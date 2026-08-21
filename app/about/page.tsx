@@ -107,6 +107,23 @@ function Founder({
   )
 }
 
+
+/** One way in, stated plainly. Four of these; more would be a menu, fewer would leave people out. */
+function Action({ title, href, cta, children }: { title: string; href: string; cta: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-2 rounded-xl border border-rnc-line bg-rnc-raised p-5">
+      <h3 className="font-bold text-white">{title}</h3>
+      <p className="text-sm leading-relaxed text-slate-300">{children}</p>
+      <Link
+        href={href}
+        className="mt-1 text-sm font-semibold text-rnc-gold underline-offset-2 hover:underline"
+      >
+        {cta} →
+      </Link>
+    </div>
+  )
+}
+
 export default async function AboutPage() {
   const { commitments } = await getAboutStats()
 
@@ -291,6 +308,38 @@ export default async function AboutPage() {
               his wife Lisa and their three children, and has watched his sons come up through North
               Carolina wrestling from elementary school to Division I.
             </Founder>
+          </div>
+        </Section>
+
+        {/* The page spent everything above earning trust and then ended without asking for
+            anything. Four ways in, because the people who finish this page arrive wanting
+            different things: money, a hire, a club to add, or a mat to train on. */}
+        <Section eyebrow="Get involved" title="Where you come in">
+          <p className="leading-relaxed text-slate-300">
+            None of this works without the people already in it. Whatever brought you to this page,
+            there is a way in.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Action title="Back the mission" href="/fundraising" cta="Give to NC United">
+              We are a 501(c)(3), and donations are tax-deductible. Money goes to the things on this
+              page — open practices, the national team, scholarships, and keeping the record free
+              for everyone.
+            </Action>
+
+            <Action title="Hire a wrestler" href="/contact" cta="Talk to us about the Network">
+              Companies fund the NC United Network, which is why athletes and mentors never pay. If
+              you are hiring interns or full-time, you are the reason it works.
+            </Action>
+
+            <Action title="Add your club" href="/clubs/submit" cta="Put your club on the map">
+              Every wrestling club in North Carolina belongs on our map, whether or not you have
+              anything to do with us. Send yours and we will add it.
+            </Action>
+
+            <Action title="Come train" href="/calendar" cta="See what is coming up">
+              Open practices, camps and tournaments. Drop in for a session without leaving your club
+              or your school program.
+            </Action>
           </div>
         </Section>
 
