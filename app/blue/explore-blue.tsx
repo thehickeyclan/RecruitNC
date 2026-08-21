@@ -34,7 +34,8 @@ const GROUPS = [
       { href: "#membership", label: "Membership" },
       { href: "#roster", label: "Roster" },
       { href: "#alumni", label: "Alumni" },
-      { href: "#schedule", label: "Schedule" },
+      { href: "/calendar", label: "Practice Calendar" },
+      { href: "#drop-ins", label: "Drop-Ins" },
     ],
   },
 ] as const

@@ -74,7 +74,11 @@ export default function BlueRegisterSuccessPage() {
                 Practices
               </div>
               <p className="text-gray-700">
-                UNC Fetzer Hall, 210 South Rd, Chapel Hill — <strong>Sundays 1:00–3:00 PM</strong>
+                Blue meets twice each month, with UNC serving as the primary Sunday home. Check the{" "}
+                <HardLink href="/calendar" className="font-medium text-[#03154C] underline hover:no-underline">
+                  NC United calendar
+                </HardLink>{" "}
+                for the exact date, time, and location of each practice.
               </p>
             </section>
 

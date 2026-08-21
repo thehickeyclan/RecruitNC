@@ -21,8 +21,9 @@ const STEPS = [
     description: "How we train and where we compete.",
     icon: Dumbbell,
     links: [
+      { href: "#format", label: "Sparring & Live Format" },
       { href: "#training", label: "Training & Partnerships" },
-      { href: "#national-team", label: "National Team Pipeline" },
+      { href: "#drop-ins", label: "Drop-Ins" },
     ],
   },
   {

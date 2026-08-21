@@ -412,7 +412,11 @@ export default function BlueRegisterPage() {
             <Image src={blueShirtUrl} alt="NC United Blue shirt" width={140} height={160} className="h-auto w-full object-contain" unoptimized />
           </div>
           <p className="text-sm text-gray-700">
-            Pick up your Blue shirt at your first practice — <strong>Sundays 1–3 PM</strong>, UNC Fetzer Hall.
+            Pick up your Blue shirt at your first scheduled practice. Exact dates, times, and locations are on the{" "}
+            <HardLink href="/calendar" className="font-medium text-[#03154C] underline">
+              NC United calendar
+            </HardLink>
+            .
           </p>
         </div>
 

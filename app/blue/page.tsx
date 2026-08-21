@@ -92,10 +92,10 @@ export default function BluePage() {
           <section id="what-is">
             <h2 className="mb-4 text-2xl font-bold text-[#003366]">What Is NC United Blue</h2>
             <p className="leading-relaxed text-[#003366]/90 mb-4">
-              NC United Blue is the premier training and competition program for North Carolina&apos;s top high school wrestlers. It brings the state&apos;s best athletes together in one environment—training under common standards, pushing each other daily, and competing as a unified group on the biggest stages.
+              NC United Blue is the premier training and competition program for North Carolina&apos;s top high school wrestlers. Blue brings the state&apos;s best athletes together for high-level sparring, situational wrestling, and live matches with different partners and styles.
             </p>
             <p className="leading-relaxed text-[#003366]/90">
-              Blue is built on a simple idea: elite wrestlers grow faster when they train with other elite wrestlers. By setting shared expectations, demanding accountability, and competing together, NC United Blue creates a culture where North Carolina&apos;s best sharpen each other and represent the state with pride.
+              Blue is built on a simple idea: elite wrestlers grow faster when they train with other elite wrestlers. Two concentrated practices each month allow us to assemble stronger rooms, set shared expectations, demand accountability, and create a culture where North Carolina&apos;s best sharpen each other.
             </p>
           </section>
 
@@ -113,6 +113,35 @@ export default function BluePage() {
             </p>
           </section>
 
+          <section id="format">
+            <h2 className="mb-4 text-2xl font-bold text-[#003366]">Sparring &amp; Live Wrestling</h2>
+            <p className="mb-6 leading-relaxed text-[#003366]/90">
+              Blue is centered on learning through wrestling. Coaches watch rounds, identify opportunities, give real-time feedback, and help athletes make adjustments while they compete.
+            </p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="mb-2 font-semibold text-[#003366]">Every Blue Session</h3>
+                  <p className="text-sm leading-relaxed text-[#003366]/90">
+                    Sparring, situational wrestling, live matches, varied partners, and high-level competition across folkstyle, freestyle, and Greco-Roman.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-t-4 border-t-[#D3B574]" style={{ borderTopColor: GOLD }}>
+                <CardContent className="pt-6">
+                  <h3 className="mb-2 font-semibold text-[#003366]">Additional Development</h3>
+                  <p className="text-sm leading-relaxed text-[#003366]/90">
+                    Optional NC United Match Days will provide organized matches with singlets, officials, and scoring. Athletes seeking individual technical work may also book training through{" "}
+                    <a href="https://www.wrestlingguild.com" target="_blank" rel="noreferrer" className="font-medium text-[#003366] hover:text-[#B31B1B] hover:underline">
+                      The Wrestling Guild
+                    </a>
+                    .
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </section>
+
           <section id="what-makes-different">
             <h2 className="mb-4 text-2xl font-bold text-[#003366]">What Makes Blue Different</h2>
             <ul className="space-y-4 text-[#003366]/90">
@@ -125,6 +154,9 @@ export default function BluePage() {
                 <strong className="text-[#003366]">College coaches in the room</strong> — Regularly, college coaches from
                 UNC, NC State, Mount Olive, Roanoke, Greensboro, Lynchburg, Belmont Abbey, and more lead or support
                 practices so kids see a college-style cadence and environment.
+              </li>
+              <li>
+                <strong className="text-[#003366]">A Room Built on Commitment</strong> — Fewer, more concentrated sessions only work when the best partners commit to being there. We build the opportunity; athletes build the room.
               </li>
             </ul>
             <div className="mt-6 grid grid-cols-2 gap-4">
@@ -145,7 +177,7 @@ export default function BluePage() {
                   <h3 className="mb-2 font-semibold">Opportunity</h3>
                   <p className="text-sm text-[#003366]/90">
                     Blue members gain access to training with college coaches, NCAA wrestlers,
-                    and peers who push them every day.
+                    and peers who push them in every session.
                   </p>
                 </CardContent>
               </Card>
@@ -170,12 +202,39 @@ export default function BluePage() {
               <Image src={images.blue_training_env} alt="NC United Blue training environment" width={700} height={400} className="h-auto w-full object-contain" unoptimized />
             </div>
             <p className="mb-4 leading-relaxed text-[#003366]/90">
-              Blue practices are <strong className="text-[#003366]">Sundays 1–3pm</strong> at the UNC wrestling room in
-              Fetzer Hall.{" "}
-              <a href={NC_UNITED_CALENDAR_URL} className="font-medium text-[#003366] hover:text-[#D3B574] hover:underline">
-                View the NC United calendar →
-              </a>
+              Blue meets twice each month so we can concentrate the best possible partners into fewer, higher-level sessions. UNC serves as our primary Sunday home, with additional college-room opportunities when available. Exact dates, times, and locations are published on the{" "}
+              <Link href={NC_UNITED_CALENDAR_URL} className="font-medium text-[#003366] hover:text-[#D3B574] hover:underline">
+                NC United calendar
+              </Link>
+              .
             </p>
+            <div className="my-6 grid gap-4 md:grid-cols-2">
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="mb-2 font-semibold text-[#003366]">Our Commitment</h3>
+                  <p className="text-sm leading-relaxed text-[#003366]/90">
+                    Publish schedules two months in advance, work around major competitions, secure elite environments, and continue investing in college coaches, collegiate athletes, and opportunities.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-t-4 border-t-[#D3B574]" style={{ borderTopColor: GOLD }}>
+                <CardContent className="pt-6">
+                  <h3 className="mb-2 font-semibold text-[#003366]">Your Commitment</h3>
+                  <p className="text-sm leading-relaxed text-[#003366]/90">
+                    Be in the room. Training partners traveling from across North Carolina—and the college programs investing their time—need a room filled with serious athletes.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+            <div id="drop-ins" className="rounded-xl border border-[#D3B574]/60 bg-[#F8F5EC] p-6">
+              <h3 className="mb-2 text-lg font-semibold text-[#003366]">How Blue Drop-Ins Work</h3>
+              <p className="leading-relaxed text-[#003366]/90">
+                Drop-ins are available only for practices marked <strong>Drop-in available</strong> on the calendar. Select the practice, choose <strong>Secure Drop-in</strong>, enter the wrestler and parent or guardian information, accept the waiver, and complete the secure $25 payment. A drop-in reserves one athlete&apos;s place for that session only; availability is limited by the capacity of each event and is open to middle and high school wrestlers.
+              </p>
+              <Link href={NC_UNITED_CALENDAR_URL} className="mt-4 inline-flex rounded-md bg-[#003366] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#B31B1B]">
+                View Blue practices &amp; drop-in availability →
+              </Link>
+            </div>
           </section>
 
           <section id="national-team">
@@ -215,8 +274,41 @@ export default function BluePage() {
 
           <section id="recruiting">
             <h2 className="mb-4 text-2xl font-bold text-[#003366]">Recruiting Support & Exposure</h2>
-            <p className="leading-relaxed text-[#003366]/90">
-              College coaches want to see athletes training with the best, competing against the best, and beating the best. NC United is built to facilitate exactly that.
+            <p className="mb-6 leading-relaxed text-[#003366]/90">
+              Blue creates meaningful recruiting exposure both in the room and through each athlete&apos;s NC United profile. College coaches can evaluate athletes in high-level environments while athlete profiles give them a central place to review accomplishments, results, and recruiting information.
+            </p>
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="mb-2 font-semibold text-[#003366]">In the Room</h3>
+                  <p className="text-sm leading-relaxed text-[#003366]/90">
+                    College coaches and collegiate wrestlers may attend or support sessions, creating opportunities for evaluation, relationships, and real conversations.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="mb-2 font-semibold text-[#003366]">Athlete Profiles</h3>
+                  <p className="text-sm leading-relaxed text-[#003366]/90">
+                    A complete, current athlete profile helps coaches find and evaluate North Carolina wrestlers beyond a single practice or tournament.
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-t-4 border-t-[#D3B574]" style={{ borderTopColor: GOLD }}>
+                <CardContent className="pt-6">
+                  <h3 className="mb-2 font-semibold text-[#003366]">Measurable Interest</h3>
+                  <p className="text-sm leading-relaxed text-[#003366]/90">
+                    Athletes and linked parents can privately see profile-view totals, including views and distinct visitors from college-coach accounts. Coach names remain private.
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+            <p className="mt-5 text-sm leading-relaxed text-[#003366]/75">
+              Exposure creates opportunity, but it does not guarantee recruitment, contact, an offer, or a roster spot.
+            </p>
+            <p className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+              <Link href="/profile" className="font-medium text-[#003366] hover:text-[#B31B1B] hover:underline">Create or update an athlete profile →</Link>
+              <Link href="/athletes" className="font-medium text-[#003366] hover:text-[#B31B1B] hover:underline">Explore athlete profiles →</Link>
             </p>
           </section>
 
@@ -296,8 +388,11 @@ export default function BluePage() {
                     Blue membership represents inclusion in a year-round training and development environment built on shared standards, accountability, and long-term growth. Membership is invite-led, not automatic.
                   </p>
                   <p className="mt-4 leading-relaxed text-[#003366]/90">
-                    After you register and pay online, pick up your Blue shirt at your first practice —{" "}
-                    <strong>Sundays 1–3 PM</strong>, UNC Fetzer Hall.
+                    After you register and pay online, pick up your Blue shirt at your first scheduled practice. Check the{" "}
+                    <Link href={NC_UNITED_CALENDAR_URL} className="font-medium text-[#003366] hover:text-[#B31B1B] hover:underline">
+                      NC United calendar
+                    </Link>{" "}
+                    for the exact date, time, and location.
                   </p>
                 </CardContent>
               </Card>
@@ -313,6 +408,9 @@ export default function BluePage() {
         <footer className="mt-16 border-t border-[#D3B574]/40 pt-8 text-center text-[#003366]/80 space-y-3">
           <p>
             <Link href="#state-qualifier" className="font-medium text-[#003366] hover:text-[#D3B574] hover:underline">Express interest in Blue →</Link>
+          </p>
+          <p>
+            <Link href={NC_UNITED_CALENDAR_URL} className="font-medium text-[#003366] hover:text-[#D3B574] hover:underline">View the NC United calendar →</Link>
           </p>
           <BackToTop />
         </footer>
