@@ -118,6 +118,10 @@ export default async function AboutPage() {
               decades — free, and open to everyone.
             </Pillar>
           </div>
+          <p className="leading-relaxed text-slate-300">
+            Everything we build — the rankings, the athlete profiles, the club map, the app, Data
+            Dawg — is free and open to anyone in North Carolina wrestling.
+          </p>
         </Section>
 
         <Section eyebrow="What we do" title="Beyond the mat">
@@ -133,7 +137,7 @@ export default async function AboutPage() {
             <Link href="/scholarships" className="font-semibold text-rnc-gold underline-offset-2 hover:underline">
               Caden Perry Scholarship
             </Link>{" "}
-            and recognise the state&apos;s best through the Dave Schultz and Tricia Saunders awards.
+            and recognize the state&apos;s best through the Dave Schultz and Tricia Saunders awards.
           </p>
           <p className="rounded-xl border border-rnc-line bg-rnc-surface p-4 text-sm text-slate-400">
             The Network is early. We soft-launched it this year and have placed our first athletes
@@ -147,7 +151,7 @@ export default async function AboutPage() {
             NC United is not a club, a team, or a training business. We do not replace school
             programs, local clubs, or the coaches who lead them. We do not operate with
             exclusivity, we do not pull athletes away from their home programs, and we do not
-            centralise control of wrestling in North Carolina.
+            centralize control of wrestling in North Carolina.
           </p>
           <p className="leading-relaxed text-slate-300">
             We strengthen the environment around every program, expand opportunity statewide,
@@ -171,7 +175,7 @@ export default async function AboutPage() {
               the sport when they move in alignment.
             </Pillar>
             <Pillar title="Build the infrastructure">
-              Referees, regional training centres, facilities and events are the foundation athletes
+              Referees, regional training centers, facilities and events are the foundation athletes
               grow inside. Strong infrastructure outlasts any one season.
             </Pillar>
           </div>
@@ -193,7 +197,7 @@ export default async function AboutPage() {
           </blockquote>
         </section>
 
-        <Section eyebrow="The organisation" title="Who we are">
+        <Section eyebrow="The organization" title="Who we are">
           <p className="leading-relaxed text-slate-300">
             We are <strong className="text-white">NC United</strong>. Our legal name, the one on our
             IRS determination, is <strong className="text-white">NC Wrestling United Inc.</strong> —
@@ -203,7 +207,7 @@ export default async function AboutPage() {
           </p>
           <p className="leading-relaxed text-slate-300">
             RecruitNC is the platform we build on. It began as our recruiting tool and now runs
-            everything you see here, including our iPhone app.
+            everything you see here.
           </p>
           <p className="leading-relaxed text-slate-300">
             Questions, a correction, or a wrestler we have missed?{" "}
