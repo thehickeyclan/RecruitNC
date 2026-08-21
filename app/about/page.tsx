@@ -249,20 +249,45 @@ export default async function AboutPage() {
             Athletes and mentors never pay. Companies fund the Network through employer partnerships
             because a wrestler who has spent ten years learning how to work is worth finding.
           </p>
-          <p className="leading-relaxed text-slate-300">
-            We also award the{" "}
-            <Link
-              href="/fundraising/scholarships/caden-perry"
-              className="font-semibold text-rnc-gold underline-offset-2 hover:underline"
-            >
-              Caden Perry Scholarship
-            </Link>{" "}
-            and recognize the state&apos;s best through the Dave Schultz and Tricia Saunders awards.
-          </p>
           <p className="rounded-xl border border-rnc-line bg-rnc-surface p-4 text-sm text-slate-400">
             The Network is still early. We soft-launched it this year and have already placed our
             first athletes in internships. We would rather say that plainly than describe it as more
             than it is — yet.
+          </p>
+        </Section>
+
+        <Section eyebrow="Scholarships and fundraising" title="Putting money back into wrestlers">
+          <p className="leading-relaxed text-slate-300">
+            We raise money for one reason: to put it back into North Carolina wrestlers. Every
+            dollar funds training, competition and the resources we keep free for everyone.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Pillar title="The Caden Perry Scholarship">
+              Awarded to a North Carolina wrestler in Caden&apos;s memory, on the belief that the
+              future is bright for those who refuse to quit. One question, answered in writing or
+              on video — no application fee, no production values required.
+            </Pillar>
+            <Pillar title="The Spartan Challenge">
+              Our annual fundraiser with Spartan Race, in Fayetteville each spring. Supporters race
+              or give, and the money goes to a named wrestler&apos;s training fund or the pool that
+              supports all of them.
+            </Pillar>
+          </div>
+          <p className="leading-relaxed text-slate-300">
+            <Link
+              href="/fundraising/scholarships/caden-perry"
+              className="font-semibold text-rnc-gold underline-offset-2 hover:underline"
+            >
+              Read about the scholarship
+            </Link>
+            {" · "}
+            <Link href="/spartan" className="font-semibold text-rnc-gold underline-offset-2 hover:underline">
+              Join the Spartan Challenge
+            </Link>
+            {" · "}
+            <Link href="/fundraising" className="font-semibold text-rnc-gold underline-offset-2 hover:underline">
+              Give to NC United
+            </Link>
           </p>
         </Section>
 
