@@ -602,6 +602,7 @@ export function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
               <a href="/news" className={navLinkClass("/news")}>News</a>
+              <a href="/about" className={navLinkClass("/about")}>About</a>
               <StoreNavLink className={navLinkClass("/store-app")}>Store</StoreNavLink>
               {highlightNavItems.map((item) => (
                 <a
@@ -1051,6 +1052,7 @@ export function Navbar() {
                     </div>
                   </div>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
+                  <a href="/about" className={mobileLinkClass("/about")} onClick={() => setIsOpen(false)}>About</a>
                   {user && (
                     <>
                       <a href="/forum" className={mobileLinkClass("/forum") + " flex items-center gap-2"} onClick={() => setIsOpen(false)}>

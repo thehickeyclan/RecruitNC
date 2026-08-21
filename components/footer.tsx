@@ -82,14 +82,9 @@ export function Footer() {
                 </HardLink>
               </li>
               <li>
-                <a
-                  href="https://ncwrestlingunited.com/about/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-gray-300 hover:text-white transition-colors"
-                >
+                <HardLink href="/about" className="text-sm text-gray-300 hover:text-white transition-colors">
                   About Us
-                </a>
+                </HardLink>
               </li>
             </ul>
           </div>

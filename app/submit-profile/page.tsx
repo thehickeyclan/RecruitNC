@@ -1080,7 +1080,7 @@ export default function SubmitProfilePage() {
                       className="mt-0.5"
                     />
                     <label htmlFor="privacy-consent" className="text-sm text-gray-700 cursor-pointer">
-                      I have read and agree to the <Link href="/about" className="text-blue-600 hover:underline font-medium">Privacy & Data policy</Link>. 
+                      I have read and agree to the <Link href="/privacy" className="text-blue-600 hover:underline font-medium">Privacy & Data policy</Link>. 
                       I understand that public wrestling data will be displayed, and private information (GPA/contact) will only be shared with verified college coaches.
                     </label>
                   </div>
