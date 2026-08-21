@@ -87,7 +87,7 @@ function Founder({
 
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-rnc-line bg-rnc-raised p-6 sm:flex-row sm:gap-6">
-      <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-full border border-rnc-line bg-rnc-surface">
+      <div className="flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-full border border-rnc-line bg-rnc-surface sm:h-28 sm:w-28">
         {photo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={photo} alt={name} className="h-full w-full object-cover" />
@@ -271,6 +271,7 @@ export default async function AboutPage() {
           <div className="flex flex-col gap-4">
             <Founder
               name="Colton Palmer"
+              photo="/images/founders/colton-palmer.jpg"
               role="Founder"
               credential="284 career wins — a national record at the time"
             >
@@ -284,6 +285,7 @@ export default async function AboutPage() {
 
             <Founder
               name="Michael Macchiavello"
+              photo="/images/founders/michael-macchiavello.jpg"
               role="Founder"
               credential="NCAA Division I national champion, US National Team"
             >
@@ -297,6 +299,7 @@ export default async function AboutPage() {
 
             <Founder
               name="Matt Hickey"
+              photo="/images/founders/matt-hickey.jpg"
               role="Founder"
               credential="Technology founder and CEO; 25+ years building companies"
             >
