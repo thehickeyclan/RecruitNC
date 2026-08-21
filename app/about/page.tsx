@@ -9,15 +9,15 @@ export const revalidate = 3600
  * trust us with their kid, partners and donors deciding whether we are real, and coaches deciding
  * whether we are here to help or to compete with them.
  *
- * The last one is why "We strengthen, we don't replace" sits high on the page rather than buried:
- * it is the question every club and school coach in the state asks first, and answering it late
- * means answering it after they have stopped reading.
+ * That third question is why "We strengthen. We don't replace." names Blue and the National Team
+ * specifically rather than reassuring in general — a club coach wants to know whether the program
+ * with the invitations is going to take his wrestlers, and a vague answer reads as a dodge.
  */
 
 export const metadata: Metadata = {
   title: "About NC United | NC Wrestling United",
   description:
-    "NC United is a 501(c)(3) building a thriving wrestling community in North Carolina — on the mat and well beyond it.",
+    "NC United brings North Carolina wrestling together — creating opportunity for athletes, strengthening the programs around them, and preserving the history of the sport in our state.",
 }
 
 function Stat({ value, label }: { value: string; label: string }) {
@@ -58,14 +58,12 @@ function Pillar({ title, children }: { title: string; children: React.ReactNode 
   )
 }
 
-
 /**
  * Founders.
  *
  * Ordered so the three of them read as the argument the rest of the page makes: someone who came
  * up through North Carolina wrestling, someone who went as far as the sport goes, and someone
- * whose career happened after the mat. Photos drop into the same slot when they arrive; until
- * then the initials are styled to look chosen rather than missing.
+ * whose career happened after the mat.
  */
 function Founder({
   name,
@@ -95,21 +93,30 @@ function Founder({
           <span className="text-xl font-bold text-rnc-gold">{initials}</span>
         )}
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         <div>
           <h3 className="text-lg font-bold text-white">{name}</h3>
           <p className="text-xs font-semibold uppercase tracking-wider text-rnc-gold">{role}</p>
         </div>
         <p className="text-sm font-semibold text-slate-200">{credential}</p>
-        <p className="text-sm leading-relaxed text-slate-300">{children}</p>
+        <div className="flex flex-col gap-2 text-sm leading-relaxed text-slate-300">{children}</div>
       </div>
     </div>
   )
 }
 
-
 /** One way in, stated plainly. Four of these; more would be a menu, fewer would leave people out. */
-function Action({ title, href, cta, children }: { title: string; href: string; cta: string; children: React.ReactNode }) {
+function Action({
+  title,
+  href,
+  cta,
+  children,
+}: {
+  title: string
+  href: string
+  cta: string
+  children: React.ReactNode
+}) {
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-rnc-line bg-rnc-raised p-5">
       <h3 className="font-bold text-white">{title}</h3>
@@ -133,140 +140,203 @@ export default async function AboutPage() {
         <header className="flex flex-col gap-5">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-rnc-gold">NC United</p>
           <h1 className="text-4xl font-bold leading-tight sm:text-5xl">
-            An ecosystem built for the athlete
+            A stronger wrestling community, built together
           </h1>
           <p className="text-lg leading-relaxed text-slate-300">
-            We use wrestling to build a thriving community in North Carolina — one that produces
-            better people, not only better wrestlers, and gives them somewhere to put it when they
-            are done competing.
+            NC United brings North Carolina wrestling together to create more opportunities for
+            athletes, strengthen the programs and people who support them, and preserve the history
+            of the sport in our state.
+          </p>
+          <p className="leading-relaxed text-slate-300">
+            We are building a community that develops better people, not only better wrestlers — and
+            gives them a way to return and do the same for the next generation.
           </p>
         </header>
 
-        {/* Counts come from the same queries the rest of the site uses, and any that fail are left
-            out rather than rendered as zero. */}
+        {/* The thesis, before the argument for it. This is not a wrestler winning — it is an
+            entire bench on its feet for a teammate, which is the whole page in one frame. */}
+        <figure className="flex flex-col gap-3">
+          <div className="overflow-hidden rounded-2xl border border-rnc-line">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/about/national-team-celebration.jpg"
+              alt="The NC United bench on its feet, arms raised, celebrating a win at the NHSCA National Duals"
+              className="w-full"
+            />
+          </div>
+          <figcaption className="text-sm text-slate-400">
+            The NC United bench as Tye Johnson&apos;s win sends the team through to the round of 16
+            at the NHSCA National Duals.
+          </figcaption>
+        </figure>
+
+        {/* Counted live from the same query the commitments page uses, so this page cannot drift
+            from it. A failed count renders nothing rather than zero. */}
         {commitments != null ? (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <Stat value={String(commitments)} label="College commitments tracked" />
+            <Stat value={String(commitments)} label="College commitments by North Carolina wrestlers tracked" />
           </div>
         ) : null}
 
-        <Section title="The athlete comes first">
+        <Section eyebrow="Our vision" title="Build the community around the athlete">
           <p className="leading-relaxed text-slate-300">
-            NC United exists to support and empower young wrestlers to reach their potential, so
-            they can go on to do the same for the next generation. Wrestlers grow when the
-            environment around them is built to support them — so that is what we work on. We
-            strengthen those environments, expand access across the state, and build the pathways
-            and resources athletes rely on to advance.
+            No wrestler develops alone. Athletes are shaped by their families, coaches, teammates,
+            clubs, schools, officials and the opportunities available to them.
           </p>
           <p className="leading-relaxed text-slate-300">
-            Competition is part of that, not the point of it. The mat teaches discipline, patience
-            and how to lose without quitting — and those are worth as much in a career as they are
-            in a season.
+            NC United works to strengthen that entire environment. We connect people and programs,
+            expand access to high-level training and competition, create pathways to college and
+            national opportunities, preserve the history of North Carolina wrestling, and help
+            athletes carry what the sport built in them into the rest of their lives.
+          </p>
+          <p className="leading-relaxed text-slate-300">
+            Competition matters, but it is not the final measure. Wrestling teaches discipline,
+            resilience, patience and how to lose without quitting. Those qualities are worth as much
+            in a career, a family and a community as they are during a season.
           </p>
         </Section>
 
-        <Section eyebrow="What we do" title="On the mat">
+        <Section eyebrow="What we do" title="Create opportunity on the mat">
           <div className="grid gap-4 sm:grid-cols-2">
             <Pillar title="Tournament of Champions">
-              The premier invitational for North Carolina&apos;s elite — the top of every weight
-              class on one mat, in front of the college coaches who recruit them.
+              An invitational bringing the best wrestlers in the state together in elite
+              eight-person brackets, with the field selected and announced weight class by weight
+              class.
             </Pillar>
             <Pillar title="NC United Blue">
-              Our national team — North Carolina wrestlers training and competing together well
-              beyond state lines.
+              Our invitation-only elite training program at UNC, bringing accomplished North
+              Carolina wrestlers into the same room for high-level practices, sparring and live
+              wrestling. Wrestlers may also attend individual Blue practices on a drop-in basis.
             </Pillar>
-            <Pillar title="Open practices">
-              Drop-in sessions any middle or high school wrestler can join, without changing clubs
-              or leaving their program.
-            </Pillar>
-            <Pillar title="Exposure">
-              Every college commitment, class rankings, and results going back decades — plus
-              athlete profiles built to be found by the coaches doing the recruiting.
+            <Pillar title="NC United National Team">
+              Our national competition team, bringing selected North Carolina wrestlers together to
+              compete at national duals, including NHSCA and AAU events.
             </Pillar>
           </div>
+        </Section>
+
+        <Section eyebrow="What we preserve" title="North Carolina wrestling's historical record">
           <p className="leading-relaxed text-slate-300">
-            Everything we build — the rankings, the athlete profiles, the club map, the app, Data
-            Dawg — is free and open to anyone in North Carolina wrestling.
+            North Carolina wrestling deserves a record that is complete, accurate and accessible.
+          </p>
+          <p className="leading-relaxed text-slate-300">
+            We preserve and make available the history of the sport in our state — including college
+            commitments, class rankings, state and national results, and records going back decades.
+          </p>
+          <p className="leading-relaxed text-slate-300">
+            The record connects today&apos;s wrestlers to the people, programs and achievements that
+            came before them. It recognizes those who built the sport and ensures that the history
+            of North Carolina wrestling is not lost.
+          </p>
+          <p className="leading-relaxed text-slate-300">
+            The historical record, rankings, athlete profiles, club map, NC United app and Data Dawg
+            are free and open to everyone in the North Carolina wrestling community.
           </p>
         </Section>
 
-        <Section eyebrow="What we do" title="Beyond the mat">
+        <Section eyebrow="Beyond competition" title="Build pathways that last">
           <p className="leading-relaxed text-slate-300">
-            A wrestling career ends. What the sport built in someone does not. The NC United
-            Network exists so that carries forward — connecting wrestlers to internships, jobs,
-            mentors and each other, whether they are heading into nursing, the trades, teaching or
-            business.
+            A wrestling career ends. What the sport builds in someone does not.
           </p>
           <p className="leading-relaxed text-slate-300">
-            Athletes and mentors never pay. Companies fund the network, because a wrestler who has
-            spent ten years learning to work is worth finding. We also award the{" "}
-            <Link href="/scholarships" className="font-semibold text-rnc-gold underline-offset-2 hover:underline">
+            The NC United Network carries that forward by connecting wrestlers to internships, jobs,
+            mentors and each other — whether they are pursuing nursing, the trades, teaching,
+            technology, business or another path.
+          </p>
+          <p className="leading-relaxed text-slate-300">
+            Athletes and mentors never pay. Companies fund the Network through employer partnerships
+            because a wrestler who has spent ten years learning how to work is worth finding.
+          </p>
+          <p className="leading-relaxed text-slate-300">
+            We also award the{" "}
+            <Link
+              href="/fundraising/scholarships/caden-perry"
+              className="font-semibold text-rnc-gold underline-offset-2 hover:underline"
+            >
               Caden Perry Scholarship
             </Link>{" "}
             and recognize the state&apos;s best through the Dave Schultz and Tricia Saunders awards.
           </p>
           <p className="rounded-xl border border-rnc-line bg-rnc-surface p-4 text-sm text-slate-400">
-            The Network is early. We soft-launched it this year and have placed our first athletes
-            in internships — we would rather tell you that plainly than describe it as more than it
-            is yet.
+            The Network is still early. We soft-launched it this year and have already placed our
+            first athletes in internships. We would rather say that plainly than describe it as more
+            than it is — yet.
           </p>
         </Section>
 
-        <Section eyebrow="Where we fit" title="We strengthen, we don't replace">
+        <Section eyebrow="Our role" title="We strengthen. We don't replace.">
           <p className="leading-relaxed text-slate-300">
-            NC United is not a club, a team, or a training business. We do not replace school
-            programs, local clubs, or the coaches who lead them. We do not operate with
-            exclusivity, we do not pull athletes away from their home programs, and we do not
-            centralize control of wrestling in North Carolina.
+            NC United is not a local club or a training business. We do not replace school programs,
+            local clubs or the coaches who lead them. We do not operate with exclusivity, pull
+            athletes away from their home programs or attempt to centralize control of wrestling in
+            North Carolina.
           </p>
           <p className="leading-relaxed text-slate-300">
-            We strengthen the environment around every program, expand opportunity statewide,
-            connect athletes to college and national pathways, support families and coaches, and
-            reinforce the structures that benefit every wrestler in the state.
+            NC United Blue supplements an athlete&apos;s home training through invitation-only
+            membership and individual drop-in opportunities. The NC United National Team exists for
+            specific national dual competitions. Neither requires athletes to leave or change their
+            school or club programs.
+          </p>
+          <p className="leading-relaxed text-slate-300">
+            Our role is to strengthen the environment around every program, expand opportunity
+            statewide, connect athletes to college and national pathways, support families and
+            coaches, and reinforce the structures that benefit every wrestler in North Carolina.
           </p>
         </Section>
 
         <Section eyebrow="How we work" title="Our commitments">
           <div className="grid gap-4 sm:grid-cols-2">
             <Pillar title="Center the athlete">
-              Every program, partnership and decision is judged by whether it strengthens the
-              growth and long-term advancement of North Carolina wrestlers.
+              Every program, partnership and decision is judged by whether it strengthens the growth
+              and long-term advancement of North Carolina wrestlers.
             </Pillar>
             <Pillar title="Expand access">
-              Training, facilities, education and visibility decide who gets to progress. We work to
-              put all of it within reach of more wrestlers, in more of the state.
+              Training, facilities, education and visibility help determine who gets to progress. We
+              work to put those opportunities within reach of more wrestlers in more parts of the
+              state.
             </Pillar>
             <Pillar title="Unite the community">
-              Athletes, coaches, families, officials, clubs, schools, colleges and partners raise
+              Athletes, coaches, families, officials, clubs, schools, colleges and partners elevate
               the sport when they move in alignment.
             </Pillar>
-            <Pillar title="Build the infrastructure">
-              Referees, regional training centers, facilities and events are the foundation athletes
-              grow inside. Strong infrastructure outlasts any one season.
+            <Pillar title="Build lasting infrastructure">
+              Coaches, referees, regional training centers, facilities, events and accessible
+              information form the environment in which athletes grow. Strong infrastructure
+              benefits every program and outlasts any single season.
             </Pillar>
           </div>
         </Section>
 
         <section className="flex flex-col gap-4 rounded-2xl border border-rnc-line bg-rnc-raised p-7">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-rnc-gold">The reinvestment loop</p>
-          <h2 className="text-2xl font-bold text-white">Everything here is built to come back around</h2>
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-rnc-gold">
+            The reinvestment loop
+          </p>
+          <h2 className="text-2xl font-bold text-white">
+            What wrestling builds should come back around
+          </h2>
           <p className="leading-relaxed text-slate-300">
-            Athletes who rise through this ecosystem return to it — as mentors, coaches, referees,
-            employers and leaders. That return is not a nice outcome we hope for. It is the engine.
-            It is what makes the next wrestler&apos;s environment better than the one we found, and
-            it is the reason we measure ourselves in people who came back rather than trophies.
+            Athletes who rise through this community return to it as mentors, coaches, referees,
+            employers and leaders.
+          </p>
+          <p className="leading-relaxed text-slate-300">
+            That return is not simply a positive outcome we hope for. It is the engine.
+          </p>
+          <p className="leading-relaxed text-slate-300">
+            Every wrestler who comes back strengthens the environment for the next one. Our success
+            will ultimately be measured not only by championships and college commitments, but by
+            the people who return and what they build for those who follow.
           </p>
           <blockquote className="border-l-2 border-rnc-gold pl-4 text-lg font-semibold leading-relaxed text-white">
             It starts with you — represent yourself and your family first. Then your team and your
-            club. Beyond state lines, we represent NC.
+            club. Beyond state lines, we represent North Carolina.
             <span className="mt-2 block text-rnc-gold">#RaiseUp</span>
           </blockquote>
         </section>
 
         <Section eyebrow="The founders" title="Who runs it">
           <p className="leading-relaxed text-slate-300">
-            NC United was founded by three people whose wrestling lives ended in three different
-            places — and who all came back to the same one.
+            NC United was founded by three people whose wrestling paths took them in different
+            directions — and who ultimately came back to serve the same community.
           </p>
           <div className="flex flex-col gap-4">
             <Founder
@@ -275,102 +345,122 @@ export default async function AboutPage() {
               role="Founder"
               credential="284 career wins — a national record at the time"
             >
-              Colton started wrestling at five in Durham, following his older brothers. He was an
-              NHSCA national champion by eighth grade, won two state titles for Riverside High
-              School — one of them on a 61-0 season — and finished with more high school wins than
-              any wrestler in North Carolina history. He was a four-year letterwinner and co-captain
-              at NC State. He now works in enterprise strategy, volunteer coaches, and sits on the
-              board of NC USA Wrestling.
+              <p>
+                Colton started wrestling at five in Durham, following his older brothers. He won an
+                NHSCA national championship in eighth grade, captured two state championships for
+                Riverside High School — including one during a 61-0 season — and finished with more
+                high school wins than any wrestler in North Carolina history.
+              </p>
+              <p>
+                He was a four-year letterwinner and co-captain at NC State. Today, Colton works in
+                enterprise strategy, coaches on a volunteer basis and serves on the board of North
+                Carolina USA Wrestling.
+              </p>
             </Founder>
 
             <Founder
               name="Michael Macchiavello"
               photo="/images/founders/michael-macchiavello.jpg"
               role="Founder"
-              credential="NCAA Division I national champion, US National Team"
+              credential="NCAA Division I national champion and United States National Team member"
             >
-              Michael grew up in Union County and did not start wrestling until he was fourteen. He
-              won a state title, then an NCAA Division I championship at 197 pounds for NC State —
-              only the second wrestler born in North Carolina ever to win one. He has represented
-              Team USA for five years and served on USA Wrestling&apos;s Board of Directors,
-              Executive Committee and Athlete Advisory Committee. He now coaches collegiately at
-              West Point.
+              <p>
+                Michael grew up in Union County and did not begin wrestling until he was fourteen.
+                He won a state championship before becoming the NCAA Division I champion at 197
+                pounds for NC State — only the second North Carolina-born wrestler ever to win an
+                NCAA wrestling title.
+              </p>
+              <p>
+                Michael represented Team USA for five years and served on USA Wrestling&apos;s Board
+                of Directors, Executive Committee and Athlete Advisory Committee. He now coaches
+                collegiately at West Point.
+              </p>
             </Founder>
 
             <Founder
               name="Matt Hickey"
               photo="/images/founders/matt-hickey.jpg"
               role="Founder"
-              credential="Technology founder and CEO; 25+ years building companies"
+              credential="Technology founder and CEO with more than 25 years of experience building companies"
             >
-              Matt was the youngest of five wrestling brothers on Long Island, joined the Long
-              Island Century Club with over 100 high school wins, placed second in the New York
-              state championships and wrestled at Hofstra before finishing his degree at NC State.
-              He has spent his career founding and running technology companies — venture-backed
-              cybersecurity and AI data businesses, several of them sold. He lives in Raleigh with
-              his wife Lisa and their three children, and has watched his sons come up through North
-              Carolina wrestling from elementary school to Division I.
+              <p>
+                Matt was the youngest of five wrestling brothers on Long Island. He joined the Long
+                Island Century Club with more than 100 high school wins, placed second in the New
+                York state championships and wrestled at Hofstra before completing his degree at NC
+                State.
+              </p>
+              <p>
+                He has spent his career founding and leading technology companies, including
+                venture-backed cybersecurity and artificial intelligence businesses, several of
+                which were acquired.
+              </p>
+              <p>
+                Matt lives in Raleigh with his wife, Lisa, and their three children. He has watched
+                his sons progress through North Carolina wrestling from elementary school to
+                Division I.
+              </p>
             </Founder>
           </div>
         </Section>
 
-        {/* The page spent everything above earning trust and then ended without asking for
-            anything. Four ways in, because the people who finish this page arrive wanting
-            different things: money, a hire, a club to add, or a mat to train on. */}
         <Section eyebrow="Get involved" title="Where you come in">
           <p className="leading-relaxed text-slate-300">
-            None of this works without the people already in it. Whatever brought you to this page,
-            there is a way in.
+            None of this works without the people already invested in North Carolina wrestling.
+            Whatever brought you to this page, there is a way to become part of it.
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             <Action title="Back the mission" href="/fundraising" cta="Give to NC United">
-              We are a 501(c)(3), and donations are tax-deductible. Money goes to the things on this
-              page — open practices, the national team, scholarships, and keeping the record free
-              for everyone.
+              NC Wrestling United is a 501(c)(3), and donations are tax-deductible to the extent
+              allowed by law. Contributions support Blue practices, the National Team, scholarships
+              and the public resources we keep free for the entire community.
             </Action>
 
             <Action title="Hire a wrestler" href="/contact" cta="Talk to us about the Network">
-              Companies fund the NC United Network, which is why athletes and mentors never pay. If
-              you are hiring interns or full-time, you are the reason it works.
+              Companies fund the NC United Network, allowing athletes and mentors to participate
+              without charge. If your company hires interns or full-time employees, you can help
+              create the opportunities that make the Network work.
             </Action>
 
             <Action title="Add your club" href="/clubs/submit" cta="Put your club on the map">
-              Every wrestling club in North Carolina belongs on our map, whether or not you have
-              anything to do with us. Send yours and we will add it.
+              Every wrestling club in North Carolina belongs on our map, whether or not it
+              participates in an NC United program. Send us your information and we will add it.
             </Action>
 
-            <Action title="Come train" href="/calendar" cta="See what is coming up">
-              Open practices, camps and tournaments. Drop in for a session without leaving your club
-              or your school program.
+            <Action title="Come train" href="/calendar" cta="See what's coming up">
+              View the calendar for upcoming Blue practices, camps, tournaments and other
+              opportunities across the state.
             </Action>
           </div>
         </Section>
 
         <Section eyebrow="The organization" title="The details">
           <p className="leading-relaxed text-slate-300">
-            We are <strong className="text-white">NC United</strong>. Our legal name, the one on our
-            IRS determination, is <strong className="text-white">NC Wrestling United Inc.</strong> —
-            a North Carolina 501(c)(3) nonprofit, Tax ID{" "}
+            We are <strong className="text-white">NC United</strong>. Our legal name is{" "}
+            <strong className="text-white">NC Wrestling United Inc.</strong>, a North Carolina
+            501(c)(3) nonprofit organization. Our federal Tax ID is{" "}
             <span className="tabular-nums">99-3757238</span>. Donations are tax-deductible to the
-            extent the law allows.
+            extent allowed by law.
           </p>
           <p className="leading-relaxed text-slate-300">
-            RecruitNC is the platform we build on. It began as our recruiting tool and now runs
-            everything you see here.
+            RecruitNC is the platform behind NC United. It began as our recruiting tool and now
+            powers the resources, information and programs available throughout this site.
           </p>
           <p className="leading-relaxed text-slate-300">
-            Questions, a correction, or a wrestler we have missed?{" "}
+            Have a question, a correction or a wrestler we have missed?{" "}
             <Link href="/contact" className="font-semibold text-rnc-gold underline-offset-2 hover:underline">
               Get in touch
             </Link>{" "}
-            — or email{" "}
+            or email{" "}
             <a
               href="mailto:info@ncwrestlingunited.com"
               className="font-semibold text-rnc-gold underline-offset-2 hover:underline"
             >
               info@ncwrestlingunited.com
             </a>
-            . How we handle athlete information is set out in our{" "}
+            .
+          </p>
+          <p className="leading-relaxed text-slate-300">
+            How we collect and manage athlete information is explained in our{" "}
             <Link href="/privacy" className="font-semibold text-rnc-gold underline-offset-2 hover:underline">
               privacy policy
             </Link>
