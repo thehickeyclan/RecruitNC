@@ -60,6 +60,12 @@ export function ConditionalAuthGuard({
     "/spartan",
     "/tournament-of-champions",
     "/fundraising",
+    // The App Store listing points at /privacy and /support, and Apple opens both signed out
+    // during review — a login wall there is a rejection, not a detail. /contact is the route
+    // both of those pages send people to, so gating it broke the only way to reach a human.
+    "/privacy",
+    "/support",
+    "/contact",
   ]
   const publicExactRoutes = new Set(["/blue"])
   const isAuthRoute = path.startsWith("/auth/")
