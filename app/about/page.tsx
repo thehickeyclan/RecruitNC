@@ -9,9 +9,11 @@ export const revalidate = 3600
  * trust us with their kid, partners and donors deciding whether we are real, and coaches deciding
  * whether we are here to help or to compete with them.
  *
- * That third question is why "We strengthen. We don't replace." names Blue and the National Team
- * specifically rather than reassuring in general — a club coach wants to know whether the program
- * with the invitations is going to take his wrestlers, and a vague answer reads as a dodge.
+ * That third question is why the "Our role" section names Blue and the National Team specifically:
+ * a club coach wants to know whether the program handing out invitations is going to take his
+ * wrestlers. It answers by saying what an athlete gains and that their coach stays their coach,
+ * rather than with a list of things we promise not to do — five sentences of "we do not" leave a
+ * reader thinking about exactly the thing being denied.
  */
 
 export const metadata: Metadata = {
@@ -264,18 +266,22 @@ export default async function AboutPage() {
           </p>
         </Section>
 
-        <Section eyebrow="Our role" title="We strengthen. We don't replace.">
+        <Section eyebrow="Our role" title="We add to what your program already gives">
           <p className="leading-relaxed text-slate-300">
-            NC United is not a local club or a training business. We do not replace school programs,
-            local clubs or the coaches who lead them. We do not operate with exclusivity, pull
-            athletes away from their home programs or attempt to centralize control of wrestling in
-            North Carolina.
+            NC United exists to give North Carolina wrestlers more — more exposure to the college
+            coaches recruiting them, more high-level competition, more training partners, and more
+            ways to be seen. Everything we run is additional to what an athlete already has.
           </p>
           <p className="leading-relaxed text-slate-300">
-            NC United Blue supplements an athlete&apos;s home training through invitation-only
-            membership and individual drop-in opportunities. The NC United National Team exists for
-            specific national dual competitions. Neither requires athletes to leave or change their
-            school or club programs.
+            NC United isn&apos;t a club. We are the layer around them: the statewide events,
+            pathways and connections that no single program can build alone, available to every
+            wrestler in the state regardless of where they train.
+          </p>
+          <p className="leading-relaxed text-slate-300">
+            Blue supplements an athlete&apos;s home training through invitation-only membership and
+            individual drop-in practices. The National Team comes together for specific national
+            duals. A wrestler keeps their school and club program exactly as it is, and their coach
+            stays their coach.
           </p>
           <p className="leading-relaxed text-slate-300">
             Our role is to strengthen the environment around every program, expand opportunity
