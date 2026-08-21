@@ -168,8 +168,8 @@ export default async function AboutPage() {
         <Section eyebrow="What we do" title="On the mat">
           <div className="grid gap-4 sm:grid-cols-2">
             <Pillar title="Tournament of Champions">
-              An invitational bringing the best wrestlers in the state onto one mat, with the field
-              announced weight class by weight class.
+              The premier invitational for North Carolina&apos;s elite — the top of every weight
+              class on one mat, in front of the college coaches who recruit them.
             </Pillar>
             <Pillar title="NC United Blue">
               Our national team — North Carolina wrestlers training and competing together well
@@ -179,9 +179,9 @@ export default async function AboutPage() {
               Drop-in sessions any middle or high school wrestler can join, without changing clubs
               or leaving their program.
             </Pillar>
-            <Pillar title="The record">
-              Every college commitment, class rankings, and state and national results going back
-              decades — free, and open to everyone.
+            <Pillar title="Exposure">
+              Every college commitment, class rankings, and results going back decades — plus
+              athlete profiles built to be found by the coaches doing the recruiting.
             </Pillar>
           </div>
           <p className="leading-relaxed text-slate-300">
