@@ -27,6 +27,7 @@
     "store:seed-uc25w-singlet": "tsx scripts/seed-womens-ultimate-club-duals-2025-singlet.ts",
     "store:seed-uc25wb-singlet": "tsx scripts/seed-womens-blue-ultimate-club-duals-2025-singlet.ts",
     "store:seed-toc-tee": "tsx scripts/seed-toc-2026-tee.ts",
+    "calendar:seed-nchsaa-2026-27": "node --env-file=.env.local --import tsx scripts/seed-nchsaa-2026-27-calendar-events.ts",
     "store:reprocess-singlets": "tsx scripts/reprocess-store-singlet-images.ts",
     "store:reprocess-catalog": "tsx scripts/reprocess-store-catalog-images.ts",
     "store:setup-aau-travel": "tsx scripts/setup-aau-duals-travel-commitments.ts",

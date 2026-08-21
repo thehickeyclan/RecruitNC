@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { shouldAutoApproveCoach } from "@/lib/coach-auto-approve"
 
 // Safe, additive: extends existing handler to accept first/last/cell/profileType
 export async function POST(request: NextRequest) {
@@ -123,6 +124,13 @@ export async function POST(request: NextRequest) {
       if (lastName) profilePayload.last_name = lastName
       if (cellPhone) profilePayload.cell_phone = cellPhone
       if (profileType) profilePayload.role = profileType
+
+      // A college coach on a .edu address skips the manual approval queue. Only this exact
+      // combination does — see lib/coach-auto-approve.ts for why the rule is kept narrow.
+      if (shouldAutoApproveCoach({ role: profileType, email: data.user.email })) {
+        profilePayload.verified_coach = true
+        console.log("[signup] auto-approved college coach on .edu address:", data.user.email)
+      }
 
       const { error: profileError } = await adminSupabase
         .from("user_profiles")
