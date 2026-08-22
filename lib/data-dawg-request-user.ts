@@ -1,18 +1,12 @@
 import type { NextRequest } from "next/server"
-import { createAdminClient } from "@/lib/supabase/admin"
-import { createClient } from "@/lib/supabase/server"
+import { resolveRequestUserId } from "@/lib/request-user"
 
-/** Resolve identity from the widget's bearer token, with SSR cookies as a fallback. */
+/**
+ * Resolve identity from the widget's bearer token, with SSR cookies as a fallback.
+ *
+ * Kept as its own export because callers read better for it; the logic is shared with every other
+ * route the app and the website both call.
+ */
 export async function resolveDataDawgRequestUserId(request: NextRequest): Promise<string | null> {
-  const authorization = request.headers.get("authorization")
-  const bearer = authorization?.match(/^Bearer\s+(.+)$/i)?.[1]?.trim()
-
-  if (bearer) {
-    const { data, error } = await createAdminClient().auth.getUser(bearer)
-    if (!error && data.user) return data.user.id
-  }
-
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  return user?.id ?? null
+  return resolveRequestUserId(request)
 }

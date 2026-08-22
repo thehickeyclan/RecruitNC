@@ -4,6 +4,18 @@
 
 export const TOC_EVENT_DATE = new Date("2026-09-18T16:00:00-04:00")
 
+/**
+ * Bracket pool window.
+ *
+ * The pool cannot open before the official draw is locked: entrants seed their own brackets in
+ * the app beforehand, and picks made against a self-seeded draw name bouts that do not exist, so
+ * they can be compared neither to each other nor to what happens. Entries stay editable until the
+ * deadline, which sits before Friday's first round.
+ */
+export const TOC_POOL_OPENS = new Date("2026-09-11T12:00:00-04:00")
+export const TOC_POOL_DEADLINE = new Date("2026-09-15T23:59:59-04:00")
+export const TOC_POOL_DEADLINE_DISPLAY = "Monday, September 15, 2026" as const
+
 /** Public date lines — single source for landing page, emails, FAQ, and schema. */
 export const TOC_EVENT_DATES_RANGE = "September 18–19, 2026" as const
 export const TOC_FRIDAY_EVENT_DATE = "Friday, September 18, 2026" as const
