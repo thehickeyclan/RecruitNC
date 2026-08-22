@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveRequestUserId } from "@/lib/request-user"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { getLockedDraw } from "@/lib/toc/bracket-service"
+import { simulationBoutParticipants } from "@/lib/toc/bracket-simulation"
 
 /**
  * Record who won a bout. This is the endpoint the tournament runs on.
@@ -79,4 +80,58 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({ ok: true, weightClass, boutNumber, winnerAthleteId, roundLabel: bout.roundLabel })
+}
+
+/**
+ * The bouts for one weight, with who is actually in each one.
+ *
+ * Participants are resolved from the results already recorded — a bout's slots say "winner of 3"
+ * until bout 3 has a winner. The simulation resolver does exactly this for a wrestler predicting
+ * a bracket, and a recorded result is the same shape as a pick, so it is reused rather than
+ * rewritten.
+ */
+export async function GET(request: NextRequest) {
+  const adminUserId = await requireAdmin(request)
+  if (!adminUserId) return NextResponse.json({ error: "Admins only." }, { status: 403 })
+
+  const weightClass = Number(new URL(request.url).searchParams.get("weightClass"))
+  if (!TOC_WEIGHT_CLASSES.includes(weightClass as (typeof TOC_WEIGHT_CLASSES)[number])) {
+    return NextResponse.json({ error: "Unknown weight class." }, { status: 400 })
+  }
+
+  const admin = createAdminClient()
+  const draw = await getLockedDraw(admin, weightClass)
+  if (!draw) return NextResponse.json({ error: "That bracket is not locked yet.", bouts: [] }, { status: 409 })
+
+  const { data: rows } = await admin
+    .from("toc_bout_results")
+    .select("bout_number,winner_athlete_id")
+    .eq("weight_class", weightClass)
+
+  const winners: Record<number, string> = {}
+  for (const row of rows ?? []) winners[Number(row.bout_number)] = String(row.winner_athlete_id)
+
+  const nameById = new Map(draw.participants.map((p) => [p.athleteId, p.name]))
+  const seedById = new Map(draw.participants.map((p) => [p.athleteId, p.seed]))
+
+  const bouts = [...draw.bouts]
+    .sort((a, b) => a.boutNumber - b.boutNumber)
+    .map((bout) => ({
+      boutNumber: bout.boutNumber,
+      roundLabel: bout.roundLabel,
+      side: bout.side,
+      winnerAthleteId: winners[bout.boutNumber] ?? null,
+      competitors: simulationBoutParticipants(draw, winners, bout.boutNumber).map((athleteId) => ({
+        athleteId,
+        name: nameById.get(athleteId) ?? "Unknown",
+        seed: seedById.get(athleteId) ?? null,
+      })),
+    }))
+
+  return NextResponse.json({
+    weightClass,
+    bouts,
+    recorded: Object.keys(winners).length,
+    total: draw.bouts.length,
+  })
 }
