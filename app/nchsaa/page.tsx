@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Crown, Calendar, ArrowRight, Star, TrendingUp, ChevronDown, School, Archive, MapPin } from "lucide-react"
+import { Crown, Calendar, ArrowRight, Star, TrendingUp, ChevronDown, School, Archive, MapPin, BookOpen } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
 import { useState } from "react"
@@ -93,6 +93,36 @@ export default function NCHSAAOverview() {
             </CardContent>
           </Card>
         </div>
+
+        <Card className="mb-6 border-2 border-[#CBAF5D] bg-gradient-to-r from-[#003366]/5 to-[#CBAF5D]/10 md:mb-8">
+          <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between md:p-6">
+            <div className="flex items-start gap-3 md:gap-4">
+              <div className="rounded-lg bg-[#003366] p-2.5 text-white md:p-3">
+                <BookOpen className="h-5 w-5 md:h-6 md:w-6" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-[#003366] md:text-xl">
+                  Official 2026–27 NCHSAA Handbook
+                </h2>
+                <p className="mt-1 max-w-2xl text-sm text-slate-600 md:text-base">
+                  View the official handbook for NCHSAA rules, policies, eligibility, administration, and member
+                  schools.
+                </p>
+              </div>
+            </div>
+            <a
+              href="/documents/nchsaa-2026-27-handbook.pdf"
+              target="_blank"
+              rel="noreferrer"
+              className="w-full shrink-0 sm:w-auto"
+            >
+              <Button className="w-full bg-[#003366] font-bold text-white hover:bg-[#001a38] sm:w-auto">
+                View Handbook
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </a>
+          </CardContent>
+        </Card>
 
         <div className="grid md:grid-cols-3 gap-4 md:gap-6 mb-6 md:mb-8">
           <button
