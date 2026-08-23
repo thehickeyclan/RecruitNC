@@ -544,7 +544,10 @@ async function fetchFargoLinesByAthleteId(
       lines: allAmericans.map((r) => {
         const year = Number(r.year) || null
         const place = Number(r.placement)
-        return `${year ? `${year} ` : ""}Fargo${Number.isInteger(place) ? ` ${formatPlacement(place)}` : " All-American"}`
+        // formatPlacement lowercases its argument, so a number throws. The NHSCA branch below
+        // already wraps it; this one did not, which made any integer Fargo placement a crash
+        // rather than a credential.
+        return `${year ? `${year} ` : ""}Fargo${Number.isInteger(place) ? ` ${formatPlacement(String(place))}` : " All-American"}`
       }),
     })
   }
