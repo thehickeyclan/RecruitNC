@@ -140,14 +140,22 @@ export default function NewsPage() {
                   className="group block overflow-hidden rounded-xl bg-[#13294B]/50 border border-white/10 hover:border-[#D3B574]/30 transition-all duration-300 hover:bg-[#13294B]"
                 >
                   {/* Card Image */}
-                  <div className="relative aspect-[16/10] overflow-hidden bg-[#1a3a5c]">
+                  <div
+                    className={`relative aspect-[16/10] overflow-hidden ${
+                      item.imageBannerBgClass ?? "bg-[#1a3a5c]"
+                    }`}
+                  >
                     {item.image ? (
                       <Image
                         src={item.image}
                         alt=""
                         fill
-                        className={`object-cover transition-transform duration-500 group-hover:scale-105 ${
-                          item.imageFit === "contain" ? "object-contain p-4" : ""
+                        // Either/or, never both: emitting object-cover alongside object-contain
+                        // lets Tailwind's stylesheet order decide, and cover ships later, so it
+                        // won every time and imageFit was ignored. The featured image above has
+                        // always done this correctly — this is the same shape.
+                        className={`transition-transform duration-500 group-hover:scale-105 ${
+                          item.imageFit === "contain" ? "object-contain p-4" : "object-cover"
                         } ${item.imagePosition === "top" ? "object-top" : "object-center"}`}
                         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       />
