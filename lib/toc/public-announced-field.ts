@@ -285,7 +285,18 @@ const STATE_PLACE_LABELS: Record<number, string> = { 1: "state champion", 2: "st
 const HS_SEASON_SPAN = 4
 
 export function normalizeNameForStateMatch(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean)
+  // Drop a quoted nickname before anything else. State results record the legal name, while a
+  // roster often carries the name people use — Amanuel "Manny" Kahsai has state results under
+  // Amanuel Kahsai and was matching none of them. Removing the decoration is not a claim that two
+  // records are the same person; it is the same name with the quotes taken off.
+  // The quote must open a whole token, so an apostrophe inside a surname is untouched: two of them
+  // in one name ("D'Angelo O'Brien") would otherwise look like a quoted nickname and take the
+  // middle of the name with it.
+  const withoutNickname = name.replace(
+    /(^|\s)["'\u2018\u2019\u201c\u201d][^"'\u2018\u2019\u201c\u201d]+["'\u2018\u2019\u201c\u201d](?=\s|$)/g,
+    " ",
+  )
+  const parts = withoutNickname.trim().split(/\s+/).filter(Boolean)
   while (parts.length > 1 && NAME_SUFFIXES.has(parts[parts.length - 1]!.toLowerCase())) parts.pop()
   return parts.join(" ")
 }

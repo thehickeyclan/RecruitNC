@@ -583,3 +583,23 @@ describe("hub tiles", () => {
     }
   })
 })
+
+describe("normalizeNameForStateMatch — nicknames", () => {
+  it("drops a quoted nickname so the legal name matches", () => {
+    // State results hold "Amanuel Kahsai"; the roster holds the name people call him.
+    expect(normalizeNameForStateMatch('Amanuel "Manny" Kahsai')).toBe("Amanuel Kahsai")
+    expect(normalizeNameForStateMatch("Amanuel “Manny” Kahsai")).toBe("Amanuel Kahsai")
+    expect(normalizeNameForStateMatch("Amanuel ‘Manny’ Kahsai")).toBe("Amanuel Kahsai")
+  })
+
+  it("leaves ordinary names alone", () => {
+    expect(normalizeNameForStateMatch("Holt Quincy")).toBe("Holt Quincy")
+    expect(normalizeNameForStateMatch("Kristopher Kerr Jr")).toBe("Kristopher Kerr")
+  })
+
+  it("leaves apostrophes inside surnames alone", () => {
+    expect(normalizeNameForStateMatch("Nick O'Neill")).toBe("Nick O'Neill")
+    // Two apostrophes in one name look like a quoted nickname unless the quote must open a token.
+    expect(normalizeNameForStateMatch("D'Angelo O'Brien")).toBe("D'Angelo O'Brien")
+  })
+})
