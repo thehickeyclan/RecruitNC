@@ -102,7 +102,15 @@ describe("eight-man DE bracket", () => {
     expect(bout(20)?.bottom).toEqual({ kind: "feeder", boutNumber: 17, label: "Winner Bout 17" })
     expect(bout(28)?.top).toEqual({ kind: "feeder", boutNumber: 26, label: "Winner Bout 26" })
     expect(bout(28)?.bottom).toEqual({ kind: "feeder", boutNumber: 27, label: "Winner Bout 27" })
-    expect(tocDrawToWinnersBracketTree(draw).rounds.map((round) => round.length)).toEqual([8, 4, 2, 1])
+    // The draw still holds eight opening bouts; the display collapses the four that are a
+    // wrestler against a bye. Twelve wrestlers means four preliminary matches, not eight boxes
+    // half of which nobody wrestles.
+    const winners = tocDrawToWinnersBracketTree(draw)
+    expect(winners.rounds.map((round) => round.length)).toEqual([4, 4, 2, 1])
+    expect(winners.rounds[0]?.[0]?.roundLabel).toBe("Preliminary")
+    // Everyone who had a bye is placed straight into the quarterfinal rather than shown as the
+    // winner of a bout that never happened.
+    expect(winners.rounds[1]?.[0]?.top).toMatchObject({ seed: 1 })
     expect(tocDrawToConsolationBracketTree(draw)?.rounds.map((round) => round.length)).toEqual([4, 4, 2, 2, 1])
   })
 
