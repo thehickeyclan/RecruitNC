@@ -86,7 +86,15 @@ export async function POST(request: Request) {
       )
     }
 
-    const draw = buildEightManDeDraw(weightClass, participants, new Date().toISOString())
+    // Size the bracket from the announced field, not from how many the user has seeded so far.
+    // Without this a nine-wrestler weight draws an eight-man bracket until the ninth tap, so
+    // somebody seeding 133 watches the wrong format take shape — and anyone who stops at eight
+    // keeps a complete-looking bracket that is not the one that will be wrestled.
+    const announced = weight.athletes.length
+    const fieldTier: 8 | 10 | 12 | undefined =
+      announced <= 8 ? undefined : announced <= 10 ? 10 : 12
+
+    const draw = buildEightManDeDraw(weightClass, participants, new Date().toISOString(), fieldTier)
 
     // Laid out here, not in the app: the same layout engine the desktop bracket uses, so the
     // two draw the same shape rather than two implementations drifting apart. The app renders
