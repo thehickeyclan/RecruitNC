@@ -13,6 +13,8 @@ export type ClubSubmissionRow = {
   city: string | null
   state: string | null
   zip_code: string | null
+  /** Who to speak to about the club. Optional — older submissions predate the field. */
+  contact_name?: string | null
   contact_phone: string | null
   contact_email: string | null
   website: string | null

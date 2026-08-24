@@ -80,6 +80,7 @@ export async function POST(request: Request) {
     city: city || null,
     state,
     zip_code: zipCode || null,
+    contact_name: asString(body.contactName) || null,
     contact_phone: asString(body.contactPhone) || null,
     contact_email: asString(body.contactEmail) || null,
     website: sanitizeClubWebsite(body.website),

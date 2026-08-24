@@ -1,0 +1,10 @@
+-- Primary contact name on club submissions.
+--
+-- The form already asked for a phone and an email but never for a person, so a reviewer chasing a
+-- submission had a number and no idea who would answer it.
+--
+-- Safe to run at any time. The submissions route drops unknown columns and retries, so the field
+-- is collected and silently discarded until this runs — no submission is lost either way.
+
+alter table public.wrestling_club_submissions
+  add column if not exists contact_name text;

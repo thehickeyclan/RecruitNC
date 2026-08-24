@@ -254,6 +254,7 @@ export function AdminClubsManager() {
                     <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D7B968]">Programs</p>
                     <p className="mt-2 text-white/80">{programSummary(submission) || "No program types selected"}</p>
                     <div className="mt-4 grid gap-3 text-sm text-white/65 sm:grid-cols-2">
+                      <p><span className="text-white/40">Contact:</span> {submission.contact_name || "—"}</p>
                       <p><span className="text-white/40">Phone:</span> {submission.contact_phone || "—"}</p>
                       <p><span className="text-white/40">Email:</span> {submission.contact_email || "—"}</p>
                     </div>

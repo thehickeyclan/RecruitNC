@@ -158,6 +158,16 @@ export function ClubSubmissionForm({ isSignedIn, userName, userEmail }: ClubSubm
           </div>
         </div>
 
+        <div className="md:col-span-2">
+          <Label htmlFor="contactName" className="text-white">Primary contact name</Label>
+          <Input
+            id="contactName"
+            name="contactName"
+            autoComplete="name"
+            placeholder="Who should we speak to about this club?"
+            className="mt-2 border-white/15 bg-[#020b18] text-white"
+          />
+        </div>
         <div>
           <Label htmlFor="contactPhone" className="text-white">Contact phone</Label>
           <Input id="contactPhone" name="contactPhone" type="tel" className="mt-2 border-white/15 bg-[#020b18] text-white" />
