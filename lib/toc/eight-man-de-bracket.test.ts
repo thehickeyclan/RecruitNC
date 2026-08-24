@@ -116,6 +116,41 @@ describe("eight-man DE bracket", () => {
     expect(tocDrawToConsolationBracketTree(draw)?.rounds.map((round) => round.length)).toEqual([4, 2, 2, 1])
   })
 
+  it("draws a nine-man field as the printed TOC schema", () => {
+    // The official 9-man chart: one pigtail, four quarterfinals, two semis, a final, and six
+    // consolation bouts — fourteen matches. Eight and nine are the only field sizes TOC runs.
+    const nine = Array.from({ length: 9 }, (_, index) => ({
+      athleteId: `seed-${index + 1}`,
+      invitationId: `seed-inv-${index + 1}`,
+      seed: index + 1,
+      name: `Seed ${index + 1}`,
+      school: "Test HS",
+      photoUrl: null,
+      graduationYear: 2027,
+    }))
+    const draw = buildEightManDeDraw(133, nine, new Date().toISOString(), 9)
+    const winners = tocDrawToWinnersBracketTree(draw)
+    const consolation = tocDrawToConsolationBracketTree(draw)!
+
+    expect(winners.rounds.map((r) => r.length)).toEqual([1, 4, 2, 1])
+    expect(consolation.rounds.map((r) => r.length)).toEqual([1, 2, 2, 1])
+    const total = winners.rounds.flat().length + consolation.rounds.flat().length
+    expect(total).toBe(14)
+
+    // The pigtail is 8 v 9, and its winner meets the top seed.
+    expect(winners.rounds[0]![0]!.roundLabel).toBe("Preliminary")
+    expect(winners.rounds[0]![0]!.top.seed).toBe(9)
+    expect(winners.rounds[0]![0]!.bottom.seed).toBe(8)
+    expect(winners.rounds[1]![0]!.top.seed).toBe(1)
+
+    // The consolation pigtail pairs the beaten pigtail wrestler with the loser of the 7 v 2
+    // quarterfinal — bout 12 — exactly as the printed chart routes it.
+    const consiPigtail = consolation.rounds[0]![0]!
+    const feeders = [consiPigtail.top.name, consiPigtail.bottom.name]
+    expect(feeders).toContain("Loser Bout 2")
+    expect(feeders).toContain("Loser Bout 12")
+  })
+
   it("crosses 16-slot consolation feeders without creating immediate rematches", () => {
     const expanded = Array.from({ length: 12 }, (_, index) => ({
       athleteId: `seed-${index + 1}`,
@@ -136,11 +171,15 @@ describe("eight-man DE bracket", () => {
     expect(feederNumbers(17)).toEqual([3, 4])
     expect(feederNumbers(18)).toEqual([5, 6])
     expect(feederNumbers(19)).toEqual([7, 8])
-    // Quarterfinal losers cross into the opposite opening consolation bout.
+    // Quarterfinal losers cross into the opposite opening consolation bout. 21 takes bout 12 and
+    // 23 takes bout 10 — crossed the other way from the obvious pairing, which is what keeps the
+    // pigtail winner and pigtail loser apart once this collapses to a nine-man field.
     expect(feederNumbers(20)).toEqual([9, 17])
-    expect(feederNumbers(21)).toEqual([10, 16])
+    expect(feederNumbers(21)).toEqual([12, 16])
     expect(feederNumbers(22)).toEqual([11, 19])
-    expect(feederNumbers(23)).toEqual([12, 18])
+    expect(feederNumbers(23)).toEqual([10, 18])
+    expect(feederNumbers(24)).toEqual([20, 23])
+    expect(feederNumbers(25)).toEqual([22, 21])
     // Semifinal losers cross to the opposite half before the third-place bout.
     expect(feederNumbers(26)).toEqual([14, 24])
     expect(feederNumbers(27)).toEqual([25, 13])

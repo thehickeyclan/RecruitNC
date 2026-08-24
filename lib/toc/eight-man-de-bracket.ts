@@ -121,11 +121,16 @@ function buildSixteenSlotDeBouts(
     bout(weightClass, 18, "Consolation R1", "losers", feederSlot(5, "Loser Bout 5"), feederSlot(6, "Loser Bout 6")),
     bout(weightClass, 19, "Consolation R1", "losers", feederSlot(7, "Loser Bout 7"), feederSlot(8, "Loser Bout 8")),
     bout(weightClass, 20, "Consolation R2", "losers", feederSlot(9, "Loser Bout 9"), feederSlot(17, "Winner Bout 17")),
-    bout(weightClass, 21, "Consolation R2", "losers", feederSlot(10, "Loser Bout 10"), feederSlot(16, "Winner Bout 16")),
+    // Bouts 21/23 and 24/25 are crossed against the obvious pairing on purpose. Collapsed to a
+    // nine-man field this reproduces the printed TOC schema: the pigtail loser meets the loser of
+    // the 7v2 quarterfinal, and — the part that matters — the pigtail winner and pigtail loser end
+    // up in different consolation quarters, so 8 and 9 cannot be made to wrestle each other again
+    // two matches after they first did. Pairing them straight through allows exactly that.
+    bout(weightClass, 21, "Consolation R2", "losers", feederSlot(12, "Loser Bout 12"), feederSlot(16, "Winner Bout 16")),
     bout(weightClass, 22, "Consolation R2", "losers", feederSlot(11, "Loser Bout 11"), feederSlot(19, "Winner Bout 19")),
-    bout(weightClass, 23, "Consolation R2", "losers", feederSlot(12, "Loser Bout 12"), feederSlot(18, "Winner Bout 18")),
-    bout(weightClass, 24, "Consolation R3", "losers", feederSlot(20, "Winner Bout 20"), feederSlot(21, "Winner Bout 21")),
-    bout(weightClass, 25, "Consolation R3", "losers", feederSlot(22, "Winner Bout 22"), feederSlot(23, "Winner Bout 23")),
+    bout(weightClass, 23, "Consolation R2", "losers", feederSlot(10, "Loser Bout 10"), feederSlot(18, "Winner Bout 18")),
+    bout(weightClass, 24, "Consolation R3", "losers", feederSlot(20, "Winner Bout 20"), feederSlot(23, "Winner Bout 23")),
+    bout(weightClass, 25, "Consolation R3", "losers", feederSlot(22, "Winner Bout 22"), feederSlot(21, "Winner Bout 21")),
     bout(weightClass, 26, "Consolation semifinals", "losers", feederSlot(14, "Loser Bout 14"), feederSlot(24, "Winner Bout 24")),
     bout(weightClass, 27, "Consolation semifinals", "losers", feederSlot(25, "Winner Bout 25"), feederSlot(13, "Loser Bout 13")),
     bout(weightClass, 28, "3rd place", "placement", feederSlot(26, "Winner Bout 26"), feederSlot(27, "Winner Bout 27")),
