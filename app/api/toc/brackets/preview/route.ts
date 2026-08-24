@@ -91,10 +91,12 @@ export async function POST(request: Request) {
     // somebody seeding 133 watches the wrong format take shape — and anyone who stops at eight
     // keeps a complete-looking bracket that is not the one that will be wrestled.
     const announced = weight.athletes.length
-    const fieldTier: 8 | 10 | 12 | undefined =
-      announced <= 8 ? undefined : announced <= 10 ? 10 : 12
-
-    const draw = buildEightManDeDraw(weightClass, participants, new Date().toISOString(), fieldTier)
+    const draw = buildEightManDeDraw(
+      weightClass,
+      participants,
+      new Date().toISOString(),
+      announced > 8 ? announced : undefined,
+    )
 
     // Laid out here, not in the app: the same layout engine the desktop bracket uses, so the
     // two draw the same shape rather than two implementations drifting apart. The app renders

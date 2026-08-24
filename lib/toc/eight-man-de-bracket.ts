@@ -170,7 +170,12 @@ export function buildEightManDeDraw(
   weightClass: number,
   seededParticipants: TocBracketParticipant[],
   lockedAt: string,
-  requestedFieldSize?: 8 | 10 | 12,
+  /**
+   * How many wrestlers the weight actually holds, when that is known and larger than the number
+   * seeded so far. Not restricted to the admin's 8/10/12 preview tiers: a real field can be nine,
+   * and rounding nine up to ten invents a tenth wrestler who shows as TBD in the bracket.
+   */
+  requestedFieldSize?: number,
 ): TocBracketDraw {
   const publishError = validatePartialBracketPublish(seededParticipants)
   if (publishError) throw new Error(publishError)
