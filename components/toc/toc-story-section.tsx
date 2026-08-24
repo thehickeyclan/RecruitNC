@@ -10,7 +10,8 @@ export function TocStorySection() {
         <div className="space-y-4 text-[#0B1D3A]/90 text-base sm:text-lg leading-relaxed">
           <p>
             North Carolina has always debated it. The Tournament of Champions settles it — eight hand-picked wrestlers
-            per weight, NCAA collegiate classes plus 117 lbs, no soft draws and no coasting through byes.
+            per weight, up to twelve where the state is deep enough to earn it. NCAA collegiate classes plus 117 lbs.
+            Every wrestler in the bracket was invited. Nobody is filling a slot.
           </p>
           <p>
             Other tournaments are something you compete in.{" "}
