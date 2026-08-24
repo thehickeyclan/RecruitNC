@@ -68,3 +68,36 @@ describe("TOC bracket simulation", () => {
     expect(simulationBoutParticipants(draw, picks, 20)).toEqual(["x8"])
   })
 })
+
+describe("nine-man field", () => {
+  const nine = Array.from({ length: 9 }, (_, index) => ({
+    athleteId: `seed-${index + 1}`,
+    invitationId: `seed-inv-${index + 1}`,
+    seed: index + 1,
+    name: `Seed ${index + 1}`,
+    school: "Test HS",
+    photoUrl: null,
+    graduationYear: 2027,
+  }))
+  const draw = buildEightManDeDraw(133, nine, new Date().toISOString(), 9)
+
+  it("does not walk the top seed into the final on their own", () => {
+    // Their quarterfinal opponent is the pigtail winner, undecided until someone picks it. One
+    // wrestler resolving is not a bye — it is a wrestler waiting for an opponent.
+    expect(simulationBoutParticipants(draw, {}, 15)).toEqual([])
+    expect(simulationBoutParticipants(draw, {}, 13)).toEqual([])
+  })
+
+  it("still advances a genuine bye", () => {
+    // Bout 1 is seed 1 against an empty sixteenth slot: that one really is a walkover.
+    expect(simulationBoutParticipants(draw, {}, 1)).toEqual(["seed-1"])
+  })
+
+  it("brings the top seed forward only once the pigtail is decided", () => {
+    const quarter = simulationBoutParticipants(draw, { 2: "seed-8" }, 9)
+    expect(quarter).toContain("seed-1")
+    expect(quarter).toContain("seed-8")
+    // And still no further: the quarterfinal has not been wrestled.
+    expect(simulationBoutParticipants(draw, { 2: "seed-8" }, 13)).toEqual([])
+  })
+})

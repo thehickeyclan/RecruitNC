@@ -20,9 +20,25 @@ function resolveSlotAthleteId(
   const source = draw.bouts.find((bout) => bout.boutNumber === slot.boutNumber)
   if (!source || resolving.has(source.boutNumber)) return null
 
-  const sourceAthletes = simulationBoutParticipants(draw, picks, source.boutNumber, new Set(resolving).add(source.boutNumber))
+  const nested = new Set(resolving).add(source.boutNumber)
+  const topId = resolveSlotAthleteId(draw, picks, source.top, nested)
+  const bottomId = resolveSlotAthleteId(draw, picks, source.bottom, nested)
+  const sourceAthletes = [topId, bottomId].filter((id): id is string => Boolean(id))
   const winner = picks[source.boutNumber]
+
+  /**
+   * One wrestler present is a bye only when the other side is structurally empty. A feeder that
+   * has not been decided yet means nobody has advanced — they are waiting on a result.
+   *
+   * Treating the two the same walked the top seed to the final untouched at a nine-man weight:
+   * their quarterfinal opponent is the pigtail winner, undecided until someone picks it, so one
+   * wrestler resolved at every round and each read as a walkover.
+   */
   if (sourceAthletes.length === 1) {
+    const missingSideIsEmpty =
+      (topId == null && source.top.kind === "empty") ||
+      (bottomId == null && source.bottom.kind === "empty")
+    if (!missingSideIsEmpty) return null
     return /^loser\b/i.test(slot.label) ? null : sourceAthletes[0]
   }
   if (!winner || !sourceAthletes.includes(winner)) return null
