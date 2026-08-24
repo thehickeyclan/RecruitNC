@@ -35,6 +35,72 @@ function isByeSlot(slot: TocBracketSlot): boolean {
   return slot.kind === "empty" && /\bbye\b/i.test(slot.label)
 }
 
+/**
+ * Work out which bouts are actually wrestled once byes are taken out, and who ends up in them.
+ *
+ * A nine-wrestler weight runs on a sixteen-slot draw, so most of it is walkovers — and they
+ * cascade. Bout 17 pairs the losers of two byes, so nobody is in it; bout 22 then pairs a real
+ * quarterfinal loser against the winner of bout 17, so it is a walkover too. Drawn literally,
+ * the consolation bracket is a wall of "Loser Bout 5" against nobody.
+ *
+ * Each bout resolves to one of three things: a match (two people will be there), a pass-through
+ * (one person, who advances without wrestling), or nothing at all. Only matches are drawn, and
+ * feeders pointing at anything else are replaced by whoever actually arrives.
+ *
+ * Bouts only ever feed forward from lower numbers, so the recursion terminates.
+ */
+type BoutOutcome =
+  | { kind: "match" }
+  | { kind: "pass"; slot: TocBracketSlot }
+  | { kind: "none" }
+
+function collapseWalkovers(bouts: TocBracketBout[]) {
+  const byNumber = new Map(bouts.map((b) => [b.boutNumber, b]))
+  const outcomes = new Map<number, BoutOutcome>()
+
+  function resolve(slot: TocBracketSlot): TocBracketSlot | null {
+    if (isByeSlot(slot)) return null
+    if (slot.kind !== "feeder") return slot
+
+    const outcome = outcomeOf(slot.boutNumber)
+    if (outcome.kind === "match") return slot // real bout ahead — keep "Winner Bout 7"
+    if (outcome.kind === "none") return null
+    // A walkover has a winner but no loser: nobody was beaten.
+    return /^winner/i.test(slot.label) ? outcome.slot : null
+  }
+
+  function outcomeOf(boutNumber: number): BoutOutcome {
+    const cached = outcomes.get(boutNumber)
+    if (cached) return cached
+
+    const bout = byNumber.get(boutNumber)
+    if (!bout) return { kind: "none" }
+
+    // Marked before recursing so a malformed draw cannot loop forever.
+    outcomes.set(boutNumber, { kind: "none" })
+    const top = resolve(bout.top)
+    const bottom = resolve(bout.bottom)
+
+    const outcome: BoutOutcome =
+      top && bottom ? { kind: "match" } : top || bottom ? { kind: "pass", slot: (top ?? bottom)! } : { kind: "none" }
+    outcomes.set(boutNumber, outcome)
+    return outcome
+  }
+
+  for (const bout of bouts) outcomeOf(bout.boutNumber)
+
+  return {
+    isWrestled: (boutNumber: number) => outcomeOf(boutNumber).kind === "match",
+    /** The bout with byes taken out, ready to draw. */
+    resolved: (bout: TocBracketBout): TocBracketBout => ({
+      ...bout,
+      top: resolve(bout.top) ?? bout.top,
+      bottom: resolve(bout.bottom) ?? bout.bottom,
+    }),
+    anyCollapsed: bouts.some((b) => outcomeOf(b.boutNumber).kind !== "match"),
+  }
+}
+
 function boutToMatch(
   bout: TocBracketBout,
   roundIndex: number,
@@ -59,47 +125,28 @@ export function tocDrawToWinnersBracketTree(draw: TocBracketDraw): BracketTreeDi
   const labels = size === 16
     ? ["Round of 16", "Quarterfinals", "Winners semifinals", "Championship"]
     : ["Round 1", "Winners semifinals", "Championship"]
-  // Collapse the walkovers. A nine-wrestler weight runs on a sixteen-slot draw, which means
-  // seven of the eight opening bouts are one wrestler against nobody — drawn in full, they bury
-  // the single match that is actually wrestled. Each bye bout is removed and the wrestler it
-  // would have advanced is placed straight into the next round.
+  const walkovers = collapseWalkovers(draw.bouts)
   const firstRound = labels[0]
-  const advancingFromBye = new Map<number, TocBracketSlot>()
-  for (const bout of draw.bouts) {
-    if (bout.roundLabel !== firstRound) continue
-    const topIsBye = isByeSlot(bout.top)
-    const bottomIsBye = isByeSlot(bout.bottom)
-    // Only a genuine walkover: two real wrestlers is a match, two byes is nobody.
-    if (topIsBye === bottomIsBye) continue
-    advancingFromBye.set(bout.boutNumber, topIsBye ? bout.bottom : bout.top)
-  }
-
-  const throughByes = (slot: TocBracketSlot): TocBracketSlot =>
-    slot.kind === "feeder" && advancingFromBye.has(slot.boutNumber)
-      ? advancingFromBye.get(slot.boutNumber)!
-      : slot
-
-  // "Round of 16" is the wrong name for a round of one. What is left of it is the preliminary.
-  const collapsed = advancingFromBye.size > 0
 
   const rounds = labels.map((label, roundIndex) =>
     draw.bouts
       .filter((bout) => bout.roundLabel === label)
-      .filter((bout) => !advancingFromBye.has(bout.boutNumber))
+      .filter((bout) => walkovers.isWrestled(bout.boutNumber))
       .sort((a, b) => a.boutNumber - b.boutNumber)
-      .map((bout, matchIndex) =>
-        boutToMatch(
+      .map((bout, matchIndex) => {
+        const resolved = walkovers.resolved(bout)
+        return boutToMatch(
           {
-            ...bout,
-            roundLabel: collapsed && label === firstRound ? "Preliminary" : bout.roundLabel,
-            top: throughByes(bout.top),
-            bottom: throughByes(bout.bottom),
+            ...resolved,
+            // "Round of 16" is the wrong name for a round of one.
+            roundLabel:
+              walkovers.anyCollapsed && label === firstRound ? "Preliminary" : resolved.roundLabel,
           },
           roundIndex,
           matchIndex,
           participantById,
-        ),
-      ),
+        )
+      }),
   )
 
   return {
@@ -131,18 +178,29 @@ export function tocDrawToConsolationBracketTree(draw: TocBracketDraw): BracketTr
     ? ["Consolation R1", "Consolation R2", "Consolation R3", "Consolation semifinals"]
     : ["Consolation R1", "Consolation semifinals"]
   const thirdPlace = draw.bouts.find((b) => b.side === "placement" && b.roundLabel === "3rd place")
+  // Same collapse as the winners side, and it matters more here: a bye has no loser, so a
+  // nine-man consolation bracket is mostly bouts between two people who do not exist.
+  const walkovers = collapseWalkovers(draw.bouts)
+
   const consolationRounds = labels.map((label, roundIndex) =>
     draw.bouts
       .filter((bout) => bout.side === "losers" && bout.roundLabel === label)
+      .filter((bout) => walkovers.isWrestled(bout.boutNumber))
       .sort((a, b) => a.boutNumber - b.boutNumber)
-      .map((bout, matchIndex) => boutToMatch(bout, roundIndex, matchIndex, participantById)),
+      .map((bout, matchIndex) =>
+        boutToMatch(walkovers.resolved(bout), roundIndex, matchIndex, participantById),
+      ),
   )
 
-  if (consolationRounds[0]?.length === 0) return null
+  // A full field has consolation from round one; a collapsed one may start later. Only bail when
+  // there is no consolation anywhere.
+  if (consolationRounds.every((round) => round.length === 0)) return null
 
   const rounds = [
     ...consolationRounds,
-    thirdPlace ? [boutToMatch(thirdPlace, labels.length, 0, participantById)] : [],
+    thirdPlace && walkovers.isWrestled(thirdPlace.boutNumber)
+      ? [boutToMatch(walkovers.resolved(thirdPlace), labels.length, 0, participantById)]
+      : [],
   ].filter((r) => r.length > 0)
 
   return {

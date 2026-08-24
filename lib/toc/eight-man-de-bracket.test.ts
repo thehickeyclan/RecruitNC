@@ -111,7 +111,9 @@ describe("eight-man DE bracket", () => {
     // Everyone who had a bye is placed straight into the quarterfinal rather than shown as the
     // winner of a bout that never happened.
     expect(winners.rounds[1]?.[0]?.top).toMatchObject({ seed: 1 })
-    expect(tocDrawToConsolationBracketTree(draw)?.rounds.map((round) => round.length)).toEqual([4, 4, 2, 2, 1])
+    // Consolation round one disappears entirely at twelve: all four of its bouts pair the loser
+    // of a bye against somebody, and a bye has no loser. Those wrestlers meet in round two.
+    expect(tocDrawToConsolationBracketTree(draw)?.rounds.map((round) => round.length)).toEqual([4, 2, 2, 1])
   })
 
   it("crosses 16-slot consolation feeders without creating immediate rematches", () => {
