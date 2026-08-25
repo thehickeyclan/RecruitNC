@@ -20,6 +20,7 @@ import { UnitedAscent20260725Content } from "../content/united-ascent-2026-07-25
 import { UnitedAscent20260801Content } from "../content/united-ascent-2026-08-01"
 import { UnitedAscent20260808Content } from "../content/united-ascent-2026-08-08"
 import { UnitedAscent20260816Content } from "../content/united-ascent-2026-08-16"
+import { UnitedAscent20260824Content } from "../content/united-ascent-2026-08-24"
 import { TournamentOfChampionsAnnouncedContent } from "../content/tournament-of-champions-announced"
 import { TheWeightOfTheScaleContent } from "../content/the-weight-of-the-scale"
 import { CadenPerryWarriorScholarshipAnnouncedContent } from "../content/caden-perry-warrior-scholarship-announced"
@@ -78,6 +79,7 @@ import {
 } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
+  "united-ascent-2026-08-24": () => <UnitedAscent20260824Content />,
   "united-ascent-2026-08-16": () => <UnitedAscent20260816Content />,
   "nc-united-2024-southeast-open": () => <NcUnited2024SoutheastOpenContent />,
   "nc-united-2024-patriot-open": () => <NcUnited2024PatriotOpenContent />,

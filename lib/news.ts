@@ -100,6 +100,29 @@ export function newsShareUsesHeroCropOnly(
  */
 const ALL_NEWS: NewsItem[] = [
   {
+    id: "united-ascent-2026-08-24",
+    slug: "united-ascent-2026-08-24",
+    title: "United Ascent: TOC Field Reveals, Tickets on Sale & 44 College Coaches",
+    subtitle: "Vol. 1, No. 6 of North Carolina wrestling news.",
+    summary:
+      "The first Tournament of Champions fields are revealed, public ticket sales are announced, 44 college coaches register, Blue raises the competitive standard and four wrestlers commit.",
+    href: "/news/united-ascent-2026-08-24",
+    date: "2026-08-24",
+    image: "/images/united-ascent/2026-08-24-wide.png",
+    homeImage: "/images/united-ascent/2026-08-24-wide.png",
+    imagePosition: "center",
+    imageFit: "contain",
+    imageBannerBgClass: "bg-[#e8ddc8]",
+    newsListBanner: true,
+    category: "UNITED ASCENT",
+    categoryBadgeClass: "bg-[#1a1a1a]",
+    readTime: "8 min read",
+    author: "United Ascent Staff",
+    shareHeroCropOnly: true,
+    shareStoryImage: "/images/united-ascent/2026-08-24-wide.png",
+    isAnnouncement: true,
+  },
+  {
     id: "united-ascent-2026-08-16",
     slug: "united-ascent-2026-08-16",
     title: "United Ascent: Athlete Reveals Begin, TOC Partners Grow & Caleb Smith Gives Back",
