@@ -447,7 +447,7 @@ export function TournamentResultsDisplay({
       <CardHeader className={cn(PROFILE_SECTION_HEADER, "from-[#13294B] to-[#1e3a5f]")}>
         <CardTitle className={cn(PROFILE_SECTION_TITLE, "flex items-center gap-2")}>
           <Trophy className="h-5 w-5 text-[#D3B574]" />
-          NCHSAA / States
+          State Championships
         </CardTitle>
         <p className={cn("text-xs mt-1", isDark ? "text-white/50" : "text-gray-500")}>
           North Carolina high school state tournament results
@@ -476,7 +476,7 @@ export function TournamentResultsDisplay({
           <CardHeader className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] py-4">
             <CardTitle className="text-white flex items-center gap-2 text-lg">
               <Trophy className="h-5 w-5 text-[#D3B574]" />
-              NCHSAA / States
+              State Championships
             </CardTitle>
           </CardHeader>
           <CardContent className={contentClass}>{nchsaaTable}</CardContent>
