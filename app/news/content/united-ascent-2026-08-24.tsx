@@ -2,10 +2,10 @@ import Image from "next/image"
 import Link from "next/link"
 import { UnitedAscentSubscribeCta } from "@/components/news/united-ascent-subscribe-cta"
 
-function StoryImage({ src, alt, caption }: { src: string; alt: string; caption?: string }) {
+function StoryImage({ src, alt, caption, aspect = "video" }: { src: string; alt: string; caption?: string; aspect?: "video" | "blue" | "college" | "field" | "logo" | "portrait" | "scholarship" | "ticket" }) {
   return (
-    <figure className="not-prose my-7 overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
-      <div className="relative aspect-[16/9] w-full">
+    <figure className={`not-prose my-7 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 ${aspect === "portrait" ? "mx-auto max-w-sm" : aspect === "scholarship" ? "mx-auto max-w-xl" : ""}`}>
+      <div className={`relative w-full ${aspect === "ticket" ? "aspect-[579/181]" : aspect === "blue" ? "aspect-[461/310]" : aspect === "college" ? "aspect-[311/131]" : aspect === "field" ? "aspect-[659/442]" : aspect === "logo" ? "aspect-[617/324]" : aspect === "portrait" ? "aspect-[169/254]" : aspect === "scholarship" ? "aspect-[547/590]" : "aspect-[16/9]"}`}>
         <Image src={src} alt={alt} fill className="object-cover" sizes="(max-width: 896px) 100vw, 800px" />
       </div>
       {caption ? <figcaption className="bg-white px-4 py-3 text-sm text-slate-600">{caption}</figcaption> : null}
@@ -43,7 +43,12 @@ export function UnitedAscent20260824Content() {
         <h3>133 pounds</h3>
         <p>Mac Johnson, Ayden Sumners, Holt Quincy, Aidan Szewczyk, Stephen Cross, Abdul-Jamil Zaggout, Cooper Mathon, Ashton Tennessee and Caleb Edwards.</p>
         <p>The NC Mat will continue revealing the field weight by weight as we build toward September 18–19.</p>
-        <StoryImage src="/images/toc/finals-announcements.png" alt="The NC Mat and Tournament of Champions athlete announcements" caption="The first three Tournament of Champions weights include 13 state champions, 23 state placers and two All-Americans." />
+        <StoryImage
+          src="/images/united-ascent/2026-08-24-field-announcement.png"
+          alt="The NC Mat Tournament of Champions field announcements for 117, 125 and 133 pounds"
+          caption="The first three Tournament of Champions weights include 13 state champions, 23 state placers and two All-Americans."
+          aspect="field"
+        />
         <p><Link href="/tournament-of-champions#field">Explore the Tournament of Champions field</Link></p>
       </section>
 
@@ -59,7 +64,12 @@ export function UnitedAscent20260824Content() {
         <p>
           <strong>September 18–19 · Hope Community Church · Apex, North Carolina</strong>
         </p>
-        <StoryImage src="/images/toc/finals-single-mat.png" alt="Tournament of Champions single-mat championship stage" caption="Public tickets go on sale Friday, August 28 at 9:00 AM Eastern. Seating is limited." />
+        <StoryImage
+          src="/images/united-ascent/2026-08-24-tickets-gofan.png"
+          alt="GoFan listing for the 2026 NC United Tournament of Champions"
+          caption="Public tickets go on sale Friday, August 28 at 9:00 AM Eastern. Seating is limited."
+          aspect="ticket"
+        />
         <p><Link href="/tournament-of-champions#families">View ticket and spectator information</Link></p>
       </section>
 
@@ -72,7 +82,12 @@ export function UnitedAscent20260824Content() {
         <p>
           That growing presence creates an opportunity for North Carolina wrestlers to compete in a high-level environment while connecting with college programs and coaches from across the region.
         </p>
-        <StoryImage src="/images/toc/tournament-of-champions-venue-arena.png" alt="Tournament of Champions competition venue in Apex" caption="Twenty-two college programs and 44 coaches are now registered for the Tournament of Champions." />
+        <StoryImage
+          src="/images/united-ascent/2026-08-24-college-programs.png"
+          alt="Tournament of Champions graphic announcing 22 college wrestling programs"
+          caption="Twenty-two college programs and 44 coaches are now registered for the Tournament of Champions."
+          aspect="college"
+        />
         <p><Link href="/tournament-of-champions#college-coaches">See the college programs attending</Link></p>
       </section>
 
@@ -85,7 +100,12 @@ export function UnitedAscent20260824Content() {
         <p>
           Quality rounds, different styles and strong partners give wrestlers an opportunity to test themselves outside their regular rooms. <strong>There will be no regular NC United Sunday practice this weekend.</strong>
         </p>
-        <StoryImage src="/images/events/weekend-wars-super32-prep.png" alt="Weekend Wars and Super 32 preparation at Darkhorse Wrestling" caption="Weekend Wars · August 29–30 · Darkhorse Wrestling · Charlotte, North Carolina." />
+        <StoryImage
+          src="/images/united-ascent/2026-08-24-darkhorse-wrestling.png"
+          alt="Darkhorse Wrestling"
+          caption="Weekend Wars · August 29–30 · Darkhorse Wrestling · Charlotte, North Carolina."
+          aspect="logo"
+        />
         <p><Link href="/weekend-wars">View Weekend Wars details</Link></p>
       </section>
 
@@ -102,7 +122,12 @@ export function UnitedAscent20260824Content() {
           Blue will be held twice each month, concentrating strong partners into fewer, higher-level sessions while continuing to create opportunities inside the UNC and NC State wrestling programs.
         </p>
         <p><strong>More sparring. More live wrestling. Better partners. College rooms.</strong></p>
-        <StoryImage src="/images/news/legacy/nc-united-blue-breaking-barriers-2025/united-blue-champions.png" alt="NC United Blue wrestlers" caption="NC United Blue brings accomplished wrestlers together for high-level sparring, situational work and live competition." />
+        <StoryImage
+          src="/images/united-ascent/2026-08-24-nc-united-blue.png"
+          alt="North Carolina United Blue program"
+          caption="NC United Blue brings accomplished wrestlers together for high-level sparring, situational work and live competition."
+          aspect="blue"
+        />
         <p><Link href="/blue">Learn more about NC United Blue</Link> · <Link href="/calendar">View the training calendar</Link></p>
       </section>
 
@@ -132,7 +157,101 @@ export function UnitedAscent20260824Content() {
           Participating partners already include <strong>Adidas Wrestling, Cronin Customs, Funky Flickr Boyz, Wrestling Mindset, Triangle Wrestling Academy and The Wrestling Guild</strong>.
         </p>
         <p><strong>All free. All going back to the wrestling community.</strong></p>
-        <StoryImage src="/images/news/wrestling-guild-toc-premier-partner.png" alt="The Wrestling Guild and NC United Tournament of Champions partnership" caption="Tournament of Champions partners are putting their support directly back into the wrestling community." />
+        <div className="not-prose my-7">
+          <p className="mb-4 text-sm font-semibold uppercase tracking-widest text-slate-500">Supporting partners</p>
+          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+            <a
+              href="https://www.cronincustoms.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group overflow-hidden rounded-xl border border-slate-200 bg-black no-underline"
+              aria-label="Visit Cronin Customs"
+            >
+              <div className="relative aspect-square w-full p-5">
+                <Image
+                  src="/images/united-ascent/2026-08-24-partner-cronin-customs.png"
+                  alt="Cronin Customs"
+                  fill
+                  className="object-contain p-5 transition-transform group-hover:scale-105"
+                  sizes="(max-width: 640px) 100vw, 260px"
+                />
+              </div>
+              <p className="bg-white px-4 py-3 text-center font-semibold text-slate-900">Cronin Customs</p>
+            </a>
+            <a
+              href="https://funkyflickrboyzgear.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group overflow-hidden rounded-xl border border-slate-200 bg-black no-underline"
+              aria-label="Visit Funky Flickr Boyz"
+            >
+              <div className="relative aspect-square w-full">
+                <Image
+                  src="/images/united-ascent/2026-08-24-partner-funky-flickr-boyz.png"
+                  alt="Funky Flickr Boyz"
+                  fill
+                  className="object-contain p-5 transition-transform group-hover:scale-105"
+                  sizes="(max-width: 640px) 100vw, 260px"
+                />
+              </div>
+              <p className="bg-white px-4 py-3 text-center font-semibold text-slate-900">Funky Flickr Boyz</p>
+            </a>
+            <a
+              href="https://www.wrestlingmindset.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group overflow-hidden rounded-xl border border-slate-200 bg-black no-underline"
+              aria-label="Visit Wrestling Mindset"
+            >
+              <div className="relative aspect-square w-full">
+                <Image
+                  src="/images/united-ascent/2026-08-24-partner-wrestling-mindset.png"
+                  alt="Wrestling Mindset"
+                  fill
+                  className="object-contain p-5 transition-transform group-hover:scale-105"
+                  sizes="(max-width: 640px) 100vw, 260px"
+                />
+              </div>
+              <p className="bg-white px-4 py-3 text-center font-semibold text-slate-900">Wrestling Mindset</p>
+            </a>
+            <a
+              href="https://www.wrestlingguild.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group overflow-hidden rounded-xl border border-slate-200 bg-black no-underline"
+              aria-label="Visit The Wrestling Guild"
+            >
+              <div className="relative aspect-square w-full">
+                <Image
+                  src="/images/sponsors/the-guild-logo.jpg"
+                  alt="The Wrestling Guild"
+                  fill
+                  className="object-contain p-5 transition-transform group-hover:scale-105"
+                  sizes="(max-width: 640px) 100vw, 260px"
+                />
+              </div>
+              <p className="bg-white px-4 py-3 text-center font-semibold text-slate-900">The Wrestling Guild</p>
+            </a>
+            <a
+              href="https://trianglewrestlingacademy.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group overflow-hidden rounded-xl border border-slate-200 bg-black no-underline"
+              aria-label="Visit Triangle Wrestling Academy"
+            >
+              <div className="relative aspect-square w-full">
+                <Image
+                  src="/images/united-ascent/2026-08-24-partner-triangle-wrestling-academy.jpg"
+                  alt="Triangle Wrestling Academy"
+                  fill
+                  className="object-contain p-5 transition-transform group-hover:scale-105"
+                  sizes="(max-width: 640px) 100vw, 260px"
+                />
+              </div>
+              <p className="bg-white px-4 py-3 text-center font-semibold text-slate-900">Triangle Wrestling Academy</p>
+            </a>
+          </div>
+        </div>
         <p><Link href="/tournament-of-champions#sponsors">Meet the Tournament of Champions partners</Link></p>
       </section>
 
@@ -143,10 +262,18 @@ export function UnitedAscent20260824Content() {
           The Wrestling Guild is officially available on the Apple App Store. Wrestlers and families can find current and former NCAA athletes, view availability and book private, partner and small-group training directly from their phones.
         </p>
         <p><strong>Find a coach. Book a session. Get to work.</strong></p>
-        <figure className="not-prose my-7 overflow-hidden rounded-xl border border-slate-200 bg-[#07101f]">
-          <div className="relative aspect-[16/9] w-full"><Image src="/images/toc/sponsors/the-guild.png" alt="The Wrestling Guild" fill className="object-contain p-8" sizes="(max-width: 896px) 100vw, 800px" /></div>
-        </figure>
-        <p><a href="https://wrestlingguild.com">Explore The Wrestling Guild</a></p>
+        <a
+          href="https://apps.apple.com/us/app/the-wrestling-guild/id6792125037"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="not-prose my-7 block overflow-hidden rounded-xl border border-slate-200"
+          aria-label="Download The Wrestling Guild from the Apple App Store"
+        >
+          <div className="relative aspect-[15/2] w-full">
+            <Image src="/images/united-ascent/2026-08-24-wrestling-guild-app.png" alt="The Wrestling Guild app is here — Download now" fill className="object-cover" sizes="(max-width: 896px) 100vw, 800px" />
+          </div>
+        </a>
+        <p><a href="https://apps.apple.com/us/app/the-wrestling-guild/id6792125037" target="_blank" rel="noopener noreferrer">Download The Wrestling Guild on the App Store</a></p>
       </section>
 
       <section>
@@ -158,7 +285,12 @@ export function UnitedAscent20260824Content() {
         <p>
           The crew brings extensive NCAA Division I, major-conference and postseason experience, providing consistency and professionalism from the opening round through the championship Finals.
         </p>
-        <StoryImage src="/images/toc/jonathan-sutton.png" alt="Tournament of Champions Chief of Officials Jonathan Sutton" caption="Jonathan Sutton will lead the Tournament of Champions collegiate officiating crew." />
+        <StoryImage
+          src="/images/united-ascent/2026-08-24-officials-jonathan-sutton.png"
+          alt="Tournament of Champions Chief of Officials Jonathan Sutton"
+          caption="Jonathan Sutton will lead the Tournament of Champions collegiate officiating crew."
+          aspect="portrait"
+        />
         <p><Link href="/tournament-of-champions#officials">Meet the officiating crew</Link></p>
       </section>
 
@@ -171,7 +303,12 @@ export function UnitedAscent20260824Content() {
         <p>
           The scholarship is not based on wrestling accomplishments. It may support club dues, training, private lessons, camps, tournament fees, travel, lodging, shoes, gear and equipment. The inaugural recipient will be recognized at the 2026 Tournament of Champions.
         </p>
-        <StoryImage src="/scholarships/caden-perry/warrior-scholarship-share-card-wide.png" alt="Caden Perry Warrior Scholarship" caption="Know a wrestler whose story deserves to be heard? Nominations remain open." />
+        <StoryImage
+          src="/images/united-ascent/2026-08-24-caden-perry-scholarship.png"
+          alt="The Caden Perry Warrior Scholarship — $1,000 wrestling-support award"
+          caption="Know a wrestler whose story deserves to be heard? Nominations remain open."
+          aspect="scholarship"
+        />
         <p><Link href="/fundraising/scholarships/caden-perry/apply">Nominate a wrestler</Link></p>
       </section>
 
