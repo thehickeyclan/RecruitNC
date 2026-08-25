@@ -101,3 +101,27 @@ describe("nine-man field", () => {
     expect(simulationBoutParticipants(draw, { 2: "seed-8" }, 13)).toEqual([])
   })
 })
+
+describe("nine-man consolation", () => {
+  const nine = Array.from({ length: 9 }, (_, index) => ({
+    athleteId: `seed-${index + 1}`,
+    invitationId: `seed-inv-${index + 1}`,
+    seed: index + 1,
+    name: `Seed ${index + 1}`,
+    school: "Test HS",
+    photoUrl: null,
+    graduationYear: 2027,
+  }))
+  const draw = buildEightManDeDraw(133, nine, new Date().toISOString(), 9)
+
+  it("puts the pigtail loser into consolation as soon as the pigtail is picked", () => {
+    // The consolation bout reaches the pigtail through bout 16, which pairs "Loser Bout 1" —
+    // a walkover, so nobody — with "Loser Bout 2". One wrestler arrives, and he advances.
+    expect(simulationBoutParticipants(draw, {}, 2)).toEqual(["seed-9", "seed-8"])
+    expect(simulationBoutParticipants(draw, { 2: "seed-8" }, 21)).toContain("seed-9")
+  })
+
+  it("keeps the pigtail winner out of consolation", () => {
+    expect(simulationBoutParticipants(draw, { 2: "seed-8" }, 21)).not.toContain("seed-8")
+  })
+})
