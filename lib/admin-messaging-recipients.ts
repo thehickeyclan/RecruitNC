@@ -42,6 +42,9 @@ async function fetchAuthEmailsByUserId(admin: SupabaseClient, userIds: string[])
  * Audience for Mass Email — same logic as GET /api/admin/messaging/recipients.
  * Loads profile rows in batches (`.in()` with 700+ ids often returns nothing).
  */
+/** Addresses added to every TOC family send, so the owner can see what actually went out. */
+const TOC_FAMILY_SEND_WATCHERS = ["thehickeyclan@gmail.com", "lisa.hickey@yahoo.com"] as const
+
 export async function getAdminMessagingRecipients(
   admin: SupabaseClient,
   profileFilter: string | null,
@@ -65,6 +68,77 @@ export async function getAdminMessagingRecipients(
       display_name: row.coach_name ?? null,
       cell_phone: row.mobile_phone ?? null,
     }))
+  }
+
+  /**
+   * Competing athletes and the families who registered them.
+   *
+   * Built live from confirmed invitations, not a saved list — a wrestler confirmed tomorrow is in
+   * the audience without anyone remembering to add them. Emails come from the athlete record and
+   * any linked parent account, deduplicated, because two wrestlers in one family share a payer and
+   * should not receive the same message twice.
+   */
+  if (groupFilter === "toc-families") {
+    const { data: invitations } = await admin
+      .from("toc_invitations")
+      .select("athlete_id")
+      .eq("status", "confirmed")
+      .limit(limit)
+
+    const athleteIds = [...new Set((invitations ?? []).map((r) => (r as { athlete_id: string }).athlete_id).filter(Boolean))]
+    if (athleteIds.length === 0) return []
+
+    // Batched: `.in()` with several hundred ids has been known to come back empty here.
+    const athletes: { id: string; name: string | null; contactEmail: string | null }[] = []
+    for (let i = 0; i < athleteIds.length; i += 50) {
+      const { data } = await admin
+        .from("athletes")
+        .select("id, name, contactEmail")
+        .in("id", athleteIds.slice(i, i + 50))
+      athletes.push(...((data ?? []) as typeof athletes))
+    }
+
+    const links: { athlete_id: string; user_id: string }[] = []
+    for (let i = 0; i < athleteIds.length; i += 50) {
+      const { data } = await admin
+        .from("parent_athlete_links")
+        .select("athlete_id, user_id")
+        .in("athlete_id", athleteIds.slice(i, i + 50))
+      links.push(...((data ?? []) as typeof links))
+    }
+
+    const parentUserIds = [...new Set(links.map((l) => l.user_id).filter(Boolean))]
+    const parentEmailByUser = new Map<string, string>()
+    for (let i = 0; i < parentUserIds.length; i += 50) {
+      const { data } = await admin
+        .from("user_profiles")
+        .select("user_id, email")
+        .in("user_id", parentUserIds.slice(i, i + 50))
+      for (const p of (data ?? []) as { user_id: string; email: string | null }[]) {
+        if (p.email?.trim()) parentEmailByUser.set(p.user_id, p.email.trim().toLowerCase())
+      }
+    }
+
+    const rows: AdminMessagingRecipientRow[] = []
+    const seen = new Set<string>()
+    const add = (email: string | null | undefined, name: string | null, key: string) => {
+      const clean = email?.trim().toLowerCase()
+      if (!clean || seen.has(clean)) return
+      seen.add(clean)
+      rows.push({ user_id: `toc-family:${key}`, email: clean, display_name: name, cell_phone: null })
+    }
+
+    for (const athlete of athletes) {
+      add(athlete.contactEmail, athlete.name, athlete.id)
+      for (const link of links.filter((l) => l.athlete_id === athlete.id)) {
+        add(parentEmailByUser.get(link.user_id), athlete.name, `${athlete.id}:${link.user_id}`)
+      }
+    }
+
+    // Always included so a send can be confirmed from the inbox rather than assumed.
+    for (const watcher of TOC_FAMILY_SEND_WATCHERS) add(watcher, "NC United", `watcher:${watcher}`)
+
+    return rows
   }
 
   let userIds = new Set<string>()

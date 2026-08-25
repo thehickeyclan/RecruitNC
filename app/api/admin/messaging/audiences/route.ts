@@ -63,6 +63,11 @@ export async function GET() {
     name: "TOC · College Coaches",
   })
   groups.push({ id: "toc-college-coaches:NC-SC-TN-VA", type: "contacts", name: "TOC · College Coaches · NC/SC/TN/VA" })
+
+  // Competing athletes and the family who registered them. Built from confirmed invitations
+  // rather than a saved list, so a wrestler added tomorrow is included without anyone
+  // remembering to update anything.
+  groups.push({ id: "toc-families", type: "contacts", name: "TOC · Athletes & Families" })
   for (const state of ["NC", "SC", "TN", "VA"]) {
     groups.push({ id: `toc-college-coaches:${state}`, type: "contacts", name: `TOC · College Coaches · ${state}` })
   }
