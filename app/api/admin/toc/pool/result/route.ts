@@ -4,6 +4,7 @@ import { resolveRequestUserId } from "@/lib/request-user"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { getLockedDraw } from "@/lib/toc/bracket-service"
 import { simulationBoutParticipants } from "@/lib/toc/bracket-simulation"
+import { validateFinalPrediction, type FinalPrediction } from "@/lib/toc/final-prediction"
 
 /**
  * Record who won a bout. This is the endpoint the tournament runs on.
@@ -35,6 +36,9 @@ export async function POST(request: NextRequest) {
     boutNumber?: unknown
     winnerAthleteId?: unknown
     loserAthleteId?: unknown
+    method?: unknown
+    winnerScore?: unknown
+    loserScore?: unknown
   } | null
 
   const weightClass = Number(body?.weightClass)
@@ -63,6 +67,20 @@ export async function POST(request: NextRequest) {
 
   const loserAthleteId = typeof body?.loserAthleteId === "string" ? body.loserAthleteId.trim() || null : null
 
+  // How the bout ended. Only the championship carries the tiebreaker, so only there is it worth
+  // asking for at a mat — but the same validation applies wherever it is sent, so a stored method
+  // can never disagree with its own score.
+  let outcome: FinalPrediction | null = null
+  if (body?.method != null && String(body.method).trim() !== "") {
+    const parsed = validateFinalPrediction({
+      method: body.method,
+      winnerScore: body.winnerScore,
+      loserScore: body.loserScore,
+    })
+    if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 })
+    outcome = parsed.value
+  }
+
   const { error } = await admin.from("toc_bout_results").upsert(
     {
       weight_class: weightClass,
@@ -70,6 +88,9 @@ export async function POST(request: NextRequest) {
       winner_athlete_id: winnerAthleteId,
       loser_athlete_id: loserAthleteId,
       recorded_by: adminUserId,
+      method: outcome?.method ?? null,
+      winner_score: outcome?.winnerScore ?? null,
+      loser_score: outcome?.loserScore ?? null,
     },
     { onConflict: "weight_class,bout_number" },
   )
@@ -79,7 +100,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Could not save that result." }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true, weightClass, boutNumber, winnerAthleteId, roundLabel: bout.roundLabel })
+  return NextResponse.json({
+    ok: true,
+    weightClass,
+    boutNumber,
+    winnerAthleteId,
+    roundLabel: bout.roundLabel,
+    method: outcome?.method ?? null,
+  })
 }
 
 /**
@@ -105,11 +133,21 @@ export async function GET(request: NextRequest) {
 
   const { data: rows } = await admin
     .from("toc_bout_results")
-    .select("bout_number,winner_athlete_id")
+    .select("bout_number,winner_athlete_id,method,winner_score,loser_score")
     .eq("weight_class", weightClass)
 
   const winners: Record<number, string> = {}
-  for (const row of rows ?? []) winners[Number(row.bout_number)] = String(row.winner_athlete_id)
+  const outcomes: Record<number, { method: string | null; winnerScore: number | null; loserScore: number | null }> = {}
+  for (const row of rows ?? []) {
+    const n = Number(row.bout_number)
+    winners[n] = String(row.winner_athlete_id)
+    const r = row as { method?: unknown; winner_score?: unknown; loser_score?: unknown }
+    outcomes[n] = {
+      method: r.method == null ? null : String(r.method),
+      winnerScore: r.winner_score == null ? null : Number(r.winner_score),
+      loserScore: r.loser_score == null ? null : Number(r.loser_score),
+    }
+  }
 
   const nameById = new Map(draw.participants.map((p) => [p.athleteId, p.name]))
   const seedById = new Map(draw.participants.map((p) => [p.athleteId, p.seed]))
@@ -121,6 +159,9 @@ export async function GET(request: NextRequest) {
       roundLabel: bout.roundLabel,
       side: bout.side,
       winnerAthleteId: winners[bout.boutNumber] ?? null,
+      method: outcomes[bout.boutNumber]?.method ?? null,
+      winnerScore: outcomes[bout.boutNumber]?.winnerScore ?? null,
+      loserScore: outcomes[bout.boutNumber]?.loserScore ?? null,
       competitors: simulationBoutParticipants(draw, winners, bout.boutNumber).map((athleteId) => ({
         athleteId,
         name: nameById.get(athleteId) ?? "Unknown",

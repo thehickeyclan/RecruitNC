@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveRequestUserId } from "@/lib/request-user"
 import { TOC_POOL_DEADLINE, TOC_POOL_OPENS, TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { getLockedDraw } from "@/lib/toc/bracket-service"
+import { validateFinalPrediction, type FinalPrediction } from "@/lib/toc/final-prediction"
 
 /**
  * An entrant's picks for one weight class.
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
   const admin = createAdminClient()
   const { data, error } = await admin
     .from("toc_pool_entries")
-    .select("weight_class,picks,submitted,submitted_at,updated_at")
+    .select("weight_class,picks,submitted,submitted_at,updated_at,final_method,final_winner_score,final_loser_score")
     .eq("user_id", userId)
 
   if (error) {
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
     weightClass?: unknown
     picks?: unknown
     submitted?: unknown
+    finalPrediction?: { method?: unknown; winnerScore?: unknown; loserScore?: unknown }
   } | null
 
   const weightClass = Number(body?.weightClass)
@@ -84,12 +86,34 @@ export async function POST(request: NextRequest) {
 
   const submitted = body?.submitted === true
 
+  // The tiebreaker. Required to submit, because a submitted entry with no tiebreaker cannot be
+  // separated from a level one — and a rule discovered at the medal stand is no rule at all.
+  let finalPrediction: FinalPrediction | null = null
+  if (body?.finalPrediction) {
+    const parsed = validateFinalPrediction(body.finalPrediction)
+    if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 })
+    finalPrediction = parsed.value
+  }
+  if (submitted && !finalPrediction) {
+    return NextResponse.json(
+      { error: "Pick how the final ends — it is the tiebreaker." },
+      { status: 400 },
+    )
+  }
+
   const { error } = await admin.from("toc_pool_entries").upsert(
     {
       user_id: userId,
       weight_class: weightClass,
       picks,
       submitted,
+      ...(finalPrediction
+        ? {
+            final_method: finalPrediction.method,
+            final_winner_score: finalPrediction.winnerScore,
+            final_loser_score: finalPrediction.loserScore,
+          }
+        : {}),
       // First submit stamps the time; later edits before the deadline leave it alone.
       ...(submitted ? { submitted_at: now.toISOString() } : {}),
     },

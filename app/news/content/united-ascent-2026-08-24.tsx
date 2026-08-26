@@ -154,7 +154,7 @@ export function UnitedAscent20260824Content() {
           One hour before the Finals, every paid spectator will receive free raffle tickets at the door. Fans can place them into designated partner boxes for the items or experiences they most want to win. There is <strong>no additional purchase, auction or bidding</strong>.
         </p>
         <p>
-          Participating partners already include <strong>Adidas Wrestling, Cronin Customs, Funky Flickr Boyz, Wrestling Mindset, Triangle Wrestling Academy and The Wrestling Guild</strong>.
+          Participating partners already include <strong>Adidas Wrestling, Cronin Customs, Funky Flickr Boyz, Wrestling Mindset, Triangle Wrestling Academy, The Wrestling Guild and V1G1L Wrestling</strong>.
         </p>
         <p><strong>All free. All going back to the wrestling community.</strong></p>
         <div className="not-prose my-7">
@@ -250,6 +250,18 @@ export function UnitedAscent20260824Content() {
               </div>
               <p className="bg-white px-4 py-3 text-center font-semibold text-slate-900">Triangle Wrestling Academy</p>
             </a>
+            <div className="overflow-hidden rounded-xl border border-slate-200 bg-black">
+              <div className="relative aspect-square w-full">
+                <Image
+                  src="/images/united-ascent/2026-08-24-partner-v1g1l-wrestling.png"
+                  alt="V1G1L Wrestling"
+                  fill
+                  className="object-contain p-5"
+                  sizes="(max-width: 640px) 100vw, 260px"
+                />
+              </div>
+              <p className="bg-white px-4 py-3 text-center font-semibold text-slate-900">V1G1L Wrestling</p>
+            </div>
           </div>
         </div>
         <p><Link href="/tournament-of-champions#sponsors">Meet the Tournament of Champions partners</Link></p>

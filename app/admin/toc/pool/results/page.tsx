@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
+import { FinalOutcome } from "@/components/toc/final-outcome"
 
 /**
  * Recording bout winners during the tournament.
@@ -19,6 +20,9 @@ type Bout = {
   roundLabel: string
   side: string
   winnerAthleteId: string | null
+  method: string | null
+  winnerScore: number | null
+  loserScore: number | null
   competitors: Competitor[]
 }
 
@@ -58,11 +62,46 @@ export default function TocPoolResultsPage() {
       const res = await fetch("/api/admin/toc/pool/result", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ weightClass, boutNumber: bout.boutNumber, winnerAthleteId: athleteId }),
+        body: JSON.stringify({
+        weightClass,
+        boutNumber: bout.boutNumber,
+        winnerAthleteId: athleteId,
+        // Re-posting a bout overwrites it, so anything already recorded has to be sent again.
+        method: bout.method ?? undefined,
+        winnerScore: bout.winnerScore ?? undefined,
+        loserScore: bout.loserScore ?? undefined,
+      }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error ?? "Could not save.")
       // Reload rather than patch state: a result changes who appears in every later bout.
+      await load(weightClass)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save.")
+    } finally {
+      setSaving(null)
+    }
+  }
+
+  async function recordOutcome(bout: Bout, method: string, winnerScore?: number, loserScore?: number) {
+    if (!bout.winnerAthleteId) return
+    setSaving(bout.boutNumber)
+    setError(null)
+    try {
+      const res = await fetch("/api/admin/toc/pool/result", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          weightClass,
+          boutNumber: bout.boutNumber,
+          winnerAthleteId: bout.winnerAthleteId,
+          method,
+          winnerScore,
+          loserScore,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error ?? "Could not save.")
       await load(weightClass)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save.")
@@ -158,6 +197,17 @@ export default function TocPoolResultsPage() {
                       })}
                     </div>
                   )}
+                  {/* Only the championship carries the tiebreaker, so only the championship asks.
+                      Every other bout stays exactly one tap. */}
+                  {done && /championship/i.test(bout.roundLabel) ? (
+                    <FinalOutcome
+                      bout={bout}
+                      disabled={saving === bout.boutNumber}
+                      onRecord={(method, winnerScore, loserScore) =>
+                        void recordOutcome(bout, method, winnerScore, loserScore)
+                      }
+                    />
+                  ) : null}
                 </li>
               )
             })}

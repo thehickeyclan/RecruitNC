@@ -90,3 +90,35 @@ create trigger toc_pool_entries_touch before update on public.toc_pool_entries
 drop trigger if exists toc_bout_results_touch on public.toc_bout_results;
 create trigger toc_bout_results_touch before update on public.toc_bout_results
   for each row execute function public.toc_pool_touch_updated_at();
+
+-- ---------------------------------------------------------------------------
+-- Finals tiebreaker.
+--
+-- Total points tie constantly — early on, most entrants have the favourites and finish level.
+-- The tiebreaker asks how the championship match ends: the method, plus a score when the method
+-- has one worth guessing. A fall and a tech fall are their own answers.
+--
+-- Safe to re-run.
+-- ---------------------------------------------------------------------------
+
+alter table public.toc_pool_entries
+  add column if not exists final_method       text,
+  add column if not exists final_winner_score integer,
+  add column if not exists final_loser_score  integer;
+
+alter table public.toc_pool_entries
+  drop constraint if exists toc_pool_entries_final_method_check;
+alter table public.toc_pool_entries
+  add constraint toc_pool_entries_final_method_check
+  check (final_method is null or final_method in ('FALL','TF','MAJ','DEC'));
+
+alter table public.toc_bout_results
+  add column if not exists method       text,
+  add column if not exists winner_score integer,
+  add column if not exists loser_score  integer;
+
+alter table public.toc_bout_results
+  drop constraint if exists toc_bout_results_method_check;
+alter table public.toc_bout_results
+  add constraint toc_bout_results_method_check
+  check (method is null or method in ('FALL','TF','MAJ','DEC'));

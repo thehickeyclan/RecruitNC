@@ -7,6 +7,7 @@ import { TocWeighInCallout } from "@/components/toc/toc-weigh-in-callout"
 import { TocChampionJacketSection } from "@/components/toc/toc-champion-jacket-section"
 import { TocCadenPerryScholarshipSection } from "@/components/toc/toc-caden-perry-scholarship-section"
 import { TocSupportDonationsSection } from "@/components/toc/toc-support-donations-section"
+import { TocGivingHourSection } from "@/components/toc/toc-giving-hour-section"
 import { TocCompetitionMatsSection } from "@/components/toc/toc-competition-mats-section"
 import { TocStorySection } from "@/components/toc/toc-story-section"
 import { TocAthleteQuotesSection } from "@/components/toc/toc-athlete-quotes-section"
@@ -64,6 +65,7 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
       <TocChampionJacketSection />
       <TocCadenPerryScholarshipSection />
       <TocSupportDonationsSection />
+      <TocGivingHourSection />
 
       {/* Plan your weekend */}
       <TocScheduleTable />

@@ -3,6 +3,14 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { getLockedDraw } from "@/lib/toc/bracket-service"
 import { scoreEntry, type PoolBout, type PoolResults } from "@/lib/toc/pool-scoring"
+import {
+  compareTiebreak,
+  gradeFinalPrediction,
+  parseFinalMethod,
+  sumTiebreak,
+  type FinalPrediction,
+  type FinalPredictionAccuracy,
+} from "@/lib/toc/final-prediction"
 
 /**
  * Standings.
@@ -27,8 +35,13 @@ export async function GET() {
   const admin = createAdminClient()
 
   const [{ data: entries, error: entriesError }, { data: results, error: resultsError }] = await Promise.all([
-    admin.from("toc_pool_entries").select("user_id,weight_class,picks").eq("submitted", true),
-    admin.from("toc_bout_results").select("weight_class,bout_number,winner_athlete_id"),
+    admin
+      .from("toc_pool_entries")
+      .select("user_id,weight_class,picks,final_method,final_winner_score,final_loser_score")
+      .eq("submitted", true),
+    admin
+      .from("toc_bout_results")
+      .select("weight_class,bout_number,winner_athlete_id,method,winner_score,loser_score"),
   ])
 
   if (entriesError || resultsError) {
@@ -49,6 +62,25 @@ export async function GET() {
     }
   }
 
+  // How each weight's championship actually ended, for the tiebreaker.
+  const finalsByWeight = new Map<number, FinalPrediction>()
+  for (const row of results ?? []) {
+    const method = parseFinalMethod((row as { method?: unknown }).method)
+    if (!method) continue
+    const weight = Number(row.weight_class)
+    const bouts = boutsByWeight.get(weight)
+    const isChampionship = bouts?.some(
+      (b) => b.boutNumber === Number(row.bout_number) && /championship/i.test(b.roundLabel ?? ""),
+    )
+    if (!isChampionship) continue
+    const r = row as { winner_score?: unknown; loser_score?: unknown }
+    finalsByWeight.set(weight, {
+      method,
+      winnerScore: r.winner_score == null ? null : Number(r.winner_score),
+      loserScore: r.loser_score == null ? null : Number(r.loser_score),
+    })
+  }
+
   const resultsByWeight = new Map<number, PoolResults>()
   for (const row of results ?? []) {
     const weight = Number(row.weight_class)
@@ -57,7 +89,7 @@ export async function GET() {
     resultsByWeight.set(weight, existing)
   }
 
-  const totals = new Map<string, { points: number; correct: number; weights: number }>()
+  const totals = new Map<string, { points: number; correct: number; weights: number; finals: FinalPredictionAccuracy[] }>()
   for (const entry of entries ?? []) {
     const weight = Number(entry.weight_class)
     const bouts = boutsByWeight.get(weight)
@@ -68,10 +100,25 @@ export async function GET() {
     )
     const score = scoreEntry(bouts, picks, resultsByWeight.get(weight) ?? {})
 
-    const current = totals.get(entry.user_id) ?? { points: 0, correct: 0, weights: 0 }
+    const current = totals.get(entry.user_id) ?? { points: 0, correct: 0, weights: 0, finals: [] }
     current.points += score.points
     current.correct += score.correct
     current.weights += 1
+
+    const e = entry as { final_method?: unknown; final_winner_score?: unknown; final_loser_score?: unknown }
+    const predictedMethod = parseFinalMethod(e.final_method)
+    current.finals.push(
+      gradeFinalPrediction(
+        predictedMethod
+          ? {
+              method: predictedMethod,
+              winnerScore: e.final_winner_score == null ? null : Number(e.final_winner_score),
+              loserScore: e.final_loser_score == null ? null : Number(e.final_loser_score),
+            }
+          : null,
+        finalsByWeight.get(weight) ?? null,
+      ),
+    )
     totals.set(entry.user_id, current)
   }
 
@@ -88,14 +135,26 @@ export async function GET() {
   const standings = userIds
     .map((userId) => {
       const t = totals.get(userId)!
+      const tiebreak = sumTiebreak(t.finals)
       return {
         name: displayName(namesById.get(userId) ?? null, "Entrant"),
         points: t.points,
         correct: t.correct,
         weightsEntered: t.weights,
+        finalsCalled: tiebreak.methodsCorrect,
+        tiebreak,
       }
     })
-    .sort((a, b) => b.points - a.points || b.correct - a.correct || a.name.localeCompare(b.name))
+    // Points, then correct picks, then the finals tiebreaker: who called how the title matches
+    // ended, and whose scores were closest. Name last, so the order is at least stable.
+    .sort(
+      (a, b) =>
+        b.points - a.points ||
+        b.correct - a.correct ||
+        compareTiebreak(a.tiebreak, b.tiebreak) ||
+        a.name.localeCompare(b.name),
+    )
+    .map(({ tiebreak: _tiebreak, ...row }) => row)
     .map((row, i) => ({ rank: i + 1, ...row }))
 
   const decided = [...resultsByWeight.values()].reduce((n, r) => n + Object.keys(r).length, 0)
