@@ -12,8 +12,7 @@ export const TOC_EVENT_DATE = new Date("2026-09-18T16:00:00-04:00")
  * they can be compared neither to each other nor to what happens. Entries stay editable until the
  * deadline, which sits before Friday's first round.
  */
-// TEMPORARY — rehearsal only, reverted immediately after. Real date: 2026-09-11T12:00:00-04:00
-export const TOC_POOL_OPENS = new Date("2026-08-01T12:00:00-04:00")
+export const TOC_POOL_OPENS = new Date("2026-09-11T12:00:00-04:00")
 export const TOC_POOL_DEADLINE = new Date("2026-09-15T23:59:59-04:00")
 export const TOC_POOL_DEADLINE_DISPLAY = "Monday, September 15, 2026" as const
 
