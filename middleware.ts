@@ -19,6 +19,16 @@ function isFundraisingHubPublicPath(p: string): boolean {
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
+  // The printed QR code. Redirecting here rather than in the page gives an iPhone a real 307
+  // before anything renders — the page-level redirect streamed the fallback first, so a scan
+  // flashed "the app is on iPhone first" on its way to the App Store.
+  if (pathname === "/download" || pathname === "/download/") {
+    const ua = request.headers.get("user-agent") ?? ""
+    if (/iPhone|iPad|iPod/i.test(ua)) {
+      return NextResponse.redirect("https://apps.apple.com/app/id6803202791", 307)
+    }
+  }
+
   // Individual-athlete giving is retired. Keep all public giving organizational
   // or within a separately governed scholarship fund.
   if (

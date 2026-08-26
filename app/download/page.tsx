@@ -1,6 +1,5 @@
 import type { Metadata } from "next"
 import { headers } from "next/headers"
-import { redirect } from "next/navigation"
 import Link from "next/link"
 
 /**
@@ -10,6 +9,10 @@ import Link from "next/link"
  * than at a store listing: this page can change where it sends people without anything being
  * reprinted. iPhones go straight to the App Store; everyone else gets told the truth rather than
  * a dead end, because the app is iOS-only for now.
+ *
+ * The iPhone redirect itself lives in middleware, so it lands as a real 307 before anything
+ * renders. Doing it here streamed the fallback page first and a scan flashed the wrong message
+ * on its way to the App Store.
  */
 
 export const dynamic = "force-dynamic"
@@ -24,11 +27,6 @@ export const metadata: Metadata = {
 
 export default async function DownloadPage() {
   const userAgent = (await headers()).get("user-agent") ?? ""
-  const isApple = /iPhone|iPad|iPod/i.test(userAgent)
-
-  // Sent on rather than shown a page: someone scanning a lanyard at a tournament wants the app,
-  // not an explanation of how to get it.
-  if (isApple) redirect(APP_STORE_URL)
 
   const isAndroid = /Android/i.test(userAgent)
 
