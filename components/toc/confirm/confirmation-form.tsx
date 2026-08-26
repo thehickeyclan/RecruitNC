@@ -189,11 +189,16 @@ export function ConfirmationForm({
           onCheckedChange={setWeightAck}
           label="I understand this is a single Friday weigh-in at college weights, and the listed tournament weight is flat with no allowance."
         />
+        {/* The Tournament of Champions is not a USA Wrestling sanctioned event, so a current
+            card confers nothing here — asking about it implied a cover that does not exist. What
+            families do need to know is how the event's own policy works: participant medical is
+            excess of $25,000, which pays after their own health insurance rather than before it.
+            Still stored in `usaw_acknowledgment`; the column predates the change. */}
         <AckCheckbox
-          id="toc-usaw"
+          id="toc-insurance"
           checked={usaw}
           onCheckedChange={setUsaw}
-          label="My USA Wrestling membership is current for 2026."
+          label="I understand the event's participant medical coverage is excess — our own health insurance is primary."
         />
         <AckCheckbox
           id="toc-photo"
