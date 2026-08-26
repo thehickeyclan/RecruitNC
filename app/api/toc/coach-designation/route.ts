@@ -2,7 +2,6 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { getPublicAnnouncedWeight } from "@/lib/toc/public-announced-field"
-import { verifyAthleteToken } from "@/lib/toc/coach-link"
 import {
   dedupeIncoming,
   fitsWithinCap,
@@ -13,8 +12,13 @@ import {
 /**
  * A family naming their wrestler's corner coaches.
  *
- * Reached only with the signed link we email to that family. The signature is checked here as
- * well as on the page, because a page gate stops nobody from posting straight to this route.
+ * The wrestler is chosen from the whole RecruitNC directory rather than the TOC field: a search
+ * limited to invited athletes would answer "is this wrestler going to TOC?" for anyone who typed
+ * a name, so it searches everybody and reveals nothing about the field.
+ *
+ * Club and date of birth, where a family supplies them, are held on the designation for review
+ * rather than written to the athlete record. This form is public, and a public form that can
+ * overwrite a child's details is not one worth having.
  *
  * It writes with the service role because the table is closed to anonymous reads — a list of
  * every coach and the wrestlers they corner is not something to leave readable.
@@ -22,37 +26,37 @@ import {
 
 export const dynamic = "force-dynamic"
 
-/** Announced athletes only. An unannounced weight is not a roster anyone outside should be probing. */
-async function findAnnouncedAthlete(
-  athleteId: string,
-): Promise<{ name: string; weightClass: number } | null> {
+/**
+ * The athlete, from the whole directory rather than the TOC field.
+ *
+ * Their weight class is filled in when they happen to be in an announced weight, so the check-in
+ * list can group by it — but a designation for somebody not in the field is accepted and simply
+ * reviewed. Refusing those would turn this form into a way to ask "is my kid in the TOC yet?".
+ */
+async function findAthlete(athleteId: string): Promise<{ name: string; weightClass: number | null } | null> {
+  const admin = createAdminClient()
+  const { data } = await admin.from("athletes").select("id, name").eq("id", athleteId).maybeSingle()
+  if (!data) return null
+
   for (const weightClass of TOC_WEIGHT_CLASSES) {
     const weight = await getPublicAnnouncedWeight(weightClass)
-    const hit = weight?.athletes.find((a) => a.athleteId === athleteId)
-    if (hit) return { name: hit.name, weightClass }
+    if (weight?.athletes.some((a) => a.athleteId === athleteId)) {
+      return { name: data.name ?? "", weightClass }
+    }
   }
-  return null
+  return { name: data.name ?? "", weightClass: null }
 }
 
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as {
     athleteId?: unknown
-    token?: unknown
     coaches?: unknown
+    submittedClub?: unknown
+    submittedDob?: unknown
   } | null
 
   const athleteId = typeof body?.athleteId === "string" ? body.athleteId.trim() : ""
-  const token = typeof body?.token === "string" ? body.token.trim() : ""
   if (!athleteId) return NextResponse.json({ error: "Choose a wrestler." }, { status: 400 })
-
-  // The page gate would be decoration on its own: anyone can post to this route directly. The
-  // signature is what ties a submission to the family we sent the link to.
-  if (!verifyAthleteToken(athleteId, token)) {
-    return NextResponse.json(
-      { error: "This link is not valid. Use the personal link from your email." },
-      { status: 403 },
-    )
-  }
 
   const rawCoaches = Array.isArray(body?.coaches) ? body.coaches : []
   if (rawCoaches.length === 0) {
@@ -67,10 +71,8 @@ export async function POST(request: NextRequest) {
   }
   const incoming = dedupeIncoming(coaches)
 
-  const athlete = await findAnnouncedAthlete(athleteId)
-  if (!athlete) {
-    return NextResponse.json({ error: "That wrestler is not in an announced weight class." }, { status: 404 })
-  }
+  const athlete = await findAthlete(athleteId)
+  if (!athlete) return NextResponse.json({ error: "We could not find that wrestler." }, { status: 404 })
 
   const admin = createAdminClient()
   const { data: existing, error: readError } = await admin
@@ -99,6 +101,13 @@ export async function POST(request: NextRequest) {
       coach_phone: coach.coachPhone,
       relationship: coach.relationship,
       coach_key: coach.coachKey,
+      coach_phone_key: coach.phoneKey,
+      submitted_club: typeof body?.submittedClub === "string" && body.submittedClub.trim()
+        ? body.submittedClub.trim()
+        : null,
+      submitted_dob: typeof body?.submittedDob === "string" && body.submittedDob.trim()
+        ? body.submittedDob.trim()
+        : null,
       updated_at: now,
     })),
     { onConflict: "athlete_id,coach_key" },

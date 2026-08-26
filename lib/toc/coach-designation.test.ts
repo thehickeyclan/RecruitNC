@@ -12,7 +12,8 @@ const coach = (email: string, name = "Coach Smith") => ({
   coachEmail: email,
   coachPhone: null,
   relationship: null,
-  coachKey: coachKeyFor(email),
+  coachKey: coachKeyFor(email, null)!,
+  phoneKey: null,
 })
 
 describe("validateCoachDesignation", () => {
@@ -32,6 +33,36 @@ describe("validateCoachDesignation", () => {
 
   it("refuses an address that is not one", () => {
     expect(validateCoachDesignation({ coachName: "John Smith", coachEmail: "john at club" }).ok).toBe(false)
+  })
+
+  it("accepts a coach given only by phone", () => {
+    // A parent may have their coach's number and not their email; refusing that loses a coach.
+    const r = validateCoachDesignation({ coachName: "John Smith", coachPhone: "(919) 555-0100" })
+    expect(r.ok).toBe(true)
+    if (r.ok) expect(r.value.coachKey).toBe("tel:9195550100")
+  })
+
+  it("treats the same number written differently as one coach", () => {
+    const a = validateCoachDesignation({ coachName: "John Smith", coachPhone: "919-555-0100" })
+    const b = validateCoachDesignation({ coachName: "John Smith", coachPhone: "+1 (919) 555 0100" })
+    expect(a.ok && b.ok && a.value.coachKey === b.value.coachKey).toBe(true)
+  })
+
+  it("prefers the email when both are given, so it stays the key", () => {
+    const r = validateCoachDesignation({
+      coachName: "John Smith",
+      coachEmail: "john@club.com",
+      coachPhone: "919-555-0100",
+    })
+    expect(r.ok && r.value.coachKey).toBe("john@club.com")
+  })
+
+  it("refuses a coach with no way to reach them", () => {
+    expect(validateCoachDesignation({ coachName: "John Smith" }).ok).toBe(false)
+  })
+
+  it("refuses a phone number that is not one", () => {
+    expect(validateCoachDesignation({ coachName: "John Smith", coachPhone: "12345" }).ok).toBe(false)
   })
 })
 

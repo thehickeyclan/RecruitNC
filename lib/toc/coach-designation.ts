@@ -18,15 +18,36 @@ export type CoachDesignationInput = {
 
 export type CoachDesignation = {
   coachName: string
-  coachEmail: string
+  coachEmail: string | null
   coachPhone: string | null
   relationship: string | null
+  /** Email where we have one, otherwise the digits of the phone. See {@link coachKeyFor}. */
   coachKey: string
+  phoneKey: string | null
 }
 
-/** The dedupe key. Lower-cased and trimmed, so "Coach@Club.com " and "coach@club.com" are one. */
-export function coachKeyFor(email: string): string {
-  return email.trim().toLowerCase()
+/** Digits only, so "(919) 555-0100" and "919-555-0100" are one number. */
+export function phoneKeyFor(phone: string): string | null {
+  const digits = phone.replace(/\D/g, "")
+  // Ten digits, or eleven starting with a US country code.
+  if (digits.length === 10) return digits
+  if (digits.length === 11 && digits.startsWith("1")) return digits.slice(1)
+  return null
+}
+
+/**
+ * The dedupe key: what collapses one coach named by twelve families into one lanyard.
+ *
+ * Email when we have it, the phone otherwise. Families may give either, which means a coach given
+ * by email on one form and by phone on another arrives as two people — the admin review flags
+ * same-name coaches so that can be merged by hand. Better than refusing a designation from a
+ * parent who only has their coach's number.
+ */
+export function coachKeyFor(email: string | null, phone: string | null): string | null {
+  const cleanEmail = (email ?? "").trim().toLowerCase()
+  if (cleanEmail) return cleanEmail
+  const digits = phoneKeyFor(phone ?? "")
+  return digits ? `tel:${digits}` : null
 }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
@@ -35,24 +56,32 @@ export function validateCoachDesignation(
   input: CoachDesignationInput,
 ): { ok: true; value: CoachDesignation } | { ok: false; error: string } {
   const coachName = String(input.coachName ?? "").trim()
-  const coachEmail = String(input.coachEmail ?? "").trim()
+  const rawEmail = String(input.coachEmail ?? "").trim()
+  const rawPhone = String(input.coachPhone ?? "").trim()
 
   if (coachName.length < 2) return { ok: false, error: "Enter the coach's full name." }
-  if (!EMAIL.test(coachEmail)) return { ok: false, error: "Enter a valid email for the coach." }
+  if (rawEmail && !EMAIL.test(rawEmail)) return { ok: false, error: "That coach email does not look right." }
+  if (rawPhone && !phoneKeyFor(rawPhone)) return { ok: false, error: "That coach phone number does not look right." }
 
-  // The email is how the coach is told they are credentialed, and how duplicates collapse. A
-  // typo here quietly creates a second coach who never hears from anyone.
-  const phone = String(input.coachPhone ?? "").trim()
+  // One way to reach them is the minimum: without it they cannot be told they are credentialed,
+  // and there is nothing to dedupe them by.
+  if (!rawEmail && !rawPhone) {
+    return { ok: false, error: "Give the coach's email or mobile number so we can reach them." }
+  }
+
+  const coachKey = coachKeyFor(rawEmail || null, rawPhone || null)
+  if (!coachKey) return { ok: false, error: "Give the coach's email or mobile number so we can reach them." }
+
   const relationship = String(input.relationship ?? "").trim()
-
   return {
     ok: true,
     value: {
       coachName,
-      coachEmail,
-      coachPhone: phone || null,
+      coachEmail: rawEmail || null,
+      coachPhone: rawPhone || null,
       relationship: relationship || null,
-      coachKey: coachKeyFor(coachEmail),
+      coachKey,
+      phoneKey: phoneKeyFor(rawPhone),
     },
   }
 }
