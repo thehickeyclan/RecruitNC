@@ -14,9 +14,9 @@ export function TocStorySection() {
             filling a slot.
           </p>
           <p>
-            Other tournaments are something you compete in.{" "}
-            <strong>This is something you come to watch.</strong> College coaches in the building, top-three placement,
-            and a championship jacket that only goes to the bracket winner.
+            <strong>Other tournaments you enter. This one you&apos;re invited to.</strong> College coaches in the
+            building, true double-elimination with top-three placement, and a championship jacket reserved for each
+            bracket winner.
           </p>
         </div>
       </div>

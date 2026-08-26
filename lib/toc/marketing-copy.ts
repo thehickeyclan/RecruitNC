@@ -7,7 +7,7 @@ export const TOC_HERO = {
   /** Locked hero stack — tagline = stakes + single-mat finals; buckleUp = emotional punch; lead = format detail. */
   tagline: "The Best in the State. One Mat. One Question.",
   buckleUp: "North Carolina, buckle up. The brackets are stacked.",
-  lead: `Eleven weight classes. Eight wrestlers each. The best North Carolina has — and nobody else. College weights. Stacked brackets. ${TOC_MATS_LINE} This isn't another bracket to grind through.`,
+  lead: `Eleven weight classes. Hand-picked fields. The best North Carolina has — and nobody else. College weights. Stacked brackets. ${TOC_MATS_LINE} This isn't another bracket to grind through.`,
   showLine: "One mat. Eleven champions.",
 } as const
 
@@ -30,7 +30,7 @@ export const TOC_ATHLETE_INVITE = {
     "North Carolina's best. You're one of them.",
   ],
   bodyIntro: (firstName: string, weightClass: number | string) =>
-    `${firstName} —\n\nYou've been invited to the NC United Tournament of Champions — an invite-only event with elite fields built by hand. Most weights feature eight wrestlers; select deep weights may expand to 10 or 12. Your name is on the field at ${weightClass} lbs.`,
+    `${firstName} —\n\nYou've been invited to the NC United Tournament of Champions — an invite-only event with elite fields built by hand. Every wrestler in your bracket was invited — nobody is filling a slot. Your name is on the field at ${weightClass} lbs.`,
   bodyDetails:
     "Here's what you're walking into: college weights, stacked brackets, no easy draws. True double-elimination with top-three placement — two mats until the titles. And if you make the finals, you wrestle on one mat for a championship jacket and a title that only means something because of who you had to beat to get it.",
   bodyClose: "We think you belong here. Confirm your spot below.",
@@ -40,9 +40,9 @@ export const TOC_SOCIAL_POSTS = {
   tease:
     "Something's coming for North Carolina wrestling.\nInvitation only. The best at every weight. One mat. One champion.\n09.18.26. Buckle up.",
   reveal:
-    `Introducing the NC United Tournament of Champions.\n11 weight classes, 8 elite wrestlers each · College weights · Invitation only · Two mats until finals\nThe best in the state, in one building. ${TOC_EVENT_DATES_DISPLAY}.`,
+    `Introducing the NC United Tournament of Champions.\nEleven weight classes, hand-picked fields · College weights · Invitation only · Two mats until finals\nThe best in the state, in one building. ${TOC_EVENT_DATES_DISPLAY}.`,
   showAngle:
-    "Other tournaments are something you compete in.\nThis is something you come to watch.\nGreat wrestling. Great entertainment. One mat when it matters.",
+    "Other tournaments you enter.\nThis one you're invited to.\nGreat wrestling. One mat when it matters.",
   stakes:
     "When the brackets drop, you'll understand.\nNo easy roads. No soft draws. Every weight, stacked top to bottom.\nIf you're in this field, you earned it.",
 } as const

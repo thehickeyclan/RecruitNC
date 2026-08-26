@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Tournament of Champions | NC United",
     description:
-      "Eleven weights. Eight wrestlers each. College weights. Single-mat championship finals. North Carolina, buckle up.",
+      "Eleven weights. Hand-picked fields. College weights. Single-mat championship finals. North Carolina, buckle up.",
     type: "website",
     url: "/tournament-of-champions",
     images: [
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Tournament of Champions | NC United",
     description:
-      "Eleven weights. Eight wrestlers each. College weights. Single-mat championship finals. North Carolina, buckle up.",
+      "Eleven weights. Hand-picked fields. College weights. Single-mat championship finals. North Carolina, buckle up.",
     images: [TOC_EVENT_LOGO.src],
   },
 }

@@ -34,7 +34,7 @@ export function buildTocAthleteInviteMessage(payload: {
   const emailBody = [
     `${firstName} —`,
     "",
-    `You've been invited to the NC United Tournament of Champions — an invite-only event with elite fields built by hand. Most weights feature eight wrestlers; select deep weights may expand to 10 or 12. Your name is on the field at ${payload.weightClass} lbs.`,
+    `You've been invited to the NC United Tournament of Champions — an invite-only event with elite fields built by hand. Every wrestler in your bracket was invited — nobody is filling a slot. Your name is on the field at ${payload.weightClass} lbs.`,
     "",
     `${TOC_EVENT_DATES_DISPLAY} · Hope Community Church, Apex · Weigh-in Friday, brackets finish ${TOC_SATURDAY_COMPETITION_DATE}.`,
     "",
