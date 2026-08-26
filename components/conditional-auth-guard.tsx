@@ -31,6 +31,9 @@ export function ConditionalAuthGuard({
 
   const isHomepage = path === "/"
   const publicRoutePrefixes = [
+    // The printed QR code on lanyards and signage points here. A login wall would make every
+    // one of them useless, and they cannot be reprinted.
+    "/download",
     "/athletes",
     "/athletes-public",
     "/view-profile",
