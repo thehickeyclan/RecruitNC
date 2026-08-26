@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { buildEightManDeDraw } from "@/lib/toc/eight-man-de-bracket"
 import { getPublicAnnouncedWeight } from "@/lib/toc/public-announced-field"
 import { tocBracketsPublicEnabled } from "@/lib/toc/bracket-public-access"
+import { getLockedDraw } from "@/lib/toc/bracket-service"
+import { createAdminClient } from "@/lib/supabase/admin"
 import type { TocBracketParticipant } from "@/lib/toc/bracket-types"
 import { layoutBracketTree } from "@/lib/bracket/single-elim-layout"
 import {
@@ -25,8 +27,10 @@ export const dynamic = "force-dynamic"
  *    `getPublicAnnouncedWeight`, which returns null unless `announced_at` is set, so a bracket
  *    cannot be built for a weight whose field is still private.
  *
- * The result is a projection, not a draw. `official` says so, and stays false until TOC
- * publishes real brackets.
+ * Until TOC publishes real brackets the result is a projection, not a draw, and `official` says
+ * so. Once they are published this serves the locked draw instead and ignores the caller's
+ * ordering entirely — everyone has to be looking at the same bracket, or a pool entry means a
+ * different pairing for every entrant who submits one.
  */
 
 const MAX_PARTICIPANTS = 16
@@ -54,6 +58,26 @@ export async function POST(request: Request) {
     const weight = await getPublicAnnouncedWeight(weightClass)
     if (!weight) {
       return NextResponse.json({ error: "That weight has not been announced yet." }, { status: 404 })
+    }
+
+    // Once brackets are public, the locked draw is the bracket — the caller's ordering is
+    // ignored rather than dressed up as official. A weight with no locked draw yet keeps
+    // projecting, so weights can be released one at a time.
+    if (tocBracketsPublicEnabled()) {
+      const locked = await getLockedDraw(createAdminClient(), weightClass)
+      if (locked) {
+        const lockedConsolation = tocDrawToConsolationBracketTree(locked)
+        return NextResponse.json({
+          draw: locked,
+          layout: {
+            championship: layoutBracketTree(tocDrawToWinnersBracketTree(locked)),
+            consolation: lockedConsolation ? layoutBracketTree(lockedConsolation) : null,
+          },
+          official: true,
+          weightClass,
+          fieldSize: locked.participants.length,
+        })
+      }
     }
 
     const byId = new Map(weight.athletes.map((a) => [a.athleteId, a]))
@@ -113,8 +137,8 @@ export async function POST(request: Request) {
         championship: layoutBracketTree(tocDrawToWinnersBracketTree(draw)),
         consolation: consolationTree ? layoutBracketTree(consolationTree) : null,
       },
-      // Flips to true when TOC publishes real brackets and this starts serving them instead.
-      official: tocBracketsPublicEnabled(),
+      // A projection: either brackets are still private, or this weight has no locked draw yet.
+      official: false,
       weightClass,
       fieldSize: weight.athletes.length,
     })
