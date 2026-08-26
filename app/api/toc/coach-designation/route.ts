@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { getPublicAnnouncedWeight } from "@/lib/toc/public-announced-field"
+import { verifyAthleteToken } from "@/lib/toc/coach-link"
 import {
   dedupeIncoming,
   fitsWithinCap,
@@ -12,9 +13,8 @@ import {
 /**
  * A family naming their wrestler's corner coaches.
  *
- * Public, and deliberately asks for nothing about the athlete beyond which one they are: the
- * roster it validates against is the announced field, which is already public, so the form
- * exposes nothing that the weight-class release did not.
+ * Reached only with the signed link we email to that family. The signature is checked here as
+ * well as on the page, because a page gate stops nobody from posting straight to this route.
  *
  * It writes with the service role because the table is closed to anonymous reads — a list of
  * every coach and the wrestlers they corner is not something to leave readable.
@@ -37,11 +37,22 @@ async function findAnnouncedAthlete(
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as {
     athleteId?: unknown
+    token?: unknown
     coaches?: unknown
   } | null
 
   const athleteId = typeof body?.athleteId === "string" ? body.athleteId.trim() : ""
+  const token = typeof body?.token === "string" ? body.token.trim() : ""
   if (!athleteId) return NextResponse.json({ error: "Choose a wrestler." }, { status: 400 })
+
+  // The page gate would be decoration on its own: anyone can post to this route directly. The
+  // signature is what ties a submission to the family we sent the link to.
+  if (!verifyAthleteToken(athleteId, token)) {
+    return NextResponse.json(
+      { error: "This link is not valid. Use the personal link from your email." },
+      { status: 403 },
+    )
+  }
 
   const rawCoaches = Array.isArray(body?.coaches) ? body.coaches : []
   if (rawCoaches.length === 0) {

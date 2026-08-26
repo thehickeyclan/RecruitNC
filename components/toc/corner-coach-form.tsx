@@ -1,11 +1,17 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useState } from "react"
 
 type Athlete = { athleteId: string; name: string; weightClass: number; club: string | null }
 type CoachFields = { coachName: string; coachEmail: string; coachPhone: string; relationship: string }
 
 const EMPTY: CoachFields = { coachName: "", coachEmail: "", coachPhone: "", relationship: "" }
+
+/** The signature the page was opened with — the API verifies it again before writing. */
+function tokenFromUrl(): string {
+  if (typeof window === "undefined") return ""
+  return new URLSearchParams(window.location.search).get("t") ?? ""
+}
 
 /**
  * The family's side of coach credentialing.
@@ -14,26 +20,17 @@ const EMPTY: CoachFields = { coachName: "", coachEmail: "", coachPhone: "", rela
  * from a list of ninety. Nothing is asked about the athlete: the roster is already public, and a
  * form that interrogates a family before it will accept help is a form they abandon.
  */
-export function CornerCoachForm({ athletes }: { athletes: Athlete[] }) {
-  const [query, setQuery] = useState("")
-  const [athlete, setAthlete] = useState<Athlete | null>(null)
+export function CornerCoachForm({ athlete }: { athlete: Athlete }) {
   const [coaches, setCoaches] = useState<CoachFields[]>([{ ...EMPTY }])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<{ athlete: string; saved: number } | null>(null)
-
-  const matches = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (q.length < 2 || athlete) return []
-    return athletes.filter((a) => a.name.toLowerCase().includes(q)).slice(0, 8)
-  }, [query, athlete, athletes])
 
   function update(index: number, field: keyof CoachFields, value: string) {
     setCoaches((prev) => prev.map((c, i) => (i === index ? { ...c, [field]: value } : c)))
   }
 
   async function submit() {
-    if (!athlete) return setError("Choose your wrestler.")
     const filled = coaches.filter((c) => c.coachName.trim() || c.coachEmail.trim())
     if (filled.length === 0) return setError("Add at least one coach.")
 
@@ -43,7 +40,7 @@ export function CornerCoachForm({ athletes }: { athletes: Athlete[] }) {
       const response = await fetch("/api/toc/coach-designation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ athleteId: athlete.athleteId, coaches: filled }),
+        body: JSON.stringify({ athleteId: athlete.athleteId, token: tokenFromUrl(), coaches: filled }),
       })
       const data = await response.json()
       if (!response.ok) throw new Error(data?.error ?? "Could not save that.")
@@ -65,10 +62,10 @@ export function CornerCoachForm({ athletes }: { athletes: Athlete[] }) {
         </p>
         <button
           type="button"
-          onClick={() => { setDone(null); setAthlete(null); setQuery(""); setCoaches([{ ...EMPTY }]) }}
+          onClick={() => { setDone(null); setCoaches([{ ...EMPTY }]) }}
           className="mt-5 rounded-lg border border-[#1a3a5f] px-5 py-3 text-sm font-semibold"
         >
-          Add another wrestler
+          Change these coaches
         </button>
       </div>
     )
@@ -80,51 +77,6 @@ export function CornerCoachForm({ athletes }: { athletes: Athlete[] }) {
 
   return (
     <div className="mt-8 flex flex-col gap-6">
-      <div>
-        <label className={label} htmlFor="wrestler">Your wrestler</label>
-        {athlete ? (
-          <div className="flex items-center justify-between rounded-lg border border-[#D3B574] bg-[#13294B] px-4 py-3">
-            <span className="font-semibold">
-              {athlete.name} <span className="text-[#A8BBD1]">· {athlete.weightClass} lbs</span>
-            </span>
-            <button
-              type="button"
-              onClick={() => { setAthlete(null); setQuery("") }}
-              className="text-sm text-[#D3B574] underline"
-            >
-              Change
-            </button>
-          </div>
-        ) : (
-          <>
-            <input
-              id="wrestler"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Start typing their name"
-              className={input}
-              autoComplete="off"
-            />
-            {matches.length > 0 ? (
-              <ul className="mt-2 overflow-hidden rounded-lg border border-[#1a3a5f]">
-                {matches.map((a) => (
-                  <li key={a.athleteId}>
-                    <button
-                      type="button"
-                      onClick={() => setAthlete(a)}
-                      className="flex w-full items-center justify-between bg-[#0f1c2e] px-4 py-3 text-left hover:bg-[#13294B]"
-                    >
-                      <span className="font-semibold">{a.name}</span>
-                      <span className="text-sm text-[#6B829D]">{a.weightClass} lbs</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </>
-        )}
-      </div>
-
       {coaches.map((coach, index) => (
         <fieldset key={index} className="rounded-xl border border-[#1a3a5f] bg-[#0f1c2e] p-5">
           <legend className="px-2 text-sm font-bold text-[#D3B574]">
