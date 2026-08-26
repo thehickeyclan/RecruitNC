@@ -4,13 +4,13 @@ import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { getLockedDraw } from "@/lib/toc/bracket-service"
 import { scoreEntry, type PoolBout, type PoolResults } from "@/lib/toc/pool-scoring"
 import {
-  compareTiebreak,
   gradeFinalPrediction,
   parseFinalMethod,
   sumTiebreak,
   type FinalPrediction,
   type FinalPredictionAccuracy,
 } from "@/lib/toc/final-prediction"
+import { rankStandings } from "@/lib/toc/pool-ranking"
 
 /**
  * Standings.
@@ -132,30 +132,18 @@ export async function GET() {
     for (const p of profiles ?? []) namesById.set(p.user_id, p.full_name)
   }
 
-  const standings = userIds
-    .map((userId) => {
+  const standings = rankStandings(
+    userIds.map((userId) => {
       const t = totals.get(userId)!
-      const tiebreak = sumTiebreak(t.finals)
       return {
         name: displayName(namesById.get(userId) ?? null, "Entrant"),
         points: t.points,
         correct: t.correct,
         weightsEntered: t.weights,
-        finalsCalled: tiebreak.methodsCorrect,
-        tiebreak,
+        tiebreak: sumTiebreak(t.finals),
       }
-    })
-    // Points, then correct picks, then the finals tiebreaker: who called how the title matches
-    // ended, and whose scores were closest. Name last, so the order is at least stable.
-    .sort(
-      (a, b) =>
-        b.points - a.points ||
-        b.correct - a.correct ||
-        compareTiebreak(a.tiebreak, b.tiebreak) ||
-        a.name.localeCompare(b.name),
-    )
-    .map(({ tiebreak: _tiebreak, ...row }) => row)
-    .map((row, i) => ({ rank: i + 1, ...row }))
+    }),
+  )
 
   const decided = [...resultsByWeight.values()].reduce((n, r) => n + Object.keys(r).length, 0)
   return NextResponse.json({ standings, entrants: standings.length, boutsDecided: decided })
