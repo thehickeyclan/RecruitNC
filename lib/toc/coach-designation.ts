@@ -217,3 +217,23 @@ export function applyKnownIdentities<
     }
   })
 }
+
+/**
+ * What a public form may show about somebody we already hold.
+ *
+ * Enough for a parent to recognise their own coach, not enough for anyone else to harvest a
+ * contact. The form sends back the person's id, never these strings — the server looks up the
+ * real address and number itself.
+ */
+export function maskEmail(email: string | null): string | null {
+  const value = String(email ?? "").trim()
+  const at = value.indexOf("@")
+  if (at < 1) return null
+  return `${value[0]}${"•".repeat(Math.max(3, at - 1))}${value.slice(at)}`
+}
+
+export function maskPhone(phone: string | null): string | null {
+  const digits = String(phone ?? "").replace(/\D/g, "")
+  if (digits.length < 4) return null
+  return `••• ••• ${digits.slice(-4)}`
+}

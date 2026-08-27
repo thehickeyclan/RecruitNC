@@ -63,18 +63,51 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Add at least one coach." }, { status: 400 })
   }
 
+  const admin = createAdminClient()
+
+  // A coach the family picked from our own directory: we hold their details, so the form never
+  // sent them and never saw them. Resolve the id here instead.
+  const chosenIds = rawCoaches
+    .map((c) => (c && typeof (c as { knownUserId?: unknown }).knownUserId === "string"
+      ? String((c as { knownUserId: string }).knownUserId)
+      : null))
+    .filter(Boolean) as string[]
+
+  const knownById = new Map<string, { full_name: string | null; email: string | null; cell_phone: string | null }>()
+  if (chosenIds.length > 0) {
+    const { data: people } = await admin
+      .from("user_profiles")
+      .select("user_id, full_name, email, cell_phone")
+      .in("user_id", chosenIds)
+    for (const p of people ?? []) knownById.set(p.user_id, p)
+  }
+
   const coaches: CoachDesignation[] = []
   for (const raw of rawCoaches) {
-    const parsed = validateCoachDesignation(raw as Record<string, unknown>)
+    const entry = raw as Record<string, unknown>
+    const knownUserId = typeof entry.knownUserId === "string" ? entry.knownUserId : null
+    const known = knownUserId ? knownById.get(knownUserId) : null
+
+    const parsed = validateCoachDesignation(
+      known
+        ? {
+            coachName: entry.coachName || known.full_name,
+            coachEmail: known.email,
+            coachPhone: known.cell_phone,
+          }
+        : entry,
+    )
     if (!parsed.ok) return NextResponse.json({ error: parsed.error }, { status: 400 })
-    coaches.push(parsed.value)
+
+    // Keyed on the person, so the same coach picked by two families is one coach whichever
+    // detail each of them happened to know.
+    coaches.push(known && knownUserId ? { ...parsed.value, coachKey: `user:${knownUserId}` } : parsed.value)
   }
   const incoming = dedupeIncoming(coaches)
 
   const athlete = await findAthlete(athleteId)
   if (!athlete) return NextResponse.json({ error: "We could not find that wrestler." }, { status: 404 })
 
-  const admin = createAdminClient()
   const { data: existing, error: readError } = await admin
     .from("toc_coach_designations")
     .select("coach_key")

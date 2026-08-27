@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest"
 import {
   applyKnownIdentities,
   coachKeyFor,
+  maskEmail,
+  maskPhone,
   dedupeIncoming,
   fitsWithinCap,
   toCheckInList,
@@ -175,5 +177,22 @@ describe("applyKnownIdentities", () => {
   it("leaves a coach we do not know untouched", () => {
     const [merged] = applyKnownIdentities([row("stranger@example.com", "stranger@example.com", null, "A")], new Map())
     expect(merged.coach_key).toBe("stranger@example.com")
+  })
+})
+
+describe("masking", () => {
+  it("shows enough of an email to recognise, not enough to use", () => {
+    expect(maskEmail("justin.usmc@yahoo.com")).toBe("j••••••••••@yahoo.com")
+  })
+
+  it("shows the last four of a number only", () => {
+    expect(maskPhone("8566388831")).toBe("••• ••• 8831")
+    expect(maskPhone("+1 (856) 638-8831")).toBe("••• ••• 8831")
+  })
+
+  it("returns nothing rather than something misleading", () => {
+    expect(maskEmail("not-an-email")).toBeNull()
+    expect(maskEmail(null)).toBeNull()
+    expect(maskPhone("12")).toBeNull()
   })
 })

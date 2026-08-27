@@ -10,9 +10,17 @@ type Athlete = {
   needsClub: boolean
   needsDob: boolean
 }
-type CoachFields = { coachName: string; coachEmail: string; coachPhone: string }
+type CoachFields = {
+  coachName: string
+  coachEmail: string
+  coachPhone: string
+  /** Set when the family picked a coach we already hold; their details never reach the browser. */
+  knownUserId: string | null
+  knownHint: string | null
+}
+type KnownPerson = { id: string; name: string; emailHint: string | null; phoneHint: string | null }
 
-const EMPTY: CoachFields = { coachName: "", coachEmail: "", coachPhone: "" }
+const EMPTY: CoachFields = { coachName: "", coachEmail: "", coachPhone: "", knownUserId: null, knownHint: null }
 
 const LABEL = "mb-1 block text-xs font-bold uppercase tracking-wider text-[#6B829D]"
 const INPUT =
@@ -32,6 +40,7 @@ export function CornerCoachForm() {
   const [club, setClub] = useState("")
   const [dob, setDob] = useState("")
   const [coaches, setCoaches] = useState<CoachFields[]>([{ ...EMPTY }])
+  const [suggestions, setSuggestions] = useState<Record<number, KnownPerson[]>>({})
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState<{ athlete: string; saved: number } | null>(null)
@@ -55,6 +64,35 @@ export function CornerCoachForm() {
     setCoaches((prev) => prev.map((c, i) => (i === index ? { ...c, [field]: value } : c)))
   }
 
+  // Suggest coaches we already hold as the name is typed. Nothing but a masked hint comes back.
+  async function suggest(index: number, name: string) {
+    if (name.trim().length < 3) return setSuggestions((p) => ({ ...p, [index]: [] }))
+    try {
+      const res = await fetch(`/api/toc/coach-lookup?q=${encodeURIComponent(name.trim())}`)
+      const data = await res.json()
+      setSuggestions((p) => ({ ...p, [index]: data.people ?? [] }))
+    } catch {
+      setSuggestions((p) => ({ ...p, [index]: [] }))
+    }
+  }
+
+  function choose(index: number, person: KnownPerson) {
+    setCoaches((prev) =>
+      prev.map((c, i) =>
+        i === index
+          ? {
+              coachName: person.name,
+              coachEmail: "",
+              coachPhone: "",
+              knownUserId: person.id,
+              knownHint: [person.emailHint, person.phoneHint].filter(Boolean).join(" · ") || null,
+            }
+          : c,
+      ),
+    )
+    setSuggestions((p) => ({ ...p, [index]: [] }))
+  }
+
   async function submit() {
     if (!athlete) return setError("Choose your wrestler.")
     const filled = coaches.filter((c) => c.coachName.trim())
@@ -68,7 +106,11 @@ export function CornerCoachForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           athleteId: athlete.id,
-          coaches: filled,
+          coaches: filled.map((c) =>
+            c.knownUserId
+              ? { coachName: c.coachName, knownUserId: c.knownUserId }
+              : { coachName: c.coachName, coachEmail: c.coachEmail, coachPhone: c.coachPhone },
+          ),
           submittedClub: club.trim() || undefined,
           submittedDob: dob.trim() || undefined,
         }),
@@ -200,22 +242,58 @@ export function CornerCoachForm() {
           <div className="flex flex-col gap-4">
             <div>
               <label className={LABEL} htmlFor={`name-${index}`}>Full name</label>
-              <input id={`name-${index}`} value={coach.coachName} className={INPUT}
-                onChange={(e) => update(index, "coachName", e.target.value)} />
+              <input id={`name-${index}`} value={coach.coachName} className={INPUT} autoComplete="off"
+                onChange={(e) => { update(index, "coachName", e.target.value); void suggest(index, e.target.value) }} />
+              {(suggestions[index] ?? []).length > 0 && !coach.knownUserId ? (
+                <ul className="mt-2 overflow-hidden rounded-lg border border-[#1a3a5f]">
+                  {(suggestions[index] ?? []).map((person) => (
+                    <li key={person.id}>
+                      <button type="button" onClick={() => choose(index, person)}
+                        className="flex w-full items-center justify-between bg-[#0f1c2e] px-4 py-3 text-left hover:bg-[#13294B]">
+                        <span className="font-semibold">{person.name}</span>
+                        <span className="text-xs text-[#6B829D]">
+                          {[person.emailHint, person.phoneHint].filter(Boolean).join(" · ")}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label className={LABEL} htmlFor={`email-${index}`}>Email</label>
-                <input id={`email-${index}`} type="email" inputMode="email" value={coach.coachEmail}
-                  className={INPUT} onChange={(e) => update(index, "coachEmail", e.target.value)} />
+
+            {coach.knownUserId ? (
+              /* We hold this coach already, so there is nothing to ask for and nothing to mistype. */
+              <div className="flex items-center justify-between rounded-lg border border-[#D3B574] bg-[#13294B] px-4 py-3">
+                <span className="text-sm text-[#A8BBD1]">
+                  We have their contact details{coach.knownHint ? ` — ${coach.knownHint}` : ""}
+                </span>
+                <button type="button"
+                  onClick={() =>
+                    setCoaches((prev) =>
+                      prev.map((c, i) => (i === index ? { ...c, knownUserId: null, knownHint: null } : c)),
+                    )
+                  }
+                  className="text-sm text-[#D3B574] underline">
+                  Not them
+                </button>
               </div>
-              <div>
-                <label className={LABEL} htmlFor={`phone-${index}`}>Mobile</label>
-                <input id={`phone-${index}`} type="tel" inputMode="tel" value={coach.coachPhone}
-                  className={INPUT} onChange={(e) => update(index, "coachPhone", e.target.value)} />
-              </div>
-            </div>
-            <p className="text-xs text-[#6B829D]">Either one is enough — it is how we tell them they are credentialed.</p>
+            ) : (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <label className={LABEL} htmlFor={`email-${index}`}>Email</label>
+                    <input id={`email-${index}`} type="email" inputMode="email" value={coach.coachEmail}
+                      className={INPUT} onChange={(e) => update(index, "coachEmail", e.target.value)} />
+                  </div>
+                  <div>
+                    <label className={LABEL} htmlFor={`phone-${index}`}>Mobile</label>
+                    <input id={`phone-${index}`} type="tel" inputMode="tel" value={coach.coachPhone}
+                      className={INPUT} onChange={(e) => update(index, "coachPhone", e.target.value)} />
+                  </div>
+                </div>
+                <p className="text-xs text-[#6B829D]">Either one is enough — it is how we tell them they are credentialed.</p>
+              </>
+            )}
           </div>
         </fieldset>
       ))}
