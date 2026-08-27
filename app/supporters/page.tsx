@@ -15,7 +15,7 @@ import { partnersSupporting, partnersWithLogos, type Partner } from "@/lib/partn
 export const metadata: Metadata = {
   title: "Supporters — NC Wrestling United",
   description:
-    "The partners funding raffle prizes at the Giving Hour, the Caden Perry Scholarship, and everyone supporting North Carolina wrestling.",
+    "Thank you to the families, small businesses and companies giving back to North Carolina wrestling — the Giving Hour partners, the Caden Perry Scholarship, and everyone supporting our community.",
 }
 
 function PartnerGrid({ partners }: { partners: readonly (Partner & { logoSrc: string })[] }) {
@@ -69,17 +69,21 @@ export default function SupportersPage() {
     <main className="min-h-screen bg-[#0A1628] px-4 py-16 text-white sm:px-6">
       <div className="mx-auto w-full max-w-4xl">
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D3B574]">NC Wrestling United</p>
-        <h1 className="mt-3 text-4xl font-extrabold leading-tight sm:text-5xl">Supporters</h1>
+        <h1 className="mt-3 text-4xl font-extrabold leading-tight sm:text-5xl">Thank you</h1>
         <p className="mt-5 max-w-2xl text-lg leading-relaxed text-[#A8BBD1]">
-          North Carolina wrestling is held up by people who put money into it and ask for very
-          little back. These are those people.
+          A family buying mats. A restaurant down the road sending lunch. A national grocer
+          sending gift cards. None of them had to, and none of them asked for anything back — they
+          did it because they want wrestling in this state to be better for somebody else&apos;s
+          kid. This page is where we say so, and where we keep saying it.
         </p>
 
         <section className="mt-16">
           <h2 className="text-2xl font-bold">The Giving Hour</h2>
           <p className="mt-4 max-w-2xl leading-relaxed text-[#A8BBD1]">
-            Our tournament partners do not pay sponsorship fees. They put the same money into
-            prizes instead, and those prizes go straight to the families in the building.
+            These partners could have bought a banner. They chose to buy prizes instead, and every
+            one of those prizes goes to a family sitting in the stands. We are grateful they took
+            us up on it — it is a harder kind of generosity, because nobody sees their name on the
+            wall for it.
           </p>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -123,7 +127,11 @@ export default function SupportersPage() {
 
         {majorGifts.length > 0 ? (
           <section className="mt-16">
-            <h2 className="text-2xl font-bold">Major gifts</h2>
+            <h2 className="text-2xl font-bold">Gifts we will not forget</h2>
+            <p className="mt-4 max-w-2xl leading-relaxed text-[#A8BBD1]">
+              Given by people who simply decided our wrestlers should have better than we could
+              afford on our own.
+            </p>
             <ul className="mt-6 flex flex-col gap-4">
               {majorGifts.map((p) => (
                 <li key={p.id} className="rounded-2xl border border-[#D3B574] bg-[#13294B] p-6">
@@ -137,10 +145,11 @@ export default function SupportersPage() {
 
         {inKind.length > 0 ? (
           <section className="mt-16">
-            <h2 className="text-2xl font-bold">Donated to the tournament</h2>
+            <h2 className="text-2xl font-bold">Given, not bought</h2>
             <p className="mt-4 max-w-2xl leading-relaxed text-[#A8BBD1]">
-              Food, supplies and equipment given rather than bought — every one of these is a cost
-              the tournament did not have to pass on to families.
+              Small businesses and national names alike, sending food, supplies and drink to an
+              event they had nothing to gain from. Every item here is a cost we did not pass on to
+              a wrestling family, and we are thankful for each one.
             </p>
             <ul className="mt-6 grid gap-3 sm:grid-cols-2">
               {inKind.map((p) => (
@@ -178,7 +187,7 @@ export default function SupportersPage() {
             Named for a North Carolina wrestler, and awarded on need and character rather than on a
             record. Academic results, win-loss records and rankings are explicitly not selection
             criteria. The fund now stands at <strong className="text-white">$1,300</strong>, funded
-            by NC United.
+            by NC United and carried by everyone who gives to it.
           </p>
           <Link
             href="/fundraising/scholarships/caden-perry"
@@ -191,7 +200,8 @@ export default function SupportersPage() {
         <section className="mt-16">
           <h2 className="text-2xl font-bold">Programme partners</h2>
           <p className="mt-4 max-w-2xl leading-relaxed text-[#A8BBD1]">
-            Businesses supporting the wider programme through the year, not only at the tournament.
+            Businesses who back North Carolina wrestling all year, not only on the weekend when
+            there is a crowd to see them do it.
           </p>
           <PartnerGrid partners={corporate} />
         </section>
@@ -199,8 +209,9 @@ export default function SupportersPage() {
         <section className="mt-16 rounded-2xl border border-[#D3B574] bg-[#13294B] p-8">
           <h2 className="text-2xl font-bold">Become a partner</h2>
           <p className="mt-3 max-w-2xl leading-relaxed text-[#A8BBD1]">
-            If your business wants its support to reach wrestling families directly, the Giving
-            Hour is the simplest way we know to do it.
+            Every name on this page started with somebody deciding to help. If you would like to
+            join them, the Giving Hour is the most direct way we know to put what you give into a
+            wrestling family&apos;s hands.
           </p>
           <Link
             href="/tournament-of-champions#sponsor"
