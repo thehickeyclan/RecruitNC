@@ -775,8 +775,26 @@ export function MatchDataSectionImproved({
                       )}
                     />
                   </CardTitle>
+                  {/* The record is the headline, not a hint that something is hidden. A college
+                      coach scanning a profile should read 143-6 without tapping anything; the
+                      bout-by-bout table is what stays folded away. */}
+                  <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                    <span className={cn("text-2xl font-semibold leading-none", isDark ? "text-white" : "text-white")}>
+                      {careerTotals.wins}-{careerTotals.losses}
+                    </span>
+                    {totalMatches > 0 ? (
+                      <span className={cn("text-sm", isDark ? "text-white/70" : "text-blue-100")}>
+                        {winPercentage.toFixed(1)}% wins
+                      </span>
+                    ) : null}
+                    {careerTotals.pins > 0 ? (
+                      <span className={cn("text-sm", isDark ? "text-white/70" : "text-blue-100")}>
+                        {careerTotals.pins} pins
+                      </span>
+                    ) : null}
+                  </div>
                   <p className={cn("text-xs mt-1", isDark ? "text-white/50" : "text-blue-100/80")}>
-                    {careerTotals.wins}-{careerTotals.losses} · {totalMatches} matches — tap to expand
+                    {totalMatches} matches — tap for every bout
                   </p>
                 </CardHeader>
               </button>
