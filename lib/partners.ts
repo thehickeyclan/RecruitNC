@@ -186,7 +186,7 @@ export const PARTNERS: readonly Partner[] = [
     id: "adidas-wrestling",
     name: "adidas Wrestling",
     href: "https://www.adidas.com/us/wrestling",
-    logoSrc: null,
+    logoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/UjkxNwsDDBTlvuxQtt2_N-Adidas.png",
     logoAlt: "adidas Wrestling",
     gift: "Gear for the free raffle",
     support: ["giving-hour"],
