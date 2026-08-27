@@ -529,6 +529,12 @@ export function buildRankWrestlerSeasonPayload(options: {
         if (!athleteSchool) athleteSchool = isWin ? match.winner_school : match.loser_school
       }
 
+      // RankWrestler can list bracket byes alongside actual results. A bye is not a bout
+      // and must not affect the official record. Forfeits are different: every listed
+      // forfeit is an official win and is intentionally retained, including multiple
+      // forfeits on the same date at the same event.
+      if (/^bye$/i.test(opponent.trim()) || /^(bye|bye\.)$/i.test(match.result.trim())) continue
+
       converted.push({
         date: match.date.trim(),
         weight: Number.parseInt(match.weight, 10) || 0,

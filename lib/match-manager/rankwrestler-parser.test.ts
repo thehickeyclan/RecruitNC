@@ -275,6 +275,45 @@ describe("parseRankWrestlerText", () => {
     }
   })
 
+  it("counts every Mills forfeit, excludes byes, and keeps the final Landon Cagle bout", () => {
+    const rows = [
+      "Win", "2/10/2026", "Forfeit", "165 lbs", "•", "Dual Team Series", "•", "For.",
+      "Win", "2/10/2026", "Forfeit", "165 lbs", "•", "Dual Team Series", "•", "For.",
+      "Win", "1/23/2026", "Forfeit", "165 lbs", "•", "Conference Duals", "•", "For.",
+      "Win", "1/23/2026", "Forfeit", "165 lbs", "•", "Conference Duals", "•", "For.",
+      "Win", "12/23/2025", "Forfeit", "165 lbs", "•", "Holiday Tournament", "•", "For.",
+      "Win", "12/23/2025", "Forfeit", "165 lbs", "•", "Holiday Tournament", "•", "For.",
+      "Win", "11/16/2025", "Bye", "165 lbs", "•", "Wolverine Challenge", "•", "Bye",
+      "Loss", "11/15/2025", "99.1", "Opponent One", "• Example High", "165 lbs", "•", "Wolverine Challenge", "•", "Dec",
+      "Loss", "11/15/2025", "99.2", "Opponent Two", "• Example High", "165 lbs", "•", "Wolverine Challenge", "•", "Dec",
+      "Loss", "11/15/2025", "99.3", "Opponent Three", "• Example High", "165 lbs", "•", "Wolverine Challenge", "•", "Dec",
+      // Regression: this final block was previously absent when a partial source candidate won.
+      "Win", "11/15/2025", "88.4", "Landon Cagle", "• Example High", "165 lbs", "•", "Wolverine Challenge", "•", "Fall",
+    ].join("\n")
+
+    const parsed = buildRankWrestlerSeasonPayload({
+      athleteName: "Jeshurun Mills",
+      graduationYear: 2027,
+      highSchool: "Lincolnton",
+      rawText: rows,
+    })
+
+    expect(parsed.success).toBe(true)
+    if (parsed.success) {
+      expect(parsed.payload.season_summary.wins).toBe(7)
+      expect(parsed.payload.season_summary.losses).toBe(3)
+      expect(parsed.payload.season_summary.forfeits_won).toBe(6)
+      expect(parsed.payload.season_summary.total_matches).toBe(10)
+      expect(parsed.payload.matches.filter((match) => match.opponent === "Forfeit")).toHaveLength(6)
+      expect(parsed.payload.matches.some((match) => /^bye$/i.test(match.opponent))).toBe(false)
+      expect(parsed.payload.matches.at(-1)).toMatchObject({
+        opponent: "Landon Cagle",
+        win_loss: "W",
+        result: "Fall",
+      })
+    }
+  })
+
   it("parses compact rendered RankWrestler rows without a Match History heading", () => {
     const renderedProfileText =
       "#5 What If? Mattex Adams Leesville Road • 126 • Sr Career Record: 49-12 " +

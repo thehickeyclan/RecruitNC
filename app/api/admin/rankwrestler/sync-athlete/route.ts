@@ -414,11 +414,17 @@ export async function POST(request: NextRequest) {
         deduplicate,
       })
       if (candidateParse.success) {
-        parsed = candidateParse
-        parsedSource = candidate.source
-        break
+        // A page can expose several independently parsable payloads. Some are partial
+        // streamed fragments, so accepting the first successful candidate can truncate a
+        // season. Keep the candidate with the most official bouts instead.
+        const currentCount = parsed?.success ? parsed.payload.season_summary.total_matches : -1
+        if (candidateParse.payload.season_summary.total_matches > currentCount) {
+          parsed = candidateParse
+          parsedSource = candidate.source
+        }
+        continue
       }
-      parsed = candidateParse
+      if (!parsed) parsed = candidateParse
     }
 
     if (!parsed?.success && !renderedBrowser && fetchDiagnostics?.looksLikeClientAppShell) {
