@@ -159,6 +159,15 @@ export const PARTNERS: readonly Partner[] = [
     gift: "Gift cards toward food and drink",
     support: ["in-kind"],
   },
+  {
+    id: "cove",
+    name: "Cove",
+    href: null,
+    logoSrc: null,
+    logoAlt: "Cove probiotic soda",
+    gift: "Twelve cases of probiotic soda",
+    support: ["in-kind"],
+  },
 ] as const
 
 export function partnersSupporting(kind: SupportKind): readonly Partner[] {
