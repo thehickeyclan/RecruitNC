@@ -10,9 +10,9 @@ type Athlete = {
   needsClub: boolean
   needsDob: boolean
 }
-type CoachFields = { coachName: string; coachEmail: string; coachPhone: string; relationship: string }
+type CoachFields = { coachName: string; coachEmail: string; coachPhone: string }
 
-const EMPTY: CoachFields = { coachName: "", coachEmail: "", coachPhone: "", relationship: "" }
+const EMPTY: CoachFields = { coachName: "", coachEmail: "", coachPhone: "" }
 
 const LABEL = "mb-1 block text-xs font-bold uppercase tracking-wider text-[#6B829D]"
 const INPUT =
@@ -158,7 +158,7 @@ export function CornerCoachForm() {
       {/* Only the gaps. Everything else we already hold, and asking again wastes their time. */}
       {athlete?.needsClub ? (
         <div>
-          <label className={LABEL} htmlFor="club">Wrestling club</label>
+          <label className={LABEL} htmlFor="club">{athlete.name.split(" ")[0]}&apos;s wrestling club</label>
           <input id="club" value={club} onChange={(e) => setClub(e.target.value)} className={INPUT}
             placeholder="Darkhorse" />
           <p className="mt-1 text-xs text-[#6B829D]">We do not have a club on file for {athlete.name}.</p>
@@ -216,11 +216,6 @@ export function CornerCoachForm() {
               </div>
             </div>
             <p className="text-xs text-[#6B829D]">Either one is enough — it is how we tell them they are credentialed.</p>
-            <div>
-              <label className={LABEL} htmlFor={`rel-${index}`}>Club or school</label>
-              <input id={`rel-${index}`} value={coach.relationship} className={INPUT} placeholder="Darkhorse"
-                onChange={(e) => update(index, "relationship", e.target.value)} />
-            </div>
           </div>
         </fieldset>
       ))}
