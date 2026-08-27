@@ -36,14 +36,14 @@ export default function TocCoachesPage() {
 
   useEffect(() => { void load() }, [load])
 
-  async function notify(coachKey?: string) {
-    setSaving(coachKey ?? "all")
+  async function notify(coachKey?: string, channel?: "email" | "sms") {
+    setSaving(coachKey ? `${coachKey}:${channel ?? "auto"}` : "all")
     setError(null)
     try {
       const res = await fetch("/api/admin/toc/coaches/notify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(coachKey ? { coachKey } : {}),
+        body: JSON.stringify({ ...(coachKey ? { coachKey } : {}), ...(channel ? { channel } : {}) }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error ?? "Could not send.")
@@ -124,7 +124,7 @@ export default function TocCoachesPage() {
           >
             {saving === "all"
               ? "Sending…"
-              : `Send tickets to ${totals.awaitingSend} coach${totals.awaitingSend === 1 ? "" : "es"}`}
+              : `Text tickets to ${totals.awaitingSend} coach${totals.awaitingSend === 1 ? "" : "es"}`}
           </button>
         </div>
 
@@ -163,27 +163,37 @@ export default function TocCoachesPage() {
                     {coach.status !== "approved" ? (
                       <button
                         type="button"
-                        disabled={saving === coach.coachKey}
+                        disabled={saving?.startsWith(coach.coachKey) ?? false}
                         onClick={() => void review(coach.coachKey, "approved")}
                         className="rounded-lg bg-rnc-gold px-3 py-2 text-xs font-bold text-rnc-ink disabled:opacity-50"
                       >
                         Approve
                       </button>
                     ) : null}
-                    {coach.status === "approved" ? (
+                    {coach.status === "approved" && coach.coachPhone ? (
                       <button
                         type="button"
-                        disabled={saving === coach.coachKey}
-                        onClick={() => void notify(coach.coachKey)}
+                        disabled={saving?.startsWith(coach.coachKey) ?? false}
+                        onClick={() => void notify(coach.coachKey, "sms")}
                         className="rounded-lg border border-rnc-gold px-3 py-2 text-xs font-bold text-rnc-gold disabled:opacity-50"
                       >
-                        {coach.notifiedAt ? "Send again" : coach.coachEmail ? "Email ticket" : "Text ticket"}
+                        {coach.notifiedChannel === "sms" ? "Text again" : "Text ticket"}
+                      </button>
+                    ) : null}
+                    {coach.status === "approved" && coach.coachEmail ? (
+                      <button
+                        type="button"
+                        disabled={saving?.startsWith(coach.coachKey) ?? false}
+                        onClick={() => void notify(coach.coachKey, "email")}
+                        className="rounded-lg border border-rnc-line px-3 py-2 text-xs font-semibold text-slate-200 disabled:opacity-50"
+                      >
+                        {coach.notifiedChannel === "email" ? "Email again" : "Email ticket"}
                       </button>
                     ) : null}
                     {coach.status !== "declined" ? (
                       <button
                         type="button"
-                        disabled={saving === coach.coachKey}
+                        disabled={saving?.startsWith(coach.coachKey) ?? false}
                         onClick={() => void review(coach.coachKey, "declined")}
                         className="rounded-lg border border-rnc-line px-3 py-2 text-xs font-semibold disabled:opacity-50"
                       >

@@ -14,8 +14,9 @@ import { loadResolvedCoachRows } from "@/lib/toc/coach-identity"
 /**
  * Tells a credentialed coach they are in, by whichever means we have.
  *
- * Email when we hold one, text otherwise — a coach given by mobile alone is still a coach, and
- * refusing to contact him because there is no address would lose him at the door.
+ * The channel is a choice, not a rule. Left to itself it sends a text, because a coach reads
+ * one — an email from an unfamiliar sender about a tournament sits unopened. Where only one
+ * detail is on file, that is what is used: a coach given by mobile alone is still a coach.
  *
  * Sending stamps every row for that person, so a second click cannot message him twice. Re-sending
  * on purpose is possible with `force`.
@@ -50,10 +51,13 @@ export async function POST(request: NextRequest) {
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   const body = (await request.json().catch(() => null)) as
-    | { coachKey?: unknown; force?: unknown }
+    | { coachKey?: unknown; force?: unknown; channel?: unknown }
     | null
   const only = typeof body?.coachKey === "string" ? body.coachKey.trim() : null
   const force = body?.force === true
+  // "auto" prefers a text: a coach reads one. An email from a sender they do not recognise,
+  // about a tournament they have not entered, is the kind of thing that sits unopened.
+  const wanted = body?.channel === "email" || body?.channel === "sms" ? body.channel : "auto"
 
   const admin = createAdminClient()
   const loaded = await loadResolvedCoachRows(admin)
@@ -81,18 +85,22 @@ export async function POST(request: NextRequest) {
   for (const coach of coaches) {
     const athleteNames = coach.athletes.map((a) => a.athleteName)
     const payload = { coachName: coach.coachName, athleteNames }
-    let channel = "none"
-    let ok = false
+    const e164 = toE164(coach.coachPhone)
+    const canText = Boolean(e164)
+    const canEmail = Boolean(coach.coachEmail)
 
-    if (coach.coachEmail) {
-      channel = "email"
+    // Honour the choice when it is possible; otherwise use whatever we can reach them by.
+    let channel: "email" | "sms" | "none" = "none"
+    if (wanted === "email" && canEmail) channel = "email"
+    else if (wanted === "sms" && canText) channel = "sms"
+    else if (wanted === "auto") channel = canText ? "sms" : canEmail ? "email" : "none"
+    else channel = canText ? "sms" : canEmail ? "email" : "none"
+
+    let ok = false
+    if (channel === "email" && coach.coachEmail) {
       ok = await sendEmail(coach.coachEmail, coachInviteSubject(), coachInviteHtml(payload), coachInviteText(payload))
-    } else {
-      const e164 = toE164(coach.coachPhone)
-      if (e164) {
-        channel = "sms"
-        ok = await sendSms(e164, coachInviteSms(payload))
-      }
+    } else if (channel === "sms" && e164) {
+      ok = await sendSms(e164, coachInviteSms(payload))
     }
 
     if (ok) {
