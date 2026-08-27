@@ -13,7 +13,7 @@ describe("partners", () => {
   it("gives every partner alt text, and a real path when there is a logo", () => {
     for (const p of PARTNERS) {
       expect(p.logoAlt.length).toBeGreaterThan(2)
-      if (p.logoSrc) expect(p.logoSrc.startsWith("/images/")).toBe(true)
+      if (p.logoSrc) expect(/^(\/images\/|https:\/\/)/.test(p.logoSrc)).toBe(true)
     }
   })
 
@@ -27,8 +27,12 @@ describe("partners", () => {
   })
 
   it("keeps a logo-less supporter out of the logo grids", () => {
-    expect(partnersWithLogos("in-kind").length).toBe(0)
-    expect(partnersWithLogos("giving-hour").every((p) => Boolean(p.logoSrc))).toBe(true)
+    // The grids may only contain what they can draw; the named lists carry the rest.
+    for (const kind of ["giving-hour", "corporate", "in-kind", "major-gift"] as const) {
+      expect(partnersWithLogos(kind).every((p) => Boolean(p.logoSrc))).toBe(true)
+      const logoless = partnersSupporting(kind).filter((p) => !p.logoSrc).map((p) => p.id)
+      expect(partnersWithLogos(kind).some((p) => logoless.includes(p.id))).toBe(false)
+    }
   })
 
   it("splits by what they support, and lets a partner do both", () => {

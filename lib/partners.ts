@@ -5,7 +5,8 @@
  * corporate list on the fundraising hub. The Guild sat in both under different names, so adding
  * a partner to one left them invisible on the other. Both read from here now.
  *
- * Logos live under `public/images/`. Wide horizontal files (~3:1) sit best in the spotlight rows.
+ * Logos live under `public/images/` or in blob storage; either is fine, and the blob host is
+ * already allowed for next/image. Wide horizontal files (~3:1) sit best in the spotlight rows.
  */
 
 /**
@@ -91,7 +92,7 @@ export const PARTNERS: readonly Partner[] = [
     id: "pathos",
     name: "Pathos",
     href: null,
-    logoSrc: null,
+    logoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/DCEzMmwaWr3rh4whHxE4R-Pathos.png",
     logoAlt: "Pathos — Live the Light",
     gift: "Socks for every Giving Hour winner",
     support: ["giving-hour"],
@@ -109,7 +110,7 @@ export const PARTNERS: readonly Partner[] = [
     id: "farina",
     name: "Farina",
     href: "https://farinaraleigh.com/",
-    logoSrc: null,
+    logoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/reGHXoSFTnC-X6Gn1epmn-Ferina.png",
     logoAlt: "Farina, Raleigh",
     gift: "Food for the VIP lounge",
     support: ["in-kind"],
@@ -145,7 +146,7 @@ export const PARTNERS: readonly Partner[] = [
     id: "costco",
     name: "Costco Wholesale",
     href: null,
-    logoSrc: null,
+    logoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/X8HOuaIGXkAWvH0Bm5pLo-Costco.png",
     logoAlt: "Costco Wholesale",
     gift: "Gift cards toward food and drink",
     support: ["in-kind"],
@@ -154,7 +155,7 @@ export const PARTNERS: readonly Partner[] = [
     id: "food-lion",
     name: "Food Lion",
     href: null,
-    logoSrc: null,
+    logoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/E_P6OvLA6EnFHbpC3sHeK-Food%20Lion.png",
     logoAlt: "Food Lion",
     gift: "Gift cards toward food and drink",
     support: ["in-kind"],
@@ -163,7 +164,7 @@ export const PARTNERS: readonly Partner[] = [
     id: "cove",
     name: "Cove",
     href: null,
-    logoSrc: null,
+    logoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/sOrarzMWUKO7IYHEYcxtQ-Cove.jpeg",
     logoAlt: "Cove probiotic soda",
     gift: "Twelve cases of probiotic soda",
     support: ["in-kind"],
