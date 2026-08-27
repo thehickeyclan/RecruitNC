@@ -160,8 +160,8 @@ export default function SupportersPage() {
             <h2 className="text-2xl font-bold">Given, not bought</h2>
             <p className="mt-4 max-w-2xl leading-relaxed text-[#A8BBD1]">
               Small businesses and national names alike, sending food, supplies and drink to an
-              event they had nothing to gain from. Every item here is a cost we did not pass on to
-              a wrestling family, and we are thankful for each one.
+              event they had nothing to gain from. Every item here is a cost we did not carry, and
+              every dollar it saved goes straight back into our wrestling community.
             </p>
             <ul className="mt-6 grid gap-3 sm:grid-cols-2">
               {inKind.map((p) => (
@@ -198,8 +198,9 @@ export default function SupportersPage() {
           <p className="mt-4 max-w-2xl leading-relaxed text-[#A8BBD1]">
             Named for a North Carolina wrestler, and awarded on need and character rather than on a
             record. Academic results, win-loss records and rankings are explicitly not selection
-            criteria. The fund now stands at <strong className="text-white">$1,300</strong>, funded
-            by NC United and carried by everyone who gives to it.
+            criteria. The fund stands at <strong className="text-white">$1,300</strong> — $1,000
+            from NC United, and $300 given by the Padgett family, who simply wanted a North
+            Carolina wrestler to have it.
           </p>
           <Link
             href="/fundraising/scholarships/caden-perry"

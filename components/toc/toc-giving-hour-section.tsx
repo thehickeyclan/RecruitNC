@@ -1,4 +1,5 @@
 import Image from "next/image"
+import Link from "next/link"
 import { ExternalLink, Gift, Ticket } from "lucide-react"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass, tocSectionClass } from "@/components/toc/toc-theme"
 import { partnersWithLogos } from "@/lib/partners"
@@ -90,6 +91,18 @@ export function TocGivingHourSection() {
 
         <p className={`mt-8 text-center text-lg text-white ${tocDisplayClass()}`}>
           All free. All going back to the wrestling community.
+        </p>
+
+        {/* The tournament shows the partners funding this weekend; /supporters thanks everyone
+            who gives to North Carolina wrestling, and is still there after the mats come up. */}
+        <p className="mt-6 text-center">
+          <Link
+            href="/supporters"
+            className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-[#D3B574] underline-offset-4 hover:underline"
+          >
+            Everyone supporting NC wrestling
+            <ExternalLink className="h-4 w-4" aria-hidden="true" />
+          </Link>
         </p>
       </div>
     </section>
