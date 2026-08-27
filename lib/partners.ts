@@ -28,6 +28,9 @@ export type Partner = {
   logoAlt: string
   /** What they actually gave. Shown for in-kind and major gifts, where the gift is the point. */
   gift?: string
+  /** A photograph of the gift itself, for the gifts worth showing rather than describing. */
+  photoSrc?: string
+  photoAlt?: string
   support: ReadonlyArray<SupportKind>
 }
 
@@ -104,6 +107,7 @@ export const PARTNERS: readonly Partner[] = [
     logoSrc: null,
     logoAlt: "The Hickey Family",
     gift: "Two Resilite mats — a $24,000 donation to NC United",
+    // photoSrc: "…", photoAlt: "The Resilite mats donated by the Hickey family",
     support: ["major-gift"],
   },
   {
@@ -128,7 +132,7 @@ export const PARTNERS: readonly Partner[] = [
     id: "defense-soap",
     name: "Defense Soap",
     href: "https://defensesoap.com/",
-    logoSrc: null,
+    logoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/St0U5IBN5JdPkOoJQN1_Z-Defense%20Soap.jpeg",
     logoAlt: "Defense Soap",
     gift: "Supplies to keep the mats clean and the athletes and officials healthy",
     support: ["in-kind"],
@@ -137,7 +141,7 @@ export const PARTNERS: readonly Partner[] = [
     id: "wegmans",
     name: "Wegmans",
     href: null,
-    logoSrc: null,
+    logoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/us3HD3BM8HIJ5hc4v-CtM-Wegmans.jpeg",
     logoAlt: "Wegmans",
     gift: "Gift cards toward food and drink",
     support: ["in-kind"],
@@ -168,6 +172,24 @@ export const PARTNERS: readonly Partner[] = [
     logoAlt: "Cove probiotic soda",
     gift: "Twelve cases of probiotic soda",
     support: ["in-kind"],
+  },
+  {
+    id: "state-farm",
+    name: "State Farm",
+    href: null,
+    logoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/FD8FI3AmsMBy1gFT_-uYQ-State%20Farm%20.png",
+    logoAlt: "State Farm",
+    gift: "Food for the VIP lounge",
+    support: ["in-kind"],
+  },
+  {
+    id: "adidas-wrestling",
+    name: "adidas Wrestling",
+    href: "https://www.adidas.com/us/wrestling",
+    logoSrc: null,
+    logoAlt: "adidas Wrestling",
+    gift: "Gear for the free raffle",
+    support: ["giving-hour"],
   },
 ] as const
 

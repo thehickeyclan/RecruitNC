@@ -97,10 +97,11 @@ export default function SupportersPage() {
             </div>
             <div className="rounded-xl border border-[#1a3a5f] bg-[#0f1c2e] p-5">
               <Gift className="h-5 w-5 text-[#D3B574]" />
-              <p className="mt-3 font-bold">Everything given away is donated</p>
+              <p className="mt-3 font-bold">Every prize is donated</p>
               <p className="mt-2 text-sm leading-relaxed text-[#A8BBD1]">
-                Gear, training, and equipment from the partners below — which is why a sponsorship
-                here reaches wrestlers rather than a banner.
+                Gear, training and equipment, given by the partners below and handed to our
+                wrestling community through a free raffle. Nothing is sold, and nothing is held
+                back.
               </p>
             </div>
           </div>
@@ -134,9 +135,20 @@ export default function SupportersPage() {
             </p>
             <ul className="mt-6 flex flex-col gap-4">
               {majorGifts.map((p) => (
-                <li key={p.id} className="rounded-2xl border border-[#D3B574] bg-[#13294B] p-6">
-                  <p className="text-xl font-bold">{p.name}</p>
-                  <p className="mt-2 leading-relaxed text-[#A8BBD1]">{p.gift}</p>
+                <li key={p.id} className="overflow-hidden rounded-2xl border border-[#D3B574] bg-[#13294B]">
+                  {p.photoSrc ? (
+                    <Image
+                      src={p.photoSrc}
+                      alt={p.photoAlt ?? p.gift ?? p.name}
+                      width={1200}
+                      height={600}
+                      className="h-56 w-full object-cover"
+                    />
+                  ) : null}
+                  <div className="p-6">
+                    <p className="text-xl font-bold">{p.name}</p>
+                    <p className="mt-2 leading-relaxed text-[#A8BBD1]">{p.gift}</p>
+                  </div>
                 </li>
               ))}
             </ul>
