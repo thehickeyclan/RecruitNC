@@ -14,7 +14,7 @@ export async function GET() {
   const admin = createAdminClient()
   const { data, error } = await admin
     .from("toc_coach_designations")
-    .select("coach_key,coach_name,coach_email,coach_phone,status,athlete_name,weight_class,relationship,submitted_club,submitted_dob")
+    .select("coach_key,coach_name,coach_email,coach_phone,status,athlete_name,weight_class,relationship,submitted_club,submitted_dob,notified_at,notified_channel")
     .order("created_at", { ascending: true })
 
   if (error) {
@@ -69,6 +69,8 @@ export async function GET() {
       wrestlers,
       approved: coaches.filter((c) => c.status === "approved").length,
       pending: coaches.filter((c) => c.status === "pending").length,
+      notified: coaches.filter((c) => c.notifiedAt).length,
+      awaitingSend: coaches.filter((c) => c.status === "approved" && !c.notifiedAt).length,
     },
   })
 }

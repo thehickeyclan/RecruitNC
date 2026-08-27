@@ -13,7 +13,7 @@ import type { CheckInCoach } from "@/lib/toc/coach-designation"
  */
 export default function TocCoachesPage() {
   const [coaches, setCoaches] = useState<CheckInCoach[]>([])
-  const [totals, setTotals] = useState({ coaches: 0, wrestlers: 0, approved: 0, pending: 0 })
+  const [totals, setTotals] = useState({ coaches: 0, wrestlers: 0, approved: 0, pending: 0, awaitingSend: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState<string | null>(null)
@@ -25,7 +25,7 @@ export default function TocCoachesPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error ?? "Could not load coaches.")
       setCoaches(data.coaches ?? [])
-      setTotals(data.totals ?? { coaches: 0, wrestlers: 0, approved: 0, pending: 0 })
+      setTotals(data.totals ?? { coaches: 0, wrestlers: 0, approved: 0, pending: 0, awaitingSend: 0 })
       setError(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load coaches.")
@@ -35,6 +35,27 @@ export default function TocCoachesPage() {
   }, [])
 
   useEffect(() => { void load() }, [load])
+
+  async function notify(coachKey?: string) {
+    setSaving(coachKey ?? "all")
+    setError(null)
+    try {
+      const res = await fetch("/api/admin/toc/coaches/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(coachKey ? { coachKey } : {}),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error ?? "Could not send.")
+      if (data.sent === 0 && data.attempted === 0) setError("Nobody to contact — approve a coach first.")
+      else if (data.failed?.length) setError(`Sent ${data.sent} of ${data.attempted}. Failed: ${data.failed.map((f: { coach: string }) => f.coach).join(", ")}`)
+      await load()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not send.")
+    } finally {
+      setSaving(null)
+    }
+  }
 
   async function review(coachKey: string, status: string) {
     setSaving(coachKey)
@@ -64,12 +85,13 @@ export default function TocCoachesPage() {
         {/* A handful of headline numbers, so a KPI row rather than a chart. Values carry no
             colour of their own: the label is what distinguishes them, and a number that turns
             red on its own tells a reader nothing they can act on. */}
-        <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 print:hidden">
+        <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5 print:hidden">
           {[
             { label: "Coaches", value: totals.coaches, hint: "lanyards to print" },
             { label: "Wrestlers covered", value: totals.wrestlers, hint: "have named a coach" },
             { label: "Approved", value: totals.approved, hint: "cleared for the floor" },
             { label: "Pending review", value: totals.pending, hint: "waiting on you" },
+            { label: "To contact", value: totals.awaitingSend, hint: "approved, not yet told" },
           ].map((tile) => (
             <div key={tile.label} className="rounded-xl border border-rnc-line bg-rnc-surface px-4 py-3">
               <dt className="text-xs font-semibold text-slate-400">{tile.label}</dt>
@@ -90,9 +112,19 @@ export default function TocCoachesPage() {
           <button
             type="button"
             onClick={() => window.print()}
-            className="rounded-lg bg-rnc-gold px-4 py-2 text-sm font-bold text-rnc-ink"
+            className="rounded-lg border border-rnc-line px-4 py-2 text-sm font-semibold"
           >
             Print check-in list
+          </button>
+          <button
+            type="button"
+            disabled={saving === "all" || totals.awaitingSend === 0}
+            onClick={() => void notify()}
+            className="rounded-lg bg-rnc-gold px-4 py-2 text-sm font-bold text-rnc-ink disabled:opacity-40"
+          >
+            {saving === "all"
+              ? "Sending…"
+              : `Send tickets to ${totals.awaitingSend} coach${totals.awaitingSend === 1 ? "" : "es"}`}
           </button>
         </div>
 
@@ -138,6 +170,16 @@ export default function TocCoachesPage() {
                         Approve
                       </button>
                     ) : null}
+                    {coach.status === "approved" ? (
+                      <button
+                        type="button"
+                        disabled={saving === coach.coachKey}
+                        onClick={() => void notify(coach.coachKey)}
+                        className="rounded-lg border border-rnc-gold px-3 py-2 text-xs font-bold text-rnc-gold disabled:opacity-50"
+                      >
+                        {coach.notifiedAt ? "Send again" : coach.coachEmail ? "Email ticket" : "Text ticket"}
+                      </button>
+                    ) : null}
                     {coach.status !== "declined" ? (
                       <button
                         type="button"
@@ -150,6 +192,13 @@ export default function TocCoachesPage() {
                     ) : null}
                   </div>
                 </div>
+
+                {coach.notifiedAt ? (
+                  <p className="mt-2 text-xs text-rnc-gold">
+                    Ticket sent by {coach.notifiedChannel === "sms" ? "text" : "email"} on{" "}
+                    {new Date(coach.notifiedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                  </p>
+                ) : null}
 
                 <p className="mt-3 text-sm text-slate-300">
                   <span className="font-semibold text-white">

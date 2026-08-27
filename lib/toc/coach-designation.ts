@@ -120,6 +120,9 @@ export type CheckInCoach = {
   coachEmail: string | null
   coachPhone: string | null
   status: string
+  /** When they were told they are credentialed, and by which means. */
+  notifiedAt: string | null
+  notifiedChannel: string | null
   athletes: {
     athleteName: string
     weightClass: number | null
@@ -147,6 +150,8 @@ export function toCheckInList(
     weight_class: number | null
     submitted_club?: string | null
     submitted_dob?: string | null
+    notified_at?: string | null
+    notified_channel?: string | null
   }[],
 ): CheckInCoach[] {
   const byCoach = new Map<string, CheckInCoach>()
@@ -162,6 +167,11 @@ export function toCheckInList(
       existing.athletes.push(athlete)
       // A coach approved for one wrestler is an approved coach; the lanyard is per person.
       if (row.status === "approved") existing.status = "approved"
+      // Told once is told: any stamped row means this person has heard from us.
+      if (row.notified_at && !existing.notifiedAt) {
+        existing.notifiedAt = row.notified_at
+        existing.notifiedChannel = row.notified_channel ?? null
+      }
       continue
     }
     byCoach.set(row.coach_key, {
@@ -170,6 +180,8 @@ export function toCheckInList(
       coachEmail: row.coach_email,
       coachPhone: row.coach_phone,
       status: row.status,
+      notifiedAt: row.notified_at ?? null,
+      notifiedChannel: row.notified_channel ?? null,
       athletes: [athlete],
     })
   }
