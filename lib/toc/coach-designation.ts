@@ -117,10 +117,16 @@ export function dedupeIncoming(coaches: CoachDesignation[]): CoachDesignation[] 
 export type CheckInCoach = {
   coachKey: string
   coachName: string
-  coachEmail: string
+  coachEmail: string | null
   coachPhone: string | null
   status: string
-  athletes: { athleteName: string; weightClass: number | null; relationship: string | null }[]
+  athletes: {
+    athleteName: string
+    weightClass: number | null
+    /** Supplied by the family because we had none on file. Wants applying to the athlete. */
+    submittedClub: string | null
+    submittedDob: string | null
+  }[]
 }
 
 /**
@@ -134,12 +140,13 @@ export function toCheckInList(
   rows: {
     coach_key: string
     coach_name: string
-    coach_email: string
+    coach_email: string | null
     coach_phone: string | null
     status: string
     athlete_name: string
     weight_class: number | null
-    relationship: string | null
+    submitted_club?: string | null
+    submitted_dob?: string | null
   }[],
 ): CheckInCoach[] {
   const byCoach = new Map<string, CheckInCoach>()
@@ -148,7 +155,8 @@ export function toCheckInList(
     const athlete = {
       athleteName: row.athlete_name,
       weightClass: row.weight_class,
-      relationship: row.relationship,
+      submittedClub: row.submitted_club ?? null,
+      submittedDob: row.submitted_dob ?? null,
     }
     if (existing) {
       existing.athletes.push(athlete)

@@ -14,7 +14,7 @@ export async function GET() {
   const admin = createAdminClient()
   const { data, error } = await admin
     .from("toc_coach_designations")
-    .select("coach_key,coach_name,coach_email,coach_phone,status,athlete_name,weight_class,relationship")
+    .select("coach_key,coach_name,coach_email,coach_phone,status,athlete_name,weight_class,relationship,submitted_club,submitted_dob")
     .order("created_at", { ascending: true })
 
   if (error) {

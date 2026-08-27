@@ -100,7 +100,8 @@ describe("toCheckInList", () => {
     status,
     athlete_name: athlete,
     weight_class: weight,
-    relationship: null,
+    submitted_club: null,
+    submitted_dob: null,
   })
 
   it("gives one row per coach with everyone they corner", () => {

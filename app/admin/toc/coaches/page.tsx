@@ -148,6 +148,23 @@ export default function TocCoachesPage() {
                     .map((a) => `${a.athleteName}${a.weightClass ? ` (${a.weightClass})` : ""}`)
                     .join(", ")}
                 </p>
+
+                {/* Details a family gave because we had none on file. They are held here rather
+                    than written to the athlete record, so they are only useful if they are seen. */}
+                {coach.athletes.some((a) => a.submittedClub || a.submittedDob) ? (
+                  <ul className="mt-2 flex flex-col gap-1 print:hidden">
+                    {coach.athletes
+                      .filter((a) => a.submittedClub || a.submittedDob)
+                      .map((a) => (
+                        <li key={`${a.athleteName}-${a.weightClass}`} className="text-xs text-rnc-gold">
+                          {a.athleteName} — family supplied
+                          {a.submittedClub ? ` club: ${a.submittedClub}` : ""}
+                          {a.submittedClub && a.submittedDob ? "," : ""}
+                          {a.submittedDob ? ` date of birth: ${a.submittedDob}` : ""}
+                        </li>
+                      ))}
+                  </ul>
+                ) : null}
               </li>
             ))}
           </ol>
