@@ -33,6 +33,11 @@ function PartnerGrid({ partners }: { partners: readonly (Partner & { logoSrc: st
             />
           </span>
         )
+        // A logo says who gave; where we know what they gave, that is worth saying too. Adding
+        // adidas's logo silently dropped "headgear and backpacks", which was the better half.
+        const gift = partner.gift ? (
+          <span className="mt-1 block text-center text-xs leading-snug text-[#A8BBD1]">{partner.gift}</span>
+        ) : null
         return (
           <li key={partner.id}>
             {/* A partner with no site still belongs on the page — they just are not a link. */}
@@ -42,11 +47,13 @@ function PartnerGrid({ partners }: { partners: readonly (Partner & { logoSrc: st
                 <span className="mt-2 block text-center text-sm font-semibold text-white group-hover:text-[#D3B574]">
                   {partner.name}
                 </span>
+                {gift}
               </a>
             ) : (
               <div>
                 {logo}
                 <span className="mt-2 block text-center text-sm font-semibold text-white">{partner.name}</span>
+                {gift}
               </div>
             )}
           </li>

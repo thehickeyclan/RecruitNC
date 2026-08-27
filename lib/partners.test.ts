@@ -65,3 +65,15 @@ describe("nobody is invisible", () => {
     expect(PARTNERS.filter((p) => p.support.length === 0)).toEqual([])
   })
 })
+
+describe("gift descriptions survive a logo", () => {
+  it("keeps the gift recorded even once a supporter has a logo", () => {
+    // Adding adidas's logo moved them into the grid, which rendered name only — so "headgear and
+    // backpacks" vanished. The data must keep it whatever the page chooses to draw.
+    const adidas = PARTNERS.find((p) => p.id === "adidas-wrestling")
+    expect(adidas?.logoSrc).toBeTruthy()
+    expect(adidas?.gift).toContain("Headgear")
+    const pathos = PARTNERS.find((p) => p.id === "pathos")
+    expect(pathos?.gift).toContain("Socks")
+  })
+})
