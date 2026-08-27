@@ -58,6 +58,9 @@ function PartnerGrid({ partners }: { partners: readonly (Partner & { logoSrc: st
 
 export default function SupportersPage() {
   const givingHour = partnersWithLogos("giving-hour")
+  // Supporters of the Giving Hour we have no logo file for. Without this they were on the list
+  // and off the page — the grid only renders what it can show.
+  const givingHourNamed = partnersSupporting("giving-hour").filter((p) => !p.logoSrc)
   const corporate = partnersWithLogos("corporate")
   const inKind = partnersSupporting("in-kind")
   const majorGifts = partnersSupporting("major-gift")
@@ -99,6 +102,23 @@ export default function SupportersPage() {
           </div>
 
           <PartnerGrid partners={givingHour} />
+
+          {givingHourNamed.length > 0 ? (
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+              {givingHourNamed.map((p) => (
+                <li key={p.id} className="rounded-xl border border-[#1a3a5f] bg-[#0f1c2e] p-5">
+                  {p.href ? (
+                    <a href={p.href} target="_blank" rel="noreferrer" className="font-bold text-white hover:text-[#D3B574]">
+                      {p.name}
+                    </a>
+                  ) : (
+                    <span className="font-bold text-white">{p.name}</span>
+                  )}
+                  {p.gift ? <p className="mt-1 text-sm leading-relaxed text-[#A8BBD1]">{p.gift}</p> : null}
+                </li>
+              ))}
+            </ul>
+          ) : null}
         </section>
 
         {majorGifts.length > 0 ? (

@@ -41,3 +41,23 @@ describe("partners", () => {
     expect(PARTNERS.some((p) => p.href === null)).toBe(true)
   })
 })
+
+describe("nobody is invisible", () => {
+  it("shows every supporter somewhere on the page", () => {
+    // Pathos supported the Giving Hour with no logo file and fell straight through: that section
+    // rendered only the partners it could show a logo for.
+    const rendered = new Set([
+      ...partnersWithLogos("giving-hour").map((p) => p.id),
+      ...partnersSupporting("giving-hour").filter((p) => !p.logoSrc).map((p) => p.id),
+      ...partnersWithLogos("corporate").map((p) => p.id),
+      ...partnersSupporting("in-kind").map((p) => p.id),
+      ...partnersSupporting("major-gift").map((p) => p.id),
+    ])
+    const missing = PARTNERS.filter((p) => !rendered.has(p.id)).map((p) => p.name)
+    expect(missing).toEqual([])
+  })
+
+  it("gives every supporter at least one kind of support", () => {
+    expect(PARTNERS.filter((p) => p.support.length === 0)).toEqual([])
+  })
+})
