@@ -169,7 +169,9 @@ export function AthleteDetail({
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
   const [athleteData, setAthleteData] = useState(athlete)
   const [editingSection, setEditingSection] = useState<string | null>(null)
-  const [bioExpanded, setBioExpanded] = useState(false)
+  // Open by default. It is the athlete introducing themselves, directly under the banner —
+  // the one section a reader wants before they have decided to look for anything.
+  const [bioExpanded, setBioExpanded] = useState(true)
   const [linkedProfileViewAthleteIds, setLinkedProfileViewAthleteIds] = useState<Set<string>>(new Set())
   const { toast } = useToast()
 
@@ -1412,14 +1414,14 @@ export function AthleteDetail({
         />
       )}
 
-      {/* Athlete Profile (Bio) — first card after the hero, collapsed until someone wants the narrative. */}
+      {/* Athlete Profile (Bio) — first card after the hero.
+          No `order` class: every other section computes to order 0, and flexbox puts 0 before 1,
+          so the one card marked "first" was the only one pushed to the very bottom of the page.
+          Its position in the DOM is already right, so the ordering is left to say nothing. */}
       {SHOW_ATHLETE_BIO_SECTION ? (
       <Card
         id="bio"
-        className={cn(
-          "profile-card border-t-4 border-t-[#D3B574] shadow-md",
-          mobileRecruiterLayout && PROFILE_SECTION_ORDER.bio,
-        )}
+        className={cn("profile-card border-t-4 border-t-[#D3B574] shadow-md")}
         data-section="bio"
       >
         <div className={cn(mobileRecruiterLayout ? PROFILE_SECTION_HEADER : "bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6")}>
