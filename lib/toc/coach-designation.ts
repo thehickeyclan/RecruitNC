@@ -249,3 +249,66 @@ export function maskPhone(phone: string | null): string | null {
   if (digits.length < 4) return null
   return `••• ••• ${digits.slice(-4)}`
 }
+
+export type ContactRow = {
+  coach_key: string
+  coach_email: string | null
+  coach_phone: string | null
+}
+
+/**
+ * Groups designations that reach the same person, without needing them to hold an account.
+ *
+ * Identity resolution against the directory only merged coaches we already knew. Everyone else
+ * split on how each family happened to reach them: Tom Puckett arrived by email from one and as
+ * "Tommy Puckett" by mobile from another, and both were texted. Bobby Lloyd and Robert Bynum are
+ * one man and one phone number under two names.
+ *
+ * So the contact details do the joining. Two designations sharing an email, or sharing a mobile,
+ * are one coach — names are how people vary and numbers are not. A shared mobile between two
+ * genuinely different coaches would merge them wrongly; at a check-in desk handing out one
+ * lanyard per person, that is the safer way to be wrong.
+ */
+export function groupByContact(rows: readonly ContactRow[]): Map<string, string> {
+  const parent = new Map<string, string>()
+  const find = (k: string): string => {
+    let root = k
+    while (parent.get(root) && parent.get(root) !== root) root = parent.get(root)!
+    return root
+  }
+  const union = (a: string, b: string) => {
+    const [ra, rb] = [find(a), find(b)]
+    if (ra !== rb) parent.set(rb, ra)
+  }
+
+  for (const row of rows) {
+    const own = row.coach_key
+    if (!parent.has(own)) parent.set(own, own)
+    const email = String(row.coach_email ?? "").trim().toLowerCase()
+    const phone = phoneKeyFor(String(row.coach_phone ?? ""))
+    for (const detail of [email ? `mail:${email}` : null, phone ? `tel:${phone}` : null]) {
+      if (!detail) continue
+      if (!parent.has(detail)) parent.set(detail, detail)
+      union(detail, own)
+    }
+  }
+
+  // One key per group, preferring a known person, then an email, then whatever we have — so the
+  // canonical key stays stable as more designations for the same coach arrive.
+  const membersByRoot = new Map<string, string[]>()
+  for (const row of rows) {
+    const root = find(row.coach_key)
+    membersByRoot.set(root, [...(membersByRoot.get(root) ?? []), row.coach_key])
+  }
+
+  const canonical = new Map<string, string>()
+  for (const members of membersByRoot.values()) {
+    const unique = [...new Set(members)].sort()
+    const chosen =
+      unique.find((k) => k.startsWith("user:")) ??
+      unique.find((k) => !k.startsWith("tel:")) ??
+      unique[0]
+    for (const member of unique) canonical.set(member, chosen)
+  }
+  return canonical
+}

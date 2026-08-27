@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   applyKnownIdentities,
   coachKeyFor,
+  groupByContact,
   maskEmail,
   maskPhone,
   dedupeIncoming,
@@ -194,5 +195,62 @@ describe("masking", () => {
     expect(maskEmail("not-an-email")).toBeNull()
     expect(maskEmail(null)).toBeNull()
     expect(maskPhone("12")).toBeNull()
+  })
+})
+
+describe("groupByContact", () => {
+  const row = (key: string, email: string | null, phone: string | null) => ({
+    coach_key: key,
+    coach_email: email,
+    coach_phone: phone,
+  })
+
+  it("merges the same phone reached under two names", () => {
+    // Tom Puckett by email from one family, "Tommy Puckett" by mobile from another. One coach,
+    // one lanyard — and he was texted twice before this.
+    const map = groupByContact([
+      row("tom@carolinacargo.com", "tom@carolinacargo.com", "+1 (704) 453-9208"),
+      row("tel:7044539208", null, "7044539208"),
+    ])
+    expect(map.get("tom@carolinacargo.com")).toBe(map.get("tel:7044539208"))
+  })
+
+  it("prefers a real address over a phone as the surviving key", () => {
+    const map = groupByContact([
+      row("tom@carolinacargo.com", "tom@carolinacargo.com", "7044539208"),
+      row("tel:7044539208", null, "7044539208"),
+    ])
+    expect(map.get("tel:7044539208")).toBe("tom@carolinacargo.com")
+  })
+
+  it("prefers a known person over either", () => {
+    const map = groupByContact([
+      row("user:abc", "justin@x.com", "8566388831"),
+      row("justin@x.com", "justin@x.com", null),
+      row("tel:8566388831", null, "8566388831"),
+    ])
+    expect(new Set([...map.values()]).size).toBe(1)
+    expect(map.get("tel:8566388831")).toBe("user:abc")
+  })
+
+  it("merges on a shared email as well as a shared number", () => {
+    const map = groupByContact([
+      row("a@club.com", "a@club.com", "1112223333"),
+      row("second-key", "A@Club.com", null),
+    ])
+    expect(map.get("a@club.com")).toBe(map.get("second-key"))
+  })
+
+  it("leaves genuinely different coaches apart", () => {
+    const map = groupByContact([
+      row("one@club.com", "one@club.com", "1112223333"),
+      row("two@club.com", "two@club.com", "4445556666"),
+    ])
+    expect(map.get("one@club.com")).not.toBe(map.get("two@club.com"))
+  })
+
+  it("keeps a coach with no contact details to themselves", () => {
+    const map = groupByContact([row("solo", null, null)])
+    expect(map.get("solo")).toBe("solo")
   })
 })

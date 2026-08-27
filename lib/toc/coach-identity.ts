@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { applyKnownIdentities, phoneKeyFor, type KnownPerson } from "@/lib/toc/coach-designation"
+import { applyKnownIdentities, groupByContact, phoneKeyFor, type KnownPerson } from "@/lib/toc/coach-designation"
 
 /**
  * Loads coach designations and resolves them onto the people we already hold.
@@ -7,6 +7,10 @@ import { applyKnownIdentities, phoneKeyFor, type KnownPerson } from "@/lib/toc/c
  * Every caller needs the same two things and they must agree: the resolved list, and a way back
  * from a resolved coach to the rows that fed them. Approving used the resolved key against the
  * table directly, matched nothing, and reported success — the button did nothing at all.
+ *
+ * Resolution runs twice over: against the directory for coaches who hold an account, then across
+ * the contact details for everybody else. Without the second pass, Tom Puckett arrived by email
+ * from one family and as "Tommy Puckett" by mobile from another, and both were texted.
  */
 
 const COLUMNS =
@@ -59,7 +63,22 @@ export async function loadResolvedCoachRows(
     }
   }
 
-  const resolved = applyKnownIdentities(rows as never, identities) as unknown as Record<string, unknown>[]
+  const viaDirectory = applyKnownIdentities(rows as never, identities) as unknown as Record<string, unknown>[]
+
+  // The directory only merges coaches who hold an account. Everyone else split on how each family
+  // happened to reach them, so the contact details join the rest: a shared mobile or a shared
+  // address is one coach, whatever name was typed.
+  const canonical = groupByContact(
+    viaDirectory.map((r) => ({
+      coach_key: String(r.coach_key),
+      coach_email: (r.coach_email as string | null) ?? null,
+      coach_phone: (r.coach_phone as string | null) ?? null,
+    })),
+  )
+  const resolved = viaDirectory.map((r) => ({
+    ...r,
+    coach_key: canonical.get(String(r.coach_key)) ?? r.coach_key,
+  }))
 
   const originalKeys = new Map<string, string[]>()
   rows.forEach((row, i) => {
