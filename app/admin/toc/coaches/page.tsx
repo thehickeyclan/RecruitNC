@@ -13,7 +13,7 @@ import type { CheckInCoach } from "@/lib/toc/coach-designation"
  */
 export default function TocCoachesPage() {
   const [coaches, setCoaches] = useState<CheckInCoach[]>([])
-  const [totals, setTotals] = useState({ coaches: 0, designations: 0, approved: 0, pending: 0 })
+  const [totals, setTotals] = useState({ coaches: 0, wrestlers: 0, approved: 0, pending: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState<string | null>(null)
@@ -25,7 +25,7 @@ export default function TocCoachesPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error ?? "Could not load coaches.")
       setCoaches(data.coaches ?? [])
-      setTotals(data.totals ?? { coaches: 0, designations: 0, approved: 0, pending: 0 })
+      setTotals(data.totals ?? { coaches: 0, wrestlers: 0, approved: 0, pending: 0 })
       setError(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load coaches.")
@@ -61,12 +61,23 @@ export default function TocCoachesPage() {
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-rnc-gold">Tournament of Champions</p>
         <h1 className="mt-2 text-3xl font-extrabold">Corner coaches</h1>
 
-        <div className="mt-4 flex flex-wrap gap-6 text-sm text-slate-300 print:hidden">
-          <span><strong className="text-white">{totals.coaches}</strong> coaches</span>
-          <span><strong className="text-white">{totals.designations}</strong> designations</span>
-          <span><strong className="text-white">{totals.approved}</strong> approved</span>
-          <span><strong className="text-white">{totals.pending}</strong> pending</span>
-        </div>
+        {/* A handful of headline numbers, so a KPI row rather than a chart. Values carry no
+            colour of their own: the label is what distinguishes them, and a number that turns
+            red on its own tells a reader nothing they can act on. */}
+        <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 print:hidden">
+          {[
+            { label: "Coaches", value: totals.coaches, hint: "lanyards to print" },
+            { label: "Wrestlers covered", value: totals.wrestlers, hint: "have named a coach" },
+            { label: "Approved", value: totals.approved, hint: "cleared for the floor" },
+            { label: "Pending review", value: totals.pending, hint: "waiting on you" },
+          ].map((tile) => (
+            <div key={tile.label} className="rounded-xl border border-rnc-line bg-rnc-surface px-4 py-3">
+              <dt className="text-xs font-semibold text-slate-400">{tile.label}</dt>
+              <dd className="mt-1 text-3xl font-semibold leading-none text-white">{tile.value}</dd>
+              <p className="mt-1 text-xs text-slate-500">{tile.hint}</p>
+            </div>
+          ))}
+        </dl>
 
         <div className="mt-4 flex flex-wrap gap-3 print:hidden">
           <button

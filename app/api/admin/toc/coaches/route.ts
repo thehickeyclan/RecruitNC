@@ -23,11 +23,15 @@ export async function GET() {
   }
 
   const coaches = toCheckInList(data ?? [])
+  // Wrestlers who have named at least one coach — the response rate, and the number that says
+  // how much chasing is left rather than how much has arrived.
+  const wrestlers = new Set((data ?? []).map((r) => r.athlete_name)).size
+
   return NextResponse.json({
     coaches,
     totals: {
       coaches: coaches.length,
-      designations: (data ?? []).length,
+      wrestlers,
       approved: coaches.filter((c) => c.status === "approved").length,
       pending: coaches.filter((c) => c.status === "pending").length,
     },
