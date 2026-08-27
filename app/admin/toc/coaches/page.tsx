@@ -77,7 +77,7 @@ export default function TocCoachesPage() {
   const shown = onlyApproved ? coaches.filter((c) => c.status === "approved") : coaches
 
   return (
-    <main className="min-h-screen bg-rnc-ink px-4 py-8 text-white sm:px-6">
+    <main className="admin-dark-page min-h-screen bg-rnc-ink px-4 py-8 text-white sm:px-6">
       <div className="mx-auto w-full max-w-4xl">
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-rnc-gold">Tournament of Champions</p>
         <h1 className="mt-2 text-3xl font-extrabold">Corner coaches</h1>

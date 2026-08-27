@@ -111,7 +111,7 @@ export default function TocPoolResultsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-rnc-ink px-4 pb-24 pt-6 text-white">
+    <main className="admin-dark-page min-h-screen bg-rnc-ink px-4 pb-24 pt-6 text-white">
       <div className="mx-auto flex max-w-xl flex-col gap-5">
         <header className="flex flex-col gap-1">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-rnc-gold">Tournament of Champions</p>
