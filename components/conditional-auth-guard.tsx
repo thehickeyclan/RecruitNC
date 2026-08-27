@@ -31,6 +31,8 @@ export function ConditionalAuthGuard({
 
   const isHomepage = path === "/"
   const publicRoutePrefixes = [
+    // Partners send this link to their own people; a login wall would waste it.
+    "/supporters",
     // The printed QR code on lanyards and signage points here. A login wall would make every
     // one of them useless, and they cannot be reprinted.
     "/download",

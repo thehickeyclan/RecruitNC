@@ -1,30 +1,22 @@
+import { partnersSupporting } from "@/lib/partners"
+
 /**
  * Corporate / brand partners spotlight on the fundraising hub.
- * Add rows as assets land under `public/images/sponsors/`.
- * Prefer wide horizontal logo files (~3:1) for the spotlight layout; full brand sheets work but may appear small.
+ *
+ * Kept as a view over the single partner list rather than its own copy: this and the tournament's
+ * Giving Hour section each held their own, and The Guild sat in both under two different names.
+ * Add partners in `lib/partners.ts`.
  */
 export type CorporateSponsor = {
   id: string
-  /** Short label for captions /aria */
+  /** Short label for captions / aria */
   name: string
   logoSrc: string
   logoAlt: string
   href: string
 }
 
-export const CORPORATE_SPONSORS: readonly CorporateSponsor[] = [
-  {
-    id: "the-guild",
-    name: "The Guild",
-    logoSrc: "/images/sponsors/the-guild-logo.jpg",
-    logoAlt: "The Guild — train with Division I wrestlers",
-    href: "https://www.wrestlingguild.com",
-  },
-  {
-    id: "submission-solutions",
-    name: "Submission Solutions",
-    logoSrc: "/images/sponsors/submission-solutions-logo.png",
-    logoAlt: "Submission Solutions — athlete hygiene and training care",
-    href: "https://submission-solutions.com",
-  },
-] as const
+export const CORPORATE_SPONSORS: readonly CorporateSponsor[] = partnersSupporting("corporate")
+  // The spotlight links every logo, so a partner with no site is not shown here.
+  .filter((p): p is typeof p & { href: string } => Boolean(p.href))
+  .map((p) => ({ id: p.id, name: p.name, logoSrc: p.logoSrc, logoAlt: p.logoAlt, href: p.href }))

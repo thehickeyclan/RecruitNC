@@ -1,39 +1,9 @@
 import Image from "next/image"
 import { ExternalLink, Gift, Ticket } from "lucide-react"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass, tocSectionClass } from "@/components/toc/toc-theme"
+import { partnersSupporting } from "@/lib/partners"
 
-const GIVING_HOUR_PARTNERS = [
-  {
-    name: "Cronin Customs",
-    href: "https://www.cronincustoms.com/",
-    logoUrl: "/images/united-ascent/2026-08-24-partner-cronin-customs.png",
-  },
-  {
-    name: "Funky Flickr Boyz",
-    href: "https://funkyflickrboyzgear.com/",
-    logoUrl: "/images/united-ascent/2026-08-24-partner-funky-flickr-boyz.png",
-  },
-  {
-    name: "Wrestling Mindset",
-    href: "https://www.wrestlingmindset.com/",
-    logoUrl: "/images/united-ascent/2026-08-24-partner-wrestling-mindset.png",
-  },
-  {
-    name: "The Wrestling Guild",
-    href: "https://www.wrestlingguild.com/",
-    logoUrl: "/images/sponsors/the-guild-logo.jpg",
-  },
-  {
-    name: "Triangle Wrestling Academy",
-    href: "https://trianglewrestlingacademy.com/",
-    logoUrl: "/images/united-ascent/2026-08-24-partner-triangle-wrestling-academy.jpg",
-  },
-  {
-    name: "V1G1L Wrestling",
-    href: null,
-    logoUrl: "/images/united-ascent/2026-08-24-partner-v1g1l-wrestling.png",
-  },
-] as const
+const GIVING_HOUR_PARTNERS = partnersSupporting("giving-hour")
 
 export function TocGivingHourSection() {
   return (
@@ -82,7 +52,7 @@ export function TocGivingHourSection() {
               <>
                 <div className="relative aspect-square w-full">
                   <Image
-                    src={partner.logoUrl}
+                    src={partner.logoSrc}
                     alt={`${partner.name} logo`}
                     fill
                     className="object-contain p-5 transition-transform group-hover:scale-105"
