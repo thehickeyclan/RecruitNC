@@ -8,18 +8,26 @@
  * Logos live under `public/images/`. Wide horizontal files (~3:1) sit best in the spotlight rows.
  */
 
+/**
+ * `giving-hour` funds the raffle prizes given away before the finals.
+ * `corporate` supports the wider programme through the year.
+ * `in-kind` gave goods or services to the event rather than money.
+ * `major-gift` gave something large enough to name on its own.
+ * A supporter can be more than one.
+ */
+export type SupportKind = "giving-hour" | "corporate" | "in-kind" | "major-gift"
+
 export type Partner = {
   id: string
   name: string
-  /** Null when a partner has no site to send people to. */
+  /** Null when there is no site to send people to. */
   href: string | null
-  logoSrc: string
+  /** Null when we have no logo file. The name carries it instead of a broken image. */
+  logoSrc: string | null
   logoAlt: string
-  /**
-   * `giving-hour` partners fund the raffle prizes given away before the finals.
-   * `corporate` partners support the wider programme. A partner can be both.
-   */
-  support: ReadonlyArray<"giving-hour" | "corporate">
+  /** What they actually gave. Shown for in-kind and major gifts, where the gift is the point. */
+  gift?: string
+  support: ReadonlyArray<SupportKind>
 }
 
 export const PARTNERS: readonly Partner[] = [
@@ -79,8 +87,85 @@ export const PARTNERS: readonly Partner[] = [
     logoAlt: "V1G1L Wrestling",
     support: ["giving-hour"],
   },
+  {
+    id: "pathos",
+    name: "Pathos",
+    href: null,
+    logoSrc: null,
+    logoAlt: "Pathos — Live the Light",
+    gift: "Socks for every Giving Hour winner",
+    support: ["giving-hour"],
+  },
+  {
+    id: "hickey-family",
+    name: "The Hickey Family",
+    href: null,
+    logoSrc: null,
+    logoAlt: "The Hickey Family",
+    gift: "Two Resilite mats — a $24,000 donation to NC United",
+    support: ["major-gift"],
+  },
+  {
+    id: "farina",
+    name: "Farina",
+    href: "https://farinaraleigh.com/",
+    logoSrc: null,
+    logoAlt: "Farina, Raleigh",
+    gift: "Food for the VIP lounge",
+    support: ["in-kind"],
+  },
+  {
+    id: "ny-bagel-and-deli",
+    name: "New York Bagel & Deli",
+    href: "https://www.newyorkbagelanddeliraleigh.com/",
+    logoSrc: null,
+    logoAlt: "New York Bagel & Deli, Raleigh",
+    gift: "Breakfast bagels for the VIP lounge",
+    support: ["in-kind"],
+  },
+  {
+    id: "defense-soap",
+    name: "Defense Soap",
+    href: "https://defensesoap.com/",
+    logoSrc: null,
+    logoAlt: "Defense Soap",
+    gift: "Supplies to keep the mats clean and the athletes and officials healthy",
+    support: ["in-kind"],
+  },
+  {
+    id: "wegmans",
+    name: "Wegmans",
+    href: null,
+    logoSrc: null,
+    logoAlt: "Wegmans",
+    gift: "Gift cards toward food and drink",
+    support: ["in-kind"],
+  },
+  {
+    id: "costco",
+    name: "Costco Wholesale",
+    href: null,
+    logoSrc: null,
+    logoAlt: "Costco Wholesale",
+    gift: "Gift cards toward food and drink",
+    support: ["in-kind"],
+  },
+  {
+    id: "food-lion",
+    name: "Food Lion",
+    href: null,
+    logoSrc: null,
+    logoAlt: "Food Lion",
+    gift: "Gift cards toward food and drink",
+    support: ["in-kind"],
+  },
 ] as const
 
-export function partnersSupporting(kind: "giving-hour" | "corporate"): readonly Partner[] {
+export function partnersSupporting(kind: SupportKind): readonly Partner[] {
   return PARTNERS.filter((p) => p.support.includes(kind))
+}
+
+/** Only those we can actually show a logo for — a grid of names is a list, not a grid. */
+export function partnersWithLogos(kind: SupportKind): readonly (Partner & { logoSrc: string })[] {
+  return partnersSupporting(kind).filter((p): p is Partner & { logoSrc: string } => Boolean(p.logoSrc))
 }

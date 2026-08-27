@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import Image from "next/image"
 import Link from "next/link"
 import { Gift, Ticket } from "lucide-react"
-import { PARTNERS, partnersSupporting } from "@/lib/partners"
+import { partnersSupporting, partnersWithLogos, type Partner } from "@/lib/partners"
 
 /**
  * Everyone supporting North Carolina wrestling, on a page that outlives any one event.
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     "The partners funding raffle prizes at the Giving Hour, the Caden Perry Scholarship, and everyone supporting North Carolina wrestling.",
 }
 
-function PartnerGrid({ partners }: { partners: readonly (typeof PARTNERS)[number][] }) {
+function PartnerGrid({ partners }: { partners: readonly (Partner & { logoSrc: string })[] }) {
   return (
     <ul className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
       {partners.map((partner) => {
@@ -57,8 +57,10 @@ function PartnerGrid({ partners }: { partners: readonly (typeof PARTNERS)[number
 }
 
 export default function SupportersPage() {
-  const givingHour = partnersSupporting("giving-hour")
-  const corporate = partnersSupporting("corporate")
+  const givingHour = partnersWithLogos("giving-hour")
+  const corporate = partnersWithLogos("corporate")
+  const inKind = partnersSupporting("in-kind")
+  const majorGifts = partnersSupporting("major-gift")
 
   return (
     <main className="min-h-screen bg-[#0A1628] px-4 py-16 text-white sm:px-6">
@@ -99,12 +101,51 @@ export default function SupportersPage() {
           <PartnerGrid partners={givingHour} />
         </section>
 
+        {majorGifts.length > 0 ? (
+          <section className="mt-16">
+            <h2 className="text-2xl font-bold">Major gifts</h2>
+            <ul className="mt-6 flex flex-col gap-4">
+              {majorGifts.map((p) => (
+                <li key={p.id} className="rounded-2xl border border-[#D3B574] bg-[#13294B] p-6">
+                  <p className="text-xl font-bold">{p.name}</p>
+                  <p className="mt-2 leading-relaxed text-[#A8BBD1]">{p.gift}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
+        {inKind.length > 0 ? (
+          <section className="mt-16">
+            <h2 className="text-2xl font-bold">Donated to the tournament</h2>
+            <p className="mt-4 max-w-2xl leading-relaxed text-[#A8BBD1]">
+              Food, supplies and equipment given rather than bought — every one of these is a cost
+              the tournament did not have to pass on to families.
+            </p>
+            <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+              {inKind.map((p) => (
+                <li key={p.id} className="rounded-xl border border-[#1a3a5f] bg-[#0f1c2e] p-5">
+                  {p.href ? (
+                    <a href={p.href} target="_blank" rel="noreferrer" className="font-bold text-white hover:text-[#D3B574]">
+                      {p.name}
+                    </a>
+                  ) : (
+                    <span className="font-bold text-white">{p.name}</span>
+                  )}
+                  <p className="mt-1 text-sm leading-relaxed text-[#A8BBD1]">{p.gift}</p>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
         <section className="mt-16">
           <h2 className="text-2xl font-bold">The Caden Perry Scholarship</h2>
           <p className="mt-4 max-w-2xl leading-relaxed text-[#A8BBD1]">
             Named for a North Carolina wrestler, and awarded on need and character rather than on a
             record. Academic results, win-loss records and rankings are explicitly not selection
-            criteria.
+            criteria. The fund now stands at <strong className="text-white">$1,300</strong>, funded
+            by NC United.
           </p>
           <Link
             href="/fundraising/scholarships/caden-perry"

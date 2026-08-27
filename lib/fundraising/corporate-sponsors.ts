@@ -1,4 +1,4 @@
-import { partnersSupporting } from "@/lib/partners"
+import { partnersWithLogos } from "@/lib/partners"
 
 /**
  * Corporate / brand partners spotlight on the fundraising hub.
@@ -16,7 +16,7 @@ export type CorporateSponsor = {
   href: string
 }
 
-export const CORPORATE_SPONSORS: readonly CorporateSponsor[] = partnersSupporting("corporate")
+export const CORPORATE_SPONSORS: readonly CorporateSponsor[] = partnersWithLogos("corporate")
   // The spotlight links every logo, so a partner with no site is not shown here.
   .filter((p): p is typeof p & { href: string } => Boolean(p.href))
   .map((p) => ({ id: p.id, name: p.name, logoSrc: p.logoSrc, logoAlt: p.logoAlt, href: p.href }))

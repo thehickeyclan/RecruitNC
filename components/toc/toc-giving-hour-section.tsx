@@ -1,9 +1,9 @@
 import Image from "next/image"
 import { ExternalLink, Gift, Ticket } from "lucide-react"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass, tocSectionClass } from "@/components/toc/toc-theme"
-import { partnersSupporting } from "@/lib/partners"
+import { partnersWithLogos } from "@/lib/partners"
 
-const GIVING_HOUR_PARTNERS = partnersSupporting("giving-hour")
+const GIVING_HOUR_PARTNERS = partnersWithLogos("giving-hour")
 
 export function TocGivingHourSection() {
   return (
