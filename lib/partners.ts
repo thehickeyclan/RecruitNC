@@ -123,7 +123,7 @@ export const PARTNERS: readonly Partner[] = [
     id: "ny-bagel-and-deli",
     name: "New York Bagel & Deli",
     href: "https://www.newyorkbagelanddeliraleigh.com/",
-    logoSrc: null,
+    logoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/HTEiGhQGr2XWMEl-b2L3Z-NY%20Bagel.png",
     logoAlt: "New York Bagel & Deli, Raleigh",
     gift: "Breakfast bagels for the VIP lounge",
     support: ["in-kind"],
