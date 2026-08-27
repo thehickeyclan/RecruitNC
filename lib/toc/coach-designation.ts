@@ -181,3 +181,39 @@ export function toCheckInList(
     (a, b) => b.athletes.length - a.athletes.length || a.coachName.localeCompare(b.coachName),
   )
 }
+
+
+export type KnownPerson = {
+  /** The canonical key every designation for this person collapses onto. */
+  key: string
+  name: string | null
+  email: string | null
+  phone: string | null
+}
+
+/**
+ * Collapses designations onto the people we already know.
+ *
+ * A coach named by email on one form and by mobile on another arrives as two rows and would be
+ * issued two lanyards. When either detail matches somebody already in the directory, both rows
+ * resolve to that person and the duplicate disappears without anyone merging it by hand — which
+ * is what should have happened the first time a parent gave a number we already held.
+ *
+ * `identities` maps a designation's own key to the person it belongs to.
+ */
+export function applyKnownIdentities<
+  T extends { coach_key: string; coach_email: string | null; coach_phone: string | null; coach_name: string },
+>(rows: T[], identities: Map<string, KnownPerson>): T[] {
+  return rows.map((row) => {
+    const known = identities.get(row.coach_key)
+    if (!known) return row
+    return {
+      ...row,
+      coach_key: known.key,
+      // Prefer what the family typed for the name — they know what he goes by — but fill in the
+      // contact details we hold and they did not supply.
+      coach_email: row.coach_email ?? known.email,
+      coach_phone: row.coach_phone ?? known.phone,
+    }
+  })
+}

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import {
+  applyKnownIdentities,
   coachKeyFor,
   dedupeIncoming,
   fitsWithinCap,
@@ -131,5 +132,48 @@ describe("toCheckInList", () => {
       row("smith@club.com", "Jones", 117, "approved"),
     ])
     expect(list[0].status).toBe("approved")
+  })
+})
+
+describe("applyKnownIdentities", () => {
+  const row = (key: string, email: string | null, phone: string | null, athlete: string) => ({
+    coach_key: key,
+    coach_name: "Justin Perry",
+    coach_email: email,
+    coach_phone: phone,
+    status: "pending",
+    athlete_name: athlete,
+    weight_class: null,
+    submitted_club: null,
+    submitted_dob: null,
+  })
+
+  it("collapses a coach given by email on one form and by phone on another", () => {
+    // Exactly the Justin Perry case: same person, two designations, two lanyards without this.
+    const identities = new Map([
+      ["justin.usmc@yahoo.com", { key: "user:abc", name: "Justin Perry", email: "justin.usmc@yahoo.com", phone: "8566388831" }],
+      ["tel:8566388831", { key: "user:abc", name: "Justin Perry", email: "justin.usmc@yahoo.com", phone: "8566388831" }],
+    ])
+    const merged = applyKnownIdentities(
+      [row("justin.usmc@yahoo.com", "justin.usmc@yahoo.com", null, "Jacob Perry"),
+       row("tel:8566388831", null, "8566388831", "Xavier Bernthal")],
+      identities,
+    )
+    const list = toCheckInList(merged)
+    expect(list).toHaveLength(1)
+    expect(list[0].athletes.map((a) => a.athleteName).sort()).toEqual(["Jacob Perry", "Xavier Bernthal"])
+  })
+
+  it("fills in contact details we hold and the family did not give", () => {
+    const identities = new Map([
+      ["tel:8566388831", { key: "user:abc", name: "Justin Perry", email: "justin.usmc@yahoo.com", phone: "8566388831" }],
+    ])
+    const [merged] = applyKnownIdentities([row("tel:8566388831", null, "8566388831", "Xavier Bernthal")], identities)
+    expect(merged.coach_email).toBe("justin.usmc@yahoo.com")
+  })
+
+  it("leaves a coach we do not know untouched", () => {
+    const [merged] = applyKnownIdentities([row("stranger@example.com", "stranger@example.com", null, "A")], new Map())
+    expect(merged.coach_key).toBe("stranger@example.com")
   })
 })

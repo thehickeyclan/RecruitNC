@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/admin-auth"
-import { toCheckInList } from "@/lib/toc/coach-designation"
+import { applyKnownIdentities, phoneKeyFor, toCheckInList, type KnownPerson } from "@/lib/toc/coach-designation"
 
 /** The deduped coach list, and approving or declining one. */
 
@@ -22,10 +22,45 @@ export async function GET() {
     return NextResponse.json({ error: "Could not load coaches.", coaches: [] }, { status: 500 })
   }
 
-  const coaches = toCheckInList(data ?? [])
+  const rows = data ?? []
+
+  // Resolve designations against people we already hold. A coach named by email on one form and
+  // by mobile on another is one person and one lanyard; the directory is what proves it, and
+  // leaving that to be spotted by eye is how two lanyards get printed for the same man.
+  const emails = [...new Set(rows.map((r) => String(r.coach_email ?? "").trim().toLowerCase()).filter(Boolean))]
+  const phones = [...new Set(rows.map((r) => phoneKeyFor(String(r.coach_phone ?? ""))).filter(Boolean))] as string[]
+
+  const identities = new Map<string, KnownPerson>()
+  if (emails.length > 0 || phones.length > 0) {
+    const [byEmail, byPhone] = await Promise.all([
+      emails.length
+        ? admin.from("user_profiles").select("user_id,full_name,email,cell_phone").in("email", emails)
+        : Promise.resolve({ data: [] as never[] }),
+      phones.length
+        ? admin.from("user_profiles").select("user_id,full_name,email,cell_phone").in("cell_phone", phones)
+        : Promise.resolve({ data: [] as never[] }),
+    ])
+
+    const people = [...(byEmail.data ?? []), ...(byPhone.data ?? [])]
+    for (const person of people) {
+      const known: KnownPerson = {
+        key: `user:${person.user_id}`,
+        name: person.full_name ?? null,
+        email: person.email ?? null,
+        phone: person.cell_phone ?? null,
+      }
+      // Index the person under every key a family could have reached them by.
+      const personEmail = String(person.email ?? "").trim().toLowerCase()
+      if (personEmail) identities.set(personEmail, known)
+      const personPhone = phoneKeyFor(String(person.cell_phone ?? ""))
+      if (personPhone) identities.set(`tel:${personPhone}`, known)
+    }
+  }
+
+  const coaches = toCheckInList(applyKnownIdentities(rows, identities))
   // Wrestlers who have named at least one coach — the response rate, and the number that says
   // how much chasing is left rather than how much has arrived.
-  const wrestlers = new Set((data ?? []).map((r) => r.athlete_name)).size
+  const wrestlers = new Set(rows.map((r) => r.athlete_name)).size
 
   return NextResponse.json({
     coaches,
