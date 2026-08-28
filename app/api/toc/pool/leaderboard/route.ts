@@ -1,5 +1,7 @@
-import { NextResponse } from "next/server"
+import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { resolveRequestUserId } from "@/lib/request-user"
+import { shortenRealName } from "@/lib/toc/pool-display-name"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { getLockedDraw } from "@/lib/toc/bracket-service"
 import { scoreEntry, type PoolBout, type PoolResults } from "@/lib/toc/pool-scoring"
@@ -18,20 +20,20 @@ import { rankStandings } from "@/lib/toc/pool-ranking"
  * Returns names and totals. It never returns picks — the pool's promise is that nobody sees
  * anyone else's bracket, and the safest way to keep that promise is for the endpoint that
  * everyone can call to have no access to them in its response shape at all.
+ *
+ * Signed in only. Most entrants are minors and this board carries their names; it was readable by
+ * anybody on the internet who knew the path, which is a wider audience than a wrestling pool
+ * needs. Knowing who is asking also lets it mark the reader's own row, which is most of why
+ * anybody wanted more of a real name on the board in the first place.
  */
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
 
-/** "Matthew Hickey" → "Matthew H." Most entrants are minors; full names do not belong on a public board. */
-function displayName(fullName: string | null, fallback: string): string {
-  const parts = String(fullName ?? "").trim().split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return fallback
-  if (parts.length === 1) return parts[0]
-  return `${parts[0]} ${parts[parts.length - 1][0]}.`
-}
+export async function GET(request: NextRequest) {
+  const viewerId = await resolveRequestUserId(request)
+  if (!viewerId) return NextResponse.json({ error: "Sign in to see the leaderboard." }, { status: 401 })
 
-export async function GET() {
   const admin = createAdminClient()
 
   const [{ data: entries, error: entriesError }, { data: results, error: resultsError }] = await Promise.all([
@@ -124,19 +126,23 @@ export async function GET() {
 
   const userIds = [...totals.keys()]
   const namesById = new Map<string, string | null>()
+  const chosenById = new Map<string, string>()
   if (userIds.length > 0) {
-    const { data: profiles } = await admin
-      .from("user_profiles")
-      .select("user_id,full_name")
-      .in("user_id", userIds)
+    const [{ data: profiles }, { data: chosen }] = await Promise.all([
+      admin.from("user_profiles").select("user_id,full_name").in("user_id", userIds),
+      admin.from("toc_pool_display_names").select("user_id,display_name").in("user_id", userIds),
+    ])
     for (const p of profiles ?? []) namesById.set(p.user_id, p.full_name)
+    // A chosen name wins. Missing table or no choice both fall back to the real name, shortened.
+    for (const c of chosen ?? []) if (c.display_name) chosenById.set(String(c.user_id), String(c.display_name))
   }
 
   const standings = rankStandings(
     userIds.map((userId) => {
       const t = totals.get(userId)!
       return {
-        name: displayName(namesById.get(userId) ?? null, "Entrant"),
+        name: chosenById.get(userId) ?? shortenRealName(namesById.get(userId) ?? null, "Entrant"),
+        isYou: userId === viewerId,
         points: t.points,
         correct: t.correct,
         weightsEntered: t.weights,

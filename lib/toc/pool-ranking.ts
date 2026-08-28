@@ -9,6 +9,8 @@ import { compareTiebreak, type TiebreakTotals } from "@/lib/toc/final-prediction
 
 export type StandingInput = {
   name: string
+  /** Whether this row belongs to the person reading the board. */
+  isYou?: boolean
   points: number
   correct: number
   weightsEntered: number
