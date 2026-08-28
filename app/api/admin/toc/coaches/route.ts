@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/admin-auth"
-import { toCheckInList } from "@/lib/toc/coach-designation"
+import { coachCapFlags, MAX_COACHES_PER_ATHLETE, toCheckInList } from "@/lib/toc/coach-designation"
 import { loadResolvedCoachRows } from "@/lib/toc/coach-identity"
 
 /** The deduped coach list, and approving or declining one. */
@@ -25,8 +25,13 @@ export async function GET() {
   // how much chasing is left rather than how much has arrived.
   const wrestlers = new Set(rows.map((r) => r.athlete_name)).size
 
+  // Counted on the resolved rows, so one coach named twice by different details is one coach.
+  const capFlags = coachCapFlags(resolved as never)
+
   return NextResponse.json({
     coaches,
+    capFlags,
+    maxCoachesPerAthlete: MAX_COACHES_PER_ATHLETE,
     totals: {
       coaches: coaches.length,
       wrestlers,
@@ -34,6 +39,7 @@ export async function GET() {
       pending: coaches.filter((c) => c.status === "pending").length,
       notified: coaches.filter((c) => c.notifiedAt).length,
       awaitingSend: coaches.filter((c) => c.status === "approved" && !c.notifiedAt).length,
+      overCap: capFlags.filter((f) => f.reason !== "would-exceed").length,
     },
   })
 }

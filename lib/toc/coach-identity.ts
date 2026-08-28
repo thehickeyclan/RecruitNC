@@ -14,7 +14,7 @@ import { applyKnownIdentities, groupByContact, phoneKeyFor, type KnownPerson } f
  */
 
 const COLUMNS =
-  "coach_key,coach_name,coach_email,coach_phone,status,athlete_name,weight_class,relationship,submitted_club,submitted_dob,notified_at,notified_channel"
+  "coach_key,coach_name,coach_email,coach_phone,status,athlete_id,athlete_name,weight_class,relationship,submitted_club,submitted_dob,notified_at,notified_channel"
 
 export type ResolvedCoachRows = {
   rows: Record<string, unknown>[]

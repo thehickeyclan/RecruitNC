@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   applyKnownIdentities,
+  coachCapFlags,
   coachKeyFor,
   groupByContact,
   maskEmail,
@@ -252,5 +253,121 @@ describe("groupByContact", () => {
   it("keeps a coach with no contact details to themselves", () => {
     const map = groupByContact([row("solo", null, null)])
     expect(map.get("solo")).toBe("solo")
+  })
+})
+
+describe("coachCapFlags", () => {
+  const row = (over: Partial<Parameters<typeof coachCapFlags>[0][number]>) => ({
+    athlete_id: "a1",
+    athlete_name: "Johnny Smith",
+    weight_class: 133,
+    coach_key: "one@x.com",
+    coach_name: "One",
+    status: "approved",
+    ...over,
+  })
+
+  it("says nothing when every wrestler is within the cap", () => {
+    expect(
+      coachCapFlags([row({}), row({ coach_key: "two@x.com", coach_name: "Two" })]),
+    ).toEqual([])
+  })
+
+  it("flags a wrestler with three approved coaches on one record", () => {
+    const flags = coachCapFlags([
+      row({}),
+      row({ coach_key: "two@x.com", coach_name: "Two" }),
+      row({ coach_key: "three@x.com", coach_name: "Three" }),
+    ])
+    expect(flags).toHaveLength(1)
+    expect(flags[0].reason).toBe("over")
+    expect(flags[0].approved).toEqual(["One", "Three", "Two"])
+    expect(flags[0].athleteName).toBe("Johnny Smith")
+  })
+
+  it("counts people rather than rows, so one coach named twice is one coach", () => {
+    // Both families named the same coach; identity resolution already collapsed them onto one key.
+    expect(
+      coachCapFlags([
+        row({}),
+        row({ coach_key: "one@x.com", coach_name: "One" }),
+        row({ coach_key: "two@x.com", coach_name: "Two" }),
+      ]),
+    ).toEqual([])
+  })
+
+  it("does not count declined or pending coaches as approved", () => {
+    const flags = coachCapFlags([
+      row({}),
+      row({ coach_key: "two@x.com", coach_name: "Two" }),
+      row({ coach_key: "three@x.com", coach_name: "Three", status: "declined" }),
+    ])
+    expect(flags).toEqual([])
+  })
+
+  it("catches a wrestler holding two athlete records, which the per-athlete cap cannot see", () => {
+    const flags = coachCapFlags([
+      row({}),
+      row({ coach_key: "two@x.com", coach_name: "Two" }),
+      row({ athlete_id: "a2", coach_key: "three@x.com", coach_name: "Three" }),
+      row({ athlete_id: "a2", coach_key: "four@x.com", coach_name: "Four" }),
+    ])
+    expect(flags).toHaveLength(1)
+    expect(flags[0].reason).toBe("duplicate")
+    expect(flags[0].athleteIds.sort()).toEqual(["a1", "a2"])
+    expect(flags[0].approved).toHaveLength(4)
+  })
+
+  it("treats punctuation and case as the same name", () => {
+    const flags = coachCapFlags([
+      row({ athlete_name: "Johnny O'Brien-Smith" }),
+      row({ athlete_name: "Johnny O'Brien-Smith", coach_key: "two@x.com", coach_name: "Two" }),
+      row({ athlete_id: "a2", athlete_name: "johnny obrien smith", coach_key: "three@x.com", coach_name: "Three" }),
+    ])
+    expect(flags).toHaveLength(1)
+    expect(flags[0].reason).toBe("duplicate")
+  })
+
+  it("warns before the click when approving what is pending would break the cap", () => {
+    const flags = coachCapFlags([
+      row({}),
+      row({ coach_key: "two@x.com", coach_name: "Two" }),
+      row({ coach_key: "three@x.com", coach_name: "Three", status: "pending" }),
+    ])
+    expect(flags).toHaveLength(1)
+    expect(flags[0].reason).toBe("would-exceed")
+    expect(flags[0].approved).toEqual(["One", "Two"])
+    expect(flags[0].pending).toEqual(["Three"])
+  })
+
+  it("reports a wrestler once, at the most serious reason", () => {
+    const flags = coachCapFlags([
+      row({}),
+      row({ coach_key: "two@x.com", coach_name: "Two" }),
+      row({ coach_key: "three@x.com", coach_name: "Three" }),
+      row({ coach_key: "four@x.com", coach_name: "Four", status: "pending" }),
+    ])
+    expect(flags).toHaveLength(1)
+    expect(flags[0].reason).toBe("over")
+  })
+
+  it("groups rows with no athlete id by the name they were filed under", () => {
+    const flags = coachCapFlags([
+      row({ athlete_id: null }),
+      row({ athlete_id: null, coach_key: "two@x.com", coach_name: "Two" }),
+      row({ athlete_id: null, coach_key: "three@x.com", coach_name: "Three" }),
+    ])
+    expect(flags).toHaveLength(1)
+    expect(flags[0].reason).toBe("over")
+    expect(flags[0].athleteIds).toEqual([])
+  })
+
+  it("leaves two different wrestlers who share a coach alone", () => {
+    expect(
+      coachCapFlags([
+        row({ athlete_id: "a1", athlete_name: "Johnny Smith" }),
+        row({ athlete_id: "a2", athlete_name: "Peter Jones" }),
+      ]),
+    ).toEqual([])
   })
 })

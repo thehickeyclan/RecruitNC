@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
-import type { CheckInCoach } from "@/lib/toc/coach-designation"
+import type { CheckInCoach, CoachCapFlag } from "@/lib/toc/coach-designation"
+import { CoachCapBanner } from "@/components/toc/admin/coach-cap-banner"
 
 /**
  * The coach list, as the door will use it.
@@ -13,6 +14,8 @@ import type { CheckInCoach } from "@/lib/toc/coach-designation"
  */
 export default function TocCoachesPage() {
   const [coaches, setCoaches] = useState<CheckInCoach[]>([])
+  const [capFlags, setCapFlags] = useState<CoachCapFlag[]>([])
+  const [maxCoaches, setMaxCoaches] = useState(2)
   const [totals, setTotals] = useState({ coaches: 0, wrestlers: 0, approved: 0, pending: 0, awaitingSend: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -25,6 +28,8 @@ export default function TocCoachesPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data?.error ?? "Could not load coaches.")
       setCoaches(data.coaches ?? [])
+      setCapFlags(data.capFlags ?? [])
+      setMaxCoaches(data.maxCoachesPerAthlete ?? 2)
       setTotals(data.totals ?? { coaches: 0, wrestlers: 0, approved: 0, pending: 0, awaitingSend: 0 })
       setError(null)
     } catch (e) {
@@ -82,9 +87,8 @@ export default function TocCoachesPage() {
         <p className="text-xs font-bold uppercase tracking-[0.2em] text-rnc-gold">Tournament of Champions</p>
         <h1 className="mt-2 text-3xl font-extrabold">Corner coaches</h1>
 
-        {/* A handful of headline numbers, so a KPI row rather than a chart. Values carry no
-            colour of their own: the label is what distinguishes them, and a number that turns
-            red on its own tells a reader nothing they can act on. */}
+        <CoachCapBanner flags={capFlags} max={maxCoaches} />
+
         <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5 print:hidden">
           {[
             { label: "Coaches", value: totals.coaches, hint: "lanyards to print" },

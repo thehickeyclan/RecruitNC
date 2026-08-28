@@ -312,3 +312,194 @@ export function groupByContact(rows: readonly ContactRow[]): Map<string, string>
   }
   return canonical
 }
+
+export type CoachCapFlag = {
+  athleteName: string
+  /** Every athlete record this name resolved to. More than one is the thing to look at. */
+  athleteIds: string[]
+  weightClass: number | null
+  /** Coach names, one per person, after identity resolution. */
+  approved: string[]
+  pending: string[]
+  reason: "over" | "duplicate" | "would-exceed"
+}
+
+/**
+ * Lower case, single spaces, punctuation folded — "Johnny O'Brien-Smith" and
+ * "johnny obrien smith" are one boy.
+ *
+ * Apostrophes vanish and everything else separates, because they behave differently: O'Brien is
+ * Obrien, while Brien-Smith is two names. Doing either to both splits a boy from himself.
+ */
+function athleteNameKey(name: string): string {
+  return name.toLowerCase().replace(/['\u2019]/g, "").replace(/[^a-z0-9]+/g, " ").trim()
+}
+
+/**
+ * Wrestlers carrying more corner coaches than the cap allows.
+ *
+ * The submission form already refuses a third coach, counting what an athlete has on file, so
+ * nothing a family can do produces this. What can: a wrestler holding two athlete records, a row
+ * edited straight in the database, or two submissions read-then-writing at the same moment. All
+ * three end the same way — a fourth adult at the edge of the mat with a lanyard we printed.
+ *
+ * Counts people, not rows: the same coach reached by email from one family and by mobile from
+ * another is one lanyard, and rows arrive here already resolved onto that person.
+ *
+ * Three things are worth an admin's attention, and they are not the same thing:
+ *   over          — one athlete record, more approved coaches than the cap. Always wrong.
+ *   duplicate     — one name across several athlete records. Usually a duplicated profile;
+ *                   sometimes two wrestlers who share a name, which is why it says which.
+ *   would-exceed  — within the cap today, but approving what is pending would break it. Approve
+ *                   acts on a coach across every wrestler they corner, so one click can push
+ *                   several athletes over at once.
+ */
+/** Approved beats waiting beats declined, whichever row it came from. */
+function strongestStanding(
+  seen: "approved" | "pending" | "declined" | undefined,
+  incoming: string,
+): "approved" | "pending" | "declined" {
+  const rank = { approved: 2, pending: 1, declined: 0 } as const
+  const next = incoming === "approved" ? "approved" : incoming === "declined" ? "declined" : "pending"
+  if (!seen) return next
+  return rank[next] > rank[seen] ? next : seen
+}
+
+export function coachCapFlags(
+  rows: {
+    athlete_id?: string | null
+    athlete_name: string
+    weight_class: number | null
+    coach_key: string
+    coach_name: string
+    status: string
+  }[],
+  max: number = MAX_COACHES_PER_ATHLETE,
+): CoachCapFlag[] {
+  type Group = {
+    athleteName: string
+    athleteIds: Set<string>
+    weightClass: number | null
+    /** coach key → name and standing for this athlete. Declined is settled, not waiting. */
+    coaches: Map<string, { name: string; status: "approved" | "pending" | "declined" }>
+  }
+
+  const byRecord = new Map<string, Group>()
+  const recordsByName = new Map<string, string[]>()
+
+  for (const row of rows) {
+    // A row with no athlete id still belongs to somebody; fall back to the name it was filed under.
+    const nameKey = athleteNameKey(row.athlete_name)
+    const recordKey = row.athlete_id ? `id:${row.athlete_id}` : `name:${nameKey}`
+
+    let group = byRecord.get(recordKey)
+    if (!group) {
+      group = {
+        athleteName: row.athlete_name,
+        athleteIds: new Set(),
+        weightClass: row.weight_class,
+        coaches: new Map(),
+      }
+      byRecord.set(recordKey, group)
+      const siblings = recordsByName.get(nameKey) ?? []
+      siblings.push(recordKey)
+      recordsByName.set(nameKey, siblings)
+    }
+    if (row.athlete_id) group.athleteIds.add(row.athlete_id)
+    if (group.weightClass == null) group.weightClass = row.weight_class
+
+    const seen = group.coaches.get(row.coach_key)
+    // Approved on any row for this wrestler is approved for this wrestler, and a coach still
+    // waiting anywhere is still waiting.
+    group.coaches.set(row.coach_key, {
+      name: seen?.name ?? row.coach_name,
+      status: strongestStanding(seen?.status, row.status),
+    })
+  }
+
+  const split = (group: Group) => {
+    const approved: string[] = []
+    const pending: string[] = []
+    for (const coach of group.coaches.values()) {
+      if (coach.status === "approved") approved.push(coach.name)
+      else if (coach.status === "pending") pending.push(coach.name)
+      // Declined is neither: they are not on the floor, and approving them is not on the cards.
+    }
+    return { approved: approved.sort(), pending: pending.sort() }
+  }
+
+  const flags: CoachCapFlag[] = []
+  const flaggedRecords = new Set<string>()
+
+  for (const [recordKey, group] of byRecord) {
+    const { approved, pending } = split(group)
+    if (approved.length > max) {
+      flaggedRecords.add(recordKey)
+      flags.push({
+        athleteName: group.athleteName,
+        athleteIds: [...group.athleteIds],
+        weightClass: group.weightClass,
+        approved,
+        pending,
+        reason: "over",
+      })
+    }
+  }
+
+  // One name, several athlete records. Counted across the records, because a wrestler with two
+  // profiles gets two full allowances and the per-record check sees nothing wrong with either.
+  for (const [, recordKeys] of recordsByName) {
+    if (recordKeys.length < 2) continue
+    if (recordKeys.some((key) => flaggedRecords.has(key))) continue
+
+    const groups = recordKeys.map((key) => byRecord.get(key)!)
+    const coaches: Group["coaches"] = new Map()
+    for (const group of groups) {
+      for (const [key, coach] of group.coaches) {
+        const seen = coaches.get(key)
+        coaches.set(key, { name: seen?.name ?? coach.name, status: strongestStanding(seen?.status, coach.status) })
+      }
+    }
+    const merged: Group = {
+      athleteName: groups[0].athleteName,
+      athleteIds: new Set(groups.flatMap((g) => [...g.athleteIds])),
+      weightClass: groups.find((g) => g.weightClass != null)?.weightClass ?? null,
+      coaches,
+    }
+    const { approved, pending } = split(merged)
+    if (approved.length > max) {
+      recordKeys.forEach((key) => flaggedRecords.add(key))
+      flags.push({
+        athleteName: merged.athleteName,
+        athleteIds: [...merged.athleteIds],
+        weightClass: merged.weightClass,
+        approved,
+        pending,
+        reason: "duplicate",
+      })
+    }
+  }
+
+  for (const [recordKey, group] of byRecord) {
+    if (flaggedRecords.has(recordKey)) continue
+    const { approved, pending } = split(group)
+    if (approved.length <= max && approved.length + pending.length > max) {
+      flags.push({
+        athleteName: group.athleteName,
+        athleteIds: [...group.athleteIds],
+        weightClass: group.weightClass,
+        approved,
+        pending,
+        reason: "would-exceed",
+      })
+    }
+  }
+
+  const order = { over: 0, duplicate: 1, "would-exceed": 2 } as const
+  return flags.sort(
+    (a, b) =>
+      order[a.reason] - order[b.reason] ||
+      b.approved.length - a.approved.length ||
+      a.athleteName.localeCompare(b.athleteName),
+  )
+}
