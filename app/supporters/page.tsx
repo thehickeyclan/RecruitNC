@@ -164,11 +164,11 @@ export default function SupportersPage() {
 
         {inKind.length > 0 ? (
           <section className="mt-16">
-            <h2 className="text-2xl font-bold">Given, not bought</h2>
+            <h2 className="text-2xl font-bold">Given by our community</h2>
             <p className="mt-4 max-w-2xl leading-relaxed text-[#A8BBD1]">
-              Small businesses and national names alike, sending food, supplies and drink to an
-              event they had nothing to gain from. Every item here is a cost we did not carry, and
-              every dollar it saved goes straight back into our wrestling community.
+              Local shops and national names alike, sending food, supplies and drink so the
+              weekend looks after the people in it. What they gave is what we did not have to
+              spend, and every dollar of it goes back into North Carolina wrestling.
             </p>
             <ul className="mt-6 grid gap-3 sm:grid-cols-2">
               {inKind.map((p) => (
