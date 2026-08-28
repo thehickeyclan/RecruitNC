@@ -301,7 +301,9 @@ export const TOC_TICKET_SALE_TIMING = "Friday, Aug 28th at 9:00 AM EST" as const
 /** ~500 spectator seats (athletes not counted): families of competing athletes get first access. Per .cursorrules, never put the seat NUMBER in public copy. */
 export const TOC_TICKET_LIMITED_LINE = "Limited seating — athletes' families get first access" as const
 /** Kept for the Aug 28th flip to live buy links. */
-export const TOC_GOFAN_TICKETS_URL = "https://gofan.co/app/school/NC101846" as const
+// The event itself rather than the school's GoFan page: the school page lists everything NC
+// United sells, so a spectator had to find the right row before they could buy.
+export const TOC_GOFAN_TICKETS_URL = "https://gofan.co/event/6745154?schoolId=NC101846" as const
 
 export const TOC_NC_UNITED_ABOUT = {
   headline: "About NC United",

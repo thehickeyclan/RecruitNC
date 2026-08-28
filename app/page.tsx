@@ -22,6 +22,7 @@ import {
   loadLatestCommits,
   type HomeRankedProspect,
 } from "@/lib/home-data"
+import { TOC_GOFAN_TICKETS_URL } from "@/lib/toc/constants"
 
 export const revalidate = 120
 
@@ -164,6 +165,20 @@ export default async function HomePage() {
               <ArrowRight className="h-4 w-4" />
             </span>
           </Link>
+
+          {/* Tickets sit beside the field rather than inside that link — somebody who has decided
+              to come should not have to read the bracket first. */}
+          <p className="-mt-1 pb-3">
+            <a
+              href={TOC_GOFAN_TICKETS_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#D3B574] px-4 py-2 text-sm font-bold text-[#0A1628] transition-colors hover:bg-[#c4a665]"
+            >
+              Buy Tournament of Champions tickets
+              <ArrowRight className="h-4 w-4" />
+            </a>
+          </p>
         </div>
       </section>
 
