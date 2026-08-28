@@ -175,10 +175,11 @@ export const PARTNERS: readonly Partner[] = [
   },
   {
     id: "state-farm",
-    name: "State Farm",
+    // The agent asked to be named rather than the brand — it is his agency doing the giving.
+    name: "Chad Richards State Farm",
     href: null,
     logoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/FD8FI3AmsMBy1gFT_-uYQ-State%20Farm%20.png",
-    logoAlt: "State Farm",
+    logoAlt: "Chad Richards State Farm",
     gift: "Food for the VIP lounge",
     support: ["in-kind"],
   },
