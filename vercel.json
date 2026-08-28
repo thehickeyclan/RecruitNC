@@ -16,6 +16,10 @@
     {
       "path": "/api/cron/calendar-alerts",
       "schedule": "0 17 * * *"
+    },
+    {
+      "path": "/api/cron/backfill-profiles",
+      "schedule": "30 4 * * *"
     }
   ]
 }
