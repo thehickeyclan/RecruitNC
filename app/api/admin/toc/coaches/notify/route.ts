@@ -79,8 +79,24 @@ export async function POST(request: NextRequest) {
     return true
   })
 
-  const results: { coach: string; channel: string; ok: boolean }[] = []
+  const results: { coach: string; channel: string; ok: boolean; skipped?: string }[] = []
   const now = new Date().toISOString()
+
+  /**
+   * Every destination already written to, and every one used in this run.
+   *
+   * Grouping is what decides who counts as one coach, and grouping is what failed: two coaches
+   * texted twice because the same man arrived under two keys. This does not care about grouping.
+   * A number or an address that has been messaged is not messaged again, whatever the list thinks.
+   */
+  const alreadyReached = new Set<string>()
+  for (const row of resolved) {
+    if (!(row as { notified_at?: string | null }).notified_at) continue
+    const email = String((row as { coach_email?: string | null }).coach_email ?? "").trim().toLowerCase()
+    if (email) alreadyReached.add(`mail:${email}`)
+    const phone = toE164(String((row as { coach_phone?: string | null }).coach_phone ?? ""))
+    if (phone) alreadyReached.add(`tel:${phone}`)
+  }
 
   for (const coach of coaches) {
     const athleteNames = coach.athletes.map((a) => a.athleteName)
@@ -95,6 +111,20 @@ export async function POST(request: NextRequest) {
     else if (wanted === "sms" && canText) channel = "sms"
     else if (wanted === "auto") channel = canText ? "sms" : canEmail ? "email" : "none"
     else channel = canText ? "sms" : canEmail ? "email" : "none"
+
+    const destination =
+      channel === "email" && coach.coachEmail
+        ? `mail:${coach.coachEmail.trim().toLowerCase()}`
+        : channel === "sms" && e164
+          ? `tel:${e164}`
+          : null
+
+    // The last line before a second message reaches somebody.
+    if (destination && alreadyReached.has(destination) && !force) {
+      results.push({ coach: coach.coachName, channel, ok: false, skipped: "already contacted at this destination" })
+      continue
+    }
+    if (destination) alreadyReached.add(destination)
 
     let ok = false
     if (channel === "email" && coach.coachEmail) {
@@ -115,10 +145,12 @@ export async function POST(request: NextRequest) {
     results.push({ coach: coach.coachName, channel, ok })
   }
 
+  const skipped = results.filter((r) => r.skipped)
   return NextResponse.json({
     attempted: results.length,
     sent: results.filter((r) => r.ok).length,
-    failed: results.filter((r) => !r.ok),
+    skipped: skipped.length,
+    failed: results.filter((r) => !r.ok && !r.skipped),
     results,
   })
 }
