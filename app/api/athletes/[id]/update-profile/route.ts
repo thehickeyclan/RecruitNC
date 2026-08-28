@@ -2,9 +2,10 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const cookieStore = cookies()
+    const { id } = await params
+    const cookieStore = await cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -30,15 +31,26 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     const { data: athlete, error: fetchError } = await supabase
       .from("athletes")
       .select("claimed_by_user_id")
-      .eq("id", params.id)
+      .eq("id", id)
       .single()
 
     if (fetchError || !athlete) {
       return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 })
     }
 
+    // Same rule as can-edit: the claimer, or a parent linked to this athlete. They must agree —
+    // a page that offers an edit and an endpoint that refuses it is worse than neither.
     if (athlete.claimed_by_user_id !== user.id) {
-      return NextResponse.json({ success: false, error: "Not authorized" }, { status: 403 })
+      const { data: link } = await supabase
+        .from("parent_athlete_links")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("athlete_id", id)
+        .maybeSingle()
+
+      if (!link) {
+        return NextResponse.json({ success: false, error: "Not authorized" }, { status: 403 })
+      }
     }
 
     // Get update data from request
@@ -60,7 +72,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
         contactEmail: updates.email,
         updated_at: new Date().toISOString(),
       })
-      .eq("id", params.id)
+      .eq("id", id)
       .select()
       .single()
 

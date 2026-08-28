@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Use auth-helpers to read/write Supabase cookies correctly in route handlers
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const supabase = createRouteHandlerClient({ cookies: () => cookieStore })
 
     // Get the current user from session
