@@ -103,14 +103,6 @@ export function getSuggestedPrompts(pathname: string): string[] {
       "What athletes are ranked in the top 20?",
     ]
   }
-  if (pathname.includes("/tournament") || pathname.includes("/tools/tournament")) {
-    return [
-      "What time will we finish?",
-      "How many wrestlers can I fit with 5 mats for a 7 PM finish?",
-      "What's a reasonable finish time for a Saturday tournament?",
-      "What are the top reasons NC tournaments fail?",
-    ]
-  }
   if (pathname.includes("/nchsaa")) {
     return [
       "Who won the 4A state championship at 132lbs in 2025?",

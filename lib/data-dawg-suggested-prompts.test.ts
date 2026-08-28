@@ -47,9 +47,50 @@ describe("getSuggestedPrompts", () => {
 
   it("tailors chips to the page instead of always showing the default set", () => {
     const home = getSuggestedPrompts("/").join("|")
-    for (const page of ["/nhsca", "/fargo", "/schools", "/tournament", "/rankings"]) {
+    // "/tournament" is deliberately absent: it used to serve run-the-event chips, and the only
+    // pages matching it are read by parents. Falling through to the general set is the fix.
+    for (const page of ["/nhsca", "/fargo", "/schools", "/rankings"]) {
       expect(getSuggestedPrompts(page).join("|"), `${page} fell through to the default set`).not.toBe(home)
     }
+  })
+
+  it("never offers a parent the tournament director's questions", () => {
+    // A mother opening the TOC page in the app was asked whether she wanted to know how many
+    // wrestlers fit on five mats. /tournament-of-champions contains "/tournament", so a loose
+    // substring match handed her a job she does not have.
+    const directorChips = [
+      "What time will we finish?",
+      "How many wrestlers can I fit with 5 mats for a 7 PM finish?",
+      "What's a reasonable finish time for a Saturday tournament?",
+      "What are the top reasons NC tournaments fail?",
+    ]
+    const pages = [
+      "/",
+      "/tournament-of-champions",
+      "/tournament-of-champions/field",
+      "/recruiting/tournaments",
+      "/tournament",
+      "/rankings",
+      "/athletes",
+      "/nchsaa",
+      "/schools",
+      "/fargo",
+      "/nhsca",
+    ]
+    for (const page of pages) {
+      for (const chip of directorChips) {
+        expect(getSuggestedPrompts(page), `${page} still offers "${chip}"`).not.toContain(chip)
+      }
+    }
+  })
+
+  it("gives the TOC page the general chips a parent can actually use", () => {
+    expect(getSuggestedPrompts("/tournament-of-champions")).toEqual(getSuggestedPrompts("/"))
+  })
+
+  it("still routes the director's questions when one of them is typed", () => {
+    expect(getRouteForSuggestedPrompt("What time will we finish?")).toBeTruthy()
+    expect(getRouteForSuggestedPrompt("What are the top reasons NC tournaments fail?")).toBeTruthy()
   })
 
   it("keeps rankings chips on rankings pages (both path spellings)", () => {
