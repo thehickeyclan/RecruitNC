@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/admin-auth"
 import { coachCapFlags, MAX_COACHES_PER_ATHLETE, toCheckInList } from "@/lib/toc/coach-designation"
 import { loadResolvedCoachRows } from "@/lib/toc/coach-identity"
+import { loadCoachTickets } from "@/lib/toc/coach-purchase-view"
 
 /** The deduped coach list, and approving or declining one. */
 
@@ -28,8 +29,15 @@ export async function GET() {
   // Counted on the resolved rows, so one coach named twice by different details is one coach.
   const capFlags = coachCapFlags(resolved as never)
 
+  // Approved and told is not the same as gone and got it, and only the door cares about the
+  // difference. Degrades to nothing when the purchases table is not there yet.
+  const tickets = await loadCoachTickets(admin, loaded.value, coaches)
+  const withTickets = coaches.map((coach) => ({ ...coach, ticket: tickets.byCoach.get(coach.coachKey) ?? null }))
+
   return NextResponse.json({
-    coaches,
+    coaches: withTickets,
+    unmatchedPurchases: tickets.unmatched,
+    purchasesReady: tickets.ready,
     capFlags,
     maxCoachesPerAthlete: MAX_COACHES_PER_ATHLETE,
     totals: {
@@ -40,6 +48,8 @@ export async function GET() {
       notified: coaches.filter((c) => c.notifiedAt).length,
       awaitingSend: coaches.filter((c) => c.status === "approved" && !c.notifiedAt).length,
       overCap: capFlags.filter((f) => f.reason !== "would-exceed").length,
+      ticketsBought: withTickets.filter((c) => c.ticket).length,
+      approvedWithoutTicket: withTickets.filter((c) => c.status === "approved" && !c.ticket).length,
     },
   })
 }

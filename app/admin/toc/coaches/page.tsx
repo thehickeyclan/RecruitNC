@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import type { CheckInCoach, CoachCapFlag } from "@/lib/toc/coach-designation"
+import type { CoachTicket, UnmatchedPurchase } from "@/lib/toc/coach-purchase-view"
 import { CoachCapBanner } from "@/components/toc/admin/coach-cap-banner"
 
 /**
@@ -13,10 +14,14 @@ import { CoachCapBanner } from "@/components/toc/admin/coach-cap-banner"
  * the check-in table about whether somebody belongs on the floor.
  */
 export default function TocCoachesPage() {
-  const [coaches, setCoaches] = useState<CheckInCoach[]>([])
+  const [coaches, setCoaches] = useState<(CheckInCoach & { ticket?: CoachTicket | null })[]>([])
+  const [unmatched, setUnmatched] = useState<UnmatchedPurchase[]>([])
+  const [purchasesReady, setPurchasesReady] = useState(true)
+  const [paste, setPaste] = useState("")
+  const [showPaste, setShowPaste] = useState(false)
   const [capFlags, setCapFlags] = useState<CoachCapFlag[]>([])
   const [maxCoaches, setMaxCoaches] = useState(2)
-  const [totals, setTotals] = useState({ coaches: 0, wrestlers: 0, approved: 0, pending: 0, awaitingSend: 0 })
+  const [totals, setTotals] = useState({ coaches: 0, wrestlers: 0, approved: 0, pending: 0, awaitingSend: 0, ticketsBought: 0, approvedWithoutTicket: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState<string | null>(null)
@@ -29,8 +34,10 @@ export default function TocCoachesPage() {
       if (!res.ok) throw new Error(data?.error ?? "Could not load coaches.")
       setCoaches(data.coaches ?? [])
       setCapFlags(data.capFlags ?? [])
+      setUnmatched(data.unmatchedPurchases ?? [])
+      setPurchasesReady(data.purchasesReady !== false)
       setMaxCoaches(data.maxCoachesPerAthlete ?? 2)
-      setTotals(data.totals ?? { coaches: 0, wrestlers: 0, approved: 0, pending: 0, awaitingSend: 0 })
+      setTotals(data.totals ?? { coaches: 0, wrestlers: 0, approved: 0, pending: 0, awaitingSend: 0, ticketsBought: 0, approvedWithoutTicket: 0 })
       setError(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load coaches.")
@@ -57,6 +64,45 @@ export default function TocCoachesPage() {
       await load()
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not send.")
+    } finally {
+      setSaving(null)
+    }
+  }
+
+  async function importPaste() {
+    setSaving("import")
+    setError(null)
+    try {
+      const res = await fetch("/api/admin/toc/coaches/purchases", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paste }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data?.error ?? "Could not import.")
+      setPaste("")
+      setShowPaste(false)
+      await load()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not import.")
+    } finally {
+      setSaving(null)
+    }
+  }
+
+  async function linkPurchase(orderId: string, coachKey: string | null) {
+    setSaving(`order:${orderId}`)
+    setError(null)
+    try {
+      const res = await fetch("/api/admin/toc/coaches/purchases", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId, coachKey }),
+      })
+      if (!res.ok) throw new Error((await res.json())?.error ?? "Could not link that.")
+      await load()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not link that.")
     } finally {
       setSaving(null)
     }
@@ -89,13 +135,15 @@ export default function TocCoachesPage() {
 
         <CoachCapBanner flags={capFlags} max={maxCoaches} />
 
-        <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-5 print:hidden">
+        <dl className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7 print:hidden">
           {[
             { label: "Coaches", value: totals.coaches, hint: "lanyards to print" },
             { label: "Wrestlers covered", value: totals.wrestlers, hint: "have named a coach" },
             { label: "Approved", value: totals.approved, hint: "cleared for the floor" },
             { label: "Pending review", value: totals.pending, hint: "waiting on you" },
             { label: "To contact", value: totals.awaitingSend, hint: "approved, not yet told" },
+            { label: "Credentials bought", value: totals.ticketsBought, hint: "have their ticket" },
+            { label: "Not yet bought", value: totals.approvedWithoutTicket, hint: "approved, no ticket" },
           ].map((tile) => (
             <div key={tile.label} className="rounded-xl border border-rnc-line bg-rnc-surface px-4 py-3">
               <dt className="text-xs font-semibold text-slate-400">{tile.label}</dt>
@@ -132,6 +180,88 @@ export default function TocCoachesPage() {
           </button>
         </div>
 
+        <div className="mt-4 print:hidden">
+          <button
+            type="button"
+            onClick={() => setShowPaste((v) => !v)}
+            className="rounded-lg border border-rnc-line px-4 py-2 text-sm font-semibold"
+          >
+            {showPaste ? "Cancel" : "Paste GoFan orders"}
+          </button>
+          {showPaste ? (
+            <div className="mt-3 rounded-xl border border-rnc-line bg-rnc-surface p-4">
+              <p className="text-sm text-slate-300">
+                Paste the GoFan order report straight in — tabs, blank cells and all. Orders are keyed on
+                the order number, so pasting the same export twice changes nothing.
+              </p>
+              <textarea
+                value={paste}
+                onChange={(event) => setPaste(event.target.value)}
+                rows={8}
+                placeholder="Email\tFirst name\tLast name\tPurchase Date…"
+                className="mt-3 w-full rounded-lg border border-rnc-line bg-rnc-ink p-3 font-mono text-xs text-white"
+              />
+              <button
+                type="button"
+                disabled={saving === "import" || !paste.trim()}
+                onClick={() => void importPaste()}
+                className="mt-3 rounded-lg bg-rnc-gold px-4 py-2 text-sm font-bold text-rnc-ink disabled:opacity-40"
+              >
+                {saving === "import" ? "Importing…" : "Import orders"}
+              </button>
+            </div>
+          ) : null}
+        </div>
+
+        {!purchasesReady ? (
+          <p className="mt-4 rounded-lg border border-rnc-line bg-rnc-surface px-4 py-3 text-sm text-slate-300 print:hidden">
+            Credential tracking is not switched on yet — the purchases table still needs creating.
+          </p>
+        ) : null}
+
+        {unmatched.length > 0 ? (
+          <section className="mt-4 rounded-xl border border-rnc-line bg-rnc-surface p-4 print:hidden">
+            <h2 className="text-sm font-bold uppercase tracking-wide text-slate-300">
+              {unmatched.length} credential{unmatched.length === 1 ? "" : "s"} bought by somebody not on the list
+            </h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Either a coach we hold only by mobile who checked out under a different address, or somebody who
+              is not a designated coach at all. Nothing is joined up on a guess — pick the coach yourself.
+            </p>
+            <ul className="mt-3 flex flex-col gap-3">
+              {unmatched.map((purchase) => (
+                <li key={purchase.orderId} className="text-sm">
+                  <p className="font-semibold text-white">
+                    {purchase.email}{" "}
+                    <span className="font-normal text-slate-400">
+                      · order {purchase.orderId}
+                      {purchase.purchasedAt ? ` · ${purchase.purchasedAt}` : ""}
+                    </span>
+                  </p>
+                  {purchase.suggestions.length > 0 ? (
+                    <div className="mt-1 flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-slate-400">Looks like:</span>
+                      {purchase.suggestions.map((suggestion) => (
+                        <button
+                          key={suggestion.coachKey}
+                          type="button"
+                          disabled={saving === `order:${purchase.orderId}`}
+                          onClick={() => void linkPurchase(purchase.orderId, suggestion.coachKey)}
+                          className="rounded-lg border border-rnc-gold px-3 py-1 text-xs font-semibold text-rnc-gold disabled:opacity-50"
+                        >
+                          {suggestion.coachName}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-1 text-xs text-slate-500">No coach on the list matches this address.</p>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
         {error ? <p className="mt-4 rounded-lg bg-rnc-red/15 px-4 py-3 text-sm text-red-300">{error}</p> : null}
 
         {loading ? (
@@ -164,6 +294,18 @@ export default function TocCoachesPage() {
                     >
                       {coach.status}
                     </span>
+                    {coach.ticket ? (
+                      <span
+                        className="rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-bold uppercase text-emerald-300"
+                        title={`Order ${coach.ticket.orderId}${coach.ticket.via === "linked" ? " · linked by hand" : ""}`}
+                      >
+                        Credential bought
+                      </span>
+                    ) : coach.status === "approved" ? (
+                      <span className="rounded-full border border-rnc-line px-3 py-1 text-xs font-semibold uppercase text-slate-400">
+                        No ticket yet
+                      </span>
+                    ) : null}
                     {coach.status !== "approved" ? (
                       <button
                         type="button"

@@ -91,3 +91,40 @@ export async function loadResolvedCoachRows(
 
   return { ok: true, value: { rows, resolved, originalKeys } }
 }
+
+/**
+ * Every address and number each resolved coach is known by.
+ *
+ * Resolution collapses a coach onto one key but the details that reached them are spread across
+ * the rows that produced it, and the original keys hold addresses that never became the
+ * canonical one. Matching a ticket purchase needs all of them, not just the winner.
+ */
+export function contactsByCoach(rows: ResolvedCoachRows): {
+  emails: Map<string, Set<string>>
+  phones: Map<string, Set<string>>
+} {
+  const emails = new Map<string, Set<string>>()
+  const phones = new Map<string, Set<string>>()
+
+  const add = (map: Map<string, Set<string>>, key: string, value: string | null) => {
+    if (!value) return
+    const set = map.get(key) ?? new Set<string>()
+    set.add(value)
+    map.set(key, set)
+  }
+
+  for (const row of rows.resolved) {
+    const key = String(row.coach_key)
+    add(emails, key, String(row.coach_email ?? "").trim().toLowerCase() || null)
+    add(phones, key, phoneKeyFor(String(row.coach_phone ?? "")))
+  }
+  for (const [key, originals] of rows.originalKeys) {
+    for (const original of originals) {
+      if (original.includes("@")) add(emails, key, original.trim().toLowerCase())
+      else if (original.startsWith("tel:")) add(phones, key, phoneKeyFor(original.slice(4)))
+    }
+    if (!emails.has(key)) emails.set(key, new Set())
+    if (!phones.has(key)) phones.set(key, new Set())
+  }
+  return { emails, phones }
+}
