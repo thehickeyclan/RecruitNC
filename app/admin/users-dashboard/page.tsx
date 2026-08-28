@@ -588,7 +588,16 @@ export default function UsersDashboardPage() {
     }
 
     const data: { date: string; totalUsers: number }[] = []
-    let runningTotal = 0
+
+    // Everyone who joined before the window still counts. Starting the running total at zero
+    // made a cumulative chart of 940 users finish at 800, because the 140 earliest simply
+    // dropped out when the axis was trimmed to a year.
+    const windowStart = (earliestDate as Date).getTime()
+    let runningTotal = Object.entries(countsByDay).reduce(
+      (carried, [dateKey, count]) => (new Date(dateKey).getTime() < windowStart ? carried + count : carried),
+      0,
+    )
+
     const cursor = new Date(earliestDate)
 
     while (cursor <= now) {
