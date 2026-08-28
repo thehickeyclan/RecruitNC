@@ -40,7 +40,7 @@ export const TOC_ROAD_MILESTONES: TocRoadMilestone[] = [
     atMs: Date.parse("2026-08-24T09:00:00-04:00"),
   },
   {
-    dateLabel: "Fri · Aug 28 · 9:00 AM",
+    dateLabel: "Fri · Aug 28",
     label: "Full field revealed · tickets on sale",
     detail: "Final fields announced — public tickets open. Limited seating.",
     atMs: TOC_TICKET_SALE_AT_MS,

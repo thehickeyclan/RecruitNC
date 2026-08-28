@@ -6,7 +6,7 @@ import { TOC_GOFAN_TICKETS_URL, TOC_TICKET_LIMITED_LINE, TOC_TICKET_SALE_TIMING 
 import { msUntilTocTicketSale, tocTicketsOnSale } from "@/lib/toc/ticket-sale"
 
 /**
- * Shows the on-sale announcement until Friday Aug 28, 2026 9:00 AM ET (public sale; athlete families get a private presale link first), then becomes the
+ * Shows the on-sale announcement until Friday Aug 28, 2026 8:00 AM ET (public sale; athlete families get a private presale link first), then becomes the
  * GoFan "Buy Tickets" button — no launch-morning deploy. The TOC page is force-dynamic,
  * so fresh loads flip server-side at the exact moment; the timer below flips the page for
  * anyone already sitting on it when the clock strikes.

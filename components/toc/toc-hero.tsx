@@ -63,7 +63,7 @@ export function TocHero({ config, confirmedColleges = [] }: Props) {
               <TocCountdown targetDate={TOC_EVENT_DATE} className="mt-8 sm:mt-10 justify-start" />
 
               <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-                {/* Announcement until Sunday Aug 2 9:00 AM ET, then the GoFan buy button — flips automatically. */}
+                {/* Announcement until the morning of Aug 28, then the GoFan buy button — flips automatically. */}
                 <TocTicketCta variant="hero" />
                 <a href="/tournament-of-champions/field" className={tocMobileCtaClass("primary")}>
                   Live Athlete Announcements

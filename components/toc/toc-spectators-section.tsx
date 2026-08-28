@@ -148,7 +148,7 @@ export function TocSpectatorsSection() {
                   </p>
                 </div>
               </div>
-              {/* Announcement until Sunday Aug 2 9:00 AM ET, then the GoFan buy button — flips automatically. */}
+              {/* Announcement until the morning of Aug 28, then the GoFan buy button — flips automatically. */}
               <TocTicketCta variant="card" />
               <p className="mt-3 text-xs leading-relaxed text-white/60">
                 Sales open via GoFan in a new tab — keep your mobile ticket available for entry on event day.
