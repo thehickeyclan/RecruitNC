@@ -297,7 +297,25 @@ export function scoreNchsaaRowsForSeed(rows: NchsaaRowForProfile[]): number {
   return Math.round(points * 10) / 10
 }
 
-function orderByHeadToHeadThenResume<T extends {
+/**
+ * How far a direct win may reach.
+ *
+ * Set by experiment on the real field, not picked. At 20 it did nothing: one state title is worth
+ * forty-eight, so any champion-over-placer pairing overrode the result. With no limit at all,
+ * Kristopher Kerr Jr — 1-4 against this field — held Liam Myles, a two-time state champion with
+ * the second-best résumé at 117, down to last on a single win, and sent Myles into a first-round
+ * meeting with the top seed. Fifty is about one state title: wide enough to carry every result
+ * worth carrying at 125, 149 and 174, narrow enough that one upset does not invert a bracket.
+ */
+export const HEAD_TO_HEAD_MAX_GAP = 50
+
+/**
+ * Seed order: a direct win outranks a résumé, and everything else falls to résumé score.
+ *
+ * Exported so the rule can be tested. It decides the seeds, and a rule that decides seeds should
+ * not live only inside a function nobody can call.
+ */
+export function orderByHeadToHeadThenResume<T extends {
   athlete: TocFieldAthlete
   score: number
   evidence: TocSeedEvidence
@@ -310,10 +328,15 @@ function orderByHeadToHeadThenResume<T extends {
       !remaining.some((other) => {
         if (other.athlete.athleteId === candidate.athlete.athleteId) return false
         const record = other.evidence.headToHead.find((h2h) => namesLikelySamePerson(h2h.opponent, candidate.athlete.name))
-        // A direct result resolves comparable résumés; it should not erase a
-        // materially stronger body of work. Twenty points is roughly one state
-        // placement tier in the résumé model.
-        return Boolean(record && record.wins > record.losses && other.score >= candidate.score - 20)
+        // A direct win holds, whatever the résumé says. This used to give way when the loser's
+        // résumé was more than twenty points stronger, which sounds narrow and is not: one state
+        // title is worth forty-eight, so any champion-over-placer pairing overrode the result
+        // automatically. Aiden Burkholder sat above Adam Walker on two NCHSAA titles having lost
+        // to him this season, while RecruitNC ranked Walker #4 and Burkholder #22.
+        //
+        // Head-to-head here is current-season only (see latestSeasonMatchRows), so this is a live
+        // result between two wrestlers in the same bracket — the most direct evidence there is.
+        return Boolean(record && record.wins > record.losses && other.score >= candidate.score - HEAD_TO_HEAD_MAX_GAP)
       }),
     )
 
@@ -385,13 +408,6 @@ async function scoreAthleteForTocSeed({
       const rankPoints = ranking <= 1 ? 32 : ranking <= 3 ? 28 : ranking <= 5 ? 24 : ranking <= 10 ? 18 : ranking <= 20 ? 10 : 5
       score += rankPoints
       reasons.push(`RecruitNC ranking #${ranking}`)
-    }
-
-    const rankWrestler = toNumber(athleteRow.rankwrestler_rank || athleteRow.rank_wrestler_rank || athleteRow.rw_rank)
-    if (rankWrestler != null) {
-      const rwPoints = rankWrestler <= 1 ? 18 : rankWrestler <= 3 ? 15 : rankWrestler <= 8 ? 10 : rankWrestler <= 16 ? 6 : 3
-      score += rwPoints
-      reasons.push(`RankWrestler signal #${rankWrestler}`)
     }
 
     const [bundle, duals] = await Promise.all([

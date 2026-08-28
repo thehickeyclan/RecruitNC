@@ -3,6 +3,7 @@ import {
   buildTocAiSeedRecommendations,
   filterFargoFreestyleResults,
   latestSeasonMatchRows,
+  orderByHeadToHeadThenResume,
   scoreNchsaaRowsForSeed,
 } from "@/lib/toc/ai-seeding"
 import type { TocFieldBoard } from "@/lib/toc/field-board"
@@ -146,5 +147,82 @@ describe("latestSeasonMatchRows", () => {
   it("falls back to every row when no season is recorded", () => {
     const rows = [{ athlete_id: "a", wins: 10 }, { athlete_id: "a", wins: 4 }]
     expect(latestSeasonMatchRows(rows)).toHaveLength(2)
+  })
+})
+
+describe("orderByHeadToHeadThenResume", () => {
+  const wrestler = (name: string, score: number, beat: string[] = [], lostTo: string[] = []) => ({
+    athlete: { athleteId: name, name },
+    score,
+    evidence: {
+      headToHead: [
+        ...beat.map((opponent) => ({ opponent, wins: 1, losses: 0 })),
+        ...lostTo.map((opponent) => ({ opponent, wins: 0, losses: 1 })),
+      ],
+    },
+  })
+
+  const order = (rows: ReturnType<typeof wrestler>[]) =>
+    orderByHeadToHeadThenResume(rows as never).map((r: { athlete: { name: string } }) => r.athlete.name)
+
+  it("orders by résumé when nobody has met", () => {
+    expect(order([wrestler("Weak", 40), wrestler("Strong", 180)])).toEqual(["Strong", "Weak"])
+  })
+
+  it("puts a direct winner above the wrestler they beat, whatever the résumés say", () => {
+    // Burkholder 168 with two state titles, Walker 134, Walker won this season.
+    const rows = [
+      wrestler("Burkholder", 168, [], ["Walker"]),
+      wrestler("Walker", 134, ["Burkholder"]),
+    ]
+    expect(order(rows)).toEqual(["Walker", "Burkholder"])
+  })
+
+  it("does not drag the winner above wrestlers they never met", () => {
+    // Sedgwick is stronger than both and beat nobody here; he keeps the top seed.
+    const rows = [
+      wrestler("Sedgwick", 233),
+      wrestler("Burkholder", 168, [], ["Walker"]),
+      wrestler("Walker", 134, ["Burkholder"]),
+    ]
+    expect(order(rows)).toEqual(["Sedgwick", "Walker", "Burkholder"])
+  })
+
+  it("breaks a circular series by résumé rather than looping forever", () => {
+    const rows = [
+      wrestler("A", 100, ["B"], ["C"]),
+      wrestler("B", 90, ["C"], ["A"]),
+      wrestler("C", 80, ["A"], ["B"]),
+    ]
+    const result = order(rows)
+    expect(result).toHaveLength(3)
+    expect([...result].sort()).toEqual(["A", "B", "C"])
+  })
+
+  it("respects a chain of results within reach of each other", () => {
+    const rows = [
+      wrestler("Top", 200, [], ["Middle"]),
+      wrestler("Middle", 160, ["Top"], ["Bottom"]),
+      wrestler("Bottom", 120, ["Middle"]),
+    ]
+    expect(order(rows)).toEqual(["Bottom", "Middle", "Top"])
+  })
+
+  it("will not let one upset from far below invert the bracket", () => {
+    // Kristopher Kerr Jr, 1-4 against the 117 field, beat Liam Myles once. Unlimited, that single
+    // result put a two-time state champion with the field's second-best résumé dead last and sent
+    // him into a first-round meeting with the top seed.
+    const rows = [
+      wrestler("Raper", 203, ["Myles", "Kerr"]),
+      wrestler("Myles", 185, [], ["Raper", "Kerr"]),
+      wrestler("Kerr", 112, ["Myles"], ["Raper"]),
+    ]
+    expect(order(rows)).toEqual(["Raper", "Myles", "Kerr"])
+  })
+
+  it("carries a win from just outside the résumé gap it is meant to cover", () => {
+    // 132 against 180 is 48 apart — about one state title, the case this exists for.
+    expect(order([wrestler("Better", 180, [], ["Worse"]), wrestler("Worse", 132, ["Better"])]))
+      .toEqual(["Worse", "Better"])
   })
 })
