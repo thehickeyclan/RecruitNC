@@ -207,6 +207,69 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* The app is the newest thing here and the one a visitor cannot discover by browsing, so
+          it gets a full-width block of its own rather than a strip. It sits under the tickets bar
+          because that sale is on a clock and this is not.
+
+          It links to /download rather than the App Store: an iPhone gets a 307 straight to the
+          listing from middleware, and everybody else gets told it is iPhone-only instead of
+          landing somewhere they cannot act on. The printed QR codes point at the same place. */}
+      <section className="border-b border-rnc-gold/25 bg-gradient-to-b from-[#0B1D3A] to-rnc-ink">
+        <div className="container mx-auto px-4 py-10 sm:py-14">
+          <div className="flex flex-col items-center gap-8 md:flex-row md:items-center md:justify-center md:gap-14">
+            <div className="max-w-xl text-center md:text-left">
+              <p className="inline-flex items-center gap-2 rounded-full border border-rnc-gold/50 bg-rnc-gold/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-rnc-gold">
+                New · Free
+              </p>
+              <h2 className="mt-3 text-3xl font-extrabold leading-tight text-white sm:text-4xl lg:text-5xl">
+                The NC United app is here
+              </h2>
+              <p className="mt-3 text-base leading-relaxed text-white/75 sm:text-lg">
+                Every North Carolina commitment, the prospect rankings, the club map and the whole
+                Tournament of Champions — the field, your own bracket, and the leaderboard — on your
+                phone.
+              </p>
+              {/* Chips rather than middot separators: the list wraps, and a separator stranded at
+                  the end of a line reads as a missing item. */}
+              <ul className="mt-5 flex flex-wrap justify-center gap-2 md:justify-start">
+                {["Seed every weight yourself", "Alerts when a field goes live", "Rankings and results"].map(
+                  (item) => (
+                    <li
+                      key={item}
+                      className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-sm font-semibold text-white/70"
+                    >
+                      {item}
+                    </li>
+                  ),
+                )}
+              </ul>
+              <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row md:items-start">
+                <Link
+                  href="/download"
+                  className="inline-flex items-center gap-2 rounded-xl bg-rnc-gold px-8 py-4 text-base font-extrabold text-rnc-ink transition-colors hover:bg-[#c4a665] sm:text-lg"
+                >
+                  Download for iPhone
+                  <ArrowRight className="h-5 w-5" />
+                </Link>
+                <p className="text-xs text-white/55">
+                  Free on the App Store. Android is not out yet.
+                </p>
+              </div>
+            </div>
+
+            <div className="shrink-0">
+              <Image
+                src="/nc-united-app-home.png"
+                alt="The NC United app showing Tournament of Champions, upcoming events and the latest commitments"
+                width={349}
+                height={760}
+                className="h-auto w-[210px] rounded-[1.75rem] border border-white/15 shadow-2xl sm:w-[240px]"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
