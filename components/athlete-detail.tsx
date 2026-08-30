@@ -20,6 +20,7 @@ import { WatchListButton } from "./watch-list-button"
 import { MessageAthleteButton } from "@/components/messaging/message-athlete-button"
 import { RequestProfileEditModal } from "./request-profile-edit-modal"
 import { MatchDataSectionImproved } from "./match-data-section-improved"
+import { SignificantWinsSection } from "./significant-wins-section"
 import { useAuth } from "@/contexts/auth-context"
 import { InlineEditSection } from "./inline-edit-section"
 import { InlineEditHeader } from "./inline-edit-header"
@@ -1966,6 +1967,10 @@ export function AthleteDetail({
               )}
             </div>
           </Card>
+
+      {/* Significant wins sit above the full match list: who somebody has beaten is the question
+          a profile gets opened with, and the list underneath answers how many. */}
+      <SignificantWinsSection athleteId={String(athlete.id)} />
 
       {/* 10. High School Career Match Results */}
       <div
