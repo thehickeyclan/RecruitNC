@@ -8,6 +8,10 @@ import { namesLikelySamePerson } from "@/lib/athlete-name-match"
  * weight in North Carolina: a win over a wrestler in the Tournament of Champions field, and a win
  * over a ranked prospect.
  *
+ * The season window is the caller's to apply — pass only the bouts you want considered. Every
+ * caller passes the most recent season, matching what seeding uses for head-to-head: a
+ * significant win is an argument about who somebody is beating now.
+ *
  * Unpublished classes count. The 2029 rankings are not public yet, but a win over the boy we
  * privately have at #3 in that class is no less real, and hiding it would make the section less
  * true rather than more careful. Only the fact of the ranking is used here, never the number, so

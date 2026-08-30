@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { buildTocFieldBoard } from "@/lib/toc/field-board"
+import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
 import { findSignificantWins, type Bout, type RankedOpponent } from "@/lib/significant-wins"
 
 /**
@@ -9,6 +10,10 @@ import { findSignificantWins, type Bout, type RankedOpponent } from "@/lib/signi
  * Ranked opponents include classes that are not published yet. The 2029 rankings are private, but
  * a win over one of those wrestlers is no less real — and only the fact of the ranking leaves this
  * endpoint, never the number, so nothing unpublished is disclosed by it.
+ *
+ * Most recent season only, the same window seeding uses for head-to-head. A significant win is an
+ * argument about who somebody is beating now; a win from three seasons ago, at a different weight
+ * and a different stage of growing up, is a different claim and does not belong in the same list.
  */
 
 export const dynamic = "force-dynamic"
@@ -22,9 +27,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     admin.from("toc_invitations").select("*, athletes(id,name)"),
   ])
 
-  const bouts: Bout[] = (rows ?? []).flatMap((row) => {
+  const bouts: Bout[] = latestSeasonMatchRows((rows ?? []) as never).flatMap((row) => {
     try {
-      return Array.isArray(row.matches) ? row.matches : JSON.parse(String(row.matches ?? "[]"))
+      const value = (row as { matches?: unknown }).matches
+      return Array.isArray(value) ? value : JSON.parse(String(value ?? "[]"))
     } catch {
       return []
     }

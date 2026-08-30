@@ -20,6 +20,9 @@ type SignificantWin = {
  * alike. This answers the question a college coach actually opens a profile with: who has he
  * beaten that I have heard of.
  *
+ * Most recent season only, the same window seeding uses. A win from three seasons ago is a
+ * different claim than one from this year and does not belong in the same list.
+ *
  * Renders nothing at all when there are none. An empty "Significant wins" heading says something
  * about a wrestler that we do not mean to say.
  */
@@ -52,7 +55,7 @@ export function SignificantWinsSection({ athleteId }: { athleteId: string }) {
         <h2 className="text-lg font-bold text-white">Significant wins</h2>
       </div>
       <p className="mt-1 text-xs text-slate-400">
-        Wins over wrestlers in the Tournament of Champions field, or over ranked North Carolina
+        This season, over wrestlers in the Tournament of Champions field or ranked North Carolina
         prospects.
       </p>
 
