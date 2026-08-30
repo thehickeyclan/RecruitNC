@@ -12,13 +12,9 @@ export default function RankingsIndexPage() {
   const currentYear = new Date().getFullYear()
   
   // Get upcoming graduation years (current year + next 4 years)
-  const graduationYears = [
-    currentYear,
-    currentYear + 1,
-    currentYear + 2,
-    currentYear + 3,
-    currentYear + 4,
-  ]
+  // Match the classes the board itself offers. Sending somebody to a year it cannot load is
+  // worse than not offering the button.
+  const graduationYears = [currentYear, currentYear + 1, currentYear + 2, currentYear + 3, currentYear + 4]
 
   return (
     <>
@@ -50,7 +46,7 @@ export default function RankingsIndexPage() {
         {/* Quick Access Card */}
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-xl">Select Graduation Year</CardTitle>
+            <CardTitle className="text-xl">Open a graduation class</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -61,7 +57,7 @@ export default function RankingsIndexPage() {
                   variant="outline"
                   className="h-20 text-lg font-semibold hover:bg-[#13294B] hover:text-white transition-colors"
                 >
-                  <Link href={`/admin/rankings/year/${year}`}>
+                  <Link href={`/admin/rankings/board?year=${year}`}>
                     Class of {year}
                   </Link>
                 </Button>

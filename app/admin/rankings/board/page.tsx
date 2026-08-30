@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { AdminHeader } from "@/components/admin-header"
 import { Button } from "@/components/ui/button"
@@ -45,7 +46,8 @@ type BoardAthlete = {
   reviewer_note?: string
 }
 
-const years = ["2026", "2027", "2028", "2029"]
+// 2030 is in the data already. A class missing from this list cannot be worked on at all.
+const years = ["2026", "2027", "2028", "2029", "2030"]
 const genders = ["Male", "Female"]
 const darkOutlineButton = "border-blue-800 bg-slate-950 text-blue-100 hover:bg-blue-950 hover:text-white"
 const activeGoldButton = "bg-[#d6b75d] text-slate-950 hover:bg-[#e6c86b]"
@@ -83,8 +85,13 @@ function move<T>(items: T[], from: number, to: number): T[] {
 }
 
 export default function RankingBoardPage() {
-  const [year, setYear] = useState("2027")
-  const [gender, setGender] = useState("Male")
+  // The class and gender live in the URL so the older ranking routes can redirect straight to
+  // the right board rather than dropping somebody on a default they have to fix.
+  const searchParams = useSearchParams()
+  const requestedYear = searchParams.get("year")
+  const requestedGender = searchParams.get("gender")
+  const [year, setYear] = useState(requestedYear && years.includes(requestedYear) ? requestedYear : "2027")
+  const [gender, setGender] = useState(requestedGender === "Female" ? "Female" : "Male")
   const [athletes, setAthletes] = useState<BoardAthlete[]>([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
