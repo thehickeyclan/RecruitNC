@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { HEAD_TO_HEAD_MAX_GAP } from "@/lib/toc/ai-seeding"
 import {
   buildCandidateHeadToHead,
   latestProspectMatchRows,
@@ -47,7 +48,7 @@ describe("RecruitNC TOC-style ranking engine", () => {
     ])
   })
 
-  it("puts a direct winner first when résumés are within one placement tier", () => {
+  it("puts a direct winner first when the résumés are close", () => {
     const ordered = orderProspectsByHeadToHead([
       {
         id: "a",
@@ -65,7 +66,9 @@ describe("RecruitNC TOC-style ranking engine", () => {
     expect(ordered.map((row) => row.id)).toEqual(["b", "a"])
   })
 
-  it("does not let one direct win erase a materially stronger résumé", () => {
+  it("lets a direct win reorder wrestlers whose résumés are close", () => {
+    // 25 apart, about half a state title. This used to be ignored: the reach was 20 points, and
+    // one NCHSAA title scores forty-eight, so a head-to-head win never moved anybody.
     const ordered = orderProspectsByHeadToHead([
       {
         id: "a",
@@ -80,6 +83,30 @@ describe("RecruitNC TOC-style ranking engine", () => {
         head_to_head: [{ opponentId: "a", opponent: "Alpha", wins: 1, losses: 0 }],
       },
     ])
+    expect(ordered.map((row) => row.id)).toEqual(["b", "a"])
+  })
+
+  it("does not let one win from far below invert the board", () => {
+    // 130 apart is more than two state titles. Beating somebody once does not make you their
+    // equal, and letting it through put a two-time state champion last at 117 in TOC seeding.
+    const ordered = orderProspectsByHeadToHead([
+      {
+        id: "a",
+        name: "Alpha",
+        ai_score: 200,
+        head_to_head: [{ opponentId: "b", opponent: "Beta", wins: 0, losses: 1 }],
+      },
+      {
+        id: "b",
+        name: "Beta",
+        ai_score: 70,
+        head_to_head: [{ opponentId: "a", opponent: "Alpha", wins: 1, losses: 0 }],
+      },
+    ])
     expect(ordered.map((row) => row.id)).toEqual(["a", "b"])
+  })
+
+  it("uses the same reach as TOC seeding, so the two tools cannot disagree", () => {
+    expect(HEAD_TO_HEAD_MAX_GAP).toBe(50)
   })
 })

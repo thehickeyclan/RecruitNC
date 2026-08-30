@@ -8,7 +8,7 @@ import {
 } from "@/lib/national-team-live-profile-results"
 import { fetchNhscaDualsSnapshot } from "@/lib/nhsca-duals-live-results/db"
 import { placementPoints, recordWinPctPoints } from "@/lib/toc/athlete-compare"
-import { filterFargoFreestyleResults, scoreNchsaaRowsForSeed } from "@/lib/toc/ai-seeding"
+import { HEAD_TO_HEAD_MAX_GAP, filterFargoFreestyleResults, scoreNchsaaRowsForSeed } from "@/lib/toc/ai-seeding"
 import { getNationalTeamResults } from "@/lib/tournament-utils"
 
 type EvidenceKind =
@@ -299,6 +299,14 @@ export function buildCandidateHeadToHead(
  * Same pairwise rule as TOC seeding: a current-season direct winner stays above
  * the loser when the two résumés are within one placement tier (20 points).
  */
+/**
+ * A direct win outranks a résumé, within reach.
+ *
+ * The same rule and the same number as TOC seeding, deliberately: two tools that rank the same
+ * wrestlers on the same evidence should not disagree about who beat whom. It reached 20 points
+ * here too, which never fired — one state title scores forty-eight — and removing the limit
+ * outright let a wrestler with one upset win invert a whole board.
+ */
 export function orderProspectsByHeadToHead<T extends {
   id: string
   name: string
@@ -313,7 +321,9 @@ export function orderProspectsByHeadToHead<T extends {
       !remaining.some((other) => {
         if (other.id === candidate.id) return false
         const record = other.head_to_head.find((meeting) => meeting.opponentId === candidate.id)
-        return Boolean(record && record.wins > record.losses && other.ai_score >= candidate.ai_score - 20)
+        return Boolean(
+          record && record.wins > record.losses && other.ai_score >= candidate.ai_score - HEAD_TO_HEAD_MAX_GAP,
+        )
       }),
     )
 
