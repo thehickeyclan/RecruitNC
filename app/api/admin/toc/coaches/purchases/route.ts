@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/admin-auth"
-import { parseGoFanPaste } from "@/lib/toc/coach-ticket-purchases"
+import { isCoachCredential, parseGoFanPaste } from "@/lib/toc/coach-ticket-purchases"
 import { PURCHASES_TABLE } from "@/lib/toc/coach-purchase-view"
 
 /**
@@ -44,7 +44,17 @@ export async function POST(request: NextRequest) {
   const paste = typeof body?.paste === "string" ? body.paste : ""
   if (!paste.trim()) return NextResponse.json({ error: "Paste the GoFan order report." }, { status: 400 })
 
-  const purchases = parseGoFanPaste(paste)
+  const parsed = parseGoFanPaste(paste)
+  // The full event export can be pasted in as it comes; only credentials are kept.
+  const purchases = parsed.filter(isCoachCredential)
+  const skipped = parsed.length - purchases.length
+
+  if (parsed.length > 0 && purchases.length === 0) {
+    return NextResponse.json(
+      { error: `Found ${parsed.length} orders but no coach credentials among them.` },
+      { status: 400 },
+    )
+  }
   if (purchases.length === 0) {
     return NextResponse.json(
       { error: "No orders found in that. Each row needs an email address and an order number." },
@@ -70,7 +80,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: tableHint(error.message) }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true, imported: purchases.length })
+  return NextResponse.json({ ok: true, imported: purchases.length, skipped })
 }
 
 /** The one failure worth explaining rather than logging: the table is not there yet. */

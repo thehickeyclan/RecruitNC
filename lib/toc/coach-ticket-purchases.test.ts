@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { matchPurchases, parseGoFanPaste, suggestCoaches } from "./coach-ticket-purchases"
+import { isCoachCredential, matchPurchases, parseGoFanPaste, suggestCoaches } from "./coach-ticket-purchases"
 
 // Pasted exactly as the GoFan report arrives, tabs, "--" cells, wrapped status and all.
 const PASTE = `Email
@@ -121,5 +121,33 @@ describe("suggestCoaches", () => {
 
   it("will not fire on an address too short to mean anything", () => {
     expect(suggestCoaches("bg7@gmail.com", coaches)).toEqual([])
+  })
+})
+
+describe("the CSV export", () => {
+  // A row straight out of the GoFan CSV: type quoted mid-row rather than on its own line.
+  const CSV = `Email,First name,Last name,Purchase date,Purchase time,Status,Ticket type,Ticket price,Order ID
+tompuckett123@gmail.com,"","",2026-08-27,15:06,--,"TOC Weekend Coach Credential",$40.00,166826360,"",,,,Tournament of Champions
+gingernobles34@yahoo.com,"","",2026-08-26,12:18,--,"Weekend Pass",$40.00,166664273,"",,,,Tournament of Champions`
+
+  it("reads the ticket type out of a CSV row, not just a pasted report", () => {
+    const rows = parseGoFanPaste(CSV)
+    expect(rows).toHaveLength(2)
+    expect(rows[0].ticketType).toBe("TOC Weekend Coach Credential")
+    expect(rows[1].ticketType).toBe("Weekend Pass")
+  })
+
+  it("still reads the purchase date out of a CSV row", () => {
+    expect(parseGoFanPaste(CSV)[0].purchasedAt).toBe("2026-08-27")
+  })
+
+  it("separates credentials from spectator tickets", () => {
+    const rows = parseGoFanPaste(CSV)
+    expect(rows.filter(isCoachCredential).map((r) => r.email)).toEqual(["tompuckett123@gmail.com"])
+  })
+
+  it("treats a row with no ticket type as not a credential", () => {
+    expect(isCoachCredential({ email: "a@b.com", orderId: "1", purchasedAt: null, ticketType: null, status: null }))
+      .toBe(false)
   })
 })

@@ -51,12 +51,21 @@ export function parseGoFanPaste(text: string): TicketPurchase[] {
     const orderId = withoutDate.match(/\b(\d{6,12})\b/)?.[1] ?? null
     if (!orderId) return
 
-    const date = chunk.match(/([A-Za-z]{3})-(\d{1,2})-(\d{4})/)
-    const month = date ? MONTHS[date[1].toLowerCase()] : null
-    const purchasedAt = date && month ? `${date[3]}-${month}-${date[2].padStart(2, "0")}` : null
+    // Two shapes: "Aug-27-2026" in the pasted order report, "2026-08-27" in the CSV export. The
+    // first date in the record is the purchase; the event's own dates come later in the row.
+    const date = chunk.match(/(\d{4})-(\d{2})-(\d{2})|([A-Za-z]{3})-(\d{1,2})-(\d{4})/)
+    let purchasedAt: string | null = null
+    if (date?.[1]) {
+      purchasedAt = `${date[1]}-${date[2]}-${date[3]}`
+    } else if (date?.[4]) {
+      const month = MONTHS[date[4].toLowerCase()]
+      if (month) purchasedAt = `${date[6]}-${month}-${date[5].padStart(2, "0")}`
+    }
 
     const status = chunk.match(/\b(Active|Refunded|Cancell?ed|Pending)\b/i)?.[1] ?? null
-    const ticketType = chunk.match(/^[ \t]*([A-Za-z][^\t\n]*?(?:Credential|Ticket|Pass))[ \t]*(?:\t|$)/m)?.[1]?.trim() ?? null
+    // Anywhere in the record, not anchored to the start of a line: the order report pastes with
+    // the type on its own line, while the CSV export puts it quoted mid-row after the email.
+    const ticketType = chunk.match(/([A-Za-z][A-Za-z0-9 ]*(?:Credential|Pass|Ticket))/)?.[1]?.trim() ?? null
 
     // One row per order: a paste that overlaps a previous one must not double up.
     byOrder.set(orderId, { email: start.email, orderId, purchasedAt, ticketType, status })
@@ -161,4 +170,15 @@ export function suggestCoaches(
       return parts.some((part) => local.includes(part) || part.startsWith(local))
     })
     .map((coach) => ({ coachKey: coach.coachKey, coachName: coach.coachName }))
+}
+
+/**
+ * Whether a row is a coach credential rather than a spectator ticket.
+ *
+ * The CSV export carries the whole event — 232 weekend passes alongside 17 credentials — and
+ * importing all of it would mark every parent in the building as a coach who had collected a
+ * lanyard, and bury the coaches page under two hundred buyers matching nobody.
+ */
+export function isCoachCredential(purchase: TicketPurchase): boolean {
+  return /coach/i.test(purchase.ticketType ?? "")
 }
