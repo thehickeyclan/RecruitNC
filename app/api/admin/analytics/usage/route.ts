@@ -2,6 +2,8 @@ import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/admin-auth"
 import {
+  buildDailySeries,
+  buildInsights,
   compareMonths,
   findPowerUsers,
   summariseSections,
@@ -72,8 +74,17 @@ export async function GET() {
     }
   }
 
+  // A year of daily points is a few hundred numbers, so the whole series ships once and the
+  // client switches range instantly rather than refetching for every tab.
+  const earliest = rows.reduce(
+    (oldest, row) => (Date.parse(row.createdAt) < Date.parse(oldest) ? row.createdAt : oldest),
+    rows[0]?.createdAt ?? now.toISOString(),
+  )
+
   return NextResponse.json({
     totalEvents: rows.length,
+    daily: buildDailySeries(rows, new Date(earliest), now),
+    insights: buildInsights(rows, now),
     windows: summariseWindows(rows, now),
     months: compareMonths(rows, now),
     sections: summariseSections(rows),

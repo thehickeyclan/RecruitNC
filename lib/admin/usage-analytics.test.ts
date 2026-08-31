@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
+  buildDailySeries,
+  buildInsights,
   classifyPath,
   compareMonths,
   easternDay,
@@ -146,5 +148,62 @@ describe("summariseSections", () => {
     expect(top.views).toBe(3)
     expect(top.people).toBe(2)
     expect(top.topPaths[0]).toEqual({ path: "/tournament-of-champions", views: 2 })
+  })
+})
+
+describe("buildDailySeries", () => {
+  it("fills silent days with zeros rather than skipping them", () => {
+    const series = buildDailySeries(
+      [at("2026-08-28T15:00:00Z"), at("2026-08-30T15:00:00Z")],
+      new Date("2026-08-28T15:00:00Z"),
+      new Date("2026-08-30T15:00:00Z"),
+    )
+    expect(series.map((p) => p.day)).toEqual(["2026-08-28", "2026-08-29", "2026-08-30"])
+    expect(series[1]).toEqual({ day: "2026-08-29", views: 0, people: 0 })
+  })
+
+  it("counts distinct people per day, not per range", () => {
+    const series = buildDailySeries(
+      [at("2026-08-28T15:00:00Z", "u1"), at("2026-08-28T16:00:00Z", "u1"), at("2026-08-28T17:00:00Z", "u2")],
+      new Date("2026-08-28T15:00:00Z"),
+      new Date("2026-08-28T18:00:00Z"),
+    )
+    expect(series[0]).toEqual({ day: "2026-08-28", views: 3, people: 2 })
+  })
+})
+
+describe("buildInsights", () => {
+  const now = new Date("2026-08-31T16:00:00Z")
+
+  it("says nothing confident when there is nothing to say", () => {
+    expect(buildInsights([], now)).toEqual([{ tone: "note", text: "No activity recorded yet." }])
+  })
+
+  it("leads with the month-on-month direction", () => {
+    const rows = [
+      ...Array.from({ length: 10 }, (_, i) => at(`2026-08-${String(i + 1).padStart(2, "0")}T12:00:00Z`, `u${i}`)),
+      ...Array.from({ length: 5 }, (_, i) => at(`2026-07-${String(i + 1).padStart(2, "0")}T12:00:00Z`, `u${i}`)),
+    ]
+    expect(buildInsights(rows, now)[0]).toMatchObject({ tone: "up" })
+    expect(buildInsights(rows, now)[0].text).toContain("100%")
+  })
+
+  it("will not compute a percentage off a base too small to mean anything", () => {
+    // One view last month becoming three is not "up 200%" worth telling anybody.
+    const rows = [
+      at("2026-07-01T12:00:00Z", "u1", "/clubs"),
+      at("2026-08-01T12:00:00Z", "u1", "/clubs"),
+      at("2026-08-02T12:00:00Z", "u2", "/clubs"),
+      at("2026-08-03T12:00:00Z", "u3", "/clubs"),
+    ]
+    expect(buildInsights(rows, now).some((i) => i.text.includes("grew fastest"))).toBe(false)
+  })
+
+  it("excludes admin from the fastest-growing claim", () => {
+    const rows = [
+      ...Array.from({ length: 30 }, (_, i) => at(`2026-07-${String((i % 28) + 1).padStart(2, "0")}T12:00:00Z`, "u1", "/admin")),
+      ...Array.from({ length: 90 }, (_, i) => at(`2026-08-${String((i % 28) + 1).padStart(2, "0")}T12:00:00Z`, "u1", "/admin")),
+    ]
+    expect(buildInsights(rows, now).some((i) => i.text.includes("Admin") && i.text.includes("grew fastest"))).toBe(false)
   })
 })
