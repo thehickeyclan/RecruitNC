@@ -24,46 +24,39 @@ const FRIDAY: Row[] = [
   { a: "10:15 AM", what: "Group meeting and walk-through", detail: "All hands", kind: "prep" },
   { a: "10:30 AM", what: "Breakout group meetings", detail: "Team leaders, assigned areas", kind: "prep" },
   { a: "10:45 AM", what: "Mats into the facility — wrestling mat setup begins", kind: "prep" },
-  { a: "11:00 AM", what: "VIP parking, food concessions, gear sale and coaches lounge setup", kind: "prep" },
-  { a: "12:00 PM", what: "Scales in place and checked", detail: "Plugged in, on, set to 0.0 — checked against the official scale", kind: "prep" },
-  { a: "12:00 PM", what: "Tournament dry run — first pass", kind: "prep" },
+  { a: "11:00 AM", what: "Food concessions, gear sale and coaches lounge setup", kind: "prep" },
+  { a: "12:00 PM", what: "Scales in place and checked · tournament dry run, first pass", detail: "Scales plugged in, on, set to 0.0 — checked against the official scale", kind: "prep" },
   { a: "1:00 PM", what: "PA and production setup · security team meeting and setup", kind: "prep" },
   { a: "2:00 PM", what: "Tournament dry run — second pass", kind: "prep" },
   { a: "2:45 PM", what: "Security team in place", detail: "Ticket entry and band checks", kind: "prep" },
   { a: "3:00 PM", what: "Doors open to coaches and athletes", kind: "prep" },
-  { a: "3:45 PM", what: "Ticket sales open · doors open to spectators", kind: "prep" },
   { a: "4:00 – 5:00 PM", what: "Weigh-in and skin check", detail: "One official weigh-in. Invited wrestlers only — there is no Saturday weigh-in.", kind: "beat" },
-  { a: "5:00 PM", what: "Meeting with athletes", kind: "prep" },
-  { a: "5:15 PM", what: "Mats open for warm-ups", kind: "prep" },
-  { a: "5:25 PM", what: "Wrestlers clear the mats · table workers report", kind: "prep" },
-  { a: "5:30 PM", what: "Welcome — Jason Gore", kind: "beat" },
-  { a: "5:35 PM", what: "Prayer — Jason Gore", kind: "beat" },
-  { a: "5:40 PM", what: "National anthem — to be named", kind: "beat" },
-  { a: "5:45 PM", what: "Athlete walkout", detail: "Fifteen minutes for roughly 80 wrestlers — by weight class, announced as a group, or it will not hold.", kind: "beat" },
-  { a: "6:00 PM", what: "First whistle — 133 lbs pigtail", detail: "Run first so its winner has the whole session before he wrestles again." },
-  { a: "6:10 PM", what: "Round 1 — all brackets, two mats", detail: "Four bouts per weight. 133 lbs goes last, giving its pigtail winner the longest rest." },
-  { a: "8:40 PM", b: "8:55 PM", what: "Mats clear", kind: "finish" },
-  { a: "8:45 PM", b: "9:00 PM", what: "Spectators and athletes exit · clean-up", kind: "prep" },
+  { a: "5:00 PM", what: "Ticket sales open · doors open to spectators", detail: "After weigh-ins finish, an hour before the first whistle.", kind: "prep" },
+  { a: "5:00 – 5:15 PM", what: "Coaches meeting — officials address the coaches", detail: "In the warm-up room. Rules, bench conduct, bracket questions, and how the weekend will be run.", kind: "beat" },
+  { a: "5:15 – 5:30 PM", what: "Mats open for warm-ups", detail: "Table workers report at 5:25.", kind: "prep" },
+  { a: "5:30 – 6:00 PM", what: "Opening ceremony", detail: "Welcome and prayer — Jason Gore. National anthem — to be named. Athlete walkout by weight class, announced as a group.", kind: "beat" },
+  { a: "6:00 PM", what: "First whistle — 133 lbs pigtail, then Round 1", detail: "The pigtail goes first so its winner has the whole session before wrestling again; 133 lbs takes the last first-round bouts for the same reason. Four bouts per weight, two mats." },
+  { a: "8:45 PM", b: "9:00 PM", what: "Mats clear", kind: "finish" },
+  { a: "9:00 PM", b: "9:15 PM", what: "Spectators and athletes exit · clean-up", kind: "prep" },
 ]
 
 const SATURDAY: Row[] = [
   { a: "6:00 AM", what: "Venue open for setup", kind: "prep" },
-  { a: "7:30 AM", what: "Athletes in · mats open for warm-ups", kind: "prep" },
-  { a: "8:30 AM", what: "Doors open to spectators", kind: "prep" },
-  { a: "8:45 AM", what: "Wrestlers clear the mats", kind: "prep" },
-  { a: "9:00 AM", what: "Welcome and prayer — Jason Gore", detail: "No anthem this morning. It is held for the finals, when the building is full.", kind: "beat" },
-  { a: "9:30 – 10:45 AM", b: "9:30 – 10:55 AM", what: "Consolation round 1 · two mats", detail: "Friday's first-round losers. 20 bouts, or 22 with 184." },
-  { a: "10:45 – 12:00 PM", b: "10:55 – 12:20 PM", what: "Winners semifinals · two mats", detail: "20 bouts, or 22 with 184." },
-  { a: "12:00 – 1:15 PM", b: "12:20 – 1:45 PM", what: "Consolation semifinals · two mats", detail: "Cannot start until both blocks above finish — it needs the semifinal losers." },
-  { a: "1:15 – 1:55 PM", b: "1:45 – 2:30 PM", what: "Third place · two mats", detail: "One per weight, and the last medal — TOC places the top three." },
-  { a: "1:55 PM", b: "2:30 PM", what: "Mat changeover to one — runs underneath the Giving Hour, since the raffle needs no mat", kind: "prep" },
-  { a: "2:00 – 3:00 PM", b: "2:35 – 3:35 PM", what: "The Giving Hour — Jason Gore MC", detail: "Free raffle tickets for every paid spectator. Gore thanks every vendor and sponsor, then draws a winner for each in turn. The Caden Perry Warrior Scholarship and the guest speaker sit inside this hour.", kind: "beat" },
-  { a: "3:00 – 3:15 PM", b: "3:35 – 3:50 PM", what: "Parade of finalists and introductions", detail: "All finalists walk out together and are announced by weight.", kind: "beat" },
-  { a: "3:15 – 3:20 PM", b: "3:50 – 3:55 PM", what: "National anthem — to be named", detail: "Held for this moment rather than the morning: full house, finalists already on the mat.", kind: "beat" },
-  { a: "3:20 – 5:40 PM", b: "3:55 – 6:30 PM", what: "Championship finals, awards after each weight · one mat", detail: "Ryan Mitchell, The NC Mat, announcing. Each finalist by name, club, who they are coached by, top accolades and college commitment. About 14 minutes a weight: announcements and walkouts, a 6 minute bout, then medal, bracket and jacket to the champion, medals to second and third, all three placers on the mat for the photograph." },
-  { a: "5:40 – 5:55 PM", b: "6:30 – 6:45 PM", what: "Most Outstanding Wrestler and Match of Champions hammers", detail: "Tournament-wide awards, presented last.", kind: "beat" },
-  { a: "5:55 PM", b: "6:45 PM", what: "Event concludes", kind: "finish" },
-  { a: "6:00 – 7:00 PM", b: "6:50 – 7:50 PM", what: "Clean-up and mat roll-up", detail: "Allow a full hour with a decent crew.", kind: "prep" },
+  { a: "7:30 AM", b: "7:00 AM", what: "Athletes in · mats open for warm-ups", kind: "prep" },
+  { a: "8:30 AM", b: "8:00 AM", what: "Doors open to spectators", kind: "prep" },
+  { a: "8:45 AM", b: "8:30 AM", what: "Wrestlers clear the mats", kind: "prep" },
+  { a: "9:00 AM", b: "8:45 AM", what: "Welcome and prayer — Jason Gore", detail: "No anthem this morning. It is held for the finals, when the building is full.", kind: "beat" },
+  { a: "9:30 – 10:45 AM", b: "9:00 – 10:30 AM", what: "Consolation round 1 · two mats", detail: "Friday's first-round losers. 20 bouts, or 22 with 184." },
+  { a: "10:45 – 12:00 PM", b: "10:30 – 12:00 PM", what: "Winners semifinals · two mats", detail: "20 bouts, or 22 with 184." },
+  { a: "12:00 – 1:15 PM", b: "12:00 – 1:30 PM", what: "Consolation semifinals · two mats", detail: "Cannot start until both blocks above finish — it needs the semifinal losers." },
+  { a: "1:15 – 2:00 PM", b: "1:30 – 2:15 PM", what: "Third place · two mats", detail: "One per weight, and the last medal — TOC places the top three." },
+  { a: "2:00 PM", b: "2:15 PM", what: "Mat changeover to one — runs underneath the Giving Hour, since the raffle needs no mat", kind: "prep" },
+  { a: "2:15 – 3:15 PM", b: "2:30 – 3:30 PM", what: "The Giving Hour — Jason Gore MC", detail: "Free raffle tickets for every paid spectator. Gore thanks every vendor and sponsor, then draws a winner for each in turn. The Caden Perry Warrior Scholarship and the guest speaker sit inside this hour.", kind: "beat" },
+  { a: "3:15 – 3:45 PM", b: "3:30 – 4:00 PM", what: "Parade of finalists, introductions and national anthem", detail: "All finalists walk out together and are announced by weight, then the anthem with them stood on the mat.", kind: "beat" },
+  { a: "3:45 – 6:15 PM", b: "4:00 – 6:45 PM", what: "Championship finals, awards after each weight · one mat", detail: "Ryan Mitchell, The NC Mat, announcing. Each finalist by name, club, who they are coached by, top accolades and college commitment. About 14 minutes a weight: announcements and walkouts, a 6 minute bout, then medal, bracket and jacket to the champion, medals to second and third, all three placers on the mat for the photograph." },
+  { a: "6:15 – 6:30 PM", b: "6:45 – 7:00 PM", what: "Most Outstanding Wrestler and Match of Champions hammers", detail: "Tournament-wide awards, presented last.", kind: "beat" },
+  { a: "6:30 PM", b: "7:00 PM", what: "Event concludes", kind: "finish" },
+  { a: "6:45 – 7:45 PM", b: "7:15 – 8:15 PM", what: "Clean-up and mat roll-up", detail: "Allow a full hour with a decent crew.", kind: "prep" },
 ]
 
 const VENDORS: { name: string; gift: string | null }[] = [
@@ -82,7 +75,8 @@ const VENDORS: { name: string; gift: string | null }[] = [
 ]
 
 const NOTES = [
-  "Every time is rounded up to the nearest five minutes. The underlying arithmetic gives odd numbers; a run sheet nobody can read at a glance is worse than one carrying a minute or two of slack, and rounding up means the sheet never promises more than the day can deliver.",
+  "Times are on quarter hours, rounded up. The raw arithmetic lands on 8:37 and 6:05; nobody runs a tournament off numbers like that, and rounding up means the sheet never promises more than the day can deliver.",
+  "With 184 filled, Saturday starts at 9:00 rather than 9:30. The extra weight adds seven bouts and one more final, and the earlier start is what keeps the finish on the 7:00 ceiling rather than half an hour past it.",
   "7½ minutes per bout — six minutes of mat time plus ninety seconds to change wrestlers. Justin's timeline allows 6:30 to 9:00 for the same Friday round; the arithmetic gives 2 hours 37 minutes, so the two agree within seven minutes.",
   "Fourteen minutes per championship weight — six minutes of wrestling, three for announcements and walkouts, then the presentation. Awarding at the mat rather than banking to the end costs about ten minutes across the afternoon and gives every weight its moment in front of a full house.",
   "Stage the next weight while the last is being photographed, or the presentation time is paid twice. Put someone on runner duty for medals, brackets and jackets.",
@@ -161,7 +155,8 @@ export default function RunSheetPage() {
           </p>
           <p className="text-sm text-white/40">
             Times are given for both fields, since 184 lbs is not yet filled — 121 bouts at ten
-            weights, 133 at eleven.
+            weights, 133 at eleven. Note that the eleven-weight column starts Saturday half an hour
+            earlier.
           </p>
         </header>
 
