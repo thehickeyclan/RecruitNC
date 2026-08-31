@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
+import { UsageAnalyticsPanel } from "@/components/admin/usage-analytics-panel"
 import { formatPhoneForDisplay } from "@/lib/phone-format"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -1073,6 +1074,8 @@ export default function UsersDashboardPage() {
           </CardContent>
         </Card>
       )}
+
+      <UsageAnalyticsPanel />
 
       {/* Cumulative User Growth */}
       <div className="mb-6">
