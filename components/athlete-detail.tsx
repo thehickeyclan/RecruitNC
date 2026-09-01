@@ -1173,12 +1173,12 @@ export function AthleteDetail({
 
               <div className="grid grid-cols-2 gap-3">
                   <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
-                  <p className="text-gray-200 text-xs font-medium uppercase tracking-wide">Year</p>
+                  <p className="text-white/70 text-xs font-medium uppercase tracking-wide">Year</p>
                   <p className="text-xl font-bold">{graduationYear || "N/A"}</p>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20 flex flex-col">
                   <div className="flex items-center justify-between gap-1">
-                    <p className="text-gray-200 text-xs font-medium uppercase tracking-wide">Weight</p>
+                    <p className="text-white/70 text-xs font-medium uppercase tracking-wide">Weight</p>
                     {canEdit && (
                       <Button
                         size="sm"
@@ -1299,12 +1299,12 @@ export function AthleteDetail({
 
                   <div className="grid grid-cols-2 gap-4 max-w-md">
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
-                      <p className="text-gray-200 text-xs font-semibold uppercase tracking-wider mb-1">Year</p>
+                      <p className="text-white/70 text-xs font-semibold uppercase tracking-wider mb-1">Year</p>
                       <p className="text-2xl font-bold text-white">{graduationYear || "N/A"}</p>
                     </div>
                     <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20 flex flex-col">
                       <div className="flex items-center justify-between gap-2 mb-1">
-                        <p className="text-gray-200 text-xs font-semibold uppercase tracking-wider">Weight</p>
+                        <p className="text-white/70 text-xs font-semibold uppercase tracking-wider">Weight</p>
                         {canEdit && (
                           <Button
                             size="sm"
