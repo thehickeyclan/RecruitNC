@@ -3,6 +3,7 @@ export const revalidate = 0
 
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { buildAthleteUpdateFromRequest } from "@/lib/admin/apply-edit-request"
 
 // Server-only service client to bypass RLS for trusted operations
 function createServiceClient() {
@@ -113,7 +114,7 @@ export async function PUT(request: NextRequest) {
     // Load existing request with user and athlete info for email
     const { data: existing, error: loadErr } = await svc
       .from("edit_requests")
-      .select("request_data, user_id, athlete_id")
+      .select("request_data, user_id, athlete_id, status")
       .eq("id", requestId)
       .maybeSingle()
 
@@ -159,6 +160,36 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Failed to update request" }, { status: 500 })
     }
 
+    /**
+     * Approving has to change the profile, not just the row.
+     *
+     * This step did not exist: approve set a status and sent the family an email saying the change
+     * was made, while the athlete record kept its old values. Anything free-text is reported back
+     * in `manual` rather than guessed at — see buildAthleteUpdateFromRequest.
+     */
+    let applied: Record<string, string | number> = {}
+    let manual: string[] = []
+    if (status === "approved" && existing.athlete_id) {
+      const plan = buildAthleteUpdateFromRequest(existing.request_data as never)
+      applied = plan.updates
+      manual = plan.manual
+      if (Object.keys(applied).length > 0) {
+        const { error: applyErr } = await svc
+          .from("athletes")
+          .update({ ...applied, updated_at: new Date().toISOString() })
+          .eq("id", existing.athlete_id)
+        if (applyErr) {
+          console.error("Failed to apply approved edit to athlete:", applyErr)
+          /** Put the request back so it is not silently marked done against an unchanged profile. */
+          await svc.from("edit_requests").update({ status: "pending" }).eq("id", requestId)
+          return NextResponse.json(
+            { error: `Approved, but the profile could not be updated: ${applyErr.message}. The request has been left pending.` },
+            { status: 500 },
+          )
+        }
+      }
+    }
+
     // Send email notification if status is approved or rejected
     if ((status === "approved" || status === "rejected") && existing.user_id && existing.athlete_id) {
       try {
@@ -194,7 +225,7 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, data: updated })
+    return NextResponse.json({ success: true, data: updated, applied, manual })
   } catch (error) {
     console.error("PUT /api/admin/edit-requests error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
