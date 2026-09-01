@@ -10,6 +10,20 @@
       ],
       "port": 3000,
       "autoPort": true
+    },
+    {
+      "name": "badge-buddies",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/matthickey/badge-buddies",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3100"
+      ],
+      "port": 3100
     }
   ]
 }

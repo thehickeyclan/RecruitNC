@@ -710,7 +710,7 @@ export function Navbar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem asChild>
-                    <a href="/profile">Profile</a>
+                    <a href="/profile">My Account</a>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <a href="/forum">Community</a>
@@ -758,7 +758,7 @@ export function Navbar() {
                 className={`flex items-center gap-1.5 shrink-0 rounded-md px-2 py-2 text-white hover:bg-white/10 min-h-[44px] font-semibold text-sm ${
                   pathname.startsWith("/profile") ? "bg-white/15 ring-1 ring-white/30" : ""
                 }`}
-                aria-label="My Profile"
+                aria-label="My Account"
                 aria-current={pathname.startsWith("/profile") ? "page" : undefined}
               >
                 <User className="h-5 w-5 shrink-0" />
@@ -890,7 +890,7 @@ export function Navbar() {
                       >
                         <a href="/profile" onClick={() => setIsOpen(false)}>
                           <User className="h-4 w-4 mr-2" />
-                          My Profile
+                          My Account
                         </a>
                       </Button>
                       <p className="px-1 text-xs text-gray-500 truncate" title={user.email ?? ""}>

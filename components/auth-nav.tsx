@@ -51,7 +51,7 @@ export function AuthNav() {
                   onClick={() => setIsOpen(false)}
                 >
                   <User className="h-4 w-4" />
-                  Profile
+                  My Account
                 </Link>
                 {isCoach && (
                   <Link
@@ -162,7 +162,7 @@ export function AuthNav() {
                 <DropdownMenuItem asChild>
                   <a href="/profile" className="cursor-pointer flex items-center gap-2">
                     <User className="h-4 w-4" />
-                    Profile
+                    My Account
                   </a>
                 </DropdownMenuItem>
                 {isCoach && (

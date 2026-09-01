@@ -307,7 +307,7 @@ export default function BluePage() {
               Exposure creates opportunity, but it does not guarantee recruitment, contact, an offer, or a roster spot.
             </p>
             <p className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-              <Link href="/profile" className="font-medium text-[#003366] hover:text-[#B31B1B] hover:underline">Create or update an athlete profile →</Link>
+              <Link href="/profile" className="font-medium text-[#003366] hover:text-[#B31B1B] hover:underline">Manage your account and athlete links →</Link>
               <Link href="/athletes" className="font-medium text-[#003366] hover:text-[#B31B1B] hover:underline">Explore athlete profiles →</Link>
             </p>
           </section>
