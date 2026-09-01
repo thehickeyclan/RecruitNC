@@ -264,3 +264,39 @@
     }
   }
 }
+
+@layer base {
+  /**
+   * The navy surface public athlete profiles are painted on.
+   *
+   * This replaces a 30-line string of Tailwind arbitrary variants that repainted children by
+   * matching literal utility names — `[&_.profile-card-body_.text-gray-600]:!text-white/60` and so
+   * on. Anything it had not been told about stayed light, so every new section drifted back to
+   * white until someone added another line.
+   *
+   * Redefining the design tokens on a container inverts that: shadcn components read --card,
+   * --border and --muted-foreground already, so they follow without being named, and so does any
+   * markup written against the tokens rather than against a fixed grey.
+   */
+  .profile-surface {
+    --background: 216 60% 10%;
+    --foreground: 210 40% 98%;
+    --card: 215 51% 12%;
+    --card-foreground: 210 40% 98%;
+    --popover: 215 51% 12%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 41 52% 64%;
+    --primary-foreground: 216 60% 10%;
+    --secondary: 215 40% 18%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 215 40% 18%;
+    --muted-foreground: 214 20% 72%;
+    --accent: 215 40% 20%;
+    --accent-foreground: 210 40% 98%;
+    --border: 215 30% 24%;
+    --input: 215 30% 24%;
+    --ring: 41 52% 64%;
+
+    color: hsl(var(--foreground));
+  }
+}

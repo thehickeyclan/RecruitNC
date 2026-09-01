@@ -37,7 +37,6 @@ import { InlineHighlightVideoEditor } from "./inline-highlight-video-editor"
 import { WorkingEntityLogo } from "./working-entity-logo"
 import { useToast } from "@/components/ui/use-toast"
 import { getYouTubeVideoId, isDirectHighlightVideoUrl } from "@/lib/highlight-video-url"
-import { PROFILE_DARK_THEME } from "@/lib/profile-dark-theme"
 import { ProfileViewStatsPanel } from "./profile-view-stats-panel"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
@@ -236,7 +235,7 @@ export function AthleteDetail({
       >
         <source src={url} type="video/quicktime" />
         <source src={url} type="video/mp4" />
-        <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+        <a href={url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
           Watch highlight video
         </a>
       </video>
@@ -950,7 +949,7 @@ export function AthleteDetail({
         mobileRecruiterLayout
           ? "flex flex-col gap-6 lg:gap-8 min-w-0 max-w-full"
           : "space-y-8 min-w-0 max-w-full",
-        isDark && PROFILE_DARK_THEME,
+        isDark && "profile-surface",
       )}
     >
       {/* 1. Banner (hero with photo, name, weight, college) */}
@@ -1493,11 +1492,11 @@ export function AthleteDetail({
                   </div>
                 </div>
                 {athleteData?.bio ? (
-                  <div className="profile-panel bg-white rounded-lg p-6 shadow-sm border border-gray-100">
-                    <p className="text-base text-gray-700 leading-relaxed whitespace-pre-wrap">{athleteData.bio}</p>
+                  <div className="profile-panel bg-card rounded-lg p-6 shadow-sm border border-border">
+                    <p className="text-base text-foreground/80 leading-relaxed whitespace-pre-wrap">{athleteData.bio}</p>
                   </div>
                 ) : (
-                  <p className="profile-text-muted text-gray-500 italic">{canEdit ? "No bio yet. Click Edit to add." : "No bio available."}</p>
+                  <p className="profile-text-muted text-muted-foreground italic">{canEdit ? "No bio yet. Click Edit to add." : "No bio available."}</p>
                 )}
               </>
             )}
@@ -1560,8 +1559,8 @@ export function AthleteDetail({
                 )}
               >
                 {highSchool && highSchool !== "Not specified" && (
-                  <div className="profile-panel bg-white rounded-xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                    <div className="w-10 h-10 lg:w-16 lg:h-16 rounded-lg bg-gray-50 p-1.5 lg:p-2 flex items-center justify-center mb-2 lg:mb-3 border border-gray-200 overflow-hidden">
+                  <div className="profile-panel bg-card rounded-xl p-4 lg:p-6 shadow-sm border border-border hover:shadow-md transition-shadow">
+                    <div className="w-10 h-10 lg:w-16 lg:h-16 rounded-lg bg-muted p-1.5 lg:p-2 flex items-center justify-center mb-2 lg:mb-3 border border-border overflow-hidden">
                       {highSchoolLogo && !highSchoolLogoLoadError ? (
                         <Image
                           src={highSchoolLogo}
@@ -1576,13 +1575,13 @@ export function AthleteDetail({
                         <WorkingEntityLogo entityName={highSchool} entityType="highschool" size={48} />
                       )}
                     </div>
-                    <p className="profile-label text-[10px] lg:text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1 lg:mb-2">High School</p>
-                    <p className="profile-text text-base lg:text-xl font-bold text-gray-900 leading-tight">{highSchool}</p>
+                    <p className="profile-label text-[10px] lg:text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1 lg:mb-2">High School</p>
+                    <p className="profile-text text-base lg:text-xl font-bold text-foreground leading-tight">{highSchool}</p>
                   </div>
                 )}
                 {wrestlingClub && wrestlingClub !== "Not specified" && (
-                  <div className="profile-panel bg-white rounded-xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                    <div className="w-10 h-10 lg:w-16 lg:h-16 rounded-lg bg-gray-50 p-1.5 lg:p-2 flex items-center justify-center mb-2 lg:mb-3 border border-gray-200 overflow-hidden">
+                  <div className="profile-panel bg-card rounded-xl p-4 lg:p-6 shadow-sm border border-border hover:shadow-md transition-shadow">
+                    <div className="w-10 h-10 lg:w-16 lg:h-16 rounded-lg bg-muted p-1.5 lg:p-2 flex items-center justify-center mb-2 lg:mb-3 border border-border overflow-hidden">
                       {clubLogo && !clubLogoLoadError ? (
                         <Image
                           src={clubLogo}
@@ -1597,13 +1596,13 @@ export function AthleteDetail({
                         <WorkingEntityLogo entityName={wrestlingClub} entityType="club" size={48} />
                       )}
                     </div>
-                    <p className="profile-label text-[10px] lg:text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1 lg:mb-2">Wrestling Club</p>
-                    <p className="profile-text text-base lg:text-xl font-bold text-gray-900 leading-tight">{wrestlingClub}</p>
+                    <p className="profile-label text-[10px] lg:text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1 lg:mb-2">Wrestling Club</p>
+                    <p className="profile-text text-base lg:text-xl font-bold text-foreground leading-tight">{wrestlingClub}</p>
                   </div>
                 )}
                 {ncUnitedTeam && ncUnitedTeam !== "none" && (
-                  <div className="profile-panel bg-white rounded-xl p-4 lg:p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow col-span-2 lg:col-span-1">
-                    <div className="w-10 h-10 lg:w-16 lg:h-16 rounded-lg bg-gray-50 p-1.5 lg:p-2 flex items-center justify-center mb-2 lg:mb-3 border border-gray-200">
+                  <div className="profile-panel bg-card rounded-xl p-4 lg:p-6 shadow-sm border border-border hover:shadow-md transition-shadow col-span-2 lg:col-span-1">
+                    <div className="w-10 h-10 lg:w-16 lg:h-16 rounded-lg bg-muted p-1.5 lg:p-2 flex items-center justify-center mb-2 lg:mb-3 border border-border">
                       <Image
                         src="/nc-united-blue-logo.png"
                         alt="NC United logo"
@@ -1612,14 +1611,14 @@ export function AthleteDetail({
                         className="object-contain"
                       />
                     </div>
-                    <p className="profile-label text-[10px] lg:text-xs text-gray-500 font-semibold uppercase tracking-wider mb-1 lg:mb-2">NC United Program</p>
-                    <p className="profile-text text-base lg:text-xl font-bold text-gray-900 leading-tight">
+                    <p className="profile-label text-[10px] lg:text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1 lg:mb-2">NC United Program</p>
+                    <p className="profile-text text-base lg:text-xl font-bold text-foreground leading-tight">
                       {ncUnitedTeam === "blue" ? "Blue Team" : ncUnitedTeam === "gold" ? "Gold Team" : ncUnitedTeam === "both" ? "Both Teams" : ncUnitedTeam}
                     </p>
                   </div>
                 )}
                 {(!highSchool || highSchool === "Not specified") && (!wrestlingClub || wrestlingClub === "Not specified") && (!ncUnitedTeam || ncUnitedTeam === "none") && (
-                  <p className="profile-text-muted text-gray-500 italic col-span-full">{canEdit ? "No school or programs listed. Click Edit to add." : "No school or programs listed."}</p>
+                  <p className="profile-text-muted text-muted-foreground italic col-span-full">{canEdit ? "No school or programs listed. Click Edit to add." : "No school or programs listed."}</p>
                 )}
               </div>
             )}
@@ -1685,26 +1684,26 @@ export function AthleteDetail({
                 {canSeePrivateInfo && hasAcademicData && (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {effectiveGpa != null && (
-                      <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                        <p className="text-sm text-gray-600 font-semibold uppercase tracking-wider mb-2">GPA</p>
+                      <div className="bg-muted rounded-lg p-6 border border-border">
+                        <p className="text-sm text-muted-foreground font-semibold uppercase tracking-wider mb-2">GPA</p>
                         <p className="text-4xl font-bold text-[#002147]">
                           {Number(effectiveGpa).toFixed(2)}
                         </p>
-                        <p className="text-xs text-gray-500 mt-2">Grade Point Average</p>
+                        <p className="text-xs text-muted-foreground mt-2">Grade Point Average</p>
                       </div>
                     )}
                     {effectiveSat != null && (
-                      <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                        <p className="text-sm text-gray-600 font-semibold uppercase tracking-wider mb-2">SAT</p>
+                      <div className="bg-muted rounded-lg p-6 border border-border">
+                        <p className="text-sm text-muted-foreground font-semibold uppercase tracking-wider mb-2">SAT</p>
                         <p className="text-4xl font-bold text-[#002147]">{effectiveSat}</p>
-                        <p className="text-xs text-gray-500 mt-2">Standardized Test Score</p>
+                        <p className="text-xs text-muted-foreground mt-2">Standardized Test Score</p>
                       </div>
                     )}
                     {effectiveAct != null && (
-                      <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
-                        <p className="text-sm text-gray-600 font-semibold uppercase tracking-wider mb-2">ACT</p>
+                      <div className="bg-muted rounded-lg p-6 border border-border">
+                        <p className="text-sm text-muted-foreground font-semibold uppercase tracking-wider mb-2">ACT</p>
                         <p className="text-4xl font-bold text-[#002147]">{effectiveAct}</p>
-                        <p className="text-xs text-gray-500 mt-2">Standardized Test Score</p>
+                        <p className="text-xs text-muted-foreground mt-2">Standardized Test Score</p>
                       </div>
                     )}
                   </div>
@@ -1712,10 +1711,10 @@ export function AthleteDetail({
                 {(athleteData?.academic_summary || athleteData?.academic_interest) && canSeePrivateInfo && (
                   <div className="mt-4 space-y-2">
                     {athleteData.academic_summary && (
-                      <p className="text-sm text-gray-700">{athleteData.academic_summary}</p>
+                      <p className="text-sm text-foreground/80">{athleteData.academic_summary}</p>
                     )}
                     {athleteData.academic_interest && (
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-muted-foreground">
                         <span className="font-medium">Academic Interest:</span> {athleteData.academic_interest}
                       </p>
                     )}
@@ -1724,8 +1723,8 @@ export function AthleteDetail({
               </>
             )}
             {!canSeePrivateInfo && hasAcademicData && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                <p className="text-sm text-blue-700 text-center">
+              <div className="bg-muted border border-border rounded-lg p-6">
+                <p className="text-sm text-primary text-center">
                   📊 GPA, SAT, and ACT are only visible to you (when signed in as this athlete), verified college coaches, and administrators.
                 </p>
               </div>
@@ -1781,8 +1780,8 @@ export function AthleteDetail({
                 }
                 if (!videoId) {
                   return (
-                    <p className="text-gray-600">
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                    <p className="text-muted-foreground">
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
                         Watch video
                       </a>
                       {canEdit && " — Use Edit to replace with a valid YouTube link for embedding."}
@@ -1806,16 +1805,16 @@ export function AthleteDetail({
               <div className="space-y-6">
                 {nationalTeamHighlightVideos.map((highlight) => (
                   <div key={`${highlight.event}-${highlight.year}-${highlight.videoSrc}`}>
-                    <p className={cn("text-sm font-semibold mb-3", isDark ? "text-white/80" : "text-gray-700")}>
+                    <p className={"text-sm font-semibold mb-3 text-foreground/80"}>
                       {highlight.event} {highlight.year}
                     </p>
                     {renderDirectHighlightVideo(highlight.videoSrc, highlight.ariaLabel)}
-                    <p className={cn("mt-2 text-sm", isDark ? "text-white/55" : "text-gray-600")}>{highlight.title}</p>
+                    <p className={"mt-2 text-sm text-muted-foreground"}>{highlight.title}</p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className={isDark ? "text-white/55" : "text-gray-600"}>
+              <p className="text-muted-foreground">
                 {canEdit ? "Add a YouTube highlight video or upload a video file via admin. Click the button above to paste your link." : "No highlight video yet."}
               </p>
             )}
@@ -1823,24 +1822,19 @@ export function AthleteDetail({
               <div
                 className={cn(
                   "mt-8 space-y-6 border-t pt-8",
-                  isDark ? "border-white/10" : "border-gray-200",
+                  "border-border",
                 )}
               >
-                <p
-                  className={cn(
-                    "text-sm font-semibold uppercase tracking-wider",
-                    isDark ? "text-white/45" : "text-gray-500",
-                  )}
-                >
+                <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
                   NC United National Team Highlights
                 </p>
                 {nationalTeamHighlightVideos.map((highlight) => (
                   <div key={`${highlight.event}-${highlight.year}-${highlight.videoSrc}`}>
-                    <p className={cn("text-sm font-semibold mb-3", isDark ? "text-white/80" : "text-gray-700")}>
+                    <p className={"text-sm font-semibold mb-3 text-foreground/80"}>
                       {highlight.event} {highlight.year}
                     </p>
                     {renderDirectHighlightVideo(highlight.videoSrc, highlight.ariaLabel)}
-                    <p className={cn("mt-2 text-sm", isDark ? "text-white/55" : "text-gray-600")}>{highlight.title}</p>
+                    <p className={"mt-2 text-sm text-muted-foreground"}>{highlight.title}</p>
                   </div>
                 ))}
               </div>
@@ -1884,7 +1878,7 @@ export function AthleteDetail({
                   onCancel={() => setEditingSection(null)}
                 />
               ) : (
-            <div className="whitespace-pre-line text-gray-700 leading-relaxed">
+            <div className="whitespace-pre-line text-foreground/80 leading-relaxed">
             {athleteData.college_opens_experience || (canEdit ? "No college opens experience listed. Click Edit to add." : "No college opens experience listed.")}
           </div>
           )}
@@ -1932,22 +1926,22 @@ export function AthleteDetail({
                     const stateQualifierText = (athleteData?.state_qualifier ?? athlete?.state_qualifier ?? "").toString().trim()
                     return stateQualifierText ? (
                       <div className="mb-6">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-3">State Qualifier</h3>
-                        <p className="text-gray-700">{stateQualifierText}</p>
+                        <h3 className="text-lg font-semibold text-foreground mb-3">State Qualifier</h3>
+                        <p className="text-foreground/80">{stateQualifierText}</p>
                       </div>
                     ) : null
                   })()}
                   {otherHonours.length > 0 && (
                     <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">Other honours</h3>
+                      <h3 className="text-lg font-semibold text-foreground mb-1">Other honours</h3>
                       {/* Said plainly, because the tournament sections above are verified and
                           this is not. Leaving both unlabelled is what let a self-typed line
                           read as a state title. */}
-                      <p className="mb-3 text-sm text-gray-500">
+                      <p className="mb-3 text-sm text-muted-foreground">
                         Added by the athlete. State, NHSCA, Super 32 and Fargo results are shown separately and come
                         from official records.
                       </p>
-                      <ul className="list-disc list-inside space-y-2 text-gray-700">
+                      <ul className="list-disc list-inside space-y-2 text-foreground/80">
                         {otherHonours.map((honour, index) => (
                           <li key={`other-honour-${index}`} className="text-base leading-relaxed">
                             {honour}
@@ -1957,7 +1951,7 @@ export function AthleteDetail({
                     </div>
                   )}
                   {otherHonours.length === 0 && !(athleteData?.state_qualifier ?? athlete?.state_qualifier)?.toString().trim() && (
-                    <p className="profile-text-muted text-gray-500 italic">
+                    <p className="profile-text-muted text-muted-foreground italic">
                       {canEdit
                         ? "Conference and regional finishes, invitationals, career records — anything not covered by official results. Click Edit to add."
                         : "No additional honours listed."}
@@ -1974,11 +1968,8 @@ export function AthleteDetail({
 
       {/* 10. High School Career Match Results */}
       <div
-        className={cn(
-          "min-w-0 max-w-full w-full",
-          isDark && "profile-match-data",
-          mobileRecruiterLayout && PROFILE_SECTION_ORDER.inSeason,
-        )}
+        /** MatchDataSectionImproved takes its own theme prop; it needs no override hook. */
+        className={cn("min-w-0 max-w-full w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.inSeason)}
       >
         <MatchDataSectionImproved
           athleteId={athlete.id}
@@ -1997,7 +1988,7 @@ export function AthleteDetail({
             mobileRecruiterLayout && PROFILE_SECTION_ORDER.footer,
           )}
         >
-          <p className={cn("text-xs text-center", isDark ? "text-white/40" : "text-gray-500")}>
+          <p className={"text-xs text-center text-muted-foreground"}>
             {athlete.last_edited_at && (
               <>
                 Last edited{" "}
@@ -2022,14 +2013,14 @@ export function AthleteDetail({
             mobileRecruiterLayout && PROFILE_SECTION_ORDER.requestEdit,
           )}
         >
-          <Card className={cn("profile-card border-2", isDark ? "border-white/20 bg-white/5" : "border-blue-200 bg-blue-50")}>
+          <Card className={"profile-card border-2 border-border bg-muted"}>
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                 <div>
-                  <h3 className={cn("text-lg font-semibold mb-1", isDark ? "text-white" : "text-gray-900")}>
+                  <h3 className={"text-lg font-semibold mb-1 text-foreground"}>
                     Help Keep This Profile Accurate
                   </h3>
-                  <p className={cn("text-sm", isDark ? "text-white/60" : "text-gray-600")}>
+                  <p className={"text-sm text-muted-foreground"}>
                     Found an error or have updated information? Request an edit to this profile.
                   </p>
                 </div>
