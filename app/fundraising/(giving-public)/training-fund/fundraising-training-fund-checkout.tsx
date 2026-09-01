@@ -1,7 +1,7 @@
 "use client"
 
-import { Suspense, useEffect } from "react"
-import { SpartanDonateForm } from "@/app/spartan/components/spartan-donate-form"
+import { useEffect } from "react"
+import { SimpleGiveForm } from "@/components/giving/simple-give-form"
 import {
   NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER,
   NC_UNITED_TRAINING_FUND_GOVERNANCE_DISCLAIMER,
@@ -34,10 +34,6 @@ function TrainingFundHashScroll() {
   return null
 }
 
-function FormFallback() {
-  return <p className="py-10 text-center text-sm text-white/50">Loading checkout…</p>
-}
-
 export function FundraisingTrainingFundCheckout() {
   return (
     <>
@@ -57,13 +53,7 @@ export function FundraisingTrainingFundCheckout() {
           <p className="mx-auto mt-2 max-w-md text-center text-[11px] leading-snug text-white/42">{NC_UNITED_TRAINING_FUND_GOVERNANCE_DISCLAIMER}</p>
           <p className="mx-auto mt-2 max-w-md text-center text-[11px] leading-snug text-white/48">{NC_UNITED_CONTRIBUTIONS_TAX_DISCLAIMER}</p>
           <div className="mt-6 w-full text-left">
-            <Suspense fallback={<FormFallback />}>
-              <SpartanDonateForm
-                fundraisingHub
-                fundraisingHubDefaultTrainingFund
-                fundraisingHubReturnSlug={FUNDRAISING_TRAINING_FUND_RETURN_SLUG}
-              />
-            </Suspense>
+            <SimpleGiveForm scholarships={[]} lockedDestination="fund" />
           </div>
         </div>
       </section>

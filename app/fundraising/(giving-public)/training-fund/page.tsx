@@ -20,7 +20,7 @@ export default async function FundraisingTrainingFundPage({
 }) {
   const sp = (await searchParams) ?? {}
   const cancelled = sp.cancelled === "1"
-  const { stats, gifts } = await getTrainingFundPublicSnapshot(250)
+  const { stats } = await getTrainingFundPublicSnapshot(250)
   const giveHref = `/fundraising/training-fund#${CHECKOUT_ANCHOR}`
 
   return (
@@ -100,47 +100,6 @@ export default async function FundraisingTrainingFundPage({
           “Gifts received” counts completed general NC United Fund checkouts. “Committed to scholarships” is the total of board-approved allocations from
           the general fund into named scholarship funds.
         </p>
-
-        {gifts.length > 0 ? (
-          <div className="mt-10">
-            <h2 className="font-[family-name:var(--font-fundraising-display)] text-sm font-bold uppercase tracking-wide text-white">
-              Gift activity
-            </h2>
-            <p className="mt-1 text-xs text-white/45">Public names only · recent NC United Fund gifts.</p>
-            <div className="mt-3 overflow-hidden rounded-lg border border-white/10 bg-black/20">
-              <div className="hidden grid-cols-[5.25rem_minmax(0,10.5rem)_minmax(0,1fr)_auto] gap-x-3 border-b border-white/10 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-white/40 sm:grid">
-                <span>Date</span>
-                <span>Campaign</span>
-                <span>Supporter</span>
-                <span className="text-right">Amount</span>
-              </div>
-              <ul className="divide-y divide-white/10">
-                {gifts.map((r, i) => (
-                  <li
-                    key={`${r.created_at}-${i}`}
-                    className="grid grid-cols-1 gap-y-1 px-3 py-3 text-sm sm:grid-cols-[5.25rem_minmax(0,10.5rem)_minmax(0,1fr)_auto] sm:items-center sm:gap-x-3 sm:gap-y-0 sm:py-2.5"
-                  >
-                    <div className="flex flex-wrap items-baseline justify-between gap-x-3 sm:contents">
-                      <span className="text-xs tabular-nums text-white/40">
-                        {new Date(r.created_at).toLocaleDateString(undefined, {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
-                      </span>
-                      <span className="font-semibold text-[#C8A94A] tabular-nums sm:hidden">{formatUsdWhole(r.amountCents)}</span>
-                    </div>
-                    <span className="text-xs leading-snug text-white/55 sm:min-w-0">{r.campaignLabel}</span>
-                    <span className="min-w-0 text-white/85">{r.donorLabel}</span>
-                    <span className="hidden font-semibold text-[#C8A94A] tabular-nums sm:block sm:text-right">
-                      {formatUsdWhole(r.amountCents)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        ) : null}
 
         <div id={CHECKOUT_ANCHOR} className="mt-12 scroll-mt-28">
           <FundraisingTrainingFundCheckout />

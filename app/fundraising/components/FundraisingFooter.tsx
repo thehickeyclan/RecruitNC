@@ -9,10 +9,6 @@ const FOOTER_LINK_CLASS = displayFont(
   "flex min-h-[48px] touch-manipulation items-center justify-center rounded-lg px-4 py-2 text-center text-white/90 transition hover:bg-white/[0.06] hover:text-[#C8A94A] sm:min-h-0 sm:inline-flex sm:justify-start sm:px-2 sm:py-1",
 )
 
-const FOOTER_LINK_CLASS_SECONDARY = displayFont(
-  "flex min-h-[48px] touch-manipulation items-center justify-center rounded-lg px-4 py-2 text-center text-xs text-white/90 transition hover:bg-white/[0.06] hover:text-[#C8A94A] sm:min-h-0 sm:inline-flex sm:justify-start sm:px-2 sm:py-1 sm:text-sm",
-)
-
 export function FundraisingFooter() {
   return (
     <footer className="border-t border-white/10 bg-[#020812] px-4 pb-[max(2rem,env(safe-area-inset-bottom))] pt-14 text-white">
@@ -51,17 +47,6 @@ export function FundraisingFooter() {
             </span>
             <HardLink href="/fundraising/training-fund" className={FOOTER_LINK_CLASS}>
               Give to NC United
-            </HardLink>
-          </div>
-          <div className="grid grid-cols-1 gap-1 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-2 sm:gap-y-2">
-            <HardLink href="/fundraising#fundraising-top-donors" className={FOOTER_LINK_CLASS_SECONDARY}>
-              Top donors
-            </HardLink>
-            <span className="hidden text-white/25 sm:inline" aria-hidden>
-              ·
-            </span>
-            <HardLink href="/fundraising/corporate" className={FOOTER_LINK_CLASS_SECONDARY}>
-              Corporate partners
             </HardLink>
           </div>
         </nav>

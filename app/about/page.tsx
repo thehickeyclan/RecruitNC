@@ -289,10 +289,6 @@ export default async function AboutPage() {
               Read about the scholarship
             </Link>
             {" · "}
-            <Link href="/spartan" className="font-semibold text-rnc-gold underline-offset-2 hover:underline">
-              Join the Spartan Challenge
-            </Link>
-            {" · "}
             <Link href="/fundraising" className="font-semibold text-rnc-gold underline-offset-2 hover:underline">
               Give to NC United
             </Link>

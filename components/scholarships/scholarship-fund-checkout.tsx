@@ -1,8 +1,8 @@
 "use client"
 
-import { Suspense, useEffect } from "react"
+import { useEffect } from "react"
 
-import { SpartanDonateForm } from "@/app/spartan/components/spartan-donate-form"
+import { SimpleGiveForm } from "@/components/giving/simple-give-form"
 
 const CHECKOUT_ANCHOR_ID = "spartan-checkout"
 
@@ -26,10 +26,6 @@ function ScholarshipHashScroll() {
   return null
 }
 
-function FormFallback() {
-  return <p className="py-10 text-center text-sm text-white/50">Loading checkout…</p>
-}
-
 export function ScholarshipFundCheckout({
   scholarshipSlug,
   scholarshipName,
@@ -37,7 +33,6 @@ export function ScholarshipFundCheckout({
   scholarshipSlug: string
   scholarshipName: string
 }) {
-  const ret = `scholarships/${scholarshipSlug.trim().toLowerCase()}`
 
   return (
     <>
@@ -55,13 +50,10 @@ export function ScholarshipFundCheckout({
             <span className="tabular-nums">$5</span>+. IRC-aligned acknowledgement by email after checkout; deductible treatment varies by donor — confirm with your tax advisor.
           </p>
           <div className="mt-6 w-full text-left">
-            <Suspense fallback={<FormFallback />}>
-              <SpartanDonateForm
-                fundraisingHub
-                fundraisingHubReturnSlug={ret}
-                fundraisingHubFundLabel={scholarshipName}
-              />
-            </Suspense>
+            <SimpleGiveForm
+              scholarships={[{ slug: scholarshipSlug, name: scholarshipName }]}
+              lockedScholarshipSlug={scholarshipSlug}
+            />
           </div>
         </div>
       </section>

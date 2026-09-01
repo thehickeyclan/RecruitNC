@@ -293,7 +293,7 @@ export function Navbar() {
 
   /** Public giving options: general NC United giving and named scholarship funds. */
   const fundraisingNavItems = [
-    { href: "/fundraising", label: "Overview", description: "Give to NC United and explore scholarship funds", icon: Gift },
+    { href: "/fundraising", label: "Make a gift", description: "One form — the NC United Fund or a named scholarship", icon: Gift },
     {
       href: "/fundraising/scholarships",
       label: "Scholarships",

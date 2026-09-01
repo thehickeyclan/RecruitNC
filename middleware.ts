@@ -29,6 +29,14 @@ export async function middleware(request: NextRequest) {
     }
   }
 
+  // The Spartan race campaign is archived, not deleted: its code, Stripe records and
+  // admin exports stay intact, but the public pages now land on the one giving form.
+  // `/spartan/thanks` stays reachable — Stripe sessions created before the archive
+  // still return there.
+  if (pathname === "/spartan" || (pathname.startsWith("/spartan/") && !pathname.startsWith("/spartan/thanks"))) {
+    return NextResponse.redirect(new URL("/fundraising", request.url), 308)
+  }
+
   // Individual-athlete giving is retired. Keep all public giving organizational
   // or within a separately governed scholarship fund.
   if (
