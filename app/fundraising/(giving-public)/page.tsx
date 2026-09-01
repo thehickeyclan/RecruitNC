@@ -32,15 +32,6 @@ export default async function FundraisingPortalHomePage() {
 
         <SimpleGiveForm scholarships={options} />
 
-        <p className="mt-8 text-center text-sm text-white/50">
-          <a href="/fundraising/training-fund" className="underline-offset-2 hover:text-[#D3B574] hover:underline">
-            Where the money goes
-          </a>
-          {" · "}
-          <a href="/fundraising/scholarships" className="underline-offset-2 hover:text-[#D3B574] hover:underline">
-            Scholarship funds
-          </a>
-        </p>
       </div>
       <FundraisingFooter />
     </div>

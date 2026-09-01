@@ -46,7 +46,7 @@ export function FundraisingFooter() {
               ·
             </span>
             <HardLink href="/fundraising/training-fund" className={FOOTER_LINK_CLASS}>
-              Give to NC United
+              Where the money goes
             </HardLink>
           </div>
         </nav>
