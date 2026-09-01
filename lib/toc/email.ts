@@ -218,7 +218,7 @@ export async function sendTocAthleteConfirmedEmail(payload: { to: string[]; athl
 <li>Champion jacket size on file: <strong>${payload.jacketSize}</strong></li>
 <li>Dates: <strong>${TOC_EVENT_DATES_DISPLAY}</strong></li>
 </ul>
-<p>Friday: weigh-in at 4:00 PM and first round. Saturday: full brackets through championship finals.</p>
+<p>Friday: weigh-in 4:00&ndash;5:00 PM, opening ceremony 5:30 PM, first round 6:00 PM. Saturday: brackets resume 9:30 AM through championship finals.</p>
 <p style="margin:20px 0;"><a href="${eventPageUrl()}" style="display:inline-block;background:#CC0000;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;font-weight:bold;">Event page</a></p>`
 
   assertTocAthleteEmailHasNoPrivateBracketsLink(body)

@@ -92,7 +92,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "When and where is the event?",
-    a: `${TOC_EVENT_DATES_RANGE} at ${TOC_VENUE.name} (${TOC_VENUE.campus}), ${TOC_VENUE.address}. ${TOC_FRIDAY_EVENT_DATE}: one official weigh-in at 4:00 PM (no Saturday weigh-in) and first round Friday night. ${TOC_SATURDAY_COMPETITION_DATE}: doors at 7:30 AM, brackets resume at 9:00 AM through single-mat championship finals. ${TOC_MATS_LINE} Seating for up to 1,000, plus a credentialed Coaches & Officials Lounge in a dedicated atrium room.`,
+    a: `${TOC_EVENT_DATES_RANGE} at ${TOC_VENUE.name} (${TOC_VENUE.campus}), ${TOC_VENUE.address}. ${TOC_FRIDAY_EVENT_DATE}: one official weigh-in 4:00–5:00 PM (no Saturday weigh-in), doors to spectators at 5:00 PM, opening ceremony at 5:30 PM and first round Friday night. ${TOC_SATURDAY_COMPETITION_DATE}: doors at 8:30 AM, brackets resume at 9:30 AM through single-mat championship finals. ${TOC_MATS_LINE} Seating for up to 1,000, plus a credentialed Coaches & Officials Lounge in a dedicated atrium room.`,
   },
   {
     q: "Will the event be streamed?",

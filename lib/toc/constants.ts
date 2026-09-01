@@ -25,7 +25,7 @@ export const TOC_EVENT_DATES_DISPLAY = `${TOC_EVENT_DATES_RANGE} · one weigh-in
 /** Single official weigh-in — fan-facing copy for landing, schedule, and athlete comms. */
 export const TOC_WEIGH_IN = {
   headline: "One weigh-in — Friday night only",
-  time: "4:00 PM Friday, September 18",
+  time: "4:00–5:00 PM Friday, September 18",
   detail: "Friday weigh-in is flat — wrestlers must make their tournament weight with no allowance. There is no second weigh-in on Saturday. Singlet required; skin check at the scale; USA Wrestling card required.",
 } as const
 
@@ -234,57 +234,64 @@ export const TOC_WEIGHT_CLASSES = [117, 125, 133, 141, 149, 157, 165, 174, 184, 
 export const TOC_WEIGH_IN_LINE = `${TOC_WEIGH_IN.headline} · ${TOC_WEIGH_IN.time} · Flat weight, no allowance` as const
 
 /** Public schedule — Friday weigh-in + first round; Saturday finishes brackets through finals. */
+/**
+ * Public schedule.
+ *
+ * These rows are the crew run sheet at /run-sheet reduced to what a spectator needs — same times,
+ * fewer of them. The run sheet is the source of truth and is planned in two scenarios; this is the
+ * eleven-weight one, matching the "all eleven championship finals" copy used elsewhere. Change the
+ * run sheet first, then bring these across, so the crew and the public never work from different
+ * clocks.
+ */
 export const TOC_SCHEDULE = {
   headline: "When to be there",
-  lead: "The NC Mat begins revealing the field with the 117 lbs athletes on August 16. Additional weight classes will be announced on a rolling basis as each field is finalized. Championship weekend opens with one official weigh-in Friday at 4:00 PM, followed by first-round bouts that evening and single-mat finals Saturday.",
-  athleteNote: "Invited wrestlers: one weigh-in Friday at 4:00 PM only — then first round Friday night. There is no second weigh-in Saturday.",
+  lead: "The NC Mat reveals the field one weight class at a time as each is finalized. Championship weekend opens with one official weigh-in Friday afternoon, an opening ceremony at 5:30 PM, and first-round bouts on two mats that evening. Saturday runs the brackets through to single-mat finals.",
+  athleteNote: "Invited wrestlers: one weigh-in Friday, 4:00–5:00 PM only — then first round Friday night. There is no second weigh-in Saturday.",
   announcements: {
     title: "The NC Mat Field Reveal",
-    subtitle: "Announcements begin August 16 and continue as weight-class fields are finalized",
+    subtitle: "Weight-class fields are announced as each one is finalized",
     rows: [
-      { time: "Sun · Aug 16", activity: "117 lbs athlete announcements begin" },
-      {
-        time: "Rolling",
-        activity: "Additional weight classes announced by The NC Mat as each field is finalized",
-      },
+      { time: "Rolling", activity: "Each weight class announced by The NC Mat once its field is set" },
     ],
   },
   friday: {
     title: "Friday · September 18",
-    subtitle: "One weigh-in at 4:00 PM · first round Friday night — two mats live",
+    subtitle: "Weigh-in 4:00–5:00 PM · opening ceremony 5:30 PM · first round on two mats",
     rows: [
+      { time: "3:00 PM", activity: "Doors open to coaches and athletes" },
       {
-        time: "2:00 PM",
-        activity: "Crew load-in — mats, scoring tables, PA, and production setup",
-      },
-      {
-        time: "4:00 PM",
+        time: "4:00–5:00 PM",
         activity: "One official weigh-in & skin check (invited wrestlers only — no Saturday weigh-in)",
       },
-      { time: "~6:30 PM", activity: "First round — all brackets on two mats" },
+      { time: "4:00 PM", activity: "Warm-up mat opens — stays open all session" },
+      { time: "5:00 PM", activity: "Ticket sales open · doors open to spectators" },
+      {
+        time: "5:30 PM",
+        activity: "Opening ceremony — athlete walkout, welcome and prayer, national anthem",
+      },
+      { time: "6:00 PM", activity: "First whistle — 133 lbs pigtail, then round one on two mats" },
+      { time: "~9:00 PM", activity: "Session ends" },
     ],
   },
   saturday: {
     title: "Saturday · September 19",
-    subtitle: "Brackets resume — placement bouts, then championship finals on one mat",
+    subtitle: "Brackets resume at 9:30 AM · Giving Hour · championship finals on one mat",
     rows: [
+      { time: "7:30 AM", activity: "Warm-up mat opens — stays open all day" },
+      { time: "8:30 AM", activity: "Doors open to spectators" },
+      { time: "9:15 AM", activity: "Welcome and prayer" },
+      { time: "9:30 AM", activity: "Consolation round one — two mats" },
+      { time: "10:45 AM", activity: "Winners semifinals — two mats" },
+      { time: "12:00 PM", activity: "Consolation semifinals — two mats" },
+      { time: "1:15 PM", activity: "Third-place bouts — two mats" },
+      { time: "2:15–3:15 PM", activity: "The Giving Hour — vendor raffle, scholarship and guest speaker" },
+      { time: "3:15 PM", activity: "Parade of finalists, introductions and national anthem" },
       {
-        time: "7:30 AM",
-        activity: "Doors open (athletes, coaches, ticket holders)",
+        time: "3:45 PM",
+        activity: "Championship finals — one mat, all eleven weights, awards after each",
       },
-      { time: "8:45 AM", activity: "National anthem & invocation" },
-      {
-        time: "9:00 AM",
-        activity: "Brackets resume — two mats through placement bouts",
-      },
-      { time: "~3:30 PM", activity: "Placement bouts complete (estimate)" },
-      { time: "4:00–5:00 PM", activity: "Break — championship mat setup" },
-      { time: "5:00 PM", activity: "Parade of finalists & introductions" },
-      {
-        time: "5:15 PM",
-        activity: "Championship finals — one mat, all 11 weights",
-      },
-      { time: "~7:30 PM", activity: "Awards & event concludes" },
+      { time: "6:15 PM", activity: "Most Outstanding Wrestler & Match of Champions awards" },
+      { time: "6:30 PM", activity: "Event concludes" },
     ],
   },
 } as const
