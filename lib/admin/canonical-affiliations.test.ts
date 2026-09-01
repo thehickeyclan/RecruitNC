@@ -18,9 +18,14 @@ describe("resolveClubName", () => {
     expect(r.ok && r.canonical).toBe("School of Hard Knocks")
   })
 
-  it("refuses a club that is not in the directory, so no logo is lost", async () => {
-    const r = await resolveClubName(fake("wrestling_clubs"), "B2A")
+  it("refuses an unknown club when the current one is known, so no logo is lost", async () => {
+    const r = await resolveClubName(fake("wrestling_clubs"), "B2A", "Combat Athletics")
     expect(r.ok).toBe(false)
+  })
+
+  it("allows an unknown club when the current one is unknown too — nothing to lose", async () => {
+    const r = await resolveClubName(fake("wrestling_clubs"), "B2A", "Believe 2 Achieve")
+    expect(r).toEqual({ ok: true, canonical: "B2A" })
   })
 })
 
@@ -30,8 +35,13 @@ describe("resolveSchoolName", () => {
     expect(r.ok && r.canonical).toBe("Mooresville")
   })
 
-  it("does not let a misspelling match a real school", async () => {
-    expect((await resolveSchoolName(fake("schools"), "Trinty high school")).ok).toBe(false)
-    expect((await resolveSchoolName(fake("schools"), "Trinity High School")).ok).toBe(true)
+  it("does not let a misspelling overwrite a school that resolves", async () => {
+    expect((await resolveSchoolName(fake("schools"), "Trinty high school", "Trinity")).ok).toBe(false)
+    expect((await resolveSchoolName(fake("schools"), "Trinity High School", "Trinity")).ok).toBe(true)
+  })
+
+  it("lets an unlisted school through when the current one is unlisted too", async () => {
+    const r = await resolveSchoolName(fake("schools"), "Middle Creek", "Middle Creek High")
+    expect(r).toEqual({ ok: true, canonical: "Middle Creek" })
   })
 })

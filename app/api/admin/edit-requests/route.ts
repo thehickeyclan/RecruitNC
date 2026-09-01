@@ -171,6 +171,11 @@ export async function PUT(request: NextRequest) {
     let applied: Record<string, string | number> = {}
     let manual: string[] = []
     if (status === "approved" && existing.athlete_id) {
+      const { data: currentAthlete } = await svc
+        .from("athletes")
+        .select("wrestlingClub, highschool")
+        .eq("id", existing.athlete_id)
+        .maybeSingle<{ wrestlingClub: string | null; highschool: string | null }>()
       const plan = buildAthleteUpdateFromRequest(existing.request_data as never)
       applied = plan.updates
       manual = plan.manual
@@ -180,7 +185,7 @@ export async function PUT(request: NextRequest) {
        * that is not in the registry rather than writing text that resolves to no crest.
        */
       if (typeof applied.wrestlingClub === "string") {
-        const club = await resolveClubName(svc, applied.wrestlingClub)
+        const club = await resolveClubName(svc, applied.wrestlingClub, currentAthlete?.wrestlingClub ?? null)
         if (club.ok) {
           applied.wrestlingClub = club.canonical
           if (club.clubId != null) applied.wrestling_club_id = club.clubId
@@ -190,7 +195,7 @@ export async function PUT(request: NextRequest) {
         }
       }
       if (typeof applied.highschool === "string") {
-        const school = await resolveSchoolName(svc, applied.highschool)
+        const school = await resolveSchoolName(svc, applied.highschool, currentAthlete?.highschool ?? null)
         if (school.ok) applied.highschool = school.canonical
         else {
           delete applied.highschool

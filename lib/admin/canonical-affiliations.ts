@@ -19,6 +19,28 @@ export type AffiliationResolution =
   | { ok: true; canonical: string; clubId?: number | null }
   | { ok: false; reason: string }
 
+/**
+ * Only 169 of 418 athlete schools and 150 of 230 clubs are in the registries, so refusing every
+ * unmatched name would block most legitimate corrections. The line that actually matters is
+ * narrower: never trade a name that resolves to a logo for one that does not. If what is already
+ * stored is itself unmatched, there is no crest to lose and the new name goes in as typed.
+ */
+function decide(
+  submittedMatch: { canonical: string; clubId?: number | null } | null,
+  currentIsKnown: boolean,
+  submitted: string,
+  kind: "club" | "school",
+): AffiliationResolution {
+  if (submittedMatch) return { ok: true, canonical: submittedMatch.canonical, clubId: submittedMatch.clubId }
+  if (currentIsKnown) {
+    return {
+      ok: false,
+      reason: `"${submitted}" is not in the ${kind} directory and the current value is — applying it would lose the logo. Add it to the directory first.`,
+    }
+  }
+  return { ok: true, canonical: submitted.trim() }
+}
+
 /** Schools normalise more literally than clubs — "Trinity" and "Trinty" must not collide. */
 function normalizeSchoolName(value: string | null | undefined): string {
   return String(value ?? "")
@@ -34,39 +56,40 @@ function normalizeSchoolName(value: string | null | undefined): string {
 export async function resolveClubName(
   supabase: SupabaseClient,
   submitted: string,
+  current?: string | null,
 ): Promise<AffiliationResolution> {
   const wanted = normalizeClubName(submitted)
   if (!wanted) return { ok: false, reason: "empty club name" }
 
   const { data } = await supabase.from("wrestling_clubs").select("id, name")
-  const match = (data ?? []).find((c: { name: string }) => normalizeClubName(c.name) === wanted)
-  if (!match) {
-    return {
-      ok: false,
-      reason: `"${submitted}" is not in the club directory — add the club there first, or its logo will not resolve`,
-    }
-  }
-  return { ok: true, canonical: (match as { name: string }).name, clubId: (match as { id: number }).id ?? null }
+  const rows = (data ?? []) as { id: number; name: string }[]
+  const match = rows.find((c) => normalizeClubName(c.name) === wanted)
+  const currentKey = normalizeClubName(current)
+  const currentIsKnown = Boolean(currentKey) && rows.some((c) => normalizeClubName(c.name) === currentKey)
+
+  return decide(match ? { canonical: match.name, clubId: match.id ?? null } : null, currentIsKnown, submitted, "club")
 }
 
 export async function resolveSchoolName(
   supabase: SupabaseClient,
   submitted: string,
+  current?: string | null,
 ): Promise<AffiliationResolution> {
   const wanted = normalizeSchoolName(submitted)
   if (!wanted) return { ok: false, reason: "empty school name" }
 
   const { data } = await supabase.from("schools").select("name, canonical_name")
-  const match = (data ?? []).find(
-    (s: { name: string; canonical_name: string | null }) =>
-      normalizeSchoolName(s.name) === wanted || normalizeSchoolName(s.canonical_name) === wanted,
+  const rows = (data ?? []) as { name: string; canonical_name: string | null }[]
+  const hit = (key: string) =>
+    rows.find((s) => normalizeSchoolName(s.name) === key || normalizeSchoolName(s.canonical_name) === key)
+  const match = hit(wanted)
+  const currentKey = normalizeSchoolName(current)
+  const currentIsKnown = Boolean(currentKey) && Boolean(hit(currentKey))
+
+  return decide(
+    match ? { canonical: (match.canonical_name || match.name).trim() } : null,
+    currentIsKnown,
+    submitted,
+    "school",
   )
-  if (!match) {
-    return {
-      ok: false,
-      reason: `"${submitted}" is not in the school directory — check the spelling, or add the school first`,
-    }
-  }
-  const row = match as { name: string; canonical_name: string | null }
-  return { ok: true, canonical: (row.canonical_name || row.name).trim() }
 }
