@@ -4,6 +4,7 @@ export const revalidate = 0
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { buildAthleteUpdateFromRequest } from "@/lib/admin/apply-edit-request"
+import { resolveClubName, resolveSchoolName } from "@/lib/admin/canonical-affiliations"
 
 // Server-only service client to bypass RLS for trusted operations
 function createServiceClient() {
@@ -173,6 +174,29 @@ export async function PUT(request: NextRequest) {
       const plan = buildAthleteUpdateFromRequest(existing.request_data as never)
       applied = plan.updates
       manual = plan.manual
+
+      /**
+       * Club and school names are logo join keys. Take the registry's spelling, and refuse a name
+       * that is not in the registry rather than writing text that resolves to no crest.
+       */
+      if (typeof applied.wrestlingClub === "string") {
+        const club = await resolveClubName(svc, applied.wrestlingClub)
+        if (club.ok) {
+          applied.wrestlingClub = club.canonical
+          if (club.clubId != null) applied.wrestling_club_id = club.clubId
+        } else {
+          delete applied.wrestlingClub
+          manual = [...manual, `Club not applied: ${club.reason}`]
+        }
+      }
+      if (typeof applied.highschool === "string") {
+        const school = await resolveSchoolName(svc, applied.highschool)
+        if (school.ok) applied.highschool = school.canonical
+        else {
+          delete applied.highschool
+          manual = [...manual, `School not applied: ${school.reason}`]
+        }
+      }
       if (Object.keys(applied).length > 0) {
         const { error: applyErr } = await svc
           .from("athletes")
