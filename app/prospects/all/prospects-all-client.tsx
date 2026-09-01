@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { yearFilterToApiParams } from "@/lib/prospects-directory"
+import { currentClassYears } from "@/lib/class-years"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
 import { Badge } from "@/components/ui/badge"
@@ -80,6 +81,9 @@ const stateQualifiers2025 = [
   { full_name: "Gavin Lopez", graduation_year: 2027 },
   { full_name: "Logan Mumy", graduation_year: 2027 },
 ]
+
+/** Resolved once at module load; the page is client-rendered per visit. */
+const CURRENT_CLASS_YEARS = currentClassYears()
 
 export default function ProspectsAllClient({
   initialProspects = [],
@@ -182,7 +186,8 @@ export default function ProspectsAllClient({
   const availableYears = useMemo(() => {
     const years = new Set<number>()
     for (const prospect of prospects) {
-      if (prospect.graduationyear && prospect.graduationyear >= 2024 && prospect.graduationyear <= 2032) {
+      /** Offer only classes still in high school; a graduated year is no longer a useful filter. */
+      if (prospect.graduationyear && CURRENT_CLASS_YEARS.includes(prospect.graduationyear)) {
         years.add(prospect.graduationyear)
       }
     }

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { currentClassYears, mostRecentGraduatedClassYear } from "@/lib/class-years"
 
 /** Directory list columns only — omit bio and other large fields. */
 export const PROSPECT_LIST_COLUMNS = `
@@ -261,8 +262,10 @@ export function yearFilterToApiParams(yearFilter: string): {
   minYear?: number
   maxYear?: number
 } {
-  if (yearFilter === "active") return { minYear: 2026, maxYear: 2029 }
-  if (yearFilter === "graduates") return { maxYear: 2025 }
+  /** Derived, not typed — a graduated class must drop out of the filter on its own each summer. */
+  const active = currentClassYears()
+  if (yearFilter === "active") return { minYear: active[0], maxYear: active[active.length - 1] }
+  if (yearFilter === "graduates") return { maxYear: mostRecentGraduatedClassYear() }
   if (yearFilter !== "all") return { graduationYear: yearFilter }
   return {}
 }
