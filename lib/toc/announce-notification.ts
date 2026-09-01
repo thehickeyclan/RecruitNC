@@ -12,6 +12,39 @@ import { getPublicAnnouncedWeight } from "@/lib/toc/public-announced-field"
 
 export type TocAnnouncePush = { title: string; body: string; data: Record<string, unknown> }
 
+/** Strongest first. Not seeds — see the note on pickHeadliners. */
+const CREDENTIAL_RANK: Record<string, number> = {
+  "all-american": 0,
+  "state-champion": 1,
+  "state-placer": 2,
+  "state-qualifier": 3,
+}
+
+export type AnnounceAthlete = { name: string; credentials?: { kind: string }[] }
+
+/**
+ * The two names worth leading with.
+ *
+ * The field page is ordered alphabetically on purpose — it is unseeded until the seeds drop, and
+ * row order must not let anyone infer them. Taking the first two names off that page therefore
+ * led with whoever happened to sort first, which sells the weight short.
+ *
+ * So this ranks by accolade, not by seed: All-American, then state champion, then placer, then
+ * qualifier. Every one of those is already printed on the public page as a credential pill, so
+ * nothing new is revealed — and unlike seed order it says nothing about how the bracket will be
+ * drawn. Alphabetical breaks ties, so the choice stays stable between sends.
+ */
+export function pickHeadliners(athletes: readonly AnnounceAthlete[], count = 2): string[] {
+  const best = (a: AnnounceAthlete) =>
+    Math.min(...[...(a.credentials ?? []).map((c) => CREDENTIAL_RANK[c.kind] ?? 9), 9])
+
+  return [...athletes]
+    .filter((a) => a.name?.trim())
+    .sort((a, b) => best(a) - best(b) || a.name.localeCompare(b.name))
+    .slice(0, count)
+    .map((a) => a.name)
+}
+
 /**
  * Copy for one reveal.
  *
@@ -21,11 +54,11 @@ export type TocAnnouncePush = { title: string; body: string; data: Record<string
  */
 export function buildTocAnnouncePush(input: {
   weightClass: number
-  athleteNames: string[]
+  athletes: readonly AnnounceAthlete[]
 }): TocAnnouncePush {
-  const { weightClass, athleteNames } = input
-  const named = athleteNames.filter((n) => n.trim()).slice(0, 2)
-  const remaining = Math.max(0, athleteNames.length - named.length)
+  const { weightClass, athletes } = input
+  const named = pickHeadliners(athletes)
+  const remaining = Math.max(0, athletes.length - named.length)
 
   let body: string
   if (named.length === 0) {
@@ -60,7 +93,7 @@ export async function notifyTocWeightAnnounced(
 
     const message = buildTocAnnouncePush({
       weightClass,
-      athleteNames: weight.athletes.map((a) => a.name),
+      athletes: weight.athletes.map((a) => ({ name: a.name, credentials: a.credentials })),
     })
 
     const result = await sendToSubscribers("alert_toc", message)
