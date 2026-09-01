@@ -300,12 +300,6 @@ export function Navbar() {
       description: "Named funds, applications, award history",
       icon: GraduationCap,
     },
-    {
-      href: "/fundraising/training-fund",
-      label: "Give to NC United",
-      description: "General support for NC United's charitable mission",
-      icon: Trophy,
-    },
   ]
 
   const fundraisingNavActiveRefs = [{ href: "/fundraising" }]
@@ -575,16 +569,6 @@ export function Navbar() {
                   <ChevronDown className="h-4 w-4" />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-80 max-h-[min(85vh,560px)] overflow-y-auto">
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex items-center gap-2 font-semibold">
-                      <Gift className="h-4 w-4" aria-hidden />
-                      Give
-                    </div>
-                    <p className="text-xs text-muted-foreground font-normal mt-1">
-                      501(c)(3) charitable gifts · IRC-aligned acknowledgement — confirm deductions with your advisor
-                    </p>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
                   {fundraisingNavItems.map((sub) => {
                     const Icon = sub.icon
                     return (
