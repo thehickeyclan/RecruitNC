@@ -757,6 +757,14 @@ export function SpartanDonateFormWizard({
       setError("Use Next until the review step, or fix any error shown above.")
       return
     }
+    // Raising the amount past the tee threshold after passing the tee step leaves the gift
+    // eligible with no size chosen. Send them back to pick one rather than into a server error
+    // the review step cannot resolve.
+    if (flow === "donate" && teeEligible && !shirtSize) {
+      setDonateStep(5)
+      setError("Your gift now includes a free tee — choose a size and shipping address.")
+      return
+    }
     if (flow === "race" && raceStep < RACE_STEPS) {
       setError("Use Next until the review step.")
       return
@@ -806,6 +814,7 @@ export function SpartanDonateFormWizard({
             ? { athleteDisplayName: athleteQuery.trim() }
             : {}),
           ...(!codeForCheckout && hasManualCredit ? { manualAthleteName: manualCreditTrimmed } : {}),
+          teeRequested: teeEligible,
           ...(teeEligible
             ? {
                 shirtSize,

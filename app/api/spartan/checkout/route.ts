@@ -259,7 +259,20 @@ export async function POST(request: NextRequest) {
       ? body.shipCountry.trim().slice(0, 2).toUpperCase()
       : "US"
 
-  if (teeEligible) {
+  /**
+   * Whether the form actually asked for a tee.
+   *
+   * The wizard skips the tee step in some paths — the athlete gift page embed has no tee unlock —
+   * and then sends no size and no address. This route used to demand both from any gift over the
+   * threshold regardless, which blocked those donors on the review step with an error and no field
+   * to fix it. A $200 sponsorship died there.
+   *
+   * A race entry always includes a tee, so that path cannot opt out. Older clients send nothing
+   * here, which reads as undefined and keeps the original strict behaviour.
+   */
+  const teeCollected = raceEntryRequested || body.teeRequested !== false
+
+  if (teeEligible && teeCollected) {
     if (!shirtSize || !TEE_SIZES.has(shirtSize)) {
       return NextResponse.json(
         {
