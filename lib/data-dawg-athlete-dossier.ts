@@ -57,10 +57,46 @@ function extractWrestlingClub(row: Record<string, unknown>): string | null {
   return null
 }
 
+/**
+ * Which school year a season belongs to.
+ *
+ * The `grade` column on `matches` is hand-entered free text and is wrong often enough not to be
+ * trusted: an audit on 1 September 2026 found 91 of 850 rows disagreed with the athlete's
+ * graduation year, including typos ("Sophmore"), placeholders ("Unknown", "8th Grade") and, most
+ * damagingly, stale labels that never moved when the athlete advanced a year. That last kind made
+ * Data Dawg describe a class-of-2027 junior's 2025-26 season as his *senior* year — a season he
+ * has not wrestled yet.
+ *
+ * Graduation year is one authoritative number per athlete and is what every other surface already
+ * keys off, so it wins wherever the season is dateable. The stored text is only a fallback for
+ * rows we cannot place — a season string we cannot parse, or an athlete with no graduation year.
+ */
 function classLabelFromMatchRow(
   mr: Record<string, unknown>,
   graduationYear: number | null,
 ): { classLabel: string | null; year: number | null } {
+  const season = String(mr.season ?? "")
+  const endYear = season.match(/(20\d{2})\s*[-–]\s*(20\d{2})/)
+  const shortEndYear = season.match(/(20\d{2})\s*[-–]\s*(\d{2})\b/)
+  const y = endYear
+    ? parseInt(endYear[2], 10)
+    : shortEndYear
+      ? parseInt(shortEndYear[1].slice(0, 2) + shortEndYear[2], 10)
+      : (() => {
+          const m = season.match(/\b(20\d{2})\b/)
+          return m ? parseInt(m[1], 10) : null
+        })()
+
+  if (y != null && graduationYear != null) {
+    const offset = graduationYear - y
+    if (offset === 0) return { classLabel: "Senior", year: y }
+    if (offset === 1) return { classLabel: "Junior", year: y }
+    if (offset === 2) return { classLabel: "Sophomore", year: y }
+    if (offset === 3) return { classLabel: "Freshman", year: y }
+    /** Middle school or a fifth year — say nothing rather than guess a grade. */
+    return { classLabel: null, year: y }
+  }
+
   const grade = String(mr.grade ?? mr.season ?? "").toLowerCase()
   for (const label of ["freshman", "sophomore", "junior", "senior"] as const) {
     if (grade.includes(label)) {
@@ -72,21 +108,6 @@ function classLabelFromMatchRow(
           : null
       return { classLabel: capitalized, year }
     }
-  }
-  const season = String(mr.season ?? "")
-  const endYear = season.match(/(20\d{2})\s*[-–]\s*(20\d{2})/)
-  const y = endYear
-    ? parseInt(endYear[2], 10)
-    : (() => {
-        const m = season.match(/\b(20\d{2})\b/)
-        return m ? parseInt(m[1], 10) : null
-      })()
-  if (y != null && graduationYear != null) {
-    const offset = graduationYear - y
-    if (offset === 0) return { classLabel: "Senior", year: y }
-    if (offset === 1) return { classLabel: "Junior", year: y }
-    if (offset === 2) return { classLabel: "Sophomore", year: y }
-    if (offset === 3) return { classLabel: "Freshman", year: y }
   }
   return { classLabel: null, year: y }
 }
