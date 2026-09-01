@@ -54,11 +54,33 @@ export function RequestProfileEditModal({
       console.log("[v0] Edit request form submitted")
       setSubmitting(true)
 
+      /**
+       * Weight does not need anyone's approval.
+       *
+       * Wrestlers move weight mid-season and the profile should follow the same day. It was already
+       * self-editable through the weight card on the profile, but this form queued it for review
+       * instead, so whoever used the button waited on an admin — two of them were still waiting
+       * months later. Weight now saves straight through and only the rest of the form is queued.
+       */
+      let weightSavedDirectly = false
+      if (weight.trim()) {
+        try {
+          const res = await fetch(`/api/athletes/${athleteId}/self-edit`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ updates: { weightclass: weight.trim() } }),
+          })
+          weightSavedDirectly = res.ok
+        } catch {
+          /** Fall through and queue it like any other field. */
+        }
+      }
+
       const descriptionParts: string[] = []
 
       if (highSchool) descriptionParts.push(`High School: ${highSchool}`)
       if (club) descriptionParts.push(`Wrestling Club: ${club}`)
-      if (weight) descriptionParts.push(`Weight Class: ${weight}`)
+      if (weight && !weightSavedDirectly) descriptionParts.push(`Weight Class: ${weight}`)
       if (cellNumber) descriptionParts.push(`Cell Number: ${cellNumber}`)
       if (highlightVideo) descriptionParts.push(`Highlight Video: ${highlightVideo}`)
       if (bioOther) descriptionParts.push(`Bio Info: ${bioOther}`)
@@ -71,6 +93,14 @@ export function RequestProfileEditModal({
       const description = descriptionParts.join(" | ")
 
       if (!description) {
+        if (weightSavedDirectly) {
+          toast({ title: "Weight Updated", description: `Weight class is now ${weight.trim()} lbs.` })
+          setWeight("")
+          setSubmitting(false)
+          onOpenChange(false)
+          window.location.reload()
+          return
+        }
         toast({
           title: "No Changes",
           description: "Please fill in at least one field to submit an edit request.",
@@ -91,7 +121,7 @@ export function RequestProfileEditModal({
           bio: {
             highSchool: highSchool || null,
             club: club || null,
-            weight: weight || null,
+            weight: weightSavedDirectly ? null : weight || null,
             cellNumber: cellNumber || null,
             highlightVideo: highlightVideo || null,
             other: bioOther || null,
@@ -125,7 +155,9 @@ export function RequestProfileEditModal({
 
       toast({
         title: "Edit Request Submitted",
-        description: "Your profile edit request has been submitted for review.",
+        description: weightSavedDirectly
+          ? `Weight class updated to ${weight.trim()} lbs right away. The rest has been submitted for review.`
+          : "Your profile edit request has been submitted for review.",
       })
 
       // Reset form
@@ -220,6 +252,7 @@ export function RequestProfileEditModal({
                 value={weight}
                 onChange={(e) => setWeight(e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">Updates straight away — no approval needed.</p>
             </div>
 
             <div className="space-y-2">
