@@ -32,6 +32,7 @@ import {
   TOC_REGISTRATION_FEE_COVERS,
 } from "@/lib/toc/registration-policy"
 import { getTocEventConfig } from "@/lib/toc/event-config"
+import { getPublicAnnouncedWeight, listPublicWeightTiles } from "@/lib/toc/public-announced-field"
 
 const TOC_PAGE_URL = "https://app.ncwrestlingunited.com/tournament-of-champions"
 
@@ -54,8 +55,17 @@ export function isTournamentOfChampionsQuery(message: string): boolean {
   )
 }
 
+/**
+ * Whole-word match against the normalised text.
+ *
+ * This used to be `text.includes(word)`, which made "weigh" match inside "weight" — so
+ * "who is in the 117lb weight class" was read as a weigh-in question and answered with the Friday
+ * schedule. Normalisation has already reduced the text to lowercase words separated by single
+ * spaces, so padding both sides is enough to anchor a term, and multi-word terms still work.
+ */
 function hasAny(text: string, words: string[]): boolean {
-  return words.some((word) => text.includes(word))
+  const padded = ` ${text} `
+  return words.some((word) => padded.includes(` ${word} `))
 }
 
 function bulletList(items: readonly string[]): string {
@@ -66,9 +76,133 @@ function section(title: string, body: string): string {
   return `**${title}**\n${body}`
 }
 
+const TOC_FIELD_HUB_URL = "https://app.ncwrestlingunited.com/tournament-of-champions/field"
+
+/** Words that mean "tell me who is entered", as opposed to "how does the bracket work". */
+const FIELD_INTENT_TERMS = [
+  "who is in",
+  "who s in",
+  "whos in",
+  "who is wrestling",
+  "who is entered",
+  "who is competing",
+  "who made",
+  "field",
+  "roster",
+  "lineup",
+  "entries",
+  "entrants",
+  "entered",
+  "competing",
+  "wrestlers in",
+  "athletes in",
+  "list of",
+]
+
+/**
+ * The weight the question is about, or null. Only real TOC weights count.
+ *
+ * The trailing boundary is a negative lookahead rather than `\b` because people write "117lb" with
+ * no space, and `\b` will not match between a digit and a letter.
+ */
+function weightFromQuestion(text: string): number | null {
+  for (const m of text.matchAll(/\b(\d{2,3})(?!\d)/g)) {
+    const n = Number(m[1])
+    if (TOC_WEIGHT_CLASSES.includes(n)) return n
+  }
+  return null
+}
+
+function announcedWeightsLine(tiles: { weightClass: number; announced: boolean }[]): string {
+  const out = tiles.filter((t) => t.announced).map((t) => t.weightClass)
+  if (!out.length) return "No weight classes have been released publicly yet."
+  return `Released so far: ${out.join(", ")} lbs.`
+}
+
+/**
+ * "Who is in the 117 lb class?" and friends.
+ *
+ * Every weight is answerable: a released one returns its athletes, an unreleased one says so
+ * plainly. Returns null when the question is not about the field, so the normal keyword sections
+ * take over.
+ *
+ * The released/unreleased split comes from {@link getPublicAnnouncedWeight}, the same call the
+ * public field page uses — an unreleased weight must never leak its entrants here after the page
+ * itself 404s them.
+ */
+async function answerFieldQuestion(text: string): Promise<string | null> {
+  const weight = weightFromQuestion(text)
+  /**
+   * "Which weights have been announced?" is a field question, but only when it is about weights —
+   * "when do tickets get announced" must still fall through to the ticketing copy.
+   */
+  const wantsRelease =
+    hasAny(text, ["announced", "released", "revealed", "public", "out yet", "dropped"]) &&
+    hasAny(text, ["weight", "weights", "class", "classes", "field", "fields", "bracket", "brackets"])
+  const wantsField = hasAny(text, FIELD_INTENT_TERMS) || wantsRelease
+  if (!wantsField && weight == null) return null
+  if (!wantsField && weight != null && !hasAny(text, ["weight", "weights", "class", "lb", "lbs", "pound", "pounds"])) {
+    return null
+  }
+
+  const tiles = await listPublicWeightTiles()
+
+  if (weight == null) {
+    if (!wantsField) return null
+    return section(
+      "The field",
+      [
+        "The NC Mat releases each weight class as its field is finalised.",
+        announcedWeightsLine(tiles),
+        `Browse them all: [The Field](${TOC_FIELD_HUB_URL})`,
+      ].join("\n\n"),
+    )
+  }
+
+  const field = await getPublicAnnouncedWeight(weight)
+  if (!field) {
+    return section(
+      `${weight} lbs has not been released yet`,
+      [
+        `The ${weight} lb field is still being finalised, and The NC Mat announces each weight only once it is set. Nothing about it is public yet.`,
+        announcedWeightsLine(tiles),
+        `Watch for it here: [The Field](${TOC_FIELD_HUB_URL}) — or turn on alerts in the NC United app and you will get the announcement as it lands.`,
+      ].join("\n\n"),
+    )
+  }
+
+  const lines = field.athletes.map((a) => {
+    const bits = [a.club || "Unaffiliated"]
+    if (a.graduationYear) bits.push(`class of ${a.graduationYear}`)
+    const top = a.credentials[0]
+    if (top) bits.push(top.label)
+    if (a.collegeCommit) bits.push(`committed to ${a.collegeCommit}`)
+    return `${a.name} — ${bits.join(" · ")}`
+  })
+
+  const r = field.rollup
+  const rollupBits: string[] = [`${field.athletes.length} athletes`]
+  if (r.allAmericans) rollupBits.push(`${r.allAmericans} All-American${r.allAmericans === 1 ? "" : "s"}`)
+  if (r.stateChampions) rollupBits.push(`${r.stateChampions} state title${r.stateChampions === 1 ? "" : "s"}`)
+
+  return section(
+    `${weight} lbs — the field`,
+    [
+      `${rollupBits.join(" · ")}. Listed alphabetically; the field is not seeded, and brackets are not public.`,
+      bulletList(lines),
+      `Full profiles: [${weight} lbs](${TOC_FIELD_HUB_URL}/${weight})`,
+    ].join("\n\n"),
+  )
+}
+
 export async function answerTournamentOfChampionsQuestion(message: string): Promise<string> {
-  const config = await getTocEventConfig()
   const text = normalize(message)
+
+  /** A "who is in X" question wants the field, not the tournament brochure. */
+  const fieldAnswer = await answerFieldQuestion(text)
+  if (fieldAnswer) return fieldAnswer
+
+  const config = await getTocEventConfig()
   const colleges = config.confirmed_colleges?.length ? config.confirmed_colleges : [...TOC_CONFIRMED_COLLEGES]
 
   const sections: string[] = []
