@@ -11,6 +11,9 @@ type Destination = "fund" | "scholarship"
 
 const PRESET_AMOUNTS = [50, 100, 250, 500] as const
 
+/** Matches the $5 minimum enforced by /api/spartan/checkout. */
+const MIN_GIFT_CENTS = 500
+
 /**
  * The one giving form.
  *
@@ -58,8 +61,9 @@ export function SimpleGiveForm({
     event.preventDefault()
     setError("")
 
-    if (amountCents < 100) {
-      setError("Enter an amount of $1 or more.")
+    /** Mirror the server's floor exactly — a client that allows less just fails at submit. */
+    if (amountCents < MIN_GIFT_CENTS) {
+      setError("Enter an amount of $5 or more.")
       return
     }
     if (!donorName.trim()) {
