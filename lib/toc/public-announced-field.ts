@@ -43,11 +43,10 @@ export type PublicFieldAthlete = {
   /** Credential pills, strongest first. Mirrors the admin field board's badges. */
   credentials: PublicCredential[]
   /**
-   * Corner coaches NC United has approved for this wrestler, at most two.
+   * Corner coaches named publicly for this wrestler, at most two.
    *
-   * Approved only — a designation a family has filed but staff have not cleared says nothing
-   * public, and a declined one must never appear. An athlete with none shows nothing rather than
-   * an empty state, so the absence reads as "not announced yet" rather than "has no coach".
+   * Approved and holding a credential. Being named here is what a coach buys, so it cannot appear
+   * before the purchase. An athlete with none shows nothing at all rather than an empty state.
    */
   coaches: string[]
 }
@@ -741,31 +740,72 @@ function coachAthleteKey(name: string): string {
 }
 
 /**
- * Approved corner coaches for one weight, keyed by the athlete's name.
+ * Corner coaches named publicly for one weight, keyed by the athlete's name.
+ *
+ * Approved **and holding a credential**. Approval alone is not enough, and the reason is
+ * incentive rather than privacy: being named under a wrestler on the field page is the reward for
+ * buying the credential. Publish it on approval and the coach has already been paid in
+ * recognition, with nothing left to buy. A coach who has not bought simply does not appear.
  *
  * Designations record the athlete by name and weight rather than by id, so this matches on a
- * normalised name within the weight. Only `approved` rows are read: pending is a family's
- * unreviewed submission and declined must never surface.
+ * normalised name within the weight. A purchase reaches a coach by the email or phone the family
+ * gave us, or by a link an admin made by hand.
  */
-async function fetchApprovedCoachesByAthlete(weightClass: number): Promise<Map<string, string[]>> {
+async function fetchApprovedCoachesByAthlete(): Promise<Map<string, string[]>> {
   const admin = createAdminClient()
-  const { data, error } = await admin
-    .from("toc_coach_designations")
-    .select("athlete_name, coach_name")
-    .eq("weight_class", weightClass)
-    .eq("status", "approved")
-
   const byAthlete = new Map<string, string[]>()
+
+  const [{ data, error }, { data: tickets, error: ticketError }] = await Promise.all([
+    /**
+     * Not scoped by weight: five approved designations carry no weight_class, and filtering on it
+     * silently dropped those coaches from every page. The athlete's name is the join.
+     */
+    admin
+      .from("toc_coach_designations")
+      .select("athlete_name, coach_name, coach_email, coach_phone_key, coach_key")
+      .eq("status", "approved"),
+    admin.from("toc_coach_ticket_purchases").select("email, linked_coach_key"),
+  ])
+
   if (error) {
     console.warn("[toc-public-field] coach designation lookup failed:", error.message)
     return byAthlete
   }
+  if (ticketError) {
+    // Without the purchase list we cannot tell who has paid, and naming everyone would give the
+    // recognition away for free. Name nobody rather than guess.
+    console.warn("[toc-public-field] coach ticket lookup failed:", ticketError.message)
+    return byAthlete
+  }
+
+  const paidEmails = new Set<string>()
+  const paidCoachKeys = new Set<string>()
+  for (const raw of tickets ?? []) {
+    const row = raw as { email?: string | null; linked_coach_key?: string | null }
+    const email = String(row.email ?? "").trim().toLowerCase()
+    if (email) paidEmails.add(email)
+    const linked = String(row.linked_coach_key ?? "").trim()
+    if (linked) paidCoachKeys.add(linked)
+  }
 
   for (const raw of data ?? []) {
-    const row = raw as { athlete_name?: string | null; coach_name?: string | null }
+    const row = raw as {
+      athlete_name?: string | null
+      coach_name?: string | null
+      coach_email?: string | null
+      coach_phone_key?: string | null
+      coach_key?: string | null
+    }
     const athlete = coachAthleteKey(String(row.athlete_name ?? ""))
     const coach = String(row.coach_name ?? "").trim()
     if (!athlete || !coach) continue
+
+    const email = String(row.coach_email ?? "").trim().toLowerCase()
+    const coachKey = String(row.coach_key ?? "").trim()
+    const hasCredential =
+      (email !== "" && paidEmails.has(email)) || (coachKey !== "" && paidCoachKeys.has(coachKey))
+    if (!hasCredential) continue
+
     const list = byAthlete.get(athlete) ?? []
     if (!list.some((existing) => existing.toLowerCase() === coach.toLowerCase())) list.push(coach)
     byAthlete.set(athlete, list)
@@ -775,7 +815,7 @@ async function fetchApprovedCoachesByAthlete(weightClass: number): Promise<Map<s
 
 async function fetchPublicAthletesForWeight(weightClass: number): Promise<PublicFieldAthlete[]> {
   const admin = createAdminClient()
-  const coachesByAthlete = await fetchApprovedCoachesByAthlete(weightClass)
+  const coachesByAthlete = await fetchApprovedCoachesByAthlete()
 
   const { data: invites, error } = await admin
     .from("toc_invitations")
