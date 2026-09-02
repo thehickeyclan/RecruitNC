@@ -21,7 +21,7 @@ export default function TocCoachesPage() {
   const [showPaste, setShowPaste] = useState(false)
   const [capFlags, setCapFlags] = useState<CoachCapFlag[]>([])
   const [maxCoaches, setMaxCoaches] = useState(2)
-  const [totals, setTotals] = useState({ coaches: 0, wrestlers: 0, approved: 0, pending: 0, awaitingSend: 0, ticketsBought: 0, approvedWithoutTicket: 0 })
+  const [totals, setTotals] = useState({ coaches: 0, wrestlers: 0, approved: 0, pending: 0, awaitingSend: 0, ticketsBought: 0, approvedWithoutTicket: 0, paidAwaitingApproval: 0 })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState<string | null>(null)
@@ -37,7 +37,7 @@ export default function TocCoachesPage() {
       setUnmatched(data.unmatchedPurchases ?? [])
       setPurchasesReady(data.purchasesReady !== false)
       setMaxCoaches(data.maxCoachesPerAthlete ?? 2)
-      setTotals(data.totals ?? { coaches: 0, wrestlers: 0, approved: 0, pending: 0, awaitingSend: 0, ticketsBought: 0, approvedWithoutTicket: 0 })
+      setTotals(data.totals ?? { coaches: 0, wrestlers: 0, approved: 0, pending: 0, awaitingSend: 0, ticketsBought: 0, approvedWithoutTicket: 0, paidAwaitingApproval: 0 })
       setError(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load coaches.")
@@ -144,6 +144,7 @@ export default function TocCoachesPage() {
             { label: "To contact", value: totals.awaitingSend, hint: "approved, not yet told" },
             { label: "Credentials bought", value: totals.ticketsBought, hint: "have their ticket" },
             { label: "Not yet bought", value: totals.approvedWithoutTicket, hint: "approved, no ticket" },
+            { label: "Paid, needs approval", value: totals.paidAwaitingApproval, hint: "bought a credential, still pending" },
           ].map((tile) => (
             <div key={tile.label} className="rounded-xl border border-rnc-line bg-rnc-surface px-4 py-3">
               <dt className="text-xs font-semibold text-slate-400">{tile.label}</dt>

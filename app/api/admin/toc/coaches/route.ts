@@ -50,6 +50,12 @@ export async function GET() {
       overCap: capFlags.filter((f) => f.reason !== "would-exceed").length,
       ticketsBought: withTickets.filter((c) => c.ticket).length,
       approvedWithoutTicket: withTickets.filter((c) => c.status === "approved" && !c.ticket).length,
+      /**
+       * Bought a credential and still waiting on approval — the easiest approvals there are, and
+       * the ones that cost most while they sit. Four coaches were in this state, unnamed on the
+       * public field page despite having paid.
+       */
+      paidAwaitingApproval: withTickets.filter((c) => c.status !== "approved" && c.ticket).length,
     },
   })
 }
