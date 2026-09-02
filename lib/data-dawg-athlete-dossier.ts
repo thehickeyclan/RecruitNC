@@ -21,6 +21,12 @@ import { isBlueTeam } from "@/lib/blue-team"
 import { buildAthleteTimelineMarkdown } from "@/lib/data-dawg-athlete-timeline"
 import { formatAthleteProfileDetailsMarkdown } from "@/lib/data-dawg-athlete-profile-details"
 import {
+  athleteGenderWritingNote,
+  athletePronouns,
+  normalizeAthleteGender,
+  type AthleteGender,
+} from "@/lib/data-dawg-athlete-gender"
+import {
   buildCareerSnapshotMarkdown,
   buildDevelopmentPathMarkdown,
   buildHistoricalContextNarrative,
@@ -579,6 +585,8 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
  */
 export type AthleteFacts = {
   name: string
+  /** Recorded profile value. Null means unknown; never infer gender from the athlete's name. */
+  gender: AthleteGender
   profile_url: string
   high_school: string | null
   high_school_url: string | null
@@ -655,16 +663,20 @@ function tournamentRows(
 function buildWritingNotes(f: AthleteFacts): string[] {
   const notes: string[] = []
   const cls = f.class_of ? ` (class of ${f.class_of})` : ""
+  const pronouns = athletePronouns(f.gender)
+  const subject = pronouns.subject.charAt(0).toUpperCase() + pronouns.subject.slice(1)
+
+  notes.push(athleteGenderWritingNote(f.name, f.gender))
 
   notes.push(
     f.career_complete
-      ? `${f.name} has finished high school${cls}. Write in the PAST tense throughout — "was", "went ${f.career_record ?? "…"}", "finished his career". Never describe him as a current prospect.`
+      ? `${f.name} has finished high school${cls}. Write in the PAST tense throughout — "was", "went ${f.career_record ?? "…"}", "finished ${pronouns.possessive} career". Never describe ${pronouns.object} as a current prospect.`
       : `${f.name} is still in high school${cls}. Write in the PRESENT tense throughout.`,
   )
 
   if (f.college_path && f.previous_college) {
     notes.push(
-      `College: ${f.college_path}. This is a TRANSFER, not a commitment — say he wrestled at ${f.previous_college} before ${f.college}, never that he "committed to ${f.college}".`,
+      `College: ${f.college_path}. This is a TRANSFER, not a commitment — say ${subject} wrestled at ${f.previous_college} before ${f.college}, never that ${pronouns.subject} "committed to ${f.college}".`,
     )
   } else if (f.college_path) {
     notes.push(`College: ${f.college_path}.`)
@@ -702,6 +714,7 @@ export async function buildAthleteFacts(
   }
   const {
     id,
+    athlete,
     stats,
     hasValidGrad,
     gradYear,
@@ -750,6 +763,7 @@ export async function buildAthleteFacts(
 
   const facts: AthleteFacts = {
     name: stats.displayName,
+    gender: normalizeAthleteGender(athlete.gender),
     profile_url: getAthleteProfileUrl(id),
     high_school: stats.highSchool ?? null,
     high_school_url: stats.highSchool ? getSchoolPageUrl(stats.highSchool) : null,
