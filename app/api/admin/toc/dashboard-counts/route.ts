@@ -10,7 +10,7 @@ export async function GET() {
 
   const admin = createAdminClient()
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-  const [sponsors, volunteers, nominations, media, email, users, collegeCoaches] = await Promise.all([
+  const [sponsors, volunteers, nominations, media, email, users, collegeCoaches, cornerCoaches] = await Promise.all([
     admin.from("toc_sponsor_inquiries").select("id", { count: "exact", head: true }).eq("status", "new"),
     admin.from("toc_volunteer_signups").select("id", { count: "exact", head: true }).eq("status", "new"),
     admin.from("toc_nominations").select("id", { count: "exact", head: true }).eq("reviewed", false),
@@ -18,6 +18,8 @@ export async function GET() {
     admin.from("toc_email_subscribers").select("id", { count: "exact", head: true }).eq("unsubscribed", false).gte("created_at", sevenDaysAgo),
     admin.schema("auth").from("users").select("id", { count: "exact", head: true }).gte("created_at", sevenDaysAgo),
     admin.from("toc_college_coaches").select("id", { count: "exact", head: true }).eq("status", "registered"),
+    /** Designations a family has filed and nobody has approved yet — the actionable number. */
+    admin.from("toc_coach_designations").select("id", { count: "exact", head: true }).eq("status", "pending"),
   ])
 
   const results = {
@@ -28,6 +30,7 @@ export async function GET() {
     email,
     users,
     collegeCoaches,
+    cornerCoaches,
   }
   const failed = Object.entries(results).filter(([, result]) => result.error)
   if (failed.length > 0) {

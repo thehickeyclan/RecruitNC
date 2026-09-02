@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { HardLink } from "@/components/hard-link"
-import { Trophy, Users, Mail, Handshake, UserCheck, UserPlus, GraduationCap, LayoutGrid, Scale, HandHeart, Newspaper, ClipboardList } from "lucide-react"
+import { Trophy, Users, Mail, Handshake, UserCheck, UserPlus, GraduationCap, LayoutGrid, Scale, HandHeart, Newspaper, ClipboardList, BadgeCheck } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
-type CountKey = "nominations" | "sponsors" | "media" | "volunteers" | "email" | "users" | "collegeCoaches"
+type CountKey = "nominations" | "sponsors" | "media" | "volunteers" | "email" | "users" | "collegeCoaches" | "cornerCoaches"
 type DashboardCounts = Record<CountKey, number>
 type DashboardLink = {
   href: string
@@ -41,6 +41,13 @@ const LINKS: DashboardLink[] = [
     title: "Athlete compare",
     description: "Head-to-head, state, NHSCA, Duals, Super32 — seeding recommendation",
     icon: Scale,
+  },
+  {
+    href: "/admin/toc/coaches",
+    title: "Corner coaches",
+    description: "Approve the coaches families name, watch the two-per-wrestler cap, see who has bought a credential",
+    icon: BadgeCheck,
+    countKey: "cornerCoaches",
   },
   {
     href: "/admin/toc/college-coaches",
@@ -115,6 +122,7 @@ const EMPTY_COUNTS: DashboardCounts = {
   email: 0,
   users: 0,
   collegeCoaches: 0,
+  cornerCoaches: 0,
 }
 
 export default function TocAdminHubPage() {
