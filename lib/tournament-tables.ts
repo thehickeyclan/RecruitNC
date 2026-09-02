@@ -814,6 +814,16 @@ function mapFargoRows(rows: any[]): TournamentResultRow[] {
 }
 
 /**
+ * Rows confirmed to belong to a different wrestler of the same name.
+ *
+ * Fargo results attach to a profile by name, and two people can share one. A class-of-2028
+ * wrestler was carrying an older Connor Reece's Junior-division results — a fifteen-year-old shown
+ * with bouts from a bracket he was too young to enter. Deleting the row would lose a real result
+ * for whoever it does belong to, so it is marked instead and skipped wherever profiles read.
+ */
+export const MISATTRIBUTED = "misattributed" as const
+
+/**
  * Fetch Fargo Nationals from fargo_results table.
  */
 export async function getFargoFromTable(
@@ -841,6 +851,7 @@ export async function getFargoFromTable(
   const { data: exactRows } = await supabase
     .from("fargo_results")
     .select("*")
+    .neq("verification_status", MISATTRIBUTED)
     .eq("athlete_name", exactName)
     .gte("year", startYear)
     .lte("year", graduationYear)
@@ -852,6 +863,7 @@ export async function getFargoFromTable(
     const { data: lfRows } = await supabase
       .from("fargo_results")
       .select("*")
+      .neq("verification_status", MISATTRIBUTED)
       .eq("athlete_name", lastFirst)
       .gte("year", startYear)
       .lte("year", graduationYear)
@@ -864,6 +876,7 @@ export async function getFargoFromTable(
       const { data: byName } = await supabase
         .from("fargo_results")
         .select("*")
+        .neq("verification_status", MISATTRIBUTED)
         .ilike("athlete_name", namePattern)
         .gte("year", startYear)
         .lte("year", graduationYear)
@@ -889,6 +902,7 @@ export async function getFargoFromTableAllTime(
       const { data: byName } = await supabase
         .from("fargo_results")
         .select("*")
+        .neq("verification_status", MISATTRIBUTED)
         .ilike("athlete_name", namePattern)
         .gte("year", ALL_TIME_YEAR_MIN)
         .lte("year", ALL_TIME_YEAR_MAX)

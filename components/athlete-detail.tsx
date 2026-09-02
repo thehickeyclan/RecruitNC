@@ -1487,7 +1487,7 @@ export function AthleteDetail({
                 <div className="mb-4">
                   <div className="flex-1">
                     {athleteData?.bio_headline && (
-                      <h3 className="profile-headline text-xl font-semibold text-[#002147] mb-4 leading-relaxed">{athleteData.bio_headline}</h3>
+                      <h3 className="profile-headline text-xl font-semibold text-primary mb-4 leading-relaxed">{athleteData.bio_headline}</h3>
                     )}
                   </div>
                 </div>
@@ -1686,7 +1686,7 @@ export function AthleteDetail({
                     {effectiveGpa != null && (
                       <div className="bg-muted rounded-lg p-6 border border-border">
                         <p className="text-sm text-muted-foreground font-semibold uppercase tracking-wider mb-2">GPA</p>
-                        <p className="text-4xl font-bold text-[#002147]">
+                        <p className="text-4xl font-bold text-foreground">
                           {Number(effectiveGpa).toFixed(2)}
                         </p>
                         <p className="text-xs text-muted-foreground mt-2">Grade Point Average</p>
@@ -1695,14 +1695,14 @@ export function AthleteDetail({
                     {effectiveSat != null && (
                       <div className="bg-muted rounded-lg p-6 border border-border">
                         <p className="text-sm text-muted-foreground font-semibold uppercase tracking-wider mb-2">SAT</p>
-                        <p className="text-4xl font-bold text-[#002147]">{effectiveSat}</p>
+                        <p className="text-4xl font-bold text-foreground">{effectiveSat}</p>
                         <p className="text-xs text-muted-foreground mt-2">Standardized Test Score</p>
                       </div>
                     )}
                     {effectiveAct != null && (
                       <div className="bg-muted rounded-lg p-6 border border-border">
                         <p className="text-sm text-muted-foreground font-semibold uppercase tracking-wider mb-2">ACT</p>
-                        <p className="text-4xl font-bold text-[#002147]">{effectiveAct}</p>
+                        <p className="text-4xl font-bold text-foreground">{effectiveAct}</p>
                         <p className="text-xs text-muted-foreground mt-2">Standardized Test Score</p>
                       </div>
                     )}
