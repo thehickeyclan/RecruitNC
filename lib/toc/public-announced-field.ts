@@ -43,12 +43,16 @@ export type PublicFieldAthlete = {
   /** Credential pills, strongest first. Mirrors the admin field board's badges. */
   credentials: PublicCredential[]
   /**
-   * Corner coaches named publicly for this wrestler, at most two.
+   * Corner coaches NC United has approved for this wrestler, at most two.
    *
-   * Approved and holding a credential. Being named here is what a coach buys, so it cannot appear
-   * before the purchase. An athlete with none shows nothing at all rather than an empty state.
+   * `hasCredential` says whether that coach has bought his weekend credential. Both states are
+   * shown: a coach who is approved but has not bought is one purchase from a green light, and
+   * seeing that is a stronger nudge than being absent from the page and never knowing.
+   *
+   * Declined designations never appear, and pending ones do not either — those are a family's
+   * submission that staff have not reviewed.
    */
-  coaches: string[]
+  coaches: { name: string; hasCredential: boolean }[]
 }
 
 export type PublicCredentialKind = "all-american" | "state-champion" | "state-placer" | "state-qualifier"
@@ -740,20 +744,19 @@ function coachAthleteKey(name: string): string {
 }
 
 /**
- * Corner coaches named publicly for one weight, keyed by the athlete's name.
+ * Approved corner coaches, keyed by the athlete's name, each marked paid or not.
  *
- * Approved **and holding a credential**. Approval alone is not enough, and the reason is
- * incentive rather than privacy: being named under a wrestler on the field page is the reward for
- * buying the credential. Publish it on approval and the coach has already been paid in
- * recognition, with nothing left to buy. A coach who has not bought simply does not appear.
+ * A credential shows as a green dot and an approved coach without one as amber. The amber is
+ * deliberate: a coach left off the page entirely never learns he is missing, while one shown a
+ * step short of his colleagues has a reason to finish.
  *
  * Designations record the athlete by name and weight rather than by id, so this matches on a
  * normalised name within the weight. A purchase reaches a coach by the email or phone the family
  * gave us, or by a link an admin made by hand.
  */
-async function fetchApprovedCoachesByAthlete(): Promise<Map<string, string[]>> {
+async function fetchApprovedCoachesByAthlete(): Promise<Map<string, { name: string; hasCredential: boolean }[]>> {
   const admin = createAdminClient()
-  const byAthlete = new Map<string, string[]>()
+  const byAthlete = new Map<string, { name: string; hasCredential: boolean }[]>()
 
   const [{ data, error }, { data: tickets, error: ticketError }] = await Promise.all([
     /**
@@ -772,8 +775,8 @@ async function fetchApprovedCoachesByAthlete(): Promise<Map<string, string[]>> {
     return byAthlete
   }
   if (ticketError) {
-    // Without the purchase list we cannot tell who has paid, and naming everyone would give the
-    // recognition away for free. Name nobody rather than guess.
+    // Every coach would show as unpaid, which is worse than showing nobody: it would mark coaches
+    // who have paid as though they had not.
     console.warn("[toc-public-field] coach ticket lookup failed:", ticketError.message)
     return byAthlete
   }
@@ -804,10 +807,11 @@ async function fetchApprovedCoachesByAthlete(): Promise<Map<string, string[]>> {
     const coachKey = String(row.coach_key ?? "").trim()
     const hasCredential =
       (email !== "" && paidEmails.has(email)) || (coachKey !== "" && paidCoachKeys.has(coachKey))
-    if (!hasCredential) continue
 
     const list = byAthlete.get(athlete) ?? []
-    if (!list.some((existing) => existing.toLowerCase() === coach.toLowerCase())) list.push(coach)
+    if (!list.some((existing) => existing.name.toLowerCase() === coach.toLowerCase())) {
+      list.push({ name: coach, hasCredential })
+    }
     byAthlete.set(athlete, list)
   }
   return byAthlete

@@ -100,11 +100,24 @@ export default async function TocPublicFieldWeightRoute({ params }: Props) {
               This field is being finalized.
             </p>
           ) : (
-            <ul className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">
+            <>
+            {/* The dots on each card mean nothing without this. */}
+            <p className="mt-10 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-white/45">
+              <span className="flex items-center gap-1.5">
+                <span aria-hidden className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                Coach credentialed
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span aria-hidden className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400" />
+                Approved — credential not yet purchased
+              </span>
+            </p>
+            <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4">
               {field.athletes.map((athlete) => (
                 <TocPublicAthleteCard key={athlete.athleteId} athlete={athlete} />
               ))}
             </ul>
+            </>
           )}
 
           <p className="mt-10 text-center text-sm text-white/45">

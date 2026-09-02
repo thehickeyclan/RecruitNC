@@ -20,13 +20,7 @@ export function TocPublicAthleteCard({ athlete }: { athlete: PublicFieldAthlete 
     .filter(Boolean)
     .join(" · ")
   const profileHref = `/view-profile?id=${encodeURIComponent(athlete.athleteId)}`
-  /** "Coached by Miller", "Coached by Miller and Jones" — read the way it is announced from the mat. */
-  const coachedBy =
-    athlete.coaches.length === 0
-      ? null
-      : athlete.coaches.length === 1
-        ? athlete.coaches[0]
-        : `${athlete.coaches.slice(0, -1).join(", ")} and ${athlete.coaches[athlete.coaches.length - 1]}`
+
 
   return (
     <li className="overflow-hidden rounded-sm border border-white/10 bg-white/[0.03] transition-colors hover:border-emerald-400/40">
@@ -62,10 +56,30 @@ export function TocPublicAthleteCard({ athlete }: { athlete: PublicFieldAthlete 
         </div>
         {/* Club names run long — let them wrap rather than clipping mid-word. */}
         <p className="mt-1 text-[11px] uppercase leading-snug tracking-[0.12em] text-white/45">{meta || "NC United"}</p>
-        {coachedBy && (
-          <p className="mt-1.5 text-[11px] leading-snug text-white/60">
-            <span className="text-white/40">Coached by</span> {coachedBy}
-          </p>
+        {athlete.coaches.length > 0 ? (
+          <div className="mt-1.5 text-[11px] leading-snug text-white/60">
+            <span className="text-white/40">Coached by</span>
+            <ul className="mt-0.5 space-y-0.5">
+              {athlete.coaches.map((coach) => (
+                <li key={coach.name} className="flex items-center gap-1.5">
+                  <span
+                    aria-hidden
+                    className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full ${
+                      coach.hasCredential ? "bg-emerald-400" : "bg-amber-400"
+                    }`}
+                  />
+                  <span className="truncate" title={coach.name}>
+                    {coach.name}
+                  </span>
+                  <span className="sr-only">
+                    {coach.hasCredential ? "credential purchased" : "approved, credential not yet purchased"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="mt-1.5 text-[11px] italic leading-snug text-white/30">No coaches submitted</p>
         )}
       </div>
     </li>
