@@ -3,8 +3,10 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { HardLink } from "@/components/hard-link"
-import { Trophy, Users, Mail, Handshake, UserCheck, UserPlus, GraduationCap, LayoutGrid, Scale, HandHeart, Newspaper, ClipboardList, BadgeCheck } from "lucide-react"
+import { Trophy, Users, Mail, Handshake, UserCheck, UserPlus, GraduationCap, LayoutGrid, Scale, HandHeart, Newspaper, ClipboardList, BadgeCheck, Ticket, ClipboardSignature } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
+import { TOC_COACH_TICKET_URL } from "@/lib/toc/coach-invite-message"
+import { TOC_GOFAN_TICKETS_URL } from "@/lib/toc/constants"
 
 type CountKey = "nominations" | "sponsors" | "media" | "volunteers" | "email" | "users" | "collegeCoaches" | "cornerCoaches"
 type DashboardCounts = Record<CountKey, number>
@@ -97,6 +99,27 @@ const LINKS: DashboardLink[] = [
     description: "New platform registrations from the last seven days",
     icon: UserPlus,
     countKey: "users",
+  },
+  {
+    href: TOC_COACH_TICKET_URL,
+    title: "Coach ticket link",
+    description: "GoFan — the credential a corner coach buys. Send coaches here, never the fan link",
+    icon: Ticket,
+    external: true,
+  },
+  {
+    href: TOC_GOFAN_TICKETS_URL,
+    title: "Fan ticket link",
+    description: "GoFan — general admission for spectators",
+    icon: Ticket,
+    external: true,
+  },
+  {
+    href: "/tournament-of-champions/corner-coaches",
+    title: "Name corner coaches",
+    description: "The public form families use to designate their two coaches — send this to athletes",
+    icon: ClipboardSignature,
+    external: true,
   },
   {
     href: "/tournament-of-champions/brackets",
