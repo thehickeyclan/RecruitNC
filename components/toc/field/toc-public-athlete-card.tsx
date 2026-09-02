@@ -20,6 +20,13 @@ export function TocPublicAthleteCard({ athlete }: { athlete: PublicFieldAthlete 
     .filter(Boolean)
     .join(" · ")
   const profileHref = `/view-profile?id=${encodeURIComponent(athlete.athleteId)}`
+  /** "Coached by Miller", "Coached by Miller and Jones" — read the way it is announced from the mat. */
+  const coachedBy =
+    athlete.coaches.length === 0
+      ? null
+      : athlete.coaches.length === 1
+        ? athlete.coaches[0]
+        : `${athlete.coaches.slice(0, -1).join(", ")} and ${athlete.coaches[athlete.coaches.length - 1]}`
 
   return (
     <li className="overflow-hidden rounded-sm border border-white/10 bg-white/[0.03] transition-colors hover:border-emerald-400/40">
@@ -42,15 +49,24 @@ export function TocPublicAthleteCard({ athlete }: { athlete: PublicFieldAthlete 
       </a>
 
       <div className="p-3 sm:p-4">
-        <a
-          href={profileHref}
-          className="block truncate text-sm font-bold text-white underline-offset-4 hover:text-emerald-300 hover:underline sm:text-base"
-          title={athlete.name}
-        >
-          {athlete.name}
-        </a>
-        <p className="mt-1 truncate text-[11px] uppercase tracking-[0.12em] text-white/45">{meta || "NC United"}</p>
-        <TocCredentialPills credentials={athlete.credentials} />
+        {/* Name and top credential share a row; the club needs the full width below it. */}
+        <div className="flex items-start justify-between gap-2">
+          <a
+            href={profileHref}
+            className="min-w-0 flex-1 truncate text-sm font-bold text-white underline-offset-4 hover:text-emerald-300 hover:underline sm:text-base"
+            title={athlete.name}
+          >
+            {athlete.name}
+          </a>
+          <TocCredentialPills credentials={athlete.credentials} inline />
+        </div>
+        {/* Club names run long — let them wrap rather than clipping mid-word. */}
+        <p className="mt-1 text-[11px] uppercase leading-snug tracking-[0.12em] text-white/45">{meta || "NC United"}</p>
+        {coachedBy && (
+          <p className="mt-1.5 text-[11px] leading-snug text-white/60">
+            <span className="text-white/40">Coached by</span> {coachedBy}
+          </p>
+        )}
       </div>
     </li>
   )

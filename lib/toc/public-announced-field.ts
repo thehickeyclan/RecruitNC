@@ -2,6 +2,7 @@ import "server-only"
 
 import { createAdminClient } from "@/lib/supabase/admin"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
+import { MAX_COACHES_PER_ATHLETE } from "@/lib/toc/coach-designation"
 
 /**
  * Public read model for announced TOC weight classes — the ONLY path that may feed a public page.
@@ -41,6 +42,14 @@ export type PublicFieldAthlete = {
   summary: string
   /** Credential pills, strongest first. Mirrors the admin field board's badges. */
   credentials: PublicCredential[]
+  /**
+   * Corner coaches NC United has approved for this wrestler, at most two.
+   *
+   * Approved only — a designation a family has filed but staff have not cleared says nothing
+   * public, and a declined one must never appear. An athlete with none shows nothing rather than
+   * an empty state, so the absence reads as "not announced yet" rather than "has no coach".
+   */
+  coaches: string[]
 }
 
 export type PublicCredentialKind = "all-american" | "state-champion" | "state-placer" | "state-qualifier"
@@ -726,8 +735,47 @@ function comparePublicNames(a: PublicFieldAthlete, b: PublicFieldAthlete): numbe
  * Confirmed athletes for one announced weight, alphabetical. Reads invitations and athletes with explicit
  * column lists and drops anything the visitor may not see before returning.
  */
+/** "Rivera" and "rivera" and "Alexander  Moody" all land on the same key. */
+function coachAthleteKey(name: string): string {
+  return name.toLowerCase().replace(/['\u2019]/g, "").replace(/[^a-z0-9]+/g, " ").trim()
+}
+
+/**
+ * Approved corner coaches for one weight, keyed by the athlete's name.
+ *
+ * Designations record the athlete by name and weight rather than by id, so this matches on a
+ * normalised name within the weight. Only `approved` rows are read: pending is a family's
+ * unreviewed submission and declined must never surface.
+ */
+async function fetchApprovedCoachesByAthlete(weightClass: number): Promise<Map<string, string[]>> {
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from("toc_coach_designations")
+    .select("athlete_name, coach_name")
+    .eq("weight_class", weightClass)
+    .eq("status", "approved")
+
+  const byAthlete = new Map<string, string[]>()
+  if (error) {
+    console.warn("[toc-public-field] coach designation lookup failed:", error.message)
+    return byAthlete
+  }
+
+  for (const raw of data ?? []) {
+    const row = raw as { athlete_name?: string | null; coach_name?: string | null }
+    const athlete = coachAthleteKey(String(row.athlete_name ?? ""))
+    const coach = String(row.coach_name ?? "").trim()
+    if (!athlete || !coach) continue
+    const list = byAthlete.get(athlete) ?? []
+    if (!list.some((existing) => existing.toLowerCase() === coach.toLowerCase())) list.push(coach)
+    byAthlete.set(athlete, list)
+  }
+  return byAthlete
+}
+
 async function fetchPublicAthletesForWeight(weightClass: number): Promise<PublicFieldAthlete[]> {
   const admin = createAdminClient()
+  const coachesByAthlete = await fetchApprovedCoachesByAthlete(weightClass)
 
   const { data: invites, error } = await admin
     .from("toc_invitations")
@@ -837,6 +885,7 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
         allAmericanYear: resultData.allAmericanYear,
         allAmericanEvent: resultData.allAmericanEvent,
       }),
+      coaches: (coachesByAthlete.get(coachAthleteKey(name)) ?? []).slice(0, MAX_COACHES_PER_ATHLETE),
     })
   }
 

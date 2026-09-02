@@ -8,12 +8,23 @@ const PILL_CLASS: Record<PublicCredentialKind, string> = {
   "state-qualifier": "border-white/20 bg-white/5 text-white/70",
 }
 
-export function TocCredentialPills({ credentials }: { credentials: PublicCredential[] }) {
+/**
+ * `inline` renders only the strongest credential, sized to sit beside the athlete's name rather
+ * than on its own row. The full set still shows wherever there is width for it.
+ */
+export function TocCredentialPills({
+  credentials,
+  inline = false,
+}: {
+  credentials: PublicCredential[]
+  inline?: boolean
+}) {
   if (credentials.length === 0) return null
+  const shown = inline ? credentials.slice(0, 1) : credentials
 
   return (
-    <div className="mt-2 flex flex-wrap gap-1">
-      {credentials.map((c) => (
+    <div className={inline ? "flex shrink-0" : "mt-2 flex flex-wrap gap-1"}>
+      {shown.map((c) => (
         <span
           key={c.kind}
           title={c.detail}
