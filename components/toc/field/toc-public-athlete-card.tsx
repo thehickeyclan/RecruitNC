@@ -43,19 +43,19 @@ export function TocPublicAthleteCard({ athlete }: { athlete: PublicFieldAthlete 
       </a>
 
       <div className="p-3 sm:p-4">
-        {/* Name and top credential share a row; the club needs the full width below it. */}
-        <div className="flex items-start justify-between gap-2">
-          <a
-            href={profileHref}
-            className="min-w-0 flex-1 truncate text-sm font-bold text-white underline-offset-4 hover:text-emerald-300 hover:underline sm:text-base"
-            title={athlete.name}
-          >
-            {athlete.name}
-          </a>
-          <TocCredentialPills credentials={athlete.credentials} inline />
-        </div>
-        {/* Club names run long — let them wrap rather than clipping mid-word. */}
+        {/*
+          The name gets the whole width and wraps rather than truncating. It is the one thing on the
+          card that must never be cut — sharing its row with a credential pill clipped it.
+        */}
+        <a
+          href={profileHref}
+          className="block text-sm font-bold leading-snug text-white underline-offset-4 hover:text-emerald-300 hover:underline sm:text-base"
+        >
+          {athlete.name}
+        </a>
+        {/* Club names run long too — let them wrap rather than clipping mid-word. */}
         <p className="mt-1 text-[11px] uppercase leading-snug tracking-[0.12em] text-white/45">{meta || "NC United"}</p>
+        <TocCredentialPills credentials={athlete.credentials} />
         {athlete.coaches.length > 0 ? (
           <div className="mt-1.5 text-[11px] leading-snug text-white/60">
             <span className="text-white/40">Coached by</span>
