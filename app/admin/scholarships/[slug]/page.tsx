@@ -37,7 +37,11 @@ export default async function AdminScholarshipDetailPage({ params }: { params: P
     if (!latestPanelReviews.has(key)) latestPanelReviews.set(key, review)
   }
 
-  const rankings = apps
+  const rankingApplications = apps.some((application) => application.status === "finalist")
+    ? apps.filter((application) => application.status === "finalist")
+    : apps
+
+  const rankings = rankingApplications
     .map((application) => {
       const currentReviews = [...latestPanelReviews.values()].filter(
         (review) => review.application_id === application.id && review.score != null,

@@ -71,6 +71,9 @@ export default async function ScholarshipApplicationReviewPage({
   }
 
   const role = await userReviewerRoleForScholarship(user.id, app.scholarship_id)
+  if (role !== "admin" && app.status !== "finalist") {
+    redirect("/scholarships/review")
+  }
   const scholarship = await getScholarshipAdminById(app.scholarship_id)
   const reviews = await listReviewsForApplication(applicationId)
 

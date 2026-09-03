@@ -36,6 +36,12 @@ export default async function ScholarshipReviewHomePage() {
     applications = await listApplicationsForScholarships(scholarshipIds)
   }
 
+  // The review panel receives only the staff-selected finalist slate. Admins retain
+  // the complete application list for screening, identity checks, and audit history.
+  if (blindReview) {
+    applications = applications.filter((application) => application.status === "finalist")
+  }
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
       <HardLink href="/fundraising/scholarships" className="text-sm font-semibold text-[#C8A94A] underline-offset-4 hover:underline">
