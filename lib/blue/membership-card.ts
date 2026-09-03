@@ -29,17 +29,30 @@ export type MembershipRow = {
 export type DropInCheckIn = {
   /** ISO timestamp of the visit a partner club recorded. */
   checkedInAt: string
+  clubId: string
+}
+
+/**
+ * One partner club's standing for this member.
+ *
+ * The window is counted per club, not across all of them: the free session is each club's own
+ * offer, so a member who trained at one partner last week is still owed a first visit at the next
+ * partner to join. Counting globally would quietly take that away the day a second club signed up.
+ */
+export type PartnerDropIn = {
+  clubId: string
   clubName: string
+  eligible: boolean
+  /** ISO date this club's next free session becomes available; null when one is available now. */
+  availableFrom: string | null
+  lastVisitAt: string | null
 }
 
 export type MembershipCard = {
   status: "active" | "paused" | "inactive"
   memberSince: string | null
-  /** True when the card may be shown to claim a partner drop-in. */
-  dropInEligible: boolean
-  /** ISO date the next free drop-in becomes available; null when one is available now. */
-  dropInAvailableFrom: string | null
-  lastDropIn: DropInCheckIn | null
+  /** One entry per partner club, in the order the clubs are listed. */
+  dropIns: PartnerDropIn[]
   /**
    * Set when the membership data behind this card is too old to vouch for.
    *
@@ -85,9 +98,10 @@ function isPaused(row: MembershipRow): boolean {
 export function buildMembershipCard(input: {
   memberships: readonly MembershipRow[]
   checkIns: readonly DropInCheckIn[]
+  partnerClubs: readonly { id: string; name: string }[]
   now: Date
 }): MembershipCard {
-  const { memberships, checkIns, now } = input
+  const { memberships, checkIns, partnerClubs, now } = input
 
   const live = memberships.filter((m) => isLive(m, now))
   const paused = memberships.filter(isPaused)
@@ -96,24 +110,30 @@ export function buildMembershipCard(input: {
   const starts = memberships.map((m) => parse(m.startedAt)).filter((d): d is Date => d !== null)
   const memberSince = starts.length ? new Date(Math.min(...starts.map((d) => d.getTime()))).toISOString() : null
 
-  const sorted = [...checkIns].sort(
-    (a, b) => new Date(b.checkedInAt).getTime() - new Date(a.checkedInAt).getTime(),
-  )
-  const lastDropIn = sorted[0] ?? null
-
-  let dropInAvailableFrom: string | null = null
-  if (lastDropIn) {
-    const last = parse(lastDropIn.checkedInAt)
-    if (last && daysBetween(last, now) < DROP_IN_WINDOW_DAYS) {
-      dropInAvailableFrom = new Date(last.getTime() + DROP_IN_WINDOW_DAYS * DAY_MS).toISOString()
-    }
-  }
-
   /**
    * Only a live membership earns a drop-in. A paused one does not — pausing is how a family stops
    * paying for a while, and the partner benefit stops with it.
    */
-  const dropInEligible = status === "active" && dropInAvailableFrom === null
+  const membershipAllows = status === "active"
+
+  const dropIns: PartnerDropIn[] = partnerClubs.map((club) => {
+    const visits = checkIns
+      .filter((visit) => visit.clubId === club.id)
+      .map((visit) => parse(visit.checkedInAt))
+      .filter((d): d is Date => d !== null)
+      .sort((a, b) => b.getTime() - a.getTime())
+
+    const last = visits[0] ?? null
+    const withinWindow = Boolean(last && daysBetween(last, now) < DROP_IN_WINDOW_DAYS)
+
+    return {
+      clubId: club.id,
+      clubName: club.name,
+      eligible: membershipAllows && !withinWindow,
+      availableFrom: withinWindow && last ? new Date(last.getTime() + DROP_IN_WINDOW_DAYS * DAY_MS).toISOString() : null,
+      lastVisitAt: last ? last.toISOString() : null,
+    }
+  })
 
   let staleWarning: string | null = null
   const staleWiq = live.filter((m) => {
@@ -125,5 +145,5 @@ export function buildMembershipCard(input: {
     staleWarning = "Membership last confirmed a while ago — check with NC United before claiming a drop-in."
   }
 
-  return { status, memberSince, dropInEligible, dropInAvailableFrom, lastDropIn, staleWarning }
+  return { status, memberSince, dropIns, staleWarning }
 }

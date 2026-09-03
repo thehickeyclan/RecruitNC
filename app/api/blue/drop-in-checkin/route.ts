@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { collectLinkedAthleteIdsForParentUser } from "@/lib/parent-spartan-fundraising-totals"
 import { buildMembershipCard, DROP_IN_WINDOW_DAYS, type MembershipRow } from "@/lib/blue/membership-card"
+import { PARTNER_CLUBS, partnerClubById } from "@/lib/blue/partner-clubs"
 
 export const dynamic = "force-dynamic"
 
@@ -33,12 +34,15 @@ export async function POST(request: NextRequest) {
   }
   if (!user) return NextResponse.json({ error: "Not signed in." }, { status: 401 })
 
-  const body = (await request.json().catch(() => null)) as { athleteId?: unknown; clubName?: unknown } | null
+  const body = (await request.json().catch(() => null)) as { athleteId?: unknown; clubId?: unknown } | null
   const athleteId = typeof body?.athleteId === "string" ? body.athleteId.trim() : ""
-  const clubName = typeof body?.clubName === "string" ? body.clubName.trim().slice(0, 120) : ""
-  if (!athleteId || !clubName) {
+  const clubId = typeof body?.clubId === "string" ? body.clubId.trim() : ""
+  if (!athleteId || !clubId) {
     return NextResponse.json({ error: "Which athlete, and which club?" }, { status: 400 })
   }
+  /** Only a club we actually partner with, so a stale app cannot write a visit to a dropped one. */
+  const club = partnerClubById(clubId)
+  if (!club) return NextResponse.json({ error: "That club is not a partner." }, { status: 400 })
 
   const admin = createAdminClient()
 
@@ -56,7 +60,7 @@ export async function POST(request: NextRequest) {
       .eq("athlete_id", athleteId),
     admin
       .from("blue_drop_in_checkins")
-      .select("checked_in_at, club_name")
+      .select("checked_in_at, club_id")
       .eq("athlete_id", athleteId)
       .order("checked_in_at", { ascending: false }),
   ])
@@ -81,18 +85,21 @@ export async function POST(request: NextRequest) {
 
   const card = buildMembershipCard({
     memberships,
-    checkIns: (existing ?? []).map((row) => ({ checkedInAt: row.checked_in_at, clubName: row.club_name })),
+    checkIns: (existing ?? []).map((row) => ({ checkedInAt: row.checked_in_at, clubId: row.club_id })),
+    partnerClubs: PARTNER_CLUBS,
     now: new Date(),
   })
 
+  const standing = card.dropIns.find((d) => d.clubId === clubId)
+
   /** Checked on the server too: the card in front of the coach could be an old render. */
-  if (!card.dropInEligible) {
+  if (!standing?.eligible) {
     return NextResponse.json(
       {
         error:
           card.status !== "active"
             ? "This membership is not active."
-            : `Already used in the last ${DROP_IN_WINDOW_DAYS} days.`,
+            : `Already used at ${club.name} in the last ${DROP_IN_WINDOW_DAYS} days.`,
         card,
       },
       { status: 409 },
@@ -101,7 +108,8 @@ export async function POST(request: NextRequest) {
 
   const { error } = await admin.from("blue_drop_in_checkins").insert({
     athlete_id: athleteId,
-    club_name: clubName,
+    club_id: club.id,
+    club_name: club.name,
     checked_in_at: new Date().toISOString(),
     recorded_by_user_id: user.id,
   })

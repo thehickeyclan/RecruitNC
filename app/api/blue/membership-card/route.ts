@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { collectLinkedAthleteIdsForParentUser } from "@/lib/parent-spartan-fundraising-totals"
 import { buildMembershipCard, type MembershipRow } from "@/lib/blue/membership-card"
+import { PARTNER_CLUBS } from "@/lib/blue/partner-clubs"
 
 export const dynamic = "force-dynamic"
 
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
       .in("athlete_id", athleteIds),
     admin
       .from("blue_drop_in_checkins")
-      .select("athlete_id, checked_in_at, club_name")
+      .select("athlete_id, checked_in_at, club_id")
       .in("athlete_id", athleteIds)
       .order("checked_in_at", { ascending: false }),
   ])
@@ -90,14 +91,14 @@ export async function GET(request: NextRequest) {
 
     const athleteCheckIns = (checkIns ?? [])
       .filter((row) => row.athlete_id === athlete.id)
-      .map((row) => ({ checkedInAt: row.checked_in_at, clubName: row.club_name }))
+      .map((row) => ({ checkedInAt: row.checked_in_at, clubId: row.club_id }))
 
     return {
       athleteId: athlete.id,
       name: athlete.name,
       photoUrl: athlete.photourl,
       graduationYear: athlete.graduationyear,
-      ...buildMembershipCard({ memberships, checkIns: athleteCheckIns, now }),
+      ...buildMembershipCard({ memberships, checkIns: athleteCheckIns, partnerClubs: PARTNER_CLUBS, now }),
     }
   })
 
