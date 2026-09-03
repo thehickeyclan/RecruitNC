@@ -307,7 +307,7 @@ export default function TocCoachesPage() {
                         No ticket yet
                       </span>
                     ) : null}
-                    {coach.status !== "approved" ? (
+                    {coach.status !== "approved" || coach.hasPendingAthlete ? (
                       <button
                         type="button"
                         disabled={saving?.startsWith(coach.coachKey) ?? false}
@@ -361,10 +361,31 @@ export default function TocCoachesPage() {
                   <span className="font-semibold text-white">
                     {coach.athletes.length} {coach.athletes.length === 1 ? "wrestler" : "wrestlers"}:
                   </span>{" "}
-                  {coach.athletes
-                    .map((a) => `${a.athleteName}${a.weightClass ? ` (${a.weightClass})` : ""}`)
-                    .join(", ")}
                 </p>
+                {/* Per wrestler, because a coach can be cleared for one and not another. */}
+                <ul className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-slate-300">
+                  {coach.athletes.map((a) => (
+                    <li key={`${a.athleteName}-${a.weightClass ?? ""}`} className="flex items-center gap-1.5">
+                      <span
+                        aria-hidden
+                        className={`inline-block h-1.5 w-1.5 rounded-full ${
+                          a.status === "approved"
+                            ? "bg-emerald-400"
+                            : a.status === "declined"
+                              ? "bg-red-400"
+                              : "bg-amber-400"
+                        }`}
+                      />
+                      <span>
+                        {a.athleteName}
+                        {a.weightClass ? ` (${a.weightClass})` : ""}
+                      </span>
+                      {a.status !== "approved" ? (
+                        <span className="text-xs uppercase text-amber-300">{a.status}</span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
 
                 {/* Details a family gave because we had none on file. They are held here rather
                     than written to the athlete record, so they are only useful if they are seen. */}

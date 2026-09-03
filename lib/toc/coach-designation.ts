@@ -126,10 +126,21 @@ export type CheckInCoach = {
   athletes: {
     athleteName: string
     weightClass: number | null
+    /**
+     * This wrestler's own designation status.
+     *
+     * The coach-level `status` above is the strongest across all their wrestlers, because the
+     * lanyard is per person. Whether a coach may corner a *particular* wrestler is per row, and
+     * collapsing the two hid it: one coach read APPROVED on the card while two of his three
+     * wrestlers were still pending, with no button offered to approve them.
+     */
+    status: string
     /** Supplied by the family because we had none on file. Wants applying to the athlete. */
     submittedClub: string | null
     submittedDob: string | null
   }[]
+  /** True when any wrestler is still waiting, whatever the coach-level status says. */
+  hasPendingAthlete: boolean
 }
 
 /**
@@ -160,11 +171,13 @@ export function toCheckInList(
     const athlete = {
       athleteName: row.athlete_name,
       weightClass: row.weight_class,
+      status: row.status,
       submittedClub: row.submitted_club ?? null,
       submittedDob: row.submitted_dob ?? null,
     }
     if (existing) {
       existing.athletes.push(athlete)
+      if (row.status === "pending") existing.hasPendingAthlete = true
       // A coach approved for one wrestler is an approved coach; the lanyard is per person.
       if (row.status === "approved") existing.status = "approved"
       // Told once is told: any stamped row means this person has heard from us.
@@ -183,6 +196,7 @@ export function toCheckInList(
       notifiedAt: row.notified_at ?? null,
       notifiedChannel: row.notified_channel ?? null,
       athletes: [athlete],
+      hasPendingAthlete: row.status === "pending",
     })
   }
 

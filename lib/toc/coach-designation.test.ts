@@ -371,3 +371,32 @@ describe("coachCapFlags", () => {
     ).toEqual([])
   })
 })
+
+describe("per-wrestler status on the check-in list", () => {
+  const base = {
+    coach_key: "tel:5134907421",
+    coach_name: "Nick Kostoff",
+    coach_email: null,
+    coach_phone: "5134907421",
+  }
+
+  it("keeps each wrestler's own status, and flags the coach as having pending work", () => {
+    const [coach] = toCheckInList([
+      { ...base, status: "approved", athlete_name: "Cooper Mathon", weight_class: 133 },
+      { ...base, status: "pending", athlete_name: "Vincent Grack", weight_class: 157 },
+    ])
+    // The lanyard is per person, so the coach reads approved...
+    expect(coach.status).toBe("approved")
+    // ...but Grack is not cleared, and the card must be able to say so.
+    expect(coach.athletes.find((a) => a.athleteName === "Vincent Grack")?.status).toBe("pending")
+    expect(coach.hasPendingAthlete).toBe(true)
+  })
+
+  it("does not flag a coach whose wrestlers are all approved", () => {
+    const [coach] = toCheckInList([
+      { ...base, status: "approved", athlete_name: "Cooper Mathon", weight_class: 133 },
+      { ...base, status: "approved", athlete_name: "Vincent Grack", weight_class: 157 },
+    ])
+    expect(coach.hasPendingAthlete).toBe(false)
+  })
+})
