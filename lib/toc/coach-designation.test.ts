@@ -72,21 +72,45 @@ describe("validateCoachDesignation", () => {
 })
 
 describe("fitsWithinCap", () => {
+  /** Existing rows as the route now supplies them: key plus the details that identify the person. */
+  const onFile = (key: string, over: { email?: string | null; phone?: string | null } = {}) => ({
+    coachKey: key,
+    coachEmail: over.email ?? (key.includes("@") ? key : null),
+    phoneKey: over.phone ?? (key.startsWith("tel:") ? key.slice(4) : null),
+  })
+
   it("allows two", () => {
     expect(fitsWithinCap([], [coach("a@x.com"), coach("b@x.com")]).ok).toBe(true)
   })
 
   it("refuses a third", () => {
-    expect(fitsWithinCap(["a@x.com", "b@x.com"], [coach("c@x.com")]).ok).toBe(false)
+    expect(fitsWithinCap([onFile("a@x.com"), onFile("b@x.com")], [coach("c@x.com")]).ok).toBe(false)
   })
 
   it("treats re-naming a coach already on file as an edit, not a third", () => {
     // A family fixing a phone number must not be told they are over the limit.
-    expect(fitsWithinCap(["a@x.com", "b@x.com"], [coach("a@x.com")]).ok).toBe(true)
+    expect(fitsWithinCap([onFile("a@x.com"), onFile("b@x.com")], [coach("a@x.com")]).ok).toBe(true)
   })
 
   it("ignores case and spacing when counting", () => {
-    expect(fitsWithinCap(["a@x.com", "b@x.com"], [coach(" A@X.com ")]).ok).toBe(true)
+    expect(fitsWithinCap([onFile("a@x.com"), onFile("b@x.com")], [coach(" A@X.com ")]).ok).toBe(true)
+  })
+
+  it("counts one coach once even when he arrives under a different key", () => {
+    /**
+     * Xavier Bernthal's case. Justin Perry was on file as a phone; the family resubmitted him by
+     * email alongside a second coach, and counting keys read three people for two.
+     */
+    const justinOnFile = onFile("tel:8566388831", { email: null, phone: "8566388831" })
+    const justinByEmail = { ...coach("justin.usmc@yahoo.com"), phoneKey: "8566388831" }
+    const bo = coach("bolansche@gmail.com")
+    expect(fitsWithinCap([justinOnFile], [justinByEmail, bo]).ok).toBe(true)
+  })
+
+  it("still refuses a genuine third person", () => {
+    const justinOnFile = onFile("tel:8566388831", { email: null, phone: "8566388831" })
+    const bo = onFile("bolansche@gmail.com")
+    expect(fitsWithinCap([justinOnFile, bo], [coach("someone-else@x.com")]).ok).toBe(false)
   })
 })
 

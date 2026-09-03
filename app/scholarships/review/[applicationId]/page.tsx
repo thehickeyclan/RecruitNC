@@ -76,6 +76,9 @@ export default async function ScholarshipApplicationReviewPage({
   }
   const scholarship = await getScholarshipAdminById(app.scholarship_id)
   const reviews = await listReviewsForApplication(applicationId)
+  const latestOwnReview = reviews
+    .filter((review) => review.reviewer_id === user.id)
+    .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))[0]
 
   const showContacts = role === "admin"
   const panelRole = role === "family" ? "family" : role === "committee" ? "committee" : "admin"
@@ -272,8 +275,7 @@ export default async function ScholarshipApplicationReviewPage({
                 <li key={r.id} className="rounded-lg border border-white/[0.07] bg-black/20 px-4 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-wide text-white/45">
                     {r.reviewer_name ?? "Reviewer"} · {r.reviewer_role ?? "—"}
-                    {r.score != null ? ` · score ${r.score}` : ""}
-                    {r.is_finalist_vote ? " · finalist pick" : ""}
+                    {r.score != null ? ` · rank ${r.score}` : ""}
                   </p>
                   {r.comment ? <p className="mt-2 text-sm leading-relaxed text-white/78">{r.comment}</p> : null}
                 </li>
@@ -284,13 +286,19 @@ export default async function ScholarshipApplicationReviewPage({
       ) : (
         <section className="mt-10 rounded-xl border border-white/[0.07] bg-black/15 px-4 py-5">
           <p className="text-sm leading-relaxed text-white/55">
-            Committee blind phase: other reviewers' scores and comments stay hidden here until finalists are named — score independently using your own form below.
+            Final ballot: other panelists&apos; rankings and comments stay hidden. Rank each anonymous finalist independently using your own form below.
           </p>
         </section>
       )}
 
       <div className="mt-10">
-        <ScholarshipReviewPanel applicationId={app.id} scholarshipId={app.scholarship_id} role={panelRole} />
+        <ScholarshipReviewPanel
+          applicationId={app.id}
+          scholarshipId={app.scholarship_id}
+          role={panelRole}
+          existingRank={latestOwnReview?.score}
+          existingComment={latestOwnReview?.comment}
+        />
       </div>
     </div>
   )

@@ -62,12 +62,25 @@ async function findAthlete(athleteId: string): Promise<{ name: string; weightCla
  */
 async function existingCoachKey(
   admin: ReturnType<typeof createAdminClient>,
-  coach: { coachEmail: string | null; phoneKey: string | null },
+  coach: { coachEmail: string | null; phoneKey: string | null; athleteId: string },
 ): Promise<string | null> {
   const filters: string[] = []
   if (coach.phoneKey) filters.push(`coach_phone_key.eq.${coach.phoneKey}`)
   if (coach.coachEmail) filters.push(`coach_email.eq.${coach.coachEmail.toLowerCase()}`)
   if (filters.length === 0) return null
+
+  /**
+   * A key already used for this wrestler wins over one used for somebody else's, so resubmitting
+   * the coach already on file updates that row rather than adding a second one and tripping the cap.
+   */
+  const { data: forThisAthlete } = await admin
+    .from("toc_coach_designations")
+    .select("coach_key")
+    .eq("athlete_id", coach.athleteId)
+    .or(filters.join(","))
+    .limit(1)
+  const own = (forThisAthlete ?? [])[0] as { coach_key?: string | null } | undefined
+  if (own?.coach_key?.trim()) return own.coach_key.trim()
 
   const { data, error } = await admin
     .from("toc_coach_designations")
@@ -143,6 +156,7 @@ export async function POST(request: NextRequest) {
     const alreadyFiled = await existingCoachKey(admin, {
       coachEmail: minted.coachEmail,
       phoneKey: minted.phoneKey,
+      athleteId,
     })
     coaches.push(alreadyFiled ? { ...minted, coachKey: alreadyFiled } : minted)
   }
@@ -153,7 +167,7 @@ export async function POST(request: NextRequest) {
 
   const { data: existing, error: readError } = await admin
     .from("toc_coach_designations")
-    .select("coach_key")
+    .select("coach_key, coach_email, coach_phone_key")
     .eq("athlete_id", athleteId)
 
   if (readError) {
@@ -163,7 +177,14 @@ export async function POST(request: NextRequest) {
 
   // The cap lives here rather than in the database: the unique constraint is per pair, so a
   // family returning a second time could otherwise add a third coach one visit at a time.
-  const cap = fitsWithinCap((existing ?? []).map((r) => String(r.coach_key)), incoming)
+  const cap = fitsWithinCap(
+    (existing ?? []).map((r) => ({
+      coachKey: String(r.coach_key),
+      coachEmail: r.coach_email,
+      phoneKey: r.coach_phone_key,
+    })),
+    incoming,
+  )
   if (!cap.ok) return NextResponse.json({ error: cap.error }, { status: 409 })
 
   const now = new Date().toISOString()

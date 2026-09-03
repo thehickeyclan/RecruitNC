@@ -92,12 +92,29 @@ export function validateCoachDesignation(
  * Re-naming a coach already on file is an edit, not a third coach — otherwise a family fixing a
  * typo in a phone number would be told they are over the limit.
  */
+/**
+ * Who a designation is really about, for counting against the cap.
+ *
+ * The key alone is not the person. A coach arrives as a phone from one family, an email from
+ * another and an account from a third, so counting distinct keys counts one man three times.
+ * Xavier Bernthal's family were refused a second coach because resubmitting the one already on
+ * file produced a different key and the cap read three.
+ *
+ * The phone is the strongest thing shared across those forms, then the email.
+ */
+function personIdentity(coach: { coachKey: string; coachEmail: string | null; phoneKey: string | null }): string {
+  if (coach.phoneKey) return `tel:${coach.phoneKey}`
+  const email = (coach.coachEmail ?? "").trim().toLowerCase()
+  if (email) return `mail:${email}`
+  return `key:${coach.coachKey}`
+}
+
 export function fitsWithinCap(
-  existingKeys: string[],
+  existing: { coachKey: string; coachEmail: string | null; phoneKey: string | null }[],
   incoming: CoachDesignation[],
 ): { ok: true } | { ok: false; error: string } {
-  const keys = new Set(existingKeys)
-  for (const coach of incoming) keys.add(coach.coachKey)
+  const keys = new Set(existing.map(personIdentity))
+  for (const coach of incoming) keys.add(personIdentity(coach))
   if (keys.size > MAX_COACHES_PER_ATHLETE) {
     return {
       ok: false,

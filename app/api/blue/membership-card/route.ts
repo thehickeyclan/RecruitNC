@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
   if (athleteIds.length === 0) return NextResponse.json({ cards: [] })
 
   const [{ data: athletes }, { data: stripeRows }, { data: wiqRows }, { data: checkIns }] = await Promise.all([
-    admin.from("athletes").select("id, name, photourl, graduationyear").in("id", athleteIds),
+    admin.from("athletes").select('id, name, photourl, graduationyear, highschool, "wrestlingClub"').in("id", athleteIds),
     admin
       .from("blue_memberships")
       .select("athlete_id, status, started_at, next_billing_at, updated_at")
@@ -98,6 +98,9 @@ export async function GET(request: NextRequest) {
       name: athlete.name,
       photoUrl: athlete.photourl,
       graduationYear: athlete.graduationyear,
+      /** The card is an ID shown by its holder to a coach, so it carries who they are. */
+      highSchool: athlete.highschool,
+      club: athlete.wrestlingClub,
       ...buildMembershipCard({ memberships, checkIns: athleteCheckIns, partnerClubs: PARTNER_CLUBS, now }),
     }
   })

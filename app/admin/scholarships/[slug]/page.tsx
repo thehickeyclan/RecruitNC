@@ -49,18 +49,18 @@ export default async function AdminScholarshipDetailPage({ params }: { params: P
       const scoreTotal = currentReviews.reduce((total, review) => total + (review.score ?? 0), 0)
       return {
         application,
-        averageScore: currentReviews.length ? scoreTotal / currentReviews.length : null,
+        averageRank: currentReviews.length ? scoreTotal / currentReviews.length : null,
         reviewCount: currentReviews.length,
-        finalistVotes: currentReviews.filter((review) => review.is_finalist_vote).length,
+        firstPlaceVotes: currentReviews.filter((review) => review.score === 1).length,
       }
     })
     .sort((a, b) => {
-      if (a.averageScore == null && b.averageScore == null) return a.application.athlete_name.localeCompare(b.application.athlete_name)
-      if (a.averageScore == null) return 1
-      if (b.averageScore == null) return -1
+      if (a.averageRank == null && b.averageRank == null) return a.application.athlete_name.localeCompare(b.application.athlete_name)
+      if (a.averageRank == null) return 1
+      if (b.averageRank == null) return -1
       return (
-        b.averageScore - a.averageScore ||
-        b.finalistVotes - a.finalistVotes ||
+        a.averageRank - b.averageRank ||
+        b.firstPlaceVotes - a.firstPlaceVotes ||
         b.reviewCount - a.reviewCount ||
         a.application.athlete_name.localeCompare(b.application.athlete_name)
       )
@@ -167,7 +167,7 @@ export default async function AdminScholarshipDetailPage({ params }: { params: P
       <section className="mt-10">
         <h2 className="text-lg font-semibold">Panel stack ranking</h2>
         <p className="mt-1 text-xs text-gray-500">
-          Average of each committee or admin panelist&apos;s latest 1–5 score. Repeat submissions do not receive extra weight.
+          Lowest average placement ranks first. Each panelist assigns the three finalists unique ranks of 1, 2, and 3; only their latest ballot entry counts.
         </p>
         {rankings.length === 0 ? (
           <p className="mt-3 text-sm text-gray-600">No applications to rank.</p>
@@ -179,15 +179,15 @@ export default async function AdminScholarshipDetailPage({ params }: { params: P
                   <th className="px-3 py-2 font-medium">Rank</th>
                   <th className="px-3 py-2 font-medium">Applicant</th>
                   <th className="px-3 py-2 font-medium">Blind code</th>
-                  <th className="px-3 py-2 text-right font-medium">Average</th>
+                  <th className="px-3 py-2 text-right font-medium">Average rank</th>
                   <th className="px-3 py-2 text-right font-medium">Panelists</th>
-                  <th className="px-3 py-2 text-right font-medium">Finalist votes</th>
+                  <th className="px-3 py-2 text-right font-medium">First-place votes</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {rankings.map((row, index) => (
                   <tr key={row.application.id}>
-                    <td className="px-3 py-2 font-semibold tabular-nums">{row.averageScore == null ? "—" : index + 1}</td>
+                    <td className="px-3 py-2 font-semibold tabular-nums">{row.averageRank == null ? "—" : index + 1}</td>
                     <td className="px-3 py-2">
                       <HardLink href={`/scholarships/review/${row.application.id}`} className="font-medium text-blue-700 underline">
                         {row.application.athlete_name}
@@ -196,10 +196,10 @@ export default async function AdminScholarshipDetailPage({ params }: { params: P
                     </td>
                     <td className="px-3 py-2 font-mono text-xs">{row.application.anonymous_id ?? "—"}</td>
                     <td className="px-3 py-2 text-right font-semibold tabular-nums">
-                      {row.averageScore == null ? "Not scored" : row.averageScore.toFixed(2)}
+                      {row.averageRank == null ? "Not ranked" : row.averageRank.toFixed(2)}
                     </td>
                     <td className="px-3 py-2 text-right tabular-nums">{row.reviewCount}</td>
-                    <td className="px-3 py-2 text-right tabular-nums">{row.finalistVotes}</td>
+                    <td className="px-3 py-2 text-right tabular-nums">{row.firstPlaceVotes}</td>
                   </tr>
                 ))}
               </tbody>
@@ -221,8 +221,7 @@ export default async function AdminScholarshipDetailPage({ params }: { params: P
                   <th className="px-3 py-2 font-medium">Submitted</th>
                   <th className="px-3 py-2 font-medium">Applicant</th>
                   <th className="px-3 py-2 font-medium">Panelist</th>
-                  <th className="px-3 py-2 font-medium">Score</th>
-                  <th className="px-3 py-2 font-medium">Finalist</th>
+                  <th className="px-3 py-2 font-medium">Rank</th>
                   <th className="px-3 py-2 font-medium">Comments</th>
                 </tr>
               </thead>
@@ -243,7 +242,6 @@ export default async function AdminScholarshipDetailPage({ params }: { params: P
                         <span className="block text-xs capitalize text-gray-500">{review.reviewer_role ?? "—"}</span>
                       </td>
                       <td className="px-3 py-2 tabular-nums">{review.score ?? "—"}</td>
-                      <td className="px-3 py-2">{review.is_finalist_vote ? "Yes" : "—"}</td>
                       <td className="max-w-md whitespace-pre-wrap px-3 py-2 text-gray-700">{review.comment ?? "—"}</td>
                     </tr>
                   )

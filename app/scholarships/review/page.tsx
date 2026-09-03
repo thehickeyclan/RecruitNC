@@ -60,6 +60,14 @@ export default async function ScholarshipReviewHomePage() {
           : "Confidential admin workspace. Nomination details are not public and must not be shared without the required approvals."}
       </p>
 
+      {blindReview ? (
+        <section className="mt-6 rounded-xl border border-[#C8A94A]/25 bg-[#0B2545]/45 p-4 text-sm leading-relaxed text-white/75">
+          <p className="font-bold text-[#C8A94A]">Your final ballot</p>
+          <p className="mt-2">Review all three anonymous finalists and assign each a unique rank: 1 for your strongest choice, then 2 and 3.</p>
+          <p className="mt-2 text-white/60">Choose the wrestler whose response to adversity best demonstrates courage, character, impact on others, and a wrestling-forged refusal to quit—not competitive accomplishments or affiliation.</p>
+        </section>
+      ) : null}
+
       {applications.length === 0 ? (
         <p className="mt-10 text-sm text-white/50">No applications yet.</p>
       ) : (

@@ -45,7 +45,7 @@ export const SCHOLARSHIP_HUB_ADVISORY_EXPLAINER =
   "Some scholarships add a non-voting family or legacy representative tied only to that fund — for commentary on finalists and to safeguard the spirit of the award. Advisors do not submit numeric scores in the blind-review phase."
 
 export const SCHOLARSHIP_HUB_TRANSPARENCY_NOTE =
-  "Voting members score applications blind: athlete names and schools stay hidden in the review portal until finalists are named. The roster lists voting members who have accepted their seats; if a change is needed, NC United updates this page."
+  "Voting members rank finalists blind: athlete names and schools stay hidden throughout panel scoring and final selection. The roster lists voting members who have accepted their seats; if a change is needed, NC United updates this page."
 
 export const SCHOLARSHIP_BLIND_REVIEW_SUMMARY =
   "Blind review reduces unconscious bias toward well-known athletes or programs. Until finalists are named, voting reviewers see the essay, optional context, and scoring criteria — not athlete name, school, club, or graduation year."

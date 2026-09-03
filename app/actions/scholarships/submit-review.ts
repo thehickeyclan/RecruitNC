@@ -13,7 +13,6 @@ export async function submitScholarshipReviewAction(input: {
   scholarshipId: string
   comment: string
   score?: number | null
-  isFinalistVote?: boolean
 }): Promise<SubmitScholarshipReviewResult> {
   const supabase = await createClient()
   const {
@@ -31,28 +30,68 @@ export async function submitScholarshipReviewAction(input: {
   const comment = input.comment.trim().slice(0, 8000)
   let score: number | null =
     typeof input.score === "number" && Number.isFinite(input.score) ? Math.round(input.score) : null
-  let finalist = Boolean(input.isFinalistVote)
 
   if (role === "family") {
     score = null
-    finalist = false
     if (!comment) {
       return { ok: false, error: "Add a comment." }
     }
   } else if (role === "committee") {
-    if (score == null || score < 1 || score > 5) {
-      return { ok: false, error: "Pick a score from 1–5." }
+    if (score == null || score < 1 || score > 3) {
+      return { ok: false, error: "Rank this finalist 1, 2, or 3." }
     }
   } else if (role === "admin") {
-    if (score != null && (score < 1 || score > 5)) {
-      return { ok: false, error: "Score must be 1–5." }
+    if (score != null && (score < 1 || score > 3)) {
+      return { ok: false, error: "Rank must be 1, 2, or 3." }
     }
-    if (score == null && !comment && !finalist) {
-      return { ok: false, error: "Add a score, comment, or finalist vote." }
+    if (score == null && !comment) {
+      return { ok: false, error: "Add a rank or comment." }
     }
   }
 
   const admin = createAdminClient()
+
+  const { data: application } = await admin
+    .from("scholarship_applications")
+    .select("id, scholarship_id, status")
+    .eq("id", input.applicationId)
+    .maybeSingle()
+  if (!application || application.scholarship_id !== input.scholarshipId) {
+    return { ok: false, error: "Application not found." }
+  }
+  if (role !== "admin" && application.status !== "finalist") {
+    return { ok: false, error: "This application is not on the finalist ballot." }
+  }
+
+  if (score != null) {
+    const { data: finalists } = await admin
+      .from("scholarship_applications")
+      .select("id")
+      .eq("scholarship_id", input.scholarshipId)
+      .eq("status", "finalist")
+    const finalistIds = (finalists ?? []).map((row) => row.id as string)
+    const { data: priorReviews } = finalistIds.length
+      ? await admin
+          .from("scholarship_reviews")
+          .select("application_id, score, created_at")
+          .eq("reviewer_id", user.id)
+          .in("application_id", finalistIds)
+          .order("created_at", { ascending: false })
+      : { data: [] }
+
+    const latestByApplication = new Map<string, number | null>()
+    for (const review of priorReviews ?? []) {
+      if (!latestByApplication.has(review.application_id)) {
+        latestByApplication.set(review.application_id, review.score)
+      }
+    }
+    const duplicate = [...latestByApplication.entries()].find(
+      ([applicationId, existingRank]) => applicationId !== input.applicationId && existingRank === score,
+    )
+    if (duplicate) {
+      return { ok: false, error: `You already assigned rank ${score} to another finalist. Use each rank once.` }
+    }
+  }
 
   const reviewerName = (typeof user.email === "string" && user.email.trim()) || "Reviewer"
 
@@ -63,7 +102,7 @@ export async function submitScholarshipReviewAction(input: {
     reviewer_role: role === "admin" ? "admin" : role,
     score,
     comment: comment || null,
-    is_finalist_vote: finalist && role !== "family",
+    is_finalist_vote: false,
   })
 
   if (error) {

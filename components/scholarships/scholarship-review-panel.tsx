@@ -8,10 +8,11 @@ export function ScholarshipReviewPanel(props: {
   applicationId: string
   scholarshipId: string
   role: "family" | "committee" | "admin"
+  existingRank?: number | null
+  existingComment?: string | null
 }) {
-  const [comment, setComment] = useState("")
-  const [score, setScore] = useState("")
-  const [finalist, setFinalist] = useState(false)
+  const [comment, setComment] = useState(props.existingComment ?? "")
+  const [score, setScore] = useState(props.existingRank ? String(props.existingRank) : "")
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -31,17 +32,13 @@ export function ScholarshipReviewPanel(props: {
       scholarshipId: props.scholarshipId,
       comment,
       score: Number.isFinite(sc as number) ? sc : null,
-      isFinalistVote: finalist,
     })
     setPending(false)
     if (!res.ok) {
       setErr(res.error)
       return
     }
-    setMsg("Saved.")
-    setComment("")
-    setScore("")
-    setFinalist(false)
+    setMsg("Ranking saved.")
     window.location.reload()
   }
 
@@ -55,38 +52,39 @@ export function ScholarshipReviewPanel(props: {
           Family reviewers can leave comments — scoring is handled by the selection committee.
         </p>
       ) : (
-        <p className="mt-2 text-sm leading-relaxed text-white/65">
-          Committee and admin: score 1–5, optional finalist recommendation, and notes.
-        </p>
+        <div className="mt-3 space-y-3 text-sm leading-relaxed text-white/72">
+          <p>Rank all three anonymous finalists. Use each placement once: 1 is your strongest choice, 3 is your third choice.</p>
+          <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+            <p className="text-xs font-bold uppercase tracking-wide text-[#C8A94A]">What the award recognizes</p>
+            <ul className="mt-2 list-disc space-y-1 pl-5">
+              <li><strong>Response to genuine adversity:</strong> courage and resilience when circumstances became difficult.</li>
+              <li><strong>Character and integrity:</strong> how the wrestler acted, not simply what they achieved.</li>
+              <li><strong>Impact on others:</strong> compassion, leadership, service, or encouragement.</li>
+              <li><strong>Wrestling-forged mindset:</strong> discipline, heart, and a demonstrated refusal to quit.</li>
+            </ul>
+            <p className="mt-3 text-xs text-white/55">Do not consider rankings, records, championships, recruiting status, academics, school, or club affiliation.</p>
+          </div>
+        </div>
       )}
 
       {props.role !== "family" ? (
         <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-white/55">
-          Score (1–5)
+          Final ranking
           <select
             value={score}
             onChange={(e) => setScore(e.target.value)}
             className="mt-2 w-full rounded-lg border border-white/18 bg-[#061224] px-3 py-2.5 text-sm text-white/90 focus:border-[#C8A94A] focus:outline-none"
           >
             <option value="">Select…</option>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <option key={n} value={String(n)}>
-                {n}
-              </option>
-            ))}
+            <option value="1">1 — strongest choice</option>
+            <option value="2">2 — second choice</option>
+            <option value="3">3 — third choice</option>
           </select>
         </label>
       ) : null}
 
-      {props.role !== "family" ? (
-        <label className="mt-4 flex items-center gap-2 text-sm text-white/80">
-          <input type="checkbox" checked={finalist} onChange={(e) => setFinalist(e.target.checked)} />
-          Recommend as finalist
-        </label>
-      ) : null}
-
       <label className="mt-4 block text-xs font-semibold uppercase tracking-wide text-white/55">
-        Comment
+        Comments supporting your ranking
         <textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
