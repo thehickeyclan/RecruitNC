@@ -47,6 +47,43 @@ async function findAthlete(athleteId: string): Promise<{ name: string; weightCla
   return { name: data.name ?? "", weightClass: null }
 }
 
+/**
+ * The key this person is already filed under, if any.
+ *
+ * A coach's key is minted from whatever the family in front of us happened to know — an account if
+ * the email matched one, otherwise the email, otherwise the phone. Three families knowing three
+ * different details produced three coaches: Nick Kostoff arrived as `tel:5134907421`,
+ * `nicholas.kostoff@gmail.com` and `user:ef08098a…`, and approving him for one wrestler left the
+ * other two pending with no way to see it.
+ *
+ * So before minting anything, look for the same human already in the table — by phone first, since
+ * that is the detail families most often share, then by email. Reusing that key makes the second
+ * family's submission land on the first family's coach.
+ */
+async function existingCoachKey(
+  admin: ReturnType<typeof createAdminClient>,
+  coach: { coachEmail: string | null; phoneKey: string | null },
+): Promise<string | null> {
+  const filters: string[] = []
+  if (coach.phoneKey) filters.push(`coach_phone_key.eq.${coach.phoneKey}`)
+  if (coach.coachEmail) filters.push(`coach_email.eq.${coach.coachEmail.toLowerCase()}`)
+  if (filters.length === 0) return null
+
+  const { data, error } = await admin
+    .from("toc_coach_designations")
+    .select("coach_key, coach_phone_key, coach_email, created_at")
+    .or(filters.join(","))
+    .order("created_at", { ascending: true })
+    .limit(1)
+
+  if (error) {
+    console.error("[toc coach] existing key lookup:", error.message)
+    return null
+  }
+  const row = (data ?? [])[0] as { coach_key?: string | null } | undefined
+  return row?.coach_key?.trim() || null
+}
+
 export async function POST(request: NextRequest) {
   const body = (await request.json().catch(() => null)) as {
     athleteId?: unknown
@@ -101,7 +138,13 @@ export async function POST(request: NextRequest) {
 
     // Keyed on the person, so the same coach picked by two families is one coach whichever
     // detail each of them happened to know.
-    coaches.push(known && knownUserId ? { ...parsed.value, coachKey: `user:${knownUserId}` } : parsed.value)
+    const minted = known && knownUserId ? { ...parsed.value, coachKey: `user:${knownUserId}` } : parsed.value
+    // Whatever we would have minted, an existing filing for the same person wins.
+    const alreadyFiled = await existingCoachKey(admin, {
+      coachEmail: minted.coachEmail,
+      phoneKey: minted.phoneKey,
+    })
+    coaches.push(alreadyFiled ? { ...minted, coachKey: alreadyFiled } : minted)
   }
   const incoming = dedupeIncoming(coaches)
 
