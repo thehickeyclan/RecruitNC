@@ -49,6 +49,56 @@ export function phoneTokens(value: string | null | undefined): string[] {
   ]
 }
 
+/**
+ * Words too ordinary to redact, even when a school or club is named after them.
+ *
+ * "Forge", "Pride" and "Combat" are club names and also words a wrestler writes about their own
+ * training. Redacting them everywhere would leave essays unreadable, so a single-word institution
+ * only counts when it is not a word anyone would otherwise use.
+ */
+const TOO_COMMON_TO_REDACT = new Set([
+  "wrestling", "club", "academy", "high", "school", "county", "central", "east", "west", "north", "south",
+  "forge", "pride", "combat", "elite", "united", "team", "athletics", "training", "center", "centre",
+  "eagles", "panthers", "wildcats", "tigers", "bulldogs", "warriors", "spartans", "knights", "rebels",
+])
+
+/**
+ * Schools and clubs named anywhere in the text, not only the one on the application.
+ *
+ * An essay saying "I drove to Belmont every Saturday" identifies the applicant in a state this
+ * small, and the school on the form was somewhere else entirely. Names of two words or more are
+ * taken whole; a single word only counts when it is distinctive enough not to be ordinary English.
+ */
+export function institutionTokens(names: readonly (string | null | undefined)[]): string[] {
+  const tokens: string[] = []
+  for (const raw of names) {
+    const name = raw?.trim()
+    if (!name || name.length < 4) continue
+
+    const words = name.split(/\s+/).filter(Boolean)
+    /** "Cardinal Gibbons High School" also goes as "Cardinal Gibbons". */
+    const trimmed = words.filter((w) => !TOO_COMMON_TO_REDACT.has(w.toLowerCase()))
+
+    /**
+     * A club called nothing but an ordinary word — Forge, Pride, Combat — is not redacted at all.
+     * Taking it would gut essays about forging character or wrestling with pride, and the word is
+     * far more likely to be doing its ordinary work than naming the club.
+     */
+    if (trimmed.length === 0) continue
+
+    if (words.length > 1) tokens.push(name)
+    if (trimmed.length >= 2) tokens.push(trimmed.join(" "))
+    /**
+     * A one-word institution has to be long enough to be a place rather than a word. "South Point
+     * High School" reduces to "Point", which ate "there was a point when he wanted to quit" out of
+     * a real essay; Crest, Burns, Avery and Dixon are the same hazard. Seven characters keeps
+     * Belmont and Cabarrus and drops all of those.
+     */
+    if (trimmed.length === 1 && trimmed[0].length >= 7) tokens.push(trimmed[0])
+  }
+  return tokens
+}
+
 /** Every identifying token an application holds, for redacting its own free text. */
 export function identityTokensForApplication(app: {
   athlete_name?: string | null

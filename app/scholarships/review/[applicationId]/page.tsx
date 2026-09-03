@@ -11,7 +11,8 @@ import {
 } from "@/lib/scholarships/admin-queries"
 import { userMayViewApplication, userReviewerRoleForScholarship } from "@/lib/scholarships/access"
 import { createClient } from "@/lib/supabase/server"
-import { identityTokensForApplication, redactApplicantIdentity } from "@/lib/scholarships/blind-redaction"
+import { identityTokensForApplication, institutionTokens, redactApplicantIdentity } from "@/lib/scholarships/blind-redaction"
+import { listRedactableInstitutionNames } from "@/lib/scholarships/institution-names"
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -91,7 +92,15 @@ export default async function ScholarshipApplicationReviewPage({
    * Everything the application knows about a person, including emails and phone numbers, which the
    * earlier version left in: an address like justin.usmc@yahoo.com names the nominator outright.
    */
-  const identityTokens = identityTokensForApplication(app)
+  const identityTokens = [
+    ...identityTokensForApplication(app),
+    /**
+     * Every school and club we hold, not just the one on the form. An essay naming a town's school
+     * identifies the writer in a state this small, and the school on the application was often
+     * somewhere else entirely.
+     */
+    ...(panelBlind ? institutionTokens(await listRedactableInstitutionNames()) : []),
+  ]
   const safeWrittenStatement = panelBlind
     ? redactApplicantIdentity(app.written_statement, identityTokens)
     : app.written_statement

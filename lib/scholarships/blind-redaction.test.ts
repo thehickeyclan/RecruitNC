@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { identityTokensForApplication, redactApplicantIdentity } from "./blind-redaction"
+import { identityTokensForApplication, institutionTokens, redactApplicantIdentity } from "./blind-redaction"
 
 const APPLICATION = {
   athlete_name: "Jacob Perry",
@@ -74,5 +74,48 @@ describe("what a blind reviewer is allowed to read", () => {
     const tokens = identityTokensForApplication({ athlete_name: "Bo Lansche" })
     expect(redactApplicantIdentity("Bo won the match.", tokens)).toBe("Bo won the match.")
     expect(redactApplicantIdentity("Lansche won the match.", tokens)).toBe("[redacted] won the match.")
+  })
+})
+
+describe("schools and clubs named anywhere in the essay", () => {
+  const DIRECTORY = ["Belmont", "Cardinal Gibbons High School", "Darkhorse Wrestling Club", "Forge", "NC Pride"]
+  const tokens = institutionTokens(DIRECTORY)
+
+  it("removes a school the applicant mentions but never listed", () => {
+    /** The real leak: an essay named Belmont while the form said somewhere else. */
+    expect(redactApplicantIdentity("I drove to Belmont every Saturday.", tokens)).toBe(
+      "I drove to [redacted] every Saturday.",
+    )
+  })
+
+  it("removes a club by its distinctive part, not just its full name", () => {
+    expect(redactApplicantIdentity("Darkhorse took me in.", tokens)).toBe("[redacted] took me in.")
+    expect(redactApplicantIdentity("I train at Cardinal Gibbons.", tokens)).toBe("I train at [redacted].")
+  })
+
+  it("leaves ordinary words alone even when a club is named after one", () => {
+    /** "Forge" is a club and also what a wrestler does to their character. */
+    expect(redactApplicantIdentity("Adversity will forge you.", tokens)).toBe("Adversity will forge you.")
+    expect(redactApplicantIdentity("I wrestled with pride.", tokens)).toBe("I wrestled with pride.")
+  })
+
+  it("ignores a name too short to match safely", () => {
+    expect(institutionTokens(["RAW"])).toEqual([])
+  })
+
+  it("does not reduce a school to a word an essay would use", () => {
+    /** "South Point High School" became "Point" and ate "there was a point when he wanted to quit". */
+    const t = institutionTokens(["South Point High School", "Crest High School", "Burns High School"])
+    expect(redactApplicantIdentity("There was a point when he wanted to quit.", t)).toBe(
+      "There was a point when he wanted to quit.",
+    )
+    expect(redactApplicantIdentity("He burns to win.", t)).toBe("He burns to win.")
+    /** The full name still goes. */
+    expect(redactApplicantIdentity("I wrestled at South Point High School.", t)).toBe("I wrestled at [redacted].")
+  })
+
+  it("still catches a distinctive one-word school", () => {
+    const t = institutionTokens(["Belmont"])
+    expect(redactApplicantIdentity("I drove to Belmont.", t)).toBe("I drove to [redacted].")
   })
 })
