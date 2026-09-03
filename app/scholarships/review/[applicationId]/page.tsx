@@ -11,6 +11,7 @@ import {
 } from "@/lib/scholarships/admin-queries"
 import { userMayViewApplication, userReviewerRoleForScholarship } from "@/lib/scholarships/access"
 import { createClient } from "@/lib/supabase/server"
+import { identityTokensForApplication, redactApplicantIdentity } from "@/lib/scholarships/blind-redaction"
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
@@ -25,27 +26,6 @@ function committeeSafeAdditionalContext(raw: string | null): string | null {
 }
 
 /** Remove stored applicant identifiers from narrative fields before rendering them to a blind reviewer. */
-function redactApplicantIdentity(raw: string | null, identifiers: Array<string | null | undefined>): string | null {
-  if (!raw) return null
-
-  const tokens = identifiers
-    .flatMap((value) => (value?.trim() ? [value.trim()] : []))
-    .sort((a, b) => b.length - a.length)
-
-  let redacted = raw
-  for (const token of [...new Set(tokens)]) {
-    const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    redacted = redacted.replace(new RegExp(`\\b${escaped}\\b`, "gi"), "[redacted]")
-  }
-  return redacted
-}
-
-function personNameTokens(value: string | null | undefined): string[] {
-  const normalized = value?.trim()
-  if (!normalized) return []
-  return [normalized, ...normalized.split(/\s+/).filter((part) => part.length >= 3)]
-}
-
 export default async function ScholarshipApplicationReviewPage({
   params,
 }: {
@@ -107,12 +87,11 @@ export default async function ScholarshipApplicationReviewPage({
   const isVideoSubmission =
     app.submission_format === "video" || Boolean(app.video_url?.trim() || app.video_blob_url?.trim())
 
-  const identityTokens = [
-    ...personNameTokens(app.athlete_name),
-    app.athlete_school,
-    ...personNameTokens(app.nominator_name),
-    ...personNameTokens(app.reference_name),
-  ]
+  /**
+   * Everything the application knows about a person, including emails and phone numbers, which the
+   * earlier version left in: an address like justin.usmc@yahoo.com names the nominator outright.
+   */
+  const identityTokens = identityTokensForApplication(app)
   const safeWrittenStatement = panelBlind
     ? redactApplicantIdentity(app.written_statement, identityTokens)
     : app.written_statement
@@ -151,7 +130,7 @@ export default async function ScholarshipApplicationReviewPage({
 
       {panelBlind ? (
         <p className="mt-6 rounded-lg border border-emerald-500/25 bg-emerald-950/20 px-4 py-3 text-sm leading-relaxed text-emerald-100/90">
-          Blind review: the applicant, school, nominator, and reference identities remain hidden throughout scoring and finalist review.
+          Blind review: the applicant, school, nominator, and reference identities are withheld, and their names, emails and phone numbers are removed from the written answers. Someone the application never named — a coach, a sibling — cannot be redacted automatically, so treat any name you do see as incidental and disregard it.
         </p>
       ) : null}
 
