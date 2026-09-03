@@ -84,7 +84,7 @@ export function parseGoFanPaste(text: string): TicketPurchase[] {
     const firstName = nameCells[0] ?? null
     const lastName = nameCells[1] ?? null
 
-    const status = chunk.match(/\b(Active|Refunded|Cancell?ed|Pending)\b/i)?.[1] ?? null
+    const status = chunk.match(/\b(Active|Refunded|Cancell?ed|Pending|Transferred)\b/i)?.[1] ?? null
     // Anywhere in the record, not anchored to the start of a line: the order report pastes with
     // the type on its own line, while the CSV export puts it quoted mid-row after the email.
     const ticketType = chunk.match(/([A-Za-z][A-Za-z0-9 ]*(?:Credential|Pass|Ticket))/)?.[1]?.trim() ?? null
@@ -203,4 +203,16 @@ export function suggestCoaches(
  */
 export function isCoachCredential(purchase: TicketPurchase): boolean {
   return /coach/i.test(purchase.ticketType ?? "")
+}
+
+/**
+ * Whether this order still puts a credential in the buyer's hand.
+ *
+ * GoFan keeps a transferred order against the person who bought it, with the status changed — Jeff
+ * Piercy bought one and passed it to Evan Worland, who has his own order. Crediting Jeff would
+ * show him a green card for a ticket he no longer holds, and turn him away at the door.
+ */
+export function isHeldCredential(purchase: TicketPurchase): boolean {
+  const status = (purchase.status ?? "").trim().toLowerCase()
+  return status === "active" || status === ""
 }

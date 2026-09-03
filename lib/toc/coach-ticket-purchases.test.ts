@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isCoachCredential, matchPurchases, parseGoFanPaste, suggestCoaches } from "./coach-ticket-purchases"
+import { isCoachCredential, isHeldCredential, matchPurchases, parseGoFanPaste, suggestCoaches } from "./coach-ticket-purchases"
 
 // Pasted exactly as the GoFan report arrives, tabs, "--" cells, wrapped status and all.
 const PASTE = `Email
@@ -186,5 +186,27 @@ describe("buyer names on a GoFan order", () => {
     )
     expect(row.firstName).toBe("Shane")
     expect(row.lastName).toBe("Barbee")
+  })
+})
+
+describe("a transferred ticket", () => {
+  const PASTE =
+    "tufts@unc.edu\tJeff\tPiercy\tSep-03-2026\t6:22 PM\nTransferred\nTOC Weekend Coach Credential\t168538327\t--\n" +
+    "tufts@unc.edu\tEvan\tWorland\tSep-03-2026\t6:41 PM\nActive\nTOC Weekend Coach Credential\t168540736\t--"
+
+  it("reads the status rather than leaving it blank", () => {
+    const rows = parseGoFanPaste(PASTE)
+    expect(rows.find((r) => r.orderId === "168538327")?.status).toBe("Transferred")
+  })
+
+  it("does not credit the person who gave it away", () => {
+    const rows = parseGoFanPaste(PASTE)
+    expect(isHeldCredential(rows.find((r) => r.orderId === "168538327")!)).toBe(false)
+    expect(isHeldCredential(rows.find((r) => r.orderId === "168540736")!)).toBe(true)
+  })
+
+  it("keeps the two orders apart even though one address bought both", () => {
+    const rows = parseGoFanPaste(PASTE)
+    expect(rows.map((r) => `${r.firstName} ${r.lastName}`).sort()).toEqual(["Evan Worland", "Jeff Piercy"])
   })
 })

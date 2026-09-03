@@ -766,7 +766,7 @@ async function fetchApprovedCoachesByAthlete(): Promise<Map<string, { name: stri
     admin
       .from("toc_coach_designations")
       .select("athlete_name, coach_name, coach_email, coach_phone, coach_phone_key, coach_key, status"),
-    admin.from("toc_coach_ticket_purchases").select("email, linked_coach_key, first_name, last_name"),
+    admin.from("toc_coach_ticket_purchases").select("email, linked_coach_key, first_name, last_name, status"),
   ])
 
   if (error) {
@@ -829,7 +829,14 @@ async function fetchApprovedCoachesByAthlete(): Promise<Map<string, { name: stri
       linked_coach_key?: string | null
       first_name?: string | null
       last_name?: string | null
+      status?: string | null
     }
+    /**
+     * A transferred order stays on the buyer's row with its status changed. Crediting them would
+     * show a green card for a credential they handed to somebody else.
+     */
+    const ticketStatus = String(ticket.status ?? "").trim().toLowerCase()
+    if (ticketStatus && ticketStatus !== "active") continue
     const email = String(ticket.email ?? "").trim().toLowerCase()
     const linked = String(ticket.linked_coach_key ?? "").trim()
     /**
