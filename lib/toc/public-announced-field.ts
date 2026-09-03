@@ -765,8 +765,7 @@ async function fetchApprovedCoachesByAthlete(): Promise<Map<string, { name: stri
      */
     admin
       .from("toc_coach_designations")
-      .select("athlete_name, coach_name, coach_email, coach_phone_key, coach_key")
-      .eq("status", "approved"),
+      .select("athlete_name, coach_name, coach_email, coach_phone, coach_phone_key, coach_key, status"),
     admin.from("toc_coach_ticket_purchases").select("email, linked_coach_key"),
   ])
 
@@ -781,36 +780,64 @@ async function fetchApprovedCoachesByAthlete(): Promise<Map<string, { name: stri
     return byAthlete
   }
 
-  const paidEmails = new Set<string>()
-  const paidCoachKeys = new Set<string>()
-  for (const raw of tickets ?? []) {
-    const row = raw as { email?: string | null; linked_coach_key?: string | null }
-    const email = String(row.email ?? "").trim().toLowerCase()
-    if (email) paidEmails.add(email)
-    const linked = String(row.linked_coach_key ?? "").trim()
-    if (linked) paidCoachKeys.add(linked)
+  type Row = {
+    athlete_name?: string | null
+    coach_name?: string | null
+    coach_email?: string | null
+    coach_phone?: string | null
+    coach_phone_key?: string | null
+    coach_key?: string | null
+    status?: string | null
+  }
+  const rows = (data ?? []) as Row[]
+
+  /**
+   * A credential belongs to a person, not to a row.
+   *
+   * One coach can hold several designations under several keys — Nick Kostoff arrived as a phone
+   * from one family, an email from another and an account from a third. His ticket is linked to
+   * one of those keys, so checking a designation against its own key alone showed him paid beside
+   * one wrestler and unpaid beside another. Identities are collapsed on the phone number, which is
+   * the detail every one of his rows shared, then every alias that person is known by counts.
+   */
+  const personOf = (row: Row): string => {
+    const phone = String(row.coach_phone_key ?? row.coach_phone ?? "").replace(/\D/g, "").replace(/^1(?=\d{10}$)/, "")
+    if (phone) return `tel:${phone}`
+    const email = String(row.coach_email ?? "").trim().toLowerCase()
+    if (email) return `mail:${email}`
+    return `key:${String(row.coach_key ?? "").trim()}`
   }
 
-  for (const raw of data ?? []) {
-    const row = raw as {
-      athlete_name?: string | null
-      coach_name?: string | null
-      coach_email?: string | null
-      coach_phone_key?: string | null
-      coach_key?: string | null
+  const aliasesByPerson = new Map<string, { emails: Set<string>; keys: Set<string> }>()
+  for (const row of rows) {
+    const person = personOf(row)
+    const bucket = aliasesByPerson.get(person) ?? { emails: new Set<string>(), keys: new Set<string>() }
+    const email = String(row.coach_email ?? "").trim().toLowerCase()
+    if (email) bucket.emails.add(email)
+    const key = String(row.coach_key ?? "").trim()
+    if (key) bucket.keys.add(key)
+    aliasesByPerson.set(person, bucket)
+  }
+
+  const paidPeople = new Set<string>()
+  for (const raw of tickets ?? []) {
+    const ticket = raw as { email?: string | null; linked_coach_key?: string | null }
+    const email = String(ticket.email ?? "").trim().toLowerCase()
+    const linked = String(ticket.linked_coach_key ?? "").trim()
+    for (const [person, aliases] of aliasesByPerson) {
+      if ((email && aliases.emails.has(email)) || (linked && aliases.keys.has(linked))) paidPeople.add(person)
     }
+  }
+
+  for (const row of rows) {
+    if (row.status !== "approved") continue
     const athlete = coachAthleteKey(String(row.athlete_name ?? ""))
     const coach = String(row.coach_name ?? "").trim()
     if (!athlete || !coach) continue
 
-    const email = String(row.coach_email ?? "").trim().toLowerCase()
-    const coachKey = String(row.coach_key ?? "").trim()
-    const hasCredential =
-      (email !== "" && paidEmails.has(email)) || (coachKey !== "" && paidCoachKeys.has(coachKey))
-
     const list = byAthlete.get(athlete) ?? []
     if (!list.some((existing) => existing.name.toLowerCase() === coach.toLowerCase())) {
-      list.push({ name: coach, hasCredential })
+      list.push({ name: coach, hasCredential: paidPeople.has(personOf(row)) })
     }
     byAthlete.set(athlete, list)
   }
