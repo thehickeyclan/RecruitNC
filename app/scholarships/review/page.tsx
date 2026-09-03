@@ -18,6 +18,12 @@ export default async function ScholarshipReviewHomePage() {
     redirect("/fundraising/scholarships")
   }
 
+  const blindReview = !access.isRecruitNcAdmin
+
+  function blindApplicationLabel(application: ScholarshipApplicationRow): string {
+    return application.anonymous_id?.trim() || `Application ${application.id.slice(0, 8).toUpperCase()}`
+  }
+
   const scholarshipIds = access.isRecruitNcAdmin
     ? null
     : access.reviewers.map((r) => r.scholarshipId)
@@ -43,7 +49,9 @@ export default async function ScholarshipReviewHomePage() {
         Applications
       </h1>
       <p className="mt-4 text-sm leading-relaxed text-white/65">
-        Confidential admin workspace. Nomination details are not public and must not be shared without the required approvals.
+        {blindReview
+          ? "Blind review workspace. Applicant, school, and nominator identities remain hidden throughout scoring and finalist review."
+          : "Confidential admin workspace. Nomination details are not public and must not be shared without the required approvals."}
       </p>
 
       {applications.length === 0 ? (
@@ -56,8 +64,8 @@ export default async function ScholarshipReviewHomePage() {
                 href={`/scholarships/review/${a.id}`}
                 className="block rounded-xl border border-white/10 bg-[#0B2545]/45 px-4 py-4 transition hover:border-[#C8A94A]/35 hover:bg-[#0B2545]/65"
               >
-                <p className="font-semibold text-white">{a.athlete_name}</p>
-                <p className="mt-1 text-sm text-white/60">{a.athlete_school}</p>
+                <p className="font-semibold text-white">{blindReview ? blindApplicationLabel(a) : a.athlete_name}</p>
+                {!blindReview ? <p className="mt-1 text-sm text-white/60">{a.athlete_school}</p> : null}
                 <p className="mt-2 text-[11px] font-bold uppercase tracking-wide text-[#C8A94A]/85">{a.status}</p>
               </HardLink>
             </li>

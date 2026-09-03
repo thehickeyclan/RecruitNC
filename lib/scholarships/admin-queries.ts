@@ -42,6 +42,7 @@ export type ScholarshipReviewRow = {
   id: string
   created_at: string
   application_id: string
+  reviewer_id: string
   reviewer_name: string | null
   reviewer_role: string | null
   score: number | null
@@ -53,12 +54,28 @@ export async function listReviewsForApplication(applicationId: string): Promise<
   const admin = createAdminClient()
   const { data, error } = await admin
     .from("scholarship_reviews")
-    .select("id, created_at, application_id, reviewer_name, reviewer_role, score, comment, is_finalist_vote")
+    .select("id, created_at, application_id, reviewer_id, reviewer_name, reviewer_role, score, comment, is_finalist_vote")
     .eq("application_id", applicationId)
     .order("created_at", { ascending: true })
 
   if (error) {
     console.warn("[scholarships] listReviewsForApplication:", error.message)
+    return []
+  }
+  return (data ?? []) as ScholarshipReviewRow[]
+}
+
+export async function listReviewsForApplications(applicationIds: string[]): Promise<ScholarshipReviewRow[]> {
+  if (applicationIds.length === 0) return []
+  const admin = createAdminClient()
+  const { data, error } = await admin
+    .from("scholarship_reviews")
+    .select("id, created_at, application_id, reviewer_id, reviewer_name, reviewer_role, score, comment, is_finalist_vote")
+    .in("application_id", applicationIds)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.warn("[scholarships] listReviewsForApplications:", error.message)
     return []
   }
   return (data ?? []) as ScholarshipReviewRow[]

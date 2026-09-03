@@ -8,14 +8,9 @@ import {
   listReviewsForApplication,
 } from "@/lib/scholarships/admin-queries"
 import { userMayViewApplication, userReviewerRoleForScholarship } from "@/lib/scholarships/access"
-import type { ScholarshipApplicationStatus } from "@/lib/scholarships/types"
 import { createClient } from "@/lib/supabase/server"
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-
-function committeeIdentityReleased(status: ScholarshipApplicationStatus): boolean {
-  return status === "finalist" || status === "awarded"
-}
 
 /** Parent secondary-reference lines are appended to wrestling_moment server-side — strip for committee blind scoring. */
 function committeeSafeAdditionalContext(raw: string | null): string | null {
@@ -25,6 +20,28 @@ function committeeSafeAdditionalContext(raw: string | null): string | null {
   if (idx === -1) return raw
   const head = raw.slice(0, idx).trim()
   return head.length ? head : null
+}
+
+/** Remove stored applicant identifiers from narrative fields before rendering them to a blind reviewer. */
+function redactApplicantIdentity(raw: string | null, identifiers: Array<string | null | undefined>): string | null {
+  if (!raw) return null
+
+  const tokens = identifiers
+    .flatMap((value) => (value?.trim() ? [value.trim()] : []))
+    .sort((a, b) => b.length - a.length)
+
+  let redacted = raw
+  for (const token of [...new Set(tokens)]) {
+    const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    redacted = redacted.replace(new RegExp(`\\b${escaped}\\b`, "gi"), "[redacted]")
+  }
+  return redacted
+}
+
+function personNameTokens(value: string | null | undefined): string[] {
+  const normalized = value?.trim()
+  if (!normalized) return []
+  return [normalized, ...normalized.split(/\s+/).filter((part) => part.length >= 3)]
 }
 
 export default async function ScholarshipApplicationReviewPage({
@@ -60,21 +77,34 @@ export default async function ScholarshipApplicationReviewPage({
   const showContacts = role === "admin"
   const panelRole = role === "family" ? "family" : role === "committee" ? "committee" : "admin"
 
-  const committeeBlind = role === "committee" && !committeeIdentityReleased(app.status)
+  // Only NC United administrators may resolve a blind application to its identity.
+  // Committee and family panelists remain blind even after finalist/award status changes.
+  const panelBlind = role !== "admin"
 
   const isVideoSubmission =
     app.submission_format === "video" || Boolean(app.video_url?.trim() || app.video_blob_url?.trim())
 
-  const blindAdditionalContext = committeeBlind ? committeeSafeAdditionalContext(app.wrestling_moment) : app.wrestling_moment
+  const identityTokens = [
+    ...personNameTokens(app.athlete_name),
+    app.athlete_school,
+    ...personNameTokens(app.nominator_name),
+    ...personNameTokens(app.reference_name),
+  ]
+  const safeWrittenStatement = panelBlind
+    ? redactApplicantIdentity(app.written_statement, identityTokens)
+    : app.written_statement
+  const blindAdditionalContext = panelBlind
+    ? redactApplicantIdentity(committeeSafeAdditionalContext(app.wrestling_moment), identityTokens)
+    : app.wrestling_moment
 
   const displayTitle =
-    committeeBlind && app.anonymous_id
+    panelBlind && app.anonymous_id
       ? app.anonymous_id
-      : committeeBlind
-        ? "Blind review application"
+      : panelBlind
+        ? `Application ${app.id.slice(0, 8).toUpperCase()}`
         : app.athlete_name
 
-  const showAthleteIdentityBlock = !committeeBlind || role === "family" || role === "admin"
+  const showAthleteIdentityBlock = role === "admin"
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
@@ -96,10 +126,9 @@ export default async function ScholarshipApplicationReviewPage({
         {scholarship?.name ?? "Scholarship"} · <span className="uppercase tracking-wide text-[#C8A94A]/90">{app.status}</span>
       </p>
 
-      {committeeBlind ? (
+      {panelBlind ? (
         <p className="mt-6 rounded-lg border border-emerald-500/25 bg-emerald-950/20 px-4 py-3 text-sm leading-relaxed text-emerald-100/90">
-          Blind review: written essay or video (link / file) and optional context only. Athlete name, school, and nominator identity stay
-          hidden until finalists are named.
+          Blind review: the applicant, school, nominator, and reference identities remain hidden throughout scoring and finalist review.
         </p>
       ) : null}
 
@@ -177,7 +206,11 @@ export default async function ScholarshipApplicationReviewPage({
         <h2 className="font-[family-name:var(--font-fundraising-display)] text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]">
           {isVideoSubmission ? "Video submission" : "Written essay"}
         </h2>
-        {isVideoSubmission ? (
+        {isVideoSubmission && panelBlind ? (
+          <p className="mt-4 text-sm leading-relaxed text-white/65">
+            The original video is withheld during blind review because it may reveal the applicant&apos;s identity. Administrators can provide an anonymized transcript for scoring.
+          </p>
+        ) : isVideoSubmission ? (
           <div className="mt-4 space-y-3 text-sm leading-relaxed text-white/82">
             {app.video_url ? (
               <p>
@@ -210,7 +243,7 @@ export default async function ScholarshipApplicationReviewPage({
             ) : null}
           </div>
         ) : (
-          <div className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-white/82">{app.written_statement}</div>
+          <div className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-white/82">{safeWrittenStatement}</div>
         )}
       </section>
 
@@ -223,7 +256,7 @@ export default async function ScholarshipApplicationReviewPage({
         </section>
       ) : null}
 
-      {!committeeBlind ? (
+      {!panelBlind ? (
         <section className="mt-10">
           <h2 className="font-[family-name:var(--font-fundraising-display)] text-xs font-bold uppercase tracking-[0.2em] text-[#C8A94A]">
             Reviews
