@@ -5,7 +5,9 @@ import { ScholarshipReviewPanel } from "@/components/scholarships/scholarship-re
 import {
   getApplicationById,
   getScholarshipAdminById,
+  listApplicationsForScholarships,
   listReviewsForApplication,
+  listReviewsForApplications,
 } from "@/lib/scholarships/admin-queries"
 import { userMayViewApplication, userReviewerRoleForScholarship } from "@/lib/scholarships/access"
 import { createClient } from "@/lib/supabase/server"
@@ -87,6 +89,21 @@ export default async function ScholarshipApplicationReviewPage({
   // Committee and family panelists remain blind even after finalist/award status changes.
   const panelBlind = role !== "admin"
 
+  const finalistApplications = panelBlind
+    ? (await listApplicationsForScholarships([app.scholarship_id]))
+        .filter((application) => application.status === "finalist")
+        .sort((a, b) => (a.anonymous_id ?? a.id).localeCompare(b.anonymous_id ?? b.id))
+    : []
+  const finalistReviews = panelBlind
+    ? await listReviewsForApplications(finalistApplications.map((application) => application.id))
+    : []
+  const latestOwnFinalistReviews = new Map<string, (typeof finalistReviews)[number]>()
+  for (const review of finalistReviews) {
+    if (review.reviewer_id === user.id && !latestOwnFinalistReviews.has(review.application_id)) {
+      latestOwnFinalistReviews.set(review.application_id, review)
+    }
+  }
+
   const isVideoSubmission =
     app.submission_format === "video" || Boolean(app.video_url?.trim() || app.video_blob_url?.trim())
 
@@ -136,6 +153,37 @@ export default async function ScholarshipApplicationReviewPage({
         <p className="mt-6 rounded-lg border border-emerald-500/25 bg-emerald-950/20 px-4 py-3 text-sm leading-relaxed text-emerald-100/90">
           Blind review: the applicant, school, nominator, and reference identities remain hidden throughout scoring and finalist review.
         </p>
+      ) : null}
+
+      {panelBlind && finalistApplications.length > 0 ? (
+        <nav className="mt-5 rounded-xl border border-white/10 bg-[#0B2545]/45 p-3" aria-label="Finalist ballot navigation">
+          <p className="px-1 text-[10px] font-bold uppercase tracking-[0.2em] text-white/45">Finalist ballot</p>
+          <div className="mt-2 grid gap-2 sm:grid-cols-3">
+            {finalistApplications.map((finalist, index) => {
+              const active = finalist.id === app.id
+              const savedRank = latestOwnFinalistReviews.get(finalist.id)?.score
+              const label = finalist.anonymous_id?.trim() || `Application ${finalist.id.slice(0, 8).toUpperCase()}`
+              return (
+                <HardLink
+                  key={finalist.id}
+                  href={`/scholarships/review/${finalist.id}`}
+                  aria-current={active ? "page" : undefined}
+                  className={`rounded-lg border px-3 py-3 transition ${
+                    active
+                      ? "border-[#C8A94A] bg-[#C8A94A]/15 text-white"
+                      : "border-white/10 bg-black/15 text-white/75 hover:border-[#C8A94A]/45"
+                  }`}
+                >
+                  <span className="block text-[10px] font-bold uppercase tracking-wide text-white/45">Finalist {index + 1}</span>
+                  <span className="mt-1 block font-semibold">{label}</span>
+                  <span className={`mt-1 block text-xs ${savedRank ? "text-emerald-300" : "text-white/45"}`}>
+                    {savedRank ? `Your rank: ${savedRank}` : "Not ranked yet"}
+                  </span>
+                </HardLink>
+              )
+            })}
+          </div>
+        </nav>
       ) : null}
 
       {showAthleteIdentityBlock ? (
