@@ -77,3 +77,14 @@ describe("gift descriptions survive a logo", () => {
     expect(pathos?.gift).toContain("Socks")
   })
 })
+
+describe("logos that need inverting on the black tiles", () => {
+  it("marks the Pathos wordmark, which is black on transparent", () => {
+    expect(PARTNERS.find((p) => p.id === "pathos")?.logoInvertsOnDark).toBe(true)
+  })
+
+  it("leaves colour logos alone, so a brand's palette is never reversed", () => {
+    const inverted = PARTNERS.filter((p) => p.logoInvertsOnDark).map((p) => p.id)
+    expect(inverted).toEqual(["pathos"])
+  })
+})

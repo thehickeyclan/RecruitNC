@@ -56,7 +56,9 @@ export function TocGivingHourSection() {
                     src={partner.logoSrc}
                     alt={`${partner.name} logo`}
                     fill
-                    className="object-contain p-5 transition-transform group-hover:scale-105"
+                    className={`object-contain p-5 transition-transform group-hover:scale-105 ${
+                      partner.logoInvertsOnDark ? "invert" : ""
+                    }`}
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 360px"
                   />
                 </div>

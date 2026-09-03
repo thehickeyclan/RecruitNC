@@ -25,6 +25,13 @@ export type Partner = {
   href: string | null
   /** Null when we have no logo file. The name carries it instead of a broken image. */
   logoSrc: string | null
+  /**
+   * True when the artwork is dark on transparent, so it disappears on the black sponsor tiles.
+   *
+   * Set per partner rather than applied everywhere: inverting a colour logo turns a brand's palette
+   * into its opposite. Pathos is a black wordmark and inverts to the white it should have been.
+   */
+  logoInvertsOnDark?: boolean
   logoAlt: string
   /** What they actually gave. Shown for in-kind and major gifts, where the gift is the point. */
   gift?: string
@@ -97,6 +104,7 @@ export const PARTNERS: readonly Partner[] = [
     href: null,
     logoSrc: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/DCEzMmwaWr3rh4whHxE4R-Pathos.png",
     logoAlt: "Pathos — Live the Light",
+    logoInvertsOnDark: true,
     gift: "Socks for every Giving Hour winner",
     support: ["giving-hour"],
   },
