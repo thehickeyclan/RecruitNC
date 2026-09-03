@@ -15,6 +15,8 @@ const state = {
   fargoResults: [] as Row[],
   matches: [] as Row[],
   stateResults: [] as Row[],
+  coachDesignations: [] as Row[],
+  coachTickets: [] as Row[],
   /** Every (table, columns) pair the module asked for, so tests can assert nothing broad was selected. */
   selects: [] as { table: string; columns: string }[],
 }
@@ -55,6 +57,8 @@ vi.mock("@/lib/supabase/admin", () => ({
       if (table === "fargo_results") return makeQuery(table, state.fargoResults)
       if (table === "matches") return makeQuery(table, state.matches)
       if (table === "wrestling_nchsaa_results") return makeQuery(table, state.stateResults)
+      if (table === "toc_coach_designations") return makeQuery(table, state.coachDesignations)
+      if (table === "toc_coach_ticket_purchases") return makeQuery(table, state.coachTickets)
       throw new Error(`unexpected table ${table}`)
     },
   }),
@@ -146,6 +150,8 @@ describe("public payload contains nothing private", () => {
       expect(Object.keys(a).sort()).toEqual([
         "athleteId",
         "club",
+        /** Approved corner coaches, each marked paid or not. Deliberately public. */
+        "coaches",
         "collegeCommit",
         "credentials",
         "graduationYear",
@@ -601,5 +607,67 @@ describe("normalizeNameForStateMatch — nicknames", () => {
     expect(normalizeNameForStateMatch("Nick O'Neill")).toBe("Nick O'Neill")
     // Two apostrophes in one name look like a quoted nickname unless the quote must open a token.
     expect(normalizeNameForStateMatch("D'Angelo O'Brien")).toBe("D'Angelo O'Brien")
+  })
+})
+
+describe("coach credentials on the public field", () => {
+  beforeEach(() => {
+    state.publication = [{ weight_class: 117, announced_at: "2026-08-16T00:00:00Z" }]
+    state.invitations = [{ athlete_id: "a1", weight_class: 117, status: "confirmed", photo_release_accepted: true }]
+    state.athletes = [{ id: "a1", name: "Alexander Moody", graduationyear: 2027, wrestlingClub: "Nc Pride" }]
+  })
+
+  it("names an approved coach and marks a credential bought under any of that person's aliases", async () => {
+    /** The Kostoff case: designated by phone for one wrestler, ticket linked to his account. */
+    state.coachDesignations = [
+      { athlete_name: "Alexander Moody", coach_name: "John Buck", status: "approved",
+        coach_email: null, coach_phone: "9107407806", coach_phone_key: "9107407806", coach_key: "tel:9107407806" },
+    ]
+    state.coachTickets = [{ email: "ncpridewrestling@gmail.com", linked_coach_key: "tel:9107407806", first_name: null, last_name: null }]
+    const field = await getPublicAnnouncedWeight(117)
+    expect(field?.athletes[0].coaches).toEqual([{ name: "John Buck", hasCredential: true }])
+  })
+
+  it("marks an approved coach with no credential as unpaid rather than hiding them", async () => {
+    state.coachDesignations = [
+      { athlete_name: "Alexander Moody", coach_name: "John Buck", status: "approved",
+        coach_email: null, coach_phone: "9107407806", coach_phone_key: "9107407806", coach_key: "tel:9107407806" },
+    ]
+    state.coachTickets = []
+    const field = await getPublicAnnouncedWeight(117)
+    expect(field?.athletes[0].coaches).toEqual([{ name: "John Buck", hasCredential: false }])
+  })
+
+  it("never names a pending or declined designation", async () => {
+    state.coachDesignations = [
+      { athlete_name: "Alexander Moody", coach_name: "Pending Coach", status: "pending",
+        coach_email: null, coach_phone: "1112223333", coach_phone_key: "1112223333", coach_key: "tel:1112223333" },
+      { athlete_name: "Alexander Moody", coach_name: "Declined Coach", status: "declined",
+        coach_email: null, coach_phone: "4445556666", coach_phone_key: "4445556666", coach_key: "tel:4445556666" },
+    ]
+    state.coachTickets = []
+    const field = await getPublicAnnouncedWeight(117)
+    expect(field?.athletes[0].coaches).toEqual([])
+  })
+
+  it("credits a purchase by the buyer's full name once GoFan collects it", async () => {
+    state.coachDesignations = [
+      { athlete_name: "Alexander Moody", coach_name: "John Buck", status: "approved",
+        coach_email: null, coach_phone: "9107407806", coach_phone_key: "9107407806", coach_key: "tel:9107407806" },
+    ]
+    /** Bought under a club address, so only the name can place it. */
+    state.coachTickets = [{ email: "someclub@example.com", linked_coach_key: null, first_name: "John", last_name: "Buck" }]
+    const field = await getPublicAnnouncedWeight(117)
+    expect(field?.athletes[0].coaches).toEqual([{ name: "John Buck", hasCredential: true }])
+  })
+
+  it("does not let a first name alone credit a coach", async () => {
+    state.coachDesignations = [
+      { athlete_name: "Alexander Moody", coach_name: "John Buck", status: "approved",
+        coach_email: null, coach_phone: "9107407806", coach_phone_key: "9107407806", coach_key: "tel:9107407806" },
+    ]
+    state.coachTickets = [{ email: "someclub@example.com", linked_coach_key: null, first_name: "John", last_name: null }]
+    const field = await getPublicAnnouncedWeight(117)
+    expect(field?.athletes[0].coaches).toEqual([{ name: "John Buck", hasCredential: false }])
   })
 })

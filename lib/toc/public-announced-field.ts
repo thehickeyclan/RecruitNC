@@ -766,7 +766,7 @@ async function fetchApprovedCoachesByAthlete(): Promise<Map<string, { name: stri
     admin
       .from("toc_coach_designations")
       .select("athlete_name, coach_name, coach_email, coach_phone, coach_phone_key, coach_key, status"),
-    admin.from("toc_coach_ticket_purchases").select("email, linked_coach_key"),
+    admin.from("toc_coach_ticket_purchases").select("email, linked_coach_key, first_name, last_name"),
   ])
 
   if (error) {
@@ -808,24 +808,49 @@ async function fetchApprovedCoachesByAthlete(): Promise<Map<string, { name: stri
     return `key:${String(row.coach_key ?? "").trim()}`
   }
 
-  const aliasesByPerson = new Map<string, { emails: Set<string>; keys: Set<string> }>()
+  const aliasesByPerson = new Map<string, { emails: Set<string>; keys: Set<string>; names: Set<string> }>()
   for (const row of rows) {
     const person = personOf(row)
-    const bucket = aliasesByPerson.get(person) ?? { emails: new Set<string>(), keys: new Set<string>() }
+    const bucket =
+      aliasesByPerson.get(person) ?? { emails: new Set<string>(), keys: new Set<string>(), names: new Set<string>() }
     const email = String(row.coach_email ?? "").trim().toLowerCase()
     if (email) bucket.emails.add(email)
     const key = String(row.coach_key ?? "").trim()
     if (key) bucket.keys.add(key)
+    const name = coachAthleteKey(String(row.coach_name ?? ""))
+    if (name) bucket.names.add(name)
     aliasesByPerson.set(person, bucket)
   }
 
   const paidPeople = new Set<string>()
   for (const raw of tickets ?? []) {
-    const ticket = raw as { email?: string | null; linked_coach_key?: string | null }
+    const ticket = raw as {
+      email?: string | null
+      linked_coach_key?: string | null
+      first_name?: string | null
+      last_name?: string | null
+    }
     const email = String(ticket.email ?? "").trim().toLowerCase()
     const linked = String(ticket.linked_coach_key ?? "").trim()
+    /**
+     * The buyer's name, where GoFan collected it.
+     *
+     * The reason this route exists: a coach who checked out under a club account or a spouse's
+     * address matched on nothing, and every one of them had to be linked by hand. A name places
+     * them without anyone intervening. Only used when it is a full name, so a lone first name
+     * cannot sweep in several coaches at once.
+     */
+    const buyerName =
+      ticket.first_name && ticket.last_name
+        ? coachAthleteKey(`${ticket.first_name} ${ticket.last_name}`)
+        : ""
+
     for (const [person, aliases] of aliasesByPerson) {
-      if ((email && aliases.emails.has(email)) || (linked && aliases.keys.has(linked))) paidPeople.add(person)
+      const matched =
+        (email && aliases.emails.has(email)) ||
+        (linked && aliases.keys.has(linked)) ||
+        (buyerName && aliases.names.has(buyerName))
+      if (matched) paidPeople.add(person)
     }
   }
 

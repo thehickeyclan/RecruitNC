@@ -39,6 +39,8 @@ describe("parseGoFanPaste", () => {
     expect(rows[0]).toEqual({
       email: "brent.gates12@gmail.com",
       orderId: "166823439",
+      firstName: null,
+      lastName: null,
       purchasedAt: "2026-08-27",
       ticketType: "TOC Weekend Coach Credential",
       status: "Active",
@@ -70,7 +72,7 @@ describe("matchPurchases", () => {
     directory: [{ userId: "tom", email: "tompuckett123@gmail.com", phone: "7044539208" }],
     linked: new Map<string, string>(),
   }
-  const purchase = (email: string, orderId: string) => ({ email, orderId, purchasedAt: null, ticketType: null, status: null })
+  const purchase = (email: string, orderId: string) => ({ email, orderId, firstName: null, lastName: null, purchasedAt: null, ticketType: null, status: null })
 
   it("matches the address a family gave us", () => {
     const m = matchPurchases({ ...base, purchases: [purchase("justin.usmc@yahoo.com", "1")] })
@@ -147,7 +149,42 @@ gingernobles34@yahoo.com,"","",2026-08-26,12:18,--,"Weekend Pass",$40.00,1666642
   })
 
   it("treats a row with no ticket type as not a credential", () => {
-    expect(isCoachCredential({ email: "a@b.com", orderId: "1", purchasedAt: null, ticketType: null, status: null }))
+    expect(isCoachCredential({ email: "a@b.com", orderId: "1", firstName: null, lastName: null, purchasedAt: null, ticketType: null, status: null }))
       .toBe(false)
+  })
+})
+
+describe("buyer names on a GoFan order", () => {
+  it("leaves both null when the export writes the cells as --", () => {
+    const [row] = parseGoFanPaste(
+      "manuel.j.ramirez1989@gmail.com\t--\t--\tAug-27-2026\t6:51 PM\nActive\nTOC Weekend Coach Credential\t166824012\t--",
+    )
+    expect(row.firstName).toBeNull()
+    expect(row.lastName).toBeNull()
+    expect(row.orderId).toBe("166824012")
+  })
+
+  it("reads the buyer's name once GoFan is set to ask for it", () => {
+    const [row] = parseGoFanPaste(
+      "gatorcheer11@yahoo.com\tCasey\tGashaw\tAug-31-2026\t8:27 PM\nActive\nTOC Weekend Coach Credential\t168088024\t--",
+    )
+    expect(row.firstName).toBe("Casey")
+    expect(row.lastName).toBe("Gashaw")
+  })
+
+  it("does not mistake the ticket type or a time for a name", () => {
+    const [row] = parseGoFanPaste(
+      "someone@example.com\t--\t--\t2026-08-27\t6:51 PM\nActive\nTOC Weekend Coach Credential\t166824099\t--",
+    )
+    expect(row.firstName).toBeNull()
+    expect(row.ticketType).toBe("TOC Weekend Coach Credential")
+  })
+
+  it("handles a CSV export with quoted names", () => {
+    const [row] = parseGoFanPaste(
+      'shane7barbee@gmail.com,"Shane","Barbee",2026-08-29,"TOC Weekend Coach Credential",167774798,Active',
+    )
+    expect(row.firstName).toBe("Shane")
+    expect(row.lastName).toBe("Barbee")
   })
 })

@@ -15,6 +15,15 @@
 export type TicketPurchase = {
   email: string
   orderId: string
+  /**
+   * The buyer's name, once GoFan is set to ask for it.
+   *
+   * Both null on every order taken so far — the export carries the columns and writes them "--".
+   * They are worth reading because email matching keeps failing on people who checked out under a
+   * club account or a spouse's address, and a name would have placed every one of them.
+   */
+  firstName: string | null
+  lastName: string | null
   /** ISO date, or null when the paste did not carry one. */
   purchasedAt: string | null
   ticketType: string | null
@@ -62,13 +71,26 @@ export function parseGoFanPaste(text: string): TicketPurchase[] {
       if (month) purchasedAt = `${date[6]}-${month}-${date[5].padStart(2, "0")}`
     }
 
+    /**
+     * The two cells between the email and the date are first and last name. Empty cells arrive as
+     * "--", so anything that is not a placeholder, a date, a time or a number is taken as a name.
+     */
+    const beforeDate = chunk.split(/(?:\d{4}-\d{2}-\d{2})|(?:[A-Za-z]{3}-\d{1,2}-\d{4})/)[0] ?? ""
+    const nameCells = beforeDate
+      .split(/[\t,]/)
+      .slice(1)
+      .map((cell) => cell.trim().replace(/^"|"$/g, ""))
+      .filter((cell) => cell && cell !== "--" && !/^\d/.test(cell) && /^[A-Za-z][A-Za-z'’.\- ]*$/.test(cell))
+    const firstName = nameCells[0] ?? null
+    const lastName = nameCells[1] ?? null
+
     const status = chunk.match(/\b(Active|Refunded|Cancell?ed|Pending)\b/i)?.[1] ?? null
     // Anywhere in the record, not anchored to the start of a line: the order report pastes with
     // the type on its own line, while the CSV export puts it quoted mid-row after the email.
     const ticketType = chunk.match(/([A-Za-z][A-Za-z0-9 ]*(?:Credential|Pass|Ticket))/)?.[1]?.trim() ?? null
 
     // One row per order: a paste that overlaps a previous one must not double up.
-    byOrder.set(orderId, { email: start.email, orderId, purchasedAt, ticketType, status })
+    byOrder.set(orderId, { email: start.email, orderId, firstName, lastName, purchasedAt, ticketType, status })
   })
 
   return [...byOrder.values()]
