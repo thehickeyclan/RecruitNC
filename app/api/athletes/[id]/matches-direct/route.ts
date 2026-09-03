@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { inSeasonBoutsOnly } from "@/lib/out-of-season-bouts"
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
@@ -133,7 +134,14 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       decisions: row.decisions || 0,
       major_decisions: row.major_decisions || 0,
       forfeits_won: row.forfeits_won || 0,
-      matches: parseMatchesField(row.matches),
+      /**
+       * Spring events are dropped here and nowhere else.
+       *
+       * The stored season record already excludes them — every row's wins-losses equals its bouts
+       * minus its Interstate 64 results — so leaving the bouts in made the log disagree with the
+       * record printed above it. Significant wins and TOC seeding still read the full array.
+       */
+      matches: inSeasonBoutsOnly(parseMatchesField(row.matches)),
       high_school: row.high_school || null,
       meta: {
         athlete_id: row.athlete_id || null,
