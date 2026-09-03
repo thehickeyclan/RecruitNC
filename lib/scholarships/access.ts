@@ -25,9 +25,14 @@ export async function getScholarshipPortalAccess(userId: string): Promise<Schola
 
     const isRecruitNcAdmin = profile?.is_admin === true || profile?.role === "admin"
 
-    if (isRecruitNcAdmin) {
-      return { ok: true, userId, isRecruitNcAdmin: true, reviewers: [] }
-    }
+    /*
+     * The roster is read for admins too.
+     *
+     * Being an admin used to end the question, so an admin who was also on a scholarship's panel
+     * scored with every name in front of them — the thing a blind process exists to prevent. An
+     * admin not on any roster still gets the admin workspace; one who is listed reviews as that
+     * role, blind, and administers elsewhere.
+     */
 
     // Reviewers are explicitly scoped to one scholarship. RLS keeps the roster
     // service-role-only; application pages still authorize every request here.
@@ -51,8 +56,8 @@ export async function getScholarshipPortalAccess(userId: string): Promise<Schola
       return [{ scholarshipId: row.scholarship_id, role: row.role as ScholarshipReviewerRole }]
     })
 
-    if (reviewers.length === 0) return { ok: false }
-    return { ok: true, userId, isRecruitNcAdmin: false, reviewers }
+    if (reviewers.length === 0) return isRecruitNcAdmin ? { ok: true, userId, isRecruitNcAdmin: true, reviewers: [] } : { ok: false }
+    return { ok: true, userId, isRecruitNcAdmin, reviewers }
   } catch (e) {
     console.warn("[scholarships] getScholarshipPortalAccess:", e)
     return { ok: false }
@@ -72,6 +77,8 @@ export async function userReviewerRoleForScholarship(
 ): Promise<ScholarshipReviewerRole | "admin" | null> {
   const access = await getScholarshipPortalAccess(userId)
   if (!access.ok) return null
-  if (access.isRecruitNcAdmin) return "admin"
-  return access.reviewers.find((r) => r.scholarshipId === scholarshipId)?.role ?? null
+  /** A seat on this scholarship's panel outranks being an admin — you score the way the panel does. */
+  const seat = access.reviewers.find((r) => r.scholarshipId === scholarshipId)?.role
+  if (seat) return seat
+  return access.isRecruitNcAdmin ? "admin" : null
 }

@@ -18,7 +18,8 @@ export default async function ScholarshipReviewHomePage() {
     redirect("/fundraising/scholarships")
   }
 
-  const blindReview = !access.isRecruitNcAdmin
+  /** A panel seat means the blind list, whatever else the account is. */
+  const blindReview = access.reviewers.length > 0 || !access.isRecruitNcAdmin
 
   function blindApplicationLabel(application: ScholarshipApplicationRow): string {
     return application.anonymous_id?.trim() || `Application ${application.id.slice(0, 8).toUpperCase()}`
