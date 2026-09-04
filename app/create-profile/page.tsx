@@ -1,13 +1,26 @@
 "use client"
 
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { AuthGuard } from "@/components/auth-guard"
 import { CreateProfileForm } from "@/components/create-profile-form"
+import { FindExistingStep, type ExistingMatch } from "@/components/profile-wizard/find-existing-step"
 
-/** Auth only. The form itself lives in components/create-profile-form.tsx. */
+/**
+ * Creating a profile starts by looking for the one that already exists.
+ *
+ * Most wrestlers here never signed up — NC United built their profile because rankings needed it,
+ * and 292 of 421 still have no owner. Someone who lands on "create" is usually looking for
+ * something they do not know is there, and skipping the search is how one boy became both Jacob
+ * McCord and Jake McCord.
+ */
 export default function CreateProfilePage() {
   const { user, isLoading } = useAuth()
+  const router = useRouter()
+  const [step, setStep] = useState<"find" | "create">("find")
+  const [typedName, setTypedName] = useState("")
 
   if (isLoading) {
     return (
@@ -34,9 +47,28 @@ export default function CreateProfilePage() {
     )
   }
 
+  if (step === "find") {
+    return (
+      <AuthGuard>
+        <div className="min-h-screen bg-[#0A1628] px-4 py-12">
+          <FindExistingStep
+            onClaim={(match: ExistingMatch) => {
+              /** Claiming is handled on the profile itself, where the athlete can see what they are taking. */
+              router.push(`/view-profile?id=${encodeURIComponent(match.id)}&claim=1`)
+            }}
+            onCreateNew={(name) => {
+              setTypedName(name)
+              setStep("create")
+            }}
+          />
+        </div>
+      </AuthGuard>
+    )
+  }
+
   return (
     <AuthGuard>
-      <CreateProfileForm accountEmail={user.email ?? ""} />
+      <CreateProfileForm accountEmail={user.email ?? ""} initialName={typedName} />
     </AuthGuard>
   )
 }

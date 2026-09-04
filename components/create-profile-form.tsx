@@ -103,12 +103,20 @@ interface ProfileFormData {
  * The profile form itself, with no auth in it — the page decides who may see it.
  * Split out so the markup can be rendered and reviewed without a signed-in session.
  */
-export function CreateProfileForm({ accountEmail }: { accountEmail: string }) {
+export function CreateProfileForm({
+  accountEmail,
+  initialName = "",
+}: {
+  accountEmail: string
+  /** Carried from the search step, so nobody types their name twice. */
+  initialName?: string
+}) {
+  const [initialFirst, ...initialRest] = initialName.trim().split(/\s+/).filter(Boolean)
   const router = useRouter()
   const searchParams = useSearchParams()
   const [formData, setFormData] = useState<ProfileFormData>({
-    firstName: "",
-    lastName: "",
+    firstName: initialFirst ?? "",
+    lastName: initialRest.join(" "),
     email: accountEmail,
     phone: "",
     gender: "",
