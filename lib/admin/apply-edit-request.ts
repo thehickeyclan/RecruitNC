@@ -118,3 +118,29 @@ export function buildAthleteUpdateFromRequest(data: EditRequestData): EditReques
 
   return { updates, manual }
 }
+
+/** Where a free-text note can be sent when an admin says what it is. */
+export const FREE_TEXT_TARGETS = {
+  bio: { column: "bio", label: "Bio" },
+  achievements: { column: "additional_achievements", label: "Achievements" },
+} as const
+
+export type FreeTextTarget = keyof typeof FREE_TEXT_TARGETS
+
+/**
+ * The free text a request carries, joined for writing into one field.
+ *
+ * Families put biography in the "Other" box — Cade Gehris's whole request was a paragraph about
+ * his family and his character, with every structured field null. Approving wrote nothing, because
+ * guessing where prose belongs is how you end up filing "Mooresville is misspelled" as somebody's
+ * bio. So the text comes back here and an admin says where it goes, in one click rather than a
+ * copy and paste.
+ */
+export function freeTextForApplying(data: EditRequestData): string {
+  const cd = data?.currentData
+  if (!cd) return ""
+  return [cd.bio?.other, cd.other, cd.achievements]
+    .map((v) => (typeof v === "string" ? v.trim() : ""))
+    .filter(Boolean)
+    .join("\n\n")
+}

@@ -3,7 +3,7 @@ export const revalidate = 0
 
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
-import { buildAthleteUpdateFromRequest } from "@/lib/admin/apply-edit-request"
+import { buildAthleteUpdateFromRequest, freeTextForApplying, FREE_TEXT_TARGETS, type FreeTextTarget } from "@/lib/admin/apply-edit-request"
 import { resolveClubName, resolveSchoolName } from "@/lib/admin/canonical-affiliations"
 
 // Server-only service client to bypass RLS for trusted operations
@@ -102,10 +102,12 @@ export async function PUT(request: NextRequest) {
   try {
     const svc = createServiceClient()
     const body = await request.json()
-    const { requestId, status, adminNotes } = body as {
+    const { requestId, status, adminNotes, applyTextTo } = body as {
       requestId: string
       status: "approved" | "rejected" | "pending"
       adminNotes?: string
+      /** Where the request's free text should be written, when an admin has said. */
+      applyTextTo?: FreeTextTarget | null
     }
 
     if (!requestId || !status) {
@@ -202,6 +204,18 @@ export async function PUT(request: NextRequest) {
           manual = [...manual, `School not applied: ${school.reason}`]
         }
       }
+      /**
+       * Free text goes where the admin sends it. Most requests carry nothing else — families use
+       * the "Other" box for biography — and until now approving one wrote nothing at all.
+       */
+      if (applyTextTo && FREE_TEXT_TARGETS[applyTextTo]) {
+        const text = freeTextForApplying(existing.request_data as never)
+        if (text) {
+          applied[FREE_TEXT_TARGETS[applyTextTo].column] = text
+          manual = manual.filter((m) => !m.startsWith("Bio note:") && !m.startsWith("Other:") && !m.startsWith("Achievements:"))
+        }
+      }
+
       if (Object.keys(applied).length > 0) {
         const { error: applyErr } = await svc
           .from("athletes")

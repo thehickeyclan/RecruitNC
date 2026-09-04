@@ -268,7 +268,9 @@ export function CreateProfileForm({
           <CheckCircle className="mx-auto h-12 w-12 text-emerald-400" />
           <h1 className="mt-4 text-3xl font-black">Your profile is live</h1>
           <p className="mt-2 leading-7 text-white/65">
-            Add your achievements and tournament results from your profile page — that is where coaches look first.
+            Your tournament results are already on their way — state placements, NHSCA, Super32, Fargo, NC United
+            national team and your match record are all imported. Add a photo and a short bio from your profile;
+            that is what coaches read first.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Button
@@ -651,9 +653,16 @@ export function CreateProfileForm({
               <h3 className="text-sm font-bold text-rnc-gold">What happens next</h3>
               <ul className="mt-2 space-y-1.5 text-sm leading-6 text-white/65">
                 <li>· Your profile goes live straight away and you land on it.</li>
-                {/* Achievements are one-per-entry on the profile. A single box here produced one
-                    long blob of text that nothing could read back as individual placings. */}
-                <li>· Add your achievements and tournament results there — one at a time, so they show properly.</li>
+                {/* Results are imported, not typed. Telling families to enter them by hand produced
+                    achievement lists that contradicted the tournament tables sitting beside them. */}
+                <li>
+                  · Your results are added for you — NCHSAA state placements, NHSCA, Super32, Fargo, NC United
+                  national team, and your in-season match record. Nothing to type.
+                </li>
+                <li>
+                  · The achievements box on your profile is for what we don&apos;t track: club tournaments,
+                  out-of-state events, captaincy, academic honours.
+                </li>
                 <li>· Everything on this page stays editable from your profile.</li>
               </ul>
             </div>
