@@ -13,6 +13,21 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
   {
     type: "function",
     function: {
+      name: "suggest_athlete_names",
+      description:
+        "LAST RESORT, only when search_athletes AND wrestling_cross_store_search have both returned nothing. Returns names from the directory and the historical record that closely resemble what the user typed, so a misspelling can be offered back as 'Did you mean…'. Returns an empty list when nobody resembles the query — in that case say the wrestler is not on file rather than naming somebody who is not them. Never call this when a search returned rows.",
+      parameters: {
+        type: "object",
+        properties: {
+          query: { type: "string", description: "The name exactly as the user typed it." },
+        },
+        required: ["query"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "search_athletes",
       description:
         "Find athletes in RecruitNC by name or high school (includes alumni / any graduation year — not limited to recent classes). Handles natural phrasing ('tell me about…', 'who is…') and minor misspellings server-side. Each returned row includes `tournament_summary` (merged NHSCA + Super32 + Fargo from placement tables) — prefer that over `nhsca_results` / `super32_results` JSON on the row when they differ.",

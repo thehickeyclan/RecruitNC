@@ -2082,6 +2082,7 @@ export async function toolFargoResultsByYear(args: { year?: number | string | nu
 }
 
 export type DataToolName =
+  | "suggest_athlete_names"
   | "search_athletes"
   | "wrestling_cross_store_search"
   | "search_school_classifications"
@@ -2115,6 +2116,11 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
 
   try {
     switch (name as DataToolName) {
+      case "suggest_athlete_names": {
+        const { suggestAthleteNames } = await import("@/lib/data-dawg-agent-v2/suggest-names")
+        const q = String((args as { query?: unknown }).query ?? "")
+        return JSON.stringify({ suggestions: await suggestAthleteNames(q) })
+      }
       case "search_athletes":
         return JSON.stringify(await toolSearchAthletes(args as { query: string; limit?: number }))
       case "wrestling_cross_store_search":
