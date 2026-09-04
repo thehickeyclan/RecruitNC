@@ -82,7 +82,7 @@ export function InlineWeightEditor({
   }
 
   return (
-    <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+    <div className="space-y-4 p-4 bg-muted rounded-lg border border-border">
       <div>
         <Label htmlFor="weightClass">Weight Class</Label>
         <Select value={value || ""} onValueChange={setValue}>

@@ -43,7 +43,7 @@ export function InlineHighlightVideoEditor({
   }
 
   return (
-    <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+    <div className="space-y-4 p-4 bg-muted rounded-lg border border-border">
       <div>
         <Label htmlFor="highlightVideo">YouTube Highlight Video URL</Label>
         <Input
@@ -54,7 +54,7 @@ export function InlineHighlightVideoEditor({
           type="url"
           className="mt-1"
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           Paste your YouTube video URL. It will be embedded on your profile.
         </p>
       </div>

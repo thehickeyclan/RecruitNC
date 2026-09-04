@@ -41,7 +41,7 @@ export function InlineEditHeader({
           <Button
             size="sm"
             variant="ghost"
-            className="text-white hover:bg-white/20"
+            className="text-white hover:bg-card/20"
             onClick={onEdit}
           >
             <Edit className="h-4 w-4 mr-2" />

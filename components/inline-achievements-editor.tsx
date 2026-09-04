@@ -53,10 +53,10 @@ export function InlineAchievementsEditor({ otherHonours, onSave, onCancel }: Inl
   }
 
   return (
-    <div className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
+    <div className="space-y-4 rounded-lg border border-border bg-muted p-4">
       <div>
         <Label htmlFor="otherHonours">Other honours</Label>
-        <p className="mb-2 mt-1 text-xs leading-5 text-gray-500">
+        <p className="mb-2 mt-1 text-xs leading-5 text-muted-foreground">
           Conference and regional finishes, invitationals, career milestones, team titles — anything not covered by
           official results. Your state, NHSCA, Super 32 and Fargo results are added automatically and shown separately,
           so there is no need to list them here.
@@ -69,7 +69,7 @@ export function InlineAchievementsEditor({ otherHonours, onSave, onCancel }: Inl
           rows={6}
           className="mt-1"
         />
-        <p className="mt-1 text-xs text-gray-500">One per line</p>
+        <p className="mt-1 text-xs text-muted-foreground">One per line</p>
       </div>
       <div className="flex gap-2">
         <Button onClick={handleSave} disabled={saving} size="sm">

@@ -102,9 +102,9 @@ export function InlineEditSection({
         <div className="group flex items-center justify-between">
           <div className="flex-1">
             {value ? (
-              <p className="text-gray-700">{value}</p>
+              <p className="text-foreground/80">{value}</p>
             ) : (
-              <p className="text-gray-400 italic">{placeholder || "Not set"}</p>
+              <p className="text-muted-foreground/70 italic">{placeholder || "Not set"}</p>
             )}
           </div>
           <Button

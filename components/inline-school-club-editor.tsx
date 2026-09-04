@@ -81,7 +81,7 @@ export function InlineSchoolClubEditor({
   }
 
   return (
-    <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+    <div className="space-y-4 p-4 bg-muted rounded-lg border border-border">
       <div>
         <Label htmlFor="highSchool">High School</Label>
         <Input
@@ -129,9 +129,9 @@ export function InlineSchoolClubEditor({
       <div>
         <Label htmlFor="ncUnitedTeam">NC United Program</Label>
         {ncUnitedTeamReadOnly ? (
-          <div className="mt-1 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+          <div className="mt-1 rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground/80">
             {ncUnitedValue === "blue" ? "NC United Blue" : ncUnitedValue === "gold" ? "NC United Gold" : ncUnitedValue === "both" ? "Both Teams" : "None"}
-            <span className="ml-2 text-xs text-gray-500">(set in Admin → Athletes)</span>
+            <span className="ml-2 text-xs text-muted-foreground">(set in Admin → Athletes)</span>
           </div>
         ) : (
           <Select value={ncUnitedValue} onValueChange={setNcUnitedValue}>

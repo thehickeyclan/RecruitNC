@@ -65,7 +65,7 @@ export function InlineContactEditor({
   }
 
   return (
-    <div className="space-y-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
+    <div className="space-y-4 p-4 bg-muted rounded-lg border border-border">
       <div>
         <Label htmlFor="cell">Cell Phone</Label>
         <Input
@@ -108,7 +108,7 @@ export function InlineContactEditor({
           type="url"
           className="mt-1"
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <p className="text-xs text-muted-foreground mt-1">
           Paste your YouTube video URL here
         </p>
       </div>
