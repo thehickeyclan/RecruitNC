@@ -11,10 +11,17 @@ import {
 export const dynamic = "force-dynamic"
 
 /** Ensure the current user is the payer for this membership. */
-async function getMembershipIfPayer(membershipId: string) {
+async function getMembershipIfPayer(request: NextRequest, membershipId: string) {
   const supabase = await createClient()
-  const { data: { user }, error } = await supabase.auth.getUser()
-  if (error || !user) return { ok: false as const, status: 401 as const, error: "Not authenticated" }
+  let { data: { user }, error } = await supabase.auth.getUser()
+  if (!user) {
+    const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "")
+    if (token) {
+      const { data } = await supabase.auth.getUser(token)
+      user = data.user
+    }
+  }
+  if ((error && !user) || !user) return { ok: false as const, status: 401 as const, error: "Not authenticated" }
   const admin = createAdminClient()
   const { data: row, error: fetchErr } = await admin
     .from("blue_memberships")
@@ -34,7 +41,7 @@ export async function POST(
   const { membershipId } = await params
   if (!membershipId) return NextResponse.json({ error: "membershipId required" }, { status: 400 })
 
-  const auth = await getMembershipIfPayer(membershipId)
+  const auth = await getMembershipIfPayer(request, membershipId)
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   let body: { action?: string; resumeAt?: string; atPeriodEnd?: boolean } = {}

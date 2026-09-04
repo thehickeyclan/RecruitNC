@@ -10,12 +10,20 @@ const stripeSecret = process.env.STRIPE_SECRET_KEY
 /** POST: Create a Stripe Customer Portal session so the parent can manage billing. Body: { customerId } */
 export async function POST(request: NextRequest) {
   const supabase = await createClient()
-  const {
+  let {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser()
 
-  if (authError || !user) {
+  if (!user) {
+    const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "")
+    if (token) {
+      const { data } = await supabase.auth.getUser(token)
+      user = data.user
+    }
+  }
+
+  if ((authError && !user) || !user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
   }
 

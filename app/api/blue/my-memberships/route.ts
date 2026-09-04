@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server"
+import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getBlueMembershipStripeDetails, type BlueStripeInvoiceRow } from "@/lib/blue-membership-stripe-details"
@@ -34,14 +34,22 @@ type BlueMembershipForParent = {
 export type { BlueStripeInvoiceRow } from "@/lib/blue-membership-stripe-details"
 
 /** GET: List Blue memberships where the current user is the payer — with billing details when Stripe is available. */
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient()
-  const {
+  let {
     data: { user },
     error: authError,
   } = await supabase.auth.getUser()
 
-  if (authError || !user) {
+  if (!user) {
+    const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "")
+    if (token) {
+      const { data } = await supabase.auth.getUser(token)
+      user = data.user
+    }
+  }
+
+  if ((authError && !user) || !user) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 })
   }
 
