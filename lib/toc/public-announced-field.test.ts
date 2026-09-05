@@ -64,6 +64,7 @@ vi.mock("@/lib/supabase/admin", () => ({
   }),
 }))
 
+import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import {
   buildAthleteSummary,
   buildCredentials,
@@ -571,7 +572,9 @@ describe("surnameSortKey", () => {
 describe("hub tiles", () => {
   it("lists every weight but only counts released ones", async () => {
     const tiles = await listPublicWeightTiles()
-    expect(tiles).toHaveLength(11)
+    /** Ten since 184 was dropped on 5 September; the tile list follows TOC_WEIGHT_CLASSES. */
+    expect(tiles).toHaveLength(TOC_WEIGHT_CLASSES.length)
+    expect(tiles.some((t) => t.weightClass === 184)).toBe(false)
 
     const t117 = tiles.find((t) => t.weightClass === 117)
     expect(t117).toMatchObject({ announced: true, athleteCount: 2, announcedAt: "2026-08-14T18:00:00Z" })

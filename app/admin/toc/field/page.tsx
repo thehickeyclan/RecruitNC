@@ -1152,7 +1152,7 @@ export default function TocFieldAdminPage() {
           className={filter === "all" ? "bg-[#CC0000] text-white hover:bg-[#a80000]" : "border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"}
           onClick={() => setFilter("all")}
         >
-          All 11 weights
+          All 10 weights
         </Button>
       </div>
 

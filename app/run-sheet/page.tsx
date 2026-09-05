@@ -109,7 +109,7 @@ function DayTable({ title, note, rows }: { title: string; note: string; rows: Ro
                 10 weights
               </th>
               <th className="border-b border-white/15 px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-[#E08C6E]">
-                11 weights
+                10 weights
               </th>
               <th className="border-b border-white/15 px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-white/45">
                 Item
@@ -163,9 +163,9 @@ export default function RunSheetPage() {
             Ryan Mitchell of The NC Mat.
           </p>
           <p className="text-sm text-white/40">
-            Times are given for both fields, since 184 lbs is not yet filled — 121 bouts at ten
-            weights, 133 at eleven. Note that the eleven-weight column starts Saturday half an hour
-            earlier.
+            <strong className="text-white/70">184 lbs is out</strong> — the field did not fill, so the
+            tournament runs ten weights and 121 bouts. Work from the ten-weight column; the
+            eleven-weight one is kept only as a record of what was planned.
           </p>
         </header>
 

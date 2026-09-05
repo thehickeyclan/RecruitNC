@@ -179,7 +179,7 @@ const seedTitlesByCategory: Record<string, string[]> = {
     "Plan VIP Lounge",
   ],
   Competition: [
-    "Select and invite elite fields at all 11 weights",
+    "Select and invite elite fields at all 10 weights",
     "Finalize 11 brackets",
     "Select bracketing platform (Trackwrestling or FloArena)",
   ],

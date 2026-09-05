@@ -102,7 +102,7 @@ export default function TocRoundSchedulePage() {
           </div>
 
           <p className="mt-8 text-sm text-white/45">
-            Eleven weight classes, true double-elimination, top three place.{" "}
+            Ten weight classes, true double-elimination, top three place.{" "}
             <HardLink href="/tournament-of-champions" className="font-semibold text-[#D3B574] underline-offset-4 hover:underline">
               Back to the tournament page
             </HardLink>

@@ -7,8 +7,8 @@ export const TOC_HERO = {
   /** Locked hero stack — tagline = stakes + single-mat finals; buckleUp = emotional punch; lead = format detail. */
   tagline: "The Best in the State. One Mat. One Question.",
   buckleUp: "North Carolina, buckle up. The brackets are stacked.",
-  lead: `Eleven weight classes. Hand-picked fields. The best North Carolina has — and nobody else. College weights. Stacked brackets. ${TOC_MATS_LINE} This isn't another bracket to grind through.`,
-  showLine: "One mat. Eleven champions.",
+  lead: `Ten weight classes. Hand-picked fields. The best North Carolina has — and nobody else. College weights. Stacked brackets. ${TOC_MATS_LINE} This isn't another bracket to grind through.`,
+  showLine: "One mat. Ten champions.",
 } as const
 
 export const TOC_TAGLINE_BANK = [
@@ -19,7 +19,7 @@ export const TOC_TAGLINE_BANK = [
   "The best in the state. In one building.",
   "You don't enter. You get the call.",
   "College weights. Stacked draws. Single-mat finals.",
-  "One mat. Eleven champions.",
+  "One mat. Ten champions.",
 ] as const
 
 /** Phase 2 athlete invitation — Resend templates can import these. */
@@ -40,7 +40,7 @@ export const TOC_SOCIAL_POSTS = {
   tease:
     "Something's coming for North Carolina wrestling.\nInvitation only. The best at every weight. One mat. One champion.\n09.18.26. Buckle up.",
   reveal:
-    `Introducing the NC United Tournament of Champions.\nEleven weight classes, hand-picked fields · College weights · Invitation only · Two mats until finals\nThe best in the state, in one building. ${TOC_EVENT_DATES_DISPLAY}.`,
+    `Introducing the NC United Tournament of Champions.\nTen weight classes, hand-picked fields · College weights · Invitation only · Two mats until finals\nThe best in the state, in one building. ${TOC_EVENT_DATES_DISPLAY}.`,
   showAngle:
     "Other tournaments you enter.\nThis one you're invited to.\nGreat wrestling. One mat when it matters.",
   stakes:

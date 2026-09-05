@@ -48,7 +48,7 @@ export const TOC_ROAD_MILESTONES: TocRoadMilestone[] = [
   {
     dateLabel: "Fri · Sep 11",
     label: "Brackets released",
-    detail: "Seeds and full brackets for all eleven weights.",
+    detail: "Seeds and full brackets for all ten weights.",
     atMs: Date.parse("2026-09-11T09:00:00-04:00"),
   },
   {

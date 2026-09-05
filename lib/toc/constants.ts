@@ -229,7 +229,8 @@ export const TOC_SUPPORT_DONATIONS = {
   ],
 } as const
 
-export const TOC_WEIGHT_CLASSES = [117, 125, 133, 141, 149, 157, 165, 174, 184, 197, 285] as const
+/** 184 was dropped on 5 September 2026 — the field never filled. Ten weights, not the college eleven. */
+export const TOC_WEIGHT_CLASSES = [117, 125, 133, 141, 149, 157, 165, 174, 197, 285] as const
 
 export const TOC_WEIGH_IN_LINE = `${TOC_WEIGH_IN.headline} · ${TOC_WEIGH_IN.time} · Flat weight, no allowance` as const
 
@@ -239,7 +240,7 @@ export const TOC_WEIGH_IN_LINE = `${TOC_WEIGH_IN.headline} · ${TOC_WEIGH_IN.tim
  *
  * These rows are the crew run sheet at /run-sheet reduced to what a spectator needs — same times,
  * fewer of them. The run sheet is the source of truth and is planned in two scenarios; this is the
- * eleven-weight one, matching the "all eleven championship finals" copy used elsewhere. Change the
+ * ten-weight one, 184 having been dropped on 5 September. Change the
  * run sheet first, then bring these across, so the crew and the public never work from different
  * clocks.
  */
@@ -275,23 +276,23 @@ export const TOC_SCHEDULE = {
   },
   saturday: {
     title: "Saturday · September 19",
-    subtitle: "Brackets resume at 9:30 AM · Giving Hour · championship finals on one mat",
+    subtitle: "Brackets resume at 9:00 AM · Giving Hour · championship finals on one mat",
     rows: [
       { time: "7:30 AM", activity: "Warm-up mat opens — stays open all day" },
       { time: "8:30 AM", activity: "Doors open to spectators" },
       { time: "9:15 AM", activity: "Welcome and prayer" },
-      { time: "9:30 AM", activity: "Consolation round one — two mats" },
-      { time: "10:45 AM", activity: "Winners semifinals — two mats" },
+      { time: "9:00 AM", activity: "Consolation round one — two mats" },
+      { time: "10:30 AM", activity: "Winners semifinals — two mats" },
       { time: "12:00 PM", activity: "Consolation semifinals — two mats" },
-      { time: "1:15 PM", activity: "Third-place bouts — two mats" },
-      { time: "2:15–3:15 PM", activity: "The Giving Hour — vendor raffle, scholarship and guest speaker" },
-      { time: "3:15 PM", activity: "Parade of finalists, introductions and national anthem" },
+      { time: "1:30 PM", activity: "Third-place bouts — two mats" },
+      { time: "2:30–3:30 PM", activity: "The Giving Hour — vendor raffle, scholarship and guest speaker" },
+      { time: "3:30 PM", activity: "Parade of finalists, introductions and national anthem" },
       {
-        time: "3:45 PM",
-        activity: "Championship finals — one mat, all eleven weights, awards after each",
+        time: "4:00 PM",
+        activity: "Championship finals — one mat, all ten weights, awards after each",
       },
-      { time: "6:15 PM", activity: "Most Outstanding Wrestler & Match of Champions awards" },
-      { time: "6:30 PM", activity: "Event concludes" },
+      { time: "6:45 PM", activity: "Most Outstanding Wrestler & Match of Champions awards" },
+      { time: "7:00 PM", activity: "Event concludes" },
     ],
   },
 } as const
@@ -301,7 +302,7 @@ export const TOC_AI_RENDERING_CAPTION = "AI rendering of the existing facility f
 export const TOC_CONTACT_EMAIL = "info@ncwrestlingunited.com" as const
 
 /** Canonical mats copy — use site-wide wherever two-mat → finals format is described. */
-export const TOC_MATS_LINE = "Two mats all weekend. One mat for all eleven championship finals." as const
+export const TOC_MATS_LINE = "Two mats all weekend. One mat for all ten championship finals." as const
 
 /** When sales open — shown wherever we used to show a buy link, until tickets are live. */
 export const TOC_TICKET_SALE_TIMING = "Friday, Aug 28th" as const
@@ -542,7 +543,7 @@ export const TOC_MEDIA = {
 export const TOC_FINALS_MAT = {
   eyebrow: "Championship finals",
   headline: "One mat for the titles",
-  lead: "Saturday evening the arena narrows to a single mat — finalist introductions, live announcements, and all eleven championship bouts with professional arena lighting and video boards.",
+  lead: "Saturday evening the arena narrows to a single mat — finalist introductions, live announcements, and all ten championship bouts with professional arena lighting and video boards.",
   bullets: ["Parade of finalists before each weight", "Live PA announcements and title-bout presentation", "One mat — every eye in the building on the championship match"],
 } as const
 
