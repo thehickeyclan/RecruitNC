@@ -1,6 +1,7 @@
 import { TocPatrioticBar, TocVarsityHeading } from "@/components/toc/toc-theme"
 import { TocWeighInCallout } from "@/components/toc/toc-weigh-in-callout"
 import { TOC_SCHEDULE } from "@/lib/toc/constants"
+import { HardLink } from "@/components/hard-link"
 
 function DayTable({
   title,
@@ -67,6 +68,15 @@ export function TocScheduleTable() {
           <DayTable title={friday.title} subtitle={friday.subtitle} rows={friday.rows} />
           <DayTable title={saturday.title} subtitle={saturday.subtitle} rows={saturday.rows} />
         </div>
+        {/* This section is the logistics timeline. Families asking "when is he on?" want the rounds. */}
+        <p className="mt-8 text-center text-sm sm:text-base">
+          <HardLink
+            href="/tournament-of-champions/schedule"
+            className="font-bold text-[#0B1D3A] underline underline-offset-4 hover:text-[#CC0000]"
+          >
+            See the round-by-round schedule →
+          </HardLink>
+        </p>
       </div>
       <TocPatrioticBar className="mt-10 sm:mt-12" />
     </section>
