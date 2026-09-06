@@ -1,215 +1,143 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { Check, Loader2, User, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useAuth } from "@/contexts/auth-context"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckCircle, AlertCircle, User, Edit, ArrowRight } from "lucide-react"
-import Link from "next/link"
+import { useToast } from "@/hooks/use-toast"
 
-interface ClaimProfileButtonProps {
+/**
+ * "Is this your profile?" — on an unclaimed wrestler's page.
+ *
+ * 292 of 421 profiles have no owner: NC United built them because rankings needed them, and
+ * the wrestler usually does not know one exists. Until now the only way to claim one was to
+ * guess that /create-profile searches for you, which nobody arriving from a link or a search
+ * result will do. A profile with no owner is also a profile nobody can add film, a GPA or an
+ * intended major to, so this is upstream of most of what a scouting report is missing.
+ *
+ * Asks rather than assumes, because the two answers are genuinely different relationships:
+ *
+ *   self   — sets claimed_by_user_id. One owner, and it is the wrestler's.
+ *   parent — writes parent_athlete_links, which is many-to-many so a parent with three
+ *            wrestlers links all three, and never takes the profile off the kid.
+ *
+ * Signed-in only. An unauthenticated visitor gets nothing rather than a button that bounces
+ * them into a login wall, which is the same rule ParentLinkButton follows.
+ */
+export function ClaimProfileButton({
+  athleteId,
+  athleteName,
+  /** Skips the whole prompt when somebody already owns this profile. */
+  claimedByUserId,
+}: {
   athleteId: string
   athleteName: string
-  className?: string
-  // New: allow the parent to explicitly tell us a profile is already claimed
-  isClaimed?: boolean
-}
+  claimedByUserId?: string | null
+}) {
+  const [state, setState] = useState<"checking" | "hidden" | "idle" | "claiming" | "done">("checking")
+  const [doneAs, setDoneAs] = useState<"self" | "parent" | null>(null)
+  const { toast } = useToast()
 
-export function ClaimProfileButton({ athleteId, athleteName, className, isClaimed }: ClaimProfileButtonProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [result, setResult] = useState<{ success: boolean; message: string; nextStep?: string } | null>(null)
-  const [claimed, setClaimed] = useState<boolean | null>(isClaimed ?? null)
-
-  const { user } = useAuth()
-
-  // If the parent didn't provide isClaimed, fetch a lightweight status from the API.
   useEffect(() => {
-    let cancelled = false
-    async function checkClaim() {
-      if (isClaimed !== undefined) return
-      try {
-        const resp = await fetch(`/api/athletes/${athleteId}`, {
-          credentials: "include",
-          cache: "no-store",
-        })
-        if (!resp.ok) return
-        const data = await resp.json()
-        // Consider claimed if there is any claimed_by_user_id set
-        const alreadyClaimed = Boolean(data?.claimed_by_user_id)
-        if (!cancelled) {
-          setClaimed(alreadyClaimed)
-        }
-      } catch {
-        // ignore network errors here; we just fail open to show the CTA
-      }
+    if (claimedByUserId) {
+      setState("hidden")
+      return
     }
-    checkClaim()
+    let cancelled = false
+    fetch("/api/profile/linked-athletes", { credentials: "include", cache: "no-store" })
+      // 401 is signed out. Falling through to "idle" would show a button that only leads to
+      // a login wall, so that case hides instead.
+      .then((r) => (r.ok ? r.json() : r.status === 401 ? "signed-out" : null))
+      .then((data) => {
+        if (cancelled) return
+        if (data === "signed-out" || !data) return setState("hidden")
+        const alreadyLinked =
+          (data.athletes ?? []).some((a: { id?: unknown }) => String(a?.id) === String(athleteId)) ||
+          String(data.profileAthleteId ?? "") === String(athleteId)
+        setState(alreadyLinked ? "hidden" : "idle")
+      })
+      .catch(() => !cancelled && setState("hidden"))
     return () => {
       cancelled = true
     }
-  }, [athleteId, isClaimed])
+  }, [athleteId, claimedByUserId])
 
-  const redirectToSignIn = () => {
-    const returnTo = encodeURIComponent(`/athletes/${athleteId}`)
-    const path = `/auth/signin?returnTo=${returnTo}`
-    if (typeof window !== "undefined" && window.self !== window.top) {
-      // Must use absolute URL when breaking out of iframe (parent may be different origin)
-      window.top!.location.href = window.location.origin + path
-    } else {
-      window.location.href = path
-    }
-  }
-
-  const handleClaimProfile = async () => {
-    if (!user) {
-      redirectToSignIn()
-      return
-    }
-
-    setIsLoading(true)
-    setResult(null)
-
+  async function claim(relationship: "self" | "parent") {
+    setState("claiming")
     try {
-      const response = await fetch("/api/athletes/claim-profile", {
+      const res = await fetch("/api/profile/claim-existing", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ athleteId }),
+        body: JSON.stringify({ athleteId, relationship }),
       })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        setResult({
-          success: true,
-          message: data.message || "Profile claimed successfully!",
-          nextStep: data.nextStep,
-        })
-        setClaimed(true)
-      } else if (response.status === 401) {
-        setResult({
-          success: false,
-          message: "Your session expired. Please sign in again to claim your profile.",
-        })
-      } else {
-        setResult({
-          success: false,
-          message: data.error || "Failed to claim profile",
-        })
-      }
-    } catch {
-      setResult({ success: false, message: "Network error. Please try again." })
-    } finally {
-      setIsLoading(false)
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || "Could not claim this profile")
+      setDoneAs(relationship)
+      setState("done")
+      toast({
+        title: relationship === "self" ? "Profile claimed" : "Linked",
+        description:
+          relationship === "self"
+            ? "This profile is now yours to edit."
+            : `${athleteName} is now on your account.`,
+      })
+    } catch (error: any) {
+      setState("idle")
+      toast({
+        title: "Could not claim",
+        description: error?.message || "Please try again.",
+        variant: "destructive",
+      })
     }
   }
 
-  // If already claimed (via prop or via fetch), don't render the Claim CTA at all.
-  if (claimed === true) {
-    return null
-  }
+  if (state === "checking" || state === "hidden") return null
 
-  // Success state
-  if (result?.success) {
+  if (state === "done") {
     return (
-      <Card className={`border-green-200 bg-green-50 ${className ?? ""}`}>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-green-800">
-            <CheckCircle className="h-5 w-5" />
-            Profile Claimed Successfully!
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <p className="text-green-700 mb-4">
-            Great! You now control this profile. Please verify that all your information is correct.
-          </p>
-          <div className="space-y-3">
-            <div className="bg-white/70 rounded-lg p-3 border border-green-200">
-              <h4 className="font-medium text-green-800 mb-2">Next Steps:</h4>
-              <ul className="text-sm text-green-700 space-y-1">
-                <li>• Review all profile information below</li>
-                <li>• Check your achievements and stats</li>
-                <li>• Update any incorrect details</li>
-                <li>• Upload a better photo if needed</li>
-              </ul>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Link href={`/athletes/${athleteId}/edit-request`} className="flex-1">
-                <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Update My Info
-                </Button>
-              </Link>
-              <Button
-                variant="outline"
-                className="flex-1 border-green-300 text-green-700 hover:bg-green-100 bg-transparent"
-                onClick={() => {
-                  const el = document.getElementById("profile-verification")
-                  if (el) el.scrollIntoView({ behavior: "smooth" })
-                }}
-              >
-                Verify Info Below
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <p className="flex items-center gap-2 text-sm text-emerald-400">
+        <Check className="h-4 w-4" />
+        {doneAs === "self"
+          ? "This profile is yours — you can edit it now."
+          : `${athleteName} is linked to your account.`}
+      </p>
     )
   }
 
-  // Error state
-  if (result && !result.success) {
-    return (
-      <Card className={`border-red-200 bg-red-50 ${className ?? ""}`}>
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 text-red-700 mb-2">
-            <AlertCircle className="h-5 w-5" />
-            <span className="font-medium">Claim Failed</span>
-          </div>
-          <p className="text-sm text-red-600 mb-3">{result.message}</p>
-          <div className="flex gap-2">
-            <Button
-              onClick={handleClaimProfile}
-              disabled={isLoading}
-              size="sm"
-              variant="outline"
-              className="border-red-300 text-red-700 hover:bg-red-100 bg-transparent"
-            >
-              {isLoading ? "Trying Again..." : "Try Again"}
-            </Button>
-            <Button onClick={redirectToSignIn} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-              Sign In Again
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
+  const firstName = athleteName.trim().split(/\s+/)[0]
 
-  // Default state
   return (
-    <Card className={`border-blue-200 bg-blue-50 ${className ?? ""}`}>
-      <CardContent className="p-4">
-        <div className="flex items-center gap-3">
-          <User className="h-5 w-5 text-blue-600" />
-          <div className="flex-1">
-            <h3 className="font-medium text-blue-900">Is this your profile?</h3>
-            <p className="text-sm text-blue-700">
-              Claim this profile to manage your information and connect with coaches.
-            </p>
-          </div>
-        </div>
-        <div className="mt-3">
-          {!user && (
-            <Button onClick={redirectToSignIn} className="w-full bg-blue-600 hover:bg-blue-700">
-              Sign In to Claim Profile
-            </Button>
+    <div className="rounded-sm border border-[#D3B574]/40 bg-[#D3B574]/5 p-4">
+      <p className="text-sm font-bold text-white">Is this your profile?</p>
+      <p className="mt-1 text-sm text-white/60">
+        Nobody has claimed {firstName} yet. Claiming lets you add film, a GPA and everything
+        college coaches ask for.
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <Button
+          onClick={() => void claim("self")}
+          disabled={state === "claiming"}
+          className="min-h-[44px] bg-[#B31B1B] text-white hover:bg-[#8f1616]"
+          size="sm"
+        >
+          {state === "claiming" ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <User className="mr-2 h-4 w-4" />
           )}
-        </div>
-      </CardContent>
-    </Card>
+          Yes, this is me
+        </Button>
+        <Button
+          onClick={() => void claim("parent")}
+          disabled={state === "claiming"}
+          variant="outline"
+          size="sm"
+          className="min-h-[44px] border-white/25 bg-transparent text-white hover:bg-white/10"
+        >
+          <Users className="mr-2 h-4 w-4" />
+          This is my son or daughter
+        </Button>
+      </div>
+    </div>
   )
 }
-
-export default ClaimProfileButton

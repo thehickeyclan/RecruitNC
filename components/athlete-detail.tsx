@@ -31,6 +31,7 @@ import { InlineContactEditor } from "./inline-contact-editor"
 import { InlineAcademicsEditor } from "./inline-academics-editor"
 import { InlineAchievementsEditor } from "./inline-achievements-editor"
 import { ParentLinkButton } from "./parent-link-button"
+import { ClaimProfileButton } from "./claim-profile-button"
 import { InlineCollegeOpensEditor } from "./inline-college-opens-editor"
 import { InlineSchoolClubEditor } from "./inline-school-club-editor"
 import { InlineWeightEditor } from "./inline-weight-editor"
@@ -1363,9 +1364,19 @@ export function AthleteDetail({
           thing they need is to tie their account to a profile that already exists, and this
           is where they will be when they want that. Hides itself when signed out, when this
           is the viewer's own profile, or when the link already exists. */}
+      {/* Unclaimed: ask whose profile it is. Claimed: a parent can still link to their kid,
+          which is what ParentLinkButton is for — the two never show at once. */}
       {!canEdit && (
         <div className="px-1">
-          <ParentLinkButton athleteId={String(athlete.id)} athleteName={athleteName} />
+          {athlete.claimed_by_user_id ? (
+            <ParentLinkButton athleteId={String(athlete.id)} athleteName={athleteName} />
+          ) : (
+            <ClaimProfileButton
+              athleteId={String(athlete.id)}
+              athleteName={athleteName}
+              claimedByUserId={athlete.claimed_by_user_id}
+            />
+          )}
         </div>
       )}
 
