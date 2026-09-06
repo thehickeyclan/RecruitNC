@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Trophy } from "lucide-react"
+import { ChevronDown, Trophy } from "lucide-react"
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { cn, scrollTableXClass } from "@/lib/utils"
 import { placementLabel, type OtherTournamentProfileBlock } from "@/lib/other-tournaments"
 import { PROFILE_SECTION_HEADER, PROFILE_SECTION_TITLE } from "@/lib/unified-profile-section-styles"
@@ -276,64 +277,98 @@ export function TournamentResultsDisplay({
         </Table>
       </div>
 
+      {/*
+        Collapsed by default. The table above already carries placement and record; the
+        bout-by-bout detail is depth for whoever wants it, and left open it pushed the rest
+        of the profile off the screen. Same disclosure idiom as the AAU quality wins section.
+      */}
       {otherTournamentBlocks.map((block) =>
         block.strengthOfWins.length > 0 ? (
-          <div key={`wins-${block.result.eventKey}`} className="mt-4">
-            <h4 className={cn("text-sm font-semibold mb-2", isDark ? "text-white/80" : "text-gray-700")}>
-              Wins at {block.result.eventShortName} {block.result.year}
-              {block.notableWins.length > 0 && (
-                <span className={memberHintClass}>
-                  {block.notableWins.length} over placers, ranked wrestlers, or TOC field
-                </span>
+          <Collapsible
+            key={`wins-${block.result.eventKey}`}
+            className={cn(
+              "group/wins mt-3 overflow-hidden rounded-xl border",
+              isDark ? "border-white/10" : "border-gray-200",
+            )}
+          >
+            <CollapsibleTrigger
+              className={cn(
+                "flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors",
+                isDark ? "bg-white/[0.03] hover:bg-white/[0.06]" : "bg-gray-50/80 hover:bg-gray-100",
               )}
-            </h4>
-            <ul className="space-y-1.5">
-              {block.strengthOfWins.map((win, index) => (
-                <li
-                  key={`${win.opponentName}-${index}`}
-                  className={cn(
-                    "flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-md px-3 py-2 text-sm",
-                    isDark ? "bg-white/5 text-white/80" : "bg-gray-50 text-gray-700",
-                  )}
-                >
-                  <span className={isDark ? "font-medium text-white" : "font-medium text-[#03154C]"}>
-                    {win.opponentName}
-                  </span>
-                  {win.opponentClub && (
-                    <span className={isDark ? "text-white/40 text-xs" : "text-gray-500 text-xs"}>
-                      {win.opponentClub}
+            >
+              <div className="min-w-0">
+                <p className={cn("text-sm font-bold", isDark ? "text-white" : "text-[#03154C]")}>
+                  Wins at {block.result.eventShortName} {block.result.year}
+                </p>
+                <p className={cn("mt-0.5 text-xs", isDark ? "text-white/55" : "text-gray-600")}>
+                  {block.strengthOfWins.length} win{block.strengthOfWins.length === 1 ? "" : "s"}
+                  {block.notableWins.length > 0
+                    ? ` · ${block.notableWins.length} over placers, ranked wrestlers, or TOC field`
+                    : ""}
+                </p>
+              </div>
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 shrink-0 transition-transform group-data-[state=open]/wins:rotate-180",
+                  isDark ? "text-white/50" : "text-gray-500",
+                )}
+              />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <ul
+                className={cn(
+                  "space-y-1.5 border-t px-4 py-3",
+                  isDark ? "border-white/10" : "border-gray-200",
+                )}
+              >
+                {block.strengthOfWins.map((win, index) => (
+                  <li
+                    key={`${win.opponentName}-${index}`}
+                    className={cn(
+                      "flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-md px-3 py-2 text-sm",
+                      isDark ? "bg-white/5 text-white/80" : "bg-gray-50 text-gray-700",
+                    )}
+                  >
+                    <span className={isDark ? "font-medium text-white" : "font-medium text-[#03154C]"}>
+                      {win.opponentName}
                     </span>
-                  )}
-                  {win.credential?.placement != null && (
-                    <Badge className="bg-[#13294B] text-white hover:bg-[#1e3a5f] text-xs px-2 py-0.5">
-                      {placementLabel(win.credential.placement)} at this event
-                    </Badge>
-                  )}
-                  {win.credential?.prospectRanking != null && (
-                    <Badge className="bg-[#D3B574] text-[#0A1628] hover:bg-[#c5a769] text-xs px-2 py-0.5">
-                      #{win.credential.prospectRanking}
-                      {win.credential.graduationYear ? ` · Class of ${win.credential.graduationYear}` : ""}
-                    </Badge>
-                  )}
-                  {win.credential?.tocParticipant && (
-                    <Badge className="bg-[#7c3aed] text-white hover:bg-[#6d28d9] text-xs px-2 py-0.5">
-                      TOC field
-                    </Badge>
-                  )}
-                  {win.credential?.placement == null && win.credential?.record && (
-                    <span className={isDark ? "text-white/40 text-xs" : "text-gray-500 text-xs"}>
-                      opponent went {win.credential.record}
+                    {win.opponentClub && (
+                      <span className={isDark ? "text-white/40 text-xs" : "text-gray-500 text-xs"}>
+                        {win.opponentClub}
+                      </span>
+                    )}
+                    {win.credential?.placement != null && (
+                      <Badge className="bg-[#13294B] text-white hover:bg-[#1e3a5f] text-xs px-2 py-0.5">
+                        {placementLabel(win.credential.placement)} at this event
+                      </Badge>
+                    )}
+                    {win.credential?.prospectRanking != null && (
+                      <Badge className="bg-[#D3B574] text-[#0A1628] hover:bg-[#c5a769] text-xs px-2 py-0.5">
+                        #{win.credential.prospectRanking}
+                        {win.credential.graduationYear ? ` · Class of ${win.credential.graduationYear}` : ""}
+                      </Badge>
+                    )}
+                    {win.credential?.tocParticipant && (
+                      <Badge className="bg-[#7c3aed] text-white hover:bg-[#6d28d9] text-xs px-2 py-0.5">
+                        TOC field
+                      </Badge>
+                    )}
+                    {win.credential?.placement == null && win.credential?.record && (
+                      <span className={isDark ? "text-white/40 text-xs" : "text-gray-500 text-xs"}>
+                        opponent went {win.credential.record}
+                      </span>
+                    )}
+                    <span className={cn("ml-auto", cellMonoClass)}>
+                      {win.winType}
+                      {win.score ? ` ${win.score}` : ""}
                     </span>
-                  )}
-                  <span className={cn("ml-auto", cellMonoClass)}>
-                    {win.winType}
-                    {win.score ? ` ${win.score}` : ""}
-                  </span>
-                  <span className={isDark ? "text-white/40 text-xs" : "text-gray-500 text-xs"}>{win.round}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
+                    <span className={isDark ? "text-white/40 text-xs" : "text-gray-500 text-xs"}>{win.round}</span>
+                  </li>
+                ))}
+              </ul>
+            </CollapsibleContent>
+          </Collapsible>
         ) : null,
       )}
     </>
