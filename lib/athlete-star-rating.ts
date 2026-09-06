@@ -178,18 +178,26 @@ export function rateAthlete(input: StarRatingInput): StarRating {
 
   const score = components.reduce((sum, c) => sum + c.points, 0)
 
-  /**
-   * Five stars means an outside national outlet ranks them — nothing else earns it.
-   *
-   * A wrestler can hold the best résumé in the state and cap at four; that is the rule
-   * working, not failing. It keeps the top band a fact we point at rather than a judgement we
-   * defend, and it is why a parent asking "why not a five" gets an answer about Flo, SI and
-   * MatScouts instead of an argument about our weighting.
-   */
-  const stars = input.nationallyRanked ? 5 : starsForScore(score)
-
   // Rating somebody off almost nothing is how a rating loses its credibility. Say so instead.
   const provisional = input.strength.bouts < 10 && input.exposure.events === 0
+
+  /**
+   * Five stars needs a national ranking AND a record behind it. Both, not either.
+   *
+   * The ranking is necessary: no résumé we can assemble earns five on its own, which keeps
+   * the top band a fact we point at rather than a judgement we defend.
+   *
+   * But it is not sufficient. Devin Hord is ranked #19 nationally as a Class of 2030 freshman
+   * with no bouts, no placement and nothing else on file — a national outlet projecting a
+   * ninth grader, which is exactly the kind of projection this rating exists not to launder.
+   * A ranking with no record behind it holds at four and says "provisional" until there is
+   * one.
+   */
+  const stars = input.nationallyRanked
+    ? provisional
+      ? 4
+      : Math.max(5, starsForScore(score))
+    : starsForScore(score)
 
   return { stars, score, components, provisional }
 }

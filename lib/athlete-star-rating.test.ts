@@ -65,8 +65,9 @@ describe("the five-star gate", () => {
     expect(rateAthlete({ ...ELITE, nationallyRanked: true }).stars).toBe(5)
   })
 
-  it("awards five on the national ranking alone, whatever the résumé", () => {
-    // The rule is the rule: a ranked wrestler with nothing else on file is still a five.
+  it("holds a ranked wrestler with no record at four, not five", () => {
+    // Devin Hord: ranked #19 nationally as a Class of 2030 freshman with nothing on file.
+    // A national outlet projecting a ninth grader is not a record, and five stars needs one.
     const thin: StarRatingInput = {
       exposure: noExposure,
       strength: noSeason,
@@ -75,7 +76,23 @@ describe("the five-star gate", () => {
       statePlaces: [],
       nationallyRanked: true,
     }
-    expect(rateAthlete(thin).stars).toBe(5)
+    const rating = rateAthlete(thin)
+    expect(rating.stars).toBe(4)
+    expect(rating.provisional).toBe(true)
+  })
+
+  it("does not drop a ranked wrestler below four just because the record is thin", () => {
+    // The ranking is still a real credential; it floors them at four rather than scoring them.
+    expect(
+      rateAthlete({
+        exposure: noExposure,
+        strength: { ...noSeason, bouts: 3, wins: 1, losses: 2 },
+        prospectRanking: null,
+        rankingPublished: false,
+        statePlaces: [],
+        nationallyRanked: true,
+      }).stars,
+    ).toBe(4)
   })
 
   it("never reaches five through the score bands", () => {
