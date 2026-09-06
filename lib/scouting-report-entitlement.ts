@@ -21,8 +21,12 @@ export const SCOUTING_REPORT_PRICES = {
   /**
    * The RecruitNC monthly membership: unlimited scouting reports, full rankings, and the
    * other recruiting services. Priced as one thing because it is sold as one thing.
+   *
+   * Deliberately two single reports. At 2x the one-off the upgrade is arithmetic a buyer does
+   * without thinking; at 3x they stop and decide to buy just the one, and one-off buyers do
+   * not come back the way subscribers do.
    */
-  subscription: 1499,
+  subscription: 999,
 } as const
 
 export type ScoutingPurchaseKind = keyof typeof SCOUTING_REPORT_PRICES

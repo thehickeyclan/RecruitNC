@@ -552,7 +552,7 @@ function ScoutingReportPaywall({ athleteId }: { athleteId: string }) {
                 Every scouting report, full rankings, cancel any time
               </span>
             </span>
-            <span className="text-lg font-black">$14.99/mo</span>
+            <span className="text-lg font-black">$9.99/mo</span>
           </button>
         </div>
 

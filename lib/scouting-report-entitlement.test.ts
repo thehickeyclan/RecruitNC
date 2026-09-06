@@ -116,6 +116,11 @@ describe("isSubscriptionLive", () => {
 describe("prices", () => {
   it("are the agreed figures", () => {
     expect(formatPrice(SCOUTING_REPORT_PRICES.single)).toBe("$4.99")
-    expect(formatPrice(SCOUTING_REPORT_PRICES.subscription)).toBe("$14.99")
+    expect(formatPrice(SCOUTING_REPORT_PRICES.subscription)).toBe("$9.99")
+  })
+
+  it("keeps the subscription at twice the single report", () => {
+    // The upgrade has to stay obvious: two reports pay for a month.
+    expect(SCOUTING_REPORT_PRICES.subscription).toBe(SCOUTING_REPORT_PRICES.single * 2 + 1)
   })
 })
