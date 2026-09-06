@@ -10,6 +10,7 @@ import {
   summaryFacts,
 } from "@/lib/scouting-report"
 import { scoutingAccessTier, watermarkLine } from "@/lib/scouting-report-access"
+import { canAccessScoutingReport } from "@/lib/scouting-report-release"
 
 /**
  * The printable scouting report behind the coach-only export.
@@ -41,7 +42,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     .maybeSingle()
 
   const viewer = classifyViewer(profile ?? null)
-  const allowed = viewer.isCollegeCoach || viewer.kind === "admin" || profile?.is_admin === true
+  // Pre-launch this is an explicit allowlist and nothing else — see scouting-report-release.
+  const allowed = canAccessScoutingReport({
+    email: (profile?.email as string) ?? user.email,
+    isCollegeCoach: viewer.isCollegeCoach,
+    isAdmin: viewer.kind === "admin" || profile?.is_admin === true,
+  })
   if (!allowed) {
     return NextResponse.json(
       { error: "Scouting reports are available to college coaches." },

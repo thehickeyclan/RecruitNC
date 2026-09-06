@@ -22,7 +22,6 @@ import { RequestProfileEditModal } from "./request-profile-edit-modal"
 import { MatchDataSectionImproved } from "./match-data-section-improved"
 import { SignificantWinsSection } from "./significant-wins-section"
 import { useAuth } from "@/contexts/auth-context"
-import { classifyViewer } from "@/lib/viewer-role"
 import { InlineEditSection } from "./inline-edit-section"
 import { InlineEditHeader } from "./inline-edit-header"
 import { ImageUploadEditor } from "./image-upload-editor"
@@ -149,9 +148,12 @@ export function AthleteDetail({
 }: AthleteDetailProps) {
   const isDark = theme === "dark"
   const { isAdmin, isVerifiedCoach, profile: viewerProfile } = useAuth()
-  // classifyViewer rather than comparing role strings here: roles are stored in both
-  // "college-coach" and "college_coach" spellings and a literal compare misses half of them.
-  const isCollegeCoach = classifyViewer(viewerProfile ?? null).isCollegeCoach || isAdmin
+  /**
+   * The server decides who sees the scouting report, so the entry point cannot drift from the
+   * endpoint. Pre-launch that is an explicit allowlist rather than a role, which is why this
+   * does not just check isCollegeCoach — see lib/scouting-report-release.ts.
+   */
+  const canSeeScoutingReport = viewerProfile?.scouting_report_access === true
   const [imageError, setImageError] = useState(false)
   const [highSchoolLogo, setHighSchoolLogo] = useState<string | null>(null)
   const [highSchoolLogoLoadError, setHighSchoolLogoLoadError] = useState(false)
@@ -1348,7 +1350,7 @@ export function AthleteDetail({
 
       {/* Recruiters want one page they can take into a staff meeting. Coaches only — the
           report pulls academics and results together in a way the public profile does not. */}
-      {isCollegeCoach && (
+      {canSeeScoutingReport && (
         <div className="px-1">
           <a
             href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`}

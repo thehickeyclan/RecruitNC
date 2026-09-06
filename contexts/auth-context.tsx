@@ -19,6 +19,8 @@ interface UserProfile {
   school_id?: string
   profile_type?: string
   verification_status?: string
+  /** Server-decided: may this account open a scouting report? Pre-launch this is an allowlist. */
+  scouting_report_access?: boolean
   created_at: string
   updated_at: string
 }

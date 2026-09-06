@@ -3,6 +3,8 @@ import { createAdminClient, createAdminClientFresh } from "@/lib/supabase/admin"
 import { runGuildLinkForProfile } from "@/lib/guild-auto-link"
 import { buildUserProfileUpsertPayload } from "@/lib/user-profile-from-auth"
 import { NextResponse } from "next/server"
+import { classifyViewer } from "@/lib/viewer-role"
+import { canAccessScoutingReport } from "@/lib/scouting-report-release"
 
 export async function GET() {
   try {
@@ -74,9 +76,19 @@ export async function GET() {
       }
     }
 
+    // Server decides who sees the scouting report entry point. The client cannot be trusted
+    // with the allowlist, and putting account emails in a NEXT_PUBLIC var would leak them.
+    const viewer = classifyViewer(profileRow as Record<string, unknown>)
+    const scoutingReportAccess = canAccessScoutingReport({
+      email: (profileRow.email as string) ?? user.email,
+      isCollegeCoach: viewer.isCollegeCoach,
+      isAdmin: viewer.kind === "admin" || profileRow.is_admin === true,
+    })
+
     return NextResponse.json({
       ...profileRow,
       name: profileRow.full_name ?? profileRow.name ?? "",
+      scouting_report_access: scoutingReportAccess,
     })
   } catch (error: unknown) {
     console.error("[api/profile] unexpected:", error)
