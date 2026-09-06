@@ -111,6 +111,19 @@ Most entrants will not match, and that is expected — these events draw heavily
 state. Unlinked rows stay in the table as the event record; they just do not appear on a
 profile.
 
+## Club corrections
+
+Bracket operators mistype club names, and the team is not cosmetic: it is half the key that
+separates two wrestlers with the same name, and it is used to pick between same-named
+profiles. Fixes go in `CLUB_CORRECTIONS` (`lib/other-tournament-import.ts`), applied to the
+raw rows before anything keys off the team, so re-importing the export keeps them. Never
+hand-edit the database or the source CSV.
+
+Scope a correction to one athlete unless the whole team label is confirmed wrong. The VA
+bracket listed Gavin Hickey as "Roanoke Area Wrestling" when he wrestles for Raleigh Area
+Wrestling — but the three other wrestlers under that label (Christopher Verner, Maximus
+Milette, Brady Booth) are genuinely Roanoke, so the correction names Gavin only.
+
 ## What the data feeds
 
 - **Profile → Other Tournaments** (above Super 32): placement, record, field size, the

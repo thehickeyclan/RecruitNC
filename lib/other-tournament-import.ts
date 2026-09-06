@@ -210,9 +210,10 @@ export function isThirdPlaceRound(round: string): boolean {
  * same-named profiles. Corrections live in code rather than being hand-edited in the
  * database or in the source CSV, so re-importing the export keeps them.
  *
- * Scope each entry to one athlete unless the whole team label is confirmed wrong — the VA
- * bracket also listed three other wrestlers as "Roanoke Area Wrestling" and those have not
- * been confirmed either way.
+ * Scope each entry to one athlete unless the whole team label is confirmed wrong. The VA
+ * bracket listed three other wrestlers as "Roanoke Area Wrestling" — Christopher Verner,
+ * Maximus Milette and Brady Booth — and those are genuinely Roanoke, confirmed by Matt.
+ * Only Gavin Hickey's entry was mistyped. Do not widen this to the club label.
  */
 export type ClubCorrection = {
   eventKey: string
