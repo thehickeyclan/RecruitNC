@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { auditIpFrom, recordAthleteEvent } from "@/lib/athlete-audit"
+import { notifyProfileClaim } from "@/lib/profile-claim-notify"
 
 /**
  * Connect a signed-in account to an existing athlete.
@@ -70,6 +71,15 @@ export async function POST(request: NextRequest) {
         ipAddress: auditIpFrom(request),
       })
 
+      await notifyProfileClaim({
+        athleteId,
+        athleteName: String(athlete.name ?? "Athlete"),
+        relationship: "parent",
+        claimantName: null,
+        claimantEmail: user.email ?? null,
+        previousOwnerUserId: null,
+      })
+
       return NextResponse.json({
         success: true,
         relationship,
@@ -119,6 +129,18 @@ export async function POST(request: NextRequest) {
       previousDetail: previousOwner ? `claimed by ${previousOwner}` : "unclaimed",
       detail: `claimed by ${user.id}${user.email ? ` (${user.email})` : ""}`,
       ipAddress: auditIpFrom(request),
+    })
+
+    // A claim is immediate and unreviewed, so staff hear about it. Never awaited into the
+    // response path in a way that could fail the claim — notifyProfileClaim swallows its own
+    // errors.
+    await notifyProfileClaim({
+      athleteId,
+      athleteName: String(athlete.name ?? "Athlete"),
+      relationship: "self",
+      claimantName: null,
+      claimantEmail: user.email ?? null,
+      previousOwnerUserId: previousOwner,
     })
 
     return NextResponse.json({
