@@ -5,7 +5,7 @@ import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Award, ChevronDown, Edit, ExternalLink, GraduationCap, Mail, Phone, Share2, TrendingUp, Trophy, Video } from "lucide-react"
+import { Award, ChevronDown, Edit, ExternalLink, FileText, GraduationCap, Mail, Phone, Share2, TrendingUp, Trophy, Video } from "lucide-react"
 import { UnifiedProfileMobileNav } from "./unified-profile-mobile-nav"
 import { ProfileQualityWinsSection } from "@/components/profile-quality-wins-section"
 import type { ProfileQualityWinsTournamentBlock } from "@/lib/profile-quality-wins"
@@ -22,6 +22,7 @@ import { RequestProfileEditModal } from "./request-profile-edit-modal"
 import { MatchDataSectionImproved } from "./match-data-section-improved"
 import { SignificantWinsSection } from "./significant-wins-section"
 import { useAuth } from "@/contexts/auth-context"
+import { classifyViewer } from "@/lib/viewer-role"
 import { InlineEditSection } from "./inline-edit-section"
 import { InlineEditHeader } from "./inline-edit-header"
 import { ImageUploadEditor } from "./image-upload-editor"
@@ -146,7 +147,10 @@ export function AthleteDetail({
   mobileRecruiterLayout = false,
 }: AthleteDetailProps) {
   const isDark = theme === "dark"
-  const { isAdmin, isVerifiedCoach } = useAuth()
+  const { isAdmin, isVerifiedCoach, profile: viewerProfile } = useAuth()
+  // classifyViewer rather than comparing role strings here: roles are stored in both
+  // "college-coach" and "college_coach" spellings and a literal compare misses half of them.
+  const isCollegeCoach = classifyViewer(viewerProfile ?? null).isCollegeCoach || isAdmin
   const [imageError, setImageError] = useState(false)
   const [highSchoolLogo, setHighSchoolLogo] = useState<string | null>(null)
   const [highSchoolLogoLoadError, setHighSchoolLogoLoadError] = useState(false)
@@ -1340,6 +1344,20 @@ export function AthleteDetail({
           <UnifiedProfileMobileNav showQualityWins={profileQualityWins.length > 0} />
         </div>
       ) : null}
+
+      {/* Recruiters want one page they can take into a staff meeting. Coaches only — the
+          report pulls academics and results together in a way the public profile does not. */}
+      {isCollegeCoach && (
+        <div className="px-1">
+          <a
+            href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`}
+            className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-[#D3B574] bg-[#D3B574]/10 px-4 py-2 text-sm font-semibold text-[#D3B574] transition-colors hover:bg-[#D3B574]/20"
+          >
+            <FileText className="h-4 w-4" />
+            Scouting report (PDF)
+          </a>
+        </div>
+      )}
 
       {/* Athletes create their own profiles, so a parent never fills in a form — the only
           thing they need is to tie their account to a profile that already exists, and this

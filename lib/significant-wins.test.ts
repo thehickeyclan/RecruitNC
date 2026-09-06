@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { findSignificantWins, isWin, type OpponentIndex } from "./significant-wins"
+import { findSignificantLosses, findSignificantWins, isLoss, isWin, type OpponentIndex } from "./significant-wins"
 
 const index: OpponentIndex = {
   tocField: ["Adam Walker", "Liam Myles"],
@@ -77,6 +77,44 @@ describe("findSignificantWins", () => {
   it("reads an opponent stored under the other field name", () => {
     const wins = findSignificantWins([{ opponent_name: "Adam Walker", win_loss: "W" }], index)
     expect(wins).toHaveLength(1)
+  })
+})
+
+describe("findSignificantLosses", () => {
+  it("keeps a loss to somebody in the TOC field", () => {
+    const losses = findSignificantLosses([bout({ win_loss: "L" })], index)
+    expect(losses).toHaveLength(1)
+    expect(losses[0]).toMatchObject({ opponent: "Adam Walker", reason: "toc-field" })
+  })
+
+  it("keeps a loss to a ranked prospect", () => {
+    const losses = findSignificantLosses([bout({ opponent: "Jack Gilson", win_loss: "L" })], index)
+    expect(losses).toHaveLength(1)
+    expect(losses[0]).toMatchObject({ reason: "ranked" })
+  })
+
+  it("ignores a loss to somebody nobody has heard of", () => {
+    expect(findSignificantLosses([bout({ opponent: "Unknown Kid", win_loss: "L" })], index)).toEqual([])
+  })
+
+  it("does not report wins as losses, or losses as wins", () => {
+    const bouts = [bout({ win_loss: "W" }), bout({ opponent: "Liam Myles", win_loss: "L" })]
+    expect(findSignificantWins(bouts, index).map((w) => w.opponent)).toEqual(["Adam Walker"])
+    expect(findSignificantLosses(bouts, index).map((w) => w.opponent)).toEqual(["Liam Myles"])
+  })
+
+  it("collapses the same loss stored twice", () => {
+    const twice = [bout({ win_loss: "L" }), bout({ win_loss: "L" })]
+    expect(findSignificantLosses(twice, index)).toHaveLength(1)
+  })
+})
+
+describe("isLoss", () => {
+  it("reads the spellings a bout row actually uses", () => {
+    expect(isLoss({ win_loss: "L" })).toBe(true)
+    expect(isLoss({ result: "LOSS" })).toBe(true)
+    expect(isLoss({ win_loss: "W" })).toBe(false)
+    expect(isLoss({ win_loss: "" })).toBe(false)
   })
 })
 

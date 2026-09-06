@@ -65,6 +65,12 @@ export function isWin(bout: Bout): boolean {
   return outcome === "W" || outcome.startsWith("W ") || outcome.includes("WIN")
 }
 
+/** A loss, however the row spells it. */
+export function isLoss(bout: Bout): boolean {
+  const outcome = String(bout.win_loss ?? bout.result ?? "").trim().toUpperCase()
+  return outcome === "L" || outcome.startsWith("L ") || outcome.includes("LOSS")
+}
+
 function toWeight(value: Bout["weight"]): number | null {
   const parsed = Number(value)
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null
@@ -78,11 +84,33 @@ function toWeight(value: Bout["weight"]): number | null {
  * with a win over somebody they never met.
  */
 export function findSignificantWins(bouts: readonly Bout[], index: OpponentIndex): SignificantWin[] {
+  return findSignificantBouts(bouts, index, "win")
+}
+
+/**
+ * The significant losses in a bout list, newest first.
+ *
+ * A scouting report is not a highlight reel. A college coach reading one wants to know who
+ * beat this wrestler as much as who they beat — a narrow loss to the state champion says
+ * something a win column cannot. Same bar as the wins: it only counts against somebody the
+ * reader has heard of, so this stays a short list of meaningful results rather than a dump
+ * of every dropped match.
+ */
+export function findSignificantLosses(bouts: readonly Bout[], index: OpponentIndex): SignificantWin[] {
+  return findSignificantBouts(bouts, index, "loss")
+}
+
+function findSignificantBouts(
+  bouts: readonly Bout[],
+  index: OpponentIndex,
+  outcome: "win" | "loss",
+): SignificantWin[] {
   const wins: SignificantWin[] = []
   const seen = new Set<string>()
+  const matchesOutcome = outcome === "win" ? isWin : isLoss
 
   for (const bout of bouts) {
-    if (!isWin(bout)) continue
+    if (!matchesOutcome(bout)) continue
     const name = opponentName(bout)
     if (!name) continue
 

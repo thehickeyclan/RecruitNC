@@ -395,13 +395,16 @@ export async function getOtherTournamentProfileBlocks(
 export async function getQualifierSignificantWinBouts(
   supabase: SupabaseClient,
   athleteId: string,
+  /** "wins" for the profile list; "all" for a scouting report, which names losses too. */
+  include: "wins" | "all" = "wins",
 ): Promise<Bout[]> {
   if (!athleteId?.trim()) return []
-  const { data, error } = await supabase
+  let query = supabase
     .from("other_tournament_bouts")
     .select("opponent_name, opponent_club, win, is_bye, win_type, score, weight_class, event_name, event_date")
     .eq("athlete_id", athleteId)
-    .eq("win", true)
+  if (include === "wins") query = query.eq("win", true)
+  const { data, error } = await query
   if (error || !data) return []
 
   const cutoff = Date.now() - HEAD_TO_HEAD_WINDOW_DAYS * 86_400_000
@@ -413,7 +416,7 @@ export async function getQualifierSignificantWinBouts(
     out.push({
       opponent: displayName(String(row.opponent_name)),
       opponent_school: (row.opponent_club as string) ?? null,
-      win_loss: "W",
+      win_loss: row.win ? "W" : "L",
       result: [row.win_type, row.score].filter(Boolean).join(" ").trim() || null,
       date: (row.event_date as string) ?? null,
       venue: (row.event_name as string) ?? null,
