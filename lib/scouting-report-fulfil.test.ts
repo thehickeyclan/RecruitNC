@@ -69,7 +69,7 @@ describe("fulfilScoutingReportCheckout", () => {
       stripeSubscriptionId: "sub_1",
     })
     expect(result).toEqual({ ok: true, granted: "subscription" })
-    expect(calls[0]!.table).toBe("scouting_report_subscriptions")
+    expect(calls[0]!.table).toBe("recruitnc_subscriptions")
     expect(calls[0]!.onConflict).toBe("user_id")
     expect(calls[0]!.row).toMatchObject({ user_id: "u1", status: "active", stripe_subscription_id: "sub_1" })
   })

@@ -21,8 +21,9 @@ CREATE TABLE IF NOT EXISTS scouting_report_purchases (
 
 CREATE INDEX IF NOT EXISTS scouting_report_purchases_user_idx ON scouting_report_purchases (user_id);
 
--- Unlimited access while the subscription is live.
-CREATE TABLE IF NOT EXISTS scouting_report_subscriptions (
+-- The RecruitNC monthly membership. Named for the membership rather than one feature: it
+-- carries unlimited scouting reports, full rankings, and the other recruiting services.
+CREATE TABLE IF NOT EXISTS recruitnc_subscriptions (
   id                     uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id                uuid NOT NULL UNIQUE,
   stripe_customer_id     text,
@@ -34,10 +35,10 @@ CREATE TABLE IF NOT EXISTS scouting_report_subscriptions (
   updated_at             timestamptz NOT NULL DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS scouting_report_subscriptions_user_idx ON scouting_report_subscriptions (user_id);
+CREATE INDEX IF NOT EXISTS recruitnc_subscriptions_user_idx ON recruitnc_subscriptions (user_id);
 
 ALTER TABLE scouting_report_purchases     ENABLE ROW LEVEL SECURITY;
-ALTER TABLE scouting_report_subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE recruitnc_subscriptions     ENABLE ROW LEVEL SECURITY;
 
 COMMENT ON TABLE scouting_report_purchases IS 'One-off $4.99 report purchases. Entitlement only — never gates contact details or academics, which follow coach verification.';
-COMMENT ON TABLE scouting_report_subscriptions IS 'Unlimited $14.99/month scouting report access.';
+COMMENT ON TABLE recruitnc_subscriptions IS 'RecruitNC monthly membership: unlimited scouting reports, full rankings, and other recruiting services.';

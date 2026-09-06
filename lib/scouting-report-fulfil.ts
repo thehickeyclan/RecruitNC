@@ -1,5 +1,5 @@
 /**
- * Turn a paid Stripe session into scouting report access.
+ * Turn a paid Stripe session into access.
  *
  * Split out of the webhook so the decision — what a given session grants — is readable and
  * testable on its own. The webhook file is nine hundred lines of other people's channels.
@@ -50,7 +50,7 @@ export async function fulfilScoutingReportCheckout(
   const kind = String(params.metadata.kind ?? "single")
 
   if (kind === "subscription") {
-    const { error } = await supabase.from("scouting_report_subscriptions").upsert(
+    const { error } = await supabase.from("recruitnc_subscriptions").upsert(
       {
         user_id: userId,
         stripe_customer_id: params.stripeCustomerId,
@@ -92,7 +92,7 @@ export async function syncScoutingSubscriptionStatus(
   params: { stripeSubscriptionId: string; status: string; currentPeriodEnd: string | null },
 ): Promise<boolean> {
   const { error } = await supabase
-    .from("scouting_report_subscriptions")
+    .from("recruitnc_subscriptions")
     .update({
       status: params.status,
       current_period_end: params.currentPeriodEnd,

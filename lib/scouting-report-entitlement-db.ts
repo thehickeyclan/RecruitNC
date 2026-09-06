@@ -40,7 +40,7 @@ export async function hasActiveSubscription(
   userId: string,
 ): Promise<boolean> {
   const { data } = await supabase
-    .from("scouting_report_subscriptions")
+    .from("recruitnc_subscriptions")
     .select("status, current_period_end")
     .eq("user_id", userId)
     .maybeSingle()
