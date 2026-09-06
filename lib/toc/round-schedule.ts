@@ -43,8 +43,8 @@ export const FRIDAY_ROUNDS: readonly ScheduledRound[] = [
 export const SATURDAY_ROUNDS: readonly ScheduledRound[] = [
   { time: "9:00 AM", label: "Consolation 1st Round", kind: "consolation", tag: "C1", detail: "Friday's first-round losers. Two mats." },
   { time: "10:30 AM", label: "Championship Semifinals", kind: "championship", tag: "R2", detail: "Two mats." },
-  { time: "12:00 PM", label: "Consolation Semifinals", kind: "consolation", tag: "C2", detail: "Starts once the semifinals finish — it needs their losers." },
-  { time: "1:30 PM", label: "Third Place", kind: "consolation", tag: "C3", detail: "One per weight. TOC places the top three." },
+  { time: "12:00 PM", label: "Consolation Semifinals", kind: "consolation", tag: "C2", detail: "Two mats. Starts once the semifinals finish — it needs their losers." },
+  { time: "1:30 PM", label: "Third Place", kind: "consolation", tag: "C3", detail: "One per weight, two mats. The last medal — TOC places the top three." },
   { time: "2:30 PM", label: "The Giving Hour", kind: "ceremony", detail: "Vendor raffle, the Caden Perry Warrior Scholarship and our guest speaker." },
   { time: "3:30 PM", label: "Parade of Finalists", kind: "ceremony", detail: "All finalists walk out together, then the national anthem." },
   { time: "4:00 PM", label: "Championship Finals", kind: "finals", tag: "F", detail: "One mat, all ten weights, awards after each." },
