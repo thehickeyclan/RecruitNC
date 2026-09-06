@@ -1,5 +1,5 @@
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
-import { TOC_MAX_CONFIRMED_PER_WEIGHT, type TocInvitationStatus } from "@/lib/toc/invitations"
+import { tocBracketSize, type TocInvitationStatus } from "@/lib/toc/invitations"
 
 export type TocFieldAthlete = {
   invitationId: string
@@ -180,7 +180,8 @@ export function buildTocFieldBoard(invitations: RawInvitation[]): TocFieldBoard 
     const athletes = (byWeight.get(weightClass) ?? []).sort(sortAthletes)
     const confirmedCount = athletes.filter((a) => a.status === "confirmed").length
     const invitedCount = athletes.filter((a) => a.status === "invited").length
-    const maxSlots = confirmedCount > 8 ? TOC_MAX_CONFIRMED_PER_WEIGHT : 8
+    // The bracket is a fixed size per weight; it does not grow because somebody confirmed.
+    const maxSlots = tocBracketSize(weightClass)
     totalConfirmed += confirmedCount
     totalInvited += invitedCount
     if (confirmedCount >= 8) fullBrackets += 1

@@ -1,6 +1,30 @@
 import { z } from "zod"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 
+/**
+ * The bracket actually being run at each weight this year.
+ *
+ * Eight everywhere, nine at 133 — which is why Friday opens with the 133 pigtail. The board
+ * used to infer the size from how many had confirmed, so the moment a ninth landed at 133 it
+ * jumped to the engine's 12-wrestler ceiling and offered three slots into a full bracket.
+ * Planned size is a decision, not something to read back out of the confirmations.
+ */
+export const TOC_DEFAULT_BRACKET_SIZE = 8 as const
+export const TOC_BRACKET_SIZE_BY_WEIGHT: Readonly<Record<number, number>> = { 133: 9 }
+
+export function tocBracketSize(weightClass: number | string | null | undefined): number {
+  const weight = Number(weightClass)
+  if (!Number.isFinite(weight)) return TOC_DEFAULT_BRACKET_SIZE
+  return TOC_BRACKET_SIZE_BY_WEIGHT[weight] ?? TOC_DEFAULT_BRACKET_SIZE
+}
+
+/**
+ * What the bracket engine can draw, not what this year's field is.
+ *
+ * buildEightManDeDraw expands a 9-12 wrestler field into a 16-slot draw with consolation
+ * routing, and that capability is tested. Do not lower this to match a given year's field —
+ * the field size belongs in TOC_BRACKET_SIZE_BY_WEIGHT, which is what the board plans from.
+ */
 export const TOC_MAX_CONFIRMED_PER_WEIGHT = 12 as const
 
 export const TOC_JACKET_SIZES = ["AS", "AM", "AL", "AXL", "A2XL", "A3XL"] as const
