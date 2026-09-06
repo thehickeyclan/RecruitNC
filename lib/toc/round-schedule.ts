@@ -32,8 +32,11 @@ export const ROUND_KIND_LABEL: Record<RoundKind, string> = {
 export const FRIDAY_ROUNDS: readonly ScheduledRound[] = [
   { time: "4:00 – 5:00 PM", label: "Weigh-in & skin check", kind: "ceremony", detail: "One weigh-in for the weekend. Flat weight, no allowance." },
   { time: "5:30 PM", label: "Opening ceremony", kind: "ceremony", detail: "Athlete walkout, welcome, prayer and the national anthem." },
-  { time: "6:00 PM", label: "133 lbs pigtail", kind: "championship", tag: "PG", detail: "The one weight with nine wrestlers." },
-  { time: "6:00 PM", label: "Round 1", kind: "championship", tag: "R1", detail: "Every weight, two mats. Four bouts per weight." },
+  // The 133 pigtail is part of Round 1 here rather than its own row. It runs first on the
+  // night — see /run-sheet, where the crew needs that ordering — but a family reading this
+  // wants to know when their wrestler is on, and two rows at the same time only asks them to
+  // work out which one applies to them.
+  { time: "6:00 PM", label: "Round 1", kind: "championship", tag: "R1", detail: "Every weight, two mats. Four bouts per weight — five at 133 lbs, which has nine wrestlers." },
   { time: "~9:00 PM", label: "Session ends", kind: "ceremony" },
 ]
 
