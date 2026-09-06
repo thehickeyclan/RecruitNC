@@ -21,6 +21,7 @@ import type { ScoutingReport } from "@/lib/scouting-report"
 export function ScoutingReportClient({ athleteId }: { athleteId: string }) {
   const [report, setReport] = useState<ScoutingReport | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [purchasable, setPurchasable] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -29,8 +30,11 @@ export function ScoutingReportClient({ athleteId }: { athleteId: string }) {
       .then(async (res) => {
         const data = await res.json().catch(() => ({}))
         if (cancelled) return
-        if (!res.ok) setError(data?.error ?? `Error ${res.status}`)
-        else setReport(data.report as ScoutingReport)
+        if (!res.ok) {
+          setError(data?.error ?? `Error ${res.status}`)
+          // 402 means paying would help — show the offer rather than a dead end.
+          setPurchasable(res.status === 402 && data?.purchasable === true)
+        } else setReport(data.report as ScoutingReport)
       })
       .catch((e) => !cancelled && setError(e?.message ?? "Failed to load"))
       .finally(() => !cancelled && setLoading(false))
@@ -45,6 +49,10 @@ export function ScoutingReportClient({ athleteId }: { athleteId: string }) {
         <Loader2 className="mr-2 h-5 w-5 animate-spin" /> Building scouting report…
       </div>
     )
+  }
+
+  if (purchasable) {
+    return <ScoutingReportPaywall athleteId={athleteId} />
   }
 
   if (error || !report) {
@@ -472,5 +480,87 @@ function BoutTable({ rows, kind }: { rows: ScoutingReport["significantWins"]; ki
         </tr>
       ))}
     </Table>
+  )
+}
+
+/**
+ * The offer, shown when the report exists but this account has not paid for it.
+ *
+ * Says plainly what is and is not in it. A buyer who expects a phone number and finds the
+ * competition record is a refund; contact details and academics follow coach verification and
+ * are not for sale, so the offer had better not imply otherwise.
+ */
+function ScoutingReportPaywall({ athleteId }: { athleteId: string }) {
+  const [busy, setBusy] = useState<"single" | "subscription" | null>(null)
+
+  async function buy(kind: "single" | "subscription") {
+    setBusy(kind)
+    try {
+      const res = await fetch("/api/scouting-report/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ athleteId, kind }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (data?.url) window.location.href = data.url as string
+      else {
+        setBusy(null)
+        alert(data?.error ?? "Could not start checkout.")
+      }
+    } catch {
+      setBusy(null)
+      alert("Could not start checkout.")
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-[#0A1628] px-4 py-16">
+      <div className="mx-auto max-w-lg rounded-sm border border-white/10 bg-[#0f1c2e] p-6">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D3B574]">Scouting report</p>
+        <h1 className="mt-2 text-2xl font-black text-white">See the full report</h1>
+        <p className="mt-2 text-sm text-white/60">
+          Competition record, significant wins and losses against ranked and Tournament of
+          Champions wrestlers, strength of schedule, and the national picture.
+        </p>
+        <p className="mt-2 text-xs text-white/40">
+          Contact details and academic records are released to verified college coaching staff
+          only, and are not part of a purchase.
+        </p>
+
+        <div className="mt-6 space-y-3">
+          <button
+            onClick={() => void buy("single")}
+            disabled={busy !== null}
+            className="flex min-h-[52px] w-full items-center justify-between rounded-sm bg-[#B31B1B] px-4 text-left text-white hover:bg-[#8f1616] disabled:opacity-60"
+          >
+            <span>
+              <span className="block text-sm font-bold">This report</span>
+              <span className="block text-xs text-white/70">One athlete, keep it for good</span>
+            </span>
+            <span className="text-lg font-black">$4.99</span>
+          </button>
+
+          <button
+            onClick={() => void buy("subscription")}
+            disabled={busy !== null}
+            className="flex min-h-[52px] w-full items-center justify-between rounded-sm border border-[#D3B574] bg-transparent px-4 text-left text-[#D3B574] hover:bg-[#D3B574]/10 disabled:opacity-60"
+          >
+            <span>
+              <span className="block text-sm font-bold">Unlimited reports</span>
+              <span className="block text-xs text-[#D3B574]/70">Every athlete, cancel any time</span>
+            </span>
+            <span className="text-lg font-black">$14.99/mo</span>
+          </button>
+        </div>
+
+        <p className="mt-5 text-xs text-white/40">
+          Your own wrestler&rsquo;s report is always free — claim their profile to see it.
+        </p>
+        <Link href={`/unified-profile/${athleteId}`} className="mt-4 inline-block text-sm text-white/50 hover:text-white/80">
+          Back to profile
+        </Link>
+      </div>
+    </div>
   )
 }

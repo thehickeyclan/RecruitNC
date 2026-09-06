@@ -10,7 +10,7 @@ import {
   summaryFacts,
 } from "@/lib/scouting-report"
 import { scoutingAccessTier, watermarkLine } from "@/lib/scouting-report-access"
-import { canAccessScoutingReport } from "@/lib/scouting-report-release"
+import { loadScoutingEntitlement } from "@/lib/scouting-report-entitlement-db"
 
 /**
  * The printable scouting report behind the coach-only export.
@@ -42,16 +42,31 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     .maybeSingle()
 
   const viewer = classifyViewer(profile ?? null)
-  // Pre-launch this is an explicit allowlist and nothing else — see scouting-report-release.
-  const allowed = canAccessScoutingReport({
-    email: (profile?.email as string) ?? user.email,
+  const isAdmin = viewer.kind === "admin" || profile?.is_admin === true
+
+  /**
+   * Access is decided in one place — pre-launch allowlist, then free reasons (admin, college
+   * coach, their own wrestler), then a subscription or a purchase of this report.
+   *
+   * A refusal reports whether paying would help, so the page can show a paywall rather than a
+   * dead end, and 402 distinguishes "you could buy this" from a plain 403.
+   */
+  const entitlement = await loadScoutingEntitlement(admin, {
+    userId: user.id,
+    email: (profile?.email as string) ?? user.email ?? null,
+    athleteId: id,
+    isAdmin,
     isCollegeCoach: viewer.isCollegeCoach,
-    isAdmin: viewer.kind === "admin" || profile?.is_admin === true,
   })
-  if (!allowed) {
+  if (!entitlement.canAccess) {
     return NextResponse.json(
-      { error: "Scouting reports are available to college coaches." },
-      { status: 403 },
+      {
+        error: entitlement.purchasable
+          ? "This scouting report requires a subscription or a single-report purchase."
+          : "Scouting reports are not available on this account.",
+        purchasable: entitlement.purchasable,
+      },
+      { status: entitlement.purchasable ? 402 : 403 },
     )
   }
 
@@ -62,7 +77,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
   // Two grants: a .edu address unlocks browsing, a human check against the program's staff
   // directory unlocks the portable document with the athlete's contact and academics in it.
-  const isAdmin = viewer.kind === "admin" || profile?.is_admin === true
   const tier = scoutingAccessTier({
     isCollegeCoach: viewer.isCollegeCoach,
     isAdmin,

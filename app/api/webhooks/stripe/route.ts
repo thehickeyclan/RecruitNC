@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
+import {
+  fulfilScoutingReportCheckout,
+  isScoutingReportSession,
+  syncScoutingSubscriptionStatus,
+} from "@/lib/scouting-report-fulfil"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { sendNationalTeamFeeReceiptAutoIfEligible } from "@/lib/national-team-auto-fee-receipt"
 import { sendOrderReceiptIfEligible } from "@/lib/order-auto-receipt"
@@ -124,6 +129,17 @@ export async function POST(request: NextRequest) {
     const subscription = event.data.object as Stripe.Subscription
     const subId = subscription.id
     const isDeleted = event.type === "customer.subscription.deleted"
+
+    // A cancellation or a failed payment has to land, or unlimited reports stay free.
+    if (isScoutingReportSession(subscription.metadata)) {
+      const periodEnd = (subscription as { current_period_end?: number }).current_period_end
+      await syncScoutingSubscriptionStatus(createAdminClient(), {
+        stripeSubscriptionId: subId,
+        status: isDeleted ? "canceled" : String(subscription.status ?? ""),
+        currentPeriodEnd: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
+      })
+      return NextResponse.json({ received: true, channel: "scouting_report" })
+    }
     const mapped = mapStripeSubscriptionToMembershipStatus(subscription, { isDeleted })
     const updatePayload: Record<string, unknown> = {
       status: mapped.status,
@@ -907,6 +923,22 @@ export async function POST(request: NextRequest) {
     const customerId = typeof session.customer === "string" ? session.customer : session.customer?.id ?? null
     const subscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription?.id ?? null
     const paymentIntentId = typeof session.payment_intent === "string" ? session.payment_intent : (session.payment_intent as { id?: string })?.id
+
+    // Scouting reports are their own channel; nothing below this belongs to them.
+    if (isScoutingReportSession(session.metadata)) {
+      const result = await fulfilScoutingReportCheckout(admin, {
+        metadata: session.metadata ?? {},
+        sessionId: session.id ?? null,
+        amountTotal: session.amount_total ?? null,
+        stripeCustomerId: customerId,
+        stripeSubscriptionId: subscriptionId,
+        currentPeriodEnd: null,
+      })
+      if (!result.ok) {
+        console.error("[stripe webhook] scouting report fulfilment failed:", result.reason)
+      }
+      return NextResponse.json({ received: true, channel: "scouting_report" })
+    }
 
     const signupId = session.metadata?.signup_id
     if (signupId) {
