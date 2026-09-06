@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest"
 import {
   buildStrengthOfWins,
   displayName,
+  getOtherTournamentBoutsForAthleteRecord,
+  getOtherTournamentResultsForAthleteRecord,
   credentialKey,
   isNotableWin,
   loadQualifierHeadToHead,
@@ -57,6 +59,84 @@ describe("displayName", () => {
     expect(displayName("Jacob De La Torre")).toBe("Jacob De La Torre")
     expect(displayName("Kristopher Kerr Jr.")).toBe("Kristopher Kerr Jr.")
     expect(displayName("Stephen cross")).toBe("Stephen cross")
+  })
+})
+
+describe("late-created profile qualifier lookup", () => {
+  const resultRow = {
+    event_key: EVENT,
+    event_name: "NC Super 32 Early Entry",
+    event_short_name: "Super 32 Early Entry",
+    event_state: "NC",
+    event_date: "2026-09-05",
+    year: 2026,
+    athlete_name: "Ben McCaleb",
+    athlete_id: null,
+    club: "Sly fox",
+    weight_class: "190",
+    wins: 5,
+    losses: 1,
+    record: "5-1",
+    placement: 3,
+    qualified: true,
+    entrants: 10,
+  }
+  const boutRow = {
+    ...resultRow,
+    round: "3rd Place",
+    bout_order: 85,
+    opponent_name: "Jordan Barbee",
+    opponent_club: "Orange",
+    opponent_id: null,
+    win: true,
+    is_bye: false,
+    win_type: "DEC",
+    score: "5-4",
+  }
+
+  function fakeSupabase() {
+    return {
+      from(table: string) {
+        return {
+          select() {
+            return {
+              eq() {
+                if (table === "other_tournament_bouts") {
+                  return { order: () => Promise.resolve({ data: [], error: null }) }
+                }
+                return Promise.resolve({ data: [], error: null })
+              },
+              is() {
+                return {
+                  ilike: (_column: string, name: string) => Promise.resolve({
+                    data: name === "ben mccaleb" ? [table === "other_tournament_bouts" ? boutRow : resultRow] : [],
+                    error: null,
+                  }),
+                }
+              },
+            }
+          },
+        }
+      },
+    } as never
+  }
+
+  it("finds an unlinked result by name after the profile is created", async () => {
+    const rows = await getOtherTournamentResultsForAthleteRecord(fakeSupabase(), {
+      id: "new-profile-id",
+      name: "Ben Mccaleb",
+    })
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({ record: "5-1", placement: 3, qualified: true, weight: "190" })
+  })
+
+  it("finds the unlinked bouts needed by the profile result block", async () => {
+    const rows = await getOtherTournamentBoutsForAthleteRecord(fakeSupabase(), {
+      id: "new-profile-id",
+      name: "Ben Mccaleb",
+    })
+    expect(rows).toHaveLength(1)
+    expect(rows[0]).toMatchObject({ opponentName: "Jordan Barbee", win: true, score: "5-4" })
   })
 })
 

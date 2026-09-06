@@ -16,7 +16,7 @@ import {
   type TournamentResultForDisplay,
 } from "@/lib/public-profile-data"
 import {
-  getOtherTournamentResultsForAthlete,
+  getOtherTournamentResultsForAthleteRecord,
   type OtherTournamentResult,
 } from "@/lib/other-tournaments"
 
@@ -49,7 +49,7 @@ export async function loadAthleteTournamentBundle(
     getNHSCAForAthlete(supabase, athlete, { tablesAllTime: options?.nhscaAllTime === true }),
     getSuper32ForAthlete(supabase, athlete),
     getFargoForAthlete(supabase, athlete),
-    getOtherTournamentResultsForAthlete(supabase, String(athlete.id ?? "")),
+    getOtherTournamentResultsForAthleteRecord(supabase, athlete),
   ])
   return { nchsaa, nhsca, super32, fargo, other }
 }

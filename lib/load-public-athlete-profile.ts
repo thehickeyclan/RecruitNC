@@ -95,7 +95,7 @@ export async function loadPublicAthleteProfile(
       highSchool,
       gradYear,
     }),
-    getOtherTournamentProfileBlocks(client, trimmed),
+    getOtherTournamentProfileBlocks(client, athleteRow),
   ])
 
   const { nchsaa: nchsaaMergedRows, nhsca: nhscaMerged, super32: super32Merged, fargo: fargoMerged } = bundle

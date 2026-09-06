@@ -131,6 +131,57 @@ export async function getOtherTournamentResultsForAthlete(
   return data.map(toResult).sort(sortResults)
 }
 
+function athleteLookupNames(athlete: Record<string, unknown>): string[] {
+  const primary = String(athlete.name ?? "").trim()
+  const wrestling = String(athlete.wrestling_name ?? "").trim()
+  return [...new Set([primary, wrestling].filter(Boolean).map((name) => name.toLowerCase()))]
+}
+
+async function getUnlinkedRowsByAthleteName(
+  supabase: SupabaseClient,
+  table: "other_tournament_results" | "other_tournament_bouts",
+  athlete: Record<string, unknown>,
+): Promise<Record<string, unknown>[]> {
+  const rows: Record<string, unknown>[] = []
+  const seen = new Set<string>()
+  for (const name of athleteLookupNames(athlete)) {
+    const { data, error } = await supabase
+      .from(table)
+      .select("*")
+      .is("athlete_id", null)
+      .ilike("athlete_name", name)
+    if (error) continue
+    for (const row of (data ?? []) as Record<string, unknown>[]) {
+      // Result rows are unique per event/weight; bout rows additionally need their order.
+      const key = [row.event_key, row.weight_class, row.bout_order ?? "result"].join("|")
+      if (seen.has(key)) continue
+      seen.add(key)
+      rows.push(row)
+    }
+  }
+  return rows
+}
+
+/**
+ * Qualifier results for a full athlete record.
+ *
+ * Imports resolve athlete ids when the bracket is loaded, but profiles are often created
+ * later. In that case the historical rows still carry the exact bracket name. Fall back to
+ * those unlinked rows so a newly created profile immediately receives its prior qualifier
+ * history, matching the self-healing behavior of the NCHSAA result tables.
+ */
+export async function getOtherTournamentResultsForAthleteRecord(
+  supabase: SupabaseClient,
+  athlete: Record<string, unknown>,
+): Promise<OtherTournamentResult[]> {
+  const athleteId = String(athlete.id ?? "").trim()
+  const linked = await getOtherTournamentResultsForAthlete(supabase, athleteId)
+  const rows = await getUnlinkedRowsByAthleteName(supabase, "other_tournament_results", athlete)
+  const merged = new Map(linked.map((row) => [`${row.eventKey}|${row.weight}`, row]))
+  for (const row of rows.map(toResult)) merged.set(`${row.eventKey}|${row.weight}`, row)
+  return [...merged.values()].sort(sortResults)
+}
+
 export async function getOtherTournamentBoutsForAthlete(
   supabase: SupabaseClient,
   athleteId: string,
@@ -143,6 +194,18 @@ export async function getOtherTournamentBoutsForAthlete(
     .order("bout_order", { ascending: true })
   if (error || !data) return []
   return data.map(toBout)
+}
+
+export async function getOtherTournamentBoutsForAthleteRecord(
+  supabase: SupabaseClient,
+  athlete: Record<string, unknown>,
+): Promise<OtherTournamentBout[]> {
+  const athleteId = String(athlete.id ?? "").trim()
+  const linked = await getOtherTournamentBoutsForAthlete(supabase, athleteId)
+  const rows = await getUnlinkedRowsByAthleteName(supabase, "other_tournament_bouts", athlete)
+  const merged = new Map(linked.map((row) => [`${row.eventKey}|${row.weight}|${row.boutOrder}`, row]))
+  for (const row of rows.map(toBout)) merged.set(`${row.eventKey}|${row.weight}|${row.boutOrder}`, row)
+  return [...merged.values()].sort((a, b) => a.boutOrder - b.boutOrder)
 }
 
 /* ------------------------------------------------------------------ *
@@ -336,12 +399,13 @@ export async function loadOpponentProfileFacts(
  */
 export async function getOtherTournamentProfileBlocks(
   supabase: SupabaseClient,
-  athleteId: string,
+  athlete: Record<string, unknown>,
 ): Promise<OtherTournamentProfileBlock[]> {
+  const athleteId = String(athlete.id ?? "").trim()
   if (!athleteId?.trim()) return []
   const [results, bouts] = await Promise.all([
-    getOtherTournamentResultsForAthlete(supabase, athleteId),
-    getOtherTournamentBoutsForAthlete(supabase, athleteId),
+    getOtherTournamentResultsForAthleteRecord(supabase, athlete),
+    getOtherTournamentBoutsForAthleteRecord(supabase, athlete),
   ])
   if (results.length === 0) return []
 
