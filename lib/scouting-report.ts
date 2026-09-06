@@ -25,6 +25,7 @@ import {
 } from "@/lib/significant-wins"
 import { isBlueTeam } from "@/lib/blue-team"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
+import { releasesPersonalData, type ScoutingAccessTier } from "@/lib/scouting-report-access"
 
 export type ScoutingReportIdentity = {
   name: string
@@ -93,6 +94,10 @@ export type ScoutingReport = {
   /** RecruitNC prospect ranking, and whether that class is published. */
   prospectRanking: number | null
   rankingPublished: boolean
+  /** Which field set this copy carries. */
+  accessTier: ScoutingAccessTier
+  /** Names who the copy was prepared for. Null on the intelligence tier. */
+  watermark: string | null
 }
 
 function text(value: unknown): string | null {
@@ -191,7 +196,15 @@ export async function buildScoutingReport(
   supabase: SupabaseClient,
   athlete: Record<string, unknown>,
   opponentIndex: OpponentIndex,
+  /**
+   * Contact and academics are withheld here rather than hidden in the UI. A report that
+   * renders them and relies on CSS still returns a minor's cell number to anyone who can
+   * call the endpoint.
+   */
+  accessTier: ScoutingAccessTier = "intelligence",
+  watermark: string | null = null,
 ): Promise<Omit<ScoutingReport, "summary">> {
+  const personal = releasesPersonalData(accessTier)
   const athleteId = String(athlete.id)
 
   const [bundle, { data: matchRows }, qualifierBouts] = await Promise.all([
@@ -234,16 +247,18 @@ export async function buildScoutingReport(
       city: text(athlete.city),
     },
     contact: {
-      cell: text(athlete.cell ?? athlete.cell_number ?? athlete.phone),
-      email: text(athlete.contact_email ?? athlete.email),
+      cell: personal ? text(athlete.cell ?? athlete.cell_number ?? athlete.phone) : null,
+      email: personal ? text(athlete.contact_email ?? athlete.email) : null,
+      // Film is promotional and the athlete publishes it themselves — not personal data.
       highlightVideoUrl: text(athlete.highlight_video_url),
     },
     academics: {
-      gpa: text(athlete.gpa),
-      sat: text(athlete.sat),
-      act: text(athlete.act),
+      gpa: personal ? text(athlete.gpa) : null,
+      sat: personal ? text(athlete.sat) : null,
+      act: personal ? text(athlete.act) : null,
+      // Intended major is what a wrestler puts on a recruiting profile to be found.
       academicInterest: text(athlete.academic_interest),
-      academicSummary: text(athlete.academic_summary),
+      academicSummary: personal ? text(athlete.academic_summary) : null,
     },
     membership: {
       ncUnitedTeam: ncUnitedTeam && ncUnitedTeam.toLowerCase() !== "none" ? ncUnitedTeam : null,
@@ -255,6 +270,8 @@ export async function buildScoutingReport(
     significantLosses: findSignificantLosses(bouts, opponentIndex),
     recruitingStatus: text(athlete.recruiting_status),
     commitment: text(athlete.college),
+    accessTier,
+    watermark,
     prospectRanking: ranking,
     rankingPublished:
       ranking != null &&

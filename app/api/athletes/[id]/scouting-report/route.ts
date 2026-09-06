@@ -9,6 +9,7 @@ import {
   loadOpponentIndex,
   summaryFacts,
 } from "@/lib/scouting-report"
+import { scoutingAccessTier, watermarkLine } from "@/lib/scouting-report-access"
 
 /**
  * The printable scouting report behind the coach-only export.
@@ -35,7 +36,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const admin = createAdminClient()
   const { data: profile } = await admin
     .from("user_profiles")
-    .select("role, profile_type, verified_coach, is_admin")
+    .select("role, profile_type, verified_coach, is_admin, verified_method, institution, full_name, email")
     .eq("user_id", user.id)
     .maybeSingle()
 
@@ -53,9 +54,46 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: loaded.error }, { status: 404 })
   }
 
+  // Two grants: a .edu address unlocks browsing, a human check against the program's staff
+  // directory unlocks the portable document with the athlete's contact and academics in it.
+  const isAdmin = viewer.kind === "admin" || profile?.is_admin === true
+  const tier = scoutingAccessTier({
+    isCollegeCoach: viewer.isCollegeCoach,
+    isAdmin,
+    verifiedCoach: viewer.verifiedCoach || isAdmin,
+    verifiedMethod: (profile?.verified_method as string) ?? null,
+  })
+  const watermark =
+    tier === "full"
+      ? watermarkLine({
+          name: profile?.full_name as string,
+          institution: profile?.institution as string,
+          email: profile?.email as string,
+        })
+      : null
+
   const opponentIndex = await loadOpponentIndex(admin)
-  const report = await buildScoutingReport(admin, loaded.athlete as Record<string, unknown>, opponentIndex)
+  const report = await buildScoutingReport(
+    admin,
+    loaded.athlete as Record<string, unknown>,
+    opponentIndex,
+    tier,
+    watermark,
+  )
   const summary = await writeSummary(report)
+
+  // Who pulled what, so a parent can see who is looking and a leak has a trail.
+  await admin
+    .from("scouting_report_access")
+    .insert({
+      athlete_id: id,
+      viewer_user_id: user.id,
+      viewer_name: (profile?.full_name as string) ?? null,
+      viewer_email: (profile?.email as string) ?? user.email ?? null,
+      viewer_institution: (profile?.institution as string) ?? null,
+      access_tier: tier,
+    })
+    .then(undefined, () => undefined)
 
   return NextResponse.json({ report: { ...report, summary } })
 }

@@ -109,7 +109,19 @@ export function ScoutingReportDocument({
           }
           @page { margin: 0.45in; }
         }
-        #scouting-report { font-variant-numeric: tabular-nums; }
+        #scouting-report { font-variant-numeric: tabular-nums; position: relative; }
+        /* Faint across the page and repeated in the footer: a coach whose own name is on the
+           document behaves differently with it, and a leaked copy carries its source. */
+        #scouting-report[data-watermark]::before {
+          content: attr(data-watermark);
+          position: absolute; inset: 0;
+          display: flex; align-items: center; justify-content: center;
+          transform: rotate(-28deg);
+          font-size: 34px; font-weight: 800; letter-spacing: 0.08em;
+          color: rgba(3, 21, 76, 0.055);
+          pointer-events: none; z-index: 0; white-space: nowrap;
+        }
+        #scouting-report > * { position: relative; z-index: 1; }
       `}</style>
 
       <div className="sticky top-0 z-10 border-b bg-white px-4 py-3 print:hidden">
@@ -142,6 +154,7 @@ export function ScoutingReportDocument({
 
       <div
         id="scouting-report"
+        data-watermark={report.watermark ?? undefined}
         className="mx-auto my-6 max-w-[8.5in] border border-gray-300 bg-white px-10 py-8 shadow-sm print:my-0 print:border-0 print:px-0 print:shadow-none"
       >
         {/* Masthead — file number and date on the right, the way a dossier is headed. */}
@@ -235,6 +248,11 @@ export function ScoutingReportDocument({
             <Vital label="Career" value={report.careerRecord} />
             <Vital label="Cell" value={contact.cell} />
             <Vital label="Email" value={contact.email} last />
+            {report.accessTier !== "full" ? (
+              <div className="pt-1 text-[9.5px] italic leading-snug text-gray-500">
+                Contact details released to verified college coaching staff.
+              </div>
+            ) : null}
           </dl>
         </div>
 
@@ -245,7 +263,12 @@ export function ScoutingReportDocument({
         ) : null}
 
         <Block n={n()} title="Academics">
-          {academics.gpa || academics.sat || academics.act || academics.academicInterest ? (
+          {report.accessTier !== "full" ? (
+            <Note>
+              Academic records are released to verified college coaching staff.
+              {academics.academicInterest ? ` Intended major: ${academics.academicInterest}.` : ""}
+            </Note>
+          ) : academics.gpa || academics.sat || academics.act || academics.academicInterest ? (
             <div className="grid grid-cols-4 gap-px border border-gray-300 bg-gray-300">
               <Cell label="GPA" value={academics.gpa} />
               <Cell label="SAT" value={academics.sat} />
@@ -293,10 +316,19 @@ export function ScoutingReportDocument({
             Carolina prospects. This is not a complete match list — routine results are omitted by design.
           </p>
           <p className="mt-1">
-            <span className="font-bold uppercase tracking-wider text-[#B31B1B]">Confidential.</span> Prepared
-            for college coaching staff. Contains contact information for a prospective student-athlete; do
-            not redistribute. File {fileNumber} · issued {generated.toLocaleString()} · NC United Wrestling /
-            RecruitNC.
+            <span className="font-bold uppercase tracking-wider text-[#B31B1B]">Confidential.</span>{" "}
+            {report.watermark ? (
+              <>
+                {report.watermark}. Contains contact information for a prospective student-athlete; do not
+                redistribute. This copy is traceable to the recipient named above.
+              </>
+            ) : (
+              <>
+                Competition analysis only. Contact details and academic records are released to verified
+                college coaching staff.
+              </>
+            )}{" "}
+            File {fileNumber} · issued {generated.toLocaleString()} · NC United Wrestling / RecruitNC.
           </p>
         </footer>
       </div>
