@@ -105,7 +105,19 @@ async function main() {
   let matched = 0
   const payload = rows.map((row) => {
     const name = row.athlete_name ?? row.name ?? ""
-    const outcome = matchAthlete(name, row.high_school ?? "", index)
+    /**
+     * Only North Carolina rows are resolved to a profile.
+     *
+     * Every athlete in this database is an NC wrestler, so a ranked wrestler listed in
+     * another state who happens to share a name is not one of them — and linking them would
+     * hand that NC kid a five-star rating off somebody else's ranking. Out-of-state rows are
+     * still stored: they are how a win over a nationally ranked opponent gets recognised.
+     */
+    const rowState = String(row.state ?? "").trim().toUpperCase()
+    const isNorthCarolina = rowState === "NC" || rowState === ""
+    const outcome = isNorthCarolina
+      ? matchAthlete(name, row.high_school ?? "", index)
+      : ({ status: "unmatched" } as const)
     const athleteId = outcome.status === "matched" ? outcome.athlete.id : null
     if (athleteId) matched += 1
     return {

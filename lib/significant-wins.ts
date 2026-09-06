@@ -41,6 +41,20 @@ export type OpponentIndex = {
   tocField: readonly string[]
   /** Every athlete carrying a prospect ranking, published or not. */
   ranked: readonly RankedOpponent[]
+  /**
+   * Wrestlers ranked nationally by FloWrestling / Sports Illustrated / MatScouts, including
+   * out-of-state ones. A win over a nationally ranked opponent is the strongest credential a
+   * result can carry, and most of them will never be in our own athlete table.
+   */
+  nationallyRanked?: readonly NationallyRankedOpponent[]
+}
+
+export type NationallyRankedOpponent = {
+  name: string
+  rank: number
+  /** "FloWrestling", "Sports Illustrated", "MatScouts". */
+  source: string
+  state: string | null
 }
 
 export type SignificantWin = {
@@ -50,9 +64,14 @@ export type SignificantWin = {
   date: string | null
   result: string | null
   weight: number | null
-  /** Why it earned its place. A TOC opponent outranks a ranking when both are true. */
-  reason: "toc-field" | "ranked"
+  /**
+   * Why it earned its place, strongest first: a national ranking outranks the TOC field,
+   * which outranks a state prospect ranking.
+   */
+  reason: "national-ranked" | "toc-field" | "ranked"
   opponentGraduationYear: number | null
+  /** Set when the opponent is nationally ranked: "#12 Sports Illustrated". */
+  nationalRankLabel?: string
 }
 
 function opponentName(bout: Bout): string {
@@ -114,9 +133,12 @@ function findSignificantBouts(
     const name = opponentName(bout)
     if (!name) continue
 
-    const inField = index.tocField.some((fieldName) => namesLikelySamePerson(fieldName, name))
-    const ranked = inField ? null : index.ranked.find((r) => namesLikelySamePerson(r.name, name))
-    if (!inField && !ranked) continue
+    // A national ranking is checked first: it is the strongest thing a result can be
+    // measured against, and it is the only credential most out-of-state opponents will have.
+    const national = (index.nationallyRanked ?? []).find((r) => namesLikelySamePerson(r.name, name))
+    const inField = national ? false : index.tocField.some((fieldName) => namesLikelySamePerson(fieldName, name))
+    const ranked = national || inField ? null : index.ranked.find((r) => namesLikelySamePerson(r.name, name))
+    if (!national && !inField && !ranked) continue
 
     // One entry per opponent per day: the same bout is sometimes stored twice.
     const key = `${name.toLowerCase()}|${bout.date ?? ""}`
@@ -130,14 +152,17 @@ function findSignificantBouts(
       date: bout.date ?? null,
       result: bout.result ?? null,
       weight: toWeight(bout.weight),
-      reason: inField ? "toc-field" : "ranked",
+      reason: national ? "national-ranked" : inField ? "toc-field" : "ranked",
       opponentGraduationYear: ranked?.graduationYear ?? null,
+      ...(national ? { nationalRankLabel: `#${national.rank} ${national.source}` } : {}),
     })
   }
 
+  const reasonRank = { "national-ranked": 0, "toc-field": 1, ranked: 2 } as const
   return wins.sort((a, b) => {
-    // TOC opponents first, then by date, newest first. Undated rows sink rather than jump.
-    if (a.reason !== b.reason) return a.reason === "toc-field" ? -1 : 1
+    // Nationally ranked first, then TOC, then state-ranked; within a tier, newest first.
+    // Undated rows sink rather than jump.
+    if (a.reason !== b.reason) return reasonRank[a.reason] - reasonRank[b.reason]
     const at = a.date ? Date.parse(a.date) : Number.NaN
     const bt = b.date ? Date.parse(b.date) : Number.NaN
     if (Number.isNaN(at) && Number.isNaN(bt)) return 0

@@ -80,6 +80,46 @@ describe("findSignificantWins", () => {
   })
 })
 
+describe("nationally ranked opponents", () => {
+  const withNational: OpponentIndex = {
+    ...index,
+    nationallyRanked: [
+      { name: "Melvin Miller", rank: 1, source: "Sports Illustrated", state: "PA" },
+      { name: "Adam Walker", rank: 12, source: "MatScouts", state: "NC" },
+    ],
+  }
+
+  it("counts a win over an out-of-state nationally ranked wrestler", () => {
+    // Most opponents worth naming will never be in our own athlete table.
+    const wins = findSignificantWins([bout({ opponent: "Melvin Miller" })], withNational)
+    expect(wins).toHaveLength(1)
+    expect(wins[0]).toMatchObject({ reason: "national-ranked", nationalRankLabel: "#1 Sports Illustrated" })
+  })
+
+  it("ranks a national credential above the TOC field for the same opponent", () => {
+    // Adam Walker is in both lists; the stronger credential should win.
+    const wins = findSignificantWins([bout({ opponent: "Adam Walker" })], withNational)
+    expect(wins[0]).toMatchObject({ reason: "national-ranked" })
+  })
+
+  it("leads the list with nationally ranked wins", () => {
+    const wins = findSignificantWins(
+      [bout({ opponent: "Liam Myles", date: "3/20/2026" }), bout({ opponent: "Melvin Miller", date: "1/2/2026" })],
+      withNational,
+    )
+    expect(wins.map((w) => w.reason)).toEqual(["national-ranked", "toc-field"])
+  })
+
+  it("still works when no national list is supplied", () => {
+    expect(findSignificantWins([bout()], index)).toHaveLength(1)
+  })
+
+  it("names nationally ranked losses too", () => {
+    const losses = findSignificantLosses([bout({ opponent: "Melvin Miller", win_loss: "L" })], withNational)
+    expect(losses[0]).toMatchObject({ reason: "national-ranked" })
+  })
+})
+
 describe("findSignificantLosses", () => {
   it("keeps a loss to somebody in the TOC field", () => {
     const losses = findSignificantLosses([bout({ win_loss: "L" })], index)
