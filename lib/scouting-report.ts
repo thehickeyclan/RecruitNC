@@ -203,6 +203,43 @@ function buildResultRows(bundle: {
 }
 
 /**
+ * Contact details as stored on `athletes`.
+ *
+ * The column names differ from the field names the profile forms post, which is exactly how
+ * this went wrong once: the report read `gpa` / `contact_email` / `career_record`, none of
+ * which are columns, and every report rendered blank without erroring. Kept as a pure
+ * function so a rename shows up as a failing test rather than an empty section.
+ */
+export function mapContact(athlete: Record<string, unknown>, personal: boolean): ScoutingReportContact {
+  return {
+    cell: personal ? text(athlete.phone ?? athlete.cell ?? athlete.cell_number) : null,
+    email: personal ? text(athlete.contactEmail ?? athlete.contact_email ?? athlete.email) : null,
+    // Film is promotional and the athlete publishes it themselves — not personal data.
+    highlightVideoUrl: text(athlete.highlight_video_url),
+  }
+}
+
+/** Academics as stored on `athletes` — the `academic_*` columns, not bare `gpa`/`sat`/`act`. */
+export function mapAcademics(
+  athlete: Record<string, unknown>,
+  personal: boolean,
+): ScoutingReportAcademics {
+  return {
+    gpa: personal ? text(athlete.academic_gpa) : null,
+    sat: personal ? text(athlete.academic_sat) : null,
+    act: personal ? text(athlete.academic_act) : null,
+    // Intended major is what a wrestler puts on a recruiting profile to be found.
+    academicInterest: text(athlete.academic_interest),
+    academicSummary: personal ? text(athlete.academic_summary) : null,
+  }
+}
+
+/** Career record — stored camelCase on `athletes`. */
+export function mapCareerRecord(athlete: Record<string, unknown>): string | null {
+  return text(athlete.careerRecord ?? athlete.career_record)
+}
+
+/**
  * Assemble everything the report needs. The caller supplies the opponent index so a batch
  * export builds it once rather than per athlete.
  */
@@ -261,25 +298,13 @@ export async function buildScoutingReport(
       state: text(athlete.state),
       city: text(athlete.city),
     },
-    contact: {
-      cell: personal ? text(athlete.cell ?? athlete.cell_number ?? athlete.phone) : null,
-      email: personal ? text(athlete.contact_email ?? athlete.email) : null,
-      // Film is promotional and the athlete publishes it themselves — not personal data.
-      highlightVideoUrl: text(athlete.highlight_video_url),
-    },
-    academics: {
-      gpa: personal ? text(athlete.gpa) : null,
-      sat: personal ? text(athlete.sat) : null,
-      act: personal ? text(athlete.act) : null,
-      // Intended major is what a wrestler puts on a recruiting profile to be found.
-      academicInterest: text(athlete.academic_interest),
-      academicSummary: personal ? text(athlete.academic_summary) : null,
-    },
+    contact: mapContact(athlete, personal),
+    academics: mapAcademics(athlete, personal),
     membership: {
       ncUnitedTeam: ncUnitedTeam && ncUnitedTeam.toLowerCase() !== "none" ? ncUnitedTeam : null,
       isBlue: isBlueTeam(athlete),
     },
-    careerRecord: text(athlete.career_record),
+    careerRecord: mapCareerRecord(athlete),
     results: buildResultRows(bundle as never),
     significantWins: findSignificantWins(bouts, opponentIndex),
     significantLosses: findSignificantLosses(bouts, opponentIndex),
