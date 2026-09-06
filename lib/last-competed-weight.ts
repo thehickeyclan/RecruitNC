@@ -103,6 +103,12 @@ export function buildProfileWeightDisplay(
 /** Build candidates from public profile tournament payload fields. */
 export function candidatesFromPublicProfilePayload(athlete: {
   nchsaa_profile?: Array<{ year?: number; weight_class?: string | null }>
+  other_tournament_results?: Array<{
+    year?: number
+    weight?: string | null
+    eventShortName?: string
+    eventDate?: string | null
+  }>
   nhsca_results?: Array<{ year?: number; weight?: string | null }>
   super32_results?: Array<{ year?: number; weight?: string | null }>
   fargo_results?: Array<{ year?: number; weight?: string | null }>
@@ -114,6 +120,16 @@ export function candidatesFromPublicProfilePayload(athlete: {
 }): LastCompetedWeightCandidate[] {
   const out: LastCompetedWeightCandidate[] = []
 
+  // Qualifiers and open events run in the early season, so within a year they are usually
+  // the most recent thing the athlete wrestled — they lead the priority order.
+  for (const r of athlete.other_tournament_results ?? []) {
+    out.push({
+      year: Number(r.year),
+      weight: r.weight,
+      event: String(r.eventShortName || "Tournament"),
+      priority: 50,
+    })
+  }
   for (const r of athlete.national_team_results ?? []) {
     out.push({
       year: Number(r.year),

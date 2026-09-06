@@ -346,6 +346,12 @@ function rankWrestlerPoints(rank: number | null): number {
   return 3
 }
 
+/**
+ * Qualifier results count for less than the national tournament they feed. Placing at
+ * Super 32 Early Entry is a strong signal, but it is not placing at Super 32.
+ */
+const QUALIFIER_WEIGHT = 0.6
+
 function evidenceToneForPlace(place: number): RankingEvidence["tone"] {
   if (place === 1) return "gold"
   if (place <= 3) return "blue"
@@ -514,6 +520,7 @@ export async function buildRecruitNcRankingBoard({
         nhsca: [],
         super32: [],
         fargo: [],
+        other: [],
       }))
       const duals = dualsByAthlete.get(id) || []
 
@@ -553,6 +560,29 @@ export async function buildRecruitNcRankingBoard({
           label: `${result.year || ""} ${event}${details ? `: ${details}` : ""}`.trim(),
           points: points || undefined,
           tone: event === "Super32" ? "purple" : evidenceToneForPlace(place || 8),
+        })
+      }
+
+      // Qualifiers and open events (Super 32 Early Entry, and the GA/VA legs of the same
+      // series). Real out-of-state fields, so they count toward the national résumé — but
+      // discounted against Super 32 / NHSCA / Fargo themselves, which are the deeper brackets.
+      for (const result of bundle.other || []) {
+        const points = Math.round(
+          (placementPoints(result.placement) + recordWinPctPoints(result.record)) * QUALIFIER_WEIGHT,
+        )
+        national += points
+        const details = [
+          result.placement ? (result.placement === 1 ? "Champion" : ordinal(result.placement)) : "",
+          result.record ? `${result.record} record` : "",
+          result.qualified ? "Super 32 qualifier" : "",
+        ]
+          .filter(Boolean)
+          .join(" · ")
+        evidence.push({
+          kind: "national",
+          label: `${result.year} ${result.eventShortName}${details ? `: ${details}` : ""}`.trim(),
+          points: points || undefined,
+          tone: result.placement ? evidenceToneForPlace(result.placement) : "purple",
         })
       }
 

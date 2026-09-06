@@ -18,6 +18,10 @@ import {
   type ProfileWeightDisplay,
 } from "@/lib/last-competed-weight"
 import { getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
+import {
+  getOtherTournamentProfileBlocks,
+  type OtherTournamentProfileBlock,
+} from "@/lib/other-tournaments"
 import { getNationalTeamResults } from "@/lib/tournament-utils"
 
 export type PublicAthleteProfile = Record<string, unknown> & {
@@ -30,6 +34,8 @@ export type PublicAthleteProfile = Record<string, unknown> & {
   }>
   super32_results: unknown[]
   fargo_results: unknown[]
+  /** Qualifiers and open events (Super 32 Early Entry etc.) with strength-of-wins attached. */
+  other_tournament_blocks: OtherTournamentProfileBlock[]
   national_team_results: unknown[]
   national_team_highlight_videos: ProfileNationalTeamHighlight[]
   profile_quality_wins: ProfileQualityWinsTournamentBlock[]
@@ -70,7 +76,7 @@ export async function loadPublicAthleteProfile(
   if (wrestlingName && wrestlingName.toLowerCase() !== name.toLowerCase()) nameBases.push(wrestlingName)
 
   const athleteRow = athlete as Record<string, unknown>
-  const [bundle, nationalTeamFromTables, nhscaDualsLive, nhscaDualsRegistration] = await Promise.all([
+  const [bundle, nationalTeamFromTables, nhscaDualsLive, nhscaDualsRegistration, otherTournamentBlocks] = await Promise.all([
     loadAthleteTournamentBundle(client, athleteRow),
     (async () => {
       const bases = nameBases.filter(Boolean)
@@ -89,6 +95,7 @@ export async function loadPublicAthleteProfile(
       highSchool,
       gradYear,
     }),
+    getOtherTournamentProfileBlocks(client, trimmed),
   ])
 
   const { nchsaa: nchsaaMergedRows, nhsca: nhscaMerged, super32: super32Merged, fargo: fargoMerged } = bundle
@@ -116,6 +123,7 @@ export async function loadPublicAthleteProfile(
     super32_results: super32Merged,
     fargo_results: fargoMerged,
     national_team_results,
+    other_tournament_results: otherTournamentBlocks.map((block) => block.result),
   }
   const lastCompeted = resolveLastCompetedWeight(candidatesFromPublicProfilePayload(profilePayload))
   const listedWeight = (athlete as Record<string, unknown>).weightclass ?? (athlete as Record<string, unknown>).weight_class
@@ -129,6 +137,7 @@ export async function loadPublicAthleteProfile(
       nchsaa_profile,
       super32_results: super32Merged,
       fargo_results: fargoMerged,
+      other_tournament_blocks: otherTournamentBlocks,
       national_team_results,
       national_team_highlight_videos,
       profile_quality_wins,

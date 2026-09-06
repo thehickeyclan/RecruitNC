@@ -28,6 +28,8 @@ export type TocSeedEvidence = {
   nhsca: string[]
   super32: string[]
   fargo: string[]
+  /** Qualifiers and open events (Super 32 Early Entry etc.). Optional — older rows predate it. */
+  other?: string[]
   headToHead: { opponent: string; wins: number; losses: number }[]
   summary: {
     stateTitles: number

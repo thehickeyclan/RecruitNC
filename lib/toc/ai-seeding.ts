@@ -352,6 +352,9 @@ export function orderByHeadToHeadThenResume<T extends {
   return ordered
 }
 
+/** Qualifier results seed a TOC bracket, but weigh less than the national events they feed. */
+const TOC_QUALIFIER_WEIGHT = 0.6
+
 async function scoreAthleteForTocSeed({
   supabase,
   athlete,
@@ -372,6 +375,7 @@ async function scoreAthleteForTocSeed({
     nhsca: [],
     super32: [],
     fargo: [],
+    other: [],
     headToHead: [],
     summary: {
       stateTitles: 0,
@@ -416,6 +420,7 @@ async function scoreAthleteForTocSeed({
         nhsca: [],
         super32: [],
         fargo: [],
+        other: [],
       })),
       loadNcUnitedResultsForNameSearch(supabase, athlete.name, {
         athleteId: athlete.athleteId,
@@ -478,6 +483,25 @@ async function scoreAthleteForTocSeed({
     score += nationalPoints
     if (nationalRows.length) reasons.push(`${nationalRows.length} national result${nationalRows.length === 1 ? "" : "s"} on file`)
     else warnings.push("No NHSCA/Super32/Fargo result on file")
+
+    // Qualifiers (Super 32 Early Entry and the rest of that series). Seeding-relevant and
+    // recent, but discounted against the national tournaments they feed into.
+    const otherRows = bundle.other || []
+    evidence.other = otherRows.map((row) => {
+      const finish = row.placement ? ordinal(row.placement) : "did not place"
+      return `${row.year} ${row.eventShortName} · ${row.weight} · ${finish}${row.record ? ` · ${row.record}` : ""}`
+    })
+    let qualifierPoints = 0
+    for (const row of otherRows) {
+      qualifierPoints += (placementPoints(row.placement) + recordWinPctPoints(row.record)) * TOC_QUALIFIER_WEIGHT
+    }
+    score += Math.round(qualifierPoints)
+    const qualified = otherRows.filter((row) => row.qualified)
+    if (qualified.length) {
+      reasons.push(`Super 32 qualifier finish at ${qualified.map((row) => row.eventShortName).join(", ")}`)
+    } else if (otherRows.length) {
+      reasons.push(`${otherRows.length} qualifier result${otherRows.length === 1 ? "" : "s"} on file`)
+    }
 
     const dualsPoints = duals.reduce((sum, row) => sum + recordWinPctPoints(row.record) * 2, 0)
     score += dualsPoints

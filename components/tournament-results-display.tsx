@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Trophy } from "lucide-react"
 import { cn, scrollTableXClass } from "@/lib/utils"
+import { placementLabel, type OtherTournamentProfileBlock } from "@/lib/other-tournaments"
 import { PROFILE_SECTION_HEADER, PROFILE_SECTION_TITLE } from "@/lib/unified-profile-section-styles"
 
 interface TournamentResult {
@@ -35,6 +36,11 @@ export interface NationalTeamResult {
 interface TournamentResultsDisplayProps {
   nhscaResults?: TournamentResult[]
   super32Results?: TournamentResult[]
+  /**
+   * Qualifiers and open events — Super 32 Early Entry and the like. A separate tournament
+   * from Super 32, so it gets its own section above it rather than being merged in.
+   */
+  otherTournamentBlocks?: OtherTournamentProfileBlock[]
   fargoResults?: TournamentResult[]
   nchsaaResults?: NCHSAAResult[]
   nationalTeamResults?: NationalTeamResult[]
@@ -48,6 +54,7 @@ interface TournamentResultsDisplayProps {
 export function TournamentResultsDisplay({
   nhscaResults = [],
   super32Results = [],
+  otherTournamentBlocks = [],
   fargoResults = [],
   nchsaaResults = [],
   nationalTeamResults = [],
@@ -81,6 +88,7 @@ export function TournamentResultsDisplay({
   const outlineBadgeClass = isDark ? "border-white/30 text-white/80 bg-transparent" : ""
   const hasAnyResults =
     nhscaResults.length > 0 ||
+    otherTournamentBlocks.length > 0 ||
     super32Results.length > 0 ||
     fargoResults.length > 0 ||
     nchsaaResults.length > 0 ||
@@ -204,6 +212,131 @@ export function TournamentResultsDisplay({
         </TableBody>
       </Table>
     </div>
+  )
+
+  /**
+   * Qualifier / open-event results. Each event shows the placement and record, then the
+   * wins behind that record with the opponent's own finish — the strength of the win, not
+   * just the score.
+   */
+  const otherTournamentsTable = (
+    <>
+      <p className={descClass}>
+        Qualifiers and open events. Top 4 earns a chance to enter Super 32 when registration opens.
+      </p>
+      <div className={tableWrapClass}>
+        <Table className="min-w-[560px]">
+          <TableHeader>
+            <TableRow className={tableHeadRowClass}>
+              <TableHead className={tableHeadCellClass}>Year</TableHead>
+              <TableHead className={tableHeadCellClass}>Event</TableHead>
+              <TableHead className={tableHeadCellClass}>Placement</TableHead>
+              <TableHead className={tableHeadCellClass}>Record</TableHead>
+              <TableHead className={tableHeadCellClass}>Weight</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {otherTournamentBlocks.length > 0 ? (
+              otherTournamentBlocks.map((block, index) => (
+                <TableRow key={`${block.result.eventKey}-${index}`} className={tableRowClass}>
+                  <TableCell className={cellYearClass}>{block.result.year}</TableCell>
+                  <TableCell className={cellPrimaryClass}>
+                    {block.result.eventShortName}
+                    {block.result.eventState && (
+                      <span className={memberHintClass}>{block.result.eventState}</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {getPlacementBadge(placementLabel(block.result.placement), "default", "DNP")}
+                      {block.result.qualified && (
+                        <Badge className="bg-[#D3B574] text-[#0A1628] hover:bg-[#c5a769] text-xs px-2 py-0.5">
+                          Super 32 qualifier
+                        </Badge>
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className={cellMonoClass}>
+                    {block.result.record || "—"}
+                    {block.result.entrants ? (
+                      <span className={memberHintClass}>of {block.result.entrants}</span>
+                    ) : null}
+                  </TableCell>
+                  <TableCell>{block.result.weight || "—"}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={5} className={emptyRowClass}>
+                  No qualifier or open-event results recorded
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {otherTournamentBlocks.map((block) =>
+        block.strengthOfWins.length > 0 ? (
+          <div key={`wins-${block.result.eventKey}`} className="mt-4">
+            <h4 className={cn("text-sm font-semibold mb-2", isDark ? "text-white/80" : "text-gray-700")}>
+              Wins at {block.result.eventShortName} {block.result.year}
+              {block.notableWins.length > 0 && (
+                <span className={memberHintClass}>
+                  {block.notableWins.length} over placers, ranked wrestlers, or TOC field
+                </span>
+              )}
+            </h4>
+            <ul className="space-y-1.5">
+              {block.strengthOfWins.map((win, index) => (
+                <li
+                  key={`${win.opponentName}-${index}`}
+                  className={cn(
+                    "flex flex-wrap items-baseline gap-x-2 gap-y-1 rounded-md px-3 py-2 text-sm",
+                    isDark ? "bg-white/5 text-white/80" : "bg-gray-50 text-gray-700",
+                  )}
+                >
+                  <span className={isDark ? "font-medium text-white" : "font-medium text-[#03154C]"}>
+                    {win.opponentName}
+                  </span>
+                  {win.opponentClub && (
+                    <span className={isDark ? "text-white/40 text-xs" : "text-gray-500 text-xs"}>
+                      {win.opponentClub}
+                    </span>
+                  )}
+                  {win.credential?.placement != null && (
+                    <Badge className="bg-[#13294B] text-white hover:bg-[#1e3a5f] text-xs px-2 py-0.5">
+                      {placementLabel(win.credential.placement)} at this event
+                    </Badge>
+                  )}
+                  {win.credential?.prospectRanking != null && (
+                    <Badge className="bg-[#D3B574] text-[#0A1628] hover:bg-[#c5a769] text-xs px-2 py-0.5">
+                      #{win.credential.prospectRanking}
+                      {win.credential.graduationYear ? ` · Class of ${win.credential.graduationYear}` : ""}
+                    </Badge>
+                  )}
+                  {win.credential?.tocParticipant && (
+                    <Badge className="bg-[#7c3aed] text-white hover:bg-[#6d28d9] text-xs px-2 py-0.5">
+                      TOC field
+                    </Badge>
+                  )}
+                  {win.credential?.placement == null && win.credential?.record && (
+                    <span className={isDark ? "text-white/40 text-xs" : "text-gray-500 text-xs"}>
+                      opponent went {win.credential.record}
+                    </span>
+                  )}
+                  <span className={cn("ml-auto", cellMonoClass)}>
+                    {win.winType}
+                    {win.score ? ` ${win.score}` : ""}
+                  </span>
+                  <span className={isDark ? "text-white/40 text-xs" : "text-gray-500 text-xs"}>{win.round}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null,
+      )}
+    </>
   )
 
   const super32Table = (
@@ -374,13 +507,14 @@ export function TournamentResultsDisplay({
     const tabs: { id: string; label: string; hasData: boolean }[] = [
       { id: "nhsca", label: "NHSCA", hasData: nhscaResults.length > 0 },
       { id: "fargo", label: "Fargo", hasData: fargoResults.length > 0 },
+      { id: "other", label: "Other", hasData: otherTournamentBlocks.length > 0 },
       { id: "super32", label: "Super 32", hasData: super32Results.length > 0 },
     ]
     if (!alwaysShowStructure) {
       return tabs.filter((t) => t.hasData)
     }
     return tabs
-  }, [alwaysShowStructure, nhscaResults.length, fargoResults.length, super32Results.length])
+  }, [alwaysShowStructure, nhscaResults.length, fargoResults.length, otherTournamentBlocks.length, super32Results.length])
 
   const defaultMobileTab = mobileTabs[0]?.id ?? "nhsca"
   const showMobileNationalTeam =
@@ -396,7 +530,7 @@ export function TournamentResultsDisplay({
           National Results
         </CardTitle>
         <p className={cn("text-xs mt-1", isDark ? "text-white/50" : "text-gray-500")}>
-          NHSCA, Fargo, and Super 32
+          NHSCA, Fargo, qualifiers, and Super 32
         </p>
       </CardHeader>
       <CardContent className={contentClass}>
@@ -424,6 +558,7 @@ export function TournamentResultsDisplay({
           </div>
           <TabsContent value="nhsca">{nhscaTable}</TabsContent>
           <TabsContent value="fargo">{fargoTable}</TabsContent>
+          <TabsContent value="other">{otherTournamentsTable}</TabsContent>
           <TabsContent value="super32">{super32Table}</TabsContent>
         </Tabs>
       </CardContent>
@@ -504,6 +639,18 @@ export function TournamentResultsDisplay({
             </CardTitle>
           </CardHeader>
           <CardContent className={contentClass}>{fargoTable}</CardContent>
+        </Card>
+      )}
+
+      {(otherTournamentBlocks.length > 0 || alwaysShowStructure) && (
+        <Card className={cardClass} id="other-tournaments">
+          <CardHeader className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] py-4">
+            <CardTitle className="text-white flex items-center gap-2 text-lg">
+              <Trophy className="h-5 w-5 text-[#D3B574]" />
+              Other Tournaments
+            </CardTitle>
+          </CardHeader>
+          <CardContent className={contentClass}>{otherTournamentsTable}</CardContent>
         </Card>
       )}
 

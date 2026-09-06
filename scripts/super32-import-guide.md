@@ -216,3 +216,14 @@ These rows are in the DB but not in the CSV. Either:
 - **Remove** them if they’re duplicates or wrong:  
   `DELETE FROM super32_results WHERE year = YEAR AND athlete_name = '...' AND weight_class = '...';`  
   Only do this after you’re sure the CSV is the single source of truth for that year.
+
+---
+
+## Related but separate: Super 32 Early Entry / qualifiers
+
+**Super 32 Early Entry (the Super 32 Qualifier) is a different tournament from Super 32.**
+Its results go in `other_tournament_results` / `other_tournament_bouts` and show in the
+profile's **Other Tournaments** section — never in `super32_results`. Top 4 at each weight
+earn a chance to enter Super 32 when registration opens.
+
+See `scripts/other-tournament-import-guide.md`.
