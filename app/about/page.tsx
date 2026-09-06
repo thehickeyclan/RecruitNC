@@ -210,7 +210,7 @@ export default async function AboutPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             <Pillar title="Tournament of Champions">
               An invitational bringing the best wrestlers in the state together in elite
-              eight-person brackets, with the field selected and announced weight class by weight
+              eight-person brackets — nine at 133 lbs — with the field selected and announced weight class by weight
               class.
             </Pillar>
             <Pillar title="NC United Blue">

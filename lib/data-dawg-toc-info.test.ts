@@ -11,7 +11,9 @@ describe("Data Dawg TOC page facts", () => {
   it("answers weight class and location questions from the TOC page facts", async () => {
     const answer = await answerTournamentOfChampionsQuestion("What are the TOC weight classes and location?")
 
-    expect(answer).toContain("117, 125, 133, 141, 149, 157, 165, 174, 184, 197, 285")
+    // Ten weights since 184 was dropped on 5 September 2026.
+    expect(answer).toContain("117, 125, 133, 141, 149, 157, 165, 174, 197, 285")
+    expect(answer).not.toContain("184")
     expect(answer).toContain("Hope Community Church")
     expect(answer).toContain("2080 East Williams Street")
     expect(answer).toContain("Tournament of Champions page")
