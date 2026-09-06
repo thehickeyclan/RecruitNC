@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { AuthGuard } from "@/components/auth-guard"
 import { CreateProfileForm } from "@/components/create-profile-form"
 import { FindExistingStep, type ExistingMatch } from "@/components/profile-wizard/find-existing-step"
+import { RevealStep } from "@/components/profile-wizard/reveal-step"
 
 /**
  * Creating a profile starts by looking for the one that already exists.
@@ -19,8 +20,9 @@ import { FindExistingStep, type ExistingMatch } from "@/components/profile-wizar
 export default function CreateProfilePage() {
   const { user, isLoading } = useAuth()
   const router = useRouter()
-  const [step, setStep] = useState<"find" | "create">("find")
+  const [step, setStep] = useState<"find" | "reveal" | "create">("find")
   const [typedName, setTypedName] = useState("")
+  const [matchedId, setMatchedId] = useState<string | null>(null)
 
   if (isLoading) {
     return (
@@ -53,12 +55,37 @@ export default function CreateProfilePage() {
         <div className="min-h-screen bg-[#0A1628] px-4 py-12">
           <FindExistingStep
             onClaim={(match: ExistingMatch) => {
-              /** Claiming is handled on the profile itself, where the athlete can see what they are taking. */
-              router.push(`/view-profile?id=${encodeURIComponent(match.id)}&claim=1`)
+              /**
+               * Show the record before the claim. Most wrestlers do not know NC United already
+               * built their profile, and seeing their own results is what makes claiming it
+               * obviously worth doing.
+               */
+              setMatchedId(match.id)
+              setStep("reveal")
             }}
             onCreateNew={(name) => {
               setTypedName(name)
               setStep("create")
+            }}
+          />
+        </div>
+      </AuthGuard>
+    )
+  }
+
+  if (step === "reveal" && matchedId) {
+    return (
+      <AuthGuard>
+        <div className="min-h-screen bg-[#0A1628] px-4 py-12">
+          <RevealStep
+            athleteId={matchedId}
+            onConfirm={(reveal) => {
+              /** Claiming happens on the profile itself, where they can see what they are taking. */
+              router.push(`/view-profile?id=${encodeURIComponent(reveal.athleteId)}&claim=1`)
+            }}
+            onReject={() => {
+              setMatchedId(null)
+              setStep("find")
             }}
           />
         </div>
