@@ -7,6 +7,13 @@ import {
   type ProfileNationalTeamResult,
 } from "@/lib/national-team-live-profile-results"
 import { fetchNhscaDualsSnapshot } from "@/lib/nhsca-duals-live-results/db"
+import {
+  datedMeetingsAgainst,
+  holdsHeadToHeadEdge,
+  resolvePairing,
+  type DatedMeeting,
+} from "@/lib/head-to-head"
+import { loadQualifierHeadToHead, type QualifierHeadToHeadIndex } from "@/lib/other-tournaments"
 import { placementPoints, recordWinPctPoints } from "@/lib/toc/athlete-compare"
 import { HEAD_TO_HEAD_MAX_GAP, filterFargoFreestyleResults, scoreNchsaaRowsForSeed } from "@/lib/toc/ai-seeding"
 import { getNationalTeamResults } from "@/lib/tournament-utils"
@@ -44,6 +51,9 @@ export type RankingHeadToHead = {
   opponent: string
   wins: number
   losses: number
+  /** Did this wrestler win the most recent meeting? That bout decides the pairing. */
+  lastMeetingWon?: boolean
+  lastMeetingNote?: string
 }
 
 export type RankingBoardAthlete = {
@@ -262,34 +272,41 @@ export function scoreProspectMatchResume(rows: MatchRow[]): {
   }
 }
 
-function headToHeadRecordAgainst(bouts: MatchBout[], opponentName: string): { wins: number; losses: number } {
-  let wins = 0
-  let losses = 0
-  for (const bout of bouts) {
-    const opponent = String(bout.opponent_name ?? bout.opponent ?? "").trim()
-    if (!opponent || !namesLikelySamePerson(opponent, opponentName)) continue
-    if (didWinBout(bout)) wins += 1
-    else if (didLoseBout(bout)) losses += 1
-  }
-  return { wins, losses }
-}
-
 export function buildCandidateHeadToHead(
   athlete: CandidateIdentity,
   candidates: CandidateIdentity[],
   currentSeasonBoutsByAthleteId: Map<string, MatchBout[]>,
+  /** Qualifier meetings keyed athleteId -> opponentId, when the caller has them. */
+  qualifierHeadToHead?: QualifierHeadToHeadIndex,
 ): RankingHeadToHead[] {
   const records: RankingHeadToHead[] = []
   const athleteBouts = currentSeasonBoutsByAthleteId.get(athlete.id) ?? []
+  const qualifierSide = qualifierHeadToHead?.get(athlete.id)
 
   for (const opponent of candidates) {
     if (opponent.id === athlete.id) continue
-    const athleteSide = headToHeadRecordAgainst(athleteBouts, opponent.name)
-    const opponentSide = headToHeadRecordAgainst(currentSeasonBoutsByAthleteId.get(opponent.id) ?? [], athlete.name)
-    const wins = Math.max(athleteSide.wins, opponentSide.losses)
-    const losses = Math.max(athleteSide.losses, opponentSide.wins)
-    if (!wins && !losses) continue
-    records.push({ opponentId: opponent.id, opponent: opponent.name, wins, losses })
+    // Same rule as TOC seeding, from the same module: last 12 months only, and the most
+    // recent meeting decides. Two tools ranking the same wrestlers on the same evidence
+    // must not disagree about who beat whom.
+    const meetings: DatedMeeting[] = [
+      ...datedMeetingsAgainst(athleteBouts, opponent.name),
+      ...datedMeetingsAgainst(currentSeasonBoutsByAthleteId.get(opponent.id) ?? [], athlete.name, true),
+      ...(qualifierSide?.get(opponent.id)?.meetings ?? []).map((m) => ({
+        at: m.at,
+        won: m.won,
+        summary: m.summary,
+      })),
+    ]
+    const pairing = resolvePairing(meetings)
+    if (!pairing.wins && !pairing.losses) continue
+    records.push({
+      opponentId: opponent.id,
+      opponent: opponent.name,
+      wins: pairing.wins,
+      losses: pairing.losses,
+      lastMeetingWon: pairing.lastMeetingWon ?? undefined,
+      lastMeetingNote: pairing.lastMeetingNote ?? undefined,
+    })
   }
 
   return records
@@ -322,7 +339,7 @@ export function orderProspectsByHeadToHead<T extends {
         if (other.id === candidate.id) return false
         const record = other.head_to_head.find((meeting) => meeting.opponentId === candidate.id)
         return Boolean(
-          record && record.wins > record.losses && other.ai_score >= candidate.ai_score - HEAD_TO_HEAD_MAX_GAP,
+          record && holdsHeadToHeadEdge(record) && other.ai_score >= candidate.ai_score - HEAD_TO_HEAD_MAX_GAP,
         )
       }),
     )
@@ -493,9 +510,10 @@ export async function buildRecruitNcRankingBoard({
 
   const athleteRows = (athletes || []) as Array<Record<string, unknown>>
   const athleteIds = athleteRows.map((athlete) => String(athlete.id)).filter(Boolean)
-  const [matchRowsByAthlete, dualsByAthlete] = await Promise.all([
+  const [matchRowsByAthlete, dualsByAthlete, qualifierHeadToHead] = await Promise.all([
     fetchMatchRows(supabase, athleteIds),
     loadRankingDualsByAthlete(supabase, athleteRows),
+    loadQualifierHeadToHead(supabase, athleteIds).catch(() => new Map() as QualifierHeadToHeadIndex),
   ])
   const candidates: CandidateIdentity[] = athleteRows.map((athlete) => ({
     id: String(athlete.id),
@@ -603,13 +621,18 @@ export async function buildRecruitNcRankingBoard({
         })
       }
 
-      const headToHead = buildCandidateHeadToHead({ id, name }, candidates, currentSeasonBoutsByAthleteId)
+      const headToHead = buildCandidateHeadToHead(
+        { id, name },
+        candidates,
+        currentSeasonBoutsByAthleteId,
+        qualifierHeadToHead,
+      )
       const headToHeadWins = headToHead.reduce((sum, record) => sum + record.wins, 0)
       const headToHeadLosses = headToHead.reduce((sum, record) => sum + record.losses, 0)
       if (headToHeadWins || headToHeadLosses) {
         evidence.push({
           kind: "head_to_head",
-          label: `Current-season same-class head-to-head: ${headToHeadWins}-${headToHeadLosses}`,
+          label: `Same-class head-to-head, last 12 months: ${headToHeadWins}-${headToHeadLosses}`,
           tone: "green",
         })
         for (const record of headToHead.filter((row) => row.wins > row.losses).slice(0, 3)) {

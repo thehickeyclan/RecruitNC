@@ -2,6 +2,12 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { namesLikelySamePerson } from "@/lib/athlete-name-match"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import { loadQualifierHeadToHead, type QualifierHeadToHeadIndex } from "@/lib/other-tournaments"
+import {
+  datedMeetingsAgainst,
+  holdsHeadToHeadEdge,
+  resolvePairing,
+  type DatedMeeting,
+} from "@/lib/head-to-head"
 import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profile-results"
 import { placementPoints, recordWinPctPoints } from "@/lib/toc/athlete-compare"
 import type { TocFieldBoard, TocFieldAthlete, TocSeedEvidence } from "@/lib/toc/field-board"
@@ -217,24 +223,29 @@ function findFieldHeadToHeadBonus(
 
   for (const opponent of field) {
     if (opponent.athleteId === athlete.athleteId) continue
-    const athleteSide = headToHeadRecordAgainst(athleteBouts, opponent.name)
-    const opponentSide = headToHeadRecordAgainst(boutsByAthleteId.get(opponent.athleteId) ?? [], athlete.name)
-
     // Qualifier bouts are matched by athlete id, so this pairing is exact rather than
     // inferred from an opponent name typed into a match import.
     const qualifier = qualifierSide?.get(opponent.athleteId)
 
-    // A meeting may be stored on one wrestler, on both, and again in qualifier data.
-    // max() across every source captures mirrored copies without counting one bout twice.
-    const pairWins = Math.max(athleteSide.wins, opponentSide.losses, qualifier?.wins ?? 0)
-    const pairLosses = Math.max(athleteSide.losses, opponentSide.wins, qualifier?.losses ?? 0)
-    if (pairWins === 0 && pairLosses === 0) continue
-    wins += pairWins
-    losses += pairLosses
+    // Every known meeting, from the athlete's row, the opponent's mirrored row, and the
+    // qualifier bout table. resolvePairing windows them to 12 months, collapses the same
+    // bout arriving from more than one source, and lets the latest one decide.
+    const meetings: DatedMeeting[] = [
+      ...datedMeetingsAgainst(athleteBouts, opponent.name),
+      ...datedMeetingsAgainst(boutsByAthleteId.get(opponent.athleteId) ?? [], athlete.name, true),
+      ...(qualifier?.meetings ?? []).map((m) => ({ at: m.at, won: m.won, summary: m.summary })),
+    ]
+    const pairing = resolvePairing(meetings)
+    if (pairing.wins === 0 && pairing.losses === 0) continue
+    wins += pairing.wins
+    losses += pairing.losses
+
     opponents.push({
       opponent: opponent.name,
-      wins: pairWins,
-      losses: pairLosses,
+      wins: pairing.wins,
+      losses: pairing.losses,
+      lastMeetingWon: pairing.lastMeetingWon ?? undefined,
+      lastMeetingNote: pairing.lastMeetingNote ?? undefined,
       ...(qualifier ? { viaQualifier: true, note: qualifier.summary } : {}),
     })
   }
@@ -348,7 +359,12 @@ export function orderByHeadToHeadThenResume<T extends {
         //
         // Head-to-head here is current-season only (see latestSeasonMatchRows), so this is a live
         // result between two wrestlers in the same bracket — the most direct evidence there is.
-        return Boolean(record && record.wins > record.losses && other.score >= candidate.score - HEAD_TO_HEAD_MAX_GAP)
+        // The latest meeting decides when we know it; otherwise fall back to the aggregate.
+        // A split series (one win each) used to count as no head-to-head at all, which let
+        // résumé settle a pairing that a bout last week had already answered.
+        return Boolean(
+          record && holdsHeadToHeadEdge(record) && other.score >= candidate.score - HEAD_TO_HEAD_MAX_GAP,
+        )
       }),
     )
 
@@ -416,7 +432,16 @@ async function scoreAthleteForTocSeed({
   // Head-to-head is enforced by orderByHeadToHeadThenResume below. Do not also
   // add or subtract résumé points here: doing both penalized a wrestler twice
   // for losing to the clear No. 1 and could bury an otherwise top-four résumé.
-  if (h2h.wins || h2h.losses) reasons.push(`Field head-to-head: ${h2h.wins}-${h2h.losses}`)
+  if (h2h.wins || h2h.losses) {
+    reasons.push(`Field head-to-head: ${h2h.wins}-${h2h.losses}`)
+    // A split series is decided by the latest bout, so name it rather than leaving the
+    // seed looking unexplained next to a 1-1.
+    for (const pairing of h2h.opponents) {
+      if (pairing.wins === pairing.losses && pairing.lastMeetingNote) {
+        reasons.push(`Most recent vs ${pairing.opponent}: ${pairing.lastMeetingNote}`)
+      }
+    }
+  }
 
   if (athleteRow) {
     const ranking = toNumber(athleteRow.prospect_ranking)

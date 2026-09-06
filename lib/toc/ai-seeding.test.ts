@@ -8,6 +8,14 @@ import {
 } from "@/lib/toc/ai-seeding"
 import type { TocFieldBoard } from "@/lib/toc/field-board"
 
+/** Head-to-head counts only the last 12 months, so fixtures date bouts relative to now. */
+function daysAgo(days: number): string {
+  return new Date(Date.now() - days * 86_400_000).toLocaleDateString("en-US")
+}
+function isoDaysAgo(days: number): string {
+  return new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10)
+}
+
 function fakeSupabaseWithMatches(rows: unknown[], qualifierBouts: unknown[] = []) {
   return {
     from(table: string) {
@@ -112,6 +120,7 @@ describe("buildTocAiSeedRecommendations", () => {
               win_loss: "W",
               tournament: "NCHSAA State Championships",
               weight: "149",
+              date: daysAgo(60),
             },
           ],
         },
@@ -122,8 +131,8 @@ describe("buildTocAiSeedRecommendations", () => {
 
     expect(recommendations.get("aiden")?.aiSeed).toBe(1)
     expect(recommendations.get("ammon")?.aiSeed).toBe(2)
-    expect(recommendations.get("ammon")?.seedEvidence.headToHead).toEqual([
-      { opponent: "Aiden Campbell", wins: 0, losses: 1 },
+    expect(recommendations.get("ammon")?.seedEvidence.headToHead).toMatchObject([
+      { opponent: "Aiden Campbell", wins: 0, losses: 1, lastMeetingWon: false },
     ])
   })
 
@@ -186,6 +195,7 @@ describe("buildTocAiSeedRecommendations", () => {
             win_type: "F",
             score: "11-9 3:20",
             event_name: "NC Super 32 Early Entry",
+            event_date: isoDaysAgo(1),
             year: 2026,
           },
         ],
@@ -196,11 +206,12 @@ describe("buildTocAiSeedRecommendations", () => {
 
     expect(recommendations.get("grack")?.aiSeed).toBe(1)
     expect(recommendations.get("smith")?.aiSeed).toBe(2)
-    expect(recommendations.get("grack")?.seedEvidence.headToHead).toEqual([
+    expect(recommendations.get("grack")?.seedEvidence.headToHead).toMatchObject([
       {
         opponent: "Hayden Smith",
         wins: 1,
         losses: 0,
+        lastMeetingWon: true,
         viaQualifier: true,
         note: "won F 11-9 3:20 — Finals, NC Super 32 Early Entry, 2026",
       },
@@ -233,7 +244,15 @@ describe("buildTocAiSeedRecommendations", () => {
             total_matches: 10,
             wins: 8,
             losses: 2,
-            matches: [{ opponent_name: "Loser Kid", win_loss: "W", tournament: "Super 32 Early Entry", weight: "157" }],
+            matches: [
+              {
+                opponent_name: "Loser Kid",
+                win_loss: "W",
+                tournament: "Super 32 Early Entry",
+                weight: "157",
+                date: daysAgo(1),
+              },
+            ],
           },
           { athlete_id: "b", total_matches: 10, wins: 6, losses: 4, matches: [] },
         ],
@@ -248,6 +267,7 @@ describe("buildTocAiSeedRecommendations", () => {
             win_type: "DEC",
             score: "5-3",
             event_name: "NC Super 32 Early Entry",
+            event_date: isoDaysAgo(1),
             year: 2026,
           },
         ],

@@ -38,6 +38,10 @@ export type TocSeedEvidence = {
     viaQualifier?: boolean
     /** How the deepest meeting went, for the seeding note. */
     note?: string
+    /** Did this wrestler win the most recent meeting? That bout decides the pairing. */
+    lastMeetingWon?: boolean
+    /** How the most recent meeting went, for the seeding note. */
+    lastMeetingNote?: string
   }[]
   summary: {
     stateTitles: number

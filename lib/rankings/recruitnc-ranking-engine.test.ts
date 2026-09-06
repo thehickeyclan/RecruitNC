@@ -34,17 +34,47 @@ describe("RecruitNC TOC-style ranking engine", () => {
   })
 
   it("deduplicates mirrored match records when building candidate head-to-head", () => {
+    // Head-to-head is windowed to the last 12 months, so bouts must be dated.
+    const date = new Date(Date.now() - 30 * 86_400_000).toLocaleDateString("en-US")
     const bouts = new Map([
-      ["a", [{ opponent_name: "Beta Wrestler", win_loss: "W" }]],
-      ["b", [{ opponent_name: "Alpha Wrestler", win_loss: "L" }]],
+      ["a", [{ opponent_name: "Beta Wrestler", win_loss: "W", date }]],
+      ["b", [{ opponent_name: "Alpha Wrestler", win_loss: "L", date }]],
     ])
     const candidates = [
       { id: "a", name: "Alpha Wrestler" },
       { id: "b", name: "Beta Wrestler" },
     ]
 
-    expect(buildCandidateHeadToHead(candidates[0], candidates, bouts)).toEqual([
-      { opponentId: "b", opponent: "Beta Wrestler", wins: 1, losses: 0 },
+    expect(buildCandidateHeadToHead(candidates[0], candidates, bouts)).toMatchObject([
+      { opponentId: "b", opponent: "Beta Wrestler", wins: 1, losses: 0, lastMeetingWon: true },
+    ])
+  })
+
+  it("drops a head-to-head meeting older than 12 months", () => {
+    const stale = new Date(Date.now() - 400 * 86_400_000).toLocaleDateString("en-US")
+    const bouts = new Map([["a", [{ opponent_name: "Beta Wrestler", win_loss: "W", date: stale }]]])
+    const candidates = [
+      { id: "a", name: "Alpha Wrestler" },
+      { id: "b", name: "Beta Wrestler" },
+    ]
+    expect(buildCandidateHeadToHead(candidates[0], candidates, bouts)).toEqual([])
+  })
+
+  it("gives a split series to whoever won most recently", () => {
+    const older = new Date(Date.now() - 200 * 86_400_000).toLocaleDateString("en-US")
+    const recent = new Date(Date.now() - 2 * 86_400_000).toLocaleDateString("en-US")
+    const bouts = new Map([
+      ["a", [
+        { opponent_name: "Beta Wrestler", win_loss: "L", date: older },
+        { opponent_name: "Beta Wrestler", win_loss: "W", date: recent },
+      ]],
+    ])
+    const candidates = [
+      { id: "a", name: "Alpha Wrestler" },
+      { id: "b", name: "Beta Wrestler" },
+    ]
+    expect(buildCandidateHeadToHead(candidates[0], candidates, bouts)).toMatchObject([
+      { opponentId: "b", wins: 1, losses: 1, lastMeetingWon: true },
     ])
   })
 

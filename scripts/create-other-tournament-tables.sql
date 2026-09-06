@@ -88,3 +88,6 @@ CREATE POLICY other_tournament_bouts_public_read ON other_tournament_bouts
 -- Bracket vocabularies differ by leg ("Finals" in NC, "1st Place Match" in VA). `round` holds
 -- the canonical name so profiles read consistently; `source_round` keeps the printed label.
 ALTER TABLE other_tournament_bouts ADD COLUMN IF NOT EXISTS source_round text;
+
+-- Head-to-head weighs the most recent meeting highest, so a bout needs its own date.
+ALTER TABLE other_tournament_bouts ADD COLUMN IF NOT EXISTS event_date date;

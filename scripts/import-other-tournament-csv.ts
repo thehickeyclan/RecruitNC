@@ -224,6 +224,7 @@ async function main() {
     return {
       event_key: eventKey,
       event_name: eventName,
+      event_date: eventDate || null,
       year,
       weight_class: bout.weightClass,
       round: bout.round,

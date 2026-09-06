@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { buildTocFieldBoard } from "@/lib/toc/field-board"
 import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
 import { findSignificantWins, type Bout, type RankedOpponent } from "@/lib/significant-wins"
+import { getQualifierSignificantWinBouts } from "@/lib/other-tournaments"
 
 /**
  * The wins on a profile worth a reader's attention: over the TOC field, or over a ranked prospect.
@@ -22,12 +23,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { id } = await params
   const admin = createAdminClient()
 
-  const [{ data: rows }, { data: invitations }] = await Promise.all([
+  const [{ data: rows }, { data: invitations }, qualifierBouts] = await Promise.all([
     admin.from("matches").select("season,matches").eq("athlete_id", id),
     admin.from("toc_invitations").select("*, athletes(id,name)"),
+    // Qualifier wins live in their own table, not in the match import.
+    getQualifierSignificantWinBouts(admin, id).catch(() => [] as Bout[]),
   ])
 
-  const bouts: Bout[] = latestSeasonMatchRows((rows ?? []) as never).flatMap((row) => {
+  const matchBouts: Bout[] = latestSeasonMatchRows((rows ?? []) as never).flatMap((row) => {
     try {
       const value = (row as { matches?: unknown }).matches
       return Array.isArray(value) ? value : JSON.parse(String(value ?? "[]"))
@@ -35,6 +38,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       return []
     }
   })
+  const bouts: Bout[] = [...matchBouts, ...qualifierBouts]
   if (bouts.length === 0) return NextResponse.json({ wins: [] })
 
   const tocField = buildTocFieldBoard(invitations ?? []).weights

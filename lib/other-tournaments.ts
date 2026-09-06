@@ -13,6 +13,8 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
+import { HEAD_TO_HEAD_WINDOW_DAYS } from "@/lib/head-to-head"
+import type { Bout } from "@/lib/significant-wins"
 
 export type OtherTournamentResult = {
   eventKey: string
@@ -380,12 +382,63 @@ export async function getOtherTournamentProfileBlocks(
   })
 }
 
+/**
+ * Qualifier bouts in the shape the significant-wins list reads.
+ *
+ * That list was built against `matches` alone, so a win at a qualifier — a real win over a
+ * ranked wrestler or someone in the TOC field — never showed up on the profile. Adam Walker
+ * beat Luke Richards at the NC Early Entry and the section stayed empty of it.
+ *
+ * Windowed to the same 12 months as head-to-head: this is a claim about who somebody is
+ * beating now, and last year's qualifier is a different claim.
+ */
+export async function getQualifierSignificantWinBouts(
+  supabase: SupabaseClient,
+  athleteId: string,
+): Promise<Bout[]> {
+  if (!athleteId?.trim()) return []
+  const { data, error } = await supabase
+    .from("other_tournament_bouts")
+    .select("opponent_name, opponent_club, win, is_bye, win_type, score, weight_class, event_name, event_date")
+    .eq("athlete_id", athleteId)
+    .eq("win", true)
+  if (error || !data) return []
+
+  const cutoff = Date.now() - HEAD_TO_HEAD_WINDOW_DAYS * 86_400_000
+  const out: Bout[] = []
+  for (const row of data) {
+    if (row.is_bye || !row.opponent_name) continue
+    const at = row.event_date ? Date.parse(String(row.event_date)) : NaN
+    if (Number.isFinite(at) && at < cutoff) continue
+    out.push({
+      opponent: displayName(String(row.opponent_name)),
+      opponent_school: (row.opponent_club as string) ?? null,
+      win_loss: "W",
+      result: [row.win_type, row.score].filter(Boolean).join(" ").trim() || null,
+      date: (row.event_date as string) ?? null,
+      venue: (row.event_name as string) ?? null,
+      weight: (row.weight_class as string) ?? null,
+    })
+  }
+  return out
+}
+
+/** One meeting between two wrestlers, dated so the most recent one can be weighed highest. */
+export type QualifierMeeting = {
+  /** Epoch ms of the event date, or null when the event carried no date. */
+  at: number | null
+  won: boolean
+  summary: string
+}
+
 /** One pairing's qualifier head-to-head, for TOC seeding. */
 export type QualifierHeadToHead = {
   wins: number
   losses: number
   /** The meeting furthest into the bracket, phrased for a seeding note. */
   summary: string
+  /** Every meeting, so seeding can weigh the latest one highest. */
+  meetings: QualifierMeeting[]
 }
 
 /** athleteId -> opponentId -> head-to-head at qualifier events. */
@@ -426,7 +479,7 @@ export async function loadQualifierHeadToHead(
 
   const { data, error } = await supabase
     .from("other_tournament_bouts")
-    .select("athlete_id, opponent_id, win, is_bye, round, bout_order, win_type, score, event_name, year")
+    .select("athlete_id, opponent_id, win, is_bye, round, bout_order, win_type, score, event_name, event_date, year")
     .in("athlete_id", ids)
   if (error || !data) return index
 
@@ -448,23 +501,31 @@ export async function loadQualifierHeadToHead(
       byOpponent = new Map()
       index.set(athleteId, byOpponent)
     }
-    const entry = byOpponent.get(opponentId) ?? { wins: 0, losses: 0, summary: "" }
+    const entry = byOpponent.get(opponentId) ?? { wins: 0, losses: 0, summary: "", meetings: [] }
     if (row.win) entry.wins += 1
     else entry.losses += 1
+
+    const summary = meetingSummary({
+      win: Boolean(row.win),
+      win_type: row.win_type as string,
+      score: row.score as string,
+      round: row.round as string,
+      event_name: row.event_name as string,
+      year: row.year as number,
+    })
+    const parsedDate = row.event_date ? Date.parse(String(row.event_date)) : NaN
+    entry.meetings.push({
+      at: Number.isFinite(parsedDate) ? parsedDate : null,
+      won: Boolean(row.win),
+      summary,
+    })
 
     // Keep the meeting that went furthest in the bracket as the note.
     const key = `${athleteId}|${opponentId}`
     const order = Number(row.bout_order ?? 0)
     if (!entry.summary || order >= (bestRound.get(key) ?? -1)) {
       bestRound.set(key, order)
-      entry.summary = meetingSummary({
-        win: Boolean(row.win),
-        win_type: row.win_type as string,
-        score: row.score as string,
-        round: row.round as string,
-        event_name: row.event_name as string,
-        year: row.year as number,
-      })
+      entry.summary = summary
     }
     byOpponent.set(opponentId, entry)
   }
