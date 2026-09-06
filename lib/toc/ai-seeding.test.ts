@@ -8,15 +8,18 @@ import {
 } from "@/lib/toc/ai-seeding"
 import type { TocFieldBoard } from "@/lib/toc/field-board"
 
-function fakeSupabaseWithMatches(rows: unknown[]) {
+function fakeSupabaseWithMatches(rows: unknown[], qualifierBouts: unknown[] = []) {
   return {
     from(table: string) {
-      if (table !== "matches") throw new Error(`Unexpected table: ${table}`)
+      if (table !== "matches" && table !== "other_tournament_bouts") {
+        throw new Error(`Unexpected table: ${table}`)
+      }
+      const data = table === "matches" ? rows : qualifierBouts
       return {
         select() {
           return {
             in() {
-              return Promise.resolve({ data: rows, error: null })
+              return Promise.resolve({ data, error: null })
             },
           }
         },
@@ -122,6 +125,140 @@ describe("buildTocAiSeedRecommendations", () => {
     expect(recommendations.get("ammon")?.seedEvidence.headToHead).toEqual([
       { opponent: "Aiden Campbell", wins: 0, losses: 1 },
     ])
+  })
+
+  it("lets a Super 32 Early Entry win override the résumé seed order", async () => {
+    // Grack was the lower seed on résumé alone but pinned Smith in the qualifier final.
+    // A direct win between two kids in the same TOC bracket has to outrank résumé depth.
+    const board: TocFieldBoard = {
+      summary: { totalConfirmed: 2, totalInvited: 0, fullBrackets: 0, partialBrackets: 1 },
+      weights: [
+        {
+          weightClass: 157,
+          maxSlots: 12,
+          confirmedCount: 2,
+          invitedCount: 0,
+          openConfirmedSlots: 6,
+          athletes: [
+            {
+              invitationId: "i-smith",
+              athleteId: "smith",
+              name: "Hayden Smith",
+              school: "White Oak",
+              graduationYear: 2028,
+              status: "confirmed",
+              seed: null,
+              jacketSize: null,
+              invitedAt: null,
+              confirmedAt: null,
+            },
+            {
+              invitationId: "i-grack",
+              athleteId: "grack",
+              name: "Vincent Grack",
+              school: "Hough",
+              graduationYear: 2028,
+              status: "confirmed",
+              seed: null,
+              jacketSize: null,
+              invitedAt: null,
+              confirmedAt: null,
+            },
+          ],
+        },
+      ],
+    }
+
+    const recommendations = await buildTocAiSeedRecommendations({
+      supabase: fakeSupabaseWithMatches(
+        [
+          { athlete_id: "smith", total_matches: 40, wins: 38, losses: 2, matches: [] },
+          { athlete_id: "grack", total_matches: 12, wins: 9, losses: 3, matches: [] },
+        ],
+        [
+          {
+            athlete_id: "grack",
+            opponent_id: "smith",
+            win: true,
+            is_bye: false,
+            round: "Finals",
+            bout_order: 90,
+            win_type: "F",
+            score: "11-9 3:20",
+            event_name: "NC Super 32 Early Entry",
+            year: 2026,
+          },
+        ],
+      ),
+      board,
+      athleteRowsById: new Map(),
+    })
+
+    expect(recommendations.get("grack")?.aiSeed).toBe(1)
+    expect(recommendations.get("smith")?.aiSeed).toBe(2)
+    expect(recommendations.get("grack")?.seedEvidence.headToHead).toEqual([
+      {
+        opponent: "Hayden Smith",
+        wins: 1,
+        losses: 0,
+        viaQualifier: true,
+        note: "won F 11-9 3:20 — Finals, NC Super 32 Early Entry, 2026",
+      },
+    ])
+  })
+
+  it("does not double count a qualifier bout that is also in the match import", async () => {
+    const board: TocFieldBoard = {
+      summary: { totalConfirmed: 2, totalInvited: 0, fullBrackets: 0, partialBrackets: 1 },
+      weights: [
+        {
+          weightClass: 157,
+          maxSlots: 12,
+          confirmedCount: 2,
+          invitedCount: 0,
+          openConfirmedSlots: 6,
+          athletes: [
+            { invitationId: "i-a", athleteId: "a", name: "Winner Kid", school: "A", graduationYear: 2027, status: "confirmed", seed: null, jacketSize: null, invitedAt: null, confirmedAt: null },
+            { invitationId: "i-b", athleteId: "b", name: "Loser Kid", school: "B", graduationYear: 2027, status: "confirmed", seed: null, jacketSize: null, invitedAt: null, confirmedAt: null },
+          ],
+        },
+      ],
+    }
+
+    const recommendations = await buildTocAiSeedRecommendations({
+      supabase: fakeSupabaseWithMatches(
+        [
+          {
+            athlete_id: "a",
+            total_matches: 10,
+            wins: 8,
+            losses: 2,
+            matches: [{ opponent_name: "Loser Kid", win_loss: "W", tournament: "Super 32 Early Entry", weight: "157" }],
+          },
+          { athlete_id: "b", total_matches: 10, wins: 6, losses: 4, matches: [] },
+        ],
+        [
+          {
+            athlete_id: "a",
+            opponent_id: "b",
+            win: true,
+            is_bye: false,
+            round: "Finals",
+            bout_order: 90,
+            win_type: "DEC",
+            score: "5-3",
+            event_name: "NC Super 32 Early Entry",
+            year: 2026,
+          },
+        ],
+      ),
+      board,
+      athleteRowsById: new Map(),
+    })
+
+    const h2h = recommendations.get("a")?.seedEvidence.headToHead ?? []
+    expect(h2h).toHaveLength(1)
+    expect(h2h[0]).toMatchObject({ opponent: "Loser Kid", wins: 1, losses: 0 })
   })
 })
 

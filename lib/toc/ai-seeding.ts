@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { namesLikelySamePerson } from "@/lib/athlete-name-match"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
+import { loadQualifierHeadToHead, type QualifierHeadToHeadIndex } from "@/lib/other-tournaments"
 import { loadNcUnitedResultsForNameSearch } from "@/lib/national-team-live-profile-results"
 import { placementPoints, recordWinPctPoints } from "@/lib/toc/athlete-compare"
 import type { TocFieldBoard, TocFieldAthlete, TocSeedEvidence } from "@/lib/toc/field-board"
@@ -206,25 +207,36 @@ function findFieldHeadToHeadBonus(
   athlete: TocFieldAthlete,
   field: TocFieldAthlete[],
   boutsByAthleteId: Map<string, MatchBout[]>,
+  qualifierHeadToHead?: QualifierHeadToHeadIndex,
 ): { points: number; wins: number; losses: number; opponents: TocSeedEvidence["headToHead"] } {
   let wins = 0
   let losses = 0
   const opponents: TocSeedEvidence["headToHead"] = []
   const athleteBouts = boutsByAthleteId.get(athlete.athleteId) ?? []
+  const qualifierSide = qualifierHeadToHead?.get(athlete.athleteId)
 
   for (const opponent of field) {
     if (opponent.athleteId === athlete.athleteId) continue
     const athleteSide = headToHeadRecordAgainst(athleteBouts, opponent.name)
     const opponentSide = headToHeadRecordAgainst(boutsByAthleteId.get(opponent.athleteId) ?? [], athlete.name)
 
-    // A meeting may be stored on one wrestler or both. max() captures mirrored
-    // records without double-counting the same bout when both profiles contain it.
-    const pairWins = Math.max(athleteSide.wins, opponentSide.losses)
-    const pairLosses = Math.max(athleteSide.losses, opponentSide.wins)
+    // Qualifier bouts are matched by athlete id, so this pairing is exact rather than
+    // inferred from an opponent name typed into a match import.
+    const qualifier = qualifierSide?.get(opponent.athleteId)
+
+    // A meeting may be stored on one wrestler, on both, and again in qualifier data.
+    // max() across every source captures mirrored copies without counting one bout twice.
+    const pairWins = Math.max(athleteSide.wins, opponentSide.losses, qualifier?.wins ?? 0)
+    const pairLosses = Math.max(athleteSide.losses, opponentSide.wins, qualifier?.losses ?? 0)
     if (pairWins === 0 && pairLosses === 0) continue
     wins += pairWins
     losses += pairLosses
-    opponents.push({ opponent: opponent.name, wins: pairWins, losses: pairLosses })
+    opponents.push({
+      opponent: opponent.name,
+      wins: pairWins,
+      losses: pairLosses,
+      ...(qualifier ? { viaQualifier: true, note: qualifier.summary } : {}),
+    })
   }
   return { points: wins * 50 - losses * 35, wins, losses, opponents }
 }
@@ -547,7 +559,12 @@ export async function buildTocAiSeedRecommendations({
   athleteRowsById: Map<string, Record<string, unknown>>
 }): Promise<Map<string, TocAiSeedRecommendation>> {
   const athleteIds = [...new Set(board.weights.flatMap((w) => w.athletes.map((a) => a.athleteId)).filter(Boolean))]
-  const matchRowsByAthlete = await loadMatchRows(supabase, athleteIds)
+  const [matchRowsByAthlete, qualifierHeadToHead] = await Promise.all([
+    loadMatchRows(supabase, athleteIds),
+    // Qualifier meetings are current-season bouts between kids in this field, so they
+    // belong in head-to-head — not only in the résumé score.
+    loadQualifierHeadToHead(supabase, athleteIds).catch(() => new Map() as QualifierHeadToHeadIndex),
+  ])
   const out = new Map<string, TocAiSeedRecommendation>()
 
   for (const weight of board.weights) {
@@ -567,7 +584,7 @@ export async function buildTocAiSeedRecommendations({
           supabase,
           athlete,
           athleteRow: athleteRowsById.get(athlete.athleteId),
-          fieldHeadToHead: findFieldHeadToHeadBonus(athlete, confirmed, boutsByAthleteId),
+          fieldHeadToHead: findFieldHeadToHeadBonus(athlete, confirmed, boutsByAthleteId, qualifierHeadToHead),
           matchRows: matchRowsByAthlete.get(athlete.athleteId) || [],
         })
         return { athlete, ...scoredAthlete }

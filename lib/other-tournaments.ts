@@ -380,6 +380,98 @@ export async function getOtherTournamentProfileBlocks(
   })
 }
 
+/** One pairing's qualifier head-to-head, for TOC seeding. */
+export type QualifierHeadToHead = {
+  wins: number
+  losses: number
+  /** The meeting furthest into the bracket, phrased for a seeding note. */
+  summary: string
+}
+
+/** athleteId -> opponentId -> head-to-head at qualifier events. */
+export type QualifierHeadToHeadIndex = Map<string, Map<string, QualifierHeadToHead>>
+
+function meetingSummary(bout: {
+  win: boolean
+  win_type?: string | null
+  score?: string | null
+  round?: string | null
+  event_name?: string | null
+  year?: number | null
+}): string {
+  const outcome = bout.win ? "won" : "lost"
+  const how = [bout.win_type, bout.score].filter(Boolean).join(" ").trim()
+  const where = [bout.round, bout.event_name, bout.year].filter(Boolean).join(", ")
+  return `${outcome}${how ? ` ${how}` : ""}${where ? ` — ${where}` : ""}`
+}
+
+/**
+ * Head-to-head between a given set of athletes at qualifier events, keyed by athlete id.
+ *
+ * Seeding is the one place where guessing at names is not good enough: flipping a seed on a
+ * mistaken identity puts the wrong kid on the wrong line of a published bracket. These rows
+ * carry `athlete_id` and `opponent_id` resolved at import, so pairings here are exact.
+ *
+ * Only the most recent year of qualifier results counts, matching the rule the rest of TOC
+ * head-to-head already follows: this is an argument about who is beating whom now, and a
+ * result from a previous season at a different weight is not evidence about this bracket.
+ */
+export async function loadQualifierHeadToHead(
+  supabase: SupabaseClient,
+  athleteIds: string[],
+): Promise<QualifierHeadToHeadIndex> {
+  const index: QualifierHeadToHeadIndex = new Map()
+  const ids = [...new Set(athleteIds.filter(Boolean))]
+  if (ids.length < 2) return index
+
+  const { data, error } = await supabase
+    .from("other_tournament_bouts")
+    .select("athlete_id, opponent_id, win, is_bye, round, bout_order, win_type, score, event_name, year")
+    .in("athlete_id", ids)
+  if (error || !data) return index
+
+  const inField = new Set(ids)
+  const bestRound = new Map<string, number>()
+
+  const years = data.map((row) => Number(row.year)).filter((year) => Number.isFinite(year))
+  const latestYear = years.length ? Math.max(...years) : null
+
+  for (const row of data) {
+    if (latestYear != null && Number(row.year) !== latestYear) continue
+    const athleteId = row.athlete_id ? String(row.athlete_id) : ""
+    const opponentId = row.opponent_id ? String(row.opponent_id) : ""
+    if (!athleteId || !opponentId || row.is_bye) continue
+    if (!inField.has(athleteId) || !inField.has(opponentId)) continue
+
+    let byOpponent = index.get(athleteId)
+    if (!byOpponent) {
+      byOpponent = new Map()
+      index.set(athleteId, byOpponent)
+    }
+    const entry = byOpponent.get(opponentId) ?? { wins: 0, losses: 0, summary: "" }
+    if (row.win) entry.wins += 1
+    else entry.losses += 1
+
+    // Keep the meeting that went furthest in the bracket as the note.
+    const key = `${athleteId}|${opponentId}`
+    const order = Number(row.bout_order ?? 0)
+    if (!entry.summary || order >= (bestRound.get(key) ?? -1)) {
+      bestRound.set(key, order)
+      entry.summary = meetingSummary({
+        win: Boolean(row.win),
+        win_type: row.win_type as string,
+        score: row.score as string,
+        round: row.round as string,
+        event_name: row.event_name as string,
+        year: row.year as number,
+      })
+    }
+    byOpponent.set(opponentId, entry)
+  }
+
+  return index
+}
+
 /**
  * Head-to-head against other athletes we have profiles for, aggregated across every
  * "other tournament" bout. Used for seeding and for the direct-wins signal in rankings.

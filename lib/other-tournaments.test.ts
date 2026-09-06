@@ -4,6 +4,7 @@ import {
   displayName,
   credentialKey,
   isNotableWin,
+  loadQualifierHeadToHead,
   placementLabel,
   scoreWin,
   summarizeDirectResults,
@@ -179,6 +180,63 @@ describe("buildStrengthOfWins", () => {
       facts,
     )
     expect(wins[0]!.opponentName).toBe("Ranked Kid")
+  })
+})
+
+describe("loadQualifierHeadToHead", () => {
+  function fakeSupabase(rows: unknown[]) {
+    return {
+      from() {
+        return { select() { return { in() { return Promise.resolve({ data: rows, error: null }) } } } }
+      },
+    } as never
+  }
+  const row = (over: Record<string, unknown>) => ({
+    athlete_id: "a", opponent_id: "b", win: true, is_bye: false,
+    round: "Finals", bout_order: 90, win_type: "F", score: "11-9 3:20",
+    event_name: "NC Super 32 Early Entry", year: 2026, ...over,
+  })
+
+  it("pairs wrestlers by athlete id, not by name", async () => {
+    const index = await loadQualifierHeadToHead(fakeSupabase([row({})]), ["a", "b"])
+    expect(index.get("a")?.get("b")).toMatchObject({ wins: 1, losses: 0 })
+    expect(index.get("a")?.get("b")?.summary).toContain("won F 11-9 3:20")
+  })
+
+  it("ignores byes and opponents outside the field", async () => {
+    const index = await loadQualifierHeadToHead(
+      fakeSupabase([row({ is_bye: true }), row({ opponent_id: "stranger" })]),
+      ["a", "b"],
+    )
+    expect(index.size).toBe(0)
+  })
+
+  it("keeps only the most recent year, so last season does not seed this bracket", async () => {
+    const index = await loadQualifierHeadToHead(
+      fakeSupabase([
+        row({ year: 2025, win: false, score: "2-1" }),
+        row({ year: 2026, win: true, score: "11-9 3:20" }),
+      ]),
+      ["a", "b"],
+    )
+    expect(index.get("a")?.get("b")).toMatchObject({ wins: 1, losses: 0 })
+  })
+
+  it("reports the meeting that went furthest in the bracket", async () => {
+    const index = await loadQualifierHeadToHead(
+      fakeSupabase([
+        row({ round: "Round of 32", bout_order: 30, win_type: "DEC", score: "3-1" }),
+        row({ round: "Finals", bout_order: 90, win_type: "F", score: "11-9 3:20" }),
+      ]),
+      ["a", "b"],
+    )
+    const entry = index.get("a")?.get("b")
+    expect(entry).toMatchObject({ wins: 2, losses: 0 })
+    expect(entry?.summary).toContain("Finals")
+  })
+
+  it("returns nothing when fewer than two of the field are given", async () => {
+    expect((await loadQualifierHeadToHead(fakeSupabase([row({})]), ["a"])).size).toBe(0)
   })
 })
 

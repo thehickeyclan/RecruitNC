@@ -30,7 +30,15 @@ export type TocSeedEvidence = {
   fargo: string[]
   /** Qualifiers and open events (Super 32 Early Entry etc.). Optional — older rows predate it. */
   other?: string[]
-  headToHead: { opponent: string; wins: number; losses: number }[]
+  headToHead: {
+    opponent: string
+    wins: number
+    losses: number
+    /** The pairing is documented in qualifier bout data (Super 32 Early Entry etc.). */
+    viaQualifier?: boolean
+    /** How the deepest meeting went, for the seeding note. */
+    note?: string
+  }[]
   summary: {
     stateTitles: number
     statePlacements: number
