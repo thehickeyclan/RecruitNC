@@ -29,6 +29,8 @@ import { releasesPersonalData, type ScoutingAccessTier } from "@/lib/scouting-re
 
 export type ScoutingReportIdentity = {
   name: string
+  /** Portrait for the file photo. Null when the athlete has none. */
+  photoUrl: string | null
   highSchool: string | null
   highSchoolLogoUrl: string | null
   club: string | null
@@ -103,6 +105,18 @@ export type ScoutingReport = {
 function text(value: unknown): string | null {
   const s = String(value ?? "").trim()
   return s ? s : null
+}
+
+/**
+ * The athlete's portrait, following the same precedence the profile uses.
+ *
+ * The silhouette placeholder counts as no photo: a scouting report with a grey outline where
+ * a face should be looks worse than one with no photo block at all.
+ */
+function photoUrl(athlete: Record<string, unknown>): string | null {
+  const candidate = text(athlete.photourl) ?? text(athlete.photo_url) ?? text(athlete.image_url)
+  if (!candidate || candidate === "/wrestler-silhouette.png") return null
+  return candidate
 }
 
 function ordinal(place: number): string {
@@ -235,6 +249,7 @@ export async function buildScoutingReport(
     generatedAt: new Date().toISOString(),
     identity: {
       name: String(athlete.name ?? "Athlete"),
+      photoUrl: photoUrl(athlete),
       highSchool: text(athlete.highschool ?? athlete.high_school),
       highSchoolLogoUrl: text(athlete.highSchoolLogoUrl),
       club: text(athlete.wrestlingClub),

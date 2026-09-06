@@ -191,7 +191,20 @@ export function ScoutingReportDocument({
         </div>
 
         {/* Subject line + vitals block, two columns like a dossier header. */}
-        <div className="mt-5 flex items-start justify-between gap-6">
+        <div className="mt-5 flex items-start justify-between gap-5">
+          {/* File photo, sized and bordered like one — a dossier has a portrait, not a hero image. */}
+          {identity.photoUrl ? (
+            <div className="shrink-0 border border-gray-300 bg-gray-50 p-1">
+              <Image
+                src={identity.photoUrl}
+                alt={identity.name}
+                width={104}
+                height={130}
+                className="h-[130px] w-[104px] object-cover object-top"
+                unoptimized
+              />
+            </div>
+          ) : null}
           <div className="min-w-0 flex-1">
             <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">Subject</div>
             <h1 className="mt-0.5 font-serif text-[34px] font-bold leading-none tracking-tight text-[#03154C]">
