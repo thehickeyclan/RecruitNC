@@ -66,3 +66,18 @@ export function watermarkLine(viewer: {
   const label = who.length ? who.join(" · ") : String(viewer.email ?? "").trim() || "Verified coach"
   return `Prepared for ${label}`
 }
+
+/**
+ * Whether an athlete has a scouting report at all.
+ *
+ * Female wrestlers are held back while their results are thinner in our data than the boys' —
+ * a coverage gap, not a judgement, and one that would make a report read as a weaker record
+ * than the wrestler actually has. See `isRatedAthlete` for the same rule on star ratings and
+ * the numbers behind it.
+ *
+ * An athlete with no gender recorded keeps their report: this holds back a group we can
+ * identify, and must not widen into everyone we are unsure about.
+ */
+export function scoutingReportAvailable(athlete: { gender?: unknown }): boolean {
+  return String(athlete?.gender ?? "").trim().toLowerCase() !== "female"
+}

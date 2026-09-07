@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   applyStarOverride,
+  isRatedAthlete,
   isRatedClass,
   rateAthlete,
   starsForScore,
@@ -263,5 +264,24 @@ describe("applyStarOverride", () => {
   it("does not mark an override that agrees with the formula", () => {
     // Setting the same number by hand is not a disagreement and should not read as one.
     expect(applyStarOverride(computed, { stars: computed.stars, reason: "looks right to me" }).override).toBeUndefined()
+  })
+})
+
+describe("isRatedAthlete", () => {
+  it("holds female wrestlers back for now", () => {
+    expect(isRatedAthlete({ gender: "Female", graduationYear: 2027 })).toBe(false)
+    expect(isRatedAthlete({ gender: "female", graduationYear: 2028 })).toBe(false)
+  })
+
+  it("still rates everybody else in a rated class", () => {
+    expect(isRatedAthlete({ gender: "Male", graduationYear: 2027 })).toBe(true)
+  })
+
+  it("does not widen into athletes with no gender on file", () => {
+    expect(isRatedAthlete({ gender: null, graduationYear: 2027 })).toBe(true)
+  })
+
+  it("still refuses an unrated class whatever the gender", () => {
+    expect(isRatedAthlete({ gender: "Male", graduationYear: 2030 })).toBe(false)
   })
 })

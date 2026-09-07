@@ -207,6 +207,31 @@ export function isRatedClass(graduationYear: number | null | undefined): boolean
   return isPublicRankingsYearPublished(graduationYear)
 }
 
+/**
+ * Whether an athlete is rated at all.
+ *
+ * Female wrestlers are held out for now, and the reason is coverage rather than the wrestlers.
+ * Backtested across the 2025 and 2026 classes, girls average 3 of 30 on national competition
+ * against 8 for boys and 7 of 25 on in-season quality against 11 — while scoring *higher* on
+ * state results, which is the one axis where their records are imported as completely. Six of
+ * them hold a signed college commitment and score zero.
+ *
+ * That is a hole in what we have imported, not a read on how they wrestle, and a rating built
+ * on it would put one star beside a signed Division II recruit on a page a college coach reads.
+ * Better to show nothing than something we know to be wrong. Revisit once girls' national and
+ * dual results are imported to the same depth.
+ *
+ * An athlete with no gender on file is still rated, as before — this holds back a group we can
+ * identify, and does not quietly widen into everyone we are unsure about.
+ */
+export function isRatedAthlete(athlete: {
+  gender?: string | null
+  graduationYear?: number | null
+}): boolean {
+  if (!isRatedClass(athlete.graduationYear)) return false
+  return String(athlete.gender ?? "").trim().toLowerCase() !== "female"
+}
+
 export function rateAthlete(input: StarRatingInput): StarRating {
   const national = nationalPoints(input.exposure)
   const competition = competitionPoints(input.strength)

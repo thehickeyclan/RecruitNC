@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest"
-import {
-  HUMAN_VERIFIED_METHOD,
-  releasesPersonalData,
-  scoutingAccessTier,
-  watermarkLine,
-} from "@/lib/scouting-report-access"
+import { HUMAN_VERIFIED_METHOD, releasesPersonalData, scoutingAccessTier, scoutingReportAvailable, watermarkLine } from "@/lib/scouting-report-access"
 
 const coach = {
   isCollegeCoach: true,
@@ -65,5 +60,26 @@ describe("watermarkLine", () => {
 
   it("still identifies the copy when nothing is known", () => {
     expect(watermarkLine({})).toBe("Prepared for Verified coach")
+  })
+})
+
+describe("scoutingReportAvailable", () => {
+  it("holds female wrestlers back while their results are thin in our data", () => {
+    // Coverage, not judgement: 3 of 30 on national competition against 8 for the boys, and six
+    // female athletes with signed college commitments scoring zero.
+    expect(scoutingReportAvailable({ gender: "Female" })).toBe(false)
+    expect(scoutingReportAvailable({ gender: "female" })).toBe(false)
+    expect(scoutingReportAvailable({ gender: " FEMALE " })).toBe(false)
+  })
+
+  it("keeps the report for everybody else", () => {
+    expect(scoutingReportAvailable({ gender: "Male" })).toBe(true)
+  })
+
+  it("does not widen into athletes with no gender recorded", () => {
+    // The hold-back names a group we can identify; it must not quietly swallow the unknowns.
+    expect(scoutingReportAvailable({ gender: null })).toBe(true)
+    expect(scoutingReportAvailable({ gender: "" })).toBe(true)
+    expect(scoutingReportAvailable({})).toBe(true)
   })
 })

@@ -41,6 +41,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { getYouTubeVideoId, isDirectHighlightVideoUrl } from "@/lib/highlight-video-url"
 import { ProfileViewStatsPanel } from "./profile-view-stats-panel"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
+import { scoutingReportAvailable } from "@/lib/scouting-report-access"
 
 /**
  * Bio/summary paragraph section.
@@ -154,7 +155,10 @@ export function AthleteDetail({
    * endpoint. Pre-launch that is an explicit allowlist rather than a role, which is why this
    * does not just check isCollegeCoach — see lib/scouting-report-release.ts.
    */
-  const canSeeScoutingReport = viewerProfile?.scouting_report_access === true
+  // The endpoint refuses a report for an athlete it has no rating coverage for, so the button
+  // is hidden for the same athletes rather than leading a coach to a 404.
+  const canSeeScoutingReport =
+    viewerProfile?.scouting_report_access === true && scoutingReportAvailable(athlete as { gender?: unknown })
   const [imageError, setImageError] = useState(false)
   const [highSchoolLogo, setHighSchoolLogo] = useState<string | null>(null)
   const [highSchoolLogoLoadError, setHighSchoolLogoLoadError] = useState(false)

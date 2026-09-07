@@ -11,7 +11,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { applyStarOverride, isRatedClass, rateAthlete, type StarRating } from "@/lib/athlete-star-rating"
+import { applyStarOverride, isRatedAthlete, rateAthlete, type StarRating } from "@/lib/athlete-star-rating"
 import { nationalEventRows, starOverrideOf, statePlaces } from "@/lib/athlete-star-rating-load"
 import { summarizeNationalExposure, summarizeSeasonStrength } from "@/lib/competition-strength"
 import {
@@ -382,7 +382,7 @@ export async function buildScoutingReport(
     nationalRankings: nationalRankingHistory(rankings),
     // Built from data already in hand — the bundle, the season's bouts and the rankings just
     // loaded — so the star costs the report no extra queries.
-    starRating: isRatedClass(gradYear)
+    starRating: isRatedAthlete({ gender: athlete.gender as string, graduationYear: gradYear })
       ? applyStarOverride(
           rateAthlete({
           exposure: summarizeNationalExposure(nationalEventRows(bundle as never)),

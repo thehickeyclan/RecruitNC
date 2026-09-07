@@ -19,7 +19,7 @@ import {
 } from "@/lib/competition-strength"
 import {
   applyStarOverride,
-  isRatedClass,
+  isRatedAthlete,
   rateAthlete,
   type StarRating,
   type StarRatingInput,
@@ -165,7 +165,9 @@ export async function rateOneAthlete(
     graduationYear,
     weightClass: athlete.weightclass == null ? null : String(athlete.weightclass),
   }
-  if (!isRatedClass(graduationYear)) return { ...identity, rating: null }
+  if (!isRatedAthlete({ gender: athlete.gender as string, graduationYear })) {
+    return { ...identity, rating: null }
+  }
 
   const input = await loadStarRatingInput(supabase, athlete, nationallyRankedIds)
   return { ...identity, rating: applyStarOverride(rateAthlete(input), starOverrideOf(athlete)) }

@@ -9,7 +9,7 @@ import {
   loadOpponentIndex,
   summaryFacts,
 } from "@/lib/scouting-report"
-import { scoutingAccessTier, watermarkLine } from "@/lib/scouting-report-access"
+import { scoutingAccessTier, scoutingReportAvailable, watermarkLine } from "@/lib/scouting-report-access"
 import { loadScoutingEntitlement } from "@/lib/scouting-report-entitlement-db"
 
 /**
@@ -73,6 +73,21 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const loaded = await loadPublicAthleteProfile(id, admin)
   if (!loaded.ok) {
     return NextResponse.json({ error: loaded.error }, { status: 404 })
+  }
+
+  /**
+   * Female wrestlers are held out of scouting reports for now.
+   *
+   * Their national and in-season results are imported far less completely than the boys' — 3 of
+   * 30 on national competition against 8, measured across the 2025 and 2026 classes — so a
+   * report would understate wrestlers who are in fact signing. Refused here rather than hidden
+   * in the page, because a hidden button is not a rule and this endpoint is reachable directly.
+   */
+  if (!scoutingReportAvailable(loaded.athlete as Record<string, unknown>)) {
+    return NextResponse.json(
+      { error: "Scouting reports are not available for this athlete yet." },
+      { status: 404 },
+    )
   }
 
   // Two grants: a .edu address unlocks browsing, a human check against the program's staff
