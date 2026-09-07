@@ -11,6 +11,9 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { isRatedClass, rateAthlete, type StarRating } from "@/lib/athlete-star-rating"
+import { nationalEventRows, statePlaces } from "@/lib/athlete-star-rating-load"
+import { summarizeNationalExposure, summarizeSeasonStrength } from "@/lib/competition-strength"
 import {
   getNationalRankingsForAthlete,
   nationalRankingHistory,
@@ -117,6 +120,13 @@ export type ScoutingReport = {
    * cannot evidence.
    */
   nationalRankings: NationalRankingSeries[]
+  /**
+   * The RecruitNC star rating and its four components.
+   *
+   * Null for a class we do not rank — see `isRatedClass`. Null is not zero stars and the report
+   * says nothing at all rather than showing an empty row of stars against a wrestler's name.
+   */
+  starRating: StarRating | null
   /** Which field set this copy carries. */
   accessTier: ScoutingAccessTier
   /** Names who the copy was prepared for. Null on the intelligence tier. */
@@ -370,6 +380,21 @@ export async function buildScoutingReport(
     watermark,
     prospectRanking: ranking,
     nationalRankings: nationalRankingHistory(rankings),
+    // Built from data already in hand — the bundle, the season's bouts and the rankings just
+    // loaded — so the star costs the report no extra queries.
+    starRating: isRatedClass(gradYear)
+      ? rateAthlete({
+          exposure: summarizeNationalExposure(nationalEventRows(bundle as never)),
+          strength: summarizeSeasonStrength(seasonBouts as never),
+          prospectRanking: ranking,
+          rankingPublished:
+            ranking != null &&
+            isPublicRankingsYearPublished(gradYear) &&
+            ranking <= getPublicRankingsMax(gradYear),
+          statePlaces: statePlaces(bundle as never),
+          nationallyRanked: rankings.length > 0,
+        })
+      : null,
     rankingPublished:
       ranking != null &&
       isPublicRankingsYearPublished(gradYear) &&

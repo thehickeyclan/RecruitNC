@@ -219,6 +219,15 @@ export function ScoutingReportDocument({
             <h1 className="mt-0.5 font-serif text-[34px] font-bold leading-none tracking-tight text-[#03154C]">
               {identity.name}
             </h1>
+            {report.starRating ? (
+              <div className="mt-2 flex items-center gap-2">
+                <Stars stars={report.starRating.stars} />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                  {report.starRating.stars} star{report.starRating.stars === 1 ? "" : "s"}
+                  {report.starRating.provisional ? " · provisional" : ""}
+                </span>
+              </div>
+            ) : null}
             <div className="mt-3 flex flex-wrap items-center gap-1.5">
               {report.nationalRankings.length ? (
                 <span className="bg-[#B31B1B] px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
@@ -310,6 +319,35 @@ export function ScoutingReportDocument({
           ) : null}
         </Block>
 
+        {report.starRating ? (
+          <Block n={n()} title="Star rating">
+            <div className="flex items-baseline gap-3">
+              <Stars stars={report.starRating.stars} />
+              <span className="font-mono text-[11px] text-gray-600">
+                {report.starRating.score}/100
+                {report.starRating.provisional ? " · provisional, thin record on file" : ""}
+              </span>
+            </div>
+            <Table head={["Component", "Earned", "Basis"]} widths={["10rem", "4.5rem", "auto"]}>
+              {report.starRating.components.map((c) => (
+                <tr key={c.key} className="border-t border-gray-200">
+                  <Td bold>{c.label}</Td>
+                  <Td mono>
+                    {c.points}/{c.max}
+                  </Td>
+                  <Td>{c.detail}</Td>
+                </tr>
+              ))}
+            </Table>
+            {/* The defence of the number is that it can be walked through, so it always is. */}
+            <p className="mt-1.5 text-[9px] leading-relaxed text-gray-500">
+              Built only from results on file, never a projection of college ceiling. Five stars
+              requires a current national ranking from FloWrestling, Sports Illustrated or MatScouts
+              and a record that independently earns four. Rated for the classes RecruitNC ranks.
+            </p>
+          </Block>
+        ) : null}
+
         {report.nationalRankings.length ? (
           <Block n={n()} title="National ranking history">
             <Table head={["Outlet", "Current", "By month", "Movement"]} widths={["9rem", "4.5rem", "auto", "6rem"]}>
@@ -381,6 +419,29 @@ export function ScoutingReportDocument({
         </footer>
       </div>
     </div>
+  )
+}
+
+/**
+ * Five glyphs, filled to the rating.
+ *
+ * Always five outlines so the number is read at a glance against a fixed scale — three filled
+ * of five, not three marks floating on their own.
+ */
+function Stars({ stars }: { stars: number }) {
+  return (
+    <span className="inline-flex gap-px" aria-label={`${stars} out of 5 stars`}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <svg key={i} viewBox="0 0 20 20" className="h-4 w-4" aria-hidden>
+          <path
+            d="M10 1.5l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L1.5 7.7l5.9-.9z"
+            fill={i <= stars ? "#D3B574" : "none"}
+            stroke={i <= stars ? "#B8963F" : "#C8CDD4"}
+            strokeWidth="1.2"
+          />
+        </svg>
+      ))}
+    </span>
   )
 }
 
