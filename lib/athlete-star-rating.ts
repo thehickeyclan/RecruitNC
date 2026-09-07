@@ -182,22 +182,25 @@ export function rateAthlete(input: StarRatingInput): StarRating {
   const provisional = input.strength.bouts < 10 && input.exposure.events === 0
 
   /**
-   * Five stars needs a national ranking AND a record behind it. Both, not either.
+   * Five stars needs a national ranking AND a record that already earns four. Both.
    *
    * The ranking is necessary: no résumé we can assemble earns five on its own, which keeps
    * the top band a fact we point at rather than a judgement we defend.
    *
-   * But it is not sufficient. Devin Hord is ranked #19 nationally as a Class of 2030 freshman
-   * with no bouts, no placement and nothing else on file — a national outlet projecting a
-   * ninth grader, which is exactly the kind of projection this rating exists not to launder.
-   * A ranking with no record behind it holds at four and says "provisional" until there is
-   * one.
+   * It is emphatically not sufficient, and the first version of this rule only half-enforced
+   * that. It refused five to a *provisional* athlete — one with under ten bouts and no
+   * national events — and handed it to everybody else who was ranked. Devin Hord, a Class of
+   * 2030 freshman ranked #19 nationally, has entered national events and so is not
+   * provisional; he scored 14 out of 100, second from bottom of the Tournament of Champions
+   * field, and was rated five stars. A national outlet projecting a ninth grader is exactly
+   * the projection this rating exists not to launder.
+   *
+   * So a national ranking floors a wrestler at four — it is a real credential and worth that
+   * on its own — but it only reaches five when the record independently earns four. Hord holds
+   * at four. Nobody arrives at five on a projection.
    */
-  const stars = input.nationallyRanked
-    ? provisional
-      ? 4
-      : Math.max(5, starsForScore(score))
-    : starsForScore(score)
+  const earned = starsForScore(score)
+  const stars = input.nationallyRanked ? Math.max(earned === 4 ? 5 : 4, earned) : earned
 
   return { stars, score, components, provisional }
 }

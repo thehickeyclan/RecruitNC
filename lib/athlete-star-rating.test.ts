@@ -163,3 +163,38 @@ describe("starsForScore bands", () => {
     }
   })
 })
+
+describe("five stars needs the record, not only the ranking", () => {
+  /**
+   * The gate this pins down failed in production data, not in a fixture.
+   *
+   * The first version refused five only to a *provisional* athlete — under ten bouts and no
+   * national events — and gave it to every other ranked wrestler. Devin Hord had entered
+   * national events, so he was not provisional, and was rated five stars on a score of 14 out
+   * of 100: second from bottom of the entire Tournament of Champions field.
+   */
+  const thinButNotProvisional: StarRatingInput = {
+    exposure: { events: 2, latestYear: 2026, wins: 1, losses: 4, bestPlacement: null, bestPlacementEvent: null, rows: [] },
+    strength: noSeason,
+    prospectRanking: null,
+    rankingPublished: false,
+    statePlaces: [],
+    nationallyRanked: true,
+  }
+
+  it("holds a ranked wrestler with a weak record at four even when not provisional", () => {
+    const rating = rateAthlete(thinButNotProvisional)
+    expect(rating.provisional).toBe(false)
+    expect(rating.score).toBeLessThan(30)
+    expect(rating.stars).toBe(4)
+  })
+
+  it("reaches five only when the record alone is already worth four", () => {
+    expect(starsForScore(rateAthlete(ELITE).score)).toBe(4)
+    expect(rateAthlete({ ...ELITE, nationallyRanked: true }).stars).toBe(5)
+  })
+
+  it("never gives five to an unranked wrestler, however strong the record", () => {
+    expect(rateAthlete({ ...ELITE, nationallyRanked: false }).stars).toBe(4)
+  })
+})
