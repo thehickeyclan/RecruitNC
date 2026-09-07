@@ -42,6 +42,32 @@ export type StarRating = {
   components: StarComponent[]
   /** True when too little is on file to rate honestly. */
   provisional: boolean
+  /** Set when a person overrode the computed rating. Carries what they gave as the reason. */
+  override?: { stars: number; computedStars: number; reason: string }
+}
+
+export type StarOverride = {
+  stars: number | null
+  reason: string | null
+}
+
+/**
+ * A hand-set rating, applied over a computed one.
+ *
+ * The computed stars are kept alongside rather than discarded, so every surface can say this
+ * was a person's call and what they said about it. An override that silently replaced the
+ * number would leave the rating looking computed while being a judgement, which is the one
+ * thing this rating cannot afford.
+ *
+ * A reason is required. Without one, the override is ignored — a star nobody can account for
+ * is worth less than no star.
+ */
+export function applyStarOverride(rating: StarRating, override: StarOverride | null): StarRating {
+  const stars = override?.stars
+  const reason = String(override?.reason ?? "").trim()
+  if (stars == null || !Number.isFinite(stars) || stars < 1 || stars > 5 || !reason) return rating
+  if (stars === rating.stars) return rating
+  return { ...rating, stars, override: { stars, computedStars: rating.stars, reason } }
 }
 
 const MAX = { national: 30, competition: 25, ranking: 25, state: 20 } as const

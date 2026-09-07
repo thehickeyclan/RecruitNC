@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest"
-import { isRatedClass, rateAthlete, starsForScore, type StarRatingInput } from "@/lib/athlete-star-rating"
+import {
+  applyStarOverride,
+  isRatedClass,
+  rateAthlete,
+  starsForScore,
+  type StarRatingInput,
+} from "@/lib/athlete-star-rating"
 import { PUBLISHED_PUBLIC_RANKINGS_YEARS } from "@/lib/public-rankings-cap"
 import type { NationalExposure, SeasonStrength } from "@/lib/competition-strength"
 
@@ -226,5 +232,36 @@ describe("isRatedClass", () => {
   it("tracks the published rankings map rather than a second list", () => {
     // The two must never drift: a class we rank is a class we star, and vice versa.
     for (const year of PUBLISHED_PUBLIC_RANKINGS_YEARS) expect(isRatedClass(year)).toBe(true)
+  })
+})
+
+describe("applyStarOverride", () => {
+  const computed = rateAthlete(ELITE)
+
+  it("replaces the number and keeps what the formula said", () => {
+    const out = applyStarOverride(computed, { stars: 2, reason: "Sat out the season injured." })
+    expect(out.stars).toBe(2)
+    expect(out.override).toMatchObject({ stars: 2, computedStars: computed.stars })
+  })
+
+  it("refuses an override with no reason", () => {
+    // A star nobody can account for is worth less than no star.
+    expect(applyStarOverride(computed, { stars: 2, reason: "" }).stars).toBe(computed.stars)
+    expect(applyStarOverride(computed, { stars: 2, reason: "   " }).override).toBeUndefined()
+  })
+
+  it("ignores a rating outside one to five", () => {
+    expect(applyStarOverride(computed, { stars: 0, reason: "a real reason here" }).stars).toBe(computed.stars)
+    expect(applyStarOverride(computed, { stars: 6, reason: "a real reason here" }).stars).toBe(computed.stars)
+  })
+
+  it("does nothing when there is no override", () => {
+    expect(applyStarOverride(computed, null).override).toBeUndefined()
+    expect(applyStarOverride(computed, { stars: null, reason: null }).stars).toBe(computed.stars)
+  })
+
+  it("does not mark an override that agrees with the formula", () => {
+    // Setting the same number by hand is not a disagreement and should not read as one.
+    expect(applyStarOverride(computed, { stars: computed.stars, reason: "looks right to me" }).override).toBeUndefined()
   })
 })

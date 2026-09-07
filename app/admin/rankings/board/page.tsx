@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { ArrowDown, ArrowUp, Bot, CheckCircle2, Eye, Lock, Save, Search, Sparkles, UploadCloud } from "lucide-react"
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
+import type { StarRating } from "@/lib/athlete-star-rating"
 
 type Evidence = {
   kind: string
@@ -71,6 +72,92 @@ function evidenceClass(tone: Evidence["tone"]): string {
   }
 }
 
+/**
+ * The star beside a ranking candidate, and the place to set one by hand.
+ *
+ * Shown next to the working rank because they answer different questions — the rank is where a
+ * wrestler sits in this class, the star is how strong the record is against everyone — and a
+ * reviewer wants both in one glance.
+ *
+ * An override always shows what the formula said as well. That is the point of reviewing here:
+ * if hand-set stars start piling up, the bands are wrong and the fix belongs in the rating.
+ */
+function StarCell({
+  rating,
+  editing,
+  error,
+  onEdit,
+  onChange,
+  onCancel,
+  onSave,
+}: {
+  rating?: StarRating
+  editing: { stars: string; reason: string } | null
+  error: string | null
+  onEdit: () => void
+  onChange: (patch: Partial<{ stars: string; reason: string }>) => void
+  onCancel: () => void
+  onSave: () => void
+}) {
+  if (!rating && !editing) {
+    return (
+      <div className="flex min-w-24 flex-col items-center justify-center rounded-2xl bg-slate-800 p-3 text-center">
+        <span className="text-[10px] font-bold uppercase text-blue-200">Stars</span>
+        <span className="mt-1 text-xs text-blue-300">Not rated</span>
+      </div>
+    )
+  }
+  return (
+    <div className="flex min-w-24 flex-col items-center rounded-2xl bg-slate-800 p-3 text-center">
+      <span className="text-[10px] font-bold uppercase text-blue-200">Stars</span>
+      <span className="text-3xl font-black text-[#d6b75d]">{rating ? `${rating.stars}★` : "—"}</span>
+      {rating ? (
+        <span className="text-[10px] text-blue-300">
+          {rating.score}/100{rating.provisional ? " · prov" : ""}
+        </span>
+      ) : null}
+      {rating?.override ? (
+        <span className="mt-1 rounded bg-amber-600 px-1 text-[9px] font-bold uppercase text-slate-950">
+          Set by hand · formula {rating.override.computedStars}★
+        </span>
+      ) : null}
+
+      {editing ? (
+        <div className="mt-2 w-44 space-y-1 text-left">
+          <select
+            value={editing.stars}
+            onChange={(e) => onChange({ stars: e.target.value })}
+            className="w-full rounded border border-blue-800 bg-slate-950 p-1 text-xs text-white"
+          >
+            <option value="">Use the formula</option>
+            {[1, 2, 3, 4, 5].map((n) => (
+              <option key={n} value={n}>{n} star{n === 1 ? "" : "s"}</option>
+            ))}
+          </select>
+          {editing.stars ? (
+            <textarea
+              value={editing.reason}
+              onChange={(e) => onChange({ reason: e.target.value })}
+              rows={2}
+              placeholder="Why? Shown wherever the rating is."
+              className="w-full rounded border border-blue-800 bg-slate-950 p-1 text-xs text-white"
+            />
+          ) : null}
+          {error ? <p className="text-[10px] text-red-300">{error}</p> : null}
+          <div className="flex gap-1">
+            <Button size="sm" className="h-6 flex-1 bg-[#d6b75d] text-[10px] text-slate-950" onClick={onSave}>Save</Button>
+            <Button size="sm" variant="outline" className="h-6 flex-1 border-blue-800 bg-slate-950 text-[10px] text-blue-100" onClick={onCancel}>Cancel</Button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={onEdit} className="mt-1 text-[10px] text-blue-300 underline hover:text-white">
+          {rating?.override ? "Change" : "Override"}
+        </button>
+      )}
+    </div>
+  )
+}
+
 function confidenceClass(confidence: BoardAthlete["confidence"]): string {
   if (confidence === "High") return "bg-emerald-600 text-white"
   if (confidence === "Medium") return "bg-amber-500 text-slate-950"
@@ -93,6 +180,9 @@ export default function RankingBoardPage() {
   const [year, setYear] = useState(requestedYear && years.includes(requestedYear) ? requestedYear : "2027")
   const [gender, setGender] = useState(requestedGender === "Female" ? "Female" : "Male")
   const [athletes, setAthletes] = useState<BoardAthlete[]>([])
+  const [stars, setStars] = useState<Record<string, StarRating>>({})
+  const [starEdit, setStarEdit] = useState<{ id: string; stars: string; reason: string } | null>(null)
+  const [starError, setStarError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [query, setQuery] = useState("")
@@ -104,6 +194,12 @@ export default function RankingBoardPage() {
     setLoading(true)
     setStatus("")
     try {
+      // Stars ride alongside rather than inside the board payload: the board is the ranking
+      // formula and this is a different measure, and a slow rating pass must not delay the list.
+      fetch(`/api/admin/rankings/stars?year=${year}`, { cache: "no-store" })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => setStars((d?.ratings ?? {}) as Record<string, StarRating>))
+        .catch(() => undefined)
       const res = await fetch(`/api/admin/rankings/board?year=${year}&gender=${gender}`, { cache: "no-store" })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Failed to load board")
@@ -407,6 +503,39 @@ export default function RankingBoardPage() {
                             <span className="text-xs font-bold uppercase">Working</span>
                             <span className="text-3xl font-black">#{finalRank}</span>
                           </div>
+                          <StarCell
+                            rating={stars[athlete.id]}
+                            editing={starEdit?.id === athlete.id ? starEdit : null}
+                            error={starEdit?.id === athlete.id ? starError : null}
+                            onEdit={() => {
+                              setStarError(null)
+                              setStarEdit({
+                                id: athlete.id,
+                                stars: String(stars[athlete.id]?.override?.stars ?? ""),
+                                reason: stars[athlete.id]?.override?.reason ?? "",
+                              })
+                            }}
+                            onChange={(patch) => setStarEdit((prev) => (prev ? { ...prev, ...patch } : prev))}
+                            onCancel={() => { setStarEdit(null); setStarError(null) }}
+                            onSave={async () => {
+                              const edit = starEdit!
+                              const res = await fetch("/api/admin/rankings/stars", {
+                                method: "PATCH",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  athleteId: edit.id,
+                                  stars: edit.stars === "" ? null : Number(edit.stars),
+                                  reason: edit.reason,
+                                }),
+                              })
+                              const body = await res.json().catch(() => ({}))
+                              if (!res.ok) { setStarError(body.error ?? "Could not save that."); return }
+                              const refreshed = await fetch(`/api/admin/rankings/stars?year=${year}`, { cache: "no-store" })
+                                .then((r) => (r.ok ? r.json() : null)).catch(() => null)
+                              setStars((refreshed?.ratings ?? {}) as Record<string, StarRating>)
+                              setStarEdit(null); setStarError(null)
+                            }}
+                          />
                           <div>
                             <CardTitle className="text-2xl">
                               <Link href={`/view-profile?id=${athlete.id}`} className="hover:text-[#d6b75d]">

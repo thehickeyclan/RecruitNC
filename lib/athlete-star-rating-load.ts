@@ -17,10 +17,26 @@ import {
   summarizeSeasonStrength,
   type NationalEventRow,
 } from "@/lib/competition-strength"
-import { isRatedClass, rateAthlete, type StarRating, type StarRatingInput } from "@/lib/athlete-star-rating"
+import {
+  applyStarOverride,
+  isRatedClass,
+  rateAthlete,
+  type StarRating,
+  type StarRatingInput,
+} from "@/lib/athlete-star-rating"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
 import type { HeadToHeadBout } from "@/lib/head-to-head"
+
+/** The hand-set rating on an athlete row, if there is one. */
+export function starOverrideOf(athlete: Record<string, unknown>): { stars: number | null; reason: string | null } {
+  const raw = athlete.star_rating_override
+  const stars = raw == null ? null : Number(raw)
+  return {
+    stars: stars != null && Number.isFinite(stars) ? stars : null,
+    reason: athlete.star_rating_override_reason == null ? null : String(athlete.star_rating_override_reason),
+  }
+}
 
 /** Placement strings are "1st", "3rd", "Champion", "R16" — only a finish counts. */
 export function placementNumber(raw: string | null | undefined): number | null {
@@ -152,5 +168,5 @@ export async function rateOneAthlete(
   if (!isRatedClass(graduationYear)) return { ...identity, rating: null }
 
   const input = await loadStarRatingInput(supabase, athlete, nationallyRankedIds)
-  return { ...identity, rating: rateAthlete(input) }
+  return { ...identity, rating: applyStarOverride(rateAthlete(input), starOverrideOf(athlete)) }
 }
