@@ -12,7 +12,16 @@ export const dynamic = "force-dynamic"
  * Matching uses the same normaliser as the map, so "sly fox" finds "Slyfox" too.
  */
 export async function GET(request: Request) {
-  const query = (new URL(request.url).searchParams.get("q") ?? "").trim()
+  const params = new URL(request.url).searchParams
+  const query = (params.get("q") ?? "").trim()
+  /**
+   * Twelve is right for a typeahead and wrong for a dropdown.
+   *
+   * The profile editor lists every club to pick from, and a silent cap at twelve would show a
+   * twelfth of the directory and look exactly like the hardcoded list it replaced — a club
+   * missing with no way to tell it was cut off.
+   */
+  const limit = params.get("all") === "1" ? Number.MAX_SAFE_INTEGER : 12
 
   const admin = createAdminClient()
   const { data: clubs, error } = await admin
@@ -86,7 +95,7 @@ export async function GET(request: Request) {
         Number(a.club.closed) - Number(b.club.closed) ||
         a.club.name.localeCompare(b.club.name),
     )
-    .slice(0, 12)
+    .slice(0, limit)
 
   return NextResponse.json({ clubs: scored.map((entry) => entry.club) })
 }

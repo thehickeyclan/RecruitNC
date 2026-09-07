@@ -1,13 +1,24 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Save, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
-import { WRESTLING_CLUBS_LIST } from "@/lib/mock-data"
+/**
+ * The club list comes from the club directory — the same rows behind the club finder map.
+ *
+ * It used to come from `WRESTLING_CLUBS_LIST`, a hardcoded array of about forty-six names in
+ * `lib/mock-data.ts`. The directory holds seventy-three, so a third of the clubs on the map
+ * could not be chosen here at all: Cory Thomas wrestles for OTM Walters, which is in the
+ * directory with two aliases and simply was not in the array, so his profile has no club on it.
+ * Fifteen wrestlers in the Tournament of Champions field have a blank club for the same reason.
+ *
+ * Loading it means the two can never disagree again — a club added to the map is selectable
+ * here the moment it is added.
+ */
 
 interface InlineSchoolClubEditorProps {
   athleteId: string
@@ -39,10 +50,33 @@ export function InlineSchoolClubEditor({
   const [customClub, setCustomClub] = useState("")
   const [showCustomClub, setShowCustomClub] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [clubs, setClubs] = useState<string[]>([])
   const { toast } = useToast()
 
+  useEffect(() => {
+    let cancelled = false
+    fetch("/api/clubs/search?q=&all=1", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled) return
+        const names = ((d?.clubs ?? []) as Array<{ name?: unknown }>)
+          .map((c) => String(c.name ?? "").trim())
+          .filter(Boolean)
+        // The club already on the profile stays selectable even if it has since been retired
+        // from the directory, so opening the editor cannot silently clear somebody's club.
+        const withCurrent = clubValue && !names.includes(clubValue) ? [clubValue, ...names] : names
+        setClubs([...new Set(withCurrent)].sort((a, b) => a.localeCompare(b)))
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+    // Loaded once on open; the current club is captured on that first run.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // Check if current club is in the list
-  const isCustomClub = clubValue && !WRESTLING_CLUBS_LIST.includes(clubValue) && clubValue !== "CLUB IS NOT LISTED"
+  const isCustomClub = clubValue && clubs.length > 0 && !clubs.includes(clubValue) && clubValue !== "CLUB IS NOT LISTED"
 
   const handleClubChange = (value: string) => {
     if (value === "CLUB IS NOT LISTED" || value === "CUSTOM") {
@@ -102,7 +136,7 @@ export function InlineSchoolClubEditor({
             <SelectValue placeholder="Select or enter wrestling club" />
           </SelectTrigger>
           <SelectContent>
-            {WRESTLING_CLUBS_LIST.filter(club => club !== "CLUB IS NOT LISTED").map((club) => (
+            {clubs.filter(club => club !== "CLUB IS NOT LISTED").map((club) => (
               <SelectItem key={club} value={club}>
                 {club}
               </SelectItem>

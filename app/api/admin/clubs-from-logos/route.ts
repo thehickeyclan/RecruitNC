@@ -3,12 +3,14 @@ import { NextResponse } from "next/server"
 
 export async function GET() {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     const { data: clubs, error } = await supabase
       .from("logo_mappings")
       .select("entity_name, logo_url, aliases")
-      .eq("entity_type", "wrestling_club")
+      // "club" is the value actually stored. This read "wrestling_club" and so returned nothing
+      // at all, leaving the commitment form's club list permanently empty.
+      .eq("entity_type", "club")
       .order("entity_name")
 
     if (error) {
@@ -20,7 +22,7 @@ export async function GET() {
       clubs?.map((club) => ({
         name: club.entity_name,
         logo_url: club.logo_url,
-        aliases: club.aliases ? club.aliases.split(",").map((a) => a.trim()) : [],
+        aliases: club.aliases ? club.aliases.split(",").map((a: string) => a.trim()) : [],
       })) || []
 
     return NextResponse.json({ clubs: formattedClubs })
