@@ -11,6 +11,13 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js"
+import {
+  getNationalRankingsForAthlete,
+  nationalRankingHistory,
+  nationalRankingSummary,
+  RETAINED_EDITIONS,
+  type NationalRankingSeries,
+} from "@/lib/national-rankings"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import { buildTocFieldBoard } from "@/lib/toc/field-board"
 import { getQualifierSignificantWinBouts } from "@/lib/other-tournaments"
@@ -41,6 +48,11 @@ export type ScoutingReportIdentity = {
   weightClass: string | null
   /** Weight actually wrestled most recently, when it differs from the listed one. */
   lastCompetedWeight: string | null
+  /** Where and when that weight was made — the context a coach reads it in. */
+  lastCompetedEvent: string | null
+  lastCompetedYear: number | null
+  /** Exact day when the source records one; otherwise null and the year stands alone. */
+  lastCompetedDate: string | null
   gender: string | null
   state: string | null
   city: string | null
@@ -98,6 +110,13 @@ export type ScoutingReport = {
   /** RecruitNC prospect ranking, and whether that class is published. */
   prospectRanking: number | null
   rankingPublished: boolean
+  /**
+   * What Flo, SI and MatScouts have published, one series per outlet, newest first.
+   *
+   * Only the retained editions — a coach is shown the window we hold, not a career arc we
+   * cannot evidence.
+   */
+  nationalRankings: NationalRankingSeries[]
   /** Which field set this copy carries. */
   accessTier: ScoutingAccessTier
   /** Names who the copy was prepared for. Null on the intelligence tier. */
@@ -283,10 +302,11 @@ export async function buildScoutingReport(
   const personal = releasesPersonalData(accessTier)
   const athleteId = String(athlete.id)
 
-  const [bundle, { data: matchRows }, qualifierBouts] = await Promise.all([
+  const [bundle, { data: matchRows }, qualifierBouts, rankings] = await Promise.all([
     loadAthleteTournamentBundle(supabase, athlete),
     supabase.from("matches").select("season,matches").eq("athlete_id", athleteId),
     getQualifierSignificantWinBouts(supabase, athleteId, "all").catch(() => [] as Bout[]),
+    getNationalRankingsForAthlete(supabase, athleteId).catch(() => []),
   ])
 
   const seasonBouts: Bout[] = latestSeasonMatchRows((matchRows ?? []) as never).flatMap((row) => {
@@ -299,8 +319,13 @@ export async function buildScoutingReport(
   })
   const bouts: Bout[] = [...seasonBouts, ...qualifierBouts]
 
-  const lastCompeted = (athlete as { profile_weight_display?: { lastCompeted?: { weight?: string } } })
-    ?.profile_weight_display?.lastCompeted?.weight
+  const lastCompeted = (
+    athlete as {
+      profile_weight_display?: {
+        lastCompeted?: { weight?: string; event?: string; year?: number; date?: string | null }
+      }
+    }
+  )?.profile_weight_display?.lastCompeted
 
   const ncUnitedTeam = text(athlete.ncUnitedTeam)
   const gradYear = athlete.graduationyear == null ? null : Number(athlete.graduationyear)
@@ -318,7 +343,13 @@ export async function buildScoutingReport(
       clubLogoUrl: text(athlete.wrestlingClubLogoUrl),
       graduationYear: athlete.graduationyear == null ? null : Number(athlete.graduationyear),
       weightClass: text(athlete.weightclass ?? athlete.weight_class),
-      lastCompetedWeight: text(lastCompeted),
+      lastCompetedWeight: text(lastCompeted?.weight),
+      lastCompetedEvent: text(lastCompeted?.event),
+      lastCompetedYear:
+        lastCompeted?.year != null && Number.isFinite(Number(lastCompeted.year))
+          ? Number(lastCompeted.year)
+          : null,
+      lastCompetedDate: text(lastCompeted?.date),
       gender: text(athlete.gender),
       state: text(athlete.state),
       city: text(athlete.city),
@@ -338,6 +369,7 @@ export async function buildScoutingReport(
     accessTier,
     watermark,
     prospectRanking: ranking,
+    nationalRankings: nationalRankingHistory(rankings),
     rankingPublished:
       ranking != null &&
       isPublicRankingsYearPublished(gradYear) &&
@@ -349,6 +381,29 @@ export async function buildScoutingReport(
  * The facts, flattened for the model. Kept separate from the prompt so what the model is
  * allowed to see is reviewable in one place — it writes from this and nothing else.
  */
+/**
+ * How an opponent's standing is stated to the model.
+ *
+ * Spelled out per bout rather than left to a section heading, because the heading covers three
+ * different standings at once and the model was free to call any of them "ranked". A win over
+ * a nationally ranked wrestler and a win over a state-ranked one are not the same claim, and a
+ * summary that blurs them oversells the first kind of athlete and undersells the second.
+ */
+function standingPhrase(bout: SignificantWin): string {
+  if (bout.reason === "national-ranked") {
+    return bout.nationalRankLabel ? `nationally ranked, ${bout.nationalRankLabel}` : "nationally ranked"
+  }
+  return bout.reason === "toc-field" ? "in the Tournament of Champions field" : "ranked in North Carolina"
+}
+
+function boutFact(bout: SignificantWin): string {
+  return (
+    `${bout.opponent} (${standingPhrase(bout)})` +
+    `${bout.result ? ` ${bout.result}` : ""}${bout.event ? ` at ${bout.event}` : ""}` +
+    `${bout.date ? `, ${bout.date}` : ""}`
+  )
+}
+
 export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
   const { identity, academics, membership } = report
   const lines: string[] = [
@@ -357,7 +412,15 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
     identity.highSchool ? `High school: ${identity.highSchool}` : "",
     identity.club ? `Club: ${identity.club}` : "",
     identity.weightClass ? `Listed weight: ${identity.weightClass}` : "",
-    identity.lastCompetedWeight ? `Last competed at: ${identity.lastCompetedWeight}` : "",
+    identity.lastCompetedWeight
+      ? `Last competed at: ${identity.lastCompetedWeight}` +
+        (identity.lastCompetedEvent ? ` — ${identity.lastCompetedEvent}` : "") +
+        (identity.lastCompetedDate
+          ? ` (${identity.lastCompetedDate})`
+          : identity.lastCompetedYear
+            ? ` (${identity.lastCompetedYear})`
+            : "")
+      : "",
     report.careerRecord ? `Career record: ${report.careerRecord}` : "",
     membership.ncUnitedTeam ? `NC United: ${membership.ncUnitedTeam}` : "",
     report.commitment ? `Committed: ${report.commitment}` : "",
@@ -370,21 +433,35 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
       : "",
   ].filter(Boolean)
 
+  // Given to the model because a national ranking is the strongest single fact on the page,
+  // and a summary that omits it while the table shows it reads as though we missed it.
+  if (report.nationalRankings.length) {
+    lines.push("", "National rankings (only the retained months, newest first):")
+    for (const series of report.nationalRankings) {
+      const run = series.editions.map((e) => `#${e.rank} in ${e.rankingMonth.slice(0, 7)}`).join(", ")
+      const move =
+        series.movement == null
+          ? ""
+          : series.movement > 0
+            ? ` — up ${series.movement} place${series.movement === 1 ? "" : "s"}`
+            : series.movement < 0
+              ? ` — down ${Math.abs(series.movement)} place${series.movement === -1 ? "" : "s"}`
+              : " — unchanged"
+      lines.push(`- ${series.sourceLabel}: ${run}${move}`)
+    }
+  }
+
   if (report.results.length) {
     lines.push("", "Tournament results:")
     for (const r of report.results.slice(0, 14)) lines.push(`- ${r.year} ${r.event}: ${r.detail}`)
   }
   if (report.significantWins.length) {
-    lines.push("", "Wins over ranked or Tournament of Champions wrestlers:")
-    for (const w of report.significantWins.slice(0, 12)) {
-      lines.push(`- beat ${w.opponent}${w.result ? ` (${w.result})` : ""}${w.event ? ` at ${w.event}` : ""}`)
-    }
+    lines.push("", "Wins over nationally ranked, NC state-ranked or Tournament of Champions wrestlers:")
+    for (const w of report.significantWins.slice(0, 12)) lines.push(`- beat ${boutFact(w)}`)
   }
   if (report.significantLosses.length) {
-    lines.push("", "Losses to ranked or Tournament of Champions wrestlers:")
-    for (const l of report.significantLosses.slice(0, 12)) {
-      lines.push(`- lost to ${l.opponent}${l.result ? ` (${l.result})` : ""}${l.event ? ` at ${l.event}` : ""}`)
-    }
+    lines.push("", "Losses to nationally ranked, NC state-ranked or Tournament of Champions wrestlers:")
+    for (const l of report.significantLosses.slice(0, 12)) lines.push(`- lost to ${boutFact(l)}`)
   }
   return lines.join("\n")
 }
@@ -397,7 +474,11 @@ Rules:
 - 3 to 5 sentences, plain and direct. No hype, no cliches, no "poised to dominate".
 - Lead with what the record actually shows: level of competition faced and how they did.
 - Name specific opponents or placements when they are in the facts.
+- Never write "ranked" on its own about an opponent. Say "nationally ranked", "ranked in North
+  Carolina", or "in the Tournament of Champions field", matching exactly what the facts state.
 - If the losses are to strong opponents, say so plainly — a coach reads that as useful.
 - If the facts are thin, say what is known and stop. Do not pad.
+- Name the outlet for any national ranking you cite. Do not call a ranking a trend unless two
+  or more months are shown, and never describe movement outside the months listed.
 - Never mention weight cutting, injuries, or anything medical.
 - Refer to the athlete by name or they/them. Do not guess their gender.`

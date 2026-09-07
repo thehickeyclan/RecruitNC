@@ -7,6 +7,11 @@ export type LastCompetedWeightCandidate = {
   year: number
   weight: string | number | null | undefined
   event: string
+  /**
+   * The day it was wrestled, when the source records one. Most result tables carry only a
+   * year, so this stays null for them rather than inventing a January the 1st.
+   */
+  date?: string | null
   /** Higher = preferred when years tie (live duals > nationals > Super32 > NCHSAA). */
   priority?: number
 }
@@ -15,6 +20,8 @@ export type LastCompetedWeight = {
   weight: string
   year: number
   event: string
+  /** Null when the source records only a year — see `LastCompetedWeightCandidate.date`. */
+  date: string | null
 }
 
 /** Strip "lbs" / non-digits; return numeric class string or null. */
@@ -41,7 +48,7 @@ export function resolveLastCompetedWeight(
     const year = Number(c.year)
     if (!weight || !Number.isFinite(year) || year < 1990 || year > 2040) continue
     const event = (c.event ?? "").trim() || "Tournament"
-    scored.push({ weight, year, event })
+    scored.push({ weight, year, event, date: c.date ?? null })
   }
   if (scored.length === 0) return null
 
@@ -54,6 +61,7 @@ export function resolveLastCompetedWeight(
         weight,
         year,
         event: (c.event ?? "").trim() || "Tournament",
+        date: c.date ?? null,
         priority: c.priority ?? 0,
       }
     })
@@ -65,7 +73,7 @@ export function resolveLastCompetedWeight(
   })
 
   const best = withPriority[0]!
-  return { weight: best.weight, year: best.year, event: best.event }
+  return { weight: best.weight, year: best.year, event: best.event, date: best.date ?? null }
 }
 
 export type ProfileWeightDisplay = {
@@ -127,6 +135,7 @@ export function candidatesFromPublicProfilePayload(athlete: {
       year: Number(r.year),
       weight: r.weight,
       event: String(r.eventShortName || "Tournament"),
+      date: r.eventDate ?? null,
       priority: 50,
     })
   }

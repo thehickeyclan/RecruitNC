@@ -113,3 +113,63 @@ export function nationalRankingSummary(rankings: ReadonlyArray<NationalRanking>)
     .map((r) => `#${r.rank} ${r.sourceLabel}`)
     .join(" · ")
 }
+
+/** One outlet's run of rankings, newest edition first. */
+export type NationalRankingSeries = {
+  source: string
+  sourceLabel: string
+  /** Newest edition first. */
+  editions: NationalRanking[]
+  /** The most recent rank. */
+  current: number
+  /** Places gained since the oldest retained edition: positive is a climb. Null on one edition. */
+  movement: number | null
+}
+
+/** Editions newest first, then best rank — the order a history reads in. */
+function byRecency(a: NationalRanking, b: NationalRanking): number {
+  return b.rankingMonth.localeCompare(a.rankingMonth) || a.rank - b.rank
+}
+
+/**
+ * A ranking history, grouped by outlet.
+ *
+ * Grouped rather than merged because outlets disagree, sometimes sharply, and averaging them
+ * would invent a number nobody published. A coach reads "#12 Flo, #24 MatScouts" as the
+ * disagreement it is.
+ *
+ * Movement is measured against the oldest edition still retained, so it only ever describes
+ * the window we actually hold — see `RETAINED_EDITIONS`. A rise from #30 to #12 two years ago
+ * is not something this can claim, and should not be.
+ */
+export function nationalRankingHistory(
+  rankings: ReadonlyArray<NationalRanking>,
+): NationalRankingSeries[] {
+  const bySource = new Map<string, NationalRanking[]>()
+  for (const ranking of rankings) {
+    const existing = bySource.get(ranking.source)
+    if (existing) existing.push(ranking)
+    else bySource.set(ranking.source, [ranking])
+  }
+
+  const series: NationalRankingSeries[] = []
+  for (const [source, rows] of bySource) {
+    const editions = [...rows].sort(byRecency)
+    const current = editions[0]!
+    const oldest = editions[editions.length - 1]!
+    series.push({
+      source,
+      sourceLabel: current.sourceLabel,
+      editions,
+      current: current.rank,
+      // Ranks count downward, so an improvement is the old number minus the new one.
+      movement: editions.length > 1 ? oldest.rank - current.rank : null,
+    })
+  }
+  return series.sort((a, b) => a.current - b.current)
+}
+
+/** How many distinct monthly editions a history spans. */
+export function editionsSpanned(rankings: ReadonlyArray<NationalRanking>): number {
+  return new Set(rankings.map((r) => r.rankingMonth)).size
+}

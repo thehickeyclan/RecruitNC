@@ -5,6 +5,7 @@ import Image from "next/image"
 import { Printer, ArrowLeft, Loader2, Link2, Check } from "lucide-react"
 import Link from "next/link"
 import type { ScoutingReport } from "@/lib/scouting-report"
+import { RETAINED_EDITIONS } from "@/lib/national-rankings"
 
 /**
  * The printable scouting report.
@@ -219,6 +220,12 @@ export function ScoutingReportDocument({
               {identity.name}
             </h1>
             <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              {report.nationalRankings.length ? (
+                <span className="bg-[#B31B1B] px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
+                  National #{report.nationalRankings[0]!.current} ·{" "}
+                  {report.nationalRankings[0]!.sourceLabel}
+                </span>
+              ) : null}
               {report.rankingPublished && report.prospectRanking ? (
                 <span className="bg-[#D3B574] px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-[#0A1628]">
                   NC #{report.prospectRanking} · Class of {identity.graduationYear}
@@ -260,10 +267,7 @@ export function ScoutingReportDocument({
           <dl className="w-[2.9in] shrink-0 border border-gray-300 bg-[#f7f8fa] px-3 py-2 text-[11px] leading-tight">
             <Vital label="Class" value={identity.graduationYear ? String(identity.graduationYear) : null} />
             <Vital label="Weight" value={identity.weightClass ? `${identity.weightClass} lbs` : null} />
-            <Vital
-              label="Last competed"
-              value={identity.lastCompetedWeight ? `${identity.lastCompetedWeight} lbs` : null}
-            />
+            <Vital label="Last competed" value={lastCompetedLine(identity)} />
             <Vital label="High school" value={identity.highSchool} />
             <Vital label="Club" value={identity.club} />
             <Vital label="Career" value={report.careerRecord} />
@@ -306,6 +310,27 @@ export function ScoutingReportDocument({
           ) : null}
         </Block>
 
+        {report.nationalRankings.length ? (
+          <Block n={n()} title="National ranking history">
+            <Table head={["Outlet", "Current", "By month", "Movement"]} widths={["9rem", "4.5rem", "auto", "6rem"]}>
+              {report.nationalRankings.map((series) => (
+                <tr key={series.source} className="border-t border-gray-200">
+                  <Td bold>{series.sourceLabel}</Td>
+                  <Td mono>#{series.current}</Td>
+                  <Td mono>
+                    {series.editions.map((e) => `${monthLabel(e.rankingMonth)} #${e.rank}`).join(" · ")}
+                  </Td>
+                  <Td>{movementLabel(series.movement)}</Td>
+                </tr>
+              ))}
+            </Table>
+            <p className="mt-1.5 text-[9px] leading-relaxed text-gray-500">
+              Weight class as published by the outlet. Only the {RETAINED_EDITIONS} most recent monthly
+              editions are retained, so movement describes that window and no further back.
+            </p>
+          </Block>
+        ) : null}
+
         <Block n={n()} title="Competition record">
           {report.results.length ? (
             <Table head={["Year", "Event", "Result"]} widths={["3rem", "11rem", "auto"]}>
@@ -333,8 +358,10 @@ export function ScoutingReportDocument({
         <footer className="mt-7 border-t-2 border-[#03154C] pt-2 text-[9px] leading-relaxed text-gray-500">
           <p>
             <span className="font-bold uppercase tracking-wider text-[#B31B1B]">Method.</span> Significant
-            results are those against wrestlers in the NC Tournament of Champions field or ranked North
-            Carolina prospects. This is not a complete match list — routine results are omitted by design.
+            results are those against wrestlers ranked nationally by FloWrestling, Sports Illustrated or
+            MatScouts, in the NC Tournament of Champions field, or ranked as North Carolina prospects —
+            labelled per bout, since they are not the same standing. This is not a complete match list —
+            routine results are omitted by design.
           </p>
           <p className="mt-1">
             <span className="font-bold uppercase tracking-wider text-[#B31B1B]">Confidential.</span>{" "}
@@ -362,7 +389,9 @@ function Vital({ label, value, last }: { label: string; value: string | null; la
   return (
     <div className={`flex justify-between gap-3 py-1 ${last ? "" : "border-b border-gray-200"}`}>
       <dt className="shrink-0 uppercase tracking-wider text-gray-500">{label}</dt>
-      <dd className="truncate text-right font-semibold text-[#03154C]">{value}</dd>
+      {/* Wraps rather than truncating: "Last competed" carries weight, event and date, and a
+          clipped event name is the half a coach needs. */}
+      <dd className="min-w-0 text-right font-semibold leading-tight text-[#03154C]">{value}</dd>
     </div>
   )
 }
@@ -399,6 +428,62 @@ function Cell({ label, value }: { label: string; value: string | null }) {
       <div className="font-semibold text-[#03154C]">{value ?? "—"}</div>
     </div>
   )
+}
+
+/**
+ * "132 lbs · Super 32 Early Entry (VA) · 14 Sep 2026".
+ *
+ * The weight on its own answers less than a coach needs: a weight made eight months ago at a
+ * state tournament and one made last weekend at a national qualifier are different facts. Most
+ * result tables record only a year, so the year stands alone when there is no day.
+ */
+function lastCompetedLine(identity: ScoutingReport["identity"]): string | null {
+  if (!identity.lastCompetedWeight) return null
+  const when = identity.lastCompetedDate
+    ? dayLabel(identity.lastCompetedDate)
+    : identity.lastCompetedYear
+      ? String(identity.lastCompetedYear)
+      : null
+  return [`${identity.lastCompetedWeight} lbs`, identity.lastCompetedEvent, when]
+    .filter(Boolean)
+    .join(" · ")
+}
+
+/**
+ * "14 Sep 2026", or the raw value if it is not a date we can read.
+ *
+ * A bare "2026-08-23" is parsed by `new Date` as UTC midnight, which is still the 22nd in every
+ * US timezone — so a wrestler's last bout showed a day early. These are calendar dates with no
+ * time in them, so the parts are read directly and never cross a timezone.
+ */
+function dayLabel(value: string): string {
+  const ymd = value.trim().match(/^(\d{4})-(\d{2})-(\d{2})/)
+  const parsed = ymd
+    ? new Date(Number(ymd[1]), Number(ymd[2]) - 1, Number(ymd[3]))
+    : new Date(value)
+  if (Number.isNaN(parsed.getTime())) return value
+  return parsed.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+}
+
+/** "Sep 2026" from a `date` column — the outlet's edition, not the day we imported it. */
+function monthLabel(rankingMonth: string): string {
+  const [year, month] = rankingMonth.slice(0, 7).split("-")
+  const names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  const name = names[Number(month) - 1]
+  return name ? `${name} ${year}` : rankingMonth
+}
+
+/**
+ * Movement in words rather than a coloured arrow.
+ *
+ * A single retained edition is not a trend and must not read as one — it says so instead of
+ * showing a flat line a coach would take as "went nowhere".
+ */
+function movementLabel(movement: number | null): string {
+  if (movement == null) return "One edition"
+  if (movement === 0) return "Unchanged"
+  const places = Math.abs(movement) === 1 ? "place" : "places"
+  return movement > 0 ? `Up ${movement} ${places}` : `Down ${Math.abs(movement)} ${places}`
 }
 
 function Note({ children }: { children: React.ReactNode }) {
@@ -446,20 +531,36 @@ function Td({ children, mono, bold }: { children: React.ReactNode; mono?: boolea
   )
 }
 
+/**
+ * The three standings kept apart.
+ *
+ * These used to collapse into one "Ranked" badge, which made a win over a nationally ranked
+ * wrestler look the same as one over a state-ranked wrestler — the single most valuable line
+ * on the page, flattened. A coach must be able to tell them apart at a glance.
+ */
+const STANDING: Record<
+  ScoutingReport["significantWins"][number]["reason"],
+  { label: string; className: string }
+> = {
+  "national-ranked": { label: "Nat'l ranked", className: "bg-[#B31B1B] text-white" },
+  "toc-field": { label: "TOC field", className: "bg-[#D3B574] text-[#0A1628]" },
+  ranked: { label: "NC ranked", className: "bg-[#03154C] text-white" },
+}
+
 function BoutTable({ rows, kind }: { rows: ScoutingReport["significantWins"]; kind: "win" | "loss" }) {
   if (!rows.length) {
     return (
       <Note>
         {kind === "win"
-          ? "No wins over ranked or Tournament of Champions wrestlers on file."
-          : "No losses to ranked or Tournament of Champions wrestlers on file."}
+          ? "No wins over nationally ranked, state-ranked or Tournament of Champions wrestlers on file."
+          : "No losses to nationally ranked, state-ranked or Tournament of Champions wrestlers on file."}
       </Note>
     )
   }
   return (
     <Table
       head={["Opponent", "Affiliation", "Standing", "Result", "Event", "Date"]}
-      widths={["8.5rem", "7.5rem", "4rem", "4.5rem", "auto", "4.75rem"]}
+      widths={["7.5rem", "6.5rem", "6rem", "4.25rem", "auto", "5.5rem"]}
     >
       {rows.map((row, i) => (
         <tr key={i} className="border-t border-gray-200">
@@ -467,16 +568,22 @@ function BoutTable({ rows, kind }: { rows: ScoutingReport["significantWins"]; ki
           <Td>{row.opponentSchool ?? "—"}</Td>
           <td className="py-1.5 pr-2 align-top">
             <span
-              className={`px-1 py-0.5 text-[8.5px] font-black uppercase tracking-wider ${
-                row.reason === "toc-field" ? "bg-[#D3B574] text-[#0A1628]" : "bg-[#03154C] text-white"
+              className={`inline-block whitespace-nowrap px-1 py-0.5 text-[8.5px] font-black uppercase tracking-wider ${
+                STANDING[row.reason].className
               }`}
             >
-              {row.reason === "toc-field" ? "TOC" : "Ranked"}
+              {STANDING[row.reason].label}
             </span>
+            {/* The outlet and number, because "nationally ranked" invites "by whom, and where". */}
+            {row.nationalRankLabel ? (
+              <div className="mt-0.5 text-[8.5px] leading-tight text-gray-500">{row.nationalRankLabel}</div>
+            ) : null}
           </td>
           <Td mono>{row.result ?? "—"}</Td>
           <Td>{row.event ?? "—"}</Td>
-          <Td mono>{row.date ?? "—"}</Td>
+          <td className="whitespace-nowrap py-1.5 pr-2 align-top font-mono text-gray-700">
+            {row.date ? dayLabel(row.date) : "—"}
+          </td>
         </tr>
       ))}
     </Table>

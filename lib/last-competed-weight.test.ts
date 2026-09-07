@@ -26,7 +26,7 @@ describe("resolveLastCompetedWeight", () => {
       { year: 2025, weight: "106", event: "NCHSAA States", priority: 10 },
       { year: 2026, weight: "116", event: "NHSCA Duals", priority: 40 },
     ])
-    expect(last).toEqual({ weight: "116", year: 2026, event: "NHSCA Duals" })
+    expect(last).toEqual({ weight: "116", year: 2026, event: "NHSCA Duals", date: null })
   })
 
   it("uses priority when years match", () => {
@@ -47,6 +47,7 @@ describe("buildProfileWeightDisplay", () => {
       weight: "106",
       year: 2026,
       event: "NCHSAA States",
+      date: null,
     })
     expect(display.displayWeight).toBe("113")
     expect(display.listedWeight).toBe("113")
@@ -59,6 +60,7 @@ describe("buildProfileWeightDisplay", () => {
       weight: "116",
       year: 2026,
       event: "NHSCA Duals",
+      date: null,
     })
     expect(display.displayWeight).toBe("116")
     expect(display.listedWeight).toBeNull()
@@ -94,7 +96,7 @@ describe("candidatesFromPublicProfilePayload", () => {
       fargo_results: [{ year: 2026, weight: "157" }],
     })
     const last = resolveLastCompetedWeight(candidates)
-    expect(last).toEqual({ weight: "157", year: 2026, event: "Fargo Nationals" })
+    expect(last).toEqual({ weight: "157", year: 2026, event: "Fargo Nationals", date: null })
   })
 
   it("surfaces the Fargo weight as last competed while the listed weight leads", () => {
