@@ -17,7 +17,7 @@ import {
   summarizeSeasonStrength,
   type NationalEventRow,
 } from "@/lib/competition-strength"
-import { rateAthlete, type StarRating, type StarRatingInput } from "@/lib/athlete-star-rating"
+import { isRatedClass, rateAthlete, type StarRating, type StarRatingInput } from "@/lib/athlete-star-rating"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
 import type { HeadToHeadBout } from "@/lib/head-to-head"
@@ -90,7 +90,11 @@ export type RatedAthlete = {
   name: string
   graduationYear: number | null
   weightClass: string | null
-  rating: StarRating
+  /**
+   * Null when the class is not rated — see `isRatedClass`. Null is not a low score and must
+   * never render as one star; the surface should say nothing at all.
+   */
+  rating: StarRating | null
 }
 
 /**
@@ -127,18 +131,26 @@ export async function loadStarRatingInput(
   }
 }
 
-/** Load and rate one athlete. */
+/**
+ * Load and rate one athlete.
+ *
+ * An unrated class short-circuits before the loads: there is no point reading a bundle and a
+ * season of matches to throw the result away, and it keeps a field of mixed classes cheap.
+ */
 export async function rateOneAthlete(
   supabase: SupabaseClient,
   athlete: Record<string, unknown>,
   nationallyRankedIds: ReadonlySet<string>,
 ): Promise<RatedAthlete> {
-  const input = await loadStarRatingInput(supabase, athlete, nationallyRankedIds)
-  return {
+  const graduationYear = athlete.graduationyear == null ? null : Number(athlete.graduationyear)
+  const identity = {
     athleteId: String(athlete.id),
     name: String(athlete.name ?? "Athlete"),
-    graduationYear: athlete.graduationyear == null ? null : Number(athlete.graduationyear),
+    graduationYear,
     weightClass: athlete.weightclass == null ? null : String(athlete.weightclass),
-    rating: rateAthlete(input),
   }
+  if (!isRatedClass(graduationYear)) return { ...identity, rating: null }
+
+  const input = await loadStarRatingInput(supabase, athlete, nationallyRankedIds)
+  return { ...identity, rating: rateAthlete(input) }
 }

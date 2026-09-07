@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { rateAthlete, starsForScore, type StarRatingInput } from "@/lib/athlete-star-rating"
+import { isRatedClass, rateAthlete, starsForScore, type StarRatingInput } from "@/lib/athlete-star-rating"
+import { PUBLISHED_PUBLIC_RANKINGS_YEARS } from "@/lib/public-rankings-cap"
 import type { NationalExposure, SeasonStrength } from "@/lib/competition-strength"
 
 const noExposure: NationalExposure = {
@@ -196,5 +197,34 @@ describe("five stars needs the record, not only the ranking", () => {
 
   it("never gives five to an unranked wrestler, however strong the record", () => {
     expect(rateAthlete({ ...ELITE, nationallyRanked: false }).stars).toBe(4)
+  })
+})
+
+describe("isRatedClass", () => {
+  it("rates the classes RecruitNC already ranks", () => {
+    expect(isRatedClass(2027)).toBe(true)
+    expect(isRatedClass(2028)).toBe(true)
+  })
+
+  it("does not rate the younger classes", () => {
+    // A freshman's record is thin by definition, and this rating reads thinness as weakness.
+    expect(isRatedClass(2029)).toBe(false)
+    expect(isRatedClass(2030)).toBe(false)
+  })
+
+  it("does not rate a class that has already graduated", () => {
+    expect(isRatedClass(2026)).toBe(false)
+    expect(isRatedClass(2025)).toBe(false)
+  })
+
+  it("does not rate an athlete with no class year", () => {
+    expect(isRatedClass(null)).toBe(false)
+    expect(isRatedClass(undefined)).toBe(false)
+    expect(isRatedClass(Number.NaN)).toBe(false)
+  })
+
+  it("tracks the published rankings map rather than a second list", () => {
+    // The two must never drift: a class we rank is a class we star, and vice versa.
+    for (const year of PUBLISHED_PUBLIC_RANKINGS_YEARS) expect(isRatedClass(year)).toBe(true)
   })
 })

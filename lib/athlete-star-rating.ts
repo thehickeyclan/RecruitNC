@@ -21,6 +21,7 @@
  */
 
 import type { NationalExposure, SeasonStrength } from "@/lib/competition-strength"
+import { isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
 export type StarComponent = {
   key: "national" | "competition" | "ranking" | "state"
@@ -161,6 +162,23 @@ export type StarRatingInput = {
    * The only route to five stars.
    */
   nationallyRanked: boolean
+}
+
+/**
+ * Whether a wrestler's class is rated at all.
+ *
+ * Stars run on the classes RecruitNC already publishes rankings for — 2027 and 2028 today.
+ * Deliberately read from `PUBLIC_RANKINGS_MAX_BY_YEAR` rather than listed again here, so the
+ * two never drift: a class we do not rank is a class we do not know well enough to star, and
+ * when a class is added to the rankings the stars follow it without a second edit.
+ *
+ * The younger classes are the reason. A freshman's record is thin by definition, and a rating
+ * built only from results reads that thinness as weakness — Devin Hord, ranked #19 nationally
+ * as a Class of 2030 wrestler, scored 14 out of 100. The honest answer for a ninth grader is
+ * not one star, it is no star at all.
+ */
+export function isRatedClass(graduationYear: number | null | undefined): boolean {
+  return isPublicRankingsYearPublished(graduationYear)
 }
 
 export function rateAthlete(input: StarRatingInput): StarRating {
