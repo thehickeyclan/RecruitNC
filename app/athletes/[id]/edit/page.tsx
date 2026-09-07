@@ -40,6 +40,21 @@ interface Athlete {
   photourl?: string | null
 }
 
+/**
+ * What a family is told before they type a cell number or a GPA.
+ *
+ * These fields are released in the scouting report to college coaches we have verified by hand
+ * against their program's public staff directory — three of thirty-nine accounts today. That is
+ * a narrow release, but nobody had ever been told it happens: the form asked for a GPA with no
+ * statement of who reads it, and the privacy policy described these fields as staff-entered
+ * records that "are not public", which is not the same thing.
+ *
+ * Disclosure, not a consent gate. Leaving the field blank is the way to decline, and saying so
+ * is what makes a blank field a choice rather than an oversight.
+ */
+const RECRUITING_DISCLOSURE =
+  "Shared with college coaches we verify against their program's staff directory, in the scouting report they can download. Leave blank if you would rather not share it."
+
 export default function AthleteEditPage({ params }: { params: { id: string } }) {
   const { toast } = useToast()
   const { user } = useAuth()
@@ -263,6 +278,7 @@ export default function AthleteEditPage({ params }: { params: { id: string } }) 
                 onChange={(e) => setCell(e.target.value)}
                 type="tel"
               />
+              <p className="mt-1 text-xs text-muted-foreground">{RECRUITING_DISCLOSURE}</p>
             </div>
             <div>
               <Label htmlFor="instagram">Instagram Handle</Label>
@@ -308,6 +324,7 @@ export default function AthleteEditPage({ params }: { params: { id: string } }) 
             <CardTitle>Academics</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <p className="text-xs text-muted-foreground">{RECRUITING_DISCLOSURE}</p>
             <div>
               <Label htmlFor="gpa">GPA</Label>
               <Input

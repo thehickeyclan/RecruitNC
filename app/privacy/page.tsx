@@ -13,7 +13,7 @@ export default function PrivacyPolicyPage() {
       <div className="mx-auto max-w-3xl">
         <p className="text-xs font-bold tracking-[0.2em] text-rnc-gold">NC UNITED WRESTLING</p>
         <h1 className="mt-2 text-4xl font-extrabold tracking-tight">Privacy Policy</h1>
-        <p className="mt-3 text-sm text-[#A8BBD1]">Last updated 19 August 2026</p>
+        <p className="mt-3 text-sm text-[#A8BBD1]">Last updated 7 September 2026</p>
 
         <div className="mt-10 space-y-10 text-[15px] leading-relaxed text-[#D6E1EE]">
           <section>
@@ -67,8 +67,25 @@ export default function PrivacyPolicyPage() {
               On the website, coaches and NC United staff working in the admin and school portals can
               record additional detail on an athlete&apos;s record, including a date of birth, contact
               email and phone number, where that is needed for eligibility, recruiting or team
-              administration. These fields are entered by signed-in staff, are not public, and are not
-              collected or shown anywhere in the app.
+              administration. Athletes and families can add a cell number, GPA and test scores
+              themselves on their own profile. These fields are never public, and are not collected or
+              shown anywhere in the app.
+            </p>
+
+            <h3 className="mt-5 font-semibold text-rnc-gold">Scouting reports for college coaches</h3>
+            <p className="mt-2">
+              A college coach can open a scouting report on an athlete. Most of what it contains is
+              competition record — results, notable wins and losses, rankings. A report also includes
+              the athlete&apos;s cell number, contact email, GPA and test scores, but only for a coach
+              we have checked by hand against their program&apos;s published staff directory. A college
+              email address on its own is not enough. Every copy carries the name of the coach it was
+              prepared for.
+            </p>
+            <p className="mt-2">
+              Anyone else who can reach a report — including a paying subscriber — sees the competition
+              record with no contact details and no academics. Leaving a field blank on the profile
+              keeps it out of the report entirely, and families can ask us to remove any of it at any
+              time.
             </p>
 
             <h3 className="mt-5 font-semibold text-rnc-gold">Athlete profiles and results</h3>
