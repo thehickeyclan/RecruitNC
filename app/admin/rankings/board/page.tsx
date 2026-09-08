@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
-import { ArrowDown, ArrowUp, Bot, CheckCircle2, Eye, Lock, Save, Search, Sparkles, UploadCloud } from "lucide-react"
+import { ArrowDown, ArrowUp, Bot, CheckCircle2, ChevronDown, ChevronUp, Eye, Lock, Save, Search, Sparkles, UploadCloud } from "lucide-react"
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
 import type { StarRating } from "@/lib/athlete-star-rating"
 
@@ -158,6 +158,63 @@ function StarCell({
   )
 }
 
+/**
+ * Evidence, grouped the way the Tournament of Champions field board groups it.
+ *
+ * A flat wall of thirty badges is not reviewable. These buckets put a wrestler's state record
+ * next to their national record next to who they actually beat, which is the order the questions
+ * get asked in.
+ */
+const EVIDENCE_GROUPS: Array<{ label: string; match: RegExp }> = [
+  { label: "State", match: /NCHSAA|state|\b\d+A\b/i },
+  { label: "National", match: /NHSCA|Super\s*32|Fargo|Early Entry|qualifier/i },
+  { label: "Schedule", match: /match record|quality win/i },
+  { label: "Duals and other", match: /duals|college open|RankWrestler|elite achievement/i },
+]
+
+/** Longest first, so the reason a wrestler scores what they score is the first thing read. */
+const SCORE_SEGMENTS: Array<{ key: string; label: string; className: string }> = [
+  { key: "matchResume", label: "Schedule", className: "bg-emerald-500" },
+  { key: "national", label: "National", className: "bg-[#d6b75d]" },
+  { key: "state", label: "State", className: "bg-sky-500" },
+  { key: "duals", label: "Duals", className: "bg-purple-500" },
+  { key: "rankWrestler", label: "RankWrestler", className: "bg-slate-400" },
+  { key: "collegeOpen", label: "College open", className: "bg-slate-500" },
+  { key: "profile", label: "Profile", className: "bg-slate-600" },
+]
+
+function ScoreBar({ breakdown, total }: { breakdown: Record<string, number>; total: number }) {
+  // A component scoring nothing is not worth a tile, a colour or a word.
+  const parts = SCORE_SEGMENTS.map((seg) => ({ ...seg, value: Number(breakdown[seg.key] ?? 0) })).filter(
+    (seg) => seg.value > 0,
+  )
+  const sum = parts.reduce((acc, seg) => acc + seg.value, 0) || 1
+
+  return (
+    <div>
+      <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-slate-950">
+        {parts.map((seg) => (
+          <div
+            key={seg.key}
+            className={seg.className}
+            style={{ width: `${(seg.value / sum) * 100}%` }}
+            title={`${seg.label}: ${seg.value}`}
+          />
+        ))}
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-blue-100">
+        <span className="font-black text-white">{Math.round(total * 10) / 10}</span>
+        {parts.map((seg) => (
+          <span key={seg.key} className="flex items-center gap-1.5">
+            <span className={`inline-block h-2 w-2 rounded-full ${seg.className}`} aria-hidden />
+            {seg.label} <span className="font-semibold text-white">{seg.value}</span>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function confidenceClass(confidence: BoardAthlete["confidence"]): string {
   if (confidence === "High") return "bg-emerald-600 text-white"
   if (confidence === "Medium") return "bg-amber-500 text-slate-950"
@@ -183,6 +240,8 @@ export default function RankingBoardPage() {
   const [stars, setStars] = useState<Record<string, StarRating>>({})
   const [starEdit, setStarEdit] = useState<{ id: string; stars: string; reason: string } | null>(null)
   const [starError, setStarError] = useState<string | null>(null)
+  /** Only one athlete's evidence is open at a time, the way the TOC field board does it. */
+  const [expandedEvidenceId, setExpandedEvidenceId] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [query, setQuery] = useState("")
@@ -545,18 +604,19 @@ export default function RankingBoardPage() {
                             <p className="mt-1 text-sm text-blue-100">
                               {athlete.highschool || "School TBD"} · {athlete.weightclass || "TBD"} lbs · Class of {athlete.graduationyear}
                             </p>
-                            <div className="mt-2 flex flex-wrap gap-2">
+                            {/*
+                              The badges that say where a wrestler stands, and nothing else.
+                              Everything explaining *why* now lives behind "See evidence", the way
+                              the Tournament of Champions field board does it — a reviewer scanning
+                              thirty athletes needs the order first and the argument on demand.
+                            */}
+                            <div className="mt-2 flex flex-wrap items-center gap-2">
                               <Badge className="bg-blue-700 text-white">Formula #{athlete.ai_rank}</Badge>
-                              <Badge className="bg-slate-700 text-white">Score {athlete.ai_score}</Badge>
                               <Badge className={isPublicSlot ? "bg-[#d6b75d] text-slate-950" : "bg-slate-700 text-blue-100"}>
                                 {isPublicSlot ? `Inside top-${publicCap} cutoff` : "Private watchlist"}
                               </Badge>
-                              {athlete.rankwrestler_rank ? <Badge className="bg-slate-700 text-white">RW #{athlete.rankwrestler_rank}</Badge> : null}
-                              {athlete.win_loss ? <Badge className="bg-emerald-700 text-white">Matches {athlete.win_loss}</Badge> : null}
-                              {sameClassWins > 0 ? (
-                                <Badge className="bg-emerald-600 text-white">
-                                  {sameClassWins} direct same-class win{sameClassWins === 1 ? "" : "s"}
-                                </Badge>
+                              {athlete.rankwrestler_rank ? (
+                                <Badge className="bg-slate-700 text-white">RankWrestler #{athlete.rankwrestler_rank}</Badge>
                               ) : null}
                               {athlete.match_count === 0 ? (
                                 <Badge className="bg-red-700 text-white">No match data</Badge>
@@ -564,11 +624,15 @@ export default function RankingBoardPage() {
                                 <Badge className="bg-orange-600 text-white">Thin match data · {athlete.match_count}</Badge>
                               ) : null}
                               <Badge className={confidenceClass(athlete.confidence)}>{athlete.confidence} confidence</Badge>
-                              {aiDelta ? (
-                                <Badge className={aiDelta > 0 ? "bg-emerald-700 text-white" : "bg-orange-700 text-white"}>
-                                  Formula says {aiDelta > 0 ? `+${aiDelta}` : aiDelta}
-                                </Badge>
-                              ) : null}
+                              <button
+                                type="button"
+                                className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[#d6b75d]/35 bg-[#d6b75d]/10 px-2 py-1 text-[10px] font-semibold text-[#d6b75d] hover:bg-[#d6b75d]/20"
+                                onClick={() => setExpandedEvidenceId((id) => (id === athlete.id ? null : athlete.id))}
+                                aria-expanded={expandedEvidenceId === athlete.id}
+                              >
+                                See evidence
+                                {expandedEvidenceId === athlete.id ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -617,42 +681,105 @@ export default function RankingBoardPage() {
                         </div>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-4 p-4">
-                      <div className="grid gap-3 md:grid-cols-6">
-                        {Object.entries(athlete.score_breakdown).map(([key, value]) => (
-                          <div key={key} className="rounded-xl border border-blue-950 bg-slate-950 p-3">
-                            <p className="text-xs capitalize text-blue-200">{key.replace(/([A-Z])/g, " $1")}</p>
-                            <p className="text-xl font-black">{value}</p>
+                    {expandedEvidenceId === athlete.id ? (
+                      <CardContent className="space-y-3 p-4">
+                        {/*
+                          A bar, not seven boxes. Every component used to render its own tile,
+                          including the ones that always score zero — college opens and profile text
+                          no longer score at all, and RankWrestler has no column to read — so four of
+                          the seven tiles on every card read "0" and one athlete filled the screen.
+                        */}
+                        <ScoreBar breakdown={athlete.score_breakdown} total={athlete.ai_score} />
+
+                        {/* What the formula thinks, and how far it is from where you have them. */}
+                        <div className="rounded-md border border-violet-400/25 bg-violet-400/10 p-2.5">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-violet-200">
+                                <Sparkles className="h-3 w-3" aria-hidden="true" />
+                                Formula recommendation
+                              </span>
+                              <span className="rounded bg-violet-300 px-1.5 py-0.5 text-xs font-black text-[#160d2b]">
+                                #{athlete.ai_rank}
+                              </span>
+                              <span className="text-[10px] font-semibold text-violet-100/70">
+                                score {athlete.ai_score} · {athlete.confidence.toLowerCase()} confidence
+                              </span>
+                            </div>
+                            <span className="text-[9px] font-semibold uppercase tracking-wide text-white/35">
+                              Advisory only
+                            </span>
                           </div>
-                        ))}
-                      </div>
-                      <div>
-                        <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-blue-200">Ranking evidence</p>
-                        <div className="flex flex-wrap gap-2">
-                          {athlete.evidence.length ? (
-                            athlete.evidence.map((item, index) => (
-                              <Badge key={`${item.label}-${index}`} variant="outline" className={evidenceClass(item.tone)}>
-                                {item.points ? `+${item.points} · ` : ""}
-                                {item.label}
-                              </Badge>
-                            ))
+                          {aiDelta ? (
+                            <p className="mt-2 text-[10px] font-semibold text-amber-200">
+                              Review: working rank is #{finalRank}, formula says {aiDelta > 0 ? `+${aiDelta}` : aiDelta}.
+                            </p>
                           ) : (
-                            <Badge variant="outline" className="border-red-300 bg-red-100 text-red-900">
-                              No ranking evidence found
-                            </Badge>
+                            <p className="mt-2 text-[10px] font-semibold text-emerald-200">Matches the working rank.</p>
                           )}
+                          <p className="mt-2 flex items-center gap-1.5 text-[10px] leading-snug text-violet-50/70">
+                            <CheckCircle2 className="h-3 w-3 shrink-0" />
+                            {athlete.confidence_reason}
+                          </p>
+                          {athlete.data_gaps?.length ? (
+                            <p className="mt-2 border-t border-violet-200/10 pt-2 text-[10px] leading-snug text-amber-100/70">
+                              Data note: {athlete.data_gaps.join(" · ")}
+                            </p>
+                          ) : null}
                         </div>
-                      </div>
-                      {athlete.college_opens_experience ? (
-                        <div className="rounded-xl border border-emerald-900 bg-emerald-950/40 p-3 text-sm text-emerald-100">
-                          <strong>College opens:</strong> {athlete.college_opens_experience}
+
+                        {/* Direct results inside this class decide ties, so they lead. */}
+                        {athlete.head_to_head?.length ? (
+                          <div className="rounded-md border border-emerald-400/25 bg-emerald-400/10 p-2.5">
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-300">
+                              Same-class head-to-head, last 12 months
+                              {athlete.win_loss ? ` · season ${athlete.win_loss}` : ""}
+                            </p>
+                            <ul className="mt-1 grid gap-1 text-xs text-emerald-100 sm:grid-cols-2">
+                              {athlete.head_to_head.map((row) => (
+                                <li key={row.opponent}>
+                                  vs {row.opponent}: <strong>{row.wins}-{row.losses}</strong>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : (
+                          <p className="rounded-md border border-white/10 bg-slate-950 p-2.5 text-xs text-white/35">
+                            No direct result against another ranked wrestler in this class.
+                          </p>
+                        )}
+
+                        {/* Every line the formula counted, grouped the way the TOC board groups them. */}
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {EVIDENCE_GROUPS.map(({ label, match }) => {
+                            const lines = athlete.evidence.filter((e) => match.test(e.label))
+                            return (
+                              <div key={label}>
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-[#d6b75d]">{label}</p>
+                                {lines.length ? (
+                                  <ul className="mt-1 space-y-1 text-xs leading-snug text-white/75">
+                                    {lines.map((item, i) => (
+                                      <li key={`${item.label}-${i}`}>
+                                        {item.points ? <span className="text-emerald-300">+{item.points} · </span> : null}
+                                        {item.label}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <p className="mt-1 text-xs text-white/30">No result on file</p>
+                                )}
+                              </div>
+                            )
+                          })}
                         </div>
-                      ) : null}
-                      <div className="flex items-center gap-2 text-xs text-blue-200">
-                        <CheckCircle2 className="h-4 w-4" />
-                        {athlete.confidence_reason}
-                      </div>
-                    </CardContent>
+
+                        {athlete.college_opens_experience ? (
+                          <p className="text-xs text-emerald-100">
+                            <strong>College opens:</strong> {athlete.college_opens_experience}
+                          </p>
+                        ) : null}
+                      </CardContent>
+                    ) : null}
                     </Card>
                   </div>
                 )
