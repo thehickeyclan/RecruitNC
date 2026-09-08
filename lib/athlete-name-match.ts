@@ -127,18 +127,48 @@ export function firstNamesLikelySame(firstA: string, firstB: string): boolean {
 }
 
 /** Educated guess: same last name + compatible first name (Max/Maxwell, Matt/Matthew, …). */
+/**
+ * The alias groups, normalised once at module load rather than on every comparison.
+ *
+ * This ran `group.map(normalizeForAlias)` for every group on every call. The ranking board asks
+ * this question millions of times — every bout in a class against every ranked opponent on file —
+ * and was spending most of a minute of CPU re-normalising the same constant strings.
+ */
+const ALIAS_GROUP_NORMS: ReadonlyArray<ReadonlySet<string>> = ATHLETE_SAME_PERSON_ALIAS_GROUPS.map(
+  (group) => new Set(group.map((s) => normalizeForAlias(s))),
+)
+
+/**
+ * Parsed and normalised forms of names already seen.
+ *
+ * The same handful of names is compared over and over — an index of ranked opponents is fixed for
+ * a whole build, and every bout is measured against all of it. Parsing is pure, so the answer is
+ * worth keeping. Bounded so a long-running server cannot grow it without limit.
+ */
+const NAME_FORM_CACHE_LIMIT = 20_000
+const aliasKeyCache = new Map<string, string>()
+const parsedNameCache = new Map<string, ReturnType<typeof parseFirstLastForNchsaa>>()
+
+function cached<V>(cache: Map<string, V>, key: string, compute: () => V): V {
+  const hit = cache.get(key)
+  if (hit !== undefined) return hit
+  const value = compute()
+  if (cache.size >= NAME_FORM_CACHE_LIMIT) cache.clear()
+  cache.set(key, value)
+  return value
+}
+
 export function namesLikelySamePerson(nameA: string, nameB: string): boolean {
   if (namesReferToSamePerson(nameA, nameB)) return true
 
-  const keyA = normalizeForAlias(nameA)
-  const keyB = normalizeForAlias(nameB)
-  for (const group of ATHLETE_SAME_PERSON_ALIAS_GROUPS) {
-    const norms = group.map((s) => normalizeForAlias(s))
-    if (norms.includes(keyA) && norms.includes(keyB)) return true
+  const keyA = cached(aliasKeyCache, nameA, () => normalizeForAlias(nameA))
+  const keyB = cached(aliasKeyCache, nameB, () => normalizeForAlias(nameB))
+  for (const norms of ALIAS_GROUP_NORMS) {
+    if (norms.has(keyA) && norms.has(keyB)) return true
   }
 
-  const pa = parseFirstLastForNchsaa(nameA)
-  const pb = parseFirstLastForNchsaa(nameB)
+  const pa = cached(parsedNameCache, nameA, () => parseFirstLastForNchsaa(nameA))
+  const pb = cached(parsedNameCache, nameB, () => parseFirstLastForNchsaa(nameB))
   if (!pa || !pb) return false
   if (pa.last.toLowerCase() !== pb.last.toLowerCase()) return false
   return firstNamesLikelySame(pa.first, pb.first)

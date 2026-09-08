@@ -128,6 +128,48 @@ export function findSignificantLosses(bouts: readonly Bout[], index: OpponentInd
   return findSignificantBouts(bouts, index, "loss")
 }
 
+type OpponentResolution = {
+  national: NationallyRankedOpponent | null
+  inField: boolean
+  ranked: RankedOpponent | null
+}
+
+/**
+ * Who an opponent is, resolved once per name per index.
+ *
+ * `namesLikelySamePerson` is a fuzzy comparison, and this used to run it for every bout against
+ * every entry in the index — with 765 opponents on file and eight thousand bouts in a class, the
+ * ranking board spent sixty-four seconds of CPU here and the admin watched a spinner. Opponent
+ * names repeat heavily both within a wrestler's season and across a class, so the answer is
+ * cached against the index it was computed from.
+ *
+ * Keyed on the index object, so a caller that rebuilds the index gets fresh answers, and the
+ * cache is collected with it. Behaviour is identical to resolving inline — this only stops the
+ * same question being asked thousands of times.
+ */
+const resolutionsByIndex = new WeakMap<OpponentIndex, Map<string, OpponentResolution>>()
+
+function resolveOpponent(index: OpponentIndex, name: string): OpponentResolution {
+  let cache = resolutionsByIndex.get(index)
+  if (!cache) {
+    cache = new Map()
+    resolutionsByIndex.set(index, cache)
+  }
+  const key = name.trim().toLowerCase()
+  const hit = cache.get(key)
+  if (hit) return hit
+
+  // A national ranking is checked first: it is the strongest thing a result can be
+  // measured against, and it is the only credential most out-of-state opponents will have.
+  const national = (index.nationallyRanked ?? []).find((r) => namesLikelySamePerson(r.name, name)) ?? null
+  const inField = national ? false : index.tocField.some((fieldName) => namesLikelySamePerson(fieldName, name))
+  const ranked = national || inField ? null : index.ranked.find((r) => namesLikelySamePerson(r.name, name)) ?? null
+
+  const resolution: OpponentResolution = { national, inField, ranked }
+  cache.set(key, resolution)
+  return resolution
+}
+
 function findSignificantBouts(
   bouts: readonly Bout[],
   index: OpponentIndex,
@@ -142,11 +184,7 @@ function findSignificantBouts(
     const name = opponentName(bout)
     if (!name) continue
 
-    // A national ranking is checked first: it is the strongest thing a result can be
-    // measured against, and it is the only credential most out-of-state opponents will have.
-    const national = (index.nationallyRanked ?? []).find((r) => namesLikelySamePerson(r.name, name))
-    const inField = national ? false : index.tocField.some((fieldName) => namesLikelySamePerson(fieldName, name))
-    const ranked = national || inField ? null : index.ranked.find((r) => namesLikelySamePerson(r.name, name))
+    const { national, inField, ranked } = resolveOpponent(index, name)
     if (!national && !inField && !ranked) continue
 
     // One entry per opponent per day: the same bout is sometimes stored twice.
