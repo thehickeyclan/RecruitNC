@@ -38,8 +38,12 @@ export type SidearmScheduleEvent = {
  * like a team, so "Southeast Open" arrived as somebody NC State wrestled.
  */
 export function looksLikeTournament(name: string): boolean {
-  return /\b(open|invitational|championships?|duals|classic|tournament|showcase|scramble|challenge|wrestle-?offs?)\b/i.test(
-    name,
+  const value = name.trim()
+  // An intra-squad scrimmage is billed as two colours, never as a school: Montreat's
+  // "Navy vs. Gold" was landing in the calendar as a dual against the Naval Academy.
+  if (/\svs\.?\s/i.test(value)) return true
+  return /\b(open|invitationals?|invite|championships?|duals|classic|tournament|showcase|scramble|challenge|battle|wrestle-?offs?)\b/i.test(
+    value,
   )
 }
 

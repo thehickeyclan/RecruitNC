@@ -3,6 +3,7 @@ import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 import { parseCollegeSchedule } from "./parse"
 import { splitFixture } from "./sidearm-classic"
+import { looksLikeTournament } from "./sidearm"
 import { currentSeason, isInSeason, seasonBounds, seasonForDate } from "./season"
 
 /**
@@ -152,5 +153,20 @@ describe("seasonForDate / currentSeason", () => {
     expect(seasonBounds("2026-27")).toEqual({ season: "2026-27", start: "2026-08-01", end: "2027-07-31" })
     expect(isInSeason("2026-10-25", "2026-27")).toBe(true)
     expect(isInSeason("2026-03-19", "2026-27")).toBe(false)
+  })
+})
+
+describe("looksLikeTournament", () => {
+  it("catches the event names that were arriving as opponents", () => {
+    // All three reached the live calendar as duals on the first real import.
+    expect(looksLikeTournament("Navy vs. Gold")).toBe(true) // an intra-squad scrimmage, not Navy
+    expect(looksLikeTournament("Missouri Valley Invite")).toBe(true) // "Invite", not "Invitational"
+    expect(looksLikeTournament("Battle in the Bluegrass")).toBe(true)
+  })
+
+  it("still lets a real opponent through", () => {
+    for (const school of ["Navy", "NC State", "Northern Iowa", "Lincoln Memorial", "Truett McConnell", "Keiser"]) {
+      expect(looksLikeTournament(school)).toBe(false)
+    }
   })
 })
