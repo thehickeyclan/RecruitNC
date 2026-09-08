@@ -29,8 +29,60 @@ describe("RecruitNC TOC-style ranking engine", () => {
       },
     ])
 
-    expect(result.score).toBe(29)
+    // 7.9 for the single quality win (sqrt curve), 16 for a 36-4 record, 5 for depth.
+    expect(result.score).toBe(28.9)
     expect(result.qualityWins).toBe(1)
+  })
+
+  /**
+   * The quality-win score has to separate wrestlers, which the old ceiling did not.
+   *
+   * It was `Math.min(qualityWinPoints, 30)`, and thirty-four of the thirty-eight ranked
+   * wrestlers in the Class of 2028 were at or above it — so the one component measuring who a
+   * wrestler actually beat gave all of them the same number. Jake Amiott had 50 wins over
+   * top-5% opponents and scored exactly what a wrestler with four scored.
+   */
+  it("keeps separating wrestlers well past the old thirty-point ceiling", () => {
+    const quality = (count: number) =>
+      scoreProspectMatchResume([
+        {
+          athlete_id: "a",
+          total_matches: 40,
+          wins: 36,
+          losses: 4,
+          matches: Array.from({ length: count }, (_, i) => ({
+            opponent_name: `Opponent ${i}`,
+            win_loss: "W",
+            opponent_percentage: 99,
+          })),
+        },
+      ]).score
+
+    // Four, twenty and fifty elite wins used to be indistinguishable. They must not be.
+    expect(quality(20)).toBeGreaterThan(quality(4))
+    expect(quality(50)).toBeGreaterThan(quality(20))
+  })
+
+  it("grows on a curve, so a long season cannot run away with the board", () => {
+    const quality = (count: number) =>
+      scoreProspectMatchResume([
+        {
+          athlete_id: "a",
+          total_matches: 60,
+          wins: 60,
+          losses: 0,
+          matches: Array.from({ length: count }, (_, i) => ({
+            opponent_name: `Opponent ${i}`,
+            win_loss: "W",
+            opponent_percentage: 99,
+          })),
+        },
+      ]).score
+
+    // Twice the elite wins is worth about forty per cent more, not twice as much.
+    const ratio = (quality(40) - 23) / (quality(10) - 23)
+    expect(ratio).toBeGreaterThan(1.6)
+    expect(ratio).toBeLessThan(2.4)
   })
 
   it("deduplicates mirrored match records when building candidate head-to-head", () => {

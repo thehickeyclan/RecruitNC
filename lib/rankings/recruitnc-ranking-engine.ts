@@ -254,7 +254,19 @@ export function scoreProspectMatchResume(rows: MatchRow[]): {
     }
   }
 
-  score += Math.min(qualityWinPoints, 30)
+  /**
+   * Strength of schedule, on a curve rather than a ceiling.
+   *
+   * This was `Math.min(qualityWinPoints, 30)`, and thirty was low enough that thirty-four of the
+   * thirty-eight ranked wrestlers in the Class of 2028 reached it. They all scored the same.
+   * Uncapped, that same field runs from 180 to 458 — Hayden Smith has 64 wins over top-5%
+   * opponents and 46 of them against the top 2%, Jake Amiott 50 and 40 — so the one number that
+   * measures who a wrestler actually beat was the one number carrying no information at all.
+   *
+   * A square root keeps every place in that order while stopping a long season from running away
+   * with the board: doubling the quality wins is worth about forty per cent more, not double.
+   */
+  score += Math.round(Math.sqrt(Math.max(qualityWinPoints, 0)) * 2.8 * 10) / 10
   if (totalMatches > 0) {
     score += Math.round((wins / Math.max(totalMatches, 1)) * 18)
     if (totalMatches >= 35) score += 5
@@ -489,6 +501,48 @@ async function loadRankingDualsByAthlete(
   return out
 }
 
+/**
+ * What each part of a résumé is worth, relative to the others.
+ *
+ * The state component used to dominate: a classification is worth up to 25 on its own, a title
+ * another 8, and Connor Reece's 8A championship alone scored 82 — more than any other component
+ * can reach. That made sense with four classifications. With eight there are eight state
+ * champions at every weight, some of whom never met a ranked wrestler, so a title says far less
+ * about where somebody belongs than it used to. It is now the smallest input, not the largest.
+ *
+ * What replaces it is what a college coach actually asks: who did they wrestle, did they beat
+ * the people around them, and how did they do outside North Carolina.
+ *
+ * `collegeOpen` and `profile` are zeroed rather than reduced. Both scored free text — `profile`
+ * ran a regex for words like "all-american" over whatever an athlete had typed, and awarded 10
+ * points for finding them. Jake Amiott is a Fargo All-American and scored 0 there because he had
+ * not written it down; Connor Reece scored 10 because he had. Eighteen points of a teenager's
+ * public ranking turned on how much they filled in a form, which is not a result and cannot be
+ * defended to the family of the wrestler it ranks below.
+ */
+export const RANKING_COMPONENT_WEIGHTS: Record<keyof RankingScoreBreakdown, number> = {
+  /** Who they wrestled and how they did — includes wins over top-percentile opponents. */
+  matchResume: 1.6,
+  /** NHSCA, Super 32, Fargo, qualifiers: the results earned outside this state. */
+  national: 1.5,
+  /** Real, and still counted — just no longer the loudest voice in the room. */
+  state: 0.45,
+  duals: 1.2,
+  rankWrestler: 1,
+  /** Scored a form field, not a result. */
+  collegeOpen: 0,
+  /** Scored a regex over free text. */
+  profile: 0,
+}
+
+function weighted(raw: RankingScoreBreakdown): RankingScoreBreakdown {
+  const out = {} as RankingScoreBreakdown
+  for (const key of Object.keys(raw) as Array<keyof RankingScoreBreakdown>) {
+    out[key] = Math.round(raw[key] * RANKING_COMPONENT_WEIGHTS[key] * 10) / 10
+  }
+  return out
+}
+
 export async function buildRecruitNcRankingBoard({
   supabase,
   year,
@@ -503,6 +557,15 @@ export async function buildRecruitNcRankingBoard({
     .select("*")
     .eq("graduationyear", year)
     .ilike("gender", gender)
+    /**
+     * These are North Carolina rankings, so a wrestler who has left the state is not in them.
+     *
+     * The board never checked this. Jack Harty transferred to Greens Farms Academy in
+     * Connecticut and still placed fourth in the Class of 2027 on the strength of an NC résumé
+     * he is no longer adding to. `is_nc_athlete` was already on the row and already false for
+     * twenty-three athletes; nothing was reading it.
+     */
+    .eq("is_nc_athlete", true)
     .order("prospect_ranking", { ascending: true })
     .order("name", { ascending: true })
 
@@ -698,7 +761,7 @@ export async function buildRecruitNcRankingBoard({
         evidence.push({ kind: "data_gap", label: gap, tone: "red" })
       }
 
-      const scoreBreakdown: RankingScoreBreakdown = {
+      const scoreBreakdown: RankingScoreBreakdown = weighted({
         matchResume: matchScore.score,
         state,
         national,
@@ -706,7 +769,7 @@ export async function buildRecruitNcRankingBoard({
         rankWrestler,
         collegeOpen,
         profile,
-      }
+      })
       const aiScore = Object.values(scoreBreakdown).reduce((sum, points) => sum + points, 0)
       const hasVerifiedResume = state > 0 || national > 0 || dualsScore > 0 || rankWrestler > 0 || headToHead.length > 0
       const confidence: RankingBoardAthlete["confidence"] =
