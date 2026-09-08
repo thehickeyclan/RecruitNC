@@ -46,6 +46,7 @@ type BoardAthlete = {
   locked?: boolean
   reviewer_note?: string
   all_american: string[]
+  last_competed: string | null
   nhsca_by_year: string[]
   super32_by_year: string[]
   fargo_by_year: string[]
@@ -695,6 +696,10 @@ export default function RankingBoardPage() {
                             </CardTitle>
                             <p className="mt-1 text-sm text-blue-100">
                               {athlete.highschool || "School TBD"} · {athlete.weightclass || "TBD"} lbs · Class of {athlete.graduationyear}
+                            </p>
+                            {/* Whether a ranking rests on results that have stopped. */}
+                            <p className="text-xs text-blue-200/50">
+                              Last competed: {athlete.last_competed ?? "no dated result on file"}
                             </p>
                             {/*
                               The badges that say where a wrestler stands, and nothing else.

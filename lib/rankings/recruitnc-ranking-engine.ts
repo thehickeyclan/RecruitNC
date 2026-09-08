@@ -48,6 +48,10 @@ export type RankingEvidence = {
 }
 
 export type RankingScoreBreakdown = {
+  /** All-American finishes at NHSCA, Fargo or Super 32 — the strongest single credential. */
+  allAmerican: number
+  /** Wins over nationally ranked, state-ranked or Tournament of Champions wrestlers. */
+  rankedWins: number
   matchResume: number
   state: number
   national: number
@@ -99,6 +103,15 @@ export type RankingBoardAthlete = {
    */
   /** One entry per All-American finish, newest first: "NHSCA 2026 4th". */
   all_american: string[]
+  /**
+   * The last time this wrestler competed, from any source on file.
+   *
+   * Shown rather than scored. Wrestling is seasonal, so in September everybody's most recent
+   * result is February states or a summer event, and a raw recency penalty would punish the
+   * whole class for the calendar. What it is worth knowing is when a résumé has stopped —
+   * Hayden Smith holds a ranking on results that a concussion has made static.
+   */
+  last_competed: string | null
   state_placements: string[]
   nhsca_record: string | null
   super32_record: string | null
@@ -565,12 +578,22 @@ async function loadRankingDualsByAthlete(
  * defended to the family of the wrestler it ranks below.
  */
 export const RANKING_COMPONENT_WEIGHTS: Record<keyof RankingScoreBreakdown, number> = {
+  /**
+   * The order asked for, loudest first: All-American honours, then who they beat, then the
+   * national event records, and state placement last.
+   *
+   * Placing at NHSCA, Fargo or Super 32 is the hardest thing on any of these résumés and the
+   * least ambiguous — a top-eight finish in a national bracket needs no context. Beating a ranked
+   * wrestler is the next best, because it is a direct measurement rather than an inference.
+   */
+  allAmerican: 1,
+  rankedWins: 1,
   /** Who they wrestled and how they did — includes wins over top-percentile opponents. */
-  matchResume: 1.6,
-  /** NHSCA, Super 32, Fargo, qualifiers: the results earned outside this state. */
-  national: 1.5,
-  /** Real, and still counted — just no longer the loudest voice in the room. */
-  state: 0.45,
+  matchResume: 1.1,
+  /** The event records themselves: Super 32, then NHSCA, then Fargo. */
+  national: 1.2,
+  /** Real, and counted last. Eight classifications means eight champions at every weight. */
+  state: 0.35,
   duals: 1.2,
   rankWrestler: 1,
   /** Scored a form field, not a result. */
@@ -990,7 +1013,69 @@ export async function buildRecruitNcRankingBoard({
                 : "ranked in North Carolina",
         }))
 
+      /**
+       * An All-American finish, scored by how deep it went and how recent it is.
+       *
+       * A national title is worth far more than an eighth, and a finish two years ago says less
+       * about a wrestler now than one last season — but it never counts for nothing, because it
+       * happened.
+       */
+      const allAmericanScore = allAmericanRows.reduce((sum, row) => {
+        const place = row.place!
+        const depth = place === 1 ? 40 : place === 2 ? 32 : place <= 4 ? 26 : place <= 6 ? 20 : 15
+        const seasonsAgo = gradYear == null ? 0 : Math.max(0, gradYear - row.year)
+        const recency = seasonsAgo === 0 ? 1 : seasonsAgo === 1 ? 0.85 : 0.7
+        return sum + depth * recency
+      }, 0)
+
+      /**
+       * Beating a ranked wrestler, scored by who they were.
+       *
+       * A direct result is a measurement rather than an inference, which is why it sits second
+       * only to a national placement. Capped so a wrestler who meets the same field twenty times
+       * cannot out-score one who travelled.
+       */
+      const rankedWinScore = Math.min(
+        significantWins.reduce(
+          (sum, win) =>
+            sum +
+            (win.standing.startsWith("nationally ranked")
+              ? 18
+              : win.standing === "Tournament of Champions field"
+                ? 10
+                : 7),
+          0,
+        ),
+        70,
+      )
+
+      /** Newest dated result across every source, formatted for a card. */
+      const lastCompeted = (() => {
+        const candidates: Array<{ at: number; label: string }> = []
+        for (const bout of [
+          ...(currentSeasonBoutsByAthleteId.get(id) ?? []),
+          ...(qualifierWinsByAthleteId.get(id) ?? []),
+        ] as Array<{ date?: string | null; venue?: string | null; tournament?: string | null }>) {
+          const at = bout.date ? Date.parse(String(bout.date)) : NaN
+          if (!Number.isFinite(at)) continue
+          candidates.push({ at, label: String(bout.venue ?? bout.tournament ?? "").trim() })
+        }
+        if (!candidates.length) {
+          // No dated bout: fall back to the most recent tournament year on file.
+          const years = [...(bundle.nchsaa ?? []), ...(bundle.nhsca ?? []), ...(bundle.super32 ?? []), ...(bundle.fargo ?? [])]
+            .map((r) => Number((r as { year?: unknown }).year))
+            .filter((y) => Number.isFinite(y) && plausibleSeason(y))
+          return years.length ? String(Math.max(...years)) : null
+        }
+        candidates.sort((a, b) => b.at - a.at)
+        const latest = candidates[0]!
+        const when = new Date(latest.at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+        return latest.label ? `${latest.label} · ${when}` : when
+      })()
+
       const scoreBreakdown: RankingScoreBreakdown = weighted({
+        allAmerican: Math.round(allAmericanScore * 10) / 10,
+        rankedWins: rankedWinScore,
         matchResume: matchScore.score,
         state,
         national,
@@ -1042,6 +1127,7 @@ export async function buildRecruitNcRankingBoard({
         achievements: athlete.achievements,
         additional_achievements: (athlete.additional_achievements as string) || null,
         all_american: allAmerican,
+        last_competed: lastCompeted,
         state_placements: statePlacements,
         nhsca_record: latestRecord(bundle.nhsca || []),
         super32_record: latestRecord(bundle.super32 || []),
