@@ -22,6 +22,12 @@ interface AdminStats {
   totalCoaches: number
   pendingSubmissions: number
   pendingDataDawgFeedback: number
+  actionCounts: Record<string, number>
+}
+
+function ActionBadge({ count }: { count?: number }) {
+  if (!count) return null
+  return <span className="absolute top-2 right-2 z-10 min-w-[1.5rem] h-6 px-1.5 rounded-full bg-[#C8102E] text-white text-xs font-bold flex items-center justify-center shadow-md" aria-label={`${count} items need attention`}>{count > 99 ? "99+" : count}</span>
 }
 
 const TOC_ADMIN_LINKS = [
@@ -47,6 +53,7 @@ export default function AdminDashboard() {
     totalCoaches: 0,
     pendingSubmissions: 0,
     pendingDataDawgFeedback: 0,
+    actionCounts: {},
   })
   const [loading, setLoading] = useState(true)
 
@@ -73,12 +80,26 @@ export default function AdminDashboard() {
       }
 
       try {
-        const response = await fetch("/api/admin/stats/overview", {
-          credentials: "include"
-        })
+        const [response, tocResponse] = await Promise.all([
+          fetch("/api/admin/stats/overview", { credentials: "include" }),
+          fetch("/api/admin/toc/dashboard-counts", { credentials: "include" }),
+        ])
         if (response.ok) {
           const data = await response.json()
-          setStats(data)
+          const tocData = tocResponse.ok ? await tocResponse.json() : { counts: {} }
+          const toc = tocData.counts ?? {}
+          const tocTotal = (toc.sponsors ?? 0) + (toc.volunteers ?? 0) + (toc.nominations ?? 0) + (toc.media ?? 0) + (toc.cornerCoaches ?? 0)
+          setStats({
+            ...data,
+            actionCounts: {
+              ...(data.actionCounts ?? {}),
+              "toc:/admin/toc": tocTotal,
+              "toc:/admin/toc/nominations": toc.nominations ?? 0,
+              "toc:/admin/toc/sponsors": toc.sponsors ?? 0,
+              "toc:/admin/toc/media": toc.media ?? 0,
+              "toc:/admin/toc/email": toc.email ?? 0,
+            },
+          })
         } else if (response.status === 429) {
           console.warn("[Admin] Rate limited on stats API")
         }
@@ -234,8 +255,9 @@ export default function AdminDashboard() {
                 <span className="text-sm font-semibold">Manage Athletes</span>
               </Button>
             </Link>
-            <Link href="/admin/submissions-manager">
-              <Button className="w-full h-20 bg-gradient-to-br from-[#C8102E] to-[#a00d25] hover:from-[#a00d25] hover:to-[#C8102E] text-white shadow-lg flex flex-col items-center justify-center gap-2">
+            <Link href="/admin/submissions-manager" className="relative block">
+              <Button className="relative w-full h-20 bg-gradient-to-br from-[#C8102E] to-[#a00d25] hover:from-[#a00d25] hover:to-[#C8102E] text-white shadow-lg flex flex-col items-center justify-center gap-2">
+                <ActionBadge count={stats.actionCounts.submissions} />
                 <FileText className="h-6 w-6" />
                 <span className="text-sm font-semibold">Submissions</span>
               </Button>
@@ -259,7 +281,8 @@ export default function AdminDashboard() {
               </Button>
             </Link>
             <HardLink href="/admin/clubs" className="block">
-              <span className="w-full h-20 bg-gradient-to-br from-[#061427] to-[#0B1D3A] hover:from-[#0B1D3A] hover:to-[#061427] text-[#D3B574] shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold border border-[#D3B574]/30">
+              <span className="relative w-full h-20 bg-gradient-to-br from-[#061427] to-[#0B1D3A] hover:from-[#0B1D3A] hover:to-[#061427] text-[#D3B574] shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold border border-[#D3B574]/30">
+                <ActionBadge count={stats.actionCounts.clubs} />
                 <MapPinned className="h-6 w-6" />
                 <span className="text-sm font-semibold">Clubs</span>
               </span>
@@ -277,13 +300,15 @@ export default function AdminDashboard() {
               </Button>
             </Link>
             <HardLink href="/admin/national-team" className="block">
-              <span className="w-full h-20 bg-gradient-to-br from-[#D3B574] to-[#b89a5a] hover:from-[#b89a5a] hover:to-[#D3B574] text-[#003366] shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
+              <span className="relative w-full h-20 bg-gradient-to-br from-[#D3B574] to-[#b89a5a] hover:from-[#b89a5a] hover:to-[#D3B574] text-[#003366] shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
+                <ActionBadge count={stats.actionCounts.nationalTeam} />
                 <Trophy className="h-6 w-6" />
                 <span className="text-sm font-semibold">National team</span>
               </span>
             </HardLink>
             <HardLink href="/admin/fundraising" className="block">
-              <span className="w-full h-20 bg-gradient-to-br from-[#7c2d12] to-[#991b1b] hover:from-[#991b1b] hover:to-[#7c2d12] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
+              <span className="relative w-full h-20 bg-gradient-to-br from-[#7c2d12] to-[#991b1b] hover:from-[#991b1b] hover:to-[#7c2d12] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
+                <ActionBadge count={stats.actionCounts.fundraising} />
                 <Coins className="h-6 w-6" />
                 <span className="text-sm font-semibold">Fundraising</span>
               </span>
@@ -301,7 +326,8 @@ export default function AdminDashboard() {
               </span>
             </HardLink>
             <HardLink href="/admin/expense-requests" className="block">
-              <span className="w-full h-20 bg-gradient-to-br from-[#1e3a5f] to-[#0f2744] hover:from-[#0f2744] hover:to-[#1e3a5f] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
+              <span className="relative w-full h-20 bg-gradient-to-br from-[#1e3a5f] to-[#0f2744] hover:from-[#0f2744] hover:to-[#1e3a5f] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
+                <ActionBadge count={stats.actionCounts.reimbursements} />
                 <Receipt className="h-6 w-6" />
                 <span className="text-sm font-semibold">Reimbursements</span>
               </span>
@@ -373,7 +399,8 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {TOC_ADMIN_LINKS.map(({ href, title, description, icon: Icon }) => (
               <HardLink key={href} href={href} className="block h-full">
-                <Card className="border-t-4 border-t-[#CC0000] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <Card className="relative border-t-4 border-t-[#CC0000] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                  <ActionBadge count={stats.actionCounts[`toc:${href}`]} />
                   <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
                     <Icon className="h-10 w-10 text-[#0B1D3A] mb-3" />
                     <h3 className="font-bold text-[#003366] mb-1">{title}</h3>
@@ -454,7 +481,8 @@ export default function AdminDashboard() {
 
             {/* Submissions Manager */}
             <Link href="/admin/submissions-manager">
-              <Card className="border-t-4 border-t-[#C8102E] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+              <Card className="relative border-t-4 border-t-[#C8102E] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <ActionBadge count={stats.actionCounts.submissions} />
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
                   <FileText className="h-10 w-10 text-[#C8102E] mb-3" />
                   <h3 className="font-bold text-[#003366] mb-1">Submissions Manager</h3>
@@ -465,7 +493,8 @@ export default function AdminDashboard() {
 
             {/* National team — interest forms + event payments (e.g. NHSCA 2026) */}
             <HardLink href="/admin/national-team" className="block h-full">
-              <Card className="border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+              <Card className="relative border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <ActionBadge count={stats.actionCounts.nationalTeam} />
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
                   <Trophy className="h-10 w-10 text-[#003366] mb-3" />
                   <h3 className="font-bold text-[#003366] mb-1">National team</h3>
@@ -509,7 +538,8 @@ export default function AdminDashboard() {
 
             {/* Orders — the fulfillment queue. Previously only reachable via /admin/store. */}
             <HardLink href="/admin/orders" className="block h-full">
-              <Card className="border-t-4 border-t-[#1a5f4a] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+              <Card className="relative border-t-4 border-t-[#1a5f4a] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <ActionBadge count={stats.actionCounts.orders} />
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
                   <Package className="h-10 w-10 text-[#1a5f4a] mb-3" />
                   <h3 className="font-bold text-[#003366] mb-1">Orders</h3>
@@ -563,7 +593,8 @@ export default function AdminDashboard() {
             </Link>
 
             <HardLink href="/admin/clubs" className="block h-full">
-              <Card className="border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+              <Card className="relative border-t-4 border-t-[#D3B574] shadow-lg hover:shadow-xl transition-all hover:scale-105 cursor-pointer h-full">
+                <ActionBadge count={stats.actionCounts.clubs} />
                 <CardContent className="p-6 flex flex-col items-center justify-center text-center h-full">
                   <MapPinned className="h-10 w-10 text-[#003366] mb-3" />
                   <h3 className="font-bold text-[#003366] mb-1">Club Submissions</h3>

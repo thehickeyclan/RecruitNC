@@ -99,6 +99,18 @@ export async function GET() {
       console.log("Data Dawg feedback table check skipped")
     }
 
+    // Actionable queues power the red badges on the admin dashboard. A missing optional
+    // table must never take down the dashboard, so each count falls back to zero.
+    const countOf = (result: { count: number | null; error: unknown }) => result.error ? 0 : (result.count ?? 0)
+    const [clubClaims, clubSubmissions, nationalTeam, fundraisingActivations, reimbursements, orders] = await Promise.all([
+      admin.from("club_claims").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      admin.from("wrestling_club_submissions").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      admin.from("national_team_interest_forms").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      admin.from("fundraising_activation_requests").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      admin.from("athlete_expense_requests").select("id", { count: "exact", head: true }).in("status", ["pending", "under_review"]),
+      admin.from("orders").select("id", { count: "exact", head: true }).in("status", ["pending", "paid", "processing"]),
+    ])
+
     return NextResponse.json({
       totalAthletes: totalAthletes || 0,
       totalProspects: totalProspects || 0,
@@ -107,6 +119,14 @@ export async function GET() {
       totalCoaches: totalCoaches || 0,
       pendingSubmissions,
       pendingDataDawgFeedback,
+      actionCounts: {
+        submissions: pendingSubmissions,
+        clubs: countOf(clubClaims) + countOf(clubSubmissions),
+        nationalTeam: countOf(nationalTeam),
+        fundraising: countOf(fundraisingActivations),
+        reimbursements: countOf(reimbursements),
+        orders: countOf(orders),
+      },
     })
   } catch (error) {
     console.error("Error fetching admin stats:", error)
