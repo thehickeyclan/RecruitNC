@@ -1079,14 +1079,10 @@ export async function getPublicAnnouncedWeight(weightClassInput: number): Promis
   }
 }
 
-/**
- * Aggregate the entire confirmed TOC field for the public hub summary.
- *
- * Only totals leave this server function. Unreleased weight rosters remain inaccessible through
- * {@link getPublicAnnouncedWeight} until their individual announcements are published.
- */
-export async function getPublicConfirmedFieldRollup(): Promise<PublicFieldRollup> {
-  const fields = await Promise.all(TOC_WEIGHT_CLASSES.map((weight) => fetchPublicAthletesForWeight(weight)))
+/** Aggregate every public weight without exposing any athlete from an unreleased weight. */
+export async function getPublicAnnouncedFieldRollup(): Promise<PublicFieldRollup> {
+  const announced = await fetchAnnouncedAtByWeight()
+  const fields = await Promise.all([...announced.keys()].map((weight) => fetchPublicAthletesForWeight(weight)))
   const unique = new Map<string, PublicFieldAthlete>()
   for (const athlete of fields.flat()) unique.set(athlete.athleteId, athlete)
   return buildFieldRollup([...unique.values()])

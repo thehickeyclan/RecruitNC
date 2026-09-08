@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { TocPublicFieldGrid } from "@/components/toc/field/toc-public-field-grid"
 import { TocVarsityHeading, tocContainerClass, tocSectionClass } from "@/components/toc/toc-theme"
 import { HardLink } from "@/components/hard-link"
-import { getPublicConfirmedFieldRollup, listPublicWeightTiles } from "@/lib/toc/public-announced-field"
+import { getPublicAnnouncedFieldRollup, listPublicWeightTiles } from "@/lib/toc/public-announced-field"
 
 export const dynamic = "force-dynamic"
 
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
  * {@link listPublicWeightTiles} on the server — this page never receives their athletes.
  */
 export default async function TocPublicFieldPage() {
-  const [tiles, rollup] = await Promise.all([listPublicWeightTiles(), getPublicConfirmedFieldRollup()])
+  const [tiles, rollup] = await Promise.all([listPublicWeightTiles(), getPublicAnnouncedFieldRollup()])
   const releasedCount = tiles.filter((t) => t.announced).length
   const stats = [
     ["Athletes", rollup.athletes],
@@ -61,7 +61,7 @@ export default async function TocPublicFieldPage() {
                 ))}
               </div>
               <p className="mt-3 text-center text-[10px] leading-relaxed text-white/40">
-                Full confirmed TOC field. Champion, finalist, placer and All-American counts are unique athletes. Title, placement and honor totals count every verified finish. Finalists include champions; placers include finalists.
+                Champion, finalist, placer and All-American counts are unique athletes. Title, placement and honor totals count every verified finish. Finalists include champions; placers include finalists.
               </p>
             </div>
           ) : null}
