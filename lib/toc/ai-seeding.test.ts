@@ -9,11 +9,25 @@ import {
 import type { TocFieldBoard } from "@/lib/toc/field-board"
 
 /** Head-to-head counts only the last 12 months, so fixtures date bouts relative to now. */
+/**
+ * The same day, written the two ways the two sources write it.
+ *
+ * These must agree on which day they mean. `toISOString` is UTC while
+ * `toLocaleDateString` is local, so after 20:00 Eastern they named different days and the
+ * same bout stopped deduplicating — a test that passed all morning and failed at night.
+ * Both are now derived from the same local calendar date.
+ */
+function localParts(days: number): { y: number; m: number; d: number } {
+  const t = new Date(Date.now() - days * 86_400_000)
+  return { y: t.getFullYear(), m: t.getMonth() + 1, d: t.getDate() }
+}
 function daysAgo(days: number): string {
-  return new Date(Date.now() - days * 86_400_000).toLocaleDateString("en-US")
+  const { y, m, d } = localParts(days)
+  return `${m}/${d}/${y}`
 }
 function isoDaysAgo(days: number): string {
-  return new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10)
+  const { y, m, d } = localParts(days)
+  return `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`
 }
 
 function fakeSupabaseWithMatches(rows: unknown[], qualifierBouts: unknown[] = []) {
