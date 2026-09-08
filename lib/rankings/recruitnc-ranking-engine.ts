@@ -646,10 +646,71 @@ export async function buildRecruitNcRankingBoard({
     name: String(athlete.name || `${athlete.firstName || ""} ${athlete.lastName || ""}`).trim(),
   }))
   // One index for the whole class: who is ranked, nationally ranked, or in the TOC field.
+  /**
+   * RankWrestler's latest published number, from `rankwrestler_rankings`.
+   *
+   * The engine has always read `athlete.rankwrestler_rank`, `rank_wrestler_rank` and `rw_rank`,
+   * none of which are columns on `athletes` — so this component scored zero for every wrestler
+   * since it was written, and the badge showed nothing. Their ranks only move in season, so the
+   * most recent edition stands until somebody wrestles.
+   */
+  const rankWrestlerByAthleteId = new Map<string, number>()
+  {
+    const { data: rwRows } = await supabase
+      .from("rankwrestler_rankings")
+      .select("athlete_id, rank, edition")
+      .eq("class_year", Number(year))
+      .not("athlete_id", "is", null)
+      .order("edition", { ascending: false })
+    for (const row of rwRows ?? []) {
+      const athleteId = String((row as { athlete_id?: unknown }).athlete_id ?? "")
+      if (athleteId && !rankWrestlerByAthleteId.has(athleteId)) {
+        rankWrestlerByAthleteId.set(athleteId, Number((row as { rank?: unknown }).rank))
+      }
+    }
+  }
+
   const [opponentIndex, nationallyRankedIds] = await Promise.all([
     loadOpponentIndex(supabase).catch(() => ({ tocField: [], ranked: [] })),
     loadNationallyRankedIds(supabase).catch(() => new Set<string>()),
   ])
+
+  /**
+   * Qualifier wins, for the whole class in one query.
+   *
+   * `findSignificantWins` only ever saw the season match import, so six and a half thousand
+   * Super 32 Early Entry bouts counted for nothing — a wrestler could beat a nationally ranked
+   * opponent in a qualifier final and the board would not mention it. The scouting report has
+   * always included them; the ranking board had not.
+   */
+  const qualifierWinsByAthleteId = new Map<string, MatchBout[]>()
+  {
+    const { data: qualifierBouts } = await supabase
+      .from("other_tournament_bouts")
+      .select("athlete_id, opponent_name, opponent_club, win, is_bye, win_type, score, weight_class, event_name, event_date")
+      .in("athlete_id", athleteIds)
+      .eq("win", true)
+    for (const row of qualifierBouts ?? []) {
+      const raw = row as Record<string, unknown>
+      if (raw.is_bye || !raw.opponent_name) continue
+      const athleteId = String(raw.athlete_id ?? "")
+      if (!athleteId) continue
+      qualifierWinsByAthleteId.set(athleteId, [
+        ...(qualifierWinsByAthleteId.get(athleteId) ?? []),
+        {
+          opponent_name: String(raw.opponent_name),
+          opponent_school: (raw.opponent_club as string) ?? null,
+          win_loss: "W",
+          result: [raw.win_type, raw.score].filter(Boolean).join(" ").trim() || undefined,
+          date: (raw.event_date as string) ?? undefined,
+          // `Bout.venue` is the event name. Using `tournament` here counted the win and lost
+          // the tournament it happened at.
+          venue: (raw.event_name as string) ?? undefined,
+          weight: (raw.weight_class as string) ?? undefined,
+        } as MatchBout,
+      ])
+    }
+  }
 
   const currentSeasonBoutsByAthleteId = new Map(
     athleteIds.map((athleteId) => [
@@ -794,7 +855,7 @@ export async function buildRecruitNcRankingBoard({
         })
       }
 
-      const rankWrestlerRank = toNumber(athlete.rankwrestler_rank || athlete.rank_wrestler_rank || athlete.rw_rank)
+      const rankWrestlerRank = rankWrestlerByAthleteId.get(id) ?? null
       const rankWrestler = rankWrestlerPoints(rankWrestlerRank)
       if (rankWrestlerRank != null) {
         evidence.push({
@@ -907,7 +968,13 @@ export async function buildRecruitNcRankingBoard({
        * prospect, or somebody in the Tournament of Champions field. The same helper the scouting
        * report uses, so a win counts here exactly as it counts there.
        */
-      const significantWins = findSignificantWins((currentSeasonBoutsByAthleteId.get(id) ?? []) as never, opponentIndex)
+      const significantWins = findSignificantWins(
+        [
+          ...(currentSeasonBoutsByAthleteId.get(id) ?? []),
+          ...(qualifierWinsByAthleteId.get(id) ?? []),
+        ] as never,
+        opponentIndex,
+      )
         .slice(0, 8)
         .map((win) => ({
           opponent: win.opponent,
