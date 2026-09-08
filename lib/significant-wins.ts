@@ -72,6 +72,15 @@ export type SignificantWin = {
   opponentGraduationYear: number | null
   /** Set when the opponent is nationally ranked: "#12 Sports Illustrated". */
   nationalRankLabel?: string
+  /**
+   * The opponent's North Carolina prospect ranking, where they carry one.
+   *
+   * Data, not display. Classes are ranked privately before they are published, so this must
+   * never reach a public profile — the public route names the fields it returns and this is not
+   * among them. The admin ranking board is the surface that shows it, because a reviewer
+   * comparing two résumés needs to know whether a win came against #2 or #38.
+   */
+  opponentRanking: number | null
 }
 
 function opponentName(bout: Bout): string {
@@ -154,6 +163,7 @@ function findSignificantBouts(
       weight: toWeight(bout.weight),
       reason: national ? "national-ranked" : inField ? "toc-field" : "ranked",
       opponentGraduationYear: ranked?.graduationYear ?? null,
+      opponentRanking: ranked?.ranking ?? null,
       ...(national ? { nationalRankLabel: `#${national.rank} ${national.source}` } : {}),
     })
   }

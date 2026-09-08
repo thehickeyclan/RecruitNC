@@ -19,6 +19,7 @@ export const BOARD_ARRAY_FIELDS = [
   "fargo_by_year",
   "state_placements",
   "significant_wins",
+  "significant_losses",
 ] as const
 
 export function normalizeBoardAthlete<T>(athlete: T): T {

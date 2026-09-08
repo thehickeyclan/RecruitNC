@@ -56,6 +56,7 @@ type BoardAthlete = {
   nhsca_record: string | null
   super32_record: string | null
   significant_wins: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
+  significant_losses: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
 }
 
 // 2030 is in the data already. A class missing from this list cannot be worked on at all.
@@ -894,6 +895,34 @@ export default function RankingBoardPage() {
                         ) : (
                           <p className="rounded-md border border-white/10 bg-slate-950 p-2.5 text-xs text-white/35">
                             No wins on file over a ranked, nationally ranked or TOC-field wrestler.
+                          </p>
+                        )}
+
+                        {/*
+                          And who beat them. A résumé is not a highlight reel: a one-point loss to
+                          the top wrestler in the country is evidence, and reading a wins list
+                          without it is reading half the argument. Red to separate it at a glance,
+                          not to mark it bad — every name here is a good opponent.
+                        */}
+                        {athlete.significant_losses?.length ? (
+                          <div className="rounded-md border border-red-400/25 bg-red-500/10 p-2.5">
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-red-300">
+                              Losses to ranked opponents · {athlete.significant_losses.length}
+                            </p>
+                            <ul className="mt-1 space-y-1 text-xs leading-snug text-white/80">
+                              {athlete.significant_losses.map((loss, i) => (
+                                <li key={`${loss.opponent}-${i}`}>
+                                  <span className="font-semibold text-white">{loss.opponent}</span>
+                                  <span className="text-white/45"> ({loss.standing})</span>
+                                  {loss.result ? <span className="font-mono text-red-200"> {loss.result}</span> : null}
+                                  {loss.event ? <span className="text-white/40"> · {loss.event}</span> : null}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : (
+                          <p className="rounded-md border border-white/10 bg-slate-950 p-2.5 text-xs text-white/35">
+                            No losses on file to a ranked, nationally ranked or TOC-field wrestler.
                           </p>
                         )}
 

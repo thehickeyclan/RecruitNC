@@ -10,7 +10,7 @@ import {
 import { nationalEventRows, starOverrideOf, statePlaces as statePlacesOf } from "@/lib/athlete-star-rating-load"
 import { summarizeNationalExposure, summarizeSeasonStrength } from "@/lib/competition-strength"
 import { loadNationallyRankedIds } from "@/lib/national-rankings"
-import { findSignificantWins } from "@/lib/significant-wins"
+import { findSignificantLosses, findSignificantWins, type SignificantWin } from "@/lib/significant-wins"
 import { loadOpponentIndex } from "@/lib/scouting-report"
 import {
   buildNhscaDuals2026LiveProfileResults,
@@ -127,6 +127,11 @@ export type RankingBoardAthlete = {
   star_rating: StarRating | null
   /** Wins over wrestlers who are ranked, nationally ranked, or in the TOC field. */
   significant_wins: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
+  /**
+   * Losses to that same calibre of opponent. Shown beside the wins, and not scored — see where
+   * they are built for why.
+   */
+  significant_losses: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
 }
 
 type MatchBout = {
@@ -200,6 +205,38 @@ function placementNumberOf(raw: unknown): number | null {
   if (!m) return null
   const n = Number(m[1])
   return Number.isInteger(n) && n >= 1 && n <= 8 ? n : null
+}
+
+/**
+ * One line of the wins/losses lists: who it was against, and how good they are.
+ *
+ * The standing carries the opponent's actual number wherever there is one. "ranked in North
+ * Carolina" covers #2 and #38 equally, which is no help to a reviewer deciding between two
+ * résumés — the whole question is how good the opponent was. This is admin-only: classes are
+ * ranked privately before they are published, and the public profile route names the fields it
+ * returns, so the number never leaves this board.
+ */
+function significantBoutRow(bout: SignificantWin): {
+  opponent: string
+  result: string | null
+  event: string | null
+  standing: string
+} {
+  return {
+    opponent: bout.opponent,
+    result: bout.result,
+    event: bout.event,
+    standing:
+      bout.reason === "national-ranked"
+        ? bout.nationalRankLabel
+          ? `nationally ranked, ${bout.nationalRankLabel}`
+          : "nationally ranked"
+        : bout.reason === "toc-field"
+          ? "Tournament of Champions field"
+          : bout.opponentRanking != null
+            ? `NC #${bout.opponentRanking}`
+            : "ranked in North Carolina",
+  }
 }
 
 function ordinal(place: number): string {
@@ -706,24 +743,25 @@ export async function buildRecruitNcRankingBoard({
    * opponent in a qualifier final and the board would not mention it. The scouting report has
    * always included them; the ranking board had not.
    */
-  const qualifierWinsByAthleteId = new Map<string, MatchBout[]>()
+  const qualifierBoutsByAthleteId = new Map<string, MatchBout[]>()
   {
     const { data: qualifierBouts } = await supabase
       .from("other_tournament_bouts")
       .select("athlete_id, opponent_name, opponent_club, win, is_bye, win_type, score, weight_class, event_name, event_date")
       .in("athlete_id", athleteIds)
-      .eq("win", true)
     for (const row of qualifierBouts ?? []) {
       const raw = row as Record<string, unknown>
       if (raw.is_bye || !raw.opponent_name) continue
       const athleteId = String(raw.athlete_id ?? "")
       if (!athleteId) continue
-      qualifierWinsByAthleteId.set(athleteId, [
-        ...(qualifierWinsByAthleteId.get(athleteId) ?? []),
+      qualifierBoutsByAthleteId.set(athleteId, [
+        ...(qualifierBoutsByAthleteId.get(athleteId) ?? []),
         {
           opponent_name: String(raw.opponent_name),
           opponent_school: (raw.opponent_club as string) ?? null,
-          win_loss: "W",
+          // Losses are loaded too now: `findSignificantLosses` needs them, and a qualifier a
+          // wrestler lost is still a date they competed on.
+          win_loss: raw.win ? "W" : "L",
           result: [raw.win_type, raw.score].filter(Boolean).join(" ").trim() || undefined,
           date: (raw.event_date as string) ?? undefined,
           // `Bout.venue` is the event name. Using `tournament` here counted the win and lost
@@ -991,27 +1029,29 @@ export async function buildRecruitNcRankingBoard({
        * prospect, or somebody in the Tournament of Champions field. The same helper the scouting
        * report uses, so a win counts here exactly as it counts there.
        */
-      const significantWins = findSignificantWins(
-        [
-          ...(currentSeasonBoutsByAthleteId.get(id) ?? []),
-          ...(qualifierWinsByAthleteId.get(id) ?? []),
-        ] as never,
-        opponentIndex,
-      )
+      const boutsForSignificance = [
+        ...(currentSeasonBoutsByAthleteId.get(id) ?? []),
+        ...(qualifierBoutsByAthleteId.get(id) ?? []),
+      ] as never
+
+      const topSignificantWins = findSignificantWins(boutsForSignificance, opponentIndex).slice(0, 8)
+      const significantWins = topSignificantWins.map(significantBoutRow)
+
+      /**
+       * Losses to the same calibre of opponent, shown beside the wins.
+       *
+       * A résumé is not a highlight reel, and a ranking argument is as much about who beat a
+       * wrestler as who they beat: a one-point loss to the #1 in the country belongs on the card,
+       * and without it a reviewer comparing two similar records is reading half the evidence.
+       *
+       * Shown, not scored. Everything here is a loss to somebody good, so subtracting for it
+       * would penalise exactly the wrestlers who enter the hardest brackets — the opposite of
+       * what the board is for. Whether a bad loss should cost points is a separate question from
+       * whether a reviewer can see it.
+       */
+      const significantLosses = findSignificantLosses(boutsForSignificance, opponentIndex)
         .slice(0, 8)
-        .map((win) => ({
-          opponent: win.opponent,
-          result: win.result,
-          event: win.event,
-          standing:
-            win.reason === "national-ranked"
-              ? win.nationalRankLabel
-                ? `nationally ranked, ${win.nationalRankLabel}`
-                : "nationally ranked"
-              : win.reason === "toc-field"
-                ? "Tournament of Champions field"
-                : "ranked in North Carolina",
-        }))
+        .map(significantBoutRow)
 
       /**
        * An All-American finish, scored by how deep it went and how recent it is.
@@ -1036,12 +1076,14 @@ export async function buildRecruitNcRankingBoard({
        * cannot out-score one who travelled.
        */
       const rankedWinScore = Math.min(
-        significantWins.reduce(
+        topSignificantWins.reduce(
           (sum, win) =>
             sum +
-            (win.standing.startsWith("nationally ranked")
+            // Scored from `reason`, not from the rendered standing. This used to read the display
+            // string, so relabelling a badge would have quietly rescored the class.
+            (win.reason === "national-ranked"
               ? 18
-              : win.standing === "Tournament of Champions field"
+              : win.reason === "toc-field"
                 ? 10
                 : 7),
           0,
@@ -1054,7 +1096,7 @@ export async function buildRecruitNcRankingBoard({
         const candidates: Array<{ at: number; label: string }> = []
         for (const bout of [
           ...(currentSeasonBoutsByAthleteId.get(id) ?? []),
-          ...(qualifierWinsByAthleteId.get(id) ?? []),
+          ...(qualifierBoutsByAthleteId.get(id) ?? []),
         ] as Array<{ date?: string | null; venue?: string | null; tournament?: string | null }>) {
           const at = bout.date ? Date.parse(String(bout.date)) : NaN
           if (!Number.isFinite(at)) continue
@@ -1148,6 +1190,7 @@ export async function buildRecruitNcRankingBoard({
             )
           : null,
         significant_wins: significantWins,
+        significant_losses: significantLosses,
       } satisfies RankingBoardAthlete
     },
   )

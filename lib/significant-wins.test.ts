@@ -120,6 +120,23 @@ describe("nationally ranked opponents", () => {
   })
 })
 
+describe("opponentRanking", () => {
+  it("carries the opponent's North Carolina ranking for a state-ranked opponent", () => {
+    const wins = findSignificantWins([bout({ opponent: "Jack Gilson" })], index)
+    expect(wins[0].opponentRanking).toBe(7)
+  })
+
+  it("is null for a TOC-field opponent who carries no prospect ranking", () => {
+    const wins = findSignificantWins([bout()], index)
+    expect(wins[0].opponentRanking).toBeNull()
+  })
+
+  it("carries the ranking on losses too", () => {
+    const losses = findSignificantLosses([bout({ opponent: "Brandon Lefler", win_loss: "L" })], index)
+    expect(losses[0].opponentRanking).toBe(5)
+  })
+})
+
 describe("findSignificantLosses", () => {
   it("keeps a loss to somebody in the TOC field", () => {
     const losses = findSignificantLosses([bout({ win_loss: "L" })], index)
