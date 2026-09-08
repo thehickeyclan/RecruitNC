@@ -45,6 +45,11 @@ type BoardAthlete = {
   final_rank?: number
   locked?: boolean
   reviewer_note?: string
+  all_american: string | null
+  state_placements: string[]
+  nhsca_record: string | null
+  super32_record: string | null
+  significant_wins: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
 }
 
 // 2030 is in the data already. A class missing from this list cannot be worked on at all.
@@ -610,20 +615,43 @@ export default function RankingBoardPage() {
                               the Tournament of Champions field board does it — a reviewer scanning
                               thirty athletes needs the order first and the argument on demand.
                             */}
+                            {/*
+                              Four facts, in the order they get asked about: where the outside
+                              service has them, whether they are an All-American, what they have
+                              done at the state tournament, and their record at the two national
+                              events. Everything else moved into the evidence drawer.
+                            */}
                             <div className="mt-2 flex flex-wrap items-center gap-2">
-                              <Badge className="bg-blue-700 text-white">Formula #{athlete.ai_rank}</Badge>
-                              <Badge className={isPublicSlot ? "bg-[#d6b75d] text-slate-950" : "bg-slate-700 text-blue-100"}>
-                                {isPublicSlot ? `Inside top-${publicCap} cutoff` : "Private watchlist"}
-                              </Badge>
                               {athlete.rankwrestler_rank ? (
-                                <Badge className="bg-slate-700 text-white">RankWrestler #{athlete.rankwrestler_rank}</Badge>
+                                <Badge className="bg-slate-200 text-slate-900">RankWrestler #{athlete.rankwrestler_rank}</Badge>
+                              ) : null}
+                              {athlete.all_american ? (
+                                <Badge className="bg-[#CC0000] text-white" title={athlete.all_american}>
+                                  All-American
+                                </Badge>
+                              ) : null}
+                              {athlete.state_placements.length ? (
+                                <Badge
+                                  className={
+                                    athlete.state_placements.some((p) => /champion/i.test(p))
+                                      ? "bg-[#d6b75d] text-slate-950"
+                                      : "bg-sky-600 text-white"
+                                  }
+                                  title={athlete.state_placements.join(" · ")}
+                                >
+                                  {athlete.state_placements[0]}
+                                  {athlete.state_placements.length > 1 ? ` +${athlete.state_placements.length - 1}` : ""}
+                                </Badge>
+                              ) : null}
+                              {athlete.nhsca_record ? (
+                                <Badge className="bg-slate-700 text-white">NHSCA {athlete.nhsca_record}</Badge>
+                              ) : null}
+                              {athlete.super32_record ? (
+                                <Badge className="bg-slate-700 text-white">Super 32 {athlete.super32_record}</Badge>
                               ) : null}
                               {athlete.match_count === 0 ? (
                                 <Badge className="bg-red-700 text-white">No match data</Badge>
-                              ) : athlete.match_count < 20 ? (
-                                <Badge className="bg-orange-600 text-white">Thin match data · {athlete.match_count}</Badge>
                               ) : null}
-                              <Badge className={confidenceClass(athlete.confidence)}>{athlete.confidence} confidence</Badge>
                               <button
                                 type="button"
                                 className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[#d6b75d]/35 bg-[#d6b75d]/10 px-2 py-1 text-[10px] font-semibold text-[#d6b75d] hover:bg-[#d6b75d]/20"
@@ -746,6 +774,33 @@ export default function RankingBoardPage() {
                         ) : (
                           <p className="rounded-md border border-white/10 bg-slate-950 p-2.5 text-xs text-white/35">
                             No direct result against another ranked wrestler in this class.
+                          </p>
+                        )}
+
+                        {/*
+                          Wins that mean something, named. A ranking argument is won or lost on who
+                          a wrestler beat, and "quality win over X (99.6%)" buried in a badge wall
+                          was the wrong place for it.
+                        */}
+                        {athlete.significant_wins?.length ? (
+                          <div className="rounded-md border border-[#d6b75d]/25 bg-[#d6b75d]/10 p-2.5">
+                            <p className="text-[10px] font-bold uppercase tracking-wide text-[#d6b75d]">
+                              Wins over ranked opponents · {athlete.significant_wins.length}
+                            </p>
+                            <ul className="mt-1 space-y-1 text-xs leading-snug text-white/80">
+                              {athlete.significant_wins.map((win, i) => (
+                                <li key={`${win.opponent}-${i}`}>
+                                  <span className="font-semibold text-white">{win.opponent}</span>
+                                  <span className="text-white/45"> ({win.standing})</span>
+                                  {win.result ? <span className="font-mono text-emerald-200"> {win.result}</span> : null}
+                                  {win.event ? <span className="text-white/40"> · {win.event}</span> : null}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ) : (
+                          <p className="rounded-md border border-white/10 bg-slate-950 p-2.5 text-xs text-white/35">
+                            No wins on file over a ranked, nationally ranked or TOC-field wrestler.
                           </p>
                         )}
 

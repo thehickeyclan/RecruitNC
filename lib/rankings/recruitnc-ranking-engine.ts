@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { getAthleteNameSearchVariants, namesLikelySamePerson } from "@/lib/athlete-name-match"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
+import { findSignificantWins } from "@/lib/significant-wins"
+import { loadOpponentIndex } from "@/lib/scouting-report"
 import {
   buildNhscaDuals2026LiveProfileResults,
   mergeNationalTeamResultsForProfile,
@@ -82,6 +84,16 @@ export type RankingBoardAthlete = {
   college_opens_experience?: string | null
   achievements?: unknown
   additional_achievements?: string | null
+  /**
+   * The four things a reviewer actually looks at, lifted out of the evidence list so they can be
+   * read from the collapsed row instead of by opening a drawer.
+   */
+  all_american: string | null
+  state_placements: string[]
+  nhsca_record: string | null
+  super32_record: string | null
+  /** Wins over wrestlers who are ranked, nationally ranked, or in the TOC field. */
+  significant_wins: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
 }
 
 type MatchBout = {
@@ -143,6 +155,18 @@ function placementNumber(value: unknown): number | null {
   if (!match) return null
   const place = Number.parseInt(match[1], 10)
   return Number.isFinite(place) ? place : null
+}
+
+/** "4th", "Champion", "8th All-American" — only a real finish counts, never a round. */
+function placementNumberOf(raw: unknown): number | null {
+  const value = String(raw ?? "").trim()
+  if (!value) return null
+  if (/champ/i.test(value)) return 1
+  if (/runner|finalist/i.test(value)) return 2
+  const m = value.match(/(\d{1,2})/)
+  if (!m) return null
+  const n = Number(m[1])
+  return Number.isInteger(n) && n >= 1 && n <= 8 ? n : null
 }
 
 function ordinal(place: number): string {
@@ -582,6 +606,9 @@ export async function buildRecruitNcRankingBoard({
     id: String(athlete.id),
     name: String(athlete.name || `${athlete.firstName || ""} ${athlete.lastName || ""}`).trim(),
   }))
+  // One index for the whole class: who is ranked, nationally ranked, or in the TOC field.
+  const opponentIndex = await loadOpponentIndex(supabase).catch(() => ({ tocField: [], ranked: [] }))
+
   const currentSeasonBoutsByAthleteId = new Map(
     athleteIds.map((athleteId) => [
       athleteId,
@@ -761,6 +788,61 @@ export async function buildRecruitNcRankingBoard({
         evidence.push({ kind: "data_gap", label: gap, tone: "red" })
       }
 
+      /**
+       * A top-eight finish at NHSCA or Fargo is an All-American, however the row records it.
+       * Newest first: the most recent finish is the one worth naming on a card.
+       */
+      const allAmericanRows = [
+        ...(bundle.nhsca || []).map((r) => ({ event: "NHSCA", year: Number(r.year), place: placementNumberOf(r.placement) })),
+        ...(bundle.fargo || []).map((r) => ({ event: "Fargo", year: Number(r.year), place: placementNumberOf(r.placement) })),
+      ]
+        .filter((r) => r.place != null && r.place >= 1 && r.place <= 8 && Number.isFinite(r.year))
+        .sort((a, b) => b.year - a.year)
+      const allAmerican = allAmericanRows.length
+        ? `${allAmericanRows[0]!.year} ${allAmericanRows[0]!.event} ${ordinal(allAmericanRows[0]!.place!)}`
+        : null
+
+      const statePlacements = [...(bundle.nchsaa || [])]
+        .filter((r) => Number(r.place) >= 1)
+        .sort((a, b) => b.year - a.year)
+        .map((r) => `${r.year} ${r.classification} ${Number(r.place) === 1 ? "champion" : ordinal(Number(r.place))}`)
+
+      /** Their whole record at the event, not just the best year — depth is the point. */
+      const combinedRecord = (rows: Array<{ record?: string | null }>): string | null => {
+        let wins = 0
+        let losses = 0
+        let found = false
+        for (const row of rows) {
+          const m = String(row.record ?? "").match(/^(\d+)\s*-\s*(\d+)$/)
+          if (!m) continue
+          found = true
+          wins += Number(m[1])
+          losses += Number(m[2])
+        }
+        return found ? `${wins}-${losses}` : null
+      }
+
+      /**
+       * Wins that mean something: over a nationally ranked wrestler, a ranked North Carolina
+       * prospect, or somebody in the Tournament of Champions field. The same helper the scouting
+       * report uses, so a win counts here exactly as it counts there.
+       */
+      const significantWins = findSignificantWins((currentSeasonBoutsByAthleteId.get(id) ?? []) as never, opponentIndex)
+        .slice(0, 8)
+        .map((win) => ({
+          opponent: win.opponent,
+          result: win.result,
+          event: win.event,
+          standing:
+            win.reason === "national-ranked"
+              ? win.nationalRankLabel
+                ? `nationally ranked, ${win.nationalRankLabel}`
+                : "nationally ranked"
+              : win.reason === "toc-field"
+                ? "Tournament of Champions field"
+                : "ranked in North Carolina",
+        }))
+
       const scoreBreakdown: RankingScoreBreakdown = weighted({
         matchResume: matchScore.score,
         state,
@@ -812,6 +894,11 @@ export async function buildRecruitNcRankingBoard({
         college_opens_experience: (athlete.college_opens_experience as string) || null,
         achievements: athlete.achievements,
         additional_achievements: (athlete.additional_achievements as string) || null,
+        all_american: allAmerican,
+        state_placements: statePlacements,
+        nhsca_record: combinedRecord(bundle.nhsca || []),
+        super32_record: combinedRecord(bundle.super32 || []),
+        significant_wins: significantWins,
       } satisfies RankingBoardAthlete
     }),
   )
