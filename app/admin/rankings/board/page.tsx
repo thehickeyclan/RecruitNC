@@ -45,7 +45,7 @@ type BoardAthlete = {
   final_rank?: number
   locked?: boolean
   reviewer_note?: string
-  all_american: string | null
+  all_american: string[]
   nhsca_by_year: string[]
   super32_by_year: string[]
   fargo_by_year: string[]
@@ -712,11 +712,11 @@ export default function RankingBoardPage() {
                               {athlete.rankwrestler_rank ? (
                                 <Badge className="bg-slate-200 text-slate-900">RankWrestler #{athlete.rankwrestler_rank}</Badge>
                               ) : null}
-                              {athlete.all_american ? (
-                                <Badge className="bg-[#CC0000] text-white" title={athlete.all_american}>
-                                  All-American
+                              {athlete.all_american?.map((finish) => (
+                                <Badge key={finish} className="bg-[#CC0000] text-white" title={`${finish} — All-American`}>
+                                  {finish}
                                 </Badge>
-                              ) : null}
+                              ))}
                               {athlete.state_placements.length ? (
                                 <Badge
                                   className={

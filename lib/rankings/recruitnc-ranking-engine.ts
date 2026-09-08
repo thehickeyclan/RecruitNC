@@ -97,7 +97,8 @@ export type RankingBoardAthlete = {
    * The four things a reviewer actually looks at, lifted out of the evidence list so they can be
    * read from the collapsed row instead of by opening a drawer.
    */
-  all_american: string | null
+  /** One entry per All-American finish, newest first: "NHSCA 2026 4th". */
+  all_american: string[]
   state_placements: string[]
   nhsca_record: string | null
   super32_record: string | null
@@ -841,15 +842,34 @@ export async function buildRecruitNcRankingBoard({
        * A top-eight finish at NHSCA or Fargo is an All-American, however the row records it.
        * Newest first: the most recent finish is the one worth naming on a card.
        */
+      /**
+       * Only seasons this wrestler could have wrestled.
+       *
+       * These results are matched by name, so without a window a namesake from another era lands
+       * on the card: a Class of 2027 athlete was shown as a 2007 NHSCA national champion, twenty
+       * years before he started high school. A national title on the wrong teenager is the worst
+       * thing this board can print.
+       */
+      const gradYear = toNumber(athlete.graduationyear)
+      const plausibleSeason = (year: number) =>
+        Number.isFinite(year) && (gradYear == null || (year <= gradYear && year > gradYear - 5))
+
       const allAmericanRows = [
         ...(bundle.nhsca || []).map((r) => ({ event: "NHSCA", year: Number(r.year), place: placementNumberOf(r.placement) })),
         ...(bundle.fargo || []).map((r) => ({ event: "Fargo", year: Number(r.year), place: placementNumberOf(r.placement) })),
       ]
-        .filter((r) => r.place != null && r.place >= 1 && r.place <= 8 && Number.isFinite(r.year))
+        .filter((r) => r.place != null && r.place >= 1 && r.place <= 8 && plausibleSeason(r.year))
         .sort((a, b) => b.year - a.year)
-      const allAmerican = allAmericanRows.length
-        ? `${allAmericanRows[0]!.year} ${allAmericanRows[0]!.event} ${ordinal(allAmericanRows[0]!.place!)}`
-        : null
+      /**
+       * Every All-American finish, one per pill.
+       *
+       * A single "All-American" badge said nothing about how many, at which event, or how high.
+       * A wrestler who placed fourth at NHSCA in 2026 and eighth at Fargo in 2025 has two
+       * results, and both belong on the card: "NHSCA 2026 4th", "Fargo 2025 8th".
+       */
+      const allAmerican = allAmericanRows.map(
+        (row) => `${row.event} ${row.year} ${ordinal(row.place!)}`,
+      )
 
       const statePlacements = [...(bundle.nchsaa || [])]
         .filter((r) => Number(r.place) >= 1)
@@ -865,14 +885,14 @@ export async function buildRecruitNcRankingBoard({
        */
       const latestRecord = (rows: Array<{ year?: number; record?: string | null; placement?: string | null }>) => {
         const dated = rows
-          .filter((r) => /^\d+\s*-\s*\d+$/.test(String(r.record ?? "").trim()))
+          .filter((r) => plausibleSeason(Number(r.year)) && /^\d+\s*-\s*\d+$/.test(String(r.record ?? "").trim()))
           .sort((a, b) => Number(b.year) - Number(a.year))
         const latest = dated[0]
         return latest ? `${latest.year} ${String(latest.record).trim()}` : null
       }
       const byYear = (rows: Array<{ year?: number; record?: string | null; placement?: string | null }>) =>
         [...rows]
-          .filter((r) => r.record || r.placement)
+          .filter((r) => plausibleSeason(Number(r.year)) && (r.record || r.placement))
           .sort((a, b) => Number(b.year) - Number(a.year))
           .map((r) => {
             const place = String(r.placement ?? "").trim()
