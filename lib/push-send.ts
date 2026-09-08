@@ -1,3 +1,5 @@
+import "server-only"
+import { createHash } from "node:crypto"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 const EXPO_PUSH_ENDPOINT = "https://exp.host/--/api/v2/push/send"
@@ -60,7 +62,18 @@ export async function sendToSubscribers(
   if (error) throw new Error(error.message)
 
   const tokens = (devices ?? []).map((d) => d.expo_push_token).filter(Boolean) as string[]
-  if (tokens.length === 0) return { sent: 0, failed: 0, pruned: 0, undelivered: 0 }
+  const { data: sendRow } = await admin.from("push_notification_sends").insert({
+    category: column,
+    title: message.title,
+    body: message.body,
+    data: message.data ?? {},
+    targeted: tokens.length,
+  }).select("id").maybeSingle()
+  const sendId = sendRow?.id as string | undefined
+  if (tokens.length === 0) {
+    if (sendId) await admin.from("push_notification_sends").update({ completed_at: new Date().toISOString() }).eq("id", sendId)
+    return { sent: 0, failed: 0, pruned: 0, undelivered: 0 }
+  }
 
   let sent = 0
   let failed = 0
@@ -68,6 +81,8 @@ export async function sendToSubscribers(
   const dead: string[] = []
   /** Ticket id → the token it was for, so a bad receipt can name the device that failed. */
   const ticketTokenById = new Map<string, string>()
+  const deliveryRows: Array<Record<string, unknown>> = []
+  const tokenHash = (token: string) => createHash("sha256").update(token).digest("hex")
 
   for (const batch of chunk(tokens, CHUNK)) {
     const payload = batch.map((to) => ({
@@ -86,6 +101,7 @@ export async function sendToSubscribers(
 
     if (!response.ok) {
       failed += batch.length
+      if (sendId) batch.forEach((token) => deliveryRows.push({ send_id: sendId, token_hash: tokenHash(token), status: "ticket_error", error_message: `Expo HTTP ${response.status}` }))
       continue
     }
 
@@ -96,12 +112,16 @@ export async function sendToSubscribers(
       if (ticket.status === "ok") {
         sent += 1
         if (ticket.id) ticketTokenById.set(ticket.id, batch[i])
+        if (sendId) deliveryRows.push({ send_id: sendId, expo_ticket_id: ticket.id ?? null, token_hash: tokenHash(batch[i]), status: ticket.id ? "receipt_pending" : "accepted" })
         return
       }
       failed += 1
+      if (sendId) deliveryRows.push({ send_id: sendId, token_hash: tokenHash(batch[i]), status: "ticket_error", error_code: ticket.details?.error ?? null, error_message: ticket.message ?? null })
       if (ticket.details?.error === "DeviceNotRegistered") dead.push(batch[i])
     })
   }
+
+  if (deliveryRows.length > 0) await admin.from("push_notification_deliveries").insert(deliveryRows)
 
   // Tickets say "accepted", not "delivered". Ask what actually happened before reporting
   // success — sending with no receipt check is how a push reports ok and reaches nobody.
@@ -118,6 +138,12 @@ export async function sendToSubscribers(
         | null
 
       for (const [id, receipt] of Object.entries(receiptBody?.data ?? {})) {
+        if (sendId) await admin.from("push_notification_deliveries").update({
+          status: receipt.status === "ok" ? "delivered" : "receipt_error",
+          error_code: receipt.details?.error ?? null,
+          error_message: receipt.message ?? null,
+          updated_at: new Date().toISOString(),
+        }).eq("send_id", sendId).eq("expo_ticket_id", id)
         if (receipt.status === "ok") continue
         const token = ticketTokenById.get(id)
         undelivered += 1
@@ -134,6 +160,21 @@ export async function sendToSubscribers(
 
   if (dead.length > 0) {
     await admin.from("push_devices").delete().in("expo_push_token", dead)
+  }
+
+  if (sendId) {
+    const { data: rows } = await admin.from("push_notification_deliveries").select("status").eq("send_id", sendId)
+    const delivered = (rows ?? []).filter((row) => row.status === "delivered").length
+    const pending = (rows ?? []).filter((row) => row.status === "receipt_pending").length
+    await admin.from("push_notification_sends").update({
+      accepted: sent,
+      failed,
+      delivered,
+      undelivered,
+      pending,
+      pruned: dead.length,
+      completed_at: new Date().toISOString(),
+    }).eq("id", sendId)
   }
 
   return { sent, failed, pruned: dead.length, undelivered }
