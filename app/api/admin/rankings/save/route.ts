@@ -11,8 +11,12 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { requireAdmin } from "@/lib/admin-auth"
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
+import { syncPublicRankingsTable } from "@/lib/rankings/publish-public-rankings"
 
 export const dynamic = "force-dynamic"
+
+/** Publishing now rebuilds the class to fill the app's cards, which is the slow part. */
+export const maxDuration = 60
 
 type Body = {
   action?: "save" | "publish"
@@ -107,7 +111,29 @@ export async function POST(request: NextRequest) {
   revalidateTag("public-rankings")
   revalidateTag("admin-ranking-board")
 
-  return NextResponse.json({ ok: true, action, published: Math.min(cap, draft.length), publishedAt: now })
+  /**
+   * The iPhone app reads `public_rankings`, not `athletes.prospect_ranking`.
+   *
+   * These were two separate publishes with two separate buttons, and only one of them was on the
+   * board where the work happens — so the app drifted three weeks behind the web without anything
+   * saying so. One press now updates both.
+   */
+  const appSync = await syncPublicRankingsTable({
+    admin,
+    year,
+    gender,
+    cap,
+    publishedAt: now,
+    draft: draft.map((row) => ({ athlete_id: String(row.athlete_id), rank: Number(row.rank) })),
+  })
+
+  return NextResponse.json({
+    ok: true,
+    action,
+    published: Math.min(cap, draft.length),
+    publishedAt: now,
+    app: appSync,
+  })
 }
 
 /** The one failure worth explaining rather than logging. */

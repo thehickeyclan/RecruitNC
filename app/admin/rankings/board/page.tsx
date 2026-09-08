@@ -438,7 +438,15 @@ export default function RankingBoardPage() {
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || "Could not publish.")
       setPublishedAt(data.publishedAt ?? new Date().toISOString())
-      setStatus(`Published the top ${data.published}. Everyone below the cut stays private.`)
+      // Whether the phone got it too. These were two separate publishes and the app quietly ran
+      // three weeks behind; a publish that only half-landed should say so.
+      const app = data.app as { synced?: boolean; rows?: number; note?: string } | undefined
+      const appLine = app?.synced
+        ? ` The iPhone app has the same ${app.rows}.`
+        : app?.note
+          ? ` App NOT updated — ${app.note}`
+          : ""
+      setStatus(`Published the top ${data.published}. Everyone below the cut stays private.${appLine}`)
       await loadBoard(true)
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not publish.")
