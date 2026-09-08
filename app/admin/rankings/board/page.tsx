@@ -56,7 +56,13 @@ type BoardAthlete = {
   nhsca_record: string | null
   super32_record: string | null
   significant_wins: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
-  significant_losses: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
+  significant_losses: Array<{
+    opponent: string
+    result: string | null
+    event: string | null
+    standing: string
+    upset: boolean
+  }>
 }
 
 // 2030 is in the data already. A class missing from this list cannot be worked on at all.
@@ -177,6 +183,11 @@ function StarCell({
  * next to their national record next to who they actually beat, which is the order the questions
  * get asked in.
  */
+/** How many losses contradict this wrestler's place in the order. */
+function upsetCount(athlete: BoardAthlete): number {
+  return (athlete.significant_losses ?? []).filter((loss) => loss.upset).length
+}
+
 const EVIDENCE_GROUPS: Array<{ label: string; match: RegExp }> = [
   { label: "State", match: /NCHSAA|state|\b\d+A\b/i },
   { label: "National", match: /NHSCA|Super\s*32|Fargo|Early Entry|qualifier/i },
@@ -719,6 +730,23 @@ export default function RankingBoardPage() {
                               {athlete.rankwrestler_rank ? (
                                 <Badge className="bg-slate-200 text-slate-900">RankWrestler #{athlete.rankwrestler_rank}</Badge>
                               ) : null}
+                              {/*
+                                The loudest thing on a card, and deliberately first. If this
+                                wrestler is ranked above somebody who beat them, one of the two
+                                numbers is wrong — that is the reviewer's job, and it should not
+                                need a drawer opened to find it.
+                              */}
+                              {upsetCount(athlete) ? (
+                                <Badge
+                                  className="animate-none bg-red-600 text-white"
+                                  title={athlete.significant_losses
+                                    .filter((loss) => loss.upset)
+                                    .map((loss) => `Lost to ${loss.opponent} (${loss.standing})`)
+                                    .join(" · ")}
+                                >
+                                  ⚑ Lost to lower-ranked · {upsetCount(athlete)}
+                                </Badge>
+                              ) : null}
                               {athlete.all_american?.map((finish) => (
                                 <Badge key={finish} className="bg-[#CC0000] text-white" title={`${finish} — All-American`}>
                                   {finish}
@@ -912,6 +940,15 @@ export default function RankingBoardPage() {
                             <ul className="mt-1 space-y-1 text-xs leading-snug text-white/80">
                               {athlete.significant_losses.map((loss, i) => (
                                 <li key={`${loss.opponent}-${i}`}>
+                                  {/* The order says this wrestler is better; the mat said otherwise. */}
+                                  {loss.upset ? (
+                                    <span
+                                      className="mr-1 rounded bg-red-500 px-1 text-[9px] font-black uppercase text-white"
+                                      title="Lost to a wrestler ranked below them in this class"
+                                    >
+                                      ⚑ Upset
+                                    </span>
+                                  ) : null}
                                   <span className="font-semibold text-white">{loss.opponent}</span>
                                   <span className="text-white/45"> ({loss.standing})</span>
                                   {loss.result ? <span className="font-mono text-red-200"> {loss.result}</span> : null}

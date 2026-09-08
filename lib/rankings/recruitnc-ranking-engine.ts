@@ -22,6 +22,7 @@ import {
   datedMeetingsAgainst,
   holdsHeadToHeadEdge,
   resolvePairing,
+  HEAD_TO_HEAD_WINDOW_DAYS,
   type DatedMeeting,
 } from "@/lib/head-to-head"
 import { loadQualifierHeadToHead, type QualifierHeadToHeadIndex } from "@/lib/other-tournaments"
@@ -131,7 +132,14 @@ export type RankingBoardAthlete = {
    * Losses to that same calibre of opponent. Shown beside the wins, and not scored — see where
    * they are built for why.
    */
-  significant_losses: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
+  significant_losses: Array<{
+    opponent: string
+    result: string | null
+    event: string | null
+    standing: string
+    /** Beaten by somebody ranked below them in the same class — the order says one thing, the mat said another. */
+    upset: boolean
+  }>
 }
 
 type MatchBout = {
@@ -144,6 +152,8 @@ type MatchBout = {
   tournament?: string
   win_loss?: string
   opponent_percentage?: string | number | null
+  /** Present on both season and qualifier rows; the reason "last competed" had to cast to reach it. */
+  date?: string | null
 }
 
 type MatchRow = {
@@ -216,6 +226,54 @@ function placementNumberOf(raw: unknown): number | null {
  * ranked privately before they are published, and the public profile route names the fields it
  * returns, so the number never leaves this board.
  */
+/**
+ * Results from the last twelve months, which is the only window a ranking argument lives in.
+ *
+ * Season bouts were already limited to the latest season on file, but qualifier results were not
+ * windowed at all — a Super 32 Early Entry win from two years ago counted exactly as much as one
+ * from September. A ranking is a claim about who somebody is now, and the same twelve months
+ * already govern head-to-head, so the two now agree.
+ *
+ * An undated row is kept rather than dropped, matching `getQualifierSignificantWinBouts`: the
+ * date is missing from the record, not from history, and discarding a real result because an
+ * importer left a blank would quietly shrink a résumé.
+ */
+export function withinRankingWindow<T extends { date?: string | null }>(
+  bouts: readonly T[],
+  now: number = Date.now(),
+): T[] {
+  const cutoff = now - HEAD_TO_HEAD_WINDOW_DAYS * 86_400_000
+  return bouts.filter((bout) => {
+    const at = bout.date ? Date.parse(String(bout.date)) : Number.NaN
+    return !Number.isFinite(at) || at >= cutoff
+  })
+}
+
+/**
+ * A loss that contradicts the ranking: beaten by somebody this board places below them.
+ *
+ * The strongest argument that an order is wrong. If we say this wrestler is #4 and the boy who
+ * beat them is #19, one of those two numbers is wrong — that is worth a reviewer's eye far more
+ * than another line in a résumé, and it is invisible when losses are only listed and not compared.
+ *
+ * Same class only. Rankings are per graduation year, so a 2027 wrestler losing to the #5 in the
+ * 2026 class is not an upset by any reading — those two numbers describe different fields and
+ * comparing them would flag half the board for nothing. Both wrestlers must also carry a
+ * published ranking: an unranked opponent has no number to contradict.
+ */
+export function isUpsetLoss(
+  loss: Pick<SignificantWin, "reason" | "opponentRanking" | "opponentGraduationYear">,
+  ownRanking: number | null,
+  ownGraduationYear: number | null,
+): boolean {
+  if (loss.reason !== "ranked") return false
+  if (ownRanking == null || loss.opponentRanking == null) return false
+  if (ownGraduationYear == null || loss.opponentGraduationYear == null) return false
+  if (loss.opponentGraduationYear !== ownGraduationYear) return false
+  // Lower number is the better ranking, so an opponent with a bigger number sits below them.
+  return loss.opponentRanking > ownRanking
+}
+
 function significantBoutRow(bout: SignificantWin): {
   opponent: string
   result: string | null
@@ -1029,10 +1087,10 @@ export async function buildRecruitNcRankingBoard({
        * prospect, or somebody in the Tournament of Champions field. The same helper the scouting
        * report uses, so a win counts here exactly as it counts there.
        */
-      const boutsForSignificance = [
+      const boutsForSignificance = withinRankingWindow([
         ...(currentSeasonBoutsByAthleteId.get(id) ?? []),
         ...(qualifierBoutsByAthleteId.get(id) ?? []),
-      ] as never
+      ]) as never
 
       const topSignificantWins = findSignificantWins(boutsForSignificance, opponentIndex).slice(0, 8)
       const significantWins = topSignificantWins.map(significantBoutRow)
@@ -1049,9 +1107,13 @@ export async function buildRecruitNcRankingBoard({
        * what the board is for. Whether a bad loss should cost points is a separate question from
        * whether a reviewer can see it.
        */
+      const ownRanking = toNumber(athlete.prospect_ranking)
       const significantLosses = findSignificantLosses(boutsForSignificance, opponentIndex)
         .slice(0, 8)
-        .map(significantBoutRow)
+        .map((loss) => ({
+          ...significantBoutRow(loss),
+          upset: isUpsetLoss(loss, ownRanking, gradYear),
+        }))
 
       /**
        * An All-American finish, scored by how deep it went and how recent it is.

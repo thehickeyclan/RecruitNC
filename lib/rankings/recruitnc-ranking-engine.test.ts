@@ -3,6 +3,8 @@ import { HEAD_TO_HEAD_MAX_GAP } from "@/lib/toc/ai-seeding"
 import {
   buildCandidateHeadToHead,
   latestProspectMatchRows,
+  isUpsetLoss,
+  withinRankingWindow,
   orderProspectsByHeadToHead,
   scoreProspectMatchResume,
 } from "@/lib/rankings/recruitnc-ranking-engine"
@@ -190,5 +192,57 @@ describe("RecruitNC TOC-style ranking engine", () => {
 
   it("uses the same reach as TOC seeding, so the two tools cannot disagree", () => {
     expect(HEAD_TO_HEAD_MAX_GAP).toBe(50)
+  })
+})
+
+describe("isUpsetLoss", () => {
+  const loss = (over = {}) => ({
+    reason: "ranked" as const,
+    opponentRanking: 19,
+    opponentGraduationYear: 2027,
+    ...over,
+  })
+
+  it("flags a loss to somebody ranked below them in the same class", () => {
+    expect(isUpsetLoss(loss(), 4, 2027)).toBe(true)
+  })
+
+  it("does not flag a loss to somebody ranked above them", () => {
+    expect(isUpsetLoss(loss({ opponentRanking: 2 }), 4, 2027)).toBe(false)
+  })
+
+  it("never compares across graduation years — those are different fields", () => {
+    expect(isUpsetLoss(loss({ opponentGraduationYear: 2026 }), 4, 2027)).toBe(false)
+  })
+
+  it("needs a published ranking on both sides", () => {
+    expect(isUpsetLoss(loss({ opponentRanking: null }), 4, 2027)).toBe(false)
+    expect(isUpsetLoss(loss(), null, 2027)).toBe(false)
+  })
+
+  it("ignores national and TOC-field losses, which carry no NC number to contradict", () => {
+    expect(isUpsetLoss(loss({ reason: "national-ranked" }), 4, 2027)).toBe(false)
+    expect(isUpsetLoss(loss({ reason: "toc-field" }), 4, 2027)).toBe(false)
+  })
+})
+
+describe("withinRankingWindow", () => {
+  const now = Date.parse("2026-09-08T00:00:00Z")
+
+  it("keeps a result from this season", () => {
+    expect(withinRankingWindow([{ date: "2026-02-24" }], now)).toHaveLength(1)
+  })
+
+  it("drops a result from two seasons ago", () => {
+    expect(withinRankingWindow([{ date: "2024-02-24" }], now)).toHaveLength(0)
+  })
+
+  it("keeps an undated row rather than inventing a reason to drop it", () => {
+    expect(withinRankingWindow([{ date: null }, {}], now)).toHaveLength(2)
+  })
+
+  it("cuts at twelve months", () => {
+    expect(withinRankingWindow([{ date: "2025-09-09" }], now)).toHaveLength(1)
+    expect(withinRankingWindow([{ date: "2025-09-06" }], now)).toHaveLength(0)
   })
 })
