@@ -73,7 +73,12 @@ export async function GET(request: NextRequest) {
   try {
     const { data: meets, error } = await admin
       .from("college_schedules")
-      .select("id, college_id, event_type, opponent, event_name, home_away, location, start_time, status, colleges(name)")
+      // Named through the column, not left to PostgREST to guess: `college_schedules` has two
+      // foreign keys to `colleges` — the team and the opponent — so a bare `colleges(name)` is
+      // ambiguous and errors, which would have failed every reminder before one was ever sent.
+      .select(
+        "id, college_id, event_type, opponent, event_name, home_away, location, start_time, status, college:college_id(name)",
+      )
       .eq("event_date", day)
       .eq("season", currentSeason())
       .neq("status", "cancelled")
@@ -91,7 +96,7 @@ export async function GET(request: NextRequest) {
     const results: Array<{ college: string; sent: number; followers: number }> = []
 
     for (const meet of pending) {
-      const teamName = ((meet as { colleges?: { name?: string } | null }).colleges?.name ?? "").trim() || "Your team"
+      const teamName = ((meet as { college?: { name?: string } | null }).college?.name ?? "").trim() || "Your team"
 
       // The follow list is the audience, intersected with the alert switch being on.
       const { data: followers } = await admin
