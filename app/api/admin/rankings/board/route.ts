@@ -7,6 +7,15 @@ import { buildRecruitNcRankingBoard } from "@/lib/rankings/recruitnc-ranking-eng
 export const dynamic = "force-dynamic"
 
 /**
+ * A cold build is the slowest request this app serves — measured at 19.6s in production for the
+ * Class of 2027, and the cache only holds for ten minutes, so the first visitor after it expires
+ * pays that in full. Every other heavy route here sets its own limit; this one, the heaviest, was
+ * left on the platform default and was one slow class away from returning 504 to an admin who
+ * would only see a spinner.
+ */
+export const maxDuration = 60
+
+/**
  * Cached for ten minutes, per class and gender.
  *
  * Building a class means loading a tournament bundle, a season of matches, duals and qualifier
