@@ -87,6 +87,22 @@ describe("fitsWithinCap", () => {
     expect(fitsWithinCap([onFile("a@x.com"), onFile("b@x.com")], [coach("c@x.com")]).ok).toBe(false)
   })
 
+  it("names the coaches already filed and makes clear that nothing was saved", () => {
+    const result = fitsWithinCap(
+      [
+        { ...onFile("a@x.com"), coachName: "Joseph Anders", status: "pending" },
+        { ...onFile("b@x.com"), coachName: "Levi Dennis", status: "pending" },
+      ],
+      [coach("a@x.com", "Joseph Anders"), coach("c@x.com", "Jon Black")],
+      "Bodie Welker",
+    )
+    expect(result).toEqual({
+      ok: false,
+      error:
+        "Coaches were not saved. Bodie Welker already has Joseph Anders (pending) and Levi Dennis (pending) on file. Adding Jon Black would exceed the two-coach limit. Contact NC United to replace a coach.",
+    })
+  })
+
   it("treats re-naming a coach already on file as an edit, not a third", () => {
     // A family fixing a phone number must not be told they are over the limit.
     expect(fitsWithinCap([onFile("a@x.com"), onFile("b@x.com")], [coach("a@x.com")]).ok).toBe(true)

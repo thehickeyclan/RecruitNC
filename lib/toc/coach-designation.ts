@@ -110,15 +110,37 @@ function personIdentity(coach: { coachKey: string; coachEmail: string | null; ph
 }
 
 export function fitsWithinCap(
-  existing: { coachKey: string; coachEmail: string | null; phoneKey: string | null }[],
+  existing: {
+    coachKey: string
+    coachEmail: string | null
+    phoneKey: string | null
+    coachName?: string | null
+    status?: string | null
+  }[],
   incoming: CoachDesignation[],
+  athleteName?: string,
 ): { ok: true } | { ok: false; error: string } {
-  const keys = new Set(existing.map(personIdentity))
+  const existingKeys = new Set(existing.map(personIdentity))
+  const keys = new Set(existingKeys)
   for (const coach of incoming) keys.add(personIdentity(coach))
   if (keys.size > MAX_COACHES_PER_ATHLETE) {
+    const filed = existing
+      .filter((coach) => coach.coachName?.trim())
+      .map((coach) => `${coach.coachName!.trim()}${coach.status ? ` (${coach.status})` : ""}`)
+    const additions = incoming
+      .filter((coach) => !existingKeys.has(personIdentity(coach)))
+      .map((coach) => coach.coachName)
+    if (filed.length > 0) {
+      const subject = athleteName?.trim() || "This wrestler"
+      const adding = additions.length > 0 ? ` Adding ${additions.join(" and ")} would exceed the two-coach limit.` : ""
+      return {
+        ok: false,
+        error: `Coaches were not saved. ${subject} already has ${filed.join(" and ")} on file.${adding} Contact NC United to replace a coach.`,
+      }
+    }
     return {
       ok: false,
-      error: `Each wrestler may designate up to ${MAX_COACHES_PER_ATHLETE} corner coaches. Contact us to change who is already on file.`,
+      error: `Coaches were not saved. Each wrestler may designate up to ${MAX_COACHES_PER_ATHLETE} corner coaches. Contact NC United to replace a coach already on file.`,
     }
   }
   return { ok: true }

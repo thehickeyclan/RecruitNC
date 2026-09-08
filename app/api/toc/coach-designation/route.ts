@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
 
   const { data: existing, error: readError } = await admin
     .from("toc_coach_designations")
-    .select("coach_key, coach_email, coach_phone_key")
+    .select("coach_key, coach_name, coach_email, coach_phone_key, status")
     .eq("athlete_id", athleteId)
 
   if (readError) {
@@ -180,10 +180,13 @@ export async function POST(request: NextRequest) {
   const cap = fitsWithinCap(
     (existing ?? []).map((r) => ({
       coachKey: String(r.coach_key),
+      coachName: r.coach_name,
       coachEmail: r.coach_email,
       phoneKey: r.coach_phone_key,
+      status: r.status,
     })),
     incoming,
+    athlete.name,
   )
   if (!cap.ok) return NextResponse.json({ error: cap.error }, { status: 409 })
 
