@@ -1,7 +1,5 @@
 "use client"
 
-import { useState } from "react"
-import { ChevronDown } from "lucide-react"
 import { RankingCredentialPills } from "@/components/rankings/ranking-credential-pills"
 import type { PublicRankedAthlete } from "@/lib/rankings/public-rankings-view"
 
@@ -21,26 +19,12 @@ function movement(rank: number, previous: number | null): { label: string; class
     : { label: `▼ ${Math.abs(delta)}`, className: "text-red-300" }
 }
 
-const TONE_CLASS: Record<string, string> = {
-  green: "text-emerald-200/80",
-  gold: "text-[#D7B95A]",
-  blue: "text-sky-200/80",
-  purple: "text-purple-200/80",
-  orange: "text-orange-200/80",
-  red: "text-red-200/80",
-  default: "text-white/60",
-}
-
 /**
  * One ranked wrestler, built to read like a Tournament of Champions field card.
  *
- * The difference is the evidence drawer. A ranking is an assertion about a teenager against their
- * classmates, and the old page made that assertion with nothing behind it — a number and a name.
- * Every line in the drawer is the same evidence the staff board weighs, so the answer to "why is
- * my son 12th" is on the page rather than in an email.
+ * Deliberately no evidence drawer: the reasoning behind a ranking stays on the admin board.
  */
 export function RankedAthleteCard({ athlete }: { athlete: PublicRankedAthlete }) {
-  const [open, setOpen] = useState(false)
   const profileHref = `/view-profile?id=${encodeURIComponent(athlete.athleteId)}`
   const move = movement(athlete.rank, athlete.previousRank)
   const meta = [
@@ -100,34 +84,6 @@ export function RankedAthleteCard({ athlete }: { athlete: PublicRankedAthlete })
         ) : null}
 
         {/* An outside number, labelled as one. It orders nothing on this page. */}
-        {athlete.rankWrestlerRank ? (
-          <p className="mt-1.5 text-[10px] uppercase tracking-[0.1em] text-white/35">
-            RankWrestler #{athlete.rankWrestlerRank}
-          </p>
-        ) : null}
-
-        {athlete.evidence.length > 0 ? (
-          <div className="mt-3 border-t border-white/10 pt-2">
-            <button
-              type="button"
-              onClick={() => setOpen((v) => !v)}
-              aria-expanded={open}
-              className="flex min-h-[36px] w-full items-center justify-between gap-2 text-left text-[11px] font-bold uppercase tracking-[0.1em] text-white/50 hover:text-white/80"
-            >
-              Why this ranking
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`} />
-            </button>
-            {open ? (
-              <ul className="mt-2 space-y-1">
-                {athlete.evidence.map((line, i) => (
-                  <li key={i} className={`text-[11px] leading-snug ${TONE_CLASS[line.tone] ?? TONE_CLASS.default}`}>
-                    • {line.label}
-                  </li>
-                ))}
-              </ul>
-            ) : null}
-          </div>
-        ) : null}
       </div>
     </li>
   )

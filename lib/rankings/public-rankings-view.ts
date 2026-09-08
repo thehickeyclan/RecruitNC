@@ -39,15 +39,8 @@ export type PublicRankedAthlete = {
   graduationYear: number | null
   /** Where they sat in the previous published edition, for a movement arrow. */
   previousRank: number | null
-  /** RankWrestler's own number, shown as an outside reference and never used to order this page. */
-  rankWrestlerRank: number | null
   collegeCommit: string | null
   credentials: PublicRankingCredential[]
-  /**
-   * Why they are here, as the admin board sees it: records, quality wins, tournament results and
-   * direct wins over other ranked wrestlers.
-   */
-  evidence: Array<{ label: string; tone: string }>
 }
 
 export type PublicClassRanking = {
@@ -55,21 +48,6 @@ export type PublicClassRanking = {
   published: boolean
   cap: number
   athletes: PublicRankedAthlete[]
-}
-
-/**
- * RankWrestler's own number, if we hold one.
- *
- * There is no column for it. `athletes.rankings` is a free-form jsonb that sometimes carries one,
- * so it is read defensively and simply omitted when absent — an outside reference is worth showing
- * when we have it and worth nothing invented when we do not.
- */
-function rankWrestlerRankOf(raw: Record<string, unknown>): number | null {
-  const bag = raw.rankings
-  if (!bag || typeof bag !== "object") return null
-  const value = (bag as Record<string, unknown>).rankWrestler ?? (bag as Record<string, unknown>).rank_wrestler
-  const n = Number(value)
-  return Number.isFinite(n) && n > 0 ? n : null
 }
 
 /** Pills read the same as the TOC field's, so the two pages speak one visual language. */
@@ -134,14 +112,13 @@ async function buildPublicClassRanking(year: number): Promise<PublicClassRanking
       weightClass: raw.weightclass == null ? null : String(raw.weightclass),
       graduationYear: raw.graduationyear == null ? null : Number(raw.graduationyear),
       previousRank: raw.previous_ranking == null ? null : Number(raw.previous_ranking),
-      rankWrestlerRank: rankWrestlerRankOf(raw),
       collegeCommit: (raw.college as string) || null,
+      /**
+       * Credentials only. The board's evidence — records, named quality wins, direct wins over
+       * other ranked wrestlers — is staff-facing and never leaves the admin board, so it is used
+       * here to derive the pills and then discarded rather than serialized to the browser.
+       */
       credentials: credentialsFor(evidence),
-      // Data gaps are staff-facing: "No college open detail" explains nothing to a family and
-      // reads as a criticism of the wrestler.
-      evidence: evidence
-        .filter((e) => e.kind !== "data_gap")
-        .map((e) => ({ label: e.label, tone: String(e.tone ?? "default") })),
     }
   })
 

@@ -26,8 +26,6 @@ export async function ClassRankingPage({ year }: { year: number }) {
           <p className="mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-white/60">
             The top {ranking.cap} wrestlers in North Carolina&apos;s Class of {year}, ranked on results:
             who they wrestled, how they did against them, and what they have done outside this state.
-            Open <strong className="text-white/75">Why this ranking</strong> on any wrestler to see the
-            evidence behind their place.
           </p>
 
           <nav className="mt-8 flex flex-wrap justify-center gap-2" aria-label="Ranked classes">
@@ -66,8 +64,7 @@ export async function ClassRankingPage({ year }: { year: number }) {
           <p className="mx-auto mt-10 max-w-2xl text-center text-[11px] leading-relaxed text-white/35">
             Rankings are reviewed by NC United staff before publication. A direct win between two ranked
             wrestlers in the last twelve months carries the most weight, with the most recent meeting
-            counting highest. RankWrestler numbers are shown as an outside reference and do not affect
-            this order.
+            counting highest.
           </p>
         </div>
       </section>
