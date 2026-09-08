@@ -3,7 +3,7 @@ import "server-only"
 import { unstable_cache } from "next/cache"
 
 import { createAdminClient } from "@/lib/supabase/admin"
-import { buildRecruitNcRankingBoard } from "@/lib/rankings/recruitnc-ranking-engine"
+import { getMergedNchsaaForAthlete } from "@/lib/nchsaa-results"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
 /**
@@ -50,25 +50,116 @@ export type PublicClassRanking = {
   athletes: PublicRankedAthlete[]
 }
 
-/** Pills read the same as the TOC field's, so the two pages speak one visual language. */
-function credentialsFor(evidence: Array<{ kind: string; label: string }>): PublicRankingCredential[] {
-  const out: PublicRankingCredential[] = []
-  const titles = evidence.find((e) => /NCHSAA title/i.test(e.label))
-  const placer = evidence.find((e) => /NCHSAA (best finish|state)/i.test(e.label))
-  const allAmerican = evidence.find((e) => /\b(1st|2nd|3rd|[4-8]th)\b/.test(e.label) && /NHSCA|Fargo/i.test(e.label))
-
-  if (allAmerican) out.push({ kind: "all-american", label: "All-American", detail: allAmerican.label })
-  if (titles) out.push({ kind: "state-champion", label: "State champ", detail: titles.label })
-  else if (placer) out.push({ kind: "state-placer", label: "State placer", detail: placer.label })
-  return out
+/**
+ * Credentials, from the results tables rather than from the ranking board.
+ *
+ * These pills used to be derived from `buildRecruitNcRankingBoard`, which does per-athlete match,
+ * duals and NCHSAA work for a whole class and takes thirty to forty seconds. Once the evidence
+ * came off the public page, the entire cost of that board was three words on a badge — and every
+ * visitor who arrived after the cache expired waited a minute for them.
+ *
+ * Two batch queries on `athlete_id` replace it. Pills read the same as the Tournament of
+ * Champions field's, because they now come from the same place.
+ */
+type CredentialSources = {
+  state: Map<string, Array<{ year: number; place: number | null }>>
+  allAmerican: Map<string, string>
 }
 
 /**
- * Uncached build. Expensive: the evidence comes from the staff ranking board, which does
- * per-athlete match, duals and NCHSAA work and takes thirty to forty seconds for a full class.
- * That is fine for one admin reviewing a board and impossible on a public page, hence the cache
- * around it. A published ranking changes when staff publish one, which is monthly at most.
+ * The same lookup the Tournament of Champions field board uses, per athlete.
+ *
+ * An earlier version batched two queries on `wrestling_nchsaa_results.athlete_id` because it was
+ * fast. That column is populated for 598 of 10,702 rows, so anyone whose bracket name differs
+ * from their roster name got nothing: Holt Quincy is a two-time state champion and showed as a
+ * state placer. `getMergedNchsaaForAthlete` reconciles a name against the athlete's school and
+ * the seasons they could have wrestled, which is why the field board has him right.
+ *
+ * It costs a few queries per athlete rather than two for the class. That is the correct trade —
+ * the whole page is cached, and a credential that is wrong is worth nothing however fast it loads.
  */
+async function loadCredentialSources(
+  admin: ReturnType<typeof createAdminClient>,
+  athletes: Array<Record<string, unknown>>,
+): Promise<CredentialSources> {
+  const state = new Map<string, Array<{ year: number; place: number | null }>>()
+  const allAmerican = new Map<string, string>()
+  if (athletes.length === 0) return { state, allAmerican }
+
+  const settled = await Promise.all(
+    athletes.map(async (athlete) => {
+      const id = String(athlete.id)
+      try {
+        const rows = await getMergedNchsaaForAthlete(admin, athlete as never)
+        return [id, rows] as const
+      } catch {
+        // One athlete failing must not blank the whole class.
+        return [id, []] as const
+      }
+    }),
+  )
+
+  for (const [id, rows] of settled) {
+    const parsed = rows
+      .map((row) => ({
+        year: Number(row.year),
+        // A zero means qualified and did not place, not first.
+        place: row.place == null || Number(row.place) < 1 ? null : Number(row.place),
+      }))
+      .filter((r) => Number.isFinite(r.year))
+    if (parsed.length) state.set(id, parsed)
+  }
+
+  const { data: fargoRows } = await admin
+    .from("fargo_results")
+    .select("athlete_id, year, placement, is_all_american")
+    .in("athlete_id", athletes.map((a) => String(a.id)))
+    .eq("is_all_american", true)
+
+  for (const row of fargoRows ?? []) {
+    const id = String((row as { athlete_id?: unknown }).athlete_id ?? "")
+    if (!id || allAmerican.has(id)) continue
+    const year = (row as { year?: unknown }).year
+    const placement = (row as { placement?: unknown }).placement
+    allAmerican.set(id, `${year ?? ""} Fargo ${placement ? `${placement}th` : "All-American"}`.trim())
+  }
+
+  return { state, allAmerican }
+}
+
+function credentialsFrom(id: string, sources: CredentialSources): PublicRankingCredential[] {
+  const out: PublicRankingCredential[] = []
+  const aa = sources.allAmerican.get(id)
+  if (aa) out.push({ kind: "all-american", label: "All-American", detail: aa })
+
+  const rows = sources.state.get(id) ?? []
+  const titles = rows.filter((r) => r.place === 1)
+  const placements = rows.filter((r) => r.place != null && r.place > 1 && r.place <= 8)
+
+  if (titles.length) {
+    out.push({
+      kind: "state-champion",
+      label: titles.length > 1 ? `${titles.length}X State champ` : "State champ",
+      detail: titles.map((t) => `${t.year} state champion`).join(" · "),
+    })
+    // A champion who also placed in another year has both worth showing.
+    if (placements.length) {
+      out.push({
+        kind: "state-placer",
+        label: placements.length > 1 ? `${placements.length}X State placer` : "State placer",
+        detail: placements.map((p) => `${p.year} ${p.place} place`).join(" · "),
+      })
+    }
+  } else if (placements.length) {
+    out.push({
+      kind: "state-placer",
+      label: placements.length > 1 ? `${placements.length}X State placer` : "State placer",
+      detail: placements.map((p) => `${p.year} ${p.place} place`).join(" · "),
+    })
+  }
+  return out
+}
+
 async function buildPublicClassRanking(year: number): Promise<PublicClassRanking> {
   const cap = getPublicRankingsMax(year)
   if (!isPublicRankingsYearPublished(year)) {
@@ -76,7 +167,7 @@ async function buildPublicClassRanking(year: number): Promise<PublicClassRanking
   }
 
   const admin = createAdminClient()
-  const [{ data: rows }, board] = await Promise.all([
+  const { data: rows } = await 
     admin
       .from("athletes")
       .select(
@@ -84,22 +175,18 @@ async function buildPublicClassRanking(year: number): Promise<PublicClassRanking
         // `rankwrestler_rank`, `rank_wrestler_rank` and `rw_rank`, none of which are columns, so
         // its rankWrestler component has always scored zero for everyone. Selecting it here made
         // the whole query fail and the page render empty.
-        "id, name, photourl, headshot_url, highschool, wrestlingClub, weightclass, graduationyear, prospect_ranking, previous_ranking, college, rankings",
+        "id, name, photourl, headshot_url, highschool, wrestlingClub, weightclass, graduationyear, prospect_ranking, previous_ranking, college",
       )
       .eq("graduationyear", year)
       .eq("is_nc_athlete", true)
       .not("prospect_ranking", "is", null)
       .lte("prospect_ranking", cap)
-      .order("prospect_ranking", { ascending: true }),
-    // Evidence only. The engine's ordering is deliberately not used here — see the note above.
-    buildRecruitNcRankingBoard({ supabase: admin, year: String(year), gender: "Male" }).catch(() => []),
-  ])
+      .order("prospect_ranking", { ascending: true })
 
-  const evidenceById = new Map(board.map((entry) => [String(entry.id), entry.evidence ?? []]))
+  const sources = await loadCredentialSources(admin, (rows ?? []) as Array<Record<string, unknown>>)
 
   const athletes: PublicRankedAthlete[] = (rows ?? []).map((row) => {
     const raw = row as Record<string, unknown>
-    const evidence = (evidenceById.get(String(raw.id)) ?? []) as Array<{ kind: string; label: string; tone?: string }>
     return {
       athleteId: String(raw.id),
       rank: Number(raw.prospect_ranking),
@@ -114,11 +201,10 @@ async function buildPublicClassRanking(year: number): Promise<PublicClassRanking
       previousRank: raw.previous_ranking == null ? null : Number(raw.previous_ranking),
       collegeCommit: (raw.college as string) || null,
       /**
-       * Credentials only. The board's evidence — records, named quality wins, direct wins over
-       * other ranked wrestlers — is staff-facing and never leaves the admin board, so it is used
-       * here to derive the pills and then discarded rather than serialized to the browser.
+       * Credentials only. Records, named quality wins and direct wins over other ranked
+       * wrestlers stay on the admin board and never reach the browser.
        */
-      credentials: credentialsFor(evidence),
+      credentials: credentialsFrom(String(raw.id), sources),
     }
   })
 
