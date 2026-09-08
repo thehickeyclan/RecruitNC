@@ -52,6 +52,8 @@ export type PublicFieldAthlete = {
     stateFinalistFinishes: number
     statePlacements: number
     allAmericanHonors: number
+    /** A college is recorded for the athlete; the name remains hidden until staff approves it. */
+    collegeCommitRecorded: boolean
   }
   /**
    * Corner coaches NC United has approved for this wrestler, at most two.
@@ -405,7 +407,7 @@ export function buildFieldRollup(athletes: PublicFieldAthlete[]): PublicFieldRol
     ).length,
     statePlacements: athletes.reduce((total, athlete) => total + athlete.accolades.statePlacements, 0),
     stateTitles: athletes.reduce((total, athlete) => total + athlete.accolades.stateTitles, 0),
-    collegeCommits: athletes.filter((athlete) => Boolean(athlete.collegeCommit)).length,
+    collegeCommits: athletes.filter((athlete) => athlete.accolades.collegeCommitRecorded).length,
     allAmericanHonors: athletes.reduce((total, athlete) => total + athlete.accolades.allAmericanHonors, 0),
   }
 }
@@ -1029,6 +1031,7 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
         stateFinalistFinishes: stateResults.filter((result) => result.place != null && result.place <= 2).length,
         statePlacements: statePlacements.length,
         allAmericanHonors: resultData.allAmericanHonors ?? 0,
+        collegeCommitRecorded: Boolean(collegeRaw),
       },
       coaches: (coachesByAthlete.get(coachAthleteKey(name)) ?? []).slice(0, MAX_COACHES_PER_ATHLETE),
     })
