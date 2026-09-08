@@ -23,7 +23,7 @@ const main = async () => {
     else console.log("YES — announced_at readable. rows:", JSON.stringify(probe.data))
   }
 
-  const { listPublicWeightTiles, getPublicAnnouncedWeight, getPublicAnnouncedFieldRollup } = await import("../lib/toc/public-announced-field")
+  const { listPublicWeightTiles, getPublicAnnouncedWeight, getPublicConfirmedFieldRollup } = await import("../lib/toc/public-announced-field")
   const tiles = await listPublicWeightTiles()
   if (!summaryOnly) {
     console.log("\n=== public hub tiles (live data) ===")
@@ -35,7 +35,7 @@ const main = async () => {
       if (f) for (const a of f.athletes) console.log(`   ${a.name.padEnd(22)} [${a.credentials.map(c=>c.label).join(", ") || "—"}]${a.recruitNcRank ? ` RecruitNC #${a.recruitNcRank}` : ""}`)
     }
   }
-  console.log("\n=== all announced weights rollup ===")
-  console.log(JSON.stringify(await getPublicAnnouncedFieldRollup(), null, 2))
+  console.log("\n=== entire confirmed field rollup ===")
+  console.log(JSON.stringify(await getPublicConfirmedFieldRollup(), null, 2))
 }
 main().catch(e => { console.error(e); process.exit(1) })
