@@ -18,7 +18,11 @@ export const dynamic = "force-dynamic"
 const cachedBoard = unstable_cache(
   async (year: string, gender: string) =>
     buildRecruitNcRankingBoard({ supabase: createAdminClient(), year, gender }),
-  ["admin-ranking-board", "v1"],
+  // Bump this version whenever `RankingBoardAthlete` changes shape. The cache outlives a deploy,
+  // so a payload built by older code is otherwise served to newer code: `all_american` went from
+  // `string | null` to `string[]` while the key stayed "v1", and the board threw
+  // "t.map is not a function" on every cached class until the entry expired.
+  ["admin-ranking-board", "v2"],
   { revalidate: 600, tags: ["admin-ranking-board"] },
 )
 

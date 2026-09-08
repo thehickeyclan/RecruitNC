@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { ArrowDown, ArrowUp, Bot, CheckCircle2, ChevronDown, ChevronUp, Eye, Lock, Save, Search, Sparkles, UploadCloud } from "lucide-react"
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
 import type { StarRating } from "@/lib/athlete-star-rating"
+import { normalizeBoardAthlete } from "@/lib/rankings/board-athlete"
 
 type Evidence = {
   kind: string
@@ -286,7 +287,7 @@ export default function RankingBoardPage() {
       )
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Failed to load board")
-      const rows = (data.athletes || []) as BoardAthlete[]
+      const rows = ((data.athletes || []) as BoardAthlete[]).map(normalizeBoardAthlete)
       // The rating comes back on the board itself now. Fetching it separately meant a second
       // full pass over the class — ninety-two athletes, in series — and the page took minutes.
       setStars(Object.fromEntries(rows.filter((r) => r.star_rating).map((r) => [r.id, r.star_rating!])))
