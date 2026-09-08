@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { useNcUnitedCalendarEvents } from "@/hooks/use-nc-united-calendar-events"
+import { useCollegeSchedule } from "@/hooks/use-college-schedule"
 import { eventCategories } from "@/lib/nc-united-calendar/calendar-config"
 import type { CalendarEvent, EventCategory } from "@/lib/nc-united-calendar/types"
 import { CalendarAdminBanner } from "@/components/nc-united-calendar/calendar-admin-banner"
@@ -36,6 +37,13 @@ function isDropInPractice(category: string): boolean {
 
 export default function CalendarPage() {
   const { events, loading, error } = useNcUnitedCalendarEvents()
+  /**
+   * A followed college team's season, merged in only once one is picked.
+   *
+   * Nothing here is on by default. Twelve NC programs at roughly twenty dates each would bury the
+   * eighteen events this calendar exists for, so the dropdown is the whole gate.
+   */
+  const college = useCollegeSchedule()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [view, setView] = useState<"month" | "list">("month")
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
@@ -48,8 +56,10 @@ export default function CalendarPage() {
   const month = currentDate.getMonth()
 
   const filteredEvents = useMemo(() => {
-    return (events || []).filter((e) => visibleCategories.has(e.category as EventCategory))
-  }, [events, visibleCategories])
+    // The college meets bypass the category filter: choosing the team is already the filter, and
+    // hiding them behind a second unchecked box would just look broken.
+    return [...(events || []).filter((e) => visibleCategories.has(e.category as EventCategory)), ...college.events]
+  }, [events, visibleCategories, college.events])
 
   const eventsThisMonth = useMemo(() => {
     return filteredEvents.filter((e) => eventOccursInMonth(e, year, month))
@@ -166,6 +176,22 @@ export default function CalendarPage() {
               <Filter className="h-4 w-4 mr-2" />
               Filter
             </Button>
+            {/* Follow a college team. Empty by default — see the merge above for why. */}
+            {college.ready && college.teams.length > 0 ? (
+              <select
+                aria-label="Show a college team's schedule"
+                value={college.teamId ?? ""}
+                onChange={(e) => college.follow(e.target.value || null)}
+                className="rounded-lg border border-[#1e3a5f] bg-[#0F1E32] px-3 py-1.5 text-sm font-medium text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-[#D3B574]"
+              >
+                <option value="">Add a college team…</option>
+                {college.teams.map((team) => (
+                  <option key={team.id} value={team.id}>
+                    {team.name}
+                  </option>
+                ))}
+              </select>
+            ) : null}
             <div className="flex rounded-lg bg-[#0F1E32] border border-[#1e3a5f] p-1">
               <button
                 onClick={() => setView("list")}

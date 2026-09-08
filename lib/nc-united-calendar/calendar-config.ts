@@ -73,6 +73,21 @@ export const eventCategories: Record<EventCategory, EventCategoryConfig> = {
     accentDot: "bg-slate-500",
     listStrip: "border-l-slate-500",
   },
+  /**
+   * A followed college team's season.
+   *
+   * Off the calendar entirely until somebody picks a team, so it needs no place in the default
+   * legend — the filter that shows it is the same act as following it.
+   */
+  "college-schedule": {
+    label: "College Schedule",
+    color: "text-emerald-900",
+    bgColor: "bg-emerald-50",
+    icon: "🎓",
+    badgeClass: "border border-emerald-200 bg-emerald-50 text-emerald-900",
+    accentDot: "bg-emerald-600",
+    listStrip: "border-l-emerald-600",
+  },
   "ncaa-recruiting": {
     label: "NCAA Recruiting",
     color: "text-indigo-900",

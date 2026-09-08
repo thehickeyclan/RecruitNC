@@ -21,6 +21,8 @@ export type EventCategory =
   | "important-date"
   | "college-open"
   | "ncaa-recruiting"
+  /** A followed college team's dual or tournament. Never shown unless a team is picked. */
+  | "college-schedule"
 
 export interface CalendarEvent {
   id: string
