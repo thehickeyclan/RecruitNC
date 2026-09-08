@@ -3,6 +3,7 @@ import { join } from "node:path"
 import { describe, expect, it } from "vitest"
 import { parseCollegeSchedule } from "./parse"
 import { splitFixture } from "./sidearm-classic"
+import { currentSeason, isInSeason, seasonBounds, seasonForDate } from "./season"
 
 /**
  * Fixtures are real pages, trimmed to the parts the parsers read.
@@ -105,5 +106,51 @@ describe("splitFixture", () => {
       opponent: null,
       eventName: "East Stroudsburg Open",
     })
+  })
+})
+
+describe("season filtering", () => {
+  // The fixtures are 2025-26 pages, which is exactly the situation the filter exists for: in
+  // September 2026 seven of the eight NC sites still served a season that had already finished.
+  const nuxt = fixture("gopack")
+
+  it("keeps a finished season out when a later one is asked for", () => {
+    const parsed = parseCollegeSchedule(nuxt, "2026-27")
+    expect(parsed.events).toHaveLength(0)
+    // The distinction that matters: the page parsed fine, it just held the wrong season.
+    expect(parsed.parsedCount).toBeGreaterThan(15)
+    expect(parsed.layout).toBe("nuxt")
+  })
+
+  it("keeps the season it was asked for", () => {
+    const parsed = parseCollegeSchedule(nuxt, "2025-26")
+    expect(parsed.events.length).toBe(parsed.parsedCount)
+    expect(parsed.events.every((e) => e.date >= "2025-08-01" && e.date <= "2026-07-31")).toBe(true)
+  })
+
+  it("takes whatever the page held when no season is named", () => {
+    expect(parseCollegeSchedule(nuxt).events.length).toBeGreaterThan(15)
+  })
+})
+
+describe("seasonForDate / currentSeason", () => {
+  it("puts a November meet in the season that opened that August", () => {
+    expect(seasonForDate("2026-11-21")).toBe("2026-27")
+  })
+
+  it("puts a March championship in the season that opened the previous August", () => {
+    expect(seasonForDate("2027-03-19")).toBe("2026-27")
+  })
+
+  it("rolls to the new season in August, not in January", () => {
+    expect(currentSeason(new Date("2026-07-31T12:00:00Z"))).toBe("2025-26")
+    expect(currentSeason(new Date("2026-08-01T12:00:00Z"))).toBe("2026-27")
+    expect(currentSeason(new Date("2027-01-15T12:00:00Z"))).toBe("2026-27")
+  })
+
+  it("spans August to July, wide enough for October opens and March championships", () => {
+    expect(seasonBounds("2026-27")).toEqual({ season: "2026-27", start: "2026-08-01", end: "2027-07-31" })
+    expect(isInSeason("2026-10-25", "2026-27")).toBe(true)
+    expect(isInSeason("2026-03-19", "2026-27")).toBe(false)
   })
 })

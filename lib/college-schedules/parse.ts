@@ -8,6 +8,7 @@
  */
 import { parseSidearmSchedule, type SidearmScheduleEvent } from "./sidearm"
 import { parseSidearmClassicSchedule } from "./sidearm-classic"
+import { isInSeason } from "./season"
 
 export type { SidearmScheduleEvent } from "./sidearm"
 
@@ -15,14 +16,28 @@ export type ParsedSchedule = {
   events: SidearmScheduleEvent[]
   /** Which layout answered — worth logging, because a school changing it explains a sudden zero. */
   layout: "nuxt" | "classic" | "none"
+  /** Everything the page held, before the season filter. Lets a caller tell "no schedule posted
+   * yet" apart from "the site served us a different season", which read identically otherwise. */
+  parsedCount: number
+  /** The season asked for, when one was. */
+  season?: string
 }
 
-export function parseCollegeSchedule(html: string): ParsedSchedule {
+/**
+ * @param season "2026-27" to keep only that season. Omit to take whatever the page held.
+ *
+ * Filtering here rather than at the fetch is deliberate: a site cannot be asked for a season it
+ * has not posted. The Nuxt sites answer a 2026-27 URL with a 200 and last season's meets, and the
+ * classic ones redirect to the season in progress, so both hand back 2025-26 looking like a
+ * success. Dropping out-of-season rows is what actually keeps a finished season out of the
+ * calendar — and a page that yields plenty of events but none in season is a schedule that has
+ * not been announced, not a broken parser, which `parsedCount` lets the caller say out loud.
+ */
+export function parseCollegeSchedule(html: string, season?: string): ParsedSchedule {
   const nuxt = parseSidearmSchedule(html)
-  if (nuxt.length) return { events: nuxt, layout: "nuxt" }
+  const parsed = nuxt.length ? nuxt : parseSidearmClassicSchedule(html)
+  const layout: ParsedSchedule["layout"] = nuxt.length ? "nuxt" : parsed.length ? "classic" : "none"
 
-  const classic = parseSidearmClassicSchedule(html)
-  if (classic.length) return { events: classic, layout: "classic" }
-
-  return { events: [], layout: "none" }
+  const events = season ? parsed.filter((event) => isInSeason(event.date, season)) : parsed
+  return { events, layout, parsedCount: parsed.length, season }
 }
