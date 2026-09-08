@@ -1,6 +1,7 @@
 import "server-only"
 
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getMergedNchsaaForAthlete } from "@/lib/nchsaa-results"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { MAX_COACHES_PER_ATHLETE } from "@/lib/toc/coach-designation"
 
@@ -387,110 +388,55 @@ export function buildFieldRollup(athletes: PublicFieldAthlete[], stateTitles: nu
   }
 }
 
+/**
+ * State credentials, from the one matcher the rest of the site already uses.
+ *
+ * This used to be its own implementation: an exact match on `wrestler_name`, with a nickname
+ * and suffix strip bolted on as the failures were found one at a time. It disagreed with the
+ * admin field board and with every athlete profile, because those call
+ * {@link getMergedNchsaaForAthlete}, which reconciles a name against the athlete's school and
+ * the seasons they could have wrestled.
+ *
+ * The disagreement was not academic. Ashton Tennessee won 6A at 133 and his card showed no
+ * credential. Jeshurun Mills wrestles as "Jay Mills" and placed second; Joshua Lemke is "Josh
+ * Lemke" and did too. All three were public and wrong while the admin board next to them was
+ * right, which is the whole argument for there being one matcher rather than two.
+ *
+ * The school is used to decide, never to publish: {@link formatStateCredential} emits a year,
+ * a classification and a placement, and nothing else.
+ */
 async function fetchStateCredentialsByAthleteId(
-  athletes: { id: string; name: string; graduationYear: number | null }[],
+  athletes: { id: string; name: string; graduationyear: number | null; highschool: string | null }[],
 ): Promise<Map<string, StateResult[]>> {
   const out = new Map<string, StateResult[]>()
   if (athletes.length === 0) return out
 
   const admin = createAdminClient()
+  const settled = await Promise.all(
+    athletes.map(async (athlete) => {
+      try {
+        const rows = await getMergedNchsaaForAthlete(admin, athlete)
+        return [athlete.id, rows] as const
+      } catch (error) {
+        // One athlete's lookup failing must not empty the whole weight class.
+        console.warn(`[toc-public-field] state results for ${athlete.id}:`, error)
+        return [athlete.id, []] as const
+      }
+    }),
+  )
 
-  /**
-   * The recorded link first.
-   *
-   * `wrestling_nchsaa_results.athlete_id` says which profile a row belongs to, decided once
-   * against the athlete rather than re-guessed from a name on every page load. Everything below
-   * is the name search that ran before that column existed, and it is wrong in both directions:
-   * it credited nobody for Jeshurun Mills, who wrestles as "Jay Mills" and placed second in 3A,
-   * and for Joshua Lemke, who is "Josh Lemke" and was also a state runner-up. Both showed no
-   * credential at all on a field page that had already been announced.
-   *
-   * Athletes with no linked row still fall through to the name search, so nothing regresses.
-   */
-  const linked = new Map<string, StateResult[]>()
-  const { data: linkedRows, error: linkedError } = await admin
-    .from("wrestling_nchsaa_results")
-    .select("athlete_id, year, place, classification")
-    .in("athlete_id", athletes.map((a) => a.id))
-  if (linkedError) {
-    console.warn("[toc-public-field] linked state results lookup failed:", linkedError.message)
-  }
-  for (const raw of linkedRows ?? []) {
-    const id = String((raw as { athlete_id?: unknown }).athlete_id ?? "")
-    const year = Number((raw as { year?: unknown }).year)
-    if (!id || !Number.isFinite(year)) continue
-    const place = (raw as { place?: unknown }).place
-    linked.set(id, [
-      ...(linked.get(id) ?? []),
-      {
-        year,
-        // A zero in this table means "qualified, did not place", not first.
-        place: place == null || Number(place) < 1 ? null : Number(place),
-        classification: ((raw as { classification?: unknown }).classification as string) ?? null,
-      },
-    ])
-  }
-  for (const [id, rows] of linked) {
-    out.set(id, rows.sort((a, b) => b.year - a.year))
-  }
-
-  const unlinked = athletes.filter((a) => !out.has(a.id))
-  if (unlinked.length === 0) return out
-
-  const byNormalizedName = new Map<string, { id: string; graduationYear: number | null }[]>()
-  for (const a of unlinked) {
-    const key = normalizeNameForStateMatch(a.name).toLowerCase()
-    if (!key) continue
-    byNormalizedName.set(key, [...(byNormalizedName.get(key) ?? []), { id: a.id, graduationYear: a.graduationYear }])
-  }
-
-  // No `school` in this select.
-  // Match on the roster's own spelling as well as the suffix-stripped form, then re-key in code.
-  const wanted = new Set<string>()
-  for (const a of unlinked) {
-    if (a.name.trim()) wanted.add(a.name.trim())
-    const norm = normalizeNameForStateMatch(a.name)
-    if (norm) wanted.add(norm)
-  }
-  const { data: rows, error } = await admin
-    .from("wrestling_nchsaa_results")
-    .select("wrestler_name, year, place, classification")
-    .in("wrestler_name", [...wanted])
-
-  if (error) {
-    console.warn("[toc-public-field] state results lookup failed:", error.message)
-    return out
-  }
-
-  type Row = { wrestler_name?: string | null; year?: number | null; place?: number | null; classification?: string | null }
-  const grouped = new Map<string, Row[]>()
-  for (const raw of (rows ?? []) as Row[]) {
-    const key = normalizeNameForStateMatch(String(raw.wrestler_name ?? "")).toLowerCase()
-    if (!key) continue
-    grouped.set(key, [...(grouped.get(key) ?? []), raw])
-  }
-
-  for (const [key, targets] of byNormalizedName) {
-    const rowsForName = grouped.get(key) ?? []
-    // A shared name would credit the wrong wrestler; skip rather than guess.
-    if (targets.length !== 1) continue
-    const target = targets[0]!
-    const credentials = rowsForName
-      .filter((r) => {
-        const year = Number(r.year)
-        if (!Number.isFinite(year)) return false
-        if (target.graduationYear == null) return true
-        return year <= target.graduationYear && year > target.graduationYear - HS_SEASON_SPAN - 1
-      })
-      .sort((a, b) => Number(b.year ?? 0) - Number(a.year ?? 0))
-      .map((r) => ({
-        year: Number(r.year),
-        place: r.place == null ? null : Number(r.place),
-        classification: r.classification ?? null,
+  for (const [id, rows] of settled) {
+    const results: StateResult[] = rows
+      .map((row) => ({
+        year: Number(row.year),
+        // A zero in this table means qualified and did not place, not first.
+        place: row.place == null || Number(row.place) < 1 ? null : Number(row.place),
+        classification: row.classification ?? null,
       }))
-    if (credentials.length > 0) out.set(target.id, credentials)
+      .filter((r) => Number.isFinite(r.year))
+      .sort((a, b) => b.year - a.year)
+    if (results.length) out.set(id, results)
   }
-
   return out
 }
 
@@ -972,12 +918,21 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
   }
 
   const publicResults = await fetchPublicResultsByAthleteId(athleteIds)
+  /**
+   * `highschool` is read here and never published.
+   *
+   * It is what tells two wrestlers with one name apart, and the shared matcher needs it. Rule 3
+   * at the top of this file is about what reaches a visitor, not about what the server may look
+   * at to decide whose result is whose — and getting that wrong put a state champion on the
+   * public field with no credential at all.
+   */
   const rosterForState = (athletes ?? []).map((raw) => {
     const r = raw as unknown as Record<string, unknown>
     return {
       id: String(r.id ?? ""),
       name: typeof r.name === "string" ? r.name : "",
-      graduationYear: typeof r.graduationyear === "number" ? r.graduationyear : null,
+      graduationyear: typeof r.graduationyear === "number" ? r.graduationyear : null,
+      highschool: typeof r.highschool === "string" ? r.highschool : null,
     }
   })
   const stateByAthlete = await fetchStateCredentialsByAthleteId(rosterForState)
