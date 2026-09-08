@@ -430,7 +430,12 @@ export default function RankingBoardPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Button onClick={loadBoard} variant="outline" className="border-blue-700 bg-slate-900 text-white hover:bg-blue-950">
+                <Button
+                  onClick={() => { void loadBoard(true) }}
+                  variant="outline"
+                  className="border-blue-700 bg-slate-900 text-white hover:bg-blue-950"
+                  title="Rebuild from current data, skipping the ten-minute cache"
+                >
                   Refresh
                 </Button>
               </div>
@@ -507,15 +512,6 @@ export default function RankingBoardPage() {
                 </div>
                 <Button onClick={applyRecommendationOrder} className="bg-purple-600 hover:bg-purple-700">
                   Preview formula order
-                </Button>
-                <Button
-                  variant="outline"
-                  className={darkOutlineButton}
-                  onClick={() => { void loadBoard(true) }}
-                  disabled={loading}
-                  title="Skip the ten-minute cache and rebuild from current data"
-                >
-                  Refresh
                 </Button>
                 <Button onClick={saveFinalRanks} disabled={saving || loading} className="bg-[#d6b75d] text-slate-950 hover:bg-[#e6c86b]">
                   <Save className="mr-2 h-4 w-4" />
