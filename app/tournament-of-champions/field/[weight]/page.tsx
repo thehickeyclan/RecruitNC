@@ -53,8 +53,12 @@ export default async function TocPublicFieldWeightRoute({ params }: Props) {
   const rollupStats = [
     { label: rollup.stateTitles === 1 ? "State title" : "State titles", value: rollup.stateTitles },
     { label: rollup.stateChampions === 1 ? "State champion" : "State champions", value: rollup.stateChampions },
+    { label: rollup.stateFinalists === 1 ? "State finalist" : "State finalists", value: rollup.stateFinalists },
     { label: rollup.statePlacers === 1 ? "State placer" : "State placers", value: rollup.statePlacers },
+    { label: rollup.statePlacements === 1 ? "State placement" : "State placements", value: rollup.statePlacements },
     { label: rollup.allAmericans === 1 ? "All-American" : "All-Americans", value: rollup.allAmericans },
+    { label: rollup.allAmericanHonors === 1 ? "All-American honor" : "All-American honors", value: rollup.allAmericanHonors },
+    { label: rollup.collegeCommits === 1 ? "College commit" : "College commits", value: rollup.collegeCommits },
   ].filter((s) => s.value > 0)
 
   return (
@@ -75,18 +79,16 @@ export default async function TocPublicFieldWeightRoute({ params }: Props) {
 
           {/* What this bracket is made of, at a glance — the public read of the admin credential rollup. */}
           {rollupStats.length > 0 ? (
-            <div className="mt-6 flex flex-wrap justify-center gap-2 sm:gap-3">
-              {rollupStats.map((stat) => (
-                <div
-                  key={stat.label}
-                  className="min-w-[104px] rounded-sm border border-white/10 bg-white/[0.04] px-3 py-2 text-center"
-                >
-                  <p className={`text-2xl leading-none text-white ${tocDisplayClass()}`}>{stat.value}</p>
-                  <p className="mt-1 text-[9px] font-bold uppercase leading-tight tracking-[0.14em] text-white/45">
-                    {stat.label}
-                  </p>
-                </div>
-              ))}
+            <div className="mt-6">
+              <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
+                {rollupStats.map((stat) => (
+                  <div key={stat.label} className="min-w-[104px] rounded-sm border border-white/10 bg-white/[0.04] px-3 py-2 text-center">
+                    <p className={`text-2xl leading-none text-white ${tocDisplayClass()}`}>{stat.value}</p>
+                    <p className="mt-1 text-[9px] font-bold uppercase leading-tight tracking-[0.14em] text-white/45">{stat.label}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-center text-[10px] text-white/40">Athlete counts are unique; titles, placements and honors count every verified finish.</p>
             </div>
           ) : null}
 

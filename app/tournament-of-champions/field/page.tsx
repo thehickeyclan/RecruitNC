@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { TocPublicFieldGrid } from "@/components/toc/field/toc-public-field-grid"
 import { TocVarsityHeading, tocContainerClass, tocSectionClass } from "@/components/toc/toc-theme"
 import { HardLink } from "@/components/hard-link"
-import { listPublicWeightTiles } from "@/lib/toc/public-announced-field"
+import { getPublicAnnouncedFieldRollup, listPublicWeightTiles } from "@/lib/toc/public-announced-field"
 
 export const dynamic = "force-dynamic"
 
@@ -19,8 +19,19 @@ export const metadata: Metadata = {
  * {@link listPublicWeightTiles} on the server — this page never receives their athletes.
  */
 export default async function TocPublicFieldPage() {
-  const tiles = await listPublicWeightTiles()
+  const [tiles, rollup] = await Promise.all([listPublicWeightTiles(), getPublicAnnouncedFieldRollup()])
   const releasedCount = tiles.filter((t) => t.announced).length
+  const stats = [
+    ["Athletes", rollup.athletes],
+    ["State champions", rollup.stateChampions],
+    ["State titles", rollup.stateTitles],
+    ["State finalists", rollup.stateFinalists],
+    ["State placers", rollup.statePlacers],
+    ["State placements", rollup.statePlacements],
+    ["All-Americans", rollup.allAmericans],
+    ["All-American honors", rollup.allAmericanHonors],
+    ["College commits", rollup.collegeCommits],
+  ] as const
 
   return (
     <div className="min-h-screen bg-[#061224]">
@@ -38,6 +49,22 @@ export default async function TocPublicFieldPage() {
             athletes are <strong className="text-white/75">listed alphabetically and the field is not seeded</strong>.
             Brackets and seeds are released separately.
           </p>
+
+          {releasedCount > 0 ? (
+            <div className="mt-8">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+                {stats.map(([label, value]) => (
+                  <div key={label} className="rounded-sm border border-white/10 bg-white/[0.04] px-3 py-3 text-center">
+                    <p className="text-2xl font-black text-white">{value}</p>
+                    <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.12em] text-white/45">{label}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-3 text-center text-[10px] leading-relaxed text-white/40">
+                Champion, finalist, placer and All-American counts are unique athletes. Title, placement and honor totals count every verified finish. Finalists include champions; placers include finalists.
+              </p>
+            </div>
+          ) : null}
 
           <div className="mt-10">
             {releasedCount === 0 ? (

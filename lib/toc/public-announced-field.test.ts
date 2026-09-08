@@ -149,6 +149,7 @@ describe("public payload contains nothing private", () => {
     const field = await getPublicAnnouncedWeight(117)
     for (const a of field?.athletes ?? []) {
       expect(Object.keys(a).sort()).toEqual([
+        "accolades",
         "athleteId",
         "club",
         /** Approved corner coaches, each marked paid or not. Deliberately public. */
@@ -158,6 +159,7 @@ describe("public payload contains nothing private", () => {
         "graduationYear",
         "name",
         "photoUrl",
+        "recruitNcRank",
         "results",
         "summary",
       ])
@@ -175,12 +177,13 @@ describe("public payload contains nothing private", () => {
     }
   })
 
-  it("does not publish rankings, which would undercut 'not seeded'", async () => {
+  it("selects only the official RecruitNC rank, never TOC seed data", async () => {
     await getPublicAnnouncedWeight(117)
     const athleteSelects = state.selects.filter((s) => s.table === "athletes").map((s) => s.columns)
     for (const columns of athleteSelects) {
-      expect(columns).not.toContain("prospect_ranking")
+      expect(columns).toContain("prospect_ranking")
       expect(columns).not.toContain("rankings")
+      expect(columns).not.toContain("seed")
     }
   })
 
@@ -464,29 +467,29 @@ describe("state credentials", () => {
 
 describe("field rollup", () => {
   it("counts athletes by credential, not credentials by athlete", () => {
-    const athlete = (creds: ReturnType<typeof buildCredentials>) =>
-      ({ credentials: creds }) as unknown as Parameters<typeof buildFieldRollup>[0][number]
+    const athlete = (creds: ReturnType<typeof buildCredentials>, accolades = { stateTitles: 0, stateFinalistFinishes: 0, statePlacements: 0, allAmericanHonors: 0 }) =>
+      ({ credentials: creds, accolades, collegeCommit: null }) as unknown as Parameters<typeof buildFieldRollup>[0][number]
     const rollup = buildFieldRollup(
       [
-        athlete(buildCredentials({ allAmericanYear: 2026, stateResults: [{ year: 2026, place: 1, classification: "4A" }] })),
-        athlete(buildCredentials({ allAmericanYear: null, stateResults: [{ year: 2026, place: 3, classification: "7A" }] })),
+        athlete(buildCredentials({ allAmericanYear: 2026, stateResults: [{ year: 2026, place: 1, classification: "4A" }] }), { stateTitles: 1, stateFinalistFinishes: 1, statePlacements: 1, allAmericanHonors: 1 }),
+        athlete(buildCredentials({ allAmericanYear: null, stateResults: [{ year: 2026, place: 3, classification: "7A" }] }), { stateTitles: 0, stateFinalistFinishes: 0, statePlacements: 1, allAmericanHonors: 0 }),
         athlete(buildCredentials({ allAmericanYear: null, stateResults: [] })),
       ],
     )
-    expect(rollup).toEqual({ athletes: 3, allAmericans: 1, stateChampions: 1, statePlacers: 2, stateTitles: 1 })
+    expect(rollup).toEqual({ athletes: 3, allAmericans: 1, allAmericanHonors: 1, stateChampions: 1, stateFinalists: 1, statePlacers: 2, statePlacements: 2, stateTitles: 1, collegeCommits: 0 })
   })
 
   it("sums the same multi-title pills displayed on athlete cards", () => {
-    const athlete = (creds: ReturnType<typeof buildCredentials>) =>
-      ({ credentials: creds }) as unknown as Parameters<typeof buildFieldRollup>[0][number]
+    const athlete = (creds: ReturnType<typeof buildCredentials>, accolades: { stateTitles: number; stateFinalistFinishes: number; statePlacements: number; allAmericanHonors: number }) =>
+      ({ credentials: creds, accolades, collegeCommit: null }) as unknown as Parameters<typeof buildFieldRollup>[0][number]
     const rollup = buildFieldRollup([
       athlete(buildCredentials({ allAmericanYear: 2026, stateResults: [
         { year: 2025, place: 1, classification: "4A" },
         { year: 2026, place: 1, classification: "8A" },
-      ] })),
+      ] }), { stateTitles: 2, stateFinalistFinishes: 2, statePlacements: 2, allAmericanHonors: 1 }),
       athlete(buildCredentials({ allAmericanYear: null, stateResults: [
         { year: 2026, place: 1, classification: "6A" },
-      ] })),
+      ] }), { stateTitles: 1, stateFinalistFinishes: 1, statePlacements: 1, allAmericanHonors: 0 }),
     ])
     expect(rollup.stateTitles).toBe(3)
     expect(rollup.stateChampions).toBe(2)

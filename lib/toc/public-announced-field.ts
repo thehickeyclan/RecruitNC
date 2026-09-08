@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getMergedNchsaaForAthlete } from "@/lib/nchsaa-results"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { MAX_COACHES_PER_ATHLETE } from "@/lib/toc/coach-designation"
+import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
 /**
  * Public read model for announced TOC weight classes — the ONLY path that may feed a public page.
@@ -35,6 +36,8 @@ export type PublicFieldAthlete = {
   photoUrl: string | null
   /** College name, only once staff approved the commitment. */
   collegeCommit: string | null
+  /** Official published RecruitNC class ranking. Null means the athlete is not publicly ranked. */
+  recruitNcRank: number | null
   /**
    * Short result lines, e.g. "2024-25 · 59-1 · 30 pins", "2026 NHSCA 4th".
    */
@@ -43,6 +46,13 @@ export type PublicFieldAthlete = {
   summary: string
   /** Credential pills, strongest first. Mirrors the admin field board's badges. */
   credentials: PublicCredential[]
+  /** Structured counts behind both the card pills and field rollups. */
+  accolades: {
+    stateTitles: number
+    stateFinalistFinishes: number
+    statePlacements: number
+    allAmericanHonors: number
+  }
   /**
    * Corner coaches NC United has approved for this wrestler, at most two.
    *
@@ -71,9 +81,15 @@ export type PublicFieldRollup = {
   athletes: number
   allAmericans: number
   stateChampions: number
+  /** Athletes with at least one first- or second-place state finish (includes champions). */
+  stateFinalists: number
   /** Athletes with at least one state placement (includes champions). */
   statePlacers: number
+  /** Total state placement finishes across all represented seasons. */
+  statePlacements: number
   stateTitles: number
+  collegeCommits: number
+  allAmericanHonors: number
 }
 
 export type SeasonRecord = { season: string | null; wins: number; losses: number; pins: number | null }
@@ -83,6 +99,7 @@ export type AthleteResultData = {
   /** Most recent year the athlete placed top eight at NHSCA or Fargo. */
   allAmericanYear: number | null
   allAmericanEvent?: "NHSCA" | "Fargo" | null
+  allAmericanHonors: number
   lines: string[]
 }
 
@@ -334,14 +351,15 @@ export function buildCredentials(input: {
   stateResults: StateResult[]
   allAmericanYear: number | null
   allAmericanEvent?: "NHSCA" | "Fargo" | null
+  allAmericanHonors?: number
 }): PublicCredential[] {
-  const { stateResults, allAmericanYear, allAmericanEvent = "NHSCA" } = input
+  const { stateResults, allAmericanYear, allAmericanEvent = "NHSCA", allAmericanHonors = allAmericanYear ? 1 : 0 } = input
   const out: PublicCredential[] = []
 
   if (allAmericanYear) {
     out.push({
       kind: "all-american",
-      label: "All-American",
+      label: allAmericanHonors > 1 ? `${allAmericanHonors}x All-American` : "All-American",
       detail: `${allAmericanYear} ${allAmericanEvent ?? "NHSCA"} All-American`,
     })
   }
@@ -376,23 +394,19 @@ export function buildCredentials(input: {
   return out
 }
 
-/** Count the titles represented by the exact state-champion pills rendered on athlete cards. */
-function stateTitleCount(athlete: PublicFieldAthlete): number {
-  const credential = athlete.credentials.find((item) => item.kind === "state-champion")
-  if (!credential) return 0
-  const multiple = /^(\d+)[x×]\s/i.exec(credential.label)
-  return multiple ? Number(multiple[1]) : 1
-}
-
 export function buildFieldRollup(athletes: PublicFieldAthlete[]): PublicFieldRollup {
   return {
     athletes: athletes.length,
     allAmericans: athletes.filter((a) => a.credentials.some((c) => c.kind === "all-american")).length,
     stateChampions: athletes.filter((a) => a.credentials.some((c) => c.kind === "state-champion")).length,
+    stateFinalists: athletes.filter((a) => a.accolades.stateFinalistFinishes > 0).length,
     statePlacers: athletes.filter((a) =>
       a.credentials.some((c) => c.kind === "state-champion" || c.kind === "state-placer"),
     ).length,
-    stateTitles: athletes.reduce((total, athlete) => total + stateTitleCount(athlete), 0),
+    statePlacements: athletes.reduce((total, athlete) => total + athlete.accolades.statePlacements, 0),
+    stateTitles: athletes.reduce((total, athlete) => total + athlete.accolades.stateTitles, 0),
+    collegeCommits: athletes.filter((athlete) => Boolean(athlete.collegeCommit)).length,
+    allAmericanHonors: athletes.reduce((total, athlete) => total + athlete.accolades.allAmericanHonors, 0),
   }
 }
 
@@ -458,8 +472,8 @@ async function fetchStateCredentialsByAthleteId(
  */
 async function fetchNhscaLinesByAthleteId(
   athleteIds: string[],
-): Promise<Map<string, { lines: string[]; allAmericanYear: number | null }>> {
-  const out = new Map<string, { lines: string[]; allAmericanYear: number | null }>()
+): Promise<Map<string, { lines: string[]; allAmericanYear: number | null; allAmericanHonors: number }>> {
+  const out = new Map<string, { lines: string[]; allAmericanYear: number | null; allAmericanHonors: number }>()
   if (athleteIds.length === 0) return out
 
   const admin = createAdminClient()
@@ -485,7 +499,7 @@ async function fetchNhscaLinesByAthleteId(
   for (const [id, rows] of byAthlete) {
     const sorted = rows.slice().sort((a, b) => Number(b.year ?? 0) - Number(a.year ?? 0))
     // Top eight at NHSCA is All-American — the strongest credential most of this field will hold.
-    const aaRow = sorted.find((r) => {
+    const aaRows = sorted.filter((r) => {
       const place = Number(r.placement)
       return Number.isInteger(place) && place >= 1 && place <= NHSCA_ALL_AMERICAN_PLACES
     })
@@ -501,8 +515,8 @@ async function fetchNhscaLinesByAthleteId(
         return record ? `${prefix} ${record}` : null
       })
       .filter((l): l is string => Boolean(l))
-    if (lines.length > 0 || aaRow) {
-      out.set(id, { lines, allAmericanYear: aaRow ? Number(aaRow.year) || null : null })
+    if (lines.length > 0 || aaRows.length > 0) {
+      out.set(id, { lines, allAmericanYear: aaRows[0] ? Number(aaRows[0].year) || null : null, allAmericanHonors: aaRows.length })
     }
   }
 
@@ -512,8 +526,8 @@ async function fetchNhscaLinesByAthleteId(
 /** Fargo top-eight finishes, linked to the canonical athlete profile. */
 async function fetchFargoLinesByAthleteId(
   athleteIds: string[],
-): Promise<Map<string, { lines: string[]; allAmericanYear: number | null }>> {
-  const out = new Map<string, { lines: string[]; allAmericanYear: number | null }>()
+): Promise<Map<string, { lines: string[]; allAmericanYear: number | null; allAmericanHonors: number }>> {
+  const out = new Map<string, { lines: string[]; allAmericanYear: number | null; allAmericanHonors: number }>()
   if (athleteIds.length === 0) return out
 
   const admin = createAdminClient()
@@ -550,6 +564,7 @@ async function fetchFargoLinesByAthleteId(
     if (allAmericans.length === 0) continue
     out.set(id, {
       allAmericanYear: Number(allAmericans[0]?.year) || null,
+      allAmericanHonors: allAmericans.length,
       lines: allAmericans.map((r) => {
         const year = Number(r.year) || null
         const place = Number(r.placement)
@@ -648,6 +663,7 @@ async function fetchPublicResultsByAthleteId(athleteIds: string[]): Promise<Map<
       seasonRecord,
       allAmericanYear: nationalAas[0]?.year ?? null,
       allAmericanEvent: nationalAas[0]?.event ?? null,
+      allAmericanHonors: (n?.allAmericanHonors ?? 0) + (f?.allAmericanHonors ?? 0),
       lines: lines.slice(0, MAX_PUBLIC_RESULTS),
     })
   }
@@ -914,6 +930,7 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
         "headshot_url",
         "college",
         "commitment_approved",
+        "prospect_ranking",
         "achievements",
         ...PLACEMENT_COLUMNS.map((p) => p.column),
       ].join(", "),
@@ -970,16 +987,28 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
     const collegeRaw = typeof record.college === "string" ? record.college.trim() : ""
     // An unapproved commitment is a claim staff have not verified — do not publish it.
     const collegeCommit = record.commitment_approved === true && collegeRaw ? collegeRaw : null
-    const resultData = publicResults.get(id) ?? { seasonRecord: null, allAmericanYear: null, lines: [] }
+    const resultData: AthleteResultData = publicResults.get(id) ?? {
+      seasonRecord: null,
+      allAmericanYear: null,
+      allAmericanEvent: null,
+      allAmericanHonors: 0,
+      lines: [],
+    }
+    const graduationYear = typeof row.graduationyear === "number" ? row.graduationyear : null
+    const rawRank = Number(record.prospect_ranking)
+    const recruitNcRank = graduationYear != null && isPublicRankingsYearPublished(graduationYear) && Number.isInteger(rawRank) && rawRank >= 1 && rawRank <= getPublicRankingsMax(graduationYear) ? rawRank : null
+    const stateResults = stateByAthlete.get(id) ?? []
+    const statePlacements = stateResults.filter((result) => result.place != null && result.place <= STATE_PLACER_MAX)
     const results = resultData.lines.length > 0 ? resultData.lines : buildPublicResults(record)
 
     out.push({
       athleteId: id,
       name,
-      graduationYear: typeof row.graduationyear === "number" ? row.graduationyear : null,
+      graduationYear,
       club: club || null,
       photoUrl: photoReleased && rawPhoto ? rawPhoto : null,
       collegeCommit,
+      recruitNcRank,
       results,
       summary: buildAthleteSummary({
         name,
@@ -990,10 +1019,17 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
         results: { ...resultData, lines: results },
       }),
       credentials: buildCredentials({
-        stateResults: stateByAthlete.get(id) ?? [],
+        stateResults,
         allAmericanYear: resultData.allAmericanYear,
         allAmericanEvent: resultData.allAmericanEvent,
+        allAmericanHonors: resultData.allAmericanHonors ?? 0,
       }),
+      accolades: {
+        stateTitles: stateResults.filter((result) => result.place === 1).length,
+        stateFinalistFinishes: stateResults.filter((result) => result.place != null && result.place <= 2).length,
+        statePlacements: statePlacements.length,
+        allAmericanHonors: resultData.allAmericanHonors ?? 0,
+      },
       coaches: (coachesByAthlete.get(coachAthleteKey(name)) ?? []).slice(0, MAX_COACHES_PER_ATHLETE),
     })
   }
@@ -1041,6 +1077,15 @@ export async function getPublicAnnouncedWeight(weightClassInput: number): Promis
     athletes,
     rollup: buildFieldRollup(athletes),
   }
+}
+
+/** Aggregate every public weight without exposing any athlete from an unreleased weight. */
+export async function getPublicAnnouncedFieldRollup(): Promise<PublicFieldRollup> {
+  const announced = await fetchAnnouncedAtByWeight()
+  const fields = await Promise.all([...announced.keys()].map((weight) => fetchPublicAthletesForWeight(weight)))
+  const unique = new Map<string, PublicFieldAthlete>()
+  for (const athlete of fields.flat()) unique.set(athlete.athleteId, athlete)
+  return buildFieldRollup([...unique.values()])
 }
 
 /** True when at least one weight has been released — lets the hub show a pre-release state. */

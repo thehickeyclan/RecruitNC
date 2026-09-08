@@ -13,22 +13,29 @@ for (const rel of [".env.local", ".env"]) { const p = path.join(root, rel); if (
     if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1,-1)
     if (!process.env[k]) process.env[k] = v.replace(/\r$/, "").trim() } }
 const main = async () => {
+  const summaryOnly = process.argv.includes("--summary")
   const { createAdminClient } = await import("../lib/supabase/admin")
   const admin = createAdminClient()
   const probe = await admin.from("toc_field_publication_status").select("weight_class, athlete_field_locked, announced_at").limit(20)
-  console.log("=== migration applied? ===")
-  if (probe.error) { console.log("NOT YET:", probe.error.message); }
-  else console.log("YES — announced_at readable. rows:", JSON.stringify(probe.data))
-
-  const { listPublicWeightTiles, getPublicAnnouncedWeight } = await import("../lib/toc/public-announced-field")
-  const tiles = await listPublicWeightTiles()
-  console.log("\n=== public hub tiles (live data) ===")
-  for (const t of tiles) console.log(`  ${String(t.weightClass).padStart(3)}  announced=${t.announced}  count=${t.athleteCount}  ${t.announcedAt ?? ""}`)
-  console.log("\n=== per-weight gate check ===")
-  for (const w of [117, 125, 133]) {
-    const f = await getPublicAnnouncedWeight(w)
-    console.log(`  ${w}: ${f ? `PUBLIC (${f.athletes.length} athletes) rollup=${JSON.stringify(f.rollup)}` : "404 / not released"}`)
-    if (f) for (const a of f.athletes) console.log(`   ${a.name.padEnd(22)} [${a.credentials.map(c=>c.label).join(", ") || "—"}]`)
+  if (!summaryOnly) {
+    console.log("=== migration applied? ===")
+    if (probe.error) { console.log("NOT YET:", probe.error.message); }
+    else console.log("YES — announced_at readable. rows:", JSON.stringify(probe.data))
   }
+
+  const { listPublicWeightTiles, getPublicAnnouncedWeight, getPublicAnnouncedFieldRollup } = await import("../lib/toc/public-announced-field")
+  const tiles = await listPublicWeightTiles()
+  if (!summaryOnly) {
+    console.log("\n=== public hub tiles (live data) ===")
+    for (const t of tiles) console.log(`  ${String(t.weightClass).padStart(3)}  announced=${t.announced}  count=${t.athleteCount}  ${t.announcedAt ?? ""}`)
+    console.log("\n=== every announced weight ===")
+    for (const w of tiles.filter((tile) => tile.announced).map((tile) => tile.weightClass)) {
+      const f = await getPublicAnnouncedWeight(w)
+      console.log(`  ${w}: ${f ? `PUBLIC (${f.athletes.length} athletes) rollup=${JSON.stringify(f.rollup)}` : "404 / not released"}`)
+      if (f) for (const a of f.athletes) console.log(`   ${a.name.padEnd(22)} [${a.credentials.map(c=>c.label).join(", ") || "—"}]${a.recruitNcRank ? ` RecruitNC #${a.recruitNcRank}` : ""}`)
+    }
+  }
+  console.log("\n=== all announced weights rollup ===")
+  console.log(JSON.stringify(await getPublicAnnouncedFieldRollup(), null, 2))
 }
 main().catch(e => { console.error(e); process.exit(1) })
