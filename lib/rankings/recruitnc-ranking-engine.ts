@@ -1,6 +1,15 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { getAthleteNameSearchVariants, namesLikelySamePerson } from "@/lib/athlete-name-match"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
+import {
+  applyStarOverride,
+  isRatedAthlete,
+  rateAthlete,
+  type StarRating,
+} from "@/lib/athlete-star-rating"
+import { nationalEventRows, starOverrideOf, statePlaces as statePlacesOf } from "@/lib/athlete-star-rating-load"
+import { summarizeNationalExposure, summarizeSeasonStrength } from "@/lib/competition-strength"
+import { loadNationallyRankedIds } from "@/lib/national-rankings"
 import { findSignificantWins } from "@/lib/significant-wins"
 import { loadOpponentIndex } from "@/lib/scouting-report"
 import {
@@ -92,6 +101,16 @@ export type RankingBoardAthlete = {
   state_placements: string[]
   nhsca_record: string | null
   super32_record: string | null
+  /** Every trip, newest first — "2026 · 4th · 5-2". For the evidence drawer. */
+  nhsca_by_year: string[]
+  super32_by_year: string[]
+  fargo_by_year: string[]
+  /**
+   * Computed here rather than by a second endpoint. The board already holds the bundle and the
+   * season's bouts, and rating separately meant a second full pass over the class — ninety-two
+   * athletes at roughly seven hundred milliseconds each, in series, on top of this build.
+   */
+  star_rating: StarRating | null
   /** Wins over wrestlers who are ranked, nationally ranked, or in the TOC field. */
   significant_wins: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
 }
@@ -567,6 +586,25 @@ function weighted(raw: RankingScoreBreakdown): RankingScoreBreakdown {
   return out
 }
 
+/** Runs `worker` over `items`, at most `limit` in flight, preserving order. */
+async function mapWithConcurrency<T, R>(
+  items: readonly T[],
+  limit: number,
+  worker: (item: T, index: number) => Promise<R>,
+): Promise<R[]> {
+  const out = new Array<R>(items.length)
+  let cursor = 0
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    for (;;) {
+      const index = cursor++
+      if (index >= items.length) return
+      out[index] = await worker(items[index]!, index)
+    }
+  })
+  await Promise.all(runners)
+  return out
+}
+
 export async function buildRecruitNcRankingBoard({
   supabase,
   year,
@@ -607,7 +645,10 @@ export async function buildRecruitNcRankingBoard({
     name: String(athlete.name || `${athlete.firstName || ""} ${athlete.lastName || ""}`).trim(),
   }))
   // One index for the whole class: who is ranked, nationally ranked, or in the TOC field.
-  const opponentIndex = await loadOpponentIndex(supabase).catch(() => ({ tocField: [], ranked: [] }))
+  const [opponentIndex, nationallyRankedIds] = await Promise.all([
+    loadOpponentIndex(supabase).catch(() => ({ tocField: [], ranked: [] })),
+    loadNationallyRankedIds(supabase).catch(() => new Set<string>()),
+  ])
 
   const currentSeasonBoutsByAthleteId = new Map(
     athleteIds.map((athleteId) => [
@@ -616,8 +657,16 @@ export async function buildRecruitNcRankingBoard({
     ]),
   )
 
-  const scored = await Promise.all(
-    athleteRows.map(async (athlete) => {
+  /**
+   * Eight at a time, not ninety at once.
+   *
+   * This was `Promise.all` over the whole class, so a hundred athletes each firing roughly ten
+   * queries hit the database with a thousand at once. It did not fail loudly — the per-athlete
+   * bundle has a catch that falls back to empty arrays, so a throttled request became a wrestler
+   * with no tournament results at all. Aidan Gore has two NHSCA years on file and the board
+   * showed him with none, while the build took the better part of a minute.
+   */
+  const scored = await mapWithConcurrency(athleteRows, 8, async (athlete) => {
       const id = String(athlete.id)
       const name = String(athlete.name || `${athlete.firstName || ""} ${athlete.lastName || ""}`).trim()
       const evidence: RankingEvidence[] = []
@@ -807,20 +856,31 @@ export async function buildRecruitNcRankingBoard({
         .sort((a, b) => b.year - a.year)
         .map((r) => `${r.year} ${r.classification} ${Number(r.place) === 1 ? "champion" : ordinal(Number(r.place))}`)
 
-      /** Their whole record at the event, not just the best year — depth is the point. */
-      const combinedRecord = (rows: Array<{ record?: string | null }>): string | null => {
-        let wins = 0
-        let losses = 0
-        let found = false
-        for (const row of rows) {
-          const m = String(row.record ?? "").match(/^(\d+)\s*-\s*(\d+)$/)
-          if (!m) continue
-          found = true
-          wins += Number(m[1])
-          losses += Number(m[2])
-        }
-        return found ? `${wins}-${losses}` : null
+      /**
+       * The most recent trip, not a career total.
+       *
+       * Adding every year together said a wrestler was 15-6 at NHSCA without saying whether that
+       * was one strong showing or four thin ones, and it buried the trip that actually matters —
+       * the last one. The per-year lines go in the drawer.
+       */
+      const latestRecord = (rows: Array<{ year?: number; record?: string | null; placement?: string | null }>) => {
+        const dated = rows
+          .filter((r) => /^\d+\s*-\s*\d+$/.test(String(r.record ?? "").trim()))
+          .sort((a, b) => Number(b.year) - Number(a.year))
+        const latest = dated[0]
+        return latest ? `${latest.year} ${String(latest.record).trim()}` : null
       }
+      const byYear = (rows: Array<{ year?: number; record?: string | null; placement?: string | null }>) =>
+        [...rows]
+          .filter((r) => r.record || r.placement)
+          .sort((a, b) => Number(b.year) - Number(a.year))
+          .map((r) => {
+            const place = String(r.placement ?? "").trim()
+            const record = String(r.record ?? "").trim()
+            return [r.year, place && !/participat/i.test(place) ? place : null, record || null]
+              .filter(Boolean)
+              .join(" · ")
+          })
 
       /**
        * Wins that mean something: over a nationally ranked wrestler, a ranked North Carolina
@@ -896,11 +956,27 @@ export async function buildRecruitNcRankingBoard({
         additional_achievements: (athlete.additional_achievements as string) || null,
         all_american: allAmerican,
         state_placements: statePlacements,
-        nhsca_record: combinedRecord(bundle.nhsca || []),
-        super32_record: combinedRecord(bundle.super32 || []),
+        nhsca_record: latestRecord(bundle.nhsca || []),
+        super32_record: latestRecord(bundle.super32 || []),
+        nhsca_by_year: byYear(bundle.nhsca || []),
+        super32_by_year: byYear(bundle.super32 || []),
+        fargo_by_year: byYear(bundle.fargo || []),
+        star_rating: isRatedAthlete({ gender: athlete.gender as string, graduationYear: toNumber(athlete.graduationyear) })
+          ? applyStarOverride(
+              rateAthlete({
+                exposure: summarizeNationalExposure(nationalEventRows(bundle as never)),
+                strength: summarizeSeasonStrength((currentSeasonBoutsByAthleteId.get(id) ?? []) as never),
+                prospectRanking: toNumber(athlete.prospect_ranking),
+                rankingPublished: true,
+                statePlaces: statePlacesOf(bundle as never),
+                nationallyRanked: nationallyRankedIds.has(id),
+              }),
+              starOverrideOf(athlete),
+            )
+          : null,
         significant_wins: significantWins,
       } satisfies RankingBoardAthlete
-    }),
+    },
   )
 
   return orderProspectsByHeadToHead(scored).map((athlete, index) => ({ ...athlete, ai_rank: index + 1 }))

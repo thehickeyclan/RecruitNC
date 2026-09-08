@@ -46,6 +46,10 @@ type BoardAthlete = {
   locked?: boolean
   reviewer_note?: string
   all_american: string | null
+  nhsca_by_year: string[]
+  super32_by_year: string[]
+  fargo_by_year: string[]
+  star_rating: StarRating | null
   state_placements: string[]
   nhsca_record: string | null
   super32_record: string | null
@@ -254,20 +258,20 @@ export default function RankingBoardPage() {
   const [status, setStatus] = useState("")
   const publicCap = getPublicRankingsMax(Number(year))
 
-  const loadBoard = async () => {
+  const loadBoard = async (forceRefresh = false) => {
     setLoading(true)
     setStatus("")
     try {
-      // Stars ride alongside rather than inside the board payload: the board is the ranking
-      // formula and this is a different measure, and a slow rating pass must not delay the list.
-      fetch(`/api/admin/rankings/stars?year=${year}`, { cache: "no-store" })
-        .then((r) => (r.ok ? r.json() : null))
-        .then((d) => setStars((d?.ratings ?? {}) as Record<string, StarRating>))
-        .catch(() => undefined)
-      const res = await fetch(`/api/admin/rankings/board?year=${year}&gender=${gender}`, { cache: "no-store" })
+      const res = await fetch(
+        `/api/admin/rankings/board?year=${year}&gender=${gender}${forceRefresh ? "&refresh=1" : ""}`,
+        { cache: "no-store" },
+      )
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Failed to load board")
       const rows = (data.athletes || []) as BoardAthlete[]
+      // The rating comes back on the board itself now. Fetching it separately meant a second
+      // full pass over the class — ninety-two athletes, in series — and the page took minutes.
+      setStars(Object.fromEntries(rows.filter((r) => r.star_rating).map((r) => [r.id, r.star_rating!])))
       // Passive by default: preserve the admin's published top 30 exactly as-is.
       // Formula recommendations order only the private watchlist until an admin
       // explicitly previews or accepts a recommendation.
@@ -504,6 +508,15 @@ export default function RankingBoardPage() {
                 <Button onClick={applyRecommendationOrder} className="bg-purple-600 hover:bg-purple-700">
                   Preview formula order
                 </Button>
+                <Button
+                  variant="outline"
+                  className={darkOutlineButton}
+                  onClick={() => { void loadBoard(true) }}
+                  disabled={loading}
+                  title="Skip the ten-minute cache and rebuild from current data"
+                >
+                  Refresh
+                </Button>
                 <Button onClick={saveFinalRanks} disabled={saving || loading} className="bg-[#d6b75d] text-slate-950 hover:bg-[#e6c86b]">
                   <Save className="mr-2 h-4 w-4" />
                   {saving ? "Publishing..." : `Publish top ${publicCap}`}
@@ -594,9 +607,13 @@ export default function RankingBoardPage() {
                               })
                               const body = await res.json().catch(() => ({}))
                               if (!res.ok) { setStarError(body.error ?? "Could not save that."); return }
-                              const refreshed = await fetch(`/api/admin/rankings/stars?year=${year}`, { cache: "no-store" })
-                                .then((r) => (r.ok ? r.json() : null)).catch(() => null)
-                              setStars((refreshed?.ratings ?? {}) as Record<string, StarRating>)
+                              // Reflect the override locally; the board reloads it on the next fetch.
+                              setStars((prev) => {
+                                const current = prev[edit.id]
+                                if (!current) return prev
+                                const stars = edit.stars === "" ? current.override?.computedStars ?? current.stars : Number(edit.stars)
+                                return { ...prev, [edit.id]: { ...current, stars, override: edit.stars === "" ? undefined : { stars, computedStars: current.override?.computedStars ?? current.stars, reason: edit.reason } } }
+                              })
                               setStarEdit(null); setStarError(null)
                             }}
                           />
@@ -803,6 +820,28 @@ export default function RankingBoardPage() {
                             No wins on file over a ranked, nationally ranked or TOC-field wrestler.
                           </p>
                         )}
+
+                        {/* Every trip to a national event, newest first — what the badge summarises. */}
+                        {(athlete.nhsca_by_year?.length || athlete.super32_by_year?.length || athlete.fargo_by_year?.length) ? (
+                          <div className="grid gap-3 sm:grid-cols-3">
+                            {([
+                              ["NHSCA", athlete.nhsca_by_year],
+                              ["Super 32", athlete.super32_by_year],
+                              ["Fargo", athlete.fargo_by_year],
+                            ] as const).map(([label, lines]) => (
+                              <div key={label}>
+                                <p className="text-[10px] font-bold uppercase tracking-wide text-[#d6b75d]">{label}</p>
+                                {lines?.length ? (
+                                  <ul className="mt-1 space-y-1 text-xs leading-snug text-white/75">
+                                    {lines.map((line) => <li key={line}>{line}</li>)}
+                                  </ul>
+                                ) : (
+                                  <p className="mt-1 text-xs text-white/30">Never entered</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : null}
 
                         {/* Every line the formula counted, grouped the way the TOC board groups them. */}
                         <div className="grid gap-3 sm:grid-cols-2">

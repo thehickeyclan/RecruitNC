@@ -1,17 +1,36 @@
 import { NextResponse } from "next/server"
+import { unstable_cache } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
 import { buildRecruitNcRankingBoard } from "@/lib/rankings/recruitnc-ranking-engine"
 
 export const dynamic = "force-dynamic"
 
+/**
+ * Cached for ten minutes, per class and gender.
+ *
+ * Building a class means loading a tournament bundle, a season of matches, duals and qualifier
+ * head-to-head for every athlete in it — forty-five seconds for the Class of 2027, and the page
+ * was unusable. A published ranking changes when staff publish one; ten minutes of staleness on a
+ * review tool costs nothing, and `?refresh=1` skips the cache when you have just changed
+ * something and want to see it.
+ */
+const cachedBoard = unstable_cache(
+  async (year: string, gender: string) =>
+    buildRecruitNcRankingBoard({ supabase: createAdminClient(), year, gender }),
+  ["admin-ranking-board", "v1"],
+  { revalidate: 600, tags: ["admin-ranking-board"] },
+)
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const year = searchParams.get("year") || "2027"
     const gender = searchParams.get("gender") || "Male"
-    const db = createAdminClient()
-    const athletes = await buildRecruitNcRankingBoard({ supabase: db, year, gender })
+    const fresh = searchParams.get("refresh") === "1"
+    const athletes = fresh
+      ? await buildRecruitNcRankingBoard({ supabase: createAdminClient(), year, gender })
+      : await cachedBoard(year, gender)
     return NextResponse.json({
       athletes,
       meta: {
