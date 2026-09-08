@@ -17,16 +17,14 @@ export type PublicRankingsSyncResult = {
 }
 
 /**
- * The app's rankings query does not filter by gender.
+ * RecruitNC publishes boys' rankings only; there is no plan to publish girls'.
  *
- * `fetchRankings` in recruitnc-mobile selects on `graduation_year` and `is_published` only, so
- * every row for a class lands in one list. That works today purely because the table holds boys
- * and nobody has written a girls' row into it. Publishing the girls' order here would interleave
- * them into the boys' rankings on every phone, and fixing it needs an app release rather than a
- * change here — so girls stay web-only until the app filters, and the admin is told plainly
- * rather than left to discover it.
+ * Kept as a guard rather than deleted, because the cost of being wrong is asymmetric. The app
+ * filters on gender now, but installs already on phones do not, and a girls' row written into
+ * `public_rankings` would appear inside the boys' list on every one of them. If that decision
+ * ever changes, this flips only once the older builds have drained.
  */
-const APP_FILTERS_BY_GENDER = false
+const APP_PUBLISHES_GIRLS = false
 
 
 type BoardLike = {
@@ -100,11 +98,11 @@ export async function syncPublicRankingsTable({
   draft: Array<{ athlete_id: string; rank: number }>
 }): Promise<PublicRankingsSyncResult> {
   const isMale = gender.toLowerCase() === "male"
-  if (!APP_FILTERS_BY_GENDER && !isMale) {
+  if (!APP_PUBLISHES_GIRLS && !isMale) {
     return {
       synced: false,
       rows: 0,
-      note: "Published to the web only. The app's rankings query does not filter by gender, so girls' rankings would appear inside the boys' list; it needs an app release before this can sync.",
+      note: "Published to the web only — the app carries the boys' rankings.",
     }
   }
 
