@@ -472,9 +472,24 @@ describe("field rollup", () => {
         athlete(buildCredentials({ allAmericanYear: null, stateResults: [{ year: 2026, place: 3, classification: "7A" }] })),
         athlete(buildCredentials({ allAmericanYear: null, stateResults: [] })),
       ],
-      1,
     )
     expect(rollup).toEqual({ athletes: 3, allAmericans: 1, stateChampions: 1, statePlacers: 2, stateTitles: 1 })
+  })
+
+  it("sums the same multi-title pills displayed on athlete cards", () => {
+    const athlete = (creds: ReturnType<typeof buildCredentials>) =>
+      ({ credentials: creds }) as unknown as Parameters<typeof buildFieldRollup>[0][number]
+    const rollup = buildFieldRollup([
+      athlete(buildCredentials({ allAmericanYear: 2026, stateResults: [
+        { year: 2025, place: 1, classification: "4A" },
+        { year: 2026, place: 1, classification: "8A" },
+      ] })),
+      athlete(buildCredentials({ allAmericanYear: null, stateResults: [
+        { year: 2026, place: 1, classification: "6A" },
+      ] })),
+    ])
+    expect(rollup.stateTitles).toBe(3)
+    expect(rollup.stateChampions).toBe(2)
   })
 })
 

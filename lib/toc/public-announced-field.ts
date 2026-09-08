@@ -376,7 +376,15 @@ export function buildCredentials(input: {
   return out
 }
 
-export function buildFieldRollup(athletes: PublicFieldAthlete[], stateTitles: number): PublicFieldRollup {
+/** Count the titles represented by the exact state-champion pills rendered on athlete cards. */
+function stateTitleCount(athlete: PublicFieldAthlete): number {
+  const credential = athlete.credentials.find((item) => item.kind === "state-champion")
+  if (!credential) return 0
+  const multiple = /^(\d+)[x×]\s/i.exec(credential.label)
+  return multiple ? Number(multiple[1]) : 1
+}
+
+export function buildFieldRollup(athletes: PublicFieldAthlete[]): PublicFieldRollup {
   return {
     athletes: athletes.length,
     allAmericans: athletes.filter((a) => a.credentials.some((c) => c.kind === "all-american")).length,
@@ -384,7 +392,7 @@ export function buildFieldRollup(athletes: PublicFieldAthlete[], stateTitles: nu
     statePlacers: athletes.filter((a) =>
       a.credentials.some((c) => c.kind === "state-champion" || c.kind === "state-placer"),
     ).length,
-    stateTitles,
+    stateTitles: athletes.reduce((total, athlete) => total + stateTitleCount(athlete), 0),
   }
 }
 
@@ -1027,18 +1035,11 @@ export async function getPublicAnnouncedWeight(weightClassInput: number): Promis
   if (!announcedAt) return null
 
   const athletes = await fetchPublicAthletesForWeight(weightClass)
-  const stateTitles = athletes.reduce((total, a) => {
-    const champ = a.credentials.find((c) => c.kind === "state-champion")
-    if (!champ) return total
-    const multi = /^(\d+)x/.exec(champ.label)
-    return total + (multi ? Number(multi[1]) : 1)
-  }, 0)
-
   return {
     weightClass,
     announcedAt,
     athletes,
-    rollup: buildFieldRollup(athletes, stateTitles),
+    rollup: buildFieldRollup(athletes),
   }
 }
 
