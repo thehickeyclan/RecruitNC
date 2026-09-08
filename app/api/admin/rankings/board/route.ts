@@ -28,9 +28,26 @@ export async function GET(request: Request) {
     const year = searchParams.get("year") || "2027"
     const gender = searchParams.get("gender") || "Male"
     const fresh = searchParams.get("refresh") === "1"
-    const athletes = fresh
-      ? await buildRecruitNcRankingBoard({ supabase: createAdminClient(), year, gender })
-      : await cachedBoard(year, gender)
+    const [athletes, edition] = await Promise.all([
+      fresh
+        ? buildRecruitNcRankingBoard({ supabase: createAdminClient(), year, gender })
+        : cachedBoard(year, gender),
+      // Never cached: the whole point of the timestamps is that they are current.
+      // The draft tables may not exist yet, so this must never take the board down with it.
+      (async () => {
+        try {
+          const { data } = await createAdminClient()
+            .from("ranking_editions")
+            .select("draft_saved_at, published_at")
+            .eq("class_year", Number(year))
+            .eq("gender", gender)
+            .maybeSingle()
+          return data ?? null
+        } catch {
+          return null
+        }
+      })(),
+    ])
     return NextResponse.json({
       athletes,
       meta: {
@@ -38,6 +55,8 @@ export async function GET(request: Request) {
         gender,
         count: athletes.length,
         scored_at: new Date().toISOString(),
+        draft_saved_at: edition?.draft_saved_at ?? null,
+        published_at: edition?.published_at ?? null,
         formula: "recruitnc-toc-resume-v2",
       },
     })

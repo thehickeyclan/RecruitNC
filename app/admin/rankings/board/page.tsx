@@ -224,6 +224,20 @@ function ScoreBar({ breakdown, total }: { breakdown: Record<string, number>; tot
   )
 }
 
+/** "3 minutes ago", "yesterday" — a reviewer wants the gap, not a timestamp to subtract. */
+function timeAgo(iso: string | null): string {
+  if (!iso) return "never"
+  const then = new Date(iso).getTime()
+  if (Number.isNaN(then)) return "never"
+  const minutes = Math.round((Date.now() - then) / 60000)
+  if (minutes < 1) return "just now"
+  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`
+  const days = Math.round(hours / 24)
+  return days === 1 ? "yesterday" : `${days} days ago`
+}
+
 function confidenceClass(confidence: BoardAthlete["confidence"]): string {
   if (confidence === "High") return "bg-emerald-600 text-white"
   if (confidence === "Medium") return "bg-amber-500 text-slate-950"
@@ -251,6 +265,9 @@ export default function RankingBoardPage() {
   const [starError, setStarError] = useState<string | null>(null)
   /** Only one athlete's evidence is open at a time, the way the TOC field board does it. */
   const [expandedEvidenceId, setExpandedEvidenceId] = useState<string | null>(null)
+  const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null)
+  const [publishedAt, setPublishedAt] = useState<string | null>(null)
+  const [publishing, setPublishing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [query, setQuery] = useState("")
@@ -272,6 +289,8 @@ export default function RankingBoardPage() {
       // The rating comes back on the board itself now. Fetching it separately meant a second
       // full pass over the class — ninety-two athletes, in series — and the page took minutes.
       setStars(Object.fromEntries(rows.filter((r) => r.star_rating).map((r) => [r.id, r.star_rating!])))
+      setDraftSavedAt(data.meta?.draft_saved_at ?? null)
+      setPublishedAt(data.meta?.published_at ?? null)
       // Passive by default: preserve the admin's published top 30 exactly as-is.
       // Formula recommendations order only the private watchlist until an admin
       // explicitly previews or accepts a recommendation.
@@ -361,30 +380,56 @@ export default function RankingBoardPage() {
     })
   }
 
-  const saveFinalRanks = async () => {
+  /**
+   * Saving records the working order. Publishing copies what was saved.
+   *
+   * The board used to have one button that wrote `prospect_ranking` straight away, so the order
+   * on screen was the public order the instant anybody moved a wrestler. Publishing now reads the
+   * saved draft rather than the screen, which means it can never ship an order nobody reviewed.
+   */
+  const saveDraft = async () => {
     setSaving(true)
     setStatus("")
     try {
-      const rankings = athletes.map((athlete, index) => ({
-        id: athlete.id,
-        final_rank: index + 1,
-        previous_ranking: athlete.prospect_ranking,
-      }))
-      const res = await fetch("/api/admin/rankings/board", {
+      const res = await fetch("/api/admin/rankings/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rankings, year, gender }),
+        body: JSON.stringify({
+          action: "save",
+          year,
+          gender,
+          rankings: athletes.map((athlete, index) => ({ id: athlete.id, final_rank: index + 1 })),
+        }),
       })
       const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || "Failed to save rankings")
-      setStatus(
-        `Published the top ${data.published}. ${data.cleared} additional candidates remain private and unranked publicly.`,
-      )
-      await loadBoard()
+      if (!res.ok) throw new Error(data.error || "Could not save the order.")
+      setDraftSavedAt(data.draftSavedAt ?? new Date().toISOString())
+      setStatus(`Saved ${data.saved} wrestlers. Nothing is public until you publish.`)
     } catch (error) {
-      setStatus(error instanceof Error ? error.message : "Failed to save rankings")
+      setStatus(error instanceof Error ? error.message : "Could not save the order.")
     } finally {
       setSaving(false)
+    }
+  }
+
+  const publishDraft = async () => {
+    setPublishing(true)
+    setStatus("")
+    try {
+      const res = await fetch("/api/admin/rankings/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "publish", year, gender }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || "Could not publish.")
+      setPublishedAt(data.publishedAt ?? new Date().toISOString())
+      setStatus(`Published the top ${data.published}. Everyone below the cut stays private.`)
+      await loadBoard(true)
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : "Could not publish.")
+    } finally {
+      setPublishing(false)
     }
   }
 
@@ -513,10 +558,39 @@ export default function RankingBoardPage() {
                 <Button onClick={applyRecommendationOrder} className="bg-purple-600 hover:bg-purple-700">
                   Preview formula order
                 </Button>
-                <Button onClick={saveFinalRanks} disabled={saving || loading} className="bg-[#d6b75d] text-slate-950 hover:bg-[#e6c86b]">
+                <Button
+                  onClick={saveDraft}
+                  disabled={saving || loading}
+                  variant="outline"
+                  className={darkOutlineButton}
+                >
                   <Save className="mr-2 h-4 w-4" />
-                  {saving ? "Publishing..." : `Publish top ${publicCap}`}
+                  {saving ? "Saving..." : "Save order"}
                 </Button>
+                <Button
+                  onClick={publishDraft}
+                  disabled={publishing || loading || !draftSavedAt}
+                  title={draftSavedAt ? undefined : "Save the order before publishing it"}
+                  className="bg-[#d6b75d] text-slate-950 hover:bg-[#e6c86b]"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {publishing ? "Publishing..." : `Publish top ${publicCap}`}
+                </Button>
+                {/*
+                  Both times, always. Whether the order on screen has been saved, and whether what
+                  was saved has been published, are two different questions and a reviewer needs
+                  both before they touch anything.
+                */}
+                <p className="w-full text-xs text-blue-200/70">
+                  Saved <span className="font-semibold text-white">{timeAgo(draftSavedAt)}</span>
+                  {" · "}
+                  Published <span className="font-semibold text-white">{timeAgo(publishedAt)}</span>
+                  {draftSavedAt && publishedAt && new Date(draftSavedAt) > new Date(publishedAt) ? (
+                    <span className="ml-2 rounded bg-amber-500/20 px-1.5 py-0.5 font-semibold text-amber-200">
+                      Unpublished changes
+                    </span>
+                  ) : null}
+                </p>
               </div>
             </CardContent>
           </Card>
