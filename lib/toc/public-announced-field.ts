@@ -394,8 +394,51 @@ async function fetchStateCredentialsByAthleteId(
   if (athletes.length === 0) return out
 
   const admin = createAdminClient()
+
+  /**
+   * The recorded link first.
+   *
+   * `wrestling_nchsaa_results.athlete_id` says which profile a row belongs to, decided once
+   * against the athlete rather than re-guessed from a name on every page load. Everything below
+   * is the name search that ran before that column existed, and it is wrong in both directions:
+   * it credited nobody for Jeshurun Mills, who wrestles as "Jay Mills" and placed second in 3A,
+   * and for Joshua Lemke, who is "Josh Lemke" and was also a state runner-up. Both showed no
+   * credential at all on a field page that had already been announced.
+   *
+   * Athletes with no linked row still fall through to the name search, so nothing regresses.
+   */
+  const linked = new Map<string, StateResult[]>()
+  const { data: linkedRows, error: linkedError } = await admin
+    .from("wrestling_nchsaa_results")
+    .select("athlete_id, year, place, classification")
+    .in("athlete_id", athletes.map((a) => a.id))
+  if (linkedError) {
+    console.warn("[toc-public-field] linked state results lookup failed:", linkedError.message)
+  }
+  for (const raw of linkedRows ?? []) {
+    const id = String((raw as { athlete_id?: unknown }).athlete_id ?? "")
+    const year = Number((raw as { year?: unknown }).year)
+    if (!id || !Number.isFinite(year)) continue
+    const place = (raw as { place?: unknown }).place
+    linked.set(id, [
+      ...(linked.get(id) ?? []),
+      {
+        year,
+        // A zero in this table means "qualified, did not place", not first.
+        place: place == null || Number(place) < 1 ? null : Number(place),
+        classification: ((raw as { classification?: unknown }).classification as string) ?? null,
+      },
+    ])
+  }
+  for (const [id, rows] of linked) {
+    out.set(id, rows.sort((a, b) => b.year - a.year))
+  }
+
+  const unlinked = athletes.filter((a) => !out.has(a.id))
+  if (unlinked.length === 0) return out
+
   const byNormalizedName = new Map<string, { id: string; graduationYear: number | null }[]>()
-  for (const a of athletes) {
+  for (const a of unlinked) {
     const key = normalizeNameForStateMatch(a.name).toLowerCase()
     if (!key) continue
     byNormalizedName.set(key, [...(byNormalizedName.get(key) ?? []), { id: a.id, graduationYear: a.graduationYear }])
@@ -404,7 +447,7 @@ async function fetchStateCredentialsByAthleteId(
   // No `school` in this select.
   // Match on the roster's own spelling as well as the suffix-stripped form, then re-key in code.
   const wanted = new Set<string>()
-  for (const a of athletes) {
+  for (const a of unlinked) {
     if (a.name.trim()) wanted.add(a.name.trim())
     const norm = normalizeNameForStateMatch(a.name)
     if (norm) wanted.add(norm)
