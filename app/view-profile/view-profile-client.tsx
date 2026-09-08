@@ -15,10 +15,26 @@ type ViewProfileClientProps = {
   id: string
   initialAthlete: PublicAthleteProfile | null
   initialError: string | null
+  /** Resolved on the server, so it is right even where the browser holds no session cookie. */
+  initialUserId: string | null
 }
 
-export function ViewProfileClient({ id, initialAthlete, initialError }: ViewProfileClientProps) {
+export function ViewProfileClient({
+  id,
+  initialAthlete,
+  initialError,
+  initialUserId,
+}: ViewProfileClientProps) {
   const { user } = useAuth()
+  /**
+   * The server's answer wins, and the client's only adds to it.
+   *
+   * `useAuth` reads the session in the browser, which is empty inside an in-app browser even
+   * when the person is signed in — that is what left wrestlers on a page with no edit controls
+   * and nothing to press. The client value still matters for someone who signs in without a
+   * reload, so it is a fallback rather than a replacement.
+   */
+  const viewerId = initialUserId ?? user?.id ?? null
   const athlete = initialAthlete
   const error = initialError
 
@@ -95,7 +111,7 @@ export function ViewProfileClient({ id, initialAthlete, initialError }: ViewProf
             ...r,
             place: r.place ?? 0,
           }))}
-          currentUserId={user?.id ?? null}
+          currentUserId={viewerId}
           tournamentResultsComponent={
             <div className="w-full min-w-0 max-w-full">
               <TournamentResultsDisplay

@@ -33,7 +33,11 @@ export function ClaimProfileButton({
   athleteName: string
   claimedByUserId?: string | null
 }) {
-  const [state, setState] = useState<"checking" | "hidden" | "idle" | "claiming" | "done">("checking")
+  const [state, setState] = useState<
+    "checking" | "hidden" | "signed-out" | "idle" | "claiming" | "done"
+  >("checking")
+  // Where to come back to after signing in — this profile, not the home page.
+  const returnTo = typeof window === "undefined" ? "/" : window.location.pathname + window.location.search
   const [doneAs, setDoneAs] = useState<"self" | "parent" | null>(null)
   const { toast } = useToast()
 
@@ -44,12 +48,17 @@ export function ClaimProfileButton({
     }
     let cancelled = false
     fetch("/api/profile/linked-athletes", { credentials: "include", cache: "no-store" })
-      // 401 is signed out. Falling through to "idle" would show a button that only leads to
-      // a login wall, so that case hides instead.
       .then((r) => (r.ok ? r.json() : r.status === 401 ? "signed-out" : null))
       .then((data) => {
         if (cancelled) return
-        if (data === "signed-out" || !data) return setState("hidden")
+        // Signed out used to hide this, on the reasoning that the button would only lead to a
+        // login wall. That was backwards. An unclaimed profile shows no edit controls either,
+        // so hiding this left a wrestler looking at his own page with nothing to press and no
+        // hint that signing in would change that — Bodie Welker, in the Tournament of Champions
+        // field, had to message us to ask how to change his photo. A visible sign-in is a door;
+        // an empty page is not.
+        if (data === "signed-out") return setState("signed-out")
+        if (!data) return setState("hidden")
         const alreadyLinked =
           (data.athletes ?? []).some((a: { id?: unknown }) => String(a?.id) === String(athleteId)) ||
           String(data.profileAthleteId ?? "") === String(athleteId)
@@ -92,6 +101,24 @@ export function ClaimProfileButton({
   }
 
   if (state === "checking" || state === "hidden") return null
+
+  if (state === "signed-out") {
+    return (
+      <div className="rounded-sm border border-[#D3B574]/40 bg-[#D3B574]/10 p-4">
+        <p className="text-sm font-semibold text-white">Is this you, or your wrestler?</p>
+        <p className="mt-1 text-sm text-white/60">
+          Sign in to claim {athleteName}&apos;s profile — then you can change the photo, weight,
+          club, contact details and more.
+        </p>
+        <a
+          href={`/auth/signin?returnTo=${encodeURIComponent(returnTo)}`}
+          className="mt-3 inline-flex min-h-[44px] items-center rounded-sm bg-[#B31B1B] px-4 text-sm font-bold text-white hover:bg-[#8f1616]"
+        >
+          Sign in to claim this profile
+        </a>
+      </div>
+    )
+  }
 
   if (state === "done") {
     return (

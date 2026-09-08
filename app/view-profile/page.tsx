@@ -1,9 +1,20 @@
 import { Suspense } from "react"
 import type { Metadata } from "next"
 import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
+import { createClient } from "@/lib/supabase/server"
 import { ViewProfileClient } from "./view-profile-client"
 
-export const revalidate = 60
+/**
+ * Resolved per request, not cached.
+ *
+ * This page has to know who is looking at it: the edit controls appear for a signed-in viewer
+ * and a cached response would serve one visitor's answer to everybody. It was `revalidate = 60`
+ * with the session read in the browser instead, and that is why wrestlers kept seeing a
+ * read-only page — a link opened from Instagram, GroupMe or the app runs in an in-app browser
+ * with its own cookie jar, so the client-side session was simply absent and the page offered
+ * them nothing. Reading the session on the server makes it work wherever the link is opened.
+ */
+export const dynamic = "force-dynamic"
 
 type ViewProfilePageProps = {
   searchParams: Promise<{ id?: string }>
@@ -66,16 +77,27 @@ async function ViewProfilePageInner({ searchParams }: ViewProfilePageProps) {
   const id = params.id?.trim() ?? ""
 
   if (!id) {
-    return <ViewProfileClient id="" initialAthlete={null} initialError="Missing id. Use ?id= athlete-uuid" />
+    return (
+      <ViewProfileClient
+        id=""
+        initialAthlete={null}
+        initialError="Missing id. Use ?id= athlete-uuid"
+        initialUserId={null}
+      />
+    )
   }
 
-  const result = await loadPublicAthleteProfile(id)
+  const [result, supabase] = await Promise.all([loadPublicAthleteProfile(id), createClient()])
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   return (
     <ViewProfileClient
       id={id}
       initialAthlete={result.ok ? result.athlete : null}
       initialError={result.ok ? null : result.error}
+      initialUserId={user?.id ?? null}
     />
   )
 }
