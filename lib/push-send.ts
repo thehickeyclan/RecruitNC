@@ -48,8 +48,17 @@ function chunk<T>(items: T[], size: number): T[][] {
  * DeviceNotRegistered. Without that pruning the table accumulates dead tokens from every
  * uninstall and each send wastes calls on addresses that can never receive again.
  */
+export type PushCategory =
+  | "alert_commits"
+  | "alert_rankings"
+  | "alert_events"
+  | "alert_toc"
+  | "alert_news"
+  | "alert_college"
+
+/** Everyone who has this category switched on. */
 export async function sendToSubscribers(
-  column: "alert_commits" | "alert_rankings" | "alert_events" | "alert_toc" | "alert_news",
+  column: PushCategory,
   message: PushMessage,
 ): Promise<{ sent: number; failed: number; pruned: number; undelivered: number }> {
   const admin = createAdminClient()
@@ -62,6 +71,23 @@ export async function sendToSubscribers(
   if (error) throw new Error(error.message)
 
   const tokens = (devices ?? []).map((d) => d.expo_push_token).filter(Boolean) as string[]
+  return sendToTokens(column, tokens, message)
+}
+
+/**
+ * Send to a named list of devices rather than to a whole category.
+ *
+ * College alerts go only to the people following that team, which no category flag can express.
+ * Split out rather than reimplemented so those sends get the same ticket handling, receipt check
+ * and dead-token pruning as every other push — a second copy of this would be a second place for
+ * "reported ok and reached nobody" to hide.
+ */
+export async function sendToTokens(
+  column: PushCategory,
+  tokens: string[],
+  message: PushMessage,
+): Promise<{ sent: number; failed: number; pruned: number; undelivered: number }> {
+  const admin = createAdminClient()
   const { data: sendRow } = await admin.from("push_notification_sends").insert({
     category: column,
     title: message.title,
