@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { TocSeedAdoptionPanel } from "@/components/toc/field/toc-seed-adoption-panel"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { HardLink } from "@/components/hard-link"
 import { TocStatusReasonDialog } from "@/components/toc/admin/toc-status-reason-dialog"
@@ -157,6 +158,7 @@ function WeightBoardCard({
   fieldStatusBusy,
   canManage,
   canEditSeeds,
+  onRefresh,
 }: {
   board: TocWeightBoard
   watchRank?: number
@@ -186,6 +188,8 @@ function WeightBoardCard({
   fieldStatusBusy: boolean
   canManage: boolean
   canEditSeeds: boolean
+  /** Reload the board after the seeds underneath it are rewritten. */
+  onRefresh: () => Promise<void>
 }) {
   const [showChart, setShowChart] = useState(false)
   const [expandedEvidenceId, setExpandedEvidenceId] = useState<string | null>(null)
@@ -502,6 +506,13 @@ function WeightBoardCard({
                 {seedChart}
               </pre>
             ) : null}
+          </div>
+        ) : null}
+
+        {/* The NC Mat seeds this tournament; their order is private until staff adopt it. */}
+        {canManage ? (
+          <div className="border-t border-white/10 pt-3">
+            <TocSeedAdoptionPanel weightClass={board.weightClass} onAdopted={onRefresh} />
           </div>
         ) : null}
 
@@ -1171,6 +1182,7 @@ export default function TocFieldAdminPage() {
             watchRank={bracketWatchRanks.get(w.weightClass)}
             onSeedChange={updateSeed}
             onSeedReorder={reorderSeeds}
+            onRefresh={load}
             onWithdraw={(athlete, weightClass) => {
               setWithdrawalTarget({ athlete, weightClass })
               return Promise.resolve()
