@@ -151,6 +151,27 @@ export async function POST(request: Request) {
   const plan = planSeedAdoption(order?.invitationIds ?? [], confirmed)
   if (!plan.ok) return NextResponse.json({ error: plan.error }, { status: 409 })
 
+  /**
+   * Keep what is being replaced.
+   *
+   * Adopting overwrites the official order and there is no history table behind it, so without
+   * this the seeding that stood before — whoever set it, however long it took — is simply gone.
+   * Stored as the order that was there, so it can be read back or put back by hand.
+   */
+  const previous = confirmed
+    .filter((row) => row.officialSeed != null)
+    .sort((a, b) => (a.officialSeed ?? 0) - (b.officialSeed ?? 0))
+    .map((row) => ({ invitationId: row.invitationId, athleteName: row.athleteName, seed: row.officialSeed }))
+
+  await admin.from("toc_seed_history").insert({
+    weight_class: weightClass,
+    replaced_order: previous,
+    adopted_order: plan.rows.map((row) => ({ invitationId: row.invitationId, athleteName: row.athleteName, seed: row.seed })),
+    adopted_from: sourceUser.user.id,
+    adopted_from_email: sourceUser.user.email ?? null,
+    adopted_by: auth.userId,
+  })
+
   // Seeds are unique per weight, so clearing first avoids a collision mid-update — the same
   // reason the drag reorder writes in one pass rather than one row at a time.
   const ids = plan.rows.map((row) => row.invitationId)
