@@ -800,6 +800,16 @@ export const TOC_DEFAULT_CONFIG = {
   hero_primary_cta_href: "#email-signup",
 } as const
 
+/**
+ * What the app says on a bracket screen before the draws go out.
+ *
+ * One string, because it is shown to everyone waiting and changing it should not mean changing it
+ * in two places. It travels from the server, so phones already installed get the current wording
+ * without an app release — which is the only way to correct it if the time moves.
+ */
+export const TOC_BRACKET_RELEASE_LINE =
+  "Brackets are released Friday at 5:00 PM, here in the NC United app." as const
+
 export const TOC_STREAMING = {
   headline: "Live streaming",
   teaser: "The event will be live streamed. Details coming soon.",

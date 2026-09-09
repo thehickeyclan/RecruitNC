@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { getPublicAnnouncedWeight } from "@/lib/toc/public-announced-field"
+import { TOC_BRACKET_RELEASE_LINE } from "@/lib/toc/constants"
 import { readBracketRelease } from "@/lib/toc/bracket-release"
 import { getLockedDraw } from "@/lib/toc/bracket-service"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
     // released its brackets yet.
     if (!release.released) {
       return NextResponse.json(
-        { released: false, error: "Brackets appear here once NC United releases the seeding." },
+        { released: false, error: TOC_BRACKET_RELEASE_LINE },
         { status: 200 },
       )
     }
@@ -85,7 +86,7 @@ export async function POST(request: Request) {
     const locked = await getLockedDraw(admin, weightClass)
     if (!locked) {
       return NextResponse.json(
-        { released: false, error: "This weight's bracket has not been released yet." },
+        { released: false, error: TOC_BRACKET_RELEASE_LINE },
         { status: 200 },
       )
     }
