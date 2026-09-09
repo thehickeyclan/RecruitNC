@@ -48,7 +48,16 @@ export async function POST(request: Request) {
      * screenshots it: parents saw children passing around what looked like their weight's bracket.
      */
     if (!tocBracketsPublicEnabled()) {
-      return NextResponse.json({ error: "Not found" }, { status: 404 })
+      // 200 with a reason, not a 404. The app prints whatever comes back on this screen, and
+      // "Not found" in red reads as a broken app rather than as a tournament that has not
+      // released its brackets yet.
+      return NextResponse.json(
+        {
+          released: false,
+          error: "Brackets appear here once NC United releases the seeding.",
+        },
+        { status: 200 },
+      )
     }
 
     const body = (await request.json().catch(() => null)) as
