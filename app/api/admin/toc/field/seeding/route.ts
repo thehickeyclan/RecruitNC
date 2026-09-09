@@ -4,6 +4,7 @@ import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { requireTocFieldViewer } from "@/lib/toc/require-toc-field-viewer"
 import { createAdminClientFresh } from "@/lib/supabase/admin"
 import { planSeedAdoption, viewerOrdersForWeight, type ConfirmedInvitation } from "@/lib/toc/seed-adoption"
+import { getBracketLockStatus } from "@/lib/toc/bracket-service"
 
 export const dynamic = "force-dynamic"
 
@@ -44,24 +45,29 @@ async function confirmedForWeight(
   })
 }
 
-class MigrationMissing extends Error {}
-
-async function lockStateFor(admin: ReturnType<typeof createAdminClientFresh>, weightClass: number) {
-  const { data, error } = await admin
+/**
+ * Whether this weight has been submitted to brackets.
+ *
+ * There is no second lock. Locking the draw is the submit — it reads the official seeds, builds
+ * the bracket and writes it — so a weight that has been submitted is exactly a weight whose seeds
+ * must stop moving. A separate seeds lock beside it would give two switches for one decision, and
+ * the pair of them would eventually disagree.
+ *
+ * It matters because the draw is a snapshot: once built, changing `toc_invitations.seed` does not
+ * change the published bracket. Adopting after submission would leave the official seeds saying
+ * one thing and the bracket people are looking at saying another, with nothing to reveal it.
+ */
+async function submissionFor(admin: ReturnType<typeof createAdminClientFresh>, weightClass: number) {
+  const status = await getBracketLockStatus(admin, weightClass)
+  const { data } = await admin
     .from("toc_field_publication_status")
-    .select("seeds_locked, seeds_locked_at, seeds_adopted_from, seeds_adopted_at")
+    .select("seeds_adopted_from, seeds_adopted_at")
     .eq("weight_class", weightClass)
     .maybeSingle()
-  // Without this the missing columns would read as "not locked", and the first adopt would move a
-  // locked weight while reporting success. A lock that fails open is worse than no lock.
-  if (error && (error.code === "42703" || /seeds_locked|column .* does not exist/i.test(error.message))) {
-    throw new MigrationMissing(
-      "The seed-lock columns are not in the database yet — run the toc_field_publication_status migration.",
-    )
-  }
   return {
-    locked: (data as { seeds_locked?: boolean } | null)?.seeds_locked === true,
-    lockedAt: (data as { seeds_locked_at?: string } | null)?.seeds_locked_at ?? null,
+    submitted: status.locked,
+    submittedAt: status.lockedAt,
+    readyToSubmit: status.readyToLock,
     adoptedFrom: (data as { seeds_adopted_from?: string } | null)?.seeds_adopted_from ?? null,
     adoptedAt: (data as { seeds_adopted_at?: string } | null)?.seeds_adopted_at ?? null,
   }
@@ -79,10 +85,9 @@ export async function GET(request: Request) {
   const weightClass = parsed.data
 
   const admin = createAdminClientFresh()
-  try {
-  const [confirmed, lock, users] = await Promise.all([
+  const [confirmed, submission, users] = await Promise.all([
     confirmedForWeight(admin, weightClass),
-    lockStateFor(admin, weightClass),
+    submissionFor(admin, weightClass),
     admin.auth.admin.listUsers({ perPage: 1000 }),
   ])
 
@@ -102,17 +107,14 @@ export async function GET(request: Request) {
     }
   })
 
-  return NextResponse.json({ weightClass, lock, confirmed: confirmed.length, seeders })
-  } catch (error) {
-    if (error instanceof MigrationMissing) return NextResponse.json({ error: error.message }, { status: 503 })
-    throw error
-  }
+  return NextResponse.json({ weightClass, submission, confirmed: confirmed.length, seeders })
 }
 
-const actionSchema = z.union([
-  z.object({ action: z.literal("adopt"), weightClass: weightSchema, sourceUserId: z.string().uuid() }),
-  z.object({ action: z.literal("lock"), weightClass: weightSchema, locked: z.boolean() }),
-])
+const actionSchema = z.object({
+  action: z.literal("adopt"),
+  weightClass: weightSchema,
+  sourceUserId: z.string().uuid(),
+})
 
 export async function POST(request: Request) {
   const auth = await requireTocFieldViewer()
@@ -128,30 +130,12 @@ export async function POST(request: Request) {
   const admin = createAdminClientFresh()
   const { weightClass } = parsed.data
 
-  if (parsed.data.action === "lock") {
-    const { error } = await admin.from("toc_field_publication_status").upsert(
-      {
-        weight_class: weightClass,
-        seeds_locked: parsed.data.locked,
-        seeds_locked_at: parsed.data.locked ? new Date().toISOString() : null,
-        seeds_locked_by: parsed.data.locked ? auth.userId : null,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "weight_class" },
+  const submission = await submissionFor(admin, weightClass)
+  if (submission.submitted) {
+    return NextResponse.json(
+      { error: "This weight is already submitted to brackets. Unlock the draw before changing seeds." },
+      { status: 409 },
     )
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-    return NextResponse.json({ weightClass, locked: parsed.data.locked })
-  }
-
-  let lock: Awaited<ReturnType<typeof lockStateFor>>
-  try {
-    lock = await lockStateFor(admin, weightClass)
-  } catch (error) {
-    if (error instanceof MigrationMissing) return NextResponse.json({ error: error.message }, { status: 503 })
-    throw error
-  }
-  if (lock.locked) {
-    return NextResponse.json({ error: "Seeds for this weight are locked. Unlock it first." }, { status: 409 })
   }
 
   const { data: sourceUser, error: userError } = await admin.auth.admin.getUserById(parsed.data.sourceUserId)

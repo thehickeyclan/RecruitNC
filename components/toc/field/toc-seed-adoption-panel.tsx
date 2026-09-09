@@ -35,7 +35,13 @@ type Seeder = {
 
 type SeedingState = {
   weightClass: number
-  lock: { locked: boolean; lockedAt: string | null; adoptedFrom: string | null; adoptedAt: string | null }
+  submission: {
+    submitted: boolean
+    submittedAt: string | null
+    readyToSubmit: boolean
+    adoptedFrom: string | null
+    adoptedAt: string | null
+  }
   confirmed: number
   seeders: Seeder[]
 }
@@ -103,9 +109,9 @@ export function TocSeedAdoptionPanel({
   }
   if (!state) return null
 
-  const locked = state.lock.locked
+  const locked = state.submission.submitted
   // Nobody has seeded this weight yet: say nothing rather than show an empty panel.
-  if (!state.seeders.length && !locked && !state.lock.adoptedAt) return null
+  if (!state.seeders.length && !locked && !state.submission.adoptedAt) return null
 
   return (
     <div
@@ -113,28 +119,25 @@ export function TocSeedAdoptionPanel({
         locked ? "border-emerald-400/35 bg-emerald-400/10" : "border-[#D7B95A]/30 bg-[#D7B95A]/[0.07]"
       }`}
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Badge className={locked ? "bg-emerald-500 text-[#04150d] hover:bg-emerald-500" : "bg-[#D7B95A] text-[#0B1D3A] hover:bg-[#D7B95A]"}>
-            {locked ? "Seeds locked" : "Seeds open"}
-          </Badge>
-          <span className="text-[11px] text-white/60">
-            {state.lock.adoptedAt
-              ? `Adopted ${new Date(state.lock.adoptedAt).toLocaleDateString()}`
-              : "Never adopted"}
-          </span>
-        </div>
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          disabled={busy}
-          className="h-7 border-white/20 bg-transparent text-[11px] text-white hover:bg-white/10"
-          onClick={() => void act({ action: "lock", locked: !locked })}
-        >
-          {locked ? "Unlock seeds" : "Lock seeds"}
-        </Button>
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge className={locked ? "bg-emerald-500 text-[#04150d] hover:bg-emerald-500" : "bg-[#D7B95A] text-[#0B1D3A] hover:bg-[#D7B95A]"}>
+          {locked ? "Submitted to brackets" : "Seeding"}
+        </Badge>
+        <span className="text-[11px] text-white/60">
+          {state.submission.adoptedAt
+            ? `Adopted ${new Date(state.submission.adoptedAt).toLocaleDateString()}`
+            : "Never adopted"}
+        </span>
       </div>
+      {/*
+        There is no lock here on purpose. Locking the draw below is the submit, and a second
+        switch for one decision is a pair that eventually disagrees.
+      */}
+      {locked ? (
+        <p className="mt-2 text-[11px] text-white/50">
+          Seeds are fixed while this weight is submitted. Unlock the draw below to change them.
+        </p>
+      ) : null}
 
       {error ? <p className="mt-2 text-[11px] text-red-200">{error}</p> : null}
 
@@ -178,7 +181,7 @@ export function TocSeedAdoptionPanel({
                 }
                 onClick={() => void act({ action: "adopt", sourceUserId: seeder.userId })}
               >
-                {locked ? "Locked" : seeder.changed === 0 ? "Already adopted" : "Adopt this seeding"}
+                {locked ? "Submitted" : seeder.changed === 0 ? "Already adopted" : "Adopt this seeding"}
               </Button>
             </div>
           </div>
