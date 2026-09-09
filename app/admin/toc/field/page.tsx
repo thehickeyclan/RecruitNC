@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { TocSeedAdoptionPanel } from "@/components/toc/field/toc-seed-adoption-panel"
+import { TocBracketReleaseButton } from "@/components/toc/field/toc-bracket-release-button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { HardLink } from "@/components/hard-link"
 import { TocStatusReasonDialog } from "@/components/toc/admin/toc-status-reason-dialog"
@@ -1107,6 +1108,8 @@ export default function TocFieldAdminPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
+          {/* Tournament-wide, so it sits above the per-weight cards rather than on one of them. */}
+          <TocBracketReleaseButton />
           <div className="rounded-lg border border-[#D7B95A]/35 bg-[#D7B95A]/10 p-3 text-sm text-white/75">
             <div className="flex items-start gap-2">
               <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#D7B95A]" />

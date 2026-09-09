@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server"
-import { buildEightManDeDraw } from "@/lib/toc/eight-man-de-bracket"
 import { getPublicAnnouncedWeight } from "@/lib/toc/public-announced-field"
-import { tocBracketsPublicEnabled } from "@/lib/toc/bracket-public-access"
+import { readBracketRelease } from "@/lib/toc/bracket-release"
 import { getLockedDraw } from "@/lib/toc/bracket-service"
 import { createAdminClient } from "@/lib/supabase/admin"
-import type { TocBracketParticipant } from "@/lib/toc/bracket-types"
 import { layoutBracketTree } from "@/lib/bracket/single-elim-layout"
 import {
   tocDrawToConsolationBracketTree,
@@ -33,8 +31,6 @@ export const dynamic = "force-dynamic"
  * different pairing for every entrant who submits one.
  */
 
-const MAX_PARTICIPANTS = 16
-
 export async function POST(request: Request) {
   try {
     /**
@@ -47,15 +43,14 @@ export async function POST(request: Request) {
      * with twelve bouts. It carried `official: false`, which is invisible the moment somebody
      * screenshots it: parents saw children passing around what looked like their weight's bracket.
      */
-    if (!tocBracketsPublicEnabled()) {
-      // 200 with a reason, not a 404. The app prints whatever comes back on this screen, and
-      // "Not found" in red reads as a broken app rather than as a tournament that has not
-      // released its brackets yet.
+    const admin = createAdminClient()
+    const release = await readBracketRelease(admin)
+    // 200 with a reason, not a 404. The app prints whatever comes back on this screen, and
+    // "Not found" in red reads as a broken app rather than as a tournament that has not
+    // released its brackets yet.
+    if (!release.released) {
       return NextResponse.json(
-        {
-          released: false,
-          error: "Brackets appear here once NC United releases the seeding.",
-        },
+        { released: false, error: "Brackets appear here once NC United releases the seeding." },
         { status: 200 },
       )
     }
@@ -69,13 +64,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "weightClass is required" }, { status: 400 })
     }
 
-    const order = Array.isArray(body?.athleteIds) ? body.athleteIds.map(String) : []
-    if (order.length === 0) {
-      return NextResponse.json({ error: "athleteIds is required" }, { status: 400 })
-    }
-    if (order.length > MAX_PARTICIPANTS) {
-      return NextResponse.json({ error: "Too many wrestlers for one bracket." }, { status: 400 })
-    }
+    // `athleteIds` is still accepted from older builds and deliberately ignored — the seeding is
+    // ours. Rejecting it would break the app already on people's phones for no gain.
 
     // The gate: null for any weight that has not been released publicly.
     const weight = await getPublicAnnouncedWeight(weightClass)
@@ -83,87 +73,40 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "That weight has not been announced yet." }, { status: 404 })
     }
 
-    // Once brackets are public, the locked draw is the bracket — the caller's ordering is
-    // ignored rather than dressed up as official. A weight with no locked draw yet keeps
-    // projecting, so weights can be released one at a time.
-    if (tocBracketsPublicEnabled()) {
-      const locked = await getLockedDraw(createAdminClient(), weightClass)
-      if (locked) {
-        const lockedConsolation = tocDrawToConsolationBracketTree(locked)
-        return NextResponse.json({
-          draw: locked,
-          layout: {
-            championship: layoutBracketTree(tocDrawToWinnersBracketTree(locked)),
-            consolation: lockedConsolation ? layoutBracketTree(lockedConsolation) : null,
-          },
-          official: true,
-          weightClass,
-          fieldSize: locked.participants.length,
-        })
-      }
-    }
-
-    const byId = new Map(weight.athletes.map((a) => [a.athleteId, a]))
-
-    // Only ids that are actually in this weight's public field, de-duplicated, in the caller's
-    // order. An unknown id is dropped rather than rejected — a stale pick from before a field
-    // update should not fail the whole bracket.
-    const seen = new Set<string>()
-    const participants: TocBracketParticipant[] = []
-    for (const id of order) {
-      if (seen.has(id)) continue
-      const athlete = byId.get(id)
-      if (!athlete) continue
-      seen.add(id)
-      participants.push({
-        athleteId: athlete.athleteId,
-        invitationId: `preview-${athlete.athleteId}`,
-        seed: participants.length + 1,
-        name: athlete.name,
-        school: athlete.club,
-        photoUrl: athlete.photoUrl,
-        graduationYear: athlete.graduationYear,
-      })
-    }
-
-    if (participants.length === 0) {
+    /**
+     * The seeding is ours, and the only seeding there is.
+     *
+     * This used to build a bracket from whatever order the caller sent, so anyone could produce a
+     * plausible-looking draw for an announced weight and pass it around — which is exactly what
+     * happened. The caller's ordering is not read at all now: a released weight returns the draw
+     * staff locked, and an unreleased one returns nothing. What people bring to a bracket is their
+     * picks, not their seeds.
+     */
+    const locked = await getLockedDraw(admin, weightClass)
+    if (!locked) {
       return NextResponse.json(
-        { error: "None of those wrestlers are in this weight's announced field." },
-        { status: 400 },
+        { released: false, error: "This weight's bracket has not been released yet." },
+        { status: 200 },
       )
     }
-
-    // Size the bracket from the announced field, not from how many the user has seeded so far.
-    // Without this a nine-wrestler weight draws an eight-man bracket until the ninth tap, so
-    // somebody seeding 133 watches the wrong format take shape — and anyone who stops at eight
-    // keeps a complete-looking bracket that is not the one that will be wrestled.
-    const announced = weight.athletes.length
-    const draw = buildEightManDeDraw(
-      weightClass,
-      participants,
-      new Date().toISOString(),
-      announced > 8 ? announced : undefined,
-    )
 
     // Laid out here, not in the app: the same layout engine the desktop bracket uses, so the
     // two draw the same shape rather than two implementations drifting apart. The app renders
     // the positions it is given.
-    const consolationTree = tocDrawToConsolationBracketTree(draw)
+    const consolationTree = tocDrawToConsolationBracketTree(locked)
 
     return NextResponse.json({
-      draw,
+      draw: locked,
       layout: {
         // The winners tree, not the seeded one. Both draw the same shape, but the seeded tree
-        // is generated from seeds and carries no bout numbers — so every tap in the app hit a
-        // match it could not identify and did nothing. This one is built from the draw's own
-        // bouts, so a tap knows which bout it is picking.
-        championship: layoutBracketTree(tocDrawToWinnersBracketTree(draw)),
+        // carries no bout numbers — so every tap in the app hit a match it could not identify
+        // and did nothing. This one is built from the draw's own bouts.
+        championship: layoutBracketTree(tocDrawToWinnersBracketTree(locked)),
         consolation: consolationTree ? layoutBracketTree(consolationTree) : null,
       },
-      // A projection: either brackets are still private, or this weight has no locked draw yet.
-      official: false,
+      official: true,
       weightClass,
-      fieldSize: weight.athletes.length,
+      fieldSize: locked.participants.length,
     })
   } catch (e) {
     console.error("[toc-bracket-preview]", e instanceof Error ? e.message : e)
