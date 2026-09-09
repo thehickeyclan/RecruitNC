@@ -4,6 +4,7 @@ import { createAdminClientFresh } from "@/lib/supabase/admin"
 import { requireTocFieldViewer } from "@/lib/toc/require-toc-field-viewer"
 import { readBracketRelease, setBracketRelease } from "@/lib/toc/bracket-release"
 import { listPublicBracketSummaries } from "@/lib/toc/bracket-service"
+import { notifyTocBracketsReleased } from "@/lib/toc/bracket-release-notification"
 
 export const dynamic = "force-dynamic"
 
@@ -47,8 +48,24 @@ export async function POST(request: Request) {
   if (!parsed.success) return NextResponse.json({ error: "Invalid request" }, { status: 400 })
 
   const admin = createAdminClientFresh()
+  // Read before writing: pressing release on something already released must not alert twice.
+  const before = await state(admin)
   const result = await setBracketRelease(admin, parsed.data.released, auth.userId)
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 500 })
 
-  return NextResponse.json(await state(admin))
+  const after = await state(admin)
+
+  /**
+   * One alert, and only on the transition.
+   *
+   * Awaited rather than dropped: Vercel freezes the isolate once the response is sent, and a
+   * loose promise here is a release nobody hears about. It never throws, so a failed push cannot
+   * fail a release that has already happened.
+   */
+  let notified: { sent: number; failed: number } | null = null
+  if (parsed.data.released && !before.released) {
+    notified = await notifyTocBracketsReleased(after.lockedWeights)
+  }
+
+  return NextResponse.json({ ...after, notified })
 }
