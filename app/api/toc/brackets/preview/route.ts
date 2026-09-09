@@ -37,6 +37,20 @@ const MAX_PARTICIPANTS = 16
 
 export async function POST(request: Request) {
   try {
+    /**
+     * The same kill switch the rest of the bracket surface obeys.
+     *
+     * `bracket-public-access` says brackets are admin-only until the flag is set, and every other
+     * bracket page and route enforces it — this one only consulted the flag to decide whether to
+     * serve the *locked* draw, and served a projection to anyone regardless. With no account at
+     * all you could post an announced weight's athlete ids and get back a seeded eight-man draw
+     * with twelve bouts. It carried `official: false`, which is invisible the moment somebody
+     * screenshots it: parents saw children passing around what looked like their weight's bracket.
+     */
+    if (!tocBracketsPublicEnabled()) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 })
+    }
+
     const body = (await request.json().catch(() => null)) as
       | { weightClass?: number; athleteIds?: string[] }
       | null
