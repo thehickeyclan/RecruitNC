@@ -32,7 +32,7 @@ const main = async () => {
     for (const w of tiles.filter((tile) => tile.announced).map((tile) => tile.weightClass)) {
       const f = await getPublicAnnouncedWeight(w)
       console.log(`  ${w}: ${f ? `PUBLIC (${f.athletes.length} athletes) rollup=${JSON.stringify(f.rollup)}` : "404 / not released"}`)
-      if (f) for (const a of f.athletes) console.log(`   ${a.name.padEnd(22)} [${a.credentials.map(c=>c.label).join(", ") || "—"}]${a.recruitNcRank ? ` RecruitNC #${a.recruitNcRank}` : ""}`)
+      if (f) for (const a of f.athletes) console.log(`   ${a.name.padEnd(22)} [${a.credentials.map(c=>c.label).join(", ") || "—"}]`)
     }
   }
   console.log("\n=== all announced weights rollup ===")

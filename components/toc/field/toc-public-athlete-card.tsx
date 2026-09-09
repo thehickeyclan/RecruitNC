@@ -13,7 +13,8 @@ function initials(name: string): string {
  * One announced wrestler: photo, name linking to their profile, class and club, then credential pills.
  *
  * Everything here comes from {@link PublicFieldAthlete}, assembled server-side with no school or TOC seed.
- * The only ranking shown is an officially published RecruitNC class ranking. No client state or fetching.
+ * No ranking of any kind: the field is not seeded, and a number beside a name reads as a seed to
+ * anyone looking at a bracket page. No client state or fetching.
  */
 export function TocPublicAthleteCard({ athlete }: { athlete: PublicFieldAthlete }) {
   const meta = [athlete.graduationYear ? `Class of ${athlete.graduationYear}` : null, athlete.club]
@@ -42,11 +43,6 @@ export function TocPublicAthleteCard({ athlete }: { athlete: PublicFieldAthlete 
       </a>
 
       <div className="p-3 sm:p-4">
-        {athlete.recruitNcRank ? (
-          <span className="mb-2 inline-flex rounded-sm border border-[#CC0000]/60 bg-[#CC0000] px-2 py-1 text-[9px] font-black uppercase tracking-[0.08em] text-white">
-            RecruitNC #{athlete.recruitNcRank}
-          </span>
-        ) : null}
         {/*
           The name gets the whole width and wraps rather than truncating. It is the one thing on the
           card that must never be cut — sharing its row with a credential pill clipped it.

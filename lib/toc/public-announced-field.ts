@@ -4,7 +4,6 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getMergedNchsaaForAthlete } from "@/lib/nchsaa-results"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { MAX_COACHES_PER_ATHLETE } from "@/lib/toc/coach-designation"
-import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
 /**
  * Public read model for announced TOC weight classes — the ONLY path that may feed a public page.
@@ -37,7 +36,6 @@ export type PublicFieldAthlete = {
   /** College name, only once staff approved the commitment. */
   collegeCommit: string | null
   /** Official published RecruitNC class ranking. Null means the athlete is not publicly ranked. */
-  recruitNcRank: number | null
   /**
    * Short result lines, e.g. "2024-25 · 59-1 · 30 pins", "2026 NHSCA 4th".
    */
@@ -932,7 +930,6 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
         "headshot_url",
         "college",
         "commitment_approved",
-        "prospect_ranking",
         "achievements",
         ...PLACEMENT_COLUMNS.map((p) => p.column),
       ].join(", "),
@@ -997,8 +994,6 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
       lines: [],
     }
     const graduationYear = typeof row.graduationyear === "number" ? row.graduationyear : null
-    const rawRank = Number(record.prospect_ranking)
-    const recruitNcRank = graduationYear != null && isPublicRankingsYearPublished(graduationYear) && Number.isInteger(rawRank) && rawRank >= 1 && rawRank <= getPublicRankingsMax(graduationYear) ? rawRank : null
     const stateResults = stateByAthlete.get(id) ?? []
     const statePlacements = stateResults.filter((result) => result.place != null && result.place <= STATE_PLACER_MAX)
     const results = resultData.lines.length > 0 ? resultData.lines : buildPublicResults(record)
@@ -1010,7 +1005,6 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
       club: club || null,
       photoUrl: photoReleased && rawPhoto ? rawPhoto : null,
       collegeCommit,
-      recruitNcRank,
       results,
       summary: buildAthleteSummary({
         name,

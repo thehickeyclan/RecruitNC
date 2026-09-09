@@ -159,7 +159,6 @@ describe("public payload contains nothing private", () => {
         "graduationYear",
         "name",
         "photoUrl",
-        "recruitNcRank",
         "results",
         "summary",
       ])
@@ -177,13 +176,24 @@ describe("public payload contains nothing private", () => {
     }
   })
 
-  it("selects only the official RecruitNC rank, never TOC seed data", async () => {
+  it("never selects a ranking of any kind", async () => {
+    // The TOC field is not seeded, and a RecruitNC number beside a name reads as one. The column
+    // is not queried at all rather than merely left unrendered, so no later change to a card can
+    // put it back on a public page by accident.
     await getPublicAnnouncedWeight(117)
     const athleteSelects = state.selects.filter((s) => s.table === "athletes").map((s) => s.columns)
     for (const columns of athleteSelects) {
-      expect(columns).toContain("prospect_ranking")
+      expect(columns).not.toContain("prospect_ranking")
       expect(columns).not.toContain("rankings")
       expect(columns).not.toContain("seed")
+    }
+  })
+
+  it("puts no ranking on any athlete in the payload", async () => {
+    const field = await getPublicAnnouncedWeight(117)
+    for (const athlete of field?.athletes ?? []) {
+      expect(athlete).not.toHaveProperty("recruitNcRank")
+      expect(JSON.stringify(athlete)).not.toMatch(/recruitNcRank|prospect_ranking/)
     }
   })
 
