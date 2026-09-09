@@ -55,7 +55,8 @@ export function TocSeedAdoptionPanel({
   onAdopted: () => void | Promise<void>
 }) {
   const [state, setState] = useState<SeedingState | null>(null)
-  const [open, setOpen] = useState(false)
+  /** Keyed by seeder: one shared flag opened and closed every list at once. */
+  const [openFor, setOpenFor] = useState<Record<string, boolean>>({})
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -164,9 +165,9 @@ export function TocSeedAdoptionPanel({
                   size="sm"
                   variant="link"
                   className="h-auto p-0 text-[11px] text-[#D7B95A]"
-                  onClick={() => setOpen((v) => !v)}
+                  onClick={() => setOpenFor((v) => ({ ...v, [seeder.userId]: !v[seeder.userId] }))}
                 >
-                  {open ? "Hide" : "Show"} their order
+                  {openFor[seeder.userId] ? "Hide" : "Show"} their order
                 </Button>
               ) : null}
               <Button
@@ -188,7 +189,7 @@ export function TocSeedAdoptionPanel({
 
           {seeder.blocked ? (
             <p className="mt-1 text-[11px] text-amber-200">{seeder.blocked}</p>
-          ) : open ? (
+          ) : openFor[seeder.userId] ? (
             <ol className="mt-2 space-y-0.5">
               {seeder.rows.map((row) => (
                 <li key={row.invitationId} className="text-[11px] text-white/70">
