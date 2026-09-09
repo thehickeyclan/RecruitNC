@@ -27,6 +27,7 @@ type AdoptionRow = {
 type Seeder = {
   userId: string
   email: string | null
+  isLead: boolean
   rows: AdoptionRow[]
   changed: number
   blocked: string | null
@@ -138,9 +139,12 @@ export function TocSeedAdoptionPanel({
       {error ? <p className="mt-2 text-[11px] text-red-200">{error}</p> : null}
 
       {state.seeders.map((seeder) => (
-        <div key={seeder.userId} className="mt-3 border-t border-white/10 pt-2">
+        <div key={seeder.userId} className={`mt-3 border-t border-white/10 pt-2 ${seeder.isLead ? "" : "opacity-70"}`}>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="text-[11px] font-semibold text-white/80">
+              {seeder.isLead ? (
+                <Badge className="mr-2 bg-[#D7B95A] text-[10px] text-[#0B1D3A] hover:bg-[#D7B95A]">Lead</Badge>
+              ) : null}
               {seeder.email ?? "A seeder"}
               {seeder.blocked ? null : (
                 <span className="ml-2 font-normal text-white/45">
@@ -166,7 +170,12 @@ export function TocSeedAdoptionPanel({
                 type="button"
                 size="sm"
                 disabled={busy || locked || Boolean(seeder.blocked) || seeder.changed === 0}
-                className="h-7 bg-[#D7B95A] text-[11px] font-bold text-[#0B1D3A] hover:bg-[#c9ab4f]"
+                variant={seeder.isLead ? "default" : "outline"}
+                className={
+                  seeder.isLead
+                    ? "h-7 bg-[#D7B95A] text-[11px] font-bold text-[#0B1D3A] hover:bg-[#c9ab4f]"
+                    : "h-7 border-white/20 bg-transparent text-[11px] text-white hover:bg-white/10"
+                }
                 onClick={() => void act({ action: "adopt", sourceUserId: seeder.userId })}
               >
                 {locked ? "Locked" : seeder.changed === 0 ? "Already adopted" : "Adopt this seeding"}

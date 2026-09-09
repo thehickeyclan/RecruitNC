@@ -94,6 +94,7 @@ export async function GET(request: Request) {
     return {
       userId: seeder.userId,
       email: seeder.email,
+      isLead: seeder.isLead,
       // The whole point of the screen: what their order actually says, in names.
       rows: plan.ok ? plan.rows : [],
       changed: plan.ok ? plan.changed : 0,

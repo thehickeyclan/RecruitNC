@@ -15,6 +15,14 @@
 export type ViewerSeedOrder = {
   userId: string
   email: string | null
+  /**
+   * The seeder whose order is the tournament's, when several have one.
+   *
+   * 117 had two saved orders that disagreed, and nothing on the screen said which one counted.
+   * The flag lives in Supabase Auth `app_metadata`, like TOC field access, so a seeder cannot
+   * award it to themselves.
+   */
+  isLead: boolean
   /** Invitation ids, best seed first. */
   invitationIds: string[]
 }
@@ -89,22 +97,25 @@ export function planSeedAdoption(order: string[], confirmed: ConfirmedInvitation
   return { ok: true, rows, changed: rows.filter((row) => row.moved).length }
 }
 
-/** Read every scoped viewer's saved order for one weight, newest listing first. */
+/** Read every seeder's saved order for one weight, the lead seeder first. */
 export function viewerOrdersForWeight(
   users: Array<{ id: string; email?: string | null; app_metadata?: Record<string, unknown> | null }>,
   weightClass: number,
 ): ViewerSeedOrder[] {
   const out: ViewerSeedOrder[] = []
   for (const user of users) {
-    const raw = (user.app_metadata ?? {})["toc_personal_seed_orders"]
+    const metadata = user.app_metadata ?? {}
+    const raw = metadata["toc_personal_seed_orders"]
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue
     const order = (raw as Record<string, unknown>)[String(weightClass)]
     if (!Array.isArray(order) || !order.length) continue
     out.push({
       userId: user.id,
       email: user.email ?? null,
+      isLead: metadata["toc_lead_seeder"] === true,
       invitationIds: order.filter((id): id is string => typeof id === "string"),
     })
   }
-  return out
+  // Lead first: on a weight several people have seeded, the one that counts should not be second.
+  return out.sort((a, b) => Number(b.isLead) - Number(a.isLead))
 }

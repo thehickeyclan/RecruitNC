@@ -69,7 +69,11 @@ describe("planSeedAdoption", () => {
 
 describe("viewerOrdersForWeight", () => {
   const users = [
-    { id: "u1", email: "ryan@thencmat.com", app_metadata: { toc_personal_seed_orders: { "149": ["a", "b"], "117": ["c"] } } },
+    {
+      id: "u1",
+      email: "ryan@thencmat.com",
+      app_metadata: { toc_lead_seeder: true, toc_personal_seed_orders: { "149": ["a", "b"], "117": ["c"] } },
+    },
     { id: "u2", email: "rhett@thencmat.com", app_metadata: { toc_personal_seed_orders: { "117": ["c", "d"] } } },
     { id: "u3", email: "nobody@example.com", app_metadata: {} },
   ]
@@ -80,6 +84,15 @@ describe("viewerOrdersForWeight", () => {
       "rhett@thencmat.com",
     ])
     expect(viewerOrdersForWeight(users, 149).map((o) => o.email)).toEqual(["ryan@thencmat.com"])
+  })
+
+  it("puts the lead seeder first however the accounts are listed", () => {
+    // 117 really did hold two orders that disagreed, with nothing saying which counted.
+    const reversed = [users[1], users[0], users[2]]
+    const found = viewerOrdersForWeight(reversed, 117)
+    expect(found.map((o) => o.email)).toEqual(["ryan@thencmat.com", "rhett@thencmat.com"])
+    expect(found[0].isLead).toBe(true)
+    expect(found[1].isLead).toBe(false)
   })
 
   it("skips accounts with nothing saved for it", () => {
