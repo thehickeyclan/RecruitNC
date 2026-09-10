@@ -17,7 +17,6 @@ const CREDENTIAL_RANK: Record<string, number> = {
   "all-american": 0,
   "state-champion": 1,
   "state-placer": 2,
-  "state-qualifier": 3,
 }
 
 export type AnnounceAthlete = { name: string; credentials?: { kind: string }[] }
@@ -29,8 +28,8 @@ export type AnnounceAthlete = { name: string; credentials?: { kind: string }[] }
  * row order must not let anyone infer them. Taking the first two names off that page therefore
  * led with whoever happened to sort first, which sells the weight short.
  *
- * So this ranks by accolade, not by seed: All-American, then state champion, then placer, then
- * qualifier. Every one of those is already printed on the public page as a credential pill, so
+ * So this ranks by accolade, not by seed: All-American, then state champion, then placer. Every
+ * one of those is already printed on the public page as a credential pill, so
  * nothing new is revealed — and unlike seed order it says nothing about how the bracket will be
  * drawn. Alphabetical breaks ties, so the choice stays stable between sends.
  */

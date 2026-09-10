@@ -5,7 +5,6 @@ const PILL_CLASS: Record<PublicCredentialKind, string> = {
   "all-american": "border-[#CC0000]/55 bg-[#CC0000]/20 text-red-200",
   "state-champion": "border-[#D7B95A]/55 bg-[#D7B95A] text-[#060f1f]",
   "state-placer": "border-sky-300/45 bg-sky-400/15 text-sky-200",
-  "state-qualifier": "border-white/20 bg-white/5 text-white/70",
 }
 
 export function TocCredentialPills({ credentials }: { credentials: PublicCredential[] }) {

@@ -441,15 +441,20 @@ describe("state credentials", () => {
     expect(creds.map((c) => c.kind)).toEqual(["all-american", "state-champion"])
   })
 
-  it("treats a deep placing as a placer and a null place as a qualifier", () => {
+  it("treats a deep placing as a placer", () => {
     expect(
       buildCredentials({ allAmericanYear: null, stateResults: [{ year: 2026, place: 3, classification: "7A" }] })[0]!
         .kind,
     ).toBe("state-placer")
+  })
+
+  it("shows nothing for a qualifier, rather than a pill for having entered", () => {
+    // Three credentials and no more. "State Qualifier" appeared only on the wrestlers with the
+    // least to say, which marks them out rather than flattering them — and everyone in this
+    // field qualified.
     expect(
-      buildCredentials({ allAmericanYear: null, stateResults: [{ year: 2025, place: null, classification: "3A" }] })[0]!
-        .kind,
-    ).toBe("state-qualifier")
+      buildCredentials({ allAmericanYear: null, stateResults: [{ year: 2025, place: null, classification: "3A" }] }),
+    ).toEqual([])
   })
 
   it("drops the qualifier pill when something better exists", () => {

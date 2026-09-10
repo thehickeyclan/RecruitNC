@@ -66,7 +66,12 @@ export type PublicFieldAthlete = {
   coaches: { name: string; hasCredential: boolean }[]
 }
 
-export type PublicCredentialKind = "all-american" | "state-champion" | "state-placer" | "state-qualifier"
+/**
+ * The three credentials a public card carries. Narrowed deliberately: "State Qualifier" was a
+ * fourth pill, and it appeared only on the wrestlers who had nothing else to show. Everyone in
+ * this field qualified, so it marked them out rather than flattering them.
+ */
+export type PublicCredentialKind = "all-american" | "state-champion" | "state-placer"
 
 export type PublicCredential = {
   kind: PublicCredentialKind
@@ -366,7 +371,6 @@ export function buildCredentials(input: {
 
   const titles = stateResults.filter((r) => r.place === 1)
   const placements = stateResults.filter((r) => r.place != null && r.place > 1 && r.place <= STATE_PLACER_MAX)
-  const qualifiers = stateResults.filter((r) => r.place == null)
 
   if (titles.length > 0) {
     out.push({
@@ -382,14 +386,12 @@ export function buildCredentials(input: {
       detail: placements.map((r) => formatStateCredential(r)).filter(Boolean).join(" · "),
     })
   }
-  // Only worth a pill when there is nothing better to say.
-  if (out.length === 0 && qualifiers.length > 0) {
-    out.push({
-      kind: "state-qualifier",
-      label: "State Qualifier",
-      detail: qualifiers.map((r) => formatStateCredential(r)).filter(Boolean).join(" · "),
-    })
-  }
+  /*
+   * Three credentials, and no more — All-American, state champion, state placer.
+   * A card with nothing to show shows nothing: "State Qualifier" was a pill for having entered,
+   * shown only to the wrestlers with the least to say, which marks them out rather than
+   * flattering them. Everyone in this field qualified.
+   */
 
   return out
 }

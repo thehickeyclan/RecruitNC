@@ -3,7 +3,6 @@ import "server-only"
 import { unstable_cache } from "next/cache"
 
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
-import { loadPublicAthleteNationalTeamData } from "@/lib/load-public-athlete-profile"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
@@ -20,15 +19,11 @@ import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/publi
  * actually decided, or the two would disagree the moment somebody wins a match.
  */
 
-export type PublicRankingCredentialKind =
-  | "all-american"
-  | "state-champion"
-  | "state-placer"
-  | "national-placer"
-  | "national-qualifier"
-  | "national-team"
-  | "significant-win"
-  | "national-ranked"
+/**
+ * The only three credentials a public card carries. Narrowed deliberately: a wider union let
+ * seven pills onto a card and buried the two that decide a ranking.
+ */
+export type PublicRankingCredentialKind = "all-american" | "state-champion" | "state-placer"
 
 export type PublicRankingCredential = {
   kind: PublicRankingCredentialKind
@@ -74,10 +69,6 @@ export type PublicClassRanking = {
 type CredentialSources = {
   state: Map<string, Array<{ year: number; place: number | null }>>
   allAmerican: Map<string, { count: number; detail: string }>
-  nationalPlacements: Map<string, Array<{ event: string; year: number; place: number }>>
-  nationalQualifiers: Map<string, Array<{ event: string; year: number }>>
-  nationalTeam: Map<string, number>
-  significantWins: Map<string, number>
 }
 
 function nationalPlacement(value: unknown): number | null {
@@ -113,13 +104,7 @@ async function loadCredentialSources(
 ): Promise<CredentialSources> {
   const state = new Map<string, Array<{ year: number; place: number | null }>>()
   const allAmerican = new Map<string, { count: number; detail: string }>()
-  const nationalPlacements = new Map<string, Array<{ event: string; year: number; place: number }>>()
-  const nationalQualifiers = new Map<string, Array<{ event: string; year: number }>>()
-  const nationalTeam = new Map<string, number>()
-  const significantWins = new Map<string, number>()
-  if (athletes.length === 0) {
-    return { state, allAmerican, nationalPlacements, nationalQualifiers, nationalTeam, significantWins }
-  }
+  if (athletes.length === 0) return { state, allAmerican }
 
   const settled = await Promise.all(
     athletes.map(async (athlete) => {
@@ -127,23 +112,16 @@ async function loadCredentialSources(
       try {
         // One canonical bundle for every tournament source. Profiles, Data Dawg, the admin
         // ranking engine and this public page therefore resolve identity the same way.
-        const [bundle, team] = await Promise.all([
-          loadAthleteTournamentBundle(admin, athlete, { nhscaAllTime: true }),
-          loadPublicAthleteNationalTeamData(admin, athlete),
-        ])
-        return { id, bundle, team }
+        const bundle = await loadAthleteTournamentBundle(admin, athlete, { nhscaAllTime: true })
+        return { id, bundle }
       } catch {
         // One athlete failing must not blank the whole class.
-        return {
-          id,
-          bundle: { nchsaa: [], nhsca: [], super32: [], fargo: [], other: [] },
-          team: { nationalTeamResults: [], qualityWins: [] },
-        }
+        return { id, bundle: { nchsaa: [], nhsca: [], super32: [], fargo: [], other: [] } }
       }
     }),
   )
 
-  for (const { id, bundle, team } of settled) {
+  for (const { id, bundle } of settled) {
     const parsed = bundle.nchsaa
       .map((row) => ({
         year: Number(row.year),
@@ -170,27 +148,9 @@ async function loadCredentialSources(
       })
     }
 
-    const placements = [
-      ...bundle.super32
-        .map((result) => ({ event: "Super 32", year: result.year, place: nationalPlacement(result.placement) }))
-        .filter((result): result is { event: string; year: number; place: number } => result.place != null),
-      ...bundle.other
-        .filter((result) => result.placement != null)
-        .map((result) => ({ event: result.eventShortName || result.eventName, year: result.year, place: Number(result.placement) })),
-    ]
-    if (placements.length) nationalPlacements.set(id, placements)
-
-    const qualifiers = bundle.other
-      .filter((result) => result.qualified)
-      .map((result) => ({ event: result.eventShortName || result.eventName, year: result.year }))
-    if (qualifiers.length) nationalQualifiers.set(id, qualifiers)
-
-    if (team.nationalTeamResults.length) nationalTeam.set(id, team.nationalTeamResults.length)
-    const qualityWinCount = team.qualityWins.reduce((total, block) => total + block.wins.length, 0)
-    if (qualityWinCount) significantWins.set(id, qualityWinCount)
   }
 
-  return { state, allAmerican, nationalPlacements, nationalQualifiers, nationalTeam, significantWins }
+  return { state, allAmerican }
 }
 
 function credentialsFrom(id: string, sources: CredentialSources): PublicRankingCredential[] {
@@ -230,45 +190,16 @@ function credentialsFrom(id: string, sources: CredentialSources): PublicRankingC
     })
   }
 
-  const nationalPlacements = sources.nationalPlacements.get(id) ?? []
-  if (nationalPlacements.length) {
-    const only = nationalPlacements[0]
-    out.push({
-      kind: "national-placer",
-      label:
-        nationalPlacements.length > 1
-          ? `${nationalPlacements.length}X National placer`
-          : `${only.event} ${only.place === 1 ? "champ" : "placer"}`,
-      detail: nationalPlacements.map((r) => `${r.year} ${r.event} — ${r.place}`).join(" · "),
-    })
-  }
-
-  const qualifiers = sources.nationalQualifiers.get(id) ?? []
-  if (qualifiers.length) {
-    out.push({
-      kind: "national-qualifier",
-      label: qualifiers.length > 1 ? `${qualifiers.length}X Super 32 qualifier` : "Super 32 qualifier",
-      detail: qualifiers.map((r) => `${r.year} ${r.event}`).join(" · "),
-    })
-  }
-
-  const nationalTeamAppearances = sources.nationalTeam.get(id) ?? 0
-  if (nationalTeamAppearances) {
-    out.push({
-      kind: "national-team",
-      label: "NC United National Team",
-      detail: `${nationalTeamAppearances} national team ${nationalTeamAppearances === 1 ? "event" : "events"} on file`,
-    })
-  }
-
-  const significantWinCount = sources.significantWins.get(id) ?? 0
-  if (significantWinCount) {
-    out.push({
-      kind: "significant-win",
-      label: significantWinCount > 1 ? `${significantWinCount} significant wins` : "Significant win",
-      detail: `Verified wins over state champions, state placers, or nationally credentialed opponents`,
-    })
-  }
+  /**
+   * Three credentials, and no more.
+   *
+   * National placer, Super 32 qualifier, national team and significant wins were all shown too,
+   * so a card could carry seven pills and the two that decide a ranking — All-American and state
+   * title — were lost in the middle of them. A reader scanning a top thirty is comparing
+   * wrestlers, and comparison needs the same small set on every card.
+   *
+   * The data behind the others is still collected and still scores; it is simply not a pill.
+   */
   return out
 }
 
@@ -331,7 +262,7 @@ async function buildPublicClassRanking(year: number): Promise<PublicClassRanking
  * the page kept serving a payload built before they existed. Bump this whenever the returned
  * shape changes.
  */
-const PUBLIC_RANKING_CACHE_VERSION = "v4-canonical-accolade-bundle"
+const PUBLIC_RANKING_CACHE_VERSION = "v5-three-credentials"
 
 export const loadPublicClassRanking = unstable_cache(
   buildPublicClassRanking,
