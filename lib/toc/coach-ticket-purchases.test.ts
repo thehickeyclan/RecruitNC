@@ -249,3 +249,37 @@ describe("parseGoFanExport — the downloaded CSV", () => {
     expect(coach).toEqual(["169993268", "168356651"])
   })
 })
+
+describe("one order, two coaches", () => {
+  /*
+   * The Worricks bought order 170196395 for Chad Lewis and Josh Stanley — two of Carson's
+   * coaches — in a single checkout. Keying on the order number alone kept one and dropped the
+   * other with no error, which at the door is a coach who was paid for and has no credential.
+   */
+  const paste = [
+    "lworrick@embarqmail.com\tJosh\tStanley\tSep-10-2026\t2:26 AM\t",
+    "Active",
+    "TOC Weekend Coach Credential\t170196395\t--\t",
+    "lworrick@embarqmail.com\tChad\tLewis\tSep-10-2026\t2:26 AM\t",
+    "Active",
+    "TOC Weekend Coach Credential\t170196395\t--\t",
+  ].join("\n")
+
+  it("keeps both attendees", () => {
+    const rows = parseGoFanExport(paste)
+    expect(rows).toHaveLength(2)
+    expect(rows.map((r) => `${r.firstName} ${r.lastName}`).sort()).toEqual(["Chad Lewis", "Josh Stanley"])
+  })
+
+  it("gives the second one a stable id of its own", () => {
+    const ids = parseGoFanExport(paste).map((r) => r.orderId).sort()
+    expect(ids).toEqual(["170196395", "170196395-2"])
+    // Same export, same ids — an import must not flip which coach owns the real order number.
+    expect(parseGoFanExport(paste).map((r) => r.orderId).sort()).toEqual(ids)
+  })
+
+  it("still collapses a genuine re-paste of the same row", () => {
+    expect(parseGoFanExport([paste, paste].join("\n"))).toHaveLength(2)
+  })
+})
+

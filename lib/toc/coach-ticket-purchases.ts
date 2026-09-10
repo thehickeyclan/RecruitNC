@@ -192,11 +192,65 @@ export function parseGoFanPaste(text: string): TicketPurchase[] {
     // the type on its own line, while the CSV export puts it quoted mid-row after the email.
     const ticketType = chunk.match(/([A-Za-z][A-Za-z0-9 ]*(?:Credential|Pass|Ticket))/)?.[1]?.trim() ?? null
 
-    // One row per order: a paste that overlaps a previous one must not double up.
-    byOrder.set(orderId, { email: start.email, orderId, firstName, lastName, purchasedAt, ticketType, status })
+    /*
+     * Keyed on the order *and* the attendee, not the order alone.
+     *
+     * "One row per order" was true until a family bought two credentials in one checkout. The
+     * Worricks bought order 170196395 for both Chad Lewis and Josh Stanley — two of Carson's
+     * coaches — and keying on the order number alone kept whichever came last and dropped the
+     * other silently. A coach who was paid for shows up at the door uncredentialed, and nothing
+     * anywhere reports that a row went missing.
+     *
+     * A genuine re-paste of the same row still collapses, because the same order and the same
+     * attendee produce the same key.
+     */
+    const attendee = [firstName, lastName].filter(Boolean).join(" ").toLowerCase()
+    byOrder.set(`${orderId}|${attendee}`, {
+      email: start.email,
+      orderId,
+      firstName,
+      lastName,
+      purchasedAt,
+      ticketType,
+      status,
+    })
   })
 
-  return [...byOrder.values()]
+  return suffixSharedOrders([...byOrder.values()])
+}
+
+/**
+ * Give the second and later attendee on one order their own id.
+ *
+ * `toc_coach_ticket_purchases` is keyed on `order_id`, so two people sharing a real order number
+ * cannot both be stored under it. Rather than change the key the night before a tournament, the
+ * extra attendees get a deterministic suffix — `170196395-2` — so the row is stable across every
+ * future import instead of flipping between the two coaches.
+ *
+ * Sorted by name so the suffix never moves: the same export always produces the same ids.
+ */
+function suffixSharedOrders(rows: TicketPurchase[]): TicketPurchase[] {
+  const byOrderNumber = new Map<string, TicketPurchase[]>()
+  for (const row of rows) {
+    const list = byOrderNumber.get(row.orderId) ?? []
+    list.push(row)
+    byOrderNumber.set(row.orderId, list)
+  }
+
+  const out: TicketPurchase[] = []
+  for (const [, group] of byOrderNumber) {
+    if (group.length === 1) {
+      out.push(group[0]!)
+      continue
+    }
+    const sorted = [...group].sort((a, b) =>
+      `${a.lastName ?? ""} ${a.firstName ?? ""}`.localeCompare(`${b.lastName ?? ""} ${b.firstName ?? ""}`),
+    )
+    sorted.forEach((row, index) => {
+      out.push(index === 0 ? row : { ...row, orderId: `${row.orderId}-${index + 1}` })
+    })
+  }
+  return out
 }
 
 export type PurchaseCoachMatch = {
