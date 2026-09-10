@@ -2,7 +2,11 @@ import "server-only"
 
 import { unstable_cache } from "next/cache"
 
-import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
+import {
+  loadAthleteCredentialsBatch,
+  ordinal,
+  type AthleteCredentials,
+} from "@/lib/credentials/athlete-credentials"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
@@ -55,118 +59,30 @@ export type PublicClassRanking = {
 }
 
 /**
- * Credentials, from the results tables rather than from the ranking board.
+ * Credentials come from the one shared engine, not from a derivation of this page's own.
  *
- * These pills used to be derived from `buildRecruitNcRankingBoard`, which does per-athlete match,
- * duals and NCHSAA work for a whole class and takes thirty to forty seconds. Once the evidence
- * came off the public page, the entire cost of that board was three words on a badge — and every
- * visitor who arrived after the cache expired waited a minute for them.
+ * This file used to reconstruct All-American and state credentials itself, and the Tournament of
+ * Champions field did the same thing differently. The two disagreed about real wrestlers: this
+ * page filtered Fargo to freestyle, so Aaron Ellison's Greco-Roman All-American showed on the TOC
+ * field and not here. Neither rule was ever decided — each was an artefact of which page was
+ * written first.
  *
- * The shared name-, school-, and graduation-year-aware tournament lookups provide the pills.
- * That matters because many verified bracket rows predate athlete profiles and have no
- * `athlete_id`; an ID-only query silently drops legitimate credentials.
+ * {@link loadAthleteCredentialsBatch} is now the only place that answers the question.
  */
-type CredentialSources = {
-  state: Map<string, Array<{ year: number; place: number | null }>>
-  allAmerican: Map<string, { count: number; detail: string }>
-}
-
-function nationalPlacement(value: unknown): number | null {
-  const text = String(value ?? "").trim()
-  if (!text) return null
-  if (/champ/i.test(text)) return 1
-  if (/runner|finalist/i.test(text)) return 2
-  const match = text.match(/(\d{1,2})\s*(?:st|nd|rd|th)?\b/i)
-  if (!match) return null
-  const place = Number(match[1])
-  return Number.isInteger(place) && place >= 1 && place <= 8 ? place : null
-}
-
-function isFargoFreestyle(division: unknown): boolean {
-  return /\b(?:freestyle|fs)\b/i.test(String(division ?? ""))
-}
-
-/**
- * The same lookup the Tournament of Champions field board uses, per athlete.
- *
- * An earlier version batched two queries on `wrestling_nchsaa_results.athlete_id` because it was
- * fast. That column is populated for 598 of 10,702 rows, so anyone whose bracket name differs
- * from their roster name got nothing: Holt Quincy is a two-time state champion and showed as a
- * state placer. `getMergedNchsaaForAthlete` reconciles a name against the athlete's school and
- * the seasons they could have wrestled, which is why the field board has him right.
- *
- * It costs a few queries per athlete rather than two for the class. That is the correct trade —
- * the whole page is cached, and a credential that is wrong is worth nothing however fast it loads.
- */
-async function loadCredentialSources(
-  admin: ReturnType<typeof createAdminClient>,
-  athletes: Array<Record<string, unknown>>,
-): Promise<CredentialSources> {
-  const state = new Map<string, Array<{ year: number; place: number | null }>>()
-  const allAmerican = new Map<string, { count: number; detail: string }>()
-  if (athletes.length === 0) return { state, allAmerican }
-
-  const settled = await Promise.all(
-    athletes.map(async (athlete) => {
-      const id = String(athlete.id)
-      try {
-        // One canonical bundle for every tournament source. Profiles, Data Dawg, the admin
-        // ranking engine and this public page therefore resolve identity the same way.
-        const bundle = await loadAthleteTournamentBundle(admin, athlete, { nhscaAllTime: true })
-        return { id, bundle }
-      } catch {
-        // One athlete failing must not blank the whole class.
-        return { id, bundle: { nchsaa: [], nhsca: [], super32: [], fargo: [], other: [] } }
-      }
-    }),
-  )
-
-  for (const { id, bundle } of settled) {
-    const parsed = bundle.nchsaa
-      .map((row) => ({
-        year: Number(row.year),
-        // A zero means qualified and did not place, not first.
-        place: row.place == null || Number(row.place) < 1 ? null : Number(row.place),
-      }))
-      .filter((r) => Number.isFinite(r.year))
-    if (parsed.length) state.set(id, parsed)
-
-    const finishes = [
-      ...bundle.nhsca
-        .filter((result) => nationalPlacement(result.placement) != null)
-        .map((result) => ({ year: result.year, detail: `${result.year} NHSCA ${result.placement}` })),
-      ...bundle.fargo
-        // Match the TOC/admin definition: Fargo freestyle podium finishes count here.
-        .filter((result) => isFargoFreestyle(result.division) && nationalPlacement(result.placement) != null)
-        .map((result) => ({ year: result.year, detail: `${result.year} Fargo ${result.placement}` })),
-    ].sort((a, b) => b.year - a.year)
-
-    if (finishes.length) {
-      allAmerican.set(id, {
-        count: finishes.length,
-        detail: finishes.map((finish) => finish.detail).join(" · "),
-      })
-    }
-
-  }
-
-  return { state, allAmerican }
-}
-
-function credentialsFrom(id: string, sources: CredentialSources): PublicRankingCredential[] {
+function credentialsFrom(held: AthleteCredentials | undefined): PublicRankingCredential[] {
   const out: PublicRankingCredential[] = []
-  const aa = sources.allAmerican.get(id)
-  if (aa) {
+  if (!held) return out
+
+  if (held.allAmerican.length) {
     out.push({
       kind: "all-american",
-      label: aa.count > 1 ? `${aa.count}X All-American` : "All-American",
-      detail: aa.detail,
+      label: held.allAmerican.length > 1 ? `${held.allAmerican.length}X All-American` : "All-American",
+      detail: held.allAmerican.map((f) => `${f.year} ${f.event} ${ordinal(f.place)}`).join(" · "),
     })
   }
 
-  const rows = sources.state.get(id) ?? []
-  const titles = rows.filter((r) => r.place === 1)
-  const placements = rows.filter((r) => r.place != null && r.place > 1 && r.place <= 8)
+  const titles = held.state.filter((r) => r.place === 1)
+  const placements = held.state.filter((r) => r.place != null && r.place > 1 && r.place <= 8)
 
   if (titles.length) {
     out.push({
@@ -174,19 +90,13 @@ function credentialsFrom(id: string, sources: CredentialSources): PublicRankingC
       label: titles.length > 1 ? `${titles.length}X State champ` : "State champ",
       detail: titles.map((t) => `${t.year} state champion`).join(" · "),
     })
-    // A champion who also placed in another year has both worth showing.
-    if (placements.length) {
-      out.push({
-        kind: "state-placer",
-        label: placements.length > 1 ? `${placements.length}X State placer` : "State placer",
-        detail: placements.map((p) => `${p.year} ${p.place} place`).join(" · "),
-      })
-    }
-  } else if (placements.length) {
+  }
+  // A champion who also placed in another year has both worth showing.
+  if (placements.length) {
     out.push({
       kind: "state-placer",
       label: placements.length > 1 ? `${placements.length}X State placer` : "State placer",
-      detail: placements.map((p) => `${p.year} ${p.place} place`).join(" · "),
+      detail: placements.map((p) => `${p.year} ${ordinal(p.place!)} place`).join(" · "),
     })
   }
 
@@ -203,6 +113,14 @@ function credentialsFrom(id: string, sources: CredentialSources): PublicRankingC
   return out
 }
 
+/**
+ * The columns the shared matcher needs, on top of what the card renders.
+ *
+ * An allowlist rather than `select("*")`: this table also carries GPA, contact details and staff
+ * evaluation notes, none of which belong anywhere near a public page.
+ */
+const IDENTITY_COLUMNS = ["wrestling_name", '"firstName"', '"lastName"', "nhsca_results", "super32_results"] as const
+
 async function buildPublicClassRanking(year: number): Promise<PublicClassRanking> {
   const cap = getPublicRankingsMax(year)
   if (!isPublicRankingsYearPublished(year)) {
@@ -218,7 +136,11 @@ async function buildPublicClassRanking(year: number): Promise<PublicClassRanking
         // `rankwrestler_rank`, `rank_wrestler_rank` and `rw_rank`, none of which are columns, so
         // its rankWrestler component has always scored zero for everyone. Selecting it here made
         // the whole query fail and the page render empty.
-        "id, name, photourl, headshot_url, highschool, wrestlingClub, weightclass, graduationyear, prospect_ranking, previous_ranking, college",
+        [
+          "id, name, photourl, headshot_url, highschool, wrestlingClub, weightclass, graduationyear",
+          "prospect_ranking, previous_ranking, college",
+          ...IDENTITY_COLUMNS,
+        ].join(", "),
       )
       .eq("graduationyear", year)
       .eq("is_nc_athlete", true)
@@ -226,10 +148,10 @@ async function buildPublicClassRanking(year: number): Promise<PublicClassRanking
       .lte("prospect_ranking", cap)
       .order("prospect_ranking", { ascending: true })
 
-  const sources = await loadCredentialSources(admin, (rows ?? []) as Array<Record<string, unknown>>)
+  const credentials = await loadAthleteCredentialsBatch(admin, (rows ?? []) as unknown as Array<Record<string, unknown>>)
 
   const athletes: PublicRankedAthlete[] = (rows ?? []).map((row) => {
-    const raw = row as Record<string, unknown>
+    const raw = row as unknown as Record<string, unknown>
     return {
       athleteId: String(raw.id),
       rank: Number(raw.prospect_ranking),
@@ -247,7 +169,7 @@ async function buildPublicClassRanking(year: number): Promise<PublicClassRanking
        * Credentials only. Records, named quality wins and direct wins over other ranked
        * wrestlers stay on the admin board and never reach the browser.
        */
-      credentials: credentialsFrom(String(raw.id), sources),
+      credentials: credentialsFrom(credentials.get(String(raw.id))),
     }
   })
 
@@ -262,7 +184,7 @@ async function buildPublicClassRanking(year: number): Promise<PublicClassRanking
  * the page kept serving a payload built before they existed. Bump this whenever the returned
  * shape changes.
  */
-const PUBLIC_RANKING_CACHE_VERSION = "v5-three-credentials"
+const PUBLIC_RANKING_CACHE_VERSION = "v6-shared-credential-engine"
 
 export const loadPublicClassRanking = unstable_cache(
   buildPublicClassRanking,
