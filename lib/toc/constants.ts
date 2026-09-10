@@ -803,19 +803,16 @@ export const TOC_RULES_GROUPS = [
   },
   {
     /**
-     * The rules that protect a wrestler's eligibility rather than govern a match.
+     * High school alignment only.
      *
-     * Confirmed with the state association in August 2026, and worth saying plainly on a public
-     * page: a family reading it should not have to ask whether competing here costs their child
-     * a high school season, and a coach should know the eight-athlete limit before they agree to
-     * work a corner.
+     * The prize cap and the event's insurance terms are compliance we hold ourselves to, not
+     * things a family needs from a rules page — publishing them invites questions nobody asked
+     * and reads as fine print rather than as reassurance. What belongs here is the part that
+     * governs how an athlete competes: the season window, and school affiliation.
      */
-    title: "Eligibility & compliance",
+    title: "High school alignment",
     items: [
       "The tournament is held outside the high school regular season",
-      "Not a USA Wrestling sanctioned event — a USAW card confers nothing here and provides no coverage at it",
-      "Performance prizes are capped at $250 in value, which keeps high school eligibility intact",
-      "Event insurance carries participant medical excess of $25,000 — a family's own health insurance is primary",
     ],
   },
 ] as const
