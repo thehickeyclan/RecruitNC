@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { isCoachCredential, isHeldCredential, matchPurchases, parseGoFanPaste, suggestCoaches } from "./coach-ticket-purchases"
+import { isCoachCredential, isHeldCredential, matchPurchases, parseGoFanPaste, suggestCoaches , parseGoFanExport } from "./coach-ticket-purchases"
 
 // Pasted exactly as the GoFan report arrives, tabs, "--" cells, wrapped status and all.
 const PASTE = `Email
@@ -208,5 +208,44 @@ describe("a transferred ticket", () => {
   it("keeps the two orders apart even though one address bought both", () => {
     const rows = parseGoFanPaste(PASTE)
     expect(rows.map((r) => `${r.firstName} ${r.lastName}`).sort()).toEqual(["Evan Worland", "Jeff Piercy"])
+  })
+})
+
+describe("parseGoFanExport — the downloaded CSV", () => {
+  const csv = [
+    'Email,First name,Last name,Purchase date,Purchase time,Status,Ticket type,Ticket price,Order ID,Promo code,Refunded At,Refunded By,Refund Reason,Event Name,Start Date,End Date,Sport,Opponent School,Comp,Last Redeemed At,"phone-number"',
+    'a@example.com,Jay,Rogers,Sep-09-2026,12:21 AM,--,TOC Weekend Coach Credential,25,169993268,--,--,--,--,TOC,--,--,Wrestling,--,--,--,--',
+    'b@example.com,--,--,Aug-27-2026,6:51 PM,--,Weekend Pass,15,166824012,--,--,--,--,TOC,--,--,Wrestling,--,--,--,--',
+    'c@example.com,Sam,Coach,Sep-01-2026,2:59 AM,--,TOC College Coach Pass,0,168178875,--,--,--,--,TOC,--,--,Wrestling,--,--,--,--',
+    'd@example.com,Ann,Payer,Sep-02-2026,2:22 PM,--,TOC Weekend Coach Credential,25,168356651,--,2026-09-03,staff,changed mind,TOC,--,--,Wrestling,--,--,--,--',
+  ].join("\n")
+
+  const rows = parseGoFanExport(csv)
+
+  it("reads every row, not the runs of text around each email", () => {
+    // The paste parser splits on text around each address; a CSV puts several on one line. On the
+    // real 315-row export it found 162 records, missed a credential and invented five.
+    expect(rows).toHaveLength(4)
+    expect(rows.map((r) => r.orderId)).toEqual(["169993268", "166824012", "168178875", "168356651"])
+  })
+
+  it("keeps the buyer name and turns the date into ISO", () => {
+    expect(rows[0].firstName).toBe("Jay")
+    expect(rows[0].lastName).toBe("Rogers")
+    expect(rows[0].purchasedAt).toBe("2026-09-09")
+  })
+
+  it("reads an empty cell as nothing, not as the string GoFan writes", () => {
+    expect(rows[1].firstName).toBeNull()
+  })
+
+  it("counts a refunded order as refunded whatever the status column says", () => {
+    expect(rows[3].status).toBe("Refunded")
+  })
+
+  it("keeps corner credentials and drops spectator and college passes", () => {
+    const coach = rows.filter(isCoachCredential).map((r) => r.orderId)
+    // A College Coach Pass is a recruiter's admission, not a corner credential.
+    expect(coach).toEqual(["169993268", "168356651"])
   })
 })

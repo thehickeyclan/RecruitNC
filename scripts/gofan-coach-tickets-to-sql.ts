@@ -10,7 +10,7 @@
  * Names are included whenever the export carries them. They are the route that places a coach who
  * checked out under a club account or a spouse's address, which email matching cannot.
  */
-import { parseGoFanPaste, isCoachCredential } from "@/lib/toc/coach-ticket-purchases"
+import { parseGoFanExport, isCoachCredential } from "@/lib/toc/coach-ticket-purchases"
 import { readFileSync } from "fs"
 
 const file = process.argv[2]
@@ -19,7 +19,8 @@ if (!file) {
   process.exit(1)
 }
 
-const all = parseGoFanPaste(readFileSync(file, "utf8"))
+// Whichever form the export arrived in — a pasted report or a downloaded CSV.
+const all = parseGoFanExport(readFileSync(file, "utf8"))
 const coach = all.filter(isCoachCredential)
 const skipped = all.length - coach.length
 
@@ -45,5 +46,9 @@ on conflict (order_id) do update set
   last_name    = coalesce(excluded.last_name, public.toc_coach_ticket_purchases.last_name),
   purchased_at = excluded.purchased_at,
   ticket_type  = excluded.ticket_type,
-  status       = excluded.status,
+  -- Never blank a status we already hold. The downloaded CSV writes every Status cell as "--",
+  -- so importing it over a pasted report would erase the Transferred flags — and a transferred
+  -- credential is one the buyer no longer holds, which is the difference between letting the
+  -- right person through the door and the wrong one.
+  status       = coalesce(excluded.status, public.toc_coach_ticket_purchases.status),
   updated_at   = now();`)

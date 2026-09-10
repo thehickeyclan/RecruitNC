@@ -37,6 +37,109 @@ const MONTHS: Record<string, string> = {
 
 const EMAIL = /[^\s<>@,;]+@[^\s<>@,;]+\.[a-z]{2,}/gi
 
+/** One row of a proper CSV, respecting quoted fields. */
+function splitCsvLine(line: string): string[] {
+  const out: string[] = []
+  let field = ""
+  let quoted = false
+  for (let i = 0; i < line.length; i += 1) {
+    const c = line[i]
+    if (quoted) {
+      if (c === '"' && line[i + 1] === '"') { field += '"'; i += 1; continue }
+      if (c === '"') { quoted = false; continue }
+      field += c
+      continue
+    }
+    if (c === '"') { quoted = true; continue }
+    if (c === ",") { out.push(field); field = ""; continue }
+    field += c
+  }
+  out.push(field)
+  return out
+}
+
+const CELL_EMPTY = (v: string | undefined) => {
+  const t = (v ?? "").trim()
+  return !t || t === "--" ? null : t
+}
+
+/**
+ * The same export downloaded as a CSV rather than pasted.
+ *
+ * GoFan offers both, and they are not the same shape. Reading a CSV with the paste parser looked
+ * like it worked — it returned rows, with order numbers — and was wrong: on a 315-row export it
+ * found 162 records, missed a real credential and invented five, because that parser splits on
+ * runs of text around each email and a CSV puts several emails' worth of columns on one line.
+ * A wrong order number credits the wrong coach, so the format is detected rather than assumed.
+ */
+export function parseGoFanCsv(text: string): TicketPurchase[] {
+  const lines = text.split(/\r?\n/).filter((line) => line.trim())
+  if (!lines.length) return []
+
+  const header = splitCsvLine(lines[0]).map((h) => h.trim().replace(/^"|"$/g, "").toLowerCase())
+  const col = (name: string) => header.indexOf(name)
+  const iEmail = col("email")
+  const iOrder = col("order id")
+  if (iEmail < 0 || iOrder < 0) return []
+
+  const iFirst = col("first name")
+  const iLast = col("last name")
+  const iDate = col("purchase date")
+  const iType = col("ticket type")
+  const iStatus = col("status")
+  const iRefunded = col("refunded at")
+
+  const out: TicketPurchase[] = []
+  for (const line of lines.slice(1)) {
+    const cells = splitCsvLine(line)
+    const email = CELL_EMPTY(cells[iEmail])
+    const orderId = CELL_EMPTY(cells[iOrder])
+    if (!email || !orderId) continue
+
+    // "Refunded At" carries a date when the order was given back; that is not a held credential.
+    const refunded = iRefunded >= 0 ? CELL_EMPTY(cells[iRefunded]) : null
+    const status = iStatus >= 0 ? CELL_EMPTY(cells[iStatus]) : null
+
+    out.push({
+      email: email.toLowerCase(),
+      orderId,
+      firstName: iFirst >= 0 ? CELL_EMPTY(cells[iFirst]) : null,
+      lastName: iLast >= 0 ? CELL_EMPTY(cells[iLast]) : null,
+      purchasedAt: iDate >= 0 ? isoDate(CELL_EMPTY(cells[iDate])) : null,
+      ticketType: iType >= 0 ? CELL_EMPTY(cells[iType]) : null,
+      status: refunded ? "Refunded" : status,
+    })
+  }
+  return out
+}
+
+/** "Sep-08-2026" or "2026-09-08" to an ISO date. */
+function isoDate(raw: string | null): string | null {
+  if (!raw) return null
+  const iso = raw.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`
+  const named = raw.match(/^([A-Za-z]{3})[a-z]*[-\s](\d{1,2})[-,\s]+(\d{4})/)
+  if (named) {
+    const month = MONTHS[named[1].toLowerCase()]
+    if (month) return `${named[3]}-${month}-${named[2].padStart(2, "0")}`
+  }
+  return null
+}
+
+/**
+ * Read whichever form the export arrived in.
+ *
+ * A header row with an Email and an Order ID column means a downloaded CSV; anything else is a
+ * paste. Callers should use this rather than choosing, because choosing wrong is silent.
+ */
+export function parseGoFanExport(text: string): TicketPurchase[] {
+  const firstLine = text.split(/\r?\n/, 1)[0]?.toLowerCase() ?? ""
+  if (firstLine.includes("email") && firstLine.includes("order id") && firstLine.includes(",")) {
+    return parseGoFanCsv(text)
+  }
+  return parseGoFanPaste(text)
+}
+
 /**
  * Reads a GoFan order export pasted straight in.
  *
@@ -202,7 +305,12 @@ export function suggestCoaches(
  * lanyard, and bury the coaches page under two hundred buyers matching nobody.
  */
 export function isCoachCredential(purchase: TicketPurchase): boolean {
-  return /coach/i.test(purchase.ticketType ?? "")
+  const type = purchase.ticketType ?? ""
+  // A "TOC College Coach Pass" is a recruiter's admission, not a corner credential — different
+  // product, different table, and crediting one as the other puts a college coach on the
+  // coaches page holding a lanyard nobody issued them.
+  if (/college/i.test(type)) return false
+  return /coach/i.test(type)
 }
 
 /**
