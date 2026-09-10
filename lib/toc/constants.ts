@@ -796,7 +796,27 @@ export const TOC_RULES_GROUPS = [
   },
   {
     title: "Coaches",
-    items: ["Maximum of two credentialed coaches in an athlete's corner"],
+    items: [
+      "Maximum of two credentialed coaches in an athlete's corner",
+      "A high school coach may not coach more than eight athletes on the day. Club coaches are unaffected unless the same person is also the athlete's high school coach.",
+    ],
+  },
+  {
+    /**
+     * The rules that protect a wrestler's eligibility rather than govern a match.
+     *
+     * Confirmed with the state association in August 2026, and worth saying plainly on a public
+     * page: a family reading it should not have to ask whether competing here costs their child
+     * a high school season, and a coach should know the eight-athlete limit before they agree to
+     * work a corner.
+     */
+    title: "Eligibility & compliance",
+    items: [
+      "The tournament is held outside the high school regular season",
+      "Not a USA Wrestling sanctioned event — a USAW card confers nothing here and provides no coverage at it",
+      "Performance prizes are capped at $250 in value, which keeps high school eligibility intact",
+      "Event insurance carries participant medical excess of $25,000 — a family's own health insurance is primary",
+    ],
   },
 ] as const
 

@@ -68,6 +68,15 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
         </div>
       </section>
 
+      {/*
+        Schedule beside the rules, not fourteenth.
+        "What time do we need to be there" is the most asked question of any tournament, and it
+        sat below the jacket, the scholarship, the donations and the giving hour — while the
+        section nav promised it third. Rules and schedule are one job: what an athlete, a coach
+        and a parent need before they arrive.
+      */}
+      <TocScheduleTable />
+
       {/* Format */}
       <TocWeightClassesList />
       <TocAthleteQuotesSection />
@@ -80,7 +89,6 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
       <TocGivingHourSection />
 
       {/* Plan your weekend */}
-      <TocScheduleTable />
       <TocHotelsSection />
       <TocSpectatorsSection />
       <TocOfficialsSection />
