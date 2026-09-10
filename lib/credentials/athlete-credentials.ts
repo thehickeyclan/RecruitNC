@@ -194,25 +194,43 @@ export async function loadAthleteCredentials(
 }
 
 /**
- * Run at most `limit` at once.
+ * A ceiling on credential lookups across the whole process, not per caller.
  *
- * Reconciling a name is not one query — each source tries an exact match, then a last-first form,
- * then each spelling variant, awaiting one before starting the next. Fanning ten weights of eight
- * wrestlers out at once therefore asked Postgres for several hundred things simultaneously, and it
- * started refusing. See {@link loadAthleteCredentialsBatch} for what that cost.
+ * Each caller used to bound only itself, which is no bound at all when ten of them run at once:
+ * `/api/toc/field` loads every announced weight in parallel, each weight allowed four athletes at
+ * a time, so forty name reconciliations went out together — and a reconciliation is not one query
+ * but a chain of them, exact name, then last-first, then each spelling variant. Postgres started
+ * refusing connections, and the whole field endpoint failed.
+ *
+ * The gate is module-level so the total stays bounded however many weights, pages or routes ask
+ * at the same moment.
  */
-async function mapWithLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
-  const out = new Array<R>(items.length)
-  let next = 0
-  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
-    for (;;) {
-      const i = next++
-      if (i >= items.length) return
-      out[i] = await fn(items[i]!)
-    }
-  })
-  await Promise.all(workers)
-  return out
+const MAX_IN_FLIGHT = 6
+
+let inFlight = 0
+const waiting: Array<() => void> = []
+
+async function acquire(): Promise<void> {
+  if (inFlight < MAX_IN_FLIGHT) {
+    inFlight += 1
+    return
+  }
+  await new Promise<void>((resolve) => waiting.push(resolve))
+  inFlight += 1
+}
+
+function release(): void {
+  inFlight -= 1
+  waiting.shift()?.()
+}
+
+async function withGate<T>(fn: () => Promise<T>): Promise<T> {
+  await acquire()
+  try {
+    return await fn()
+  } finally {
+    release()
+  }
 }
 
 const CONCURRENCY = 4
@@ -244,8 +262,23 @@ export async function loadAthleteCredentialsBatch(
   const out = new Map<string, AthleteCredentials>()
   if (athletes.length === 0) return out
 
-  const settled = await mapWithLimit(athletes, CONCURRENCY, async (athlete) => {
-    const id = String(athlete.id ?? "")
+  const settled = await Promise.all(
+    athletes.map((athlete) => loadOne(supabase, athlete)),
+  )
+
+  for (const [id, credentials] of settled) {
+    if (id) out.set(id, credentials)
+  }
+  return out
+}
+
+/** One athlete, behind the gate, with a single retry for the connection refused under load. */
+async function loadOne(
+  supabase: SupabaseClient,
+  athlete: Record<string, unknown>,
+): Promise<readonly [string, AthleteCredentials]> {
+  const id = String(athlete.id ?? "")
+  return withGate(async () => {
     try {
       return [id, await loadAthleteCredentials(supabase, athlete)] as const
     } catch (first) {
@@ -259,11 +292,6 @@ export async function loadAthleteCredentialsBatch(
       }
     }
   })
-
-  for (const [id, credentials] of settled) {
-    if (id) out.set(id, credentials)
-  }
-  return out
 }
 
 /** "4" reads as a stray number under a photo; "4th" reads as a finish. */
