@@ -4,6 +4,7 @@ import { TocHero } from "@/components/toc/toc-hero"
 import { TocQuickFacts } from "@/components/toc/toc-quick-facts"
 import { TocRoadSection } from "@/components/toc/toc-road-section"
 import { TocWeighInCallout } from "@/components/toc/toc-weigh-in-callout"
+import { TocRulesSection } from "@/components/toc/toc-rules-section"
 import { TocChampionJacketSection } from "@/components/toc/toc-champion-jacket-section"
 import { TocCadenPerryScholarshipSection } from "@/components/toc/toc-caden-perry-scholarship-section"
 import { TocSupportDonationsSection } from "@/components/toc/toc-support-donations-section"
@@ -55,6 +56,17 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
         </div>
       </section>
       <TocStorySection />
+
+      {/*
+        Rules before the sales sections. Everything below this point is tickets, hotels and
+        apparel; a coach or an athlete looking for match length or the corner limit should not
+        have to scroll past all of it, or dig through the FAQ, to find out.
+      */}
+      <section className="bg-white py-10 sm:py-14">
+        <div className="container mx-auto w-full px-4 sm:px-6 max-w-4xl">
+          <TocRulesSection />
+        </div>
+      </section>
 
       {/* Format */}
       <TocWeightClassesList />

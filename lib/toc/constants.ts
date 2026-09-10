@@ -744,8 +744,65 @@ export const TOC_SECTION_NAV_GROUPS = [
 ] as const
 
 /** Quick jumps shown as pills on mobile sticky bar. */
+/**
+ * The rules, in one place.
+ *
+ * They were scattered across a weigh-in callout, a quick-facts tile and three FAQ answers, so a
+ * coach looking for match length had nowhere to go and four copies could drift apart. This is the
+ * source; those surfaces should read from it rather than restate it.
+ *
+ * Weight classes come from TOC_WEIGHT_CLASSES rather than being typed again — a written list had
+ * already picked up an eleventh weight that does not exist.
+ */
+export const TOC_RULES_SUMMARY =
+  "One weigh-in. No allowance. Headgear optional. 2–2–2 every match. Double elimination. Top three place. One champion at every weight." as const
+
+export const TOC_RULES_GROUPS = [
+  {
+    title: "Format",
+    items: [
+      "Folkstyle (scholastic)",
+      `${TOC_WEIGHT_CLASSES.length} weight classes: ${TOC_WEIGHT_CLASSES.join(", ")}`,
+      "Eight wrestlers per weight class",
+      "Double elimination — wrestlers stay eligible for consolation after a first loss",
+      "First, second and third place only. A third-place match decides the bronze; no additional placement matches",
+      "Championship finals contested one match at a time on a single mat",
+    ],
+  },
+  {
+    title: "Match rules",
+    items: [
+      "2–2–2 for every match, including championship and consolation rounds",
+      "Current NFHS overtime rules",
+      "College out-of-bounds rules",
+      "Current NFHS wrestling rules apply except where Tournament of Champions rules state otherwise",
+    ],
+  },
+  {
+    title: "Weigh-in",
+    items: [
+      "One weigh-in on Friday for the entire tournament",
+      "No weight allowance",
+      "Singlets required for weigh-ins and competition",
+    ],
+  },
+  {
+    title: "Athlete requirements",
+    items: [
+      "Headgear optional",
+      "Mouthguards required for wrestlers with braces, per NFHS rules",
+      "Nails must be properly trimmed",
+    ],
+  },
+  {
+    title: "Coaches",
+    items: ["Maximum of two credentialed coaches in an athlete's corner"],
+  },
+] as const
+
 export const TOC_SECTION_NAV_QUICK = [
   { href: "#road", label: "What's next" },
+  { href: "#rules", label: "Rules & format" },
   { href: "#schedule", label: "Schedule" },
   { href: "#families", label: "Tickets" },
   { href: "#hotels", label: "Hotels" },
