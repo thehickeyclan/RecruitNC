@@ -194,15 +194,48 @@ export async function loadAthleteCredentials(
 }
 
 /**
+ * Run at most `limit` at once.
+ *
+ * Reconciling a name is not one query — each source tries an exact match, then a last-first form,
+ * then each spelling variant, awaiting one before starting the next. Fanning ten weights of eight
+ * wrestlers out at once therefore asked Postgres for several hundred things simultaneously, and it
+ * started refusing. See {@link loadAthleteCredentialsBatch} for what that cost.
+ */
+async function mapWithLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const out = new Array<R>(items.length)
+  let next = 0
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    for (;;) {
+      const i = next++
+      if (i >= items.length) return
+      out[i] = await fn(items[i]!)
+    }
+  })
+  await Promise.all(workers)
+  return out
+}
+
+const CONCURRENCY = 4
+const RETRY_DELAY_MS = 250
+
+/**
  * Credentials for a set of athletes, one bundle each.
  *
  * A batched query on `athlete_id` would be one round trip instead of N, and that is exactly the
- * shortcut that broke this. Reconciliation is per-athlete by nature: it needs the school and the
- * graduation year to tell two wrestlers with one name apart. Every caller caches its page, and a
- * credential that is wrong is worth nothing however fast it loads.
+ * shortcut that broke this in the first place. Reconciliation is per-athlete by nature: it needs
+ * the school and the graduation year to tell two wrestlers with one name apart. Every caller
+ * caches its result, and a credential that is wrong is worth nothing however fast it loads.
  *
- * One athlete's lookup failing yields empty credentials for that athlete rather than an
- * exception, so a single bad row cannot blank a whole weight class or class ranking.
+ * **This used to swallow failures, and that was the worst thing in the file.** A per-athlete catch
+ * returned empty credentials on error, which is indistinguishable from a wrestler who has won
+ * nothing. Under the load of the whole field at once Postgres began refusing connections, and 23
+ * of the 80 wrestlers in the Tournament of Champions field lost their pills in production —
+ * everyone at 149, half of 197 and 285 — silently, and cached that way for half an hour. It was
+ * the same class of bug this module exists to end: a lookup that fails by quietly saying "nothing".
+ *
+ * So: bounded concurrency, one retry, and then a throw. A caller that cannot load credentials must
+ * find out. Blanking a weight is bad; publishing a state champion with no credentials, and
+ * believing it, is worse — nobody looking at the page can tell that anything went wrong.
  */
 export async function loadAthleteCredentialsBatch(
   supabase: SupabaseClient,
@@ -211,17 +244,21 @@ export async function loadAthleteCredentialsBatch(
   const out = new Map<string, AthleteCredentials>()
   if (athletes.length === 0) return out
 
-  const settled = await Promise.all(
-    athletes.map(async (athlete) => {
-      const id = String(athlete.id ?? "")
+  const settled = await mapWithLimit(athletes, CONCURRENCY, async (athlete) => {
+    const id = String(athlete.id ?? "")
+    try {
+      return [id, await loadAthleteCredentials(supabase, athlete)] as const
+    } catch (first) {
+      // Almost always a connection Postgres declined under load, which succeeds on a second ask.
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAY_MS))
       try {
         return [id, await loadAthleteCredentials(supabase, athlete)] as const
-      } catch (error) {
-        console.warn(`[athlete-credentials] lookup failed for ${id}:`, error)
-        return [id, { allAmerican: [], state: [], national: [] } as AthleteCredentials] as const
+      } catch (second) {
+        console.error(`[athlete-credentials] lookup failed twice for ${id}:`, second ?? first)
+        throw second
       }
-    }),
-  )
+    }
+  })
 
   for (const [id, credentials] of settled) {
     if (id) out.set(id, credentials)
