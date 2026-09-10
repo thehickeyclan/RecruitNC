@@ -4,6 +4,7 @@ import { unstable_cache } from "next/cache"
 
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getMergedNchsaaForAthlete } from "@/lib/nchsaa-results"
+import { getFargoForAthlete, getNHSCAForAthlete } from "@/lib/public-profile-data"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
 /**
@@ -58,12 +59,28 @@ export type PublicClassRanking = {
  * came off the public page, the entire cost of that board was three words on a badge — and every
  * visitor who arrived after the cache expired waited a minute for them.
  *
- * Two batch queries on `athlete_id` replace it. Pills read the same as the Tournament of
- * Champions field's, because they now come from the same place.
+ * The shared name-, school-, and graduation-year-aware tournament lookups provide the pills.
+ * That matters because many verified bracket rows predate athlete profiles and have no
+ * `athlete_id`; an ID-only query silently drops legitimate credentials.
  */
 type CredentialSources = {
   state: Map<string, Array<{ year: number; place: number | null }>>
-  allAmerican: Map<string, string>
+  allAmerican: Map<string, { count: number; detail: string }>
+}
+
+function nationalPlacement(value: unknown): number | null {
+  const text = String(value ?? "").trim()
+  if (!text) return null
+  if (/champ/i.test(text)) return 1
+  if (/runner|finalist/i.test(text)) return 2
+  const match = text.match(/(\d{1,2})\s*(?:st|nd|rd|th)?\b/i)
+  if (!match) return null
+  const place = Number(match[1])
+  return Number.isInteger(place) && place >= 1 && place <= 8 ? place : null
+}
+
+function isFargoFreestyle(division: unknown): boolean {
+  return /\b(?:freestyle|fs)\b/i.test(String(division ?? ""))
 }
 
 /**
@@ -90,16 +107,22 @@ async function loadCredentialSources(
     athletes.map(async (athlete) => {
       const id = String(athlete.id)
       try {
-        const rows = await getMergedNchsaaForAthlete(admin, athlete as never)
-        return [id, rows] as const
+        const [rows, nhsca, fargo] = await Promise.all([
+          getMergedNchsaaForAthlete(admin, athlete as never),
+          // The national tables are primarily keyed by bracket name, not athlete_id. This is
+          // the same reconciled lookup used by profiles and the ranking engine.
+          getNHSCAForAthlete(admin, athlete, { tablesAllTime: true }),
+          getFargoForAthlete(admin, athlete),
+        ])
+        return { id, rows, nhsca, fargo }
       } catch {
         // One athlete failing must not blank the whole class.
-        return [id, []] as const
+        return { id, rows: [], nhsca: [], fargo: [] }
       }
     }),
   )
 
-  for (const [id, rows] of settled) {
+  for (const { id, rows, nhsca, fargo } of settled) {
     const parsed = rows
       .map((row) => ({
         year: Number(row.year),
@@ -108,45 +131,24 @@ async function loadCredentialSources(
       }))
       .filter((r) => Number.isFinite(r.year))
     if (parsed.length) state.set(id, parsed)
-  }
 
-  /**
-   * All-American from both national events, the way the field board reads it.
-   *
-   * This only looked at `fargo_results` with `is_all_american` set, so it missed every NHSCA
-   * All-American and every Fargo placer whose flag was never written. A top-eight finish at
-   * either event is the credential, however the row records it.
-   */
-  const ids = athletes.map((a) => String(a.id))
-  const isAllAmericanPlace = (value: unknown) => {
-    const place = Number(value)
-    return Number.isInteger(place) && place >= 1 && place <= 8
-  }
-  const best = new Map<string, { year: number; label: string }>()
-  const remember = (id: string, year: number, label: string) => {
-    if (!id || !Number.isFinite(year)) return
-    const current = best.get(id)
-    // The most recent All-American finish is the one worth naming.
-    if (!current || year > current.year) best.set(id, { year, label })
-  }
+    const finishes = [
+      ...nhsca
+        .filter((result) => nationalPlacement(result.placement) != null)
+        .map((result) => ({ year: result.year, detail: `${result.year} NHSCA ${result.placement}` })),
+      ...fargo
+        // Match the TOC/admin definition: Fargo freestyle podium finishes count here.
+        .filter((result) => isFargoFreestyle(result.division) && nationalPlacement(result.placement) != null)
+        .map((result) => ({ year: result.year, detail: `${result.year} Fargo ${result.placement}` })),
+    ].sort((a, b) => b.year - a.year)
 
-  const [{ data: nhscaRows }, { data: fargoRows }] = await Promise.all([
-    admin.from("nhsca_placements").select("athlete_id, year, placement").in("athlete_id", ids),
-    admin.from("fargo_results").select("athlete_id, year, placement, is_all_american").in("athlete_id", ids),
-  ])
-
-  for (const row of nhscaRows ?? []) {
-    const r = row as { athlete_id?: unknown; year?: unknown; placement?: unknown }
-    if (!isAllAmericanPlace(r.placement)) continue
-    remember(String(r.athlete_id ?? ""), Number(r.year), `${r.year} NHSCA ${r.placement}`)
+    if (finishes.length) {
+      allAmerican.set(id, {
+        count: finishes.length,
+        detail: finishes.map((finish) => finish.detail).join(" · "),
+      })
+    }
   }
-  for (const row of fargoRows ?? []) {
-    const r = row as { athlete_id?: unknown; year?: unknown; placement?: unknown; is_all_american?: unknown }
-    if (r.is_all_american !== true && !isAllAmericanPlace(r.placement)) continue
-    const detail = isAllAmericanPlace(r.placement) ? `${r.year} Fargo ${r.placement}` : `${r.year} Fargo All-American`
-    remember(String(r.athlete_id ?? ""), Number(r.year), detail)
-  }
-  for (const [id, entry] of best) allAmerican.set(id, entry.label)
 
   return { state, allAmerican }
 }
@@ -154,7 +156,13 @@ async function loadCredentialSources(
 function credentialsFrom(id: string, sources: CredentialSources): PublicRankingCredential[] {
   const out: PublicRankingCredential[] = []
   const aa = sources.allAmerican.get(id)
-  if (aa) out.push({ kind: "all-american", label: "All-American", detail: aa })
+  if (aa) {
+    out.push({
+      kind: "all-american",
+      label: aa.count > 1 ? `${aa.count}X All-American` : "All-American",
+      detail: aa.detail,
+    })
+  }
 
   const rows = sources.state.get(id) ?? []
   const titles = rows.filter((r) => r.place === 1)
@@ -243,7 +251,7 @@ async function buildPublicClassRanking(year: number): Promise<PublicClassRanking
  * the page kept serving a payload built before they existed. Bump this whenever the returned
  * shape changes.
  */
-const PUBLIC_RANKING_CACHE_VERSION = "v2-all-american-pills"
+const PUBLIC_RANKING_CACHE_VERSION = "v3-reconciled-all-american-pills"
 
 export const loadPublicClassRanking = unstable_cache(
   buildPublicClassRanking,
