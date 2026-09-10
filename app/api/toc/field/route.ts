@@ -43,6 +43,21 @@ export async function GET() {
       await Promise.all(announcedTiles.map((t) => getPublicAnnouncedWeight(t.weightClass)))
     ).filter((w): w is PublicAnnouncedWeight => w != null)
 
+    /*
+     * Every announced weight, or none of them.
+     *
+     * That filter used to be the last word, so a weight that failed to load simply was not in the
+     * response — and the app has no way to tell "285 has not been announced" from "285 failed".
+     * 285 lbs went out to phones as an empty weight class for exactly this reason. Answering with
+     * an error is recoverable; answering with a field that is quietly missing a weight is not.
+     */
+    if (weights.length !== announcedTiles.length) {
+      const missing = announcedTiles
+        .map((t) => t.weightClass)
+        .filter((w) => !weights.some((loaded) => loaded.weightClass === w))
+      throw new Error(`announced weights failed to load: ${missing.join(", ")}`)
+    }
+
     return NextResponse.json(
       {
         // Every weight class, so the app can show the release cadence — unreleased ones carry

@@ -791,8 +791,13 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
     .in("status", PUBLIC_STATUSES as unknown as string[])
 
   if (error) {
-    console.warn("[toc-public-field] invitation lookup failed:", error.message)
-    return []
+    /*
+     * Thrown, not swallowed. An empty array here is indistinguishable from a weight nobody has
+     * confirmed for, and the caller caches the answer for a day — so a momentary database refusal
+     * became "285 lbs has no wrestlers" on every phone until somebody noticed. A weight is only
+     * announceable with at least one confirmed athlete, so empty is never the truth for one.
+     */
+    throw new Error(`[toc-public-field] invitation lookup failed: ${error.message}`)
   }
 
   const releaseByAthleteId = new Map<string, boolean>()
@@ -828,8 +833,9 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
     .in("id", athleteIds)
 
   if (athleteError) {
-    console.warn("[toc-public-field] athlete lookup failed:", athleteError.message)
-    return []
+    // Same reasoning as the invitation lookup above: a failure that reads as an empty field is
+    // the worst possible answer to cache.
+    throw new Error(`[toc-public-field] athlete lookup failed: ${athleteError.message}`)
   }
 
   /**
@@ -851,7 +857,8 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
     .in("id", athleteIds)
 
   if (identityError) {
-    console.warn("[toc-public-field] identity lookup failed:", identityError.message)
+    // Without identity rows every credential on the page silently disappears. Never cache that.
+    throw new Error(`[toc-public-field] identity lookup failed: ${identityError.message}`)
   }
 
   const { state: stateByAthlete, results: publicResults } = await fetchFieldCredentials(
@@ -978,9 +985,17 @@ const loadAnnouncedWeight = unstable_cache(
     const announcedAt = announced.get(weightClass)
     if (!announcedAt) return null
     const athletes = await fetchPublicAthletesForWeight(weightClass)
+    /*
+     * A belt to the braces above. Announcing refuses a weight with no confirmed athletes, so an
+     * empty roster on an announced weight is always a fault somewhere upstream — and caching it
+     * for a day publishes an empty weight class. Throwing means the next request tries again.
+     */
+    if (athletes.length === 0) {
+      throw new Error(`[toc-public-field] weight ${weightClass} is announced but came back empty`)
+    }
     return { weightClass, announcedAt, athletes, rollup: buildFieldRollup(athletes) }
   },
-  ["toc-public-announced-weight", "v2-shared-credential-engine"],
+  ["toc-public-announced-weight", "v3-no-silent-empty"],
   /*
    * A day, and in practice for ever — correctness comes from the tag, not the clock.
    *
