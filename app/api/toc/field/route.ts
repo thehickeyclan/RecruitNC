@@ -8,6 +8,16 @@ import {
 export const dynamic = "force-dynamic"
 
 /**
+ * Long enough for a cold rebuild.
+ *
+ * Reconciling every wrestler in the field takes about thirty seconds when nothing is cached, and
+ * Vercel's default cut it off well before that — which surfaces as a failed request rather than a
+ * slow one. The cache means this is rare; the ceiling means it does not fail when it happens.
+ */
+export const maxDuration = 60
+
+
+/**
  * The announced TOC field, for the iOS app.
  *
  * `public-announced-field.ts` says there is intentionally no API route wrapping it, because

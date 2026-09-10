@@ -7,21 +7,18 @@ import {
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 
 describe("tocBracketSize", () => {
-  it("runs nine at 133 — the weight with the Friday pigtail", () => {
-    expect(tocBracketSize(133)).toBe(9)
+  it("runs eight at 133", () => {
+    expect(tocBracketSize(133)).toBe(8)
   })
 
-  it("runs eight at every other weight", () => {
+  it("runs eight at every weight", () => {
     for (const weight of TOC_WEIGHT_CLASSES) {
-      if (weight === 133) continue
       expect(tocBracketSize(weight)).toBe(TOC_DEFAULT_BRACKET_SIZE)
     }
   })
 
   it("does not grow because more wrestlers confirmed", () => {
-    // The board used to infer size from confirmations, so a ninth at 133 opened three
-    // phantom slots into a bracket that was already full.
-    expect(tocBracketSize(133)).toBe(9)
+    expect(tocBracketSize(133)).toBe(8)
     expect(tocBracketSize(117)).toBe(8)
   })
 

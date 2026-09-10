@@ -5,8 +5,17 @@ import { createAdminClientFresh } from "@/lib/supabase/admin"
 import { requireTocFieldViewer } from "@/lib/toc/require-toc-field-viewer"
 import { readBracketRelease, setBracketRelease } from "@/lib/toc/bracket-release"
 import { listPublicBracketSummaries } from "@/lib/toc/bracket-service"
-import { TOC_PUBLIC_FIELD_TAG } from "@/lib/toc/public-announced-field"
+import { TOC_PUBLIC_FIELD_TAG, warmPublicAnnouncedField } from "@/lib/toc/public-announced-field"
 import { notifyTocBracketsReleased } from "@/lib/toc/bracket-release-notification"
+
+/**
+ * Long enough for a cold rebuild.
+ *
+ * Reconciling every wrestler in the field takes about thirty seconds when nothing is cached, and
+ * Vercel's default cut it off well before that — which surfaces as a failed request rather than a
+ * slow one. The cache means this is rare; the ceiling means it does not fail when it happens.
+ */
+export const maxDuration = 60
 
 export const dynamic = "force-dynamic"
 
@@ -63,6 +72,13 @@ export async function POST(request: Request) {
    * shows, and this is the one moment in the tournament where a stale minute is unacceptable.
    */
   revalidateTag(TOC_PUBLIC_FIELD_TAG)
+  // Awaited, not fired and forgotten. Dropping the tag without rebuilding hands the
+  // thirty-second cold read to whichever parent opens the app next, and that is precisely the
+  // minute they will be looking. Staff carry the wait instead.
+  await warmPublicAnnouncedField().catch((error) => {
+    // A failed warm is a slow first read, not a failed announcement. Never fail the action.
+    console.warn("[toc] field warm failed:", error)
+  })
 
   /**
    * One alert, and only on the transition.

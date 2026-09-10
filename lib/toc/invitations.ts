@@ -4,13 +4,11 @@ import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 /**
  * The bracket actually being run at each weight this year.
  *
- * Eight everywhere, nine at 133 — which is why Friday opens with the 133 pigtail. The board
- * used to infer the size from how many had confirmed, so the moment a ninth landed at 133 it
- * jumped to the engine's 12-wrestler ceiling and offered three slots into a full bracket.
- * Planned size is a decision, not something to read back out of the confirmations.
+ * Eight wrestlers at every weight. Planned size is a decision, not something to read back out
+ * of confirmations.
  */
 export const TOC_DEFAULT_BRACKET_SIZE = 8 as const
-export const TOC_BRACKET_SIZE_BY_WEIGHT: Readonly<Record<number, number>> = { 133: 9 }
+export const TOC_BRACKET_SIZE_BY_WEIGHT: Readonly<Record<number, number>> = {}
 
 export function tocBracketSize(weightClass: number | string | null | undefined): number {
   const weight = Number(weightClass)

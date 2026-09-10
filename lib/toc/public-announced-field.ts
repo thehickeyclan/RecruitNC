@@ -982,16 +982,35 @@ const loadAnnouncedWeight = unstable_cache(
   },
   ["toc-public-announced-weight", "v2-shared-credential-engine"],
   /*
-   * Half an hour, not five minutes. Correctness does not depend on the window — announcing a
-   * weight and releasing the brackets both drop this tag immediately — so the only thing the
-   * window controls is how often somebody pays the cold cost, and that cost is currently large.
-   * The underlying slowness is the name reconciliation itself: `getFargoFromTable` and its
-   * siblings try an exact name, then a last-first form, then each spelling variant, awaiting one
-   * before starting the next. That is worth fixing properly; it is not worth fixing the day
-   * before the brackets drop.
+   * A day, and in practice for ever — correctness comes from the tag, not the clock.
+   *
+   * Announcing a weight and releasing the brackets both drop {@link TOC_PUBLIC_FIELD_TAG}, and
+   * those are the only two things that change this field. So the window controls nothing except
+   * how often somebody pays the cold cost, and the cold cost is the problem: a full rebuild takes
+   * about thirty seconds and the phone gives up at twenty. On a half-hour window that meant the
+   * first person to open the field after every lapse got "fetch failed" — the app looked broken
+   * twice an hour, to whoever happened to be first.
+   *
+   * The underlying slowness is the name reconciliation: getFargoFromTable and its siblings try an
+   * exact name, then a last-first form, then each spelling variant, awaiting one before starting
+   * the next. That is the thing actually worth fixing, and it is not a job for the night before
+   * the brackets drop.
    */
-  { revalidate: 1800, tags: [TOC_PUBLIC_FIELD_TAG] },
+  { revalidate: 86400, tags: [TOC_PUBLIC_FIELD_TAG] },
 )
+
+/**
+ * Rebuild every announced weight's cache entry, now.
+ *
+ * Call this straight after {@link TOC_PUBLIC_FIELD_TAG} is revalidated. Dropping the tag without
+ * rebuilding just moves the thirty-second cold read onto whichever parent opens the app next —
+ * and the moment staff press announce or release is exactly when people are looking. Staff wait
+ * instead, on a request that is already a deliberate action.
+ */
+export async function warmPublicAnnouncedField(): Promise<void> {
+  const announced = await fetchAnnouncedAtByWeight()
+  await Promise.all([...announced.keys()].map((weight) => loadAnnouncedWeight(weight)))
+}
 
 export async function getPublicAnnouncedWeight(weightClassInput: number): Promise<PublicAnnouncedWeight | null> {
   const weightClass = Number(weightClassInput)

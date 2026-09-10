@@ -276,7 +276,7 @@ export async function answerTournamentOfChampionsQuestion(message: string): Prom
       section(
         "Format and weights",
         [
-          `Invite-only: eight-person brackets, except 133 lbs which runs nine with a Friday pigtail.`,
+          `Invite-only: eight-person brackets at every weight.`,
           `College weights plus 117 lbs: ${TOC_WEIGHT_CLASSES.join(", ")}.`,
           `Bracket style: true double-elimination with top-three placement.`,
           TOC_MATS_LINE,

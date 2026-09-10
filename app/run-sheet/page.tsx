@@ -41,7 +41,7 @@ const FRIDAY: Row[] = [
   { a: "5:35 PM", what: "Welcome and prayer — Jason Gore", kind: "beat" },
   { a: "5:40 PM", what: "National anthem — to be named", kind: "beat" },
   { a: "5:50 PM", what: "Athletes exit mats for competition", kind: "beat" },
-  { a: "6:00 PM", what: "First whistle — 133 lbs pigtail, then Round 1", detail: "The pigtail goes first so its winner has the whole session before wrestling again; 133 lbs takes the last first-round bouts for the same reason. Four bouts per weight, two mats." },
+  { a: "6:00 PM", what: "First whistle — Round 1", detail: "Four bouts per weight on two mats." },
   { a: "8:45 PM", b: "9:00 PM", what: "Mats clear", kind: "finish" },
   { a: "9:00 PM", b: "9:15 PM", what: "Spectators and athletes exit · clean-up", kind: "prep" },
 ]
@@ -169,7 +169,7 @@ export default function RunSheetPage() {
           </p>
         </header>
 
-        <DayTable title="Friday 18 September" note="Build-up, weigh-in, pigtail and first round · 41 or 45 bouts" rows={FRIDAY} />
+        <DayTable title="Friday 18 September" note="Build-up, weigh-in and first round · 40 bouts" rows={FRIDAY} />
         <DayTable title="Saturday 19 September" note="Placement, the Giving Hour, then finals · 80 or 88 bouts" rows={SATURDAY} />
 
         <section className="flex flex-col gap-3">

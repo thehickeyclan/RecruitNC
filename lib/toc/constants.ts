@@ -270,7 +270,7 @@ export const TOC_SCHEDULE = {
         time: "5:30 PM",
         activity: "Opening ceremony — athlete walkout, welcome and prayer, national anthem",
       },
-      { time: "6:00 PM", activity: "First whistle — 133 lbs pigtail, then round one on two mats" },
+      { time: "6:00 PM", activity: "First whistle — round one begins on two mats" },
       { time: "~9:00 PM", activity: "Session ends" },
     ],
   },

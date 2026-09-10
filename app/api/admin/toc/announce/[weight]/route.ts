@@ -1,13 +1,22 @@
 import { NextResponse } from "next/server"
 import { revalidateTag } from "next/cache"
 
-import { TOC_PUBLIC_FIELD_TAG } from "@/lib/toc/public-announced-field"
+import { TOC_PUBLIC_FIELD_TAG, warmPublicAnnouncedField } from "@/lib/toc/public-announced-field"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getBracketLockStatus } from "@/lib/toc/bracket-service"
 import { setTocFieldAnnounced } from "@/lib/toc/field-publication-status"
 import { notifyTocWeightAnnounced } from "@/lib/toc/announce-notification"
 import { parseAthleteWeightClass } from "@/lib/toc/invitations"
 import { requireTocFieldViewer } from "@/lib/toc/require-toc-field-viewer"
+
+/**
+ * Long enough for a cold rebuild.
+ *
+ * Reconciling every wrestler in the field takes about thirty seconds when nothing is cached, and
+ * Vercel's default cut it off well before that — which surfaces as a failed request rather than a
+ * slow one. The cache means this is rare; the ceiling means it does not fail when it happens.
+ */
+export const maxDuration = 60
 
 export const dynamic = "force-dynamic"
 
@@ -82,6 +91,13 @@ export async function PATCH(request: Request, { params }: Params) {
    * weight go live, not see it go live in five minutes.
    */
   revalidateTag(TOC_PUBLIC_FIELD_TAG)
+  // Awaited, not fired and forgotten. Dropping the tag without rebuilding hands the
+  // thirty-second cold read to whichever parent opens the app next, and that is precisely the
+  // minute they will be looking. Staff carry the wait instead.
+  await warmPublicAnnouncedField().catch((error) => {
+    // A failed warm is a slow first read, not a failed announcement. Never fail the action.
+    console.warn("[toc] field warm failed:", error)
+  })
 
   // Awaited on purpose: Vercel freezes the isolate once the response is sent, and a dropped
   // promise here is a reveal nobody hears about. notifyTocWeightAnnounced never throws.
