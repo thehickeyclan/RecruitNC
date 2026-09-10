@@ -1,5 +1,5 @@
 import { ClipboardList } from "lucide-react"
-import { TOC_GOFAN_TICKETS_URL, TOC_RULES_GROUPS, TOC_RULES_SUMMARY } from "@/lib/toc/constants"
+import { TOC_RULES_GROUPS, TOC_RULES_SUMMARY } from "@/lib/toc/constants"
 import { tocDisplayClass } from "@/components/toc/toc-theme"
 
 /**
@@ -38,17 +38,6 @@ export function TocRulesSection() {
               ))}
             </ul>
 
-            {/* The one rule that costs money — the corner limit is why people buy a credential. */}
-            {group.title === "Coaches" ? (
-              <a
-                href={TOC_GOFAN_TICKETS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-[#CC0000] underline underline-offset-4 hover:text-[#0B1D3A]"
-              >
-                Buy a coach credential
-              </a>
-            ) : null}
           </div>
         ))}
       </div>
