@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server"
+import { revalidateTag } from "next/cache"
+
+import { TOC_PUBLIC_FIELD_TAG } from "@/lib/toc/public-announced-field"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getBracketLockStatus } from "@/lib/toc/bracket-service"
 import { setTocFieldAnnounced } from "@/lib/toc/field-publication-status"
@@ -71,6 +74,14 @@ export async function PATCH(request: Request, { params }: Params) {
   console.info(
     `[toc-announce] weight ${weightClass} ${body.announced ? "RELEASED publicly" : "un-released"} by ${auth.userId}`,
   )
+
+  /*
+   * The public field is cached per weight, because the credential engine reconciles each wrestler
+   * by name and that is too slow to redo on every request. Announcing is the moment that cache is
+   * wrong, so it is dropped here rather than waited out — staff pressing this button must see the
+   * weight go live, not see it go live in five minutes.
+   */
+  revalidateTag(TOC_PUBLIC_FIELD_TAG)
 
   // Awaited on purpose: Vercel freezes the isolate once the response is sent, and a dropped
   // promise here is a reveal nobody hears about. notifyTocWeightAnnounced never throws.

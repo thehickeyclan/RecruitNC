@@ -1,5 +1,7 @@
 import "server-only"
 
+import { unstable_cache } from "next/cache"
+
 import { createAdminClient } from "@/lib/supabase/admin"
 import { loadAthleteCredentialsBatch, ordinal } from "@/lib/credentials/athlete-credentials"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
@@ -954,21 +956,47 @@ export async function listPublicWeightTiles(): Promise<PublicWeightTile[]> {
  * Full public field for one weight, or null when the weight is invalid or has not been announced.
  * Callers must treat null as {@link import("next/navigation").notFound} — never as an empty field.
  */
+/**
+ * Cached per weight, and it has to be.
+ *
+ * Credentials now come from the shared engine, which reconciles each wrestler by name rather than
+ * looking them up by id — that is the whole point, and it costs a handful of queries per athlete
+ * instead of three batched ones per weight. Uncached, `/api/toc/field` asks for every announced
+ * weight at once and took 86 seconds to answer, which on a phone is not slow, it is broken: the
+ * bracket screen spun forever and showed nothing.
+ *
+ * The field changes when staff announce a weight or release the brackets, not otherwise, so this
+ * is exactly the kind of read that should be cached. {@link TOC_PUBLIC_FIELD_TAG} is revalidated
+ * at both of those moments, so an announcement is still immediate — the cache never stands
+ * between staff pressing a button and the public seeing it.
+ */
+export const TOC_PUBLIC_FIELD_TAG = "toc-public-field"
+
+const loadAnnouncedWeight = unstable_cache(
+  async (weightClass: number): Promise<PublicAnnouncedWeight | null> => {
+    const announced = await fetchAnnouncedAtByWeight()
+    const announcedAt = announced.get(weightClass)
+    if (!announcedAt) return null
+    const athletes = await fetchPublicAthletesForWeight(weightClass)
+    return { weightClass, announcedAt, athletes, rollup: buildFieldRollup(athletes) }
+  },
+  ["toc-public-announced-weight", "v2-shared-credential-engine"],
+  /*
+   * Half an hour, not five minutes. Correctness does not depend on the window — announcing a
+   * weight and releasing the brackets both drop this tag immediately — so the only thing the
+   * window controls is how often somebody pays the cold cost, and that cost is currently large.
+   * The underlying slowness is the name reconciliation itself: `getFargoFromTable` and its
+   * siblings try an exact name, then a last-first form, then each spelling variant, awaiting one
+   * before starting the next. That is worth fixing properly; it is not worth fixing the day
+   * before the brackets drop.
+   */
+  { revalidate: 1800, tags: [TOC_PUBLIC_FIELD_TAG] },
+)
+
 export async function getPublicAnnouncedWeight(weightClassInput: number): Promise<PublicAnnouncedWeight | null> {
   const weightClass = Number(weightClassInput)
   if (!Number.isFinite(weightClass) || !isValidWeight(weightClass)) return null
-
-  const announced = await fetchAnnouncedAtByWeight()
-  const announcedAt = announced.get(weightClass)
-  if (!announcedAt) return null
-
-  const athletes = await fetchPublicAthletesForWeight(weightClass)
-  return {
-    weightClass,
-    announcedAt,
-    athletes,
-    rollup: buildFieldRollup(athletes),
-  }
+  return loadAnnouncedWeight(weightClass)
 }
 
 /** Aggregate every public weight without exposing any athlete from an unreleased weight. */

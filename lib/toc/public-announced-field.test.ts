@@ -107,6 +107,16 @@ function makeQuery(table: string, rows: Row[]) {
   return q
 }
 
+/*
+ * The public field is cached per weight in production. Here it must not be: these tests set a
+ * different fixture per case and then ask the same weight for it, so a real cache would answer
+ * the second test with the first test's field.
+ */
+vi.mock("next/cache", () => ({
+  unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
+  revalidateTag: () => {},
+}))
+
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: () => ({
     from(table: string) {

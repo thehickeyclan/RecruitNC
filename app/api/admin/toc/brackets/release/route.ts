@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server"
+import { revalidateTag } from "next/cache"
 import { z } from "zod"
 import { createAdminClientFresh } from "@/lib/supabase/admin"
 import { requireTocFieldViewer } from "@/lib/toc/require-toc-field-viewer"
 import { readBracketRelease, setBracketRelease } from "@/lib/toc/bracket-release"
 import { listPublicBracketSummaries } from "@/lib/toc/bracket-service"
+import { TOC_PUBLIC_FIELD_TAG } from "@/lib/toc/public-announced-field"
 import { notifyTocBracketsReleased } from "@/lib/toc/bracket-release-notification"
 
 export const dynamic = "force-dynamic"
@@ -54,6 +56,13 @@ export async function POST(request: Request) {
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: 500 })
 
   const after = await state(admin)
+
+  /*
+   * The public field is cached per weight — the credential engine reconciles each wrestler by
+   * name, which is too slow to redo on every request. Releasing brackets changes what that screen
+   * shows, and this is the one moment in the tournament where a stale minute is unacceptable.
+   */
+  revalidateTag(TOC_PUBLIC_FIELD_TAG)
 
   /**
    * One alert, and only on the transition.
