@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { collapseRepeatedRankWrestlerEventSnapshots } from "@/lib/match-manager/rankwrestler-parser"
 
 interface Athlete {
   id: string
@@ -976,8 +977,9 @@ export default function MatchManagerPage() {
       return
     }
 
-    // RankWrestler imports are lossless: one recognized source block becomes one row.
-    const finalMatches = convertedMatches
+    const finalMatches = rawTextFormat === "rank"
+      ? collapseRepeatedRankWrestlerEventSnapshots(convertedMatches)
+      : convertedMatches
 
     const firstName = selectedAthleteData.name.split(" ")[0] || ""
     const lastName = selectedAthleteData.name.split(" ").slice(1).join(" ") || ""

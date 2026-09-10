@@ -24,6 +24,67 @@ export type ProfileMatch = {
   opponent_percentage: string | null
 }
 
+function profileMatchIdentity(match: ProfileMatch): string {
+  return JSON.stringify([
+    match.date.trim(),
+    match.weight,
+    match.opponent.trim().toLowerCase(),
+    match.opponent_school.trim().toLowerCase(),
+    match.result.trim().toLowerCase(),
+    match.venue.trim().toLowerCase(),
+    match.win_loss,
+    match.opponent_percentage,
+  ])
+}
+
+/**
+ * RankWrestler can render the same event roster more than once in copied page text. Detect
+ * only repeated multi-bout event snapshots: each repeated chunk must contain the exact same
+ * multiset of rows. A group made solely of identical rows is deliberately never collapsed,
+ * so consecutive forfeits and true identical rematches remain lossless.
+ */
+export function collapseRepeatedRankWrestlerEventSnapshots(matches: ProfileMatch[]): ProfileMatch[] {
+  const output: ProfileMatch[] = []
+  const gcd = (a: number, b: number): number => (b === 0 ? a : gcd(b, a % b))
+
+  for (let start = 0; start < matches.length;) {
+    const first = matches[start]!
+    let end = start + 1
+    while (
+      end < matches.length &&
+      matches[end]!.date.trim() === first.date.trim() &&
+      matches[end]!.venue.trim().toLowerCase() === first.venue.trim().toLowerCase()
+    ) {
+      end++
+    }
+
+    const group = matches.slice(start, end)
+    let retained = group
+    const counts = new Map<string, number>()
+    for (const match of group) {
+      const key = profileMatchIdentity(match)
+      counts.set(key, (counts.get(key) ?? 0) + 1)
+    }
+    if (counts.size >= 2) {
+      const repetitions = [...counts.values()].reduce(gcd)
+      if (repetitions >= 2) {
+        const keptCounts = new Map<string, number>()
+        retained = group.filter((match) => {
+          const key = profileMatchIdentity(match)
+          const next = (keptCounts.get(key) ?? 0) + 1
+          keptCounts.set(key, next)
+          return next <= (counts.get(key) ?? 0) / repetitions
+        })
+      }
+    }
+
+    output.push(...retained)
+    start = end
+  }
+
+  return output
+}
+
 export type RankWrestlerSeasonPayload = {
   wrestler_info: {
     first_name: string
@@ -554,7 +615,32 @@ export function buildRankWrestlerSeasonPayload(options: {
     .split(RANKWRESTLER_SNAPSHOT_SEPARATOR)
     .map((segment) => segment.trim())
     .filter(Boolean)
-  const converted = segments.length > 1 ? segments.flatMap(convertText) : convertText(options.rawText)
+  const rawConvertedSegments = (segments.length > 1 ? segments : [options.rawText]).map(convertText)
+  const parsedMatchCount = rawConvertedSegments.reduce((count, segment) => count + segment.length, 0)
+  const convertedSegments = rawConvertedSegments.map(collapseRepeatedRankWrestlerEventSnapshots)
+  let converted = convertedSegments.flat()
+
+  // Browser automation joins overlapping viewport snapshots with an explicit boundary.
+  // Preserve the maximum occurrence count found inside any one snapshot, which retains real
+  // identical bouts while removing only copies caused by snapshot overlap.
+  if (convertedSegments.length > 1) {
+    const allowed = new Map<string, number>()
+    for (const segment of convertedSegments) {
+      const counts = new Map<string, number>()
+      for (const match of segment) {
+        const key = profileMatchIdentity(match)
+        counts.set(key, (counts.get(key) ?? 0) + 1)
+      }
+      for (const [key, count] of counts) allowed.set(key, Math.max(allowed.get(key) ?? 0, count))
+    }
+    const used = new Map<string, number>()
+    converted = converted.filter((match) => {
+      const key = profileMatchIdentity(match)
+      const count = (used.get(key) ?? 0) + 1
+      used.set(key, count)
+      return count <= (allowed.get(key) ?? 1)
+    })
+  }
   if (converted.length === 0) {
     const parsedAny = parseRankWrestlerText(options.rawText.split(RANKWRESTLER_SNAPSHOT_SEPARATOR).join("\n"), options.format ?? "rank")
     return parsedAny.length === 0
@@ -618,9 +704,9 @@ export function buildRankWrestlerSeasonPayload(options: {
       matches: finalMatches,
     },
     diagnostics: {
-      parsedMatches: converted.length,
+      parsedMatches: parsedMatchCount,
       dedupedMatches: finalMatches.length,
-      duplicatesRemoved: converted.length - finalMatches.length,
+      duplicatesRemoved: parsedMatchCount - finalMatches.length,
       season,
       grade,
     },

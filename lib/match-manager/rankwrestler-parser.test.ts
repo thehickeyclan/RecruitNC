@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   buildRankWrestlerSeasonPayload,
+  collapseRepeatedRankWrestlerEventSnapshots,
   parseRankWrestlerText,
   rankWrestlerTextCandidatesFromHtml,
   RANKWRESTLER_SNAPSHOT_SEPARATOR,
@@ -266,14 +267,13 @@ describe("parseRankWrestlerText", () => {
     expect(payload.success).toBe(true)
     if (payload.success) {
       expect(payload.diagnostics.parsedMatches).toBe(6)
-      expect(payload.diagnostics.duplicatesRemoved).toBe(0)
-      expect(payload.payload.matches.filter((m) => m.opponent === "Ian Speight")).toHaveLength(4)
-      expect(payload.payload.matches.filter((m) => m.opponent === "Lloy Bosan")).toHaveLength(2)
+      expect(payload.diagnostics.duplicatesRemoved).toBe(3)
+      expect(payload.payload.matches.filter((m) => m.opponent === "Ian Speight")).toHaveLength(2)
+      expect(payload.payload.matches.filter((m) => m.opponent === "Lloy Bosan")).toHaveLength(1)
       expect(payload.payload.matches.map((m) => m.opponent)).toEqual([
         "Ian Speight", "Lloy Bosan", "Ian Speight",
-        "Ian Speight", "Lloy Bosan", "Ian Speight",
       ])
-      expect(payload.payload.season_summary.total_matches).toBe(6)
+      expect(payload.payload.season_summary.total_matches).toBe(3)
     }
   })
 
@@ -319,6 +319,43 @@ describe("parseRankWrestlerText", () => {
         "Lucas Frank", "Tristen Lawrence", "Tye Johnson", "Lucas Frank", "Farouq Busisou",
       ])
     }
+  })
+
+  it("collapses Cole's repeated event renderings from 66 rows to 42 without field deduplication", () => {
+    const make = (date: string, venue: string, opponent: string, result = "Fall") => ({
+      date, venue, opponent, result, weight: 138, opponent_school: "", win_loss: "W" as const,
+      opponent_percentage: null,
+    })
+    const group = (date: string, venue: string, opponents: string[]) =>
+      opponents.map((opponent) => make(date, venue, opponent))
+
+    const coleCapture = [
+      ...group("2/24/2025", "State", ["Austin", "Aiden"]),
+      ...group("2/15/2025", "Regional", ["Mitchell", "Noah", "Trenyce", "Caleb", "Gavin", "Jackson"]),
+      ...group("1/24/2025", "Old Well", ["Matthew", "Xavier", "Xavier", "Matthew"]),
+      ...group("1/18/2025", "Coach T", ["Parker", "Jamonte", "Joshua", "Jaxon", "Jacaden", "Parker", "Jamonte", "Joshua", "Jaxon", "Jacaden"]),
+      ...group("1/16/2025", "Dual A", ["Christopher", "Christopher"]),
+      ...group("1/9/2025", "Dual B", ["Forfeit", "Forfeit"]),
+      ...group("12/28/2024", "Tiger", ["Daschle", "Dylan", "Daschle", "Dylan"]),
+      ...group("12/21/2024", "Eagle", ["Albert", "Landon", "Ali", "Braden", "Albert", "Braden", "Landon", "Ali"]),
+      ...group("12/19/2024", "Dual C", ["Erik", "Erik"]),
+      ...group("12/14/2024", "Rumble", ["Shawn", "Enrique", "Tim", "Shawn", "Tim", "Enrique"]),
+      ...[
+        make("12/7/2024", "Jim King", "Kai", "Dec"), make("12/7/2024", "Jim King", "Tyton", "TF"),
+        make("12/7/2024", "Jim King", "Giovanni", "Dec"), make("12/7/2024", "Jim King", "Kai", "TF"),
+        make("12/7/2024", "Jim King", "Kai", "TF"), make("12/7/2024", "Jim King", "Giovanni", "Dec"),
+        make("12/7/2024", "Jim King", "Tyton", "TF"), make("12/7/2024", "Jim King", "Kai", "Dec"),
+      ],
+      ...group("12/4/2024", "Cedar Ridge", ["Forfeit", "Forfeit", "Forfeit", "Forfeit"]),
+      ...group("11/20/2024", "Millbrook", ["Ernest", "Kyle", "Ernest", "Kyle"]),
+      ...group("11/19/2024", "Northwood", ["Brayan", "Brayan", "Cole", "Cole"]),
+    ]
+
+    expect(coleCapture).toHaveLength(66)
+    const cleaned = collapseRepeatedRankWrestlerEventSnapshots(coleCapture)
+    expect(cleaned).toHaveLength(42)
+    expect(cleaned.filter((match) => match.date === "1/9/2025" && match.opponent === "Forfeit")).toHaveLength(2)
+    expect(cleaned.filter((match) => match.date === "12/4/2024" && match.opponent === "Forfeit")).toHaveLength(4)
   })
 
   it("counts every Mills forfeit, excludes byes, and keeps the final Landon Cagle bout", () => {
