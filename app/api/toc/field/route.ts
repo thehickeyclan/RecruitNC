@@ -67,9 +67,20 @@ export async function GET() {
         releasedCount: announcedTiles.length,
       },
       {
-        // A reveal should reach the app promptly; a minute of edge caching is worth the
-        // thundering herd it prevents when a push goes out to every device at once.
-        headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300" },
+        /*
+         * The edge is what actually serves this, and it is what keeps the app fast.
+         *
+         * Rebuilding the field at the origin reconciles every wrestler by name and takes about
+         * twenty-five seconds, so the goal is that almost nobody ever waits for one. Five minutes
+         * fresh, then a day of serving the last good answer while a new one is fetched behind the
+         * scenes — a reader gets a stale field rather than a spinner, and never a cold rebuild.
+         *
+         * Staleness is safe here because this is the roster, not the draw. Releasing brackets does
+         * not change who is in a weight, and the bracket itself comes from a different route. The
+         * one thing that does change it — announcing a weight — is rare, deliberate, and already
+         * followed by a warm.
+         */
+        headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=86400" },
       },
     )
   } catch (e) {

@@ -204,8 +204,13 @@ export async function loadAthleteCredentials(
  *
  * The gate is module-level so the total stays bounded however many weights, pages or routes ask
  * at the same moment.
+ *
+ * Three, not six. Six still failed roughly one request in three against the real database, and a
+ * field endpoint that fails a third of the time is worse than one that is slow — the origin is
+ * behind an edge cache that serves nearly every reader, so slow costs almost nobody anything and
+ * failing costs whoever is unlucky the whole screen.
  */
-const MAX_IN_FLIGHT = 6
+const MAX_IN_FLIGHT = 3
 
 let inFlight = 0
 const waiting: Array<() => void> = []
