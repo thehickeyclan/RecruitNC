@@ -26,7 +26,7 @@ export const TOC_EVENT_DATES_DISPLAY = `${TOC_EVENT_DATES_RANGE} · one weigh-in
 export const TOC_WEIGH_IN = {
   headline: "One weigh-in — Friday night only",
   time: "4:00–5:00 PM Friday, September 18",
-  detail: "Friday weigh-in is flat — wrestlers must make their tournament weight with no allowance. There is no second weigh-in on Saturday. Singlet required; skin check at the scale; USA Wrestling card required.",
+  detail: "Friday weigh-in is flat — wrestlers must make their tournament weight with no allowance. There is no second weigh-in on Saturday. Singlet required; skin check at the scale.",
 } as const
 
 /** Hero — large date stack at top of landing page. */

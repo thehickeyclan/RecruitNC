@@ -3,7 +3,6 @@
 import { TocHero } from "@/components/toc/toc-hero"
 import { TocQuickFacts } from "@/components/toc/toc-quick-facts"
 import { TocRoadSection } from "@/components/toc/toc-road-section"
-import { TocWeighInCallout } from "@/components/toc/toc-weigh-in-callout"
 import { TocRulesSection } from "@/components/toc/toc-rules-section"
 import { TocChampionJacketSection } from "@/components/toc/toc-champion-jacket-section"
 import { TocCadenPerryScholarshipSection } from "@/components/toc/toc-caden-perry-scholarship-section"
@@ -50,11 +49,6 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
       <TocQuickFacts />
       <TocVenueSection config={config} />
       <TocRoadSection />
-      <section className="bg-[#060f1f] pb-8 sm:pb-10">
-        <div className="container mx-auto w-full px-4 sm:px-6 max-w-3xl">
-          <TocWeighInCallout variant="dark" />
-        </div>
-      </section>
       <TocStorySection />
 
       {/*
@@ -77,13 +71,22 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
       */}
       <TocScheduleTable />
 
-      {/* Format */}
+      {/*
+        Everything about how the tournament is wrestled, in one run.
+        Weight classes sat three sections below the schedule under a "Format" heading, and the
+        weigh-in had a band of its own before the story. That band is gone rather than moved: the
+        schedule already carries the callout and the weight-class list already carries its
+        headline, so relocating it simply put three copies in a row. The jacket joins them because
+        it is what a wrestler wins, not something the page is asking them to fund.
+      */}
       <TocWeightClassesList />
-      <TocAthleteQuotesSection />
-      <TocCompetitionMatsSection />
-
-      {/* Prize */}
       <TocChampionJacketSection />
+
+      {/* The room itself */}
+      <TocCompetitionMatsSection />
+      <TocAthleteQuotesSection />
+
+      {/* Support the tournament */}
       <TocCadenPerryScholarshipSection />
       <TocSupportDonationsSection />
       <TocGivingHourSection />
