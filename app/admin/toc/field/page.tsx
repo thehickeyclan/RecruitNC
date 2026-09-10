@@ -640,7 +640,14 @@ function WeightBoardCard({
 
           {bracketStatus?.locked ? (
             <>
-              <Badge className="bg-emerald-600 text-white">Draw published</Badge>
+              {/*
+                Locked is not published, and this badge used to say it was.
+                Locking writes the draw so it is final and cannot drift; the public sees nothing
+                until the release switch at the bottom of this page is thrown. Saying "published"
+                here told staff they had already gone live when the brackets were still private,
+                which is the single most alarming thing a control can get wrong the night before.
+              */}
+              <Badge className="bg-emerald-600 text-white">Draw locked · not public</Badge>
               <div className="flex flex-wrap gap-2">
                 <Button type="button" variant="outline" size="sm" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" asChild>
                   <HardLink href={`/tournament-of-champions/brackets/${board.weightClass}`}>
@@ -873,7 +880,7 @@ export default function TocFieldAdminPage() {
 
       if (status?.locked) {
         const unlockRes = await fetch(`/api/admin/toc/brackets/${weightClass}`, { method: "DELETE" })
-        if (!unlockRes.ok) throw new Error("Athlete was withdrawn, but the published bracket could not be taken offline.")
+        if (!unlockRes.ok) throw new Error("Athlete was withdrawn, but the locked draw could not be unlocked.")
       }
       if (status?.athleteFieldLocked) {
         const fieldRes = await fetch(`/api/admin/toc/field-status/${weightClass}`, {
