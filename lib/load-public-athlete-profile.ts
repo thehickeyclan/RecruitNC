@@ -47,6 +47,51 @@ export type LoadPublicAthleteProfileResult =
   | { ok: true; athlete: PublicAthleteProfile }
   | { ok: false; error: string; code?: string }
 
+/**
+ * Canonical NC United team and documented quality-win lookup for an existing athlete row.
+ * Keep this shared: rankings must not infer team membership from a single table or a stale
+ * profile column while the public profile merges registrations, live results, and archives.
+ */
+export async function loadPublicAthleteNationalTeamData(
+  client: SupabaseClient,
+  athleteRow: Record<string, unknown>,
+): Promise<{
+  nationalTeamResults: unknown[]
+  qualityWins: ProfileQualityWinsTournamentBlock[]
+}> {
+  const athleteId = String(athleteRow.id ?? "").trim()
+  const gradYear = resolveGraduationYear(athleteRow)
+  const highSchool = String(athleteRow.highschool ?? athleteRow.highSchool ?? "").trim()
+  const name = String(athleteRow.name ?? "").trim()
+  const wrestlingName = String(athleteRow.wrestling_name ?? "").trim()
+  const nameBases = [name, wrestlingName].filter(
+    (value, index, values) => Boolean(value) && values.findIndex((item) => item.toLowerCase() === value.toLowerCase()) === index,
+  )
+
+  const [nationalTeamFromTables, nhscaDualsLive, nhscaDualsRegistration] = await Promise.all([
+    (async () => {
+      for (const base of nameBases) {
+        const rows = await getUltimateClubDualsFromTables(client, base, highSchool || undefined)
+        if (rows.length) return rows
+      }
+      return []
+    })(),
+    getNhscaDuals2026LiveProfileResults(client, nameBases),
+    getNhscaDuals2026RegistrationPlaceholders(client, athleteId, { name, highSchool, gradYear }),
+  ])
+
+  return {
+    nationalTeamResults: mergeNationalTeamResultsForProfile({
+      fromTable: nationalTeamFromTables,
+      fromAthleteRow: getNationalTeamResults(athleteRow),
+      fromLive: nhscaDualsLive,
+      fromRegistration: nhscaDualsRegistration,
+      fromAau: getAauScholasticDuals2026ProfileResults(athleteId, nameBases),
+    }),
+    qualityWins: getProfileQualityWins(athleteId, nameBases),
+  }
+}
+
 /** Load one public athlete with tournament bundle merged (shared by API route + view-profile SSR). */
 export async function loadPublicAthleteProfile(
   id: string,
@@ -67,8 +112,6 @@ export async function loadPublicAthleteProfile(
     return { ok: false, error: "no row" }
   }
 
-  const gradYear = resolveGraduationYear(athlete as Record<string, unknown>)
-  const highSchool = (athlete.highschool ?? athlete.highSchool ?? "").toString().trim()
   const name = (athlete.name ?? "").toString().trim()
   const wrestlingName = (athlete.wrestling_name ?? "").toString().trim()
   const nameBases: string[] = []
@@ -76,25 +119,9 @@ export async function loadPublicAthleteProfile(
   if (wrestlingName && wrestlingName.toLowerCase() !== name.toLowerCase()) nameBases.push(wrestlingName)
 
   const athleteRow = athlete as Record<string, unknown>
-  const [bundle, nationalTeamFromTables, nhscaDualsLive, nhscaDualsRegistration, otherTournamentBlocks] = await Promise.all([
+  const [bundle, nationalTeamData, otherTournamentBlocks] = await Promise.all([
     loadAthleteTournamentBundle(client, athleteRow),
-    (async () => {
-      const bases = nameBases.filter(Boolean)
-      if (!bases.length) return []
-      const tries = await Promise.all(
-        bases.map((n) => getUltimateClubDualsFromTables(client, n, highSchool || undefined)),
-      )
-      for (const rows of tries) {
-        if (rows.length) return rows
-      }
-      return []
-    })(),
-    getNhscaDuals2026LiveProfileResults(client, nameBases),
-    getNhscaDuals2026RegistrationPlaceholders(client, trimmed, {
-      name,
-      highSchool,
-      gradYear,
-    }),
+    loadPublicAthleteNationalTeamData(client, athleteRow),
     getOtherTournamentProfileBlocks(client, athleteRow),
   ])
 
@@ -105,16 +132,8 @@ export async function loadPublicAthleteProfile(
     classification: r.classification,
     weight_class: r.weight_class,
   }))
-  const nationalTeamFromRow = getNationalTeamResults(athlete)
-  const aauScholasticResults = getAauScholasticDuals2026ProfileResults(trimmed, nameBases)
-  const profile_quality_wins = getProfileQualityWins(trimmed, nameBases)
-  const national_team_results = mergeNationalTeamResultsForProfile({
-    fromTable: nationalTeamFromTables,
-    fromAthleteRow: nationalTeamFromRow,
-    fromLive: nhscaDualsLive,
-    fromRegistration: nhscaDualsRegistration,
-    fromAau: aauScholasticResults,
-  })
+  const profile_quality_wins = nationalTeamData.qualityWins
+  const national_team_results = nationalTeamData.nationalTeamResults
   const national_team_highlight_videos = getNationalTeamProfileHighlights(trimmed, nameBases)
 
   const profilePayload = {

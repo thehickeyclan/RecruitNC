@@ -2,9 +2,9 @@ import "server-only"
 
 import { unstable_cache } from "next/cache"
 
+import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
+import { loadPublicAthleteNationalTeamData } from "@/lib/load-public-athlete-profile"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getMergedNchsaaForAthlete } from "@/lib/nchsaa-results"
-import { getFargoForAthlete, getNHSCAForAthlete } from "@/lib/public-profile-data"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
 /**
@@ -20,7 +20,15 @@ import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/publi
  * actually decided, or the two would disagree the moment somebody wins a match.
  */
 
-export type PublicRankingCredentialKind = "all-american" | "state-champion" | "state-placer" | "national-ranked"
+export type PublicRankingCredentialKind =
+  | "all-american"
+  | "state-champion"
+  | "state-placer"
+  | "national-placer"
+  | "national-qualifier"
+  | "national-team"
+  | "significant-win"
+  | "national-ranked"
 
 export type PublicRankingCredential = {
   kind: PublicRankingCredentialKind
@@ -66,6 +74,10 @@ export type PublicClassRanking = {
 type CredentialSources = {
   state: Map<string, Array<{ year: number; place: number | null }>>
   allAmerican: Map<string, { count: number; detail: string }>
+  nationalPlacements: Map<string, Array<{ event: string; year: number; place: number }>>
+  nationalQualifiers: Map<string, Array<{ event: string; year: number }>>
+  nationalTeam: Map<string, number>
+  significantWins: Map<string, number>
 }
 
 function nationalPlacement(value: unknown): number | null {
@@ -100,30 +112,39 @@ async function loadCredentialSources(
   athletes: Array<Record<string, unknown>>,
 ): Promise<CredentialSources> {
   const state = new Map<string, Array<{ year: number; place: number | null }>>()
-  const allAmerican = new Map<string, string>()
-  if (athletes.length === 0) return { state, allAmerican }
+  const allAmerican = new Map<string, { count: number; detail: string }>()
+  const nationalPlacements = new Map<string, Array<{ event: string; year: number; place: number }>>()
+  const nationalQualifiers = new Map<string, Array<{ event: string; year: number }>>()
+  const nationalTeam = new Map<string, number>()
+  const significantWins = new Map<string, number>()
+  if (athletes.length === 0) {
+    return { state, allAmerican, nationalPlacements, nationalQualifiers, nationalTeam, significantWins }
+  }
 
   const settled = await Promise.all(
     athletes.map(async (athlete) => {
       const id = String(athlete.id)
       try {
-        const [rows, nhsca, fargo] = await Promise.all([
-          getMergedNchsaaForAthlete(admin, athlete as never),
-          // The national tables are primarily keyed by bracket name, not athlete_id. This is
-          // the same reconciled lookup used by profiles and the ranking engine.
-          getNHSCAForAthlete(admin, athlete, { tablesAllTime: true }),
-          getFargoForAthlete(admin, athlete),
+        // One canonical bundle for every tournament source. Profiles, Data Dawg, the admin
+        // ranking engine and this public page therefore resolve identity the same way.
+        const [bundle, team] = await Promise.all([
+          loadAthleteTournamentBundle(admin, athlete, { nhscaAllTime: true }),
+          loadPublicAthleteNationalTeamData(admin, athlete),
         ])
-        return { id, rows, nhsca, fargo }
+        return { id, bundle, team }
       } catch {
         // One athlete failing must not blank the whole class.
-        return { id, rows: [], nhsca: [], fargo: [] }
+        return {
+          id,
+          bundle: { nchsaa: [], nhsca: [], super32: [], fargo: [], other: [] },
+          team: { nationalTeamResults: [], qualityWins: [] },
+        }
       }
     }),
   )
 
-  for (const { id, rows, nhsca, fargo } of settled) {
-    const parsed = rows
+  for (const { id, bundle, team } of settled) {
+    const parsed = bundle.nchsaa
       .map((row) => ({
         year: Number(row.year),
         // A zero means qualified and did not place, not first.
@@ -133,10 +154,10 @@ async function loadCredentialSources(
     if (parsed.length) state.set(id, parsed)
 
     const finishes = [
-      ...nhsca
+      ...bundle.nhsca
         .filter((result) => nationalPlacement(result.placement) != null)
         .map((result) => ({ year: result.year, detail: `${result.year} NHSCA ${result.placement}` })),
-      ...fargo
+      ...bundle.fargo
         // Match the TOC/admin definition: Fargo freestyle podium finishes count here.
         .filter((result) => isFargoFreestyle(result.division) && nationalPlacement(result.placement) != null)
         .map((result) => ({ year: result.year, detail: `${result.year} Fargo ${result.placement}` })),
@@ -148,9 +169,28 @@ async function loadCredentialSources(
         detail: finishes.map((finish) => finish.detail).join(" · "),
       })
     }
+
+    const placements = [
+      ...bundle.super32
+        .map((result) => ({ event: "Super 32", year: result.year, place: nationalPlacement(result.placement) }))
+        .filter((result): result is { event: string; year: number; place: number } => result.place != null),
+      ...bundle.other
+        .filter((result) => result.placement != null)
+        .map((result) => ({ event: result.eventShortName || result.eventName, year: result.year, place: Number(result.placement) })),
+    ]
+    if (placements.length) nationalPlacements.set(id, placements)
+
+    const qualifiers = bundle.other
+      .filter((result) => result.qualified)
+      .map((result) => ({ event: result.eventShortName || result.eventName, year: result.year }))
+    if (qualifiers.length) nationalQualifiers.set(id, qualifiers)
+
+    if (team.nationalTeamResults.length) nationalTeam.set(id, team.nationalTeamResults.length)
+    const qualityWinCount = team.qualityWins.reduce((total, block) => total + block.wins.length, 0)
+    if (qualityWinCount) significantWins.set(id, qualityWinCount)
   }
 
-  return { state, allAmerican }
+  return { state, allAmerican, nationalPlacements, nationalQualifiers, nationalTeam, significantWins }
 }
 
 function credentialsFrom(id: string, sources: CredentialSources): PublicRankingCredential[] {
@@ -187,6 +227,46 @@ function credentialsFrom(id: string, sources: CredentialSources): PublicRankingC
       kind: "state-placer",
       label: placements.length > 1 ? `${placements.length}X State placer` : "State placer",
       detail: placements.map((p) => `${p.year} ${p.place} place`).join(" · "),
+    })
+  }
+
+  const nationalPlacements = sources.nationalPlacements.get(id) ?? []
+  if (nationalPlacements.length) {
+    const only = nationalPlacements[0]
+    out.push({
+      kind: "national-placer",
+      label:
+        nationalPlacements.length > 1
+          ? `${nationalPlacements.length}X National placer`
+          : `${only.event} ${only.place === 1 ? "champ" : "placer"}`,
+      detail: nationalPlacements.map((r) => `${r.year} ${r.event} — ${r.place}`).join(" · "),
+    })
+  }
+
+  const qualifiers = sources.nationalQualifiers.get(id) ?? []
+  if (qualifiers.length) {
+    out.push({
+      kind: "national-qualifier",
+      label: qualifiers.length > 1 ? `${qualifiers.length}X Super 32 qualifier` : "Super 32 qualifier",
+      detail: qualifiers.map((r) => `${r.year} ${r.event}`).join(" · "),
+    })
+  }
+
+  const nationalTeamAppearances = sources.nationalTeam.get(id) ?? 0
+  if (nationalTeamAppearances) {
+    out.push({
+      kind: "national-team",
+      label: "NC United National Team",
+      detail: `${nationalTeamAppearances} national team ${nationalTeamAppearances === 1 ? "event" : "events"} on file`,
+    })
+  }
+
+  const significantWinCount = sources.significantWins.get(id) ?? 0
+  if (significantWinCount) {
+    out.push({
+      kind: "significant-win",
+      label: significantWinCount > 1 ? `${significantWinCount} significant wins` : "Significant win",
+      detail: `Verified wins over state champions, state placers, or nationally credentialed opponents`,
     })
   }
   return out
@@ -251,7 +331,7 @@ async function buildPublicClassRanking(year: number): Promise<PublicClassRanking
  * the page kept serving a payload built before they existed. Bump this whenever the returned
  * shape changes.
  */
-const PUBLIC_RANKING_CACHE_VERSION = "v3-reconciled-all-american-pills"
+const PUBLIC_RANKING_CACHE_VERSION = "v4-canonical-accolade-bundle"
 
 export const loadPublicClassRanking = unstable_cache(
   buildPublicClassRanking,
