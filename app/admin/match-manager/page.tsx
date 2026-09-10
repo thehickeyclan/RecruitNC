@@ -9,7 +9,10 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { collapseRepeatedRankWrestlerEventSnapshots } from "@/lib/match-manager/rankwrestler-parser"
+import {
+  collapseRepeatedRankWrestlerEventSnapshots,
+  parseRankWrestlerText,
+} from "@/lib/match-manager/rankwrestler-parser"
 
 interface Athlete {
   id: string
@@ -588,6 +591,9 @@ export default function MatchManagerPage() {
     if (format === "track") {
       return parseTrackFormat(allLines)
     }
+
+    // Keep pasted RankWrestler imports on the same tested parser used by browser sync.
+    return parseRankWrestlerText(rawText, "rank")
 
     // Rank format: Win/Loss-first blocks, date-first blocks, or tab-separated
     const denseLines = allLines.map((l) => l.trim()).filter((l) => l.length > 0)

@@ -64,6 +64,22 @@ describe("rankWrestlerTextCandidatesFromHtml", () => {
 })
 
 describe("parseRankWrestlerText", () => {
+  it("recovers a complete leading match when the copied first Win badge is omitted", () => {
+    const rawText = [
+      "2/17/2024", "99.63", "Jack Sarchet", "• Green Hope", "132 lbs", "•", "NCHSAA State Championships", "•", "TF",
+      "Win", "2/17/2024", "99.88", "Dylan Drinkard", "• Mallard Creek", "132 lbs", "•", "NCHSAA State Championships", "•", "Dec",
+      "Loss", "2/17/2024", "99.93", "Eli Pendergrass", "• Northwest Guilford", "132 lbs", "•", "NCHSAA State Championships", "•", "Dec",
+    ].join("\n")
+
+    const matches = parseRankWrestlerText(rawText)
+    expect(matches).toHaveLength(3)
+    expect(matches.map((match) => ({ opponent: match.winner || match.loser, win: match.winner === "" }))).toEqual([
+      { opponent: "Jack Sarchet", win: true },
+      { opponent: "Dylan Drinkard", win: true },
+      { opponent: "Eli Pendergrass", win: false },
+    ])
+  })
+
   it("parses rendered RankWrestler profile text copied from Match History", () => {
     const renderedProfileText = [
       "#5",

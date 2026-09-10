@@ -334,6 +334,19 @@ export function parseRankWrestlerText(rawText: string, format: "rank" | "track" 
     return (lower === "win" || lower === "loss") && /^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(denseLines[index + 1] ?? "")
   })
   if (embeddedRankStart > 0) {
+    // A copied RankWrestler selection can begin inside the first result badge, leaving a
+    // complete first match card that starts with its date. Recover that leading card instead
+    // of silently discarding it. RankWrestler's omitted leading badge is the win badge; a
+    // visible Loss badge is retained as text and therefore does not enter this recovery path.
+    if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(denseLines[0] ?? "")) {
+      const leading = parseRankWrestlerText(["Win", ...denseLines.slice(0, embeddedRankStart)].join("\n"), format)
+      if (leading.length === 1) {
+        return [
+          ...leading,
+          ...parseRankWrestlerText(denseLines.slice(embeddedRankStart).join("\n"), format),
+        ]
+      }
+    }
     return parseRankWrestlerText(denseLines.slice(embeddedRankStart).join("\n"), format)
   }
 
