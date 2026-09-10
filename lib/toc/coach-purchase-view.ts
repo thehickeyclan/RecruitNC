@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { contactsByCoach, type ResolvedCoachRows } from "@/lib/toc/coach-identity"
 import {
   matchPurchases,
+  normaliseCoachName,
   suggestCoaches,
   type PurchaseCoachMatch,
   type TicketPurchase,
@@ -35,13 +36,17 @@ export async function loadCoachTickets(
 ): Promise<{ byCoach: Map<string, CoachTicket>; unmatched: UnmatchedPurchase[]; ready: boolean }> {
   const { data, error } = await admin
     .from(PURCHASES_TABLE)
-    .select("order_id,email,purchased_at,ticket_type,status,linked_coach_key")
+    .select("order_id,email,purchased_at,ticket_type,status,linked_coach_key,first_name,last_name")
 
   if (error) return { byCoach: new Map(), unmatched: [], ready: false }
 
   const purchases: TicketPurchase[] = (data ?? []).map((row) => ({
     email: String(row.email ?? "").toLowerCase(),
     orderId: String(row.order_id),
+    // Carried through, not dropped. Leaving these out here is what made this page disagree with
+    // the public field card about whether a coach had bought a credential.
+    firstName: row.first_name ? String(row.first_name) : null,
+    lastName: row.last_name ? String(row.last_name) : null,
     purchasedAt: row.purchased_at ? String(row.purchased_at) : null,
     ticketType: row.ticket_type ? String(row.ticket_type) : null,
     status: row.status ? String(row.status) : null,
@@ -66,12 +71,23 @@ export async function loadCoachTickets(
     : []
 
   const contacts = contactsByCoach(rows)
+  // What each coach is called, so a family's purchase in the coach's name finds them.
+  const namesByCoach = new Map<string, Set<string>>()
+  for (const coach of coaches) {
+    const key = normaliseCoachName(coach.coachName)
+    if (!key) continue
+    const set = namesByCoach.get(coach.coachKey) ?? new Set<string>()
+    set.add(key)
+    namesByCoach.set(coach.coachKey, set)
+  }
+
   const matches = matchPurchases({
     purchases,
     emailsByCoach: contacts.emails,
     phonesByCoach: contacts.phones,
     directory,
     linked,
+    namesByCoach,
   })
 
   const byCoach = new Map<string, CoachTicket>()

@@ -283,3 +283,53 @@ describe("one order, two coaches", () => {
   })
 })
 
+describe("a family buying in the coach's name", () => {
+  /*
+   * Families buy their wrestler's coaches a credential, so the checkout address is a parent's and
+   * matches nothing on file. GoFan asks for the attendee's name, and that name is the only thing
+   * that places the purchase.
+   *
+   * This was reached through a bug worth remembering: the buyer-has-no-account branch used to
+   * `continue`, which skipped every route below it. Jay Rogers, Dusty Smith and Darrell Travers
+   * all bought under their own names from personal addresses and all three read as unpaid.
+   */
+  const base = { purchasedAt: null, ticketType: "TOC Weekend Coach Credential", status: "Active" }
+
+  it("matches on the full name when the buyer has no account at all", () => {
+    const matches = matchPurchases({
+      purchases: [{ ...base, email: "jayrogers13@hotmail.com", orderId: "1", firstName: "Jay", lastName: "Rogers" }],
+      emailsByCoach: new Map(),
+      phonesByCoach: new Map(),
+      directory: [],
+      linked: new Map(),
+      namesByCoach: new Map([["tel:3365412929", new Set(["jay rogers"])]]),
+    })
+    expect(matches.get("1")).toEqual({ via: "name", coachKey: "tel:3365412929" })
+  })
+
+  it("will not place a purchase on a first name alone", () => {
+    const matches = matchPurchases({
+      purchases: [{ ...base, email: "someone@example.com", orderId: "2", firstName: "Jay", lastName: null }],
+      emailsByCoach: new Map(),
+      phonesByCoach: new Map(),
+      directory: [],
+      linked: new Map(),
+      namesByCoach: new Map([["tel:3365412929", new Set(["jay rogers"])]]),
+    })
+    expect(matches.get("2")).toBeUndefined()
+  })
+
+  it("still lets an admin's hand link outrank the name", () => {
+    const matches = matchPurchases({
+      purchases: [{ ...base, email: "x@example.com", orderId: "3", firstName: "Jay", lastName: "Rogers" }],
+      emailsByCoach: new Map(),
+      phonesByCoach: new Map(),
+      directory: [],
+      linked: new Map([["3", "tel:9999999999"]]),
+      namesByCoach: new Map([["tel:3365412929", new Set(["jay rogers"])]]),
+    })
+    expect(matches.get("3")?.via).toBe("linked")
+  })
+})
+
+

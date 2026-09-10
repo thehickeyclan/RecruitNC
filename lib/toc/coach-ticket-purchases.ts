@@ -255,11 +255,20 @@ function suffixSharedOrders(rows: TicketPurchase[]): TicketPurchase[] {
 
 export type PurchaseCoachMatch = {
   /** How the purchase reached the coach, for a reader deciding whether to trust it. */
-  via: "email" | "account" | "phone" | "linked"
+  via: "email" | "account" | "phone" | "linked" | "name"
   coachKey: string
 }
 
 export type DirectoryPerson = { userId: string; email: string | null; phone: string | null }
+
+/** One spelling for a person's name, so "Jon-Jon Milner" and "jon jon milner" are one man. */
+export function normaliseCoachName(name: string): string {
+  return String(name ?? "")
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
 
 /**
  * Matches purchases onto coaches, exactly, by every route we hold.
@@ -274,8 +283,26 @@ export function matchPurchases(input: {
   phonesByCoach: ReadonlyMap<string, ReadonlySet<string>>
   directory: readonly DirectoryPerson[]
   linked: ReadonlyMap<string, string>
+  /** Coach key by normalised full name — the route that places a family's purchase. */
+  namesByCoach?: ReadonlyMap<string, ReadonlySet<string>>
 }): Map<string, PurchaseCoachMatch> {
-  const { purchases, emailsByCoach, phonesByCoach, directory, linked } = input
+  const { purchases, emailsByCoach, phonesByCoach, directory, linked, namesByCoach } = input
+
+  /*
+   * The name on the ticket is the coach, not the buyer.
+   *
+   * Families buy their wrestler's coaches a credential, so the checkout address belongs to a
+   * parent and matches nothing we hold. GoFan asks for the attendee's name, and that name is the
+   * only thing tying `lworrick@embarqmail.com` to Chad Lewis and Josh Stanley.
+   *
+   * This route already existed — on the public field card, in its own hand-written loop — while
+   * this matcher, which the admin check-in list uses, ignored names entirely. So the same coach
+   * read as credentialed on one page and unpaid on the other. One matcher, both pages.
+   */
+  const coachByName = new Map<string, string>()
+  for (const [coachKey, names] of namesByCoach ?? new Map()) {
+    for (const name of names) if (name && !coachByName.has(name)) coachByName.set(name, coachKey)
+  }
 
   const coachByEmail = new Map<string, string>()
   for (const [coachKey, emails] of emailsByCoach) {
@@ -302,17 +329,34 @@ export function matchPurchases(input: {
     const direct = coachByEmail.get(email)
     if (direct) { matches.set(purchase.orderId, { via: "email", coachKey: direct }); continue }
 
-    // The address they checked out with may be the one on their account rather than the one a
-    // family gave us — Tom Puckett was designated by mobile and bought under his account email.
+    /*
+     * The address they checked out with may be the one on their account rather than the one a
+     * family gave us — Tom Puckett was designated by mobile and bought under his account email.
+     *
+     * Guarded rather than an early `continue`. It used to bail out of the whole loop when the
+     * buyer had no account, which silently skipped every route below it: Jay Rogers, Dusty Smith
+     * and Darrell Travers all bought under their own name from a personal address, and all three
+     * read as unpaid because the name check sat underneath a `continue` they never got past.
+     */
     const person = personByEmail.get(email)
-    if (!person) continue
+    if (person) {
+      const byAccount = coachByEmail.get(`user:${person.userId}`) ?? findKey(emailsByCoach, `user:${person.userId}`)
+      if (byAccount) { matches.set(purchase.orderId, { via: "account", coachKey: byAccount }); continue }
 
-    const byAccount = coachByEmail.get(`user:${person.userId}`) ?? findKey(emailsByCoach, `user:${person.userId}`)
-    if (byAccount) { matches.set(purchase.orderId, { via: "account", coachKey: byAccount }); continue }
+      const phone = digits(person.phone)
+      const byPhone = phone ? coachByPhone.get(phone) : undefined
+      if (byPhone) { matches.set(purchase.orderId, { via: "phone", coachKey: byPhone }); continue }
+    }
 
-    const phone = digits(person.phone)
-    const byPhone = phone ? coachByPhone.get(phone) : undefined
-    if (byPhone) matches.set(purchase.orderId, { via: "phone", coachKey: byPhone })
+    /*
+     * Last, and only on a full name. A lone first name would sweep several coaches into one
+     * purchase, which is worse than leaving it unmatched for a human to look at.
+     */
+    const fullName = normaliseCoachName(`${purchase.firstName ?? ""} ${purchase.lastName ?? ""}`)
+    if (purchase.firstName && purchase.lastName) {
+      const byName = coachByName.get(fullName)
+      if (byName) matches.set(purchase.orderId, { via: "name", coachKey: byName })
+    }
   }
   return matches
 }
