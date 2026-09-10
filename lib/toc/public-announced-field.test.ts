@@ -19,7 +19,25 @@ const state = {
   coachTickets: [] as Row[],
   /** Every (table, columns) pair the module asked for, so tests can assert nothing broad was selected. */
   selects: [] as { table: string; columns: string }[],
+  /** Extra sources the shared credential engine consults; empty unless a test cares. */
+  engineTables: {} as Record<string, Row[]>,
 }
+
+/**
+ * Tables reached only through {@link loadAthleteCredentials}, not by this module directly.
+ *
+ * They are listed rather than blanket-allowed so that a genuinely unexpected table still throws —
+ * the point of the harness is that a new query cannot appear unnoticed on a public path.
+ */
+const SHARED_ENGINE_TABLES = [
+  "nc_united_tournament_results",
+  "nc_united_wrestlers",
+  "nhsca_roster",
+  "other_tournament_bouts",
+  "other_tournament_results",
+  "super32_results",
+  "wrestling_nhsca_results",
+]
 
 function makeQuery(table: string, rows: Row[]) {
   let result = [...rows]
@@ -40,6 +58,48 @@ function makeQuery(table: string, rows: Row[]) {
       result = result.filter((r) => r[col] !== null && r[col] !== undefined)
       return q
     },
+    /*
+     * The credential engine builds longer chains than this module ever did. A missing method here
+     * throws, the engine catches it as "no credentials", and the test reads as a wrestler with an
+     * empty résumé — so these exist to make a harness gap fail loudly rather than quietly.
+     */
+    ilike(col: string, val: string) {
+      const re = new RegExp(`^${String(val).replace(/%/g, ".*")}$`, "i")
+      result = result.filter((r) => re.test(String(r[col] ?? "")))
+      return q
+    },
+    or() {
+      return q
+    },
+    order() {
+      return q
+    },
+    limit(n: number) {
+      result = result.slice(0, n)
+      return q
+    },
+    gte(col: string, val: number) {
+      result = result.filter((r) => Number(r[col]) >= Number(val))
+      return q
+    },
+    lte(col: string, val: number) {
+      result = result.filter((r) => Number(r[col]) <= Number(val))
+      return q
+    },
+    neq(col: string, val: unknown) {
+      result = result.filter((r) => r[col] !== val)
+      return q
+    },
+    is(col: string, val: unknown) {
+      result = result.filter((r) => (r[col] ?? null) === val)
+      return q
+    },
+    maybeSingle() {
+      return Promise.resolve({ data: result[0] ?? null, error: null })
+    },
+    single() {
+      return Promise.resolve({ data: result[0] ?? null, error: null })
+    },
     then(resolve: (v: { data: Row[]; error: null }) => unknown) {
       return Promise.resolve({ data: result, error: null }).then(resolve)
     },
@@ -59,6 +119,14 @@ vi.mock("@/lib/supabase/admin", () => ({
       if (table === "wrestling_nchsaa_results") return makeQuery(table, state.stateResults)
       if (table === "toc_coach_designations") return makeQuery(table, state.coachDesignations)
       if (table === "toc_coach_ticket_purchases") return makeQuery(table, state.coachTickets)
+      /*
+       * The credential engine reconciles across every tournament source, so these tables are now
+       * part of this module's real query surface. Empty is the honest default — a test that cares
+       * about one of them fills it in. Throwing here instead made the whole bundle fail, which the
+       * engine catches as "no credentials", so a broken harness looked exactly like a wrestler
+       * with nothing to his name.
+       */
+      if (SHARED_ENGINE_TABLES.includes(table)) return makeQuery(table, state.engineTables[table] ?? [])
       throw new Error(`unexpected table ${table}`)
     },
   }),
@@ -83,6 +151,7 @@ import {
 
 beforeEach(() => {
   state.selects = []
+  state.engineTables = {}
   state.placements = []
   state.fargoResults = []
   state.matches = []
@@ -170,9 +239,26 @@ describe("public payload contains nothing private", () => {
     await getPublicAnnouncedWeight(117)
     const athleteSelects = state.selects.filter((s) => s.table === "athletes").map((s) => s.columns)
     for (const columns of athleteSelects) {
-      for (const forbidden of [...FORBIDDEN_SUMMARY_COLUMNS, "highschool"]) {
+      for (const forbidden of FORBIDDEN_SUMMARY_COLUMNS) {
         expect(columns).not.toContain(forbidden)
       }
+    }
+  })
+
+  /**
+   * The school guarantee moved from the query to the payload, on purpose.
+   *
+   * It used to be enforced by never selecting `highschool` at all, which is the stronger form —
+   * but it was also a fiction: the matcher needs the school to tell two wrestlers with one name
+   * apart, and the select that omitted it left every state lookup on this page matching blind.
+   * Now the column is read deliberately, into a variable nothing publishes, and the guarantee that
+   * matters is asserted where it matters: no school reaches a visitor.
+   */
+  it("keeps every athlete's school out of the payload even though the matcher reads it", async () => {
+    const field = await getPublicAnnouncedWeight(117)
+    const serialized = JSON.stringify(field).toLowerCase()
+    for (const school of ["davie", "cape fear", "wakefield", "leesville"]) {
+      expect(serialized).not.toContain(school)
     }
   })
 
@@ -198,8 +284,20 @@ describe("public payload contains nothing private", () => {
   })
 
   it("never issues a select(*) against invitations or athletes", async () => {
+    /*
+     * These two tables are the ones that carry private columns on the same row as public ones —
+     * seed, medical notes and jacket size on invitations; GPA, contact details and staff
+     * evaluation notes on athletes. Every select against them stays an explicit allowlist.
+     *
+     * The shared credential engine does select broadly from the tournament tables it reconciles.
+     * That is a deliberately narrower guarantee than this file used to make, and it is why the
+     * payload-level assertions below exist: nothing those tables hold — school, seed, or anything
+     * else — may appear in what a visitor receives.
+     */
     await getPublicAnnouncedWeight(117)
-    const broad = state.selects.filter((s) => s.columns.includes("*"))
+    const broad = state.selects.filter(
+      (s) => (s.table === "toc_invitations" || s.table === "athletes") && s.columns.includes("*"),
+    )
     expect(broad).toEqual([])
   })
 })
@@ -292,7 +390,9 @@ describe("summary fields", () => {
   it("lists national results newest first and caps the count", async () => {
     const field = await getPublicAnnouncedWeight(117)
     const a = field?.athletes.find((x) => x.name === "Approved Commit")
-    expect(a?.results).toEqual(["2026 NHSCA 3rd", "2025 Super 32 Round of 16", "2025 NHSCA 5th"])
+    // Within a year, a placing leads a round-of-16 exit. The old order was an artefact of which
+    // legacy column happened to be listed first, not a judgement about which result mattered more.
+    expect(a?.results).toEqual(["2026 NHSCA 3rd", "2025 NHSCA 5th", "2025 Super 32 Round of 16"])
   })
 
   it("returns no results rather than inventing them when the athlete has none", async () => {
@@ -308,40 +408,41 @@ describe("summary fields", () => {
   })
 })
 
-describe("national results from nhsca_placements", () => {
+describe("national results", () => {
   beforeEach(() => {
+    /*
+     * Rows are keyed on the wrestler's name, not on `athlete_id`, because that is how the shared
+     * engine finds them — and because 60 of the 106 All-American rows in the real table have no
+     * `athlete_id` at all. Fixtures keyed on the ID tested a lookup that did not survive contact
+     * with the data.
+     */
     state.placements = [
-      { athlete_id: "a1", year: 2025, placement: "6", high_school: "Davie", seed: 2 },
-      { athlete_id: "a1", year: 2026, placement: "4", high_school: "Davie", seed: 1 },
+      { athlete_name: "Zeb Wilson", year: 2025, placement: "6th", high_school: "Davie", seed: 2 },
+      { athlete_name: "Zeb Wilson", year: 2026, placement: "4th", high_school: "Davie", seed: 1 },
     ]
   })
 
   it("formats and orders newest first", async () => {
     const field = await getPublicAnnouncedWeight(117)
-    const wilson = field?.athletes.find((a) => a.name === "Zeb Wilson")
+    const wilson = field?.athletes.find((a) => a.athleteId === "a1")
     expect(wilson?.results).toEqual(["2026 NHSCA 4th", "2025 NHSCA 6th"])
   })
 
-  it("never selects high_school or seed from the placements table", async () => {
-    await getPublicAnnouncedWeight(117)
-    const sel = state.selects.filter((s) => s.table === "nhsca_placements").map((s) => s.columns)
-    expect(sel.length).toBeGreaterThan(0)
-    for (const columns of sel) {
-      expect(columns).not.toContain("high_school")
-      expect(columns).not.toContain("seed")
-      expect(columns).not.toContain("*")
-    }
-  })
-
-  it("keeps the placements school out of the payload", async () => {
+  it("keeps the placements school and seed out of the payload", async () => {
+    // Both live on the same row as the placement. The engine reads the row; the page publishes
+    // a year and a finish, and nothing else.
     const field = await getPublicAnnouncedWeight(117)
-    expect(JSON.stringify(field)).not.toContain("Davie")
+    const serialized = JSON.stringify(field)
+    expect(serialized).not.toContain("Davie")
+    expect(serialized).not.toMatch(/"seed"/)
   })
 })
 
 describe("Fargo All-American results", () => {
   it("counts a linked Fargo All-American in the public rollup", async () => {
-    state.fargoResults = [{ athlete_id: "a1", year: 2026, placement: 5, is_all_american: true }]
+    state.fargoResults = [
+      { athlete_name: "Zeb Wilson", high_school: "Davie", year: 2026, placement: 5, is_all_american: true },
+    ]
     const field = await getPublicAnnouncedWeight(117)
     const athlete = field?.athletes.find((a) => a.athleteId === "a1")
     expect(field?.rollup.allAmericans).toBe(1)

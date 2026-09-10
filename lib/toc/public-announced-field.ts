@@ -1,7 +1,7 @@
 import "server-only"
 
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getMergedNchsaaForAthlete } from "@/lib/nchsaa-results"
+import { loadAthleteCredentialsBatch, ordinal } from "@/lib/credentials/athlete-credentials"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { MAX_COACHES_PER_ATHLETE } from "@/lib/toc/coach-designation"
 
@@ -279,6 +279,29 @@ const PLACEMENT_COLUMNS = [
   { column: "nhsca_2024_placement", label: "2024 NHSCA" },
 ] as const
 
+/**
+ * The only columns the credential matcher may read, and an allowlist for the same reason every
+ * other select in this file is one: `athletes` has 100 columns, among them GPA, contact email,
+ * phone, birthdate and staff evaluation notes. A `select("*")` here would put all of that one
+ * careless spread away from a public card.
+ *
+ * These are what {@link loadAthleteCredentials} needs to tell two wrestlers with one name apart.
+ * Removing one does not break the build — it quietly weakens every match on the page, which is
+ * the failure this whole change exists to end. `firstName` and `lastName` are camelCase in
+ * Postgres and must stay quoted or they resolve lowercased and 404.
+ */
+const IDENTITY_COLUMNS = [
+  "id",
+  "name",
+  "wrestling_name",
+  '"firstName"',
+  '"lastName"',
+  "highschool",
+  "graduationyear",
+  "nhsca_results",
+  "super32_results",
+] as const
+
 /** At most this many result lines per athlete — the card is a summary, not a résumé. */
 const MAX_PUBLIC_RESULTS = 3
 
@@ -413,172 +436,72 @@ export function buildFieldRollup(athletes: PublicFieldAthlete[]): PublicFieldRol
 }
 
 /**
- * State credentials, from the one matcher the rest of the site already uses.
+ * State and national credentials, from the one engine every surface shares.
  *
- * This used to be its own implementation: an exact match on `wrestler_name`, with a nickname
- * and suffix strip bolted on as the failures were found one at a time. It disagreed with the
- * admin field board and with every athlete profile, because those call
- * {@link getMergedNchsaaForAthlete}, which reconciles a name against the athlete's school and
- * the seasons they could have wrestled.
+ * This used to be three hand-rolled lookups. State results already went through the shared
+ * matcher, but NHSCA and Fargo were `.in("athlete_id", ids)` queries straight against
+ * `nhsca_placements` and `fargo_results` — and 60 of the 106 All-American rows in that first
+ * table have no `athlete_id`, because a 2025 import glued the first word of each school onto the
+ * wrestler's name. The field page therefore showed 8 All-Americans where the athlete actually
+ * held 11, and which three vanished depended on nothing a reader could see.
  *
- * The disagreement was not academic. Ashton Tennessee won 6A at 133 and his card showed no
- * credential. Jeshurun Mills wrestles as "Jay Mills" and placed second; Joshua Lemke is "Josh
- * Lemke" and did too. All three were public and wrong while the admin board next to them was
- * right, which is the whole argument for there being one matcher rather than two.
+ * {@link loadAthleteCredentialsBatch} reconciles a name against the school and the plausible
+ * seasons, exactly as an athlete profile does, so the field and the profile can no longer
+ * disagree about the same wrestler.
  *
- * The school is used to decide, never to publish: {@link formatStateCredential} emits a year,
- * a classification and a placement, and nothing else.
+ * Identity rows are read here and never published. The school is what tells two wrestlers with
+ * one name apart; rule 3 at the top of this file governs what reaches a visitor, not what the
+ * server may look at to decide whose result is whose.
  */
-async function fetchStateCredentialsByAthleteId(
-  athletes: { id: string; name: string; graduationyear: number | null; highschool: string | null }[],
-): Promise<Map<string, StateResult[]>> {
-  const out = new Map<string, StateResult[]>()
-  if (athletes.length === 0) return out
+async function fetchFieldCredentials(
+  identityRows: Array<Record<string, unknown>>,
+): Promise<{ state: Map<string, StateResult[]>; results: Map<string, AthleteResultData> }> {
+  const state = new Map<string, StateResult[]>()
+  const results = new Map<string, AthleteResultData>()
+  if (identityRows.length === 0) return { state, results }
 
   const admin = createAdminClient()
-  const settled = await Promise.all(
-    athletes.map(async (athlete) => {
-      try {
-        const rows = await getMergedNchsaaForAthlete(admin, athlete)
-        return [athlete.id, rows] as const
-      } catch (error) {
-        // One athlete's lookup failing must not empty the whole weight class.
-        console.warn(`[toc-public-field] state results for ${athlete.id}:`, error)
-        return [athlete.id, []] as const
-      }
-    }),
-  )
+  const ids = identityRows.map((row) => String(row.id ?? "")).filter(Boolean)
+  const [credentials, seasons] = await Promise.all([
+    loadAthleteCredentialsBatch(admin, identityRows),
+    fetchSeasonRecordByAthleteId(ids),
+  ])
 
-  for (const [id, rows] of settled) {
-    const results: StateResult[] = rows
-      .map((row) => ({
-        year: Number(row.year),
-        // A zero in this table means qualified and did not place, not first.
-        place: row.place == null || Number(row.place) < 1 ? null : Number(row.place),
-        classification: row.classification ?? null,
-      }))
-      .filter((r) => Number.isFinite(r.year))
-      .sort((a, b) => b.year - a.year)
-    if (results.length) out.set(id, results)
-  }
-  return out
-}
+  for (const id of ids) {
+    const held = credentials.get(id)
+    const seasonRecord = seasons.get(id) ?? null
 
-/**
- * National-event finishes from `nhsca_placements`, newest first.
- *
- * Two columns on that table are off limits and must never enter the select: `high_school`, for the same reason
- * as everywhere else on this page, and `seed` — an NHSCA seed is still a seed, and this page states the TOC
- * field is unseeded. Only rows with an actual placement are published; a losing record is not a "result" worth
- * putting under an athlete's photo.
- */
-async function fetchNhscaLinesByAthleteId(
-  athleteIds: string[],
-): Promise<Map<string, { lines: string[]; allAmericanYear: number | null; allAmericanHonors: number }>> {
-  const out = new Map<string, { lines: string[]; allAmericanYear: number | null; allAmericanHonors: number }>()
-  if (athleteIds.length === 0) return out
-
-  const admin = createAdminClient()
-  // No `high_school`, and no `seed` — an NHSCA seed is still a seed on a page that says unseeded.
-  const { data, error } = await admin
-    .from("nhsca_placements")
-    .select("athlete_id, year, placement, record")
-    .in("athlete_id", athleteIds)
-
-  if (error) {
-    console.warn("[toc-public-field] NHSCA lookup failed:", error.message)
-    return out
-  }
-
-  type Row = { athlete_id?: string | null; year?: number | null; placement?: string | number | null; record?: string | null }
-  const byAthlete = new Map<string, Row[]>()
-  for (const raw of (data ?? []) as Row[]) {
-    const id = typeof raw.athlete_id === "string" ? raw.athlete_id : ""
-    if (!id) continue
-    byAthlete.set(id, [...(byAthlete.get(id) ?? []), raw])
-  }
-
-  for (const [id, rows] of byAthlete) {
-    const sorted = rows.slice().sort((a, b) => Number(b.year ?? 0) - Number(a.year ?? 0))
-    // Top eight at NHSCA is All-American — the strongest credential most of this field will hold.
-    const aaRows = sorted.filter((r) => {
-      const place = Number(r.placement)
-      return Number.isInteger(place) && place >= 1 && place <= NHSCA_ALL_AMERICAN_PLACES
-    })
-    const lines = sorted
-      .map((r) => {
-        const year = Number(r.year) || null
-        const prefix = `${year ? `${year} ` : ""}NHSCA`
-        const placement =
-          typeof r.placement === "number" ? String(r.placement) : (r.placement ?? "").toString().trim()
-        // A placing is the headline; otherwise the tournament record still shows they were on the national stage.
-        if (placement) return `${prefix} ${formatPlacement(placement)}`
-        const record = (r.record ?? "").trim()
-        return record ? `${prefix} ${record}` : null
-      })
-      .filter((l): l is string => Boolean(l))
-    if (lines.length > 0 || aaRows.length > 0) {
-      out.set(id, { lines, allAmericanYear: aaRows[0] ? Number(aaRows[0].year) || null : null, allAmericanHonors: aaRows.length })
+    if (held && held.state.length) {
+      state.set(
+        id,
+        held.state.map((row) => ({ year: row.year, place: row.place, classification: row.classification })),
+      )
     }
-  }
 
-  return out
-}
+    /*
+     * Presentation is unchanged on purpose: an NHSCA trip that produced only a record still earns
+     * a line, placings render as ordinals, and Fargo follows NHSCA. Only the source of the facts
+     * moved, so the diff across the field is the credentials that were missing and nothing else.
+     */
+    const lines: string[] = []
+    if (seasonRecord) lines.push(formatSeasonRecord(seasonRecord))
+    for (const trip of held?.national ?? []) {
+      const finish =
+        trip.place != null ? ordinal(trip.place) : trip.placementText || trip.record || null
+      if (finish) lines.push(`${trip.year} ${trip.event} ${finish}`)
+    }
 
-/** Fargo top-eight finishes, linked to the canonical athlete profile. */
-async function fetchFargoLinesByAthleteId(
-  athleteIds: string[],
-): Promise<Map<string, { lines: string[]; allAmericanYear: number | null; allAmericanHonors: number }>> {
-  const out = new Map<string, { lines: string[]; allAmericanYear: number | null; allAmericanHonors: number }>()
-  if (athleteIds.length === 0) return out
-
-  const admin = createAdminClient()
-  const { data, error } = await admin
-    .from("fargo_results")
-    .select("athlete_id, year, placement, is_all_american")
-    .in("athlete_id", athleteIds)
-
-  if (error) {
-    console.warn("[toc-public-field] Fargo lookup failed:", error.message)
-    return out
-  }
-
-  type Row = {
-    athlete_id?: string | null
-    year?: number | null
-    placement?: number | string | null
-    is_all_american?: boolean | null
-  }
-  const byAthlete = new Map<string, Row[]>()
-  for (const raw of (data ?? []) as Row[]) {
-    const id = typeof raw.athlete_id === "string" ? raw.athlete_id : ""
-    if (!id) continue
-    byAthlete.set(id, [...(byAthlete.get(id) ?? []), raw])
-  }
-
-  for (const [id, rows] of byAthlete) {
-    const allAmericans = rows
-      .filter((r) => {
-        const place = Number(r.placement)
-        return r.is_all_american === true || (Number.isInteger(place) && place >= 1 && place <= 8)
-      })
-      .sort((a, b) => Number(b.year ?? 0) - Number(a.year ?? 0))
-    if (allAmericans.length === 0) continue
-    out.set(id, {
-      allAmericanYear: Number(allAmericans[0]?.year) || null,
-      allAmericanHonors: allAmericans.length,
-      lines: allAmericans.map((r) => {
-        const year = Number(r.year) || null
-        const place = Number(r.placement)
-        // formatPlacement lowercases its argument, so a number throws. The NHSCA branch below
-        // already wraps it; this one did not, which made any integer Fargo placement a crash
-        // rather than a credential.
-        return `${year ? `${year} ` : ""}Fargo${Number.isInteger(place) ? ` ${formatPlacement(String(place))}` : " All-American"}`
-      }),
+    const newest = held?.allAmerican[0] ?? null
+    results.set(id, {
+      seasonRecord,
+      allAmericanYear: newest?.year ?? null,
+      allAmericanEvent: newest?.event ?? null,
+      allAmericanHonors: held?.allAmerican.length ?? 0,
+      lines: lines.slice(0, MAX_PUBLIC_RESULTS),
     })
   }
 
-  return out
+  return { state, results }
 }
 
 /**
@@ -633,42 +556,6 @@ async function fetchSeasonRecordByAthleteId(athleteIds: string[]): Promise<Map<s
     })
   }
 
-  return out
-}
-
-/**
- * Public result lines per athlete, best-first: season record, then national tournament lines. Capped at
- * {@link MAX_PUBLIC_RESULTS} so the card stays a summary.
- */
-async function fetchPublicResultsByAthleteId(athleteIds: string[]): Promise<Map<string, AthleteResultData>> {
-  const [seasons, nhsca, fargo] = await Promise.all([
-    fetchSeasonRecordByAthleteId(athleteIds),
-    fetchNhscaLinesByAthleteId(athleteIds),
-    fetchFargoLinesByAthleteId(athleteIds),
-  ])
-
-  const out = new Map<string, AthleteResultData>()
-  for (const id of athleteIds) {
-    const seasonRecord = seasons.get(id) ?? null
-    const n = nhsca.get(id)
-    const f = fargo.get(id)
-    const nationalAas = [
-      n?.allAmericanYear ? { year: n.allAmericanYear, event: "NHSCA" as const } : null,
-      f?.allAmericanYear ? { year: f.allAmericanYear, event: "Fargo" as const } : null,
-    ].filter((v): v is { year: number; event: "NHSCA" | "Fargo" } => v != null)
-    nationalAas.sort((a, b) => b.year - a.year)
-    const lines: string[] = []
-    if (seasonRecord) lines.push(formatSeasonRecord(seasonRecord))
-    lines.push(...(n?.lines ?? []))
-    lines.push(...(f?.lines ?? []))
-    out.set(id, {
-      seasonRecord,
-      allAmericanYear: nationalAas[0]?.year ?? null,
-      allAmericanEvent: nationalAas[0]?.event ?? null,
-      allAmericanHonors: (n?.allAmericanHonors ?? 0) + (f?.allAmericanHonors ?? 0),
-      lines: lines.slice(0, MAX_PUBLIC_RESULTS),
-    })
-  }
   return out
 }
 
@@ -943,25 +830,31 @@ async function fetchPublicAthletesForWeight(weightClass: number): Promise<Public
     return []
   }
 
-  const publicResults = await fetchPublicResultsByAthleteId(athleteIds)
   /**
-   * `highschool` is read here and never published.
+   * Identity rows: a second read, used only to decide whose result is whose.
    *
-   * It is what tells two wrestlers with one name apart, and the shared matcher needs it. Rule 3
-   * at the top of this file is about what reaches a visitor, not about what the server may look
-   * at to decide whose result is whose — and getting that wrong put a state champion on the
-   * public field with no credential at all.
+   * The publishable select above deliberately omits `highschool` and the prose bio fields, and it
+   * stays that way — the row that becomes a card cannot leak a school because it never holds one.
+   * But the matcher does need the school, and reading it from the same query as the card is how
+   * it would eventually reach a visitor. So identity stays in its own variable that no branch
+   * below writes into `out`.
+   *
+   * The previous version tried to have it both ways and lost: it built `rosterForState` expecting
+   * `highschool`, from a select that never asked for it, so every state lookup on this page has
+   * been running with the school blank.
    */
-  const rosterForState = (athletes ?? []).map((raw) => {
-    const r = raw as unknown as Record<string, unknown>
-    return {
-      id: String(r.id ?? ""),
-      name: typeof r.name === "string" ? r.name : "",
-      graduationyear: typeof r.graduationyear === "number" ? r.graduationyear : null,
-      highschool: typeof r.highschool === "string" ? r.highschool : null,
-    }
-  })
-  const stateByAthlete = await fetchStateCredentialsByAthleteId(rosterForState)
+  const { data: identityRows, error: identityError } = await admin
+    .from("athletes")
+    .select(IDENTITY_COLUMNS.join(", "))
+    .in("id", athleteIds)
+
+  if (identityError) {
+    console.warn("[toc-public-field] identity lookup failed:", identityError.message)
+  }
+
+  const { state: stateByAthlete, results: publicResults } = await fetchFieldCredentials(
+    (identityRows ?? []) as unknown as Array<Record<string, unknown>>,
+  )
 
   const out: PublicFieldAthlete[] = []
   for (const raw of athletes ?? []) {
