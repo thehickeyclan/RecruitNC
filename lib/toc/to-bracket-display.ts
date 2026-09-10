@@ -3,6 +3,12 @@ import { buildSingleElimTreeFromSeeds, type SeededCompetitor } from "@/lib/brack
 import { isPlaceholderParticipant, resolveSlotLabel } from "@/lib/toc/eight-man-de-bracket"
 import type { TocBracketBout, TocBracketDraw, TocBracketParticipant, TocBracketSlot } from "@/lib/toc/bracket-types"
 
+/**
+ * What a wrestler with no club reads as. Never a school — TOC wrestlers compete unattached, and
+ * a blank line beside a name invites somebody to "fix" it by putting the high school back.
+ */
+const UNAFFILIATED = "Unaffiliated"
+
 function slotToDisplay(
   slot: TocBracketSlot,
   participantById: Map<string, TocBracketParticipant>,
@@ -20,7 +26,7 @@ function slotToDisplay(
 
   return {
     name: isBye ? "BYE" : isOpen ? "TBD" : label.primary,
-    subtitle: isOpen ? null : label.secondary ?? participant?.school ?? null,
+    subtitle: isOpen ? null : label.secondary ?? participant?.club ?? UNAFFILIATED,
     seed,
     isOpen,
     photoUrl: isOpen ? null : label.photoUrl ?? participant?.photoUrl ?? null,
@@ -163,7 +169,7 @@ export function tocDrawToSeededBracketTree(draw: TocBracketDraw): BracketTreeDis
     id: p.athleteId,
     seed: p.seed,
     name: p.name,
-    subtitle: p.school,
+    subtitle: p.club ?? UNAFFILIATED,
     photoUrl: p.photoUrl,
     isPlaceholder: isPlaceholderParticipant(p),
   }))

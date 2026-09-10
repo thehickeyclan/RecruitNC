@@ -45,7 +45,7 @@ export function placeholderParticipant(weightClass: number, seed: number): TocBr
     invitationId: `__toc_open_${weightClass}_${seed}__`,
     seed,
     name: "Open spot",
-    school: null,
+    club: null,
     photoUrl: null,
     graduationYear: null,
     isPlaceholder: true,
@@ -224,7 +224,7 @@ export function resolveSlotLabel(
     if (!p || isPlaceholderParticipant(p)) return { primary: "Open spot", isOpen: true }
     return {
       primary: p.name,
-      secondary: p.school ?? undefined,
+      secondary: p.club ?? undefined,
       seed: p.seed,
       photoUrl: p.photoUrl,
     }

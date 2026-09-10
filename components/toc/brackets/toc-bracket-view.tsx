@@ -240,7 +240,7 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
                   <p className={cn("text-sm text-white leading-tight", !open && tocDisplayClass())}>
                     {open ? (bye ? "BYE" : "TBD") : p.name}
                   </p>
-                  <p className="text-[11px] text-white/50 mt-1 truncate">{open ? (bye ? "Automatic advance" : "Open") : p.school ?? "—"}</p>
+                  <p className="text-[11px] text-white/50 mt-1 truncate">{open ? (bye ? "Automatic advance" : "Open") : p.club ?? "Unaffiliated"}</p>
                 </button>
               )
             })}

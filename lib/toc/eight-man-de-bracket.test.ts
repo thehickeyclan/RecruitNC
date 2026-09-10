@@ -9,7 +9,7 @@ function mockParticipants(): TocBracketParticipant[] {
     invitationId: `inv-${seed}`,
     seed,
     name: `Wrestler ${seed}`,
-    school: "Test HS",
+    club: "Test HS",
     photoUrl: null,
     graduationYear: 2027,
   }))
@@ -75,7 +75,7 @@ describe("eight-man DE bracket", () => {
       invitationId: `expanded-inv-${index + 1}`,
       seed: index + 1,
       name: `Expanded Wrestler ${index + 1}`,
-      school: "Test HS",
+      club: "Test HS",
       photoUrl: null,
       graduationYear: 2027,
     }))
@@ -124,7 +124,7 @@ describe("eight-man DE bracket", () => {
       invitationId: `seed-inv-${index + 1}`,
       seed: index + 1,
       name: `Seed ${index + 1}`,
-      school: "Test HS",
+      club: "Test HS",
       photoUrl: null,
       graduationYear: 2027,
     }))
@@ -157,7 +157,7 @@ describe("eight-man DE bracket", () => {
       invitationId: `seed-inv-${index + 1}`,
       seed: index + 1,
       name: `Seed ${index + 1}`,
-      school: "Test HS",
+      club: "Test HS",
       photoUrl: null,
       graduationYear: 2027,
     }))

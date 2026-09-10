@@ -8,7 +8,7 @@ const participants: TocBracketParticipant[] = Array.from({ length: 8 }, (_, inde
   invitationId: `i${index + 1}`,
   seed: index + 1,
   name: `Wrestler ${index + 1}`,
-  school: null,
+  club: null,
   photoUrl: null,
   graduationYear: 2027,
 }))
@@ -55,7 +55,7 @@ describe("TOC bracket simulation", () => {
       invitationId: `xi${index + 1}`,
       seed: index + 1,
       name: `Expanded ${index + 1}`,
-      school: null,
+      club: null,
       photoUrl: null,
       graduationYear: 2027,
     }))
@@ -75,7 +75,7 @@ describe("nine-man field", () => {
     invitationId: `seed-inv-${index + 1}`,
     seed: index + 1,
     name: `Seed ${index + 1}`,
-    school: "Test HS",
+    club: "Test HS",
     photoUrl: null,
     graduationYear: 2027,
   }))
@@ -108,7 +108,7 @@ describe("nine-man consolation", () => {
     invitationId: `seed-inv-${index + 1}`,
     seed: index + 1,
     name: `Seed ${index + 1}`,
-    school: "Test HS",
+    club: "Test HS",
     photoUrl: null,
     graduationYear: 2027,
   }))

@@ -5,7 +5,15 @@ export type TocBracketParticipant = {
   invitationId: string
   seed: number
   name: string
-  school: string | null
+  /**
+   * Club, never the high school.
+   *
+   * TOC wrestlers compete unattached, and the public field page has never named a school —
+   * `public-announced-field.ts` rule 3, with a test asserting no school reaches that payload.
+   * The bracket carried one anyway, which nobody minded while brackets were admin-only and which
+   * would have put a school beside every name the moment they went public.
+   */
+  club: string | null
   photoUrl: string | null
   graduationYear: number | null
   isPlaceholder?: boolean
@@ -51,4 +59,20 @@ export type TocBracketDrawSummary = {
   source: "locked" | "live"
   athleteFieldLocked?: boolean
   athleteFieldLockedAt?: string | null
+}
+
+/**
+ * No bracket payload may name a high school.
+ *
+ * TOC wrestlers compete unattached. The public field page has enforced that since it was written
+ * and the bracket did not, which nobody noticed while brackets were admin-only — it would have
+ * put a school beside all eighty names the minute they went public. Affiliation is the club, or
+ * "Unaffiliated", and there is no third option.
+ */
+export function assertNoSchoolInDraw(draw: { participants: readonly Record<string, unknown>[] }): void {
+  for (const participant of draw.participants) {
+    if ("school" in participant || "highschool" in participant) {
+      throw new Error(`Bracket participant carries a school: ${JSON.stringify(participant)}`)
+    }
+  }
 }

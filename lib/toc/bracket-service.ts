@@ -18,7 +18,7 @@ type InvitationRow = {
   athletes: {
     id: string
     name: string
-    highschool: string | null
+    wrestlingClub: string | null
     graduationyear: number | null
     photourl: string | null
   } | null
@@ -31,7 +31,7 @@ export function mapInvitationToBracketParticipant(row: InvitationRow): TocBracke
     invitationId: row.id,
     seed: row.seed,
     name: row.athletes?.name ?? "Athlete",
-    school: row.athletes?.highschool ?? null,
+    club: row.athletes?.wrestlingClub ?? null,
     photoUrl: row.athletes?.photourl ?? null,
     graduationYear: row.athletes?.graduationyear ?? null,
   }
@@ -43,7 +43,7 @@ export async function loadParticipantsForWeight(
 ): Promise<{ participants: TocBracketParticipant[]; totalConfirmed: number; error?: string }> {
   const { data, error } = await admin
     .from("toc_invitations")
-    .select("id, athlete_id, weight_class, status, seed, athletes(id, name, highschool, graduationyear, photourl)")
+    .select('id, athlete_id, weight_class, status, seed, athletes(id, name, "wrestlingClub", graduationyear, photourl)')
     .eq("weight_class", weightClass)
     .eq("status", "confirmed")
 
@@ -66,7 +66,7 @@ export async function loadAllConfirmedParticipantsForWeight(
 ): Promise<{ participants: TocBracketParticipant[]; error?: string }> {
   const { data, error } = await admin
     .from("toc_invitations")
-    .select("id, athlete_id, weight_class, status, seed, athletes(id, name, highschool, graduationyear, photourl)")
+    .select('id, athlete_id, weight_class, status, seed, athletes(id, name, "wrestlingClub", graduationyear, photourl)')
     .eq("weight_class", weightClass)
     .eq("status", "confirmed")
 
@@ -81,7 +81,7 @@ export async function loadAllConfirmedParticipantsForWeight(
       invitationId: row.id,
       seed: index + 1,
       name: row.athletes?.name ?? "Athlete",
-      school: row.athletes?.highschool ?? null,
+      club: row.athletes?.wrestlingClub ?? null,
       photoUrl: row.athletes?.photourl ?? null,
       graduationYear: row.athletes?.graduationyear ?? null,
     }))
@@ -112,6 +112,34 @@ export async function getPublicBracketDraw(
   if (totalConfirmed !== participants.length) live.isComplete = false
   live.confirmedCount = totalConfirmed
   return { draw: live, source: "live" }
+}
+
+/**
+ * Strip any affiliation a stored draw was locked with, and put the club back.
+ *
+ * The ten draws locked for 2026 were written while participants carried `school`, filled from
+ * `athletes.highschool`. Those rows are already on disk, so fixing the builder alone would leave
+ * every locked bracket showing a school the moment brackets went public — and re-locking ten
+ * weights hours before a tournament is not a thing to ask anyone to do.
+ *
+ * So affiliation is resolved on the way out instead: whatever a draw was stored with is dropped,
+ * and the club is read fresh. One choke point, so no consumer can serve a stale school — the app
+ * preview, the bracket pages, the pool routes and the admin board all read through here.
+ */
+async function withClubs(admin: SupabaseClient, draw: TocBracketDraw): Promise<TocBracketDraw> {
+  const ids = draw.participants.map((p) => p.athleteId).filter((id) => id && !id.startsWith("__toc_open_"))
+  if (ids.length === 0) return draw
+  const { data } = await admin.from("athletes").select('id, "wrestlingClub"').in("id", ids)
+  const clubOf = new Map((data ?? []).map((a: { id: string; wrestlingClub?: string | null }) => [String(a.id), a.wrestlingClub ?? null]))
+  return {
+    ...draw,
+    participants: draw.participants.map((p) => {
+      // Delete rather than overwrite: a legacy `school` key must not survive into the payload.
+      const { ...rest } = p as TocBracketParticipant & { school?: string | null }
+      delete (rest as { school?: string | null }).school
+      return { ...rest, club: clubOf.get(p.athleteId) ?? null }
+    }),
+  }
 }
 
 function normalizeDraw(draw: TocBracketDraw): TocBracketDraw {
@@ -200,7 +228,7 @@ export async function getLockedDraw(
     .maybeSingle()
 
   if (error || !data?.draw) return null
-  return normalizeDraw(data.draw as TocBracketDraw)
+  return withClubs(admin, normalizeDraw(data.draw as TocBracketDraw))
 }
 
 export async function listPublicBracketSummaries(admin: SupabaseClient): Promise<TocBracketDrawSummary[]> {
