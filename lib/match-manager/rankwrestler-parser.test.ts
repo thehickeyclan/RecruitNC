@@ -250,9 +250,7 @@ describe("parseRankWrestlerText", () => {
     }
   })
 
-  it("collapses rows repeated across browser snapshots but keeps real rematches within one", () => {
-    // Two overlapping scroll snapshots: Lloy Bosan appears in both (capture artifact), and
-    // the Ian Speight loss appears twice INSIDE each snapshot (real rematch).
+  it("preserves every recognized row across browser snapshots in source order", () => {
     const snapshot = [
       "Loss", "11/22/2025", "99.32", "Ian Speight", "• Person", "126 lbs", "•", "Red Wolf Invitational", "•", "Fall",
       "Win", "11/22/2025", "99.27", "Lloy Bosan", "• Randleman", "126 lbs", "•", "Red Wolf Invitational", "•", "Dec",
@@ -267,11 +265,59 @@ describe("parseRankWrestlerText", () => {
 
     expect(payload.success).toBe(true)
     if (payload.success) {
-      // 6 rows parsed across the two snapshots; per-snapshot truth is 2 Speight + 1 Bosan.
       expect(payload.diagnostics.parsedMatches).toBe(6)
-      expect(payload.payload.matches.filter((m) => m.opponent === "Ian Speight")).toHaveLength(2)
-      expect(payload.payload.matches.filter((m) => m.opponent === "Lloy Bosan")).toHaveLength(1)
-      expect(payload.payload.season_summary.total_matches).toBe(3)
+      expect(payload.diagnostics.duplicatesRemoved).toBe(0)
+      expect(payload.payload.matches.filter((m) => m.opponent === "Ian Speight")).toHaveLength(4)
+      expect(payload.payload.matches.filter((m) => m.opponent === "Lloy Bosan")).toHaveLength(2)
+      expect(payload.payload.matches.map((m) => m.opponent)).toEqual([
+        "Ian Speight", "Lloy Bosan", "Ian Speight",
+        "Ian Speight", "Lloy Bosan", "Ian Speight",
+      ])
+      expect(payload.payload.season_summary.total_matches).toBe(6)
+    }
+  })
+
+  it("is lossless for identical forfeits and identical opponent blocks", () => {
+    const sourceBlocks = [
+      ["Win", "12/13/2025", "Forfeit", "138 lbs", "2025 Rumble in the Jungle", "For."],
+      ["Win", "12/13/2025", "Forfeit", "138 lbs", "2025 Rumble in the Jungle", "For."],
+      ["Win", "12/13/2025", "Forfeit", "138 lbs", "2025 Rumble in the Jungle", "For."],
+      ["Win", "12/13/2025", "97.2", "Thomas Kingsley", "Example High", "138 lbs", "2025 Rumble in the Jungle", "Fall"],
+      ["Win", "12/13/2025", "96.1", "Austin Sixtos", "Example High", "138 lbs", "2025 Rumble in the Jungle", "Fall"],
+      ["Win", "11/22/2025", "98.64", "Lucas Frank", "Southern Lee", "138 lbs", "Red Wolf Invitational", "Fall"],
+      ["Win", "11/22/2025", "94.1", "Tristen Lawrence", "Example High", "138 lbs", "Red Wolf Invitational", "Fall"],
+      ["Loss", "11/22/2025", "99.1", "Tye Johnson", "Example High", "138 lbs", "Red Wolf Invitational", "TF"],
+      ["Win", "11/22/2025", "98.64", "Lucas Frank", "Southern Lee", "138 lbs", "Red Wolf Invitational", "Fall"],
+      ["Win", "11/22/2025", "91.2", "Farouq Busisou", "Example High", "138 lbs", "Red Wolf Invitational", "Dec"],
+    ]
+    const rawText = sourceBlocks.flatMap(([wl, date, pctOrOpponent, opponentOrWeight, schoolOrVenue, weightOrMethod, venue, method]) => {
+      if (pctOrOpponent === "Forfeit") {
+        return [wl, date, pctOrOpponent, opponentOrWeight, "•", schoolOrVenue, "•", weightOrMethod]
+      }
+      return [wl, date, pctOrOpponent, opponentOrWeight, `• ${schoolOrVenue}`, weightOrMethod, "•", venue, "•", method]
+    }).join("\n")
+
+    const parsedBlocks = parseRankWrestlerText(rawText)
+    expect(parsedBlocks).toHaveLength(sourceBlocks.length)
+
+    const payload = buildRankWrestlerSeasonPayload({
+      athleteName: "Lossless Wrestler",
+      graduationYear: 2027,
+      rawText,
+      deduplicate: true,
+    })
+
+    expect(payload.success).toBe(true)
+    if (payload.success) {
+      expect(payload.payload.matches).toHaveLength(sourceBlocks.length)
+      expect(payload.diagnostics.parsedMatches).toBe(sourceBlocks.length)
+      expect(payload.diagnostics.duplicatesRemoved).toBe(0)
+      expect(payload.payload.matches.filter((m) => m.opponent === "Forfeit")).toHaveLength(3)
+      expect(payload.payload.matches.filter((m) => m.opponent === "Lucas Frank")).toHaveLength(2)
+      expect(payload.payload.matches.map((m) => m.opponent)).toEqual([
+        "Forfeit", "Forfeit", "Forfeit", "Thomas Kingsley", "Austin Sixtos",
+        "Lucas Frank", "Tristen Lawrence", "Tye Johnson", "Lucas Frank", "Farouq Busisou",
+      ])
     }
   })
 

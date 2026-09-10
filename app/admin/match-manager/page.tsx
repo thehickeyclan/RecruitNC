@@ -54,7 +54,6 @@ export default function MatchManagerPage() {
   const [rankwrestlerUrl, setRankwrestlerUrl] = useState("")
   const [isRankSyncing, setIsRankSyncing] = useState(false)
   const [rankSyncResult, setRankSyncResult] = useState<any>(null)
-  const [deduplicateMatches, setDeduplicateMatches] = useState(true)
   const [useRenderedBrowserSync, setUseRenderedBrowserSync] = useState(true)
   const [syncAllRankSeasons, setSyncAllRankSeasons] = useState(false)
   const [parseResult, setParseResult] = useState<any>(null)
@@ -411,7 +410,6 @@ export default function MatchManagerPage() {
         body: JSON.stringify({
           athleteId: selectedAthlete,
           rankwrestlerUrl: rankwrestlerUrl.trim(),
-          deduplicate: deduplicateMatches,
           renderedBrowser: useRenderedBrowserSync,
           syncAllSeasons: syncAllRankSeasons,
         }),
@@ -978,27 +976,8 @@ export default function MatchManagerPage() {
       return
     }
 
-    // Deduplicate (optional): Rank exports sometimes list the same bout twice. When enabled,
-    // merge duplicates by date+opponent+W/L+result+venue. Disable to count all entries (raw).
-    const matchCountBeforeDedup = convertedMatches.length
-    let matchCountAfterDedup = matchCountBeforeDedup
-    let finalMatches: typeof convertedMatches
-    if (deduplicateMatches) {
-      const seen = new Set<string>()
-      const deduped: typeof convertedMatches = []
-      for (const m of convertedMatches) {
-        const r = (m.result ?? "").trim().toLowerCase()
-        const v = (m.venue ?? "").trim().toLowerCase()
-        const key = `${m.date}|${m.opponent.trim().toLowerCase()}|${m.win_loss}|${r}|${v}`
-        if (seen.has(key)) continue
-        seen.add(key)
-        deduped.push(m)
-      }
-      matchCountAfterDedup = deduped.length
-      finalMatches = deduped
-    } else {
-      finalMatches = convertedMatches
-    }
+    // RankWrestler imports are lossless: one recognized source block becomes one row.
+    const finalMatches = convertedMatches
 
     const firstName = selectedAthleteData.name.split(" ")[0] || ""
     const lastName = selectedAthleteData.name.split(" ").slice(1).join(" ") || ""
@@ -1110,13 +1089,9 @@ export default function MatchManagerPage() {
     }
 
     setJsonData(JSON.stringify(jsonPayload, null, 2))
-    const dedupNote =
-      matchCountBeforeDedup > matchCountAfterDedup
-        ? ` (${matchCountBeforeDedup - matchCountAfterDedup} duplicate bouts removed from Rank export)`
-        : ""
     setParseResult({
       success: true,
-      message: `Successfully parsed ${matchCountAfterDedup} matches${dedupNote}. JSON has been loaded into the Single Athlete Upload tab.`,
+      message: `Successfully parsed ${finalMatches.length} matches. JSON has been loaded into the Single Athlete Upload tab.`,
     })
   }
 
@@ -1399,7 +1374,7 @@ export default function MatchManagerPage() {
                   <p className="mt-1 text-sm text-blue-700">
                     Browser automation opens RankWrestler, uses the private <code>RANKWRESTLER_COOKIE</code> or{" "}
                     <code>RANKWRESTLER_EMAIL</code>/<code>RANKWRESTLER_PASSWORD</code>, waits for Match History to
-                    render, parses the bouts, deduplicates if enabled, and writes the season to the same{" "}
+                    render, parses every bout in source order, and writes the season to the same{" "}
                     <code>matches</code> table used by athlete profiles.
                   </p>
                 </AlertDescription>
@@ -1480,19 +1455,6 @@ export default function MatchManagerPage() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="rankSyncDeduplicate"
-                  checked={deduplicateMatches}
-                  onChange={(e) => setDeduplicateMatches(e.target.checked)}
-                  className="h-4 w-4 rounded"
-                />
-                <Label htmlFor="rankSyncDeduplicate" className="cursor-pointer font-normal">
-                  Deduplicate matches to match RankWrestler season record
-                </Label>
-              </div>
-
               <Button
                 onClick={handleRankWrestlerSync}
                 disabled={isRankSyncing || !selectedAthlete || !rankwrestlerUrl.trim()}
@@ -1570,7 +1532,7 @@ export default function MatchManagerPage() {
                                     rankSyncResult.diagnostics.dedupedMatches
                                   }${
                                     rankSyncResult.diagnostics.duplicatesRemoved > 0
-                                      ? ` (${rankSyncResult.diagnostics.duplicatesRemoved} duplicates removed)`
+                                      ? ` (${rankSyncResult.diagnostics.duplicatesRemoved} rows omitted)`
                                       : ""
                                   }`}
                             </p>
@@ -1742,22 +1704,6 @@ export default function MatchManagerPage() {
                   </label>
                 </div>
               </div>
-
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="deduplicateMatches"
-                  checked={deduplicateMatches}
-                  onChange={(e) => setDeduplicateMatches(e.target.checked)}
-                  className="rounded h-4 w-4"
-                />
-                <Label htmlFor="deduplicateMatches" className="cursor-pointer font-normal">
-                  Match Rank (deduplicate) — merge export duplicates to match Rank&apos;s record
-                </Label>
-              </div>
-              <p className="text-xs text-gray-500 -mt-2 ml-6">
-                Uncheck for Raw (no deduplication) — count every entry
-              </p>
 
               <div>
                 <Label htmlFor="rawTextData">Raw Match Data</Label>

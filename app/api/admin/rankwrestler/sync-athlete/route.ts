@@ -219,7 +219,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const athleteId = String(body.athleteId ?? "").trim()
     const rankwrestlerUrl = String(body.rankwrestlerUrl ?? "").trim()
-    const deduplicate = body.deduplicate !== false
     const renderedBrowser = body.renderedBrowser === true
     const syncAllSeasons = body.syncAllSeasons === true
 
@@ -285,7 +284,6 @@ export async function POST(request: NextRequest) {
           highSchool: athlete.highschool,
           rawText: seasonText.text,
           format: "rank",
-          deduplicate,
         })
 
         if (!parsedSeason.success) {
@@ -411,7 +409,6 @@ export async function POST(request: NextRequest) {
         highSchool: athlete.highschool,
         rawText: candidate.text,
         format: "rank",
-        deduplicate,
       })
       if (candidateParse.success) {
         // A page can expose several independently parsable payloads. Some are partial
@@ -436,7 +433,6 @@ export async function POST(request: NextRequest) {
           highSchool: athlete.highschool,
           rawText: rendered.text,
           format: "rank",
-          deduplicate,
         })
         parsed = renderedParse
         if (renderedParse.success) {

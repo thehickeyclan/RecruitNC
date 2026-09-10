@@ -1,8 +1,4 @@
-/**
- * Marks the boundary between overlapping page snapshots in browser-captured text, so
- * duplicate rows across snapshots (capture artifacts) can be told apart from duplicate rows
- * within one snapshot (real rematches — kids wrestle the same opponent twice in a tournament).
- */
+/** Marks the boundary between browser-captured page snapshots. */
 export const RANKWRESTLER_SNAPSHOT_SEPARATOR = "\n[[rw-snapshot-boundary]]\n"
 
 export type RankParsedMatch = {
@@ -489,6 +485,7 @@ export function buildRankWrestlerSeasonPayload(options: {
   highSchool?: string | null
   rawText: string
   format?: "rank" | "track"
+  /** @deprecated RankWrestler imports are always lossless; this option is ignored. */
   deduplicate?: boolean
 }): RankWrestlerParseResult {
   const athleteNameLower = options.athleteName.trim().toLowerCase()
@@ -550,15 +547,9 @@ export function buildRankWrestlerSeasonPayload(options: {
     return converted
   }
 
-  const matchKey = (m: ProfileMatch) =>
-    `${m.date}|${m.opponent.toLowerCase()}|${m.win_loss}|${m.result.toLowerCase()}|${m.venue.toLowerCase()}`
-
-  // The browser sync captures the page in overlapping scroll snapshots (joined with the
-  // separator), so the SAME rendered row legitimately repeats across segments. But wrestlers
-  // really do meet the same opponent twice in one tournament — pool play then bracket, even
-  // by the same method — so a repeat WITHIN one segment is a real rematch, not an artifact.
-  // Keep, per match key, the maximum count seen in any single segment: artifacts collapse,
-  // rematches survive. A manual paste is one segment, so nothing real is ever dropped there.
+  // Parse each captured segment independently so its match-block boundaries remain intact.
+  // RankWrestler imports are intentionally lossless: field equality is never evidence that
+  // two source blocks are the same bout. Every recognized source block stays in source order.
   const segments = options.rawText
     .split(RANKWRESTLER_SNAPSHOT_SEPARATOR)
     .map((segment) => segment.trim())
@@ -571,27 +562,7 @@ export function buildRankWrestlerSeasonPayload(options: {
       : { success: false, error: "Parsed matches, but none could be matched to the selected athlete." }
   }
 
-  let finalMatches = converted
-  if (options.deduplicate !== false) {
-    const allowed = new Map<string, number>()
-    for (const segment of segments.length > 1 ? segments : [options.rawText]) {
-      const counts = new Map<string, number>()
-      for (const m of convertText(segment)) {
-        const key = matchKey(m)
-        counts.set(key, (counts.get(key) ?? 0) + 1)
-      }
-      for (const [key, count] of counts) {
-        allowed.set(key, Math.max(allowed.get(key) ?? 0, count))
-      }
-    }
-    const used = new Map<string, number>()
-    finalMatches = converted.filter((m) => {
-      const key = matchKey(m)
-      const next = (used.get(key) ?? 0) + 1
-      used.set(key, next)
-      return next <= (allowed.get(key) ?? 1)
-    })
-  }
+  const finalMatches = converted
 
   const dates = finalMatches.map((m) => dateParts(m.date)).filter(Boolean) as Array<{ month: number; day: number; year: number }>
   const years = dates.map((d) => d.year)
