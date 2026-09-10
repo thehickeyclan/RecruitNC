@@ -233,7 +233,6 @@ async function withGate<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
-const CONCURRENCY = 4
 const RETRY_DELAY_MS = 250
 
 /**
