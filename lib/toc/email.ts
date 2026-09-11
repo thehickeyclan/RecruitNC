@@ -227,3 +227,20 @@ export async function sendTocAthleteConfirmedEmail(payload: { to: string[]; athl
     if (to.trim()) await sendHtml(to, subject, wrap(body))
   }
 }
+
+/**
+ * The targeted TOC Madness reminder — only to people who started their picks and have not finished.
+ *
+ * Links to the event page, never to a bracket URL: athlete-facing email is blocked from linking to
+ * brackets, and the picks are made in the app anyway.
+ */
+export async function sendTocMadnessReminderEmail(to: string, submitted: number, total: number, deadlineText: string): Promise<void> {
+  await sendHtml(
+    to,
+    `Your TOC Madness picks lock ${deadlineText}`,
+    wrap(`<p>You have submitted <strong>${submitted} of ${total}</strong> weight classes in TOC Madness.</p>
+<p>Picks lock <strong>${escapeHtml(deadlineText)}</strong>. Open the NC United app, go to <strong>Your Bracket</strong>, and finish every weight to stay in the running.</p>
+<p><a href="https://app.ncwrestlingunited.com/tournament-of-champions">Tournament of Champions</a></p>`),
+  )
+}
+

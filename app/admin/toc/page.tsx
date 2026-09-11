@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { HardLink } from "@/components/hard-link"
-import { Trophy, Users, Mail, Handshake, UserCheck, UserPlus, GraduationCap, LayoutGrid, Scale, HandHeart, Newspaper, ClipboardList, BadgeCheck, Ticket, ClipboardSignature } from "lucide-react"
+import { Trophy, Users, Mail, Handshake, UserCheck, UserPlus, GraduationCap, LayoutGrid, Scale, HandHeart, Newspaper, ClipboardList, BadgeCheck, Ticket, ClipboardSignature, Megaphone, ListChecks } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { TOC_COACH_TICKET_URL } from "@/lib/toc/coach-invite-message"
 import { TOC_GOFAN_TICKETS_URL } from "@/lib/toc/constants"
@@ -120,6 +120,18 @@ const LINKS: DashboardLink[] = [
     description: "The public form families use to designate their two coaches — send this to athletes",
     icon: ClipboardSignature,
     external: true,
+  },
+  {
+    href: "/admin/toc/pool/results",
+    title: "Live results",
+    description: "Record bout winners during the tournament — the official results",
+    icon: ListChecks,
+  },
+  {
+    href: "/admin/toc/madness",
+    title: "TOC Madness",
+    description: "Announce the game and remind entrants before picks lock — separate from the brackets",
+    icon: Megaphone,
   },
   {
     href: "/tournament-of-champions/brackets",
