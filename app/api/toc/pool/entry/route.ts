@@ -2,8 +2,9 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveRequestUserId } from "@/lib/request-user"
 import { TOC_POOL_DEADLINE, TOC_POOL_OPENS, TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
+import { readBracketRelease } from "@/lib/toc/bracket-release"
+import { poolWindow } from "@/lib/toc/pool-entry-window"
 import { getLockedDraw } from "@/lib/toc/bracket-service"
-import { tocBracketsPublicEnabled } from "@/lib/toc/bracket-public-access"
 import { validateFinalPrediction, type FinalPrediction } from "@/lib/toc/final-prediction"
 
 /**
@@ -16,17 +17,10 @@ import { validateFinalPrediction, type FinalPrediction } from "@/lib/toc/final-p
 
 export const dynamic = "force-dynamic"
 
-function isOpen(now: Date): { open: boolean; reason?: string } {
-  // Entries are picks against the official draw. While brackets are still private, everyone is
-  // looking at their own projected seeding, so a pick for "bout 1" means a different pairing for
-  // every entrant — accepted by the validator, and scored against a bracket they never saw.
-  // The pool cannot open before the brackets do, whatever the calendar says.
-  if (!tocBracketsPublicEnabled()) {
-    return { open: false, reason: "The pool opens when official brackets are released." }
-  }
-  if (now < TOC_POOL_OPENS) return { open: false, reason: "The pool opens when official brackets are released." }
-  if (now > TOC_POOL_DEADLINE) return { open: false, reason: "The deadline has passed. Entries are locked." }
-  return { open: true }
+/** The live window: the release row, read fresh, then the dates. Fails closed with the release. */
+async function isOpen(now: Date) {
+  const release = await readBracketRelease(createAdminClient())
+  return poolWindow(release.released, now)
 }
 
 export async function GET(request: NextRequest) {
@@ -47,7 +41,7 @@ export async function GET(request: NextRequest) {
   const now = new Date()
   return NextResponse.json({
     entries: data ?? [],
-    window: { opensAt: TOC_POOL_OPENS.toISOString(), deadline: TOC_POOL_DEADLINE.toISOString(), ...isOpen(now) },
+    window: { opensAt: TOC_POOL_OPENS.toISOString(), deadline: TOC_POOL_DEADLINE.toISOString(), ...(await isOpen(now)) },
   })
 }
 
@@ -56,7 +50,7 @@ export async function POST(request: NextRequest) {
   if (!userId) return NextResponse.json({ error: "Sign in to enter the pool." }, { status: 401 })
 
   const now = new Date()
-  const window = isOpen(now)
+  const window = await isOpen(now)
   if (!window.open) return NextResponse.json({ error: window.reason }, { status: 409 })
 
   const body = (await request.json().catch(() => null)) as {

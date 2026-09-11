@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 import { TOC_POOL_DEADLINE, TOC_POOL_OPENS } from "@/lib/toc/constants"
+import { poolWindow } from "@/lib/toc/pool-entry-window"
 
 /**
  * The pool window has two gates, and the second one is the subtle one.
@@ -18,5 +19,20 @@ describe("the pool window", () => {
   it("keeps the deadline before the tournament's first round", () => {
     const firstRound = new Date("2026-09-18T00:00:00-04:00")
     expect(TOC_POOL_DEADLINE.getTime()).toBeLessThan(firstRound.getTime())
+  })
+
+  it("stays shut before release even when the calendar says open", () => {
+    const afterOpens = new Date(TOC_POOL_OPENS.getTime() + 60_000)
+    expect(poolWindow(false, afterOpens).open).toBe(false)
+  })
+
+  it("opens the moment brackets are released", () => {
+    const afterOpens = new Date(TOC_POOL_OPENS.getTime() + 60_000)
+    expect(poolWindow(true, afterOpens)).toEqual({ open: true })
+  })
+
+  it("locks after the deadline even though brackets stay released", () => {
+    const late = new Date(TOC_POOL_DEADLINE.getTime() + 1)
+    expect(poolWindow(true, late).open).toBe(false)
   })
 })

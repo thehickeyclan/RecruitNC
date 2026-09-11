@@ -66,6 +66,22 @@ export async function POST(request: Request) {
 
   const after = await state(admin)
 
+  /**
+   * One alert, and only on the transition — sent before anything slow.
+   *
+   * It used to wait behind the field warm, which takes twenty to thirty seconds, so an alert
+   * meant for five o'clock reached phones at half past. The release is already committed by this
+   * line, so a phone that taps straight through finds the brackets there.
+   *
+   * Awaited rather than dropped: Vercel freezes the isolate once the response is sent, and a
+   * loose promise here is a release nobody hears about. It never throws, so a failed push cannot
+   * fail a release that has already happened.
+   */
+  let notified: { sent: number; failed: number } | null = null
+  if (parsed.data.released && !before.released) {
+    notified = await notifyTocBracketsReleased(after.lockedWeights)
+  }
+
   /*
    * The public field is cached per weight — the credential engine reconciles each wrestler by
    * name, which is too slow to redo on every request. Releasing brackets changes what that screen
@@ -79,18 +95,6 @@ export async function POST(request: Request) {
     // A failed warm is a slow first read, not a failed announcement. Never fail the action.
     console.warn("[toc] field warm failed:", error)
   })
-
-  /**
-   * One alert, and only on the transition.
-   *
-   * Awaited rather than dropped: Vercel freezes the isolate once the response is sent, and a
-   * loose promise here is a release nobody hears about. It never throws, so a failed push cannot
-   * fail a release that has already happened.
-   */
-  let notified: { sent: number; failed: number } | null = null
-  if (parsed.data.released && !before.released) {
-    notified = await notifyTocBracketsReleased(after.lockedWeights)
-  }
 
   return NextResponse.json({ ...after, notified })
 }
