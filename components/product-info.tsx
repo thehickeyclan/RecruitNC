@@ -11,8 +11,10 @@ import {
   Twitter,
   Instagram,
   LinkIcon,
+  ShoppingCart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ToastAction } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { SizeGuideModal } from "@/components/size-guide-modal";
 import { useCartStore, getMaxQuantityForItem } from "@/lib/store/cart-store";
@@ -96,6 +98,7 @@ export function ProductInfo({
   const [linkCopied, setLinkCopied] = useState(false);
 
   const { addItem, autoAddRivalryTee } = useCartStore();
+  const cartCount = useCartStore((s) => s.items.reduce((n, i) => n + i.quantity, 0));
   const { toast } = useToast();
 
   const showSizeSelector = shouldShowSizeSelector(
@@ -185,6 +188,13 @@ export function ProductInfo({
     toast({
       title: "Added to cart",
       description: `${product.name} (${selectedColor}${showSizeSelector ? `, ${effectiveSize}` : ""}) x${quantity} has been added to your cart.`,
+      // On a phone this toast sits at the top of the screen, right over the header cart icon, so
+      // it has to carry the way to the cart itself.
+      action: (
+        <ToastAction altText="View cart" asChild>
+          <a href="/cart" target="_top">View cart</a>
+        </ToastAction>
+      ),
     });
 
     const isRivalryProduct = product.name.toLowerCase().includes("rivalry");
@@ -597,6 +607,23 @@ export function ProductInfo({
               "Add to Cart"
             )}
           </Button>
+
+          {/*
+            The header cart icon is small and, on a phone, hidden under the "Added to cart" toast
+            right when someone is looking for it. The next step belongs next to the button that
+            got them here.
+          */}
+          {cartCount > 0 && (
+            <Button
+              asChild
+              className="w-full h-12 bg-[#D4B46A] hover:bg-[#D4B46A]/90 text-[#0A1628] text-base font-semibold"
+            >
+              <a href="/cart" target="_top">
+                <ShoppingCart className="w-5 h-5 mr-2" />
+                View cart and check out ({cartCount})
+              </a>
+            </Button>
+          )}
 
           <Button
             variant="outline"
