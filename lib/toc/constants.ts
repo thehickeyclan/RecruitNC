@@ -280,7 +280,15 @@ export const TOC_SCHEDULE = {
     rows: [
       { time: "7:30 AM", activity: "Warm-up mat opens — stays open all day" },
       { time: "8:30 AM", activity: "Doors open to spectators" },
-      { time: "9:15 AM", activity: "Welcome and prayer" },
+      /*
+       * Before the first bout, not after it.
+       *
+       * This read 9:15 welcome and prayer, listed above a 9:00 consolation round one — out of
+       * sequence on the page and backwards in fact: wrestling would have started fifteen minutes
+       * before anyone was welcomed. Friday already has the right shape, with the welcome and
+       * prayer at 5:30 and the first whistle at 6:00; Saturday now matches it.
+       */
+      { time: "8:45 AM", activity: "Welcome and prayer" },
       { time: "9:00 AM", activity: "Consolation round one — two mats" },
       { time: "10:30 AM", activity: "Winners semifinals — two mats" },
       { time: "12:00 PM", activity: "Consolation semifinals — two mats" },
