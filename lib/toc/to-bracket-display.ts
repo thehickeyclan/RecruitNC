@@ -9,7 +9,7 @@ import type { TocBracketBout, TocBracketDraw, TocBracketParticipant, TocBracketS
  */
 const UNAFFILIATED = "Unaffiliated"
 
-function slotToDisplay(
+export function slotToDisplay(
   slot: TocBracketSlot,
   participantById: Map<string, TocBracketParticipant>,
 ): BracketSlotDisplay {
@@ -26,7 +26,9 @@ function slotToDisplay(
 
   return {
     name: isBye ? "BYE" : isOpen ? "TBD" : label.primary,
-    subtitle: isOpen ? null : label.secondary ?? participant?.club ?? UNAFFILIATED,
+    // "Unaffiliated" describes a wrestler. A slot waiting on "Winner Bout 1" has nobody in it yet, and
+    // labelling it Unaffiliated put that word under every empty semifinal and final on every bracket.
+    subtitle: isOpen ? null : label.secondary ?? (participant ? participant.club ?? UNAFFILIATED : null),
     seed,
     isOpen,
     photoUrl: isOpen ? null : label.photoUrl ?? participant?.photoUrl ?? null,
