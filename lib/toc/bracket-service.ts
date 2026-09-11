@@ -8,6 +8,7 @@ import type { TocBracketDraw, TocBracketDrawSummary, TocBracketParticipant } fro
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { TOC_MAX_CONFIRMED_PER_WEIGHT } from "@/lib/toc/invitations"
 import { listTocFieldPublicationStatuses } from "@/lib/toc/field-publication-status"
+import { normalizeClub } from "@/lib/toc/normalize-club"
 
 type InvitationRow = {
   id: string
@@ -31,7 +32,7 @@ export function mapInvitationToBracketParticipant(row: InvitationRow): TocBracke
     invitationId: row.id,
     seed: row.seed,
     name: row.athletes?.name ?? "Athlete",
-    club: row.athletes?.wrestlingClub ?? null,
+    club: normalizeClub(row.athletes?.wrestlingClub),
     photoUrl: row.athletes?.photourl ?? null,
     graduationYear: row.athletes?.graduationyear ?? null,
   }
@@ -81,7 +82,7 @@ export async function loadAllConfirmedParticipantsForWeight(
       invitationId: row.id,
       seed: index + 1,
       name: row.athletes?.name ?? "Athlete",
-      club: row.athletes?.wrestlingClub ?? null,
+      club: normalizeClub(row.athletes?.wrestlingClub),
       photoUrl: row.athletes?.photourl ?? null,
       graduationYear: row.athletes?.graduationyear ?? null,
     }))
@@ -130,7 +131,7 @@ async function withClubs(admin: SupabaseClient, draw: TocBracketDraw): Promise<T
   const ids = draw.participants.map((p) => p.athleteId).filter((id) => id && !id.startsWith("__toc_open_"))
   if (ids.length === 0) return draw
   const { data } = await admin.from("athletes").select('id, "wrestlingClub"').in("id", ids)
-  const clubOf = new Map((data ?? []).map((a: { id: string; wrestlingClub?: string | null }) => [String(a.id), a.wrestlingClub ?? null]))
+  const clubOf = new Map((data ?? []).map((a: { id: string; wrestlingClub?: string | null }) => [String(a.id), normalizeClub(a.wrestlingClub)]))
   return {
     ...draw,
     participants: draw.participants.map((p) => {
