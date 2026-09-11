@@ -157,7 +157,15 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    const hasExplicitNext = next !== "/" && !next.startsWith("/auth/signin") && !next.startsWith("/auth/signup")
+    // "/dashboard" is not a page. Every sign-up confirmation email arrives asking for it (the address
+    // comes from the Supabase email template, not from this codebase), and following it landed brand-new
+    // accounts on a 404 straight after verifying. Treating it as no destination sends them where
+    // their role normally lands instead.
+    const hasExplicitNext =
+      next !== "/" &&
+      next !== "/dashboard" &&
+      !next.startsWith("/auth/signin") &&
+      !next.startsWith("/auth/signup")
     let redirectPath = hasExplicitNext ? next : "/"
 
     // Password reset flow: send to reset-password page. Check both type=recovery (token_hash)

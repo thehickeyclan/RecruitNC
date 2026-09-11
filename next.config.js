@@ -1,5 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  async redirects() {
+    return [
+      {
+        // There is no /dashboard page, but sign-up confirmation emails have sent new accounts
+        // there (see app/auth/callback/route.ts), so people have it open, bookmarked, or in their
+        // history. Not permanent: a browser caches a 308 for good, which would shadow a real page
+        // at this address if one is ever built.
+        source: "/dashboard",
+        destination: "/",
+        permanent: false,
+      },
+    ]
+  },
   async headers() {
     return [
       {
