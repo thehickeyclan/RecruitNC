@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Award, ChevronDown, Edit, ExternalLink, FileText, GraduationCap, Mail, Phone, Share2, TrendingUp, Trophy, Video } from "lucide-react"
 import { UnifiedProfileMobileNav } from "./unified-profile-mobile-nav"
-import { ProfileQualityWinsSection } from "@/components/profile-quality-wins-section"
 import type { ProfileQualityWinsTournamentBlock } from "@/lib/profile-quality-wins"
 import {
   PROFILE_CARD_BODY,
@@ -1677,12 +1676,6 @@ export function AthleteDetail({
         {tournamentResultsComponent}
       </div>
 
-      {profileQualityWins.length > 0 ? (
-        <div className={cn("min-w-0 max-w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.qualityWins)}>
-          <ProfileQualityWinsSection blocks={profileQualityWins} theme={theme} />
-        </div>
-      ) : null}
-
       {/* 5. Academics - always show for consistent structure */}
       <Card
         className={cn(
@@ -2006,7 +1999,9 @@ export function AthleteDetail({
 
       {/* Significant wins sit above the full match list: who somebody has beaten is the question
           a profile gets opened with, and the list underneath answers how many. */}
-      <SignificantWinsSection athleteId={String(athlete.id)} />
+      <div className={cn("min-w-0 max-w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.qualityWins)}>
+        <SignificantWinsSection athleteId={String(athlete.id)} qualityWinBlocks={profileQualityWins} />
+      </div>
 
       {/* 10. High School Career Match Results */}
       <div

@@ -4,6 +4,7 @@ import { buildTocFieldBoard } from "@/lib/toc/field-board"
 import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
 import { findSignificantWins, type Bout, type RankedOpponent } from "@/lib/significant-wins"
 import { getQualifierSignificantWinBouts } from "@/lib/other-tournaments"
+import { getCuratedSignificantWins } from "@/lib/curated-significant-wins"
 
 /**
  * The wins on a profile worth a reader's attention: over the TOC field, or over a ranked prospect.
@@ -39,7 +40,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     }
   })
   const bouts: Bout[] = [...matchBouts, ...qualifierBouts]
-  if (bouts.length === 0) return NextResponse.json({ wins: [] })
+  const curatedWins = getCuratedSignificantWins(id).map((win) => ({
+    ...win,
+    reason: "credentialed" as const,
+    scope: "national" as const,
+  }))
+  if (bouts.length === 0 && curatedWins.length === 0) return NextResponse.json({ wins: [] })
 
   const tocField = buildTocFieldBoard(invitations ?? []).weights
     .flatMap((weight) => weight.athletes.filter((a) => a.status === "confirmed").map((a) => a.name))
@@ -67,7 +73,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     if (data.length < 1000) break
   }
 
-  const wins = findSignificantWins(bouts, { tocField, ranked }).map((win) => ({
+  const calculatedWins = findSignificantWins(bouts, { tocField, ranked }).map((win) => ({
     opponent: win.opponent,
     opponentSchool: win.opponentSchool,
     event: win.event,
@@ -75,7 +81,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     result: win.result,
     weight: win.weight,
     reason: win.reason,
+    credential: null,
+    scope: "in-state" as const,
   }))
+
+  const curatedKeys = new Set(curatedWins.map((win) => `${win.opponent.toLowerCase()}|${win.date}`))
+  const wins = [
+    ...curatedWins,
+    ...calculatedWins.filter((win) => !curatedKeys.has(`${win.opponent.toLowerCase()}|${win.date}`)),
+  ]
 
   return NextResponse.json({ wins })
 }
