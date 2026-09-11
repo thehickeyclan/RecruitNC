@@ -64,22 +64,25 @@ export function AthleteVerificationCard({ data, onConfirm, onReject }: Props) {
           </dl>
         </div>
 
-        {alreadyConfirmed ? (
+        {alreadyConfirmed && invitation?.paymentStatus === "paid" ? (
+          <p className="text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-sm px-3 py-2">
+            You&apos;re confirmed and registration is paid — you&apos;re all set.
+          </p>
+        ) : alreadyConfirmed ? (
+          /*
+            Confirmed but not paid. Staff can hold a spot before the family pays — a late
+            replacement has to be in the draw before the brackets are seeded — and this used to
+            greet that family with a green "You're already confirmed" and a small text link. It
+            read as finished, so nobody paid. Payment is the one thing left, so it leads.
+          */
           <div className="space-y-3">
-            <p className="text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-sm px-3 py-2">
-              You&apos;re already confirmed for this tournament.
+            <p className="text-sm font-medium text-[#0B1D3A] bg-amber-50 border border-amber-300 rounded-sm px-3 py-2">
+              Your spot is held. <strong>Registration payment is still due</strong> — {formatTocRegistrationFee()} by{" "}
+              {paymentDeadline}.
             </p>
-            {invitation?.paymentStatus === "paid" ? (
-              <p className="text-sm text-green-700">Registration is paid — you&apos;re all set.</p>
-            ) : (
-              <p className="text-sm text-[#0B1D3A]/75">
-                Already confirmed?{" "}
-                <a href={registrationPayPageUrl(athlete.id)} className="text-[#0B1D3A] underline hover:text-[#CC0000]">
-                  Complete required registration payment
-                </a>{" "}
-                ({formatTocRegistrationFee()} by {paymentDeadline}).
-              </p>
-            )}
+            <Button asChild className="bg-[#CC0000] hover:bg-[#a80000] text-white">
+              <a href={registrationPayPageUrl(athlete.id)}>Pay {formatTocRegistrationFee()} registration</a>
+            </Button>
           </div>
         ) : invitation?.status === "invited" ? (
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
