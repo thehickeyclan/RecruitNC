@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Trophy } from "lucide-react"
 import type { ProfileQualityWinsTournamentBlock } from "@/lib/profile-quality-wins"
+import { SignificantWinSubmissionDialog } from "@/components/significant-win-submission-dialog"
 
 type SignificantWin = {
   opponent: string
@@ -26,8 +27,8 @@ type SignificantWin = {
  * Most recent season only, the same window seeding uses. A win from three seasons ago is a
  * different claim than one from this year and does not belong in the same list.
  *
- * Renders nothing at all when there are none. An empty "Significant wins" heading says something
- * about a wrestler that we do not mean to say.
+ * When there are no documented wins yet, the section still provides the community submission
+ * path so missing results can be sent to NC United for review.
  */
 export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
   athleteId: string
@@ -36,6 +37,7 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
   const [wins, setWins] = useState<SignificantWin[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<"all" | "in-state" | "national">("all")
+  const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -68,14 +70,18 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
   )
   const allWins = [...wins, ...qualityWins]
   const visibleWins = filter === "all" ? allWins : allWins.filter((win) => win.scope === filter)
+  const displayedWins = expanded ? visibleWins : visibleWins.slice(0, 3)
 
-  if (loading || allWins.length === 0) return null
+  if (loading) return null
 
   return (
     <section id="quality-wins" className="rounded-xl border border-rnc-gold/30 bg-rnc-surface p-5" data-section="quality-wins">
-      <div className="flex items-center gap-2">
-        <Trophy className="h-5 w-5 text-rnc-gold" aria-hidden="true" />
-        <h2 className="text-lg font-bold text-white">Significant wins</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <Trophy className="h-5 w-5 text-rnc-gold" aria-hidden="true" />
+          <h2 className="text-lg font-bold text-white">Significant wins</h2>
+        </div>
+        <SignificantWinSubmissionDialog athleteId={athleteId} />
       </div>
       <p className="mt-1 text-xs text-slate-400">
         Significant wins over strong opponents.
@@ -86,7 +92,10 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
           <button
             key={option}
             type="button"
-            onClick={() => setFilter(option)}
+            onClick={() => {
+              setFilter(option)
+              if (option !== "all") setExpanded(true)
+            }}
             className={filter === option
               ? "rounded-full bg-rnc-gold px-3 py-1 text-xs font-bold text-rnc-ink"
               : "rounded-full border border-rnc-line px-3 py-1 text-xs font-semibold text-slate-300 hover:border-rnc-gold/60"}
@@ -97,7 +106,7 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
       </div>
 
       <ul className="mt-4 flex flex-col gap-2">
-        {visibleWins.map((win, index) => (
+        {displayedWins.map((win, index) => (
           <li
             key={`${win.opponent}-${win.date}-${win.event}-${index}`}
             className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-lg border border-rnc-line bg-rnc-ink px-3 py-2"
@@ -132,7 +141,21 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
           </li>
         ))}
       </ul>
-      {visibleWins.length === 0 ? <p className="mt-4 text-sm text-slate-400">No wins in this category.</p> : null}
+      {visibleWins.length > 3 ? (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          onClick={() => setExpanded((current) => !current)}
+          className="mt-4 w-full rounded-lg border border-rnc-gold/40 bg-rnc-gold/5 px-4 py-2.5 text-sm font-semibold text-rnc-gold transition hover:border-rnc-gold/70 hover:bg-rnc-gold/10"
+        >
+          {expanded ? "Show less" : `View all ${visibleWins.length} significant wins`}
+        </button>
+      ) : null}
+      {visibleWins.length === 0 ? (
+        <p className="mt-4 rounded-lg border border-rnc-line bg-rnc-ink px-3 py-4 text-sm text-slate-400">
+          {filter === "all" ? "No significant wins have been documented yet." : "No wins in this category."}
+        </p>
+      ) : null}
     </section>
   )
 }
