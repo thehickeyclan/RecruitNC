@@ -1,5 +1,6 @@
 import "server-only"
 import { sendToSubscribers, type PushMessage } from "@/lib/push-send"
+import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 
 /**
  * The one alert that says brackets are live.
@@ -20,7 +21,10 @@ export function buildBracketReleasePush(weights: readonly number[]): PushMessage
       ? `The ${list[0]} lb bracket is live. Tap to see the draw.`
       : count <= 4
         ? `${list.slice(0, -1).join(", ")} and ${list[count - 1]} lbs. Tap to see the draws.`
-        : `All ${count} weight classes. Tap to see the draws.`
+        : // "All" only when it is true. A weight held back for a redraw goes out later, and
+          // "All 9 weight classes" on a ten-weight tournament tells that weight's families
+          // their bracket is not coming.
+          `${count >= TOC_WEIGHT_CLASSES.length ? "All " : ""}${count} weight classes. Tap to see the draws.`
 
   return {
     title: "Brackets are live",

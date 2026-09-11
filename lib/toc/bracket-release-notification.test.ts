@@ -15,7 +15,16 @@ describe("buildBracketReleasePush", () => {
 
   it("counts rather than lists once the list stops being readable", () => {
     expect(buildBracketReleasePush([117, 125, 133, 141, 149]).body).toBe(
-      "All 5 weight classes. Tap to see the draws.",
+      "5 weight classes. Tap to see the draws.",
+    )
+  })
+
+  it("says All only when every weight goes out", () => {
+    const every = [117, 125, 133, 141, 149, 157, 165, 174, 197, 285]
+    expect(buildBracketReleasePush(every).body).toBe("All 10 weight classes. Tap to see the draws.")
+    // One weight held back for a redraw: the other families must not read that theirs is missing.
+    expect(buildBracketReleasePush(every.filter((w) => w !== 141)).body).toBe(
+      "9 weight classes. Tap to see the draws.",
     )
   })
 

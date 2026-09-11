@@ -85,8 +85,16 @@ export async function POST(request: Request) {
      */
     const locked = await getLockedDraw(admin, weightClass)
     if (!locked) {
+      // Brackets are already out by the time this branch runs — the release gate above returned
+      // for everything before 5:00 — so a weight with no locked draw is one being redrawn, not
+      // one waiting for Friday. Repeating the "released Friday at 5:00 PM" line here after 5:00
+      // told people a time that had already passed. `released: false` stays: it is what the app
+      // keys the calm, not-an-error state on, and the app prints this line underneath it.
       return NextResponse.json(
-        { released: false, error: TOC_BRACKET_RELEASE_LINE },
+        {
+          released: false,
+          error: `The ${weightClass} lb bracket is being finalized. Check back soon — it will appear here as soon as it is ready.`,
+        },
         { status: 200 },
       )
     }
