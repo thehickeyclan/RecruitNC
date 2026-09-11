@@ -5,6 +5,7 @@ import { useState } from "react";
 import { StoreLink } from "@/components/store-link";
 import { Badge } from "@/components/ui/badge";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { categoryLabel } from "@/lib/store/store-categories";
 import { getColorHex } from "@/lib/color-utils";
 import {
   StoreCatalogImage,
@@ -156,7 +157,7 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="mt-4 space-y-2">
           {product.category && (
             <p className="text-xs font-medium text-[#D3B574]/80 uppercase tracking-wider">
-              {product.category}
+              {categoryLabel(product.category)}
             </p>
           )}
 
@@ -164,25 +165,26 @@ export function ProductCard({ product }: ProductCardProps) {
             {product.name}
           </h3>
 
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-0.5">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Star
-                  key={i}
-                  className={`w-3.5 h-3.5 ${
-                    i < Math.round(rating)
-                      ? "fill-[#D3B574] text-[#D3B574]"
-                      : "fill-white/10 text-white/10"
-                  }`}
-                />
-              ))}
-            </div>
-            {rating > 0 && (
+          {/* Stars only once someone has rated it; five empty stars on every card look like bad reviews. */}
+          {rating > 0 && (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-0.5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`w-3.5 h-3.5 ${
+                      i < Math.round(rating)
+                        ? "fill-[#D3B574] text-[#D3B574]"
+                        : "fill-white/10 text-white/10"
+                    }`}
+                  />
+                ))}
+              </div>
               <span className="text-xs text-white/50">
                 ({rating.toFixed(1)})
               </span>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Color swatches */}
           {uniqueColors.length > 0 && (

@@ -108,31 +108,36 @@ export function CustomerReviews({
           <h2 className="text-2xl font-bold mb-2 text-[#003366]">
             Customer Reviews
           </h2>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              {renderStars(Math.floor(averageRating))}
+          {/* A 0.0 rating and a sort menu with nothing to sort make an empty section look broken. */}
+          {reviews.length > 0 && (
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1">
+                {renderStars(Math.floor(averageRating))}
+              </div>
+              <span className="text-lg font-semibold">
+                {averageRating.toFixed(1)}
+              </span>
+              <span className="text-muted-foreground">
+                ({reviews.length} {reviews.length === 1 ? "review" : "reviews"})
+              </span>
             </div>
-            <span className="text-lg font-semibold">
-              {averageRating.toFixed(1)}
-            </span>
-            <span className="text-muted-foreground">
-              ({reviews.length} {reviews.length === 1 ? "review" : "reviews"})
-            </span>
-          </div>
+          )}
         </div>
 
         <div className="flex items-center gap-3">
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="helpful">Most Helpful</SelectItem>
-              <SelectItem value="recent">Most Recent</SelectItem>
-              <SelectItem value="highest">Highest Rated</SelectItem>
-              <SelectItem value="lowest">Lowest Rated</SelectItem>
-            </SelectContent>
-          </Select>
+          {reviews.length > 1 && (
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="helpful">Most Helpful</SelectItem>
+                <SelectItem value="recent">Most Recent</SelectItem>
+                <SelectItem value="highest">Highest Rated</SelectItem>
+                <SelectItem value="lowest">Lowest Rated</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
 
           <Button
             variant="outline"
@@ -155,10 +160,7 @@ export function CustomerReviews({
 
       <div className="space-y-6">
         {sortedReviews.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <p className="text-lg mb-2">No reviews yet</p>
-            <p>Be the first to review this product!</p>
-          </div>
+          <p className="text-muted-foreground">Bought this? Be the first to review it.</p>
         ) : (
           sortedReviews.map((review) => (
             <div

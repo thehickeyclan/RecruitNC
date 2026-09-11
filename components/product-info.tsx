@@ -3,13 +3,9 @@
 import { useState } from "react";
 import {
   Star,
-  Heart,
   Check,
   Minus,
   Plus,
-  Facebook,
-  Twitter,
-  Instagram,
   LinkIcon,
   ShoppingCart,
 } from "lucide-react";
@@ -92,7 +88,6 @@ export function ProductInfo({
   const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
   const [isAdded, setIsAdded] = useState(false);
-  const [isWishlisted, setIsWishlisted] = useState(false);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
   const [errors, setErrors] = useState({ size: false, color: false });
   const [linkCopied, setLinkCopied] = useState(false);
@@ -265,29 +260,25 @@ export function ProductInfo({
         >
           {product.name}
         </h1>
-        <p
-          className={cn(
-            "text-sm mb-3",
-            storeTheme ? "text-white/55" : "text-muted-foreground",
-          )}
-        >
-          SKU: {details.sku}
-        </p>
-
-        <div className="flex items-center gap-3 mb-4">
-          <div className="flex items-center gap-1">
-            {renderStars(product.rating ?? 0)}
+        {/* No SKU here: it is an internal stock code, and some are machine-made
+            ("…-copy-1776359769164-0"). No stars until there is a review — five empty stars and
+            "(0 reviews)" under every product name reads as a store nobody buys from. */}
+        {details.reviewCount > 0 && (
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-1">
+              {renderStars(product.rating ?? 0)}
+            </div>
+            <a
+              href="#reviews"
+              className={cn(
+                "text-sm hover:underline",
+                storeTheme ? "text-[#D3B574]" : "text-[#003366]",
+              )}
+            >
+              ({details.reviewCount} {details.reviewCount === 1 ? "review" : "reviews"})
+            </a>
           </div>
-          <a
-            href="#reviews"
-            className={cn(
-              "text-sm hover:underline",
-              storeTheme ? "text-[#D3B574]" : "text-[#003366]",
-            )}
-          >
-            ({details.reviewCount} reviews)
-          </a>
-        </div>
+        )}
 
         <p
           className={cn(
@@ -326,27 +317,29 @@ export function ProductInfo({
           {details.description}
         </p>
 
-        <div className="space-y-2">
-          <p
-            className={cn(
-              "font-semibold text-sm",
-              storeTheme ? "text-white" : "text-foreground",
-            )}
-          >
-            Features:
-          </p>
-          <ul className="space-y-1">
-            {details.features.map((feature, index) => (
-              <li
-                key={index}
-                className="text-sm text-muted-foreground flex items-start gap-2"
-              >
-                <span className="text-[#003366] mt-1">•</span>
-                <span>{feature}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {details.features.length > 0 && (
+          <div className="space-y-2">
+            <p
+              className={cn(
+                "font-semibold text-sm",
+                storeTheme ? "text-white" : "text-foreground",
+              )}
+            >
+              Features:
+            </p>
+            <ul className="space-y-1">
+              {details.features.map((feature, index) => (
+                <li
+                  key={index}
+                  className="text-sm text-muted-foreground flex items-start gap-2"
+                >
+                  <span className="text-[#003366] mt-1">•</span>
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       <div
@@ -624,20 +617,6 @@ export function ProductInfo({
               </a>
             </Button>
           )}
-
-          <Button
-            variant="outline"
-            onClick={() => setIsWishlisted(!isWishlisted)}
-            className="w-full h-12 text-base font-semibold"
-          >
-            <Heart
-              className={cn(
-                "w-5 h-5 mr-2",
-                isWishlisted && "fill-red-500 text-red-500",
-              )}
-            />
-            {isWishlisted ? "Added to Wishlist" : "Add to Wishlist"}
-          </Button>
         </div>
       </div>
 
@@ -650,28 +629,9 @@ export function ProductInfo({
         >
           Share this product
         </p>
+        {/* Only the link copies anything. The Facebook, Twitter and Instagram buttons that used to
+            sit here had no handler, so a tap did nothing. */}
         <div className="flex flex-wrap gap-3">
-          <Button
-            variant="outline"
-            size="icon"
-            className="rounded-full bg-transparent"
-          >
-            <Facebook className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="rounded-full bg-transparent"
-          >
-            <Twitter className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="rounded-full bg-transparent"
-          >
-            <Instagram className="w-4 h-4" />
-          </Button>
           <Button
             variant="outline"
             size="icon"

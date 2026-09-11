@@ -98,9 +98,11 @@ export function RelatedProducts({ products, storeTheme = false }: RelatedProduct
                       {product.name}
                     </h3>
                   </StoreLink>
-                  <div className="flex items-center gap-1 mb-2">
-                    {renderStars(product.rating ?? 0)}
-                  </div>
+                  {(product.rating ?? 0) > 0 && (
+                    <div className="flex items-center gap-1 mb-2">
+                      {renderStars(product.rating ?? 0)}
+                    </div>
+                  )}
                   <p className={cn("text-xl font-bold", storeTheme ? "text-white" : "text-foreground")}>
                     ${Number(product.price).toFixed(2)}
                   </p>

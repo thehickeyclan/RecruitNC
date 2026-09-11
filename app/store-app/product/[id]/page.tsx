@@ -81,12 +81,10 @@ export default async function ProductDetailPage({
   const details = {
     sku: variants[0]?.sku ?? `NC-${String(product.id).slice(0, 8)}`,
     description: product.description ?? "",
-    features: [
-      "Premium quality materials",
-      "Comfortable fit for all-day wear",
-      "Official NC United branding",
-      "Machine washable",
-    ],
+    // No stock feature list. The one that lived here ("Premium quality materials… Machine
+    // washable") printed under every product, body wipes and socks included. The description
+    // written for each product says what is true about it.
+    features: [],
     colors: variants.reduce((acc: any[], v: any) => {
       if (v.color && !acc.find((c: any) => c.name === v.color)) {
         const colorHasStock = variants.some(
