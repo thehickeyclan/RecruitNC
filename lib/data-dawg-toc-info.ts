@@ -33,6 +33,18 @@ import {
 } from "@/lib/toc/registration-policy"
 import { getTocEventConfig } from "@/lib/toc/event-config"
 import { getPublicAnnouncedWeight, listPublicWeightTiles } from "@/lib/toc/public-announced-field"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { readBracketRelease } from "@/lib/toc/bracket-release"
+import { getLockedDraw } from "@/lib/toc/bracket-service"
+import { toBoutResultsView, type BoutResultRow } from "@/lib/toc/bout-results-view"
+import {
+  athleteRunText,
+  bracketText,
+  championText,
+  seedListText,
+  type ResultsForAnswers,
+} from "@/lib/toc/bracket-answer-format"
+import { TOC_BRACKET_RELEASE_LINE, TOC_EVENT_DATE } from "@/lib/toc/constants"
 
 const TOC_PAGE_URL = "https://app.ncwrestlingunited.com/tournament-of-champions"
 
@@ -44,15 +56,75 @@ function normalize(value: string): string {
     .trim()
 }
 
-export function isTournamentOfChampionsQuery(message: string): boolean {
+/**
+ * Another event — or another season — the question could be about, in which case it is not ours.
+ *
+ * The classifications and the past years matter as much as the event names: "who won the 3A
+ * bracket" and "his 2025 bracket" are history questions the data agent answers properly, and the
+ * Tournament of Champions intercept would answer them with this week's draw instead.
+ */
+function namesAnotherTournament(text: string): boolean {
+  if (/\b(19|20)\d{2}\b/.test(text) && !/\b2026\b/.test(text)) return true
+  return /\b(nchsaa|ncisaa|nhsca|fargo|super ?32|state (championship|tournament|meet|title)|regionals?|conference|dual|duals|midlands|ironman|beast|[1-4]a)\b/.test(
+    text,
+  )
+}
+
+export function isTournamentOfChampionsQuery(message: string, now: Date = new Date()): boolean {
   const text = normalize(message)
   if (!text) return false
 
-  return (
+  if (
     /\b(tournament of champions|toc|champions invitational)\b/i.test(message) ||
     /\b(champion jacket|single mat finals|gofan|invite only|invitation only)\b/i.test(message) ||
     (/\b(champions|champion)\b/.test(text) && /\b(nc united|north carolina wrestling)\b/.test(text))
+  ) {
+    return true
+  }
+
+  if (namesAnotherTournament(text)) return false
+
+  /**
+   * A bare "where can I see brackets" is about our tournament.
+   *
+   * Two people asked exactly that on release night and were sent to the NCHSAA website, because
+   * neither typed "TOC". In this app, during this season, a bracket or seeding question with no
+   * other event named is ours.
+   */
+  if (/\b(bracket|brackets|seed|seeds|seeded|seeding|matchups?|the draw)\b/.test(text)) return true
+
+  /**
+   * Results questions only count while the tournament is actually running, and only when the
+   * question points at it — a weight class, or wording about right now. Outside that window
+   * "how many wins does he have" is a career question, and the data agent owns it.
+   */
+  if (!duringTournamentWeek(now)) return false
+  const asksResults = /\b(result|results|score|scores|won|win|wins|beat|lost|champion|champions|final|finals|semifinal|semifinals|placed|place|placing|advance|advanced)\b/.test(
+    text,
   )
+  const asksField = /\b(field|who is in|whos in|lineup)\b/.test(text)
+  if (!asksResults && !asksField) return false
+  if (/\b(career|all time|lifetime|season|this year|high school|record against)\b/.test(text)) return false
+
+  return (
+    weightFromQuestion(text) !== null ||
+    /\b(so far|right now|today|tonight|live|currently|yet|already|update|updates)\b/.test(text)
+  )
+}
+
+const DAY_MS = 24 * 60 * 60 * 1000
+
+/**
+ * Bracket release week through the days after wrestling ends.
+ *
+ * Outside it, the loose results routing above would quietly take over ordinary wrestling questions
+ * for the rest of the app's life — "how many wins does he have" is a career question in October.
+ * Inside it, that is exactly what people mean.
+ */
+export function duringTournamentWeek(now: Date = new Date()): boolean {
+  const start = TOC_EVENT_DATE.getTime() - 10 * DAY_MS
+  const end = TOC_EVENT_DATE.getTime() + 3 * DAY_MS
+  return now.getTime() >= start && now.getTime() <= end
 }
 
 /**
@@ -108,7 +180,7 @@ const FIELD_INTENT_TERMS = [
 function weightFromQuestion(text: string): number | null {
   for (const m of text.matchAll(/\b(\d{2,3})(?!\d)/g)) {
     const n = Number(m[1])
-    if (TOC_WEIGHT_CLASSES.includes(n)) return n
+    if ((TOC_WEIGHT_CLASSES as readonly number[]).includes(n)) return n
   }
   return null
 }
@@ -185,18 +257,197 @@ async function answerFieldQuestion(text: string): Promise<string | null> {
   if (r.allAmericans) rollupBits.push(`${r.allAmericans} All-American${r.allAmericans === 1 ? "" : "s"}`)
   if (r.stateChampions) rollupBits.push(`${r.stateChampions} state title${r.stateChampions === 1 ? "" : "s"}`)
 
+  const { released } = await readBracketRelease(createAdminClient())
+  const seedingLine = released
+    ? `Seeds and the draw are out — ask for the bracket at ${weight}, or open Official Brackets in the app.`
+    : "The field is not seeded, and brackets are not public."
+
   return section(
     `${weight} lbs — the field`,
     [
-      `${rollupBits.join(" · ")}. Listed alphabetically; the field is not seeded, and brackets are not public.`,
+      `${rollupBits.join(" · ")}. Listed alphabetically. ${seedingLine}`,
       bulletList(lines),
       `Full profiles: [${weight} lbs](${TOC_FIELD_HUB_URL}/${weight})`,
     ].join("\n\n"),
   )
 }
 
+/** Words that mean "show me the draw or what happened in it". */
+function wantsBracketFacts(text: string): boolean {
+  // "How did Landon Logan do at TOC" names none of the words below, and is the commonest question
+  // of the weekend.
+  if (/\bhow (did|has|is)\b/.test(text) || /\bwho (did|does) .* (wrestle|face|beat|lose)/.test(text)) return true
+
+  return hasAny(text, [
+    "bracket", "brackets", "seed", "seeds", "seeded", "seeding", "matchup", "matchups", "draw", "draws",
+    "result", "results", "score", "scores", "won", "win", "wins", "beat", "lost", "loss", "champion", "champions",
+    "advance", "advanced", "quarterfinal", "semifinal", "semifinals", "final", "finals", "placed", "placing",
+  ])
+}
+
+/** The first wrestler in the released field whose name the question mentions. */
+function athleteFromQuestion(
+  text: string,
+  draws: TocBracketDrawForAnswers[],
+): { weightClass: number; athleteId: string; name: string } | null {
+  for (const { weightClass, draw } of draws) {
+    for (const p of draw.participants) {
+      const surname = normalize(p.name).split(" ").at(-1) ?? ""
+      if (surname.length > 2 && hasAny(text, [normalize(p.name), surname])) {
+        return { weightClass, athleteId: p.athleteId, name: p.name }
+      }
+    }
+  }
+  return null
+}
+
+type TocBracketDrawForAnswers = { weightClass: number; draw: NonNullable<Awaited<ReturnType<typeof getLockedDraw>>> }
+
+async function loadDrawsAndResults(weights: readonly number[]): Promise<{
+  draws: TocBracketDrawForAnswers[]
+  resultsByWeight: Map<number, ResultsForAnswers>
+  recorded: number
+}> {
+  const admin = createAdminClient()
+  // Ten weights in parallel: a chat answer waits on the slowest draw, not on all ten in turn.
+  const loaded = await Promise.all(
+    weights.map(async (weightClass) => ({ weightClass, draw: await getLockedDraw(admin, weightClass) })),
+  )
+  const draws: TocBracketDrawForAnswers[] = loaded.filter(
+    (entry): entry is TocBracketDrawForAnswers => Boolean(entry.draw),
+  )
+
+  const { data } = await admin
+    .from("toc_bout_results")
+    .select("weight_class,bout_number,winner_athlete_id,method,winner_score,loser_score,recorded_at,updated_at")
+    .in("weight_class", draws.map((d) => d.weightClass))
+
+  const rowsByWeight = new Map<number, BoutResultRow[]>()
+  for (const row of data ?? []) {
+    const weight = Number((row as { weight_class: number }).weight_class)
+    rowsByWeight.set(weight, [...(rowsByWeight.get(weight) ?? []), row as BoutResultRow])
+  }
+
+  const resultsByWeight = new Map<number, ResultsForAnswers>()
+  let recorded = 0
+  for (const { weightClass } of draws) {
+    const view = toBoutResultsView(rowsByWeight.get(weightClass) ?? [])
+    recorded += view.recorded
+    resultsByWeight.set(weightClass, { winners: view.winners, outcomes: view.outcomes })
+  }
+
+  return { draws, resultsByWeight, recorded }
+}
+
+/**
+ * Seeds, matchups and results — the questions people actually asked on release night.
+ *
+ * Everything here is gated on the same release flag the app reads, so nothing about a draw can be
+ * described before staff publish it. Returns null when the question is not about the bracket, so
+ * the tournament's own facts answer instead.
+ */
+async function answerBracketQuestion(text: string): Promise<string | null> {
+  if (!wantsBracketFacts(text)) return null
+
+  const namesDraw = hasAny(text, [
+    "bracket", "brackets", "seed", "seeds", "seeded", "seeding", "draw", "matchup", "matchups",
+  ])
+
+  const release = await readBracketRelease(createAdminClient())
+  if (!release.released) {
+    if (!namesDraw) return null
+    return section("Brackets", `${TOC_BRACKET_RELEASE_LINE} The field is public in the meantime: [The Field](${TOC_FIELD_HUB_URL})`)
+  }
+
+  const weight = weightFromQuestion(text)
+  const { draws, resultsByWeight, recorded } = await loadDrawsAndResults(
+    weight ? [weight] : TOC_WEIGHT_CLASSES,
+  )
+  if (draws.length === 0) return null
+
+  const seeAll = "Every weight is in the NC United app under **Official Brackets**, and updates as bouts are recorded."
+
+  // "How did Tye Johnson do" — a named wrestler beats a weight class, because it is more specific.
+  const athlete = athleteFromQuestion(text, draws)
+  if (athlete && hasAny(text, ["how did", "do", "doing", "result", "results", "won", "win", "lost", "record", "beat"])) {
+    const entry = draws.find((d) => d.weightClass === athlete.weightClass)!
+    const results = resultsByWeight.get(athlete.weightClass) ?? { winners: {}, outcomes: {} }
+    const run = athleteRunText(entry.draw, results, athlete.athleteId)
+    const body = run.lines.length
+      ? [`${run.wins}-${run.losses} at ${athlete.weightClass} lbs so far.`, bulletList(run.lines)].join("\n\n")
+      : `${athlete.name} is in the ${athlete.weightClass} lb bracket. No bouts recorded yet.`
+    return section(`${athlete.name} — ${athlete.weightClass} lbs`, [body, seeAll].join("\n\n"))
+  }
+
+  if (weight) {
+    const entry = draws[0]
+    const results = resultsByWeight.get(weight) ?? { winners: {}, outcomes: {} }
+    const champion = championText(entry.draw, results)
+
+    /**
+     * Someone who asks for "the bracket" wants the matchups, not a seed list — that is the whole
+     * point of a bracket. Only a question narrowly about seeding gets seeds alone.
+     */
+    const seedsOnly =
+      hasAny(text, ["seed", "seeds", "seeded", "seeding"]) &&
+      !hasAny(text, ["bracket", "brackets", "draw", "matchup", "matchups", "result", "results", "bout", "bouts"])
+
+    const parts = [
+      champion ?? null,
+      `**Seeds**\n${seedListText(entry.draw)}`,
+      seedsOnly ? null : `**Bouts**\n${bracketText(entry.draw, results)}`,
+      seeAll,
+    ].filter(Boolean) as string[]
+    return section(`${weight} lbs — the bracket`, parts.join("\n\n"))
+  }
+
+  // No weight named: the one-seeds, or the champions once they exist.
+  const champions = draws
+    .map(({ weightClass, draw }) => championText(draw, resultsByWeight.get(weightClass) ?? { winners: {}, outcomes: {} }))
+    .filter((line): line is string => Boolean(line))
+
+  if (hasAny(text, ["champion", "champions", "won", "win", "result", "results"])) {
+    return champions.length
+      ? section("Champions so far", [bulletList(champions), seeAll].join("\n\n"))
+      : section(
+          "No results yet",
+          [
+            recorded > 0
+              ? `${recorded} bouts are in, but no weight has crowned a champion yet.`
+              : "Nothing has been wrestled yet — the brackets are seeded and locked.",
+            seeAll,
+          ].join("\n\n"),
+        )
+  }
+
+  /**
+   * "How did the weekend go" reaches this far and is not a bracket question. Only wording that
+   * actually names the draw gets the overview; anything else falls through to the page facts.
+   */
+  if (!namesDraw) return null
+
+  const topSeeds = draws.map(({ weightClass, draw }) => {
+    const one = draw.participants.find((p) => p.seed === 1)
+    return `${weightClass} lbs — ${one?.name ?? "TBD"}`
+  })
+  return section(
+    "Brackets are out",
+    [
+      recorded > 0 ? `${recorded} bouts recorded so far.` : "Seeded and locked; no bouts wrestled yet.",
+      "**Top seeds**",
+      bulletList(topSeeds),
+      "Ask about a weight — “what is the bracket for 141” — for its seeds and bouts.",
+      seeAll,
+    ].join("\n\n"),
+  )
+}
+
 export async function answerTournamentOfChampionsQuestion(message: string): Promise<string> {
   const text = normalize(message)
+
+  /** Seeds, matchups and results, once the draws are public. */
+  const bracketAnswer = await answerBracketQuestion(text)
+  if (bracketAnswer) return bracketAnswer
 
   /** A "who is in X" question wants the field, not the tournament brochure. */
   const fieldAnswer = await answerFieldQuestion(text)
