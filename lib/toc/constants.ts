@@ -12,6 +12,16 @@ export const TOC_EVENT_DATE = new Date("2026-09-18T16:00:00-04:00")
  * they can be compared neither to each other nor to what happens. Entries stay editable until the
  * deadline, which sits before Friday's first round.
  */
+/**
+ * When the brackets stop being a draw and start being a scoreboard.
+ *
+ * Weigh-ins are Friday 4:00–5:00 PM and the first round follows, so five o'clock is the moment the
+ * bracket published on release night can start changing: a wrestler who misses weight is out of it
+ * before anyone steps on a mat. The app relabels itself from Official to Live at this point, and a
+ * recorded result flips it early if the mats get going ahead of schedule.
+ */
+export const TOC_LIVE_FROM = new Date("2026-09-18T17:00:00-04:00")
+
 export const TOC_POOL_OPENS = new Date("2026-09-11T12:00:00-04:00")
 // The night before the tournament: entries stay open through the week of watching the brackets,
 // and lock ahead of Friday's first bout. Moved from Tuesday 15 September at 11:59 PM.

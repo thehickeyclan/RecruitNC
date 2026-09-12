@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { readBracketRelease } from "@/lib/toc/bracket-release"
 import { getLockedDraw } from "@/lib/toc/bracket-service"
-import { TOC_BRACKET_RELEASE_LINE, TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
+import { TOC_BRACKET_RELEASE_LINE, TOC_LIVE_FROM, TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { toBoutResultsView, type BoutResultRow } from "@/lib/toc/bout-results-view"
 
 /**
@@ -74,7 +74,16 @@ export async function GET(request: NextRequest) {
     null,
   )
 
+  /**
+   * Live once weigh-ins close, or earlier if a bout has already been recorded.
+   *
+   * Served rather than computed in the app so the moment can move — weigh-ins running long is a
+   * website deploy, not an App Store release. The app knows the same clock and takes whichever
+   * says live, so a phone offline at five o'clock still relabels itself.
+   */
+  const live = Date.now() >= TOC_LIVE_FROM.getTime() || perWeight.some((w) => w.recorded > 0)
+
   const single = Number.isInteger(requested) ? perWeight[0] : null
-  if (single) return NextResponse.json({ released: true, ...single })
-  return NextResponse.json({ released: true, lastUpdated: newest, weights: perWeight })
+  if (single) return NextResponse.json({ released: true, live, ...single })
+  return NextResponse.json({ released: true, live, lastUpdated: newest, weights: perWeight })
 }
