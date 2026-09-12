@@ -13,8 +13,10 @@ export const TOC_EVENT_DATE = new Date("2026-09-18T16:00:00-04:00")
  * deadline, which sits before Friday's first round.
  */
 export const TOC_POOL_OPENS = new Date("2026-09-11T12:00:00-04:00")
-export const TOC_POOL_DEADLINE = new Date("2026-09-15T23:59:59-04:00")
-export const TOC_POOL_DEADLINE_DISPLAY = "Monday, September 15, 2026" as const
+// The night before the tournament: entries stay open through the week of watching the brackets,
+// and lock ahead of Friday's first bout. Moved from Tuesday 15 September at 11:59 PM.
+export const TOC_POOL_DEADLINE = new Date("2026-09-17T22:00:00-04:00")
+export const TOC_POOL_DEADLINE_DISPLAY = "Thursday, September 17, 2026" as const
 
 /** Public date lines — single source for landing page, emails, FAQ, and schema. */
 export const TOC_EVENT_DATES_RANGE = "September 18–19, 2026" as const
