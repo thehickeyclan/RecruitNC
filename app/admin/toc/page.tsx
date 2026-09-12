@@ -134,6 +134,12 @@ const LINKS: DashboardLink[] = [
     icon: Megaphone,
   },
   {
+    href: "/admin/toc/pool/entries",
+    title: "TOC Madness entries",
+    description: "Everyone who entered, how many weights they have in, and what they picked",
+    icon: ClipboardList,
+  },
+  {
     href: "/tournament-of-champions/brackets",
     title: "Public brackets",
     description: "Published weight-class draws",
