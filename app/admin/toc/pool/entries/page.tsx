@@ -107,8 +107,11 @@ export default function TocPoolEntriesPage() {
 
   const name = (e: Entrant) => e.leaderboardName || e.accountName || e.email || e.userId.slice(0, 8)
 
+  // The dark background is the page's own job: /admin/toc has no layout, so a page that only sets
+  // white text renders white-on-white. The sibling results page paints the same shell.
   return (
-    <div className="mx-auto max-w-6xl space-y-4 p-4 sm:p-6">
+    <main className="admin-dark-page min-h-screen bg-rnc-ink px-4 pb-24 pt-6 text-white">
+      <div className="mx-auto max-w-6xl space-y-4">
       <div>
         <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#CC0000]">Tournament of Champions</p>
         <h1 className="text-2xl font-black text-white">TOC Madness entries</h1>
@@ -244,6 +247,7 @@ export default function TocPoolEntriesPage() {
           )}
         </div>
       ) : null}
-    </div>
+      </div>
+    </main>
   )
 }
