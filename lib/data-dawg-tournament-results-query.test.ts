@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   dedupeNhscaAllAmericanRows,
   extractNchsaaClassification,
+  extractWeightClass,
   formatNhscaAllAmericansAnswer,
   formatNchsaaStateTournamentAnswer,
   matchesNchsaaClassificationFilter,
@@ -16,6 +17,7 @@ describe("parseTournamentResultsQuery", () => {
       year: 2017,
       gender: "men",
       classification: null,
+      weightClass: null,
     })
   })
 
@@ -25,6 +27,7 @@ describe("parseTournamentResultsQuery", () => {
       year: 2025,
       gender: "men",
       classification: "4A",
+      weightClass: null,
     })
   })
 
@@ -34,6 +37,7 @@ describe("parseTournamentResultsQuery", () => {
       year: 2024,
       gender: "men",
       classification: "4A",
+      weightClass: null,
     })
   })
 
@@ -43,6 +47,7 @@ describe("parseTournamentResultsQuery", () => {
       year: 2026,
       gender: "men",
       classification: "1A/2A",
+      weightClass: null,
     })
   })
 
@@ -54,6 +59,7 @@ describe("parseTournamentResultsQuery", () => {
       year: 2022,
       gender: "men",
       classification: null,
+      weightClass: null,
     })
   })
 
@@ -63,6 +69,7 @@ describe("parseTournamentResultsQuery", () => {
       year: 2017,
       gender: "men",
       classification: null,
+      weightClass: null,
     })
   })
 
@@ -72,6 +79,7 @@ describe("parseTournamentResultsQuery", () => {
       year: 2019,
       gender: "men",
       classification: null,
+      weightClass: null,
     })
   })
 
@@ -81,6 +89,7 @@ describe("parseTournamentResultsQuery", () => {
       year: 2024,
       gender: "men",
       classification: null,
+      weightClass: null,
     })
   })
 
@@ -90,6 +99,7 @@ describe("parseTournamentResultsQuery", () => {
       year: 2024,
       gender: "men",
       classification: null,
+      weightClass: null,
     })
   })
 
@@ -99,6 +109,7 @@ describe("parseTournamentResultsQuery", () => {
       year: 2024,
       gender: "men",
       classification: "1A",
+      weightClass: null,
     })
   })
 
@@ -108,6 +119,7 @@ describe("parseTournamentResultsQuery", () => {
       year: 2024,
       gender: "men",
       classification: "2A",
+      weightClass: null,
     })
   })
 
@@ -117,6 +129,7 @@ describe("parseTournamentResultsQuery", () => {
       year: 2017,
       gender: "men",
       classification: null,
+      weightClass: null,
     })
   })
 
@@ -126,6 +139,7 @@ describe("parseTournamentResultsQuery", () => {
       year: 2020,
       gender: "men",
       classification: null,
+      weightClass: null,
     })
   })
 
@@ -135,6 +149,7 @@ describe("parseTournamentResultsQuery", () => {
       year: 2023,
       gender: "women",
       classification: null,
+      weightClass: null,
     })
   })
 
@@ -152,6 +167,7 @@ describe("parseTournamentResultsQuery", () => {
       year: 2026,
       gender: "men",
       classification: null,
+      weightClass: null,
     })
   })
 
@@ -161,6 +177,7 @@ describe("parseTournamentResultsQuery", () => {
       year: 2024,
       gender: "men",
       classification: null,
+      weightClass: null,
     })
   })
 })
@@ -168,7 +185,7 @@ describe("parseTournamentResultsQuery", () => {
 describe("formatNhscaAllAmericansAnswer", () => {
   it("groups by division and formats placers", () => {
     const answer = formatNhscaAllAmericansAnswer(
-      { kind: "nhsca_all_americans", year: 2017, gender: "men", classification: null },
+      { kind: "nhsca_all_americans", year: 2017, gender: "men", classification: null, weightClass: null },
       [
         {
           athlete_name: "Test Wrestler",
@@ -187,7 +204,7 @@ describe("formatNhscaAllAmericansAnswer", () => {
 
   it("does not double-append lbs when weight already includes lbs", () => {
     const answer = formatNhscaAllAmericansAnswer(
-      { kind: "nhsca_all_americans", year: 2023, gender: "men", classification: null },
+      { kind: "nhsca_all_americans", year: 2023, gender: "men", classification: null, weightClass: null },
       [
         {
           athlete_name: "Lorenzo Alston",
@@ -355,7 +372,7 @@ describe("matchesNchsaaClassificationFilter", () => {
 describe("formatNchsaaStateTournamentAnswer", () => {
   it("includes classification in header when filtered", () => {
     const answer = formatNchsaaStateTournamentAnswer(
-      { kind: "nchsaa_state", year: 2025, gender: "men", classification: "4A" },
+      { kind: "nchsaa_state", year: 2025, gender: "men", classification: "4A", weightClass: null },
       [
         {
           wrestler_name: "State Champ",
@@ -373,7 +390,7 @@ describe("formatNchsaaStateTournamentAnswer", () => {
 
   it("links to the year page and lists placers", () => {
     const answer = formatNchsaaStateTournamentAnswer(
-      { kind: "nchsaa_state", year: 2017, gender: "men", classification: null },
+      { kind: "nchsaa_state", year: 2017, gender: "men", classification: null, weightClass: null },
       [
         {
           wrestler_name: "State Champ",
@@ -387,5 +404,80 @@ describe("formatNchsaaStateTournamentAnswer", () => {
     )
     expect(answer).toContain("/nchsaa/2017")
     expect(answer).toContain("State Champ")
+  })
+})
+
+/**
+ * A parent asked "who won the 3A state championship at 138 in 2025" and got all 84 placers back.
+ * Their note: "why not just show the weight they are looking for or just answer the question?"
+ */
+describe("weight class in the question", () => {
+  it("finds the weight without mistaking the division or the year for one", () => {
+    expect(extractWeightClass("who won the 3A state championship at 138 in 2025")).toBe(138)
+    expect(extractWeightClass("2025 4A state results")).toBeNull()
+    expect(extractWeightClass("show me 145 lbs at 2024 state")).toBe(145)
+    expect(extractWeightClass("who placed at 106lbs in 2023")).toBe(106)
+    expect(extractWeightClass("who were the 1A/2A placers in 2026")).toBeNull()
+  })
+
+  it("carries the weight through the parse", () => {
+    expect(parseTournamentResultsQuery("who won the 3A state championship at 138 in 2025")).toEqual({
+      kind: "nchsaa_state",
+      year: 2025,
+      gender: "men",
+      classification: "3A",
+      weightClass: 138,
+    })
+  })
+
+  const placers2025 = [
+    { wrestler_name: "Winner", place: 1, year: 2025, classification: "3A", weight_class: "138", school: "Apex" },
+    { wrestler_name: "Runner Up", place: 2, year: 2025, classification: "3A", weight_class: "138", school: "Cary" },
+    { wrestler_name: "Someone Else", place: 1, year: 2025, classification: "3A", weight_class: "106", school: "Enka" },
+  ]
+
+  it("answers the question in the first line and shows only that weight", () => {
+    const answer = formatNchsaaStateTournamentAnswer(
+      { kind: "nchsaa_state", year: 2025, gender: "men", classification: "3A", weightClass: 138 },
+      placers2025,
+    )
+    expect(answer.split("\n")[0]).toBe("**Winner** (Apex) won 2025 3A at 138 lbs.")
+    expect(answer).toContain("Runner Up")
+    expect(answer).not.toContain("Someone Else")
+  })
+
+  it("says so when that weight is not in the data, rather than dumping every weight", () => {
+    const answer = formatNchsaaStateTournamentAnswer(
+      { kind: "nchsaa_state", year: 2025, gender: "men", classification: "3A", weightClass: 999 },
+      placers2025,
+    )
+    expect(answer).toContain("999 lb")
+    expect(answer).toContain("106, 138")
+    expect(answer).not.toContain("Winner")
+  })
+
+  it("points at the nearest weight when the season used a different one", () => {
+    const answer = formatNchsaaStateTournamentAnswer(
+      { kind: "nchsaa_state", year: 2025, gender: "men", classification: "3A", weightClass: 140 },
+      placers2025,
+    )
+    expect(answer).toContain("closest that year was **138 lbs**")
+  })
+
+  it("leaves the full listing alone when no weight was asked for", () => {
+    const answer = formatNchsaaStateTournamentAnswer(
+      { kind: "nchsaa_state", year: 2025, gender: "men", classification: "3A", weightClass: null },
+      placers2025,
+    )
+    expect(answer).toContain("Someone Else")
+    expect(answer).toContain("Winner")
+  })
+
+  it("does not nest bold markers in the header", () => {
+    const answer = formatNchsaaStateTournamentAnswer(
+      { kind: "nchsaa_state", year: 2025, gender: "men", classification: "3A", weightClass: null },
+      placers2025,
+    )
+    expect(answer).not.toContain("**2025 **")
   })
 })

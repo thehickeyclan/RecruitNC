@@ -1969,6 +1969,7 @@ export async function toolNhscaAllAmericansByYear(args: {
     year: Number(args.year),
     gender: args.gender === "women" ? "women" : "men",
     classification: null,
+    weightClass: null,
   }
   const rows = await fetchNhscaAllAmericansByYear(parsed)
   return {
@@ -1990,8 +1991,10 @@ export async function toolNchsaaStateTournamentByYear(args: {
   year?: number | string | null
   classification?: string | null
   gender?: string | null
+  weight_class?: number | string | null
 }) {
   const classification = args.classification?.trim() || null
+  const weightClass = Number.isFinite(Number(args.weight_class)) ? Number(args.weight_class) : null
   const requested = args.year == null || args.year === "" ? Number.NaN : Number(args.year)
   const yearInferred = !Number.isFinite(requested)
 
@@ -2022,6 +2025,7 @@ export async function toolNchsaaStateTournamentByYear(args: {
     year,
     gender: args.gender === "women" ? "women" : "men",
     classification,
+    weightClass,
   }
   const rows = await fetchNchsaaStateTournamentByYear(parsed)
   const realignment = nchsaaRealignmentNote(classification, year)
@@ -2065,6 +2069,7 @@ export async function toolFargoResultsByYear(args: { year?: number | string | nu
     year,
     gender: "men",
     classification: null,
+    weightClass: null,
   }
   const rows = await fetchFargoResultsByYear(parsed.year)
   return {

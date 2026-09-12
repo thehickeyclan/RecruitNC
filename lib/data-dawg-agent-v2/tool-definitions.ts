@@ -318,6 +318,11 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
             enum: ["men", "women"],
             description: "Default men unless user asks for girls/women.",
           },
+          weight_class: {
+            type: "integer",
+            description:
+              "Pass the weight whenever the user names one ('who won 4A state at 132?' → 132). Without it the tool returns every placer at every weight.",
+          },
         },
         required: [],
       },
