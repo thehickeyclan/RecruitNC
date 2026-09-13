@@ -4,6 +4,7 @@ import { useEffect, useState, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import { Calendar, Clock, MapPin } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
+import { formatCalendarDate } from "@/lib/calendar-date"
 
 export const dynamic = "force-dynamic"
 
@@ -55,15 +56,7 @@ function DropInSuccessContent() {
     fetchEventDetails()
   }, [sessionId])
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString("en-US", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    })
-  }
+  const formatDate = (dateString: string) => formatCalendarDate(dateString)
 
   const formatTime = (timeString?: string) => {
     if (!timeString) return null

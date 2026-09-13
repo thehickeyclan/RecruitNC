@@ -2,6 +2,8 @@
  * Confirmation email after NC United calendar drop-in payment (Stripe webhook).
  */
 
+import { formatCalendarDate } from "@/lib/calendar-date"
+
 const FROM = "NC Wrestling United <info@ncwrestlingunited.com>"
 
 export type DropInApprovalEmailInput = {
@@ -23,8 +25,7 @@ function formatTime(time: string) {
 }
 
 function formatDate(dateString: string) {
-  const date = new Date(dateString)
-  return date.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" })
+  return formatCalendarDate(dateString)
 }
 
 export async function sendDropInApprovalEmail(data: DropInApprovalEmailInput): Promise<{ success: boolean; error?: string }> {
