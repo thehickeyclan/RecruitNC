@@ -190,9 +190,33 @@ export async function POST(request: NextRequest) {
   )
   if (!cap.ok) return NextResponse.json({ error: cap.error }, { status: 409 })
 
+  /**
+   * A family's coaches count the moment they are named.
+   *
+   * They used to land as pending until staff approved them, and the public field only shows
+   * approved coaches — so a family that named two coaches who had already bought credentials was
+   * told on the field page that their wrestler had no coach. Luke Richards' family did exactly
+   * that on the morning credentials were running out. The only rule approval enforced, two per
+   * wrestler, is already enforced by the cap above.
+   *
+   * A coach staff declined stays declined: resubmitting the same person does not undo it.
+   */
+  const declined = new Set(
+    (existing ?? []).filter((r) => r.status === "declined").map((r) => String(r.coach_key)),
+  )
+  const toWrite = incoming.filter((coach) => !declined.has(coach.coachKey))
+  if (toWrite.length === 0) {
+    return NextResponse.json(
+      { error: "That coach cannot be added for this wrestler. Contact NC United." },
+      { status: 409 },
+    )
+  }
+
   const now = new Date().toISOString()
   const { error: writeError } = await admin.from("toc_coach_designations").upsert(
-    incoming.map((coach) => ({
+    toWrite.map((coach) => ({
+      status: "approved",
+      reviewed_at: now,
       athlete_id: athleteId,
       athlete_name: athlete.name,
       weight_class: athlete.weightClass,
