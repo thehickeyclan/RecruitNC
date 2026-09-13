@@ -22,9 +22,19 @@ export function getDropInFeeCents(): number {
 
 /** Base URL for Stripe success/cancel redirects (calendar + drop-in). */
 export function getNcUnitedCalendarBaseUrl(): string {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
-  if (baseUrl && baseUrl.trim().length > 0) {
-    return baseUrl.replace(/\/$/, "")
+  /*
+   * The site's own address before Vercel's. Production sets APP_URL and SITE_URL but never
+   * BASE_URL, so every drop-in checkout sent families back to the per-deployment
+   * `…-gyaanais-projects.vercel.app` address — a URL a parent does not recognise, pinned to one
+   * build rather than the live site.
+   */
+  const baseUrl = [
+    process.env.NEXT_PUBLIC_BASE_URL,
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.NEXT_PUBLIC_SITE_URL,
+  ].find((value) => value && value.trim().length > 0)
+  if (baseUrl) {
+    return baseUrl.trim().replace(/\/$/, "")
   }
   const vercelUrl = process.env.VERCEL_URL
   if (vercelUrl) {
