@@ -23,6 +23,40 @@ export type UnmatchedPurchase = TicketPurchase & {
 export const PURCHASES_TABLE = "toc_coach_ticket_purchases"
 
 /**
+ * The coach a hand-made link means today.
+ *
+ * A link stores the coach's key as it was when an admin made it — often an email or a `tel:`.
+ * Identity resolution later folds that coach onto an account key, and the stored link then points
+ * at a key no coach carries: Shane Barbee's order was linked to shane7barbee@gmail.com, he became
+ * `user:dc2bd3bd…`, and the check-in list showed him unpaid with the ticket in hand. Nick Kostoff
+ * the same. So a link is translated through the same resolution everything else goes through.
+ */
+export function canonicalCoachKey(
+  linkedKey: string,
+  rows: Pick<ResolvedCoachRows, "originalKeys">,
+  contacts: { emails: ReadonlyMap<string, ReadonlySet<string>>; phones: ReadonlyMap<string, ReadonlySet<string>> },
+): string {
+  const key = linkedKey.trim()
+  if (rows.originalKeys.has(key)) return key
+
+  for (const [canonical, originals] of rows.originalKeys) {
+    if (originals.includes(key)) return canonical
+  }
+
+  const lower = key.toLowerCase()
+  const phone = key.startsWith("tel:") ? key.slice(4).replace(/\D/g, "").slice(-10) : null
+  for (const [canonical, emails] of contacts.emails) {
+    if (emails.has(lower)) return canonical
+  }
+  if (phone) {
+    for (const [canonical, phones] of contacts.phones) {
+      if (phones.has(phone)) return canonical
+    }
+  }
+  return key
+}
+
+/**
  * Credentials bought, matched onto the coaches we hold.
  *
  * Returns empty rather than failing when the table is not there yet, so the coaches page keeps
@@ -52,9 +86,12 @@ export async function loadCoachTickets(
     status: row.status ? String(row.status) : null,
   }))
 
+  const contacts = contactsByCoach(rows)
   const linked = new Map<string, string>()
   for (const row of data ?? []) {
-    if (row.linked_coach_key) linked.set(String(row.order_id), String(row.linked_coach_key))
+    if (row.linked_coach_key) {
+      linked.set(String(row.order_id), canonicalCoachKey(String(row.linked_coach_key), rows, contacts))
+    }
   }
 
   // The address somebody checks out with is often the one on their account rather than the one a
@@ -70,7 +107,6 @@ export async function loadCoachTickets(
       )
     : []
 
-  const contacts = contactsByCoach(rows)
   // What each coach is called, so a family's purchase in the coach's name finds them.
   const namesByCoach = new Map<string, Set<string>>()
   for (const coach of coaches) {
