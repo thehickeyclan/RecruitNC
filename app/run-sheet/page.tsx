@@ -33,7 +33,7 @@ const FRIDAY: Row[] = [
   { a: "4:00 – 5:00 PM", what: "Weigh-in and skin check", detail: "One official weigh-in. Invited wrestlers only — there is no Saturday weigh-in.", kind: "beat" },
   { a: "4:00 PM – close", what: "Warm-up mat open in the weigh-in area", detail: "Open continuously from the first weigh-in until the last bout of the night. Wrestlers step on as they clear the scale, and anyone waiting on a later bout can keep moving while others wrestle.", kind: "beat" },
   { a: "4:15 – 5:30 PM", what: "Competition mats also open for warm-ups", detail: "Both mats, until they are cleared for the opening. After that all warm-ups move to the weigh-in area.", kind: "beat" },
-  { a: "5:00 PM", what: "Ticket sales open · doors open to spectators", detail: "After weigh-ins finish, an hour before the first whistle.", kind: "prep" },
+  { a: "4:30 PM", what: "Doors open to the public · ticket sales open", detail: "Weigh-ins are still running until 5:00. An hour and a half before the first whistle.", kind: "prep" },
   { a: "5:00 – 5:15 PM", what: "Coaches meeting — officials address the coaches", detail: "In the warm-up room. Rules, bench conduct, bracket questions, and how the weekend will be run.", kind: "beat" },
   { a: "5:15 PM", what: "All athletes to the warm-up area · form two lines in weight order", detail: "Roughly 44 a line with a full field, 40 without 184. Sorting happens here, out of sight — they enter in their final formation and are never re-sorted in front of the crowd. A marshal on each line, briefed beforehand.", kind: "beat" },
   { a: "5:30 PM", what: "Competition mats clear · table workers report", detail: "The warm-up mat stays open through the ceremony and all session.", kind: "prep" },

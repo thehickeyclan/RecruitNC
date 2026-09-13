@@ -31,6 +31,7 @@ export const ROUND_KIND_LABEL: Record<RoundKind, string> = {
 
 export const FRIDAY_ROUNDS: readonly ScheduledRound[] = [
   { time: "4:00 – 5:00 PM", label: "Weigh-in & skin check", kind: "ceremony", detail: "One weigh-in for the weekend. Flat weight, no allowance." },
+  { time: "4:30 PM", label: "Doors open to the public", kind: "ceremony", detail: "Seating opens an hour and a half before the first whistle." },
   { time: "5:00 – 5:15 PM", label: "Coaches meeting", kind: "ceremony", detail: "Officials address the coaches in the warm-up room — rules, bench conduct and bracket questions." },
   { time: "5:30 PM", label: "Opening ceremony", kind: "ceremony", detail: "Athlete walkout, welcome, prayer and the national anthem." },
   { time: "6:00 PM", label: "Round 1", kind: "championship", tag: "R1", detail: "Every weight, two mats. Four bouts per weight." },

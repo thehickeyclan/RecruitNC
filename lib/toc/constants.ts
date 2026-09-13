@@ -277,8 +277,8 @@ export const TOC_SCHEDULE = {
         activity: "One official weigh-in & skin check (invited wrestlers only — no Saturday weigh-in)",
       },
       { time: "4:00 PM", activity: "Warm-up mat opens — stays open all session" },
+      { time: "4:30 PM", activity: "Doors open to the public · ticket sales open" },
       { time: "5:00–5:15 PM", activity: "Coaches meeting — officials address the coaches in the warm-up room" },
-      { time: "5:00 PM", activity: "Ticket sales open · doors open to spectators" },
       {
         time: "5:30 PM",
         activity: "Opening ceremony — athlete walkout, welcome and prayer, national anthem",
