@@ -71,15 +71,19 @@ export function TocPublicAthleteCard({ athlete }: { athlete: PublicFieldAthlete 
                   <span className="truncate" title={coach.name}>
                     {coach.name}
                   </span>
-                  <span className="sr-only">
-                    {coach.hasCredential ? "credential purchased" : "approved, credential not yet purchased"}
+                  {/* Families are sent here to check, so the state is words, not only a colour. */}
+                  <span className={`shrink-0 ${coach.hasCredential ? "text-emerald-300" : "text-amber-300"}`}>
+                    {coach.hasCredential ? "· credential ✓" : "· needs credential"}
                   </span>
                 </li>
               ))}
             </ul>
           </div>
         ) : (
-          <p className="mt-1.5 text-[11px] italic leading-snug text-white/30">No coaches submitted</p>
+          <p className="mt-1.5 flex items-center gap-1.5 text-[11px] font-semibold leading-snug text-rose-300">
+            <span aria-hidden className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-rose-400" />
+            No corner coach named
+          </p>
         )}
       </div>
     </li>

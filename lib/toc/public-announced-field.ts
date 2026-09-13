@@ -1030,7 +1030,27 @@ export async function warmPublicAnnouncedField(): Promise<void> {
 export async function getPublicAnnouncedWeight(weightClassInput: number): Promise<PublicAnnouncedWeight | null> {
   const weightClass = Number(weightClassInput)
   if (!Number.isFinite(weightClass) || !isValidWeight(weightClass)) return null
-  return loadAnnouncedWeight(weightClass)
+  const field = await loadAnnouncedWeight(weightClass)
+  if (!field) return null
+
+  /**
+   * Coaches are read fresh, never from the day-long cache.
+   *
+   * The cache is right for the field — it only changes when staff announce or release — but a
+   * coach's green or amber dot changes every time someone buys a credential, and families are told
+   * to check exactly that dot. Imports run as SQL, so no route could drop the tag for them: Matt
+   * Dunn, Jarrett Brown and Scott Swain had all bought and still read amber the afternoon
+   * credentials were selling out. The coach lookup is two small queries; the thirty-second cost
+   * the cache exists for is the credential reconciliation, which stays cached.
+   */
+  const coachesByAthlete = await fetchApprovedCoachesByAthlete()
+  return {
+    ...field,
+    athletes: field.athletes.map((athlete) => ({
+      ...athlete,
+      coaches: (coachesByAthlete.get(coachAthleteKey(athlete.name)) ?? []).slice(0, MAX_COACHES_PER_ATHLETE),
+    })),
+  }
 }
 
 /** Aggregate every public weight without exposing any athlete from an unreleased weight. */
