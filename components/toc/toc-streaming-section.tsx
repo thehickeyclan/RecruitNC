@@ -1,6 +1,7 @@
+import Image from "next/image"
 import { Radio, ExternalLink } from "lucide-react"
 import { TocPatrioticBar, TocVarsityHeading, tocMobileCtaClass, tocSectionClass } from "@/components/toc/toc-theme"
-import { TOC_STREAMING } from "@/lib/toc/constants"
+import { TOC_FLO_URL, TOC_STREAMING } from "@/lib/toc/constants"
 import type { TocEventConfig } from "@/lib/toc/event-config"
 
 type Props = {
@@ -8,7 +9,8 @@ type Props = {
 }
 
 export function TocStreamingSection({ config }: Props) {
-  const liveUrl = config.watch_live_url?.trim()
+  // An admin-set watch link still wins, so a direct event-day stream URL can replace the event page.
+  const watchUrl = config.watch_live_url?.trim() || TOC_FLO_URL
 
   return (
     <section id="streaming" className={`relative scroll-mt-20 bg-[#060f1f] text-white ${tocSectionClass()}`}>
@@ -21,28 +23,18 @@ export function TocStreamingSection({ config }: Props) {
         <TocVarsityHeading as="h2" className="text-white mb-3">
           Watch from anywhere
         </TocVarsityHeading>
-        {liveUrl ? (
-          <>
-            <p className="text-white/75 text-sm sm:text-base mb-6">The Tournament of Champions is streaming live.</p>
-            <a
-              href={liveUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`${tocMobileCtaClass("primary")} gap-2`}
-            >
-              Watch live
-              <ExternalLink className="h-4 w-4" aria-hidden />
-            </a>
-          </>
-        ) : (
-          <>
-            <p className="text-white/85 text-base sm:text-lg leading-relaxed mb-2">{TOC_STREAMING.teaser}</p>
-            <p className="text-white/60 text-sm mb-6">{TOC_STREAMING.notifyHint}</p>
-            <a href="#email-signup" className={tocMobileCtaClass("ghost")}>
-              Get stream updates
-            </a>
-          </>
-        )}
+        <p className="text-white/85 text-base sm:text-lg leading-relaxed mb-2">{TOC_STREAMING.teaser}</p>
+        <p className="text-white/60 text-sm mb-6">Commentary: {TOC_STREAMING.commentator}</p>
+        <a
+          href={watchUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${tocMobileCtaClass("primary")} gap-2`}
+        >
+          <Image src="/images/flo-logo.png" alt="" width={20} height={20} className="h-5 w-5 rounded" />
+          Watch on FloWrestling
+          <ExternalLink className="h-4 w-4" aria-hidden />
+        </a>
       </div>
     </section>
   )

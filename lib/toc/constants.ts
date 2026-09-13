@@ -905,8 +905,13 @@ export const TOC_DEFAULT_CONFIG = {
 export const TOC_BRACKET_RELEASE_LINE =
   "Brackets are released Friday at 5:00 PM, here in the NC United app." as const
 
+/** The FloWrestling event page — every TOC match, live and on demand. */
+export const TOC_FLO_URL = "https://www.flowrestling.org/nextgen/events/16151556/information" as const
+
 export const TOC_STREAMING = {
-  headline: "Live streaming",
-  teaser: "The event will be live streamed. Details coming soon.",
-  notifyHint: "Sign up below and we'll send the watch link when broadcast details are announced.",
+  headline: "Live on FloWrestling",
+  teaser:
+    "Every match streams live and on demand on FloWrestling, with live commentary from Ryan Mitchell of The NC Mat.",
+  notifyHint: `Watch on FloWrestling: ${TOC_FLO_URL}`,
+  commentator: "Ryan Mitchell · The NC Mat",
 } as const

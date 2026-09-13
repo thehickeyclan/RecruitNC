@@ -22,7 +22,7 @@ import {
   loadLatestCommits,
   type HomeRankedProspect,
 } from "@/lib/home-data"
-import { TOC_GOFAN_TICKETS_URL } from "@/lib/toc/constants"
+import { TOC_FLO_URL, TOC_GOFAN_TICKETS_URL } from "@/lib/toc/constants"
 import { tocTicketsOnSale } from "@/lib/toc/ticket-sale"
 
 export const revalidate = 120
@@ -164,6 +164,17 @@ export default async function HomePage() {
                 <p className="mt-1 text-sm text-white/75 sm:text-base">
                   September 18–19 · Hope Community Church, Apex · limited seating
                 </p>
+                <a
+                  href={TOC_FLO_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-[#D3B574]"
+                >
+                  <Image src="/images/flo-logo.png" alt="FloWrestling" width={20} height={20} className="h-5 w-5 rounded" />
+                  <span>
+                    Streaming live on FloWrestling · commentary by Ryan Mitchell, The NC Mat
+                  </span>
+                </a>
               </div>
               <div className="flex shrink-0 flex-col items-center gap-2 sm:items-end">
                 <a
