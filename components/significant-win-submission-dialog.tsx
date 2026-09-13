@@ -63,9 +63,14 @@ export function SignificantWinSubmissionDialog({ athleteId }: { athleteId: strin
 
   return (
     <>
+      {/*
+       * Through handleOpenChange, not setOpen. Opening straight to `open` skipped the reset, so
+       * after one win the dialog reopened on "Thank you" with no form — Luke Padgett could only
+       * ever add a single win without reloading the page.
+       */}
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => handleOpenChange(true)}
         className="inline-flex items-center gap-1.5 rounded-full border border-rnc-gold/50 px-3 py-1.5 text-xs font-bold text-rnc-gold transition hover:bg-rnc-gold/10"
       >
         <Plus className="h-3.5 w-3.5" aria-hidden="true" />
@@ -82,8 +87,18 @@ export function SignificantWinSubmissionDialog({ athleteId }: { athleteId: strin
           </DialogHeader>
 
           {submitted ? (
-            <div className="rounded-lg border border-emerald-400/30 bg-emerald-400/10 p-4 text-sm text-emerald-200">
-              Thank you. The win was submitted for review.
+            <div className="space-y-3">
+              <div className="rounded-lg border border-emerald-400/30 bg-emerald-400/10 p-4 text-sm text-emerald-200">
+                Thank you. The win was submitted for review.
+              </div>
+              {/* Wrestlers arrive with several wins to add, one form per win. */}
+              <button
+                type="button"
+                onClick={() => setSubmitted(false)}
+                className="w-full rounded-lg border border-rnc-gold/50 px-4 py-3 font-bold text-rnc-gold transition hover:bg-rnc-gold/10"
+              >
+                Submit another win
+              </button>
             </div>
           ) : (
             <form onSubmit={submit} className="space-y-4">
