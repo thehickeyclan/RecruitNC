@@ -332,4 +332,48 @@ describe("a family buying in the coach's name", () => {
   })
 })
 
+describe("one buyer paying for other coaches", () => {
+  /*
+   * Casey Gashaw bought Brandon Palmer's credential on his own address, and Shannon Tufts bought
+   * Evan Worland's on tufts@unc.edu, Jeff Piercy's address. Matching the address first credited
+   * the buyer and left the attendee showing no credential on the check-in list.
+   */
+  const base = { purchasedAt: null, ticketType: "TOC Weekend Coach Credential", status: "Active" }
+  const namesByCoach = new Map([
+    ["user:casey", new Set(["casey gashaw"])],
+    ["user:brandon", new Set(["brandon palmer"])],
+  ])
+
+  it("credits the coach named on the ticket, not the coach whose address paid", () => {
+    const matches = matchPurchases({
+      purchases: [
+        { ...base, email: "gashawcasey@gmail.com", orderId: "171491801", firstName: "Casey", lastName: "Gashaw" },
+        { ...base, email: "gashawcasey@gmail.com", orderId: "171491801-2", firstName: "Brandon", lastName: "Palmer" },
+      ],
+      emailsByCoach: new Map([["user:casey", new Set(["gashawcasey@gmail.com"])]]),
+      phonesByCoach: new Map(),
+      directory: [],
+      linked: new Map(),
+      namesByCoach,
+    })
+    expect(matches.get("171491801")?.coachKey).toBe("user:casey")
+    expect(matches.get("171491801-2")).toEqual({ via: "name", coachKey: "user:brandon" })
+  })
+
+  it("keeps using the address when it belongs to a coach of that same name", () => {
+    const matches = matchPurchases({
+      purchases: [{ ...base, email: "chad@two.example", orderId: "9", firstName: "Chad", lastName: "Lewis" }],
+      emailsByCoach: new Map([["tel:second-chad", new Set(["chad@two.example"])]]),
+      phonesByCoach: new Map(),
+      directory: [],
+      linked: new Map(),
+      namesByCoach: new Map([
+        ["tel:first-chad", new Set(["chad lewis"])],
+        ["tel:second-chad", new Set(["chad lewis"])],
+      ]),
+    })
+    expect(matches.get("9")).toEqual({ via: "email", coachKey: "tel:second-chad" })
+  })
+})
+
 

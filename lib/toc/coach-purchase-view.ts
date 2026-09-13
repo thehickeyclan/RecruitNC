@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { contactsByCoach, type ResolvedCoachRows } from "@/lib/toc/coach-identity"
 import {
+  isHeldCredential,
   matchPurchases,
   normaliseCoachName,
   suggestCoaches,
@@ -85,6 +86,9 @@ export async function loadCoachTickets(
     ticketType: row.ticket_type ? String(row.ticket_type) : null,
     status: row.status ? String(row.status) : null,
   }))
+    // A transferred order stays on the buyer's row. The public field already skipped these; this
+    // page did not, so Jeff Piercy read as credentialed for a ticket he gave to Evan Worland.
+    .filter(isHeldCredential)
 
   const contacts = contactsByCoach(rows)
   const linked = new Map<string, string>()

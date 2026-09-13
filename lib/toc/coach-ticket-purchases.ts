@@ -326,7 +326,26 @@ export function matchPurchases(input: {
     const byHand = linked.get(purchase.orderId)
     if (byHand) { matches.set(purchase.orderId, { via: "linked", coachKey: byHand }); continue }
 
+    const fullName =
+      purchase.firstName && purchase.lastName
+        ? normaliseCoachName(`${purchase.firstName} ${purchase.lastName}`)
+        : ""
+    const byName = fullName ? coachByName.get(fullName) : undefined
     const direct = coachByEmail.get(email)
+
+    /*
+     * The attendee's name outranks the buyer's address.
+     *
+     * One person often buys for several coaches. Casey Gashaw bought Brandon Palmer's credential
+     * on his own address, and Shannon Tufts bought Evan Worland's on tufts@unc.edu — which is also
+     * Jeff Piercy's address. Matching the address first credited Casey twice and Jeff with a
+     * ticket he had transferred, and left Brandon and Evan showing no credential on the check-in
+     * list. The address still decides when it points at a coach of the same name, which keeps two
+     * coaches who share a name apart.
+     */
+    if (byName && !(direct && namesByCoach?.get(direct)?.has(fullName))) {
+      matches.set(purchase.orderId, { via: "name", coachKey: byName }); continue
+    }
     if (direct) { matches.set(purchase.orderId, { via: "email", coachKey: direct }); continue }
 
     /*
@@ -349,14 +368,10 @@ export function matchPurchases(input: {
     }
 
     /*
-     * Last, and only on a full name. A lone first name would sweep several coaches into one
-     * purchase, which is worse than leaving it unmatched for a human to look at.
+     * Only on a full name. A lone first name would sweep several coaches into one purchase, which
+     * is worse than leaving it unmatched for a human to look at.
      */
-    const fullName = normaliseCoachName(`${purchase.firstName ?? ""} ${purchase.lastName ?? ""}`)
-    if (purchase.firstName && purchase.lastName) {
-      const byName = coachByName.get(fullName)
-      if (byName) matches.set(purchase.orderId, { via: "name", coachKey: byName })
-    }
+    if (byName) matches.set(purchase.orderId, { via: "name", coachKey: byName })
   }
   return matches
 }
