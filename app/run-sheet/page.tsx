@@ -74,7 +74,7 @@ const VENDORS: { name: string; gift: string | null }[] = [
   { name: "Food Lion", gift: "Gift cards toward food and drink" },
   { name: "Cove", gift: "Twelve cases of probiotic soda" },
   { name: "The Guild", gift: null },
-  { name: "Cronin Customs", gift: null },
+  { name: "Cronin Customs", gift: "Four pairs of VTG1 custom wrestling shoes (sizes 13, 11, 9, 9)" },
   { name: "Funky Flickr Boyz", gift: null },
   { name: "Wrestling Mindset", gift: null },
   { name: "Triangle Wrestling Academy", gift: null },
