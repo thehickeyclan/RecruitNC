@@ -17,7 +17,7 @@ const highlights = [
   },
   {
     icon: ReceiptText,
-    title: "$1,000 wrestling support",
+    title: "$1,300 wrestling support",
     body: "Funds are for documented wrestling-related expenses, paid directly or reimbursed with receipts.",
   },
 ] as const

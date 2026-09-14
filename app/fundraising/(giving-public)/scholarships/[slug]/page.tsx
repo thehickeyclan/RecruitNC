@@ -47,7 +47,7 @@ const CADEN_PERRY_SHARE_IMAGE = {
   url: `${base}/scholarships/caden-perry/warrior-scholarship-share-card-wide.png`,
   width: 1448,
   height: 1086,
-  alt: "The Caden Perry Warrior Scholarship — $1,000 wrestling-support award",
+  alt: "The Caden Perry Warrior Scholarship — $1,300 wrestling-support award",
 }
 
 function df(c: string) {

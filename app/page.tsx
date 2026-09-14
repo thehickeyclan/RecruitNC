@@ -335,14 +335,14 @@ export default async function HomePage() {
                   Caden Perry Warrior Scholarship
                 </p>
                 <p className="mt-1.5 text-sm leading-relaxed text-white/75">
-                  Nominate a North Carolina wrestler for a $1,000 wrestling-support award. Nominations close August 30.
+                  A $1,300 wrestling-support award, presented Saturday, September 19 at the Tournament of Champions.
                 </p>
               </div>
               <Link
                 href="/fundraising/scholarships/caden-perry"
                 className="mt-4 inline-flex min-h-11 shrink-0 items-center justify-center rounded-md bg-rnc-red px-5 text-sm font-bold text-white transition-colors hover:bg-rnc-red-hover sm:mt-0"
               >
-                Learn More &amp; Nominate
+                Learn More
               </Link>
             </div>
           </div>

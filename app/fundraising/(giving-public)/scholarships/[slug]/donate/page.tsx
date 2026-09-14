@@ -10,7 +10,7 @@ const CADEN_PERRY_SHARE_IMAGE = {
   url: `${base}/scholarships/caden-perry/warrior-scholarship-share-card-wide.png`,
   width: 1448,
   height: 1086,
-  alt: "The Caden Perry Warrior Scholarship — $1,000 wrestling-support award",
+  alt: "The Caden Perry Warrior Scholarship — $1,300 wrestling-support award",
 }
 
 export async function generateMetadata({
@@ -24,7 +24,7 @@ export async function generateMetadata({
   const title = `Donate · ${row.name}`
   const description =
     row.slug === "caden-perry"
-      ? "Support The Caden Perry Warrior Scholarship — one North Carolina wrestler will receive $1,000 in wrestling support."
+      ? "Support The Caden Perry Warrior Scholarship — one North Carolina wrestler will receive $1,300 in wrestling support."
       : `Support ${row.name} through NC United Wrestling.`
   const isCaden = row.slug === "caden-perry"
   return {
@@ -76,7 +76,7 @@ export default async function ScholarshipDonatePage({ params }: { params: Promis
         </h1>
         {isCaden ? (
           <p className="mt-4 rounded-xl border border-[#C8A94A]/30 bg-[#C8A94A]/10 p-4 text-base font-semibold leading-relaxed text-[#f5e6b8]">
-            One North Carolina wrestler will receive $1,000 in wrestling support, applied directly to documented training
+            One North Carolina wrestler will receive $1,300 in wrestling support, applied directly to documented training
             and competition expenses.
           </p>
         ) : null}

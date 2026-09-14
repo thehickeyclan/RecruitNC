@@ -21,7 +21,7 @@ At just 16 years old, Caden gained his eternal peace, but the impact he left beh
  * When Supabase row fields are empty, show these on the public page so deadlines and award amount are never blank for Year 1.
  */
 export const CADEN_PUBLIC_PAGE_FALLBACKS = {
-  award_amount_cents: 100_000,
+  award_amount_cents: 130_000,
   applications_open_date: "2026-08-01",
   applications_close_date: "2026-08-30",
   award_announcement_date: "2026-09-19",

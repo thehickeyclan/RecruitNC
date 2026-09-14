@@ -84,7 +84,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "What is the Caden Perry Warrior Scholarship?",
-    a: `${TOC_CADEN_PERRY_WARRIOR_SCHOLARSHIP.headline} is a $1,000 wrestling-support award presented at Tournament of Champions. It is open to active North Carolina wrestlers in grades 6–12, and the recipient does not have to compete in TOC. Funds can support documented wrestling-related expenses such as club dues, private lessons, small groups, camps, tournament fees, travel, and gear. ${TOC_CADEN_PERRY_WARRIOR_SCHOLARSHIP.dates}`,
+    a: `${TOC_CADEN_PERRY_WARRIOR_SCHOLARSHIP.headline} is a $1,300 wrestling-support award presented at Tournament of Champions. It is open to active North Carolina wrestlers in grades 6–12, and the recipient does not have to compete in TOC. Funds can support documented wrestling-related expenses such as club dues, private lessons, small groups, camps, tournament fees, travel, and gear. ${TOC_CADEN_PERRY_WARRIOR_SCHOLARSHIP.dates}`,
   },
   {
     q: "Is there a girls division?",
