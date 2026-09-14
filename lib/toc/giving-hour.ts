@@ -33,7 +33,7 @@ export const GIVING_HOUR_TIME = "Saturday, September 19 · 2:30–3:30 PM"
 export const GIVING_HOUR_MC = "Jason Gore"
 
 export const GIVING_HOUR_OPENING =
-  "Every paid spectator received a free raffle ticket today. Hold on to it — we are about to thank the sponsors who made this weekend possible, and draw a winner for every prize they are giving away."
+  "Every paid spectator received five raffle tickets today, to drop in the box of any vendor whose prize they want. We are about to thank the sponsors who made this weekend possible, and draw a winner for every prize they are giving away."
 
 export const GIVING_HOUR_SPONSORS: GivingHourSponsor[] = [
   {
@@ -43,17 +43,17 @@ export const GIVING_HOUR_SPONSORS: GivingHourSponsor[] = [
     logo: "/images/giving-hour/adidas-wrestling-logo.png",
     prizes: [
       {
-        item: "adidas headgear and backpack ·Black and blue",
+        item: "adidas headgear and backpack (Black and blue)",
         detail: "Black headgear · black backpack · white and navy cross socks",
         image: "/images/giving-hour/adidas-black-blue.png",
       },
       {
-        item: "adidas headgear and backpack ·Black and red",
+        item: "adidas headgear and backpack (Black and red)",
         detail: "Black headgear · black backpack · white and red “Just Pray” socks",
         image: "/images/giving-hour/adidas-black-red.png",
       },
       {
-        item: "adidas headgear and backpack ·White and brown",
+        item: "adidas headgear and backpack (White and brown)",
         detail: "White headgear · black backpack · tan “Amen Grind” socks",
         image: "/images/giving-hour/adidas-white-brown.png",
       },
