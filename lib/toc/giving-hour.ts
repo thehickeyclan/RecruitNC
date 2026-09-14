@@ -39,20 +39,21 @@ export const GIVING_HOUR_SPONSORS: GivingHourSponsor[] = [
   {
     id: "adidas",
     name: "adidas Wrestling",
+    about: "adidas Wrestling makes the shoes, headgear and gear worn on wrestling mats around the world.",
     logo: "/images/giving-hour/adidas-wrestling-logo.png",
     prizes: [
       {
-        item: "adidas headgear, backpack and socks — Black and blue",
+        item: "adidas headgear and backpack —Black and blue",
         detail: "Black headgear · black backpack · white and navy cross socks",
         image: "/images/giving-hour/adidas-black-blue.png",
       },
       {
-        item: "adidas headgear, backpack and socks — Black and red",
+        item: "adidas headgear and backpack —Black and red",
         detail: "Black headgear · black backpack · white and red “Just Pray” socks",
         image: "/images/giving-hour/adidas-black-red.png",
       },
       {
-        item: "adidas headgear, backpack and socks — White and brown",
+        item: "adidas headgear and backpack —White and brown",
         detail: "White headgear · black backpack · tan “Amen Grind” socks",
         image: "/images/giving-hour/adidas-white-brown.png",
       },
@@ -61,28 +62,43 @@ export const GIVING_HOUR_SPONSORS: GivingHourSponsor[] = [
   {
     id: "pathos",
     name: "Pathos",
+    about: "Pathos Socks is a faith-based sock company built on one idea: Live the Light.",
     prizes: [],
     note: "Pathos is giving a pair of socks to every Giving Hour winner.",
   },
   {
     id: "wegmans",
     name: "Wegmans",
+    about: "Wegmans, the family-owned grocer, helped fuel this weekend with gift cards toward food and drink.",
     prizes: [{ item: "Gift card", detail: "Toward food and drink" }],
   },
   {
     id: "costco",
     name: "Costco Wholesale",
+    about: "Costco Wholesale helped fuel this weekend with gift cards toward food and drink.",
     prizes: [{ item: "Gift card", detail: "Toward food and drink" }],
   },
   {
     id: "food-lion",
     name: "Food Lion",
+    about: "Food Lion, the grocer founded right here in Salisbury, North Carolina, helped fuel this weekend with gift cards toward food and drink.",
     prizes: [{ item: "Gift card", detail: "Toward food and drink" }],
   },
   {
     id: "cove",
     name: "Cove",
+    about: "Cove makes probiotic soda — a better-for-you drink for athletes and fans alike.",
     prizes: [{ item: "Twelve cases of probiotic soda" }],
+  },
+  {
+    id: "the-guild",
+    name: "The Guild",
+    about: "The Guild connects youth and high school wrestlers with elite coaches in their own communities — private sessions and small groups led by current and former college wrestlers from programs like UNC and NC State.",
+    logo: "/images/sponsors/the-guild-logo.png",
+    prizes: [1, 2, 3, 4].map((n) => ({
+      item: `$250 toward Guild privates and small groups (${n} of 4)`,
+      detail: "Training with current and former college athletes throughout the state",
+    })),
   },
   {
     id: "cronin-customs",
@@ -103,6 +119,7 @@ export const GIVING_HOUR_SPONSORS: GivingHourSponsor[] = [
   {
     id: "funky-flickr-boyz",
     name: "Funky Flickr Boyz",
+    about: "Funky Flickr Boyz makes performance wrestling gear — shoes, headgear, bags and clothing — inspired by movement, culture, and individuality.",
     logo: "/images/giving-hour/funky-flickr-logo.png",
     prizes: [
       {
@@ -116,6 +133,13 @@ export const GIVING_HOUR_SPONSORS: GivingHourSponsor[] = [
         image: "/images/giving-hour/funky-flickr-postlude.png",
       },
     ],
+  },
+  {
+    id: "wrestling-mindset",
+    name: "Wrestling Mindset",
+    about: "Wrestling Mindset is a mental performance program for wrestlers, founded by Gene Zannetti and built by All-Ivy League wrestlers, with 1-on-1 coaching and team training.",
+    logo: "/images/giving-hour/wrestling-mindset-logo.png",
+    prizes: [{ item: "A free month of 1-on-1 mindset sessions" }],
   },
   {
     id: "v1g1l",

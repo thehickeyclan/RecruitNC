@@ -73,12 +73,12 @@ const VENDORS: { name: string; gift: string | null }[] = [
   { name: "Costco Wholesale", gift: "Gift cards toward food and drink" },
   { name: "Food Lion", gift: "Gift cards toward food and drink" },
   { name: "Cove", gift: "Twelve cases of probiotic soda" },
-  { name: "The Guild", gift: null },
+  { name: "The Guild", gift: "Four raffles of $250 toward Guild privates and small groups" },
   { name: "Cronin Customs", gift: "Four pairs of VTG1 custom wrestling shoes (sizes 13, 11, 9, 9)" },
-  { name: "Funky Flickr Boyz", gift: null },
-  { name: "Wrestling Mindset", gift: null },
+  { name: "Funky Flickr Boyz", gift: "Two pairs of shoes (Aero, Postlude) — winner picks size and color" },
+  { name: "Wrestling Mindset", gift: "A free month of 1-on-1 mindset sessions" },
   { name: "Triangle Wrestling Academy", gift: null },
-  { name: "V1G1L Wrestling", gift: null },
+  { name: "V1G1L Wrestling", gift: "Two Guardian short sleeves, a Legacy long sleeve and a pair of Hammers" },
 ]
 
 const NOTES = [
