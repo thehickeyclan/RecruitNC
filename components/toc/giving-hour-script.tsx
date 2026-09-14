@@ -126,9 +126,9 @@ export function GivingHourScript({ time, mc, opening, sponsors, thanks, closing,
                             <img
                               src={prize.image}
                               alt={prize.item}
-                              width={56}
+                              width={84}
                               height={56}
-                              className="h-14 w-14 shrink-0 rounded-lg bg-white/5 object-contain"
+                              className="h-14 w-[84px] shrink-0 rounded-lg bg-white object-contain"
                             />
                           ) : null}
                           <span className="min-w-0">

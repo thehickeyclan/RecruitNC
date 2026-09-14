@@ -40,7 +40,23 @@ export const GIVING_HOUR_SPONSORS: GivingHourSponsor[] = [
     id: "adidas",
     name: "adidas Wrestling",
     logo: "/images/giving-hour/adidas-wrestling-logo.png",
-    prizes: [{ item: "Headgear and backpacks" }],
+    prizes: [
+      {
+        item: "adidas headgear, backpack and socks — Black and blue",
+        detail: "Black headgear · black backpack · white and navy cross socks",
+        image: "/images/giving-hour/adidas-black-blue.png",
+      },
+      {
+        item: "adidas headgear, backpack and socks — Black and red",
+        detail: "Black headgear · black backpack · white and red “Just Pray” socks",
+        image: "/images/giving-hour/adidas-black-red.png",
+      },
+      {
+        item: "adidas headgear, backpack and socks — White and brown",
+        detail: "White headgear · black backpack · tan “Amen Grind” socks",
+        image: "/images/giving-hour/adidas-white-brown.png",
+      },
+    ],
   },
   {
     id: "pathos",
