@@ -8,6 +8,7 @@ import {
   GIVING_HOUR_SPONSORS,
   GIVING_HOUR_THANKS,
   GIVING_HOUR_TIME,
+  GIVING_HOUR_WITH_EVERY_PRIZE,
   givingHourDrawCount,
 } from "@/lib/toc/giving-hour"
 
@@ -33,6 +34,7 @@ export default function GivingHourPage() {
       thanks={GIVING_HOUR_THANKS}
       closing={GIVING_HOUR_CLOSING}
       drawCount={givingHourDrawCount()}
+      withEveryPrize={GIVING_HOUR_WITH_EVERY_PRIZE}
     />
   )
 }

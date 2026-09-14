@@ -14,6 +14,8 @@ type Props = {
   thanks: { name: string; for: string }[]
   closing: string
   drawCount: number
+  /** A gift that goes out with every prize — shown as a badge on each prize row. */
+  withEveryPrize?: { name: string; label: string; logo: string }
 }
 
 function readDrawn(): Record<string, boolean> {
@@ -26,7 +28,7 @@ function readDrawn(): Record<string, boolean> {
 }
 
 /** Big-type reading script. Ticks live only on the phone that made them. */
-export function GivingHourScript({ time, mc, opening, sponsors, thanks, closing, drawCount }: Props) {
+export function GivingHourScript({ time, mc, opening, sponsors, thanks, closing, drawCount, withEveryPrize }: Props) {
   const [drawn, setDrawn] = useState<Record<string, boolean>>({})
 
   useEffect(() => setDrawn(readDrawn()), [])
@@ -136,6 +138,13 @@ export function GivingHourScript({ time, mc, opening, sponsors, thanks, closing,
                               {prize.item}
                             </span>
                             {prize.detail ? <span className="block text-base text-white/60">{prize.detail}</span> : null}
+                            {withEveryPrize ? (
+                              <span className="mt-1.5 inline-flex items-center gap-1.5 rounded-full bg-white px-2 py-0.5 text-xs font-bold text-[#0A1628]">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src={withEveryPrize.logo} alt="" width={40} height={14} className="h-3.5 w-auto" />
+                                {withEveryPrize.label}
+                              </span>
+                            ) : null}
                           </span>
                           <span className="ml-auto shrink-0 text-xs font-bold uppercase tracking-wide text-emerald-300">
                             {isDrawn ? "Drawn" : ""}

@@ -60,13 +60,6 @@ export const GIVING_HOUR_SPONSORS: GivingHourSponsor[] = [
     ],
   },
   {
-    id: "pathos",
-    name: "Pathos",
-    about: "Pathos Socks is a faith-based sock company built on one idea: Live the Light.",
-    prizes: [],
-    note: "Pathos is giving a pair of socks to every Giving Hour winner.",
-  },
-  {
     id: "wegmans",
     name: "Wegmans",
     about: "Wegmans, the family-owned grocer, helped fuel this weekend with gift cards toward food and drink.",
@@ -154,8 +147,21 @@ export const GIVING_HOUR_SPONSORS: GivingHourSponsor[] = [
   },
 ]
 
+/**
+ * Given with every raffle prize rather than drawn on its own.
+ *
+ * Pathos socks go out with each prize, so they sit on every prize row as a small badge instead of
+ * a card of their own — the MC says "plus Pathos socks" as each winner is called.
+ */
+export const GIVING_HOUR_WITH_EVERY_PRIZE = {
+  name: "Pathos",
+  label: "+ Pathos socks",
+  logo: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logo/DCEzMmwaWr3rh4whHxE4R-Pathos.png",
+} as const
+
 /** Thanked from the microphone, but not drawn for. */
 export const GIVING_HOUR_THANKS: { name: string; for: string }[] = [
+  { name: "Pathos", for: "Pathos socks with every raffle prize — a faith-based sock company built on one idea: Live the Light" },
   { name: "Farina", for: "VIP lounge food" },
   { name: "New York Bagel & Deli", for: "VIP lounge food" },
   { name: "Chad Richards State Farm", for: "VIP lounge food" },
