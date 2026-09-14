@@ -170,7 +170,8 @@ export const GIVING_HOUR_THANKS: { name: string; for: string }[] = [
   { name: "The Hickey family", for: "The two Resilite competition mats — a $24,000 gift, and the mats this tournament is wrestled on" },
 ]
 
-export const GIVING_HOUR_CLOSING =
+/** Read first — the scholarship opens the Giving Hour. */
+export const GIVING_HOUR_SCHOLARSHIP =
   "The Caden Perry Warrior Scholarship — a $1,300 wrestling-support award for one North Carolina wrestler whose response to genuine adversity reflects Caden's warrior spirit. The future is bright for those who refuse to quit."
 
 export function givingHourDrawCount(sponsors: readonly GivingHourSponsor[] = GIVING_HOUR_SPONSORS): number {

@@ -12,7 +12,7 @@ type Props = {
   opening: string
   sponsors: GivingHourSponsor[]
   thanks: { name: string; for: string }[]
-  closing: string
+  scholarship: string
   drawCount: number
   /** A gift that goes out with every prize — shown as a badge on each prize row. */
   withEveryPrize?: { name: string; label: string; logo: string }
@@ -28,7 +28,7 @@ function readDrawn(): Record<string, boolean> {
 }
 
 /** Big-type reading script. Ticks live only on the phone that made them. */
-export function GivingHourScript({ time, mc, opening, sponsors, thanks, closing, drawCount, withEveryPrize }: Props) {
+export function GivingHourScript({ time, mc, opening, sponsors, thanks, scholarship, drawCount, withEveryPrize }: Props) {
   const [drawn, setDrawn] = useState<Record<string, boolean>>({})
 
   useEffect(() => setDrawn(readDrawn()), [])
@@ -66,8 +66,17 @@ export function GivingHourScript({ time, mc, opening, sponsors, thanks, closing,
           {time} · MC {mc}
         </p>
 
+        {/* Running order: the scholarship first, then every raffle together, then the sponsors who gave without a draw. */}
+        <section className="rounded-2xl border border-[#CC0000]/40 bg-[#CC0000]/[0.08] p-5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#ff8a8a]">Start with</p>
+          <h2 className="mt-1 text-2xl font-extrabold leading-tight">The Caden Perry Warrior Scholarship</h2>
+          <p className="mt-2 text-xl leading-relaxed">{scholarship}</p>
+        </section>
+
+        <h2 className="mt-4 text-sm font-bold uppercase tracking-[0.2em] text-[#D3B574]">Raffles</h2>
+
         <section className="rounded-2xl border border-[#D3B574]/35 bg-[#D3B574]/[0.07] p-5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#D3B574]">Open with</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#D3B574]">Open the raffles with</p>
           <p className="mt-2 text-xl leading-relaxed">{opening}</p>
         </section>
 
@@ -161,7 +170,7 @@ export function GivingHourScript({ time, mc, opening, sponsors, thanks, closing,
 
         {thanks.length > 0 ? (
           <section className="rounded-2xl border border-white/10 bg-[#0f1f38] p-5">
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#D3B574]">Also thank</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#D3B574]">Thank you to our sponsors</p>
             <ul className="mt-3 flex flex-col gap-3">
               {thanks.map((row) => (
                 <li key={row.name}>
@@ -173,10 +182,6 @@ export function GivingHourScript({ time, mc, opening, sponsors, thanks, closing,
           </section>
         ) : null}
 
-        <section className="rounded-2xl border border-[#CC0000]/40 bg-[#CC0000]/[0.08] p-5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#ff8a8a]">Close with</p>
-          <p className="mt-2 text-xl leading-relaxed">{closing}</p>
-        </section>
 
         {done > 0 ? (
           <button

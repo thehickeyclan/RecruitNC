@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 
 import { GivingHourScript } from "@/components/toc/giving-hour-script"
 import {
-  GIVING_HOUR_CLOSING,
+  GIVING_HOUR_SCHOLARSHIP,
   GIVING_HOUR_MC,
   GIVING_HOUR_OPENING,
   GIVING_HOUR_SPONSORS,
@@ -32,7 +32,7 @@ export default function GivingHourPage() {
       opening={GIVING_HOUR_OPENING}
       sponsors={GIVING_HOUR_SPONSORS}
       thanks={GIVING_HOUR_THANKS}
-      closing={GIVING_HOUR_CLOSING}
+      scholarship={GIVING_HOUR_SCHOLARSHIP}
       drawCount={givingHourDrawCount()}
       withEveryPrize={GIVING_HOUR_WITH_EVERY_PRIZE}
     />
