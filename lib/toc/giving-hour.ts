@@ -100,6 +100,23 @@ export const GIVING_HOUR_SPONSORS: GivingHourSponsor[] = [
       { item: "VTG1 “Flux” wrestling shoes", detail: "Size 9", image: "/images/giving-hour/cronin-vtg1-flux.webp" },
     ],
   },
+  {
+    id: "funky-flickr-boyz",
+    name: "Funky Flickr Boyz",
+    logo: "/images/giving-hour/funky-flickr-logo.png",
+    prizes: [
+      {
+        item: "“Aero” wrestling shoes",
+        detail: "Winner picks size and color, based on availability on the Funky Flickr Boyz website",
+        image: "/images/giving-hour/funky-flickr-aero.png",
+      },
+      {
+        item: "“Postlude” wrestling shoes",
+        detail: "Winner picks size and color, based on availability on the Funky Flickr Boyz website",
+        image: "/images/giving-hour/funky-flickr-postlude.png",
+      },
+    ],
+  },
 ]
 
 /** Thanked from the microphone, but not drawn for. */
