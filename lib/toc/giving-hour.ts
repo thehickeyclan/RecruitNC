@@ -117,6 +117,17 @@ export const GIVING_HOUR_SPONSORS: GivingHourSponsor[] = [
       },
     ],
   },
+  {
+    id: "v1g1l",
+    name: "V1G1L Wrestling",
+    prizes: [
+      {
+        item: "V1G1L package",
+        detail: "Two “Guardian” short sleeve shirts, a “Legacy” long sleeve shirt, and a pair of V1G1L Hammers",
+        image: "/images/giving-hour/v1g1l.jpeg",
+      },
+    ],
+  },
 ]
 
 /** Thanked from the microphone, but not drawn for. */
