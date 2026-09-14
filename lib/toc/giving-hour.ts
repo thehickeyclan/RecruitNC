@@ -12,11 +12,15 @@ export type GivingHourPrize = {
   item: string
   /** Size, flavour, value — the detail read after the item. */
   detail?: string
+  /** A small photo of the prize, under /public. Shown as a thumbnail so the MC can hold it up by eye. */
+  image?: string
 }
 
 export type GivingHourSponsor = {
   id: string
   name: string
+  /** The sponsor's logo, under /public, shown at the head of their card. */
+  logo?: string
   /** One or two sentences, written to be read aloud. */
   about?: string
   /** Each entry is its own draw. A sponsor giving four pairs of shoes is four winners. */
@@ -35,6 +39,7 @@ export const GIVING_HOUR_SPONSORS: GivingHourSponsor[] = [
   {
     id: "adidas",
     name: "adidas Wrestling",
+    logo: "/images/giving-hour/adidas-wrestling-logo.png",
     prizes: [{ item: "Headgear and backpacks" }],
   },
   {
@@ -66,12 +71,17 @@ export const GIVING_HOUR_SPONSORS: GivingHourSponsor[] = [
   {
     id: "cronin-customs",
     name: "Cronin Customs",
+    logo: "/images/giving-hour/cronin-customs-logo.png",
     about: "At Cronin Customs, we specialize in creating one-of-a-kind handcrafted wrestling shoes.",
     prizes: [
-      { item: "VTG1 “Creamsicle” wrestling shoes", detail: "Size 13" },
-      { item: "VTG1 “Glacier” wrestling shoes", detail: "Size 11" },
-      { item: "VTG1 “Illini” wrestling shoes", detail: "Size 9" },
-      { item: "VTG1 “Flux” wrestling shoes", detail: "Size 9" },
+      {
+        item: "VTG1 “Creamsicle” wrestling shoes",
+        detail: "Size 13",
+        image: "/images/giving-hour/cronin-vtg1-creamsicle.webp",
+      },
+      { item: "VTG1 “Glacier” wrestling shoes", detail: "Size 11", image: "/images/giving-hour/cronin-vtg1-glacier.webp" },
+      { item: "VTG1 “Illini” wrestling shoes", detail: "Size 9", image: "/images/giving-hour/cronin-vtg1-illini.webp" },
+      { item: "VTG1 “Flux” wrestling shoes", detail: "Size 9", image: "/images/giving-hour/cronin-vtg1-flux.webp" },
     ],
   },
 ]

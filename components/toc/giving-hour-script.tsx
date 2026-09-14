@@ -74,7 +74,19 @@ export function GivingHourScript({ time, mc, opening, sponsors, thanks, closing,
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-white/45">
               Sponsor {index + 1} of {sponsors.length}
             </p>
-            <h2 className="mt-1 text-3xl font-extrabold leading-tight">{sponsor.name}</h2>
+            <div className="mt-1 flex items-center gap-3">
+              {sponsor.logo ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={sponsor.logo}
+                  alt=""
+                  width={56}
+                  height={56}
+                  className="h-14 w-14 shrink-0 rounded-lg bg-white object-contain"
+                />
+              ) : null}
+              <h2 className="text-3xl font-extrabold leading-tight">{sponsor.name}</h2>
+            </div>
 
             {sponsor.about ? (
               <div className="mt-4">
@@ -107,6 +119,18 @@ export function GivingHourScript({ time, mc, opening, sponsors, thanks, closing,
                             onChange={() => toggle(key)}
                             className="h-7 w-7 shrink-0 accent-emerald-400"
                           />
+                          {prize.image ? (
+                            // Plain img: sponsor photos arrive as small thumbnails, and upscaling one
+                            // through next/image would only blur it.
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={prize.image}
+                              alt={prize.item}
+                              width={56}
+                              height={56}
+                              className="h-14 w-14 shrink-0 rounded-lg bg-white/5 object-contain"
+                            />
+                          ) : null}
                           <span className="min-w-0">
                             <span className={`block text-lg font-semibold leading-snug ${isDrawn ? "text-white/60 line-through" : "text-white"}`}>
                               {prize.item}
