@@ -69,10 +69,6 @@ const SATURDAY: Row[] = [
 const VENDORS: { name: string; gift: string | null }[] = [
   { name: "adidas Wrestling", gift: "Headgear and backpacks" },
   { name: "Pathos", gift: "Socks for every Giving Hour winner" },
-  { name: "Wegmans", gift: "Gift cards toward food and drink" },
-  { name: "Costco Wholesale", gift: "Gift cards toward food and drink" },
-  { name: "Food Lion", gift: "Gift cards toward food and drink" },
-  { name: "Cove", gift: "Twelve cases of probiotic soda" },
   { name: "The Guild", gift: "Four raffles of $250 toward Guild privates and small groups" },
   { name: "Cronin Customs", gift: "Four pairs of VTG1 custom wrestling shoes (sizes 13, 11, 9, 9)" },
   { name: "Funky Flickr Boyz", gift: "Two pairs of shoes (Aero, Postlude) — winner picks size and color" },
@@ -200,7 +196,10 @@ export default function RunSheetPage() {
             </table>
           </div>
           <p className="max-w-3xl text-sm text-white/50">
-            Thanked but not drawn for: <b className="text-white/80">Farina</b>,{" "}
+            Thanked but not drawn for: <b className="text-white/80">Wegmans</b>,{" "}
+            <b className="text-white/80">Costco</b> and <b className="text-white/80">Food Lion</b> (gift cards toward
+            food and drink), <b className="text-white/80">Cove</b> (probiotic soda),{" "}
+            <b className="text-white/80">Farina</b>,{" "}
             <b className="text-white/80">New York Bagel &amp; Deli</b> and{" "}
             <b className="text-white/80">Chad Richards State Farm</b> (VIP lounge food),{" "}
             <b className="text-white/80">Defense Soap</b> (mat and athlete supplies),{" "}

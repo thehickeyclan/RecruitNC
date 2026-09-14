@@ -43,45 +43,21 @@ export const GIVING_HOUR_SPONSORS: GivingHourSponsor[] = [
     logo: "/images/giving-hour/adidas-wrestling-logo.png",
     prizes: [
       {
-        item: "adidas headgear and backpack —Black and blue",
+        item: "adidas headgear and backpack ·Black and blue",
         detail: "Black headgear · black backpack · white and navy cross socks",
         image: "/images/giving-hour/adidas-black-blue.png",
       },
       {
-        item: "adidas headgear and backpack —Black and red",
+        item: "adidas headgear and backpack ·Black and red",
         detail: "Black headgear · black backpack · white and red “Just Pray” socks",
         image: "/images/giving-hour/adidas-black-red.png",
       },
       {
-        item: "adidas headgear and backpack —White and brown",
+        item: "adidas headgear and backpack ·White and brown",
         detail: "White headgear · black backpack · tan “Amen Grind” socks",
         image: "/images/giving-hour/adidas-white-brown.png",
       },
     ],
-  },
-  {
-    id: "wegmans",
-    name: "Wegmans",
-    about: "Wegmans, the family-owned grocer, helped fuel this weekend with gift cards toward food and drink.",
-    prizes: [{ item: "Gift card", detail: "Toward food and drink" }],
-  },
-  {
-    id: "costco",
-    name: "Costco Wholesale",
-    about: "Costco Wholesale helped fuel this weekend with gift cards toward food and drink.",
-    prizes: [{ item: "Gift card", detail: "Toward food and drink" }],
-  },
-  {
-    id: "food-lion",
-    name: "Food Lion",
-    about: "Food Lion, the grocer founded right here in Salisbury, North Carolina, helped fuel this weekend with gift cards toward food and drink.",
-    prizes: [{ item: "Gift card", detail: "Toward food and drink" }],
-  },
-  {
-    id: "cove",
-    name: "Cove",
-    about: "Cove makes probiotic soda — a better-for-you drink for athletes and fans alike.",
-    prizes: [{ item: "Twelve cases of probiotic soda" }],
   },
   {
     id: "the-guild",
@@ -162,6 +138,10 @@ export const GIVING_HOUR_WITH_EVERY_PRIZE = {
 /** Thanked from the microphone, but not drawn for. */
 export const GIVING_HOUR_THANKS: { name: string; for: string }[] = [
   { name: "Pathos", for: "Pathos socks with every raffle prize — a faith-based sock company built on one idea: Live the Light" },
+  { name: "Wegmans", for: "Gift cards toward food and drink for the tournament — the family-owned grocer helping fuel this weekend" },
+  { name: "Costco Wholesale", for: "Gift cards toward food and drink for the tournament" },
+  { name: "Food Lion", for: "Gift cards toward food and drink for the tournament — the grocer founded right here in Salisbury, North Carolina" },
+  { name: "Cove", for: "Twelve cases of probiotic soda — a better-for-you drink for athletes and fans alike" },
   { name: "Farina", for: "VIP lounge food" },
   { name: "New York Bagel & Deli", for: "VIP lounge food" },
   { name: "Chad Richards State Farm", for: "VIP lounge food" },
