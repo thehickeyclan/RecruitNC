@@ -73,7 +73,7 @@ const VENDORS: { name: string; gift: string | null }[] = [
   { name: "Cronin Customs", gift: "Four pairs of VTG1 custom wrestling shoes (sizes 13, 11, 9, 9)" },
   { name: "Funky Flickr Boyz", gift: "Two pairs of shoes (Aero, Postlude) — winner picks size and color" },
   { name: "Wrestling Mindset", gift: "A free month of 1-on-1 mindset sessions" },
-  { name: "Triangle Wrestling Academy", gift: null },
+  { name: "Triangle Wrestling Academy", gift: "Five free monthly unlimited training memberships for new members" },
   { name: "V1G1L Wrestling", gift: "Two Guardian short sleeves, a Legacy long sleeve and a pair of Hammers" },
   { name: "Coldwell Banker", gift: "Summer gift package" },
 ]
@@ -200,11 +200,11 @@ export default function RunSheetPage() {
             Thanked but not drawn for: <b className="text-white/80">Wegmans</b>,{" "}
             <b className="text-white/80">Costco</b> and <b className="text-white/80">Food Lion</b> (gift cards toward
             food and drink), <b className="text-white/80">Cove</b> (probiotic soda),{" "}
+            <b className="text-white/80">Sam&rsquo;s Club</b> (food and drink),{" "}
             <b className="text-white/80">Farina</b>,{" "}
             <b className="text-white/80">New York Bagel &amp; Deli</b> and{" "}
             <b className="text-white/80">Chad Richards State Farm</b> (VIP lounge food),{" "}
-            <b className="text-white/80">Defense Soap</b> (mat and athlete supplies),{" "}
-            <b className="text-white/80">Submission Solutions</b>, and{" "}
+            <b className="text-white/80">Defense Soap</b> (mat and athlete supplies), and{" "}
             <b className="text-white/80">the Hickey family</b>, whose two Resilite mats are a $24,000
             gift and the mats the tournament is wrestled on.
           </p>

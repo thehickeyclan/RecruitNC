@@ -111,6 +111,16 @@ export const GIVING_HOUR_SPONSORS: GivingHourSponsor[] = [
     prizes: [{ item: "A free month of 1-on-1 mindset sessions" }],
   },
   {
+    id: "triangle-wrestling-academy",
+    name: "Triangle Wrestling Academy",
+    about: "Triangle Wrestling Academy — TWA — is an elite wrestling club located right here in Apex, NC. Their coaches are here today to meet families, answer questions, and talk wrestling.",
+    logo: "/images/giving-hour/triangle-wrestling-academy-logo.png",
+    prizes: [1, 2, 3, 4, 5].map((n) => ({
+      item: `Free monthly unlimited training membership (${n} of 5)`,
+      detail: "For new TWA members",
+    })),
+  },
+  {
     id: "v1g1l",
     name: "V1G1L Wrestling",
     prizes: [
@@ -147,12 +157,12 @@ export const GIVING_HOUR_THANKS: { name: string; for: string }[] = [
   { name: "Wegmans", for: "Gift cards toward food and drink for the tournament — the family-owned grocer helping fuel this weekend" },
   { name: "Costco Wholesale", for: "Gift cards toward food and drink for the tournament" },
   { name: "Food Lion", for: "Gift cards toward food and drink for the tournament — the grocer founded right here in Salisbury, North Carolina" },
+  { name: "Sam's Club", for: "Food and drink for the tournament" },
   { name: "Cove", for: "Twelve cases of probiotic soda — a better-for-you drink for athletes and fans alike" },
   { name: "Farina", for: "VIP lounge food" },
   { name: "New York Bagel & Deli", for: "VIP lounge food" },
   { name: "Chad Richards State Farm", for: "VIP lounge food" },
   { name: "Defense Soap", for: "Mat and athlete supplies" },
-  { name: "Submission Solutions", for: "Event support" },
   { name: "The Hickey family", for: "The two Resilite competition mats — a $24,000 gift, and the mats this tournament is wrestled on" },
 ]
 
