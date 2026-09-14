@@ -94,8 +94,7 @@ export const CADEN_REVIEW_PROCESS_STAGES: { title: string; body: string }[] = [
 export const CADEN_PAGE_STANDING_COMMITTEE: { name: string; role: string; seat: string }[] = [
   { name: "Matt Hickey", role: "NC United Co-Founder", seat: "Voting" },
   { name: "Jonathan Sutton", role: "NC Wrestling Official · Diversity & Inclusion", seat: "Voting" },
-  { name: "LaTasha Robinson Stinson", role: "Educator · Wrestling Family", seat: "Voting" },
-  { name: "Dave Pyper", role: "Educator · Athens Drive", seat: "Voting" },
+  { name: "Jeannine Aponte", role: "Scholarship committee", seat: "Voting" },
 ]
 
 export const CADEN_PAGE_FAMILY_REPRESENTATIVE: { name: string; role: string; seat: string } = {

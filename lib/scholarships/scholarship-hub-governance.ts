@@ -25,15 +25,9 @@ export const SHARED_SCHOLARSHIP_VOTING_COMMITTEE: SharedScholarshipCommitteeMemb
     voteType: "Voting",
   },
   {
-    name: "LaTasha Robinson Stinson",
-    seatTitle: "Educator · wrestling family",
-    connection: "Educator; deeply engaged in the NC wrestling community (confirmed)",
-    voteType: "Voting",
-  },
-  {
-    name: "Dave Pyper",
-    seatTitle: "Educator · Athens Drive",
-    connection: "Educator; Athens Drive High School",
+    name: "Jeannine Aponte",
+    seatTitle: "Scholarship committee",
+    connection: "Voting member of the scholarship committee",
     voteType: "Voting",
   },
 ]
