@@ -121,6 +121,12 @@ export const GIVING_HOUR_SPONSORS: GivingHourSponsor[] = [
       },
     ],
   },
+  {
+    id: "coldwell-banker",
+    name: "Coldwell Banker",
+    about: "Coldwell Banker is a real estate brokerage, helping families buy and sell homes.",
+    prizes: [{ item: "Summer gift package" }],
+  },
 ]
 
 /**

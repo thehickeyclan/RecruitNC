@@ -75,6 +75,7 @@ const VENDORS: { name: string; gift: string | null }[] = [
   { name: "Wrestling Mindset", gift: "A free month of 1-on-1 mindset sessions" },
   { name: "Triangle Wrestling Academy", gift: null },
   { name: "V1G1L Wrestling", gift: "Two Guardian short sleeves, a Legacy long sleeve and a pair of Hammers" },
+  { name: "Coldwell Banker", gift: "Summer gift package" },
 ]
 
 const NOTES = [
