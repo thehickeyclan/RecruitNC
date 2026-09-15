@@ -52,6 +52,7 @@ export default function WeighInsPage() {
   const [error, setError] = useState("")
   const [station, setStation] = useState<0 | 1 | 2>(0)
   const [filter, setFilter] = useState<Filter>("all")
+  const [query, setQuery] = useState("")
 
   const load = useCallback(async () => {
     try {
@@ -79,16 +80,18 @@ export default function WeighInsPage() {
   const weights = useMemo(() => {
     if (!data) return []
     const allowed = station === 0 ? null : new Set(WEIGH_IN_STATIONS.find((s) => s.id === station)?.weights ?? [])
+    const needle = query.trim().toLowerCase()
     const byWeight = new Map<number, RosterAthlete[]>()
     for (const athlete of data.roster) {
       if (allowed && !allowed.has(athlete.weightClass)) continue
+      if (needle && !`${athlete.name} ${athlete.club ?? ""} ${athlete.weightClass}`.toLowerCase().includes(needle)) continue
       const state = weighInState(data.records[athlete.athleteId])
       if (filter === "not-weighed" && state !== "not-weighed") continue
       if (filter === "problems" && state !== "over-weight" && state !== "skin-fail") continue
       byWeight.set(athlete.weightClass, [...(byWeight.get(athlete.weightClass) ?? []), athlete])
     }
     return [...byWeight.entries()].sort((a, b) => a[0] - b[0])
-  }, [data, station, filter])
+  }, [data, station, filter, query])
 
   const summary = data?.summary
 
@@ -116,6 +119,15 @@ export default function WeighInsPage() {
         </header>
 
         {error ? <p className="rounded-lg border border-rose-400/40 bg-rose-500/10 p-3 text-sm text-rose-200">{error}</p> : null}
+
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search wrestler, club or weight"
+          autoComplete="off"
+          className="min-h-12 w-full rounded-lg border border-white/15 bg-black/30 px-4 text-lg text-white placeholder:text-white/40"
+        />
 
         <div className="flex flex-wrap gap-2">
           {([0, 1, 2] as const).map((id) => (
@@ -224,6 +236,22 @@ function AthleteRow({
         <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${STATE_CLASS[state]}`}>{STATE_LABEL[state]}</span>
       </div>
 
+      {athlete.phones && athlete.phones.length > 0 ? (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {athlete.phones.map((phone) => (
+            <a
+              key={phone.e164}
+              href={`tel:${phone.e164}`}
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-white/15 px-3 text-sm font-semibold text-white/80"
+            >
+              📞 {phone.label}: {phone.display}
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-2 text-xs text-white/40">No phone on file</p>
+      )}
+
       <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_auto]">
         <label className="flex flex-col gap-1 text-xs text-white/55">
           Scale weight (must be ≤ {athlete.weightClass})
@@ -232,9 +260,16 @@ function AthleteRow({
             value={weight}
             onChange={(e) => setWeight(e.target.value)}
             placeholder={`${athlete.weightClass}.0`}
-            className={`min-h-11 rounded-lg border bg-black/30 px-3 text-lg tabular-nums text-white ${onWeight === false ? "border-rose-400" : "border-white/15"}`}
+            className={`min-h-11 rounded-lg border-2 px-3 text-lg tabular-nums text-white ${
+              onWeight === false
+                ? "border-rose-400 bg-rose-500/15"
+                : onWeight === true
+                  ? "border-emerald-400 bg-emerald-400/10"
+                  : "border-white/15 bg-black/30"
+            }`}
           />
-          {onWeight === false ? <span className="text-rose-300">Over {athlete.weightClass} — did not make weight</span> : null}
+          {onWeight === false ? <span className="font-bold text-rose-300">Over {athlete.weightClass} — did not make weight</span> : null}
+          {onWeight === true ? <span className="font-bold text-emerald-300">Made weight</span> : null}
         </label>
         <div className="flex flex-col gap-1 text-xs text-white/55">
           Skin check

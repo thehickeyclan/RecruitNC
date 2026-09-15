@@ -26,6 +26,8 @@ export type RosterAthlete = {
   club: string | null
   weightClass: number
   seed: number | null
+  /** Numbers to call if a wrestler is missing — the athlete's, then a linked parent's. */
+  phones?: { label: string; display: string; e164: string }[]
 }
 
 export type WeighInState = "not-weighed" | "incomplete" | "cleared" | "over-weight" | "skin-fail"

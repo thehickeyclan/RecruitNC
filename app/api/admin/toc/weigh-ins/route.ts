@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 
 import { createAdminClientFresh } from "@/lib/supabase/admin"
+import { toE164 } from "@/lib/sms"
 import { requireTocFieldViewer } from "@/lib/toc/require-toc-field-viewer"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import {
@@ -54,6 +55,75 @@ function toRecord(row: WeighInRow): WeighInRecord {
   }
 }
 
+type Phone = NonNullable<RosterAthlete["phones"]>[number]
+
+/**
+ * Numbers to call when a wrestler has not come through the line: the athlete's own, then any
+ * linked parent's, then the account that claimed the profile. The same order the invite reminders
+ * use, loaded for the whole field in three queries — the page polls every ten seconds.
+ */
+async function loadPhones(
+  admin: ReturnType<typeof createAdminClientFresh>,
+  athleteIds: string[],
+): Promise<Map<string, Phone[]>> {
+  const out = new Map<string, Phone[]>()
+  if (athleteIds.length === 0) return out
+
+  const add = (athleteId: string, label: string, raw: unknown) => {
+    const text = typeof raw === "string" ? raw.trim() : ""
+    const e164 = text ? toE164(text) : null
+    if (!e164) return
+    const list = out.get(athleteId) ?? []
+    if (list.some((p) => p.e164 === e164)) return
+    list.push({ label, display: text, e164 })
+    out.set(athleteId, list)
+  }
+
+  const [{ data: athletes }, { data: links }] = await Promise.all([
+    admin.from("athletes").select("*").in("id", athleteIds),
+    admin.from("parent_athlete_links").select("athlete_id, user_id").in("athlete_id", athleteIds),
+  ])
+
+  const claimedBy = new Map<string, string>()
+  for (const raw of (athletes ?? []) as Record<string, unknown>[]) {
+    const id = String(raw.id)
+    const own = ["cell", "cell_number", "phone"].map((k) => raw[k]).find((v) => typeof v === "string" && v.trim())
+    add(id, "Athlete", own)
+    if (typeof raw.claimed_by_user_id === "string") claimedBy.set(id, raw.claimed_by_user_id)
+  }
+
+  const userIds = [...new Set([...(links ?? []).map((l) => String(l.user_id)), ...claimedBy.values()])]
+  if (userIds.length > 0) {
+    const { data: profiles } = await admin
+      .from("user_profiles")
+      .select("user_id, full_name, first_name, cell_phone")
+      .in("user_id", userIds)
+    const byUser = new Map((profiles ?? []).map((p) => [String(p.user_id), p]))
+    const labelFor = (p: { full_name?: string | null; first_name?: string | null }) =>
+      p.full_name?.trim() || p.first_name?.trim() || "Parent"
+    for (const link of links ?? []) {
+      const profile = byUser.get(String(link.user_id))
+      if (profile) add(String(link.athlete_id), labelFor(profile), profile.cell_phone)
+    }
+    for (const [athleteId, userId] of claimedBy) {
+      const profile = byUser.get(userId)
+      if (profile) add(athleteId, labelFor(profile), profile.cell_phone)
+    }
+  }
+
+  // Their corner coach is who knows where a missing wrestler is — and the only number for a dozen
+  // wrestlers whose families left none.
+  const { data: coaches } = await admin
+    .from("toc_coach_designations")
+    .select("athlete_id, coach_name, coach_phone")
+    .in("athlete_id", athleteIds)
+    .eq("status", "approved")
+  for (const coach of coaches ?? []) {
+    add(String(coach.athlete_id), `Coach ${String(coach.coach_name ?? "").trim()}`.trim(), coach.coach_phone)
+  }
+  return out
+}
+
 async function loadRoster(admin: ReturnType<typeof createAdminClientFresh>): Promise<RosterAthlete[]> {
   const { data, error } = await admin
     .from("toc_invitations")
@@ -61,13 +131,16 @@ async function loadRoster(admin: ReturnType<typeof createAdminClientFresh>): Pro
     .eq("status", "confirmed")
     .in("weight_class", [...TOC_WEIGHT_CLASSES])
   if (error) throw new Error(error.message)
-  return ((data ?? []) as unknown as InvitationRow[])
+  const rows = (data ?? []) as unknown as InvitationRow[]
+  const phones = await loadPhones(admin, rows.map((row) => row.athlete_id))
+  return rows
     .map((row) => ({
       athleteId: row.athlete_id,
       name: row.athletes?.name?.trim() || "Unknown wrestler",
       club: row.athletes?.wrestlingClub?.trim() || null,
       weightClass: Number(row.weight_class),
       seed: row.seed,
+      phones: phones.get(row.athlete_id) ?? [],
     }))
     .sort((a, b) => a.weightClass - b.weightClass || (a.seed ?? 99) - (b.seed ?? 99) || a.name.localeCompare(b.name))
 }
