@@ -11,6 +11,13 @@ const nextConfig = {
         destination: "/",
         permanent: false,
       },
+      {
+        // The Giving Hour script was shared at this address before the staff hub existed. A real
+        // redirect lands people on the hub instantly, rather than a cached page that refreshes.
+        source: "/tournament-of-champions/giving-hour",
+        destination: "/tournament-of-champions/staff",
+        permanent: false,
+      },
     ]
   },
   async headers() {
