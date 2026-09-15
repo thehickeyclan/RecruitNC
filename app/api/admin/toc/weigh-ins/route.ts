@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { createAdminClientFresh } from "@/lib/supabase/admin"
 import { toE164 } from "@/lib/sms"
-import { requireTocFieldViewer } from "@/lib/toc/require-toc-field-viewer"
+import { requireTocWeighInStaff } from "@/lib/toc/require-toc-weigh-in-staff"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import {
   summarizeWeighIns,
@@ -156,7 +156,7 @@ async function loadRoster(admin: ReturnType<typeof createAdminClientFresh>): Pro
 }
 
 export async function GET() {
-  const auth = await requireTocFieldViewer()
+  const auth = await requireTocWeighInStaff()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   const admin = createAdminClientFresh()
@@ -179,7 +179,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await requireTocFieldViewer()
+  const auth = await requireTocWeighInStaff()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   const body = (await request.json().catch(() => null)) as {
