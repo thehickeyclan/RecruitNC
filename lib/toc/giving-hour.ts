@@ -152,13 +152,18 @@ export const GIVING_HOUR_WITH_EVERY_PRIZE = {
 } as const
 
 /** Thanked from the microphone, but not drawn for. */
-export const GIVING_HOUR_THANKS: { name: string; for: string }[] = [
+export const GIVING_HOUR_THANKS: { name: string; for: string; logo?: string }[] = [
   { name: "Pathos", for: "Pathos socks with every raffle prize — a faith-based sock company built on one idea: Live the Light" },
   { name: "Wegmans", for: "Gift cards toward food and drink for the tournament — the family-owned grocer helping fuel this weekend" },
   { name: "Costco Wholesale", for: "Gift cards toward food and drink for the tournament" },
   { name: "Food Lion", for: "Gift cards toward food and drink for the tournament — the grocer founded right here in Salisbury, North Carolina" },
   { name: "Sam's Club", for: "Food and drink for the tournament" },
   { name: "Cove", for: "Twelve cases of probiotic soda — a better-for-you drink for athletes and fans alike" },
+  {
+    name: "Jubala Coffee",
+    for: "Coffee all weekend long — the Raleigh craft roaster our crew swears is the best coffee on the planet",
+    logo: "/images/giving-hour/jubala-logo.png",
+  },
   { name: "Farina", for: "VIP lounge food" },
   { name: "New York Bagel & Deli", for: "VIP lounge food" },
   { name: "Chad Richards State Farm", for: "VIP lounge food" },

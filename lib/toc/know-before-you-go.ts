@@ -69,7 +69,7 @@ export const TOC_KNOW_BEFORE_YOU_GO: KnowBeforeYouGoSection[] = [
     items: [
       "No food is allowed in the gym. There are open spaces and plenty of areas to eat outside the gym. Please help us keep it clean and ready for Sunday services.",
       "Water is available on the floor for athletes.",
-      "Concessions: bagels (peanut butter, honey, cream cheese), bars, trail mix, yogurt and granola, protein bars, fruit buckets, water, Gatorade and coffee. No soda or candy.",
+      "Concessions: bagels (peanut butter, honey, cream cheese), bars, trail mix, yogurt and granola, protein bars, fruit buckets, water, Gatorade and Jubala coffee. No soda or candy.",
       "Food trucks: Merritt's sandwiches Friday from 4:00 to 8:00 PM, plus Mediterranean and savory bowl trucks Saturday from 11:00 AM to 6:00 PM.",
     ],
   },

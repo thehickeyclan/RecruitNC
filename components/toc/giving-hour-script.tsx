@@ -11,7 +11,7 @@ type Props = {
   mc: string
   opening: string
   sponsors: GivingHourSponsor[]
-  thanks: { name: string; for: string }[]
+  thanks: { name: string; for: string; logo?: string }[]
   scholarship: string
   drawCount: number
   /** A gift that goes out with every prize — shown as a badge on each prize row. */
@@ -173,9 +173,21 @@ export function GivingHourScript({ time, mc, opening, sponsors, thanks, scholars
             <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#D3B574]">Thank you to our sponsors</p>
             <ul className="mt-3 flex flex-col gap-3">
               {thanks.map((row) => (
-                <li key={row.name}>
-                  <p className="text-xl font-semibold">{row.name}</p>
-                  <p className="text-base text-white/60">{row.for}</p>
+                <li key={row.name} className="flex items-center gap-3">
+                  {row.logo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={row.logo}
+                      alt=""
+                      width={40}
+                      height={40}
+                      className="h-10 w-10 shrink-0 rounded-lg bg-white object-contain"
+                    />
+                  ) : null}
+                  <div>
+                    <p className="text-xl font-semibold">{row.name}</p>
+                    <p className="text-base text-white/60">{row.for}</p>
+                  </div>
                 </li>
               ))}
             </ul>
