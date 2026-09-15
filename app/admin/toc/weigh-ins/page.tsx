@@ -54,6 +54,14 @@ export default function WeighInsPage() {
   const [station, setStation] = useState<0 | 1 | 2>(0)
   const [filter, setFilter] = useState<Filter>("all")
   const [query, setQuery] = useState("")
+  const [printedAt, setPrintedAt] = useState<Date | null>(null)
+
+  // The paper copy is what was recorded at the moment Print was tapped, not up to ten seconds stale.
+  async function printRoster() {
+    await load()
+    setPrintedAt(new Date())
+    window.setTimeout(() => window.print(), 150)
+  }
 
   const load = useCallback(async () => {
     try {
@@ -206,7 +214,7 @@ export default function WeighInsPage() {
           ))}
           <button
             type="button"
-            onClick={() => window.print()}
+            onClick={() => void printRoster()}
             className="ml-auto min-h-11 rounded-lg border border-white/15 px-3 text-sm text-white/70"
           >
             Print paper roster
@@ -250,7 +258,7 @@ export default function WeighInsPage() {
         ))}
       </div>
 
-      {data ? <PrintRoster roster={data.roster} /> : null}
+      {data ? <PrintRoster roster={data.roster} records={data.records} printedAt={printedAt} /> : null}
     </main>
   )
 }
@@ -452,21 +460,38 @@ function AthleteRow({
 }
 
 /** The paper backup and official record: every wrestler by weight, with blanks to fill in by hand. */
-function PrintRoster({ roster }: { roster: RosterAthlete[] }) {
+function PrintRoster({
+  roster,
+  records,
+  printedAt,
+}: {
+  roster: RosterAthlete[]
+  records: Record<string, WeighInRecord>
+  printedAt: Date | null
+}) {
   const byWeight = new Map<number, RosterAthlete[]>()
   for (const athlete of roster) byWeight.set(athlete.weightClass, [...(byWeight.get(athlete.weightClass) ?? []), athlete])
+  const cleared = roster.filter((a) => weighInState(records[a.athleteId]) === "cleared").length
+  const time = (iso: string | null) =>
+    iso ? new Date(iso).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) : ""
   return (
     <div className="hidden bg-white text-black print:block">
       <h1 className="text-xl font-bold">TOC Weigh-in Roster · Friday, September 18 · 4:00–5:00 PM</h1>
-      <p className="mb-3 text-sm">Flat weight, no allowance. Singlet required. Lanyard only after weight and skin check pass.</p>
+      <p className="text-sm">
+        Printed {printedAt ? printedAt.toLocaleString("en-US", { weekday: "short", hour: "numeric", minute: "2-digit" }) : "—"} ·{" "}
+        {cleared} of {roster.length} cleared
+      </p>
+      <p className="mb-3 text-sm">Flat weight, no allowance. Singlet required. Blank rows have not weighed in — record by hand.</p>
       {[...byWeight.entries()].sort((a, b) => a[0] - b[0]).map(([weight, athletes]) => (
         <table key={weight} className="mb-4 w-full border-collapse text-sm" style={{ breakInside: "avoid" }}>
           <thead>
             <tr>
-              <th colSpan={6} className="border border-black bg-gray-200 px-2 py-1 text-left">{weight} lbs</th>
+              <th colSpan={7} className="border border-black bg-gray-200 px-2 py-1 text-left">
+                {weight} lbs · {athletes.filter((a) => weighInState(records[a.athleteId]) === "cleared").length}/{athletes.length} cleared
+              </th>
             </tr>
             <tr>
-              {["Wrestler", "Club", "Weight", "Skin ✓", "Lanyard ✓", "Initials"].map((h) => (
+              {["Wrestler", "Club", "Weight", "Skin ✓", "Lanyard ✓", "Status", "Recorded by / initials"].map((h) => (
                 <th key={h} className="border border-black px-2 py-1 text-left">{h}</th>
               ))}
             </tr>
@@ -476,10 +501,23 @@ function PrintRoster({ roster }: { roster: RosterAthlete[] }) {
               <tr key={athlete.athleteId}>
                 <td className="border border-black px-2 py-2">{athlete.name}</td>
                 <td className="border border-black px-2 py-2">{athlete.club ?? "Unaffiliated"}</td>
-                <td className="w-20 border border-black px-2 py-2" />
-                <td className="w-16 border border-black px-2 py-2" />
-                <td className="w-20 border border-black px-2 py-2" />
-                <td className="w-20 border border-black px-2 py-2" />
+                {(() => {
+                  const record = records[athlete.athleteId]
+                  const state = weighInState(record)
+                  return (
+                    <>
+                      <td className="w-20 border border-black px-2 py-2 tabular-nums">
+                        {record?.recordedWeight != null ? record.recordedWeight.toFixed(1) : ""}
+                      </td>
+                      <td className="w-14 border border-black px-2 py-2 text-center">{record?.skinCheck === "pass" ? "✓" : record?.skinCheck === "fail" ? "✗" : ""}</td>
+                      <td className="w-16 border border-black px-2 py-2 text-center">{record?.lanyardGiven ? "✓" : ""}</td>
+                      <td className="w-24 border border-black px-2 py-2">{state === "not-weighed" ? "" : STATE_LABEL[state]}</td>
+                      <td className="w-32 border border-black px-2 py-2 text-xs">
+                        {record?.updatedAt ? `${record.recordedByName ?? ""} ${time(record.updatedAt)}`.trim() : ""}
+                      </td>
+                    </>
+                  )
+                })()}
               </tr>
             ))}
           </tbody>
