@@ -56,6 +56,7 @@ function toRecord(row: WeighInRow): WeighInRecord {
 }
 
 type Phone = NonNullable<RosterAthlete["phones"]>[number]
+type Coach = NonNullable<RosterAthlete["coaches"]>[number]
 
 /**
  * Numbers to call when a wrestler has not come through the line: the athlete's own, then any
@@ -65,9 +66,10 @@ type Phone = NonNullable<RosterAthlete["phones"]>[number]
 async function loadPhones(
   admin: ReturnType<typeof createAdminClientFresh>,
   athleteIds: string[],
-): Promise<Map<string, Phone[]>> {
+): Promise<{ phones: Map<string, Phone[]>; coaches: Map<string, Coach[]> }> {
   const out = new Map<string, Phone[]>()
-  if (athleteIds.length === 0) return out
+  const coachMap = new Map<string, Coach[]>()
+  if (athleteIds.length === 0) return { phones: out, coaches: coachMap }
 
   const add = (athleteId: string, label: string, raw: unknown) => {
     const text = typeof raw === "string" ? raw.trim() : ""
@@ -111,17 +113,24 @@ async function loadPhones(
     }
   }
 
-  // Their corner coach is who knows where a missing wrestler is — and the only number for a dozen
-  // wrestlers whose families left none.
+  // Their corner coaches, listed by name whether or not we hold a number — the coach is who knows
+  // where a missing wrestler is, and for a dozen wrestlers the only number on file.
   const { data: coaches } = await admin
     .from("toc_coach_designations")
     .select("athlete_id, coach_name, coach_phone")
     .in("athlete_id", athleteIds)
     .eq("status", "approved")
   for (const coach of coaches ?? []) {
-    add(String(coach.athlete_id), `Coach ${String(coach.coach_name ?? "").trim()}`.trim(), coach.coach_phone)
+    const athleteId = String(coach.athlete_id)
+    const name = String(coach.coach_name ?? "").trim()
+    if (!name) continue
+    const list = coachMap.get(athleteId) ?? []
+    if (list.some((c) => c.name.toLowerCase() === name.toLowerCase())) continue
+    const display = typeof coach.coach_phone === "string" && coach.coach_phone.trim() ? coach.coach_phone.trim() : null
+    list.push({ name, display, e164: display ? toE164(display) : null })
+    coachMap.set(athleteId, list)
   }
-  return out
+  return { phones: out, coaches: coachMap }
 }
 
 async function loadRoster(admin: ReturnType<typeof createAdminClientFresh>): Promise<RosterAthlete[]> {
@@ -132,7 +141,7 @@ async function loadRoster(admin: ReturnType<typeof createAdminClientFresh>): Pro
     .in("weight_class", [...TOC_WEIGHT_CLASSES])
   if (error) throw new Error(error.message)
   const rows = (data ?? []) as unknown as InvitationRow[]
-  const phones = await loadPhones(admin, rows.map((row) => row.athlete_id))
+  const { phones, coaches } = await loadPhones(admin, rows.map((row) => row.athlete_id))
   return rows
     .map((row) => ({
       athleteId: row.athlete_id,
@@ -141,6 +150,7 @@ async function loadRoster(admin: ReturnType<typeof createAdminClientFresh>): Pro
       weightClass: Number(row.weight_class),
       seed: row.seed,
       phones: phones.get(row.athlete_id) ?? [],
+      coaches: coaches.get(row.athlete_id) ?? [],
     }))
     .sort((a, b) => a.weightClass - b.weightClass || (a.seed ?? 99) - (b.seed ?? 99) || a.name.localeCompare(b.name))
 }

@@ -249,8 +249,28 @@ function AthleteRow({
           ))}
         </div>
       ) : (
-        <p className="mt-2 text-xs text-white/40">No phone on file</p>
+        <p className="mt-2 text-xs text-white/40">No family phone on file</p>
       )}
+
+      <p className="mt-2 text-sm text-white/70">
+        <span className="text-white/45">Coaches: </span>
+        {athlete.coaches && athlete.coaches.length > 0 ? (
+          athlete.coaches.map((coach, index) => (
+            <span key={coach.name}>
+              {index > 0 ? ", " : ""}
+              {coach.e164 ? (
+                <a href={`tel:${coach.e164}`} className="font-semibold text-[#D3B574] underline underline-offset-2">
+                  {coach.name}
+                </a>
+              ) : (
+                <span className="font-semibold text-white">{coach.name}</span>
+              )}
+            </span>
+          ))
+        ) : (
+          <span className="italic text-white/40">none named</span>
+        )}
+      </p>
 
       <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto_auto]">
         <label className="flex flex-col gap-1 text-xs text-white/55">

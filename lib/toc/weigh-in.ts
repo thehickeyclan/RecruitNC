@@ -28,6 +28,8 @@ export type RosterAthlete = {
   seed: number | null
   /** Numbers to call if a wrestler is missing — the athlete's, then a linked parent's. */
   phones?: { label: string; display: string; e164: string }[]
+  /** Approved corner coaches. `e164` is null when no usable cell is on file. */
+  coaches?: { name: string; display: string | null; e164: string | null }[]
 }
 
 export type WeighInState = "not-weighed" | "incomplete" | "cleared" | "over-weight" | "skin-fail"
