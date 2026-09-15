@@ -1,40 +1,9 @@
-import type { Metadata } from "next"
-
-import { GivingHourScript } from "@/components/toc/giving-hour-script"
-import {
-  GIVING_HOUR_SCHOLARSHIP,
-  GIVING_HOUR_MC,
-  GIVING_HOUR_OPENING,
-  GIVING_HOUR_SPONSORS,
-  GIVING_HOUR_THANKS,
-  GIVING_HOUR_TIME,
-  GIVING_HOUR_WITH_EVERY_PRIZE,
-  givingHourDrawCount,
-} from "@/lib/toc/giving-hour"
-
-export const metadata: Metadata = {
-  title: "The Giving Hour | Tournament of Champions 2026",
-  description:
-    "The sponsors of the NC United Tournament of Champions and what they are giving away during Saturday's Giving Hour.",
-}
+import { redirect } from "next/navigation"
 
 /**
- * The Giving Hour script — built to be read from a phone at the microphone.
- *
- * Public on purpose: sponsors can see their own card, and the MC needs no account. Large type,
- * one sponsor per card, and a Drawn tick per prize kept on the reader's own phone.
+ * The Giving Hour script was shared at this address before the staff hub existed. It now lives at
+ * /tournament-of-champions/staff/giving-hour, and anyone holding the old link lands on the hub.
  */
-export default function GivingHourPage() {
-  return (
-    <GivingHourScript
-      time={GIVING_HOUR_TIME}
-      mc={GIVING_HOUR_MC}
-      opening={GIVING_HOUR_OPENING}
-      sponsors={GIVING_HOUR_SPONSORS}
-      thanks={GIVING_HOUR_THANKS}
-      scholarship={GIVING_HOUR_SCHOLARSHIP}
-      drawCount={givingHourDrawCount()}
-      withEveryPrize={GIVING_HOUR_WITH_EVERY_PRIZE}
-    />
-  )
+export default function GivingHourRedirect() {
+  redirect("/tournament-of-champions/staff")
 }
