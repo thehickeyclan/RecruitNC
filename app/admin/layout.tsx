@@ -15,7 +15,9 @@ export default function AdminLayout({
     pathname === "/admin/toc/plan" ||
     pathname.startsWith("/admin/toc/plan/") ||
     pathname === "/admin/toc/field" ||
-    pathname.startsWith("/admin/toc/field/")
+    pathname.startsWith("/admin/toc/field/") ||
+    // Scale stations are staffed by people with TOC field access, not only full admins.
+    pathname === "/admin/toc/weigh-ins"
 
   return (
     <AuthGuard requireAdmin={!isScopedTocManagerPage}>

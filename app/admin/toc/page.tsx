@@ -39,6 +39,12 @@ const LINKS: DashboardLink[] = [
     icon: LayoutGrid,
   },
   {
+    href: "/admin/toc/weigh-ins",
+    title: "Weigh-ins",
+    description: "Friday check-in for the scale stations — weight, skin check, lanyard, who is still missing",
+    icon: Scale,
+  },
+  {
     href: "/admin/toc/compare",
     title: "Athlete compare",
     description: "Head-to-head, state, NHSCA, Duals, Super32 — seeding recommendation",
