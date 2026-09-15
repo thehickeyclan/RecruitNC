@@ -47,15 +47,20 @@ export function madeWeight(recordedWeight: number | null, weightClass: number): 
 }
 
 /**
- * Where a wrestler stands. Cleared means weighed, on weight, skin check passed and lanyard handed
- * over — the lanyard is the proof of weigh-in for the rest of the weekend.
+ * Where a wrestler stands. Cleared means on weight and skin check passed — the two things that
+ * decide whether they wrestle. The lanyard is tracked alongside but does not hold anyone up.
  */
 export function weighInState(record: WeighInRecord | undefined): WeighInState {
   if (!record || (record.recordedWeight == null && record.skinCheck == null)) return "not-weighed"
   if (madeWeight(record.recordedWeight, record.weightClass) === false) return "over-weight"
   if (record.skinCheck === "fail") return "skin-fail"
-  if (record.recordedWeight != null && record.skinCheck === "pass" && record.lanyardGiven) return "cleared"
+  if (isClearedEntry(record.recordedWeight, record.weightClass, record.skinCheck === "pass")) return "cleared"
   return "incomplete"
+}
+
+/** On weight and skin check passed — used for a saved record and for what is typed before Save. */
+export function isClearedEntry(recordedWeight: number | null, weightClass: number, skinPassed: boolean): boolean {
+  return madeWeight(recordedWeight, weightClass) === true && skinPassed
 }
 
 export type WeighInSummary = {

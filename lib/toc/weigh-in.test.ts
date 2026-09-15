@@ -34,10 +34,11 @@ describe("weighInState", () => {
     expect(weighInState(undefined)).toBe("not-weighed")
   })
 
-  it("clears only with weight, a passed skin check and the lanyard handed over", () => {
+  it("clears with weight on or under the class and a passed skin check; the lanyard is not required", () => {
     expect(weighInState(record())).toBe("cleared")
-    expect(weighInState(record({ lanyardGiven: false }))).toBe("incomplete")
+    expect(weighInState(record({ lanyardGiven: false }))).toBe("cleared")
     expect(weighInState(record({ skinCheck: null }))).toBe("incomplete")
+    expect(weighInState(record({ recordedWeight: null }))).toBe("incomplete")
   })
 
   it("flags over weight ahead of anything else", () => {

@@ -249,3 +249,18 @@ export async function POST(request: NextRequest) {
   }
   return NextResponse.json({ record: toRecord(data as WeighInRow) })
 }
+
+/** Clears one wrestler's weigh-in entirely — for a reading saved against the wrong wrestler. */
+export async function DELETE(request: NextRequest) {
+  const auth = await requireTocWeighInStaff()
+  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
+
+  const athleteId = request.nextUrl.searchParams.get("athleteId")?.trim() ?? ""
+  if (!athleteId) return NextResponse.json({ error: "Choose a wrestler." }, { status: 400 })
+
+  const { error } = await createAdminClientFresh().from(TABLE).delete().eq("athlete_id", athleteId)
+  if (error) {
+    return NextResponse.json({ error: error.code === "42P01" ? MISSING_TABLE : error.message }, { status: 500 })
+  }
+  return NextResponse.json({ cleared: athleteId })
+}

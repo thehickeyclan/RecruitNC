@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 
 import {
+  isClearedEntry,
   madeWeight,
   parseScaleReading,
   weighInState,
@@ -75,6 +76,15 @@ export default function WeighInsPage() {
 
   const onSaved = useCallback((record: WeighInRecord) => {
     setData((current) => (current ? { ...current, records: { ...current.records, [record.athleteId]: record } } : current))
+  }, [])
+
+  const onCleared = useCallback((athleteId: string) => {
+    setData((current) => {
+      if (!current) return current
+      const records = { ...current.records }
+      delete records[athleteId]
+      return { ...current, records }
+    })
   }, [])
 
   const weights = useMemo(() => {
@@ -228,7 +238,13 @@ export default function WeighInsPage() {
               )
             })()}
             {athletes.map((athlete) => (
-              <AthleteRow key={athlete.athleteId} athlete={athlete} record={data?.records[athlete.athleteId]} onSaved={onSaved} />
+              <AthleteRow
+                key={athlete.athleteId}
+                athlete={athlete}
+                record={data?.records[athlete.athleteId]}
+                onSaved={onSaved}
+                onCleared={onCleared}
+              />
             ))}
           </section>
         ))}
@@ -243,10 +259,12 @@ function AthleteRow({
   athlete,
   record,
   onSaved,
+  onCleared,
 }: {
   athlete: RosterAthlete
   record: WeighInRecord | undefined
   onSaved: (record: WeighInRecord) => void
+  onCleared: (athleteId: string) => void
 }) {
   const [weight, setWeight] = useState(record?.recordedWeight != null ? String(record.recordedWeight) : "")
   const [skin, setSkin] = useState<SkinCheck | null>(record?.skinCheck ?? null)
@@ -283,8 +301,38 @@ function AthleteRow({
     }
   }
 
+  async function reset() {
+    if (!window.confirm(`Clear the weigh-in for ${athlete.name}? This removes the weight, skin check and lanyard.`)) return
+    setSaving(true)
+    setMessage("")
+    try {
+      const response = await fetch(`/api/admin/toc/weigh-ins?athleteId=${encodeURIComponent(athlete.athleteId)}`, {
+        method: "DELETE",
+        credentials: "include",
+      })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload.error || "Could not reset.")
+      setWeight("")
+      setSkin(null)
+      setLanyard(false)
+      onCleared(athlete.athleteId)
+      setMessage("Reset")
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : "Could not reset.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Green as soon as what is typed qualifies — on or under weight and skin check ticked — or once saved as cleared.
+  const clearedNow = isClearedEntry(parsed, athlete.weightClass, skin === "pass") || state === "cleared"
+
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+    <div
+      className={`rounded-xl border-2 p-3 transition-colors ${
+        clearedNow ? "border-emerald-400 bg-emerald-400/10" : "border-white/10 bg-white/[0.03]"
+      }`}
+    >
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="text-lg font-bold leading-tight">{athlete.name}</p>
@@ -351,27 +399,19 @@ function AthleteRow({
           {onWeight === false ? <span className="font-bold text-rose-300">Over {athlete.weightClass} — did not make weight</span> : null}
           {onWeight === true ? <span className="font-bold text-emerald-300">Made weight</span> : null}
         </label>
-        <div className="flex flex-col gap-1 text-xs text-white/55">
-          Skin check
-          <div className="flex gap-2">
-            {(["pass", "fail"] as const).map((value) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => setSkin(skin === value ? null : value)}
-                className={`min-h-11 flex-1 rounded-lg border px-4 text-sm font-bold capitalize ${
-                  skin === value
-                    ? value === "pass"
-                      ? "border-emerald-400 bg-emerald-400/15 text-emerald-300"
-                      : "border-rose-400 bg-rose-500/15 text-rose-300"
-                    : "border-white/15 text-white/70"
-                }`}
-              >
-                {value}
-              </button>
-            ))}
-          </div>
-        </div>
+        <label
+          className={`flex min-h-11 items-center gap-2 self-end rounded-lg border-2 px-3 text-sm font-bold ${
+            skin === "pass" ? "border-emerald-400 bg-emerald-400/15 text-emerald-300" : "border-white/15 text-white/80"
+          }`}
+        >
+          <input
+            type="checkbox"
+            checked={skin === "pass"}
+            onChange={(e) => setSkin(e.target.checked ? "pass" : null)}
+            className="h-6 w-6 accent-emerald-400"
+          />
+          Skin check passed
+        </label>
         <label className="flex min-h-11 items-center gap-2 self-end rounded-lg border border-white/15 px-3 text-sm font-semibold">
           <input type="checkbox" checked={lanyard} onChange={(e) => setLanyard(e.target.checked)} className="h-5 w-5 accent-emerald-400" />
           Lanyard given
@@ -387,7 +427,19 @@ function AthleteRow({
         >
           {saving ? "Saving…" : "Save"}
         </button>
-        {message ? <span className={`text-sm ${message === "Saved" ? "text-emerald-300" : "text-rose-300"}`}>{message}</span> : null}
+        {record || weight || skin || lanyard ? (
+          <button
+            type="button"
+            onClick={() => void reset()}
+            disabled={saving}
+            className="min-h-11 rounded-lg border border-white/20 px-4 text-sm font-semibold text-white/70 disabled:opacity-60"
+          >
+            Reset
+          </button>
+        ) : null}
+        {message ? (
+          <span className={`text-sm ${message === "Saved" || message === "Reset" ? "text-emerald-300" : "text-rose-300"}`}>{message}</span>
+        ) : null}
         {record?.updatedAt ? (
           <span className="ml-auto text-xs text-white/40">
             {record.recordedByName ? `${record.recordedByName} · ` : ""}
