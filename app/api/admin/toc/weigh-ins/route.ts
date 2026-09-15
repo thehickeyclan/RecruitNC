@@ -250,17 +250,33 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ record: toRecord(data as WeighInRow) })
 }
 
-/** Clears one wrestler's weigh-in entirely — for a reading saved against the wrong wrestler. */
+/**
+ * Clears a weigh-in — one wrestler, for a reading saved against the wrong name, or a whole weight
+ * when a station has to start that line again.
+ */
 export async function DELETE(request: NextRequest) {
   const auth = await requireTocWeighInStaff()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   const athleteId = request.nextUrl.searchParams.get("athleteId")?.trim() ?? ""
-  if (!athleteId) return NextResponse.json({ error: "Choose a wrestler." }, { status: 400 })
+  const weightParam = request.nextUrl.searchParams.get("weightClass")?.trim() ?? ""
+  const weightClass = weightParam ? Number(weightParam) : null
 
-  const { error } = await createAdminClientFresh().from(TABLE).delete().eq("athlete_id", athleteId)
-  if (error) {
-    return NextResponse.json({ error: error.code === "42P01" ? MISSING_TABLE : error.message }, { status: 500 })
+  const admin = createAdminClientFresh()
+  let result
+  if (athleteId) {
+    result = await admin.from(TABLE).delete().eq("athlete_id", athleteId)
+  } else if (weightClass != null && (TOC_WEIGHT_CLASSES as readonly number[]).includes(weightClass)) {
+    result = await admin.from(TABLE).delete().eq("weight_class", weightClass)
+  } else {
+    return NextResponse.json({ error: "Choose a wrestler or a weight class." }, { status: 400 })
   }
-  return NextResponse.json({ cleared: athleteId })
+
+  if (result.error) {
+    return NextResponse.json(
+      { error: result.error.code === "42P01" ? MISSING_TABLE : result.error.message },
+      { status: 500 },
+    )
+  }
+  return NextResponse.json({ cleared: athleteId || weightClass })
 }

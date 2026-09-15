@@ -86,6 +86,27 @@ export default function WeighInsPage() {
     setData((current) => (current ? { ...current, records: { ...current.records, [record.athleteId]: record } } : current))
   }, [])
 
+  // Bumping a weight's token remounts its rows, so typed-but-unsaved entries clear with the saved ones.
+  const [resetTokens, setResetTokens] = useState<Record<number, number>>({})
+
+  async function resetWeight(weight: number) {
+    if (!window.confirm(`Clear ALL weigh-ins at ${weight} lbs? Every wrestler at this weight goes back to not weighed.`)) return
+    try {
+      const response = await fetch(`/api/admin/toc/weigh-ins?weightClass=${weight}`, { method: "DELETE", credentials: "include" })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload.error || "Could not reset this weight.")
+      setData((current) => {
+        if (!current) return current
+        const records = { ...current.records }
+        for (const athlete of current.roster) if (athlete.weightClass === weight) delete records[athlete.athleteId]
+        return { ...current, records }
+      })
+      setResetTokens((current) => ({ ...current, [weight]: (current[weight] ?? 0) + 1 }))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not reset this weight.")
+    }
+  }
+
   const onCleared = useCallback((athleteId: string) => {
     setData((current) => {
       if (!current) return current
@@ -242,12 +263,22 @@ export default function WeighInsPage() {
                       {done ? " ✓" : ""}
                     </span>
                   ) : null}
+                  {/* Only with the full weight on screen — a search shows part of it, and this clears all of it. */}
+                  {query.trim() ? null : (
+                    <button
+                      type="button"
+                      onClick={() => void resetWeight(weight)}
+                      className="ml-auto min-h-9 rounded-lg border border-white/20 px-3 text-xs font-semibold text-white/60"
+                    >
+                      Reset weight
+                    </button>
+                  )}
                 </h2>
               )
             })()}
             {athletes.map((athlete) => (
               <AthleteRow
-                key={athlete.athleteId}
+                key={`${athlete.athleteId}-${resetTokens[athlete.weightClass] ?? 0}`}
                 athlete={athlete}
                 record={data?.records[athlete.athleteId]}
                 onSaved={onSaved}
