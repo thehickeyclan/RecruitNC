@@ -93,6 +93,25 @@ export default function WeighInsPage() {
     return [...byWeight.entries()].sort((a, b) => a[0] - b[0])
   }, [data, station, filter, query])
 
+  // Cleared out of total per weight, over the whole field — filters and search never change it.
+  const perWeight = useMemo(() => {
+    const counts = new Map<number, { cleared: number; total: number }>()
+    for (const athlete of data?.roster ?? []) {
+      const entry = counts.get(athlete.weightClass) ?? { cleared: 0, total: 0 }
+      entry.total++
+      if (weighInState(data?.records[athlete.athleteId]) === "cleared") entry.cleared++
+      counts.set(athlete.weightClass, entry)
+    }
+    return [...counts.entries()].sort((a, b) => a[0] - b[0])
+  }, [data])
+
+  function jumpToWeight(weight: number) {
+    setStation(0)
+    setFilter("all")
+    setQuery("")
+    window.setTimeout(() => document.getElementById(`w-${weight}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50)
+  }
+
   const summary = data?.summary
 
   return (
@@ -119,6 +138,29 @@ export default function WeighInsPage() {
         </header>
 
         {error ? <p className="rounded-lg border border-rose-400/40 bg-rose-500/10 p-3 text-sm text-rose-200">{error}</p> : null}
+
+        {perWeight.length > 0 ? (
+          <div className="grid grid-cols-5 gap-2">
+            {perWeight.map(([weight, count]) => {
+              const done = count.total > 0 && count.cleared === count.total
+              return (
+                <button
+                  key={weight}
+                  type="button"
+                  onClick={() => jumpToWeight(weight)}
+                  className={`flex min-h-12 flex-col items-center justify-center rounded-lg border text-center ${
+                    done ? "border-emerald-400 bg-emerald-400/15 text-emerald-300" : "border-white/15 text-white/80"
+                  }`}
+                >
+                  <span className="text-sm font-extrabold leading-none">{weight}</span>
+                  <span className="mt-0.5 text-xs tabular-nums leading-none">
+                    {count.cleared}/{count.total}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        ) : null}
 
         <input
           type="search"
@@ -165,8 +207,26 @@ export default function WeighInsPage() {
         {data && weights.length === 0 ? <p className="text-white/60">Nobody matches this filter.</p> : null}
 
         {weights.map(([weight, athletes]) => (
-          <section key={weight} className="flex flex-col gap-2">
-            <h2 className="mt-2 text-lg font-extrabold">{weight} lbs</h2>
+          <section key={weight} id={`w-${weight}`} className="flex scroll-mt-40 flex-col gap-2">
+            {(() => {
+              const count = perWeight.find(([w]) => w === weight)?.[1]
+              const done = count != null && count.total > 0 && count.cleared === count.total
+              return (
+                <h2 className="mt-2 flex items-center gap-2 text-lg font-extrabold">
+                  {weight} lbs
+                  {count ? (
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-sm tabular-nums ${
+                        done ? "bg-emerald-400/15 text-emerald-300" : "bg-white/10 text-white/70"
+                      }`}
+                    >
+                      {count.cleared}/{count.total}
+                      {done ? " ✓" : ""}
+                    </span>
+                  ) : null}
+                </h2>
+              )
+            })()}
             {athletes.map((athlete) => (
               <AthleteRow key={athlete.athleteId} athlete={athlete} record={data?.records[athlete.athleteId]} onSaved={onSaved} />
             ))}
