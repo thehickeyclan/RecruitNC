@@ -30,6 +30,7 @@ import { TocSectionNavSentinel } from "@/components/toc/toc-section-nav"
 import { TocEmailSignup } from "@/components/toc/toc-email-signup"
 import { TocFieldAnnouncementLink } from "@/components/toc/toc-field-announcement-link"
 import { TocFloStreamingStrip } from "@/components/toc/toc-flo-streaming-strip"
+import { TocKnowBeforeYouGo } from "@/components/toc/toc-know-before-you-go"
 import { TocPatrioticBar, TocVarsityHeading, tocDisplayClass } from "@/components/toc/toc-theme"
 import { TOC_CONTACT_EMAIL } from "@/lib/toc/constants"
 import type { TocConfirmedCollege } from "@/lib/toc/confirmed-colleges"
@@ -47,6 +48,7 @@ export function TocLandingPage({ config, confirmedColleges }: Props) {
       <TocHero config={config} confirmedColleges={confirmedColleges} />
       <TocFloStreamingStrip />
       <TocFieldAnnouncementLink />
+      <TocKnowBeforeYouGo />
       <TocSectionNavSentinel />
       <TocQuickFacts />
       <TocVenueSection config={config} />

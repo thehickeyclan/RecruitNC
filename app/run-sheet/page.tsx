@@ -29,7 +29,7 @@ const FRIDAY: Row[] = [
   { a: "1:00 PM", what: "PA and production setup · security team meeting and setup", kind: "prep" },
   { a: "2:00 PM", what: "Tournament dry run — second pass", kind: "prep" },
   { a: "2:45 PM", what: "Security team in place", detail: "Ticket entry and band checks", kind: "prep" },
-  { a: "3:00 PM", what: "Doors open to coaches and athletes", kind: "prep" },
+  { a: "3:30 PM", what: "Doors open to coaches and athletes", kind: "prep" },
   { a: "4:00 – 5:00 PM", what: "Weigh-in and skin check", detail: "One official weigh-in. Invited wrestlers only — there is no Saturday weigh-in.", kind: "beat" },
   { a: "4:00 PM – close", what: "Warm-up mat open in the weigh-in area", detail: "Open continuously from the first weigh-in until the last bout of the night. Wrestlers step on as they clear the scale, and anyone waiting on a later bout can keep moving while others wrestle.", kind: "beat" },
   { a: "4:15 – 5:30 PM", what: "Competition mats also open for warm-ups", detail: "Both mats, until they are cleared for the opening. After that all warm-ups move to the weigh-in area.", kind: "beat" },

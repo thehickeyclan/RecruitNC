@@ -271,7 +271,7 @@ export const TOC_SCHEDULE = {
     title: "Friday · September 18",
     subtitle: "Weigh-in 4:00–5:00 PM · opening ceremony 5:30 PM · first round on two mats",
     rows: [
-      { time: "3:00 PM", activity: "Doors open to coaches and athletes" },
+      { time: "3:30 PM", activity: "Doors open to coaches and athletes" },
       {
         time: "4:00–5:00 PM",
         activity: "One official weigh-in & skin check (invited wrestlers only — no Saturday weigh-in)",
@@ -291,7 +291,7 @@ export const TOC_SCHEDULE = {
     title: "Saturday · September 19",
     subtitle: "Brackets resume at 9:00 AM · Giving Hour · championship finals on one mat",
     rows: [
-      { time: "7:30 AM", activity: "Warm-up mat opens — stays open all day" },
+      { time: "7:30 AM", activity: "Doors open to wrestlers and coaches · warm-up mat opens — stays open all day" },
       { time: "8:30 AM", activity: "Doors open to spectators" },
       /*
        * Before the first bout, not after it.
@@ -502,8 +502,8 @@ export const TOC_VENUE_FEATURES = [
 /** Public marketing copy — one Hope atrium lounge; ops detail in docs/toc-venue-ops.md */
 export const TOC_VENUE_LOUNGES = {
   eyebrow: "Dedicated lounge",
-  headline: "Credentialed coaches and officials — one room",
-  lead: "One atrium room at Hope Apex is reserved for credentialed college coaches, credentialed club coaches, and tournament officials — credentials required, not open to general spectators.",
+  headline: "College coaches, officials and table workers — one room",
+  lead: "One atrium room at Hope Apex is reserved for credentialed college coaches, tournament officials and table workers — credentials required, not open to spectators.",
   title: "Coaches & Officials Lounge",
   description:
     "Check in at credentials for your lanyard. Comfortable seating and work tables, charging and Wi-Fi, live feeds from both mats with bracket updates, hospitality on Saturday, recruiting guides for college coaches (sent in advance and available as hard copy in the lounge on event day), a print station for profiles and notes, and space for officials to store gear and regroup between sessions.",
@@ -732,6 +732,7 @@ export const TOC_SECTION_NAV_GROUPS = [
   {
     label: "The event",
     links: [
+      { href: "#know-before-you-go", label: "Know before you go" },
       { href: "#weights", label: "Weight classes" },
       { href: "#champion-jacket", label: "Champion jacket" },
       { href: "#official-tee", label: "Official apparel" },
@@ -839,6 +840,7 @@ export const TOC_RULES_GROUPS = [
 ] as const
 
 export const TOC_SECTION_NAV_QUICK = [
+  { href: "#know-before-you-go", label: "Know before you go" },
   { href: "#road", label: "What's next" },
   { href: "#rules", label: "Rules & format" },
   { href: "#schedule", label: "Schedule" },
