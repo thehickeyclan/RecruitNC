@@ -205,6 +205,18 @@ export default function TocRecruitingGuidePage() {
         .pill-all-american { background: #B31B1B; border-color: #8d1515; color: #fff; }
         .pill-state-champion { background: #D3B574; border-color: #a8904f; color: #13294B; }
         .pill-state-placer { background: #E8EDF4; border-color: #13294B; color: #13294B; }
+        /*
+         * The Guild's mark is gold baked onto black — there is no transparent version of it.
+         * Floated on white it reads as a black box nobody cropped, so it gets a panel that looks
+         * deliberate. Same print-color-adjust as the pills: without it the panel prints white and
+         * the gold artwork all but disappears.
+         */
+        .panel-dark {
+          background: #0A1628;
+          color: #fff;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
       `}</style>
 
       <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 print:hidden">
@@ -245,6 +257,28 @@ export default function TocRecruitingGuidePage() {
 
           {/* Logistics */}
           <section className="print:break-after-page">
+            {/*
+              Opens the book, before any logistics.
+
+              A coach who drove four hours to stand on a wall in Apex should be thanked on the
+              first page they read, not in a line at the end nobody reaches.
+            */}
+            <Rule label="Thank you for being here" />
+            <p className="text-[10pt] leading-snug">
+              Your time is the scarcest thing in this sport, and you have chosen to spend a weekend
+              of it on our mats. That matters more to these families than anything we could say from
+              the microphone — a wrestler who sees a college coach in the building wrestles the rest
+              of his season differently.
+            </p>
+            <p className="mt-1 text-[10pt] leading-snug">
+              Eighty of the best wrestlers in North Carolina are in this room because coaches like
+              you keep showing up for them. Thank you for supporting North Carolina wrestling and the
+              Tournament of Champions. If there is anything you need this weekend — a wrestler you
+              want to see, a bout time, a family to reach — find us at the credentials table or email{" "}
+              {TOC_CONTACT_EMAIL}. We would rather be interrupted than have you leave without what
+              you came for.
+            </p>
+
             <Rule label="For visiting coaches" />
             <p className="text-[9.5pt] leading-snug">{TOC_VENUE_LOUNGES.lead}</p>
             <p className="mt-1 text-[9.5pt] leading-snug">{TOC_VENUE_LOUNGES.description}</p>
@@ -338,6 +372,63 @@ export default function TocRecruitingGuidePage() {
                 </div>
               ))}
             </div>
+          </section>
+
+          {/*
+            The back page, where a program puts its advertisements.
+
+            QR rather than a printed URL: nobody types apps.apple.com/app/id6803202791 off a page.
+            Both codes were generated from the live App Store links and both were checked to
+            resolve — a QR that goes nowhere cannot be corrected once the book is bound.
+          */}
+          <section className="print:break-before-page">
+            <Rule label="Two apps worth your pocket" />
+
+            <div className="mt-3 flex items-start gap-4 border border-black/20 p-3">
+              <Image src="/images/nc-united-logo.png" alt="NC United" width={96} height={96} className="shrink-0" />
+              <div className="flex-1">
+                <h3 className="text-[13pt] font-black leading-none">The NC United app</h3>
+                <p className="mt-1 text-[9.5pt] leading-snug">
+                  The whole tournament in your pocket. Every bracket at every weight, updating as bouts
+                  land, so you can follow a wrestler from the warm-up mat to the podium without leaving
+                  your seat — and see the field for next year before anybody else does.
+                </p>
+                <p className="mt-1 text-[8.5pt] font-semibold">Free on the App Store · scan to install</p>
+              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images/toc/nc-united-app-qr.svg" alt="" width={84} height={84} className="shrink-0" />
+            </div>
+
+            <div className="panel-dark mt-3 flex items-start gap-4 border border-black/20 p-3">
+              <Image
+                src="/images/sponsors/the-guild-logo.png"
+                alt="The Wrestling Guild"
+                width={120}
+                height={80}
+                className="shrink-0"
+              />
+              <div className="flex-1">
+                <h3 className="text-[13pt] font-black leading-none">The Wrestling Guild</h3>
+                <p className="mt-1 text-[9.5pt] leading-snug">
+                  The Guild connects youth and high school wrestlers with elite coaches in their own
+                  communities — private sessions and small groups led by current and former college
+                  wrestlers from programs like UNC and NC State.
+                </p>
+                <p className="mt-1 text-[8.5pt] font-semibold">
+                  Premier partner of the Tournament of Champions · scan for the app
+                </p>
+              </div>
+              <div className="shrink-0 bg-white p-1">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/images/toc/guild-app-qr.svg" alt="" width={76} height={76} />
+              </div>
+            </div>
+
+            <p className="mt-3 text-[8.5pt] leading-snug text-black/70">
+              Everything in this guide — the field, the brackets, and the results as they land — is in
+              the NC United app all weekend. Questions about any wrestler in these pages:{" "}
+              {TOC_CONTACT_EMAIL}.
+            </p>
           </section>
         </div>
       ) : null}
