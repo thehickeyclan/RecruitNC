@@ -176,6 +176,12 @@ const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
   "c30deea8-6e11-4bbd-b95c-6a5bc4d72692": [E.superThirtyTwo, E.journeymen],
   // Landon Logan · 141 · seed 5 · A.L. Brown. The one Logan in the field.
   "e5077d85-f82e-4e21-9558-f52c2d252230": [E.iSixtyFour, E.superThirtyTwo],
+  // Micah Howard · 157 · seed 3 · Tuscola.
+  "dbb30d81-60a5-439c-b698-96433f4f030e": [E.superThirtyTwo],
+  // Luke Richards · 125 · seed 4 · Cardinal Gibbons. Two Lukes here — Padgett at 197.
+  "1a2d638e-5978-45d4-b6c8-bc95ba754367": [E.iSixtyFour, E.journeymen, E.southeastOpen],
+  // Jordan Barbee · 197 · seed 8 · Orange. Had no results on file at all, so this is his only line.
+  "9815ad12-2e75-4b6e-afd1-7dd65564e90d": [E.superThirtyTwo],
 }
 
 /** The events a wrestler competes at next, or an empty list when none were sent in. */

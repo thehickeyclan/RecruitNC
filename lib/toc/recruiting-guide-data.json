@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-09-16T18:17:46.300Z",
+  "generatedAt": "2026-09-16T20:46:53.797Z",
   "total": 80,
   "weights": [
     {
@@ -474,7 +474,11 @@
             "Stephen Cross (TOC field)",
             "Daniel McDermott (TOC field)"
           ],
-          "upNext": [],
+          "upNext": [
+            "I-64 Duals",
+            "Journeymen",
+            "Southeast Open"
+          ],
           "gpa": "4.3",
           "email": "annerichards3@icloud.com",
           "phone": "(919) 624-5195"
@@ -1645,7 +1649,9 @@
           "wins": [
             "Cade Gehris (TOC field)"
           ],
-          "upNext": [],
+          "upNext": [
+            "Super 32"
+          ],
           "gpa": "3.9",
           "email": "micahhowardwrestler@gmail.com",
           "phone": "(864) 423-5591"
@@ -2609,7 +2615,9 @@
           "wins": [
             "Ben McCaleb (TOC field)"
           ],
-          "upNext": [],
+          "upNext": [
+            "Super 32"
+          ],
           "gpa": null,
           "email": "shane7barbee@gmail.com",
           "phone": null
