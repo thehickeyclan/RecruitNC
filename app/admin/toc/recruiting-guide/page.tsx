@@ -265,18 +265,23 @@ export default function TocRecruitingGuidePage() {
             */}
             <Rule label="Thank you for being here" />
             <p className="text-[10pt] leading-snug">
-              Your time is the scarcest thing in this sport, and you have chosen to spend a weekend
-              of it on our mats. That matters more to these families than anything we could say from
-              the microphone — a wrestler who sees a college coach in the building wrestles the rest
-              of his season differently.
+              North Carolina wrestling is a community before it is anything else. It is club coaches
+              driving across the state on a Saturday, parents running the table, officials giving up
+              a weekend, and rooms full of people who show up for somebody else&rsquo;s kid. You are
+              part of that community this weekend, and your time is the scarcest thing any of us has
+              to give.
             </p>
             <p className="mt-1 text-[10pt] leading-snug">
-              Eighty of the best wrestlers in North Carolina are in this room because coaches like
-              you keep showing up for them. Thank you for supporting North Carolina wrestling and the
-              Tournament of Champions. If there is anything you need this weekend — a wrestler you
-              want to see, a bout time, a family to reach — find us at the credentials table or email{" "}
-              {TOC_CONTACT_EMAIL}. We would rather be interrupted than have you leave without what
-              you came for.
+              Eighty wrestlers earned their way into this building, and not one of them got here
+              alone — there is a youth coach, a club, and a family behind every name in these pages.
+              Thank you for supporting North Carolina wrestling and the Tournament of Champions, and
+              for being part of what this weekend is for.
+            </p>
+            <p className="mt-1 text-[10pt] leading-snug">
+              Come find us in the {TOC_VENUE_LOUNGES.title} — it is yours all weekend. If you need
+              anything at all, a bout time, a wrestler you want to watch, a family to reach, ask us
+              there or email {TOC_CONTACT_EMAIL}. We would far rather be interrupted than have you
+              leave without what you came for.
             </p>
 
             <Rule label="For visiting coaches" />
