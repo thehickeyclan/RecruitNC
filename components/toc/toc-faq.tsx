@@ -76,7 +76,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Will college coaches be there?",
-    a: "Yes. Credentialed college coaches, tournament officials and table workers share one atrium lounge — live feeds from both mats, bracket updates, work tables, charging and Wi-Fi, hospitality on Saturday, recruiting guides for college coaches (delivered in advance and hard copy in the lounge on event day), and a print station for profiles and notes. Credentials required; it's built for coaches and officials working the event, not general spectators.",
+    a: "Yes. Credentialed college coaches, tournament officials and table workers share one atrium lounge — live feeds from both mats, bracket updates, work tables, charging and Wi-Fi, food and beverage, and recruiting guides for college coaches (delivered in advance and hard copy in the lounge on event day). Check in at credentials for your wrist band. Credentials required; it's built for coaches and officials working the event, not general spectators.",
   },
   {
     q: "What is the Champion jacket?",
