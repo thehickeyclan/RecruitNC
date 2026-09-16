@@ -29,6 +29,8 @@ export const UP_NEXT_EVENTS = {
   appStateOpen: "App State Open",
   ironman: "Ironman",
   grapplerFallClassic: "Grappler Fall Classic",
+  georgiaOpen: "Georgia Open",
+  kingOpen: "King Open",
 } as const
 
 const E = UP_NEXT_EVENTS
@@ -191,6 +193,20 @@ const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
    * have been a coin flip between two real wrestlers in this field.
    */
   "a91dea56-f982-4527-83e1-6fe9834d16a1": [E.powerade],
+  /*
+   * Jake Amiott · 149 · seed 3 · Topsail.
+   *
+   * Six events, the second-longest schedule in the field after Holt Quincy's eight, on the weight
+   * that already carries the most of them.
+   */
+  "7bb99ea9-a0ff-4cd0-91f8-217327959105": [
+    E.journeymen,
+    E.iSixtyFour,
+    E.superThirtyTwo,
+    E.georgiaOpen,
+    E.pembrokeOpen,
+    E.kingOpen,
+  ],
 }
 
 /** The events a wrestler competes at next, or an empty list when none were sent in. */
