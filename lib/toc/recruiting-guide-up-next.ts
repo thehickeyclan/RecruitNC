@@ -23,6 +23,7 @@ export const UP_NEXT_EVENTS = {
   columbusDay: "Columbus Day Duals",
   cosmicClash: "Cosmic Clash Duals",
   southeastOpen: "Southeast Open",
+  pembrokeOpen: "Pembroke Open",
 } as const
 
 const E = UP_NEXT_EVENTS
@@ -71,6 +72,13 @@ const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
   "31ee331c-024f-4e61-8f62-3477acb937f3": [E.iSixtyFour],
   // Simeon Hammett · 165 · seed 6 · Trinity. Sent in by first name only; the one Simeon in the field.
   "73ad572d-45ae-4fc1-8666-4e7c6543a865": [E.superThirtyTwo],
+  /*
+   * Jaxon Thomas · 117 · seed 2 · Piedmont.
+   *
+   * Not Cory Thomas (285) and not Charles Thompson (141) — the third near-identical surname in
+   * this field, after the Perry/Perez pair.
+   */
+  "ca4cdc62-99ac-4951-bab6-6577885aad3e": [E.journeymen, E.iSixtyFour, E.superThirtyTwo, E.pembrokeOpen],
 }
 
 /** The events a wrestler competes at next, or an empty list when none were sent in. */
