@@ -166,6 +166,8 @@ const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
   "05fe2bf5-f027-400f-8654-f1293b4e9691": [E.superThirtyTwo, E.iSixtyFour],
   // Joshua Lemke · 285 · seed 4 · Rosewood. Sent in as "Josh", the one Lemke in the field.
   "05b7c94b-3aba-48a9-9c5a-a99a14e9cd61": [E.superThirtyTwo],
+  // Nash Mullis · 285 · seed 2 · North Stanly. The one Mullis in the field.
+  "7a95dcfc-b3e2-4abb-921c-c8e98f0901b3": [E.superThirtyTwo, E.iSixtyFour],
 }
 
 /** The events a wrestler competes at next, or an empty list when none were sent in. */
