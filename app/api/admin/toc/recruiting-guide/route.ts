@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import guideSnapshot from "@/lib/toc/recruiting-guide-data.json"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import { loadOpponentIndex } from "@/lib/scouting-report"
 import { findSignificantWins, type Bout } from "@/lib/significant-wins"
@@ -35,6 +36,14 @@ import {
  */
 
 export const dynamic = "force-dynamic"
+
+/**
+ * Eighty wrestlers, each needing a tournament bundle and their qualifier bouts. Serially that ran
+ * ninety-five seconds and the function was killed long before it answered — the page reported
+ * "Could not build the guide" with nothing wrong in the data. Batching fixes the wall clock; this
+ * is the headroom for a slow day.
+ */
+export const maxDuration = 120
 
 /** Classes whose contact details are printed. Younger wrestlers appear with school and club only. */
 const CONTACT_CLASSES = [2027, 2028]
@@ -71,10 +80,25 @@ function latestSeasonBouts(rows: { season?: string | null; matches?: unknown }[]
   }
 }
 
+/**
+ * Serves the guide from the committed snapshot.
+ *
+ * Building it live meant four hundred-odd queries in one request. Fired together they saturated
+ * the database and the function died; run serially they take ninety-five seconds. Neither fits in
+ * a request, and this is a book rather than a dashboard — the field is locked and the results are
+ * history. `scripts/build-toc-recruiting-guide.ts` regenerates the file when schedules change.
+ */
 export async function GET() {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ ok: false, error: auth.error }, { status: auth.status })
 
+  const res = NextResponse.json(guideSnapshot)
+  res.headers.set("Cache-Control", "no-store, max-age=0")
+  return res
+}
+
+/** Kept for reference: how the snapshot is assembled. Run through the script, never per request. */
+async function buildLive() {
   const admin = createAdminClient()
 
   try {
@@ -105,8 +129,24 @@ export async function GET() {
       matchesByAthlete.set(String(row.athlete_id), list)
     }
 
-    const entries = await Promise.all(
-      invites.map(async (invite) => {
+    /*
+     * In batches, not one at a time.
+     *
+     * Each wrestler needs a tournament bundle and a qualifier-bout query, and none of them depend
+     * on each other — but awaiting them in sequence took ninety-five seconds for eighty wrestlers,
+     * which no serverless function will sit through. Batched, the same work is a few seconds.
+     *
+     * Bounded rather than all eighty at once: a single burst of ~400 queries is how you trip
+     * Supabase's connection limits and turn a slow page into a failing one.
+     */
+    const BATCH = 10
+    const entries: Awaited<ReturnType<typeof buildEntry>>[] = []
+    for (let start = 0; start < invites.length; start += BATCH) {
+      const slice = invites.slice(start, start + BATCH)
+      entries.push(...(await Promise.all(slice.map(buildEntry))))
+    }
+
+    async function buildEntry(invite: (typeof invites)[number]) {
         const athlete = athleteById.get(String(invite.athlete_id))
         if (!athlete) return null
 
@@ -176,8 +216,7 @@ export async function GET() {
           email: printsContact ? String(athlete.contactEmail ?? "").trim() || null : null,
           phone: printsContact ? String(athlete.phone ?? "").trim() || null : null,
         }
-      }),
-    )
+    }
 
     const found = entries.filter((entry): entry is NonNullable<typeof entry> => entry != null)
 

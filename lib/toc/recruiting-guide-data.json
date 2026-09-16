@@ -1,0 +1,3686 @@
+{
+  "ok": true,
+  "generatedAt": "2026-09-16T17:47:31.832Z",
+  "total": 80,
+  "weights": [
+    {
+      "weightClass": 117,
+      "locked": true,
+      "firstRound": [
+        {
+          "boutNumber": 1,
+          "top": {
+            "seed": 1,
+            "name": "Carson Raper"
+          },
+          "bottom": {
+            "seed": 8,
+            "name": "Kristopher Kerr Jr"
+          }
+        },
+        {
+          "boutNumber": 2,
+          "top": {
+            "seed": 4,
+            "name": "Liam Myles"
+          },
+          "bottom": {
+            "seed": 5,
+            "name": "Matthew Akins"
+          }
+        },
+        {
+          "boutNumber": 3,
+          "top": {
+            "seed": 3,
+            "name": "Xavier Bernthal"
+          },
+          "bottom": {
+            "seed": 6,
+            "name": "Alexander Moody"
+          }
+        },
+        {
+          "boutNumber": 4,
+          "top": {
+            "seed": 7,
+            "name": "Tommy Kishpaugh"
+          },
+          "bottom": {
+            "seed": 2,
+            "name": "Jaxon Thomas"
+          }
+        }
+      ],
+      "athletes": [
+        {
+          "athleteId": "68696afb-0b22-465c-b22e-82e84913144e",
+          "weightClass": 117,
+          "seed": 1,
+          "name": "Carson Raper",
+          "gradYear": 2029,
+          "highSchool": "South Rowan",
+          "club": "Darkhorse",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "all-american",
+              "label": "All-American"
+            },
+            {
+              "kind": "state-champion",
+              "label": "State Champion"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 4A champion '26",
+            "NHSCA '26 4th All-American (8-2)",
+            "Fargo '26 (5-2)",
+            "Super 32 '25 (1-2)"
+          ],
+          "wins": [
+            "Kristopher Kerr (TOC field)",
+            "Liam Myles (TOC field)"
+          ],
+          "upNext": [
+            "Journeymen",
+            "Super 32",
+            "Ironman"
+          ],
+          "gpa": null,
+          "email": null,
+          "phone": null
+        },
+        {
+          "athleteId": "ca4cdc62-99ac-4951-bab6-6577885aad3e",
+          "weightClass": 117,
+          "seed": 2,
+          "name": "Jaxon Thomas",
+          "gradYear": 2027,
+          "highSchool": "Piedmont",
+          "club": "Darkhorse",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "State Champion"
+            },
+            {
+              "kind": "state-placer",
+              "label": "2× State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 6A champion '26 · 3rd '25",
+            "NHSCA '26 (4-2)",
+            "Super 32 '25 (3-2)"
+          ],
+          "wins": [
+            "Daniel Mcdermott (TOC field)",
+            "Aiden Burkholder (TOC field)"
+          ],
+          "upNext": [
+            "Journeymen",
+            "I-64 Duals",
+            "Super 32",
+            "Pembroke Open"
+          ],
+          "gpa": "4.05",
+          "email": "jaxonthomas504@gmail.com",
+          "phone": "(704) 690-3257"
+        },
+        {
+          "athleteId": "f5a87c74-7dc6-427c-b205-da34e24c2375",
+          "weightClass": 117,
+          "seed": 3,
+          "name": "Xavier Bernthal",
+          "gradYear": 2029,
+          "highSchool": "New Bern",
+          "club": "OTM Walters",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "State Champion"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 7A champion '26",
+            "NHSCA '26 (5-2)"
+          ],
+          "wins": [
+            "Alexander Moody (TOC field)",
+            "Kristopher Kerr (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": null,
+          "email": null,
+          "phone": null
+        },
+        {
+          "athleteId": "d5a61e49-a014-4123-86f1-816bb5c05fd6",
+          "weightClass": 117,
+          "seed": 4,
+          "name": "Liam Myles",
+          "gradYear": 2027,
+          "highSchool": "Union Pines",
+          "club": "Unaffiliated",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "2× State Champion"
+            }
+          ],
+          "credentials": [
+            "2× NCHSAA champion '25 '26",
+            "NHSCA '26 (2-2)",
+            "Super 32 '25 (2-2)"
+          ],
+          "wins": [
+            "Tommy Kishpaugh (TOC field)"
+          ],
+          "upNext": [
+            "I-64 Duals",
+            "Super 32"
+          ],
+          "gpa": "4.1",
+          "email": "myles03@aol.com",
+          "phone": "910-391-6191"
+        },
+        {
+          "athleteId": "9a5d50a8-89a9-4579-83c2-2152cea84efc",
+          "weightClass": 117,
+          "seed": 5,
+          "name": "Matthew Akins",
+          "gradYear": 2028,
+          "highSchool": "Pinecrest",
+          "club": "NC Wrestling Factory",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "State Champion"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 8A champion '26",
+            "NHSCA '26 (3-2)",
+            "Super 32 '25 (0-2)"
+          ],
+          "wins": [
+            "Brandon Lefler (NC ranked)"
+          ],
+          "upNext": [
+            "I-64 Duals",
+            "Super 32"
+          ],
+          "gpa": null,
+          "email": "eakins612@yahoo.com",
+          "phone": "(910) 603-1401"
+        },
+        {
+          "athleteId": "9ec33b90-2c53-4f24-9513-6ca2ff937b43",
+          "weightClass": 117,
+          "seed": 6,
+          "name": "Alexander Moody",
+          "gradYear": 2027,
+          "highSchool": "Lumberton",
+          "club": "NC Pride",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 7A 3rd '26",
+            "NHSCA '26 (1-2)",
+            "Super 32 '25 (0-2)"
+          ],
+          "wins": [
+            "Kristopher Kerr Jr. (TOC field)",
+            "Kristopher Kerr (TOC field)"
+          ],
+          "upNext": [
+            "Super 32"
+          ],
+          "gpa": "4",
+          "email": "jackmoody417@gmail.com",
+          "phone": "910-734-9968"
+        },
+        {
+          "athleteId": "39536348-daaf-40d0-af4e-cddf7caa2cbd",
+          "weightClass": 117,
+          "seed": 7,
+          "name": "Tommy Kishpaugh",
+          "gradYear": 2027,
+          "highSchool": "St. Stephens",
+          "club": "Catawba Rasslin",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 6A 2nd '26"
+          ],
+          "wins": [
+            "Liam Myles (TOC field)",
+            "Kristopher Kerr (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": "4.1",
+          "email": null,
+          "phone": "704-860-6926"
+        },
+        {
+          "athleteId": "716ea4f6-d1d7-4314-8574-d9eae837df9f",
+          "weightClass": 117,
+          "seed": 8,
+          "name": "Kristopher Kerr Jr",
+          "gradYear": 2029,
+          "highSchool": "Cape fear",
+          "club": "Fayettenam Brawlers",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 7A 4th '26",
+            "NHSCA '26 (2-2)"
+          ],
+          "wins": [
+            "Liam Myles (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": null,
+          "email": null,
+          "phone": null
+        }
+      ]
+    },
+    {
+      "weightClass": 125,
+      "locked": true,
+      "firstRound": [
+        {
+          "boutNumber": 1,
+          "top": {
+            "seed": 1,
+            "name": "Jekai Sedgwick"
+          },
+          "bottom": {
+            "seed": 8,
+            "name": "Devin Hord"
+          }
+        },
+        {
+          "boutNumber": 2,
+          "top": {
+            "seed": 4,
+            "name": "Luke Richards"
+          },
+          "bottom": {
+            "seed": 5,
+            "name": "Daniel McDermott"
+          }
+        },
+        {
+          "boutNumber": 3,
+          "top": {
+            "seed": 3,
+            "name": "Adam Walker"
+          },
+          "bottom": {
+            "seed": 6,
+            "name": "Paxton Kearns"
+          }
+        },
+        {
+          "boutNumber": 4,
+          "top": {
+            "seed": 7,
+            "name": "Mason Brown"
+          },
+          "bottom": {
+            "seed": 2,
+            "name": "Aiden Burkholder"
+          }
+        }
+      ],
+      "athletes": [
+        {
+          "athleteId": "7cf32563-e793-4272-ac9b-4718114473cc",
+          "weightClass": 125,
+          "seed": 1,
+          "name": "Jekai Sedgwick",
+          "gradYear": 2027,
+          "highSchool": "Hoke County",
+          "club": "Forge wrestling club",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "State Champion"
+            },
+            {
+              "kind": "state-placer",
+              "label": "3× State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 8A champion '26 · 3rd '25",
+            "NHSCA '26 (1-2)",
+            "Fargo '25 (2-2)",
+            "Super 32 '25 (2-2)"
+          ],
+          "wins": [
+            "Jimmy Araujo (TOC field)",
+            "Matthew Akins (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": null,
+          "email": "sogywettaco@gmail.com",
+          "phone": "(915) 731-5903"
+        },
+        {
+          "athleteId": "6720fbe8-fd7b-4a80-8492-d9786a4ae054",
+          "weightClass": 125,
+          "seed": 2,
+          "name": "Aiden Burkholder",
+          "gradYear": 2027,
+          "highSchool": "Trinity",
+          "club": "Trinity Top Team",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "2× State Champion"
+            }
+          ],
+          "credentials": [
+            "2× NCHSAA champion '25 '26",
+            "NHSCA '26 (1-2)",
+            "Super 32 '25 (1-2)"
+          ],
+          "wins": [
+            "Liam Myles (TOC field)",
+            "Adam Walker (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": "3.83",
+          "email": "studded.loose_0@icloud.com",
+          "phone": "(336) 225-9166"
+        },
+        {
+          "athleteId": "c55d5eec-e7af-4ee5-a44f-3d7829462f3d",
+          "weightClass": 125,
+          "seed": 3,
+          "name": "Adam Walker",
+          "gradYear": 2029,
+          "highSchool": "Holly Springs",
+          "club": "Triangle Wrestling Academy",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 7A 2nd '26",
+            "NHSCA '26 (3-2)"
+          ],
+          "wins": [
+            "Luke Richards (TOC field)",
+            "Liam Myles (TOC field)"
+          ],
+          "upNext": [
+            "Grappler Fall Classic",
+            "I-64 Duals",
+            "Super 32"
+          ],
+          "gpa": null,
+          "email": null,
+          "phone": null
+        },
+        {
+          "athleteId": "1a2d638e-5978-45d4-b6c8-bc95ba754367",
+          "weightClass": 125,
+          "seed": 4,
+          "name": "Luke Richards",
+          "gradYear": 2028,
+          "highSchool": "Cardinal Gibbons",
+          "club": "RAW",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 4A 5th '25",
+            "NHSCA '26 (4-2)"
+          ],
+          "wins": [
+            "Stephen Cross (TOC field)",
+            "Daniel McDermott (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": "4.3",
+          "email": "annerichards3@icloud.com",
+          "phone": "(919) 624-5195"
+        },
+        {
+          "athleteId": "41dabe17-6cb5-40d1-84e6-ea07e1df5cb4",
+          "weightClass": 125,
+          "seed": 5,
+          "name": "Daniel McDermott",
+          "gradYear": 2029,
+          "highSchool": "Union Pines",
+          "club": "NC Wrestling Factory",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 6A 2nd '26",
+            "NHSCA '26 (4-2)",
+            "Super 32 '25 (1-2)"
+          ],
+          "wins": [
+            "Stephen Cross (TOC field)",
+            "Tyler Gardner (NC ranked)"
+          ],
+          "upNext": [
+            "I-64 Duals",
+            "Super 32"
+          ],
+          "gpa": null,
+          "email": null,
+          "phone": null
+        },
+        {
+          "athleteId": "d206b724-e587-4721-a1e2-2d23a57f79c2",
+          "weightClass": 125,
+          "seed": 6,
+          "name": "Paxton Kearns",
+          "gradYear": 2028,
+          "highSchool": "Trinity",
+          "club": "Palestra",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 4A 3rd '26",
+            "NHSCA '26 (2-2)"
+          ],
+          "wins": [
+            "Caleb Edwards (TOC field)",
+            "Sheppard Homan (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": null,
+          "email": "aprilann0707@yahoo.com",
+          "phone": "(336) 963-9878"
+        },
+        {
+          "athleteId": "f67d8f9f-fa06-4a73-b0fd-7dee5fc6433b",
+          "weightClass": 125,
+          "seed": 7,
+          "name": "Mason Brown",
+          "gradYear": 2030,
+          "highSchool": "South Rowan",
+          "club": "Darkhorse",
+          "committedTo": null,
+          "pills": [],
+          "credentials": [
+            "Fargo '26 (2-2)"
+          ],
+          "wins": [
+            "Xavier Bernthal (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": null,
+          "email": null,
+          "phone": null
+        },
+        {
+          "athleteId": "ac3fe9c1-d404-4d86-b379-70ecb5604166",
+          "weightClass": 125,
+          "seed": 8,
+          "name": "Devin Hord",
+          "gradYear": 2030,
+          "highSchool": "Kings Mountain",
+          "club": "Darkhorse",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "all-american",
+              "label": "All-American"
+            }
+          ],
+          "credentials": [
+            "Fargo '26 5th All-American (6-2)"
+          ],
+          "wins": [],
+          "upNext": [],
+          "gpa": null,
+          "email": null,
+          "phone": null
+        }
+      ]
+    },
+    {
+      "weightClass": 133,
+      "locked": true,
+      "firstRound": [
+        {
+          "boutNumber": 1,
+          "top": {
+            "seed": 1,
+            "name": "Ayden Sumners"
+          },
+          "bottom": {
+            "seed": 8,
+            "name": "Jimmy Araujo"
+          }
+        },
+        {
+          "boutNumber": 2,
+          "top": {
+            "seed": 4,
+            "name": "Abdul-Jamil Zaggout"
+          },
+          "bottom": {
+            "seed": 5,
+            "name": "Caleb Edwards"
+          }
+        },
+        {
+          "boutNumber": 3,
+          "top": {
+            "seed": 3,
+            "name": "Aidan Szewczyk"
+          },
+          "bottom": {
+            "seed": 6,
+            "name": "Ashton Tennessee"
+          }
+        },
+        {
+          "boutNumber": 4,
+          "top": {
+            "seed": 7,
+            "name": "Stephen Cross"
+          },
+          "bottom": {
+            "seed": 2,
+            "name": "Holt Quincy"
+          }
+        }
+      ],
+      "athletes": [
+        {
+          "athleteId": "f4236c5d-90cf-4249-afb8-755e3604702c",
+          "weightClass": 133,
+          "seed": 1,
+          "name": "Ayden Sumners",
+          "gradYear": 2027,
+          "highSchool": "Wheatmore",
+          "club": "RAW",
+          "committedTo": "VMI",
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "2× State Champion"
+            },
+            {
+              "kind": "state-placer",
+              "label": "3× State Placer"
+            }
+          ],
+          "credentials": [
+            "2× NCHSAA champion '25 '26 · 3rd '24",
+            "NHSCA '26 (4-2)",
+            "Fargo '26 (3-2)",
+            "Super 32 '25 (1-2)"
+          ],
+          "wins": [
+            "David Lambright (NC ranked)",
+            "David Angel (NC ranked)"
+          ],
+          "upNext": [
+            "Super 32",
+            "Southeast Open",
+            "Cougar Open",
+            "App State Open"
+          ],
+          "gpa": "4.2",
+          "email": "sumnerscody083@gmail.com",
+          "phone": "336-579-7639"
+        },
+        {
+          "athleteId": "fb4f10b4-30f7-4bcc-871e-73930909f3c0",
+          "weightClass": 133,
+          "seed": 2,
+          "name": "Holt Quincy",
+          "gradYear": 2027,
+          "highSchool": "North East Carolina Prep",
+          "club": "RAW",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "2× State Champion"
+            },
+            {
+              "kind": "state-placer",
+              "label": "3× State Placer"
+            }
+          ],
+          "credentials": [
+            "2× NCHSAA champion '24 '26 · 2nd '25",
+            "NHSCA '26 (1-2)",
+            "Fargo '24 (2-2)",
+            "Super 32 '25 (1-2)"
+          ],
+          "wins": [
+            "Matthew Akins (TOC field)",
+            "Ashton Tennessee (TOC field)"
+          ],
+          "upNext": [
+            "Columbus Day Duals",
+            "Journeymen",
+            "I-64 Duals",
+            "Super 32",
+            "Southeast Open",
+            "Cougar Open",
+            "Southern Slam",
+            "Powerade"
+          ],
+          "gpa": "4.38",
+          "email": "holtonquincy@gmail.com",
+          "phone": "(252) 886-0930"
+        },
+        {
+          "athleteId": "7d9d0eaa-838a-4d65-8ad6-45d25d3103b9",
+          "weightClass": 133,
+          "seed": 3,
+          "name": "Aidan Szewczyk",
+          "gradYear": 2027,
+          "highSchool": "Davie",
+          "club": "Combat",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "3× State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 2nd '26 · 2nd '25",
+            "NHSCA '26 (3-2)",
+            "Fargo '26 (0-2)",
+            "Super 32 '25 (1-2)"
+          ],
+          "wins": [
+            "Jake Amiott (TOC field)",
+            "Aiden White (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": "4.52",
+          "email": "aidan72108@icloud.com",
+          "phone": "(336) 909-8719"
+        },
+        {
+          "athleteId": "a91dea56-f982-4527-83e1-6fe9834d16a1",
+          "weightClass": 133,
+          "seed": 4,
+          "name": "Abdul-Jamil Zaggout",
+          "gradYear": 2027,
+          "highSchool": "West Forsyth",
+          "club": "Unaffiliated",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "State Champion"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 8A champion '26",
+            "NHSCA '26 (4-2)"
+          ],
+          "wins": [
+            "Colt Cambruzzi (NC ranked)",
+            "Loxston Hooper (NC ranked)"
+          ],
+          "upNext": [],
+          "gpa": "3.5",
+          "email": "jamalzaggout1@gmail.com",
+          "phone": "6073862002"
+        },
+        {
+          "athleteId": "8713c36d-940d-4be0-bc02-a0bccf927ec3",
+          "weightClass": 133,
+          "seed": 5,
+          "name": "Caleb Edwards",
+          "gradYear": 2028,
+          "highSchool": "Piedmont",
+          "club": "Harrisburg Wrestling Club",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "State Champion"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 6A champion '26",
+            "NHSCA '26 (2-2)"
+          ],
+          "wins": [
+            "Cooper Mathon (NC ranked)",
+            "Cody Bui (NC ranked)"
+          ],
+          "upNext": [
+            "I-64 Duals",
+            "Super 32"
+          ],
+          "gpa": null,
+          "email": "caleb1243758@gmail.com",
+          "phone": "(704) 218-0504"
+        },
+        {
+          "athleteId": "890b43a5-850d-440f-b4f1-64191088344f",
+          "weightClass": 133,
+          "seed": 6,
+          "name": "Ashton Tennessee",
+          "gradYear": 2027,
+          "highSchool": "West Johnston",
+          "club": "Unaffiliated",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "State Champion"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 6A champion '26",
+            "NHSCA '26 (3-2)"
+          ],
+          "wins": [
+            "Gael Guerrero Perez (NC ranked)"
+          ],
+          "upNext": [],
+          "gpa": null,
+          "email": "tennesseeashton@gmail.com",
+          "phone": "(984) 291-2483"
+        },
+        {
+          "athleteId": "f5dfa7b9-49b3-4296-94a2-b6f587d03b5c",
+          "weightClass": 133,
+          "seed": 7,
+          "name": "Stephen Cross",
+          "gradYear": 2028,
+          "highSchool": "Trinity",
+          "club": "Trinity Top Team",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "2× State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 2nd '26 · 5th '25",
+            "NHSCA '26 (6-2)"
+          ],
+          "wins": [
+            "Matthew Akins (TOC field)",
+            "Jeremiah Payne (NC ranked)"
+          ],
+          "upNext": [
+            "Journeymen",
+            "Super 32"
+          ],
+          "gpa": null,
+          "email": "stephenc0408@gmail.com",
+          "phone": "(336) 6281960"
+        },
+        {
+          "athleteId": "61bc9080-c01e-402a-8941-5b0c9f2343d9",
+          "weightClass": 133,
+          "seed": 8,
+          "name": "Jimmy Araujo",
+          "gradYear": 2027,
+          "highSchool": "Pinecrest",
+          "club": "Unaffiliated",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 8A 3rd '26",
+            "NHSCA '26 (1-2)"
+          ],
+          "wins": [
+            "Jesse Farnsworth (NC ranked)",
+            "Cooper Mathon (NC ranked)"
+          ],
+          "upNext": [],
+          "gpa": null,
+          "email": null,
+          "phone": "‪+1 (910) 504-5369‬"
+        }
+      ]
+    },
+    {
+      "weightClass": 141,
+      "locked": true,
+      "firstRound": [
+        {
+          "boutNumber": 1,
+          "top": {
+            "seed": 1,
+            "name": "Tye Johnson"
+          },
+          "bottom": {
+            "seed": 8,
+            "name": "Cole Shuster"
+          }
+        },
+        {
+          "boutNumber": 2,
+          "top": {
+            "seed": 4,
+            "name": "Jaycob Perez"
+          },
+          "bottom": {
+            "seed": 5,
+            "name": "Landon Logan"
+          }
+        },
+        {
+          "boutNumber": 3,
+          "top": {
+            "seed": 3,
+            "name": "Sheppard Homan"
+          },
+          "bottom": {
+            "seed": 6,
+            "name": "Charles Thompson"
+          }
+        },
+        {
+          "boutNumber": 4,
+          "top": {
+            "seed": 7,
+            "name": "Coy Deel"
+          },
+          "bottom": {
+            "seed": 2,
+            "name": "Aiden White"
+          }
+        }
+      ],
+      "athletes": [
+        {
+          "athleteId": "f52d685f-814f-4d7c-9631-8fdfc8f7db60",
+          "weightClass": 141,
+          "seed": 1,
+          "name": "Tye Johnson",
+          "gradYear": 2027,
+          "highSchool": "Cape Fear",
+          "club": "Fear This",
+          "committedTo": "Appalachian State",
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "3× State Champion"
+            }
+          ],
+          "credentials": [
+            "3× NCHSAA champion '24 '25 '26",
+            "NHSCA '26 (3-2)",
+            "Fargo '26 (3-2)",
+            "Super 32 '25 (0-2)"
+          ],
+          "wins": [
+            "Aidan Szewczyk (TOC field)",
+            "Aiden White (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": "4.2",
+          "email": "ninaerin2@yahoo.com",
+          "phone": "910-965-9235"
+        },
+        {
+          "athleteId": "a95c204d-785c-427a-98cf-1930410b0dc7",
+          "weightClass": 141,
+          "seed": 2,
+          "name": "Aiden White",
+          "gradYear": 2027,
+          "highSchool": "Weddington",
+          "club": "Darkhorse",
+          "committedTo": "Appalachian State",
+          "pills": [
+            {
+              "kind": "all-american",
+              "label": "All-American"
+            },
+            {
+              "kind": "state-champion",
+              "label": "State Champion"
+            },
+            {
+              "kind": "state-placer",
+              "label": "2× State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 4A champion '25 · 3rd '26",
+            "NHSCA '26 4th All-American (9-2) · NHSCA '25 DNP (3-2)",
+            "Fargo '25 (4-2)",
+            "Super 32 '25 (4-2)"
+          ],
+          "wins": [
+            "Nate Gardner (NC ranked)"
+          ],
+          "upNext": [
+            "Super 32",
+            "Southeast Open"
+          ],
+          "gpa": "4.2",
+          "email": "aidenwhitewrest@gmail.com",
+          "phone": "(704) 771-8759"
+        },
+        {
+          "athleteId": "c63a0c30-55a5-41d5-a65d-68344e03a0e8",
+          "weightClass": 141,
+          "seed": 3,
+          "name": "Sheppard Homan",
+          "gradYear": 2028,
+          "highSchool": "Enka",
+          "club": "Unaffiliated",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "State Champion"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 5A champion '26",
+            "NHSCA '26 (1-2)"
+          ],
+          "wins": [
+            "Malakai Esclamado (NC ranked)",
+            "Amon Villarreal (NC ranked)"
+          ],
+          "upNext": [],
+          "gpa": null,
+          "email": "betsyhoman5@gmail.com",
+          "phone": null
+        },
+        {
+          "athleteId": "8b05a40e-6a8f-4e65-ad8f-6d461dd37fbb",
+          "weightClass": 141,
+          "seed": 4,
+          "name": "Jaycob Perez",
+          "gradYear": 2027,
+          "highSchool": "Ashbrook",
+          "club": "Darkhorse",
+          "committedTo": "Coker",
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 6A 3rd '26",
+            "NHSCA '26 (3-2)",
+            "Fargo '25 (1-2)"
+          ],
+          "wins": [
+            "Charles Thompson (TOC field)",
+            "Gage Klee (NC ranked)"
+          ],
+          "upNext": [],
+          "gpa": null,
+          "email": "jaycobperez8@icloud.com",
+          "phone": "7048985971"
+        },
+        {
+          "athleteId": "e5077d85-f82e-4e21-9558-f52c2d252230",
+          "weightClass": 141,
+          "seed": 5,
+          "name": "Landon Logan",
+          "gradYear": 2027,
+          "highSchool": "A.L. Brown",
+          "club": "Harrisburg Wrestling Club",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "2× State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 3rd '26 · 6th '25",
+            "NHSCA '26 (3-2)"
+          ],
+          "wins": [],
+          "upNext": [],
+          "gpa": null,
+          "email": null,
+          "phone": "+1 (704) 796-4632"
+        },
+        {
+          "athleteId": "088074e4-0171-4f3b-8fe3-8d6f3edd0991",
+          "weightClass": 141,
+          "seed": 6,
+          "name": "Charles Thompson",
+          "gradYear": 2027,
+          "highSchool": "Mallard Creek",
+          "club": "Wild ponies",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 8A 2nd '26",
+            "NHSCA '26 (1-2)",
+            "Fargo '26 (2-2)"
+          ],
+          "wins": [
+            "Jesse Farnsworth (NC ranked)",
+            "Gage Klee (NC ranked)"
+          ],
+          "upNext": [
+            "Super 32",
+            "I-64 Duals"
+          ],
+          "gpa": null,
+          "email": "charlesathompson200903@gmail.com",
+          "phone": "(704) 780-3586"
+        },
+        {
+          "athleteId": "ef9c0bc5-0898-408a-86d0-740bef7e4888",
+          "weightClass": 141,
+          "seed": 7,
+          "name": "Coy Deel",
+          "gradYear": 2027,
+          "highSchool": "West Craven",
+          "club": "OTM Walters",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "3× State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 2nd '26 · 5th '25",
+            "Super 32 '24 (0-2)"
+          ],
+          "wins": [
+            "Austin Mielcarek (NC ranked)"
+          ],
+          "upNext": [
+            "Journeymen",
+            "I-64 Duals",
+            "Super 32",
+            "Cougar Open"
+          ],
+          "gpa": "3.9",
+          "email": "deelcoy@gmail.com",
+          "phone": "(325) 271-1355"
+        },
+        {
+          "athleteId": "2b29ac83-4d3f-4baf-bc2e-7ce6baa51da0",
+          "weightClass": 141,
+          "seed": 8,
+          "name": "Cole Shuster",
+          "gradYear": 2028,
+          "highSchool": "East Chapel Hill",
+          "club": "RAW",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 6A 4th '26",
+            "NHSCA '26 (3-2)"
+          ],
+          "wins": [
+            "Omar Rushing (NC ranked)"
+          ],
+          "upNext": [],
+          "gpa": "4.6",
+          "email": "cheryl0320@gmail.com",
+          "phone": "(646) 992-1092"
+        }
+      ]
+    },
+    {
+      "weightClass": 149,
+      "locked": true,
+      "firstRound": [
+        {
+          "boutNumber": 1,
+          "top": {
+            "seed": 1,
+            "name": "Tyton Kostoff"
+          },
+          "bottom": {
+            "seed": 8,
+            "name": "Cayden Laws"
+          }
+        },
+        {
+          "boutNumber": 2,
+          "top": {
+            "seed": 4,
+            "name": "Aiden Campbell"
+          },
+          "bottom": {
+            "seed": 5,
+            "name": "Joseph Shook"
+          }
+        },
+        {
+          "boutNumber": 3,
+          "top": {
+            "seed": 3,
+            "name": "Jake Amiott"
+          },
+          "bottom": {
+            "seed": 6,
+            "name": "Cade Gehris"
+          }
+        },
+        {
+          "boutNumber": 4,
+          "top": {
+            "seed": 7,
+            "name": "Lukas Allman"
+          },
+          "bottom": {
+            "seed": 2,
+            "name": "Aaron Ellison"
+          }
+        }
+      ],
+      "athletes": [
+        {
+          "athleteId": "b57cc0b2-ae3d-4f58-be43-d1493b37732a",
+          "weightClass": 149,
+          "seed": 1,
+          "name": "Tyton Kostoff",
+          "gradYear": 2027,
+          "highSchool": "Hough",
+          "club": "Darkhorse",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "State Champion"
+            },
+            {
+              "kind": "state-placer",
+              "label": "2× State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 8A champion '26 · 3rd '25",
+            "NHSCA '26 (4-2)",
+            "Super 32 '25 (1-2)"
+          ],
+          "wins": [
+            "Vincent Valentino (NC ranked)",
+            "Marcello Scaldaferri (NC ranked)"
+          ],
+          "upNext": [
+            "Super 32",
+            "Southeast Open"
+          ],
+          "gpa": "3.5",
+          "email": "nicholas.kostoff@gmail.com",
+          "phone": "(513) 490-7421"
+        },
+        {
+          "athleteId": "a31bf725-32b8-4550-aff5-c74c59d97311",
+          "weightClass": 149,
+          "seed": 2,
+          "name": "Aaron Ellison",
+          "gradYear": 2028,
+          "highSchool": "Lumberton",
+          "club": "NC Pride",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "all-american",
+              "label": "2× All-American"
+            },
+            {
+              "kind": "state-placer",
+              "label": "2× State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 2nd '26 · 4th '25",
+            "NHSCA '25 4th All-American (5-2)",
+            "Fargo '25 8th All-American (7-3)",
+            "Super 32 '25 (2-2)"
+          ],
+          "wins": [
+            "Jacob Perry (TOC field)",
+            "Cade Gehris (TOC field)"
+          ],
+          "upNext": [
+            "Super 32"
+          ],
+          "gpa": "3.2",
+          "email": "natasha.marcia.ellison@gmail.com",
+          "phone": "(910) 474-3269"
+        },
+        {
+          "athleteId": "7bb99ea9-a0ff-4cd0-91f8-217327959105",
+          "weightClass": 149,
+          "seed": 3,
+          "name": "Jake Amiott",
+          "gradYear": 2028,
+          "highSchool": "Topsail",
+          "club": "Sly Fox",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "all-american",
+              "label": "All-American"
+            },
+            {
+              "kind": "state-placer",
+              "label": "2× State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 4th '26 · 5th '25",
+            "NHSCA '26 (4-2)",
+            "Fargo '26 8th All-American (6-3)",
+            "Super 32 '25 (1-2)"
+          ],
+          "wins": [
+            "Abdul-Jamil Zaggout (TOC field)",
+            "Josh Brezac (NC ranked)"
+          ],
+          "upNext": [],
+          "gpa": "4.1",
+          "email": "jakeamiottwrestles@gmail.com",
+          "phone": "(910) 523-9723"
+        },
+        {
+          "athleteId": "ff5337d6-4c77-4988-b767-ad4fe1a4ee75",
+          "weightClass": 149,
+          "seed": 4,
+          "name": "Aiden Campbell",
+          "gradYear": 2027,
+          "highSchool": "Havelock",
+          "club": "East Carolina Wrestling Academy",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "State Champion"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 5A champion '26",
+            "NHSCA '26 (3-2)",
+            "Super 32 '24 (0-2)"
+          ],
+          "wins": [
+            "Lukas Allman (TOC field)",
+            "Cade Gehris (TOC field)"
+          ],
+          "upNext": [
+            "Super 32",
+            "I-64 Duals",
+            "Journeymen"
+          ],
+          "gpa": "4.12",
+          "email": "Aidencampbell252@gmail.com",
+          "phone": "2522882268"
+        },
+        {
+          "athleteId": "92d9d56f-3268-45c8-896c-5c3801b29041",
+          "weightClass": 149,
+          "seed": 5,
+          "name": "Joseph Shook",
+          "gradYear": 2028,
+          "highSchool": "Union Pines",
+          "club": "The Factory",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 6A 2nd '26",
+            "NHSCA '26 (4-2)"
+          ],
+          "wins": [
+            "Simeon Hammett (TOC field)",
+            "Cole Shuster (TOC field)"
+          ],
+          "upNext": [
+            "I-64 Duals",
+            "Super 32"
+          ],
+          "gpa": null,
+          "email": "mshook32@gmail.com",
+          "phone": "(910) 639-7016"
+        },
+        {
+          "athleteId": "c1849e65-a453-4506-b6d3-96f7423a25c9",
+          "weightClass": 149,
+          "seed": 6,
+          "name": "Cade Gehris",
+          "gradYear": 2027,
+          "highSchool": "First Flight",
+          "club": "OBX Wrestling Factory",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 4A 2nd '26",
+            "NHSCA '26 (1-2)"
+          ],
+          "wins": [],
+          "upNext": [
+            "Super 32"
+          ],
+          "gpa": "3.8",
+          "email": "gehrisc2@gmail.com",
+          "phone": "984-920-1165"
+        },
+        {
+          "athleteId": "31ee331c-024f-4e61-8f62-3477acb937f3",
+          "weightClass": 149,
+          "seed": 7,
+          "name": "Lukas Allman",
+          "gradYear": 2027,
+          "highSchool": "Mount Pleasant",
+          "club": "Darkhorse",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "2× State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 3rd '26 · 5th '25",
+            "NHSCA '26 (2-2)"
+          ],
+          "wins": [
+            "Simeon Hammett (TOC field)"
+          ],
+          "upNext": [
+            "I-64 Duals"
+          ],
+          "gpa": null,
+          "email": "joshallman3897@gmail.com",
+          "phone": "(704) 213-7418"
+        },
+        {
+          "athleteId": "6bb63666-61cd-4933-a9b6-34cfc59bdd84",
+          "weightClass": 149,
+          "seed": 8,
+          "name": "Cayden Laws",
+          "gradYear": 2028,
+          "highSchool": "Rutherfordton-Spindale Central",
+          "club": "Unaffiliated",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 4A 3rd '26",
+            "NHSCA '26 (4-2)"
+          ],
+          "wins": [],
+          "upNext": [],
+          "gpa": null,
+          "email": null,
+          "phone": null
+        }
+      ]
+    },
+    {
+      "weightClass": 157,
+      "locked": true,
+      "firstRound": [
+        {
+          "boutNumber": 1,
+          "top": {
+            "seed": 1,
+            "name": "Josh Stonebraker"
+          },
+          "bottom": {
+            "seed": 8,
+            "name": "Louden Dunn"
+          }
+        },
+        {
+          "boutNumber": 2,
+          "top": {
+            "seed": 4,
+            "name": "Travis Nobles"
+          },
+          "bottom": {
+            "seed": 5,
+            "name": "Noah Cerino"
+          }
+        },
+        {
+          "boutNumber": 3,
+          "top": {
+            "seed": 3,
+            "name": "Micah Howard"
+          },
+          "bottom": {
+            "seed": 6,
+            "name": "Josh Connick"
+          }
+        },
+        {
+          "boutNumber": 4,
+          "top": {
+            "seed": 7,
+            "name": "Ahmet Zaggout"
+          },
+          "bottom": {
+            "seed": 2,
+            "name": "Jacob Perry"
+          }
+        }
+      ],
+      "athletes": [
+        {
+          "athleteId": "00d54b04-2420-4fdd-aef1-f298635c1987",
+          "weightClass": 157,
+          "seed": 1,
+          "name": "Josh Stonebraker",
+          "gradYear": 2027,
+          "highSchool": "Cary Christian",
+          "club": "Triangle Wrestling Academy",
+          "committedTo": "NC State",
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "3× State Champion"
+            },
+            {
+              "kind": "state-placer",
+              "label": "4× State Placer"
+            }
+          ],
+          "credentials": [
+            "3× NCHSAA NCISA champion '23 '25 '26 · 2nd '24",
+            "NHSCA '26 (5-2)",
+            "Fargo '26 (3-2)",
+            "Super 32 '25 (0-2)"
+          ],
+          "wins": [
+            "Jacob Mccord (TOC field)",
+            "Bodie Welker (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": "4",
+          "email": "jsstoneb64@gmail.com",
+          "phone": "(919) 454-5270"
+        },
+        {
+          "athleteId": "ddea34af-ae6a-4880-8a1c-687576bef1fe",
+          "weightClass": 157,
+          "seed": 2,
+          "name": "Jacob Perry",
+          "gradYear": 2028,
+          "highSchool": "New Bern",
+          "club": "OTM Walters",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "all-american",
+              "label": "All-American"
+            },
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 7A 4th '26",
+            "NHSCA '25 8th All-American",
+            "Super 32 '25 (0-2)"
+          ],
+          "wins": [
+            "Aiden Campbell (TOC field)",
+            "Jacob De La Torre (TOC field)"
+          ],
+          "upNext": [
+            "Journeymen (main event, 160)",
+            "I-64 Duals",
+            "Super 32",
+            "Southeast Open"
+          ],
+          "gpa": "4",
+          "email": "justin.usmc@yahoo.com",
+          "phone": "(856) 638-8831"
+        },
+        {
+          "athleteId": "dbb30d81-60a5-439c-b698-96433f4f030e",
+          "weightClass": 157,
+          "seed": 3,
+          "name": "Micah Howard",
+          "gradYear": 2027,
+          "highSchool": "Tuscola",
+          "club": "Mountaineer Wrecking Crew",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "State Champion"
+            },
+            {
+              "kind": "state-placer",
+              "label": "2× State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 4A champion '26 · 6th '25",
+            "NHSCA '26 (5-2)",
+            "Fargo '25 (0-2)"
+          ],
+          "wins": [
+            "Cade Gehris (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": "3.9",
+          "email": "micahhowardwrestler@gmail.com",
+          "phone": "(864) 423-5591"
+        },
+        {
+          "athleteId": "1d29adb9-ba7e-49c7-9194-f680bc7a4d09",
+          "weightClass": 157,
+          "seed": 4,
+          "name": "Travis Nobles",
+          "gradYear": 2028,
+          "highSchool": "Trinity",
+          "club": "School of Hard Knocks",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 4A 4th '26",
+            "NHSCA '26 (1-2)",
+            "Super 32 '25 (0-2)"
+          ],
+          "wins": [
+            "Jacob De La Torre (TOC field)",
+            "Josiah McCowan (TOC field)"
+          ],
+          "upNext": [
+            "Columbus Day Duals",
+            "Journeymen",
+            "Cosmic Clash Duals",
+            "Super 32"
+          ],
+          "gpa": null,
+          "email": "travis09nobles@icloud.com",
+          "phone": "336 309 6811"
+        },
+        {
+          "athleteId": "3b609b1a-4728-4d6c-a1b1-70f477722461",
+          "weightClass": 157,
+          "seed": 5,
+          "name": "Noah Cerino",
+          "gradYear": 2027,
+          "highSchool": "West Carteret",
+          "club": "Bull Sharks Wrestling Club",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 5A 3rd '26",
+            "NHSCA '26 (0-2)",
+            "Fargo '26 (0-2)"
+          ],
+          "wins": [],
+          "upNext": [],
+          "gpa": "4.68",
+          "email": "ncerino09@hotmail.com",
+          "phone": "(252) 725-1268"
+        },
+        {
+          "athleteId": "940eb7da-b0ee-44e2-8967-c93587de362d",
+          "weightClass": 157,
+          "seed": 6,
+          "name": "Josh Connick",
+          "gradYear": 2027,
+          "highSchool": "West Brunswick",
+          "club": "Peak",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 6A 4th '26",
+            "NHSCA '26 (3-2)"
+          ],
+          "wins": [
+            "Jacob De La Torre (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": null,
+          "email": null,
+          "phone": null
+        },
+        {
+          "athleteId": "2ce1afb1-c995-457e-9bb8-2658588d46a9",
+          "weightClass": 157,
+          "seed": 7,
+          "name": "Ahmet Zaggout",
+          "gradYear": 2029,
+          "highSchool": "West Forsyth",
+          "club": "Unaffiliated",
+          "committedTo": null,
+          "pills": [],
+          "credentials": [
+            "NHSCA '26 (3-2)",
+            "Fargo '26 (2-2)"
+          ],
+          "wins": [
+            "Jacob De La Torre (TOC field)",
+            "Lukas Allman (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": "3.7",
+          "email": null,
+          "phone": null
+        },
+        {
+          "athleteId": "5eb09e87-9fab-43cd-ac7f-264c4fe9425f",
+          "weightClass": 157,
+          "seed": 8,
+          "name": "Louden Dunn",
+          "gradYear": 2031,
+          "highSchool": "None",
+          "club": "Combat",
+          "committedTo": null,
+          "pills": [],
+          "credentials": [],
+          "wins": [],
+          "upNext": [],
+          "gpa": null,
+          "email": null,
+          "phone": null
+        }
+      ]
+    },
+    {
+      "weightClass": 165,
+      "locked": true,
+      "firstRound": [
+        {
+          "boutNumber": 1,
+          "top": {
+            "seed": 1,
+            "name": "Carson Worrick"
+          },
+          "bottom": {
+            "seed": 8,
+            "name": "Talon Grady"
+          }
+        },
+        {
+          "boutNumber": 2,
+          "top": {
+            "seed": 4,
+            "name": "Noah Sapp"
+          },
+          "bottom": {
+            "seed": 5,
+            "name": "Jacob De La Torre"
+          }
+        },
+        {
+          "boutNumber": 3,
+          "top": {
+            "seed": 3,
+            "name": "Jacob Campos"
+          },
+          "bottom": {
+            "seed": 6,
+            "name": "Simeon Hammett"
+          }
+        },
+        {
+          "boutNumber": 4,
+          "top": {
+            "seed": 7,
+            "name": "Josiah McCowan"
+          },
+          "bottom": {
+            "seed": 2,
+            "name": "Campbell Tufts"
+          }
+        }
+      ],
+      "athletes": [
+        {
+          "athleteId": "2608f74c-1262-44dd-9097-c990ed3c0166",
+          "weightClass": 165,
+          "seed": 1,
+          "name": "Carson Worrick",
+          "gradYear": 2027,
+          "highSchool": "Davie",
+          "club": "Combat",
+          "committedTo": "Binghamton",
+          "pills": [
+            {
+              "kind": "all-american",
+              "label": "All-American"
+            },
+            {
+              "kind": "state-champion",
+              "label": "2× State Champion"
+            },
+            {
+              "kind": "state-placer",
+              "label": "3× State Placer"
+            }
+          ],
+          "credentials": [
+            "2× NCHSAA champion '25 '26 · 3rd '24",
+            "NHSCA '26 4th All-American (7-2)",
+            "Super 32 '25 (1-2)"
+          ],
+          "wins": [
+            "Benjamin Green (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": "4.3",
+          "email": "lworrick@embarqmail.com",
+          "phone": "336-657-4818"
+        },
+        {
+          "athleteId": "f6510005-cba5-47fd-9d7f-12ec2c7c6cb4",
+          "weightClass": 165,
+          "seed": 2,
+          "name": "Campbell Tufts",
+          "gradYear": 2027,
+          "highSchool": "Millbrook",
+          "club": "Capital City",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 8A 2nd '26",
+            "NHSCA '26 (7-2)",
+            "Fargo '25 (2-2)",
+            "Super 32 '25 (0-2)"
+          ],
+          "wins": [
+            "Joshua Stonebraker (TOC field)",
+            "Vincent Grack (NC ranked)"
+          ],
+          "upNext": [
+            "Journeymen",
+            "Super 32"
+          ],
+          "gpa": "4.19",
+          "email": "souptufts@gmail.com",
+          "phone": "(919) 603-8246"
+        },
+        {
+          "athleteId": "5e0207fa-2930-4583-b221-d8f15e9ed973",
+          "weightClass": 165,
+          "seed": 3,
+          "name": "Jacob Campos",
+          "gradYear": 2027,
+          "highSchool": "White Oak",
+          "club": "Sly Fox",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "2× State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 2nd '26 · 4th '24",
+            "NHSCA '26 (3-2)"
+          ],
+          "wins": [
+            "Josiah Mccowan (TOC field)",
+            "Maxwell Davis (NC ranked)"
+          ],
+          "upNext": [
+            "I-64 Duals",
+            "Super 32"
+          ],
+          "gpa": null,
+          "email": "Jacob.n.campos8@gmail.com",
+          "phone": "9103823907"
+        },
+        {
+          "athleteId": "90b10958-f873-4564-b57b-739dac7ffc1d",
+          "weightClass": 165,
+          "seed": 4,
+          "name": "Noah Sapp",
+          "gradYear": 2028,
+          "highSchool": "South Stanly",
+          "club": "Harrisburg Wrestling Club",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "State Champion"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 1A/2A champion '26",
+            "NHSCA '25 (2-2)"
+          ],
+          "wins": [
+            "Josiah Mccowan (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": null,
+          "email": "codystarling5391@gmail.com",
+          "phone": "+1 (704) 960-8656"
+        },
+        {
+          "athleteId": "0088db52-b41b-453e-8043-20fed94891a0",
+          "weightClass": 165,
+          "seed": 5,
+          "name": "Jacob De La Torre",
+          "gradYear": 2028,
+          "highSchool": "Union Pines",
+          "club": "The Factory",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 6A 3rd '26",
+            "NHSCA '26 (3-2)"
+          ],
+          "wins": [
+            "Josh Connick (TOC field)",
+            "Ahmet Zaggout (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": null,
+          "email": "sdelat38@gmail.com",
+          "phone": "(804) 790-9584"
+        },
+        {
+          "athleteId": "73ad572d-45ae-4fc1-8666-4e7c6543a865",
+          "weightClass": 165,
+          "seed": 6,
+          "name": "Simeon Hammett",
+          "gradYear": 2028,
+          "highSchool": "Trinity",
+          "club": "Trinity Top Team",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 3A 2nd '26"
+          ],
+          "wins": [],
+          "upNext": [
+            "Super 32"
+          ],
+          "gpa": null,
+          "email": null,
+          "phone": "(336) 858-0761"
+        },
+        {
+          "athleteId": "8dc1ee05-a898-4c77-9a55-7a0621c9178f",
+          "weightClass": 165,
+          "seed": 7,
+          "name": "Josiah McCowan",
+          "gradYear": 2027,
+          "highSchool": "North Stanly",
+          "club": "Ronin MMA and Rowan Wrestling Club",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 3A 3rd '26"
+          ],
+          "wins": [],
+          "upNext": [],
+          "gpa": "3.8",
+          "email": "josiahmccowan66@gmail.com",
+          "phone": "(980) 271-8767"
+        },
+        {
+          "athleteId": "78c14860-f2e1-45e9-beba-f742f0ff5081",
+          "weightClass": 165,
+          "seed": 8,
+          "name": "Talon Grady",
+          "gradYear": 2028,
+          "highSchool": "RS Central",
+          "club": "Unaffiliated",
+          "committedTo": null,
+          "pills": [],
+          "credentials": [
+            "NHSCA '26 (0-2)"
+          ],
+          "wins": [],
+          "upNext": [],
+          "gpa": null,
+          "email": "tygrady26@yahoo.com",
+          "phone": null
+        }
+      ]
+    },
+    {
+      "weightClass": 174,
+      "locked": true,
+      "firstRound": [
+        {
+          "boutNumber": 1,
+          "top": {
+            "seed": 1,
+            "name": "Tobin McNair"
+          },
+          "bottom": {
+            "seed": 8,
+            "name": "Bodie Welker"
+          }
+        },
+        {
+          "boutNumber": 2,
+          "top": {
+            "seed": 4,
+            "name": "John Bane"
+          },
+          "bottom": {
+            "seed": 5,
+            "name": "Tripp Sullivan"
+          }
+        },
+        {
+          "boutNumber": 3,
+          "top": {
+            "seed": 3,
+            "name": "Mason Hollar"
+          },
+          "bottom": {
+            "seed": 6,
+            "name": "Jeshurun Mills"
+          }
+        },
+        {
+          "boutNumber": 4,
+          "top": {
+            "seed": 7,
+            "name": "Jatorien Hill"
+          },
+          "bottom": {
+            "seed": 2,
+            "name": "Jacob McCord"
+          }
+        }
+      ],
+      "athletes": [
+        {
+          "athleteId": "63ea613d-0886-4af0-b64b-1c3d80fe0332",
+          "weightClass": 174,
+          "seed": 1,
+          "name": "Tobin McNair",
+          "gradYear": 2027,
+          "highSchool": "Wakefield",
+          "club": "Capital City",
+          "committedTo": "Binghamton",
+          "pills": [
+            {
+              "kind": "all-american",
+              "label": "2× All-American"
+            },
+            {
+              "kind": "state-champion",
+              "label": "2× State Champion"
+            },
+            {
+              "kind": "state-placer",
+              "label": "3× State Placer"
+            }
+          ],
+          "credentials": [
+            "2× NCHSAA champion '25 '26 · 3rd '24",
+            "NHSCA '26 5th All-American (5-2) · NHSCA '25 6th All-American (4-3)",
+            "Super 32 '25 (0-2)"
+          ],
+          "wins": [
+            "Jatorien Hill (TOC field)",
+            "Ben Mccaleb (TOC field)"
+          ],
+          "upNext": [
+            "Journeymen",
+            "Super 32",
+            "I-64 Duals",
+            "Beast of the East"
+          ],
+          "gpa": "4.2",
+          "email": "tobinmcnair2008@gmail.com",
+          "phone": "201-213-3341"
+        },
+        {
+          "athleteId": "fdab23e0-2dab-4135-a239-284944f8096e",
+          "weightClass": 174,
+          "seed": 2,
+          "name": "Jacob McCord",
+          "gradYear": 2027,
+          "highSchool": "Grimsley",
+          "club": "School of Hard Knocks",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "2× State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 2nd '26 · 2nd '25",
+            "NHSCA '26 (4-2)",
+            "Super 32 '25 (1-2)"
+          ],
+          "wins": [
+            "Bodie Welker (TOC field)",
+            "Elliott Gould (NC ranked)"
+          ],
+          "upNext": [],
+          "gpa": null,
+          "email": "christina.mccord3@gmail.com",
+          "phone": "(336) 314-3796"
+        },
+        {
+          "athleteId": "c59ef031-d1d1-4263-bc9f-63e56e2ab118",
+          "weightClass": 174,
+          "seed": 3,
+          "name": "Mason Hollar",
+          "gradYear": 2027,
+          "highSchool": "South Caldwell",
+          "club": "Funk Factory",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "State Champion"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 6A champion '26",
+            "NHSCA '26 (4-2)",
+            "Fargo '26 (0-2)",
+            "Super 32 '24 (0-2)"
+          ],
+          "wins": [
+            "Jacob Campos (TOC field)",
+            "Misael Rivera (NC ranked)"
+          ],
+          "upNext": [],
+          "gpa": null,
+          "email": "mason.hollar09@gmail.com",
+          "phone": null
+        },
+        {
+          "athleteId": "a74f8517-0717-48f2-90c8-f3cd485c186f",
+          "weightClass": 174,
+          "seed": 4,
+          "name": "John Bane",
+          "gradYear": 2027,
+          "highSchool": "New Bern",
+          "club": "OTM Walters",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 7A 3rd '26",
+            "NHSCA '26 (0-2)"
+          ],
+          "wins": [
+            "Jacob Campos (TOC field)",
+            "Ben Mccaleb (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": null,
+          "email": "raymond.bane@gmail.com",
+          "phone": null
+        },
+        {
+          "athleteId": "85eb411c-ea51-4381-827d-13e5efa0e299",
+          "weightClass": 174,
+          "seed": 5,
+          "name": "Tripp Sullivan",
+          "gradYear": 2027,
+          "highSchool": "Union Pines",
+          "club": "The Factory",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "3× State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 2nd '26 · 3rd '25",
+            "NHSCA '25 (3-2)",
+            "Fargo '24 (3-2)"
+          ],
+          "wins": [
+            "Jacob Campos (TOC field)",
+            "Abdeen Zaggout (NC ranked)"
+          ],
+          "upNext": [
+            "Super 32",
+            "Southeast Open"
+          ],
+          "gpa": null,
+          "email": "asully1011@yahoo.com",
+          "phone": "(910) 724-1542"
+        },
+        {
+          "athleteId": "838f0bd1-fd71-44f1-a98a-c21deea0412e",
+          "weightClass": 174,
+          "seed": 6,
+          "name": "Jeshurun Mills",
+          "gradYear": 2027,
+          "highSchool": "Lincolnton",
+          "club": "CKMMA",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "2× State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 2nd '26 · 5th '25",
+            "NHSCA '26 (1-2)"
+          ],
+          "wins": [],
+          "upNext": [
+            "Super 32"
+          ],
+          "gpa": "3.8",
+          "email": "j.mekhi0607@gmail.com",
+          "phone": "(828) 715-0182"
+        },
+        {
+          "athleteId": "fadc3b66-90e4-47ac-b324-f5864cb44af1",
+          "weightClass": 174,
+          "seed": 7,
+          "name": "Jatorien Hill",
+          "gradYear": 2029,
+          "highSchool": "Montgomery Central",
+          "club": "Unaffiliated",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 5A 4th '26",
+            "NHSCA '26 (1-2)"
+          ],
+          "wins": [],
+          "upNext": [],
+          "gpa": "4.33",
+          "email": null,
+          "phone": null
+        },
+        {
+          "athleteId": "4c1465d1-c2c2-462b-9cac-d6f387c25b0c",
+          "weightClass": 174,
+          "seed": 8,
+          "name": "Bodie Welker",
+          "gradYear": 2028,
+          "highSchool": "Wesleyan Christian",
+          "club": "Trinity Top Team",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "2× State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA NCISA 3rd '26 · 6th '25"
+          ],
+          "wins": [],
+          "upNext": [],
+          "gpa": "4.6",
+          "email": "claybmx@icloud.com",
+          "phone": "3366138438"
+        }
+      ]
+    },
+    {
+      "weightClass": 197,
+      "locked": true,
+      "firstRound": [
+        {
+          "boutNumber": 1,
+          "top": {
+            "seed": 1,
+            "name": "Luke Padgett"
+          },
+          "bottom": {
+            "seed": 8,
+            "name": "Jordan Barbee"
+          }
+        },
+        {
+          "boutNumber": 2,
+          "top": {
+            "seed": 4,
+            "name": "Carson Owens"
+          },
+          "bottom": {
+            "seed": 5,
+            "name": "Hayden Rogers"
+          }
+        },
+        {
+          "boutNumber": 3,
+          "top": {
+            "seed": 3,
+            "name": "Braylen Yates"
+          },
+          "bottom": {
+            "seed": 6,
+            "name": "AMANUEL KAHSAI"
+          }
+        },
+        {
+          "boutNumber": 4,
+          "top": {
+            "seed": 7,
+            "name": "Ben Mccaleb"
+          },
+          "bottom": {
+            "seed": 2,
+            "name": "Brieon Mayfield"
+          }
+        }
+      ],
+      "athletes": [
+        {
+          "athleteId": "c30deea8-6e11-4bbd-b95c-6a5bc4d72692",
+          "weightClass": 197,
+          "seed": 1,
+          "name": "Luke Padgett",
+          "gradYear": 2027,
+          "highSchool": "Croatan",
+          "club": "OTM Walters",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "State Champion"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 5A champion '26",
+            "NHSCA '26 (2-2)"
+          ],
+          "wins": [
+            "John Perez (TOC field)",
+            "Dominic Hittepole (NC ranked)"
+          ],
+          "upNext": [
+            "Super 32",
+            "Journeymen"
+          ],
+          "gpa": "4.45",
+          "email": "donnydossy@gmail.com",
+          "phone": "(252) 665-3536"
+        },
+        {
+          "athleteId": "3ed5884e-12cc-4b43-a976-93790161569e",
+          "weightClass": 197,
+          "seed": 2,
+          "name": "Brieon Mayfield",
+          "gradYear": 2027,
+          "highSchool": "Jack Britt",
+          "club": "Fayettenam Brawlers",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "2× State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 3rd '26 · 3rd '25",
+            "NHSCA '26 (4-2)",
+            "Super 32 '25 (0-2)"
+          ],
+          "wins": [
+            "John Perez (TOC field)",
+            "Amanuel Kahsai (TOC field)"
+          ],
+          "upNext": [
+            "I-64 Duals",
+            "Super 32"
+          ],
+          "gpa": "4.43",
+          "email": "mayfieldbrieon@gmail.com",
+          "phone": "(757) 533-2213"
+        },
+        {
+          "athleteId": "cfd61be9-da05-49f5-ba93-5d62df3862da",
+          "weightClass": 197,
+          "seed": 3,
+          "name": "Braylen Yates",
+          "gradYear": 2029,
+          "highSchool": "Topsail",
+          "club": "Sly Fox",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "all-american",
+              "label": "2× All-American"
+            },
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 5A 2nd '26",
+            "NHSCA '26 Champion (5-0)",
+            "Fargo '26 4th All-American (5-2)"
+          ],
+          "wins": [
+            "Josiah Mccowan (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": null,
+          "email": null,
+          "phone": null
+        },
+        {
+          "athleteId": "05fe2bf5-f027-400f-8654-f1293b4e9691",
+          "weightClass": 197,
+          "seed": 4,
+          "name": "Carson Owens",
+          "gradYear": 2027,
+          "highSchool": "Leesville Road",
+          "club": "RAW",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "State Champion"
+            }
+          ],
+          "credentials": [
+            "NCHSAA NCISA champion '25",
+            "NHSCA '25 (1-2)",
+            "Super 32 '25 (0-2)"
+          ],
+          "wins": [
+            "Jordan Barbee (TOC field)"
+          ],
+          "upNext": [
+            "Super 32",
+            "I-64 Duals"
+          ],
+          "gpa": "4.56",
+          "email": "caowens327@gmail.com",
+          "phone": "(984) 900-7442"
+        },
+        {
+          "athleteId": "dfd51a73-7788-43b7-a4cb-4dab8271396c",
+          "weightClass": 197,
+          "seed": 5,
+          "name": "Hayden Rogers",
+          "gradYear": 2027,
+          "highSchool": "Grimsley",
+          "club": "Unaffiliated",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 7A 2nd '26",
+            "NHSCA '24 (1-2)"
+          ],
+          "wins": [],
+          "upNext": [],
+          "gpa": null,
+          "email": null,
+          "phone": null
+        },
+        {
+          "athleteId": "1ae6b10a-eeb9-4751-8453-ff0ab511c428",
+          "weightClass": 197,
+          "seed": 6,
+          "name": "AMANUEL KAHSAI",
+          "gradYear": 2028,
+          "highSchool": "NEW BERN",
+          "club": "OTM Walters",
+          "committedTo": null,
+          "pills": [],
+          "credentials": [
+            "NHSCA '26 (4-2)",
+            "Fargo '26 (3-2)"
+          ],
+          "wins": [
+            "Jordan Barbee (TOC field)",
+            "Dominic Hittepole (NC ranked)"
+          ],
+          "upNext": [
+            "I-64 Duals",
+            "Super 32"
+          ],
+          "gpa": "4.2",
+          "email": "rachell5878@gmail.com",
+          "phone": "(252) 269-8017"
+        },
+        {
+          "athleteId": "ab15038e-c51f-4d0f-947e-bcdfdc75e85b",
+          "weightClass": 197,
+          "seed": 7,
+          "name": "Ben Mccaleb",
+          "gradYear": 2028,
+          "highSchool": "Topsail",
+          "club": "Sly Fox",
+          "committedTo": null,
+          "pills": [],
+          "credentials": [
+            "NHSCA '26 (0-2)"
+          ],
+          "wins": [
+            "Jordan Barbee (TOC field)"
+          ],
+          "upNext": [
+            "Super 32",
+            "I-64 Duals"
+          ],
+          "gpa": null,
+          "email": null,
+          "phone": null
+        },
+        {
+          "athleteId": "9815ad12-2e75-4b6e-afd1-7dd65564e90d",
+          "weightClass": 197,
+          "seed": 8,
+          "name": "Jordan Barbee",
+          "gradYear": 2028,
+          "highSchool": "Orange",
+          "club": "Unaffiliated",
+          "committedTo": null,
+          "pills": [],
+          "credentials": [],
+          "wins": [
+            "Ben McCaleb (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": null,
+          "email": "shane7barbee@gmail.com",
+          "phone": null
+        }
+      ]
+    },
+    {
+      "weightClass": 285,
+      "locked": true,
+      "firstRound": [
+        {
+          "boutNumber": 1,
+          "top": {
+            "seed": 1,
+            "name": "Gavin Lopez"
+          },
+          "bottom": {
+            "seed": 8,
+            "name": "Noah Matamoros"
+          }
+        },
+        {
+          "boutNumber": 2,
+          "top": {
+            "seed": 4,
+            "name": "Joshua Lemke"
+          },
+          "bottom": {
+            "seed": 5,
+            "name": "John Perez"
+          }
+        },
+        {
+          "boutNumber": 3,
+          "top": {
+            "seed": 3,
+            "name": "Connor Brinkley"
+          },
+          "bottom": {
+            "seed": 6,
+            "name": "Cory Thomas"
+          }
+        },
+        {
+          "boutNumber": 4,
+          "top": {
+            "seed": 7,
+            "name": "Ben Green"
+          },
+          "bottom": {
+            "seed": 2,
+            "name": "Nash Mullis"
+          }
+        }
+      ],
+      "athletes": [
+        {
+          "athleteId": "da7e32d2-bbdc-4b0e-ac70-ecb6ac67ed10",
+          "weightClass": 285,
+          "seed": 1,
+          "name": "Gavin Lopez",
+          "gradYear": 2027,
+          "highSchool": "Green Hope",
+          "club": "RAW",
+          "committedTo": "Navy",
+          "pills": [
+            {
+              "kind": "all-american",
+              "label": "3× All-American"
+            },
+            {
+              "kind": "state-champion",
+              "label": "State Champion"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 8A champion '26",
+            "NHSCA '26 4th All-American (4-2) · NHSCA '25 7th All-American (4-2)",
+            "Fargo '25 (0-2)",
+            "Super 32 '25 (0-2)"
+          ],
+          "wins": [
+            "Benjamin Green (TOC field)"
+          ],
+          "upNext": [
+            "Journeymen",
+            "I-64 Duals",
+            "Super 32"
+          ],
+          "gpa": "3.4",
+          "email": "djg050901@gmail.com",
+          "phone": "(908) 566-8816"
+        },
+        {
+          "athleteId": "7a95dcfc-b3e2-4abb-921c-c8e98f0901b3",
+          "weightClass": 285,
+          "seed": 2,
+          "name": "Nash Mullis",
+          "gradYear": 2027,
+          "highSchool": "North Stanly",
+          "club": "Valebound and Speedshot WC",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-champion",
+              "label": "State Champion"
+            },
+            {
+              "kind": "state-placer",
+              "label": "2× State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 3A champion '26 · 6th '25",
+            "NHSCA '25 (0-2)",
+            "Fargo '26 (3-2)"
+          ],
+          "wins": [
+            "Noah Matamoros (TOC field)",
+            "Aaron Ruiz-Angel (NC ranked)"
+          ],
+          "upNext": [
+            "Super 32",
+            "I-64 Duals"
+          ],
+          "gpa": null,
+          "email": "bigoak33@yahoo.com",
+          "phone": "(704) 991-6595"
+        },
+        {
+          "athleteId": "eb3ce001-65a2-4335-8b58-a83c6aed6be5",
+          "weightClass": 285,
+          "seed": 3,
+          "name": "Connor Brinkley",
+          "gradYear": 2027,
+          "highSchool": "Newton-Conover",
+          "club": "Darkhorse",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "all-american",
+              "label": "All-American"
+            },
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 1A 3rd '25",
+            "NHSCA '24 7th All-American (3-2)"
+          ],
+          "wins": [],
+          "upNext": [],
+          "gpa": "3.13",
+          "email": "alycenqueen@gmail.com",
+          "phone": "(828) 764-7117"
+        },
+        {
+          "athleteId": "05b7c94b-3aba-48a9-9c5a-a99a14e9cd61",
+          "weightClass": 285,
+          "seed": 4,
+          "name": "Joshua Lemke",
+          "gradYear": 2027,
+          "highSchool": "Rosewood",
+          "club": "Unaffiliated",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 1A/2A 2nd '26"
+          ],
+          "wins": [],
+          "upNext": [
+            "Super 32"
+          ],
+          "gpa": "3.6",
+          "email": "poshywoshy08@gmail.com",
+          "phone": "(984) 239-5048"
+        },
+        {
+          "athleteId": "ba2cef23-213e-44c9-9fbb-103b103614f2",
+          "weightClass": 285,
+          "seed": 5,
+          "name": "John Perez",
+          "gradYear": 2027,
+          "highSchool": "Rockingham County",
+          "club": "RAW",
+          "committedTo": null,
+          "pills": [
+            {
+              "kind": "state-placer",
+              "label": "State Placer"
+            }
+          ],
+          "credentials": [
+            "NCHSAA 5A 4th '26"
+          ],
+          "wins": [
+            "Amanuel Kahsai (TOC field)",
+            "Jatorien Hill (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": null,
+          "email": "benbenuse@gmail.com",
+          "phone": null
+        },
+        {
+          "athleteId": "60fe7886-965a-4d91-ae2a-1cea79ec3251",
+          "weightClass": 285,
+          "seed": 6,
+          "name": "Cory Thomas",
+          "gradYear": 2027,
+          "highSchool": "new bern highschool",
+          "club": "OTM Walters",
+          "committedTo": null,
+          "pills": [],
+          "credentials": [],
+          "wins": [],
+          "upNext": [],
+          "gpa": null,
+          "email": "coryman618@gmail.com",
+          "phone": "(252) 626-7637"
+        },
+        {
+          "athleteId": "7b5c18e3-2a1a-4e4f-9a69-c6a3538a2353",
+          "weightClass": 285,
+          "seed": 7,
+          "name": "Ben Green",
+          "gradYear": 2029,
+          "highSchool": "Chapel Hill",
+          "club": "Unaffiliated",
+          "committedTo": null,
+          "pills": [],
+          "credentials": [
+            "Fargo '26 (0-2)"
+          ],
+          "wins": [],
+          "upNext": [],
+          "gpa": null,
+          "email": null,
+          "phone": null
+        },
+        {
+          "athleteId": "1e2b7f15-af09-402d-bb6f-e96eb2962ccf",
+          "weightClass": 285,
+          "seed": 8,
+          "name": "Noah Matamoros",
+          "gradYear": 2027,
+          "highSchool": "Carrboro",
+          "club": "RAW",
+          "committedTo": null,
+          "pills": [],
+          "credentials": [],
+          "wins": [],
+          "upNext": [],
+          "gpa": "3.2",
+          "email": "matamorosnoah5@gmail.com",
+          "phone": "(919) 616-8354"
+        }
+      ]
+    }
+  ],
+  "committed": [
+    {
+      "athleteId": "a95c204d-785c-427a-98cf-1930410b0dc7",
+      "weightClass": 141,
+      "seed": 2,
+      "name": "Aiden White",
+      "gradYear": 2027,
+      "highSchool": "Weddington",
+      "club": "Darkhorse",
+      "committedTo": "Appalachian State",
+      "pills": [
+        {
+          "kind": "all-american",
+          "label": "All-American"
+        },
+        {
+          "kind": "state-champion",
+          "label": "State Champion"
+        },
+        {
+          "kind": "state-placer",
+          "label": "2× State Placer"
+        }
+      ],
+      "credentials": [
+        "NCHSAA 4A champion '25 · 3rd '26",
+        "NHSCA '26 4th All-American (9-2) · NHSCA '25 DNP (3-2)",
+        "Fargo '25 (4-2)",
+        "Super 32 '25 (4-2)"
+      ],
+      "wins": [
+        "Nate Gardner (NC ranked)"
+      ],
+      "upNext": [
+        "Super 32",
+        "Southeast Open"
+      ],
+      "gpa": "4.2",
+      "email": "aidenwhitewrest@gmail.com",
+      "phone": "(704) 771-8759"
+    },
+    {
+      "athleteId": "f4236c5d-90cf-4249-afb8-755e3604702c",
+      "weightClass": 133,
+      "seed": 1,
+      "name": "Ayden Sumners",
+      "gradYear": 2027,
+      "highSchool": "Wheatmore",
+      "club": "RAW",
+      "committedTo": "VMI",
+      "pills": [
+        {
+          "kind": "state-champion",
+          "label": "2× State Champion"
+        },
+        {
+          "kind": "state-placer",
+          "label": "3× State Placer"
+        }
+      ],
+      "credentials": [
+        "2× NCHSAA champion '25 '26 · 3rd '24",
+        "NHSCA '26 (4-2)",
+        "Fargo '26 (3-2)",
+        "Super 32 '25 (1-2)"
+      ],
+      "wins": [
+        "David Lambright (NC ranked)",
+        "David Angel (NC ranked)"
+      ],
+      "upNext": [
+        "Super 32",
+        "Southeast Open",
+        "Cougar Open",
+        "App State Open"
+      ],
+      "gpa": "4.2",
+      "email": "sumnerscody083@gmail.com",
+      "phone": "336-579-7639"
+    },
+    {
+      "athleteId": "2608f74c-1262-44dd-9097-c990ed3c0166",
+      "weightClass": 165,
+      "seed": 1,
+      "name": "Carson Worrick",
+      "gradYear": 2027,
+      "highSchool": "Davie",
+      "club": "Combat",
+      "committedTo": "Binghamton",
+      "pills": [
+        {
+          "kind": "all-american",
+          "label": "All-American"
+        },
+        {
+          "kind": "state-champion",
+          "label": "2× State Champion"
+        },
+        {
+          "kind": "state-placer",
+          "label": "3× State Placer"
+        }
+      ],
+      "credentials": [
+        "2× NCHSAA champion '25 '26 · 3rd '24",
+        "NHSCA '26 4th All-American (7-2)",
+        "Super 32 '25 (1-2)"
+      ],
+      "wins": [
+        "Benjamin Green (TOC field)"
+      ],
+      "upNext": [],
+      "gpa": "4.3",
+      "email": "lworrick@embarqmail.com",
+      "phone": "336-657-4818"
+    },
+    {
+      "athleteId": "da7e32d2-bbdc-4b0e-ac70-ecb6ac67ed10",
+      "weightClass": 285,
+      "seed": 1,
+      "name": "Gavin Lopez",
+      "gradYear": 2027,
+      "highSchool": "Green Hope",
+      "club": "RAW",
+      "committedTo": "Navy",
+      "pills": [
+        {
+          "kind": "all-american",
+          "label": "3× All-American"
+        },
+        {
+          "kind": "state-champion",
+          "label": "State Champion"
+        }
+      ],
+      "credentials": [
+        "NCHSAA 8A champion '26",
+        "NHSCA '26 4th All-American (4-2) · NHSCA '25 7th All-American (4-2)",
+        "Fargo '25 (0-2)",
+        "Super 32 '25 (0-2)"
+      ],
+      "wins": [
+        "Benjamin Green (TOC field)"
+      ],
+      "upNext": [
+        "Journeymen",
+        "I-64 Duals",
+        "Super 32"
+      ],
+      "gpa": "3.4",
+      "email": "djg050901@gmail.com",
+      "phone": "(908) 566-8816"
+    },
+    {
+      "athleteId": "8b05a40e-6a8f-4e65-ad8f-6d461dd37fbb",
+      "weightClass": 141,
+      "seed": 4,
+      "name": "Jaycob Perez",
+      "gradYear": 2027,
+      "highSchool": "Ashbrook",
+      "club": "Darkhorse",
+      "committedTo": "Coker",
+      "pills": [
+        {
+          "kind": "state-placer",
+          "label": "State Placer"
+        }
+      ],
+      "credentials": [
+        "NCHSAA 6A 3rd '26",
+        "NHSCA '26 (3-2)",
+        "Fargo '25 (1-2)"
+      ],
+      "wins": [
+        "Charles Thompson (TOC field)",
+        "Gage Klee (NC ranked)"
+      ],
+      "upNext": [],
+      "gpa": null,
+      "email": "jaycobperez8@icloud.com",
+      "phone": "7048985971"
+    },
+    {
+      "athleteId": "00d54b04-2420-4fdd-aef1-f298635c1987",
+      "weightClass": 157,
+      "seed": 1,
+      "name": "Josh Stonebraker",
+      "gradYear": 2027,
+      "highSchool": "Cary Christian",
+      "club": "Triangle Wrestling Academy",
+      "committedTo": "NC State",
+      "pills": [
+        {
+          "kind": "state-champion",
+          "label": "3× State Champion"
+        },
+        {
+          "kind": "state-placer",
+          "label": "4× State Placer"
+        }
+      ],
+      "credentials": [
+        "3× NCHSAA NCISA champion '23 '25 '26 · 2nd '24",
+        "NHSCA '26 (5-2)",
+        "Fargo '26 (3-2)",
+        "Super 32 '25 (0-2)"
+      ],
+      "wins": [
+        "Jacob Mccord (TOC field)",
+        "Bodie Welker (TOC field)"
+      ],
+      "upNext": [],
+      "gpa": "4",
+      "email": "jsstoneb64@gmail.com",
+      "phone": "(919) 454-5270"
+    },
+    {
+      "athleteId": "63ea613d-0886-4af0-b64b-1c3d80fe0332",
+      "weightClass": 174,
+      "seed": 1,
+      "name": "Tobin McNair",
+      "gradYear": 2027,
+      "highSchool": "Wakefield",
+      "club": "Capital City",
+      "committedTo": "Binghamton",
+      "pills": [
+        {
+          "kind": "all-american",
+          "label": "2× All-American"
+        },
+        {
+          "kind": "state-champion",
+          "label": "2× State Champion"
+        },
+        {
+          "kind": "state-placer",
+          "label": "3× State Placer"
+        }
+      ],
+      "credentials": [
+        "2× NCHSAA champion '25 '26 · 3rd '24",
+        "NHSCA '26 5th All-American (5-2) · NHSCA '25 6th All-American (4-3)",
+        "Super 32 '25 (0-2)"
+      ],
+      "wins": [
+        "Jatorien Hill (TOC field)",
+        "Ben Mccaleb (TOC field)"
+      ],
+      "upNext": [
+        "Journeymen",
+        "Super 32",
+        "I-64 Duals",
+        "Beast of the East"
+      ],
+      "gpa": "4.2",
+      "email": "tobinmcnair2008@gmail.com",
+      "phone": "201-213-3341"
+    },
+    {
+      "athleteId": "f52d685f-814f-4d7c-9631-8fdfc8f7db60",
+      "weightClass": 141,
+      "seed": 1,
+      "name": "Tye Johnson",
+      "gradYear": 2027,
+      "highSchool": "Cape Fear",
+      "club": "Fear This",
+      "committedTo": "Appalachian State",
+      "pills": [
+        {
+          "kind": "state-champion",
+          "label": "3× State Champion"
+        }
+      ],
+      "credentials": [
+        "3× NCHSAA champion '24 '25 '26",
+        "NHSCA '26 (3-2)",
+        "Fargo '26 (3-2)",
+        "Super 32 '25 (0-2)"
+      ],
+      "wins": [
+        "Aidan Szewczyk (TOC field)",
+        "Aiden White (TOC field)"
+      ],
+      "upNext": [],
+      "gpa": "4.2",
+      "email": "ninaerin2@yahoo.com",
+      "phone": "910-965-9235"
+    }
+  ],
+  "clubs": [
+    {
+      "name": "Unaffiliated",
+      "count": 13
+    },
+    {
+      "name": "Darkhorse",
+      "count": 9
+    },
+    {
+      "name": "RAW",
+      "count": 8
+    },
+    {
+      "name": "OTM Walters",
+      "count": 7
+    },
+    {
+      "name": "Sly Fox",
+      "count": 4
+    },
+    {
+      "name": "Trinity Top Team",
+      "count": 4
+    },
+    {
+      "name": "Combat",
+      "count": 3
+    },
+    {
+      "name": "Harrisburg Wrestling Club",
+      "count": 3
+    },
+    {
+      "name": "The Factory",
+      "count": 3
+    },
+    {
+      "name": "Capital City",
+      "count": 2
+    },
+    {
+      "name": "Fayettenam Brawlers",
+      "count": 2
+    },
+    {
+      "name": "NC Pride",
+      "count": 2
+    },
+    {
+      "name": "NC Wrestling Factory",
+      "count": 2
+    },
+    {
+      "name": "School of Hard Knocks",
+      "count": 2
+    },
+    {
+      "name": "Triangle Wrestling Academy",
+      "count": 2
+    },
+    {
+      "name": "Bull Sharks Wrestling Club",
+      "count": 1
+    },
+    {
+      "name": "Catawba Rasslin",
+      "count": 1
+    },
+    {
+      "name": "CKMMA",
+      "count": 1
+    },
+    {
+      "name": "East Carolina Wrestling Academy",
+      "count": 1
+    },
+    {
+      "name": "Fear This",
+      "count": 1
+    },
+    {
+      "name": "Forge wrestling club",
+      "count": 1
+    },
+    {
+      "name": "Funk Factory",
+      "count": 1
+    },
+    {
+      "name": "Mountaineer Wrecking Crew",
+      "count": 1
+    },
+    {
+      "name": "OBX Wrestling Factory",
+      "count": 1
+    },
+    {
+      "name": "Palestra",
+      "count": 1
+    },
+    {
+      "name": "Peak",
+      "count": 1
+    },
+    {
+      "name": "Ronin MMA and Rowan Wrestling Club",
+      "count": 1
+    },
+    {
+      "name": "Valebound and Speedshot WC",
+      "count": 1
+    },
+    {
+      "name": "Wild ponies",
+      "count": 1
+    }
+  ],
+  "index": [
+    {
+      "name": "Matthew Akins",
+      "weightClass": 117,
+      "seed": 5
+    },
+    {
+      "name": "Lukas Allman",
+      "weightClass": 149,
+      "seed": 7
+    },
+    {
+      "name": "Jake Amiott",
+      "weightClass": 149,
+      "seed": 3
+    },
+    {
+      "name": "Jimmy Araujo",
+      "weightClass": 133,
+      "seed": 8
+    },
+    {
+      "name": "John Bane",
+      "weightClass": 174,
+      "seed": 4
+    },
+    {
+      "name": "Jordan Barbee",
+      "weightClass": 197,
+      "seed": 8
+    },
+    {
+      "name": "Xavier Bernthal",
+      "weightClass": 117,
+      "seed": 3
+    },
+    {
+      "name": "Connor Brinkley",
+      "weightClass": 285,
+      "seed": 3
+    },
+    {
+      "name": "Mason Brown",
+      "weightClass": 125,
+      "seed": 7
+    },
+    {
+      "name": "Aiden Burkholder",
+      "weightClass": 125,
+      "seed": 2
+    },
+    {
+      "name": "Aiden Campbell",
+      "weightClass": 149,
+      "seed": 4
+    },
+    {
+      "name": "Jacob Campos",
+      "weightClass": 165,
+      "seed": 3
+    },
+    {
+      "name": "Noah Cerino",
+      "weightClass": 157,
+      "seed": 5
+    },
+    {
+      "name": "Josh Connick",
+      "weightClass": 157,
+      "seed": 6
+    },
+    {
+      "name": "Stephen Cross",
+      "weightClass": 133,
+      "seed": 7
+    },
+    {
+      "name": "Coy Deel",
+      "weightClass": 141,
+      "seed": 7
+    },
+    {
+      "name": "Louden Dunn",
+      "weightClass": 157,
+      "seed": 8
+    },
+    {
+      "name": "Caleb Edwards",
+      "weightClass": 133,
+      "seed": 5
+    },
+    {
+      "name": "Aaron Ellison",
+      "weightClass": 149,
+      "seed": 2
+    },
+    {
+      "name": "Cade Gehris",
+      "weightClass": 149,
+      "seed": 6
+    },
+    {
+      "name": "Talon Grady",
+      "weightClass": 165,
+      "seed": 8
+    },
+    {
+      "name": "Ben Green",
+      "weightClass": 285,
+      "seed": 7
+    },
+    {
+      "name": "Simeon Hammett",
+      "weightClass": 165,
+      "seed": 6
+    },
+    {
+      "name": "Jatorien Hill",
+      "weightClass": 174,
+      "seed": 7
+    },
+    {
+      "name": "Mason Hollar",
+      "weightClass": 174,
+      "seed": 3
+    },
+    {
+      "name": "Sheppard Homan",
+      "weightClass": 141,
+      "seed": 3
+    },
+    {
+      "name": "Devin Hord",
+      "weightClass": 125,
+      "seed": 8
+    },
+    {
+      "name": "Micah Howard",
+      "weightClass": 157,
+      "seed": 3
+    },
+    {
+      "name": "Tye Johnson",
+      "weightClass": 141,
+      "seed": 1
+    },
+    {
+      "name": "Kristopher Kerr Jr",
+      "weightClass": 117,
+      "seed": 8
+    },
+    {
+      "name": "AMANUEL KAHSAI",
+      "weightClass": 197,
+      "seed": 6
+    },
+    {
+      "name": "Paxton Kearns",
+      "weightClass": 125,
+      "seed": 6
+    },
+    {
+      "name": "Tommy Kishpaugh",
+      "weightClass": 117,
+      "seed": 7
+    },
+    {
+      "name": "Tyton Kostoff",
+      "weightClass": 149,
+      "seed": 1
+    },
+    {
+      "name": "Cayden Laws",
+      "weightClass": 149,
+      "seed": 8
+    },
+    {
+      "name": "Joshua Lemke",
+      "weightClass": 285,
+      "seed": 4
+    },
+    {
+      "name": "Landon Logan",
+      "weightClass": 141,
+      "seed": 5
+    },
+    {
+      "name": "Gavin Lopez",
+      "weightClass": 285,
+      "seed": 1
+    },
+    {
+      "name": "Noah Matamoros",
+      "weightClass": 285,
+      "seed": 8
+    },
+    {
+      "name": "Brieon Mayfield",
+      "weightClass": 197,
+      "seed": 2
+    },
+    {
+      "name": "Ben Mccaleb",
+      "weightClass": 197,
+      "seed": 7
+    },
+    {
+      "name": "Jacob McCord",
+      "weightClass": 174,
+      "seed": 2
+    },
+    {
+      "name": "Josiah McCowan",
+      "weightClass": 165,
+      "seed": 7
+    },
+    {
+      "name": "Daniel McDermott",
+      "weightClass": 125,
+      "seed": 5
+    },
+    {
+      "name": "Tobin McNair",
+      "weightClass": 174,
+      "seed": 1
+    },
+    {
+      "name": "Jeshurun Mills",
+      "weightClass": 174,
+      "seed": 6
+    },
+    {
+      "name": "Alexander Moody",
+      "weightClass": 117,
+      "seed": 6
+    },
+    {
+      "name": "Nash Mullis",
+      "weightClass": 285,
+      "seed": 2
+    },
+    {
+      "name": "Liam Myles",
+      "weightClass": 117,
+      "seed": 4
+    },
+    {
+      "name": "Travis Nobles",
+      "weightClass": 157,
+      "seed": 4
+    },
+    {
+      "name": "Carson Owens",
+      "weightClass": 197,
+      "seed": 4
+    },
+    {
+      "name": "Luke Padgett",
+      "weightClass": 197,
+      "seed": 1
+    },
+    {
+      "name": "Jaycob Perez",
+      "weightClass": 141,
+      "seed": 4
+    },
+    {
+      "name": "John Perez",
+      "weightClass": 285,
+      "seed": 5
+    },
+    {
+      "name": "Jacob Perry",
+      "weightClass": 157,
+      "seed": 2
+    },
+    {
+      "name": "Holt Quincy",
+      "weightClass": 133,
+      "seed": 2
+    },
+    {
+      "name": "Carson Raper",
+      "weightClass": 117,
+      "seed": 1
+    },
+    {
+      "name": "Luke Richards",
+      "weightClass": 125,
+      "seed": 4
+    },
+    {
+      "name": "Hayden Rogers",
+      "weightClass": 197,
+      "seed": 5
+    },
+    {
+      "name": "Noah Sapp",
+      "weightClass": 165,
+      "seed": 4
+    },
+    {
+      "name": "Jekai Sedgwick",
+      "weightClass": 125,
+      "seed": 1
+    },
+    {
+      "name": "Joseph Shook",
+      "weightClass": 149,
+      "seed": 5
+    },
+    {
+      "name": "Cole Shuster",
+      "weightClass": 141,
+      "seed": 8
+    },
+    {
+      "name": "Josh Stonebraker",
+      "weightClass": 157,
+      "seed": 1
+    },
+    {
+      "name": "Tripp Sullivan",
+      "weightClass": 174,
+      "seed": 5
+    },
+    {
+      "name": "Ayden Sumners",
+      "weightClass": 133,
+      "seed": 1
+    },
+    {
+      "name": "Aidan Szewczyk",
+      "weightClass": 133,
+      "seed": 3
+    },
+    {
+      "name": "Ashton Tennessee",
+      "weightClass": 133,
+      "seed": 6
+    },
+    {
+      "name": "Jaxon Thomas",
+      "weightClass": 117,
+      "seed": 2
+    },
+    {
+      "name": "Cory Thomas",
+      "weightClass": 285,
+      "seed": 6
+    },
+    {
+      "name": "Charles Thompson",
+      "weightClass": 141,
+      "seed": 6
+    },
+    {
+      "name": "Jacob De La Torre",
+      "weightClass": 165,
+      "seed": 5
+    },
+    {
+      "name": "Campbell Tufts",
+      "weightClass": 165,
+      "seed": 2
+    },
+    {
+      "name": "Adam Walker",
+      "weightClass": 125,
+      "seed": 3
+    },
+    {
+      "name": "Bodie Welker",
+      "weightClass": 174,
+      "seed": 8
+    },
+    {
+      "name": "Aiden White",
+      "weightClass": 141,
+      "seed": 2
+    },
+    {
+      "name": "Carson Worrick",
+      "weightClass": 165,
+      "seed": 1
+    },
+    {
+      "name": "Braylen Yates",
+      "weightClass": 197,
+      "seed": 3
+    },
+    {
+      "name": "Ahmet Zaggout",
+      "weightClass": 157,
+      "seed": 7
+    },
+    {
+      "name": "Abdul-Jamil Zaggout",
+      "weightClass": 133,
+      "seed": 4
+    }
+  ]
+}
