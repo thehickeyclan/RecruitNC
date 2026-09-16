@@ -28,6 +28,7 @@ export const UP_NEXT_EVENTS = {
   powerade: "Powerade",
   appStateOpen: "App State Open",
   ironman: "Ironman",
+  grapplerFallClassic: "Grappler Fall Classic",
 } as const
 
 const E = UP_NEXT_EVENTS
@@ -168,6 +169,9 @@ const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
   "05b7c94b-3aba-48a9-9c5a-a99a14e9cd61": [E.superThirtyTwo],
   // Nash Mullis · 285 · seed 2 · North Stanly. The one Mullis in the field.
   "7a95dcfc-b3e2-4abb-921c-c8e98f0901b3": [E.superThirtyTwo, E.iSixtyFour],
+  // Adam Walker · 125 · seed 3 · Holly Springs. Class of 2029, so his entry prints no contact
+  // details — a schedule is not personal data and belongs there either way.
+  "c55d5eec-e7af-4ee5-a44f-3d7829462f3d": [E.grapplerFallClassic, E.iSixtyFour, E.superThirtyTwo],
 }
 
 /** The events a wrestler competes at next, or an empty list when none were sent in. */
