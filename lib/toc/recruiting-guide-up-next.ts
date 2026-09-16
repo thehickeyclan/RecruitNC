@@ -28,6 +28,7 @@ export const UP_NEXT_EVENTS = {
   southernSlam: "Southern Slam",
   powerade: "Powerade",
   appStateOpen: "App State Open",
+  ironman: "Ironman",
 } as const
 
 const E = UP_NEXT_EVENTS
@@ -140,6 +141,16 @@ const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
   "85eb411c-ea51-4381-827d-13e5efa0e299": [E.superThirtyTwo, E.southeastOpen],
   // Coy Deel · 141 · seed 7 · West Craven. The only Deel in the field.
   "ef9c0bc5-0898-408a-86d0-740bef7e4888": [E.journeymen, E.iSixtyFour, E.superThirtyTwo, E.cougarOpen],
+  // Carson Raper · 117 · seed 1 · South Rowan. Sent his own schedule to the chat.
+  "68696afb-0b22-465c-b22e-82e84913144e": [E.journeymen, E.superThirtyTwo, E.ironman],
+  /*
+   * Ben Mccaleb · 197 · seed 7 · Topsail.
+   *
+   * This is the schedule that arrived in the chat as a bare "Super 32 and I64 Duals" with the
+   * name on the line below it. It sat unattached until the full chat was re-shared rather than
+   * being guessed at.
+   */
+  "ab15038e-c51f-4d0f-947e-bcdfdc75e85b": [E.superThirtyTwo, E.iSixtyFour],
 }
 
 /** The events a wrestler competes at next, or an empty list when none were sent in. */
