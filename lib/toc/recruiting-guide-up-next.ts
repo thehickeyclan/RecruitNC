@@ -18,7 +18,6 @@ export const UP_NEXT_EVENTS = {
   superThirtyTwo: "Super 32",
   iSixtyFour: "I-64 Duals",
   journeymen: "Journeymen",
-  journeymenOverflow: "Journeymen Overflow",
   beast: "Beast of the East",
   columbusDay: "Columbus Day Duals",
   cosmicClash: "Cosmic Clash Duals",
@@ -59,7 +58,14 @@ const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
   // Matthew Akins · 117 · seed 5
   "9a5d50a8-89a9-4579-83c2-2152cea84efc": [E.iSixtyFour, E.superThirtyTwo],
   // Stephen Cross · 133 · seed 7
-  "f5dfa7b9-49b3-4296-94a2-b6f587d03b5c": [E.journeymenOverflow, E.superThirtyTwo],
+  /*
+   * Stephen Cross · 133 · seed 7 · Trinity.
+   *
+   * Entered from Michael Cross as "Journeyman overflow and super 32", then sent by Stephen
+   * himself as plain "Journeymen, Super 32". Matt's call: print Journeymen, do not name the
+   * overflow bracket.
+   */
+  "f5dfa7b9-49b3-4296-94a2-b6f587d03b5c": [E.journeymen, E.superThirtyTwo],
   // Jeshurun Mills · 174 · seed 6
   "838f0bd1-fd71-44f1-a98a-c21deea0412e": [E.superThirtyTwo],
 
