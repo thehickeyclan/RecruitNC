@@ -24,6 +24,9 @@ export const UP_NEXT_EVENTS = {
   cosmicClash: "Cosmic Clash Duals",
   southeastOpen: "Southeast Open",
   pembrokeOpen: "Pembroke Open",
+  cougarOpen: "Cougar Open",
+  southernSlam: "Southern Slam",
+  powerade: "Powerade",
 } as const
 
 const E = UP_NEXT_EVENTS
@@ -88,6 +91,24 @@ const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
    * Szewczyk at 133 — and exactly one White, which is what makes this one safe.
    */
   "a95c204d-785c-427a-98cf-1930410b0dc7": [E.superThirtyTwo, E.southeastOpen],
+  /*
+   * Holt Quincy · 133 · seed 2 · North East Carolina Prep.
+   *
+   * Eight events, the longest schedule in the field. The line wraps to two, and 133 is already
+   * the tightest page in the book — if any weight spills onto a second sheet, it is this one.
+   */
+  "fb4f10b4-30f7-4bcc-871e-73930909f3c0": [
+    E.columbusDay,
+    E.journeymen,
+    E.iSixtyFour,
+    E.superThirtyTwo,
+    E.southeastOpen,
+    E.cougarOpen,
+    E.southernSlam,
+    E.powerade,
+  ],
+  // Cade Gehris · 149 · seed 6 · First Flight.
+  "c1849e65-a453-4506-b6d3-96f7423a25c9": [E.superThirtyTwo],
 }
 
 /** The events a wrestler competes at next, or an empty list when none were sent in. */
