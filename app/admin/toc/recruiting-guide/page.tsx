@@ -211,6 +211,12 @@ export default function TocRecruitingGuidePage() {
          * deliberate. Same print-color-adjust as the pills: without it the panel prints white and
          * the gold artwork all but disappears.
          */
+        /* The event logo has no transparency — its black background is part of the file. */
+        .panel-logo {
+          background: #000;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
         .panel-dark {
           background: #0A1628;
           color: #fff;
@@ -242,7 +248,9 @@ export default function TocRecruitingGuidePage() {
         <div className="mx-auto max-w-4xl px-6 py-6 print:max-w-none print:p-0">
           {/* Cover */}
           <section className="flex min-h-[9in] flex-col items-center justify-center text-center print:break-after-page">
-            <Image src="/images/toc/toc-logo.png" alt="Tournament of Champions" width={340} height={340} priority />
+            <div className="panel-logo p-3">
+              <Image src="/images/toc/toc-logo.png" alt="Tournament of Champions" width={340} height={340} priority />
+            </div>
             <h1 className="mt-6 text-[26pt] font-black uppercase leading-none tracking-tight">Recruiting Guide</h1>
             <p className="mt-2 text-[13pt] font-semibold">{TOC_EVENT_DATES_RANGE}</p>
             <p className="mt-1 text-[11pt]">
