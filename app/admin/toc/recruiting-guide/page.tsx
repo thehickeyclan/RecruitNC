@@ -263,25 +263,41 @@ export default function TocRecruitingGuidePage() {
               A coach who drove four hours to stand on a wall in Apex should be thanked on the
               first page they read, not in a line at the end nobody reaches.
             */}
+            {/* Matt's words, as he wrote them. Signed, because it is a letter and not a notice. */}
             <Rule label="Thank you for being here" />
             <p className="text-[10pt] leading-snug">
-              North Carolina wrestling is a community before it is anything else. It is club coaches
-              driving across the state on a Saturday, parents running the table, officials giving up
-              a weekend, and rooms full of people who show up for somebody else&rsquo;s kid. You are
-              part of that community this weekend, and your time is the scarcest thing any of us has
-              to give.
+              North Carolina wrestling is a community before it is anything else. It&rsquo;s club
+              coaches driving across the state on a Saturday, parents running tables, officials
+              giving up a weekend, and rooms full of people showing up for somebody else&rsquo;s kid.
             </p>
-            <p className="mt-1 text-[10pt] leading-snug">
+            <p className="mt-1.5 text-[10pt] leading-snug">
+              We also recognize how valuable your time is as a college coach, especially at this time
+              of year. The fact that you chose to spend part of your weekend here, evaluating and
+              supporting North Carolina wrestlers, means a great deal to our athletes, families and
+              wrestling community.
+            </p>
+            <p className="mt-1.5 text-[10pt] leading-snug">
               Eighty wrestlers earned their way into this building, and not one of them got here
-              alone — there is a youth coach, a club, and a family behind every name in these pages.
-              Thank you for supporting North Carolina wrestling and the Tournament of Champions, and
-              for being part of what this weekend is for.
+              alone. Behind every name in these pages is a youth coach, a club, a family, and a
+              wrestling community that helped get them here.
             </p>
-            <p className="mt-1 text-[10pt] leading-snug">
-              Come find us in the {TOC_VENUE_LOUNGES.title} — it is yours all weekend. If you need
-              anything at all, a bout time, a wrestler you want to watch, a family to reach, ask us
-              there or email {TOC_CONTACT_EMAIL}. We would far rather be interrupted than have you
-              leave without what you came for.
+            <p className="mt-1.5 text-[10pt] leading-snug">
+              Thank you for supporting North Carolina wrestling and the Tournament of Champions, and
+              for investing your time in the athletes competing this weekend.
+            </p>
+            <p className="mt-1.5 text-[10pt] leading-snug">
+              The {TOC_VENUE_LOUNGES.title} is yours all weekend. If you need anything—a bout time, a
+              wrestler you want to watch, a family you&rsquo;re trying to reach, or anything
+              else—please find us.
+            </p>
+            <p className="mt-1.5 text-[10pt] leading-snug">
+              You can also call or text me directly at 631-662-5409. We would far rather be
+              interrupted than have you leave without what you came for.
+            </p>
+            <p className="mt-2 text-[10pt] font-bold leading-tight">
+              Matt Hickey
+              <br />
+              <span className="font-semibold">NC United</span>
             </p>
 
             <Rule label="For visiting coaches" />
