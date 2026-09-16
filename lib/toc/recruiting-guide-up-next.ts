@@ -184,6 +184,13 @@ const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
   "9815ad12-2e75-4b6e-afd1-7dd65564e90d": [E.superThirtyTwo],
   // Carson Worrick · 165 · seed 1 · Davie. Three Carsons here — Raper 117, Owens 197 — one Worrick.
   "2608f74c-1262-44dd-9097-c990ed3c0166": [E.journeymen, E.superThirtyTwo],
+  /*
+   * Abdul-Jamil Zaggout · 133 · seed 4 · West Forsyth.
+   *
+   * Not his brother Ahmet, who wrestles 157 out of the same school. A surname match here would
+   * have been a coin flip between two real wrestlers in this field.
+   */
+  "a91dea56-f982-4527-83e1-6fe9834d16a1": [E.powerade],
 }
 
 /** The events a wrestler competes at next, or an empty list when none were sent in. */

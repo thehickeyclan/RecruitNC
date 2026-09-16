@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-09-16T20:54:56.437Z",
+  "generatedAt": "2026-09-16T21:29:21.960Z",
   "total": 80,
   "weights": [
     {
@@ -775,7 +775,9 @@
             "Colt Cambruzzi (NC ranked)",
             "Loxston Hooper (NC ranked)"
           ],
-          "upNext": [],
+          "upNext": [
+            "Powerade"
+          ],
           "gpa": "3.5",
           "email": "jamalzaggout1@gmail.com",
           "phone": "6073862002"
