@@ -9,6 +9,7 @@ import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import type { TocBracketDraw } from "@/lib/toc/bracket-types"
 import { getQualifierSignificantWinBouts } from "@/lib/other-tournaments"
 import { getCuratedSignificantWins } from "@/lib/curated-significant-wins"
+import { getUpNextEvents } from "@/lib/toc/recruiting-guide-up-next"
 import {
   formatWin,
   honourPills,
@@ -170,6 +171,7 @@ export async function GET() {
           pills,
           credentials,
           wins,
+          upNext: getUpNextEvents(String(athlete.id)),
           gpa: athlete.academic_gpa == null ? null : String(athlete.academic_gpa),
           email: printsContact ? String(athlete.contactEmail ?? "").trim() || null : null,
           phone: printsContact ? String(athlete.phone ?? "").trim() || null : null,

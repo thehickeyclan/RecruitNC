@@ -1,0 +1,84 @@
+/**
+ * Where a wrestler competes next, for the printed recruiting guide.
+ *
+ * Hand-collected from families in the TOC group chat, so it lives here as a curated map keyed by
+ * athlete id rather than being derived from anything — the same shape as
+ * `lib/curated-significant-wins.ts`, and for the same reason: there is no table behind it.
+ *
+ * Keyed by id, never by name. The chat gave us "Joe Shook", "Danny McDermott" and "Alex
+ * Thompson" for wrestlers the roster calls Joseph, Daniel and Charles, and a name-keyed map
+ * would have quietly attached one boy's schedule to another. Every id below was resolved against
+ * the confirmed field first.
+ *
+ * Event names are normalised on the way in — the chat has "S32", "Super32", "I64", "I-64" and
+ * "journeyman" for four events — so the guide prints one spelling.
+ */
+
+export const UP_NEXT_EVENTS = {
+  superThirtyTwo: "Super 32",
+  iSixtyFour: "I-64 Duals",
+  journeymen: "Journeymen",
+  journeymenOverflow: "Journeymen Overflow",
+  beast: "Beast of the East",
+  columbusDay: "Columbus Day Duals",
+  cosmicClash: "Cosmic Clash Duals",
+  southeastOpen: "Southeast Open",
+} as const
+
+const E = UP_NEXT_EVENTS
+
+const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
+  // Campbell Tufts · 165 · seed 2
+  "f6510005-cba5-47fd-9d7f-12ec2c7c6cb4": [E.journeymen, E.superThirtyTwo],
+  // Aiden Campbell · 149 · seed 4
+  "ff5337d6-4c77-4988-b767-ad4fe1a4ee75": [E.superThirtyTwo, E.iSixtyFour, E.journeymen],
+  // Tobin McNair · 174 · seed 1
+  "63ea613d-0886-4af0-b64b-1c3d80fe0332": [E.journeymen, E.superThirtyTwo, E.iSixtyFour, E.beast],
+  // Brieon Mayfield · 197 · seed 2
+  "3ed5884e-12cc-4b43-a976-93790161569e": [E.iSixtyFour, E.superThirtyTwo],
+  // Amanuel (Manny) Kahsai · 197 · seed 6
+  "1ae6b10a-eeb9-4751-8453-ff0ab511c428": [E.iSixtyFour, E.superThirtyTwo],
+  // Travis Nobles · 157 · seed 4
+  "1d29adb9-ba7e-49c7-9194-f680bc7a4d09": [E.columbusDay, E.journeymen, E.cosmicClash, E.superThirtyTwo],
+  // Caleb Edwards · 133 · seed 5
+  "8713c36d-940d-4be0-bc02-a0bccf927ec3": [E.iSixtyFour, E.superThirtyTwo],
+  // Gavin Lopez · 285 · seed 1
+  "da7e32d2-bbdc-4b0e-ac70-ecb6ac67ed10": [E.journeymen, E.iSixtyFour, E.superThirtyTwo],
+  // Joseph ("Joe") Shook · 149 · seed 5
+  "92d9d56f-3268-45c8-896c-5c3801b29041": [E.iSixtyFour, E.superThirtyTwo],
+  // Daniel ("Danny") McDermott · 125 · seed 5
+  "41dabe17-6cb5-40d1-84e6-ea07e1df5cb4": [E.iSixtyFour, E.superThirtyTwo],
+  // Jacob Campos · 165 · seed 3
+  "5e0207fa-2930-4583-b221-d8f15e9ed973": [E.iSixtyFour, E.superThirtyTwo],
+  // Matthew Akins · 117 · seed 5
+  "9a5d50a8-89a9-4579-83c2-2152cea84efc": [E.iSixtyFour, E.superThirtyTwo],
+  // Stephen Cross · 133 · seed 7
+  "f5dfa7b9-49b3-4296-94a2-b6f587d03b5c": [E.journeymenOverflow, E.superThirtyTwo],
+  // Jeshurun Mills · 174 · seed 6
+  "838f0bd1-fd71-44f1-a98a-c21deea0412e": [E.superThirtyTwo],
+
+  // Charles Thompson · 141 · seed 6. Sent in as "Alex Thompson" by Chuck Thompson and confirmed
+  // by Matt as the same wrestler: Charles goes by Alex.
+  "088074e4-0171-4f3b-8fe3-8d6f3edd0991": [E.superThirtyTwo, E.iSixtyFour],
+  /*
+   * Jacob Perry · 157 · seed 2 · New Bern.
+   *
+   * Not Jaycob Perez (141) and not John Perez (285). Three names this close in one field is the
+   * reason this map is keyed by id.
+   */
+  "ddea34af-ae6a-4880-8a1c-687576bef1fe": [E.journeymen, E.iSixtyFour, E.superThirtyTwo, E.southeastOpen],
+  // Lukas Allman · 149 · seed 7 · Mount Pleasant.
+  "31ee331c-024f-4e61-8f62-3477acb937f3": [E.iSixtyFour],
+  // Simeon Hammett · 165 · seed 6 · Trinity. Sent in by first name only; the one Simeon in the field.
+  "73ad572d-45ae-4fc1-8666-4e7c6543a865": [E.superThirtyTwo],
+}
+
+/** The events a wrestler competes at next, or an empty list when none were sent in. */
+export function getUpNextEvents(athleteId: string): readonly string[] {
+  return BY_ATHLETE_ID[athleteId] ?? []
+}
+
+/** Every id carrying a schedule — used by the tests to guard against a typo'd key. */
+export function upNextAthleteIds(): string[] {
+  return Object.keys(BY_ATHLETE_ID)
+}

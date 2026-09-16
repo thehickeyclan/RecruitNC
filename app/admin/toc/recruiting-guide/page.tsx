@@ -35,6 +35,7 @@ type GuideAthlete = {
   pills: { label: string; kind: "all-american" | "state-champion" | "state-placer" }[]
   credentials: string[]
   wins: string[]
+  upNext: string[]
   gpa: string | null
   email: string | null
   phone: string | null
@@ -129,6 +130,13 @@ function AthleteEntry({ athlete }: { athlete: GuideAthlete }) {
       {athlete.wins.length > 0 ? (
         <div className="ml-7 text-[8.5pt] leading-snug">
           <span className="font-semibold">Wins over:</span> {athlete.wins.join(", ")}
+        </div>
+      ) : null}
+
+      {/* Where to see them next — the line a coach acts on after the weekend. */}
+      {athlete.upNext.length > 0 ? (
+        <div className="ml-7 text-[8.5pt] leading-snug">
+          <span className="font-semibold">Up next:</span> {athlete.upNext.join(" · ")}
         </div>
       ) : null}
 
