@@ -68,29 +68,70 @@ function Rule({ label }: { label: string }) {
   )
 }
 
-/** First-round pairings with blank advancement lines — a coach fills these in as bouts land. */
+/** One blank slot for a coach to write a name into as the bracket runs. */
+function Slot() {
+  return <div className="mt-1 h-[13px] border-b border-black/45" />
+}
+
+/**
+ * The championship side: round one as drawn, then blanks through to the final.
+ *
+ * Only the winners bracket. The full draw is twelve bouts once consolation is counted, and that
+ * side does not shrink to this size legibly — it is the part of the weekend the app is better at,
+ * live, than paper ever will be.
+ *
+ * Round one carries real names because that is the one thing a coach wants off a page: who meets
+ * whom. It is printed before Friday's weigh-in, so it says so underneath rather than presenting
+ * itself as final.
+ */
 function BracketThumb({ weight }: { weight: GuideWeight }) {
   if (!weight.locked || weight.firstRound.length === 0) return null
   return (
-    <div className="mb-3 border border-black/30 px-3 py-2">
-      <div className="mb-1 text-[7.5pt] font-bold uppercase tracking-widest text-black/60">
-        First round · winners bracket
+    <div className="mb-3 break-inside-avoid border border-black/30 px-3 py-2">
+      <div className="mb-1 flex gap-2 text-[7.5pt] font-bold uppercase tracking-widest text-black/60">
+        <span className="flex-1">Round 1</span>
+        <span className="flex-1">Semifinals</span>
+        <span className="w-[28%]">Championship</span>
       </div>
-      <div className="grid grid-cols-4 gap-x-3">
-        {weight.firstRound.map((bout) => (
-          <div key={bout.boutNumber} className="text-[8pt] leading-tight">
-            <div className="flex gap-1 border-b border-black/70 pb-0.5">
-              <span className="w-3 font-bold tabular-nums">{bout.top?.seed ?? "—"}</span>
-              <span className="truncate">{bout.top?.name ?? "—"}</span>
+
+      <div className="flex gap-2">
+        <div className="flex flex-1 flex-col gap-2">
+          {weight.firstRound.map((bout) => (
+            <div key={bout.boutNumber} className="text-[8pt] leading-tight">
+              <div className="flex gap-1 border-b border-black/70 pb-0.5">
+                <span className="w-3 font-bold tabular-nums">{bout.top?.seed ?? "—"}</span>
+                <span className="truncate">{bout.top?.name ?? "—"}</span>
+              </div>
+              <div className="flex gap-1 pt-0.5">
+                <span className="w-3 font-bold tabular-nums">{bout.bottom?.seed ?? "—"}</span>
+                <span className="truncate">{bout.bottom?.name ?? "—"}</span>
+              </div>
             </div>
-            <div className="flex gap-1 pt-0.5">
-              <span className="w-3 font-bold tabular-nums">{bout.bottom?.seed ?? "—"}</span>
-              <span className="truncate">{bout.bottom?.name ?? "—"}</span>
+          ))}
+        </div>
+
+        {/* Two semifinals, each sitting across the two first-round bouts that feed it. */}
+        <div className="flex flex-1 flex-col justify-around">
+          {[0, 1].map((n) => (
+            <div key={n}>
+              <Slot />
+              <Slot />
             </div>
-            <div className="mt-1 h-3 border-t border-dotted border-black/40" />
-          </div>
-        ))}
+          ))}
+        </div>
+
+        <div className="flex w-[28%] flex-col justify-center">
+          <Slot />
+          <Slot />
+          <div className="mt-1 text-[6.5pt] uppercase tracking-widest text-black/45">Champion</div>
+        </div>
       </div>
+
+      <p className="mt-1.5 text-[7pt] leading-tight text-black/55">
+        {/* The constant already names the day — "4:00–5:00 PM Friday, September 18". */}
+        Round one as drawn. Wrestlers weigh in once, {TOC_WEIGH_IN.time}, so the draw can still
+        change — the NC United app carries the live bracket all weekend.
+      </p>
     </div>
   )
 }
