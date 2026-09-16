@@ -138,6 +138,8 @@ const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
   // Tripp Sullivan · 174 · seed 5 · Union Pines. Sent in as "South East Open", which is the
   // Southeast Open — the fifth spelling this list has normalised away.
   "85eb411c-ea51-4381-827d-13e5efa0e299": [E.superThirtyTwo, E.southeastOpen],
+  // Coy Deel · 141 · seed 7 · West Craven. The only Deel in the field.
+  "ef9c0bc5-0898-408a-86d0-740bef7e4888": [E.journeymen, E.iSixtyFour, E.superThirtyTwo, E.cougarOpen],
 }
 
 /** The events a wrestler competes at next, or an empty list when none were sent in. */
