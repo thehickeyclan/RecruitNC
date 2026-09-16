@@ -98,7 +98,13 @@ function BracketThumb({ weight }: { weight: GuideWeight }) {
 function AthleteEntry({ athlete }: { athlete: GuideAthlete }) {
   const contact = [athlete.phone, athlete.email].filter(Boolean).join(" · ")
   return (
-    <div className="break-inside-avoid border-b border-black/20 py-1.5">
+    /*
+     * Tight by design. Eight entries, a bracket and a heading share one sheet, and the schedules
+     * families keep sending push the busiest weights to the bottom of it: 133 reached 99% of the
+     * page with Quincy's eight events and Sumners's four. Reclaiming a few points per entry keeps
+     * every weight on one page without dropping anything anybody sent in.
+     */
+    <div className="break-inside-avoid border-b border-black/20 py-1">
       <div className="flex items-baseline gap-2">
         <span className="w-5 shrink-0 text-[12pt] font-black tabular-nums">{athlete.seed ?? "—"}</span>
         <span className="text-[11pt] font-bold">{athlete.name}</span>

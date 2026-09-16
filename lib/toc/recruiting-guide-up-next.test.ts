@@ -28,10 +28,14 @@ describe("up-next schedules", () => {
 
   it("prints one spelling per event", () => {
     // The chat had "S32", "Super32", "I64", "I-64" and "journeyman" for four events.
+    //
+    // A parenthetical detail may follow the name — "Journeymen (main event, 160)" — so the
+    // check is on the name in front of it, which is the part that must not vary.
     const allowed = new Set<string>(Object.values(UP_NEXT_EVENTS))
     for (const id of ids) {
       for (const event of getUpNextEvents(id)) {
-        expect(allowed.has(event), `"${event}" is not a normalised event name`).toBe(true)
+        const name = event.split(" (")[0]
+        expect(allowed.has(name), `"${event}" is not a normalised event name`).toBe(true)
       }
     }
   })

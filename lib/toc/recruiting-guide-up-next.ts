@@ -27,6 +27,7 @@ export const UP_NEXT_EVENTS = {
   cougarOpen: "Cougar Open",
   southernSlam: "Southern Slam",
   powerade: "Powerade",
+  appStateOpen: "App State Open",
 } as const
 
 const E = UP_NEXT_EVENTS
@@ -70,7 +71,13 @@ const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
    * Not Jaycob Perez (141) and not John Perez (285). Three names this close in one field is the
    * reason this map is keyed by id.
    */
-  "ddea34af-ae6a-4880-8a1c-687576bef1fe": [E.journeymen, E.iSixtyFour, E.superThirtyTwo, E.southeastOpen],
+  "ddea34af-ae6a-4880-8a1c-687576bef1fe": [
+    // A parenthetical is allowed after a normalised name: he is in the Journeymen main event.
+    `${E.journeymen} (main event, 160)`,
+    E.iSixtyFour,
+    E.superThirtyTwo,
+    E.southeastOpen,
+  ],
   // Lukas Allman · 149 · seed 7 · Mount Pleasant.
   "31ee331c-024f-4e61-8f62-3477acb937f3": [E.iSixtyFour],
   // Simeon Hammett · 165 · seed 6 · Trinity. Sent in by first name only; the one Simeon in the field.
@@ -109,6 +116,25 @@ const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
   ],
   // Cade Gehris · 149 · seed 6 · First Flight.
   "c1849e65-a453-4506-b6d3-96f7423a25c9": [E.superThirtyTwo],
+  // Tyton Kostoff · 149 · seed 1 · Hough. Sent in by first name; the one Kostoff in the field.
+  "b57cc0b2-ae3d-4f58-be43-d1493b37732a": [E.superThirtyTwo, E.southeastOpen],
+  /*
+   * Ayden Sumners · 133 · seed 1 · Wheatmore.
+   *
+   * On the same page as Holt Quincy's eight-event line, which makes 133 the weight most likely
+   * to run past the bottom of the sheet.
+   */
+  "f4236c5d-90cf-4249-afb8-755e3604702c": [E.superThirtyTwo, E.southeastOpen, E.cougarOpen, E.appStateOpen],
+  // Alexander Moody · 117 · seed 6 · Lumberton.
+  "9ec33b90-2c53-4f24-9513-6ca2ff937b43": [E.superThirtyTwo],
+  /*
+   * Aaron Ellison · 149 · seed 2 · Lumberton.
+   *
+   * Sent as a bare "Super 32" by Natasha Ellison and attached on the sender's surname: he is the
+   * only Ellison in the field. That is an inference, not a confirmation — it was flagged to Matt
+   * when it went in, and should be corrected here if it was meant for somebody else.
+   */
+  "a31bf725-32b8-4550-aff5-c74c59d97311": [E.superThirtyTwo],
 }
 
 /** The events a wrestler competes at next, or an empty list when none were sent in. */
