@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest"
 
-import { formatWin, nchsaaPhrase, ordinal, topSignificantWins, tournamentPhrase } from "./recruiting-guide-format"
+import {
+  formatWin,
+  honourPills,
+  nchsaaPhrase,
+  ordinal,
+  topSignificantWins,
+  tournamentPhrase,
+} from "./recruiting-guide-format"
 
 /**
  * The rows here are the shapes production actually returns, taken from the TOC field: NCHSAA
@@ -101,6 +108,82 @@ describe("tournamentPhrase", () => {
   it("returns null when there is nothing at all", () => {
     expect(tournamentPhrase("NHSCA", [])).toBeNull()
     expect(tournamentPhrase("NHSCA", [{ year: 2026, placement: "", record: "" }])).toBeNull()
+  })
+})
+
+describe("honourPills", () => {
+  const nationals = (rows: { year: number; placement?: string }[]) => [{ label: "NHSCA", rows }]
+
+  it("counts All-American finishes across tournaments", () => {
+    const pills = honourPills([], [
+      { label: "NHSCA", rows: [{ year: 2026, placement: "4th All-American" }] },
+      { label: "Fargo", rows: [{ year: 2026, placement: "8th All-American" }] },
+    ])
+    expect(pills).toEqual([{ kind: "all-american", label: "2× All-American" }])
+  })
+
+  it("counts a national title, which is the strongest All-American finish there is", () => {
+    // Braylen Yates won NHSCA '26; his placement reads "Champion", and matching the literal
+    // words "All-American" made the best result in the field the one that did not count.
+    expect(honourPills([], nationals([{ year: 2026, placement: "Champion" }]))).toEqual([
+      { kind: "all-american", label: "All-American" },
+    ])
+  })
+
+  it("counts a bare top-eight placement", () => {
+    expect(honourPills([], nationals([{ year: 2026, placement: "6th" }]))).toEqual([
+      { kind: "all-american", label: "All-American" },
+    ])
+  })
+
+  it("does not count a placement that is not an All-American finish", () => {
+    expect(honourPills([], nationals([{ year: 2026, placement: "" }]))).toEqual([])
+    expect(honourPills([], nationals([{ year: 2026, placement: "9th" }]))).toEqual([])
+    expect(honourPills([], nationals([{ year: 2026, placement: "12th" }]))).toEqual([])
+  })
+
+  it("counts state titles by distinct year, not by row", () => {
+    // The same title arrives from a table row and from the athlete's JSON. Counting rows would
+    // make a one-time champion a two-timer.
+    const pills = honourPills(
+      [
+        { year: 2026, place: 1, classification: "3A" },
+        { year: 2026, place: 1, classification: "3A" },
+      ],
+      [],
+    )
+    expect(pills).toEqual([{ kind: "state-champion", label: "State Champion" }])
+  })
+
+  it("shows placer alongside champion so all four years read", () => {
+    const pills = honourPills(
+      [
+        { year: 2026, place: 1, classification: "3A" },
+        { year: 2025, place: 1, classification: "3A" },
+        { year: 2024, place: 3, classification: "3A" },
+      ],
+      [],
+    )
+    expect(pills).toEqual([
+      { kind: "state-champion", label: "2× State Champion" },
+      { kind: "state-placer", label: "3× State Placer" },
+    ])
+  })
+
+  it("omits the placer pill when every placement was a title", () => {
+    const pills = honourPills([{ year: 2026, place: 1, classification: "3A" }], [])
+    expect(pills.map((p) => p.kind)).toEqual(["state-champion"])
+  })
+
+  it("drops the multiplier when the count stops being credible", () => {
+    // Five state titles is five chances in four years of high school — two wrestlers sharing a
+    // name, not a record. Same guard the profile badges already apply.
+    const rows = [2022, 2023, 2024, 2025, 2026].map((year) => ({ year, place: 1, classification: "3A" }))
+    expect(honourPills(rows, [])).toEqual([{ kind: "state-champion", label: "State Champion" }])
+  })
+
+  it("ignores placements outside the top eight", () => {
+    expect(honourPills([{ year: 2026, place: 12, classification: "3A" }], [])).toEqual([])
   })
 })
 

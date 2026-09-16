@@ -32,6 +32,7 @@ type GuideAthlete = {
   highSchool: string | null
   club: string
   committedTo: string | null
+  pills: { label: string; kind: "all-american" | "state-champion" | "state-placer" }[]
   credentials: string[]
   wins: string[]
   gpa: string | null
@@ -111,6 +112,16 @@ function AthleteEntry({ athlete }: { athlete: GuideAthlete }) {
         ) : null}
       </div>
 
+      {athlete.pills.length > 0 ? (
+        <div className="ml-7 mt-0.5 flex flex-wrap gap-1">
+          {athlete.pills.map((pill) => (
+            <span key={pill.kind} className={`pill pill-${pill.kind}`}>
+              {pill.label}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
       {athlete.credentials.length > 0 ? (
         <div className="ml-7 text-[8.5pt] leading-snug">{athlete.credentials.join("  |  ")}</div>
       ) : null}
@@ -158,7 +169,29 @@ export default function TocRecruitingGuidePage() {
 
   return (
     <div className="min-h-screen bg-white text-black">
-      <style>{`@page { size: letter portrait; margin: 0.5in; }`}</style>
+      <style>{`
+        @page { size: letter portrait; margin: 0.5in; }
+        /*
+         * Without this the pills print as empty outlines: browsers drop background colour on
+         * paper by default, which is the one thing a colour pill cannot survive.
+         */
+        .pill {
+          display: inline-block;
+          border-radius: 9999px;
+          padding: 0 6px;
+          font-size: 7.5pt;
+          font-weight: 800;
+          line-height: 1.5;
+          letter-spacing: 0.02em;
+          border: 1px solid;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        /* Each pill also differs in weight and border, so it still reads on a mono printer. */
+        .pill-all-american { background: #B31B1B; border-color: #8d1515; color: #fff; }
+        .pill-state-champion { background: #D3B574; border-color: #a8904f; color: #13294B; }
+        .pill-state-placer { background: #E8EDF4; border-color: #13294B; color: #13294B; }
+      `}</style>
 
       <div className="border-b border-gray-200 bg-gray-50 px-4 py-3 print:hidden">
         <div className="mx-auto flex max-w-4xl items-center justify-between gap-4">

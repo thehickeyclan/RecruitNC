@@ -7,8 +7,11 @@ import { loadOpponentIndex } from "@/lib/scouting-report"
 import { findSignificantWins, type Bout } from "@/lib/significant-wins"
 import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import type { TocBracketDraw } from "@/lib/toc/bracket-types"
+import { getQualifierSignificantWinBouts } from "@/lib/other-tournaments"
+import { getCuratedSignificantWins } from "@/lib/curated-significant-wins"
 import {
   formatWin,
+  honourPills,
   nchsaaPhrase,
   topSignificantWins,
   tournamentPhrase,
@@ -110,14 +113,45 @@ export async function GET() {
         const gradYear = athlete.graduationyear == null ? null : Number(athlete.graduationyear)
         const printsContact = gradYear != null && CONTACT_CLASSES.includes(gradYear)
 
+        const nchsaa = (bundle.nchsaa ?? []) as unknown as NchsaaRow[]
+        /*
+         * Fargo counts, and leaving it out was a hole.
+         *
+         * A quarter of this field wrestles it, and for some of them the Fargo All-American is the
+         * best credential they own — Devin Hord's only result of any kind is 5th at 16U freestyle.
+         */
+        const nationals = [
+          { label: "NHSCA", rows: (bundle.nhsca ?? []) as unknown as TournamentRow[] },
+          { label: "Fargo", rows: (bundle.fargo ?? []) as unknown as TournamentRow[] },
+          { label: "Super 32", rows: (bundle.super32 ?? []) as unknown as TournamentRow[] },
+        ]
+
         const credentials = [
-          nchsaaPhrase((bundle.nchsaa ?? []) as unknown as NchsaaRow[]),
-          tournamentPhrase("NHSCA", (bundle.nhsca ?? []) as unknown as TournamentRow[]),
-          tournamentPhrase("Super 32", (bundle.super32 ?? []) as unknown as TournamentRow[]),
+          nchsaaPhrase(nchsaa),
+          ...nationals.map((national) => tournamentPhrase(national.label, national.rows)),
         ].filter((line): line is string => Boolean(line))
 
-        const bouts = latestSeasonBouts(matchesByAthlete.get(String(invite.athlete_id)) ?? [])
-        const wins = topSignificantWins(findSignificantWins(bouts, opponentIndex), MAX_WINS).map(formatWin)
+        const pills = honourPills(nchsaa, nationals)
+
+        /*
+         * Wins come from everywhere the profile looks, not just the high-school season.
+         *
+         * The season table holds duals and tournaments; the qualifier bouts hold Super 32 Early
+         * Entry and the like, which is where several of these wrestlers met somebody worth naming.
+         * Curated wins are hand-entered where our import has no bout at all.
+         */
+        const [qualifierBouts] = await Promise.all([
+          getQualifierSignificantWinBouts(admin, String(athlete.id), "wins").catch(() => [] as Bout[]),
+        ])
+        const bouts = [...latestSeasonBouts(matchesByAthlete.get(String(invite.athlete_id)) ?? []), ...qualifierBouts]
+
+        const curated = getCuratedSignificantWins(String(athlete.id)).map(
+          (win) => `${win.opponent} (${win.credential})`,
+        )
+        const wins = [
+          ...topSignificantWins(findSignificantWins(bouts, opponentIndex), MAX_WINS).map(formatWin),
+          ...curated,
+        ].slice(0, MAX_WINS)
 
         const college = String(athlete.college ?? "").trim()
         const committedTo = college && !["Uncommitted", "TBD", "Undecided"].includes(college) ? college : null
@@ -133,6 +167,7 @@ export async function GET() {
           // field genuinely have none on file.
           club: String(athlete.wrestlingClub ?? "").trim() || "Unaffiliated",
           committedTo,
+          pills,
           credentials,
           wins,
           gpa: athlete.academic_gpa == null ? null : String(athlete.academic_gpa),
