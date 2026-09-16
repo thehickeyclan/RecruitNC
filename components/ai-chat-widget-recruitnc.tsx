@@ -513,6 +513,9 @@ export function AIChatWidget() {
       {/* Floating launcher with glow effect */}
       <div
         className={cn(
+          // Never on paper. It is a screen affordance, and it was printing in the bottom corner of
+          // every page of the recruiting guide.
+          "print:hidden",
           "fixed bottom-20 sm:bottom-4 right-4 z-50 flex items-center gap-3 transition-all duration-500",
           showSplash ? "opacity-0 scale-90" : "opacity-100 scale-100"
         )}

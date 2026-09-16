@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-09-16T17:47:31.832Z",
+  "generatedAt": "2026-09-16T18:17:46.300Z",
   "total": 80,
   "weights": [
     {
@@ -1092,7 +1092,10 @@
             "NHSCA '26 (3-2)"
           ],
           "wins": [],
-          "upNext": [],
+          "upNext": [
+            "I-64 Duals",
+            "Super 32"
+          ],
           "gpa": null,
           "email": null,
           "phone": "+1 (704) 796-4632"

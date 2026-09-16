@@ -4,7 +4,7 @@ import { StoreButton } from "@/components/store-button"
 
 export function Footer() {
   return (
-    <footer className="border-t border-[#1e3a5f] bg-[#0A1628] text-white">
+    <footer className="border-t border-[#1e3a5f] bg-[#0A1628] text-white print:hidden">
       <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {/* Brand */}

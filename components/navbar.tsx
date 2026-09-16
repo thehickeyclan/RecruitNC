@@ -314,7 +314,7 @@ export function Navbar() {
     : []
 
   return (
-    <nav className="bg-[#003366] shadow-md touch-scroll sticky top-0 z-50" aria-label="Main navigation">
+    <nav className="bg-[#003366] shadow-md touch-scroll sticky top-0 z-50 print:hidden" aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center min-h-[72px] py-4">
           {/* Logo — white on blue; use transparent PNG at this path to avoid blend (no black background) */}

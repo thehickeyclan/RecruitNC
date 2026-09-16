@@ -174,6 +174,8 @@ const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
   "c55d5eec-e7af-4ee5-a44f-3d7829462f3d": [E.grapplerFallClassic, E.iSixtyFour, E.superThirtyTwo],
   // Luke Padgett · 197 · seed 1 · Croatan. Two Lukes wrestle here — Richards at 125 — but one Padgett.
   "c30deea8-6e11-4bbd-b95c-6a5bc4d72692": [E.superThirtyTwo, E.journeymen],
+  // Landon Logan · 141 · seed 5 · A.L. Brown. The one Logan in the field.
+  "e5077d85-f82e-4e21-9558-f52c2d252230": [E.iSixtyFour, E.superThirtyTwo],
 }
 
 /** The events a wrestler competes at next, or an empty list when none were sent in. */

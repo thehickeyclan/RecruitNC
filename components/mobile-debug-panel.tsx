@@ -81,7 +81,7 @@ export function MobileDebugPanel() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-4 right-4 z-[9999] bg-red-600 text-white p-3 rounded-full shadow-lg"
+          className="print:hidden fixed bottom-4 right-4 z-[9999] bg-red-600 text-white p-3 rounded-full shadow-lg"
           style={{ touchAction: "manipulation" }}
           aria-label="Open debug panel"
         >
