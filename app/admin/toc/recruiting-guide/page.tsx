@@ -387,14 +387,20 @@ export default function TocRecruitingGuidePage() {
           </section>
 
           {/*
-            Weights flow rather than each taking its own sheet.
+            No page rule on the weight sections at all, deliberately.
 
-            Forcing a page per weight left four-fifths of a sheet blank behind the lighter ones —
-            285 filled 72% of its page, 197 78%. Individual entries still refuse to split across a
-            break, so nobody's line is severed; the weights just start where the last one ended.
+            They carried break-inside-avoid-page, which looked like the way to save paper and did
+            the opposite: every weight block runs 604-741pt against 595pt of usable sheet, so none
+            of them can fit on one page and the rule cannot be honoured. The browser pushed each
+            weight to a fresh sheet and abandoned the rest of the previous one — the printed PDF
+            came out 25 pages with ten near-empty tails, one of which was Louden Dunn alone on a
+            sheet.
+
+            Left to flow, the seam lands wherever it lands. Entries keep break-inside-avoid, so it
+            falls between two wrestlers rather than through one.
           */}
           {guide.weights.map((weight) => (
-            <section key={weight.weightClass} className="break-inside-avoid-page">
+            <section key={weight.weightClass}>
               <Rule label={`${weight.weightClass} lbs`} />
               <BracketThumb weight={weight} />
               {weight.athletes.map((athlete) => (
