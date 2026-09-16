@@ -157,6 +157,15 @@ const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
    * being guessed at.
    */
   "ab15038e-c51f-4d0f-947e-bcdfdc75e85b": [E.superThirtyTwo, E.iSixtyFour],
+  /*
+   * Carson Owens · 197 · seed 4 · Leesville Road.
+   *
+   * Sent with events and no athlete name, like Carson Raper's. Three Carsons wrestle this
+   * tournament — Raper at 117, Worrick at 165 — and exactly one Owens, which is what settles it.
+   */
+  "05fe2bf5-f027-400f-8654-f1293b4e9691": [E.superThirtyTwo, E.iSixtyFour],
+  // Joshua Lemke · 285 · seed 4 · Rosewood. Sent in as "Josh", the one Lemke in the field.
+  "05b7c94b-3aba-48a9-9c5a-a99a14e9cd61": [E.superThirtyTwo],
 }
 
 /** The events a wrestler competes at next, or an empty list when none were sent in. */
