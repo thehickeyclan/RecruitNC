@@ -182,6 +182,8 @@ const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
   "1a2d638e-5978-45d4-b6c8-bc95ba754367": [E.iSixtyFour, E.journeymen, E.southeastOpen],
   // Jordan Barbee · 197 · seed 8 · Orange. Had no results on file at all, so this is his only line.
   "9815ad12-2e75-4b6e-afd1-7dd65564e90d": [E.superThirtyTwo],
+  // Carson Worrick · 165 · seed 1 · Davie. Three Carsons here — Raper 117, Owens 197 — one Worrick.
+  "2608f74c-1262-44dd-9097-c990ed3c0166": [E.journeymen, E.superThirtyTwo],
 }
 
 /** The events a wrestler competes at next, or an empty list when none were sent in. */

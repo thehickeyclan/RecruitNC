@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-09-16T20:46:53.797Z",
+  "generatedAt": "2026-09-16T20:54:56.437Z",
   "total": 80,
   "weights": [
     {
@@ -1866,7 +1866,10 @@
           "wins": [
             "Benjamin Green (TOC field)"
           ],
-          "upNext": [],
+          "upNext": [
+            "Journeymen",
+            "Super 32"
+          ],
           "gpa": "4.3",
           "email": "lworrick@embarqmail.com",
           "phone": "336-657-4818"
@@ -2996,7 +2999,10 @@
       "wins": [
         "Benjamin Green (TOC field)"
       ],
-      "upNext": [],
+      "upNext": [
+        "Journeymen",
+        "Super 32"
+      ],
       "gpa": "4.3",
       "email": "lworrick@embarqmail.com",
       "phone": "336-657-4818"
