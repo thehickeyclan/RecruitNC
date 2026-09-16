@@ -79,6 +79,15 @@ const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
    * this field, after the Perry/Perez pair.
    */
   "ca4cdc62-99ac-4951-bab6-6577885aad3e": [E.journeymen, E.iSixtyFour, E.superThirtyTwo, E.pembrokeOpen],
+  // Liam Myles · 117 · seed 4 · Union Pines. The one Myles in the field.
+  "d5a61e49-a014-4123-86f1-816bb5c05fd6": [E.iSixtyFour, E.superThirtyTwo],
+  /*
+   * Aiden White · 141 · seed 2 · Weddington · committed to Appalachian State.
+   *
+   * Four Aiden/Aidan names wrestle this tournament — Burkholder at 125, Campbell at 149 and
+   * Szewczyk at 133 — and exactly one White, which is what makes this one safe.
+   */
+  "a95c204d-785c-427a-98cf-1930410b0dc7": [E.superThirtyTwo, E.southeastOpen],
 }
 
 /** The events a wrestler competes at next, or an empty list when none were sent in. */
