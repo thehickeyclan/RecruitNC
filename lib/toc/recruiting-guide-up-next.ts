@@ -172,6 +172,8 @@ const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
   // Adam Walker · 125 · seed 3 · Holly Springs. Class of 2029, so his entry prints no contact
   // details — a schedule is not personal data and belongs there either way.
   "c55d5eec-e7af-4ee5-a44f-3d7829462f3d": [E.grapplerFallClassic, E.iSixtyFour, E.superThirtyTwo],
+  // Luke Padgett · 197 · seed 1 · Croatan. Two Lukes wrestle here — Richards at 125 — but one Padgett.
+  "c30deea8-6e11-4bbd-b95c-6a5bc4d72692": [E.superThirtyTwo, E.journeymen],
 }
 
 /** The events a wrestler competes at next, or an empty list when none were sent in. */
