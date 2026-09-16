@@ -135,6 +135,9 @@ const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
    * when it went in, and should be corrected here if it was meant for somebody else.
    */
   "a31bf725-32b8-4550-aff5-c74c59d97311": [E.superThirtyTwo],
+  // Tripp Sullivan · 174 · seed 5 · Union Pines. Sent in as "South East Open", which is the
+  // Southeast Open — the fifth spelling this list has normalised away.
+  "85eb411c-ea51-4381-827d-13e5efa0e299": [E.superThirtyTwo, E.southeastOpen],
 }
 
 /** The events a wrestler competes at next, or an empty list when none were sent in. */
