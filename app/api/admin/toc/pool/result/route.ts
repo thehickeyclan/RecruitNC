@@ -16,20 +16,39 @@ import { validateFinalPrediction, type FinalPrediction } from "@/lib/toc/final-p
 
 export const dynamic = "force-dynamic"
 
+/**
+ * Who may record results: admins, plus the people entering bouts at the mat.
+ *
+ * Those recorders need this one endpoint and nothing else. Full admin would hand them every
+ * athlete's phone number, email and GPA, and it is not a thing to give out for a weekend. So they
+ * carry a narrow `toc_results` flag, the same shape as `toc_weigh_in` for the scale stations —
+ * held in Supabase Auth app_metadata, which users cannot set on themselves. TOC field-access staff
+ * are allowed too, since they already run the brackets these results complete.
+ *
+ * Still resolves the user through resolveRequestUserId rather than the cookie client, so a bearer
+ * token from the app keeps working.
+ */
 async function requireAdmin(request: NextRequest): Promise<string | null> {
   const userId = await resolveRequestUserId(request)
   if (!userId) return null
-  const { data } = await createAdminClient()
-    .from("user_profiles")
-    .select("is_admin")
-    .eq("user_id", userId)
-    .maybeSingle()
-  return data?.is_admin === true ? userId : null
+  const admin = createAdminClient()
+  const [{ data: profile }, { data: authUser }] = await Promise.all([
+    admin.from("user_profiles").select("is_admin").eq("user_id", userId).maybeSingle(),
+    admin.auth.admin.getUserById(userId),
+  ])
+  const meta = authUser?.user?.app_metadata ?? {}
+  const allowed = profile?.is_admin === true || meta.toc_results === true || meta.toc_field_access === true
+  return allowed ? userId : null
 }
 
 export async function POST(request: NextRequest) {
   const adminUserId = await requireAdmin(request)
-  if (!adminUserId) return NextResponse.json({ error: "Admins only." }, { status: 403 })
+  if (!adminUserId) {
+    return NextResponse.json(
+      { error: "Results access required. Ask NC United staff to add you." },
+      { status: 403 },
+    )
+  }
 
   const body = (await request.json().catch(() => null)) as {
     weightClass?: unknown
@@ -120,7 +139,12 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   const adminUserId = await requireAdmin(request)
-  if (!adminUserId) return NextResponse.json({ error: "Admins only." }, { status: 403 })
+  if (!adminUserId) {
+    return NextResponse.json(
+      { error: "Results access required. Ask NC United staff to add you." },
+      { status: 403 },
+    )
+  }
 
   const weightClass = Number(new URL(request.url).searchParams.get("weightClass"))
   if (!TOC_WEIGHT_CLASSES.includes(weightClass as (typeof TOC_WEIGHT_CLASSES)[number])) {

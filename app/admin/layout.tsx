@@ -17,7 +17,10 @@ export default function AdminLayout({
     pathname === "/admin/toc/field" ||
     pathname.startsWith("/admin/toc/field/") ||
     // Scale stations are staffed by people with TOC field access, not only full admins.
-    pathname === "/admin/toc/weigh-ins"
+    pathname === "/admin/toc/weigh-ins" ||
+    // Results are entered at the mat by people holding the scoped toc_results flag. The page only
+    // needs a signed-in user; the result API is what refuses anyone without the flag.
+    pathname === "/admin/toc/pool/results"
 
   return (
     <AuthGuard requireAdmin={!isScopedTocManagerPage}>
