@@ -192,6 +192,9 @@ export default function CardAnalyticsPage() {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/admin/college-interest">College interest</Link>
+          </Button>
         </div>
       </div>
 
