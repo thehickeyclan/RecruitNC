@@ -68,6 +68,7 @@ export async function GET() {
   // rather than a saved list, so a wrestler added tomorrow is included without anyone
   // remembering to update anything.
   groups.push({ id: "toc-families", type: "contacts", name: "TOC · Athletes & Families" })
+  groups.push({ id: "toc-users-and-ticket-buyers", type: "contacts", name: "TOC · All RecruitNC users + ticket buyers" })
   for (const state of ["NC", "SC", "TN", "VA"]) {
     groups.push({ id: `toc-college-coaches:${state}`, type: "contacts", name: `TOC · College Coaches · ${state}` })
   }

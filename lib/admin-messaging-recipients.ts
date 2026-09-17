@@ -78,6 +78,35 @@ export async function getAdminMessagingRecipients(
    * any linked parent account, deduplicated, because two wrestlers in one family share a payer and
    * should not receive the same message twice.
    */
+  /**
+   * Every RecruitNC user plus everyone who bought a TOC ticket on GoFan, one email each.
+   *
+   * Buyers who also have an account go out as that account, so the 93 who are both get one
+   * message, not two. Buyers are loaded by scripts/import-toc-fan-ticket-buyers.mjs.
+   */
+  if (groupFilter === "toc-users-and-ticket-buyers") {
+    const users = await getAdminMessagingRecipients(admin, null, null, limit, excludeCollegeCoaches)
+    const seen = new Set(users.map((r) => r.email?.trim().toLowerCase()).filter(Boolean))
+    const rows = [...users]
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await admin
+        .from("toc_fan_ticket_buyers")
+        .select("email, first_name, last_name")
+        .order("email")
+        .range(from, from + 999)
+      if (error) return []
+      for (const b of (data ?? []) as { email: string; first_name: string | null; last_name: string | null }[]) {
+        const email = b.email.trim().toLowerCase()
+        if (!email || seen.has(email)) continue
+        seen.add(email)
+        const name = [b.first_name, b.last_name].filter(Boolean).join(" ") || null
+        rows.push({ user_id: `toc-ticket:${email}`, email, display_name: name, cell_phone: null })
+      }
+      if ((data ?? []).length < 1000) break
+    }
+    return rows
+  }
+
   if (groupFilter === "toc-families") {
     const { data: invitations } = await admin
       .from("toc_invitations")
