@@ -10,7 +10,7 @@
  * Names are included whenever the export carries them. They are the route that places a coach who
  * checked out under a club account or a spouse's address, which email matching cannot.
  */
-import { parseGoFanExport, isCoachCredential } from "@/lib/toc/coach-ticket-purchases"
+import { parseGoFanExport, isCoachCredential, purchaseKeys } from "@/lib/toc/coach-ticket-purchases"
 import { readFileSync } from "fs"
 
 const file = process.argv[2]
@@ -25,10 +25,13 @@ const coach = all.filter(isCoachCredential)
 const skipped = all.length - coach.length
 
 const q = (v: string | null) => (v === null ? "null" : `'${v.replace(/'/g, "''")}'`)
+// One order can carry several coaches, so the stored key is the order plus the buyer name in
+// that case. See purchaseKeys: a single-credential order keeps the bare order number.
+const keys = purchaseKeys(coach)
 const values = coach
   .map(
-    (r) =>
-      `  (${q(r.orderId)}, ${q(r.email)}, ${q(r.firstName)}, ${q(r.lastName)}, ` +
+    (r, i) =>
+      `  (${q(keys[i])}, ${q(r.email)}, ${q(r.firstName)}, ${q(r.lastName)}, ` +
       `${r.purchasedAt ? `${q(r.purchasedAt)}::date` : "null"}, ${q(r.ticketType)}, ${q(r.status)})`,
   )
   .join(",\n")

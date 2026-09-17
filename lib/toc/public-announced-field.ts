@@ -1,6 +1,6 @@
 import "server-only"
 
-import { unstable_cache } from "next/cache"
+import { revalidateTag, unstable_cache } from "next/cache"
 
 import { createAdminClient } from "@/lib/supabase/admin"
 import { loadAthleteCredentialsBatch, ordinal } from "@/lib/credentials/athlete-credentials"
@@ -1025,6 +1025,24 @@ const loadAnnouncedWeight = unstable_cache(
 export async function warmPublicAnnouncedField(): Promise<void> {
   const announced = await fetchAnnouncedAtByWeight()
   await Promise.all([...announced.keys()].map((weight) => loadAnnouncedWeight(weight)))
+}
+
+/**
+ * Drop the public field cache and rebuild it, now.
+ *
+ * Every route that changes who is in the field calls this. It used to live inline in the announce
+ * and release routes only, which covered the two moments staff *press a button about the field* —
+ * but not the ones where the field changes underneath them. Xavier Bernthal withdrew from 117 and
+ * Braylen Butts took his place; the public 117 page still listed Bernthal, and would have for a
+ * day, because a withdrawal drops no tag.
+ */
+export async function refreshPublicAnnouncedField(reason: string): Promise<void> {
+  revalidateTag(TOC_PUBLIC_FIELD_TAG)
+  // Awaited: dropping the tag without rebuilding hands the cold read to whoever opens the app
+  // next. A failed warm is a slow first read, never a failed action, so it is caught here.
+  await warmPublicAnnouncedField().catch((error) => {
+    console.warn(`[toc] field warm failed after ${reason}:`, error)
+  })
 }
 
 export async function getPublicAnnouncedWeight(weightClassInput: number): Promise<PublicAnnouncedWeight | null> {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { refreshPublicAnnouncedField } from "@/lib/toc/public-announced-field"
 import { requireAdmin } from "@/lib/admin-auth"
 import { createAdminClientFresh } from "@/lib/supabase/admin"
 import { tocAdminInvitationPatchSchema } from "@/lib/toc/invitations"
@@ -155,6 +156,13 @@ export async function PATCH(request: Request, { params }: Params) {
       }
       return NextResponse.json({ error: updateError.message }, { status: 500 })
     }
+
+    /*
+     * The public field is cached for a day and keyed on nothing that changes here, so a
+     * withdrawal or a weight move would sit invisible behind it. Awaited so the page is right
+     * before staff see the row update — this is a deliberate action, not a page load.
+     */
+    await refreshPublicAnnouncedField("invitation update")
 
     return NextResponse.json({ ok: true, invitation: updated })
   } catch (e) {

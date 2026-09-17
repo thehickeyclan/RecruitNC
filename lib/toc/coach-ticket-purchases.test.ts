@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { isCoachCredential, isHeldCredential, matchPurchases, parseGoFanPaste, suggestCoaches , parseGoFanExport } from "./coach-ticket-purchases"
+import { isCoachCredential, isHeldCredential, matchPurchases, parseGoFanPaste, purchaseKeys, suggestCoaches , parseGoFanExport } from "./coach-ticket-purchases"
+import type { TicketPurchase } from "./coach-ticket-purchases"
 
 // Pasted exactly as the GoFan report arrives, tabs, "--" cells, wrapped status and all.
 const PASTE = `Email
@@ -377,3 +378,34 @@ describe("one buyer paying for other coaches", () => {
 })
 
 
+
+describe("purchaseKeys", () => {
+  const purchase = (orderId: string, firstName: string | null, lastName: string | null): TicketPurchase => ({
+    orderId,
+    email: "buyer@example.com",
+    firstName,
+    lastName,
+    purchasedAt: "2026-09-13",
+    ticketType: "TOC Weekend Coach Credential",
+    status: null,
+  })
+
+  it("leaves a one-credential order keyed on the order number", () => {
+    // Hundreds of rows are already stored this way; re-keying them would orphan every one.
+    expect(purchaseKeys([purchase("171491801", "Casey", "Gashaw")])).toEqual(["171491801"])
+  })
+
+  it("keys each coach separately when one order covers several", () => {
+    // Brian Gray bought two on one order, for himself and Ethan Tursini. Keyed on the order
+    // alone the upsert fails outright — and if it did not, one of them would read as having no
+    // credential at the door.
+    expect(
+      purchaseKeys([purchase("171499911", "Ethan", "Tursini"), purchase("171499911", "Brian", "Gray")]),
+    ).toEqual(["171499911#ethan-tursini", "171499911#brian-gray"])
+  })
+
+  it("still separates duplicates that carry no name", () => {
+    const keys = purchaseKeys([purchase("9", null, null), purchase("9", null, null)])
+    expect(new Set(keys).size).toBe(2)
+  })
+})

@@ -417,6 +417,38 @@ export function suggestCoaches(
  * importing all of it would mark every parent in the building as a coach who had collected a
  * lanyard, and bury the coaches page under two hundred buyers matching nobody.
  */
+/**
+ * A key that survives one order covering several coaches.
+ *
+ * `toc_coach_ticket_purchases` is keyed on the order number, which held while every order was one
+ * credential. It is not: Brian Gray bought two on order 171499911, one for himself and one for
+ * Ethan Tursini, and Jamal Zaggout bought three. Keyed on the order alone, the second and third
+ * names silently overwrite the first — the import fails outright on a conflicting upsert, and had
+ * it not, one real coach would read as credentialed and the others as still needing one.
+ *
+ * So an order holding more than one credential keys each row by order and buyer name. A single
+ * credential keeps the bare order number, which is what is already stored for hundreds of rows;
+ * changing those would orphan every credential imported before this.
+ */
+export function purchaseKeys(purchases: TicketPurchase[]): string[] {
+  const perOrder = new Map<string, number>()
+  for (const purchase of purchases) perOrder.set(purchase.orderId, (perOrder.get(purchase.orderId) ?? 0) + 1)
+
+  const usedKeys = new Set<string>()
+  return purchases.map((purchase) => {
+    if ((perOrder.get(purchase.orderId) ?? 0) <= 1) return purchase.orderId
+
+    const name = normaliseCoachName(`${purchase.firstName ?? ""} ${purchase.lastName ?? ""}`)
+    // A nameless duplicate has nothing to tell it from its sibling, so it falls back to a
+    // position. Both rows still land; neither overwrites the other.
+    const base = name ? `${purchase.orderId}#${name.replace(/\s+/g, "-")}` : purchase.orderId
+    let key = base
+    for (let n = 2; usedKeys.has(key); n++) key = `${base}#${n}`
+    usedKeys.add(key)
+    return key
+  })
+}
+
 export function isCoachCredential(purchase: TicketPurchase): boolean {
   const type = purchase.ticketType ?? ""
   // A "TOC College Coach Pass" is a recruiter's admission, not a corner credential — different

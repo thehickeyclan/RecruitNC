@@ -5,6 +5,7 @@ import { TOC_REGISTRATION_FEE_USD } from "@/lib/toc/registration-policy"
 import { orderShippingFields } from "@/lib/order-shipping"
 import { resolveAthleteNotificationEmails } from "@/lib/toc/invitation-service"
 import { sendTocAthleteConfirmedEmail } from "@/lib/toc/email"
+import { refreshPublicAnnouncedField } from "@/lib/toc/public-announced-field"
 
 function generateOrderNumber(): string {
   return (
@@ -132,6 +133,10 @@ export async function processTocRegistrationCheckoutSession(
     if (updateError) {
       console.error("[toc/register] mark paid:", updateError.message)
     } else {
+      // A paid registration is a new name in a public weight class. Without this the field page
+      // keeps yesterday's roster for up to a day, which is how a withdrawn wrestler outlived his
+      // own withdrawal on the 117 page.
+      await refreshPublicAnnouncedField("registration paid")
       const emails = await resolveAthleteNotificationEmails(
         admin,
         athleteId,
