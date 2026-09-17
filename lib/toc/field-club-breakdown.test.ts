@@ -36,6 +36,22 @@ describe("buildFieldClubBreakdown", () => {
     expect(slices.find((s) => s.club === "Solo")?.percentage).toBe(1.4)
   })
 
+  it("counts RAW's other names and RAW West as RAW", () => {
+    // The case that broke: seven wrestlers entered as "RAW", one as "Raleigh Area Wolfpack", one
+    // as "RAW WEST". RAW is one club for analytics, so all of them belong in one slice.
+    const { slices, total } = buildFieldClubBreakdown([
+      { name: "Ayden Sumners", wrestlingClub: "RAW" },
+      { name: "Jordan Barbee", wrestlingClub: "Raleigh Area Wolfpack" },
+      { name: "Someone Else", wrestlingClub: "Raleigh Area Wrestling" },
+      { name: "John Perez", wrestlingClub: "RAW WEST" },
+      { name: "Adam Walker", wrestlingClub: "Combat" },
+    ])
+    expect(total).toBe(5)
+    expect(slices[0]).toMatchObject({ club: "RAW", count: 4, percentage: 80 })
+    expect(slices[0].athletes).toEqual(["Ayden Sumners", "John Perez", "Jordan Barbee", "Someone Else"])
+    expect(slices[1]).toMatchObject({ club: "Combat", count: 1 })
+  })
+
   it("returns nothing for an empty field rather than dividing by zero", () => {
     expect(buildFieldClubBreakdown([])).toEqual({ slices: [], total: 0 })
   })

@@ -1,12 +1,18 @@
-import { normalizeClubName } from "@/lib/clubs/club-normalize"
+import { clubCountKey, clubFamilyLabel } from "@/lib/toc/club-family"
 
 /**
  * Which clubs the confirmed TOC field comes from.
  *
- * Counted off the athlete's own `wrestlingClub` free text, normalised the same way the club
- * map does, so "RAW" and "Raleigh Area Wolfpack" land in one slice instead of two. The
- * display name is the most common spelling among the athletes in that slice, which reads
- * better than the normalised key.
+ * Counted off the athlete's own `wrestlingClub` free text. Spellings of one name merge through
+ * normalisation — "RAW" and "raw " are one slice — and a club's other names merge through its
+ * family in `club-family.ts`, so "Raleigh Area Wolfpack" and "RAW WEST" count as RAW.
+ *
+ * This comment used to claim normalisation alone merged "RAW" with "Raleigh Area Wolfpack". It
+ * never did: an acronym does not normalise to its expansion. It went unnoticed because the tests
+ * only covered case and whitespace, until one family typed the full name and RAW's count dropped.
+ *
+ * The display name is the family label where there is one, otherwise the most common spelling
+ * among the athletes in the slice, which reads better than the normalised key.
  *
  * Athletes with no club are their own slice rather than being dropped — "how many of this
  * field train at a club at all" is part of what the chart is for.
@@ -34,8 +40,8 @@ export function buildFieldClubBreakdown(
 
   for (const athlete of athletes) {
     const raw = String(athlete.wrestlingClub ?? athlete.wrestling_club ?? "").trim()
-    const key = raw ? normalizeClubName(raw) || NO_CLUB_LABEL : NO_CLUB_LABEL
-    const label = raw || NO_CLUB_LABEL
+    const key = raw ? clubCountKey(raw) || NO_CLUB_LABEL : NO_CLUB_LABEL
+    const label = raw ? (clubFamilyLabel(raw) ?? raw) : NO_CLUB_LABEL
 
     const group = groups.get(key) ?? { spellings: new Map<string, number>(), count: 0, names: [] }
     group.count += 1

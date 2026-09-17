@@ -37,6 +37,7 @@ import {
   type NchsaaRow,
   type TournamentRow,
 } from "@/lib/toc/recruiting-guide-format"
+import { clubFamilyLabel } from "@/lib/toc/club-family"
 
 const OUT = "lib/toc/recruiting-guide-data.json"
 const CONTACT_CLASSES = [2027, 2028]
@@ -185,8 +186,14 @@ void (async () => {
     }
   })
 
+  // Counted by club family, so RAW's other names and RAW West add to RAW rather than each reading as
+  // a club of one. A wrestler's own line still prints the name his family typed.
   const clubCounts = new Map<string, number>()
-  for (const entry of found) clubCounts.set(String(entry.club), (clubCounts.get(String(entry.club)) ?? 0) + 1)
+  for (const entry of found) {
+    const club = String(entry.club)
+    const counted = clubFamilyLabel(club) ?? club
+    clubCounts.set(counted, (clubCounts.get(counted) ?? 0) + 1)
+  }
 
   const payload = {
     ok: true,
