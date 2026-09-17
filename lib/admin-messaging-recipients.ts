@@ -176,11 +176,21 @@ export async function getAdminMessagingRecipients(
   }
 
   const byRole = profileFilter && profileFilter.toLowerCase() !== "all"
-  const { data: profileRows, error: profileError } = byRole
-    ? await admin.from("user_profiles").select("user_id, email, full_name, cell_phone, role").eq("role", profileFilter)
-    : await admin.from("user_profiles").select("user_id, email, full_name, cell_phone, role")
-
-  if (profileError) return []
+  /*
+   * Paged, because PostgREST returns at most 1,000 rows per request. The single select this replaced
+   * silently sent "All users" to the first 1,000 of 1,125 profiles; nothing errored, the last 125
+   * just never heard.
+   */
+  const profileRows: { user_id: string; email: string | null; full_name: string | null; cell_phone: string | null; role: string | null }[] = []
+  for (let from = 0; ; from += 1000) {
+    const base = admin.from("user_profiles").select("user_id, email, full_name, cell_phone, role")
+    const { data, error: profileError } = await (byRole ? base.eq("role", profileFilter) : base)
+      .order("user_id")
+      .range(from, from + 999)
+    if (profileError) return []
+    profileRows.push(...(data ?? []))
+    if ((data ?? []).length < 1000) break
+  }
 
   const eligibleProfileRows = excludeCollegeCoaches
     ? (profileRows ?? []).filter((row: { role?: string | null }) => !isCollegeCoachRole(row.role))
