@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-09-16T23:12:24.009Z",
+  "generatedAt": "2026-09-17T12:34:19.949Z",
   "total": 80,
   "weights": [
     {
@@ -414,7 +414,9 @@
             "Liam Myles (TOC field)",
             "Adam Walker (TOC field)"
           ],
-          "upNext": [],
+          "upNext": [
+            "Super 32"
+          ],
           "gpa": "3.83",
           "email": "studded.loose_0@icloud.com",
           "phone": "(336) 225-9166"
@@ -1997,7 +1999,10 @@
             "Josh Connick (TOC field)",
             "Ahmet Zaggout (TOC field)"
           ],
-          "upNext": [],
+          "upNext": [
+            "I-64 Duals",
+            "Super 32"
+          ],
           "gpa": null,
           "email": "sdelat38@gmail.com",
           "phone": "(804) 790-9584"
@@ -2189,7 +2194,9 @@
             "Bodie Welker (TOC field)",
             "Elliott Gould (NC ranked)"
           ],
-          "upNext": [],
+          "upNext": [
+            "Super 32"
+          ],
           "gpa": null,
           "email": "christina.mccord3@gmail.com",
           "phone": "(336) 314-3796"
@@ -2820,8 +2827,8 @@
           "seed": 5,
           "name": "John Perez",
           "gradYear": 2027,
-          "highSchool": "Rockingham County",
-          "club": "RAW",
+          "highSchool": "Dalton L. Mcmichael highschool",
+          "club": "RAW WEST",
           "committedTo": null,
           "pills": [
             {
@@ -3199,11 +3206,11 @@
       "count": 9
     },
     {
-      "name": "RAW",
-      "count": 8
+      "name": "OTM Walters",
+      "count": 7
     },
     {
-      "name": "OTM Walters",
+      "name": "RAW",
       "count": 7
     },
     {
@@ -3292,6 +3299,10 @@
     },
     {
       "name": "Peak",
+      "count": 1
+    },
+    {
+      "name": "RAW WEST",
       "count": 1
     },
     {

@@ -207,6 +207,12 @@ const BY_ATHLETE_ID: Readonly<Record<string, readonly string[]>> = {
     E.pembrokeOpen,
     E.kingOpen,
   ],
+  // Jacob De La Torre · 165 · seed 5 · Union Pines.
+  "0088db52-b41b-453e-8043-20fed94891a0": [E.iSixtyFour, E.superThirtyTwo],
+  // Jacob McCord · 174 · seed 2 · Grimsley. Sent in as "Jake"; the one McCord in the field.
+  "fdab23e0-2dab-4135-a239-284944f8096e": [E.superThirtyTwo],
+  // Aiden Burkholder · 125 · seed 2 · Trinity. Sent his own. Four Aidens here; one Burkholder.
+  "6720fbe8-fd7b-4a80-8492-d9786a4ae054": [E.superThirtyTwo],
 }
 
 /** The events a wrestler competes at next, or an empty list when none were sent in. */
