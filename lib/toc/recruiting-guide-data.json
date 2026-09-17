@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-09-17T12:34:19.949Z",
+  "generatedAt": "2026-09-17T20:12:05.512Z",
   "total": 80,
   "weights": [
     {
@@ -15,36 +15,36 @@
           },
           "bottom": {
             "seed": 8,
-            "name": "Kristopher Kerr Jr"
+            "name": "Braylen Butts"
           }
         },
         {
           "boutNumber": 2,
           "top": {
             "seed": 4,
-            "name": "Liam Myles"
+            "name": "Matthew Akins"
           },
           "bottom": {
             "seed": 5,
-            "name": "Matthew Akins"
+            "name": "Alexander Moody"
           }
         },
         {
           "boutNumber": 3,
           "top": {
             "seed": 3,
-            "name": "Xavier Bernthal"
+            "name": "Liam Myles"
           },
           "bottom": {
             "seed": 6,
-            "name": "Alexander Moody"
+            "name": "Tommy Kishpaugh"
           }
         },
         {
           "boutNumber": 4,
           "top": {
             "seed": 7,
-            "name": "Tommy Kishpaugh"
+            "name": "Kristopher Kerr Jr"
           },
           "bottom": {
             "seed": 2,
@@ -130,37 +130,9 @@
           "phone": "(704) 690-3257"
         },
         {
-          "athleteId": "f5a87c74-7dc6-427c-b205-da34e24c2375",
-          "weightClass": 117,
-          "seed": 3,
-          "name": "Xavier Bernthal",
-          "gradYear": 2029,
-          "highSchool": "New Bern",
-          "club": "OTM Walters",
-          "committedTo": null,
-          "pills": [
-            {
-              "kind": "state-champion",
-              "label": "State Champion"
-            }
-          ],
-          "credentials": [
-            "NCHSAA 7A champion '26",
-            "NHSCA '26 (5-2)"
-          ],
-          "wins": [
-            "Alexander Moody (TOC field)",
-            "Kristopher Kerr (TOC field)"
-          ],
-          "upNext": [],
-          "gpa": null,
-          "email": null,
-          "phone": null
-        },
-        {
           "athleteId": "d5a61e49-a014-4123-86f1-816bb5c05fd6",
           "weightClass": 117,
-          "seed": 4,
+          "seed": 3,
           "name": "Liam Myles",
           "gradYear": 2027,
           "highSchool": "Union Pines",
@@ -191,7 +163,7 @@
         {
           "athleteId": "9a5d50a8-89a9-4579-83c2-2152cea84efc",
           "weightClass": 117,
-          "seed": 5,
+          "seed": 4,
           "name": "Matthew Akins",
           "gradYear": 2028,
           "highSchool": "Pinecrest",
@@ -222,7 +194,7 @@
         {
           "athleteId": "9ec33b90-2c53-4f24-9513-6ca2ff937b43",
           "weightClass": 117,
-          "seed": 6,
+          "seed": 5,
           "name": "Alexander Moody",
           "gradYear": 2027,
           "highSchool": "Lumberton",
@@ -253,7 +225,7 @@
         {
           "athleteId": "39536348-daaf-40d0-af4e-cddf7caa2cbd",
           "weightClass": 117,
-          "seed": 7,
+          "seed": 6,
           "name": "Tommy Kishpaugh",
           "gradYear": 2027,
           "highSchool": "St. Stephens",
@@ -280,7 +252,7 @@
         {
           "athleteId": "716ea4f6-d1d7-4314-8574-d9eae837df9f",
           "weightClass": 117,
-          "seed": 8,
+          "seed": 7,
           "name": "Kristopher Kerr Jr",
           "gradYear": 2029,
           "highSchool": "Cape fear",
@@ -298,6 +270,25 @@
           ],
           "wins": [
             "Liam Myles (TOC field)"
+          ],
+          "upNext": [],
+          "gpa": null,
+          "email": null,
+          "phone": null
+        },
+        {
+          "athleteId": "9ce9996c-0575-4881-8f3b-8c9f101f1d69",
+          "weightClass": 117,
+          "seed": 8,
+          "name": "Braylen Butts",
+          "gradYear": 2029,
+          "highSchool": "Union Pines",
+          "club": "RAW",
+          "committedTo": null,
+          "pills": [],
+          "credentials": [],
+          "wins": [
+            "Elias Marquez Flores (NC ranked)"
           ],
           "upNext": [],
           "gpa": null,
@@ -559,7 +550,7 @@
             "Fargo '26 (2-2)"
           ],
           "wins": [
-            "Xavier Bernthal (TOC field)"
+            "Xavier Bernthal (NC ranked)"
           ],
           "upNext": [],
           "gpa": null,
@@ -2627,7 +2618,7 @@
           "name": "Jordan Barbee",
           "gradYear": 2028,
           "highSchool": "Orange",
-          "club": "Unaffiliated",
+          "club": "Raleigh Area Wolfpack",
           "committedTo": null,
           "pills": [],
           "credentials": [],
@@ -3199,7 +3190,11 @@
   "clubs": [
     {
       "name": "Unaffiliated",
-      "count": 13
+      "count": 12
+    },
+    {
+      "name": "RAW",
+      "count": 10
     },
     {
       "name": "Darkhorse",
@@ -3207,11 +3202,7 @@
     },
     {
       "name": "OTM Walters",
-      "count": 7
-    },
-    {
-      "name": "RAW",
-      "count": 7
+      "count": 6
     },
     {
       "name": "Sly Fox",
@@ -3302,10 +3293,6 @@
       "count": 1
     },
     {
-      "name": "RAW WEST",
-      "count": 1
-    },
-    {
       "name": "Ronin MMA and Rowan Wrestling Club",
       "count": 1
     },
@@ -3322,7 +3309,7 @@
     {
       "name": "Matthew Akins",
       "weightClass": 117,
-      "seed": 5
+      "seed": 4
     },
     {
       "name": "Lukas Allman",
@@ -3350,11 +3337,6 @@
       "seed": 8
     },
     {
-      "name": "Xavier Bernthal",
-      "weightClass": 117,
-      "seed": 3
-    },
-    {
       "name": "Connor Brinkley",
       "weightClass": 285,
       "seed": 3
@@ -3368,6 +3350,11 @@
       "name": "Aiden Burkholder",
       "weightClass": 125,
       "seed": 2
+    },
+    {
+      "name": "Braylen Butts",
+      "weightClass": 117,
+      "seed": 8
     },
     {
       "name": "Aiden Campbell",
@@ -3467,7 +3454,7 @@
     {
       "name": "Kristopher Kerr Jr",
       "weightClass": 117,
-      "seed": 8
+      "seed": 7
     },
     {
       "name": "AMANUEL KAHSAI",
@@ -3482,7 +3469,7 @@
     {
       "name": "Tommy Kishpaugh",
       "weightClass": 117,
-      "seed": 7
+      "seed": 6
     },
     {
       "name": "Tyton Kostoff",
@@ -3552,7 +3539,7 @@
     {
       "name": "Alexander Moody",
       "weightClass": 117,
-      "seed": 6
+      "seed": 5
     },
     {
       "name": "Nash Mullis",
@@ -3562,7 +3549,7 @@
     {
       "name": "Liam Myles",
       "weightClass": 117,
-      "seed": 4
+      "seed": 3
     },
     {
       "name": "Travis Nobles",
