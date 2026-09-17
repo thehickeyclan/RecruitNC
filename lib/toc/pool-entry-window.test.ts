@@ -17,7 +17,15 @@ describe("the pool window", () => {
   })
 
   it("keeps the deadline before the tournament's first round", () => {
-    const firstRound = new Date("2026-09-18T00:00:00-04:00")
+    /*
+     * The real first whistle: Friday 6:00 PM, "round one begins on two mats" in TOC_SCHEDULE.
+     *
+     * This used to read midnight at the start of Friday — a stand-in for "the tournament", not the
+     * first round — which only held while the deadline sat on Thursday night. Moving the deadline to
+     * Friday afternoon, after weigh-ins, made the stand-in wrong. Pinning the actual 6:00 PM makes
+     * the guard stricter, not looser: it now fails if the deadline ever reaches the first bout.
+     */
+    const firstRound = new Date("2026-09-18T18:00:00-04:00")
     expect(TOC_POOL_DEADLINE.getTime()).toBeLessThan(firstRound.getTime())
   })
 

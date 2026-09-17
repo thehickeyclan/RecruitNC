@@ -25,8 +25,20 @@ export const TOC_LIVE_FROM = new Date("2026-09-18T17:00:00-04:00")
 export const TOC_POOL_OPENS = new Date("2026-09-11T12:00:00-04:00")
 // The night before the tournament: entries stay open through the week of watching the brackets,
 // and lock ahead of Friday's first bout. Moved from Tuesday 15 September at 11:59 PM.
-export const TOC_POOL_DEADLINE = new Date("2026-09-17T22:00:00-04:00")
-export const TOC_POOL_DEADLINE_DISPLAY = "Thursday, September 17, 2026" as const
+/*
+ * Friday 5:45 PM, after weigh-ins and before the first whistle.
+ *
+ * It was Thursday 10 PM, which locked picks before anyone had stepped on a scale. Weigh-in is one
+ * shot, Friday 4:00-5:00 PM, and a wrestler who misses weight changes his bracket after picks were
+ * already sealed — every pick on him dead, with nothing anyone could do. Xavier Bernthal withdrew
+ * from 117 the day before, which is the same failure arriving early.
+ *
+ * It cannot move past 6:00 PM. Round one starts then, and picks open after a bout begins can be
+ * made knowing how it went. pool-entry-window.test.ts holds that line: it fails if this ever lands
+ * on or after the first round.
+ */
+export const TOC_POOL_DEADLINE = new Date("2026-09-18T17:45:00-04:00")
+export const TOC_POOL_DEADLINE_DISPLAY = "Friday, September 18, 2026" as const
 
 /** Public date lines — single source for landing page, emails, FAQ, and schema. */
 export const TOC_EVENT_DATES_RANGE = "September 18–19, 2026" as const
