@@ -38,7 +38,9 @@ describe("weighInState", () => {
     expect(weighInState(record())).toBe("cleared")
     expect(weighInState(record({ lanyardGiven: false }))).toBe("cleared")
     expect(weighInState(record({ skinCheck: null }))).toBe("incomplete")
-    expect(weighInState(record({ recordedWeight: null }))).toBe("incomplete")
+    // Weighed on the scale with the weight not typed: cleared on the skin check. The table did
+    // exactly this for the first nineteen wrestlers and the counter sat at 0 of 80.
+    expect(weighInState(record({ recordedWeight: null }))).toBe("cleared")
   })
 
   it("flags over weight ahead of anything else", () => {

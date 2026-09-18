@@ -58,9 +58,16 @@ export function weighInState(record: WeighInRecord | undefined): WeighInState {
   return "incomplete"
 }
 
-/** On weight and skin check passed — used for a saved record and for what is typed before Save. */
+/**
+ * Skin check passed and not recorded over — used for a saved record and for what is typed before Save.
+ *
+ * A typed weight is not required. The table weighs the wrestler on the scale in front of an
+ * official and records the skin check and lanyard; on the day, nobody typed the number. Requiring
+ * it held all nineteen wrestlers weighed in the first half hour at "In progress" and the counter at
+ * 0 of 80. A weight that is typed still has to be on — over the class is flagged, never cleared.
+ */
 export function isClearedEntry(recordedWeight: number | null, weightClass: number, skinPassed: boolean): boolean {
-  return madeWeight(recordedWeight, weightClass) === true && skinPassed
+  return madeWeight(recordedWeight, weightClass) !== false && skinPassed
 }
 
 export type WeighInSummary = {
