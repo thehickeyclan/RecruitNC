@@ -60,7 +60,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Will NC United coaches be cornering the athletes?",
-    a: "No. Each athlete's club coach corners them throughout the tournament — wrestlers come to TOC individually, with their own coach, not as part of a school or team group. If you need a club coach to corner you, we're happy to help coordinate.",
+    a: "No. Each athlete's club coach corners them throughout the tournament — wrestlers come to TOC individually, with their own coach, not as part of a school or team group. Each wrestler may name up to two corner coaches, and families with more than one wrestler in the field share two between them. If you need a club coach to corner you, we're happy to help coordinate.",
   },
   {
     q: "What makes the Tournament of Champions different?",

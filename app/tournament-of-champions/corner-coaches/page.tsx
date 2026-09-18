@@ -24,7 +24,7 @@ export default function CornerCoachesPage() {
         </p>
         <h1 className="mt-3 text-3xl font-extrabold leading-tight sm:text-4xl">Name your corner coaches</h1>
         <p className="mt-4 text-base leading-relaxed text-[#A8BBD1]">
-          Each wrestler may designate up to two coaches. We credential them and contact them
+          Each wrestler may designate up to two coaches, and brothers in the field share two. We credential them and contact them
           directly — coaches buy the same ticket as everyone else, and collect a coaching lanyard
           at check-in for floor access and floor seating.
         </p>
