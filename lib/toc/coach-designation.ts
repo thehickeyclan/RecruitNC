@@ -146,6 +146,75 @@ export function fitsWithinCap(
   return { ok: true }
 }
 
+/**
+ * Brothers who share a corner.
+ *
+ * The per-wrestler cap is two, so a family with two wrestlers in the field could name four coaches
+ * — and naming is approved on submit. Where staff have agreed a smaller number with a family, the
+ * wrestlers share one pool: the Zaggouts have Abdul-Jamil at 133 and Ahmet at 157, and two coaches
+ * between them. A coach cornering both brothers counts once.
+ */
+export const SHARED_COACH_CAPS: readonly { label: string; athleteIds: readonly string[]; max: number }[] = [
+  {
+    label: "the Zaggout family",
+    athleteIds: ["a91dea56-f982-4527-83e1-6fe9834d16a1", "2ce1afb1-c995-457e-9bb8-2658588d46a9"],
+    max: 2,
+  },
+]
+
+export function sharedCapFor(athleteId: string) {
+  return SHARED_COACH_CAPS.find((group) => group.athleteIds.includes(athleteId)) ?? null
+}
+
+type CappedCoach = { coachKey: string; coachName?: string | null; coachEmail: string | null; phoneKey: string | null }
+
+/**
+ * How many different people these filings name.
+ *
+ * Two filings are one person when they share a phone, an email or a name. A family names the same
+ * coach for each brother and rarely types the same details twice — an email for one, a phone for the
+ * other — and counting those as two people would turn away a coach who is well within the limit.
+ */
+export function countPeople(coaches: readonly CappedCoach[]): number {
+  const parent = coaches.map((_, i) => i)
+  const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i])))
+  const owner = new Map<string, number>()
+  coaches.forEach((coach, i) => {
+    const marks = [
+      coach.phoneKey ? `tel:${coach.phoneKey}` : null,
+      coach.coachEmail?.trim() ? `mail:${coach.coachEmail.trim().toLowerCase()}` : null,
+      coach.coachName?.trim() ? `name:${coach.coachName.trim().toLowerCase().replace(/\s+/g, " ")}` : null,
+      `key:${coach.coachKey}`,
+    ].filter(Boolean) as string[]
+    for (const mark of marks) {
+      const seen = owner.get(mark)
+      if (seen === undefined) owner.set(mark, i)
+      else parent[find(i)] = find(seen)
+    }
+  })
+  return new Set(coaches.map((_, i) => find(i))).size
+}
+
+/**
+ * Whether naming these coaches keeps a shared-cap family within its number.
+ *
+ * `existing` is every live filing across all the family's wrestlers; declined filings are not
+ * coaches and are left out by the caller.
+ */
+export function fitsSharedCap(
+  existing: readonly CappedCoach[],
+  incoming: readonly CappedCoach[],
+  group: { label: string; max: number },
+): { ok: true } | { ok: false; error: string } {
+  if (countPeople([...existing, ...incoming]) <= group.max) return { ok: true }
+  const filed = [...new Set(existing.map((coach) => coach.coachName?.trim()).filter(Boolean))]
+  const onFile = filed.length > 0 ? ` ${filed.join(" and ")} ${filed.length === 1 ? "is" : "are"} already on file.` : ""
+  return {
+    ok: false,
+    error: `Coaches were not saved. ${group.label[0].toUpperCase()}${group.label.slice(1)} may name ${group.max} corner coaches in total across both wrestlers.${onFile} Contact NC United to change a coach.`,
+  }
+}
+
 /** Two coaches with the same email are one coach, whatever the form says. */
 export function dedupeIncoming(coaches: CoachDesignation[]): CoachDesignation[] {
   const seen = new Map<string, CoachDesignation>()

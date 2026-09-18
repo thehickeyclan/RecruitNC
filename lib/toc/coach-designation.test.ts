@@ -9,8 +9,7 @@ import {
   dedupeIncoming,
   fitsWithinCap,
   toCheckInList,
-  validateCoachDesignation,
-} from "./coach-designation"
+  validateCoachDesignation, countPeople, fitsSharedCap, sharedCapFor } from "./coach-designation"
 
 const coach = (email: string, name = "Coach Smith") => ({
   coachName: name,
@@ -438,5 +437,46 @@ describe("per-wrestler status on the check-in list", () => {
       { ...base, status: "approved", athlete_name: "Vincent Grack", weight_class: 157 },
     ])
     expect(coach.hasPendingAthlete).toBe(false)
+  })
+})
+
+describe("the shared family cap", () => {
+  const ZAGGOUT = { label: "the Zaggout family", max: 2 }
+  const coach = (coachName: string, extra: { coachEmail?: string; phoneKey?: string } = {}) => ({
+    coachKey: extra.coachEmail ?? `tel:${extra.phoneKey ?? coachName}`,
+    coachName,
+    coachEmail: extra.coachEmail ?? null,
+    phoneKey: extra.phoneKey ?? null,
+  })
+
+  it("covers both Zaggout brothers", () => {
+    expect(sharedCapFor("a91dea56-f982-4527-83e1-6fe9834d16a1")?.max).toBe(2) // Abdul-Jamil, 133
+    expect(sharedCapFor("2ce1afb1-c995-457e-9bb8-2658588d46a9")?.max).toBe(2) // Ahmet, 157
+    expect(sharedCapFor("someone-else")).toBeNull()
+  })
+
+  it("allows two coaches split across the brothers", () => {
+    expect(fitsSharedCap([coach("Jamal Zaggout", { phoneKey: "9195550100" })], [coach("Jacob Simms", { coachEmail: "js@x.com" })], ZAGGOUT).ok).toBe(true)
+  })
+
+  it("refuses a third coach even though each brother has room of his own", () => {
+    // Per wrestler this is one coach for one brother and two for the other — inside the
+    // two-per-wrestler cap, and exactly the four-coach reading the family cap exists to stop.
+    const result = fitsSharedCap(
+      [coach("Jamal Zaggout", { phoneKey: "9195550100" }), coach("Jacob Simms", { coachEmail: "js@x.com" })],
+      [coach("Abdeen Zaggout", { phoneKey: "9195550199" })],
+      ZAGGOUT,
+    )
+    expect(result.ok).toBe(false)
+    if (!result.ok) expect(result.error).toMatch(/2 corner coaches in total/)
+  })
+
+  it("counts a coach named for both brothers once, even with different details", () => {
+    // Email on one brother's form, phone on the other's: the same man, so still two people.
+    expect(countPeople([
+      coach("Jamal Zaggout", { phoneKey: "9195550100" }),
+      coach("Jamal Zaggout", { coachEmail: "jamal@x.com" }),
+      coach("Jacob Simms", { coachEmail: "js@x.com" }),
+    ])).toBe(2)
   })
 })

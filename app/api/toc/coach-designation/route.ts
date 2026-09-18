@@ -4,7 +4,9 @@ import { TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
 import { getPublicAnnouncedWeight } from "@/lib/toc/public-announced-field"
 import {
   dedupeIncoming,
+  fitsSharedCap,
   fitsWithinCap,
+  sharedCapFor,
   validateCoachDesignation,
   type CoachDesignation,
 } from "@/lib/toc/coach-designation"
@@ -189,6 +191,33 @@ export async function POST(request: NextRequest) {
     athlete.name,
   )
   if (!cap.ok) return NextResponse.json({ error: cap.error }, { status: 409 })
+
+  /*
+   * A family with a shared allowance is counted across all its wrestlers, not per wrestler.
+   * Checked here, before anything is written, because naming approves on submit — there is no
+   * review step afterwards where staff could turn a third coach away.
+   */
+  const shared = sharedCapFor(athleteId)
+  if (shared) {
+    const { data: familyRows, error: familyError } = await admin
+      .from("toc_coach_designations")
+      .select("coach_key, coach_name, coach_email, coach_phone_key, status")
+      .in("athlete_id", [...shared.athleteIds])
+    if (familyError) {
+      console.error("[toc coach] read family:", familyError.message)
+      return NextResponse.json({ error: "Could not save that right now." }, { status: 500 })
+    }
+    const live = (familyRows ?? [])
+      .filter((row) => row.status !== "declined")
+      .map((row) => ({
+        coachKey: String(row.coach_key),
+        coachName: row.coach_name,
+        coachEmail: row.coach_email,
+        phoneKey: row.coach_phone_key,
+      }))
+    const familyCap = fitsSharedCap(live, incoming, shared)
+    if (!familyCap.ok) return NextResponse.json({ error: familyCap.error }, { status: 409 })
+  }
 
   /**
    * A family's coaches count the moment they are named.
