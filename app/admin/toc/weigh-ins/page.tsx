@@ -290,6 +290,17 @@ export default function WeighInsPage() {
       </div>
 
       {data ? <PrintRoster roster={data.roster} records={data.records} printedAt={printedAt} /> : null}
+
+      {/* Back to the counters and search after working down the list — the table asked for it at 3:45. */}
+      <button
+        type="button"
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className="fixed right-4 z-20 rounded-full bg-[#D3B574] px-5 py-3 text-base font-extrabold text-[#0A1628] shadow-lg print:hidden"
+        style={{ bottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
+        aria-label="Back to top"
+      >
+        ↑ Top
+      </button>
     </main>
   )
 }
