@@ -1,6 +1,6 @@
 {
   "ok": true,
-  "generatedAt": "2026-09-17T20:12:05.512Z",
+  "generatedAt": "2026-09-18T00:25:59.425Z",
   "total": 80,
   "weights": [
     {
@@ -15,7 +15,7 @@
           },
           "bottom": {
             "seed": 8,
-            "name": "Braylen Butts"
+            "name": "Braylon Butts"
           }
         },
         {
@@ -213,7 +213,7 @@
           ],
           "wins": [
             "Kristopher Kerr Jr. (TOC field)",
-            "Kristopher Kerr (TOC field)"
+            "Braylon Butts (TOC field)"
           ],
           "upNext": [
             "Super 32"
@@ -269,7 +269,8 @@
             "NHSCA '26 (2-2)"
           ],
           "wins": [
-            "Liam Myles (TOC field)"
+            "Liam Myles (TOC field)",
+            "Braylon Butts (TOC field)"
           ],
           "upNext": [],
           "gpa": null,
@@ -280,18 +281,20 @@
           "athleteId": "9ce9996c-0575-4881-8f3b-8c9f101f1d69",
           "weightClass": 117,
           "seed": 8,
-          "name": "Braylen Butts",
+          "name": "Braylon Butts",
           "gradYear": 2029,
           "highSchool": "Union Pines",
-          "club": "RAW",
+          "club": "Raleigh Area Wolfpack",
           "committedTo": null,
           "pills": [],
-          "credentials": [],
+          "credentials": [
+            "NHSCA '26 (3-2)"
+          ],
           "wins": [
             "Elias Marquez Flores (NC ranked)"
           ],
           "upNext": [],
-          "gpa": null,
+          "gpa": "3.5",
           "email": null,
           "phone": null
         }
@@ -1872,7 +1875,7 @@
             "Journeymen",
             "Super 32"
           ],
-          "gpa": "4.3",
+          "gpa": "4.5",
           "email": "lworrick@embarqmail.com",
           "phone": "336-657-4818"
         },
@@ -3010,7 +3013,7 @@
         "Journeymen",
         "Super 32"
       ],
-      "gpa": "4.3",
+      "gpa": "4.5",
       "email": "lworrick@embarqmail.com",
       "phone": "336-657-4818"
     },
@@ -3352,7 +3355,7 @@
       "seed": 2
     },
     {
-      "name": "Braylen Butts",
+      "name": "Braylon Butts",
       "weightClass": 117,
       "seed": 8
     },

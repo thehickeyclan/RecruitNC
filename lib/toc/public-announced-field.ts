@@ -1033,7 +1033,7 @@ export async function warmPublicAnnouncedField(): Promise<void> {
  * Every route that changes who is in the field calls this. It used to live inline in the announce
  * and release routes only, which covered the two moments staff *press a button about the field* —
  * but not the ones where the field changes underneath them. Xavier Bernthal withdrew from 117 and
- * Braylen Butts took his place; the public 117 page still listed Bernthal, and would have for a
+ * Braylon Butts took his place; the public 117 page still listed Bernthal, and would have for a
  * day, because a withdrawal drops no tag.
  */
 export async function refreshPublicAnnouncedField(reason: string): Promise<void> {
