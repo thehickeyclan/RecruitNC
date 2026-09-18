@@ -21,7 +21,12 @@ function isTocScopedAdminTarget(path: string | null): boolean {
     path === "/admin/toc/field" ||
     path.startsWith("/admin/toc/field/") ||
     path === "/admin/toc/plan" ||
-    path.startsWith("/admin/toc/plan/")
+    path.startsWith("/admin/toc/plan/") ||
+    // Scale staff and mat-side results staff hold scoped flags, not admin. Signing them in through
+    // the admin-only login refused them with "Admin access required" before they reached the page
+    // they had been given — Zach Tolbert, granted weigh-ins, was turned away at sign-in.
+    path === "/admin/toc/weigh-ins" ||
+    path === "/admin/toc/pool/results"
   )
 }
 
