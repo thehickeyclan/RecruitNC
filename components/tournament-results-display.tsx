@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ChevronDown, Trophy } from "lucide-react"
+import { ChevronDown, Medal, Trophy } from "lucide-react"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { cn, scrollTableXClass } from "@/lib/utils"
 import { placementLabel, type OtherTournamentProfileBlock } from "@/lib/other-tournaments"
@@ -106,6 +106,15 @@ export function TournamentResultsDisplay({
 
   if (!hasAnyResults && !alwaysShowStructure) {
     return null
+  }
+
+  function nchsaaPlacementText(place: number | null | undefined): string {
+    if (place === null || place === undefined || place === 0) return "SQ"
+    if (place === 1) return "Champion"
+    if (place === 2) return "2nd Place"
+    if (place === 3) return "3rd Place"
+    if (place === 4) return "4th Place"
+    return `${place}th Place`
   }
 
   const getPlacementBadge = (
@@ -451,8 +460,44 @@ export function TournamentResultsDisplay({
     </div>
   )
 
+  /*
+   * On a phone this is a stacked list, not a table.
+   *
+   * Four columns forced a 480px minimum inside a 375px screen, so a single row of state results —
+   * the credential North Carolina coaches look for first — had to be scrolled sideways to read.
+   */
+  const nchsaaCards = (
+    <div className="space-y-2 md:hidden">
+      {nchsaaResults.length > 0 ? (
+        nchsaaResults.map((result, index) => (
+          <div
+            key={index}
+            className={cn(
+              "flex items-center justify-between gap-3 rounded-lg border p-3",
+              isDark ? "border-white/10 bg-white/[0.03]" : "border-gray-200",
+            )}
+          >
+            <div className="min-w-0">
+              <div className={cn("text-sm font-bold", isDark ? "text-white" : "text-[#13294B]")}>{result.year}</div>
+              <div className={cn("text-xs", isDark ? "text-white/50" : "text-gray-500")}>
+                {[result.classification, result.weight_class ? `${result.weight_class} lbs` : null]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </div>
+            </div>
+            {getPlacementBadge(nchsaaPlacementText(result.place), "sm")}
+          </div>
+        ))
+      ) : (
+        <p className={cn("py-4 text-center text-sm", isDark ? "text-white/40" : "text-gray-500")}>
+          No NCHSAA results recorded
+        </p>
+      )}
+    </div>
+  )
+
   const nchsaaTable = (
-    <div className={tableWrapClass}>
+    <div className={cn(tableWrapClass, "hidden md:block")}>
       <Table className="min-w-[480px]">
         <TableHeader>
           <TableRow className={tableHeadRowClass}>
@@ -658,7 +703,10 @@ export function TournamentResultsDisplay({
               State Championships
             </CardTitle>
           </CardHeader>
-          <CardContent className={contentClass}>{nchsaaTable}</CardContent>
+          <CardContent className={contentClass}>
+          {nchsaaCards}
+          {nchsaaTable}
+        </CardContent>
         </Card>
       )}
 
@@ -717,14 +765,17 @@ export function TournamentResultsDisplay({
       <Card className={cardClass} id="nchsaa-states">
         <CardHeader className={cn(PROFILE_SECTION_HEADER, "from-[#13294B] to-[#1e3a5f]")}>
           <CardTitle className={cn(PROFILE_SECTION_TITLE, "flex items-center gap-2")}>
-            <Trophy className="h-5 w-5 text-[#D3B574]" />
+            <Medal className="h-5 w-5 text-[#D3B574]" />
             State Championships
           </CardTitle>
           <p className={cn("text-xs mt-1", isDark ? "text-white/50" : "text-gray-500")}>
             North Carolina high school state tournament results
           </p>
         </CardHeader>
-        <CardContent className={contentClass}>{nchsaaTable}</CardContent>
+        <CardContent className={contentClass}>
+          {nchsaaCards}
+          {nchsaaTable}
+        </CardContent>
       </Card>
     )
   }

@@ -501,6 +501,19 @@ export function AthleteDetail({
       .filter(Boolean)
   })()
 
+  /*
+   * A section with nothing in it is not structure, it is noise.
+   *
+   * These four printed on every profile whether or not the athlete had filled them in — on one
+   * profile that was 978 pixels of "No highlight video yet" above the results a college coach came
+   * for. The card still shows to whoever can fill it in, where the empty state is a prompt rather
+   * than a dead end.
+   */
+  const hasBioContent = Boolean(String(athleteData?.bio ?? "").trim())
+  const hasHighlightContent = Boolean(athleteData?.highlight_video_url) || nationalTeamHighlightVideos.length > 0
+  const hasCollegeOpensContent = Boolean(String(athleteData?.college_opens_experience ?? "").trim())
+  const hasOtherHonoursContent = otherHonours.length > 0
+
   const athletePhoto = getAthletePhoto()
 
   const getRecruitingStatusBadge = () => {
@@ -982,7 +995,13 @@ export function AthleteDetail({
                   <img
                     src={athletePhoto || "/wrestler-silhouette.png"}
                     alt={athleteName}
-                    className="mx-auto block h-auto w-auto max-h-[min(85vh,720px)] max-w-full"
+                    /*
+                      Capped so the first screen is not only a photograph. At 85vh on a phone the
+                      image filled 590 of 812 pixels and the name sat at the fold, which put every
+                      credential below it — the opposite of what a coach opening a profile at a
+                      tournament needs. Desktop keeps the tall crop.
+                    */
+                    className="mx-auto block h-auto w-auto max-h-[min(46vh,420px)] max-w-full sm:max-h-[min(85vh,720px)]"
                     onError={() => setImageError(true)}
                   />
 
@@ -1459,7 +1478,7 @@ export function AthleteDetail({
           No `order` class: every other section computes to order 0, and flexbox puts 0 before 1,
           so the one card marked "first" was the only one pushed to the very bottom of the page.
           Its position in the DOM is already right, so the ordering is left to say nothing. */}
-      {SHOW_ATHLETE_BIO_SECTION ? (
+      {SHOW_ATHLETE_BIO_SECTION && (hasBioContent || canEdit) ? (
       <Card
         id="bio"
         className={cn("profile-card border-t-4 border-t-[#D3B574] shadow-md")}
@@ -1677,6 +1696,7 @@ export function AthleteDetail({
       </div>
 
       {/* 5. Academics - always show for consistent structure */}
+      {hasAcademicData || canEdit ? (
       <Card
         className={cn(
           "profile-card border-t-4 border-t-[#D3B574] shadow-md",
@@ -1766,8 +1786,10 @@ export function AthleteDetail({
             )}
           </div>
         </Card>
+      ) : null}
 
       {/* 7. Highlight Reel - always show for consistent structure */}
+      {hasHighlightContent || canEdit ? (
       <Card
         id="highlights"
         className={cn(
@@ -1876,8 +1898,10 @@ export function AthleteDetail({
             ) : null}
           </div>
         </Card>
+      ) : null}
 
       {/* 8. College Opens Experience - always show for consistent structure */}
+      {hasCollegeOpensContent || canEdit ? (
       <Card
         className={cn(
           "profile-card border-t-4 border-t-[#D3B574] shadow-md",
@@ -1919,8 +1943,10 @@ export function AthleteDetail({
           )}
         </div>
       </Card>
+      ) : null}
 
       {/* 9. Achievements - always show for consistent structure */}
+      {hasOtherHonoursContent || canEdit ? (
       <Card
         className={cn(
           "profile-card border-t-4 border-t-[#D3B574] shadow-md",
@@ -1996,6 +2022,7 @@ export function AthleteDetail({
               )}
             </div>
           </Card>
+      ) : null}
 
       {/* Significant wins sit above the full match list: who somebody has beaten is the question
           a profile gets opened with, and the list underneath answers how many. */}

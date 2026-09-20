@@ -758,12 +758,18 @@ export function MatchDataSectionImproved({
   if (collapseOnMobile) {
     return (
       <div className={PROFILE_TABLE_WIDTH_CONSTRAINT_CLASS}>
-        <Collapsible open={mobileOpen} onOpenChange={setMobileOpen} className={cn(PROFILE_TABLE_WIDTH_CONSTRAINT_CLASS, "lg:hidden")}>
+        {/*
+          Folded on every screen, not only on phones.
+          On a laptop the bout-by-bout table ran 2,400 pixels — a third of the whole profile —
+          below a record a coach had already read in the header. The record and the pins stay in
+          the open; the 140-row table is one click away.
+        */}
+        <Collapsible open={mobileOpen} onOpenChange={setMobileOpen} className={PROFILE_TABLE_WIDTH_CONSTRAINT_CLASS}>
           <Card className={cardClass} id="in-season" data-section="in-season">
             <CollapsibleTrigger asChild>
               <button type="button" className="w-full text-left">
                 <CardHeader className={headerClass}>
-                  <CardTitle className="text-white flex items-center justify-between gap-2 text-base">
+                  <CardTitle className="text-white flex items-center justify-between gap-2 text-base lg:text-lg">
                     <span className="flex items-center gap-2">
                       <BarChart3 className="h-4 w-4 text-[#D3B574]" />
                       {sectionTitle}
@@ -811,10 +817,6 @@ export function MatchDataSectionImproved({
             </CollapsibleContent>
           </Card>
         </Collapsible>
-        <Card className={cn(cardClass, "hidden lg:block")}>
-          {matchDataHeader}
-          <CardContent className={cn(contentClass, PROFILE_TABLE_WIDTH_CONSTRAINT_CLASS)}>{matchDataBody}</CardContent>
-        </Card>
       </div>
     )
   }

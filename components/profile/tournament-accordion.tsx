@@ -16,7 +16,7 @@
  */
 
 import { useState } from "react"
-import { ChevronDown, Trophy } from "lucide-react"
+import { ChevronDown, Globe, Trophy, type LucideIcon } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { cn, scrollTableXClass } from "@/lib/utils"
@@ -192,6 +192,7 @@ export function TournamentAccordion({
   sectionId = "tournaments",
   emptyText = "No tournament results recorded yet",
   hideWhenEmpty = false,
+  icon: Icon = Globe,
 }: {
   rows: TournamentRow[]
   theme?: "light" | "dark"
@@ -201,6 +202,8 @@ export function TournamentAccordion({
   emptyText?: string
   /** A section for an event most wrestlers have never entered should not print an empty card. */
   hideWhenEmpty?: boolean
+  /** One icon per section: ten identical trophies give a reader nothing to navigate by. */
+  icon?: LucideIcon
 }) {
   const isDark = theme === "dark"
   const [open, setOpen] = useState<string | null>(null)
@@ -225,7 +228,7 @@ export function TournamentAccordion({
     <Card className={cardClass} id={sectionId}>
       <CardHeader className={cn(PROFILE_SECTION_HEADER, "from-[#13294B] to-[#1e3a5f]")}>
         <CardTitle className={cn(PROFILE_SECTION_TITLE, "flex items-center gap-2")}>
-          <Trophy className="h-5 w-5 text-[#D3B574]" />
+          <Icon className="h-5 w-5 text-[#D3B574]" />
           {title}
         </CardTitle>
         <p className={cn("text-xs mt-1", isDark ? "text-white/50" : "text-gray-500")}>

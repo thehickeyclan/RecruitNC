@@ -4,7 +4,7 @@ import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Trophy } from "lucide-react"
 import { AthleteDetail } from "@/components/athlete-detail"
 import { TournamentAccordion, buildTournamentRows, isTocRow } from "@/components/profile/tournament-accordion"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
@@ -221,6 +221,7 @@ export default function UnifiedProfilePage() {
               <TournamentAccordion
                 theme="dark"
                 sectionId="toc"
+                icon={Trophy}
                 title="Tournament of Champions"
                 subtitle="North Carolina's invitational championship"
                 rows={profileTournamentRows.filter(isTocRow)}
