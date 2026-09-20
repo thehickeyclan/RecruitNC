@@ -102,7 +102,7 @@ export async function buildProfileReveal(
   const national: Array<[string, Array<{ year: number; placement?: string; record?: string; weight?: string }>]> = [
     ["NHSCA Nationals", bundle.nhsca ?? []],
     ["Super 32", bundle.super32 ?? []],
-    ["Fargo Nationals", bundle.fargo ?? []],
+    ["Fargo", bundle.fargo ?? []],
   ]
   for (const [label, rows] of national) {
     for (const r of rows) {

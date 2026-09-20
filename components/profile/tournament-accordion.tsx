@@ -22,12 +22,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn, scrollTableXClass } from "@/lib/utils"
 import { PROFILE_SECTION_HEADER, PROFILE_SECTION_TITLE } from "@/lib/unified-profile-section-styles"
 import { displayName, placementLabel, type OtherTournamentProfileBlock } from "@/lib/other-tournaments"
+import { parseFargoDivisionString } from "@/lib/fargo-division"
 
 export type AccordionSummaryResult = {
   year: number
   placement: string
   record?: string
   weight?: string
+  /** Fargo's "Junior Boys Greco-Roman" and the like. Two separate tournaments in one week. */
+  division?: string
 }
 
 export type NationalTeamEntry = {
@@ -109,7 +112,21 @@ export function buildTournamentRows(input: {
     ...rowsFromBlocks(input.otherTournamentBlocks ?? []),
     ...rowsFromSummaries("NHSCA Nationals", input.nhscaResults ?? []),
     ...rowsFromSummaries("Super 32", input.super32Results ?? []),
-    ...rowsFromSummaries("Fargo Nationals", input.fargoResults ?? []),
+    /*
+     * Freestyle and Greco are different tournaments, wrestled on different days, and a wrestler
+     * can be an All-American in one and go 0-2 in the other. Labelled "Fargo" alone, a
+     * profile printed two rows at the same weight and year with no way to tell which was which.
+     */
+    ...(input.fargoResults ?? []).flatMap((result, i) => {
+      const parsed = result.division ? parseFargoDivisionString(result.division) : null
+      const style = parsed ? (parsed.style === "GR" ? "Greco-Roman" : "Freestyle") : null
+      const age = parsed && parsed.age_division !== "Unknown" ? parsed.age_division : null
+      return rowsFromSummaries(style ? `Fargo · ${style}` : "Fargo", [result]).map((row) => ({
+        ...row,
+        id: `fargo-${result.year}-${i}`,
+        team: age,
+      }))
+    }),
     /*
      * The event is the duals; NC United is who they wrestled for.
      *

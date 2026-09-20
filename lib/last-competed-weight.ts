@@ -151,7 +151,7 @@ export function candidatesFromPublicProfilePayload(athlete: {
     out.push({
       year: Number(r.year),
       weight: r.weight,
-      event: "Fargo Nationals",
+      event: "Fargo",
       priority: 35,
     })
   }

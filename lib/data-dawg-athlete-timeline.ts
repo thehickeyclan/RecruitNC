@@ -264,9 +264,9 @@ function fargoLabel(r: TournamentResultForDisplay): string | null {
     const blood = /blood\s*round/i.test(placement)
       ? " · Reached Blood Round"
       : ""
-    return `🇺🇸 Fargo Nationals — ${nice}${detail}${blood}`
+    return `🇺🇸 Fargo — ${nice}${detail}${blood}`
   }
-  if (placement) return `🇺🇸 Fargo Nationals — ${placement}${detail}`
+  if (placement) return `🇺🇸 Fargo — ${placement}${detail}`
   return null
 }
 

@@ -234,14 +234,18 @@ function buildResultRows(bundle: {
     const place = r.place && r.place > 0 ? (r.place === 1 ? "Champion" : ordinal(r.place)) : "Qualifier"
     rows.push({ event: "NCHSAA States", year: r.year, detail: `${r.classification} · ${r.weight_class} · ${place}` })
   }
-  const national: Array<[string, typeof bundle.nhsca]> = [
+  const national: Array<[string, typeof bundle.fargo]> = [
     ["NHSCA Nationals", bundle.nhsca ?? []],
     ["Super 32", bundle.super32 ?? []],
-    ["Fargo Nationals", bundle.fargo ?? []],
+    ["Fargo", bundle.fargo ?? []],
   ]
   for (const [label, list] of national) {
     for (const r of list) {
-      const detail = [r.weight, r.placement, r.record ? `${r.record} record` : ""].filter(Boolean).join(" · ")
+      // Fargo runs freestyle and Greco as separate tournaments; the division says which.
+      const division = label === "Fargo" ? String(r.division ?? "").trim() : ""
+      const detail = [division, r.weight, r.placement, r.record ? `${r.record} record` : ""]
+        .filter(Boolean)
+        .join(" · ")
       if (detail) rows.push({ event: label, year: r.year, detail })
     }
   }
