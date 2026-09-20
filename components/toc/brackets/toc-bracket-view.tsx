@@ -118,7 +118,9 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
   }
 
   const copyLink = async () => {
-    const url = `${window.location.origin}/tournament-of-champions/brackets/${draw.weightClass}`
+    // Share what the reader is looking at: the public results bracket, not the seeding room.
+    const base = readOnly ? "/tournament-of-champions/results" : "/admin/toc/brackets"
+    const url = `${window.location.origin}${base}/${draw.weightClass}`
     try {
       await navigator.clipboard.writeText(url)
     } catch {
@@ -215,7 +217,7 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
             {allWeights.map((w) => (
               <HardLink
                 key={w}
-                href={`/tournament-of-champions/brackets/${w}`}
+                href={`${readOnly ? "/tournament-of-champions/results" : "/admin/toc/brackets"}/${w}`}
                 className={cn(
                   "shrink-0 rounded-sm px-3 py-2 text-sm font-semibold transition-colors",
                   w === draw.weightClass

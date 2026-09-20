@@ -650,7 +650,7 @@ function WeightBoardCard({
               <Badge className="bg-emerald-600 text-white">Draw locked · not public</Badge>
               <div className="flex flex-wrap gap-2">
                 <Button type="button" variant="outline" size="sm" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" asChild>
-                  <HardLink href={`/tournament-of-champions/brackets/${board.weightClass}`}>
+                  <HardLink href={`/admin/toc/brackets/${board.weightClass}`}>
                     View bracket
                   </HardLink>
                 </Button>
@@ -674,7 +674,7 @@ function WeightBoardCard({
               {bracketStatus?.canViewLive ? (
                 <div className="flex flex-wrap gap-2">
                   <Button type="button" variant="outline" size="sm" className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white" asChild>
-                    <HardLink href={`/tournament-of-champions/brackets/${board.weightClass}`}>
+                    <HardLink href={`/admin/toc/brackets/${board.weightClass}`}>
                       View live bracket
                     </HardLink>
                   </Button>
@@ -1015,7 +1015,7 @@ export default function TocFieldAdminPage() {
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" className="text-white/60 hover:bg-white/10 hover:text-white" asChild>
-            <Link href={canManage ? "/admin/toc" : "/tournament-of-champions/brackets"}>
+            <Link href={canManage ? "/admin/toc" : "/admin/toc/brackets"}>
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
@@ -1023,7 +1023,7 @@ export default function TocFieldAdminPage() {
             <h1 className="text-3xl font-black uppercase tracking-wide text-white">Field by weight</h1>
             <p className="text-sm text-white/50">
               {canManage ? `Private roster. Seed 1–${TOC_MAX_CONFIRMED_PER_WEIGHT}; weights above eight expand automatically. Publish official draws to ` : "Your private seeding workspace. Open your saved draw at "}
-              <HardLink href="/tournament-of-champions/brackets" className="text-[#D7B95A] hover:underline">
+              <HardLink href="/admin/toc/brackets" className="text-[#D7B95A] hover:underline">
                 public brackets
               </HardLink>
               .
@@ -1129,7 +1129,7 @@ export default function TocFieldAdminPage() {
           </div>
           <div className="flex flex-wrap gap-3">
           <HardLink
-            href="/tournament-of-champions/brackets"
+            href="/admin/toc/brackets"
             className="inline-flex items-center gap-2 text-sm font-medium text-[#D7B95A] hover:underline"
           >
             Public brackets hub <ExternalLink className="h-3.5 w-3.5" />

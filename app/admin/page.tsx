@@ -40,7 +40,7 @@ const TOC_ADMIN_LINKS = [
   { href: "/admin/toc/media", title: "Media requests", description: "Credentials & coverage pipeline", icon: Newspaper },
   { href: "/admin/toc/email", title: "Email list", description: "Subscribers · CSV export", icon: Mail },
   { href: "/admin/push-health", title: "Push health", description: "Installs · permissions · delivery", icon: BellRing },
-  { href: "/tournament-of-champions/brackets", title: "Brackets preview", description: "Admin-only draws until published", icon: LayoutGrid },
+  { href: "/admin/toc/brackets", title: "Brackets preview", description: "Admin-only draws until published", icon: LayoutGrid },
   { href: "/tournament-of-champions", title: "Public landing", description: "Marketing event page", icon: Eye },
 ] as const
 

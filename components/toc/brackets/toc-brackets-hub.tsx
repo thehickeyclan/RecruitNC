@@ -50,7 +50,7 @@ export function TocBracketsHub() {
             {brackets.map((b) => (
               <HardLink
                 key={b.weightClass}
-                href={`/tournament-of-champions/brackets/${b.weightClass}`}
+                href={`/admin/toc/brackets/${b.weightClass}`}
                 className="group rounded-sm border border-white/10 bg-white/5 p-6 text-center transition-all hover:border-[#CC0000]/50 hover:bg-[#CC0000]/10 hover:shadow-lg hover:shadow-[#CC0000]/10"
               >
                 <p className={`text-3xl sm:text-4xl text-white group-hover:text-[#CC0000] transition-colors ${tocDisplayClass()}`}>

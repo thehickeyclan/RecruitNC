@@ -146,7 +146,7 @@ const LINKS: DashboardLink[] = [
     icon: ClipboardList,
   },
   {
-    href: "/tournament-of-champions/brackets",
+    href: "/admin/toc/brackets",
     title: "Public brackets",
     description: "Published weight-class draws",
     icon: LayoutGrid,
