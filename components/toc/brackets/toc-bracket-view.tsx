@@ -84,7 +84,7 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
   )
   const winnersTree = useMemo(() => tocDrawToWinnersBracketTree(displayedDraw), [displayedDraw])
   const consolationTree = useMemo(() => tocDrawToConsolationBracketTree(displayedDraw), [displayedDraw])
-  const championName = useMemo(() => {
+  const champion = useMemo(() => {
     const championshipBout = previewDraw.bouts.find((bout) => bout.roundLabel === "Championship")
     if (!championshipBout) return null
     /*
@@ -96,7 +96,7 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
      */
     const recorded = displayedDraw.bouts.find((bout) => bout.boutNumber === championshipBout.boutNumber)?.winnerAthleteId
     const championId = simulationPicks[championshipBout.boutNumber] ?? (readOnly ? recorded : null)
-    return championId ? previewDraw.participants.find((participant) => participant.athleteId === championId)?.name ?? null : null
+    return championId ? previewDraw.participants.find((participant) => participant.athleteId === championId) ?? null : null
   }, [previewDraw, displayedDraw, simulationPicks, readOnly])
 
   useEffect(() => {
@@ -317,6 +317,12 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
               </button>
             </div>
           </div>
+          {/*
+            Every 2026 weight ran an eight-man bracket, so a finished one has nothing to preview.
+            Removed from the tree rather than hidden with a class: this panel carries `sm:flex`,
+            which beats `hidden` on anything wider than a phone.
+          */}
+          {readOnly ? null : (
           <div className="mb-5 rounded-sm border border-white/10 bg-[#0B1D3A] p-3 sm:flex sm:items-center sm:justify-between sm:gap-4">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#D7B95A]">Bracket size preview</p>
@@ -347,6 +353,7 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
               })}
             </div>
           </div>
+          )}
           {previewFieldSize !== "current" ? (
             <div className="mb-4 rounded-sm border border-sky-300/30 bg-sky-400/10 px-4 py-3 text-xs text-sky-100">
               Previewing a {previewFieldSize}-wrestler field. Seeds {draw.confirmedCount + 1}–{previewFieldSize} are TBD; remaining 16-slot positions are automatic byes.
@@ -367,7 +374,8 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
             reordering={reordering}
             selectedWinnerByBout={simulationEnabled ? simulationPicks : undefined}
             onSelectWinner={simulationEnabled ? selectSimulationWinner : undefined}
-            championName={simulationEnabled || readOnly ? championName : null}
+            championName={simulationEnabled || readOnly ? champion?.name ?? null : null}
+            championPhotoUrl={readOnly ? champion?.photoUrl ?? null : null}
           />
         </div>
 

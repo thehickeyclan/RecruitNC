@@ -31,6 +31,8 @@ type Props = {
   selectedWinnerByBout?: Record<number, string>
   onSelectWinner?: (boutNumber: number, competitorId: string) => void
   championName?: string | null
+  /** The champion's photo, shown in the champ box once a tournament is decided. */
+  championPhotoUrl?: string | null
   className?: string
 }
 
@@ -187,6 +189,7 @@ export function BracketTree({
   selectedWinnerByBout,
   onSelectWinner,
   championName,
+  championPhotoUrl,
   className,
 }: Props) {
   const theme = { ...DEFAULT_THEME, ...themeProp }
@@ -293,7 +296,15 @@ export function BracketTree({
               }}
             >
               <span className="text-xs font-semibold uppercase tracking-wide text-[#CC0000]">Champ</span>
-              <span className="text-[10px] mt-1" style={{ color: theme.slotOpenText }}>
+              {/* A finished bracket ends on a face, not an empty square. */}
+              {championPhotoUrl ? (
+                <img
+                  src={championPhotoUrl}
+                  alt={championName ?? "Champion"}
+                  className="mt-2 h-16 w-16 rounded-sm border-2 border-[#D7B95A]/70 object-cover"
+                />
+              ) : null}
+              <span className="text-[10px] mt-1 max-w-[92px]" style={{ color: theme.slotOpenText }}>
                 {championName ?? "TBD"}
               </span>
             </div>
