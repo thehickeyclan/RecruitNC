@@ -224,7 +224,7 @@ export default function UnifiedProfilePage() {
                 title="Tournament of Champions"
                 subtitle="North Carolina's invitational championship"
                 rows={profileTournamentRows.filter(isTocRow)}
-                emptyText="Has not competed at the Tournament of Champions"
+                hideWhenEmpty
               />
               <TournamentAccordion theme="dark" rows={profileTournamentRows.filter((row) => !isTocRow(row))} />
             </div>

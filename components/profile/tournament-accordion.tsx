@@ -191,6 +191,7 @@ export function TournamentAccordion({
   subtitle = "Super 32, Fargo, NHSCA, Journeymen, duals and open events",
   sectionId = "tournaments",
   emptyText = "No tournament results recorded yet",
+  hideWhenEmpty = false,
 }: {
   rows: TournamentRow[]
   theme?: "light" | "dark"
@@ -198,6 +199,8 @@ export function TournamentAccordion({
   subtitle?: string
   sectionId?: string
   emptyText?: string
+  /** A section for an event most wrestlers have never entered should not print an empty card. */
+  hideWhenEmpty?: boolean
 }) {
   const isDark = theme === "dark"
   const [open, setOpen] = useState<string | null>(null)
@@ -215,6 +218,8 @@ export function TournamentAccordion({
   const cardClass = isDark
     ? "profile-card border-t-4 border-t-[#D3B574] border-white/10 bg-[#0f1c2e] shadow-none"
     : "border-t-4 border-t-[#D3B574] shadow-md"
+
+  if (hideWhenEmpty && rows.length === 0) return null
 
   return (
     <Card className={cardClass} id={sectionId}>
