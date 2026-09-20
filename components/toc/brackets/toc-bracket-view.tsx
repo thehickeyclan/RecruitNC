@@ -19,6 +19,17 @@ type Props = {
   source?: "locked" | "live" | "personal"
   workspace?: "official" | "personal"
   onDrawUpdated?: () => Promise<void> | void
+  /**
+   * The public, finished-tournament view: the same bracket with nothing that can change it.
+   *
+   * This component is the seeding room — drag a wrestler, simulate a round, relock the draw. All
+   * of that is right in the week before the tournament and wrong on a public page afterwards,
+   * where the bracket is a record of what happened. One component, two modes, rather than a
+   * second bracket drawn somewhere else.
+   */
+  readOnly?: boolean
+  /** Bout number → "MD 13-4", shown on a finished bracket. */
+  outcomes?: Record<number, string>
 }
 
 function AthleteAvatar({ name, photoUrl, seed }: { name: string; photoUrl: string | null; seed: number }) {
@@ -56,7 +67,7 @@ function AthleteAvatar({ name, photoUrl, seed }: { name: string; photoUrl: strin
   )
 }
 
-export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], source = "live", workspace = "official", onDrawUpdated }: Props) {
+export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], source = "live", workspace = "official", onDrawUpdated, readOnly = false, outcomes }: Props) {
   const [highlightedAthleteId, setHighlightedAthleteId] = useState<string | null>(null)
   const [reordering, setReordering] = useState(false)
   const [simulationEnabled, setSimulationEnabled] = useState(false)
@@ -75,9 +86,18 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
   const consolationTree = useMemo(() => tocDrawToConsolationBracketTree(displayedDraw), [displayedDraw])
   const championName = useMemo(() => {
     const championshipBout = previewDraw.bouts.find((bout) => bout.roundLabel === "Championship")
-    const championId = championshipBout ? simulationPicks[championshipBout.boutNumber] : null
+    if (!championshipBout) return null
+    /*
+     * A finished bracket already knows its champion.
+     *
+     * The name used to come from the simulation picks alone, which is right while somebody is
+     * playing out a draw and wrong afterwards: the public bracket had every bout resolved and
+     * still printed "CHAMP · TBD" over a tournament with a winner.
+     */
+    const recorded = displayedDraw.bouts.find((bout) => bout.boutNumber === championshipBout.boutNumber)?.winnerAthleteId
+    const championId = simulationPicks[championshipBout.boutNumber] ?? (readOnly ? recorded : null)
     return championId ? previewDraw.participants.find((participant) => participant.athleteId === championId)?.name ?? null : null
-  }, [previewDraw, simulationPicks])
+  }, [previewDraw, displayedDraw, simulationPicks, readOnly])
 
   useEffect(() => {
     setSimulationEnabled(false)
@@ -86,6 +106,7 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
   }, [draw.weightClass])
 
   const selectSimulationWinner = (boutNumber: number, athleteId: string) => {
+    if (readOnly) return
     setSimulationPicks((current) => updateSimulationPick(previewDraw, current, boutNumber, athleteId))
   }
 
@@ -99,7 +120,7 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
   }
 
   const reorderBracketSlot = async (draggedInvitationId: string, targetSeed: number) => {
-    if (reordering) return
+    if (readOnly || reordering) return
     const seedSlots = Array.from({ length: draw.bracketSize ?? draw.participants.length }, (_, index) => {
       const participant = draw.participants.find((p) => p.seed === index + 1 && !isPlaceholderParticipant(p))
       return participant?.invitationId ?? null
@@ -147,7 +168,13 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
         <TocPatrioticBar />
         <div className="container mx-auto max-w-6xl px-4 sm:px-6 py-10 sm:py-14">
           <p className="text-[#CC0000] text-xs font-semibold uppercase tracking-[0.22em] mb-3">
-            {workspace === "personal" ? "My private seed workspace" : draw.isComplete ? "Official draw" : "Live bracket · field building"}
+            {readOnly
+              ? "Final results"
+              : workspace === "personal"
+                ? "My private seed workspace"
+                : draw.isComplete
+                  ? "Official draw"
+                  : "Live bracket · field building"}
           </p>
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
             <div>
@@ -155,7 +182,9 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
                 {draw.weightClass} lbs
               </h1>
               <p className="mt-3 text-white/70 text-sm sm:text-base max-w-xl">
-                {draw.isComplete
+                {readOnly
+                  ? "Every bout as it was recorded at the mats."
+                  : draw.isComplete
                   ? `${draw.confirmedCount} wrestlers. True double elimination${(draw.bracketSize ?? 8) === 16 ? " with opening-round byes" : ""}. Two mats until the title — then one mat for the champion.`
                   : `${draw.confirmedCount ?? 0} confirmed — the bracket automatically expands only when the field exceeds eight.`}
               </p>
@@ -201,7 +230,7 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
             Drag wrestlers into different bracket positions. Your seed order saves privately and does not change the official TOC draw or another user's workspace.
           </div>
         ) : null}
-        {!draw.isComplete ? (
+        {!draw.isComplete && !readOnly ? (
           <div className="rounded-sm border border-[#CC0000]/30 bg-[#CC0000]/10 px-4 py-3 text-sm text-white/85">
             Field building — {draw.confirmedCount ?? 0}/12 maximum wrestlers confirmed. Weights with eight or fewer stay on the compact bracket.
           </div>
@@ -254,12 +283,14 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
                 Bracket · {draw.weightClass} lbs
               </h2>
               <p className="text-sm text-white/45">
-                {simulationEnabled
-                  ? "Simulation mode — select a wrestler in each bout to advance the winner and feed the loser into consolation."
-                  : "Winners bracket — scroll horizontally on mobile."}
+                {readOnly
+                  ? "Final bracket — scroll horizontally on mobile."
+                  : simulationEnabled
+                    ? "Simulation mode — select a wrestler in each bout to advance the winner and feed the loser into consolation."
+                    : "Winners bracket — scroll horizontally on mobile."}
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className={cn("flex flex-wrap gap-2", readOnly && "hidden")}>
               {simulationEnabled ? (
                 <button
                   type="button"
@@ -336,7 +367,7 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
             reordering={reordering}
             selectedWinnerByBout={simulationEnabled ? simulationPicks : undefined}
             onSelectWinner={simulationEnabled ? selectSimulationWinner : undefined}
-            championName={simulationEnabled ? championName : null}
+            championName={simulationEnabled || readOnly ? championName : null}
           />
         </div>
 
