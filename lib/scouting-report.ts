@@ -220,19 +220,35 @@ export async function loadOpponentIndex(supabase: SupabaseClient): Promise<Oppon
   return { tocField, ranked, nationallyRanked }
 }
 
+/**
+ * When each fixed-calendar event is wrestled, so the list can be ordered by when it happened.
+ *
+ * Only the year is stored for these, and sorting on the year alone left a February state
+ * tournament above a Tournament of Champions wrestled in September of the same year — the
+ * opposite of what a coach wants at the top. Events that carry a real date use it instead.
+ */
+const EVENT_MONTH: Record<string, number> = {
+  "NCHSAA States": 2,
+  "NHSCA Nationals": 3,
+  Fargo: 7,
+  "Super 32": 10,
+}
+
 /** Tournament results flattened into printable lines, newest first. */
 function buildResultRows(bundle: {
   nchsaa: Array<{ year: number; place: number | null; classification: string; weight_class: string }>
   nhsca: Array<{ year: number; placement?: string; record?: string; weight?: string }>
   super32: Array<{ year: number; placement?: string; record?: string; weight?: string }>
   fargo: Array<{ year: number; placement?: string; record?: string; weight?: string; division?: string }>
-  other: Array<{ year: number; eventShortName: string; placement: number | null; record: string; weight: string; qualified: boolean }>
+  other: Array<{ year: number; eventShortName: string; placement: number | null; record: string; weight: string; qualified: boolean; eventDate?: string | null }>
 }): ScoutingReportResultRow[] {
-  const rows: ScoutingReportResultRow[] = []
+  const rows: Array<ScoutingReportResultRow & { when: string }> = []
+  const when = (event: string, year: number) =>
+    `${year}-${String(EVENT_MONTH[event] ?? 6).padStart(2, "0")}-01`
 
   for (const r of bundle.nchsaa ?? []) {
     const place = r.place && r.place > 0 ? (r.place === 1 ? "Champion" : ordinal(r.place)) : "Qualifier"
-    rows.push({ event: "NCHSAA States", year: r.year, detail: `${r.classification} · ${r.weight_class} · ${place}` })
+    rows.push({ event: "NCHSAA States", year: r.year, when: when("NCHSAA States", r.year), detail: `${r.classification} · ${r.weight_class} · ${place}` })
   }
   const national: Array<[string, typeof bundle.fargo]> = [
     ["NHSCA Nationals", bundle.nhsca ?? []],
@@ -246,7 +262,7 @@ function buildResultRows(bundle: {
       const detail = [division, r.weight, r.placement, r.record ? `${r.record} record` : ""]
         .filter(Boolean)
         .join(" · ")
-      if (detail) rows.push({ event: label, year: r.year, detail })
+      if (detail) rows.push({ event: label, year: r.year, when: when(label, r.year), detail })
     }
   }
   for (const r of bundle.other ?? []) {
@@ -254,10 +270,19 @@ function buildResultRows(bundle: {
     const detail = [r.weight, place, r.record ? `${r.record} record` : "", r.qualified ? "Super 32 qualifier" : ""]
       .filter(Boolean)
       .join(" · ")
-    rows.push({ event: r.eventShortName, year: r.year, detail })
+    rows.push({
+      event: r.eventShortName,
+      year: r.year,
+      // These carry the date they were actually wrestled.
+      when: r.eventDate ?? when(r.eventShortName, r.year),
+      detail,
+    })
   }
 
-  return rows.sort((a, b) => b.year - a.year || a.event.localeCompare(b.event))
+  // Newest first, so the most recent tournament is the first line a coach reads.
+  return rows
+    .sort((a, b) => b.when.localeCompare(a.when) || a.event.localeCompare(b.event))
+    .map(({ when: _when, ...row }) => row)
 }
 
 /**
