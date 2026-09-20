@@ -1,9 +1,16 @@
 import type { Metadata } from "next"
+import Image from "next/image"
 import Link from "next/link"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { loadTocResults } from "@/lib/toc/public-results"
 import { TocResultsBrackets } from "@/components/toc/toc-results-brackets"
-import { TOC_2026_AWARDS, TOC_EVENT_DATES_RANGE, TOC_VENUE, TOC_WEIGHT_CLASSES } from "@/lib/toc/constants"
+import {
+  TOC_2026_AWARDS,
+  TOC_2026_MADNESS,
+  TOC_EVENT_DATES_RANGE,
+  TOC_VENUE,
+  TOC_WEIGHT_CLASSES,
+} from "@/lib/toc/constants"
 
 /**
  * What happened at the 2026 Tournament of Champions.
@@ -23,6 +30,7 @@ export const metadata: Metadata = {
 export default async function TocResultsPage() {
   const results = await loadTocResults(createAdminClient())
   const awards = TOC_2026_AWARDS
+  const madness = TOC_2026_MADNESS
 
   return (
     <main className="min-h-screen bg-[#0A1628] pb-20 text-white">
@@ -85,6 +93,41 @@ export default async function TocResultsPage() {
           </nav>
         </div>
       </header>
+
+      {/*
+        The pool, decided by one point.
+
+        Above the brackets rather than below them: it is the one thing on this page that nobody who
+        watched the weekend already knows, and a page that opens with ten brackets buries it.
+      */}
+      <section className="mx-auto mt-10 max-w-6xl px-4 sm:px-6">
+        <div className="flex flex-col gap-6 rounded-xl border border-[#D3B574]/40 bg-[#D3B574]/[0.06] p-5 sm:p-6 md:flex-row md:items-center">
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#D3B574]">TOC Madness</p>
+            <h2 className="mt-1 text-2xl font-extrabold sm:text-3xl">
+              {madness.winner} <span className="text-white/40">({madness.leaderboardName})</span>
+            </h2>
+            <p className="mt-2 text-white/70">
+              {madness.points} points and {madness.correct} correct picks across all {madness.weightsEntered}{" "}
+              weights — {madness.margin === 1 ? "one point" : `${madness.margin} points`} clear of second, out of{" "}
+              {madness.entrants} entrants.
+            </p>
+            <p className="mt-4 text-sm text-white/60">
+              <span className="font-semibold text-white/80">The prize:</span> {madness.prize.label} ·{" "}
+              {madness.prize.detail}
+            </p>
+          </div>
+          <div className="shrink-0 self-center rounded-lg bg-white p-3">
+            <Image
+              src={madness.prize.src}
+              alt={madness.prize.alt}
+              width={madness.prize.width}
+              height={madness.prize.height}
+              className="h-auto w-44 sm:w-52"
+            />
+          </div>
+        </div>
+      </section>
 
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         {results.length === 0 ? (

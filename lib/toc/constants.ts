@@ -206,6 +206,31 @@ export const TOC_2026_AWARDS = {
   },
 } as const
 
+/**
+ * Who won the bracket pool, and what he won.
+ *
+ * Named in full because he is a parent who entered a pool, not one of the minors whose names keep
+ * the leaderboard itself behind a sign-in. The numbers are the ones the leaderboard's own scoring
+ * produced — 193 points over 79 entrants, one clear of second — so this block and the board agree.
+ */
+export const TOC_2026_MADNESS = {
+  winner: "Jordan Whitaker",
+  leaderboardName: "JW1",
+  points: 193,
+  correct: 76,
+  weightsEntered: 10,
+  entrants: 79,
+  margin: 1,
+  prize: {
+    label: "OG Asics Ex-Eo",
+    detail: "Red and gold, deadstock, from the Guild vault",
+    src: "/images/toc/toc-madness-2026-prize-ex-eo.jpg",
+    alt: "A red suede Asics Ex-Eo wrestling shoe with gold and white stripes, photographed from the side",
+    width: 1000,
+    height: 1000,
+  },
+} as const
+
 export const TOC_OFFICIAL_TEE = {
   eyebrow: "Official event apparel",
   headline: "The inaugural 2026 Tournament of Champions collection.",
