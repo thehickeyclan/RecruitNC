@@ -223,7 +223,7 @@ export async function buildAuthoritativeStoreCheckout(
   if (shippingId !== "standard" && shippingId !== "pickup") {
     return { ok: false, error: "Please select a valid shipping method." }
   }
-  const hasTocPreorder = items.some(isToc2026PreorderItem)
+  const hasTocPreorder = items.some((item) => isToc2026PreorderItem(item))
   if (hasTocPreorder && shippingId !== "pickup") {
     return { ok: false, error: "Tournament of Champions preorder shirts are available for event pickup only." }
   }

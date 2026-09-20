@@ -36,7 +36,7 @@ const SHIPPING_OPTIONS: ShippingMethod[] = [
 export default function ShippingMethodPage() {
   const router = useRouter()
   const { items, shippingAddress, setShippingMethod, shippingMethod } = useCartStore()
-  const hasTocPreorder = items.some(isToc2026PreorderItem)
+  const hasTocPreorder = items.some((item) => isToc2026PreorderItem(item))
   const availableOptions = hasTocPreorder ? [TOC_2026_PICKUP_METHOD] : SHIPPING_OPTIONS
   const [selectedMethod, setSelectedMethod] = useState<string>(hasTocPreorder ? "pickup" : shippingMethod?.id ?? "standard")
 

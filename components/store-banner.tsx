@@ -4,6 +4,7 @@ import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 import { HardLink } from "@/components/hard-link";
 import type { StoreCategoryOption } from "@/lib/store/store-categories";
+import { tocEventIsOver } from "@/lib/toc/ticket-sale";
 
 interface StoreBannerProps {
   onShopAll: () => void;
@@ -19,7 +20,14 @@ export function StoreBanner({
   categories,
   tocProductHref,
 }: StoreBannerProps) {
-  const preorderHref = tocProductHref ?? "/store-app?category=t-shirts";
+  const teeHref = tocProductHref ?? "/store-app?category=t-shirts";
+
+  /*
+   * The hero sold a preorder, and the artwork says PRE-ORDER in letters six inches high.
+   * Once the shirts ship instead of being collected in Apex, both the words and the image have
+   * to go — the plain front-and-back shot carries no date and no promise.
+   */
+  const over = tocEventIsOver();
 
   return (
     <section className="relative overflow-hidden border-b border-white/10 bg-[#050c1d]">
@@ -30,12 +38,16 @@ export function StoreBanner({
 
       <div className="container relative mx-auto px-4 py-6 sm:py-8 lg:px-8 lg:py-10">
         <HardLink
-          href={preorderHref}
+          href={teeHref}
           className="group relative mx-auto block max-w-7xl overflow-hidden rounded-xl border border-[#D3B574]/20 shadow-2xl shadow-black/50 transition hover:border-[#D3B574]/45"
         >
           <Image
-            src="/images/store/toc-2026-tee-preorder-banner.png"
-            alt="Official 2026 Tournament of Champions apparel — limited-edition tee available for preorder"
+            src={over ? "/images/store/toc-2026-tee.png" : "/images/store/toc-2026-tee-preorder-banner.png"}
+            alt={
+              over
+                ? "The official 2026 Tournament of Champions tee, front and back"
+                : "Official 2026 Tournament of Champions apparel — limited-edition tee available for preorder"
+            }
             width={1536}
             height={1024}
             priority
@@ -43,16 +55,16 @@ export function StoreBanner({
             sizes="(min-width: 1280px) 1216px, 100vw"
           />
           <span className="sr-only">
-            Pre-order the official Tournament of Champions tee
+            {over ? "Shop the official Tournament of Champions tee" : "Pre-order the official Tournament of Champions tee"}
           </span>
         </HardLink>
 
         <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row sm:flex-wrap">
           <HardLink
-            href={preorderHref}
+            href={teeHref}
             className="inline-flex min-h-[46px] w-full items-center justify-center gap-1 rounded-lg bg-[#D3B574] px-6 py-2.5 text-sm font-black uppercase tracking-wide text-[#0A1628] transition-colors hover:bg-[#c4a665] sm:w-auto"
           >
-            Pre-order the TOC tee
+            {over ? "Shop the TOC tee" : "Pre-order the TOC tee"}
             <ChevronRight className="h-4 w-4" aria-hidden />
           </HardLink>
           <button
@@ -65,7 +77,7 @@ export function StoreBanner({
         </div>
 
         <p className="mt-3 text-center text-xs font-semibold uppercase tracking-[0.13em] text-white/55">
-          Pre-order now · Pickup in Apex September 18–19
+          {over ? "Official event apparel · now shipping" : "Pre-order now · Pickup in Apex September 18–19"}
         </p>
 
         <div className="mx-auto mt-6 flex max-w-4xl flex-wrap justify-center gap-2">

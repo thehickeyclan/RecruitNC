@@ -51,7 +51,7 @@ const PICKUP_ADDRESS: Pick<ShippingAddress, "address1" | "address2" | "city" | "
 
 export default function ShippingPage() {
   const { items, setShippingAddress, setShippingMethod, shippingAddress, shippingMethod, getTotal } = useCartStore()
-  const hasTocPreorder = items.some(isToc2026PreorderItem)
+  const hasTocPreorder = items.some((item) => isToc2026PreorderItem(item))
   const [fulfillmentType, setFulfillmentType] = useState<"pickup" | "ship">(
     hasTocPreorder ? "pickup" : shippingMethod && shippingMethod.id !== "pickup" ? "ship" : "pickup"
   )

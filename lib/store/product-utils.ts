@@ -58,6 +58,7 @@ export function getStoreProductShipLabel(product: {
   slug?: string | null
   name?: string | null
 }): string {
+  // Only while it is still a preorder; afterwards it falls through and ships like anything else.
   if (isToc2026PreorderItem(product)) return "Pickup September 18–19 at the Tournament of Champions"
   if (isFirstInFlightSingletProduct(product)) return "Ships in 3 weeks"
   return "Ships in 1-2 business days"
