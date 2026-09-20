@@ -50,6 +50,14 @@ interface TournamentResultsDisplayProps {
   theme?: "light" | "dark"
   /** Single tabbed card on mobile — national team tab first. */
   mobileTabbedLayout?: boolean
+  /**
+   * Render the State Championships card and nothing else.
+   *
+   * Profiles now show every other event through `TournamentAccordion`, but this component draws a
+   * card per section whether or not it was given data — so without this a profile printed empty
+   * "No Super 32 results recorded" cards above the list that held the real ones.
+   */
+  statesOnly?: boolean
 }
 
 export function TournamentResultsDisplay({
@@ -63,6 +71,7 @@ export function TournamentResultsDisplay({
   alwaysShowStructure = true,
   theme = "light",
   mobileTabbedLayout = false,
+  statesOnly = false,
 }: TournamentResultsDisplayProps) {
   const isDark = theme === "dark"
   const cardClass = isDark
@@ -702,6 +711,23 @@ export function TournamentResultsDisplay({
       )}
     </div>
   )
+
+  if (statesOnly) {
+    return (
+      <Card className={cardClass} id="nchsaa-states">
+        <CardHeader className={cn(PROFILE_SECTION_HEADER, "from-[#13294B] to-[#1e3a5f]")}>
+          <CardTitle className={cn(PROFILE_SECTION_TITLE, "flex items-center gap-2")}>
+            <Trophy className="h-5 w-5 text-[#D3B574]" />
+            State Championships
+          </CardTitle>
+          <p className={cn("text-xs mt-1", isDark ? "text-white/50" : "text-gray-500")}>
+            North Carolina high school state tournament results
+          </p>
+        </CardHeader>
+        <CardContent className={contentClass}>{nchsaaTable}</CardContent>
+      </Card>
+    )
+  }
 
   return (
     <>

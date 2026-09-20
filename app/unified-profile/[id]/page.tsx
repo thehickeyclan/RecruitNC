@@ -6,6 +6,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { ArrowLeft } from "lucide-react"
 import { AthleteDetail } from "@/components/athlete-detail"
+import { TournamentAccordion, buildTournamentRows } from "@/components/profile/tournament-accordion"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
 import { ProfileViewTracker } from "@/components/profile-view-tracker"
 import { recruitNcClientLog } from "@/lib/recruitnc-debug-client"
@@ -197,17 +198,27 @@ export default function UnifiedProfilePage() {
           }))}
           currentUserId={user?.id ?? null}
             tournamentResultsComponent={
-            <div className="w-full min-w-0 max-w-full">
+            <div className="w-full min-w-0 max-w-full space-y-6">
+              {/*
+                States first, then everything else as one list. Six stacked cards became two: the
+                credential NC coaches anchor on, and every other tournament in a collapsed row that
+                already shows the finish.
+              */}
               <TournamentResultsDisplay
                 nchsaaResults={nchsaaResults}
-                nhscaResults={nhscaResults as never[]}
-                super32Results={super32Results as never[]}
-                fargoResults={fargoResults as never[]}
-                otherTournamentBlocks={otherTournamentBlocks as never[]}
-                nationalTeamResults={nationalTeamResults as never[]}
+                statesOnly
                 alwaysShowStructure={true}
-                mobileTabbedLayout
                 theme="dark"
+              />
+              <TournamentAccordion
+                theme="dark"
+                rows={buildTournamentRows({
+                  otherTournamentBlocks: otherTournamentBlocks as never[],
+                  nhscaResults: nhscaResults as never[],
+                  super32Results: super32Results as never[],
+                  fargoResults: fargoResults as never[],
+                  nationalTeamResults: nationalTeamResults as never[],
+                })}
               />
             </div>
           }
