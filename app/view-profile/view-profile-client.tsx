@@ -4,7 +4,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { ArrowLeft } from "lucide-react"
 import { AthleteDetail } from "@/components/athlete-detail"
-import { TournamentAccordion, buildTournamentRows } from "@/components/profile/tournament-accordion"
+import { TournamentAccordion, buildTournamentRows, isTocRow } from "@/components/profile/tournament-accordion"
 import { TournamentResultsDisplay } from "@/components/tournament-results-display"
 import { ProfileViewTracker } from "@/components/profile-view-tracker"
 import { useAuth } from "@/contexts/auth-context"
@@ -66,6 +66,14 @@ export function ViewProfileClient({
     ? athlete.other_tournament_blocks
     : []
   const nationalTeamResults = Array.isArray(athlete.national_team_results) ? athlete.national_team_results : []
+
+  const profileTournamentRows = buildTournamentRows({
+    otherTournamentBlocks: otherTournamentBlocks as never[],
+    nhscaResults: nhscaResults as never[],
+    super32Results: super32Results as never[],
+    fargoResults: fargoResults as never[],
+    nationalTeamResults: nationalTeamResults as never[],
+  })
   const athleteName = String(athlete.name ?? "Athlete")
 
   return (
@@ -124,14 +132,13 @@ export function ViewProfileClient({
               />
               <TournamentAccordion
                 theme="dark"
-                rows={buildTournamentRows({
-                  otherTournamentBlocks: otherTournamentBlocks as never[],
-                  nhscaResults: nhscaResults as never[],
-                  super32Results: super32Results as never[],
-                  fargoResults: fargoResults as never[],
-                  nationalTeamResults: nationalTeamResults as never[],
-                })}
+                sectionId="toc"
+                title="Tournament of Champions"
+                subtitle="North Carolina's invitational championship"
+                rows={profileTournamentRows.filter(isTocRow)}
+                emptyText="Has not competed at the Tournament of Champions"
               />
+              <TournamentAccordion theme="dark" rows={profileTournamentRows.filter((row) => !isTocRow(row))} />
             </div>
           }
         />

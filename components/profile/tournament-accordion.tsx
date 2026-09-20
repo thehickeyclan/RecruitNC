@@ -40,6 +40,10 @@ export type NationalTeamEntry = {
 export type TournamentRow = {
   id: string
   event: string
+  /** The team a wrestler competed for, on duals rows. Duals have a team and no placement. */
+  team: string | null
+  /** Duals are grouped apart: a record against whoever your team drew is not a finish in a field. */
+  isDuals: boolean
   year: number
   /** Sorts the list; events without a date fall back to the year. */
   sortKey: string
@@ -51,10 +55,17 @@ export type TournamentRow = {
   bouts: OtherTournamentProfileBlock["bouts"]
 }
 
+/** Duals name themselves: no export we take carries a flag for it. */
+function looksLikeDuals(eventName: string): boolean {
+  return /\bduals?\b/i.test(eventName)
+}
+
 function rowsFromBlocks(blocks: OtherTournamentProfileBlock[]): TournamentRow[] {
   return blocks.map((block) => ({
     id: `${block.result.eventKey}-${block.result.year}-${block.result.weight}`,
     event: block.result.eventName,
+    team: null,
+    isDuals: looksLikeDuals(block.result.eventName),
     year: block.result.year,
     sortKey: block.result.eventDate ?? `${block.result.year}-01-01`,
     weight: block.result.weight || null,
@@ -65,12 +76,18 @@ function rowsFromBlocks(blocks: OtherTournamentProfileBlock[]): TournamentRow[] 
   }))
 }
 
-function rowsFromSummaries(event: string, results: AccordionSummaryResult[]): TournamentRow[] {
+function rowsFromSummaries(
+  event: string,
+  results: AccordionSummaryResult[],
+  options: { team?: string; isDuals?: boolean } = {},
+): TournamentRow[] {
   return results
     .filter((r) => !!r.year)
     .map((r, i) => ({
       id: `${event}-${r.year}-${i}`,
       event,
+      team: options.team ?? null,
+      isDuals: options.isDuals ?? looksLikeDuals(event),
       year: r.year,
       sortKey: `${r.year}-06-01`,
       weight: r.weight ?? null,
@@ -93,13 +110,30 @@ export function buildTournamentRows(input: {
     ...rowsFromSummaries("NHSCA Nationals", input.nhscaResults ?? []),
     ...rowsFromSummaries("Super 32", input.super32Results ?? []),
     ...rowsFromSummaries("Fargo Nationals", input.fargoResults ?? []),
-    // A placeholder row is a team we expect them on, not a result — it has nothing to show.
-    ...rowsFromSummaries(
-      "NC United National Team",
-      (input.nationalTeamResults ?? [])
-        .filter((r) => !r.isPlaceholder)
-        .map((r) => ({ year: r.year, placement: r.event, record: r.record })),
-    ),
+    /*
+     * The event is the duals; NC United is who they wrestled for.
+     *
+     * These rows used to print the team as the event and the event where a placement belongs, so a
+     * profile read "NC United National Team · 2025 · Ultimate Club Duals · 6-3" — the team where
+     * the finish goes. A placeholder row is a team we expect them on, not a result, so it is left out.
+     */
+    ...(input.nationalTeamResults ?? [])
+      .filter((r) => !r.isPlaceholder)
+      .flatMap((r, i) => [
+        {
+          id: `national-team-${r.year}-${i}`,
+          event: r.event,
+          team: "NC United National Team",
+          isDuals: true,
+          year: r.year,
+          sortKey: `${r.year}-06-01`,
+          weight: null,
+          placement: null,
+          record: r.record || null,
+          entrants: null,
+          bouts: [],
+        } satisfies TournamentRow,
+      ]),
   ]
   // Most recent first: the result a coach is asking about is almost always the last one.
   return rows.sort((a, b) => b.sortKey.localeCompare(a.sortKey) || b.year - a.year)
@@ -145,38 +179,74 @@ function BoutTable({ bouts, isDark }: { bouts: TournamentRow["bouts"]; isDark: b
   )
 }
 
+/** TOC sits with the state title, not with the national events: both are North Carolina finishes. */
+export function isTocRow(row: TournamentRow): boolean {
+  return /tournament of champions/i.test(row.event)
+}
+
 export function TournamentAccordion({
   rows,
   theme = "light",
+  title = "National Tournaments",
+  subtitle = "Super 32, Fargo, NHSCA, Journeymen, duals and open events",
+  sectionId = "tournaments",
+  emptyText = "No tournament results recorded yet",
 }: {
   rows: TournamentRow[]
   theme?: "light" | "dark"
+  title?: string
+  subtitle?: string
+  sectionId?: string
+  emptyText?: string
 }) {
   const isDark = theme === "dark"
   const [open, setOpen] = useState<string | null>(null)
+
+  /*
+   * Individual results and duals read differently: a placement says where a wrestler finished in a
+   * field, a duals record says how he did against whoever his team drew. Printing "1st of 8" beside
+   * "5-0" as if they were the same claim is what the split avoids.
+   */
+  const groups = [
+    { label: "Individual", rows: rows.filter((r) => !r.isDuals) },
+    { label: "Duals & team events", rows: rows.filter((r) => r.isDuals) },
+  ].filter((group) => group.rows.length > 0)
 
   const cardClass = isDark
     ? "profile-card border-t-4 border-t-[#D3B574] border-white/10 bg-[#0f1c2e] shadow-none"
     : "border-t-4 border-t-[#D3B574] shadow-md"
 
   return (
-    <Card className={cardClass} id="tournaments">
+    <Card className={cardClass} id={sectionId}>
       <CardHeader className={cn(PROFILE_SECTION_HEADER, "from-[#13294B] to-[#1e3a5f]")}>
         <CardTitle className={cn(PROFILE_SECTION_TITLE, "flex items-center gap-2")}>
           <Trophy className="h-5 w-5 text-[#D3B574]" />
-          Tournaments
+          {title}
         </CardTitle>
         <p className={cn("text-xs mt-1", isDark ? "text-white/50" : "text-gray-500")}>
-          Tournament of Champions, Super 32, Fargo, NHSCA, duals and open events
+          {subtitle}
         </p>
       </CardHeader>
       <CardContent className={cn(isDark ? "p-3 md:p-4 bg-[#0f1c2e] text-white/80" : "p-3 md:p-4", "space-y-2")}>
         {rows.length === 0 ? (
           <p className={cn("py-6 text-center text-sm", isDark ? "text-white/40" : "text-gray-500")}>
-            No tournament results recorded yet
+            {emptyText}
           </p>
         ) : (
-          rows.map((row) => {
+          groups.map(({ label, rows: groupRows }) => (
+            <div key={label} className="space-y-2">
+              {/* Only labelled when both kinds are present: a heading over the only group is noise. */}
+              {groups.length > 1 ? (
+                <p
+                  className={cn(
+                    "px-1 pt-1 text-[11px] font-bold uppercase tracking-[0.14em]",
+                    isDark ? "text-white/40" : "text-gray-500",
+                  )}
+                >
+                  {label}
+                </p>
+              ) : null}
+              {groupRows.map((row) => {
             const expandable = row.bouts.length > 0
             const isOpen = open === row.id
             return (
@@ -200,7 +270,12 @@ export function TournamentAccordion({
                       {row.event}
                     </div>
                     <div className={cn("text-xs", isDark ? "text-white/50" : "text-gray-500")}>
-                      {[row.year, row.weight ? `${row.weight} lbs` : null, row.entrants ? `${row.entrants} in bracket` : null]
+                      {[
+                        row.year,
+                        row.team,
+                        row.weight ? `${row.weight} lbs` : null,
+                        row.entrants ? `${row.entrants} in bracket` : null,
+                      ]
                         .filter(Boolean)
                         .join(" · ")}
                     </div>
@@ -240,9 +315,11 @@ export function TournamentAccordion({
                     <BoutTable bouts={row.bouts} isDark={isDark} />
                   </div>
                 ) : null}
-              </div>
-            )
-          })
+                  </div>
+                )
+              })}
+            </div>
+          ))
         )}
       </CardContent>
     </Card>

@@ -10,7 +10,7 @@
  *     --event-name "NC Super 32 Early Entry" \
  *     --short-name "Super 32 Early Entry" \
  *     --event-state NC --event-date 2026-09-05 --gender M \
- *     [--dry-run] [--report path.json]
+ *     [--dry-run] [--report path.json] [--no-placements]
  *
  * Re-running is safe: rows for the event key are replaced, so a corrected CSV can just be
  * re-imported.
@@ -51,6 +51,17 @@ function arg(name: string, fallback?: string): string {
 }
 
 const DRY_RUN = process.argv.includes("--dry-run")
+/**
+ * Import records without placements.
+ *
+ * Placement is read from the bout labelled "Finals" in each weight, which holds for a single
+ * bracket per weight. The Journeymen Fall Classic runs several divisions and brackets under one
+ * weight number with no division column — every weight in that export has four to eight "Finals"
+ * rows — so a wrestler who lost in the round of 32 and later won a second-chance bracket came out
+ * as the champion. Where the source cannot say which bracket a final belongs to, we publish the
+ * record and no placement rather than a placement we cannot stand behind.
+ */
+const NO_PLACEMENTS = process.argv.includes("--no-placements")
 
 /**
  * Trackwrestling exports wrap every cell as `="value"` so spreadsheets keep the leading
@@ -211,8 +222,8 @@ async function main() {
       losses: athlete.losses,
       byes: athlete.byes,
       record: athlete.record,
-      placement: athlete.placement,
-      qualified: athlete.qualified,
+      placement: NO_PLACEMENTS ? null : athlete.placement,
+      qualified: NO_PLACEMENTS ? false : athlete.qualified,
       entrants: athlete.entrants || parsed.entrantsByWeight[athlete.weightClass] || null,
       source_file: path.basename(file),
     }
