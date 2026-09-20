@@ -25,6 +25,8 @@ export function TocResultsStrip() {
             <p className="mt-1 text-sm text-white/70">
               {TOC_2026_AWARDS.mostOutstandingWrestler.name} took Most Outstanding Wrestler
               {" · "}
+              Match of Champions: {TOC_2026_AWARDS.matchOfChampions.label}
+              {" · "}
               {TOC_2026_AWARDS.cadenPerryScholarship.name} received the Caden Perry Warrior Scholarship
             </p>
           </div>
