@@ -1,6 +1,7 @@
 "use client"
 
 import { TocHero } from "@/components/toc/toc-hero"
+import { TocResultsStrip } from "@/components/toc/toc-results-strip"
 import { TocQuickFacts } from "@/components/toc/toc-quick-facts"
 import { TocRoadSection } from "@/components/toc/toc-road-section"
 import { TocRulesSection } from "@/components/toc/toc-rules-section"
@@ -44,6 +45,8 @@ type Props = {
 export function TocLandingPage({ config, confirmedColleges }: Props) {
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
+      {/* The result comes before the pitch now that the tournament has been wrestled. */}
+      <TocResultsStrip />
       {/* Hook */}
       <TocHero config={config} confirmedColleges={confirmedColleges} />
       <TocFloStreamingStrip />
