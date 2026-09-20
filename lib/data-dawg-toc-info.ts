@@ -24,7 +24,7 @@ import {
   TOC_WEIGH_IN,
   TOC_WEIGHT_CLASSES,
 } from "@/lib/toc/constants"
-import { tocTicketsOnSale } from "@/lib/toc/ticket-sale"
+import { tocEventIsOver, tocTicketsOnSale } from "@/lib/toc/ticket-sale"
 import { TOC_HERO } from "@/lib/toc/marketing-copy"
 import {
   formatTocRegistrationFee,
@@ -490,7 +490,7 @@ export async function answerTournamentOfChampionsQuestion(message: string): Prom
     sections.push(
       section(
         "Tournament of Champions",
-        `${TOC_HERO.tagline}\n\n${TOC_HERO.lead}\n\n- Dates: ${TOC_EVENT_DATES_RANGE}\n- Venue: ${config.venue_name ?? TOC_VENUE.name}, ${config.venue_address ?? TOC_VENUE.address}\n- Format: invite-only; most weights have eight wrestlers, with select deep weights expanding to 10 or 12; true double-elimination and top-three placement\n- Weights: ${TOC_WEIGHT_CLASSES.join(", ")} lbs\n- Tickets: ${tocTicketsOnSale() ? `on sale now — [GoFan](${TOC_GOFAN_TICKETS_URL})` : `on sale ${TOC_TICKET_SALE_TIMING} (sold via GoFan)`}\n- Full page: [Tournament of Champions](${TOC_PAGE_URL})`,
+        `${TOC_HERO.tagline}\n\n${TOC_HERO.lead}\n\n- Dates: ${TOC_EVENT_DATES_RANGE}\n- Venue: ${config.venue_name ?? TOC_VENUE.name}, ${config.venue_address ?? TOC_VENUE.address}\n- Format: invite-only; most weights have eight wrestlers, with select deep weights expanding to 10 or 12; true double-elimination and top-three placement\n- Weights: ${TOC_WEIGHT_CLASSES.join(", ")} lbs\n- Tickets: ${tocEventIsOver() ? `the 2026 event is over — [results and brackets](${TOC_PAGE_URL}/results)` : tocTicketsOnSale() ? `on sale now — [GoFan](${TOC_GOFAN_TICKETS_URL})` : `on sale ${TOC_TICKET_SALE_TIMING} (sold via GoFan)`}\n- Full page: [Tournament of Champions](${TOC_PAGE_URL})`,
       ),
     )
   }
@@ -573,7 +573,9 @@ export async function answerTournamentOfChampionsQuestion(message: string): Prom
         "Tickets",
         [
           `${TOC_SPECTATORS.ticketProviderLabel}.`,
-          tocTicketsOnSale()
+          tocEventIsOver()
+            ? `The 2026 tournament is over — there are no tickets to sell. Point people at the results and brackets instead: ${TOC_PAGE_URL}/results`
+            : tocTicketsOnSale()
             ? `Tickets are on sale now: [Buy on GoFan](${TOC_GOFAN_TICKETS_URL})`
             : `Tickets are not on sale yet — public sale opens ${TOC_TICKET_SALE_TIMING}, sold via GoFan. Seating is limited and families of competing athletes get first access before the public sale. Do not share a purchase link until sales open.`,
           `Saturday admission covers the full tournament including single-mat championship finals.`,

@@ -14,7 +14,7 @@ import {
   TOC_VENUE,
   TOC_WEIGH_IN,
 } from "@/lib/toc/constants"
-import { tocTicketsOnSale } from "@/lib/toc/ticket-sale"
+import { tocEventIsOver, tocTicketsOnSale } from "@/lib/toc/ticket-sale"
 import {
   formatTocRegistrationFee,
   TOC_REGISTRATION_FEE_COVERS,
@@ -104,7 +104,10 @@ const FAQ_ITEMS = [
   },
   {
     q: "Can I buy tickets now?",
-    a: tocTicketsOnSale()
+    // Three answers, not two: after the tournament "not yet" is as wrong as "on sale now".
+    a: tocEventIsOver()
+      ? `The 2026 tournament is over — full results and every bracket are on the results page. Tickets for the next one will go on sale here and in the NC United app.`
+      : tocTicketsOnSale()
       ? `Yes — tickets are on sale now through NC United's GoFan page (see the Spectators section above). Saturday admission covers the full tournament including single-mat championship finals.`
       : `Not yet. Tickets go on sale ${TOC_TICKET_SALE_TIMING}. Sign up for the email list to be notified the moment they're live. Saturday admission covers the full tournament including single-mat championship finals. Pricing to be announced.`,
   },

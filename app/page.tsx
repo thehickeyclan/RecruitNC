@@ -22,8 +22,8 @@ import {
   loadLatestCommits,
   type HomeRankedProspect,
 } from "@/lib/home-data"
-import { TOC_FLO_URL, TOC_GOFAN_TICKETS_URL } from "@/lib/toc/constants"
-import { tocTicketsOnSale } from "@/lib/toc/ticket-sale"
+import { TOC_2026_AWARDS, TOC_FLO_URL, TOC_GOFAN_TICKETS_URL } from "@/lib/toc/constants"
+import { tocEventIsOver, tocTicketsOnSale } from "@/lib/toc/ticket-sale"
 
 export const revalidate = 120
 
@@ -145,8 +145,43 @@ export default async function HomePage() {
     <main className="min-h-screen bg-rnc-ink">
       {/* Tickets are the one thing a visitor might have come to do today, so they lead — above
           the hero, before anything asks them to browse. Behind the same clock every other ticket
-          link uses, and it falls back to the field announcement when sales are shut. */}
-      {tocTicketsOnSale() ? (
+          link uses, and it falls back to the field announcement when sales are shut.
+
+          Once the tournament is wrestled the same slot is the strongest thing we have to show:
+          ten champions and every bracket. Selling a ticket to it the morning after was the loudest
+          way the site could say nobody is home. */}
+      {tocEventIsOver() ? (
+        <section className="border-b-2 border-[#D3B574] bg-gradient-to-r from-[#0B1D3A] via-[#13294B] to-[#0B1D3A]">
+          <div className="container mx-auto px-4 py-5 sm:py-6">
+            <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-left">
+              <div className="min-w-0">
+                <p className="inline-flex items-center gap-2 rounded-full bg-[#D3B574] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#0A1628]">
+                  Final
+                </p>
+                <h2 className="mt-2 text-2xl font-extrabold leading-tight text-white sm:text-3xl">
+                  Tournament of Champions
+                </h2>
+                <p className="mt-1 text-sm text-white/75 sm:text-base">
+                  Ten champions crowned in Apex · {TOC_2026_AWARDS.mostOutstandingWrestler.name} named Most
+                  Outstanding Wrestler
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col items-center gap-2 sm:items-end">
+                <Link
+                  href="/tournament-of-champions/results"
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#D3B574] px-7 py-4 text-base font-extrabold text-[#0A1628] transition-colors hover:bg-[#c4a665] sm:text-lg"
+                >
+                  Results &amp; Brackets
+                  <ArrowRight className="h-5 w-5" />
+                </Link>
+                <Link href="/tournament-of-champions" className="text-xs font-semibold text-white/70 hover:text-white">
+                  About the tournament
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : tocTicketsOnSale() ? (
         <section className="border-b-2 border-[#D3B574] bg-gradient-to-r from-[#0B1D3A] via-[#13294B] to-[#0B1D3A]">
           <div className="container mx-auto px-4 py-5 sm:py-6">
             <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-left">
@@ -236,14 +271,13 @@ export default async function HomePage() {
                 The NC United app is here
               </h2>
               <p className="mt-3 text-base leading-relaxed text-white/75 sm:text-lg">
-                Every North Carolina commitment, the prospect rankings, the club map and the whole
-                Tournament of Champions — the field, your own bracket, and the leaderboard — on your
-                phone.
+                Every North Carolina commitment, the prospect rankings, the club map and every
+                Tournament of Champions bracket — bout by bout, as it was wrestled — on your phone.
               </p>
               {/* Chips rather than middot separators: the list wraps, and a separator stranded at
                   the end of a line reads as a missing item. */}
               <ul className="mt-5 flex flex-wrap justify-center gap-2 md:justify-start">
-                {["Seed every weight yourself", "Alerts when a field goes live", "Rankings and results"].map(
+                {["Commitments as they happen", "Alerts you choose", "Rankings and results"].map(
                   (item) => (
                     <li
                       key={item}
@@ -335,7 +369,8 @@ export default async function HomePage() {
                   Caden Perry Warrior Scholarship
                 </p>
                 <p className="mt-1.5 text-sm leading-relaxed text-white/75">
-                  A $1,300 wrestling-support award, presented Saturday, September 19 at the Tournament of Champions.
+                  A $1,300 wrestling-support award, presented to {TOC_2026_AWARDS.cadenPerryScholarship.name} at
+                  the 2026 Tournament of Champions.
                 </p>
               </div>
               <Link

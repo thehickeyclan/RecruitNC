@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
 import { tocMobileCtaClass } from "@/components/toc/toc-theme"
 import { TOC_GOFAN_TICKETS_URL, TOC_TICKET_LIMITED_LINE, TOC_TICKET_SALE_TIMING } from "@/lib/toc/constants"
-import { msUntilTocTicketSale, tocTicketsOnSale } from "@/lib/toc/ticket-sale"
+import { msUntilTocTicketSale, tocEventIsOver, tocTicketsOnSale } from "@/lib/toc/ticket-sale"
 
 /**
  * Shows the on-sale announcement until Friday Aug 28, 2026 8:00 AM ET (public sale; athlete families get a private presale link first), then becomes the
@@ -35,6 +36,19 @@ export function TocTicketCta({ variant }: { variant: "hero" | "card" }) {
     arm()
     return () => clearTimeout(timer)
   }, [])
+
+  // After the tournament there is nothing to sell and nothing to wait for, and the announcement
+  // below would spend the next year promising a sale that already opened and closed.
+  if (tocEventIsOver()) {
+    return (
+      <Link
+        href="/tournament-of-champions/results"
+        className={variant === "hero" ? tocMobileCtaClass("primary") : `${tocMobileCtaClass("primary")} mt-4 text-sm`}
+      >
+        {variant === "hero" ? "Results & Brackets" : "See the results and brackets"}
+      </Link>
+    )
+  }
 
   if (onSale) {
     return (
