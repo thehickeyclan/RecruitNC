@@ -84,6 +84,13 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
   )
   const winnersTree = useMemo(() => tocDrawToWinnersBracketTree(displayedDraw), [displayedDraw])
   const consolationTree = useMemo(() => tocDrawToConsolationBracketTree(displayedDraw), [displayedDraw])
+  const thirdPlace = useMemo(() => {
+    const bout = previewDraw.bouts.find((b) => /3rd/i.test(b.roundLabel))
+    if (!bout) return null
+    const recorded = displayedDraw.bouts.find((b) => b.boutNumber === bout.boutNumber)?.winnerAthleteId
+    const winnerId = simulationPicks[bout.boutNumber] ?? (readOnly ? recorded : null)
+    return winnerId ? previewDraw.participants.find((p) => p.athleteId === winnerId) ?? null : null
+  }, [previewDraw, displayedDraw, simulationPicks, readOnly])
   const champion = useMemo(() => {
     const championshipBout = previewDraw.bouts.find((bout) => bout.roundLabel === "Championship")
     if (!championshipBout) return null
@@ -376,6 +383,7 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
             onSelectWinner={simulationEnabled ? selectSimulationWinner : undefined}
             championName={simulationEnabled || readOnly ? champion?.name ?? null : null}
             championPhotoUrl={readOnly ? champion?.photoUrl ?? null : null}
+            outcomes={readOnly ? outcomes : undefined}
           />
         </div>
 
@@ -383,11 +391,19 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
           <div className="border-t border-white/10 pt-10">
             <h2 className={cn("text-xl sm:text-2xl text-white mb-2", tocDisplayClass())}>Consolation bracket</h2>
             <p className="text-sm text-white/45 mb-4">
-              {simulationEnabled ? "Back-side matchups update automatically from your simulated results." : "Back-side bracket — names fill in as results are recorded."}
+              {readOnly
+                ? "Back-side bracket — third place is decided here."
+                : simulationEnabled
+                  ? "Back-side matchups update automatically from your simulated results."
+                  : "Back-side bracket — names fill in as results are recorded."}
             </p>
             <BracketTree
               tree={consolationTree}
-              showChampion={false}
+              showChampion={readOnly && thirdPlace != null}
+              championLabel="3rd"
+              championName={readOnly ? thirdPlace?.name ?? null : null}
+              championPhotoUrl={readOnly ? thirdPlace?.photoUrl ?? null : null}
+              outcomes={readOnly ? outcomes : undefined}
               selectedWinnerByBout={simulationEnabled ? simulationPicks : undefined}
               onSelectWinner={simulationEnabled ? selectSimulationWinner : undefined}
             />
