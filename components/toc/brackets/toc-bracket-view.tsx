@@ -386,6 +386,7 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
             championName={simulationEnabled || readOnly ? champion?.name ?? null : null}
             championPhotoUrl={readOnly ? champion?.photoUrl ?? null : null}
             outcomes={readOnly ? outcomes : undefined}
+            profileHrefFor={readOnly ? (id) => `/view-profile?id=${id}` : undefined}
           />
         </div>
 
@@ -406,6 +407,7 @@ export function TocBracketView({ draw, allWeights = [...TOC_WEIGHT_CLASSES], sou
               championName={readOnly ? thirdPlace?.name ?? null : null}
               championPhotoUrl={readOnly ? thirdPlace?.photoUrl ?? null : null}
               outcomes={readOnly ? outcomes : undefined}
+              profileHrefFor={readOnly ? (id) => `/view-profile?id=${id}` : undefined}
               selectedWinnerByBout={simulationEnabled ? simulationPicks : undefined}
               onSelectWinner={simulationEnabled ? selectSimulationWinner : undefined}
             />

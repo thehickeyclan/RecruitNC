@@ -37,6 +37,8 @@ type Props = {
   championLabel?: string
   /** Bout number → "MD 13-4". How each bout was won, the way the app's bracket shows it. */
   outcomes?: Record<number, string>
+  /** Turns a wrestler into a link to their profile. Omitted while a draw is still being seeded. */
+  profileHrefFor?: (competitorId: string) => string | null
   className?: string
 }
 
@@ -50,6 +52,7 @@ function SlotRow({
   onReorderSlotDrop,
   reordering,
   boutNumber,
+  profileHref,
   selectedWinnerId,
   onSelectWinner,
 }: {
@@ -62,6 +65,8 @@ function SlotRow({
   onReorderSlotDrop?: (draggedReorderId: string, targetSeed: number) => void
   reordering?: boolean
   boutNumber?: number
+  /** Where this wrestler's profile lives, when the bracket is a finished one. */
+  profileHref?: string | null
   selectedWinnerId?: string | null
   onSelectWinner?: (boutNumber: number, competitorId: string) => void
 }) {
@@ -85,12 +90,23 @@ function SlotRow({
         {slot.seed ?? "—"}
       </span>
       <span className="min-w-0 flex-1 overflow-hidden">
-        <span
-          className="block truncate text-xs sm:text-sm leading-tight"
-          style={{ color: isOpen ? theme.slotOpenText : theme.slotText, fontStyle: isOpen ? "italic" : "normal" }}
-        >
-          {slot.name}
-        </span>
+        {/* On a finished bracket every name is a wrestler somebody wants to read about. */}
+        {!isOpen && profileHref ? (
+          <a
+            href={profileHref}
+            className="block truncate text-xs sm:text-sm leading-tight hover:underline"
+            style={{ color: theme.slotText }}
+          >
+            {slot.name}
+          </a>
+        ) : (
+          <span
+            className="block truncate text-xs sm:text-sm leading-tight"
+            style={{ color: isOpen ? theme.slotOpenText : theme.slotText, fontStyle: isOpen ? "italic" : "normal" }}
+          >
+            {slot.name}
+          </span>
+        )}
         {!isOpen && slot.subtitle ? (
           <span className="block truncate text-[10px]" style={{ color: theme.slotSubtext }}>
             {slot.subtitle}
@@ -196,6 +212,7 @@ export function BracketTree({
   championPhotoUrl,
   championLabel = "Champ",
   outcomes,
+  profileHrefFor,
   className,
 }: Props) {
   const theme = { ...DEFAULT_THEME, ...themeProp }
@@ -274,6 +291,7 @@ export function BracketTree({
               onReorderSlotDrop={match.roundIndex === 0 ? onReorderSlotDrop : undefined}
               reordering={reordering}
               boutNumber={match.boutNumber}
+              profileHref={match.top.competitorId ? profileHrefFor?.(match.top.competitorId) ?? null : null}
               selectedWinnerId={match.boutNumber != null ? selectedWinnerByBout?.[match.boutNumber] : null}
               onSelectWinner={onSelectWinner}
             />
@@ -287,6 +305,7 @@ export function BracketTree({
               onReorderSlotDrop={match.roundIndex === 0 ? onReorderSlotDrop : undefined}
               reordering={reordering}
               boutNumber={match.boutNumber}
+              profileHref={match.bottom.competitorId ? profileHrefFor?.(match.bottom.competitorId) ?? null : null}
               selectedWinnerId={match.boutNumber != null ? selectedWinnerByBout?.[match.boutNumber] : null}
               onSelectWinner={onSelectWinner}
             />
