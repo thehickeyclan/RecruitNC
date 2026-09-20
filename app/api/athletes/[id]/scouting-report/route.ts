@@ -5,6 +5,7 @@ import { classifyViewer } from "@/lib/viewer-role"
 import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
 import {
   SUMMARY_SYSTEM_PROMPT,
+  unsupportedSummaryClaims,
   buildScoutingReport,
   loadOpponentIndex,
   summaryFacts,
@@ -142,6 +143,26 @@ async function writeSummary(report: Awaited<ReturnType<typeof buildScoutingRepor
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) return null
 
+  const facts = summaryFacts(report)
+
+  /*
+   * Two attempts, then nothing.
+   *
+   * The model is told to use only the facts, and on a wrestler with no published ranking and no
+   * GPA it still wrote "RecruitNC #13 in the Class of 2029 and has a GPA of 3.8". A coach paying
+   * for this page cannot be handed invented numbers, and a report with no summary is honest.
+   */
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const text = await askForSummary(apiKey, facts)
+    if (!text) return null
+    const problems = unsupportedSummaryClaims(text, facts)
+    if (problems.length === 0) return text
+    console.warn(`[scouting-report] summary discarded, unsupported: ${problems.join(", ")}`)
+  }
+  return null
+}
+
+async function askForSummary(apiKey: string, facts: string): Promise<string | null> {
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -152,7 +173,7 @@ async function writeSummary(report: Awaited<ReturnType<typeof buildScoutingRepor
         max_tokens: 320,
         messages: [
           { role: "system", content: SUMMARY_SYSTEM_PROMPT },
-          { role: "user", content: summaryFacts(report) },
+          { role: "user", content: facts },
         ],
       }),
       signal: AbortSignal.timeout(20_000),

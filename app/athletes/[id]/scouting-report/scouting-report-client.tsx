@@ -19,6 +19,12 @@ import { RETAINED_EDITIONS } from "@/lib/national-rankings"
  * Coaches export through the browser's own print dialog, which is how the college recruiting
  * guide already works here. It keeps the text selectable and needs no server-side renderer.
  */
+/** Only http(s) or a site-root path is a logo we can draw. */
+function isImageUrl(value: string | null | undefined): value is string {
+  const v = String(value ?? "").trim()
+  return v.length > 0 && (/^https?:\/\//i.test(v) || v.startsWith("/"))
+}
+
 export function ScoutingReportClient({ athleteId }: { athleteId: string }) {
   const [report, setReport] = useState<ScoutingReport | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -250,7 +256,13 @@ export function ScoutingReportDocument({
               </span>
             </div>
             <div className="mt-3 flex items-center gap-3">
-              {identity.highSchoolLogoUrl ? (
+              {/*
+                A logo only renders from something that is actually a URL.
+                Twenty athlete records had their NCHSAA classification in this column — "7A",
+                "8A", "NCISAA" — and the report drew a broken image with the school's name as its
+                alt text, on the page a college coach pays for.
+              */}
+              {isImageUrl(identity.highSchoolLogoUrl) ? (
                 <Image
                   src={identity.highSchoolLogoUrl}
                   alt={identity.highSchool ?? ""}
@@ -260,7 +272,7 @@ export function ScoutingReportDocument({
                   unoptimized
                 />
               ) : null}
-              {identity.clubLogoUrl ? (
+              {isImageUrl(identity.clubLogoUrl) ? (
                 <Image
                   src={identity.clubLogoUrl}
                   alt={identity.club ?? ""}

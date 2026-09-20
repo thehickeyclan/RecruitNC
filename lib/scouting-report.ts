@@ -456,13 +456,21 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
     report.careerRecord ? `Career record: ${report.careerRecord}` : "",
     membership.ncUnitedTeam ? `NC United: ${membership.ncUnitedTeam}` : "",
     report.commitment ? `Committed: ${report.commitment}` : "",
+    report.rankingPublished && report.prospectRanking
+      ? `RecruitNC ranking (North Carolina class ranking, not national): #${report.prospectRanking} in the Class of ${identity.graduationYear ?? ""}`.trim()
+      : "",
+  ].filter(Boolean)
+
+  /*
+   * Academics go last, after the results, because that is the order the summary states them in.
+   * The model reads this list top to bottom, and a GPA sitting above the tournament record was
+   * turning up in the second sentence of a scouting summary.
+   */
+  const academicLines = [
     academics.gpa ? `GPA: ${academics.gpa}` : "",
     academics.sat ? `SAT: ${academics.sat}` : "",
     academics.act ? `ACT: ${academics.act}` : "",
     academics.academicInterest ? `Intended major: ${academics.academicInterest}` : "",
-    report.rankingPublished && report.prospectRanking
-      ? `RecruitNC ranking: #${report.prospectRanking} in the class`
-      : "",
   ].filter(Boolean)
 
   // Given to the model because a national ranking is the strongest single fact on the page,
@@ -495,22 +503,74 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
     lines.push("", "Losses to nationally ranked, NC state-ranked or Tournament of Champions wrestlers:")
     for (const l of report.significantLosses.slice(0, 12)) lines.push(`- lost to ${boutFact(l)}`)
   }
+  if (academicLines.length) lines.push("", "Academics:", ...academicLines.map((line) => `- ${line}`))
   return lines.join("\n")
+}
+
+/**
+ * What the summary claims that the facts do not support.
+ *
+ * The model is told to use only the facts and mostly does, but on a wrestler with no published
+ * ranking and no GPA on file it wrote "RecruitNC #13 in the Class of 2029 and has a GPA of 3.8" —
+ * two numbers that exist nowhere in his record. A scouting report a coach pays for cannot carry
+ * that, so every number the summary states is checked back against the facts and a summary that
+ * fails is thrown away rather than shown.
+ *
+ * Only claims of the kind the model has actually invented are checked: rankings, GPA and test
+ * scores. Returns the offending claims, empty when the summary is clean.
+ */
+export function unsupportedSummaryClaims(summary: string, facts: string): string[] {
+  const problems: string[] = []
+  const factText = facts.toLowerCase()
+
+  for (const match of summary.matchAll(/#\s?(\d+)/g)) {
+    if (!factText.includes(`#${match[1]}`)) problems.push(`ranking ${match[0]}`)
+  }
+  for (const [, label, value] of summary.matchAll(/\b(GPA|SAT|ACT)\b[^0-9]{0,12}(\d+(?:\.\d+)?)/gi)) {
+    const stated = String(value)
+    if (!factText.includes(`${label.toLowerCase()}: ${stated}`)) problems.push(`${label.toUpperCase()} ${stated}`)
+  }
+  // A ranking claimed in words with no number at all — "ranked in his class" over a record that
+  // has no ranking in it. Skipped when a numeric ranking was already caught, so one invented
+  // ranking is reported once.
+  const claimsNumberedRank = /#\s?\d/.test(summary)
+  if (!claimsNumberedRank && /\branked\b/i.test(summary) && !/ranking/i.test(factText) && !/#\d/.test(facts)) {
+    problems.push("a ranking the facts do not contain")
+  }
+  return [...new Set(problems)]
 }
 
 /** The instruction given to the model. Separate export so it can be reviewed and tested. */
 export const SUMMARY_SYSTEM_PROMPT = `You write short scouting summaries for college wrestling coaches.
 
+Say things in this order, skipping anything the facts do not contain:
+1. Who they are: name, class year, high school and club, in one clause.
+2. National results first — NHSCA, Fargo, Super 32, Journeymen and other out-of-state events.
+   Give the placement, the weight and the record.
+3. Then this season's results, including the Tournament of Champions and the state tournament.
+4. Then the wins and losses that carry a credential, naming the opponents.
+5. Then the ranking: a national ranking with its outlet, otherwise the RecruitNC class ranking.
+6. Then GPA and test scores, last, in one short sentence.
+
 Rules:
 - Use ONLY the facts provided. Never invent a result, a ranking, an opponent, or a number.
 - 3 to 5 sentences, plain and direct. No hype, no cliches, no "poised to dominate".
-- Lead with what the record actually shows: level of competition faced and how they did.
-- Name specific opponents or placements when they are in the facts.
+- Never open with filler like "has shown strong performance", "has had a solid career", or
+  "competed at various competitions". Open with the strongest result on the page.
+- Write "a win over X" for one opponent and "wins over X and Y" for two. Never "a victory over"
+  two people.
+- Use the surname after the first mention rather than a pronoun. Do not guess their gender; where
+  a pronoun is unavoidable use they/them.
 - Never write "ranked" on its own about an opponent. Say "nationally ranked", "ranked in North
   Carolina", or "in the Tournament of Champions field", matching exactly what the facts state.
+- A RecruitNC ranking is a North Carolina class ranking, not a national one. Write it as
+  "RecruitNC #13 in the Class of 2027".
+- Fargo freestyle and Fargo Greco-Roman are separate tournaments. Name the style when the facts do.
 - If the losses are to strong opponents, say so plainly — a coach reads that as useful.
 - If the facts are thin, say what is known and stop. Do not pad.
 - Name the outlet for any national ranking you cite. Do not call a ranking a trend unless two
   or more months are shown, and never describe movement outside the months listed.
 - Never mention weight cutting, injuries, or anything medical.
-- Refer to the athlete by name or they/them. Do not guess their gender.`
+- State a ranking or a GPA only if it appears in the facts. If no ranking is listed, say nothing
+  about rankings; if no GPA is listed, say nothing about academics.
+- Name at least one loss when the facts list losses, with what the opponent's credential is.`

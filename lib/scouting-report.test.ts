@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { mapAcademics, mapCareerRecord, mapContact, summaryFacts } from "@/lib/scouting-report"
+import { mapAcademics, mapCareerRecord, mapContact, summaryFacts, unsupportedSummaryClaims } from "@/lib/scouting-report"
 
 /**
  * A row shaped like `athletes` actually is.
@@ -231,5 +231,35 @@ describe("summaryFacts national rankings", () => {
 
   it("says nothing at all when the athlete is unranked", () => {
     expect(summaryFacts(REPORT_BASE as never)).not.toContain("National rankings")
+  })
+})
+
+describe("unsupportedSummaryClaims", () => {
+  const FACTS = [
+    "Name: Carson Raper",
+    "Class of 2029",
+    "",
+    "Tournament results:",
+    "- 2026 NCHSAA States: 4A · 106 · Champion",
+  ].join("\n")
+
+  it("catches a ranking and a GPA the facts never mention", () => {
+    // Exactly what the model wrote for a wrestler whose class is not ranked and who has no GPA
+    // on file: two numbers with nothing behind them.
+    const summary = "Raper is ranked RecruitNC #13 in the Class of 2029 and has a GPA of 3.8."
+    expect(unsupportedSummaryClaims(summary, FACTS)).toEqual([
+      "ranking #13",
+      "GPA 3.8",
+    ])
+  })
+
+  it("passes a summary whose numbers all come from the facts", () => {
+    const facts = `${FACTS}\nGPA: 4.43\nRecruitNC ranking (North Carolina class ranking, not national): #13 in the Class of 2027`
+    const summary = "Mayfield is RecruitNC #13 in the Class of 2027 and has a GPA of 4.43."
+    expect(unsupportedSummaryClaims(summary, facts)).toEqual([])
+  })
+
+  it("says nothing about a summary that states no numbers", () => {
+    expect(unsupportedSummaryClaims("Raper won the state title at 106.", FACTS)).toEqual([])
   })
 })
