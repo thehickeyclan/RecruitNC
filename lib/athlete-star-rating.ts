@@ -121,7 +121,7 @@ function competitionPoints(strength: SeasonStrength): { points: number; detail: 
 /** RecruitNC's own class ranking, when that class is published. */
 function rankingPoints(ranking: number | null, published: boolean): { points: number; detail: string } {
   if (!published || ranking == null) {
-    return { points: 0, detail: "Not ranked in a published class" }
+    return { points: 0, detail: "Not in a published RecruitNC class ranking" }
   }
   let points: number
   if (ranking === 1) points = 25
@@ -130,7 +130,7 @@ function rankingPoints(ranking: number | null, published: boolean): { points: nu
   else if (ranking <= 10) points = 15
   else if (ranking <= 20) points = 10
   else points = 6
-  return { points, detail: `Ranked #${ranking} in the class` }
+  return { points, detail: `RecruitNC #${ranking} in the class` }
 }
 
 /** NCHSAA placement — the credential a North Carolina family recognises first. */

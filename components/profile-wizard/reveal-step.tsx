@@ -95,7 +95,7 @@ export function RevealStep({
             </p>
             {reveal.prospectRanking ? (
               <span className="mt-2 inline-block bg-[#D3B574] px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-[#0A1628]">
-                Ranked #{reveal.prospectRanking} in the class
+                RecruitNC #{reveal.prospectRanking} in the class
               </span>
             ) : null}
           </div>

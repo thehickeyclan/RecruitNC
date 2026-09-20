@@ -1065,7 +1065,7 @@ export function AthleteDetail({
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     {prospectRanking ? (
                       <Badge className="bg-[#D3B574] text-[#13294B] px-2.5 py-1 text-xs font-bold">
-                        #{prospectRanking} · Class of {graduationYear || "—"}
+                        RecruitNC #{prospectRanking} · Class of {graduationYear || "—"}
                       </Badge>
                     ) : graduationYear ? (
                       <Badge className="bg-white/15 text-white border border-white/20 px-2.5 py-1 text-xs font-semibold">
@@ -1177,7 +1177,7 @@ export function AthleteDetail({
               {prospectRanking && (
                 <div className="mb-4">
                   <Badge className="bg-[#D3B574] text-[#13294B] px-3 py-1.5 text-sm font-bold">
-                    #{prospectRanking} - Class of {graduationYear}
+                    RecruitNC #{prospectRanking} - Class of {graduationYear}
                   </Badge>
                 </div>
               )}
@@ -1304,7 +1304,7 @@ export function AthleteDetail({
 
                   {prospectRanking && (
                     <Badge className="bg-[#D3B574] text-[#13294B] px-4 py-2 text-base font-bold shadow-lg mb-4">
-                      #{prospectRanking} - Class of {graduationYear}
+                      RecruitNC #{prospectRanking} - Class of {graduationYear}
                     </Badge>
                   )}
 

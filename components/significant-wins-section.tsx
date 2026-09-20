@@ -129,13 +129,18 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
                     : "rounded-full border border-rnc-line px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-400"
                 }
               >
+                {/*
+                  Never a bare "Ranked". Two different standings are in play — the national lists
+                  and RecruitNC's own class rankings — and a college coach reading "Ranked" beside a
+                  win has no way to tell which one it means. Same rule the scouting report follows.
+                */}
                 {win.credential
                   ? win.credential
                   : win.reason === "toc-field"
                     ? "TOC field"
                     : win.reason === "national-ranked"
                       ? "Nationally ranked"
-                      : "Ranked"}
+                      : "NC ranked"}
               </span>
             </div>
           </li>
