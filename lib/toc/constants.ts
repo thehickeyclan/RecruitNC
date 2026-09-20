@@ -169,6 +169,43 @@ export const TOC_CADEN_PERRY_WARRIOR_SCHOLARSHIP = {
   donateHref: "/fundraising/scholarships/caden-perry/donate",
 } as const
 
+/**
+ * What was handed out on Saturday night, 19 September 2026.
+ *
+ * Recorded here because nothing else holds it: the brackets know who won each weight, but the
+ * hammer, the Match of Champions and the scholarship are decisions people made in the building.
+ * Athlete ids are kept so each name can link to the profile rather than being matched on spelling.
+ */
+export const TOC_2026_AWARDS = {
+  mostOutstandingWrestler: {
+    name: "Tyton Kostoff",
+    athleteId: "b57cc0b2-ae3d-4f58-be43-d1493b37732a",
+    highSchool: "Hough",
+    detail: "149 lbs champion, 3-0",
+    award: "The hammer",
+  },
+  matchOfChampions: {
+    /** The 125 third-place bout: Hord won it 10-8. */
+    label: "Devin Hord vs Adam Walker",
+    weightClass: 125,
+    round: "3rd place",
+    result: "Hord dec. Walker 10-8",
+    wrestlers: [
+      { name: "Devin Hord", athleteId: "ac3fe9c1-d404-4d86-b379-70ecb5604166" },
+      { name: "Adam Walker", athleteId: "c55d5eec-e7af-4ee5-a44f-3d7829462f3d" },
+    ],
+  },
+  cadenPerryScholarship: {
+    name: "Ammon Scott",
+    athleteId: "18d82703-e422-4718-8fe7-c5bbd84dd52a",
+    highSchool: "South Point",
+    club: "Darkhorse",
+    graduationYear: 2028,
+    /** He did not have to compete at TOC to win it — see TOC_CADEN_PERRY_WARRIOR_SCHOLARSHIP. */
+    award: "$1,300 in wrestling support",
+  },
+} as const
+
 export const TOC_OFFICIAL_TEE = {
   eyebrow: "Official event apparel",
   headline: "The inaugural 2026 Tournament of Champions collection.",
