@@ -277,6 +277,25 @@ export const TOC_2026_PHOTOS = {
   credit: "Photos by Brad Harper, Tony Rotundo and Steve Hopper — official media partners of the Tournament of Champions.",
 } as const
 
+/**
+ * Each weight's podium: the three placers on the mat, champion holding the printed bracket.
+ *
+ * The weight is on the board in every frame, which is how these were identified — the file names
+ * are a camera's counter and say nothing. Two of the ten had to be read off the board by eye.
+ */
+export const TOC_2026_PODIUMS: Record<number, { src: string; frame: string }> = {
+  117: { src: "/images/toc/2026/podium-117.jpg", frame: "196A4603" },
+  125: { src: "/images/toc/2026/podium-125.jpg", frame: "196A5120" },
+  133: { src: "/images/toc/2026/podium-133.jpg", frame: "196A5484" },
+  141: { src: "/images/toc/2026/podium-141.jpg", frame: "196A5936" },
+  149: { src: "/images/toc/2026/podium-149.jpg", frame: "196A6202" },
+  157: { src: "/images/toc/2026/podium-157.jpg", frame: "196A6398" },
+  165: { src: "/images/toc/2026/podium-165.jpg", frame: "196A6620" },
+  174: { src: "/images/toc/2026/podium-174.jpg", frame: "196A6890" },
+  197: { src: "/images/toc/2026/podium-197.jpg", frame: "196A7112" },
+  285: { src: "/images/toc/2026/podium-285.jpg", frame: "196A7127" },
+}
+
 export const TOC_OFFICIAL_TEE = {
   eyebrow: "Official event apparel",
   headline: "The inaugural 2026 Tournament of Champions collection.",
