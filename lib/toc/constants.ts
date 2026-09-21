@@ -273,8 +273,8 @@ export const TOC_2026_PHOTOS = {
       height: 889,
     },
   ],
-  /** The two photographers whose frames these actually are. */
-  credit: "Photos by Brad Harper and Steve Hopper — official media partners of the Tournament of Champions.",
+  /** The tournament's official media partners, all three. */
+  credit: "Photos by Brad Harper, Tony Rotundo and Steve Hopper — official media partners of the Tournament of Champions.",
 } as const
 
 /**
