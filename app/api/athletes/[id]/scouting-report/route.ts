@@ -5,6 +5,7 @@ import { classifyViewer } from "@/lib/viewer-role"
 import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
 import {
   SUMMARY_SYSTEM_PROMPT,
+  stripUnsupportedSentences,
   unsupportedSummaryClaims,
   buildScoutingReport,
   loadOpponentIndex,
@@ -152,14 +153,20 @@ async function writeSummary(report: Awaited<ReturnType<typeof buildScoutingRepor
    * GPA it still wrote "RecruitNC #13 in the Class of 2029 and has a GPA of 3.8". A coach paying
    * for this page cannot be handed invented numbers, and a report with no summary is honest.
    */
+  let lastText: string | null = null
   for (let attempt = 0; attempt < 2; attempt++) {
     const text = await askForSummary(apiKey, facts)
     if (!text) return null
     const problems = unsupportedSummaryClaims(text, facts)
     if (problems.length === 0) return text
+    lastText = text
     console.warn(`[scouting-report] summary discarded, unsupported: ${problems.join(", ")}`)
   }
-  return null
+
+  // Both attempts invented something. Keep the sentences that did not rather than show nothing.
+  const salvaged = lastText ? stripUnsupportedSentences(lastText, facts) : null
+  if (salvaged) console.warn("[scouting-report] summary salvaged by dropping unsupported sentences")
+  return salvaged
 }
 
 async function askForSummary(apiKey: string, facts: string): Promise<string | null> {

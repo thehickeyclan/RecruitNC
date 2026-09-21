@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest"
-import { mapAcademics, mapCareerRecord, mapContact, summaryFacts, unsupportedSummaryClaims } from "@/lib/scouting-report"
+import { mapAcademics, mapCareerRecord, mapContact, summaryFacts, unsupportedSummaryClaims,
+  stripUnsupportedSentences,
+} from "@/lib/scouting-report"
 
 /**
  * A row shaped like `athletes` actually is.
@@ -261,5 +263,27 @@ describe("unsupportedSummaryClaims", () => {
 
   it("says nothing about a summary that states no numbers", () => {
     expect(unsupportedSummaryClaims("Raper won the state title at 106.", FACTS)).toEqual([])
+  })
+})
+
+describe("stripUnsupportedSentences", () => {
+  const facts = "Name: Adam Walker\nClass of 2029\nRecruitNC ranking: none published for this class. Do not state a ranking."
+
+  it("keeps the true sentences and drops the invented one", () => {
+    const summary =
+      "Adam Walker is a Class of 2029 wrestler from Holly Springs. He placed 4th at the Tournament of Champions. " +
+      "Walker is ranked RecruitNC #13 in the Class of 2029."
+    const kept = stripUnsupportedSentences(summary, facts)
+    expect(kept).toBe(
+      "Adam Walker is a Class of 2029 wrestler from Holly Springs. He placed 4th at the Tournament of Champions.",
+    )
+  })
+
+  it("gives up when too little would survive", () => {
+    expect(stripUnsupportedSentences("Walker is RecruitNC #13. He has a GPA of 3.8.", facts)).toBeNull()
+  })
+
+  it("returns null when nothing needed removing, so the caller keeps the original", () => {
+    expect(stripUnsupportedSentences("He placed 4th. He wrestles at Holly Springs.", facts)).toBeNull()
   })
 })

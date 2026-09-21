@@ -401,7 +401,7 @@ export function ScoutingReportDocument({
           <BoutTable rows={report.significantWins} kind="win" />
         </Block>
 
-        <Block n={n()} title="Significant losses" count={report.significantLosses.length}>
+        <Block n={n()} title="Notable losses" count={report.significantLosses.length}>
           <BoutTable rows={report.significantLosses} kind="loss" />
         </Block>
 

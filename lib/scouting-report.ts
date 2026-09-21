@@ -483,7 +483,15 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
     report.commitment ? `Committed: ${report.commitment}` : "",
     report.rankingPublished && report.prospectRanking
       ? `RecruitNC ranking (North Carolina class ranking, not national): #${report.prospectRanking} in the Class of ${identity.graduationYear ?? ""}`.trim()
-      : "",
+      : /*
+         * The absence, stated.
+         *
+         * "If no ranking is listed, say nothing about rankings" is in the prompt and the model
+         * ignored it: given a 2029 with no published class it wrote "RecruitNC #13 in the Class
+         * of 2029" twice in a row, and the guard threw both away, so the wrestler had no summary
+         * at all. A fact it can read beats an instruction it can skip.
+         */
+        "RecruitNC ranking: none published for this class. Do not state a ranking.",
   ].filter(Boolean)
 
   /*
@@ -492,7 +500,7 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
    * turning up in the second sentence of a scouting summary.
    */
   const academicLines = [
-    academics.gpa ? `GPA: ${academics.gpa}` : "",
+    academics.gpa ? `GPA: ${academics.gpa}` : "GPA: not on file. Do not state one.",
     academics.sat ? `SAT: ${academics.sat}` : "",
     academics.act ? `ACT: ${academics.act}` : "",
     academics.academicInterest ? `Intended major: ${academics.academicInterest}` : "",
@@ -563,6 +571,23 @@ export function unsupportedSummaryClaims(summary: string, facts: string): string
     problems.push("a ranking the facts do not contain")
   }
   return [...new Set(problems)]
+}
+
+
+/**
+ * The summary with its unsupported sentences removed.
+ *
+ * Throwing the whole paragraph away for one invented number left wrestlers with no summary at
+ * all — the model would append "Walker is ranked RecruitNC #13" to four sentences that were
+ * true, twice, and the report rendered blank. The true sentences are worth keeping, so the
+ * offending ones are cut and the rest stands, provided enough of it survives to read as a
+ * scouting summary rather than a fragment.
+ */
+export function stripUnsupportedSentences(summary: string, facts: string): string | null {
+  const sentences = summary.split(/(?<=[.!?])\s+/).filter((s) => s.trim().length > 0)
+  const kept = sentences.filter((sentence) => unsupportedSummaryClaims(sentence, facts).length === 0)
+  if (kept.length < 2 || kept.length === sentences.length) return null
+  return kept.join(" ").trim()
 }
 
 /** The instruction given to the model. Separate export so it can be reviewed and tested. */
