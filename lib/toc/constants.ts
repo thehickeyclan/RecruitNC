@@ -231,6 +231,48 @@ export const TOC_2026_MADNESS = {
   },
 } as const
 
+/**
+ * The weekend, in four photographs.
+ *
+ * Web-sized rather than print: these are what came back from the galleries, and the originals may
+ * never arrive. Better four honest 1400px frames on the page now than a placeholder waiting on
+ * files nobody has promised.
+ */
+export const TOC_2026_PHOTOS = {
+  hero: {
+    src: "/images/toc/2026/champions.jpg",
+    alt: "The ten 2026 Tournament of Champions winners together in North Carolina jackets with their gold medals",
+    caption: "Ten champions, one state.",
+    width: 1400,
+    height: 771,
+  },
+  frames: [
+    {
+      src: "/images/toc/2026/finals-hand-raised.jpg",
+      alt: "A referee raises a wrestler's hand at the centre of a single mat during the finals",
+      caption: "Two mats until the title, then one.",
+      width: 1071,
+      height: 1400,
+    },
+    {
+      src: "/images/toc/2026/kostoff-mow.jpg",
+      alt: "Tyton Kostoff on the mat holding the Most Outstanding Wrestler hammer, medal around his neck",
+      caption: "Tyton Kostoff, Most Outstanding Wrestler.",
+      width: 1139,
+      height: 1400,
+    },
+    {
+      src: "/images/toc/2026/crew.jpg",
+      alt: "The NC United volunteer and staff crew in red shirts on the mat after the finals",
+      caption: "The crew in red, who ran it.",
+      width: 1400,
+      height: 889,
+    },
+  ],
+  /** Named in the things-to-know email as the tournament's official media partners. */
+  credit: "Photos by Brad Harper, Tony Rotundo and Steve Hopper — official media partners of the Tournament of Champions.",
+} as const
+
 export const TOC_OFFICIAL_TEE = {
   eyebrow: "Official event apparel",
   headline: "The inaugural 2026 Tournament of Champions collection.",

@@ -7,6 +7,7 @@ import { TocResultsBrackets } from "@/components/toc/toc-results-brackets"
 import {
   TOC_2026_AWARDS,
   TOC_2026_MADNESS,
+  TOC_2026_PHOTOS,
   TOC_EVENT_DATES_RANGE,
   TOC_VENUE,
   TOC_WEIGHT_CLASSES,
@@ -31,6 +32,7 @@ export default async function TocResultsPage() {
   const results = await loadTocResults(createAdminClient())
   const awards = TOC_2026_AWARDS
   const madness = TOC_2026_MADNESS
+  const photos = TOC_2026_PHOTOS
 
   return (
     <main className="min-h-screen bg-[#0A1628] pb-20 text-white">
@@ -127,6 +129,37 @@ export default async function TocResultsPage() {
             />
           </div>
         </div>
+      </section>
+
+      {/* The weekend itself, between the pool and the brackets. */}
+      <section className="mx-auto mt-10 max-w-6xl px-4 sm:px-6">
+        <figure>
+          <img
+            src={photos.hero.src}
+            alt={photos.hero.alt}
+            width={photos.hero.width}
+            height={photos.hero.height}
+            className="w-full rounded-xl border border-white/10"
+          />
+          <figcaption className="mt-2 text-sm text-white/50">{photos.hero.caption}</figcaption>
+        </figure>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          {photos.frames.map((frame) => (
+            <figure key={frame.src}>
+              <img
+                src={frame.src}
+                alt={frame.alt}
+                width={frame.width}
+                height={frame.height}
+                className="w-full rounded-xl border border-white/10"
+              />
+              <figcaption className="mt-2 text-sm text-white/50">{frame.caption}</figcaption>
+            </figure>
+          ))}
+        </div>
+
+        <p className="mt-4 text-xs text-white/40">{photos.credit}</p>
       </section>
 
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
