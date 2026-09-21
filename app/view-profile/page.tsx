@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import type { Metadata } from "next"
 import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
+import { stripPrivateAthleteFields, viewerMaySeeAthletePrivateInfo } from "@/lib/athlete-private-fields"
 import { createClient } from "@/lib/supabase/server"
 import { ViewProfileClient } from "./view-profile-client"
 
@@ -92,10 +93,25 @@ async function ViewProfilePageInner({ searchParams }: ViewProfilePageProps) {
     data: { user },
   } = await supabase.auth.getUser()
 
+  /*
+   * The private block is drawn in the browser, so the row has to arrive there without it.
+   *
+   * `canSeePrivateInfo` in athlete-detail decides whether a phone number is rendered, but the
+   * whole row was serialised into the page for every reader regardless — view source on any
+   * profile and there was the cell, the email, the GPA and the date of birth. Stripping it here
+   * means an unentitled reader is never sent what the component would have refused to draw.
+   */
+  const entitled = result.ok ? await viewerMaySeeAthletePrivateInfo(supabase, result.athlete as { claimed_by_user_id?: unknown }) : false
+  const athlete = result.ok
+    ? entitled
+      ? result.athlete
+      : (stripPrivateAthleteFields(result.athlete as unknown as Record<string, unknown>) as typeof result.athlete)
+    : null
+
   return (
     <ViewProfileClient
       id={id}
-      initialAthlete={result.ok ? result.athlete : null}
+      initialAthlete={athlete}
       initialError={result.ok ? null : result.error}
       initialUserId={user?.id ?? null}
     />

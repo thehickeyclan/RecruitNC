@@ -1,11 +1,22 @@
 import { NextResponse } from "next/server"
 import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
 import { recruitNcDebugLogProfile } from "@/lib/recruitnc-debug"
+import { createClient } from "@/lib/supabase/server"
+import { stripPrivateAthleteFields, viewerMaySeeAthletePrivateInfo } from "@/lib/athlete-private-fields"
 
 /**
  * GET /api/athlete/[id]
  * Returns athlete with NHSCA, Super32 (and NCHSAA/National Team from row) merged from tournament tables.
  * Used by view-profile prefetch and unified-profile so tournament data appears on public profiles.
+ *
+ * Open, and it stays open — but it used to answer with the entire athletes row, so a cell number,
+ * a contact email, a GPA and a date of birth were one unauthenticated request away for any athlete
+ * whose id you had, and the id is in every profile link. The page never drew those fields for a
+ * stranger; it just received them.
+ *
+ * Now the row is stripped unless the viewer is the athlete, an admin or a verified coach — the
+ * same three the profile page draws the private block for. A personalised answer must not be
+ * cached at the edge, so the entitled response says no-store and only the public one is shared.
  */
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const start = Date.now()
@@ -22,6 +33,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     }
 
     const athlete = result.athlete
+    const supabase = await createClient()
+    const entitled = await viewerMaySeeAthletePrivateInfo(supabase, athlete as { claimed_by_user_id?: unknown })
+    const payload = entitled ? athlete : stripPrivateAthleteFields(athlete as Record<string, unknown>)
     recruitNcDebugLogProfile("GET /api/athlete/[id] bundle", {
       elapsedMs: Date.now() - start,
       athleteIdPrefix: id.trim().slice(0, 8),
@@ -34,10 +48,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     })
 
     return NextResponse.json(
-      { ok: true, athlete },
+      { ok: true, athlete: payload },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",
+          "Cache-Control": entitled ? "private, no-store" : "public, s-maxage=60, stale-while-revalidate=120",
         },
       },
     )
