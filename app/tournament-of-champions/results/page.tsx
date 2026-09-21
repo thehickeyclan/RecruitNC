@@ -141,7 +141,10 @@ export default async function TocResultsPage() {
             height={photos.hero.height}
             className="w-full rounded-xl border border-white/10"
           />
-          <figcaption className="mt-2 text-sm text-white/50">{photos.hero.caption}</figcaption>
+          <figcaption className="mt-2 text-sm text-white/50">
+            {photos.hero.caption}{" "}
+            <span className="text-white/40">{photos.hero.names}</span>
+          </figcaption>
         </figure>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-3">

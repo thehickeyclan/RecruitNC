@@ -243,8 +243,12 @@ export const TOC_2026_PHOTOS = {
     src: "/images/toc/2026/champions.jpg",
     alt: "The ten 2026 Tournament of Champions winners together in North Carolina jackets with their gold medals",
     caption: "Ten champions, one state.",
-    width: 1400,
-    height: 771,
+    /** Named as they stand, which is how anyone looking for their kid reads a team photo. */
+    names:
+      "Front row, left to right: Carson Raper, Mason Brown, Aidan Szewczyk, Tye Johnson, Tyton Kostoff. " +
+      "Back row, left to right: Josh Stonebraker, Carson Worrick, Tobin McNair, Brieon Mayfield, Gavin Lopez.",
+    width: 2000,
+    height: 1333,
   },
   frames: [
     {
@@ -258,8 +262,8 @@ export const TOC_2026_PHOTOS = {
       src: "/images/toc/2026/kostoff-mow.jpg",
       alt: "Tyton Kostoff on the mat holding the Most Outstanding Wrestler hammer, medal around his neck",
       caption: "Tyton Kostoff, Most Outstanding Wrestler.",
-      width: 1139,
-      height: 1400,
+      width: 1199,
+      height: 1800,
     },
     {
       src: "/images/toc/2026/crew.jpg",
