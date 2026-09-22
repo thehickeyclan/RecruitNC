@@ -16,7 +16,16 @@ import { normalizeWeightClassLabel } from "@/lib/last-competed-weight"
 export type AthleteEditInput = Record<string, unknown>
 
 export type AthleteEditResult =
-  | { ok: true; patch: Record<string, unknown> }
+  | {
+      ok: true
+      patch: Record<string, unknown>
+      /**
+       * Instagram lives inside the `socialMedia` jsonb rather than a column of its own, so it
+       * cannot be set by a flat patch — the route merges it into whatever is already there.
+       * Undefined when the field was not sent; null clears it.
+       */
+      instagram?: string | null
+    }
   | { ok: false; field: string; error: string }
 
 /** Weighted scales exist, so this is not capped at 4.0 — but 6.0 is nobody's GPA. */
@@ -135,20 +144,36 @@ export function buildAthleteEditPatch(input: AthleteEditInput): AthleteEditResul
     patch.bio = text || null
   }
 
+  let instagram: string | null | undefined
   if (has("instagram")) {
     const text = str(input.instagram)
-    if (!text) patch.instagram = null
+    if (!text) instagram = null
     else {
       const handle = normalizeInstagramHandle(text)
       if (!handle) return { ok: false, field: "instagram", error: "Use your Instagram handle, like ncunited." }
-      patch.instagram = handle
+      instagram = handle
     }
   }
 
-  if (Object.keys(patch).length === 0) {
+  if (Object.keys(patch).length === 0 && instagram === undefined) {
     return { ok: false, field: "", error: "Nothing to change." }
   }
-  return { ok: true, patch }
+  return instagram === undefined ? { ok: true, patch } : { ok: true, patch, instagram }
+}
+
+/**
+ * Merge a handle into the `socialMedia` jsonb without disturbing the other networks.
+ *
+ * There is no `instagram` column on `athletes` — the flat spellings the profile reads
+ * (`instagram`, `instagram_handle`, `instagram_username`) do not exist, which a write found out
+ * the hard way. The object is the only real home.
+ */
+export function mergeInstagram(current: unknown, handle: string | null): Record<string, unknown> {
+  const base = current && typeof current === "object" && !Array.isArray(current) ? { ...(current as object) } : {}
+  const next = base as Record<string, unknown>
+  if (handle) next.instagram = handle
+  else delete next.instagram
+  return next
 }
 
 /** The fields the edit screen shows, so the app and the route agree on one list. */

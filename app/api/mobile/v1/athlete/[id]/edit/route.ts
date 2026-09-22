@@ -31,7 +31,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { data, error } = await admin
     .from("athletes")
     .select(
-      "academic_gpa, academic_sat, academic_act, academic_interest, college_weight_class, weightclass, highlight_video_url, bio, instagram",
+      "academic_gpa, academic_sat, academic_act, academic_interest, college_weight_class, weightclass, highlight_video_url, bio, socialMedia",
     )
     .eq("id", athleteId)
     .maybeSingle()
@@ -55,7 +55,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         weightClass: text(data.weightclass),
         highlightVideoUrl: text(data.highlight_video_url),
         bio: text(data.bio),
-        instagram: text(data.instagram),
+        // Instagram lives in the socialMedia object; there is no column of its own.
+        instagram: text((data.socialMedia as { instagram?: unknown } | null)?.instagram),
       },
     },
     { headers: { "Cache-Control": "private, no-store" } },

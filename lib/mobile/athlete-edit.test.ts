@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest"
-import { buildAthleteEditPatch, normalizeInstagramHandle, normalizeVideoUrl } from "@/lib/mobile/athlete-edit"
+import {
+  buildAthleteEditPatch,
+  mergeInstagram,
+  normalizeInstagramHandle,
+  normalizeVideoUrl,
+} from "@/lib/mobile/athlete-edit"
 
 describe("buildAthleteEditPatch", () => {
   it("maps the phone's field names onto the columns that exist", () => {
@@ -64,5 +69,24 @@ describe("normalizeVideoUrl", () => {
   it("refuses what is not a link at all", () => {
     expect(normalizeVideoUrl("my highlight tape")).toBeUndefined()
     expect(normalizeVideoUrl("file:///Users/matt/reel.mov")).toBeUndefined()
+  })
+})
+
+describe("instagram", () => {
+  it("comes back separately, because it is not a column", () => {
+    const result = buildAthleteEditPatch({ instagram: "@ncunited" })
+    expect(result).toEqual({ ok: true, patch: {}, instagram: "ncunited" })
+  })
+
+  it("merges into socialMedia without disturbing the others", () => {
+    expect(mergeInstagram({ twitter: "ncu", instagram: "old" }, "new")).toEqual({ twitter: "ncu", instagram: "new" })
+  })
+
+  it("clears without wiping the object", () => {
+    expect(mergeInstagram({ twitter: "ncu", instagram: "old" }, null)).toEqual({ twitter: "ncu" })
+  })
+
+  it("copes with a row that has no socialMedia yet", () => {
+    expect(mergeInstagram(null, "ncunited")).toEqual({ instagram: "ncunited" })
   })
 })

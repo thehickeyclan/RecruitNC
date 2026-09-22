@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveRequestUserId } from "@/lib/request-user"
-import { buildAthleteEditPatch } from "@/lib/mobile/athlete-edit"
+import { buildAthleteEditPatch, mergeInstagram } from "@/lib/mobile/athlete-edit"
 import { resolveAthleteOwnership } from "@/lib/mobile/athlete-ownership"
 import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
 import { buildProfileReveal } from "@/lib/profile-reveal"
@@ -160,9 +160,21 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ ok: false, error: built.error, field: built.field || undefined }, { status: 400 })
   }
 
+  const patch: Record<string, unknown> = { ...built.patch }
+
+  /*
+   * Instagram is a key inside the `socialMedia` object, so setting it means reading what is
+   * there and merging. The flat `instagram` column the profile appears to read does not exist —
+   * a write to it fails, and a read of it takes the whole request down with a 500.
+   */
+  if (built.instagram !== undefined) {
+    const { data: current } = await admin.from("athletes").select("socialMedia").eq("id", athleteId).maybeSingle()
+    patch.socialMedia = mergeInstagram(current?.socialMedia, built.instagram)
+  }
+
   const { error } = await admin
     .from("athletes")
-    .update({ ...built.patch, updated_at: new Date().toISOString(), last_edited_by: viewerId })
+    .update({ ...patch, updated_at: new Date().toISOString(), last_edited_by: viewerId })
     .eq("id", athleteId)
 
   if (error) {
@@ -170,5 +182,5 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     return NextResponse.json({ ok: false, error: "Could not save those changes." }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true, changed: Object.keys(built.patch), relationship: ownership.relationship })
+  return NextResponse.json({ ok: true, changed: Object.keys(patch), relationship: ownership.relationship })
 }
