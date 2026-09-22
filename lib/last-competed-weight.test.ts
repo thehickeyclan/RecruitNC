@@ -96,7 +96,7 @@ describe("candidatesFromPublicProfilePayload", () => {
       fargo_results: [{ year: 2026, weight: "157" }],
     })
     const last = resolveLastCompetedWeight(candidates)
-    expect(last).toEqual({ weight: "157", year: 2026, event: "Fargo Nationals", date: null })
+    expect(last).toEqual({ weight: "157", year: 2026, event: "Fargo", date: null })
   })
 
   it("surfaces the Fargo weight as last competed while the listed weight leads", () => {
@@ -110,7 +110,7 @@ describe("candidatesFromPublicProfilePayload", () => {
     expect(display.displayWeight).toBe("150")
     expect(display.listedWeight).toBe("150")
     expect(display.lastCompeted?.weight).toBe("144")
-    expect(display.lastCompeted?.event).toBe("Fargo Nationals")
+    expect(display.lastCompeted?.event).toBe("Fargo")
     expect(display.differsFromListed).toBe(true)
   })
 })

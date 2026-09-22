@@ -13,7 +13,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { applyStarOverride, isRatedAthlete, rateAthlete, type StarRating } from "@/lib/athlete-star-rating"
 import { nationalEventRows, starOverrideOf, statePlaces } from "@/lib/athlete-star-rating-load"
-import { summarizeNationalExposure, summarizeSeasonStrength } from "@/lib/competition-strength"
+import { summarizeNationalExposure, summarizeSeasonStrength, type SeasonStrength } from "@/lib/competition-strength"
 import {
   getNationalRankingsForAthlete,
   nationalRankingHistory,
@@ -80,6 +80,9 @@ export type ScoutingReportContact = {
   cell: string | null
   email: string | null
   highlightVideoUrl: string | null
+  /** Public profiles a coach would otherwise go hunting for, to check the record themselves. */
+  floProfileUrl: string | null
+  trackWrestlingProfileUrl: string | null
 }
 
 export type ScoutingReportMembership = {
@@ -92,6 +95,14 @@ export type ScoutingReportResultRow = {
   event: string
   year: number
   detail: string
+  /**
+   * The day it was wrestled, where the source records one.
+   *
+   * The sort has always had this and threw it away, so a coach reading the record saw "2026"
+   * against four different events and could not tell which was last week. Annual events that
+   * publish only a year keep it null and still show the year.
+   */
+  date: string | null
 }
 
 export type ScoutingReport = {
@@ -106,6 +117,14 @@ export type ScoutingReport = {
   results: ScoutingReportResultRow[]
   significantWins: SignificantWin[]
   significantLosses: SignificantWin[]
+  /**
+   * How hard the season actually was, from the imported bouts.
+   *
+   * Computed all along to feed one line of the star rating, then discarded — while the paywall
+   * in front of this page sells "strength of schedule" by name. Null when no season bouts are
+   * on file.
+   */
+  seasonStrength: SeasonStrength | null
   /** Written by the model from the fields above. Null when generation is unavailable. */
   summary: string | null
   recruitingStatus: string | null
@@ -248,7 +267,8 @@ function buildResultRows(bundle: {
 
   for (const r of bundle.nchsaa ?? []) {
     const place = r.place && r.place > 0 ? (r.place === 1 ? "Champion" : ordinal(r.place)) : "Qualifier"
-    rows.push({ event: "NCHSAA States", year: r.year, when: when("NCHSAA States", r.year), detail: `${r.classification} · ${r.weight_class} · ${place}` })
+    // The state tournament publishes a year, not a day: `when` is a sort key, never a date.
+    rows.push({ event: "NCHSAA States", year: r.year, when: when("NCHSAA States", r.year), date: null, detail: `${r.classification} · ${r.weight_class} · ${place}` })
   }
   const national: Array<[string, typeof bundle.fargo]> = [
     ["NHSCA Nationals", bundle.nhsca ?? []],
@@ -262,7 +282,7 @@ function buildResultRows(bundle: {
       const detail = [division, r.weight, r.placement, r.record ? `${r.record} record` : ""]
         .filter(Boolean)
         .join(" · ")
-      if (detail) rows.push({ event: label, year: r.year, when: when(label, r.year), detail })
+      if (detail) rows.push({ event: label, year: r.year, when: when(label, r.year), date: null, detail })
     }
   }
   for (const r of bundle.other ?? []) {
@@ -275,6 +295,7 @@ function buildResultRows(bundle: {
       year: r.year,
       // These carry the date they were actually wrestled.
       when: r.eventDate ?? when(r.eventShortName, r.year),
+      date: r.eventDate ?? null,
       detail,
     })
   }
@@ -299,6 +320,13 @@ export function mapContact(athlete: Record<string, unknown>, personal: boolean):
     email: personal ? text(athlete.contactEmail ?? athlete.contact_email ?? athlete.email) : null,
     // Film is promotional and the athlete publishes it themselves — not personal data.
     highlightVideoUrl: text(athlete.highlight_video_url),
+    /*
+     * Released at both tiers for the same reason as film: these are pages the athlete has
+     * already made public, and a coach who cannot reach them from here simply searches the
+     * name and finds them anyway, less reliably.
+     */
+    floProfileUrl: text(athlete.flo_profile_url),
+    trackWrestlingProfileUrl: text(athlete.track_wrestling_profile_url),
   }
 }
 
@@ -407,6 +435,7 @@ export async function buildScoutingReport(
     commitment: text(athlete.college),
     accessTier,
     watermark,
+    seasonStrength: seasonBouts.length > 0 ? summarizeSeasonStrength(seasonBouts as never) : null,
     prospectRanking: ranking,
     nationalRankings: nationalRankingHistory(rankings),
     // Built from data already in hand — the bundle, the season's bouts and the rankings just

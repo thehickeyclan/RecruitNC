@@ -1395,9 +1395,18 @@ export function AthleteDetail({
           thing they need is to tie their account to a profile that already exists, and this
           is where they will be when they want that. Hides itself when signed out, when this
           is the viewer's own profile, or when the link already exists. */}
-      {/* Unclaimed: ask whose profile it is. Claimed: a parent can still link to their kid,
-          which is what ParentLinkButton is for — the two never show at once. */}
-      {!canEdit && (
+      {/*
+        Unclaimed: ask whose profile it is. Claimed: a parent can still link to their kid,
+        which is what ParentLinkButton is for — the two never show at once.
+
+        Gated on ownership, not on canEdit. canEdit is true for ANY signed-in user, so this
+        whole block only ever rendered for signed-out visitors: a parent who made an account,
+        searched for their wrestler and landed here saw no way to claim the profile at all.
+        273 of 404 profiles have no owner, and three quarters of the ranked ones do not — this
+        is the door they were looking for. Admins are excluded so nobody claims a profile by
+        reflex while checking somebody else's page.
+      */}
+      {!isViewingOwnProfile && !isAdmin && (
         <div className="px-1">
           {athlete.claimed_by_user_id ? (
             <ParentLinkButton athleteId={String(athlete.id)} athleteName={athleteName} />

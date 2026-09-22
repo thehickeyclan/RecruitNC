@@ -67,8 +67,20 @@ export function resolveLastCompetedWeight(
     })
     .filter((x): x is LastCompetedWeight & { priority: number } => x != null)
 
+  /*
+   * A real date beats the priority table.
+   *
+   * Ordering was year, then a hard-coded ranking of event types, which gets two events in the
+   * same season the wrong way round whenever the calendar disagrees with the ranking — the
+   * Tournament of Champions in September against a Super 32 the week before, say. Where both
+   * candidates record an actual day, that decides it; the priority order still settles the
+   * annual events that carry only a year.
+   */
   withPriority.sort((a, b) => {
     if (b.year !== a.year) return b.year - a.year
+    const aDate = a.date ? Date.parse(a.date) : NaN
+    const bDate = b.date ? Date.parse(b.date) : NaN
+    if (Number.isFinite(aDate) && Number.isFinite(bDate) && aDate !== bDate) return bDate - aDate
     return b.priority - a.priority
   })
 

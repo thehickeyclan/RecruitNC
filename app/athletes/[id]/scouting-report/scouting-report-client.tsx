@@ -6,6 +6,7 @@ import { Printer, ArrowLeft, Loader2, Link2, Check } from "lucide-react"
 import Link from "next/link"
 import type { ScoutingReport } from "@/lib/scouting-report"
 import { RETAINED_EDITIONS } from "@/lib/national-rankings"
+import { ELITE_OPPONENT_PERCENTILE } from "@/lib/competition-strength"
 
 /**
  * The printable scouting report.
@@ -308,6 +309,43 @@ export function ScoutingReportDocument({
           </Block>
         ) : null}
 
+        {/*
+          Film and the public profiles, which the report has always carried and never drawn.
+          `highlightVideoUrl` is released at both access tiers on purpose, and our own claim
+          wizard tells athletes film is "the first thing a college coach asks for after your
+          record" — it was reaching the page and stopping there.
+        */}
+        {contact.highlightVideoUrl || contact.floProfileUrl || contact.trackWrestlingProfileUrl ? (
+          <Block n={n()} title="Film and profiles">
+            <ul className="space-y-1 text-[11.5px] text-gray-900">
+              {contact.highlightVideoUrl ? (
+                <li>
+                  <span className="font-semibold">Highlight film</span>{" "}
+                  <a href={contact.highlightVideoUrl} className="break-all underline" target="_blank" rel="noreferrer">
+                    {contact.highlightVideoUrl}
+                  </a>
+                </li>
+              ) : null}
+              {contact.floProfileUrl ? (
+                <li>
+                  <span className="font-semibold">FloWrestling</span>{" "}
+                  <a href={contact.floProfileUrl} className="break-all underline" target="_blank" rel="noreferrer">
+                    {contact.floProfileUrl}
+                  </a>
+                </li>
+              ) : null}
+              {contact.trackWrestlingProfileUrl ? (
+                <li>
+                  <span className="font-semibold">TrackWrestling</span>{" "}
+                  <a href={contact.trackWrestlingProfileUrl} className="break-all underline" target="_blank" rel="noreferrer">
+                    {contact.trackWrestlingProfileUrl}
+                  </a>
+                </li>
+              ) : null}
+            </ul>
+          </Block>
+        ) : null}
+
         <Block n={n()} title="Academics">
           {report.accessTier !== "full" ? (
             <Note>
@@ -381,12 +419,50 @@ export function ScoutingReportDocument({
           </Block>
         ) : null}
 
+        {/*
+          Strength of schedule, which the paywall in front of this page sells by name and the
+          report has never printed. The numbers come from the same season bouts the star rating
+          is built on — only the elite threshold is a judgement, so it is stated.
+        */}
+        {report.seasonStrength && report.seasonStrength.bouts > 0 ? (
+          <Block n={n()} title="Strength of schedule">
+            <div className="grid grid-cols-4 gap-3 text-[11.5px]">
+              <Stat label="Season record" value={`${report.seasonStrength.wins}-${report.seasonStrength.losses}`} />
+              <Stat
+                label="Vs. elite"
+                value={
+                  report.seasonStrength.vsElite > 0
+                    ? `${report.seasonStrength.eliteWins}-${report.seasonStrength.eliteLosses} in ${report.seasonStrength.vsElite}`
+                    : "—"
+                }
+              />
+              <Stat
+                label="Elite share"
+                value={report.seasonStrength.eliteShare != null ? `${Math.round(report.seasonStrength.eliteShare)}%` : "—"}
+              />
+              <Stat
+                label="Bonus rate"
+                value={report.seasonStrength.bonusRate != null ? `${Math.round(report.seasonStrength.bonusRate)}%` : "—"}
+              />
+            </div>
+            <p className="mt-2 text-[9.5px] italic leading-snug text-gray-500">
+              From {report.seasonStrength.bouts} imported high-school bouts.{" "}
+              {report.seasonStrength.averageOpponentPercentile != null
+                ? `Average opponent in the ${Math.round(report.seasonStrength.averageOpponentPercentile)}th percentile. `
+                : ""}
+              &ldquo;Elite&rdquo; is an opponent at or above the {ELITE_OPPONENT_PERCENTILE}th percentile; bonus rate is
+              the share of wins by fall, tech or major.
+            </p>
+          </Block>
+        ) : null}
+
         <Block n={n()} title="Competition record">
           {report.results.length ? (
-            <Table head={["Year", "Event", "Result"]} widths={["3rem", "11rem", "auto"]}>
+            <Table head={["Date", "Event", "Result"]} widths={["5.2rem", "11rem", "auto"]}>
               {report.results.map((row, i) => (
                 <tr key={i} className="border-t border-gray-200">
-                  <Td mono>{row.year}</Td>
+                  {/* The day where we have it, the year where the source only published one. */}
+                  <Td mono>{row.date ? dayLabel(row.date) : row.year}</Td>
                   <Td bold>{row.event}</Td>
                   <Td>{row.detail}</Td>
                 </tr>
@@ -510,6 +586,15 @@ function Cell({ label, value }: { label: string; value: string | null }) {
  * state tournament and one made last weekend at a national qualifier are different facts. Most
  * result tables record only a year, so the year stands alone when there is no day.
  */
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border border-gray-300 bg-[#f7f8fa] px-2 py-1.5">
+      <div className="text-[9px] uppercase tracking-wide text-gray-500">{label}</div>
+      <div className="font-semibold text-gray-900">{value}</div>
+    </div>
+  )
+}
+
 function lastCompetedLine(identity: ScoutingReport["identity"]): string | null {
   if (!identity.lastCompetedWeight) return null
   const when = identity.lastCompetedDate
