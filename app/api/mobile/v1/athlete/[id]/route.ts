@@ -1,5 +1,8 @@
-import { NextResponse } from "next/server"
+import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { resolveRequestUserId } from "@/lib/request-user"
+import { buildAthleteEditPatch } from "@/lib/mobile/athlete-edit"
+import { resolveAthleteOwnership } from "@/lib/mobile/athlete-ownership"
 import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
 import { buildProfileReveal } from "@/lib/profile-reveal"
 import {
@@ -126,4 +129,46 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       },
     },
   )
+}
+
+/**
+ * The athlete editing their own profile, from the phone.
+ *
+ * Same allowlist discipline as the read above, pointed the other way: `buildAthleteEditPatch`
+ * decides which columns exist to be written and validates every value, and
+ * `resolveAthleteOwnership` decides whether this person may write them. A field absent from the
+ * body is left alone; a field present and empty is cleared, because a GPA typed last season has
+ * to be fixable from the screen that set it.
+ */
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
+  const athleteId = String(id ?? "").trim()
+  if (!athleteId) return NextResponse.json({ ok: false, error: "Missing athlete id" }, { status: 400 })
+
+  const admin = createAdminClient()
+  const viewerId = await resolveRequestUserId(request)
+  const ownership = await resolveAthleteOwnership(admin, athleteId, viewerId)
+  if (!ownership.ok) {
+    return NextResponse.json({ ok: false, error: ownership.error }, { status: ownership.status })
+  }
+
+  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null
+  if (!body) return NextResponse.json({ ok: false, error: "Send some fields to change." }, { status: 400 })
+
+  const built = buildAthleteEditPatch(body)
+  if (!built.ok) {
+    return NextResponse.json({ ok: false, error: built.error, field: built.field || undefined }, { status: 400 })
+  }
+
+  const { error } = await admin
+    .from("athletes")
+    .update({ ...built.patch, updated_at: new Date().toISOString(), last_edited_by: viewerId })
+    .eq("id", athleteId)
+
+  if (error) {
+    console.error("[mobile] athlete edit failed:", error.message)
+    return NextResponse.json({ ok: false, error: "Could not save those changes." }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true, changed: Object.keys(built.patch), relationship: ownership.relationship })
 }
