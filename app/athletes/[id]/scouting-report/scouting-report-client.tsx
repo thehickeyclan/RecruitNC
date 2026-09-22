@@ -290,6 +290,12 @@ export function ScoutingReportDocument({
             <Vital label="Class" value={identity.graduationYear ? String(identity.graduationYear) : null} />
             <Vital label="Weight" value={identity.weightClass ? `${identity.weightClass} lbs` : null} />
             <Vital label="Last competed" value={lastCompetedLine(identity)} />
+            {/* Sits with the two real weights, since the three together are the honest picture:
+                what he is listed at, what he last made, and where he thinks he lands. */}
+            <Vital
+              label="Projected college"
+              value={identity.collegeWeightClass ? `${identity.collegeWeightClass} lbs · athlete-stated` : null}
+            />
             <Vital label="High school" value={identity.highSchool} />
             <Vital label="Club" value={identity.club} />
             <Vital label="Career" value={report.careerRecord} />

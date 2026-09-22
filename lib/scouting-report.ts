@@ -56,6 +56,15 @@ export type ScoutingReportIdentity = {
   lastCompetedYear: number | null
   /** Exact day when the source records one; otherwise null and the year stands alone. */
   lastCompetedDate: string | null
+  /**
+   * Where the athlete expects to wrestle in college — their own projection, not ours.
+   *
+   * Owner-editable and better filled in than anything else on a profile (295 of 404), and no
+   * coach could see it. Labelled as athlete-stated wherever it is shown: it is a claim about a
+   * teenager's own body and plans, and NC United asserting a number for them would be a guess
+   * with our name on it.
+   */
+  collegeWeightClass: string | null
   gender: string | null
   state: string | null
   city: string | null
@@ -418,7 +427,8 @@ export async function buildScoutingReport(
           : null,
       lastCompetedDate: text(lastCompeted?.date),
       gender: text(athlete.gender),
-      state: text(athlete.state),
+      collegeWeightClass: text(athlete.college_weight_class),
+    state: text(athlete.state),
       city: text(athlete.city),
     },
     contact: mapContact(athlete, personal),
