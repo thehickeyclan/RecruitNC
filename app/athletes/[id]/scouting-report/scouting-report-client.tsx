@@ -6,7 +6,6 @@ import { Printer, ArrowLeft, Loader2, Link2, Check } from "lucide-react"
 import Link from "next/link"
 import type { ScoutingReport } from "@/lib/scouting-report"
 import { weightProgression } from "@/lib/scouting-report"
-import { SCHEDULE_BAND_MEDIAN, SCHEDULE_BAND_SAMPLE } from "@/lib/schedule-strength-band"
 import { cn } from "@/lib/utils"
 import { RETAINED_EDITIONS } from "@/lib/national-rankings"
 import { ELITE_OPPONENT_PERCENTILE } from "@/lib/competition-strength"
@@ -444,10 +443,15 @@ export function ScoutingReportDocument({
               One table, in the same language as Significant wins and Notable losses below, so
               the section reads as part of the report rather than a dashboard bolted to it.
 
-              Each row carries its own basis. The footnote underneath used to explain all eight
-              boxes at once in 9px grey — which meant the reader had to hold "opponent ratings
-              arrive with the match import" in their head while looking at a number three inches
-              away. A number and its provenance belong on the same line.
+              Each row carries its own basis, on the same line as the number.
+
+              The two rows built on the imported opponent rating are gone. The rating still
+              arrives with every import — 88% of 2025-26 bouts carry one — so this is not about
+              stale data. It is that nobody here can say what the number measures: it is pasted
+              in from an outside source, no definition travels with it, and a figure a college
+              coach cannot have explained to them does not belong on a report they paid for.
+              Season record and bonus rate stay, because both are computed from bout results we
+              hold outright.
             */}
             <Table head={["Measure", "Value", "Basis"]} widths={["12rem", "6.5rem", "auto"]}>
               <tr className="border-t border-gray-200">
@@ -456,27 +460,6 @@ export function ScoutingReportDocument({
                 <Td>
                   {report.seasonStrength.bouts} imported bouts
                   {report.seasonStrengthSeason ? `, ${report.seasonStrengthSeason} season` : ""}
-                </Td>
-              </tr>
-              <tr className="border-t border-gray-200">
-                <Td bold>Vs. opponents rated 95+</Td>
-                <Td mono>
-                  {report.seasonStrength.vsElite > 0
-                    ? `${report.seasonStrength.eliteWins}-${report.seasonStrength.eliteLosses} in ${report.seasonStrength.vsElite}`
-                    : "—"}
-                </Td>
-                <Td>Opponent ratings arrive with the match import; 95+ is the bar used here</Td>
-              </tr>
-              <tr className="border-t border-gray-200">
-                <Td bold>Share rated 95+</Td>
-                <Td mono>
-                  {report.seasonStrength.eliteShare != null ? `${Math.round(report.seasonStrength.eliteShare)}%` : "—"}
-                </Td>
-                <Td>
-                  Median {SCHEDULE_BAND_MEDIAN}% across {SCHEDULE_BAND_SAMPLE} NC wrestlers on file
-                  {report.seasonStrength.averageOpponentPercentile != null
-                    ? `; average opponent rating ${Math.round(report.seasonStrength.averageOpponentPercentile)} of 100`
-                    : ""}
                 </Td>
               </tr>
               <tr className="border-t border-gray-200">

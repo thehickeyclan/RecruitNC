@@ -13,7 +13,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { applyStarOverride, isRatedAthlete, rateAthlete, type StarRating } from "@/lib/athlete-star-rating"
 import { nationalEventRows, starOverrideOf, statePlaces } from "@/lib/athlete-star-rating-load"
-import { summarizeNationalExposure, summarizeSeasonStrength, type SeasonStrength, seasonStrengthLine } from "@/lib/competition-strength"
+import { summarizeNationalExposure, summarizeSeasonStrength, type SeasonStrength } from "@/lib/competition-strength"
 import {
   buildStrengthOfCompetition,
   strengthOfCompetitionFacts,
@@ -758,12 +758,26 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
       for (const l of socLines) lines.push(`- ${l}`)
     }
 
-    const strengthLine = report.seasonStrength ? seasonStrengthLine(report.seasonStrength) : null
-    if (strengthLine) {
-      // Named, because "strength of schedule" with no season attached is read as "now" — and
-      // in September the most recent season ended seven months ago.
+    /*
+     * The season record, without the opponent-rating figures.
+     *
+     * "21-7 against opponents rated 95+" was the strongest-sounding line in the facts and the
+     * only one nobody could define — the rating is pasted in from an outside source with no
+     * definition attached. A model given it will put it in the first sentence, and a coach who
+     * asks what it means gets a shrug. Bonus rate survives: falls, techs and majors are read
+     * off bout results we hold.
+     */
+    if (report.seasonStrength) {
       const label = report.seasonStrengthSeason ? `${report.seasonStrengthSeason} ` : ""
-      lines.push("", `${label}high school season strength of schedule: ${strengthLine}.`)
+      const bonus =
+        report.seasonStrength.bonusRate != null
+          ? `, ${Math.round(report.seasonStrength.bonusRate)}% of wins by fall, tech or major`
+          : ""
+      lines.push(
+        "",
+        `${label}high school season: ${report.seasonStrength.wins}-${report.seasonStrength.losses}` +
+          ` across ${report.seasonStrength.bouts} bouts${bonus}.`,
+      )
     }
 
     if (!report.results.some((r) => isNationalEvent(r.event))) {
@@ -892,8 +906,8 @@ Two lines are worth a sentence of their own when the facts carry them:
 - "Competed at:" is the weight progression. For a young wrestler still filling out, where they
   have actually competed says more than a listed weight. Report the direction.
 - "Strength of competition" is who they wrestled and beat. A record without it is the half
-  that misleads: 50-8 reads very differently once you know 28 of those bouts were against
-  opponents rated 95+ and eight wins came over Tournament of Champions field opponents. Quote
+  that misleads: 50-8 reads very differently once you know eight of those wins came over
+  Tournament of Champions field opponents. Quote
   the figures as given, never call a schedule "weak", and if the coverage line says one season
   is on file, do not treat a short record as a limit on the wrestler.
 
