@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { shouldAutoApproveCoach } from "@/lib/coach-auto-approve"
+import { canonicalRole, shouldAutoApproveCoach } from "@/lib/coach-auto-approve"
 
 // Safe, additive: extends existing handler to accept first/last/cell/profileType
 export async function POST(request: NextRequest) {
@@ -123,7 +123,9 @@ export async function POST(request: NextRequest) {
       if (firstName) profilePayload.first_name = firstName
       if (lastName) profilePayload.last_name = lastName
       if (cellPhone) profilePayload.cell_phone = cellPhone
-      if (profileType) profilePayload.role = profileType
+      // Canonical spelling: the picker says `college-coach`, the approval queue reads
+      // `college_coach`, and for as long as those differed every coach was invisible to it.
+      if (profileType) profilePayload.role = canonicalRole(profileType)
 
       // A college coach on a .edu address skips the manual approval queue. Only this exact
       // combination does — see lib/coach-auto-approve.ts for why the rule is kept narrow.

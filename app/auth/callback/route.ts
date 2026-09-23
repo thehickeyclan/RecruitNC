@@ -121,6 +121,10 @@ export async function GET(req: NextRequest) {
       console.error("[v0] Profile fetch error:", profileFetchError)
     }
 
+    // A brand-new account that never said what it is. The password form asks on the way in;
+    // the Google button cannot, so the question is asked once, on the next screen.
+    let needsProfileType = false
+
     if (!profile) {
       console.log("[v0] Creating user profile...")
       const payload = buildUserProfileUpsertPayload(session.user as User)
@@ -131,6 +135,10 @@ export async function GET(req: NextRequest) {
       } else {
         console.log("[v0] User profile created with role:", payload.role)
       }
+
+      // Only ever for a profile created just now, and only when the sign-up carried no profile
+      // type of its own. An existing account never sees this, whatever its role happens to be.
+      needsProfileType = !String(payload.profile_type ?? "").trim()
     }
 
     const isEmailVerificationCallback = type === "signup" || (!type && next !== "/auth/reset-password")
@@ -178,6 +186,12 @@ export async function GET(req: NextRequest) {
       redirectPath = "/admin"
     } else if (!hasExplicitNext && session.user.user_metadata?.profile_type === "athlete") {
       redirectPath = "/athletes"
+    }
+
+    // Ask the new account who it is before sending it anywhere else. `next` is carried through
+    // so the destination they originally asked for still happens afterwards.
+    if (needsProfileType && type !== "recovery" && redirectPath !== "/auth/reset-password") {
+      redirectPath = `/auth/complete-profile?next=${encodeURIComponent(redirectPath)}`
     }
 
     console.log("[v0] Redirecting authenticated user to:", redirectPath)

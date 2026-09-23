@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { emailDomain, isCollegeCoachRole, isEduEmail, shouldAutoApproveCoach } from "./coach-auto-approve"
+import { canonicalRole, emailDomain, isCollegeCoachRole, isEduEmail, shouldAutoApproveCoach } from "./coach-auto-approve"
 
 describe("emailDomain", () => {
   it("lowercases and takes the part after the last @", () => {
@@ -63,5 +63,29 @@ describe("shouldAutoApproveCoach", () => {
     // The one that matters most: a .edu address must not let any other role in.
     expect(shouldAutoApproveCoach({ role: "hs-club-coach", email: "coach@ncsu.edu" })).toBe(false)
     expect(shouldAutoApproveCoach({ role: "fan", email: "someone@unc.edu" })).toBe(false)
+  })
+})
+
+describe("canonicalRole", () => {
+  it("folds the picker's spelling onto the queue's spelling", () => {
+    // The bug this exists for: the form wrote "college-coach", the admin approval queue counted
+    // "college_coach", and four real coaches sat in a queue that rendered as empty.
+    expect(canonicalRole("college-coach")).toBe("college_coach")
+    expect(canonicalRole("College Coach")).toBe("college_coach")
+    expect(canonicalRole("college_coach")).toBe("college_coach")
+  })
+
+  it("leaves a bare coach alone", () => {
+    // `buildUserProfileUpsertPayload` writes "coach" for high-school and club coaches as well.
+    // Folding it into college_coach would hand them minors' phone numbers on a .edu address.
+    expect(canonicalRole("coach")).toBe("coach")
+    expect(shouldAutoApproveCoach({ role: canonicalRole("coach"), email: "someone@ncsu.edu" })).toBe(false)
+  })
+
+  it("keeps the other roles as the database spells them", () => {
+    expect(canonicalRole("hs-club-coach")).toBe("hs-club-coach")
+    expect(canonicalRole("athlete")).toBe("athlete")
+    expect(canonicalRole("")).toBeNull()
+    expect(canonicalRole(null)).toBeNull()
   })
 })

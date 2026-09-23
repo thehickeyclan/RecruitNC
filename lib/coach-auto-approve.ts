@@ -30,6 +30,25 @@ export function isEduEmail(email: string | null | undefined): boolean {
   return /\.edu$/.test(domain)
 }
 
+/**
+ * The role spellings this codebase writes, reduced to one.
+ *
+ * The sign-up form's picker offers `college-coach`; the admin dashboard's approval queue counts
+ * `college_coach`. Those are the same person and they have never matched, so every coach who
+ * signed up through the form landed in a queue nobody could see. Write the canonical spelling
+ * going forward, and read with `isCollegeCoachRole`, which accepts either.
+ */
+export function canonicalRole(role: string | null | undefined): string | null {
+  const value = String(role ?? "").trim().toLowerCase().replace(/[\s-]+/g, "_")
+  if (!value) return null
+  // Deliberately NOT mapping bare "coach": the callback writes it for high-school and club
+  // coaches too, so folding it in here would promote them into the college-coach queue and,
+  // with a .edu address, into auto-approval for minors' contact details.
+  if (value === "college_coach") return "college_coach"
+  if (value === "hs_club_coach") return "hs-club-coach"
+  return value
+}
+
 /** The roles that mean "college coach", in every spelling the codebase has used. */
 export function isCollegeCoachRole(role: string | null | undefined): boolean {
   const normalized = String(role ?? "").trim().toLowerCase().replace(/[\s-]+/g, "_")

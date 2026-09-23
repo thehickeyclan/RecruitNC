@@ -55,6 +55,7 @@ import {
   ResponsiveContainer,
   Legend 
 } from "recharts"
+import { isCollegeCoachRole } from "@/lib/coach-auto-approve"
 
 type UserProfile = {
   user_id: string
@@ -530,23 +531,23 @@ export default function UsersDashboardPage() {
 
   const pendingCoaches = useMemo(() => 
     filteredProfiles.filter(p => 
-      p.role === "college_coach" && !p.verified_coach && p.verification_status !== "rejected"
+      isCollegeCoachRole(p.role) && !p.verified_coach && p.verification_status !== "rejected"
     ),
     [filteredProfiles]
   )
 
   const approvedCoaches = useMemo(() => 
     filteredProfiles.filter(p => 
-      p.role === "college_coach" && p.verified_coach
+      isCollegeCoachRole(p.role) && p.verified_coach
     ),
     [filteredProfiles]
   )
 
   const stats = useMemo(() => ({
     total: profiles.length,
-    coaches: profiles.filter(p => p.role === "college_coach").length,
-    pendingCoaches: profiles.filter(p => p.role === "college_coach" && !p.verified_coach && p.verification_status !== "rejected").length,
-    approvedCoaches: profiles.filter(p => p.role === "college_coach" && p.verified_coach).length,
+    coaches: profiles.filter(p => isCollegeCoachRole(p.role)).length,
+    pendingCoaches: profiles.filter(p => isCollegeCoachRole(p.role) && !p.verified_coach && p.verification_status !== "rejected").length,
+    approvedCoaches: profiles.filter(p => isCollegeCoachRole(p.role) && p.verified_coach).length,
     athletes: profiles.filter(p => p.role === "athlete").length,
     activeToday: profiles.filter(p => {
       const lastActive = effectiveLastActiveAt(p)
