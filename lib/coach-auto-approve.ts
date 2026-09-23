@@ -67,3 +67,26 @@ export function shouldAutoApproveCoach(input: {
 }): boolean {
   return isCollegeCoachRole(input.role) && isEduEmail(input.email)
 }
+
+/**
+ * A coach who was let in by the rule and still owes a human a look.
+ *
+ * Auto-approval is a convenience, not a verdict. `.edu` proves affiliation with an institution,
+ * not that the holder coaches there — students and, at many schools, alumni keep an address for
+ * life — so the rule opens the door immediately and this puts the coach on a list to be checked
+ * afterwards. `verification_status` is where that verdict lands: `approved` once a person has
+ * confirmed them, `rejected` if not. Until then they are approved but unreviewed.
+ */
+export function needsCoachReview(profile: {
+  role?: string | null
+  verified_coach?: boolean | null
+  verification_status?: string | null
+}): boolean {
+  if (!isCollegeCoachRole(profile.role)) return false
+  if (!profile.verified_coach) return false
+  const status = String(profile.verification_status ?? "").trim().toLowerCase()
+  return status !== "approved" && status !== "rejected"
+}
+
+/** The verdicts a human may record. Anything else is not a decision we store. */
+export const VERIFICATION_STATUSES = new Set(["pending", "approved", "rejected"])

@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest"
-import { canonicalRole, emailDomain, isCollegeCoachRole, isEduEmail, shouldAutoApproveCoach } from "./coach-auto-approve"
+import {
+  canonicalRole,
+  emailDomain,
+  isCollegeCoachRole,
+  isEduEmail,
+  needsCoachReview,
+  shouldAutoApproveCoach,
+} from "./coach-auto-approve"
 
 describe("emailDomain", () => {
   it("lowercases and takes the part after the last @", () => {
@@ -87,5 +94,39 @@ describe("canonicalRole", () => {
     expect(canonicalRole("athlete")).toBe("athlete")
     expect(canonicalRole("")).toBeNull()
     expect(canonicalRole(null)).toBeNull()
+  })
+})
+
+describe("needsCoachReview", () => {
+  const coach = (over: Record<string, unknown> = {}) => ({
+    role: "college_coach",
+    verified_coach: true,
+    verification_status: "pending",
+    ...over,
+  })
+
+  it("flags a coach the .edu rule let in before anyone looked", () => {
+    expect(needsCoachReview(coach())).toBe(true)
+    // The spelling the sign-up form used to write must not hide them again.
+    expect(needsCoachReview(coach({ role: "college-coach" }))).toBe(true)
+  })
+
+  it("stops flagging once a human has decided either way", () => {
+    expect(needsCoachReview(coach({ verification_status: "approved" }))).toBe(false)
+    expect(needsCoachReview(coach({ verification_status: "rejected" }))).toBe(false)
+  })
+
+  it("is not about coaches still waiting for approval", () => {
+    // Those are the pending queue; this list is the opposite — already inside, unchecked.
+    expect(needsCoachReview(coach({ verified_coach: false }))).toBe(false)
+  })
+
+  it("ignores everyone who is not a college coach", () => {
+    expect(needsCoachReview(coach({ role: "hs-club-coach" }))).toBe(false)
+    expect(needsCoachReview(coach({ role: "athlete" }))).toBe(false)
+  })
+
+  it("treats a missing status as unreviewed", () => {
+    expect(needsCoachReview(coach({ verification_status: null }))).toBe(true)
   })
 })

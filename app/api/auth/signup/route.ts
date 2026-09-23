@@ -131,6 +131,8 @@ export async function POST(request: NextRequest) {
       // combination does — see lib/coach-auto-approve.ts for why the rule is kept narrow.
       if (shouldAutoApproveCoach({ role: profileType, email: data.user.email })) {
         profilePayload.verified_coach = true
+        // Let in by the rule, not by a person. Stays on the review list until one looks.
+        profilePayload.verification_status = "pending"
         console.log("[signup] auto-approved college coach on .edu address:", data.user.email)
       }
 

@@ -55,7 +55,7 @@ import {
   ResponsiveContainer,
   Legend 
 } from "recharts"
-import { isCollegeCoachRole } from "@/lib/coach-auto-approve"
+import { isCollegeCoachRole, needsCoachReview } from "@/lib/coach-auto-approve"
 
 type UserProfile = {
   user_id: string
@@ -342,6 +342,44 @@ export default function UsersDashboardPage() {
     }
   }
 
+  /**
+   * "I have looked at this one."
+   *
+   * A .edu address opens the door on its own, which is a convenience and not a verdict — the
+   * domain proves an institution, not a job. This is the verdict, recorded separately so an
+   * auto-approved coach stays on a list until a person has actually checked them.
+   */
+  const handleConfirmCoach = async (userId: string, verdict: "approved" | "rejected") => {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        // Rejecting a coach also shuts the door the rule opened.
+        body: JSON.stringify(
+          verdict === "approved"
+            ? { verification_status: "approved" }
+            : { verification_status: "rejected", verified_coach: false },
+        ),
+        credentials: "include",
+      })
+      if (!res.ok) throw new Error("Failed to record review")
+
+      toast({
+        title: "Success",
+        description: verdict === "approved" ? "Coach confirmed" : "Coach rejected",
+      })
+      setProfiles(prev =>
+        prev.map(p =>
+          p.user_id === userId
+            ? { ...p, verification_status: verdict, verified_coach: verdict === "approved" ? p.verified_coach : false }
+            : p
+        )
+      )
+    } catch {
+      toast({ title: "Error", description: "Could not record that review", variant: "destructive" })
+    }
+  }
+
   const handleApproveCoach = async (userId: string, approved: boolean) => {
     try {
       const res = await fetch(`/api/admin/users/${userId}`, {
@@ -543,11 +581,18 @@ export default function UsersDashboardPage() {
     [filteredProfiles]
   )
 
+  /** Approved by the rule, not yet by a person. */
+  const coachesAwaitingReview = useMemo(
+    () => filteredProfiles.filter(needsCoachReview),
+    [filteredProfiles]
+  )
+
   const stats = useMemo(() => ({
     total: profiles.length,
     coaches: profiles.filter(p => isCollegeCoachRole(p.role)).length,
     pendingCoaches: profiles.filter(p => isCollegeCoachRole(p.role) && !p.verified_coach && p.verification_status !== "rejected").length,
     approvedCoaches: profiles.filter(p => isCollegeCoachRole(p.role) && p.verified_coach).length,
+    awaitingReview: profiles.filter(needsCoachReview).length,
     athletes: profiles.filter(p => p.role === "athlete").length,
     activeToday: profiles.filter(p => {
       const lastActive = effectiveLastActiveAt(p)
@@ -735,7 +780,12 @@ export default function UsersDashboardPage() {
         {isCoach && (
           <>
             <td className="px-4 py-3">
-              {user.verified_coach ? (
+              {needsCoachReview(user) ? (
+                <Badge variant="default" className="bg-amber-500" title="Auto-approved on a .edu address — not yet reviewed by a person">
+                  <AlertCircle className="h-3 w-3 mr-1" />
+                  Unreviewed
+                </Badge>
+              ) : user.verified_coach ? (
                 <Badge variant="default" className="bg-green-600">
                   <UserCheck className="h-3 w-3 mr-1" />
                   Approved
@@ -787,6 +837,18 @@ export default function UsersDashboardPage() {
             >
               <Edit className="h-4 w-4" />
             </Button>
+            {needsCoachReview(user) && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => handleConfirmCoach(user.user_id, "approved")}
+                className="bg-amber-500 hover:bg-amber-600"
+                title="Confirm this coach — you have checked who they are"
+              >
+                <Check className="h-4 w-4" />
+                Confirm
+              </Button>
+            )}
             {isCoach && (
               <Button
                 variant={user.verified_coach ? "outline" : "default"}
@@ -880,6 +942,11 @@ export default function UsersDashboardPage() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Pending Coaches</p>
                 <p className="text-2xl font-bold text-orange-600">{stats.pendingCoaches}</p>
+                {stats.awaitingReview > 0 && (
+                  <p className="mt-1 text-xs font-medium text-amber-600">
+                    + {stats.awaitingReview} auto-approved, unreviewed
+                  </p>
+                )}
               </div>
               <AlertCircle className="h-8 w-8 text-orange-600" />
             </div>
@@ -1232,6 +1299,12 @@ export default function UsersDashboardPage() {
                 <UserCheck className="h-5 w-5 text-green-600" />
                 Approved Coaches ({approvedCoaches.length})
               </CardTitle>
+              {coachesAwaitingReview.length > 0 && (
+                <p className="text-sm text-amber-600">
+                  {coachesAwaitingReview.length} were let in automatically by the .edu rule and still need your eyes —
+                  look for the amber <span className="font-semibold">Unreviewed</span> badge.
+                </p>
+              )}
             </CardHeader>
             <CardContent>
               {approvedCoaches.length === 0 ? (

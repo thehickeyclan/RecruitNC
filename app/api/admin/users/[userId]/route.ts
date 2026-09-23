@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { createClient as createServiceClient } from "@supabase/supabase-js"
 import { normalizePhoneForStorage } from "@/lib/phone-format"
+import { VERIFICATION_STATUSES } from "@/lib/coach-auto-approve"
 
 export const dynamic = "force-dynamic"
 
@@ -31,7 +32,7 @@ export async function PATCH(
     }
 
     const body = await request.json()
-    const { name, cell_phone, role, verified_coach, school_id, college_id } = body
+    const { name, cell_phone, role, verified_coach, verification_status, school_id, college_id } = body
 
     const supabaseAdmin = createServiceClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -52,6 +53,16 @@ export async function PATCH(
     if (formattedPhone !== undefined) updateData.cell_phone = formattedPhone
     if (role !== undefined) updateData.role = role
     if (verified_coach !== undefined) updateData.verified_coach = verified_coach
+
+    // The human verdict on an auto-approved coach. `.edu` opens the door; this records that
+    // someone then checked who walked through it. Allowlisted so the column keeps meaning
+    // something — it spent a long time stuck at "pending" for everybody.
+    if (verification_status !== undefined) {
+      if (!VERIFICATION_STATUSES.has(String(verification_status))) {
+        return NextResponse.json({ error: "Unknown verification status" }, { status: 400 })
+      }
+      updateData.verification_status = verification_status
+    }
     if (school_id !== undefined) updateData.school_id = school_id || null
 
     // College coaches select from the canonical `colleges` table. Existing coach portals

@@ -56,7 +56,11 @@ export async function POST(request: NextRequest) {
   if (cellPhone) patch.cell_phone = cellPhone
   const institution = String(body?.institution ?? "").trim()
   if (institution) patch.institution = institution
-  if (decision.verifiedCoach) patch.verified_coach = true
+  if (decision.verifiedCoach) {
+    patch.verified_coach = true
+    // Let in by the rule, not by a person. Stays on the review list until one looks.
+    patch.verification_status = "pending"
+  }
 
   const { error } = await admin.from("user_profiles").update(patch).eq("user_id", user.id)
   if (error) {
