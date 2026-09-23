@@ -263,6 +263,38 @@ const EVENT_MONTH: Record<string, number> = {
 }
 
 /**
+ * What today is, and whether the high school season is running.
+ *
+ * The prompt used to say "then this season's results" to a model with no idea what day it was,
+ * so a report written in September 2026 called Adam Walker's February 2026 state runner-up
+ * finish "this season" — a season that had not started and was still two months away. The
+ * facts have to carry the clock, and the summary has to speak in years.
+ *
+ * North Carolina wrestles November to February; NCHSAA States is mid-February, which is what
+ * closes a season.
+ */
+export function seasonContext(now: Date = new Date()): string {
+  const month = now.getMonth() + 1
+  const year = now.getFullYear()
+  const today = now.toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" })
+
+  // States is mid-February, so late February is already an off-season date: a report written
+  // on 25 February should not call the season "under way" when it finished the week before.
+  const inSeason = month >= 11 || month === 1 || (month === 2 && now.getDate() <= 20)
+  if (inSeason) {
+    const start = month >= 11 ? year : year - 1
+    return `Today is ${today}. The ${start}-${String(start + 1).slice(2)} North Carolina high school season is under way.`
+  }
+  // Off-season: States in February of this year closed the most recent one.
+  const ended = `${year - 1}-${String(year).slice(2)}`
+  return (
+    `Today is ${today}. The North Carolina high school season is not running: the ${ended} season` +
+    ` closed at NCHSAA States in February ${year}, and the next one begins in November ${year}.` +
+    ` Do not call any result "this season" or "last season" — name the year the facts give it.`
+  )
+}
+
+/**
  * The events we hold structured results for that are not North Carolina in-season wrestling.
  *
  * Deliberately not a list of every national tournament that exists: Beast of the East, Ironman
@@ -531,6 +563,7 @@ function boutFact(bout: SignificantWin): string {
 export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
   const { identity, academics, membership } = report
   const lines: string[] = [
+    seasonContext(),
     `Name: ${identity.name}`,
     identity.graduationYear ? `Class of ${identity.graduationYear}` : "",
     identity.highSchool ? `High school: ${identity.highSchool}` : "",
@@ -688,6 +721,26 @@ export function stripUnsupportedSentences(summary: string, facts: string): strin
   return kept.join(" ").trim()
 }
 
+
+/**
+ * Remove season-relative framing the facts cannot support.
+ *
+ * The prompt forbids it, but "This season, Walker finished 2nd at the 2026 NCHSAA States" is
+ * one phrase away from being a true sentence, so it is cut rather than the whole sentence
+ * thrown away — the year is already there and does the work.
+ */
+export function stripSeasonFraming(summary: string): string {
+  return summary
+    .replace(/\b(this|last|the current)\s+season,\s*/gi, "")
+    .replace(/,?\s*\b(this|last|the current)\s+season\b/gi, "")
+    .replace(/\bso far this year\b,?\s*/gi, "")
+    // A cut at the start of a sentence leaves it lower-case.
+    .replace(/(^|[.!?]\s+)([a-z])/g, (_m, lead: string, letter: string) => lead + letter.toUpperCase())
+    .replace(/\s{2,}/g, " ")
+    .replace(/\s+([.,])/g, "$1")
+    .trim()
+}
+
 /** The instruction given to the model. Separate export so it can be reviewed and tested. */
 export const SUMMARY_SYSTEM_PROMPT = `You write short scouting summaries for college wrestling coaches.
 
@@ -699,7 +752,10 @@ Say things in this order, skipping anything the facts do not contain:
    Give the weight, the record, and the placement ONLY when the facts state one. A line reading
    "did not place" means exactly that: report the record and say they did not place. Never
    supply a placement, an All-American finish or a podium the facts do not contain.
-3. Then this season's results, including the Tournament of Champions and the state tournament.
+3. Refer to every result by the year the facts give it. NEVER write "this season", "last
+   season", "currently" or "so far this year" — you are not told where in the calendar you are
+   beyond the clock line at the top of the facts, and a February result is a different season
+   from a September one.
 4. Then the wins and losses that carry a credential, naming the opponents.
 5. Then the ranking: a national ranking with its outlet, otherwise the RecruitNC class ranking.
 6. Then GPA and test scores, last, in one short sentence.

@@ -9,6 +9,7 @@ import {
   unsupportedSummaryClaims,
   buildScoutingReport,
   loadOpponentIndex,
+  stripSeasonFraming,
   summaryFacts,
 } from "@/lib/scouting-report"
 import { scoutingAccessTier, scoutingReportAvailable, watermarkLine } from "@/lib/scouting-report-access"
@@ -155,8 +156,11 @@ async function writeSummary(report: Awaited<ReturnType<typeof buildScoutingRepor
    */
   let lastText: string | null = null
   for (let attempt = 0; attempt < 2; attempt++) {
-    const text = await askForSummary(apiKey, facts)
-    if (!text) return null
+    const raw = await askForSummary(apiKey, facts)
+    if (!raw) return null
+    // "This season" is forbidden by the prompt and still turns up; the year beside it is
+    // already correct, so the framing is cut rather than the sentence discarded.
+    const text = stripSeasonFraming(raw)
     const problems = unsupportedSummaryClaims(text, facts)
     if (problems.length === 0) return text
     lastText = text

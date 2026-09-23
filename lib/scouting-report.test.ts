@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { buildResultRows, isNationalEvent, mapAcademics, mapCareerRecord, mapContact, summaryFacts, unsupportedSummaryClaims,
+import { buildResultRows, isNationalEvent, seasonContext, stripSeasonFraming, mapAcademics, mapCareerRecord, mapContact, summaryFacts, unsupportedSummaryClaims,
   stripUnsupportedSentences,
 } from "@/lib/scouting-report"
 
@@ -358,5 +358,53 @@ describe("national coverage", () => {
     expect(isNationalEvent("Beast of the East")).toBe(false)
     expect(isNationalEvent("Ironman")).toBe(false)
     expect(isNationalEvent("Powerade")).toBe(false)
+  })
+})
+
+describe("seasonContext", () => {
+  const at = (iso: string) => seasonContext(new Date(`${iso}T12:00:00`))
+
+  it("knows the season has not started in September", () => {
+    // Adam Walker's report, written 23 Sept 2026, called his February 2026 state runner-up
+    // finish "this season" — a season still two months from starting.
+    const line = at("2026-09-23")
+    expect(line).toContain("Today is September 23, 2026")
+    expect(line).toContain("is not running")
+    expect(line).toContain("2025-26 season closed at NCHSAA States in February 2026")
+  })
+
+  it("knows the season is running in December and January", () => {
+    expect(at("2026-12-05")).toContain("2026-27 North Carolina high school season is under way")
+    expect(at("2027-01-20")).toContain("2026-27 North Carolina high school season is under way")
+  })
+
+  it("treats late February as over, because States is mid-month", () => {
+    expect(at("2027-02-10")).toContain("under way")
+    expect(at("2027-02-25")).toContain("is not running")
+  })
+})
+
+describe("stripSeasonFraming", () => {
+  it("cuts the framing and keeps the fact", () => {
+    expect(
+      stripSeasonFraming("This season, Walker finished 2nd at the 2026 NCHSAA States at 113."),
+    ).toBe("Walker finished 2nd at the 2026 NCHSAA States at 113.")
+  })
+
+  it("handles it mid-sentence", () => {
+    expect(stripSeasonFraming("Walker finished 2nd this season at the 2026 NCHSAA States.")).toBe(
+      "Walker finished 2nd at the 2026 NCHSAA States.",
+    )
+  })
+
+  it("re-capitalises a sentence it opened", () => {
+    expect(stripSeasonFraming("He placed 4th. Last season, he went 2-2.")).toBe(
+      "He placed 4th. He went 2-2.",
+    )
+  })
+
+  it("leaves a summary without season framing untouched", () => {
+    const clean = "Walker placed 4th at the 2026 Tournament of Champions at 125."
+    expect(stripSeasonFraming(clean)).toBe(clean)
   })
 })
