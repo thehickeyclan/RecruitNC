@@ -52,9 +52,14 @@ export function recruitingProfilePhotoFromRow(
     "headshotUrl",
     "athlete_image",
     "hero_image_url",
-    "commitmentphotourl",
-    "commitmentPhotoUrl",
-    "commitment_photo_url",
+    /*
+     * The commitment graphic is deliberately absent.
+     *
+     * It used to sit at the end of this chain, so a wrestler with no headshot showed his
+     * celebration card as his portrait — team colours, "COMMITTED" across it, often in a jersey
+     * he does not own yet. It is news about him, not a picture of him, and it was reaching
+     * fundraising pages that way. The silhouette and a prompt for a real photo are better.
+     */
   ] as const
 
   for (const k of keys) {

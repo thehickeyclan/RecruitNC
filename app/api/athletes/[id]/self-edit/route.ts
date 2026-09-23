@@ -43,6 +43,15 @@ const ALLOWED_UPDATE_COLUMNS = new Set([
   // athlete's field, for what those tables do not cover: conference and regional finishes,
   // invitationals, career records, team titles.
   "college_opens_experience", "other_honours",
+  /*
+   * Both pictures, because the people who have them could not add them.
+   *
+   * 206 of 295 committed athletes have no commitment graphic — it is sitting on the family's
+   * phone, posted to Instagram the day they committed, and the only uploader was behind an
+   * admin wizard. The headshot was the same story. They are separate fields on purpose: the
+   * celebration card belongs on the commitment card and never as the portrait.
+   */
+  "photourl", "commitmentPhotoUrl",
 ])
 
 function isContactOnlyUpdate(updates: Record<string, unknown>): boolean {
