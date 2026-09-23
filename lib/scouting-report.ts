@@ -764,19 +764,15 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
      * "21-7 against opponents rated 95+" was the strongest-sounding line in the facts and the
      * only one nobody could define — the rating is pasted in from an outside source with no
      * definition attached. A model given it will put it in the first sentence, and a coach who
-     * asks what it means gets a shrug. Bonus rate survives: falls, techs and majors are read
-     * off bout results we hold.
+     * asks what it means gets a shrug. Bonus rate went with it — well recorded, and not an
+     * answer to who a wrestler has faced.
      */
     if (report.seasonStrength) {
       const label = report.seasonStrengthSeason ? `${report.seasonStrengthSeason} ` : ""
-      const bonus =
-        report.seasonStrength.bonusRate != null
-          ? `, ${Math.round(report.seasonStrength.bonusRate)}% of wins by fall, tech or major`
-          : ""
       lines.push(
         "",
         `${label}high school season: ${report.seasonStrength.wins}-${report.seasonStrength.losses}` +
-          ` across ${report.seasonStrength.bouts} bouts${bonus}.`,
+          ` across ${report.seasonStrength.bouts} bouts.`,
       )
     }
 

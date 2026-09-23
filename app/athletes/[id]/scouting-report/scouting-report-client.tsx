@@ -450,8 +450,8 @@ export function ScoutingReportDocument({
               stale data. It is that nobody here can say what the number measures: it is pasted
               in from an outside source, no definition travels with it, and a figure a college
               coach cannot have explained to them does not belong on a report they paid for.
-              Season record and bonus rate stay, because both are computed from bout results we
-              hold outright.
+              Bonus rate went too: falls, techs and majors are well recorded and simply do not
+              answer the question this section asks, which is who a wrestler has faced.
             */}
             <Table head={["Measure", "Value", "Basis"]} widths={["12rem", "6.5rem", "auto"]}>
               <tr className="border-t border-gray-200">
@@ -461,13 +461,6 @@ export function ScoutingReportDocument({
                   {report.seasonStrength.bouts} imported bouts
                   {report.seasonStrengthSeason ? `, ${report.seasonStrengthSeason} season` : ""}
                 </Td>
-              </tr>
-              <tr className="border-t border-gray-200">
-                <Td bold>Bonus rate</Td>
-                <Td mono>
-                  {report.seasonStrength.bonusRate != null ? `${Math.round(report.seasonStrength.bonusRate)}%` : "—"}
-                </Td>
-                <Td>Share of wins by fall, tech or major</Td>
               </tr>
               <tr className="border-t border-gray-200">
                 <Td bold>Wins over ranked opponents</Td>
