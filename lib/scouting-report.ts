@@ -136,6 +136,8 @@ export type ScoutingReport = {
    * on file.
    */
   seasonStrength: SeasonStrength | null
+  /** Which season that strength describes, e.g. "2025-26". Null when no bouts are on file. */
+  seasonStrengthSeason: string | null
   /** Written by the model from the fields above. Null when generation is unavailable. */
   summary: string | null
   recruitingStatus: string | null
@@ -517,7 +519,11 @@ export async function buildScoutingReport(
     getNationalRankingsForAthlete(supabase, athleteId).catch(() => []),
   ])
 
-  const seasonBouts: Bout[] = latestSeasonMatchRows((matchRows ?? []) as never).flatMap((row) => {
+  const latestSeasonRows = latestSeasonMatchRows((matchRows ?? []) as never)
+  const seasonStrengthSeason =
+    String((latestSeasonRows[0] as { season?: unknown } | undefined)?.season ?? "").trim() || null
+
+  const seasonBouts: Bout[] = latestSeasonRows.flatMap((row) => {
     try {
       const value = (row as { matches?: unknown }).matches
       return Array.isArray(value) ? value : JSON.parse(String(value ?? "[]"))
@@ -578,6 +584,7 @@ export async function buildScoutingReport(
     accessTier,
     watermark,
     seasonStrength: seasonBouts.length > 0 ? summarizeSeasonStrength(seasonBouts as never) : null,
+    seasonStrengthSeason,
     prospectRanking: ranking,
     nationalRankings: nationalRankingHistory(rankings),
     // Built from data already in hand — the bundle, the season's bouts and the rankings just
@@ -720,7 +727,10 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
      */
     const strengthLine = report.seasonStrength ? seasonStrengthLine(report.seasonStrength) : null
     if (strengthLine) {
-      lines.push("", `High school season strength of schedule: ${strengthLine}.`)
+      // Named, because "strength of schedule" with no season attached is read as "now" — and
+      // in September the most recent season ended seven months ago.
+      const label = report.seasonStrengthSeason ? `${report.seasonStrengthSeason} ` : ""
+      lines.push("", `${label}high school season strength of schedule: ${strengthLine}.`)
     }
 
     if (!report.results.some((r) => isNationalEvent(r.event))) {
