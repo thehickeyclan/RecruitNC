@@ -6,6 +6,8 @@ import { Printer, ArrowLeft, Loader2, Link2, Check } from "lucide-react"
 import Link from "next/link"
 import type { ScoutingReport } from "@/lib/scouting-report"
 import { weightProgression } from "@/lib/scouting-report"
+import { scheduleStrengthBand, SCHEDULE_BAND_MEDIAN } from "@/lib/schedule-strength-band"
+import { cn } from "@/lib/utils"
 import { RETAINED_EDITIONS } from "@/lib/national-rankings"
 import { ELITE_OPPONENT_PERCENTILE } from "@/lib/competition-strength"
 
@@ -459,12 +461,47 @@ export function ScoutingReportDocument({
             </div>
             {report.strengthOfCompetition.rankedWins.total > 0 ? (
               <div className="mt-3 grid grid-cols-4 gap-3 text-[11.5px]">
-                <Stat label="Wins vs national" value={String(report.strengthOfCompetition.rankedWins.national)} />
+                <Stat label="Wins vs nationally ranked" value={String(report.strengthOfCompetition.rankedWins.national)} />
                 <Stat label="Wins vs TOC field" value={String(report.strengthOfCompetition.rankedWins.tocField)} />
                 <Stat label="Wins vs NC ranked" value={String(report.strengthOfCompetition.rankedWins.stateRanked)} />
                 <Stat label="Losses vs ranked" value={String(report.strengthOfCompetition.credentialedLosses)} />
               </div>
             ) : null}
+            {/*
+              A bar, not a dial over a blended score — the difference matters. This measures one
+              thing we hold (share of bouts against opponents rated 95+) against a population we
+              can name and count (325 NC wrestlers with a rated schedule), so "out of what?" has
+              an answer. The median tick is drawn so a coach can see the comparison rather than
+              take the colour on trust.
+            */}
+            {scheduleStrengthBand(report.seasonStrength.eliteShare) ? (
+              <div className="mt-3">
+                <div className="flex items-baseline justify-between text-[11px]">
+                  <span className="font-semibold text-gray-800">
+                    {scheduleStrengthBand(report.seasonStrength.eliteShare)!.label}
+                  </span>
+                  <span className="font-mono text-gray-600">
+                    {Math.round(report.seasonStrength.eliteShare ?? 0)}%
+                  </span>
+                </div>
+                <div className="relative mt-1 h-2 w-full overflow-hidden rounded-full bg-gray-200">
+                  <div
+                    className={cn("h-full rounded-full", scheduleStrengthBand(report.seasonStrength.eliteShare)!.color)}
+                    style={{ width: `${Math.max(2, Math.min(100, Math.round(report.seasonStrength.eliteShare ?? 0)))}%` }}
+                  />
+                  {/* The median, so the bar is a comparison and not a vibe. */}
+                  <div
+                    className="absolute top-0 h-full w-px bg-gray-700"
+                    style={{ left: `${SCHEDULE_BAND_MEDIAN}%` }}
+                    title={`Median schedule: ${SCHEDULE_BAND_MEDIAN}%`}
+                  />
+                </div>
+                <p className="mt-1 text-[9.5px] leading-snug text-gray-500">
+                  {scheduleStrengthBand(report.seasonStrength.eliteShare)!.caption}
+                </p>
+              </div>
+            ) : null}
+
             {/*
               Where they have actually competed, oldest first. A listed weight is where somebody
               is entered; this is where they wrestled. For a young wrestler still filling out it

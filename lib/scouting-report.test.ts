@@ -410,39 +410,47 @@ describe("stripSeasonFraming", () => {
 })
 
 describe("weightProgression", () => {
-  const row = (event: string, weight: string, date: string | null = null, year = 2026) => ({
+  const row = (event: string, weight: string, year = 2026, date: string | null = null) => ({
     event,
     year,
     date,
     weight,
   })
 
-  it("orders by the calendar, not by table order", () => {
-    // The bug this exists for: a flat mid-year fallback for undated events put March's NHSCA
-    // before February's States and reported Zaggout going 152 -> 132, "down 20 lbs", when he
-    // had gone up 20.
+  it("gives a range per season, not every weight in order", () => {
+    // Tobin McNair's line was 132, 157, 144, 152, 157, 160, 165, 160, 175, 174 — ten steps of
+    // in-season movement the results table already prints. The trajectory is what it could not.
     const line = weightProgression([
-      row("NHSCA Nationals", "152"),
-      row("NCHSAA States", "132"),
+      row("NCHSAA States", "132", 2024),
+      row("Super 32", "157", 2024),
+      row("NCHSAA States", "144", 2025),
+      row("Journeymen", "160", 2025),
+      row("Tournament of Champions", "174", 2026),
+      row("I-64 Spring Duals", "175", 2026),
     ])
-    expect(line).toBe(
-      "132 (NCHSAA States 2026) → 152 (NHSCA Nationals 2026) — up 20 lbs across the period on file",
+    expect(line).toBe("2024: 132\u2013157 · 2025: 144\u2013160 · 2026: 174\u2013175")
+  })
+
+  it("states no total, because one bump is not a gain", () => {
+    // Gavin Lopez wrestles 215-220 and went 285 once at the Tournament of Champions. First to
+    // last said "up 115 lbs" — true, and it tells a college coach something false.
+    const line = weightProgression([
+      row("NHSCA Nationals", "170", 2024),
+      row("NCHSAA States", "215", 2026),
+      row("Tournament of Champions", "285", 2026),
+    ])
+    expect(line).toBe("2024: 170 · 2026: 215\u2013285")
+    expect(line).not.toContain("lbs")
+  })
+
+  it("shows movement inside a single season", () => {
+    expect(weightProgression([row("NCHSAA States", "113"), row("Super 32 Early Entry", "126")])).toBe(
+      "2026: 113\u2013126",
     )
   })
 
-  it("puts a dated event in its real place", () => {
-    const line = weightProgression([
-      row("NCHSAA States", "113"),
-      row("Tournament of Champions", "125", "2026-09-18"),
-      row("NHSCA Nationals", "120"),
-    ])
-    expect(line).toContain("113 (NCHSAA States 2026) → 120 (NHSCA Nationals 2026) → 125")
-    expect(line).toContain("up 12 lbs")
-  })
-
-  it("collapses a wrestler who never moved", () => {
-    const line = weightProgression([row("NCHSAA States", "138"), row("NHSCA Nationals", "138")])
-    expect(line).toBeNull()
+  it("says nothing when a wrestler never moved", () => {
+    expect(weightProgression([row("NCHSAA States", "138"), row("NHSCA Nationals", "138")])).toBe("2026: 138")
   })
 
   it("says nothing on a single result", () => {

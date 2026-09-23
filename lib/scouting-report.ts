@@ -313,34 +313,36 @@ export function weightProgression(
 ): string | null {
   const numeric = rows
     .map((r) => ({ ...r, value: Number(String(r.weight ?? "").replace(/[^0-9.]/g, "")) }))
-    .filter((r) => Number.isFinite(r.value) && r.value > 0)
+    .filter((r) => Number.isFinite(r.value) && r.value > 0 && Number.isFinite(r.year))
   if (numeric.length < 2) return null
 
   /*
-   * Oldest first, on the same key the results table sorts by.
+   * A range per season, not every weight in order.
    *
-   * A flat mid-year fallback for undated events got this exactly backwards: NCHSAA States is
-   * February and NHSCA is March, so pinning both to June left them in table order and reported
-   * Abdul-Jamil Zaggout going 152 → 132 — "down 20 lbs" when he had gone up. The calendar in
-   * EVENT_MONTH is the whole reason that map exists.
+   * Listing each result produced ten steps of noise for Tobin McNair — 132, 157, 144, 152, 157,
+   * 160, 165, 160, 175, 174 — because a wrestler moves around inside a season and the table
+   * already prints every one of those. What the table cannot show is the trajectory.
+   *
+   * And the first-to-last delta had to go. Gavin Lopez wrestles 215-220 and bumped to 285 once
+   * at the Tournament of Champions; the arithmetic said "up 115 lbs", which is true and tells a
+   * college coach something false about what he weighs.
    */
-  const ordered = [...numeric].sort((a, b) =>
-    eventSortKey(a.event, a.year, a.date).localeCompare(eventSortKey(b.event, b.year, b.date)),
-  )
-
-  const steps: string[] = []
-  for (const row of ordered) {
-    const label = `${row.value} (${row.event} ${row.year})`
-    if (steps.length && steps[steps.length - 1].startsWith(`${row.value} (`)) continue
-    steps.push(label)
+  const byYear = new Map<number, number[]>()
+  for (const r of numeric) {
+    if (!byYear.has(r.year)) byYear.set(r.year, [])
+    byYear.get(r.year)!.push(r.value)
   }
-  if (steps.length < 2) return null
+  if (byYear.size === 0) return null
 
-  const first = ordered[0].value
-  const last = ordered[ordered.length - 1].value
-  const move =
-    last > first ? `up ${last - first} lbs` : last < first ? `down ${first - last} lbs` : "level"
-  return `${steps.join(" → ")} — ${move} across the period on file`
+  const parts: string[] = []
+  for (const year of [...byYear.keys()].sort((a, b) => a - b)) {
+    const weights = byYear.get(year)!
+    const low = Math.min(...weights)
+    const high = Math.max(...weights)
+    parts.push(`${year}: ${low === high ? low : `${low}\u2013${high}`}`)
+  }
+  if (parts.length === 1 && byYear.get([...byYear.keys()][0])!.length < 2) return null
+  return parts.join(" \u00b7 ")
 }
 
 /**
