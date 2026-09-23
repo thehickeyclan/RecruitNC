@@ -256,10 +256,21 @@ export async function loadOpponentIndex(supabase: SupabaseClient): Promise<Oppon
  * opposite of what a coach wants at the top. Events that carry a real date use it instead.
  */
 const EVENT_MONTH: Record<string, number> = {
-  "NCHSAA States": 2,
-  "NHSCA Nationals": 3,
-  Fargo: 7,
-  "Super 32": 10,
+  // The North Carolina wrestling calendar, as Matt gives it. Every event in
+  // `other_tournament_results` carries a real date and sorts on that; these months are the
+  // fallback for the table-backed results (NHSCA, Fargo, Super 32) which publish a year only,
+  // and the safety net for any event added later without a date.
+  "NCHSAA States": 2, // mid-February — this is what closes a season
+  "NHSCA Nationals": 3, // mid-March
+  Fargo: 7, // July
+  "Super 32 Early Entry": 9, // early September, the qualifier
+  "Tournament of Champions": 9, // mid-September
+  Journeymen: 10, // early October
+  "Super 32": 10, // late October
+  // Ironman, Beast of the East and Powerade all sit in December and January — inside the North
+  // Carolina season, which is why NC wrestlers historically could not enter them and why we
+  // hold no results for any of the three. Everything above is off-season, which is exactly the
+  // set an NC athlete can travel to.
 }
 
 /**
