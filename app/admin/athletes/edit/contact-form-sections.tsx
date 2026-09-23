@@ -79,6 +79,7 @@ export function ContactFormSections({ initialData, onSubmit, editableBio, editab
     graduationYear: data.graduationYear?.toString() || data.graduationyear?.toString() || "",
     weightClass: data.weightclass || "",
     collegeWeightClass: data.college_weight_class || "",
+    commitmentPhotoUrl: data.commitmentPhotoUrl || "",
     highSchool: data.highschool || "",
     highSchoolDivision: data.highSchoolDivision || "",
     wrestlingClub: data.wrestlingClub || data.wrestling_club || "",
@@ -294,6 +295,28 @@ export function ContactFormSections({ initialData, onSubmit, editableBio, editab
                 onChange={handleChange}
                 options={[{ value: "", label: "Select" }, ...collegeWeightOptions.map((w) => ({ value: w.value, label: `${w.label} lbs` }))]}
               />
+              {/*
+                The announcement graphic, on the form with the rest of the commitment.
+                It has always been uploadable, but only inside the commitment wizard behind the
+                quick-actions bar — far enough from the fields it belongs with that two of us
+                looked at this page and concluded it could not be done at all.
+              */}
+              <div className="pt-2">
+                <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-white/50">
+                  Commitment Announcement Graphic
+                </label>
+                <ImageUpload
+                  category="commitment"
+                  onUploadComplete={(url) => setFormData((prev) => ({ ...prev, commitmentPhotoUrl: url }))}
+                  existingImageUrl={formData.commitmentPhotoUrl || undefined}
+                  entityName={`${formData.firstName || "athlete"}-${formData.lastName || "commitment"}`}
+                  aspectRatio="announcement"
+                />
+                <p className="mt-2 text-xs text-white/50">
+                  The celebration card. Shows on commitment cards and the commitments feed — not as the
+                  profile photo.
+                </p>
+              </div>
             </>
           )}
         </div>
