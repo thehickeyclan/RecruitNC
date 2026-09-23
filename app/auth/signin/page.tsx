@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Trophy, Users, Edit, ArrowRight } from "lucide-react"
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button"
 
 function isTocScopedAdminTarget(path: string | null): boolean {
   if (!path) return false
@@ -437,6 +438,18 @@ export default function SignInPage() {
                   {redirectingAfterSignIn ? "Sign-in successful, redirecting…" : loading ? "Signing in..." : "Sign In"}
                 </Button>
               </form>
+
+              {/* Above the fold would push the password form down for the 1,217 people who already
+                  have one; below it is where somebody looks after deciding they cannot remember. */}
+              <div className="mt-5">
+                <div className="mb-4 flex items-center gap-3">
+                  <span className="h-px flex-1 bg-gray-200" />
+                  <span className="text-xs font-medium uppercase tracking-wide text-gray-400">or</span>
+                  <span className="h-px flex-1 bg-gray-200" />
+                </div>
+                <GoogleSignInButton returnTo={returnTo} />
+              </div>
+
               <div className="mt-4 text-center space-y-2">
                 <p className="text-xs sm:text-sm text-gray-600">
                   <Link href="/auth/forgot-password" className="text-blue-600 hover:underline">

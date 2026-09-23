@@ -3,6 +3,7 @@
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, Trophy, Users, Edit } from "lucide-react"
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button"
 
 import type React from "react"
 
@@ -480,6 +481,17 @@ export default function SignUpPage() {
               {loading ? "Creating account..." : "Sign Up"}
             </Button>
           </form>
+
+          {/* The same button as sign-in: with Google there is no difference between making an
+              account and using one, and a third of new accounts never survive the email step. */}
+          <div className="mt-5">
+            <div className="mb-4 flex items-center gap-3">
+              <span className="h-px flex-1 bg-gray-200" />
+              <span className="text-xs font-medium uppercase tracking-wide text-gray-400">or</span>
+              <span className="h-px flex-1 bg-gray-200" />
+            </div>
+            <GoogleSignInButton returnTo={returnTo} label="Sign up with Google" />
+          </div>
 
           <div className="mt-4 text-center">
             <p className="text-sm text-gray-600">
