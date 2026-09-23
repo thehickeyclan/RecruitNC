@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { buildResultRows, isNationalEvent, seasonContext, stripSeasonFraming, mapAcademics, mapCareerRecord, mapContact, summaryFacts, unsupportedSummaryClaims,
+import { buildResultRows, eventSortKey, isNationalEvent, seasonContext, stripSeasonFraming, weightProgression, mapAcademics, mapCareerRecord, mapContact, summaryFacts, unsupportedSummaryClaims,
   stripUnsupportedSentences,
 } from "@/lib/scouting-report"
 
@@ -406,5 +406,67 @@ describe("stripSeasonFraming", () => {
   it("leaves a summary without season framing untouched", () => {
     const clean = "Walker placed 4th at the 2026 Tournament of Champions at 125."
     expect(stripSeasonFraming(clean)).toBe(clean)
+  })
+})
+
+describe("weightProgression", () => {
+  const row = (event: string, weight: string, date: string | null = null, year = 2026) => ({
+    event,
+    year,
+    date,
+    weight,
+  })
+
+  it("orders by the calendar, not by table order", () => {
+    // The bug this exists for: a flat mid-year fallback for undated events put March's NHSCA
+    // before February's States and reported Zaggout going 152 -> 132, "down 20 lbs", when he
+    // had gone up 20.
+    const line = weightProgression([
+      row("NHSCA Nationals", "152"),
+      row("NCHSAA States", "132"),
+    ])
+    expect(line).toBe(
+      "132 (NCHSAA States 2026) → 152 (NHSCA Nationals 2026) — up 20 lbs across the period on file",
+    )
+  })
+
+  it("puts a dated event in its real place", () => {
+    const line = weightProgression([
+      row("NCHSAA States", "113"),
+      row("Tournament of Champions", "125", "2026-09-18"),
+      row("NHSCA Nationals", "120"),
+    ])
+    expect(line).toContain("113 (NCHSAA States 2026) → 120 (NHSCA Nationals 2026) → 125")
+    expect(line).toContain("up 12 lbs")
+  })
+
+  it("collapses a wrestler who never moved", () => {
+    const line = weightProgression([row("NCHSAA States", "138"), row("NHSCA Nationals", "138")])
+    expect(line).toBeNull()
+  })
+
+  it("says nothing on a single result", () => {
+    expect(weightProgression([row("NCHSAA States", "138")])).toBeNull()
+  })
+
+  it("ignores results with no weight recorded", () => {
+    expect(weightProgression([row("NCHSAA States", "138"), row("Fargo", "")])).toBeNull()
+  })
+})
+
+describe("eventSortKey", () => {
+  it("prefers a real date", () => {
+    expect(eventSortKey("Tournament of Champions", 2026, "2026-09-18")).toBe("2026-09-18")
+  })
+
+  it("falls back to the month the event runs in", () => {
+    expect(eventSortKey("NCHSAA States", 2026, null)).toBe("2026-02-01")
+    expect(eventSortKey("NHSCA Nationals", 2026, null)).toBe("2026-03-01")
+    expect(eventSortKey("Fargo", 2026, null)).toBe("2026-07-01")
+    expect(eventSortKey("Super 32", 2026, null)).toBe("2026-10-01")
+  })
+
+  it("keeps an unknown event inside its own year", () => {
+    expect(eventSortKey("Some New Open", 2026, null)).toBe("2026-12-31")
   })
 })

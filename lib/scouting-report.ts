@@ -13,7 +13,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { applyStarOverride, isRatedAthlete, rateAthlete, type StarRating } from "@/lib/athlete-star-rating"
 import { nationalEventRows, starOverrideOf, statePlaces } from "@/lib/athlete-star-rating-load"
-import { summarizeNationalExposure, summarizeSeasonStrength, type SeasonStrength } from "@/lib/competition-strength"
+import { summarizeNationalExposure, summarizeSeasonStrength, type SeasonStrength, seasonStrengthLine } from "@/lib/competition-strength"
 import {
   getNationalRankingsForAthlete,
   nationalRankingHistory,
@@ -112,6 +112,8 @@ export type ScoutingReportResultRow = {
    * publish only a year keep it null and still show the year.
    */
   date: string | null
+  /** The weight actually wrestled, for the progression line. Null when the source omits it. */
+  weight: string | null
 }
 
 export type ScoutingReport = {
@@ -274,6 +276,65 @@ const EVENT_MONTH: Record<string, number> = {
 }
 
 /**
+ * A sortable key for a result: its real date where one exists, otherwise the month the event
+ * runs in. Annual events publish only a year, and guessing mid-year reorders a season.
+ */
+export function eventSortKey(event: string, year: number, date: string | null): string {
+  if (date) return date
+  const month = EVENT_MONTH[event]
+  if (month) return `${year}-${String(month).padStart(2, "0")}-01`
+  // An event we do not have in the calendar: sort it within its year, after the dated ones.
+  return `${year}-12-31`
+}
+
+/**
+ * What weight they have actually been wrestling, in order.
+ *
+ * A listed weight is where somebody is entered; this is where they have competed. For a young
+ * wrestler it is often the most telling line on the page — Adam Walker, Class of 2029, went
+ * 113 at States in February and 125-126 by September, which tells a college coach more about
+ * his frame than any single placement does.
+ *
+ * Oldest first, because the direction is the point. Only events that record a weight count,
+ * and consecutive repeats collapse so a wrestler who sat at 138 all year reads as "138"
+ * rather than "138 → 138 → 138".
+ */
+export function weightProgression(
+  rows: ReadonlyArray<{ event: string; year: number; date: string | null; weight: string | null }>,
+): string | null {
+  const numeric = rows
+    .map((r) => ({ ...r, value: Number(String(r.weight ?? "").replace(/[^0-9.]/g, "")) }))
+    .filter((r) => Number.isFinite(r.value) && r.value > 0)
+  if (numeric.length < 2) return null
+
+  /*
+   * Oldest first, on the same key the results table sorts by.
+   *
+   * A flat mid-year fallback for undated events got this exactly backwards: NCHSAA States is
+   * February and NHSCA is March, so pinning both to June left them in table order and reported
+   * Abdul-Jamil Zaggout going 152 → 132 — "down 20 lbs" when he had gone up. The calendar in
+   * EVENT_MONTH is the whole reason that map exists.
+   */
+  const ordered = [...numeric].sort((a, b) =>
+    eventSortKey(a.event, a.year, a.date).localeCompare(eventSortKey(b.event, b.year, b.date)),
+  )
+
+  const steps: string[] = []
+  for (const row of ordered) {
+    const label = `${row.value} (${row.event} ${row.year})`
+    if (steps.length && steps[steps.length - 1].startsWith(`${row.value} (`)) continue
+    steps.push(label)
+  }
+  if (steps.length < 2) return null
+
+  const first = ordered[0].value
+  const last = ordered[ordered.length - 1].value
+  const move =
+    last > first ? `up ${last - first} lbs` : last < first ? `down ${first - last} lbs` : "level"
+  return `${steps.join(" → ")} — ${move} across the period on file`
+}
+
+/**
  * What today is, and whether the high school season is running.
  *
  * The prompt used to say "then this season's results" to a model with no idea what day it was,
@@ -334,13 +395,12 @@ export function buildResultRows(bundle: {
   other: Array<{ year: number; eventShortName: string; placement: number | null; record: string; weight: string; qualified: boolean; eventDate?: string | null }>
 }): ScoutingReportResultRow[] {
   const rows: Array<ScoutingReportResultRow & { when: string }> = []
-  const when = (event: string, year: number) =>
-    `${year}-${String(EVENT_MONTH[event] ?? 6).padStart(2, "0")}-01`
+  const when = (event: string, year: number) => eventSortKey(event, year, null)
 
   for (const r of bundle.nchsaa ?? []) {
     const place = r.place && r.place > 0 ? (r.place === 1 ? "Champion" : ordinal(r.place)) : "Qualifier"
     // The state tournament publishes a year, not a day: `when` is a sort key, never a date.
-    rows.push({ event: "NCHSAA States", year: r.year, when: when("NCHSAA States", r.year), date: null, detail: `${r.classification} · ${r.weight_class} · ${place}` })
+    rows.push({ event: "NCHSAA States", year: r.year, when: when("NCHSAA States", r.year), date: null, weight: String(r.weight_class ?? "") || null, detail: `${r.classification} · ${r.weight_class} · ${place}` })
   }
   const national: Array<[string, typeof bundle.fargo]> = [
     ["NHSCA Nationals", bundle.nhsca ?? []],
@@ -362,7 +422,7 @@ export function buildResultRows(bundle: {
       const detail = [division, r.weight, placement, r.record ? `${r.record} record` : ""]
         .filter(Boolean)
         .join(" · ")
-      if (detail) rows.push({ event: label, year: r.year, when: when(label, r.year), date: null, detail })
+      if (detail) rows.push({ event: label, year: r.year, when: when(label, r.year), date: null, weight: String(r.weight ?? "") || null, detail })
     }
   }
   for (const r of bundle.other ?? []) {
@@ -373,6 +433,7 @@ export function buildResultRows(bundle: {
     rows.push({
       event: r.eventShortName,
       year: r.year,
+      weight: String(r.weight ?? "") || null,
       // These carry the date they were actually wrestled.
       when: r.eventDate ?? when(r.eventShortName, r.year),
       date: r.eventDate ?? null,
@@ -649,6 +710,19 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
      * nationally" would invent an absence the same way the NHSCA line once invented a
      * placement.
      */
+    const progression = weightProgression(report.results)
+    if (progression) lines.push("", `Competed at: ${progression}`)
+
+    /*
+     * Strength of schedule was computed, rendered in the report table, and never given to the
+     * model — so a wrestler who went 21-7 against top-5% opposition had a summary that could
+     * only say 50-8. The record without the schedule is the half that misleads.
+     */
+    const strengthLine = report.seasonStrength ? seasonStrengthLine(report.seasonStrength) : null
+    if (strengthLine) {
+      lines.push("", `High school season strength of schedule: ${strengthLine}.`)
+    }
+
     if (!report.results.some((r) => isNationalEvent(r.event))) {
       lines.push(
         "",
@@ -770,6 +844,13 @@ Say things in this order, skipping anything the facts do not contain:
 4. Then the wins and losses that carry a credential, naming the opponents.
 5. Then the ranking: a national ranking with its outlet, otherwise the RecruitNC class ranking.
 6. Then GPA and test scores, last, in one short sentence.
+
+Two lines are worth a sentence of their own when the facts carry them:
+- "Competed at:" is the weight progression. For a young wrestler still filling out, where they
+  have actually competed says more than a listed weight. Report the direction.
+- "strength of schedule" is who they wrestled. A record without it is the half that misleads:
+  50-8 reads very differently once you know 28 of those bouts were against top-5% opposition.
+  Quote the figures as given; never call a schedule "weak".
 
 Rules:
 - Use ONLY the facts provided. Never invent a result, a ranking, an opponent, or a number.
