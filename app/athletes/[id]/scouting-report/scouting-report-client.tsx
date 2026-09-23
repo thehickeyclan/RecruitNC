@@ -6,7 +6,7 @@ import { Printer, ArrowLeft, Loader2, Link2, Check } from "lucide-react"
 import Link from "next/link"
 import type { ScoutingReport } from "@/lib/scouting-report"
 import { weightProgression } from "@/lib/scouting-report"
-import { scheduleStrengthBand, SCHEDULE_BAND_MEDIAN } from "@/lib/schedule-strength-band"
+import { SCHEDULE_BAND_MEDIAN, SCHEDULE_BAND_SAMPLE } from "@/lib/schedule-strength-band"
 import { cn } from "@/lib/utils"
 import { RETAINED_EDITIONS } from "@/lib/national-rankings"
 import { ELITE_OPPONENT_PERCENTILE } from "@/lib/competition-strength"
@@ -440,33 +440,75 @@ export function ScoutingReportDocument({
         */}
         {report.seasonStrength && report.seasonStrength.bouts > 0 ? (
           <Block n={n()} title="Strength of competition">
-            <div className="grid grid-cols-4 gap-3 text-[11.5px]">
-              <Stat label="Season record" value={`${report.seasonStrength.wins}-${report.seasonStrength.losses}`} />
-              <Stat
-                label="Vs. rated 95+"
-                value={
-                  report.seasonStrength.vsElite > 0
+            {/*
+              One table, in the same language as Significant wins and Notable losses below, so
+              the section reads as part of the report rather than a dashboard bolted to it.
+
+              Each row carries its own basis. The footnote underneath used to explain all eight
+              boxes at once in 9px grey — which meant the reader had to hold "opponent ratings
+              arrive with the match import" in their head while looking at a number three inches
+              away. A number and its provenance belong on the same line.
+            */}
+            <Table head={["Measure", "Value", "Basis"]} widths={["12rem", "6.5rem", "auto"]}>
+              <tr className="border-t border-gray-200">
+                <Td bold>Season record</Td>
+                <Td mono>{`${report.seasonStrength.wins}-${report.seasonStrength.losses}`}</Td>
+                <Td>
+                  {report.seasonStrength.bouts} imported bouts
+                  {report.seasonStrengthSeason ? `, ${report.seasonStrengthSeason} season` : ""}
+                </Td>
+              </tr>
+              <tr className="border-t border-gray-200">
+                <Td bold>Vs. opponents rated 95+</Td>
+                <Td mono>
+                  {report.seasonStrength.vsElite > 0
                     ? `${report.seasonStrength.eliteWins}-${report.seasonStrength.eliteLosses} in ${report.seasonStrength.vsElite}`
-                    : "—"
-                }
-              />
-              <Stat
-                label="Share rated 95+"
-                value={report.seasonStrength.eliteShare != null ? `${Math.round(report.seasonStrength.eliteShare)}%` : "—"}
-              />
-              <Stat
-                label="Bonus rate"
-                value={report.seasonStrength.bonusRate != null ? `${Math.round(report.seasonStrength.bonusRate)}%` : "—"}
-              />
-            </div>
-            {report.strengthOfCompetition.rankedWins.total > 0 ? (
-              <div className="mt-3 grid grid-cols-4 gap-3 text-[11.5px]">
-                <Stat label="Wins vs nationally ranked" value={String(report.strengthOfCompetition.rankedWins.national)} />
-                <Stat label="Wins vs TOC field" value={String(report.strengthOfCompetition.rankedWins.tocField)} />
-                <Stat label="Wins vs NC ranked" value={String(report.strengthOfCompetition.rankedWins.stateRanked)} />
-                <Stat label="Losses vs ranked" value={String(report.strengthOfCompetition.credentialedLosses)} />
-              </div>
-            ) : null}
+                    : "—"}
+                </Td>
+                <Td>Opponent ratings arrive with the match import; 95+ is the bar used here</Td>
+              </tr>
+              <tr className="border-t border-gray-200">
+                <Td bold>Share rated 95+</Td>
+                <Td mono>
+                  {report.seasonStrength.eliteShare != null ? `${Math.round(report.seasonStrength.eliteShare)}%` : "—"}
+                </Td>
+                <Td>
+                  Median {SCHEDULE_BAND_MEDIAN}% across {SCHEDULE_BAND_SAMPLE} NC wrestlers on file
+                  {report.seasonStrength.averageOpponentPercentile != null
+                    ? `; average opponent rating ${Math.round(report.seasonStrength.averageOpponentPercentile)} of 100`
+                    : ""}
+                </Td>
+              </tr>
+              <tr className="border-t border-gray-200">
+                <Td bold>Bonus rate</Td>
+                <Td mono>
+                  {report.seasonStrength.bonusRate != null ? `${Math.round(report.seasonStrength.bonusRate)}%` : "—"}
+                </Td>
+                <Td>Share of wins by fall, tech or major</Td>
+              </tr>
+              <tr className="border-t border-gray-200">
+                <Td bold>Wins over ranked opponents</Td>
+                <Td mono>{report.strengthOfCompetition.rankedWins.total}</Td>
+                <Td>
+                  {report.strengthOfCompetition.rankedWins.national} nationally ranked ·{" "}
+                  {report.strengthOfCompetition.rankedWins.tocField} Tournament of Champions field ·{" "}
+                  {report.strengthOfCompetition.rankedWins.stateRanked} NC ranked
+                </Td>
+              </tr>
+              <tr className="border-t border-gray-200">
+                <Td bold>Losses to ranked opponents</Td>
+                <Td mono>{report.strengthOfCompetition.credentialedLosses}</Td>
+                <Td>Listed in full under Notable losses</Td>
+              </tr>
+              {weightProgression(report.results) ? (
+                <tr className="border-t border-gray-200">
+                  <Td bold>Competed at</Td>
+                  <Td mono>—</Td>
+                  <Td>{weightProgression(report.results)}</Td>
+                </tr>
+              ) : null}
+            </Table>
+
             {/*
               The verdict, not a measurement.
               
@@ -528,31 +570,12 @@ export function ScoutingReportDocument({
               ) : null}
             </div>
 
-            {/*
-              Where they have actually competed, oldest first. A listed weight is where somebody
-              is entered; this is where they wrestled. For a young wrestler still filling out it
-              is often the most telling line on the page — and until now it reached the summary
-              model and never the printed report.
-            */}
-            {weightProgression(report.results) ? (
-              <p className="mt-3 text-[11px] leading-snug text-gray-700">
-                <span className="font-semibold">Competed at:</span> {weightProgression(report.results)}
-              </p>
-            ) : null}
             {report.strengthOfCompetition.seasonsOnFile <= 1 ? (
               <p className="mt-2 text-[9.5px] leading-snug text-amber-700">
                 One season on file. A wrestler who transferred in, or is in their first year, will read as quiet here
                 whatever they have done elsewhere.
               </p>
             ) : null}
-            <p className="mt-2 text-[9.5px] italic leading-snug text-gray-500">
-              From {report.seasonStrength.bouts} imported high-school bouts.{" "}
-              {report.seasonStrength.averageOpponentPercentile != null
-                ? `Average opponent rating ${Math.round(report.seasonStrength.averageOpponentPercentile)} of 100. `
-                : ""}
-              Opponent ratings arrive with the match import; {ELITE_OPPONENT_PERCENTILE}+ is the bar used here. Bonus
-              rate is the share of wins by fall, tech or major.
-            </p>
           </Block>
         ) : null}
 

@@ -68,15 +68,18 @@ function scoreNational(count: number): { points: 0 | 1 | 2; detail: string; next
 }
 
 function scoreYearRound(count: number): { points: 0 | 1 | 2; detail: string; nextStep: string | null } {
-  if (count >= 3) return { points: 2, detail: `${count} off-season events`, nextStep: null }
+  // "Post/preseason major events", not "off-season": these are the March-to-October majors an
+  // NC wrestler can enter, and calling them off-season makes them sound like filler.
+  const noun = (n: number) => `${n} post/preseason major event${n === 1 ? "" : "s"}`
+  if (count >= 3) return { points: 2, detail: noun(count), nextStep: null }
   if (count >= 1) {
-    return {
-      points: 1,
-      detail: `${count} off-season event${count === 1 ? "" : "s"}`,
-      nextStep: "Wrestle a third off-season event",
-    }
+    return { points: 1, detail: noun(count), nextStep: "Wrestle a third post/preseason major" }
   }
-  return { points: 0, detail: "In-season only", nextStep: "Wrestle something outside November to February" }
+  return {
+    points: 0,
+    detail: "In-season only",
+    nextStep: "Wrestle a post or preseason major — NHSCA, Fargo, Super 32 or Journeymen",
+  }
 }
 
 export function buildCompetitionGrade(input: {
@@ -91,7 +94,7 @@ export function buildCompetitionGrade(input: {
   const factors: GradeFactor[] = [
     { key: "rankedWins", label: "Wins over ranked opponents", ...wins },
     { key: "national", label: "Competes nationally", ...national },
-    { key: "yearRound", label: "Wrestles year-round", ...yearRound },
+    { key: "yearRound", label: "Competes post/preseason", ...yearRound },
   ]
 
   const score = wins.points + national.points + yearRound.points
@@ -100,7 +103,7 @@ export function buildCompetitionGrade(input: {
       ? {
           band: "green" as const,
           label: "Tested",
-          verdict: "Beats ranked opponents, competes nationally and wrestles year-round.",
+          verdict: "Beats ranked opponents, competes nationally, and wrestles the post and preseason majors.",
         }
       : score >= 3
         ? {
