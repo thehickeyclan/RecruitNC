@@ -1,6 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient as createSupabaseAdmin } from "@supabase/supabase-js"
 import { createClient as createSSRClient } from "@/lib/supabase/server"
+import { publishSubmittedResult } from "@/lib/publish-submitted-result"
+import { publishSubmittedWin } from "@/lib/athlete-submitted-wins"
+import type { SubmittedResultForm } from "@/lib/tournament-result-submission"
 
 type AchievementItem = {
   tournament?: string
@@ -133,9 +136,45 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to create edit request: " + error.message }, { status: 500 })
     }
 
+    /*
+     * Results publish on submission, not on approval.
+     *
+     * A wrestler has no reason to invent a tournament: the first college coach who checks a
+     * bracket and finds nothing is the end of their recruitment. The deterrent is real and it
+     * is theirs. Holding a true result behind a review queue, meanwhile, costs them the
+     * fortnight a coach was actually looking.
+     *
+     * So the row goes in now, marked `family-submitted` rather than `verified` — published,
+     * visibly not the same as a row we imported off a bracket — and the edit request above
+     * stays as the record an admin acknowledges afterwards.
+     */
+    let published: { ok: boolean; error?: string } | null = null
+    if (editType === "significant_win") {
+      const win = (currentData?.proposedSignificantWin ?? {}) as Record<string, string>
+      published = await publishSubmittedWin(admin, {
+        athleteId,
+        requestId: String(data?.id ?? ""),
+        opponent: win.opponent ?? "",
+        event: win.event ?? "",
+        date: win.date ?? null,
+        result: win.result ?? null,
+        credential: win.accolade ?? "",
+      })
+      if (!published.ok) console.error("[edit-requests] win not published:", published.error)
+    }
+    if (editType === "tournament_result") {
+      published = await publishSubmittedResult(admin, {
+        athleteId,
+        requestId: String(data?.id ?? ""),
+        form: (currentData?.proposedTournamentResult ?? {}) as SubmittedResultForm,
+      })
+      if (!published.ok) console.error("[edit-requests] result not published:", published.error)
+    }
+
     return NextResponse.json({
       success: true,
       message: "Edit request submitted successfully",
+      published: published?.ok ?? false,
       data,
     })
   } catch (error) {

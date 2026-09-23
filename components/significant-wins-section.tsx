@@ -15,6 +15,8 @@ type SignificantWin = {
   weight: number | null
   reason: "credentialed" | "toc-field" | "ranked" | "national-ranked"
   credential?: string | null
+  /** "athlete-reported" for a win published from the submission form, unverified. */
+  source?: string | null
   scope?: "in-state" | "national"
 }
 
@@ -151,6 +153,14 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
                       ? "Nationally ranked"
                       : "NC ranked"}
               </span>
+              {win.source === "athlete-reported" ? (
+                <span
+                  className="ml-2 rounded-full border border-slate-500/50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400"
+                  title="Reported by the athlete or family. Published without review and not verified against a bracket."
+                >
+                  Athlete-reported
+                </span>
+              ) : null}
             </div>
           </li>
         ))}

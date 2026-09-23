@@ -5,6 +5,7 @@ import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
 import { findSignificantWins, type Bout, type RankedOpponent } from "@/lib/significant-wins"
 import { getQualifierSignificantWinBouts } from "@/lib/other-tournaments"
 import { getCuratedSignificantWins } from "@/lib/curated-significant-wins"
+import { getSubmittedWins } from "@/lib/athlete-submitted-wins"
 
 /**
  * The wins on a profile worth a reader's attention: over the TOC field, or over a ranked prospect.
@@ -31,6 +32,26 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     getQualifierSignificantWinBouts(admin, id).catch(() => [] as Bout[]),
   ])
 
+  /*
+   * Wins the athlete reported themselves, published without review.
+   *
+   * Carried with `source: "athlete-reported"` so the profile can label them. A coach is owed
+   * the difference between a win we imported off a bracket and one someone typed into a form —
+   * and the label is also what makes publishing-without-review safe to offer.
+   */
+  const submittedWins = (await getSubmittedWins(admin, id)).map((win) => ({
+    opponent: win.opponent,
+    opponentSchool: win.opponentSchool,
+    event: win.event,
+    date: win.date,
+    result: win.result,
+    weight: null,
+    reason: "credentialed" as const,
+    credential: win.credential,
+    scope: "national" as const,
+    source: "athlete-reported" as const,
+  }))
+
   const matchBouts: Bout[] = latestSeasonMatchRows((rows ?? []) as never).flatMap((row) => {
     try {
       const value = (row as { matches?: unknown }).matches
@@ -45,7 +66,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     reason: "credentialed" as const,
     scope: "national" as const,
   }))
-  if (bouts.length === 0 && curatedWins.length === 0) return NextResponse.json({ wins: [] })
+  if (bouts.length === 0 && curatedWins.length === 0 && submittedWins.length === 0) {
+    return NextResponse.json({ wins: submittedWins })
+  }
 
   const tocField = buildTocFieldBoard(invitations ?? []).weights
     .flatMap((weight) => weight.athletes.filter((a) => a.status === "confirmed").map((a) => a.name))
@@ -86,9 +109,16 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   }))
 
   const curatedKeys = new Set(curatedWins.map((win) => `${win.opponent.toLowerCase()}|${win.date}`))
+  // A submitted win that the import later picks up should not appear twice.
+  const submittedKeys = new Set(submittedWins.map((win) => `${win.opponent.toLowerCase()}|${win.date}`))
   const wins = [
-    ...curatedWins,
-    ...calculatedWins.filter((win) => !curatedKeys.has(`${win.opponent.toLowerCase()}|${win.date}`)),
+    ...submittedWins,
+    ...curatedWins.filter((win) => !submittedKeys.has(`${win.opponent.toLowerCase()}|${win.date}`)),
+    ...calculatedWins.filter(
+      (win) =>
+        !curatedKeys.has(`${win.opponent.toLowerCase()}|${win.date}`) &&
+        !submittedKeys.has(`${win.opponent.toLowerCase()}|${win.date}`),
+    ),
   ]
 
   return NextResponse.json({ wins })
