@@ -468,39 +468,65 @@ export function ScoutingReportDocument({
               </div>
             ) : null}
             {/*
-              A bar, not a dial over a blended score — the difference matters. This measures one
-              thing we hold (share of bouts against opponents rated 95+) against a population we
-              can name and count (325 NC wrestlers with a rated schedule), so "out of what?" has
-              an answer. The median tick is drawn so a coach can see the comparison rather than
-              take the colour on trust.
+              The verdict, not a measurement.
+              
+              A family reading this is owed the thing a college coach already knows: a state
+              title does not prove you have been tested. Red means no ranked wins, no national
+              competition, in-season only. Green means all three. Every band names the cheapest
+              step up, because the point of showing it is to get kids wrestling the best, and a
+              grade nobody can act on is only a judgement.
             */}
-            {scheduleStrengthBand(report.seasonStrength.eliteShare) ? (
-              <div className="mt-3">
-                <div className="flex items-baseline justify-between text-[11px]">
-                  <span className="font-semibold text-gray-800">
-                    {scheduleStrengthBand(report.seasonStrength.eliteShare)!.label}
-                  </span>
-                  <span className="font-mono text-gray-600">
-                    {Math.round(report.seasonStrength.eliteShare ?? 0)}%
-                  </span>
-                </div>
-                <div className="relative mt-1 h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                  <div
-                    className={cn("h-full rounded-full", scheduleStrengthBand(report.seasonStrength.eliteShare)!.color)}
-                    style={{ width: `${Math.max(2, Math.min(100, Math.round(report.seasonStrength.eliteShare ?? 0)))}%` }}
-                  />
-                  {/* The median, so the bar is a comparison and not a vibe. */}
-                  <div
-                    className="absolute top-0 h-full w-px bg-gray-700"
-                    style={{ left: `${SCHEDULE_BAND_MEDIAN}%` }}
-                    title={`Median schedule: ${SCHEDULE_BAND_MEDIAN}%`}
-                  />
-                </div>
-                <p className="mt-1 text-[9.5px] leading-snug text-gray-500">
-                  {scheduleStrengthBand(report.seasonStrength.eliteShare)!.caption}
-                </p>
+            <div
+              className={cn(
+                "mt-3 rounded border p-3",
+                report.strengthOfCompetition.grade.band === "green" && "border-emerald-300 bg-emerald-50",
+                report.strengthOfCompetition.grade.band === "amber" && "border-amber-300 bg-amber-50",
+                report.strengthOfCompetition.grade.band === "orange" && "border-orange-300 bg-orange-50",
+                report.strengthOfCompetition.grade.band === "red" && "border-red-300 bg-red-50",
+              )}
+            >
+              <div className="flex items-baseline justify-between">
+                <span
+                  className={cn(
+                    "text-[13px] font-bold uppercase tracking-wide",
+                    report.strengthOfCompetition.grade.band === "green" && "text-emerald-800",
+                    report.strengthOfCompetition.grade.band === "amber" && "text-amber-800",
+                    report.strengthOfCompetition.grade.band === "orange" && "text-orange-800",
+                    report.strengthOfCompetition.grade.band === "red" && "text-red-800",
+                  )}
+                >
+                  {report.strengthOfCompetition.grade.label}
+                </span>
+                <span className="font-mono text-[11px] text-gray-600">
+                  {report.strengthOfCompetition.grade.score}/6
+                </span>
               </div>
-            ) : null}
+              <p className="mt-1 text-[11px] leading-snug text-gray-800">
+                {report.strengthOfCompetition.grade.verdict}
+              </p>
+              <ul className="mt-2 space-y-1">
+                {report.strengthOfCompetition.grade.factors.map((factor) => (
+                  <li key={factor.key} className="flex items-baseline gap-2 text-[11px]">
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "inline-block h-2 w-2 shrink-0 rounded-full",
+                        factor.points === 2 && "bg-emerald-600",
+                        factor.points === 1 && "bg-amber-500",
+                        factor.points === 0 && "bg-red-500",
+                      )}
+                    />
+                    <span className="font-medium text-gray-700">{factor.label}:</span>
+                    <span className="text-gray-600">{factor.detail}</span>
+                  </li>
+                ))}
+              </ul>
+              {report.strengthOfCompetition.grade.nextStep ? (
+                <p className="mt-2 text-[11px] font-semibold text-gray-800">
+                  Next step: {report.strengthOfCompetition.grade.nextStep}
+                </p>
+              ) : null}
+            </div>
 
             {/*
               Where they have actually competed, oldest first. A listed weight is where somebody

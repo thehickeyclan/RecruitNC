@@ -20,6 +20,7 @@
  */
 
 import type { SeasonStrength } from "@/lib/competition-strength"
+import { buildCompetitionGrade, type CompetitionGrade } from "@/lib/competition-grade"
 
 /** Events ingested regardless of which team a wrestler travelled with. */
 const TEAM_BLIND_EVENTS = [
@@ -66,9 +67,13 @@ export type StrengthOfCompetition = {
   nationalEvents: string[]
   /** Events entered with an NC United squad — shown, never counted comparatively. */
   teamEvents: string[]
+  /** Off-season entries — the only way an NC wrestler can travel, since in-season is barred. */
+  offSeasonEvents: number
   /** Earliest result or bout we hold, so every count above has a visible denominator. */
   recordsBeginYear: number | null
   seasonsOnFile: number
+  /** Red to green, with the step that would raise it. */
+  grade: CompetitionGrade
 }
 
 export function countRankedWins(
@@ -105,8 +110,25 @@ export function buildStrengthOfCompetition(input: {
 
   const years = input.results.map((r) => r.year).filter((y) => Number.isFinite(y) && y > 1900)
 
+  /*
+   * Off-season entries. North Carolina wrestles November to February and bars out-of-state
+   * competition inside it, so everything here is, by definition, a wrestler choosing to keep
+   * going when the season stopped.
+   */
+  const offSeason = new Set(
+    input.results.filter((r) => isTeamBlindEvent(r.event)).map((r) => `${r.event}|${r.year}`),
+  ).size
+
+  const rankedWins = countRankedWins(input.significantWins)
+
   return {
-    rankedWins: countRankedWins(input.significantWins),
+    rankedWins,
+    offSeasonEvents: offSeason,
+    grade: buildCompetitionGrade({
+      rankedWins: rankedWins.total,
+      nationalEvents: nationalEvents.length,
+      offSeasonEvents: offSeason,
+    }),
     credentialedLosses: input.significantLosses.length,
     season: input.season,
     seasonLabel: input.seasonLabel,
