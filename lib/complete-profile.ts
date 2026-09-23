@@ -50,8 +50,9 @@ export function decideCompleteProfile(input: {
 
   const role = canonicalRole(requested)!
   const verifiedCoach = shouldAutoApproveCoach({ role, email: input.email })
-  const redirectTo =
-    role === "college_coach" ? (verifiedCoach ? "/coaches/dashboard" : "/auth/coach-pending") : "/"
+  // Not the coach dashboard: it has one view in thirteen months. Coaches live on athlete
+  // profiles — 15,836 views — which is also where verified_coach actually buys them something.
+  const redirectTo = role === "college_coach" ? (verifiedCoach ? "/athletes" : "/auth/coach-pending") : "/"
 
   return { ok: true, role, verifiedCoach, redirectTo }
 }

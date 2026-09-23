@@ -19,7 +19,7 @@ export default function CoachPendingPage() {
       if (!user) {
         window.location.href = "/auth/signin"
       } else if (profile?.verified_coach) {
-        window.location.href = "/coach-portal"
+        window.location.href = "/athletes"
       } else {
         setChecking(false)
       }

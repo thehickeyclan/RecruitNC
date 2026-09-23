@@ -181,7 +181,7 @@ export async function GET(req: NextRequest) {
     if (type === "recovery" || next === "/auth/reset-password") {
       redirectPath = "/auth/reset-password"
     } else if (!hasExplicitNext && (profile?.role === "coach" || session.user.user_metadata?.profile_type === "college-coach")) {
-      redirectPath = "/coaches/dashboard"
+      redirectPath = "/athletes"
     } else if (!hasExplicitNext && (profile?.role === "admin" || profile?.is_admin)) {
       redirectPath = "/admin"
     } else if (!hasExplicitNext && session.user.user_metadata?.profile_type === "athlete") {

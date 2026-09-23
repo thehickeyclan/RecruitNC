@@ -10,7 +10,7 @@ describe("decideCompleteProfile", () => {
       ok: true,
       role: "college_coach",
       verifiedCoach: true,
-      redirectTo: "/coaches/dashboard",
+      redirectTo: "/athletes",
     })
   })
 

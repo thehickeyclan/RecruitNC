@@ -37,6 +37,27 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/fundraising", request.url), 308)
   }
 
+  // The college coach portal is archived, not deleted.
+  //
+  // Thirteen months of analytics hold one view of /coach-portal, one of /coaches/dashboard and
+  // none at all of the per-college "My Recruits" pages — while the same verified coaches opened
+  // athlete profiles 15,836 times. It was a destination nobody travelled to, and the lazy-create
+  // school duplicates we spent today cleaning up existed only to feed its header logo.
+  //
+  // Two deliberate exceptions. `/api/coach-portal/*` is untouched: the high-school portal at
+  // /schools/[schoolId]/portal still calls it and that one is in use. `/colleges` itself stays —
+  // the directory is the only page in here anybody opens.
+  if (
+    !pathname.startsWith("/api/") &&
+    (pathname === "/coach-portal" ||
+      pathname.startsWith("/coach-portal/") ||
+      pathname === "/coaches" ||
+      pathname.startsWith("/coaches/") ||
+      pathname.startsWith("/colleges/"))
+  ) {
+    return NextResponse.redirect(new URL("/athletes", request.url), 308)
+  }
+
   // Individual-athlete giving is retired. Keep all public giving organizational
   // or within a separately governed scholarship fund.
   if (
