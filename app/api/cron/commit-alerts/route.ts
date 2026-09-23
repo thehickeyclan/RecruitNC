@@ -5,8 +5,24 @@ import { sendToSubscribers } from "@/lib/push-send"
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
 
-/** Never announce a commitment older than this, so a backfill or data import can't spam the tab. */
-const MAX_AGE_DAYS = 14
+/**
+ * How far back a commitment can be dated and still be announced automatically.
+ *
+ * Was 14 days, which quietly decided that a commitment entered with its real date — the day the
+ * wrestler actually committed, often weeks before anyone told us — was not news. Three went
+ * unannounced that way, one of them by a single day. The date is when it happened; the alert is
+ * about when we learned.
+ */
+const MAX_AGE_DAYS = 45
+
+/**
+ * Most announcements in one run.
+ *
+ * This is what the age window was really guarding: an import setting a hundred colleges at once
+ * and every phone buzzing a hundred times. A cap says that directly, and a backlog drains over
+ * the following hours instead of being thrown away.
+ */
+const MAX_PER_RUN = 5
 
 function authorizeCron(request: NextRequest): boolean {
   const secret = process.env.CRON_SECRET?.trim()
@@ -55,9 +71,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ announced: 0, message: "No new commitments to announce." })
   }
 
+  const batch = pending.slice(0, MAX_PER_RUN)
+  const deferred = pending.length - batch.length
+
   const results: Array<Record<string, unknown>> = []
 
-  for (const athlete of pending) {
+  for (const athlete of batch) {
     // Claim the athlete before sending. If the send throws, the row stays claimed and this
     // athlete is skipped next run — a missed alert is recoverable, a duplicate blast is not.
     const { error: claimError } = await admin
@@ -84,5 +103,5 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  return NextResponse.json({ announced: results.length, results })
+  return NextResponse.json({ announced: results.length, deferred, results })
 }

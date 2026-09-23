@@ -20,6 +20,7 @@ import {
   GraduationCap,
   ExternalLink,
   ImagePlus,
+  Megaphone,
   CheckCircle2,
   AlertCircle,
   Loader2,
@@ -37,6 +38,33 @@ export default function EditAthletePage() {
   const [editableBio, setEditableBio] = useState("")
   const [editableHeadline, setEditableHeadline] = useState("")
   const [commitmentWizardOpen, setCommitmentWizardOpen] = useState(false)
+  const [announcing, setAnnouncing] = useState(false)
+
+  /** Pushes "X commits to Y" to every device opted into commitment alerts. Once per athlete, ever. */
+  const announceCommitment = async () => {
+    if (announcing) return
+    if (!window.confirm(`Send "${athlete?.name} commits to ${athlete?.college}" to every phone with commitment alerts on?`)) {
+      return
+    }
+    setAnnouncing(true)
+    try {
+      const res = await fetch(`/api/admin/athletes/${id}/announce-commitment`, {
+        method: "POST",
+        credentials: "include",
+      })
+      const body = await res.json()
+      if (!res.ok) throw new Error(body.error || "Could not send the alert")
+      toast({ title: "Announced", description: `Sent to ${body.sent ?? 0} device${body.sent === 1 ? "" : "s"}.` })
+    } catch (e) {
+      toast({
+        title: "Not sent",
+        description: e instanceof Error ? e.message : "Try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setAnnouncing(false)
+    }
+  }
   const [crmData, setCrmData] = useState<any>(null)
   const [linkedUserId, setLinkedUserId] = useState<string | null>(null)
   const [fundraisingData, setFundraisingData] = useState<any>(null)
@@ -286,6 +314,22 @@ export default function EditAthletePage() {
       <div className="border-b border-white/10 bg-[#0B2545]">
         <div className="mx-auto max-w-3xl px-4 py-3">
           <div className="flex flex-wrap gap-2">
+            {/*
+              Announce, for when the cron will not.
+              It decides from `commitmentdate` — the day the wrestler committed, not the day we
+              found out — so a commitment entered with its real date weeks later is never
+              announced at all. Saving it looks like it told everyone and silently did not.
+            */}
+            {athlete?.college ? (
+              <button
+                onClick={() => void announceCommitment()}
+                disabled={announcing}
+                className="flex min-h-[44px] items-center gap-2 rounded-lg border border-[#C8A94A]/60 px-4 text-sm font-semibold text-[#C8A94A] hover:bg-[#C8A94A]/10 disabled:opacity-50"
+              >
+                <Megaphone className="h-4 w-4" />
+                {announcing ? "Sending…" : "Announce commitment"}
+              </button>
+            ) : null}
             <button
               onClick={() => setCommitmentWizardOpen(true)}
               className="flex min-h-[44px] items-center gap-2 rounded-lg bg-[#C8A94A] px-4 text-sm font-semibold text-[#061224] hover:bg-[#d4b75c]"
