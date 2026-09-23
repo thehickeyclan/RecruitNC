@@ -768,7 +768,9 @@ export default function UsersDashboardPage() {
   }, [profiles])
 
   const UserRow = ({ user }: { user: UserProfile }) => {
-    const isCoach = user.role === "college_coach"
+    // Both spellings, or a coach written by the sign-up form loses the Status and School cells
+    // entirely and their row renders a column short of every other row.
+    const isCoach = isCollegeCoachRole(user.role)
     const lastActiveAt = effectiveLastActiveAt(user)
     
     return (
