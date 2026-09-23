@@ -65,6 +65,7 @@ type UserProfile = {
   cell_phone: string | null
   created_at: string
   is_admin: boolean
+  email_confirmed_at: string | null
   last_sign_in_at: string | null
   last_activity_at: string | null
   last_activity_path: string | null
@@ -587,32 +588,49 @@ export default function UsersDashboardPage() {
     [filteredProfiles]
   )
 
+  /**
+   * Accounts that actually exist as people.
+   *
+   * An unconfirmed account has never clicked the link and cannot sign in — it is a registration
+   * attempt, not a user. Counting them made "Total Users" overstate the audience by about a
+   * tenth, and quietly absorbed a bot signup wave that put 103 rows in the table in one month
+   * without a single sign-in between them. The table below still lists everybody; the numbers
+   * above it no longer do.
+   */
+  const confirmedProfiles = useMemo(
+    () => profiles.filter(p => Boolean(p.email_confirmed_at)),
+    [profiles]
+  )
+
   const stats = useMemo(() => ({
-    total: profiles.length,
-    coaches: profiles.filter(p => isCollegeCoachRole(p.role)).length,
-    pendingCoaches: profiles.filter(p => isCollegeCoachRole(p.role) && !p.verified_coach && p.verification_status !== "rejected").length,
-    approvedCoaches: profiles.filter(p => isCollegeCoachRole(p.role) && p.verified_coach).length,
-    awaitingReview: profiles.filter(needsCoachReview).length,
-    athletes: profiles.filter(p => p.role === "athlete").length,
-    activeToday: profiles.filter(p => {
+    total: confirmedProfiles.length,
+    unconfirmed: profiles.length - confirmedProfiles.length,
+    coaches: confirmedProfiles.filter(p => isCollegeCoachRole(p.role)).length,
+    pendingCoaches: confirmedProfiles.filter(p => isCollegeCoachRole(p.role) && !p.verified_coach && p.verification_status !== "rejected").length,
+    approvedCoaches: confirmedProfiles.filter(p => isCollegeCoachRole(p.role) && p.verified_coach).length,
+    awaitingReview: confirmedProfiles.filter(needsCoachReview).length,
+    athletes: confirmedProfiles.filter(p => p.role === "athlete").length,
+    activeToday: confirmedProfiles.filter(p => {
       const lastActive = effectiveLastActiveAt(p)
       if (!lastActive) return false
       const today = new Date().toDateString()
       return new Date(lastActive).toDateString() === today
     }).length,
-    active7d: profiles.filter(p => p.activity_count_7d > 0).length,
-    highIntent30d: profiles.reduce((sum, p) => sum + (p.high_intent_count_30d || 0), 0),
-  }), [profiles])
+    active7d: confirmedProfiles.filter(p => p.activity_count_7d > 0).length,
+    highIntent30d: confirmedProfiles.reduce((sum, p) => sum + (p.high_intent_count_30d || 0), 0),
+  }), [profiles, confirmedProfiles])
 
   // Cumulative user growth over time
   const cumulativeGrowthData = useMemo(() => {
-    if (!profiles.length) return []
+    if (!confirmedProfiles.length) return []
 
     const countsByDay: { [key: string]: number } = {}
     let earliestDate: Date | null = null
     const now = new Date()
 
-    profiles.forEach(p => {
+    // Confirmed accounts only, same as the numbers above. Counting registrations here drew a
+    // growth spike in September that was a bot wave, not an audience.
+    confirmedProfiles.forEach(p => {
       const created = new Date(p.created_at)
       // Ignore obviously bad dates
       if (Number.isNaN(created.getTime()) || created > now) return
@@ -661,7 +679,7 @@ export default function UsersDashboardPage() {
     }
 
     return data
-  }, [profiles])
+  }, [confirmedProfiles])
 
   // Activity charts data
   const activityData = useMemo(() => {
@@ -776,6 +794,11 @@ export default function UsersDashboardPage() {
         </td>
         <td className="px-4 py-3 text-sm">
           {formatPhoneForDisplay(user.cell_phone) || "N/A"}
+          {!user.email_confirmed_at && (
+            <Badge variant="outline" className="ml-2 border-gray-400 text-gray-500" title="Never confirmed their email — cannot sign in">
+              Unconfirmed
+            </Badge>
+          )}
         </td>
         {isCoach && (
           <>
@@ -928,8 +951,13 @@ export default function UsersDashboardPage() {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Users</p>
+                <p className="text-sm font-medium text-gray-600">Confirmed Users</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
+                {stats.unconfirmed > 0 && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    {stats.unconfirmed} never confirmed — listed below, not counted here
+                  </p>
+                )}
               </div>
               <Users className="h-8 w-8 text-blue-600" />
             </div>

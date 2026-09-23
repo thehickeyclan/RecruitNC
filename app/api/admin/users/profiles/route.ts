@@ -225,6 +225,9 @@ export async function GET() {
         school_name: profile?.schools?.name || null,
         athlete_id: (profile as { athlete_id?: string | null } | undefined)?.athlete_id ?? null,
         created_at: user.created_at,
+        // Whether this is a person or just a row. An unconfirmed account has never clicked the
+        // link and cannot sign in, so counting it as a user overstates the audience.
+        email_confirmed_at: user.email_confirmed_at || null,
         last_sign_in_at: user.last_sign_in_at || null,
         ...activity,
       }
