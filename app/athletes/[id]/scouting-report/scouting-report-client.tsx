@@ -5,6 +5,7 @@ import Image from "next/image"
 import { Printer, ArrowLeft, Loader2, Link2, Check } from "lucide-react"
 import Link from "next/link"
 import type { ScoutingReport } from "@/lib/scouting-report"
+import { weightProgression } from "@/lib/scouting-report"
 import { RETAINED_EDITIONS } from "@/lib/national-rankings"
 import { ELITE_OPPONENT_PERCENTILE } from "@/lib/competition-strength"
 
@@ -463,6 +464,17 @@ export function ScoutingReportDocument({
                 <Stat label="Wins vs NC ranked" value={String(report.strengthOfCompetition.rankedWins.stateRanked)} />
                 <Stat label="Losses vs ranked" value={String(report.strengthOfCompetition.credentialedLosses)} />
               </div>
+            ) : null}
+            {/*
+              Where they have actually competed, oldest first. A listed weight is where somebody
+              is entered; this is where they wrestled. For a young wrestler still filling out it
+              is often the most telling line on the page — and until now it reached the summary
+              model and never the printed report.
+            */}
+            {weightProgression(report.results) ? (
+              <p className="mt-3 text-[11px] leading-snug text-gray-700">
+                <span className="font-semibold">Competed at:</span> {weightProgression(report.results)}
+              </p>
             ) : null}
             {report.strengthOfCompetition.seasonsOnFile <= 1 ? (
               <p className="mt-2 text-[9.5px] leading-snug text-amber-700">
