@@ -20,10 +20,23 @@
 
 import type { HeadToHeadBout } from "@/lib/head-to-head"
 
-/** Opponents at or above this percentile are the ones worth counting separately. */
+/**
+ * Opponents rated at or above this are the ones worth counting separately.
+ *
+ * NOT verified as a percentile against any known population. The value arrives pasted into the
+ * match importer from an outside source — `lib/../app/admin/match-manager` reads it as the line
+ * after Win/Loss — and nothing in this codebase defines what it measures. Two things are known
+ * from the data: it is bimodal (a spike at 0-10 and a much larger one at 90-100, median 86),
+ * and it changes for the same opponent within a season, so it is a snapshot taken at the time
+ * of the bout rather than a fixed rating.
+ *
+ * Which is why the line below no longer says "top 5%": 41% of the 34,056 rated bouts on file
+ * sit at 95 or above, so that phrasing told a college coach something the data cannot support.
+ * Report the rating; do not name a population.
+ */
 export const ELITE_OPPONENT_PERCENTILE = 95
 
-/** Imported bouts carry an opponent quality percentile, as "96.14%". */
+/** Imported bouts carry an opponent rating, as "96.14%". */
 export function opponentPercentile(bout: { opponent_percentage?: unknown }): number | null {
   const raw = String(bout.opponent_percentage ?? "").replace("%", "").trim()
   if (!raw) return null
@@ -192,8 +205,8 @@ export function seasonStrengthLine(strength: SeasonStrength): string | null {
   if (strength.bouts === 0) return null
   if (strength.vsElite === 0) {
     return strength.averageOpponentPercentile != null
-      ? `${strength.bouts} bouts · average opponent in the ${Math.round(strength.averageOpponentPercentile)}th percentile`
+      ? `${strength.bouts} bouts · average opponent rating ${Math.round(strength.averageOpponentPercentile)} of 100`
       : `${strength.bouts} bouts on file`
   }
-  return `${strength.eliteWins}-${strength.eliteLosses} against top-${100 - ELITE_OPPONENT_PERCENTILE}% opponents · ${strength.vsElite} of ${strength.bouts} bouts`
+  return `${strength.eliteWins}-${strength.eliteLosses} against opponents rated ${ELITE_OPPONENT_PERCENTILE}+ · ${strength.vsElite} of ${strength.bouts} bouts`
 }

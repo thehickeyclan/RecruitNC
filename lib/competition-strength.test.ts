@@ -91,12 +91,12 @@ describe("seasonStrengthLine", () => {
       ]),
     )
     expect(line).toContain("1-1")
-    expect(line).toContain("top-5%")
+    expect(line).toContain("rated 95+")
   })
 
   it("says what the schedule was when nobody elite was on it", () => {
     const line = seasonStrengthLine(summarizeSeasonStrength([bout({ opponent_percentage: "50%" })]))
-    expect(line).toContain("percentile")
+    expect(line).toContain("average opponent rating")
   })
 
   it("is null with no bouts rather than inventing a claim", () => {
