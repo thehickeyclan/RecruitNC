@@ -17,12 +17,25 @@ export async function publishSubmittedResult(
   input: { athleteId: string; requestId: string; form: SubmittedResultForm },
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    const { data: athlete } = await admin
+    /*
+     * `wrestlingClub`, not `club`.
+     *
+     * There is no `club` column on `athletes`, so this select errored, `data` came back null,
+     * and the guard below reported "athlete not found" about a wrestler who plainly exists —
+     * Adam Walker's first real submission vanished exactly this way. The error was discarded,
+     * which is what made it silent, so it is read now.
+     *
+     * The same trap this file's neighbours already carry a comment about: the scouting report
+     * once selected `gpa`, `contact_email` and `career_record`, none of which are columns, and
+     * every report rendered blank without anything failing.
+     */
+    const { data: athlete, error: lookupError } = await admin
       .from("athletes")
-      .select("id, name, highschool, club")
+      .select("id, name, highschool, wrestlingClub")
       .eq("id", input.athleteId)
       .maybeSingle()
 
+    if (lookupError) return { ok: false, error: `athlete lookup failed: ${lookupError.message}` }
     if (!athlete) return { ok: false, error: "athlete not found" }
 
     const built = buildTournamentResultRow({
@@ -30,7 +43,7 @@ export async function publishSubmittedResult(
       athleteId: String(athlete.id),
       athleteName: String(athlete.name ?? ""),
       highSchool: (athlete.highschool as string | null) ?? null,
-      club: (athlete.club as string | null) ?? null,
+      club: (athlete.wrestlingClub as string | null) ?? null,
       requestId: input.requestId,
     })
     if (!built.ok) return { ok: false, error: built.error }
