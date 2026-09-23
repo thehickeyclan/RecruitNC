@@ -6,9 +6,14 @@ import { createClient } from "@/lib/supabase/client"
 /**
  * "Continue with Google" — one button, both auth pages.
  *
- * A third of the accounts created in the last ninety days never confirmed their email: 111 of
- * 334 people made an account, never clicked the link, and could not sign in. They show up in the
- * table as users, which is why nobody noticed. This is the door that has no link to click.
+ * About one real sign-up in ten never confirms their email — 101 of the 1,012 accounts made
+ * before September. They sit in the table looking like users, having never once signed in,
+ * because the only door we offered them needed a link they never clicked. This is the door with
+ * no link to click.
+ *
+ * (Do not read September's rate as a human number: 103 of that month's 207 sign-ups are a bot
+ * wave hitting the password form, scraped business domains and dotted Gmail aliases. Those
+ * inflate every "never confirmed" count that includes them.)
  *
  * Sign-in and sign-up share it deliberately. With Google there is no difference between the two —
  * the same tap either finds the account or makes one — and two buttons that drift apart is how
