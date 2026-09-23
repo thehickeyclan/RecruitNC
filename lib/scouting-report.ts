@@ -15,6 +15,11 @@ import { applyStarOverride, isRatedAthlete, rateAthlete, type StarRating } from 
 import { nationalEventRows, starOverrideOf, statePlaces } from "@/lib/athlete-star-rating-load"
 import { summarizeNationalExposure, summarizeSeasonStrength, type SeasonStrength, seasonStrengthLine } from "@/lib/competition-strength"
 import {
+  buildStrengthOfCompetition,
+  strengthOfCompetitionFacts,
+  type StrengthOfCompetition,
+} from "@/lib/strength-of-competition"
+import {
   getNationalRankingsForAthlete,
   nationalRankingHistory,
   nationalRankingSummary,
@@ -138,6 +143,8 @@ export type ScoutingReport = {
   seasonStrength: SeasonStrength | null
   /** Which season that strength describes, e.g. "2025-26". Null when no bouts are on file. */
   seasonStrengthSeason: string | null
+  /** Who they have actually faced, counted — never scored. */
+  strengthOfCompetition: StrengthOfCompetition
   /** Written by the model from the fields above. Null when generation is unavailable. */
   summary: string | null
   recruitingStatus: string | null
@@ -519,6 +526,9 @@ export async function buildScoutingReport(
     getNationalRankingsForAthlete(supabase, athleteId).catch(() => []),
   ])
 
+  const seasonsOnFile = new Set(
+    (matchRows ?? []).map((r) => String((r as { season?: unknown }).season ?? "").trim()).filter(Boolean),
+  ).size
   const latestSeasonRows = latestSeasonMatchRows((matchRows ?? []) as never)
   const seasonStrengthSeason =
     String((latestSeasonRows[0] as { season?: unknown } | undefined)?.season ?? "").trim() || null
@@ -544,6 +554,12 @@ export async function buildScoutingReport(
   const ncUnitedTeam = text(athlete.ncUnitedTeam)
   const gradYear = athlete.graduationyear == null ? null : Number(athlete.graduationyear)
   const rawRank = athlete.prospect_ranking == null ? null : Number(athlete.prospect_ranking)
+  // Built once: the panel counts the same rows the table prints, so the two cannot disagree.
+  const resultRows = buildResultRows(bundle as never)
+  const rankedWins = findSignificantWins(bouts, opponentIndex)
+  const rankedLosses = findSignificantLosses(bouts, opponentIndex)
+  const seasonStrength = seasonBouts.length > 0 ? summarizeSeasonStrength(seasonBouts as never) : null
+
   const ranking = rawRank != null && Number.isFinite(rawRank) && rawRank >= 1 ? rawRank : null
   return {
     athleteId,
@@ -576,15 +592,23 @@ export async function buildScoutingReport(
       isBlue: isBlueTeam(athlete),
     },
     careerRecord: mapCareerRecord(athlete),
-    results: buildResultRows(bundle as never),
-    significantWins: findSignificantWins(bouts, opponentIndex),
-    significantLosses: findSignificantLosses(bouts, opponentIndex),
+    results: resultRows,
+    significantWins: rankedWins,
+    significantLosses: rankedLosses,
     recruitingStatus: text(athlete.recruiting_status),
     commitment: text(athlete.college),
     accessTier,
     watermark,
-    seasonStrength: seasonBouts.length > 0 ? summarizeSeasonStrength(seasonBouts as never) : null,
+    seasonStrength: seasonStrength,
     seasonStrengthSeason,
+    strengthOfCompetition: buildStrengthOfCompetition({
+      significantWins: rankedWins,
+      significantLosses: rankedLosses,
+      results: resultRows,
+      season: seasonStrength,
+      seasonLabel: seasonStrengthSeason,
+      seasonsOnFile,
+    }),
     prospectRanking: ranking,
     nationalRankings: nationalRankingHistory(rankings),
     // Built from data already in hand — the bundle, the season's bouts and the rankings just
@@ -725,6 +749,13 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
      * model — so a wrestler who went 21-7 against top-5% opposition had a summary that could
      * only say 50-8. The record without the schedule is the half that misleads.
      */
+    // The panel: counted, traceable, and never a score.
+    const socLines = strengthOfCompetitionFacts(report.strengthOfCompetition)
+    if (socLines.length) {
+      lines.push("", "Strength of competition:")
+      for (const l of socLines) lines.push(`- ${l}`)
+    }
+
     const strengthLine = report.seasonStrength ? seasonStrengthLine(report.seasonStrength) : null
     if (strengthLine) {
       // Named, because "strength of schedule" with no season attached is read as "now" — and
@@ -858,9 +889,11 @@ Say things in this order, skipping anything the facts do not contain:
 Two lines are worth a sentence of their own when the facts carry them:
 - "Competed at:" is the weight progression. For a young wrestler still filling out, where they
   have actually competed says more than a listed weight. Report the direction.
-- "strength of schedule" is who they wrestled. A record without it is the half that misleads:
-  50-8 reads very differently once you know 28 of those bouts were against top-5% opposition.
-  Quote the figures as given; never call a schedule "weak".
+- "Strength of competition" is who they wrestled and beat. A record without it is the half
+  that misleads: 50-8 reads very differently once you know 28 of those bouts were against
+  opponents rated 95+ and eight wins came over Tournament of Champions field opponents. Quote
+  the figures as given, never call a schedule "weak", and if the coverage line says one season
+  is on file, do not treat a short record as a limit on the wrestler.
 
 Rules:
 - Use ONLY the facts provided. Never invent a result, a ranking, an opponent, or a number.

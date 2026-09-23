@@ -426,16 +426,21 @@ export function ScoutingReportDocument({
         ) : null}
 
         {/*
-          Strength of schedule, which the paywall in front of this page sells by name and the
-          report has never printed. The numbers come from the same season bouts the star rating
-          is built on — only the elite threshold is a judgement, so it is stated.
+          Strength of competition — renamed from "schedule", which only ever described the
+          in-season half. The season figures come from the same bouts the star rating is built
+          on; the ranked-win counts come from the same bouts the table below prints.
+
+          No composite score, deliberately. A single number would have to answer "out of what?",
+          and the previous copy here claimed a 95th percentile we cannot define: the value is
+          pasted in from an outside source and 41% of all rated bouts on file clear it. The
+          rating is reported; the population is not named.
         */}
         {report.seasonStrength && report.seasonStrength.bouts > 0 ? (
-          <Block n={n()} title="Strength of schedule">
+          <Block n={n()} title="Strength of competition">
             <div className="grid grid-cols-4 gap-3 text-[11.5px]">
               <Stat label="Season record" value={`${report.seasonStrength.wins}-${report.seasonStrength.losses}`} />
               <Stat
-                label="Vs. elite"
+                label="Vs. rated 95+"
                 value={
                   report.seasonStrength.vsElite > 0
                     ? `${report.seasonStrength.eliteWins}-${report.seasonStrength.eliteLosses} in ${report.seasonStrength.vsElite}`
@@ -443,7 +448,7 @@ export function ScoutingReportDocument({
                 }
               />
               <Stat
-                label="Elite share"
+                label="Share rated 95+"
                 value={report.seasonStrength.eliteShare != null ? `${Math.round(report.seasonStrength.eliteShare)}%` : "—"}
               />
               <Stat
@@ -451,13 +456,27 @@ export function ScoutingReportDocument({
                 value={report.seasonStrength.bonusRate != null ? `${Math.round(report.seasonStrength.bonusRate)}%` : "—"}
               />
             </div>
+            {report.strengthOfCompetition.rankedWins.total > 0 ? (
+              <div className="mt-3 grid grid-cols-4 gap-3 text-[11.5px]">
+                <Stat label="Wins vs national" value={String(report.strengthOfCompetition.rankedWins.national)} />
+                <Stat label="Wins vs TOC field" value={String(report.strengthOfCompetition.rankedWins.tocField)} />
+                <Stat label="Wins vs NC ranked" value={String(report.strengthOfCompetition.rankedWins.stateRanked)} />
+                <Stat label="Losses vs ranked" value={String(report.strengthOfCompetition.credentialedLosses)} />
+              </div>
+            ) : null}
+            {report.strengthOfCompetition.seasonsOnFile <= 1 ? (
+              <p className="mt-2 text-[9.5px] leading-snug text-amber-700">
+                One season on file. A wrestler who transferred in, or is in their first year, will read as quiet here
+                whatever they have done elsewhere.
+              </p>
+            ) : null}
             <p className="mt-2 text-[9.5px] italic leading-snug text-gray-500">
               From {report.seasonStrength.bouts} imported high-school bouts.{" "}
               {report.seasonStrength.averageOpponentPercentile != null
-                ? `Average opponent in the ${Math.round(report.seasonStrength.averageOpponentPercentile)}th percentile. `
+                ? `Average opponent rating ${Math.round(report.seasonStrength.averageOpponentPercentile)} of 100. `
                 : ""}
-              &ldquo;Elite&rdquo; is an opponent at or above the {ELITE_OPPONENT_PERCENTILE}th percentile; bonus rate is
-              the share of wins by fall, tech or major.
+              Opponent ratings arrive with the match import; {ELITE_OPPONENT_PERCENTILE}+ is the bar used here. Bonus
+              rate is the share of wins by fall, tech or major.
             </p>
           </Block>
         ) : null}

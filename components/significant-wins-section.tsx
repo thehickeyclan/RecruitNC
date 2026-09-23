@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Trophy } from "lucide-react"
 import type { ProfileQualityWinsTournamentBlock } from "@/lib/profile-quality-wins"
 import { SignificantWinSubmissionDialog } from "@/components/significant-win-submission-dialog"
+import { TournamentResultSubmissionDialog } from "@/components/tournament-result-submission-dialog"
 
 type SignificantWin = {
   opponent: string
@@ -81,7 +82,15 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
           <Trophy className="h-5 w-5 text-rnc-gold" aria-hidden="true" />
           <h2 className="text-lg font-bold text-white">Significant wins</h2>
         </div>
-        <SignificantWinSubmissionDialog athleteId={athleteId} />
+        <div className="flex flex-wrap items-center gap-2">
+          <SignificantWinSubmissionDialog athleteId={athleteId} />
+          {/*
+           * Beside the win, because the gaps they fill are different: a win is one bout, a
+           * result is a whole tournament we may not carry at all — Ironman, Beast, Powerade,
+           * or duals wrestled with another team.
+           */}
+          <TournamentResultSubmissionDialog athleteId={athleteId} />
+        </div>
       </div>
       <p className="mt-1 text-xs text-slate-400">
         Significant wins over strong opponents.
