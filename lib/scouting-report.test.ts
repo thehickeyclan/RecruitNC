@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { mapAcademics, mapCareerRecord, mapContact, summaryFacts, unsupportedSummaryClaims,
+import { buildResultRows, mapAcademics, mapCareerRecord, mapContact, summaryFacts, unsupportedSummaryClaims,
   stripUnsupportedSentences,
 } from "@/lib/scouting-report"
 
@@ -267,7 +267,11 @@ describe("unsupportedSummaryClaims", () => {
 })
 
 describe("stripUnsupportedSentences", () => {
-  const facts = "Name: Adam Walker\nClass of 2029\nRecruitNC ranking: none published for this class. Do not state a ranking."
+  // The TOC line is here because the summary below claims it. Before placements were checked,
+  // this fixture asserted a 4th-place finish the facts never mentioned and nothing objected.
+  const facts =
+    "Name: Adam Walker\nClass of 2029\nTournament of Champions 2026 · 4th · 3-2 record\n" +
+    "RecruitNC ranking: none published for this class. Do not state a ranking."
 
   it("keeps the true sentences and drops the invented one", () => {
     const summary =
@@ -285,5 +289,55 @@ describe("stripUnsupportedSentences", () => {
 
   it("returns null when nothing needed removing, so the caller keeps the original", () => {
     expect(stripUnsupportedSentences("He placed 4th. He wrestles at Holly Springs.", facts)).toBeNull()
+  })
+})
+
+describe("a placement the facts do not contain", () => {
+  /*
+   * Abdul-Jamil Zaggout, NHSCA 2026: 4-2 at 152, placed nowhere. The profile showed no
+   * placement and Data Dawg knew it; the scouting report announced a 6th-place finish. The
+   * facts line had simply omitted the placement, and the prompt told the model to give one.
+   */
+  const zaggoutFacts = [
+    "Abdul-Jamil Zaggout, Class of 2027, West Forsyth.",
+    "NHSCA Nationals 2026 · 152 · did not place · 4-2 record",
+    "NCHSAA States 2026 · 8A · 132 · Champion",
+    "RecruitNC ranking: #24 in the Class of 2027.",
+    "GPA: 3.5",
+  ].join("\n")
+
+  it("states the absence instead of leaving a gap", () => {
+    const rows = buildResultRows({
+      nchsaa: [],
+      nhsca: [{ year: 2026, placement: "", record: "4-2", weight: "152" }],
+      super32: [],
+      fargo: [],
+      other: [],
+    })
+    expect(rows).toHaveLength(1)
+    expect(rows[0].detail).toBe("152 · did not place · 4-2 record")
+  })
+
+  it("catches the invented 6th place", () => {
+    const invented = "Zaggout placed 6th at the 2026 NHSCA Nationals at 152 pounds with a 4-2 record."
+    expect(unsupportedSummaryClaims(invented, zaggoutFacts)).toContain("placement 6th")
+  })
+
+  it("leaves a placement the facts really contain alone", () => {
+    const facts = "NHSCA Nationals 2026 · 152 · 6th All-American · 6-2 record"
+    const truthful = "Zaggout finished 6th at NHSCA Nationals at 152."
+    expect(unsupportedSummaryClaims(truthful, facts)).toEqual([])
+  })
+
+  it("does not flag the state title the facts do support", () => {
+    const summary = "Zaggout was the 8A state champion at 132 pounds in 2026."
+    expect(unsupportedSummaryClaims(summary, zaggoutFacts)).toEqual([])
+  })
+
+  it("catches an All-American claim over a record that has none", () => {
+    const invented = "Zaggout is an All-American at 152."
+    expect(unsupportedSummaryClaims(invented, zaggoutFacts)).toContain(
+      "a all-american claim the facts do not contain",
+    )
   })
 })

@@ -263,7 +263,7 @@ const EVENT_MONTH: Record<string, number> = {
 }
 
 /** Tournament results flattened into printable lines, newest first. */
-function buildResultRows(bundle: {
+export function buildResultRows(bundle: {
   nchsaa: Array<{ year: number; place: number | null; classification: string; weight_class: string }>
   nhsca: Array<{ year: number; placement?: string; record?: string; weight?: string }>
   super32: Array<{ year: number; placement?: string; record?: string; weight?: string }>
@@ -288,7 +288,15 @@ function buildResultRows(bundle: {
     for (const r of list) {
       // Fargo runs freestyle and Greco as separate tournaments; the division says which.
       const division = label === "Fargo" ? String(r.division ?? "").trim() : ""
-      const detail = [division, r.weight, r.placement, r.record ? `${r.record} record` : ""]
+      // Say "did not place" rather than leaving the placement out.
+      //
+      // Abdul-Jamil Zaggout went 4-2 at NHSCA 2026 and placed nowhere. His row read
+      // "152 · 4-2 record", the prompt below says "give the placement", and the model duly
+      // supplied one: a 6th-place finish that never happened. An absent fact reads to a model
+      // as a gap to fill, so the absence has to be a fact of its own — the same reason the
+      // ranking and GPA lines say "none published" and "not on file".
+      const placement = String(r.placement ?? "").trim() || "did not place"
+      const detail = [division, r.weight, placement, r.record ? `${r.record} record` : ""]
         .filter(Boolean)
         .join(" · ")
       if (detail) rows.push({ event: label, year: r.year, when: when(label, r.year), date: null, detail })
@@ -609,6 +617,18 @@ export function unsupportedSummaryClaims(summary: string, facts: string): string
   if (!claimsNumberedRank && /\branked\b/i.test(summary) && !/ranking/i.test(factText) && !/#\d/.test(facts)) {
     problems.push("a ranking the facts do not contain")
   }
+
+  // A placement is the other number a model will supply when the facts omit one. An ordinal in
+  // the summary — "placed 6th", "finished 3rd" — has to appear in the facts to survive.
+  for (const match of summary.matchAll(/\b(\d{1,2}(?:st|nd|rd|th))\b/gi)) {
+    const ordinalText = match[1].toLowerCase()
+    if (!factText.includes(ordinalText)) problems.push(`placement ${match[1]}`)
+  }
+  for (const word of ["all-american", "runner-up"]) {
+    if (new RegExp(`\\b${word}\\b`, "i").test(summary) && !factText.includes(word)) {
+      problems.push(`a ${word} claim the facts do not contain`)
+    }
+  }
   return [...new Set(problems)]
 }
 
@@ -635,7 +655,9 @@ export const SUMMARY_SYSTEM_PROMPT = `You write short scouting summaries for col
 Say things in this order, skipping anything the facts do not contain:
 1. Who they are: name, class year, high school and club, in one clause.
 2. National results first — NHSCA, Fargo, Super 32, Journeymen and other out-of-state events.
-   Give the placement, the weight and the record.
+   Give the weight, the record, and the placement ONLY when the facts state one. A line reading
+   "did not place" means exactly that: report the record and say they did not place. Never
+   supply a placement, an All-American finish or a podium the facts do not contain.
 3. Then this season's results, including the Tournament of Champions and the state tournament.
 4. Then the wins and losses that carry a credential, naming the opponents.
 5. Then the ranking: a national ranking with its outlet, otherwise the RecruitNC class ranking.
