@@ -483,7 +483,7 @@ function FormField({
         placeholder={placeholder}
         required={required}
         step={step}
-        className="w-full rounded-lg border border-white/15 bg-[#061224] px-4 py-3 text-white placeholder:text-white/30 focus:border-[#C8A94A] focus:outline-none focus:ring-1 focus:ring-[#C8A94A]/50"
+        className="w-full rounded-lg border border-white/15 bg-[#061224] px-4 py-3 text-white placeholder:text-white/30 focus:border-[#C8A94A] focus:outline-none focus:ring-1 focus:ring-[#C8A94A]/50 [color-scheme:dark]"
       />
     </div>
   )

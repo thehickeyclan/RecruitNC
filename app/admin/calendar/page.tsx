@@ -478,7 +478,7 @@ export default function AdminCalendarPage() {
                     type="date"
                     value={form.startDate}
                     onChange={(e) => setForm((f) => ({ ...f, startDate: e.target.value }))}
-                    className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white"
+                    className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white [color-scheme:dark]"
                   />
                 </div>
                 <div>
@@ -488,7 +488,7 @@ export default function AdminCalendarPage() {
                     type="date"
                     value={form.endDate}
                     onChange={(e) => setForm((f) => ({ ...f, endDate: e.target.value }))}
-                    className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white"
+                    className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white [color-scheme:dark]"
                   />
                 </div>
               </div>
@@ -501,7 +501,7 @@ export default function AdminCalendarPage() {
                     type="time"
                     value={form.startTime}
                     onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
-                    className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white"
+                    className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white [color-scheme:dark]"
                   />
                 </div>
                 <div>
@@ -511,7 +511,7 @@ export default function AdminCalendarPage() {
                     type="time"
                     value={form.endTime}
                     onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
-                    className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white"
+                    className="mt-1 bg-[#0A1628] border-[#1e3a5f] text-white [color-scheme:dark]"
                   />
                 </div>
               </div>
