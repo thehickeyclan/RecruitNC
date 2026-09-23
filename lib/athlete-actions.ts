@@ -135,6 +135,21 @@ export async function updateAthleteAction(id: string, athleteData: any) {
       filteredPayload.college_weight_class = String(updatePayload.college_weight_class).trim()
     }
 
+    /*
+     * Stamp when we first learned of a commitment.
+     *
+     * The push alert used to trigger on `commitmentdate` — the day the wrestler committed, which
+     * is often weeks before anyone told us — so a commitment entered honestly with its real date
+     * was either announced late or never. This records the moment the athlete went from no
+     * college to having one, which is what "new commitment" actually means, and it is set once:
+     * every later edit leaves it alone, so editing a weight class can never announce anybody.
+     */
+    const hadCollege = String(previousAthlete?.college ?? "").trim().length > 0
+    const hasCollegeNow = String(filteredPayload.college ?? "").trim().length > 0
+    if (!hadCollege && hasCollegeNow && columns.has("college_set_at")) {
+      filteredPayload.college_set_at = new Date().toISOString()
+    }
+
     // Use admin client for update to bypass RLS (this is an admin action)
     const { data, error } = await adminSupabase.from("athletes").update(filteredPayload).eq("id", id).select().single()
 

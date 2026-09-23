@@ -24,6 +24,16 @@ const MAX_AGE_DAYS = 45
  */
 const MAX_PER_RUN = 5
 
+/**
+ * How recently we must have learned of a commitment to announce it automatically.
+ *
+ * `college_set_at` records the moment an athlete went from no college to having one. Requiring
+ * it to be fresh makes this an announcement of news rather than of history: a batch of older
+ * commitments entered in one sitting is stamped now, but each one still has to pass the date
+ * window below, and anything genuinely old is left to the Announce button and a human.
+ */
+const LEARNED_WITHIN_HOURS = 48
+
 function authorizeCron(request: NextRequest): boolean {
   const secret = process.env.CRON_SECRET?.trim()
   if (!secret) return false
@@ -50,12 +60,22 @@ export async function GET(request: NextRequest) {
   cutoff.setDate(cutoff.getDate() - MAX_AGE_DAYS)
   const cutoffIso = cutoff.toISOString().slice(0, 10)
 
+  const learnedAfter = new Date(Date.now() - LEARNED_WITHIN_HOURS * 3600_000).toISOString()
+
+  /*
+   * Both tests, deliberately.
+   *
+   * `college_set_at` is when we learned, so an edit to a weight class or a photo months later
+   * cannot announce anybody — the stamp does not move. `commitmentdate` is when it happened, so
+   * a backfill of genuinely old commitments stays quiet even though we learned of them today.
+   */
   const { data: candidates, error } = await admin
     .from("athletes")
-    .select("id, name, college, commitmentdate")
+    .select("id, name, college, commitmentdate, college_set_at")
     .not("college", "is", null)
     .neq("college", "")
     .gte("commitmentdate", cutoffIso)
+    .gte("college_set_at", learnedAfter)
     .order("commitmentdate", { ascending: true })
 
   if (error) {
