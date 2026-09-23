@@ -30,6 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { createClient } from "@/lib/supabase/client"
+import { publishesImmediately } from "@/lib/retract-submission"
 
 interface EditRequest {
   id: string
@@ -181,6 +182,38 @@ export default function EditRequestsPage() {
     return () => ctrl.abort()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view, activeStatusTab, athleteFilter])
+
+  /**
+   * The submitted values as label/value pairs, or null when this is not a submission.
+   *
+   * "Did not place" is printed rather than left blank: an empty placement is a fact the form
+   * asks for on purpose, and a gap in a review screen invites the reviewer to fill it in.
+   */
+  const submittedFields = (data: any): Array<[string, string]> | null => {
+    const result = data?.currentData?.proposedTournamentResult
+    if (result) {
+      return [
+        ["Tournament", result.event || "—"],
+        ["Date", result.date || "—"],
+        ["Weight", result.weight || "—"],
+        ["Placement", result.placement?.trim() ? result.placement : "Did not place"],
+        ["Record", result.record || "—"],
+        ["Team", result.team?.trim() || "—"],
+        ["Proof", result.proof?.trim() || "none given"],
+      ]
+    }
+    const win = data?.currentData?.proposedSignificantWin
+    if (win) {
+      return [
+        ["Opponent", win.opponent || "—"],
+        ["Opponent accolade", win.accolade || "—"],
+        ["Event", win.event || "—"],
+        ["Date", win.date || "—"],
+        ["Result", win.result || "—"],
+      ]
+    }
+    return null
+  }
 
   const handleUpdateRequest = async (requestId: string, status: string) => {
     try {
@@ -555,8 +588,41 @@ export default function EditRequestsPage() {
                                 )}
                               </div>
 
-                              {/* Current Data Reference */}
-                              {request.request_data?.currentData && (
+                              {/*
+                                These publish on submission, so by the time this page shows them
+                                the wrestler's profile already has them. Saying so plainly is the
+                                difference between a review queue and a record to acknowledge.
+                              */}
+                              {publishesImmediately(request.request_data?.editType) ? (
+                                <div className="mb-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                                  <strong>Already live.</strong> This published when it was submitted and is on the
+                                  profile now, labelled{" "}
+                                  {request.request_data?.editType === "significant_win"
+                                    ? "\u201cAthlete-reported\u201d"
+                                    : "as family-submitted"}
+                                  . Acknowledging records that you have seen it. Taking it down removes it from the
+                                  profile.
+                                </div>
+                              ) : null}
+
+                              {/*
+                                A submitted win or result reads as a table, not as JSON. These
+                                are the two things an admin actually checks — the opponent and
+                                the event — and a pretty-printed blob buries both.
+                              */}
+                              {submittedFields(request.request_data) ? (
+                                <div className="mb-4">
+                                  <h4 className="font-semibold mb-2">Submitted</h4>
+                                  <dl className="grid grid-cols-[10rem_1fr] gap-x-4 gap-y-1 rounded border bg-gray-50 p-3 text-sm">
+                                    {submittedFields(request.request_data)!.map(([label, value]) => (
+                                      <div key={label} className="contents">
+                                        <dt className="font-medium text-muted-foreground">{label}</dt>
+                                        <dd className="break-words">{value}</dd>
+                                      </div>
+                                    ))}
+                                  </dl>
+                                </div>
+                              ) : request.request_data?.currentData ? (
                                 <div className="mb-4">
                                   <h4 className="font-semibold mb-2">Current Profile Data (for reference)</h4>
                                   <div className="bg-gray-50 p-3 rounded border text-xs">
@@ -565,7 +631,7 @@ export default function EditRequestsPage() {
                                     </pre>
                                   </div>
                                 </div>
-                              )}
+                              ) : null}
 
                               {/* Photo Preview */}
                               {request.request_data?.photoFile && (
@@ -616,7 +682,9 @@ export default function EditRequestsPage() {
                                       ) : (
                                         <CheckCircle className="h-4 w-4 mr-2" />
                                       )}
-                                      Approve Request
+                                      {publishesImmediately(request.request_data?.editType)
+                                        ? "Acknowledge"
+                                        : "Approve Request"}
                                     </Button>
 
                                     <Button
@@ -629,7 +697,9 @@ export default function EditRequestsPage() {
                                       ) : (
                                         <XCircle className="h-4 w-4 mr-2" />
                                       )}
-                                      Reject Request
+                                      {publishesImmediately(request.request_data?.editType)
+                                        ? "Take down"
+                                        : "Reject Request"}
                                     </Button>
                                   </div>
                                 </div>

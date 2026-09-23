@@ -5,6 +5,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { buildAthleteUpdateFromRequest, freeTextForApplying, FREE_TEXT_TARGETS, type FreeTextTarget } from "@/lib/admin/apply-edit-request"
 import { resolveClubName, resolveSchoolName } from "@/lib/admin/canonical-affiliations"
+import { publishesImmediately, retractPublishedSubmission } from "@/lib/retract-submission"
 
 // Server-only service client to bypass RLS for trusted operations
 function createServiceClient() {
@@ -128,6 +129,21 @@ export async function PUT(request: NextRequest) {
 
     if (!existing) {
       return NextResponse.json({ error: "Request not found" }, { status: 404 })
+    }
+
+    /*
+     * A rejection has to undo the publish. These go live on submission, so by the time an admin
+     * presses the button the row is already on the profile — "rejected" with the row still
+     * showing would be the button reporting an outcome it did not produce.
+     */
+    const existingEditType = String(
+      (existing?.request_data as { editType?: unknown } | null)?.editType ?? "",
+    )
+    let retracted = 0
+    if (status === "rejected" && publishesImmediately(existingEditType)) {
+      const result = await retractPublishedSubmission(svc, { requestId, editType: existingEditType })
+      retracted = result.removed
+      if (result.error) console.error("[admin/edit-requests] takedown failed:", result.error)
     }
 
     const mergedRequestData =
@@ -268,7 +284,7 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, data: updated, applied, manual })
+    return NextResponse.json({ success: true, data: updated, applied, manual, retracted })
   } catch (error) {
     console.error("PUT /api/admin/edit-requests error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
