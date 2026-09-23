@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { buildResultRows, mapAcademics, mapCareerRecord, mapContact, summaryFacts, unsupportedSummaryClaims,
+import { buildResultRows, isNationalEvent, mapAcademics, mapCareerRecord, mapContact, summaryFacts, unsupportedSummaryClaims,
   stripUnsupportedSentences,
 } from "@/lib/scouting-report"
 
@@ -339,5 +339,24 @@ describe("a placement the facts do not contain", () => {
     expect(unsupportedSummaryClaims(invented, zaggoutFacts)).toContain(
       "a all-american claim the facts do not contain",
     )
+  })
+})
+
+describe("national coverage", () => {
+  it("knows which events our records actually speak to", () => {
+    expect(isNationalEvent("NHSCA Nationals")).toBe(true)
+    expect(isNationalEvent("Super 32 Early Entry")).toBe(true)
+    expect(isNationalEvent("Journeymen (OF)")).toBe(true)
+    expect(isNationalEvent("I-64 Spring Duals")).toBe(true)
+    expect(isNationalEvent("NCHSAA States")).toBe(false)
+    expect(isNationalEvent("Tournament of Champions")).toBe(false)
+  })
+
+  it("does not claim Beast, Ironman or Powerade are covered", () => {
+    // They are not ingested anywhere. Treating them as known events would let the report imply
+    // a wrestler skipped them when we simply hold nothing either way.
+    expect(isNationalEvent("Beast of the East")).toBe(false)
+    expect(isNationalEvent("Ironman")).toBe(false)
+    expect(isNationalEvent("Powerade")).toBe(false)
   })
 })

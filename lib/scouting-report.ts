@@ -262,6 +262,26 @@ const EVENT_MONTH: Record<string, number> = {
   "Super 32": 10,
 }
 
+/**
+ * The events we hold structured results for that are not North Carolina in-season wrestling.
+ *
+ * Deliberately not a list of every national tournament that exists: Beast of the East, Ironman
+ * and Powerade are real and are not ingested anywhere, so a wrestler can place at one and leave
+ * no trace here. This names what our data can actually speak to.
+ */
+const NATIONAL_EVENTS = [
+  "NHSCA",
+  "Fargo",
+  "Super 32",
+  "Journeymen",
+  "I-64",
+]
+
+export function isNationalEvent(event: string): boolean {
+  const name = String(event ?? "").toLowerCase()
+  return NATIONAL_EVENTS.some((e) => name.includes(e.toLowerCase()))
+}
+
 /** Tournament results flattened into printable lines, newest first. */
 export function buildResultRows(bundle: {
   nchsaa: Array<{ year: number; place: number | null; classification: string; weight_class: string }>
@@ -574,6 +594,25 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
   if (report.results.length) {
     lines.push("", "Tournament results:")
     for (const r of report.results.slice(0, 14)) lines.push(`- ${r.year} ${r.event}: ${r.detail}`)
+
+    /*
+     * The absence, stated — and stated carefully.
+     *
+     * A record showing only NCHSAA is the single most useful signal a college coach can get
+     * from this page, so it should not go unsaid. But it is a fact about our records, not
+     * about the wrestler: we ingest NHSCA, Fargo, Super 32, Journeymen and I-64, and we do
+     * not ingest Beast of the East, Ironman or Powerade. Writing "does not compete
+     * nationally" would invent an absence the same way the NHSCA line once invented a
+     * placement.
+     */
+    if (!report.results.some((r) => isNationalEvent(r.event))) {
+      lines.push(
+        "",
+        "National results: none on file. Say that no national results are on file and that the" +
+          " record here is North Carolina in-season competition. Do NOT write that they do not" +
+          " compete nationally — our records do not cover every national event.",
+      )
+    }
   }
   if (report.significantWins.length) {
     lines.push("", "Wins over nationally ranked, NC state-ranked or Tournament of Champions wrestlers:")
@@ -654,7 +693,9 @@ export const SUMMARY_SYSTEM_PROMPT = `You write short scouting summaries for col
 
 Say things in this order, skipping anything the facts do not contain:
 1. Who they are: name, class year, high school and club, in one clause.
-2. National results first — NHSCA, Fargo, Super 32, Journeymen and other out-of-state events.
+2. National and out-of-state results first — NHSCA Nationals, Fargo, Super 32 (and Super 32
+   Early Entry), Journeymen and I-64 Spring Duals — then North Carolina events, NCHSAA States
+   and the Tournament of Champions. Name the tournament exactly as the facts name it.
    Give the weight, the record, and the placement ONLY when the facts state one. A line reading
    "did not place" means exactly that: report the record and say they did not place. Never
    supply a placement, an All-American finish or a podium the facts do not contain.
