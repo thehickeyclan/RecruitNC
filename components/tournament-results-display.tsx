@@ -817,6 +817,7 @@ export function TournamentResultsDisplay({
         <CardContent className={contentClass}>
           {nchsaaCards}
           {nchsaaTable}
+          {nchsaaBoutDetails}
         </CardContent>
       </Card>
     )
