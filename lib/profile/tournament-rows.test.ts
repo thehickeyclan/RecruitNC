@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { buildNchsaaStateRows } from "@/lib/profile/tournament-rows"
+import { buildNchsaaStateRows, inferNchsaaStateRounds } from "@/lib/profile/tournament-rows"
 
 describe("buildNchsaaStateRows", () => {
   it("uses the same expandable tournament-row shape as TOC", () => {
@@ -19,5 +19,37 @@ describe("buildNchsaaStateRows", () => {
     })
     expect(rows[0].bouts).toHaveLength(2)
     expect(rows[0].bouts.map((bout) => bout.win)).toEqual([true, false])
+  })
+})
+
+describe("inferNchsaaStateRounds", () => {
+  it("labels a finalist's ordered path quarterfinal, semifinal, final", () => {
+    const bout = (outcome: "W" | "L") => ({
+      year: 2026,
+      date: "2/21/2026",
+      weight: "113",
+      opponent: "Opponent",
+      opponentSchool: null,
+      outcome,
+      method: "Dec",
+    })
+    expect(inferNchsaaStateRounds(2, [bout("W"), bout("W"), bout("L")])).toEqual([
+      "Quarter-Finals",
+      "Semi-Finals",
+      "Finals",
+    ])
+  })
+
+  it("does not invent early rounds when the finish does not prove the path", () => {
+    const bouts = [{
+      year: 2026,
+      date: "2/21/2026",
+      weight: "113",
+      opponent: "Opponent",
+      opponentSchool: null,
+      outcome: "L" as const,
+      method: "Dec",
+    }]
+    expect(inferNchsaaStateRounds(null, bouts)).toEqual(["State Championships"])
   })
 })

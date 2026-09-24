@@ -61,6 +61,55 @@ function statePlacement(place: number | null | undefined): string | null {
   return `${place}th`
 }
 
+/**
+ * RankWrestler does not export a round field for States. The finish and ordered path still prove
+ * some round names: a finalist's final bout is Finals, the win before it is Semi-Finals, and so
+ * on. Consolation placement bouts are likewise explicit. Anything the path does not prove stays
+ * "State Championships" rather than receiving a guessed bracket round.
+ */
+export function inferNchsaaStateRounds(
+  place: number | null | undefined,
+  bouts: NchsaaStateBout[],
+): string[] {
+  const labels = bouts.map(() => "State Championships")
+  if (bouts.length === 0) return labels
+  const last = bouts.length - 1
+
+  if (place === 1 || place === 2) {
+    const championshipPath = ["Finals", "Semi-Finals", "Quarter-Finals", "Round of 16", "Round of 32"]
+    for (let offset = 0; offset < bouts.length && offset < championshipPath.length; offset += 1) {
+      labels[last - offset] = championshipPath[offset]!
+    }
+    return labels
+  }
+
+  if (place === 3 || place === 4) {
+    labels[last] = "3rd Place"
+    if (last >= 1) labels[last - 1] = "Consi-Semis"
+    // The last loss before the consolation semifinal is the championship semifinal loss.
+    for (let index = last - 2; index >= 0; index -= 1) {
+      if (bouts[index]!.outcome === "L") {
+        labels[index] = "Semi-Finals"
+        let winnerRound = "Quarter-Finals"
+        for (let earlier = index - 1; earlier >= 0; earlier -= 1) {
+          labels[earlier] = winnerRound
+          winnerRound = winnerRound === "Quarter-Finals" ? "Round of 16" : "Round of 32"
+        }
+        break
+      }
+    }
+    return labels
+  }
+
+  if (place === 5 || place === 6) {
+    labels[last] = "5th Place"
+    if (last >= 1) labels[last - 1] = "Consi Quarter-Finals"
+  } else if (place === 7 || place === 8) {
+    labels[last] = "7th Place"
+  }
+  return labels
+}
+
 /** State results in the exact same summary-row + expandable-bouts shape as TOC. */
 export function buildNchsaaStateRows(
   results: NchsaaSummaryResult[],
@@ -69,6 +118,7 @@ export function buildNchsaaStateRows(
   return results
     .map((result, index) => {
       const bouts = stateBouts.filter((bout) => bout.year === result.year)
+      const rounds = inferNchsaaStateRounds(result.place, bouts)
       const wins = bouts.filter((bout) => bout.outcome === "W").length
       return {
         id: `nchsaa-states-${result.year}-${result.classification}-${result.weight_class}-${index}`,
@@ -86,7 +136,7 @@ export function buildNchsaaStateRows(
           eventName: "NCHSAA State Championships",
           year: result.year,
           weight: bout.weight ?? result.weight_class,
-          round: bout.date ?? "",
+          round: rounds[boutOrder] ?? "State Championships",
           boutOrder,
           opponentName: bout.opponent,
           opponentClub: bout.opponentSchool,
