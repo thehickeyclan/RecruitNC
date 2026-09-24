@@ -561,7 +561,9 @@ export function ScoutingReportDocument({
             */}
             <div
               className={cn(
-                "mt-3 rounded border p-3",
+                // Never split. It is a verdict: a grade and half its reasons on one page with
+                // the rest overleaf reads as two different findings. Small enough to move whole.
+                "mt-3 break-inside-avoid rounded border p-3",
                 report.strengthOfCompetition.grade.band === "green" && "border-emerald-300 bg-emerald-50",
                 report.strengthOfCompetition.grade.band === "amber" && "border-amber-300 bg-amber-50",
                 report.strengthOfCompetition.grade.band === "orange" && "border-orange-300 bg-orange-50",
