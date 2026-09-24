@@ -533,6 +533,21 @@ function rankWrestlerPoints(rank: number | null): number {
  */
 const QUALIFIER_WEIGHT = 0.6
 
+/**
+ * The Tournament of Champions is not a qualifier.
+ *
+ * It arrives in the same bundle as Super 32 Early Entry and the GA/VA legs, so it was being
+ * discounted to 0.6 alongside them — a TOC title scored as though it were a regional feeder.
+ * It is the deepest field assembled in North Carolina all year, by invitation, and it is the
+ * one event where this class wrestles each other: Tyton Kostoff went through Jake Amiott,
+ * Joseph Shook and Cayden Laws to win it and sat at #9 afterwards.
+ *
+ * Scored at full weight, like NHSCA and Super 32. Not more — the field is state-deep rather
+ * than nationally deep — but not less either.
+ */
+const TOC_EVENT = /tournament of champions/i
+const TOC_WEIGHT = 1
+
 function evidenceToneForPlace(place: number): RankingEvidence["tone"] {
   if (place === 1) return "gold"
   if (place <= 3) return "blue"
@@ -905,8 +920,10 @@ export async function buildRecruitNcRankingBoard({
       // series). Real out-of-state fields, so they count toward the national résumé — but
       // discounted against Super 32 / NHSCA / Fargo themselves, which are the deeper brackets.
       for (const result of bundle.other || []) {
+        const isToc = TOC_EVENT.test(String(result.eventShortName ?? result.eventName ?? ""))
+        const weight = isToc ? TOC_WEIGHT : QUALIFIER_WEIGHT
         const points = Math.round(
-          (placementPoints(result.placement) + recordWinPctPoints(result.record)) * QUALIFIER_WEIGHT,
+          (placementPoints(result.placement) + recordWinPctPoints(result.record)) * weight,
         )
         national += points
         const details = [
