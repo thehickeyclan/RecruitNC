@@ -145,13 +145,22 @@ async function getUnlinkedRowsByAthleteName(
   const rows: Record<string, unknown>[] = []
   const seen = new Set<string>()
   for (const name of athleteLookupNames(athlete)) {
-    const { data, error } = await supabase
+    const query = supabase
       .from(table)
       .select("*")
       .is("athlete_id", null)
       .ilike("athlete_name", name)
+    // Name-only recovery is intentionally limited to approved rows. Imports such as NHSCA
+    // National Duals retain plausible matches as `needs_review`; those rows must remain useful
+    // to an administrator without silently becoming profile, Data Dawg, or ranking evidence.
+    const { data, error } = await query
     if (error) continue
     for (const row of (data ?? []) as Record<string, unknown>[]) {
+      if (
+        table === "other_tournament_results" &&
+        row.verification_status != null &&
+        String(row.verification_status).toLowerCase() !== "verified"
+      ) continue
       // Result rows are unique per event/weight; bout rows additionally need their order.
       const key = [row.event_key, row.weight_class, row.bout_order ?? "result"].join("|")
       if (seen.has(key)) continue
@@ -202,9 +211,16 @@ export async function getOtherTournamentBoutsForAthleteRecord(
 ): Promise<OtherTournamentBout[]> {
   const athleteId = String(athlete.id ?? "").trim()
   const linked = await getOtherTournamentBoutsForAthlete(supabase, athleteId)
-  const rows = await getUnlinkedRowsByAthleteName(supabase, "other_tournament_bouts", athlete)
+  const [rows, verifiedResults] = await Promise.all([
+    getUnlinkedRowsByAthleteName(supabase, "other_tournament_bouts", athlete),
+    getUnlinkedRowsByAthleteName(supabase, "other_tournament_results", athlete),
+  ])
+  const verifiedKeys = new Set(verifiedResults.map((row) => `${row.event_key}|${row.weight_class}`))
   const merged = new Map(linked.map((row) => [`${row.eventKey}|${row.weight}|${row.boutOrder}`, row]))
-  for (const row of rows.map(toBout)) merged.set(`${row.eventKey}|${row.weight}|${row.boutOrder}`, row)
+  for (const row of rows.map(toBout)) {
+    if (!verifiedKeys.has(`${row.eventKey}|${row.weight}`)) continue
+    merged.set(`${row.eventKey}|${row.weight}|${row.boutOrder}`, row)
+  }
   return [...merged.values()].sort((a, b) => a.boutOrder - b.boutOrder)
 }
 

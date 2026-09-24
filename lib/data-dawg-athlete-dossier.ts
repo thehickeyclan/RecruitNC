@@ -175,7 +175,7 @@ async function gatherAthleteDossierData(athleteId: string) {
   const yearMin = hasValidGrad ? gradYear - 4 : 1990
   const yearMax = hasValidGrad ? gradYear + 1 : 2035
 
-  const [{ nchsaa: nchsaaMerged, nhsca: nhscaDisplay, super32, fargo }, ncUnited] = await Promise.all([
+  const [{ nchsaa: nchsaaMerged, nhsca: nhscaDisplay, super32, fargo, other }, ncUnited] = await Promise.all([
     loadAthleteTournamentBundle(supabase, athlete, { nhscaAllTime: true }),
     loadNcUnitedResultsForNameSearch(supabase, nameForQueries, {
       highSchool: highSchool || undefined,
@@ -387,6 +387,7 @@ async function gatherAthleteDossierData(athleteId: string) {
       nhscaDisplay,
       super32Rows,
       fargoRows,
+      other,
       ncUnited,
       stateDualLines,
       mowFiltered,
@@ -421,6 +422,7 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     nhscaDisplay,
     super32Rows,
     fargoRows,
+    other,
     ncUnited,
     stateDualLines,
     mowFiltered,
@@ -533,6 +535,15 @@ export async function buildAthleteDossierMarkdown(athleteId: string): Promise<{ 
     lines.push(national)
   }
 
+  if (other.length > 0) {
+    lines.push("")
+    lines.push("Other verified national and open tournament results:")
+    for (const result of [...other].sort((a, b) => String(b.eventDate ?? b.year).localeCompare(String(a.eventDate ?? a.year)))) {
+      const weight = result.weight ? ` at ${result.weight} lbs` : ""
+      lines.push(`- ${result.year} ${result.eventShortName}: ${result.record}${weight}`)
+    }
+  }
+
   if (daveFiltered.length > 0) {
     lines.push("")
     lines.push("Dave Schultz High School Excellence Award:")
@@ -613,6 +624,7 @@ export type AthleteFacts = {
   nhsca: Array<{ year: number; placement: string | null; record: string | null; division: string | null }>
   super32: Array<{ year: number; placement: string | null; record: string | null; division: string | null }>
   fargo: Array<{ year: number; placement: string | null; record: string | null; division: string | null }>
+  other_tournaments: Array<{ year: number; event: string; record: string; weight: string | null }>
   nc_united: Array<{ year: number | null; event: string | null; record: string | null }>
   awards: Array<{ year: number; award: string }>
   record_book: Array<{ scope: string; rank: number | null; record: string | null; years: string | null; school: string | null }>
@@ -722,6 +734,7 @@ export async function buildAthleteFacts(
     nhscaDisplay,
     super32Rows,
     fargoRows,
+    other,
     ncUnited,
     mowFiltered,
     daveFiltered,
@@ -827,6 +840,12 @@ export async function buildAthleteFacts(
     nhsca: tournamentRows(nhscaDisplay),
     super32: tournamentRows(super32Rows),
     fargo: tournamentRows(fargoRows),
+    other_tournaments: other.map((result) => ({
+      year: result.year,
+      event: result.eventShortName,
+      record: result.record,
+      weight: tidy(result.weight),
+    })),
     nc_united: ncUnited
       .filter((e) => !e.isPlaceholder)
       .map((e) => ({

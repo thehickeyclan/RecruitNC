@@ -1,5 +1,6 @@
 import type { AthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import type { TournamentResultForDisplay } from "@/lib/public-profile-data"
+import type { OtherTournamentResult } from "@/lib/other-tournaments"
 
 /** Prefer tournament record over generic "Participated" when there is no real placement. */
 export function formatNhscaLabelForDataDawg(r: TournamentResultForDisplay): string {
@@ -52,11 +53,20 @@ export function formatFargoLineForDataDawg(r: TournamentResultForDisplay): strin
   return `- ${r.year}: ${label}${divW ? ` (${divW})` : ""}`
 }
 
+export function formatOtherTournamentLineForDataDawg(r: OtherTournamentResult): string {
+  const details = [r.record ? `${r.record} record` : null, r.placement ? `placed ${r.placement}` : null]
+    .filter(Boolean)
+    .join(", ")
+  const weight = r.weight ? `, ${String(r.weight).replace(/lbs?$/i, "").trim()} lbs` : ""
+  return `- ${r.year} ${r.eventShortName}: ${details || "Competed"}${weight}`
+}
+
 /** Compact NHSCA + Super32 + Fargo block for search_athletes / tool JSON. */
 export function buildDataDawgTournamentSummary(bundle: AthleteTournamentBundle): {
   nhsca: string[]
   super32: string[]
   fargo: string[]
+  other: string[]
   note: string
 } {
   const nhsca = [...bundle.nhsca]
@@ -68,11 +78,15 @@ export function buildDataDawgTournamentSummary(bundle: AthleteTournamentBundle):
   const fargo = [...bundle.fargo]
     .sort((a, b) => b.year - a.year)
     .map(formatFargoLineForDataDawg)
+  const other = [...bundle.other]
+    .sort((a, b) => String(b.eventDate ?? b.year).localeCompare(String(a.eventDate ?? a.year)))
+    .map(formatOtherTournamentLineForDataDawg)
   return {
     nhsca,
     super32,
     fargo,
+    other,
     note:
-      "Merged from nhsca_placements + wrestling_nhsca_results + super32_results + fargo_results tables and profile JSON. Prefer this over nhsca_results / super32_results JSON columns alone (those may say Participated while tables have full records).",
+      "Merged from verified NHSCA, Super32, Fargo, and other tournament result stores plus profile JSON. `other` includes linked or verified results such as NHSCA National Duals; review-only rows are excluded. Prefer this summary over profile JSON columns alone.",
   }
 }

@@ -600,7 +600,7 @@ export async function toolSearchAthletes(args: {
     rows: enrichedRows,
     searched_for: q,
     tournament_summary_note:
-      "Rows are slim identity fields plus `profile_url`. The top match may include `tournament_summary` (merged NHSCA + Super32 + Fargo). Prefer that over inventing results. For the full report call `get_athlete_full_dossier` on the chosen `id`. Athlete answers: name is the profile hyperlink at the top, then High School / College commit, then results. No ### headings.",
+      "Rows are slim identity fields plus `profile_url`. The top match may include `tournament_summary` (merged NHSCA + Super32 + Fargo + verified other tournaments, including NHSCA National Duals). Prefer that over inventing results. For the full report call `get_athlete_full_dossier` on the chosen `id`. Athlete answers: name is the profile hyperlink at the top, then High School / College commit, then results. No ### headings.",
     ...(disambiguation.length
       ? {
           disambiguation,

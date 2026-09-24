@@ -537,6 +537,7 @@ function rankWrestlerPoints(rank: number | null): number {
  * Super 32 Early Entry is a strong signal, but it is not placing at Super 32.
  */
 const QUALIFIER_WEIGHT = 0.6
+const NATIONAL_DUALS_WEIGHT = 0.8
 
 /**
  * The Tournament of Champions is not a qualifier.
@@ -926,7 +927,8 @@ export async function buildRecruitNcRankingBoard({
       // discounted against Super 32 / NHSCA / Fargo themselves, which are the deeper brackets.
       for (const result of bundle.other || []) {
         const isToc = TOC_EVENT.test(String(result.eventShortName ?? result.eventName ?? ""))
-        const weight = isToc ? TOC_WEIGHT : QUALIFIER_WEIGHT
+        const isNationalDuals = /nhsca\s+national\s+duals/i.test(String(result.eventShortName ?? result.eventName ?? ""))
+        const weight = isToc ? TOC_WEIGHT : isNationalDuals ? NATIONAL_DUALS_WEIGHT : QUALIFIER_WEIGHT
         const points = Math.round(
           (placementPoints(result.placement) + recordWinPctPoints(result.record)) * weight,
         )
@@ -939,7 +941,7 @@ export async function buildRecruitNcRankingBoard({
           .filter(Boolean)
           .join(" · ")
         evidence.push({
-          kind: "national",
+          kind: isNationalDuals ? "duals" : "national",
           label: `${result.year} ${result.eventShortName}${details ? `: ${details}` : ""}`.trim(),
           points: points || undefined,
           tone: result.placement ? evidenceToneForPlace(result.placement) : "purple",
