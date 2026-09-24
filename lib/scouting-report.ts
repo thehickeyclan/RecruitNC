@@ -285,6 +285,21 @@ const EVENT_MONTH: Record<string, number> = {
 }
 
 /**
+ * Venues that are not North Carolina in-season wrestling.
+ *
+ * The match import is pasted from a wrestler's match history and is overwhelmingly the NC
+ * season — duals, tris, invitationals and the NCHSAA postseason. But a few post-season bouts
+ * ride along: Adam Walker's 58 "season" bouts include three from Interstate 64 Spring Duals in
+ * March. Leaving them in made a line labelled in-season quietly untrue, and double-counted
+ * bouts the tournament tables already print above.
+ */
+const NON_SEASON_VENUE = /nhsca|fargo|super\s*32|journeymen|i-?64|interstate\s*64|tournament of champions/i
+
+export function isInSeasonBout(bout: { venue?: unknown }): boolean {
+  return !NON_SEASON_VENUE.test(String(bout?.venue ?? ""))
+}
+
+/**
  * A sortable key for a result: its real date where one exists, otherwise the month the event
  * runs in. Annual events publish only a year, and guessing mid-year reorders a season.
  */
@@ -535,7 +550,7 @@ export async function buildScoutingReport(
   const seasonStrengthSeason =
     String((latestSeasonRows[0] as { season?: unknown } | undefined)?.season ?? "").trim() || null
 
-  const seasonBouts: Bout[] = latestSeasonRows.flatMap((row) => {
+  const allSeasonBouts: Bout[] = latestSeasonRows.flatMap((row) => {
     try {
       const value = (row as { matches?: unknown }).matches
       return Array.isArray(value) ? value : JSON.parse(String(value ?? "[]"))
@@ -543,7 +558,13 @@ export async function buildScoutingReport(
       return []
     }
   })
-  const bouts: Bout[] = [...seasonBouts, ...qualifierBouts]
+  /*
+   * Significant wins still consider every imported bout — a win over a ranked opponent at I-64
+   * is a real win and belongs in that list. Only the record line is narrowed, because that one
+   * is labelled in-season.
+   */
+  const seasonBouts: Bout[] = allSeasonBouts.filter(isInSeasonBout)
+  const bouts: Bout[] = [...allSeasonBouts, ...qualifierBouts]
 
   const lastCompeted = (
     athlete as {
@@ -771,8 +792,10 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
       const label = report.seasonStrengthSeason ? `${report.seasonStrengthSeason} ` : ""
       lines.push(
         "",
-        `${label}high school season: ${report.seasonStrength.wins}-${report.seasonStrength.losses}` +
-          ` across ${report.seasonStrength.bouts} bouts.`,
+        `${label}in-season record: ${report.seasonStrength.wins}-${report.seasonStrength.losses}` +
+          ` across ${report.seasonStrength.bouts} bouts — duals, invitationals and the NCHSAA` +
+          ` postseason. National and post/preseason events are the tournament results above and` +
+          ` are not in this number.`,
       )
     }
 

@@ -290,8 +290,11 @@ export function ScoutingReportDocument({
 
           <dl className="w-[2.9in] shrink-0 border border-gray-300 bg-[#f7f8fa] px-3 py-2 text-[11px] leading-tight">
             <Vital label="Class" value={identity.graduationYear ? String(identity.graduationYear) : null} />
-            <Vital label="Weight" value={identity.weightClass ? `${identity.weightClass} lbs` : null} />
-            <Vital label="Last competed" value={lastCompetedLine(identity)} />
+            {/* "Weight" on its own read as the weight he wrestles. It is the weight he is
+                listed at, which is often not the same — naming both stops the reader guessing
+                which of the two they are looking at. */}
+            <Vital label="Listed weight" value={identity.weightClass ? `${identity.weightClass} lbs` : null} />
+            <Vital label="Last competed weight" value={lastCompetedLine(identity)} />
             {/* Sits with the two real weights, since the three together are the honest picture:
                 what he is listed at, what he last made, and where he thinks he lands. */}
             <Vital
@@ -455,11 +458,13 @@ export function ScoutingReportDocument({
             */}
             <Table head={["Measure", "Value", "Basis"]} widths={["12rem", "6.5rem", "auto"]}>
               <tr className="border-t border-gray-200">
-                <Td bold>Season record</Td>
+                <Td bold>In-season record</Td>
                 <Td mono>{`${report.seasonStrength.wins}-${report.seasonStrength.losses}`}</Td>
                 <Td>
-                  {report.seasonStrength.bouts} imported bouts
-                  {report.seasonStrengthSeason ? `, ${report.seasonStrengthSeason} season` : ""}
+                  {report.seasonStrength.bouts} bouts
+                  {report.seasonStrengthSeason ? ` in the ${report.seasonStrengthSeason} season` : ""} — duals, tris,
+                  invitationals and the NCHSAA postseason. National and post/preseason events are listed under
+                  Competition record, not counted here.
                 </Td>
               </tr>
               <tr className="border-t border-gray-200">

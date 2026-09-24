@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { buildResultRows, eventSortKey, isNationalEvent, seasonContext, stripSeasonFraming, weightProgression, mapAcademics, mapCareerRecord, mapContact, summaryFacts, unsupportedSummaryClaims,
+import { buildResultRows, eventSortKey, isInSeasonBout, isNationalEvent, seasonContext, stripSeasonFraming, weightProgression, mapAcademics, mapCareerRecord, mapContact, summaryFacts, unsupportedSummaryClaims,
   stripUnsupportedSentences,
 } from "@/lib/scouting-report"
 
@@ -476,5 +476,35 @@ describe("eventSortKey", () => {
 
   it("keeps an unknown event inside its own year", () => {
     expect(eventSortKey("Some New Open", 2026, null)).toBe("2026-12-31")
+  })
+})
+
+describe("isInSeasonBout", () => {
+  const at = (venue: string) => isInSeasonBout({ venue })
+
+  it("keeps North Carolina in-season wrestling", () => {
+    // All real venues from Adam Walker's 2025-26 import.
+    expect(at("Red Wolf Invitational")).toBe(true)
+    expect(at("NCHSAA 7A East Regional")).toBe(true)
+    expect(at("NCHSAA State Championships")).toBe(true)
+    expect(at("Cougar Duals")).toBe(true)
+    expect(at("Tri w/ Holly Springs and Felton Grove")).toBe(true)
+    expect(at("Dual")).toBe(true)
+  })
+
+  it("drops the post and preseason bouts that ride along in the import", () => {
+    // Walker's 58 "season" bouts included three from I-64 in March, which made a line labelled
+    // in-season untrue and double-counted results the tournament table already prints.
+    expect(at("Interstate 64 Spring Duals")).toBe(false)
+    expect(at("NHSCA Nationals")).toBe(false)
+    expect(at("Super 32")).toBe(false)
+    expect(at("Fargo")).toBe(false)
+    expect(at("Journeymen Fall Classic")).toBe(false)
+    expect(at("NC United Tournament of Champions")).toBe(false)
+  })
+
+  it("keeps a bout with no venue rather than discarding a record", () => {
+    expect(isInSeasonBout({})).toBe(true)
+    expect(at("")).toBe(true)
   })
 })
