@@ -22,15 +22,28 @@ async function requireAdmin() {
 }
 
 async function loadAthletesForMatch(admin: ReturnType<typeof createAdminClient>): Promise<AthleteForWiqMatch[]> {
-  const { data } = await admin
+  /*
+   * `firstName` and `lastName`, not `firstname` and `lastname`.
+   *
+   * This asked for both spellings. There is no lowercase pair on `athletes`, so PostgREST
+   * rejected the whole select, `data` came back null, `(data ?? [])` turned that into an empty
+   * list, and every WrestlingIQ row imported as unmatched — for months. The screen looked like
+   * it worked: statuses updated, counts moved, and not one subscription ever found its wrestler.
+   *
+   * The error is read now. An import that cannot see the athletes should fail, not quietly
+   * decide that none of them exist.
+   */
+  const { data, error } = await admin
     .from("athletes")
-    .select("id, name, firstname, lastname, firstName, lastName, highschool, graduationyear")
+    .select("id, name, firstName, lastName, highschool, graduationyear")
     .limit(15000)
+
+  if (error) throw new Error(`Could not load athletes for matching: ${error.message}`)
 
   return (data ?? []).map((a) => {
     const row = a as Record<string, unknown>
-    const first = String(row.firstname ?? row.firstName ?? "").trim()
-    const last = String(row.lastname ?? row.lastName ?? "").trim()
+    const first = String(row.firstName ?? "").trim()
+    const last = String(row.lastName ?? "").trim()
     const name = String(row.name ?? "").trim() || [first, last].filter(Boolean).join(" ")
     const gy = row.graduationyear
     return {
