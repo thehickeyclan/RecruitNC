@@ -2,10 +2,9 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowLeft, Trophy } from "lucide-react"
+import { ArrowLeft, Medal, Trophy } from "lucide-react"
 import { AthleteDetail } from "@/components/athlete-detail"
-import { TournamentAccordion, buildTournamentRows, isTocRow } from "@/components/profile/tournament-accordion"
-import { TournamentResultsDisplay } from "@/components/tournament-results-display"
+import { TournamentAccordion, buildNchsaaStateRows, buildTournamentRows, isTocRow } from "@/components/profile/tournament-accordion"
 import { ProfileViewTracker } from "@/components/profile-view-tracker"
 import { useAuth } from "@/contexts/auth-context"
 import type { PublicAthleteProfile } from "@/lib/load-public-athlete-profile"
@@ -75,6 +74,7 @@ export function ViewProfileClient({
     fargoResults: fargoResults as never[],
     nationalTeamResults: nationalTeamResults as never[],
   })
+  const stateTournamentRows = buildNchsaaStateRows(nchsaaResults, nchsaaStateBouts)
   const athleteName = String(athlete.name ?? "Athlete")
 
   return (
@@ -116,7 +116,7 @@ export function ViewProfileClient({
         <AthleteDetail
           theme="dark"
           mobileRecruiterLayout
-          athlete={athlete as Parameters<typeof AthleteDetail>[0]["athlete"]}
+          athlete={athlete as unknown as Parameters<typeof AthleteDetail>[0]["athlete"]}
           nchsaaResults={nchsaaResults.map((r) => ({
             ...r,
             place: r.place ?? 0,
@@ -125,12 +125,14 @@ export function ViewProfileClient({
           tournamentResultsComponent={
             <div className="w-full min-w-0 max-w-full space-y-6">
               {/* States on its own, everything else as one collapsed list. See tournament-accordion. */}
-              <TournamentResultsDisplay
-                nchsaaResults={nchsaaResults}
-                nchsaaStateBouts={nchsaaStateBouts}
-                statesOnly
-                alwaysShowStructure={true}
+              <TournamentAccordion
+                rows={stateTournamentRows}
                 theme="dark"
+                sectionId="nchsaa-states"
+                icon={Medal}
+                title="State Championships"
+                subtitle="North Carolina high school state tournament results"
+                emptyText="No NCHSAA state results recorded"
               />
               <TournamentAccordion
                 theme="dark"

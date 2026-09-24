@@ -23,6 +23,7 @@ import { cn, scrollTableXClass } from "@/lib/utils"
 import { PROFILE_SECTION_HEADER, PROFILE_SECTION_TITLE } from "@/lib/unified-profile-section-styles"
 import { displayName, type OtherTournamentProfileBlock } from "@/lib/other-tournaments"
 import {
+  buildNchsaaStateRows,
   buildTournamentRows,
   isTocRow,
   type AccordionSummaryResult,
@@ -30,7 +31,7 @@ import {
   type TournamentRow,
 } from "@/lib/profile/tournament-rows"
 
-export { buildTournamentRows, isTocRow }
+export { buildNchsaaStateRows, buildTournamentRows, isTocRow }
 export type { AccordionSummaryResult, NationalTeamEntry, TournamentRow }
 
 function BoutTable({ bouts, isDark }: { bouts: TournamentRow["bouts"]; isDark: boolean }) {
@@ -52,7 +53,12 @@ function BoutTable({ bouts, isDark }: { bouts: TournamentRow["bouts"]; isDark: b
             <TableRow key={`${bout.round}-${index}`} className={bodyRow}>
               <TableCell className="whitespace-nowrap">{bout.round || "—"}</TableCell>
               <TableCell className="whitespace-nowrap font-mono">
-                <span className={bout.win ? "text-emerald-400 font-semibold" : isDark ? "text-white/50" : "text-gray-500"}>
+                <span
+                  className={cn(
+                    "inline-flex min-w-6 justify-center rounded px-1.5 py-0.5 text-[11px] font-bold text-white",
+                    bout.win ? "bg-emerald-600" : "bg-red-700",
+                  )}
+                >
                   {bout.win ? "W" : "L"}
                 </span>{" "}
                 {[bout.winType, bout.score].filter(Boolean).join(" ")}

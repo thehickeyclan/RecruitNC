@@ -10,6 +10,7 @@
  */
 import { displayName, placementLabel, type OtherTournamentProfileBlock } from "@/lib/other-tournaments"
 import { parseFargoDivisionString } from "@/lib/fargo-division"
+import type { NchsaaStateBout } from "@/lib/nchsaa-state-bouts"
 
 export type AccordionSummaryResult = {
   year: number
@@ -43,6 +44,61 @@ export type TournamentRow = {
   record: string | null
   entrants: number | null
   bouts: OtherTournamentProfileBlock["bouts"]
+}
+
+export type NchsaaSummaryResult = {
+  year: number
+  place: number | null | undefined
+  classification: string
+  weight_class: string
+}
+
+function statePlacement(place: number | null | undefined): string | null {
+  if (place == null || place === 0) return "State Qualifier"
+  if (place === 1) return "Champion"
+  if (place === 2) return "2nd"
+  if (place === 3) return "3rd"
+  return `${place}th`
+}
+
+/** State results in the exact same summary-row + expandable-bouts shape as TOC. */
+export function buildNchsaaStateRows(
+  results: NchsaaSummaryResult[],
+  stateBouts: NchsaaStateBout[],
+): TournamentRow[] {
+  return results
+    .map((result, index) => {
+      const bouts = stateBouts.filter((bout) => bout.year === result.year)
+      const wins = bouts.filter((bout) => bout.outcome === "W").length
+      return {
+        id: `nchsaa-states-${result.year}-${result.classification}-${result.weight_class}-${index}`,
+        event: `NCHSAA ${result.classification} State Championships`,
+        team: null,
+        isDuals: false,
+        year: result.year,
+        sortKey: `${result.year}-02-21`,
+        weight: result.weight_class || null,
+        placement: statePlacement(result.place),
+        record: bouts.length ? `${wins}-${bouts.length - wins}` : null,
+        entrants: null,
+        bouts: bouts.map((bout, boutOrder) => ({
+          eventKey: `nchsaa-states-${result.year}`,
+          eventName: "NCHSAA State Championships",
+          year: result.year,
+          weight: bout.weight ?? result.weight_class,
+          round: bout.date ?? "",
+          boutOrder,
+          opponentName: bout.opponent,
+          opponentClub: bout.opponentSchool,
+          opponentAthleteId: null,
+          win: bout.outcome === "W",
+          isBye: false,
+          winType: bout.method ?? "",
+          score: "",
+        })),
+      } satisfies TournamentRow
+    })
+    .sort((a, b) => b.year - a.year)
 }
 
 /** Duals name themselves: no export we take carries a flag for it. */
