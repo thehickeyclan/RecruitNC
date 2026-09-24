@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getBlueMembershipStripeDetails, type BlueStripeInvoiceRow } from "@/lib/blue-membership-stripe-details"
+import { getWiqSubscriptionsForParent, type ParentWiqSubscription } from "@/lib/blue-wiq-for-parent"
 
 export const dynamic = "force-dynamic"
 
@@ -32,6 +33,7 @@ type BlueMembershipForParent = {
 }
 
 export type { BlueStripeInvoiceRow } from "@/lib/blue-membership-stripe-details"
+export type { ParentWiqSubscription } from "@/lib/blue-wiq-for-parent"
 
 /** GET: List Blue memberships where the current user is the payer — with billing details when Stripe is available. */
 export async function GET(request: NextRequest) {
@@ -64,13 +66,21 @@ export async function GET(request: NextRequest) {
     .not("stripe_subscription_id", "is", null)
     .order("started_at", { ascending: false })
 
+  /*
+   * The legacy cohort bills through WrestlingIQ, not Stripe, so none of it appears above. Those
+   * parents opened this page and saw nothing at all — a family paying $51 a month for years with
+   * no subscription on their profile. They are read-only here: we cannot change a WrestlingIQ
+   * subscription from this app, and the panel says so rather than offering a button that lies.
+   */
+  const wiqSubscriptions = await getWiqSubscriptionsForParent(admin, user.id).catch(() => [])
+
   if (error) {
-    if (error.code === "42P01") return NextResponse.json({ memberships: [] })
+    if (error.code === "42P01") return NextResponse.json({ memberships: [], wiqSubscriptions })
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
   if (!rows?.length) {
-    return NextResponse.json({ memberships: [] })
+    return NextResponse.json({ memberships: [], wiqSubscriptions })
   }
 
   const athleteIds = [...new Set(rows.map((r) => r.athlete_id))]
@@ -154,5 +164,5 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  return NextResponse.json({ memberships })
+  return NextResponse.json({ memberships, wiqSubscriptions })
 }

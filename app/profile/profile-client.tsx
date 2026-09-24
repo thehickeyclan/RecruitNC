@@ -18,6 +18,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { NcUnitedBlueSection, type ParentBlueMembership } from "@/components/profile/nc-united-blue-section"
+import { WiqSubscriptionPanel } from "@/components/profile/wiq-subscription-panel"
+import type { ParentWiqSubscription } from "@/lib/blue-wiq-for-parent"
 import { ProfileFamilyTab } from "@/components/profile/profile-family-tab"
 import { ProfileFundraiseTab } from "@/components/profile/profile-fundraise-tab"
 import type { ProfileSpartanSupportersAthletePayload } from "@/app/api/profile/spartan-fundraising-supporters/route"
@@ -58,6 +60,7 @@ export function ProfileClient() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [blueMemberships, setBlueMemberships] = useState<ParentBlueMembership[]>([])
+  const [wiqSubscriptions, setWiqSubscriptions] = useState<ParentWiqSubscription[]>([])
   const [blueLoading, setBlueLoading] = useState(true)
   const [portalLoading, setPortalLoading] = useState<string | null>(null)
   const [blueBillingPortalError, setBlueBillingPortalError] = useState("")
@@ -371,10 +374,13 @@ export function ProfileClient() {
       if (res.ok) {
         const data = await res.json()
         setBlueMemberships((data.memberships ?? []) as ParentBlueMembership[])
+        // The legacy cohort bills through WrestlingIQ and has no Stripe membership at all.
+        setWiqSubscriptions((data.wiqSubscriptions ?? []) as ParentWiqSubscription[])
       }
       await fetch("/api/blue/resume-check", { method: "POST", credentials: "include" }).catch(() => {})
     } catch {
       setBlueMemberships([])
+      setWiqSubscriptions([])
     } finally {
       setBlueLoading(false)
     }
@@ -977,6 +983,10 @@ export function ProfileClient() {
         </TabsContent>
 
         <TabsContent value="blue" className="mt-0 space-y-6 focus-visible:outline-none">
+                {/* A WrestlingIQ family has no Stripe membership, so without this their
+                    subscription tab was empty and invited them to join something they
+                    already pay for. */}
+                <WiqSubscriptionPanel subscriptions={wiqSubscriptions} />
                 {blueLoading || blueMemberships.length > 0 ? (
                   <NcUnitedBlueSection
                     memberships={blueMemberships}
@@ -986,7 +996,7 @@ export function ProfileClient() {
                     onRefresh={fetchBlueMemberships}
                     billingPortalError={blueBillingPortalError || undefined}
                   />
-                ) : (
+                ) : wiqSubscriptions.length > 0 ? null : (
                   <Card className="bg-[#0F1E32] border-[#1e3a5f] shadow-md overflow-hidden">
                     <div className="h-1 w-full bg-gradient-to-r from-[#D3B574] to-[#c4a665]" aria-hidden />
                     <CardHeader>
