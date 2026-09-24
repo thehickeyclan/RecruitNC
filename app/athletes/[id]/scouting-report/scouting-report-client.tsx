@@ -103,6 +103,28 @@ export function ScoutingReportDocument({
     }
   }
 
+  /*
+   * The browser names a printed PDF after `document.title`, so every report downloaded as
+   * "Scouting report | RecruitNC | NC United Wrestling.pdf" — identical for every wrestler, in
+   * a folder where a recruiter is keeping thirty of them. The title is swapped for the
+   * wrestler's own and put back when the dialog closes.
+   *
+   * Restored on `afterprint` rather than a timer: the dialog blocks for as long as the coach
+   * takes, and a timer either fires while it is still open (renaming the file mid-save) or
+   * leaves the tab titled wrongly if they cancel.
+   */
+  const printReport = () => {
+    const previous = document.title
+    const safeName = report.identity.name.replace(/[\\/:*?"<>|]/g, " ").replace(/\s+/g, " ").trim()
+    document.title = safeName ? `${safeName} Scouting Report` : previous
+    const restore = () => {
+      document.title = previous
+      window.removeEventListener("afterprint", restore)
+    }
+    window.addEventListener("afterprint", restore)
+    window.print()
+  }
+
   const { identity, academics, membership, contact } = report
   const generated = new Date(report.generatedAt)
   const fileNumber = `NCU-${athleteId.slice(0, 8).toUpperCase()}`
@@ -118,12 +140,34 @@ export function ScoutingReportDocument({
       */}
       <style>{`
         @media print {
-          body * { visibility: hidden !important; }
-          #scouting-report, #scouting-report * { visibility: visible !important; }
+          /*
+           * Hide everything that is not this document, its ancestors, or inside it.
+           *
+           * The previous rule made the report \`position: absolute\`, which is why only the
+           * first page ever came out: an absolutely positioned box is out of flow, and a
+           * browser will not paginate it — everything past the first sheet was silently
+           * clipped. The report has to stay in normal flow to break across pages.
+           *
+           * Ancestors are kept (they are the layout chain) but stripped of the shell's spacing
+           * so the document still starts at the top of page one.
+           */
+          body *:not(:has(#scouting-report)):not(#scouting-report):not(#scouting-report *) {
+            display: none !important;
+          }
+          body:has(#scouting-report), body:has(#scouting-report) *:has(#scouting-report) {
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            background: #fff !important;
+            min-height: 0 !important;
+          }
           #scouting-report {
-            position: absolute !important;
-            left: 0; top: 0; width: 100%;
-            margin: 0 !important; box-shadow: none !important;
+            position: static !important;
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
+            box-shadow: none !important;
           }
           @page { margin: 0.45in; }
         }
@@ -160,7 +204,7 @@ export function ScoutingReportDocument({
               {copied ? "Link copied" : "Share"}
             </button>
             <button
-              onClick={() => window.print()}
+              onClick={printReport}
               className="inline-flex items-center gap-2 rounded-md bg-[#B31B1B] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8f1616]"
             >
               <Printer className="h-4 w-4" />
