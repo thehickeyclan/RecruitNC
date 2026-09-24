@@ -23,10 +23,10 @@ import {
   applyClubCorrections,
   buildAthleteIndex,
   matchAthlete,
+  parseTrackwrestlingBoutCsv,
   parseTournament,
   tidy,
   type MatchableAthlete,
-  type SourceBoutRow,
 } from "../lib/other-tournament-import"
 
 function loadEnv() {
@@ -63,75 +63,6 @@ const DRY_RUN = process.argv.includes("--dry-run")
  */
 const NO_PLACEMENTS = process.argv.includes("--no-placements")
 
-/**
- * Trackwrestling exports wrap every cell as `="value"` so spreadsheets keep the leading
- * zeros. Strip that, then parse as ordinary CSV.
- */
-function parseCsv(text: string): string[][] {
-  const rows: string[][] = []
-  let row: string[] = []
-  let cell = ""
-  let quoted = false
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i]
-    if (quoted) {
-      if (char === '"' && text[i + 1] === '"') {
-        cell += '"'
-        i++
-      } else if (char === '"') {
-        quoted = false
-      } else {
-        cell += char
-      }
-      continue
-    }
-    if (char === '"') quoted = true
-    else if (char === ",") {
-      row.push(cell)
-      cell = ""
-    } else if (char === "\n") {
-      row.push(cell)
-      rows.push(row)
-      row = []
-      cell = ""
-    } else if (char !== "\r") {
-      cell += char
-    }
-  }
-  if (cell || row.length) {
-    row.push(cell)
-    rows.push(row)
-  }
-  return rows.filter((r) => r.some((c) => c.trim()))
-}
-
-function unwrap(cell: string): string {
-  return tidy(cell.replace(/^=/, "").replace(/^"|"$/g, ""))
-}
-
-function toSourceRows(csvPath: string): SourceBoutRow[] {
-  const grid = parseCsv(fs.readFileSync(csvPath, "utf8"))
-  const header = (grid.shift() ?? []).map(unwrap)
-  const at = (row: string[], column: string) => {
-    const index = header.findIndex((h) => h.toLowerCase() === column.toLowerCase())
-    return index >= 0 ? unwrap(row[index] ?? "") : ""
-  }
-  return grid.map((row) => ({
-    date: at(row, "Date"),
-    weight: at(row, "Weight"),
-    round: at(row, "Round"),
-    winningWrestler: at(row, "Winning Wrestler"),
-    winningTeam: at(row, "Winning Team"),
-    result: at(row, "Result"),
-    winType: at(row, "Win Type"),
-    losingWrestler: at(row, "Losing Wrestler"),
-    losingTeam: at(row, "Losing Team"),
-    city: at(row, "City"),
-    state: at(row, "State"),
-    event: at(row, "Event"),
-  }))
-}
-
 async function main() {
   loadEnv()
 
@@ -144,7 +75,7 @@ async function main() {
   const gender = arg("gender", "M")
   const reportPath = process.argv.includes("--report") ? arg("report") : ""
 
-  const sourceRows = applyClubCorrections(toSourceRows(file), eventKey)
+  const sourceRows = applyClubCorrections(parseTrackwrestlingBoutCsv(fs.readFileSync(file, "utf8")), eventKey)
   const year = Number(arg("year", String(new Date(eventDate || sourceRows[0]?.date || "").getFullYear())))
   if (!Number.isFinite(year)) throw new Error("Could not determine event year — pass --year")
 

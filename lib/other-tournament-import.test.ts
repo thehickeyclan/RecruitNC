@@ -41,6 +41,17 @@ const MINI_BRACKET: SourceBoutRow[] = [
 ]
 
 describe("parseTournament", () => {
+  it("counts an opponent-less forfeit as a win but never counts a bye", () => {
+    const rows = [
+      bout({ winningWrestler: "Adam Walker", winningTeam: "Prestige - HSB", losingWrestler: "", losingTeam: "", winType: "FOR", result: "0-0" }),
+      bout({ winningWrestler: "Adam Walker", winningTeam: "Prestige - HSB", losingWrestler: "", losingTeam: "", winType: "BYE", result: "" }),
+    ]
+    const parsed = parseTournament(rows)
+    const adam = parsed.athletes.find((row) => row.athleteName === "Adam Walker")
+    expect(adam).toMatchObject({ wins: 1, losses: 0, byes: 1, record: "1-0" })
+    expect(adam?.bouts).toHaveLength(2)
+    expect(adam?.bouts.find((row) => row.winType === "FOR")?.isBye).toBe(false)
+  })
   it("assigns 1st-4th from the finals and third-place match", () => {
     const { athletes } = parseTournament(MINI_BRACKET)
     const placements = Object.fromEntries(athletes.map((a) => [a.athleteName, a.placement]))

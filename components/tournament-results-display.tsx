@@ -739,7 +739,7 @@ export function TournamentResultsDisplay({
           <CardHeader className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] py-4">
             <CardTitle className="text-white flex items-center gap-2 text-lg">
               <Trophy className="h-5 w-5 text-[#D3B574]" />
-              Other Tournaments
+              National &amp; Other Tournaments
             </CardTitle>
           </CardHeader>
           <CardContent className={contentClass}>{otherTournamentsTable}</CardContent>

@@ -25,6 +25,58 @@ export type SourceBoutRow = {
   event: string
 }
 
+/** Parse Trackwrestling's CSV format, including its spreadsheet-preserving `="value"` cells. */
+export function parseTrackwrestlingBoutCsv(text: string): SourceBoutRow[] {
+  const grid: string[][] = []
+  let row: string[] = []
+  let cell = ""
+  let quoted = false
+  for (let index = 0; index < text.length; index++) {
+    const char = text[index]
+    if (quoted) {
+      if (char === '"' && text[index + 1] === '"') {
+        cell += '"'
+        index++
+      } else if (char === '"') quoted = false
+      else cell += char
+    } else if (char === '"') quoted = true
+    else if (char === ",") {
+      row.push(cell)
+      cell = ""
+    } else if (char === "\n") {
+      row.push(cell)
+      grid.push(row)
+      row = []
+      cell = ""
+    } else if (char !== "\r") cell += char
+  }
+  if (cell || row.length) {
+    row.push(cell)
+    grid.push(row)
+  }
+
+  const unwrap = (value: string) => tidy(value.replace(/^=/, "").replace(/^"|"$/g, ""))
+  const header = (grid.shift() ?? []).map(unwrap)
+  const at = (cells: string[], column: string) => {
+    const index = header.findIndex((heading) => heading.toLowerCase() === column.toLowerCase())
+    return index >= 0 ? unwrap(cells[index] ?? "") : ""
+  }
+  return grid.filter((cells) => cells.some((value) => value.trim())).map((cells) => ({
+    date: at(cells, "Date"),
+    weight: at(cells, "Weight"),
+    round: at(cells, "Round"),
+    winningWrestler: at(cells, "Winning Wrestler"),
+    winningTeam: at(cells, "Winning Team"),
+    result: at(cells, "Result"),
+    winType: at(cells, "Win Type"),
+    losingWrestler: at(cells, "Losing Wrestler"),
+    losingTeam: at(cells, "Losing Team"),
+    city: at(cells, "City"),
+    state: at(cells, "State"),
+    event: at(cells, "Event"),
+  }))
+}
+
 export type ParsedBout = {
   weightClass: string
   /** Canonical round name, so NC's "Finals" and VA's "1st Place Match" read the same. */
@@ -261,7 +313,12 @@ export function applyClubCorrections(rows: SourceBoutRow[], eventKey: string): S
 
 /** A bout the winner did not have to wrestle — never counts as a win. */
 export function isByeRow(row: SourceBoutRow): boolean {
-  return row.winType.trim().toUpperCase() === "BYE" || !row.losingWrestler.trim()
+  return row.winType.trim().toUpperCase() === "BYE"
+}
+
+/** A forfeit is an official win even when Trackwrestling leaves the opponent blank. */
+export function isForfeitRow(row: SourceBoutRow): boolean {
+  return /^(?:FOR|M FOR|MED FOR|FF)$/.test(row.winType.trim().toUpperCase())
 }
 
 /** Collapse whitespace; the source pads some team names with a leading space. */
@@ -346,6 +403,30 @@ export function parseTournament(rows: SourceBoutRow[]): ParsedTournament {
       bouts.push(bout)
       continue
     }
+
+    if (!loser && isForfeitRow(row)) {
+      winnerAthlete.wins += 1
+      const bout: ParsedBout = {
+        weightClass: weight,
+        round: canonical,
+        sourceRound: round,
+        boutOrder: order,
+        athleteName: winnerAthlete.athleteName,
+        athleteClub: winnerAthlete.club,
+        opponentName: null,
+        opponentClub: null,
+        win: true,
+        isBye: false,
+        winType,
+        score,
+      }
+      winnerAthlete.bouts.push(bout)
+      bouts.push(bout)
+      continue
+    }
+
+    // An opponent-less row that is neither a bye nor a documented forfeit is incomplete.
+    if (!loser) continue
 
     const loserAthlete = ensure(loser, loserTeam, weight)
     winnerAthlete.wins += 1
