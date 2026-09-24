@@ -169,6 +169,22 @@ export function ScoutingReportDocument({
             margin: 0 !important;
             box-shadow: none !important;
           }
+          /*
+           * Break inside sections, not inside rows.
+           *
+           * Every section used to carry break-inside-avoid, so a section that did not fit in
+           * what was left of a page moved to the next one whole — page 1 ended after Academics
+           * with a third of the sheet empty while Strength of competition sat below the fold.
+           *
+           * A section is allowed to flow across the break now. What must not split is a table
+           * row (a wrestler's name on one page and his result on the next is unreadable) and a
+           * section heading, which has to stay with the first of its content.
+           */
+          #scouting-report tr,
+          #scouting-report li,
+          #scouting-report dl > div { break-inside: avoid; }
+          #scouting-report section > div:first-child { break-after: avoid; }
+          #scouting-report thead { display: table-header-group; }
           @page { margin: 0.45in; }
         }
         #scouting-report { font-variant-numeric: tabular-nums; position: relative; }
@@ -705,7 +721,7 @@ function Block({
   children: React.ReactNode
 }) {
   return (
-    <section className="mt-6 break-inside-avoid">
+    <section className="mt-6">
       <div className="mb-2 flex items-baseline gap-2 border-b-2 border-[#03154C] pb-1">
         <span className="font-mono text-[10px] font-bold text-[#B31B1B]">{n}</span>
         <h2 className="text-[11px] font-black uppercase tracking-[0.18em] text-[#03154C]">{title}</h2>
