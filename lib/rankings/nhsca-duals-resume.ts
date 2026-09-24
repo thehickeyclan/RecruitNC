@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { matchCountsTowardWrestlerRecord } from "@/lib/nhsca-duals-live-results/scoring"
 
 /**
  * NHSCA Duals, as ranking evidence.
@@ -44,7 +45,7 @@ export type DualsResume = {
   /** Contested bouts only. A forfeit is not a wrestled match. */
   wins: number
   losses: number
-  /** Wins by forfeit — an OPEN weight on the other side. Reported, never scored. */
+  /** Wins not wrestled — a forfeit, injury default, or OPEN weight. Reported, never scored. */
   forfeitWins: number
   /** Individual record plus the team's run. */
   points: number
@@ -86,8 +87,12 @@ export async function loadDualsResumes(
   try {
     const { data: roster, error } = await supabase
       .from("nhsca_duals_wrestlers")
-      .select("id, athlete_id, name, weight_class, team_id")
+      .select("id, athlete_id, name, weight_class, team_id, active")
       .in("athlete_id", athleteIds)
+      // The command centre counts only active roster rows, and the board has to agree with the
+      // duals pages about who wrestled. Adam Walker sits inactive on a squad he did not compete
+      // for; he is on Prestige Worldwide's roster instead.
+      .eq("active", true)
     if (error || !roster?.length) return out
 
     const teamIds = [...new Set(roster.map((r) => r.team_id).filter(Boolean))] as string[]
@@ -107,8 +112,10 @@ export async function loadDualsResumes(
       const key = String(m.nc_wrestler_id)
       const cur = tally.get(key) ?? { wins: 0, losses: 0, forfeitWins: 0 }
       // Thirteen of the 224 bouts were forfeits, the other team leaving the weight OPEN. Six
-      // team points, no wrestling. Scoring it would rank a wrestler for an opponent's absence.
-      if (m.result_type === "forfeit") {
+      // team points, no wrestling. The duals pages already leave these out of a wrestler's
+      // record, and this shares their predicate rather than restating it — it also excludes
+      // injury defaults and unwrestled weights, which a local check for "forfeit" would miss.
+      if (!matchCountsTowardWrestlerRecord(m.result_type)) {
         if (m.winner === "nc") cur.forfeitWins += 1
       } else if (m.winner === "nc") cur.wins += 1
       else cur.losses += 1
