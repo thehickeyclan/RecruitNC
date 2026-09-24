@@ -23,6 +23,7 @@ import {
   type OtherTournamentProfileBlock,
 } from "@/lib/other-tournaments"
 import { getNationalTeamResults } from "@/lib/tournament-utils"
+import { getNchsaaStateBoutsForAthlete, type NchsaaStateBout } from "@/lib/nchsaa-state-bouts"
 
 export type PublicAthleteProfile = Record<string, unknown> & {
   nhsca_results: unknown[]
@@ -32,6 +33,8 @@ export type PublicAthleteProfile = Record<string, unknown> & {
     classification: string
     weight_class: string
   }>
+  /** Bout-level state championship history when it exists in the athlete's match import. */
+  nchsaa_state_bouts: NchsaaStateBout[]
   super32_results: unknown[]
   fargo_results: unknown[]
   /** Qualifiers and open events (Super 32 Early Entry etc.) with strength-of-wins attached. */
@@ -119,10 +122,11 @@ export async function loadPublicAthleteProfile(
   if (wrestlingName && wrestlingName.toLowerCase() !== name.toLowerCase()) nameBases.push(wrestlingName)
 
   const athleteRow = athlete as Record<string, unknown>
-  const [bundle, nationalTeamData, otherTournamentBlocks] = await Promise.all([
+  const [bundle, nationalTeamData, otherTournamentBlocks, nchsaaStateBouts] = await Promise.all([
     loadAthleteTournamentBundle(client, athleteRow),
     loadPublicAthleteNationalTeamData(client, athleteRow),
     getOtherTournamentProfileBlocks(client, athleteRow),
+    getNchsaaStateBoutsForAthlete(client, trimmed),
   ])
 
   const { nchsaa: nchsaaMergedRows, nhsca: nhscaMerged, super32: super32Merged, fargo: fargoMerged } = bundle
@@ -141,7 +145,11 @@ export async function loadPublicAthleteProfile(
     nhsca_results: nhscaMerged,
     super32_results: super32Merged,
     fargo_results: fargoMerged,
-    national_team_results,
+    national_team_results: national_team_results as Array<{
+      year?: number
+      event?: string
+      weight?: string | null
+    }>,
     other_tournament_results: otherTournamentBlocks.map((block) => block.result),
   }
   const lastCompeted = resolveLastCompetedWeight(candidatesFromPublicProfilePayload(profilePayload))
@@ -154,6 +162,7 @@ export async function loadPublicAthleteProfile(
       ...(athlete as Record<string, unknown>),
       nhsca_results: nhscaMerged,
       nchsaa_profile,
+      nchsaa_state_bouts: nchsaaStateBouts,
       super32_results: super32Merged,
       fargo_results: fargoMerged,
       other_tournament_blocks: otherTournamentBlocks,

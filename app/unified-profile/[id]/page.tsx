@@ -143,6 +143,7 @@ export default function UnifiedProfilePage() {
   const nchsaaResults = Array.isArray(athlete.nchsaa_profile)
     ? (athlete.nchsaa_profile as NchsaaResult[])
     : []
+  const nchsaaStateBouts = Array.isArray(athlete.nchsaa_state_bouts) ? athlete.nchsaa_state_bouts : []
   const nhscaResults = Array.isArray(athlete.nhsca_results) ? athlete.nhsca_results : []
   const super32Results = Array.isArray(athlete.super32_results) ? athlete.super32_results : []
   const fargoResults = Array.isArray(athlete.fargo_results) ? athlete.fargo_results : []
@@ -214,6 +215,7 @@ export default function UnifiedProfilePage() {
               */}
               <TournamentResultsDisplay
                 nchsaaResults={nchsaaResults}
+                nchsaaStateBouts={nchsaaStateBouts}
                 statesOnly
                 alwaysShowStructure={true}
                 theme="dark"

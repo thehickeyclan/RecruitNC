@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { cn, scrollTableXClass } from "@/lib/utils"
 import { placementLabel, type OtherTournamentProfileBlock } from "@/lib/other-tournaments"
 import { PROFILE_SECTION_HEADER, PROFILE_SECTION_TITLE } from "@/lib/unified-profile-section-styles"
+import type { NchsaaStateBout } from "@/lib/nchsaa-state-bouts"
 
 interface TournamentResult {
   year: number
@@ -44,6 +45,7 @@ interface TournamentResultsDisplayProps {
   otherTournamentBlocks?: OtherTournamentProfileBlock[]
   fargoResults?: TournamentResult[]
   nchsaaResults?: NCHSAAResult[]
+  nchsaaStateBouts?: NchsaaStateBout[]
   nationalTeamResults?: NationalTeamResult[]
   compact?: boolean
   alwaysShowStructure?: boolean
@@ -66,6 +68,7 @@ export function TournamentResultsDisplay({
   otherTournamentBlocks = [],
   fargoResults = [],
   nchsaaResults = [],
+  nchsaaStateBouts = [],
   nationalTeamResults = [],
   compact = false,
   alwaysShowStructure = true,
@@ -546,6 +549,44 @@ export function TournamentResultsDisplay({
     </div>
   )
 
+  const nchsaaBoutYears = (() => {
+    const grouped = new Map<number, NchsaaStateBout[]>()
+    for (const bout of nchsaaStateBouts) grouped.set(bout.year, [...(grouped.get(bout.year) ?? []), bout])
+    return [...grouped.entries()].sort((a, b) => b[0] - a[0])
+  })()
+
+  const nchsaaBoutDetails = nchsaaBoutYears.length > 0 ? (
+    <div className="mt-3 space-y-2">
+      {nchsaaBoutYears.map(([year, bouts]) => {
+        const wins = bouts.filter((bout) => bout.outcome === "W").length
+        return (
+          <Collapsible key={year} className={cn("group/state-bouts overflow-hidden rounded-xl border", isDark ? "border-white/10" : "border-gray-200")}>
+            <CollapsibleTrigger className={cn("flex w-full items-center justify-between gap-3 px-4 py-3 text-left", isDark ? "bg-white/[0.03] hover:bg-white/[0.06]" : "bg-gray-50 hover:bg-gray-100")}>
+              <div>
+                <p className={cn("text-sm font-bold", isDark ? "text-white" : "text-[#03154C]")}>{year} State Championship matches</p>
+                <p className={cn("text-xs", isDark ? "text-white/50" : "text-gray-500")}>{wins}-{bouts.length - wins} · {bouts.length} bout{bouts.length === 1 ? "" : "s"} on file</p>
+              </div>
+              <ChevronDown className={cn("h-4 w-4 transition-transform group-data-[state=open]/state-bouts:rotate-180", isDark ? "text-white/50" : "text-gray-500")} />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <ul className={cn("space-y-1.5 border-t px-4 py-3", isDark ? "border-white/10" : "border-gray-200")}>
+                {bouts.map((bout, index) => (
+                  <li key={`${bout.opponent}-${bout.date}-${index}`} className={cn("flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md px-3 py-2 text-sm", isDark ? "bg-white/5 text-white/75" : "bg-white text-gray-700")}>
+                    <Badge className={bout.outcome === "W" ? "bg-emerald-600 text-white" : "bg-red-700 text-white"}>{bout.outcome}</Badge>
+                    <span className={cn("font-medium", isDark ? "text-white" : "text-[#03154C]")}>{bout.opponent}</span>
+                    {bout.opponentSchool && <span className={cn("text-xs", isDark ? "text-white/40" : "text-gray-500")}>{bout.opponentSchool}</span>}
+                    <span className={cn("ml-auto font-mono text-xs", isDark ? "text-white/65" : "text-gray-600")}>{[bout.method, bout.weight ? `${bout.weight} lbs` : null, bout.date].filter(Boolean).join(" · ")}</span>
+                  </li>
+                ))}
+              </ul>
+            </CollapsibleContent>
+          </Collapsible>
+        )
+      })}
+      <p className={cn("px-1 text-[11px]", isDark ? "text-white/35" : "text-gray-500")}>Matches shown only where bout-level history is on file.</p>
+    </div>
+  ) : null
+
   if (compact) {
     return (
       <div className="space-y-4">
@@ -704,9 +745,10 @@ export function TournamentResultsDisplay({
             </CardTitle>
           </CardHeader>
           <CardContent className={contentClass}>
-          {nchsaaCards}
-          {nchsaaTable}
-        </CardContent>
+            {nchsaaCards}
+            {nchsaaTable}
+            {nchsaaBoutDetails}
+          </CardContent>
         </Card>
       )}
 
