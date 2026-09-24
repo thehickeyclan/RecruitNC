@@ -15,9 +15,11 @@ import { loadOpponentIndex } from "@/lib/scouting-report"
 import {
   buildNhscaDuals2026LiveProfileResults,
   mergeNationalTeamResultsForProfile,
+  NHSCA_DUALS_2026_YEAR,
   type ProfileNationalTeamResult,
 } from "@/lib/national-team-live-profile-results"
 import { fetchNhscaDualsSnapshot } from "@/lib/nhsca-duals-live-results/db"
+import { loadDualsResumes, type DualsResume } from "@/lib/rankings/nhsca-duals-resume"
 import {
   datedMeetingsAgainst,
   holdsHeadToHeadEdge,
@@ -554,6 +556,15 @@ const NATIONAL_DUALS_WEIGHT = 0.8
 const TOC_EVENT = /tournament of champions/i
 const TOC_WEIGHT = 1
 
+/**
+ * Whether a name-matched duals row is the same event as an exactly-linked one, so the two are
+ * not both scored. The snapshot labels the squads separately ("NHSCA Duals", "NHSCA Duals
+ * (Select)"); either is the same trip to Virginia Beach.
+ */
+function isSameDualsEvent(nameMatched: { event: string; year: number }): boolean {
+  return Number(nameMatched.year) === NHSCA_DUALS_2026_YEAR && /nhsca duals/i.test(nameMatched.event)
+}
+
 function evidenceToneForPlace(place: number): RankingEvidence["tone"] {
   if (place === 1) return "gold"
   if (place <= 3) return "blue"
@@ -775,10 +786,17 @@ export async function buildRecruitNcRankingBoard({
 
   const athleteRows = (athletes || []) as Array<Record<string, unknown>>
   const athleteIds = athleteRows.map((athlete) => String(athlete.id)).filter(Boolean)
-  const [matchRowsByAthlete, dualsByAthlete, qualifierHeadToHead] = await Promise.all([
+  const [matchRowsByAthlete, dualsByAthlete, qualifierHeadToHead, dualsResumeByAthlete] = await Promise.all([
     fetchMatchRows(supabase, athleteIds),
     loadRankingDualsByAthlete(supabase, athleteRows),
     loadQualifierHeadToHead(supabase, athleteIds).catch(() => new Map() as QualifierHeadToHeadIndex),
+    /*
+     * The duals roster now carries `athlete_id`, so a wrestler's own record can be read by the
+     * link instead of inferred from their name. Both matter: the name match above is what put
+     * duals on the board at all, and it silently counted forfeits as wins and ignored how far
+     * the team went. Where an exact link exists, it wins.
+     */
+    loadDualsResumes(supabase, athleteIds).catch(() => new Map<string, DualsResume>()),
   ])
   const candidates: CandidateIdentity[] = athleteRows.map((athlete) => ({
     id: String(athlete.id),
@@ -988,8 +1006,35 @@ export async function buildRecruitNcRankingBoard({
         }
       }
 
-      const dualsScore = duals.reduce((sum, result) => sum + recordWinPctPoints(result.record) * 2, 0)
-      for (const result of duals.slice(0, 3)) {
+      /*
+       * NHSCA Duals, read from the link rather than the name.
+       *
+       * The name match counts what the snapshot says, forfeits and all: Jonathan Burns shows 3-2
+       * there, and two of those wins were weights the other club left OPEN. Six team points, no
+       * wrestling. The résumé below scores contested bouts only, and adds a smaller amount for
+       * how far the team got — reaching the Round of 32 means the later duals came against clubs
+       * that had also won, which is context the wrestler was in but did not choose.
+       *
+       * What it will not do is credit a win over a ranked opponent. The matches store initials
+       * ("R. Judd", "C. Yanek"), so there is no way to know who was across the mat. A duals win
+       * counts as a win at a national event, never as a ranked win.
+       */
+      const dualsResume = dualsResumeByAthlete.get(id) ?? null
+      const nameMatchedDuals = dualsResume
+        ? duals.filter((result) => !isSameDualsEvent(result))
+        : duals
+      const dualsScore =
+        nameMatchedDuals.reduce((sum, result) => sum + recordWinPctPoints(result.record) * 2, 0) +
+        (dualsResume?.points ?? 0)
+      if (dualsResume) {
+        evidence.push({
+          kind: "duals",
+          label: `${NHSCA_DUALS_2026_YEAR} ${dualsResume.label}`,
+          points: dualsResume.points,
+          tone: "blue",
+        })
+      }
+      for (const result of nameMatchedDuals.slice(0, 3)) {
         evidence.push({
           kind: "duals",
           label: `${result.year} ${result.event}: ${result.record || "record unavailable"}`,
@@ -1315,6 +1360,13 @@ export async function buildRecruitNcRankingBoard({
           ...(bundle.super32 || []).map((r: any) => `Super 32 ${r.year}`),
           ...(bundle.fargo || []).map((r: any) => `Fargo ${r.year}`),
           ...(bundle.other || []).map((r: any) => `${r.eventShortName} ${r.year}`),
+          /*
+           * Duals is a room the class was in. Thirty of them went to Virginia Beach in March and
+           * wrestled eight duals against out-of-state clubs; a wrestler who was not there missed
+           * the same week of competition as one who skipped Super 32, and until now the board had
+           * no way to say so.
+           */
+          ...(dualsResume ? [`NHSCA Duals ${NHSCA_DUALS_2026_YEAR}`] : []),
         ].filter((label) => /\b20\d{2}$/.test(label)),
         /** Filled by the second pass, which is the only place the class is known. */
         missed_windows: [],

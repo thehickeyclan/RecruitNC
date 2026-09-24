@@ -35,6 +35,26 @@ export const WINDOW_PARTICIPATION_FLOOR = 0.4
 /** The most a single missed window can cost, when effectively the whole class was there. */
 export const MAX_WINDOW_PENALTY = 30
 
+/**
+ * Events nobody can enter on their own, which therefore cannot be missed.
+ *
+ * Everything else this penalty covers is open: a wrestler who wants to be at Super 32 or NHSCA
+ * Nationals enters and goes. NHSCA Duals is a twenty-man roster picked per squad, one wrestler
+ * per weight. A 152-pounder who would have started anywhere else stays home because someone
+ * else had the weight, and that is a coaching decision about a lineup, not a choice the
+ * wrestler made about their season.
+ *
+ * So Duals gives credit and never takes it. The record counts, the team's run counts, and the
+ * absence costs nothing. Today the 0.4 floor happens to keep Duals out anyway — 18 of the 92 in
+ * the Class of 2027 were on a squad — but that is arithmetic that changes as outside-team
+ * wrestlers are added, and the reason for excluding it does not.
+ */
+const ROSTER_LIMITED_EVENT = /nhsca duals|ultimate club duals/i
+
+export function isRosterLimitedWindow(label: string): boolean {
+  return ROSTER_LIMITED_EVENT.test(String(label))
+}
+
 export type ClassWindow = {
   /** "Tournament of Champions 2026" */
   label: string
@@ -59,6 +79,7 @@ export function findClassWindows(
   for (const [label, entrants] of counts) {
     const year = Number(String(label).match(/\b(20\d{2})\b/)?.[1] ?? 0)
     if (!options.seasons.includes(year)) continue
+    if (isRosterLimitedWindow(label)) continue
     const participation = options.classSize > 0 ? entrants / options.classSize : 0
     if (participation < WINDOW_PARTICIPATION_FLOOR) continue
     windows.push({ label, year, entrants, classSize: options.classSize, participation })

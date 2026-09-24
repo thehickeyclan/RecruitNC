@@ -1,11 +1,5 @@
 import { describe, expect, it } from "vitest"
-import {
-  describeMissedWindow,
-  findClassWindows,
-  missedWindowsFor,
-  MAX_WINDOW_PENALTY,
-  WINDOW_PARTICIPATION_FLOOR,
-} from "./missed-window"
+import { MAX_WINDOW_PENALTY, WINDOW_PARTICIPATION_FLOOR, describeMissedWindow, findClassWindows, isRosterLimitedWindow, missedWindowsFor } from "./missed-window"
 
 const entries = (m: Record<string, string[]>) =>
   new Map(Object.entries(m).map(([k, v]) => [k, new Set(v)]))
@@ -80,5 +74,25 @@ describe("missedWindowsFor", () => {
     ))
     expect(findClassWindows(map, { classSize: 92, seasons: [2026] })).toEqual([])
     expect(WINDOW_PARTICIPATION_FLOOR).toBe(0.4)
+  })
+})
+
+describe("roster-limited events", () => {
+  it("never become a missed window, however many of the class were there", () => {
+    // One wrestler per weight per squad. A 152-pounder stays home because the weight was taken,
+    // which is a lineup decision, not a choice about their season.
+    const entries = new Map<string, Set<string>>()
+    for (let i = 0; i < 9; i += 1) entries.set(`in-${i}`, new Set(["NHSCA Duals 2026", "Super 32 2026"]))
+    entries.set("out", new Set<string>())
+
+    const windows = findClassWindows(entries, { classSize: 10, seasons: [2026] })
+    expect(windows.map((w) => w.label)).toEqual(["Super 32 2026"])
+  })
+
+  it("recognises the roster-limited events by name", () => {
+    expect(isRosterLimitedWindow("NHSCA Duals 2026")).toBe(true)
+    expect(isRosterLimitedWindow("Ultimate Club Duals 2025")).toBe(true)
+    expect(isRosterLimitedWindow("Tournament of Champions 2026")).toBe(false)
+    expect(isRosterLimitedWindow("NHSCA Nationals 2026")).toBe(false)
   })
 })
