@@ -83,13 +83,34 @@ export function isWiqCurrent(row: WiqMembershipRow, now: Date = new Date()): boo
   return Boolean(until && !Number.isNaN(until.getTime()) && until >= now)
 }
 
+/**
+ * Has this wrestler graduated out of the programme?
+ *
+ * Membership is about money; this is not. A class of 2025 wrestler sitting in a grace window is
+ * in college — keeping him entitled because a subscription has days left is counting a member
+ * who left in June. Blue reporting was carrying three of these: Dantrell Williams (2025), and
+ * Trevelian Hall and Fares Alkurdasi (2026).
+ *
+ * A class graduates in June. From July onward that year is alumni, which is why the check is
+ * not simply `gradYear < thisYear` — in May 2026 the class of 2026 is still wrestling.
+ */
+export function hasGraduated(graduationYear: number | null | undefined, now: Date = new Date()): boolean {
+  if (graduationYear == null || !Number.isFinite(graduationYear)) return false
+  const year = now.getFullYear()
+  if (graduationYear < year) return true
+  return graduationYear === year && now.getMonth() + 1 >= 7
+}
+
 /** Entitled: paying or comped, on either side. This is what unlocks features. */
 export function isEntitled(input: {
   stripe?: StripeMembershipRow[]
   wiq?: WiqMembershipRow[]
+  /** The wrestler's class. A graduated member is not entitled, whatever the billing says. */
+  graduationYear?: number | null
   now?: Date
 }): boolean {
   const now = input.now ?? new Date()
+  if (hasGraduated(input.graduationYear, now)) return false
   for (const row of input.stripe ?? []) {
     if (isPayingStripeMembership(row) || isCompedStripeMembership(row)) return true
   }
