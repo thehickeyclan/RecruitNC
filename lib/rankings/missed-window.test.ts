@@ -92,7 +92,14 @@ describe("roster-limited events", () => {
   it("recognises the roster-limited events by name", () => {
     expect(isRosterLimitedWindow("NHSCA Duals 2026")).toBe(true)
     expect(isRosterLimitedWindow("Ultimate Club Duals 2025")).toBe(true)
+    // The same event, spelled the way the outside-club results import writes it. Missing this
+    // spelling would charge the thirty wrestlers who were there for not being there.
+    expect(isRosterLimitedWindow("NHSCA National Duals 2026")).toBe(true)
+    // Any duals meet is a team event with a lineup, so the word is the test rather than a list.
+    expect(isRosterLimitedWindow("I-64 Spring Duals 2026")).toBe(true)
     expect(isRosterLimitedWindow("Tournament of Champions 2026")).toBe(false)
+    // NHSCA Nationals is the open individual tournament, not the duals. It stays a window.
     expect(isRosterLimitedWindow("NHSCA Nationals 2026")).toBe(false)
+    expect(isRosterLimitedWindow("NHSCA 2026")).toBe(false)
   })
 })

@@ -48,8 +48,17 @@ export const MAX_WINDOW_PENALTY = 30
  * absence costs nothing. Today the 0.4 floor happens to keep Duals out anyway — 18 of the 92 in
  * the Class of 2027 were on a squad — but that is arithmetic that changes as outside-team
  * wrestlers are added, and the reason for excluding it does not.
+ *
+ * The rule is the word, not a list of events. Naming them one at a time missed straight away:
+ * an NC United wrestler's entry is labelled "NHSCA Duals 2026" from the roster while the 55 who
+ * competed for outside clubs arrive through the results import as "NHSCA National Duals 2026",
+ * and matching only the first spelling would have left the second a live window — charging the
+ * thirty who were actually in Virginia Beach for missing the event they wrestled. I-64 Spring
+ * Duals sat one rename away from the same bug.
+ *
+ * A duals meet is a team event with a lineup by definition, so the word is the test.
  */
-const ROSTER_LIMITED_EVENT = /nhsca duals|ultimate club duals/i
+const ROSTER_LIMITED_EVENT = /\bduals\b/i
 
 export function isRosterLimitedWindow(label: string): boolean {
   return ROSTER_LIMITED_EVENT.test(String(label))
