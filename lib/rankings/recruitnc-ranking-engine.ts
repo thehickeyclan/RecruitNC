@@ -27,6 +27,7 @@ import {
 } from "@/lib/head-to-head"
 import { loadQualifierHeadToHead, type QualifierHeadToHeadIndex } from "@/lib/other-tournaments"
 import { placementPoints, recordWinPctPoints } from "@/lib/toc/athlete-compare"
+import { describeMissedWindow, findClassWindows, missedWindowsFor } from "@/lib/rankings/missed-window"
 import { HEAD_TO_HEAD_MAX_GAP, filterFargoFreestyleResults, scoreNchsaaRowsForSeed } from "@/lib/toc/ai-seeding"
 import { getNationalTeamResults } from "@/lib/tournament-utils"
 
@@ -126,6 +127,10 @@ export type RankingBoardAthlete = {
    * athletes at roughly seven hundred milliseconds each, in series, on top of this build.
    */
   star_rating: StarRating | null
+  /** National and out-of-state events entered, as "NHSCA Nationals 2026". */
+  entered_events: string[]
+  /** Events the class turned out for that this wrestler missed, with what each cost. */
+  missed_windows: Array<{ label: string; entrants: number; classSize: number; penalty: number }>
   /** Wins over wrestlers who are ranked, nationally ranked, or in the TOC field. */
   significant_wins: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
   /**
@@ -1181,13 +1186,42 @@ export async function buildRecruitNcRankingBoard({
           if (!Number.isFinite(at)) continue
           candidates.push({ at, label: String(bout.venue ?? bout.tournament ?? "").trim() })
         }
-        if (!candidates.length) {
-          // No dated bout: fall back to the most recent tournament year on file.
-          const years = [...(bundle.nchsaa ?? []), ...(bundle.nhsca ?? []), ...(bundle.super32 ?? []), ...(bundle.fargo ?? [])]
-            .map((r) => Number((r as { year?: unknown }).year))
-            .filter((y) => Number.isFinite(y) && plausibleSeason(y))
-          return years.length ? String(Math.max(...years)) : null
+        /*
+         * The tournament bundle counts too, not only as a fallback.
+         *
+         * This looked at in-season match rows and qualifier bouts, and consulted the bundle
+         * only when neither had a dated bout. Mac Johnson's season record ends at states in
+         * February; he then wrestled NHSCA in March and Fargo in July, neither of which
+         * produces a dated bout row — so the board reported his last competition as February
+         * and he read as a wrestler who had stopped.
+         *
+         * These events publish a year, not a day, so each is placed at the month it runs:
+         * NHSCA mid-March, Fargo July, Super 32 late October, NCHSAA States mid-February.
+         */
+        const EVENT_MONTH_DAY: Record<string, [number, number]> = {
+          nchsaa: [2, 15],
+          nhsca: [3, 15],
+          fargo: [7, 15],
+          super32: [10, 25],
         }
+        for (const [key, rows] of [
+          ["nchsaa", bundle.nchsaa],
+          ["nhsca", bundle.nhsca],
+          ["fargo", bundle.fargo],
+          ["super32", bundle.super32],
+        ] as const) {
+          for (const row of rows ?? []) {
+            const year = Number((row as { year?: unknown }).year)
+            if (!Number.isFinite(year) || !plausibleSeason(year)) continue
+            const [month, day] = EVENT_MONTH_DAY[key]!
+            const at = Date.UTC(year, month - 1, day)
+            const label =
+              key === "nchsaa" ? "NCHSAA States" : key === "nhsca" ? "NHSCA Nationals" : key === "fargo" ? "Fargo" : "Super 32"
+            candidates.push({ at, label })
+          }
+        }
+
+        if (!candidates.length) return null
         candidates.sort((a, b) => b.at - a.at)
         const latest = candidates[0]!
         const when = new Date(latest.at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
@@ -1270,9 +1304,62 @@ export async function buildRecruitNcRankingBoard({
           : null,
         significant_wins: significantWins,
         significant_losses: significantLosses,
+        /*
+         * Every national/out-of-state event this wrestler entered, as "Event 2026". Carried so
+         * the second pass can ask what the class turned out for and who was missing.
+         */
+        entered_events: [
+          ...(bundle.nhsca || []).map((r: any) => `NHSCA Nationals ${r.year}`),
+          ...(bundle.super32 || []).map((r: any) => `Super 32 ${r.year}`),
+          ...(bundle.fargo || []).map((r: any) => `Fargo ${r.year}`),
+          ...(bundle.other || []).map((r: any) => `${r.eventShortName} ${r.year}`),
+        ].filter((label) => /\b20\d{2}$/.test(label)),
+        /** Filled by the second pass, which is the only place the class is known. */
+        missed_windows: [],
       } satisfies RankingBoardAthlete
     },
   )
 
-  return orderProspectsByHeadToHead(scored).map((athlete, index) => ({ ...athlete, ai_rank: index + 1 }))
+  /*
+   * Second pass: charge for the rooms the class was in.
+   *
+   * This cannot happen inside the per-athlete pass — whether missing an event means anything
+   * depends on how many of the others entered it, which is only knowable once the whole class
+   * is scored. Seasons are limited to the current one and the one before: an event three years
+   * ago tells you nothing about who is wrestling now.
+   */
+  const thisYear = new Date().getFullYear()
+  const entriesByAthlete = new Map(scored.map((a) => [a.id, new Set(a.entered_events)]))
+  const windows = findClassWindows(entriesByAthlete, {
+    classSize: scored.length,
+    seasons: [thisYear, thisYear - 1],
+  })
+
+  const adjusted = scored.map((athlete) => {
+    const missed = missedWindowsFor(entriesByAthlete.get(athlete.id) ?? new Set(), windows)
+    if (missed.length === 0) return { ...athlete, missed_windows: [] }
+
+    const penalty = missed.reduce((sum, m) => sum + m.penalty, 0)
+    return {
+      ...athlete,
+      ai_score: Math.round((athlete.ai_score - penalty) * 10) / 10,
+      missed_windows: missed.map((m) => ({
+        label: m.label,
+        entrants: m.entrants,
+        classSize: m.classSize,
+        penalty: m.penalty,
+      })),
+      evidence: [
+        ...athlete.evidence,
+        ...missed.map((m) => ({
+          kind: "national" as const,
+          label: describeMissedWindow(m),
+          points: -m.penalty,
+          tone: "slate" as const,
+        })),
+      ],
+    }
+  })
+
+  return orderProspectsByHeadToHead(adjusted).map((athlete, index) => ({ ...athlete, ai_rank: index + 1 }))
 }
