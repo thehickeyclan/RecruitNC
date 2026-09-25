@@ -8,6 +8,10 @@ export type NchsaaStateBout = {
   opponentSchool: string | null
   outcome: "W" | "L"
   method: string | null
+  /** Authoritative bracket label when the source or placement path proves it. */
+  round?: string | null
+  /** Exact Trackwrestling result (for example, 6-5 SV). */
+  score?: string | null
 }
 
 type MatchHistoryRow = {
@@ -63,10 +67,38 @@ export async function getNchsaaStateBoutsForAthlete(
   athleteId: string,
 ): Promise<NchsaaStateBout[]> {
   if (!athleteId.trim()) return []
-  const { data, error } = await supabase
-    .from("matches")
-    .select("season,matches")
-    .eq("athlete_id", athleteId)
-  if (error || !data) return []
-  return extractNchsaaStateBouts(data)
+  const [historyResponse, csvResponse] = await Promise.all([
+    supabase.from("matches").select("season,matches").eq("athlete_id", athleteId),
+    supabase
+      .from("other_tournament_bouts")
+      .select("year,event_date,weight_class,round,bout_order,opponent_name,opponent_club,win,win_type,score")
+      .eq("athlete_id", athleteId)
+      .like("event_key", "nchsaa-states-%")
+      .order("year", { ascending: false })
+      .order("bout_order", { ascending: true }),
+  ])
+
+  const history = historyResponse.error || !historyResponse.data
+    ? []
+    : extractNchsaaStateBouts(historyResponse.data)
+  if (csvResponse.error || !csvResponse.data?.length) return history
+
+  const authoritative = csvResponse.data.flatMap((row): NchsaaStateBout[] => {
+    const opponent = String(row.opponent_name ?? "").trim()
+    const year = Number(row.year)
+    if (!opponent || !Number.isFinite(year)) return []
+    return [{
+      year,
+      date: String(row.event_date ?? "").trim() || null,
+      weight: String(row.weight_class ?? "").trim() || null,
+      opponent,
+      opponentSchool: String(row.opponent_club ?? "").trim() || null,
+      outcome: row.win ? "W" : "L",
+      method: String(row.win_type ?? "").trim() || null,
+      round: String(row.round ?? "").replace(/\s*·\s*Bout\s+\d+$/i, "").trim() || null,
+      score: String(row.score ?? "").trim() || null,
+    }]
+  })
+  const authoritativeYears = new Set(authoritative.map((bout) => bout.year))
+  return [...authoritative, ...history.filter((bout) => !authoritativeYears.has(bout.year))]
 }

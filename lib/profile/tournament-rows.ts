@@ -136,7 +136,7 @@ export function buildNchsaaStateRows(
           eventName: "NCHSAA State Championships",
           year: result.year,
           weight: bout.weight ?? result.weight_class,
-          round: rounds[boutOrder] ?? "State Championships",
+          round: bout.round || rounds[boutOrder] || "State Championships",
           boutOrder,
           opponentName: bout.opponent,
           opponentClub: bout.opponentSchool,
@@ -144,7 +144,7 @@ export function buildNchsaaStateRows(
           win: bout.outcome === "W",
           isBye: false,
           winType: bout.method ?? "",
-          score: "",
+          score: bout.score ?? "",
         })),
       } satisfies TournamentRow
     })

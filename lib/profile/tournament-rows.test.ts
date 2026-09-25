@@ -20,6 +20,24 @@ describe("buildNchsaaStateRows", () => {
     expect(rows[0].bouts).toHaveLength(2)
     expect(rows[0].bouts.map((bout) => bout.win)).toEqual([true, false])
   })
+
+  it("prefers authoritative CSV rounds and exact scores", () => {
+    const [row] = buildNchsaaStateRows(
+      [{ year: 2026, place: 2, classification: "7A", weight_class: "113" }],
+      [{
+        year: 2026,
+        date: "2026-02-19",
+        weight: "113",
+        opponent: "Ryder Menard",
+        opponentSchool: "Lake Norman",
+        outcome: "W",
+        method: "DEC",
+        round: "Quarter-Finals",
+        score: "6-5 SV",
+      }],
+    )
+    expect(row!.bouts[0]).toMatchObject({ round: "Quarter-Finals", winType: "DEC", score: "6-5 SV" })
+  })
 })
 
 describe("inferNchsaaStateRounds", () => {
