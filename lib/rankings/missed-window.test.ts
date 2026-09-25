@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { MAX_WINDOW_PENALTY, WINDOW_PARTICIPATION_FLOOR, describeMissedWindow, findClassWindows, isRosterLimitedWindow, missedWindowsFor } from "./missed-window"
+import { MAX_WINDOW_PENALTY, WINDOW_PARTICIPATION_FLOOR, describeMissedWindow, findClassWindows, isRosterLimitedWindow, missedWindowsFor, type ClassWindow } from "./missed-window"
 
 const entries = (m: Record<string, string[]>) =>
   new Map(Object.entries(m).map(([k, v]) => [k, new Set(v)]))
@@ -38,9 +38,22 @@ describe("missedWindowsFor", () => {
   ]
 
   it("charges most for the event nearly everyone entered", () => {
+    // Missing both would come to 0.85 + 0.45 of the ceiling, so the pair is scaled back to it.
+    // What the test is really about survives: the room the class turned out for costs the most,
+    // and the two stay in proportion (0.85 : 0.45).
     const missed = missedWindowsFor(new Set(), windows)
+    const total = missed.reduce((sum, m) => sum + m.penalty, 0)
+    expect(total).toBeLessThanOrEqual(MAX_WINDOW_PENALTY)
+    expect(missed[0].penalty).toBeGreaterThan(missed[1].penalty)
+    // Rounding to whole points moves the ratio a little (20 and 10 against an exact 1.89), so
+    // this asserts the proportion survives rather than a precise quotient.
+    expect(missed[0].penalty / missed[1].penalty).toBeGreaterThan(1.5)
+    expect(missed[0].penalty / missed[1].penalty).toBeLessThan(2.3)
+  })
+
+  it("does not scale a wrestler who only missed the one", () => {
+    const missed = missedWindowsFor(new Set(["NHSCA Nationals 2026"]), windows)
     expect(missed[0].penalty).toBe(Math.round(MAX_WINDOW_PENALTY * 0.85))
-    expect(missed[1].penalty).toBe(Math.round(MAX_WINDOW_PENALTY * 0.45))
   })
 
   it("charges nothing to a wrestler who was there", () => {
@@ -101,5 +114,49 @@ describe("roster-limited events", () => {
     // NHSCA Nationals is the open individual tournament, not the duals. It stays a window.
     expect(isRosterLimitedWindow("NHSCA Nationals 2026")).toBe(false)
     expect(isRosterLimitedWindow("NHSCA 2026")).toBe(false)
+  })
+})
+
+describe("the total is capped, not just each window", () => {
+  const window = (label: string, participation: number): ClassWindow => ({
+    label, year: 2026, entrants: Math.round(participation * 100), classSize: 100, participation,
+  })
+
+  it("charges a quiet season once, however many rooms it spans", () => {
+    // Christian Riddick carried 23 + 16 + 13 + 12 = 64, against a TOC title worth 52. An absence
+    // cannot be the largest single force on the board.
+    const missed = missedWindowsFor(new Set<string>(), [
+      window("Super 32 Early Entry 2026", 0.77),
+      window("NHSCA Nationals 2025", 0.53),
+      window("Tournament of Champions 2026", 0.43),
+      window("NHSCA Nationals 2026", 0.40),
+    ])
+    const total = missed.reduce((sum, w) => sum + w.penalty, 0)
+    expect(total).toBeLessThanOrEqual(MAX_WINDOW_PENALTY)
+  })
+
+  it("keeps the proportions so a reviewer sees which room mattered most", () => {
+    const missed = missedWindowsFor(new Set<string>(), [
+      window("Super 32 Early Entry 2026", 0.8),
+      window("NHSCA Nationals 2026", 0.4),
+    ])
+    expect(missed[0]!.penalty).toBeGreaterThan(missed[1]!.penalty)
+    expect(missed.map((w) => w.label)).toEqual(["Super 32 Early Entry 2026", "NHSCA Nationals 2026"])
+  })
+
+  it("leaves a single missed window untouched", () => {
+    const missed = missedWindowsFor(new Set<string>(), [window("Tournament of Champions 2026", 0.5)])
+    expect(missed[0]!.penalty).toBe(15)
+  })
+
+  it("prices the same quiet season alike in a small class and a large one", () => {
+    // Four windows clear the floor in 2028 and one in 2029. The wrestler who entered nothing
+    // should not be charged three times as much for being in the smaller class.
+    const small = missedWindowsFor(new Set<string>(), [
+      window("a 2026", 0.9), window("b 2026", 0.8), window("c 2026", 0.7), window("d 2026", 0.6),
+    ]).reduce((s, w) => s + w.penalty, 0)
+    const large = missedWindowsFor(new Set<string>(), [window("a 2026", 0.9)]).reduce((s, w) => s + w.penalty, 0)
+    expect(small).toBeLessThanOrEqual(MAX_WINDOW_PENALTY)
+    expect(small - large).toBeLessThan(MAX_WINDOW_PENALTY / 2)
   })
 })

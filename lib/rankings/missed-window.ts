@@ -32,7 +32,23 @@
  */
 export const WINDOW_PARTICIPATION_FLOOR = 0.4
 
-/** The most a single missed window can cost, when effectively the whole class was there. */
+/**
+ * The most missing events can cost a wrestler in total, not per event.
+ *
+ * This was applied per window and nothing bounded the sum, so the charges stacked: Christian
+ * Riddick carried 23 + 16 + 13 + 12 = 64, and Jackson D'Ettore 52. Against a Tournament of
+ * Champions title worth 52, an absence had quietly become the largest single force on the board
+ * — and the paragraph at the top of this file still promised the opposite, that "a TOC title is
+ * worth +52; missing the TOC costs at most 30".
+ *
+ * Stacking also priced the same behaviour differently by class. Four windows cleared the floor
+ * in the Class of 2028 and one in 2029, so an identical quiet season cost up to 64 in one and 19
+ * in the other, for no reason a family could be told.
+ *
+ * Not competing much is one fact about a wrestler. It is charged once, and the individual
+ * windows are scaled down proportionally so a reviewer still sees which rooms were missed and in
+ * what proportion.
+ */
 export const MAX_WINDOW_PENALTY = 30
 
 /**
@@ -103,9 +119,15 @@ export function missedWindowsFor(
   entered: ReadonlySet<string>,
   windows: readonly ClassWindow[],
 ): MissedWindow[] {
-  return windows
+  const missed = windows
     .filter((w) => !entered.has(w.label))
-    .map((w) => ({ ...w, penalty: Math.round(MAX_WINDOW_PENALTY * w.participation) }))
+    .map((w) => ({ ...w, penalty: MAX_WINDOW_PENALTY * w.participation }))
+
+  const total = missed.reduce((sum, w) => sum + w.penalty, 0)
+  const scale = total > MAX_WINDOW_PENALTY ? MAX_WINDOW_PENALTY / total : 1
+
+  return missed
+    .map((w) => ({ ...w, penalty: Math.round(w.penalty * scale) }))
     .filter((w) => w.penalty > 0)
 }
 
