@@ -43,6 +43,7 @@ import { isBlueTeam } from "@/lib/blue-team"
 import { sourceLabel } from "@/lib/national-rankings"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { releasesPersonalData, type ScoutingAccessTier } from "@/lib/scouting-report-access"
+import { mergeBoutSources } from "@/lib/bout-source-deduplication"
 
 export type ScoutingReportIdentity = {
   name: string
@@ -564,7 +565,10 @@ export async function buildScoutingReport(
    * is labelled in-season.
    */
   const seasonBouts: Bout[] = allSeasonBouts.filter(isInSeasonBout)
-  const bouts: Bout[] = [...allSeasonBouts, ...qualifierBouts]
+  // Event CSVs carry the exact score and are authoritative. RankWrestler also includes some of
+  // the same off-season bouts (notably I-64) and States; merging the raw arrays printed and
+  // scored those meetings twice in every scouting report.
+  const bouts: Bout[] = mergeBoutSources(qualifierBouts, allSeasonBouts)
 
   const lastCompeted = (
     athlete as {

@@ -29,6 +29,7 @@ import {
   type DatedMeeting,
 } from "@/lib/head-to-head"
 import { loadQualifierHeadToHead, type QualifierHeadToHeadIndex } from "@/lib/other-tournaments"
+import { mergeBoutSources } from "@/lib/bout-source-deduplication"
 import { placementPoints, recordWinPctPoints } from "@/lib/toc/athlete-compare"
 import { describeMissedWindow, findClassWindows, missedWindowsFor } from "@/lib/rankings/missed-window"
 import { HEAD_TO_HEAD_MAX_GAP, filterFargoFreestyleResults, scoreNchsaaRowsForSeed } from "@/lib/toc/ai-seeding"
@@ -1203,10 +1204,12 @@ export async function buildRecruitNcRankingBoard({
        * prospect, or somebody in the Tournament of Champions field. The same helper the scouting
        * report uses, so a win counts here exactly as it counts there.
        */
-      const boutsForSignificance = withinRankingWindow([
-        ...(currentSeasonBoutsByAthleteId.get(id) ?? []),
-        ...(qualifierBoutsByAthleteId.get(id) ?? []),
-      ]) as never
+      const boutsForSignificance = withinRankingWindow(
+        mergeBoutSources(
+          qualifierBoutsByAthleteId.get(id) ?? [],
+          currentSeasonBoutsByAthleteId.get(id) ?? [],
+        ),
+      ) as never
 
       const topSignificantWins = findSignificantWins(boutsForSignificance, opponentIndex).slice(0, 8)
       const significantWins = topSignificantWins.map(significantBoutRow)
@@ -1284,8 +1287,20 @@ export async function buildRecruitNcRankingBoard({
         const EVENT_MONTH_DAY: Record<string, [number, number]> = {
           nchsaa: [2, 15],
           nhsca: [3, 15],
+          /*
+           * NHSCA Duals runs the week before Memorial Day, two months after NHSCA Nationals.
+           * Leaving it out reported Aidan Gore and Keyshon Morrison as having last competed in
+           * March when both wrestled in Virginia Beach in May — Gore 6-2 at 152, Morrison 5-2 at
+           * heavyweight — which made two wrestlers look like they had stopped for the season.
+           */
+          nhscaDuals: [5, 23],
           fargo: [7, 15],
           super32: [10, 25],
+        }
+        // The duals résumé is dated by the event, not by a bout row, same as the others.
+        if (dualsResume) {
+          const [month, day] = EVENT_MONTH_DAY.nhscaDuals!
+          candidates.push({ at: Date.UTC(NHSCA_DUALS_2026_YEAR, month - 1, day), label: "NHSCA Duals" })
         }
         for (const [key, rows] of [
           ["nchsaa", bundle.nchsaa],
