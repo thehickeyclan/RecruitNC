@@ -120,6 +120,15 @@ export type RankingBoardAthlete = {
   state_placements: string[]
   nhsca_record: string | null
   super32_record: string | null
+  /**
+   * The Tournament of Champions, as a card pill: "2026 Champion · 3-0".
+   *
+   * NHSCA and Super 32 had pills and TOC did not, so the deepest field assembled in North
+   * Carolina all year was the one result a reviewer could not see without opening the evidence
+   * drawer. Two of the top five in the Class of 2027 won it, and their cards said nothing.
+   * It is scored at full weight; it belongs on the face of the card like the others.
+   */
+  toc_result: string | null
   /** Every trip, newest first — "2026 · 4th · 5-2". For the evidence drawer. */
   nhsca_by_year: string[]
   super32_by_year: string[]
@@ -1133,6 +1142,27 @@ export async function buildRecruitNcRankingBoard({
        * was one strong showing or four thin ones, and it buried the trip that actually matters —
        * the last one. The per-year lines go in the drawer.
        */
+      /*
+       * The TOC line for the card. Placement leads, because a title there is the strongest
+       * in-state credential on any of these résumés and a bare record hides it.
+       */
+      const tocResult = (() => {
+        const rows = (bundle.other || []).filter((r: any) =>
+          TOC_EVENT.test(String(r.eventShortName ?? r.eventName ?? "")),
+        )
+        const latest = rows
+          .filter((r: any) => plausibleSeason(Number(r.year)))
+          .sort((a: any, b: any) => Number(b.year) - Number(a.year))[0]
+        if (!latest) return null
+        const place = placementNumber((latest as any).placement)
+        const record = String((latest as any).record ?? "").trim()
+        const parts = [
+          place ? (place === 1 ? "Champion" : ordinal(place)) : null,
+          /^\d+\s*-\s*\d+$/.test(record) ? record : null,
+        ].filter(Boolean)
+        return `${(latest as any).year}${parts.length ? ` ${parts.join(" · ")}` : ""}`
+      })()
+
       const latestRecord = (rows: Array<{ year?: number; record?: string | null; placement?: string | null }>) => {
         const dated = rows
           .filter((r) => plausibleSeason(Number(r.year)) && /^\d+\s*-\s*\d+$/.test(String(r.record ?? "").trim()))
@@ -1323,6 +1353,7 @@ export async function buildRecruitNcRankingBoard({
         state_placements: statePlacements,
         nhsca_record: latestRecord(bundle.nhsca || []),
         super32_record: latestRecord(bundle.super32 || []),
+        toc_result: tocResult,
         nhsca_by_year: byYear(bundle.nhsca || []),
         super32_by_year: byYear(bundle.super32 || []),
         fargo_by_year: byYear(bundle.fargo || []),

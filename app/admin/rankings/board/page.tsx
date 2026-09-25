@@ -54,6 +54,7 @@ type BoardAthlete = {
   star_rating: StarRating | null
   state_placements: string[]
   nhsca_record: string | null
+  toc_result: string | null
   super32_record: string | null
   significant_wins: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
   significant_losses: Array<{
@@ -771,6 +772,24 @@ export default function RankingBoardPage() {
                                 >
                                   {athlete.state_placements[0]}
                                   {athlete.state_placements.length > 1 ? ` +${athlete.state_placements.length - 1}` : ""}
+                                </Badge>
+                              ) : null}
+                              {/*
+                                TOC sits ahead of NHSCA and Super 32 because it is the deepest
+                                field in the state and the one event where this class wrestles
+                                each other. A title here was previously visible only inside the
+                                evidence drawer.
+                              */}
+                              {athlete.toc_result ? (
+                                <Badge
+                                  className={
+                                    /champion/i.test(athlete.toc_result)
+                                      ? "bg-[#d6b75d] text-slate-950"
+                                      : "bg-emerald-700 text-white"
+                                  }
+                                  title={`Tournament of Champions — ${athlete.toc_result}`}
+                                >
+                                  TOC {athlete.toc_result}
                                 </Badge>
                               ) : null}
                               {athlete.nhsca_record ? (
