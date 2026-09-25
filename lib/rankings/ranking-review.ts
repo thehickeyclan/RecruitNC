@@ -142,7 +142,8 @@ export function reviewAthlete(
       beat.push(`${meeting.opponent} (#${theirRank})`)
     }
   }
-  if (beatenByUnranked.length && athlete.isRanked !== false) {
+  // The guard at the top has already returned for an unranked wrestler.
+  if (beatenByUnranked.length) {
     flags.push({
       kind: "beaten_by_unranked",
       severity: "high",
