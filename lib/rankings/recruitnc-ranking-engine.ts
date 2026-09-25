@@ -277,13 +277,20 @@ export function withinRankingWindow<T extends { date?: string | null }>(
  * 2026 class is not an upset by any reading — those two numbers describe different fields and
  * comparing them would flag half the board for nothing. Both wrestlers must also carry a
  * published ranking: an unranked opponent has no number to contradict.
+ *
+ * What decides it is the ranking, never which bucket the opponent fell into. This used to open
+ * with `loss.reason !== "ranked"`, and an opponent in the Tournament of Champions field is
+ * tagged "toc-field" — so every loss at the TOC was exempt. That is the one event where a class
+ * wrestles each other and therefore the richest source of upsets we have: Ayden Sumners lost the
+ * final 6-5 in a second tiebreaker to Aidan Szewczyk, eight places below him, and nothing on the
+ * board said so. A nationally ranked opponent carries no North Carolina number and is still
+ * excluded, by the guard below rather than by a name.
  */
 export function isUpsetLoss(
   loss: Pick<SignificantWin, "reason" | "opponentRanking" | "opponentGraduationYear">,
   ownRanking: number | null,
   ownGraduationYear: number | null,
 ): boolean {
-  if (loss.reason !== "ranked") return false
   if (ownRanking == null || loss.opponentRanking == null) return false
   if (ownGraduationYear == null || loss.opponentGraduationYear == null) return false
   if (loss.opponentGraduationYear !== ownGraduationYear) return false

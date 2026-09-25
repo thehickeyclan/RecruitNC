@@ -220,9 +220,21 @@ describe("isUpsetLoss", () => {
     expect(isUpsetLoss(loss(), null, 2027)).toBe(false)
   })
 
-  it("ignores national and TOC-field losses, which carry no NC number to contradict", () => {
-    expect(isUpsetLoss(loss({ reason: "national-ranked" }), 4, 2027)).toBe(false)
-    expect(isUpsetLoss(loss({ reason: "toc-field" }), 4, 2027)).toBe(false)
+  it("ignores a nationally ranked opponent, who carries no NC number to contradict", () => {
+    // `resolveOpponent` returns no North Carolina ranking for a nationally ranked opponent, so
+    // there is nothing to compare — the guard is the missing number, not the label.
+    expect(isUpsetLoss(loss({ reason: "national-ranked", opponentRanking: null }), 4, 2027)).toBe(false)
+  })
+
+  it("flags a loss at the TOC, which is where a class actually meets", () => {
+    /*
+     * This is the case the old rule missed. It opened with `reason !== "ranked"` and every TOC
+     * opponent is tagged "toc-field", so the single richest source of upsets was exempt. Ayden
+     * Sumners lost the 2026 final 6-5 in a second tiebreaker to Aidan Szewczyk — ranked eight
+     * places below him — and the board said nothing.
+     */
+    expect(isUpsetLoss(loss({ reason: "toc-field", opponentRanking: 18 }), 10, 2027)).toBe(true)
+    expect(isUpsetLoss(loss({ reason: "toc-field", opponentRanking: 2 }), 10, 2027)).toBe(false)
   })
 })
 
