@@ -40,8 +40,11 @@ export async function GET(request: NextRequest) {
 /**
  * Set or clear a hand-set rating.
  *
- * A reason is required to set one and is stored with it. The database enforces the same thing,
- * so a star can never arrive without an account of itself.
+ * A reason is optional. It used to be required at three layers at once — this route, the check
+ * constraint on the column, and `applyStarOverride`, which ignored any override lacking one — so
+ * setting a star without writing ten characters of justification failed, and the two layers
+ * below meant it could fail quietly. Whoever sets the star decides whether it needs explaining.
+ * When there is a reason it is still stored and still shown wherever the rating appears.
  */
 export async function PATCH(request: NextRequest) {
   const auth = await requireAdmin()
@@ -61,12 +64,6 @@ export async function PATCH(request: NextRequest) {
     if (!Number.isInteger(stars) || stars! < 1 || stars! > 5) {
       return NextResponse.json({ error: "A star rating is a whole number from 1 to 5." }, { status: 400 })
     }
-    if (reason.length < 10) {
-      return NextResponse.json(
-        { error: "Say why. The reason is shown wherever the rating is, so it needs to read as one." },
-        { status: 400 },
-      )
-    }
   }
 
   // requireAdmin proves the caller is an admin but does not hand back who they are, and the
@@ -78,7 +75,7 @@ export async function PATCH(request: NextRequest) {
     .from("athletes")
     .update({
       star_rating_override: stars,
-      star_rating_override_reason: clearing ? null : reason,
+      star_rating_override_reason: clearing || !reason ? null : reason,
       star_rating_override_by: clearing ? null : setBy,
       star_rating_override_at: clearing ? null : new Date().toISOString(),
     })

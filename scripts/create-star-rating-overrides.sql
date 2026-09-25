@@ -20,12 +20,11 @@ alter table public.athletes
   add constraint athletes_star_rating_override_range
   check (star_rating_override is null or star_rating_override between 1 and 5);
 
--- A star set by hand without a reason is the thing this is meant to prevent.
+-- A reason is optional. Requiring one here, in the route and in `applyStarOverride` at the same
+-- time meant a star set without ten characters of justification was rejected — and when it did
+-- get through, it was ignored on read, which is indistinguishable from a broken Save button.
 alter table public.athletes
   drop constraint if exists athletes_star_rating_override_reason;
-alter table public.athletes
-  add constraint athletes_star_rating_override_reason
-  check (star_rating_override is null or length(btrim(coalesce(star_rating_override_reason, ''))) >= 10);
 
 comment on column public.athletes.star_rating_override is
   'Hand-set star rating, 1-5. Overrides the computed value and is shown as a staff rating.';

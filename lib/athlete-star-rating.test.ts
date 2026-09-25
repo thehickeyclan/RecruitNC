@@ -245,10 +245,11 @@ describe("applyStarOverride", () => {
     expect(out.override).toMatchObject({ stars: 2, computedStars: computed.stars })
   })
 
-  it("refuses an override with no reason", () => {
-    // A star nobody can account for is worth less than no star.
-    expect(applyStarOverride(computed, { stars: 2, reason: "" }).stars).toBe(computed.stars)
-    expect(applyStarOverride(computed, { stars: 2, reason: "   " }).override).toBeUndefined()
+  it("applies an override with no reason", () => {
+    // Requiring one meant a star set without a note was written to the row and then ignored on
+    // every read, which is indistinguishable from a Save button that does not work.
+    expect(applyStarOverride(computed, { stars: 2, reason: "" }).stars).toBe(2)
+    expect(applyStarOverride(computed, { stars: 2, reason: "   " }).override).toMatchObject({ stars: 2 })
   })
 
   it("ignores a rating outside one to five", () => {
@@ -261,9 +262,12 @@ describe("applyStarOverride", () => {
     expect(applyStarOverride(computed, { stars: null, reason: null }).stars).toBe(computed.stars)
   })
 
-  it("does not mark an override that agrees with the formula", () => {
-    // Setting the same number by hand is not a disagreement and should not read as one.
-    expect(applyStarOverride(computed, { stars: computed.stars, reason: "looks right to me" }).override).toBeUndefined()
+  it("keeps an override that agrees with today's formula", () => {
+    // Pinning a star is the point of setting one by hand. If the bands move next week, a rating
+    // somebody chose deliberately should not move with them.
+    const out = applyStarOverride(computed, { stars: computed.stars, reason: "looks right to me" })
+    expect(out.stars).toBe(computed.stars)
+    expect(out.override).toMatchObject({ stars: computed.stars, computedStars: computed.stars })
   })
 })
 

@@ -62,11 +62,22 @@ export type StarOverride = {
  * A reason is required. Without one, the override is ignored — a star nobody can account for
  * is worth less than no star.
  */
+/**
+ * A hand-set rating wins, reason or no reason.
+ *
+ * This used to discard any override that arrived without one, so a star set without a note was
+ * written to the row and then silently ignored everywhere it was read — the rating simply did
+ * not change, which reads exactly like a broken Save button. A reason is worth having and is
+ * still stored and shown; it is no longer the price of setting a star.
+ *
+ * An override equal to the computed value is also kept rather than dropped. Pinning a star is
+ * the point of setting one by hand: if the formula moves next week, a rating somebody chose
+ * should not move with it.
+ */
 export function applyStarOverride(rating: StarRating, override: StarOverride | null): StarRating {
   const stars = override?.stars
   const reason = String(override?.reason ?? "").trim()
-  if (stars == null || !Number.isFinite(stars) || stars < 1 || stars > 5 || !reason) return rating
-  if (stars === rating.stars) return rating
+  if (stars == null || !Number.isFinite(stars) || stars < 1 || stars > 5) return rating
   return { ...rating, stars, override: { stars, computedStars: rating.stars, reason } }
 }
 
