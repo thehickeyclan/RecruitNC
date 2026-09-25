@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     const year = searchParams.get("year") || "2027"
     const gender = searchParams.get("gender") || "Male"
     const fresh = searchParams.get("refresh") === "1"
-    const [athletes, edition] = await Promise.all([
+    const [athletes, edition, draftRanks] = await Promise.all([
       fresh
         ? buildRecruitNcRankingBoard({ supabase: createAdminClient(), year, gender })
         : cachedBoard(year, gender),
@@ -60,10 +60,38 @@ export async function GET(request: Request) {
           return null
         }
       })(),
+      /*
+       * The saved draft, which is the working order.
+       *
+       * Saving wrote `ranking_drafts` and nothing ever read it back, so the board rebuilt itself
+       * from `athletes.prospect_ranking` on every load — the last *published* order. An admin
+       * would spend an evening reordering a class, press Save, reload, and be looking at the
+       * published order again with no indication their work was anywhere. It was: the rows were
+       * in the table the whole time, unread.
+       *
+       * Never cached, for the same reason the timestamps are not: a draft saved thirty seconds
+       * ago has to be on screen now. Missing tables must not take the board down.
+       */
+      (async () => {
+        try {
+          const { data } = await createAdminClient()
+            .from("ranking_drafts")
+            .select("athlete_id, rank")
+            .eq("class_year", Number(year))
+            .eq("gender", gender)
+          return new Map((data ?? []).map((row) => [String(row.athlete_id), Number(row.rank)]))
+        } catch {
+          return new Map<string, number>()
+        }
+      })(),
     ])
     return NextResponse.json({
-      athletes,
+      athletes: athletes.map((athlete) => ({
+        ...athlete,
+        draft_rank: draftRanks.get(String(athlete.id)) ?? null,
+      })),
       meta: {
+        draft_count: draftRanks.size,
         year,
         gender,
         count: athletes.length,

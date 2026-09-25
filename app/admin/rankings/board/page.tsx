@@ -44,6 +44,8 @@ type BoardAthlete = {
   college?: string | null
   college_opens_experience?: string | null
   final_rank?: number
+  /** Rank in the saved draft, when one exists. The working order, and it wins. */
+  draft_rank?: number | null
   locked?: boolean
   reviewer_note?: string
   all_american: string[]
@@ -306,16 +308,33 @@ export default function RankingBoardPage() {
       setStars(Object.fromEntries(rows.filter((r) => r.star_rating).map((r) => [r.id, r.star_rating!])))
       setDraftSavedAt(data.meta?.draft_saved_at ?? null)
       setPublishedAt(data.meta?.published_at ?? null)
-      // Passive by default: preserve the admin's published top 30 exactly as-is.
-      // Formula recommendations order only the private watchlist until an admin
-      // explicitly previews or accepts a recommendation.
+      /*
+       * A saved draft is the working order and outranks everything else on screen.
+       *
+       * This used to rebuild from `prospect_ranking` — the last published order — on every load,
+       * so a saved draft was written and never seen again. Reordering a class, saving it and
+       * reloading put the published order back, which reads exactly like the Save button doing
+       * nothing.
+       *
+       * With no draft saved the old behaviour stands: the published thirty stay exactly as they
+       * are and the formula only orders the private watchlist below them.
+       */
+      const drafted = rows
+        .filter((athlete) => athlete.draft_rank != null)
+        .sort((a, b) => (a.draft_rank ?? 999) - (b.draft_rank ?? 999))
+      const undrafted = rows
+        .filter((athlete) => athlete.draft_rank == null)
+        .sort((a, b) => a.ai_rank - b.ai_rank)
+
       const published = rows
         .filter((athlete) => athlete.prospect_ranking != null && athlete.prospect_ranking <= publicCap)
         .sort((a, b) => (a.prospect_ranking || 999) - (b.prospect_ranking || 999))
       const watchlist = rows
         .filter((athlete) => athlete.prospect_ranking == null || athlete.prospect_ranking > publicCap)
         .sort((a, b) => a.ai_rank - b.ai_rank)
-      const withFinal = [...published, ...watchlist]
+
+      const ordered = drafted.length > 0 ? [...drafted, ...undrafted] : [...published, ...watchlist]
+      const withFinal = ordered
         .map((athlete) => ({ ...athlete, locked: false, reviewer_note: "" }))
         .map((athlete, index) => ({ ...athlete, final_rank: index + 1 }))
       setAthletes(withFinal)
