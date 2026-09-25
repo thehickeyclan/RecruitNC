@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { ArrowDown, ArrowUp, Bot, CheckCircle2, ChevronDown, ChevronUp, Eye, Lock, Save, Search, Sparkles, UploadCloud } from "lucide-react"
+import { reviewBoard, summariseReview, type ReviewAthlete, type ReviewFlag } from "@/lib/rankings/ranking-review"
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
 import type { StarRating } from "@/lib/athlete-star-rating"
 import { normalizeBoardAthlete } from "@/lib/rankings/board-athlete"
@@ -72,6 +73,37 @@ type BoardAthlete = {
 const years = ["2026", "2027", "2028", "2029", "2030"]
 const genders = ["Male", "Female"]
 const darkOutlineButton = "border-blue-800 bg-slate-950 text-blue-100 hover:bg-blue-950 hover:text-white"
+
+/** `last_competed` is written for a card — "NHSCA Nationals · Mar 15, 2026". Pull the date back out. */
+function parseLastCompeted(value: string | null | undefined): string | null {
+  const match = String(value ?? "").match(/([A-Z][a-z]{2} \d{1,2}, \d{4})/)
+  if (!match) return null
+  const at = Date.parse(match[1]!)
+  return Number.isFinite(at) ? new Date(at).toISOString().slice(0, 10) : null
+}
+
+/** A contradiction, coloured by how much it should interrupt a reviewer. */
+function ReviewFlags({ flags }: { flags: ReviewFlag[] }) {
+  if (!flags.length) return null
+  return (
+    <ul className="mt-2 space-y-1">
+      {flags.map((flag, index) => (
+        <li
+          key={`${flag.kind}-${index}`}
+          className={`rounded border px-2 py-1 text-[11px] leading-snug ${
+            flag.severity === "high"
+              ? "border-red-500/40 bg-red-500/10 text-red-200"
+              : flag.severity === "medium"
+                ? "border-amber-500/40 bg-amber-500/10 text-amber-200"
+                : "border-slate-600/50 bg-slate-800/40 text-slate-300"
+          }`}
+        >
+          {flag.message}
+        </li>
+      ))}
+    </ul>
+  )
+}
 const activeGoldButton = "bg-[#d6b75d] text-slate-950 hover:bg-[#e6c86b]"
 
 function evidenceClass(tone: Evidence["tone"]): string {
@@ -349,18 +381,48 @@ export default function RankingBoardPage() {
     loadBoard()
   }, [year, gender])
 
+  /*
+   * What argues against the order on screen.
+   *
+   * Every real error found while reviewing this class by hand was already in the data and took
+   * somebody noticing it. This computes the contradictions instead — a wrestler ranked above
+   * somebody who beat them, a rating that disagrees with the order, a résumé that stopped in
+   * March, a match history that was never imported. It never proposes a rank; it states what a
+   * reviewer would want to answer before publishing.
+   */
+  const reviewFlags = useMemo(() => {
+    const rows: ReviewAthlete[] = athletes
+      .filter((a) => (a.final_rank ?? 0) > 0 && (a.final_rank ?? 0) <= publicCap)
+      .map((a) => ({
+        id: a.id,
+        name: a.name,
+        workingRank: a.final_rank!,
+        formulaRank: a.ai_rank,
+        outsideRank: a.rankwrestler_rank ?? null,
+        starScore: stars[a.id]?.score ?? a.star_rating?.score ?? null,
+        matchCount: a.match_count,
+        lastCompetedAt: parseLastCompeted(a.last_competed),
+        headToHead: (a.head_to_head ?? []).map((h) => ({
+          opponentId: h.opponentId,
+          opponent: h.opponent,
+          wins: h.wins,
+          losses: h.losses,
+        })),
+      }))
+    return reviewBoard(rows)
+  }, [athletes, publicCap, stars])
+
+  const reviewSummary = useMemo(() => summariseReview(reviewFlags), [reviewFlags])
+
   const filtered = useMemo(() => {
     const term = query.trim().toLowerCase()
     let rows = athletes
     if (view === "recommendation") rows = [...rows].sort((a, b) => a.ai_rank - b.ai_rank)
     if (view === "review") {
-      rows = rows.filter(
-        (a) =>
-          a.confidence !== "High" ||
-          Math.abs((a.final_rank || 999) - a.ai_rank) >= 5 ||
-          a.data_gaps.length >= 3 ||
-          !a.prospect_ranking,
-      )
+      // Something has to actually argue against the row, rather than the row merely being
+      // unfamiliar. Low confidence on its own flagged a quarter of the class and taught nobody
+      // anything.
+      rows = rows.filter((a) => (reviewFlags.get(a.id)?.length ?? 0) > 0 || a.data_gaps.length >= 3)
     }
     if (view === "gaps") {
       rows = [...rows]
@@ -376,13 +438,13 @@ export default function RankingBoardPage() {
       )
     }
     return rows
-  }, [athletes, query, view])
+  }, [athletes, query, view, reviewFlags])
 
   const currentlyPublished = athletes.filter(
     (athlete) => athlete.prospect_ranking != null && athlete.prospect_ranking <= publicCap,
   ).length
   const highConfidence = athletes.filter((a) => a.confidence === "High").length
-  const needsReview = athletes.filter((a) => a.confidence !== "High" || a.data_gaps.length >= 3).length
+  const needsReview = reviewSummary.contested
   const missingMatches = athletes.filter((a) => a.match_count === 0).length
   const thinMatches = athletes.filter((a) => a.match_count > 0 && a.match_count < 20).length
 
@@ -830,6 +892,7 @@ export default function RankingBoardPage() {
                                 {expandedEvidenceId === athlete.id ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                               </button>
                             </div>
+                            <ReviewFlags flags={reviewFlags.get(athlete.id) ?? []} />
                           </div>
                         </div>
                         <div className="flex flex-wrap gap-2">
