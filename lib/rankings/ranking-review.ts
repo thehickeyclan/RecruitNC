@@ -23,6 +23,7 @@ export type ReviewSeverity = "high" | "medium" | "low"
 export type ReviewFlag = {
   kind:
     | "beaten_by_lower"
+    | "beaten_by_unranked"
     | "beat_higher"
     | "formula_gap"
     | "outside_gap"
@@ -50,6 +51,14 @@ export type ReviewAthlete = {
   lastCompetedAt?: string | null
   /** Same-class meetings, as the board already computes them. */
   headToHead?: ReadonlyArray<{ opponentId: string; opponent: string; wins: number; losses: number }>
+  /**
+   * Is this wrestler inside the published cut?
+   *
+   * Everyone passed in is reviewed against everyone else, but only the ranked are reported on —
+   * positions beyond the cut are an unranked pool, not a ranking, and flagging their order would
+   * be treating noise as a judgement.
+   */
+  isRanked?: boolean
 }
 
 /**
@@ -88,6 +97,13 @@ export function reviewAthlete(
   order: ReadonlyArray<ReviewAthlete>,
   now: number = Date.now(),
 ): ReviewFlag[] {
+  /*
+   * Nothing is reported about a wrestler outside the cut. Positions past it are an unranked
+   * pool rather than a ranking — the order within it was never reviewed and is thin evidence —
+   * so flagging it contradicts an order nobody claimed. They are still compared *against*, which
+   * is how a loss to one of them reaches the ranked wrestler's card.
+   */
+  if (athlete.isRanked === false) return []
   const flags: ReviewFlag[] = []
   const rankOf = new Map(order.map((a) => [a.id, a.workingRank]))
 
@@ -96,17 +112,45 @@ export function reviewAthlete(
    * résumé argues about who is better; a result settles it for one afternoon, and an order that
    * contradicts one needs a reason.
    */
+  const rankedIds = new Set(order.filter((a) => a.isRanked !== false).map((a) => a.id))
+  const byId = new Map(order.map((a) => [a.id, a]))
   const beatenBy: string[] = []
+  const beatenByUnranked: string[] = []
   const beat: string[] = []
   for (const meeting of athlete.headToHead ?? []) {
+    const other = byId.get(meeting.opponentId)
+    if (!other) continue
     const theirRank = rankOf.get(meeting.opponentId)
     if (theirRank == null) continue
+    /*
+     * A loss to somebody outside the ranking is the loudest thing here, and it was invisible.
+     * This only ever compared the ranked against each other, so Jaycob Perez beating Landon
+     * Logan in the Tournament of Champions quarter-final went unreported — Logan was ranked 23rd
+     * and Perez was not ranked at all, so neither appeared in the other's comparison.
+     *
+     * Their formula position comes with it, because "beaten by somebody unranked" and "beaten by
+     * somebody the model puts 40th" are different problems.
+     */
+    if (meeting.losses > 0 && !rankedIds.has(meeting.opponentId)) {
+      beatenByUnranked.push(`${meeting.opponent} (unranked, formula #${other.formulaRank})`)
+      continue
+    }
     if (meeting.losses > 0 && theirRank > athlete.workingRank) {
       beatenBy.push(`${meeting.opponent} (#${theirRank})`)
     }
     if (meeting.wins > 0 && theirRank < athlete.workingRank) {
       beat.push(`${meeting.opponent} (#${theirRank})`)
     }
+  }
+  if (beatenByUnranked.length && athlete.isRanked !== false) {
+    flags.push({
+      kind: "beaten_by_unranked",
+      severity: "high",
+      message:
+        beatenByUnranked.length === 1
+          ? `Ranked, but beaten by a wrestler who is not: ${beatenByUnranked[0]}.`
+          : `Ranked, but beaten by ${beatenByUnranked.length} wrestlers who are not: ${beatenByUnranked.join(", ")}.`,
+    })
   }
   if (beatenBy.length) {
     flags.push({
@@ -218,4 +262,51 @@ export function summariseReview(flags: ReadonlyMap<string, ReviewFlag[]>): {
     }
   }
   return { contested, high, byKind }
+}
+
+
+/**
+ * Wrestlers outside the cut with a claim on it.
+ *
+ * The review reports on the ranked, which is right — but it meant the only way an unranked
+ * wrestler could ever be noticed was somebody remembering them. Two were found by eye in one
+ * afternoon: Landon Logan, 84th on the board because his match history had never been imported,
+ * and Jaycob Perez, 86th with a win over the wrestler who replaced him at 23.
+ *
+ * A claim is one of two things: the formula puts them inside the cut, or they have beaten
+ * somebody who is in it. Both are facts about results rather than opinions about potential.
+ */
+export type OverlookedCandidate = {
+  id: string
+  name: string
+  workingRank: number
+  formulaRank: number
+  reason: string
+}
+
+export function findOverlookedCandidates(
+  order: ReadonlyArray<ReviewAthlete>,
+  options: { cut: number },
+): OverlookedCandidate[] {
+  const ranked = new Set(order.filter((a) => a.workingRank <= options.cut).map((a) => a.id))
+  const rankOf = new Map(order.map((a) => [a.id, a.workingRank]))
+  const out: OverlookedCandidate[] = []
+  for (const athlete of order) {
+    if (athlete.workingRank <= options.cut) continue
+    const reasons: string[] = []
+    if (athlete.formulaRank <= options.cut) reasons.push(`formula ranks them ${athlete.formulaRank}`)
+    const beat = (athlete.headToHead ?? [])
+      .filter((m) => m.wins > 0 && ranked.has(m.opponentId))
+      .map((m) => `${m.opponent} (#${rankOf.get(m.opponentId)})`)
+    if (beat.length) reasons.push(`beat ${beat.join(", ")}`)
+    if (!reasons.length) continue
+    out.push({
+      id: athlete.id,
+      name: athlete.name,
+      workingRank: athlete.workingRank,
+      formulaRank: athlete.formulaRank,
+      reason: reasons.join("; "),
+    })
+  }
+  return out.sort((a, b) => a.formulaRank - b.formulaRank)
 }

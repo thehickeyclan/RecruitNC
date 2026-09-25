@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { reviewAthlete, reviewBoard, summariseReview, type ReviewAthlete } from "./ranking-review"
+import { findOverlookedCandidates, reviewAthlete, reviewBoard, summariseReview, type ReviewAthlete } from "./ranking-review"
 
 const NOW = Date.parse("2026-09-25T00:00:00Z")
 
@@ -134,5 +134,69 @@ describe("severity ordering and the summary", () => {
   it("reports nothing for an order nothing argues with", () => {
     const order = [athlete({ id: "a", workingRank: 1 }), athlete({ id: "b", workingRank: 2 })]
     expect(summariseReview(reviewBoard(order, NOW)).contested).toBe(0)
+  })
+})
+
+describe("wrestlers outside the cut", () => {
+  /*
+   * The blind spot this closed. The review only ever compared the ranked against each other, so
+   * Jaycob Perez beating Landon Logan in the TOC quarter-final was reported to nobody: Logan was
+   * 23rd and Perez was 86th, and neither appeared in the other's comparison.
+   */
+  const order = [
+    athlete({ id: "logan", workingRank: 23, formulaRank: 21, isRanked: true, headToHead: [{ opponentId: "perez", opponent: "Jaycob Perez", wins: 0, losses: 1 }] }),
+    athlete({ id: "perez", workingRank: 86, formulaRank: 40, isRanked: false, headToHead: [{ opponentId: "logan", opponent: "Landon Logan", wins: 1, losses: 0 }] }),
+  ]
+
+  it("flags a ranked wrestler beaten by somebody unranked", () => {
+    const flags = reviewAthlete(order[0]!, order, NOW)
+    const flag = flags.find((f) => f.kind === "beaten_by_unranked")!
+    expect(flag.severity).toBe("high")
+    expect(flag.message).toContain("Jaycob Perez")
+    expect(flag.message).toContain("formula #40")
+  })
+
+  it("does not report on the order of the unranked pool itself", () => {
+    // Positions past the cut are a shortlist, not a ranking, and flagging their order would be
+    // treating noise as a judgement.
+    expect(reviewAthlete(order[1]!, order, NOW).some((f) => f.kind === "beaten_by_unranked")).toBe(false)
+  })
+
+  it("surfaces an unranked wrestler who beat a ranked one", () => {
+    const found = findOverlookedCandidates(order, { cut: 30 })
+    expect(found).toHaveLength(1)
+    expect(found[0]!.name).toBe("perez")
+    expect(found[0]!.reason).toContain("beat Landon Logan (#23)")
+    // The formula has him 40th, outside the cut, so beating a ranked wrestler is the whole
+    // claim — which is the point: a result counts even when the model does not rate him.
+    expect(found[0]!.reason).not.toContain("formula ranks them")
+  })
+
+  it("surfaces an unranked wrestler the formula puts inside the cut", () => {
+    // Landon Logan sat 84th with no match history imported, and the only way he surfaced was
+    // somebody remembering him.
+    const pool = [
+      athlete({ id: "in", workingRank: 5, formulaRank: 5 }),
+      athlete({ id: "logan", workingRank: 84, formulaRank: 21 }),
+    ]
+    const found = findOverlookedCandidates(pool, { cut: 30 })
+    expect(found.map((f) => f.id)).toEqual(["logan"])
+  })
+
+  it("says nothing about an unranked wrestler with no claim", () => {
+    const pool = [athlete({ id: "a", workingRank: 4 }), athlete({ id: "b", workingRank: 70, formulaRank: 72 })]
+    expect(findOverlookedCandidates(pool, { cut: 30 })).toEqual([])
+  })
+})
+
+describe("the unranked pool is compared against, never reported on", () => {
+  it("says nothing at all about a wrestler outside the cut", () => {
+    const order = [
+      athlete({ id: "ranked", workingRank: 5, formulaRank: 5, isRanked: true }),
+      athlete({ id: "pool", workingRank: 60, formulaRank: 12, isRanked: false, matchCount: 0 }),
+    ]
+    // The pool wrestler has an empty match history and a 48-place formula gap, and neither is a
+    // finding: nobody claimed that 60th means anything.
+    expect(reviewAthlete(order[1]!, order, NOW)).toEqual([])
   })
 })
