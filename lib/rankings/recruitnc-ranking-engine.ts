@@ -20,6 +20,7 @@ import {
 } from "@/lib/national-team-live-profile-results"
 import { fetchNhscaDualsSnapshot } from "@/lib/nhsca-duals-live-results/db"
 import { loadDualsResumes, type DualsResume } from "@/lib/rankings/nhsca-duals-resume"
+import { scoreRankedWins } from "@/lib/rankings/ranked-win-value"
 import {
   datedMeetingsAgainst,
   holdsHeadToHeadEdge,
@@ -1206,21 +1207,10 @@ export async function buildRecruitNcRankingBoard({
        * only to a national placement. Capped so a wrestler who meets the same field twenty times
        * cannot out-score one who travelled.
        */
-      const rankedWinScore = Math.min(
-        topSignificantWins.reduce(
-          (sum, win) =>
-            sum +
-            // Scored from `reason`, not from the rendered standing. This used to read the display
-            // string, so relabelling a badge would have quietly rescored the class.
-            (win.reason === "national-ranked"
-              ? 18
-              : win.reason === "toc-field"
-                ? 10
-                : 7),
-          0,
-        ),
-        70,
-      )
+      // Scored from `reason` and the opponent's ranking, never from the rendered standing: this
+      // used to read the display string, so relabelling a badge would have quietly rescored the
+      // class. See `ranked-win-value` for why the TOC field is a floor rather than a ceiling.
+      const rankedWinScore = scoreRankedWins(topSignificantWins)
 
       /** Newest dated result across every source, formatted for a card. */
       const lastCompeted = (() => {
