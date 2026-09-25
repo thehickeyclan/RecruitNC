@@ -164,6 +164,15 @@ function formatNhscaMultiTimeByClass(payload: Record<string, unknown>): string {
 }
 
 function formatRankings(payload: Record<string, unknown>): string {
+  /*
+   * A gated answer is not an empty one. Rankings are for Blue members and verified college
+   * coaches now, and the branch below would have reported "No public prospect rankings found" —
+   * telling the reader the rankings do not exist rather than that they are not for them.
+   */
+  if (typeof payload.error === "string" && payload.error.trim()) {
+    const where = typeof payload.where_to_look === "string" ? `\n\n${payload.where_to_look}` : ""
+    return `${payload.error}${where}`
+  }
   if (payload.available_years && !payload.rankings) {
     const years = payload.available_years as number[]
     return `RecruitNC public prospect rankings are available for class years: **${years.join(", ")}** (top 20 per class).`

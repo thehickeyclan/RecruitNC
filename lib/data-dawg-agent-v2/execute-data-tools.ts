@@ -68,106 +68,31 @@ import {
   PUBLISHED_PUBLIC_RANKINGS_YEARS,
 } from "@/lib/public-rankings-cap"
 
-export async function toolPublicRankingsSearch(args: {
+/**
+ * Data Dawg does not hand out rankings.
+ *
+ * The ranking is what this platform charges for, and a profile now shows it only to NC United
+ * Blue members, verified college coaches and the wrestler themselves. A public chat agent that
+ * recites the same list on request is the same leak through a different door, and a worse one:
+ * it will do it a whole class at a time, on demand, to anybody.
+ *
+ * It says where the rankings are rather than refusing flatly, because somebody asking for them
+ * is exactly the person the subscription is for.
+ *
+ * Everything else this agent knows stays open — results, records, placements, head-to-heads. The
+ * ranking is our judgement about a wrestler and is the product; a result is a fact and is not.
+ */
+export async function toolPublicRankingsSearch(_args: {
   graduation_year?: number | null
   gender?: string | null
   limit?: number | null
   list_available_years?: boolean | null
 }) {
-  const admin = getSupabaseAdmin()
-
-  if (args.list_available_years) {
-    const years = PUBLISHED_PUBLIC_RANKINGS_YEARS
-    const counts: Record<string, number> = {}
-    for (const y of years) {
-      const maxRank = PUBLIC_RANKINGS_MAX_BY_YEAR[y]!
-      const { count } = await admin
-        .from("athletes")
-        .select("id", { count: "exact", head: true })
-        .eq("graduationyear", y)
-        .eq("gender", "Male")
-        .not("prospect_ranking", "is", null)
-        .lte("prospect_ranking", maxRank)
-      counts[String(y)] = count ?? 0
-    }
-    return {
-      available_years: years,
-      public_caps: PUBLIC_RANKINGS_MAX_BY_YEAR,
-      male_ranked_counts: counts,
-      pages: years.map((y) => `${RECRUITNC_APP_URL}/public-rankings/${y}`),
-      note: "RecruitNC official prospect rankings by class year.",
-    }
-  }
-
-  const yearRaw = args.graduation_year
-  const year =
-    yearRaw != null && Number.isFinite(Number(yearRaw)) ? Math.floor(Number(yearRaw)) : null
-  if (year == null) {
-    return {
-      error: `graduation_year is required (currently public: ${PUBLISHED_PUBLIC_RANKINGS_YEARS.join(", ")}), or set list_available_years: true.`,
-      rankings: [] as unknown[],
-      available_years: PUBLISHED_PUBLIC_RANKINGS_YEARS,
-    }
-  }
-  if (!isPublicRankingsYearPublished(year)) {
-    return {
-      error: `Class of ${year} rankings are not public yet. Public RecruitNC rankings are currently available for Class of ${PUBLISHED_PUBLIC_RANKINGS_YEARS.join(" and ")}.`,
-      rankings: [] as unknown[],
-      graduation_year: year,
-      available_years: PUBLISHED_PUBLIC_RANKINGS_YEARS,
-    }
-  }
-
-  const genderRaw = String(args.gender ?? "Male").trim()
-  const gender = /^female$/i.test(genderRaw) ? "Female" : "Male"
-  const maxPublicRank = PUBLIC_RANKINGS_MAX_BY_YEAR[year] ?? 20
-  const limitCap = maxPublicRank
-  const limit =
-    args.limit != null && Number.isFinite(Number(args.limit))
-      ? Math.min(Math.max(Math.floor(Number(args.limit)), 1), limitCap)
-      : limitCap
-
-  let q = admin
-    .from("athletes")
-    .select(
-      "id, name, highschool, graduationyear, gender, weightclass, prospect_ranking, recruiting_status, college",
-    )
-    .eq("graduationyear", year)
-    .eq("gender", gender)
-    .not("prospect_ranking", "is", null)
-    .lte("prospect_ranking", maxPublicRank)
-    .order("prospect_ranking", { ascending: true })
-    .limit(limit)
-
-  const { data, error } = await q
-  if (error) {
-    return { error: error.message, rankings: [] as unknown[], graduation_year: year, gender }
-  }
-
-  const rankings = (data ?? []).map((a: Record<string, unknown>) => ({
-    rank: a.prospect_ranking,
-    name: a.name,
-    highschool: a.highschool,
-    weightclass: a.weightclass,
-    graduationyear: a.graduationyear,
-    gender: a.gender,
-    recruiting_status: a.recruiting_status,
-    college: a.college,
-    profile_url: a.id ? getAthleteProfileUrl(String(a.id)) : null,
-    athlete_id: a.id,
-  }))
-
   return {
-    graduation_year: year,
-    gender,
-    public_cap: maxPublicRank,
-    count: rankings.length,
-    rankings,
-    page_url: `${RECRUITNC_APP_URL}/public-rankings/${year}`,
-    note:
-      rankings.length === 0
-        ? `No public prospect rankings found for class of ${year} (${gender}). Available years: ${PUBLISHED_PUBLIC_RANKINGS_YEARS.join(", ")}.`
-        : `RecruitNC official Class of ${year} ${gender} rankings (top ${maxPublicRank ?? "all"}). List every row returned in rank order.`,
+    error:
+      "RecruitNC prospect rankings are for NC United Blue members and verified college coaches. They are on the athlete's profile once signed in, and at /public-rankings. I do not read rankings out here.",
+    rankings: [] as unknown[],
+    where_to_look: `${RECRUITNC_APP_URL}/public-rankings`,
   }
 }
 
