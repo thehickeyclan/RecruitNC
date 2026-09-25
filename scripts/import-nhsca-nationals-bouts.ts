@@ -122,8 +122,16 @@ async function main() {
       seen.add(key)
       const order = (nextOrder.get(athleteId) ?? 0) + 1
       nextOrder.set(athleteId, order)
+      /*
+       * Resolve the opponent too when they are also a North Carolina wrestler we hold.
+       * `loadQualifierHeadToHead` keys on `opponent_id` and skips any bout without one, so a
+       * null here means the meeting never reaches the head-to-head index — Carson Worrick beat
+       * Tobin McNair in the 2026 consolation semi-final and neither card showed it.
+       */
+      const opponentId = (won ? loserTeam : winnerTeam) === "NC" ? resolve(opponent) : null
       payload.push({
         bout_order: order,
+        opponent_id: opponentId,
         event_key: eventKey,
         event_name: `${year} ${EVENT_NAME_PREFIX}`,
         year,
