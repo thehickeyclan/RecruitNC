@@ -31,7 +31,9 @@ const cachedBoard = unstable_cache(
   // so a payload built by older code is otherwise served to newer code: `all_american` went from
   // `string | null` to `string[]` while the key stayed "v1", and the board threw
   // "t.map is not a function" on every cached class until the entry expired.
-  ["admin-ranking-board", "v2"],
+  // v3: draft_rank, toc_result, and class-qualified standings on significant wins and losses.
+  // A cached v2 payload has none of them, and serving one to this code is what broke the board.
+  ["admin-ranking-board", "v3"],
   { revalidate: 600, tags: ["admin-ranking-board"] },
 )
 
@@ -41,7 +43,7 @@ export async function GET(request: Request) {
     const year = searchParams.get("year") || "2027"
     const gender = searchParams.get("gender") || "Male"
     const fresh = searchParams.get("refresh") === "1"
-    const [athletes, edition, draftRanks, excluded] = await Promise.all([
+    const [athletes, edition, excluded, draftRanks] = await Promise.all([
       fresh
         ? buildRecruitNcRankingBoard({ supabase: createAdminClient(), year, gender })
         : cachedBoard(year, gender),
