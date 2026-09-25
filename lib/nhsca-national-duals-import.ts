@@ -42,6 +42,28 @@ function divisionOf(team: string): "HSB" | "HSG" | "MS" | "EL" | null {
   return (match?.[1]?.toUpperCase() as "HSB" | "HSG" | "MS" | "EL" | undefined) ?? null
 }
 
+/**
+ * Elementary and middle school divisions, which this platform does not rank.
+ *
+ * The matcher was never wrong about these — it was working exactly as written. `ageDivisionMatches`
+ * requires an MS entrant to be four to six classes out, so it correctly tied a 154lb "Team Lil
+ * SHUTTs - MS" line to a class of 2031 wrestler, and an "- EL" line at 85lbs to a class of 2032
+ * one whose high school field reads "Middle". Accurate, and not what the board is for: these are
+ * recruiting rankings for high school wrestlers, and a fifth grader's duals record has no place
+ * in them.
+ *
+ * Excluded at the resolver rather than at the call site so nothing downstream can put them back.
+ * The nationwide export also carries names that collide across divisions — a "Jacob Perry" at 100
+ * in the MS bracket is not the class of 2028 Jacob Perry who wrestled this same event at 152 for
+ * NC United Select, and no amount of name matching can tell them apart. Dropping the youth
+ * divisions removes that whole class of false link, which is cheaper than adjudicating them one
+ * at a time.
+ */
+export function isYouthDivisionEntry(team: string | null | undefined): boolean {
+  const division = divisionOf(String(team ?? ""))
+  return division === "EL" || division === "MS"
+}
+
 function ageDivisionMatches(gradYear: number, division: ReturnType<typeof divisionOf>, eventYear: number): boolean {
   if (!division || !Number.isFinite(gradYear)) return false
   const seniorClass = eventYear
@@ -95,6 +117,9 @@ export function resolveNhscaNationalDualsProfiles(
 
   const teamsByName = new Map<string, Set<string>>()
   for (const entrant of entrants) {
+    // A youth namesake must not make a high schooler ambiguous. Left in, the MS "Jacob Perry"
+    // would put two teams under that name and send the real one to review as a collision.
+    if (isYouthDivisionEntry(entrant.club)) continue
     const key = normalizeNhscaDualsName(entrant.athleteName)
     const teams = teamsByName.get(key) ?? new Set<string>()
     teams.add(tidy(entrant.club).toLowerCase())
@@ -105,6 +130,7 @@ export function resolveNhscaNationalDualsProfiles(
   const review: NhscaDualsReview[] = []
   for (const source of entrants) {
     if (excludedTeam.test(source.club)) continue
+    if (isYouthDivisionEntry(source.club)) continue
     const key = normalizeNhscaDualsName(source.athleteName)
     const candidates = profilesByName.get(key) ?? []
     if (!candidates.length) continue
