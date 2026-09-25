@@ -173,6 +173,43 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
   {
     type: "function",
     function: {
+      name: "tournament_bouts_search",
+      description:
+        "Individual BOUTS for one wrestler — who they actually wrestled and what happened, with opponent, round, method and score. Use for 'who did X beat at NHSCA', 'who has beaten X', 'show me X's TOC matches', 'X's losses this year'. Covers NHSCA Nationals, the NCHSAA state tournament, the Tournament of Champions, Super 32 Early Entry, I-64 Spring Duals, Journeymen and NHSCA Duals. For a wrestler's RECORD or PLACEMENT rather than their matches, use nhsca_placements_search, nchsaa_state_results_search or get_athlete_full_dossier.",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          wrestler: { type: "string", description: "Wrestler's name." },
+          event: { type: "string", description: "Optional event name fragment, e.g. 'NHSCA' or 'Tournament of Champions'." },
+          year: { type: "integer", description: "Optional tournament year." },
+          outcome: { type: "string", enum: ["wins", "losses"], description: "Optional: only wins, or only losses." },
+          limit: { type: "integer" },
+        },
+        required: ["wrestler"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "head_to_head_search",
+      description:
+        "Whether two named wrestlers have ever met, the series record, and who won the most recent meeting. Use for 'has A ever beaten B', 'A vs B', 'who won when they wrestled'. The latest meeting is what a ranking argument turns on, so it is reported separately from the aggregate record.",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          wrestler: { type: "string", description: "First wrestler's name." },
+          opponent: { type: "string", description: "Second wrestler's name." },
+        },
+        required: ["wrestler", "opponent"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "nhsca_placements_search",
       description:
         "NHSCA national tournament placements (athlete or school) across **all years in DB** — merges `nhsca_placements` and legacy `wrestling_nhsca_results`. Use for All-Americans, national placers, NHSCA history. Prefer `get_athlete_full_dossier` or `wrestling_cross_store_search` for a specific wrestler when you have a name.",

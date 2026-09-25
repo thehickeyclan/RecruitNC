@@ -4,6 +4,12 @@
  */
 
 import { getSupabaseAdmin } from "@/lib/server-supabase"
+import {
+  buildHeadToHead,
+  describeBout,
+  loadBoutsForAthlete,
+  loadMeetings,
+} from "@/lib/data-dawg-agent-v2/tournament-bouts"
 import { fetchCollegeCommits } from "@/lib/college-commit-query"
 import { getAthletesColumnNames } from "@/lib/athletes-schema"
 import type { SupabaseClient } from "@supabase/supabase-js"
@@ -2087,6 +2093,8 @@ export async function toolFargoResultsByYear(args: { year?: number | string | nu
 }
 
 export type DataToolName =
+  | "tournament_bouts_search"
+  | "head_to_head_search"
   | "suggest_athlete_names"
   | "search_athletes"
   | "wrestling_cross_store_search"
@@ -2159,6 +2167,16 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
               limit?: number | null
             },
           ),
+        )
+      case "tournament_bouts_search":
+        return JSON.stringify(
+          await toolTournamentBoutsSearch(
+            args as { wrestler: string; event?: string | null; year?: number | null; outcome?: "wins" | "losses" | null; limit?: number },
+          ),
+        )
+      case "head_to_head_search":
+        return JSON.stringify(
+          await toolHeadToHeadSearch(args as { wrestler: string; opponent: string }),
         )
       case "nhsca_placements_search":
         return JSON.stringify(
@@ -2264,4 +2282,80 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
     const msg = e instanceof Error ? e.message : String(e)
     return JSON.stringify({ error: msg })
   }
+}
+
+
+/**
+ * One athlete's id from a name fragment, for the bout tools.
+ *
+ * Deliberately refuses to guess. Two wrestlers called Jacob Perry exist in this database, one in
+ * the class of 2028 and one who never had a profile made; answering a head-to-head question with
+ * the wrong one is worse than saying which two were found.
+ */
+async function resolveOneAthlete(
+  admin: SupabaseClient,
+  name: string,
+): Promise<{ id: string; name: string } | { error: string; candidates?: string[] }> {
+  const q = sanitizeFragment(name || "").trim()
+  if (q.length < 2) return { error: "Give a wrestler's name." }
+  const { data, error } = await admin
+    .from("athletes")
+    .select("id,name,graduationyear,highschool")
+    .ilike("name", `%${escapeForIlike(q)}%`)
+    .limit(10)
+  if (error) return { error: error.message }
+  if (!data?.length) return { error: `No athlete found matching "${q}".` }
+  if (data.length > 1) {
+    const exact = data.filter((a) => String(a.name).toLowerCase() === q.toLowerCase())
+    if (exact.length !== 1) {
+      return {
+        error: `"${q}" matches ${data.length} athletes. Ask which one.`,
+        candidates: data.map((a) => `${a.name} (${a.highschool ?? "school unknown"}, class of ${a.graduationyear ?? "?"})`),
+      }
+    }
+    return { id: String(exact[0]!.id), name: String(exact[0]!.name) }
+  }
+  return { id: String(data[0]!.id), name: String(data[0]!.name) }
+}
+
+/** Every recorded bout for a wrestler: who they wrestled, and what happened. */
+export async function toolTournamentBoutsSearch(args: {
+  wrestler: string
+  event?: string | null
+  year?: number | null
+  outcome?: "wins" | "losses" | null
+  limit?: number
+}) {
+  const admin = getSupabaseAdmin()
+  const found = await resolveOneAthlete(admin, args.wrestler)
+  if ("error" in found) return found
+  const bouts = await loadBoutsForAthlete(admin, found.id, {
+    event: args.event ?? null,
+    year: args.year ?? null,
+    limit: args.limit,
+  })
+  const filtered =
+    args.outcome === "wins" ? bouts.filter((b) => b.outcome === "W")
+      : args.outcome === "losses" ? bouts.filter((b) => b.outcome === "L")
+        : bouts
+  return {
+    wrestler: found.name,
+    count: filtered.length,
+    // Stated plainly, because an empty list here means we lack the bracket, not that the
+    // wrestler never competed. Records and placements live in the NHSCA and Super 32 tools.
+    coverage:
+      "Bout-level data covers the events imported so far: NHSCA Nationals, the NCHSAA state tournament, the Tournament of Champions, Super 32 Early Entry, I-64 Spring Duals, Journeymen and NHSCA Duals. Absence here is missing data, not a missing result.",
+    bouts: filtered.map((b) => ({ ...b, narrative: describeBout(b, found.name) })),
+  }
+}
+
+/** Did these two ever wrestle, and who won last time. */
+export async function toolHeadToHeadSearch(args: { wrestler: string; opponent: string }) {
+  const admin = getSupabaseAdmin()
+  const found = await resolveOneAthlete(admin, args.wrestler)
+  if ("error" in found) return found
+  const opponentName = sanitizeFragment(args.opponent || "").trim()
+  if (opponentName.length < 2) return { error: "Give the opponent's name." }
+  const meetings = await loadMeetings(admin, found.id, opponentName)
+  return buildHeadToHead(found.name, opponentName, meetings)
 }
