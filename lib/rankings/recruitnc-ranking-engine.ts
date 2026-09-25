@@ -1322,7 +1322,12 @@ export async function buildRecruitNcRankingBoard({
         if (!candidates.length) return null
         candidates.sort((a, b) => b.at - a.at)
         const latest = candidates[0]!
-        const when = new Date(latest.at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+        // Rendered in UTC, because the dates above are built with Date.UTC. Without this a
+        // server west of Greenwich prints every undated event a day early — NHSCA Duals, set to
+        // 23 May, read "May 22".
+        const when = new Date(latest.at).toLocaleDateString("en-US", {
+          month: "short", day: "numeric", year: "numeric", timeZone: "UTC",
+        })
         return latest.label ? `${latest.label} · ${when}` : when
       })()
 
