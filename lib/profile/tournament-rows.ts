@@ -1,3 +1,4 @@
+import type { NhscaNationalBout } from "@/lib/nhsca-national-bouts"
 /**
  * The rows behind a wrestler's tournament list, built once for every surface that shows them.
  *
@@ -172,6 +173,62 @@ function rowsFromBlocks(blocks: OtherTournamentProfileBlock[]): TournamentRow[] 
   }))
 }
 
+/**
+ * Bracket order within a year.
+ *
+ * The export groups the whole tournament by round, so a single wrestler's bouts do not come out
+ * in the order they wrestled them: Keyshon Morrison's championship loss in the Round of 32 —
+ * the bout that sent him to the consolation bracket — was listed after the 7th-place match it
+ * led to. Sorting by day, then by where the round sits in the bracket, puts a run back in the
+ * order it happened.
+ */
+function nhscaRoundRank(round: string | null | undefined): number {
+  const label = String(round ?? "").toLowerCase()
+  const size = Number(label.match(/of\s+(\d+)/)?.[1] ?? 0)
+  // Championship bracket first within a day, largest round first; consolation follows.
+  if (/consi/.test(label)) return size ? 200 - Math.log2(size) : /semi/.test(label) ? 196 : 197
+  if (/round of/.test(label) && size) return 100 - Math.log2(size)
+  if (/quarter/.test(label)) return 96
+  if (/semi/.test(label)) return 97
+  if (/final/.test(label)) return 98
+  if (/1st|3rd|5th|7th|place/.test(label)) return 300
+  return 250
+}
+
+function compareNhscaBouts(a: NhscaNationalBout, b: NhscaNationalBout): number {
+  const byDay = String(a.date ?? "").localeCompare(String(b.date ?? ""))
+  if (byDay !== 0) return byDay
+  return nhscaRoundRank(a.round) - nhscaRoundRank(b.round)
+}
+
+/** Put each NHSCA bout on the row for the year it was wrestled. */
+function attachNhscaBouts(rows: TournamentRow[], bouts: NhscaNationalBout[]): TournamentRow[] {
+  if (!bouts.length) return rows
+  return rows.map((row): TournamentRow => {
+    const mine = bouts.filter((bout) => bout.year === row.year)
+    if (!mine.length) return row
+    return {
+      ...row,
+      bouts: [...mine].sort(compareNhscaBouts).map((bout, boutOrder) => ({
+        eventKey: `nhsca-nationals-${bout.year}`,
+        eventName: "NHSCA High School Nationals",
+        year: bout.year,
+        weight: String(bout.weight ?? row.weight ?? ""),
+        round: bout.round || "NHSCA Nationals",
+        boutOrder,
+        opponentName: bout.opponent,
+        // NHSCA seeds by state, so what we hold for an opponent is the state they wrestled for.
+        opponentClub: bout.opponentState,
+        opponentAthleteId: null,
+        win: bout.outcome === "W",
+        isBye: false,
+        winType: bout.method ?? "",
+        score: bout.score ?? "",
+      })),
+    }
+  })
+}
+
 function rowsFromSummaries(
   event: string,
   results: AccordionSummaryResult[],
@@ -197,13 +254,20 @@ function rowsFromSummaries(
 export function buildTournamentRows(input: {
   otherTournamentBlocks?: OtherTournamentProfileBlock[]
   nhscaResults?: AccordionSummaryResult[]
+  /** Bout-level NHSCA results, attached to the year they were wrestled. */
+  nhscaBouts?: NhscaNationalBout[]
   super32Results?: AccordionSummaryResult[]
   fargoResults?: AccordionSummaryResult[]
   nationalTeamResults?: NationalTeamEntry[]
 }): TournamentRow[] {
   const rows = [
     ...rowsFromBlocks(input.otherTournamentBlocks ?? []),
-    ...rowsFromSummaries("NHSCA Nationals", input.nhscaResults ?? []),
+    /*
+     * NHSCA rows carry their bouts where we have them. A profile that says "7-2, 4th" without
+     * naming anybody beaten is the one thing a college coach cannot use, and states has shown
+     * every bout since its own import.
+     */
+    ...attachNhscaBouts(rowsFromSummaries("NHSCA Nationals", input.nhscaResults ?? []), input.nhscaBouts ?? []),
     ...rowsFromSummaries("Super 32", input.super32Results ?? []),
     /*
      * Freestyle and Greco are different tournaments, wrestled on different days, and a wrestler

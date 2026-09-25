@@ -70,6 +70,7 @@ export function ViewProfileClient({
   const profileTournamentRows = buildTournamentRows({
     otherTournamentBlocks: otherTournamentBlocks as never[],
     nhscaResults: nhscaResults as never[],
+    nhscaBouts: (Array.isArray(athlete.nhsca_bouts) ? athlete.nhsca_bouts : []) as never[],
     super32Results: super32Results as never[],
     fargoResults: fargoResults as never[],
     nationalTeamResults: nationalTeamResults as never[],
