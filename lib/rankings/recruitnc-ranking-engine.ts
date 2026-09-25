@@ -306,10 +306,12 @@ function significantBoutRow(bout: SignificantWin): {
         ? bout.nationalRankLabel
           ? `nationally ranked, ${bout.nationalRankLabel}`
           : "nationally ranked"
-        : bout.reason === "toc-field"
-          ? "Tournament of Champions field"
-          : bout.opponentRanking != null
-            ? `NC #${bout.opponentRanking}`
+        : bout.opponentRanking != null
+          ? // The number first, the field second. "Tournament of Champions field" alone read the
+            // same for the #1 in a class as for an invitee who went 0-2 there.
+            `NC #${bout.opponentRanking}${bout.reason === "toc-field" ? " · TOC field" : ""}`
+          : bout.reason === "toc-field"
+            ? "Tournament of Champions field"
             : "ranked in North Carolina",
   }
 }

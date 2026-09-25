@@ -48,3 +48,16 @@ describe("scoreRankedWins", () => {
     expect(scoreRankedWins(elite)).toBeGreaterThan(scoreRankedWins(padded))
   })
 })
+
+describe("a TOC invitee who is also ranked", () => {
+  it("is priced on the ranking, not on the invitation", () => {
+    /*
+     * The bug this guards. `resolveOpponent` used to null out `ranked` whenever the opponent was
+     * in the TOC field, so Kostoff's win over Jake Amiott (2028 #2) and Allman's over Aaron
+     * Ellison (2028 #1) both arrived here with no ranking and scored as unranked invitees.
+     */
+    expect(rankedWinValue({ reason: "toc-field", opponentRanking: 1 })).toBe(16)
+    expect(rankedWinValue({ reason: "toc-field", opponentRanking: 2 })).toBe(16)
+    expect(rankedWinValue({ reason: "toc-field", opponentRanking: null })).toBe(9)
+  })
+})

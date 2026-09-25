@@ -163,7 +163,19 @@ function resolveOpponent(index: OpponentIndex, name: string): OpponentResolution
   // measured against, and it is the only credential most out-of-state opponents will have.
   const national = (index.nationallyRanked ?? []).find((r) => namesLikelySamePerson(r.name, name)) ?? null
   const inField = national ? false : index.tocField.some((fieldName) => namesLikelySamePerson(fieldName, name))
-  const ranked = national || inField ? null : index.ranked.find((r) => namesLikelySamePerson(r.name, name)) ?? null
+  /*
+   * Resolved even when the opponent is in the TOC field, which it previously was not.
+   *
+   * Being invited to the Tournament of Champions and being the #1 wrestler in a class are not
+   * alternatives, and treating them as such threw away the better fact. Tyton Kostoff's win over
+   * Jake Amiott, the #2 in the Class of 2028, and Lukas Allman's over Aaron Ellison, the #1,
+   * both arrived carrying `opponentRanking: null` — so they were scored and labelled as though
+   * the opponent were any other invitee, including the ones who went 0-2.
+   *
+   * `reason` keeps its old precedence, so nothing that reads it changes. What changes is that a
+   * ranking is now available alongside it for whoever wants the sharper number.
+   */
+  const ranked = national ? null : index.ranked.find((r) => namesLikelySamePerson(r.name, name)) ?? null
 
   const resolution: OpponentResolution = { national, inField, ranked }
   cache.set(key, resolution)
