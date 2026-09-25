@@ -309,7 +309,14 @@ function significantBoutRow(bout: SignificantWin): {
         : bout.opponentRanking != null
           ? // The number first, the field second. "Tournament of Champions field" alone read the
             // same for the #1 in a class as for an invitee who went 0-2 there.
-            `NC #${bout.opponentRanking}${bout.reason === "toc-field" ? " · TOC field" : ""}`
+            //
+            // The class comes with it, because rankings are per graduation year and a bare "NC
+            // #118" is read as catastrophic when it is not. Jacob Perry lost three times to Jack
+            // Kancler, shown as "NC #118" — Kancler is class of 2026, 118th of the 119 ranked in
+            // a class that has now graduated, and Perry was wrestling a year up. The same label
+            // made Jake Amiott look beaten by his own class's top five when Kostoff, White and
+            // Tye Johnson are all 2027.
+            `${bout.opponentGraduationYear ? `${bout.opponentGraduationYear} ` : "NC "}#${bout.opponentRanking}${bout.reason === "toc-field" ? " · TOC field" : ""}`
           : bout.reason === "toc-field"
             ? "Tournament of Champions field"
             : "ranked in North Carolina",
