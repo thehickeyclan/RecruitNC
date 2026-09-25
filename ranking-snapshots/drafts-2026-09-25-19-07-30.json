@@ -1,0 +1,1120 @@
+{
+ "2027": [
+  {
+   "rank": 1,
+   "athlete_id": "2608f74c-1262-44dd-9097-c990ed3c0166",
+   "name": "Carson Worrick",
+   "school": "Davie",
+   "published_ranking": 1
+  },
+  {
+   "rank": 2,
+   "athlete_id": "63ea613d-0886-4af0-b64b-1c3d80fe0332",
+   "name": "Tobin McNair",
+   "school": "Wakefield",
+   "published_ranking": 2
+  },
+  {
+   "rank": 3,
+   "athlete_id": "f52d685f-814f-4d7c-9631-8fdfc8f7db60",
+   "name": "Tye Johnson",
+   "school": "Cape Fear",
+   "published_ranking": 4
+  },
+  {
+   "rank": 4,
+   "athlete_id": "b57cc0b2-ae3d-4f58-be43-d1493b37732a",
+   "name": "Tyton Kostoff",
+   "school": "Hough",
+   "published_ranking": 9
+  },
+  {
+   "rank": 5,
+   "athlete_id": "5cb8dcb5-6989-4a34-9db2-a33a2487100e",
+   "name": "Mac Johnson",
+   "school": "Cape Fear",
+   "published_ranking": 3
+  },
+  {
+   "rank": 6,
+   "athlete_id": "da7e32d2-bbdc-4b0e-ac70-ecb6ac67ed10",
+   "name": "Gavin Lopez",
+   "school": "Green Hope",
+   "published_ranking": 8
+  },
+  {
+   "rank": 7,
+   "athlete_id": "3ed5884e-12cc-4b43-a976-93790161569e",
+   "name": "Brieon Mayfield",
+   "school": "Jack Britt",
+   "published_ranking": 13
+  },
+  {
+   "rank": 8,
+   "athlete_id": "7d9d0eaa-838a-4d65-8ad6-45d25d3103b9",
+   "name": "Aidan Szewczyk",
+   "school": "Davie",
+   "published_ranking": 18
+  },
+  {
+   "rank": 9,
+   "athlete_id": "a95c204d-785c-427a-98cf-1930410b0dc7",
+   "name": "Aiden White",
+   "school": "Weddington",
+   "published_ranking": 5
+  },
+  {
+   "rank": 10,
+   "athlete_id": "f4236c5d-90cf-4249-afb8-755e3604702c",
+   "name": "Ayden Sumners",
+   "school": "Wheatmore",
+   "published_ranking": 10
+  },
+  {
+   "rank": 11,
+   "athlete_id": "58aaa26d-f206-4bb1-aee3-7d465b64ff39",
+   "name": "Aidan Gore",
+   "school": "Garner",
+   "published_ranking": 6
+  },
+  {
+   "rank": 12,
+   "athlete_id": "7cf32563-e793-4272-ac9b-4718114473cc",
+   "name": "Jekai Sedgwick",
+   "school": "Hoke County",
+   "published_ranking": 12
+  },
+  {
+   "rank": 13,
+   "athlete_id": "f6510005-cba5-47fd-9d7f-12ec2c7c6cb4",
+   "name": "Campbell Tufts",
+   "school": "Millbrook",
+   "published_ranking": 15
+  },
+  {
+   "rank": 14,
+   "athlete_id": "ca4cdc62-99ac-4951-bab6-6577885aad3e",
+   "name": "Jaxon Thomas",
+   "school": "Piedmont",
+   "published_ranking": 11
+  },
+  {
+   "rank": 15,
+   "athlete_id": "00d54b04-2420-4fdd-aef1-f298635c1987",
+   "name": "Josh Stonebraker",
+   "school": "Cary Christian",
+   "published_ranking": 16
+  },
+  {
+   "rank": 16,
+   "athlete_id": "fdab23e0-2dab-4135-a239-284944f8096e",
+   "name": "Jacob McCord",
+   "school": "Grimsley",
+   "published_ranking": 17
+  },
+  {
+   "rank": 17,
+   "athlete_id": "bf250d03-ab22-4a3b-8ba0-b2c8fac51713",
+   "name": "Keyshon Morrison",
+   "school": "Lake Norman",
+   "published_ranking": 7
+  },
+  {
+   "rank": 18,
+   "athlete_id": "fb4f10b4-30f7-4bcc-871e-73930909f3c0",
+   "name": "Holt Quincy",
+   "school": "North East Carolina Prep",
+   "published_ranking": 14
+  },
+  {
+   "rank": 19,
+   "athlete_id": "c30deea8-6e11-4bbd-b95c-6a5bc4d72692",
+   "name": "Luke Padgett",
+   "school": "Croatan",
+   "published_ranking": 19
+  },
+  {
+   "rank": 20,
+   "athlete_id": "dbb30d81-60a5-439c-b698-96433f4f030e",
+   "name": "Micah Howard",
+   "school": "Tuscola",
+   "published_ranking": 21
+  },
+  {
+   "rank": 21,
+   "athlete_id": "ff5337d6-4c77-4988-b767-ad4fe1a4ee75",
+   "name": "Aiden Campbell",
+   "school": "Havelock",
+   "published_ranking": 25
+  },
+  {
+   "rank": 22,
+   "athlete_id": "a74f8517-0717-48f2-90c8-f3cd485c186f",
+   "name": "John Bane",
+   "school": "New Bern",
+   "published_ranking": 27
+  },
+  {
+   "rank": 23,
+   "athlete_id": "7a95dcfc-b3e2-4abb-921c-c8e98f0901b3",
+   "name": "Nash Mullis",
+   "school": "North Stanly",
+   "published_ranking": null
+  },
+  {
+   "rank": 24,
+   "athlete_id": "af527675-63a4-417c-8081-06c00aa17f80",
+   "name": "Carter Furman",
+   "school": "Northwest Guilford",
+   "published_ranking": 23
+  },
+  {
+   "rank": 25,
+   "athlete_id": "e5077d85-f82e-4e21-9558-f52c2d252230",
+   "name": "Landon Logan",
+   "school": "A.L. Brown",
+   "published_ranking": null
+  },
+  {
+   "rank": 26,
+   "athlete_id": "85eb411c-ea51-4381-827d-13e5efa0e299",
+   "name": "Tripp Sullivan",
+   "school": "Union Pines",
+   "published_ranking": 29
+  },
+  {
+   "rank": 27,
+   "athlete_id": "a91dea56-f982-4527-83e1-6fe9834d16a1",
+   "name": "Abdul-Jamil Zaggout",
+   "school": "West Forsyth",
+   "published_ranking": 24
+  },
+  {
+   "rank": 28,
+   "athlete_id": "890b43a5-850d-440f-b4f1-64191088344f",
+   "name": "Ashton Tennessee",
+   "school": "West Johnston",
+   "published_ranking": null
+  },
+  {
+   "rank": 29,
+   "athlete_id": "6720fbe8-fd7b-4a80-8492-d9786a4ae054",
+   "name": "Aiden Burkholder",
+   "school": "Trinity",
+   "published_ranking": 20
+  },
+  {
+   "rank": 30,
+   "athlete_id": "9ec33b90-2c53-4f24-9513-6ca2ff937b43",
+   "name": "Alexander Moody",
+   "school": "Lumberton",
+   "published_ranking": null
+  },
+  {
+   "rank": 31,
+   "athlete_id": "05fe2bf5-f027-400f-8654-f1293b4e9691",
+   "name": "Carson Owens",
+   "school": "Leesville Road",
+   "published_ranking": null
+  },
+  {
+   "rank": 32,
+   "athlete_id": "c59ef031-d1d1-4263-bc9f-63e56e2ab118",
+   "name": "Mason Hollar",
+   "school": "South Caldwell",
+   "published_ranking": 22
+  },
+  {
+   "rank": 33,
+   "athlete_id": "5e0207fa-2930-4583-b221-d8f15e9ed973",
+   "name": "Jacob Campos",
+   "school": "White Oak",
+   "published_ranking": null
+  },
+  {
+   "rank": 34,
+   "athlete_id": "d5a61e49-a014-4123-86f1-816bb5c05fd6",
+   "name": "Liam Myles",
+   "school": "Union Pines",
+   "published_ranking": null
+  },
+  {
+   "rank": 35,
+   "athlete_id": "31ee331c-024f-4e61-8f62-3477acb937f3",
+   "name": "Lukas Allman",
+   "school": "Mount Pleasant",
+   "published_ranking": null
+  },
+  {
+   "rank": 36,
+   "athlete_id": "25f19ade-8632-47b1-8b28-81afd2ea8a04",
+   "name": "Colt Cambruzzi",
+   "school": "Providence",
+   "published_ranking": 26
+  },
+  {
+   "rank": 37,
+   "athlete_id": "fc44395c-b5b8-4a36-879f-33de59003b1b",
+   "name": "Michael Mauro",
+   "school": "Bradford Prep",
+   "published_ranking": 28
+  },
+  {
+   "rank": 38,
+   "athlete_id": "8bf9019b-fd66-43d7-b7d1-e2d83dae0ded",
+   "name": "Cooper Mathon",
+   "school": "Hough",
+   "published_ranking": 30
+  },
+  {
+   "rank": 39,
+   "athlete_id": "78a00f44-22df-44f7-927b-f83e92733ccb",
+   "name": "Zack Knott",
+   "school": "North Davidson",
+   "published_ranking": null
+  },
+  {
+   "rank": 40,
+   "athlete_id": "eb3ce001-65a2-4335-8b58-a83c6aed6be5",
+   "name": "Connor Brinkley",
+   "school": "Newton-Conover",
+   "published_ranking": null
+  },
+  {
+   "rank": 41,
+   "athlete_id": "ba2cef23-213e-44c9-9fbb-103b103614f2",
+   "name": "John Perez",
+   "school": "Dalton L. Mcmichael highschool",
+   "published_ranking": null
+  },
+  {
+   "rank": 42,
+   "athlete_id": "9b5c4f88-6363-4953-9d4e-f347ce1fa977",
+   "name": "Garrison Raper",
+   "school": "South Rowan",
+   "published_ranking": null
+  },
+  {
+   "rank": 43,
+   "athlete_id": "bca6bc93-26c0-4354-8305-bd33bb4644f5",
+   "name": "Brian Bellerand",
+   "school": "Southeast Guilford",
+   "published_ranking": null
+  },
+  {
+   "rank": 44,
+   "athlete_id": "27f3496f-e74b-4744-b1ca-8a59909c2e28",
+   "name": "Mason Hocker",
+   "school": "Hoggard",
+   "published_ranking": null
+  },
+  {
+   "rank": 45,
+   "athlete_id": "b4110366-a49b-4384-85ba-14bd685e8113",
+   "name": "Nicholas Arado",
+   "school": "Charlotte Country Day",
+   "published_ranking": null
+  },
+  {
+   "rank": 46,
+   "athlete_id": "39536348-daaf-40d0-af4e-cddf7caa2cbd",
+   "name": "Tommy Kishpaugh",
+   "school": "St. Stephens",
+   "published_ranking": null
+  },
+  {
+   "rank": 47,
+   "athlete_id": "3dced757-63c4-4fdf-9ae3-139f1e5ae837",
+   "name": "Logan Mumy",
+   "school": "Fred T Foard",
+   "published_ranking": null
+  },
+  {
+   "rank": 48,
+   "athlete_id": "06ea91f9-6262-4e05-9e77-bf4c2ecfbbb0",
+   "name": "Brennan Ferguson",
+   "school": "Cuthbertson",
+   "published_ranking": null
+  },
+  {
+   "rank": 49,
+   "athlete_id": "a42f215b-8bf6-44e1-894b-fbb3838fcd31",
+   "name": "Mattex Adams",
+   "school": "Leesville Road",
+   "published_ranking": null
+  },
+  {
+   "rank": 50,
+   "athlete_id": "838f0bd1-fd71-44f1-a98a-c21deea0412e",
+   "name": "Jeshurun Mills",
+   "school": "Lincolnton",
+   "published_ranking": null
+  },
+  {
+   "rank": 51,
+   "athlete_id": "0a045371-d786-4ef2-bf54-1ce7b8373d18",
+   "name": "Bryce Perry",
+   "school": "Washington",
+   "published_ranking": null
+  },
+  {
+   "rank": 52,
+   "athlete_id": "2ab676c3-7b67-404e-9db6-161997852b15",
+   "name": "Chris Aparicio",
+   "school": "Lincoln Charter",
+   "published_ranking": null
+  },
+  {
+   "rank": 53,
+   "athlete_id": "7e47f2a5-3c46-475c-a005-08c41c74a94a",
+   "name": "Gabriel Jones",
+   "school": "East Surry",
+   "published_ranking": null
+  },
+  {
+   "rank": 54,
+   "athlete_id": "c1849e65-a453-4506-b6d3-96f7423a25c9",
+   "name": "Cade Gehris",
+   "school": "First Flight",
+   "published_ranking": null
+  },
+  {
+   "rank": 55,
+   "athlete_id": "940eb7da-b0ee-44e2-8967-c93587de362d",
+   "name": "Josh Connick",
+   "school": "West Brunswick",
+   "published_ranking": null
+  },
+  {
+   "rank": 56,
+   "athlete_id": "8dc1ee05-a898-4c77-9a55-7a0621c9178f",
+   "name": "Josiah McCowan",
+   "school": "North Stanly",
+   "published_ranking": null
+  },
+  {
+   "rank": 57,
+   "athlete_id": "9befb049-a330-4a62-8e85-2d09a0d5e5df",
+   "name": "Devin Cotton",
+   "school": "Dudley",
+   "published_ranking": null
+  },
+  {
+   "rank": 58,
+   "athlete_id": "7bfd589b-833f-4326-b79c-1e296a091751",
+   "name": "Angel Olalde",
+   "school": "Mount Airy",
+   "published_ranking": null
+  },
+  {
+   "rank": 59,
+   "athlete_id": "60fe7886-965a-4d91-ae2a-1cea79ec3251",
+   "name": "Cory Thomas",
+   "school": "new bern highschool",
+   "published_ranking": null
+  },
+  {
+   "rank": 60,
+   "athlete_id": "1784a239-eaf2-4483-94c7-761cffbc96e4",
+   "name": "Naylor Higgins",
+   "school": "Middle Creek",
+   "published_ranking": null
+  },
+  {
+   "rank": 61,
+   "athlete_id": "de2e2807-c4a6-4296-98f7-b19964b2aecf",
+   "name": "Jonathan Burns",
+   "school": "Franklinton",
+   "published_ranking": null
+  },
+  {
+   "rank": 62,
+   "athlete_id": "7a4fd564-b98a-4e79-9a46-2f0043a4cdbc",
+   "name": "Alex Spainhour",
+   "school": "Mount Airy",
+   "published_ranking": null
+  },
+  {
+   "rank": 63,
+   "athlete_id": "d42f2b9c-af69-49a3-b1ab-d92ffcc572f9",
+   "name": "Rylin Walker",
+   "school": "South Caldwell",
+   "published_ranking": null
+  },
+  {
+   "rank": 64,
+   "athlete_id": "9c147a10-b2a9-4024-b81e-1d4b7765528a",
+   "name": "Sam Boltes",
+   "school": "Washington",
+   "published_ranking": null
+  },
+  {
+   "rank": 65,
+   "athlete_id": "53f7815d-72c3-4a8b-8429-f4daab1e3090",
+   "name": "Zareion Ebron-Berger",
+   "school": "New Bern",
+   "published_ranking": null
+  },
+  {
+   "rank": 66,
+   "athlete_id": "557e4d66-73e0-4454-9d4e-a53e80e81869",
+   "name": "Julian combs",
+   "school": "Person",
+   "published_ranking": null
+  },
+  {
+   "rank": 67,
+   "athlete_id": "22613ec2-c1c9-4920-8c2c-d5afc8fd95fe",
+   "name": "Abdel Adam",
+   "school": "Southwest Guilford",
+   "published_ranking": null
+  },
+  {
+   "rank": 68,
+   "athlete_id": "80089945-3516-4f84-a201-63ec0e634d30",
+   "name": "Matthew Carter",
+   "school": "New Hanover",
+   "published_ranking": null
+  },
+  {
+   "rank": 69,
+   "athlete_id": "dfd51a73-7788-43b7-a4cb-4dab8271396c",
+   "name": "Hayden Rogers",
+   "school": "Grimsley",
+   "published_ranking": null
+  },
+  {
+   "rank": 70,
+   "athlete_id": "19391c0c-61c8-4c27-a1cb-cfb5082edecf",
+   "name": "Kade Hennessy",
+   "school": "Ronald W. Reagan",
+   "published_ranking": null
+  },
+  {
+   "rank": 71,
+   "athlete_id": "25083aa0-df27-486e-b2a4-c290d4d41fc4",
+   "name": "Ayden Terwilliger",
+   "school": "Providence Grove",
+   "published_ranking": null
+  },
+  {
+   "rank": 72,
+   "athlete_id": "99a021eb-0bce-429b-81c3-8cb6f92bebde",
+   "name": "Ashton Tennessee",
+   "school": "West Johnston",
+   "published_ranking": null
+  },
+  {
+   "rank": 73,
+   "athlete_id": "566a8153-b39e-43db-94e1-88b61744568b",
+   "name": "Shane Shuster",
+   "school": "East Chapel Hill",
+   "published_ranking": null
+  },
+  {
+   "rank": 74,
+   "athlete_id": "21173eb4-6684-4009-9e02-e220a663010d",
+   "name": "Finn Morgan",
+   "school": "Pinecrest",
+   "published_ranking": null
+  },
+  {
+   "rank": 75,
+   "athlete_id": "09c4338b-d800-4a78-b885-d56b93c59992",
+   "name": "Henry “Hank” Franklin",
+   "school": "Saint Stephens",
+   "published_ranking": null
+  },
+  {
+   "rank": 76,
+   "athlete_id": "5cd8f583-b622-495e-9f45-2173fa765501",
+   "name": "Alex Rodriguez",
+   "school": "Cardinal Gibbons",
+   "published_ranking": null
+  },
+  {
+   "rank": 77,
+   "athlete_id": "0ae901bc-b9be-4ecd-8a6e-4d9d6d30050b",
+   "name": "Corben Boyd",
+   "school": "Oak Grove",
+   "published_ranking": null
+  },
+  {
+   "rank": 78,
+   "athlete_id": "94afe186-035d-4c6b-8452-e7b7de004da9",
+   "name": "Joshua Lemke",
+   "school": "Rosewood",
+   "published_ranking": null
+  },
+  {
+   "rank": 79,
+   "athlete_id": "dffbc2d3-78db-469d-8635-948dd4eb9cc1",
+   "name": "Royce Espinoza",
+   "school": "Triton",
+   "published_ranking": null
+  },
+  {
+   "rank": 80,
+   "athlete_id": "bc8bf5c5-0081-4871-ba49-de29a996f023",
+   "name": "Spencer Stanislawscyk",
+   "school": "Northwest Guilford",
+   "published_ranking": null
+  },
+  {
+   "rank": 81,
+   "athlete_id": "1e2b7f15-af09-402d-bb6f-e96eb2962ccf",
+   "name": "Noah Matamoros",
+   "school": "Carrboro",
+   "published_ranking": null
+  },
+  {
+   "rank": 82,
+   "athlete_id": "05b7c94b-3aba-48a9-9c5a-a99a14e9cd61",
+   "name": "Joshua Lemke",
+   "school": "Rosewood",
+   "published_ranking": null
+  },
+  {
+   "rank": 83,
+   "athlete_id": "b42cbb36-e37f-4bb8-8c42-22f860dc7949",
+   "name": "Hunter Artim",
+   "school": "Servite",
+   "published_ranking": null
+  },
+  {
+   "rank": 84,
+   "athlete_id": "dda5fd22-5a8e-4d51-be1e-3ad8111092fc",
+   "name": "Jai'Rel Young",
+   "school": "Corinth Holders",
+   "published_ranking": null
+  },
+  {
+   "rank": 85,
+   "athlete_id": "ef9c0bc5-0898-408a-86d0-740bef7e4888",
+   "name": "Coy Deel",
+   "school": "West Craven",
+   "published_ranking": null
+  },
+  {
+   "rank": 86,
+   "athlete_id": "8b05a40e-6a8f-4e65-ad8f-6d461dd37fbb",
+   "name": "Jaycob Perez",
+   "school": "Ashbrook",
+   "published_ranking": null
+  },
+  {
+   "rank": 87,
+   "athlete_id": "088074e4-0171-4f3b-8fe3-8d6f3edd0991",
+   "name": "Charles Thompson",
+   "school": "Mallard Creek",
+   "published_ranking": null
+  },
+  {
+   "rank": 88,
+   "athlete_id": "61bc9080-c01e-402a-8941-5b0c9f2343d9",
+   "name": "Jimmy Araujo",
+   "school": "Pinecrest",
+   "published_ranking": null
+  },
+  {
+   "rank": 89,
+   "athlete_id": "9b86b458-8591-4188-a2e1-4b091cbf832e",
+   "name": "James Paschal",
+   "school": "John motley Morehead",
+   "published_ranking": null
+  },
+  {
+   "rank": 90,
+   "athlete_id": "47a6eb7b-09e0-4ed6-9a97-b2ea4c76ae3b",
+   "name": "Tyler Kendrick",
+   "school": "John M. Morehead High School",
+   "published_ranking": null
+  },
+  {
+   "rank": 91,
+   "athlete_id": "d842df86-fe00-49c4-8f32-7ca843b6334f",
+   "name": "Elgia Helmstetter",
+   "school": "Chapel Hill",
+   "published_ranking": null
+  },
+  {
+   "rank": 92,
+   "athlete_id": "e184233f-8d68-4b4c-8cb3-0bcf6344127c",
+   "name": "Tyquez Wells",
+   "school": "North Pitt",
+   "published_ranking": null
+  }
+ ],
+ "2028": [
+  {
+   "rank": 1,
+   "athlete_id": "7bb99ea9-a0ff-4cd0-91f8-217327959105",
+   "name": "Jake Amiott",
+   "school": "Topsail",
+   "published_ranking": 2
+  },
+  {
+   "rank": 2,
+   "athlete_id": "a31bf725-32b8-4550-aff5-c74c59d97311",
+   "name": "Aaron Ellison",
+   "school": "Lumberton",
+   "published_ranking": 1
+  },
+  {
+   "rank": 3,
+   "athlete_id": "6a3c422a-ee87-42f4-b2ab-2b87d8a67bad",
+   "name": "Ryan Thompson",
+   "school": "Cardinal Gibbons",
+   "published_ranking": 4
+  },
+  {
+   "rank": 4,
+   "athlete_id": "270fcf81-8337-4581-8a17-ff0093a1b6af",
+   "name": "Connor Reece",
+   "school": "Northwest Guilford",
+   "published_ranking": 3
+  },
+  {
+   "rank": 5,
+   "athlete_id": "5d34ba2f-5111-45ee-8536-cb1bb759cea1",
+   "name": "Drew Teeter",
+   "school": "Mooresville",
+   "published_ranking": 5
+  },
+  {
+   "rank": 6,
+   "athlete_id": "1a2d638e-5978-45d4-b6c8-bc95ba754367",
+   "name": "Luke Richards",
+   "school": "Cardinal Gibbons",
+   "published_ranking": 13
+  },
+  {
+   "rank": 7,
+   "athlete_id": "18791362-9bf7-4e61-aa61-d4019a79f8d1",
+   "name": "Vincent Grack",
+   "school": "Hough",
+   "published_ranking": 22
+  },
+  {
+   "rank": 8,
+   "athlete_id": "a73d6036-dcb2-42e7-a9e5-0788b0d1594b",
+   "name": "Hayden Smith",
+   "school": "White Oak",
+   "published_ranking": 7
+  },
+  {
+   "rank": 9,
+   "athlete_id": "ddea34af-ae6a-4880-8a1c-687576bef1fe",
+   "name": "Jacob Perry",
+   "school": "New Bern",
+   "published_ranking": 9
+  },
+  {
+   "rank": 10,
+   "athlete_id": "92d9d56f-3268-45c8-896c-5c3801b29041",
+   "name": "Joseph Shook",
+   "school": "Union Pines",
+   "published_ranking": 15
+  },
+  {
+   "rank": 11,
+   "athlete_id": "2be076e9-5400-4238-a245-b4e4fb640d48",
+   "name": "Jackson D'Ettore",
+   "school": "Charlotte Catholic",
+   "published_ranking": 8
+  },
+  {
+   "rank": 12,
+   "athlete_id": "f5dfa7b9-49b3-4296-94a2-b6f587d03b5c",
+   "name": "Stephen Cross",
+   "school": "Trinity",
+   "published_ranking": 14
+  },
+  {
+   "rank": 13,
+   "athlete_id": "088023a8-b9df-4d84-94b5-40bf59535ed2",
+   "name": "Mitchell Rowland",
+   "school": "Pinecrest",
+   "published_ranking": 11
+  },
+  {
+   "rank": 14,
+   "athlete_id": "9a5d50a8-89a9-4579-83c2-2152cea84efc",
+   "name": "Matthew Akins",
+   "school": "Pinecrest",
+   "published_ranking": 19
+  },
+  {
+   "rank": 15,
+   "athlete_id": "18d82703-e422-4718-8fe7-c5bbd84dd52a",
+   "name": "Ammon Scott",
+   "school": "South Point",
+   "published_ranking": 12
+  },
+  {
+   "rank": 16,
+   "athlete_id": "a045087f-22be-466d-a4f5-81fc8d5cdd5c",
+   "name": "Aaron Ruiz-Angel",
+   "school": "Mount Airy",
+   "published_ranking": 10
+  },
+  {
+   "rank": 17,
+   "athlete_id": "d206b724-e587-4721-a1e2-2d23a57f79c2",
+   "name": "Paxton Kearns",
+   "school": "Trinity",
+   "published_ranking": 16
+  },
+  {
+   "rank": 18,
+   "athlete_id": "afcae647-b19d-4480-a85a-1f2e7a4b27ec",
+   "name": "Garrett Young",
+   "school": "Franklin",
+   "published_ranking": 6
+  },
+  {
+   "rank": 19,
+   "athlete_id": "1d29adb9-ba7e-49c7-9194-f680bc7a4d09",
+   "name": "Travis Nobles",
+   "school": "Trinity",
+   "published_ranking": 23
+  },
+  {
+   "rank": 20,
+   "athlete_id": "1ae6b10a-eeb9-4751-8453-ff0ab511c428",
+   "name": "AMANUEL KAHSAI",
+   "school": "NEW BERN",
+   "published_ranking": 21
+  },
+  {
+   "rank": 21,
+   "athlete_id": "b34fa366-dd5e-4af0-b67c-3feda4a12e05",
+   "name": "Adrian Feliciano",
+   "school": "Hough",
+   "published_ranking": 18
+  },
+  {
+   "rank": 22,
+   "athlete_id": "c63a0c30-55a5-41d5-a65d-68344e03a0e8",
+   "name": "Sheppard Homan",
+   "school": "Enka",
+   "published_ranking": 24
+  },
+  {
+   "rank": 23,
+   "athlete_id": "adff26ce-a620-40d5-864e-0658dca7f34c",
+   "name": "Christian Riddick",
+   "school": "First Flight",
+   "published_ranking": 17
+  },
+  {
+   "rank": 24,
+   "athlete_id": "73ad572d-45ae-4fc1-8666-4e7c6543a865",
+   "name": "Simeon Hammett",
+   "school": "Trinity",
+   "published_ranking": 27
+  },
+  {
+   "rank": 25,
+   "athlete_id": "90b10958-f873-4564-b57b-739dac7ffc1d",
+   "name": "Noah Sapp",
+   "school": "South Stanly",
+   "published_ranking": 37
+  },
+  {
+   "rank": 26,
+   "athlete_id": "8713c36d-940d-4be0-bc02-a0bccf927ec3",
+   "name": "Caleb Edwards",
+   "school": "Piedmont",
+   "published_ranking": 30
+  },
+  {
+   "rank": 27,
+   "athlete_id": "0088db52-b41b-453e-8043-20fed94891a0",
+   "name": "Jacob De La Torre",
+   "school": "Union Pines",
+   "published_ranking": 20
+  },
+  {
+   "rank": 28,
+   "athlete_id": "9887779f-1a24-4e52-a421-680491fa5cb1",
+   "name": "Vincent Valentino",
+   "school": "Laney",
+   "published_ranking": 25
+  },
+  {
+   "rank": 29,
+   "athlete_id": "2b29ac83-4d3f-4baf-bc2e-7ce6baa51da0",
+   "name": "Cole Shuster",
+   "school": "East Chapel Hill",
+   "published_ranking": 26
+  },
+  {
+   "rank": 30,
+   "athlete_id": "400b0713-37dd-4fc7-a3bb-6226eb9189d0",
+   "name": "Tyler Gardner",
+   "school": "Jacksonville",
+   "published_ranking": 28
+  },
+  {
+   "rank": 31,
+   "athlete_id": "1acac6a4-ef0f-4678-8ac9-dd2a2fae7b1e",
+   "name": "Chris Gaither",
+   "school": "West Rowan",
+   "published_ranking": 29
+  },
+  {
+   "rank": 32,
+   "athlete_id": "ab15038e-c51f-4d0f-947e-bcdfdc75e85b",
+   "name": "Ben Mccaleb",
+   "school": "Topsail",
+   "published_ranking": null
+  },
+  {
+   "rank": 33,
+   "athlete_id": "e0d1b6d1-c7b0-47d3-9879-7f6cc5193294",
+   "name": "Justin Woolard",
+   "school": "Washington highschool",
+   "published_ranking": 32
+  },
+  {
+   "rank": 34,
+   "athlete_id": "9815ad12-2e75-4b6e-afd1-7dd65564e90d",
+   "name": "Jordan Barbee",
+   "school": "Orange",
+   "published_ranking": 33
+  },
+  {
+   "rank": 35,
+   "athlete_id": "4c1465d1-c2c2-462b-9cac-d6f387c25b0c",
+   "name": "Bodie Welker",
+   "school": "Wesleyan Christian",
+   "published_ranking": null
+  },
+  {
+   "rank": 36,
+   "athlete_id": "6bb63666-61cd-4933-a9b6-34cfc59bdd84",
+   "name": "Cayden Laws",
+   "school": "Rutherfordton-Spindale Central",
+   "published_ranking": null
+  },
+  {
+   "rank": 37,
+   "athlete_id": "39d87bed-3f25-4d34-bee1-c9cb15ac87c3",
+   "name": "James Stephens",
+   "school": "West Rowan",
+   "published_ranking": 34
+  },
+  {
+   "rank": 38,
+   "athlete_id": "78c14860-f2e1-45e9-beba-f742f0ff5081",
+   "name": "Talon Grady",
+   "school": "RS Central",
+   "published_ranking": 35
+  },
+  {
+   "rank": 39,
+   "athlete_id": "f54dd4be-65f1-4e23-be17-3c0c042b8b96",
+   "name": "Kenny Martinez",
+   "school": "Kings Mountain",
+   "published_ranking": 31
+  },
+  {
+   "rank": 40,
+   "athlete_id": "92777de5-edbd-4097-a140-c9a95bb772a4",
+   "name": "Antonio Corral",
+   "school": "First Flight",
+   "published_ranking": null
+  }
+ ],
+ "2029": [
+  {
+   "rank": 1,
+   "athlete_id": "cfd61be9-da05-49f5-ba93-5d62df3862da",
+   "name": "Braylen Yates",
+   "school": "Topsail",
+   "published_ranking": 1
+  },
+  {
+   "rank": 2,
+   "athlete_id": "68696afb-0b22-465c-b22e-82e84913144e",
+   "name": "Carson Raper",
+   "school": "South Rowan",
+   "published_ranking": 2
+  },
+  {
+   "rank": 3,
+   "athlete_id": "c55d5eec-e7af-4ee5-a44f-3d7829462f3d",
+   "name": "Adam Walker",
+   "school": "Holly Springs",
+   "published_ranking": 4
+  },
+  {
+   "rank": 4,
+   "athlete_id": "f5a87c74-7dc6-427c-b205-da34e24c2375",
+   "name": "Xavier Bernthal",
+   "school": "New Bern",
+   "published_ranking": 3
+  },
+  {
+   "rank": 5,
+   "athlete_id": "93a01e1a-4eb4-473c-898f-bd67d29794b0",
+   "name": "Brandon Lefler",
+   "school": "Hough",
+   "published_ranking": 5
+  },
+  {
+   "rank": 6,
+   "athlete_id": "41dabe17-6cb5-40d1-84e6-ea07e1df5cb4",
+   "name": "Daniel McDermott",
+   "school": "Union Pines",
+   "published_ranking": null
+  },
+  {
+   "rank": 7,
+   "athlete_id": "fadc3b66-90e4-47ac-b324-f5864cb44af1",
+   "name": "Jatorien Hill",
+   "school": "Montgomery Central",
+   "published_ranking": 14
+  },
+  {
+   "rank": 8,
+   "athlete_id": "3a7924f7-fd2a-4e0a-94c5-8c0cbffad82c",
+   "name": "Isaac Young",
+   "school": "Pisgah",
+   "published_ranking": null
+  },
+  {
+   "rank": 9,
+   "athlete_id": "9ce9996c-0575-4881-8f3b-8c9f101f1d69",
+   "name": "Braylon Butts",
+   "school": "Union Pines",
+   "published_ranking": null
+  },
+  {
+   "rank": 10,
+   "athlete_id": "69c262de-782a-4756-b346-0aaa63301e64",
+   "name": "David Angel",
+   "school": "Cedar ridge highschool",
+   "published_ranking": 6
+  },
+  {
+   "rank": 11,
+   "athlete_id": "2ce1afb1-c995-457e-9bb8-2658588d46a9",
+   "name": "Ahmet Zaggout",
+   "school": "West Forsyth",
+   "published_ranking": 10
+  },
+  {
+   "rank": 12,
+   "athlete_id": "345edbf4-317f-46e4-8fc1-7eec7e3062e1",
+   "name": "Jack Gilson",
+   "school": "Charlotte Latin",
+   "published_ranking": 7
+  },
+  {
+   "rank": 13,
+   "athlete_id": "716ea4f6-d1d7-4314-8574-d9eae837df9f",
+   "name": "Kristopher Kerr Jr",
+   "school": "Cape fear",
+   "published_ranking": null
+  },
+  {
+   "rank": 14,
+   "athlete_id": "0483c906-c888-4c00-a0b3-6f38fa7e3102",
+   "name": "Malakai Esclamado",
+   "school": "Saint Stephens",
+   "published_ranking": 8
+  },
+  {
+   "rank": 15,
+   "athlete_id": "4da2b958-cae4-4b6e-9437-2be80b05c98c",
+   "name": "Jeremiah Payne",
+   "school": "Providence Grove",
+   "published_ranking": 9
+  },
+  {
+   "rank": 16,
+   "athlete_id": "9bbc5b8b-3cc8-4052-a9c8-6899a25eb369",
+   "name": "Ayden James",
+   "school": "James B. Dudley",
+   "published_ranking": 11
+  },
+  {
+   "rank": 17,
+   "athlete_id": "14ad272b-11d0-4323-a3ef-4e5ab94314ed",
+   "name": "Gael Guerrero Perez",
+   "school": "Bunn",
+   "published_ranking": 12
+  },
+  {
+   "rank": 18,
+   "athlete_id": "e23c1c51-1337-49fa-8931-ac34a58afe49",
+   "name": "Trent Walker",
+   "school": "Trinity",
+   "published_ranking": 13
+  },
+  {
+   "rank": 19,
+   "athlete_id": "12f0798b-8e08-4bb7-88c7-1db66ffa690a",
+   "name": "Adam Hart",
+   "school": "Western Harnett",
+   "published_ranking": null
+  },
+  {
+   "rank": 20,
+   "athlete_id": "7b5c18e3-2a1a-4e4f-9a69-c6a3538a2353",
+   "name": "Ben Green",
+   "school": "Chapel Hill",
+   "published_ranking": null
+  },
+  {
+   "rank": 21,
+   "athlete_id": "97dc9de1-c79e-4bae-a7e1-7ac17c67e76a",
+   "name": "Taylen Brewer",
+   "school": "Porter Ridge",
+   "published_ranking": null
+  },
+  {
+   "rank": 22,
+   "athlete_id": "a8b5777c-c50b-43dd-80e3-fe39e4791641",
+   "name": "James Cofield",
+   "school": "Rocky Mount High",
+   "published_ranking": null
+  },
+  {
+   "rank": 23,
+   "athlete_id": "e99d37c9-d9b9-4adf-a765-0b7531bcb8b9",
+   "name": "Ethan Freeman",
+   "school": "Douglas Byrd",
+   "published_ranking": null
+  }
+ ],
+ "takenAt": "2026-09-25T19:07:30.683Z",
+ "editions": [
+  {
+   "class_year": 2029,
+   "gender": "Male",
+   "draft_saved_at": "2026-09-08T20:18:30.414+00:00",
+   "draft_saved_by": "6c8e4e80-7c49-4b18-b6a7-3b017011f2d2",
+   "published_at": null,
+   "published_by": null
+  },
+  {
+   "class_year": 2028,
+   "gender": "Male",
+   "draft_saved_at": "2026-09-25T17:15:34.823+00:00",
+   "draft_saved_by": "6c8e4e80-7c49-4b18-b6a7-3b017011f2d2",
+   "published_at": null,
+   "published_by": null
+  },
+  {
+   "class_year": 2027,
+   "gender": "Male",
+   "draft_saved_at": "2026-09-25T18:44:26.889+00:00",
+   "draft_saved_by": "6c8e4e80-7c49-4b18-b6a7-3b017011f2d2",
+   "published_at": "2026-09-08T18:57:28.65+00:00",
+   "published_by": "6c8e4e80-7c49-4b18-b6a7-3b017011f2d2"
+  }
+ ]
+}

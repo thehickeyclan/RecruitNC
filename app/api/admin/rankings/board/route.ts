@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     const year = searchParams.get("year") || "2027"
     const gender = searchParams.get("gender") || "Male"
     const fresh = searchParams.get("refresh") === "1"
-    const [athletes, edition, draftRanks] = await Promise.all([
+    const [athletes, edition, draftRanks, excluded] = await Promise.all([
       fresh
         ? buildRecruitNcRankingBoard({ supabase: createAdminClient(), year, gender })
         : cachedBoard(year, gender),
@@ -58,6 +58,35 @@ export async function GET(request: Request) {
           return data ?? null
         } catch {
           return null
+        }
+      })(),
+      /*
+       * Who this class query silently dropped.
+       *
+       * The board filters on gender, and a null never matches — so an athlete with that one
+       * field unset vanished from every board with nothing saying so. Seven were missing this
+       * way, including Miller Menteer, whom RankWrestler had 30th in the Class of 2027, and a
+       * wrestler with sixty-three matches on file. A class quietly three athletes short looks
+       * exactly like a class that is complete.
+       *
+       * Reported rather than included: guessing at gender on a minor's record is worse than
+       * showing an admin that a record needs a field.
+       */
+      (async () => {
+        try {
+          const { data } = await createAdminClient()
+            .from("athletes")
+            .select("id, name, highschool")
+            .eq("graduationyear", Number(year))
+            .eq("is_nc_athlete", true)
+            .is("gender", null)
+          return (data ?? []).map((row) => ({
+            id: String(row.id),
+            name: String(row.name ?? "Unnamed"),
+            highschool: (row.highschool as string) ?? null,
+          }))
+        } catch {
+          return [] as Array<{ id: string; name: string; highschool: string | null }>
         }
       })(),
       /*
@@ -92,6 +121,8 @@ export async function GET(request: Request) {
       })),
       meta: {
         draft_count: draftRanks.size,
+        /** Athletes in this class the query could not place, and why. */
+        excluded_no_gender: excluded,
         year,
         gender,
         count: athletes.length,

@@ -309,6 +309,8 @@ export default function RankingBoardPage() {
   const [year, setYear] = useState(requestedYear && years.includes(requestedYear) ? requestedYear : "2027")
   const [gender, setGender] = useState(requestedGender === "Female" ? "Female" : "Male")
   const [athletes, setAthletes] = useState<BoardAthlete[]>([])
+  /** Athletes this class query dropped for a missing field, rather than for a reason. */
+  const [excluded, setExcluded] = useState<Array<{ id: string; name: string; highschool: string | null }>>([])
   const [stars, setStars] = useState<Record<string, StarRating>>({})
   const [starEdit, setStarEdit] = useState<{ id: string; stars: string; reason: string } | null>(null)
   const [starError, setStarError] = useState<string | null>(null)
@@ -339,6 +341,7 @@ export default function RankingBoardPage() {
       // full pass over the class — ninety-two athletes, in series — and the page took minutes.
       setStars(Object.fromEntries(rows.filter((r) => r.star_rating).map((r) => [r.id, r.star_rating!])))
       setDraftSavedAt(data.meta?.draft_saved_at ?? null)
+      setExcluded(Array.isArray(data.meta?.excluded_no_gender) ? data.meta.excluded_no_gender : [])
       setPublishedAt(data.meta?.published_at ?? null)
       /*
        * A saved draft is the working order and outranks everything else on screen.
@@ -698,6 +701,35 @@ export default function RankingBoardPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/*
+            A class that is quietly short looks exactly like a class that is complete.
+
+            The board filters on gender and a null never matches, so an athlete with that one
+            field unset dropped out of every board with nothing saying so — seven were missing
+            this way, one of them 30th in his class on RankWrestler with sixty-three matches on
+            file. They are named rather than counted, because a name is what makes somebody go
+            and fix the record.
+          */}
+          {excluded.length ? (
+            <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100">
+              <p className="font-semibold">
+                {excluded.length} {excluded.length === 1 ? "athlete is" : "athletes are"} missing from this class
+              </p>
+              <p className="mt-1 text-amber-200/80">
+                Their gender is not set, and the board cannot place them. This is a missing field, not a
+                judgement about the wrestler.
+              </p>
+              <ul className="mt-2 space-y-0.5">
+                {excluded.map((athlete) => (
+                  <li key={athlete.id}>
+                    {athlete.name}
+                    {athlete.highschool ? ` — ${athlete.highschool}` : ""}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
 
           {status ? (
             <div className="rounded-2xl border border-blue-800 bg-blue-950/60 p-4 text-sm text-blue-100">{status}</div>

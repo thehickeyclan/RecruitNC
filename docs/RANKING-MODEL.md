@@ -95,6 +95,21 @@ State these before defending a number.
    `public_rankings` (the iPhone app) in one press. Only what was saved is published, so an order
    nobody reviewed cannot ship.
 
+## The formula is locked
+
+`formula-lock.test.ts` pins every scoring constant with the number written out. Changing one
+fails that file, and the failure is the point.
+
+Six scoring changes went in over a single afternoon. Each was a real defect — the penalty cap,
+graded ranked wins, the TOC opponent fix, the upset check, the duals scale, the standing labels —
+and each moved the board underneath somebody who was mid-order. Forty-seven of ninety-two
+wrestlers moved on one commit. However correct the step, a ranking that shifts while it is being
+worked on is not one anybody can use.
+
+So: update the pinned number in the same commit as the change, never separately, and say in the
+message which wrestlers move and by how much. Take a snapshot first — `ranking-snapshots/` holds
+the saved drafts as JSON, names included, so an order can always be put back.
+
 ## When the model is wrong
 
 It will be. The useful question is which kind of wrong:
