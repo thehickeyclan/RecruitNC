@@ -173,3 +173,40 @@ describe("when the class board disagrees with the season", () => {
     expect(list.every((x) => x.classOverride === 0)).toBe(true)
   })
 })
+
+describe("a result contradicts any order, in any class", () => {
+  it("reports everyone who beat them, whatever their class or position", () => {
+    /*
+     * Micah Howard (2027) beat Jacob Perry (2028) in the TOC semi-final. The page could move
+     * Perry above Howard with nothing turning red, because the only rule it could check was
+     * about classmates and these two graduate in different years. `beatenBy` was no help: it is
+     * names, already filtered against the order this build produced, so it says nothing about
+     * an order somebody makes by hand afterwards.
+     */
+    const list = buildPoundForPound(
+      [
+        w("howard", { graduationYear: 2027, classRank: 20, statePlace: 1, tocPlace: 2, wins: 52, losses: 2 }),
+        w("perry", { graduationYear: 2028, classRank: 9, statePlace: 4, tocPlace: 3, wins: 61, losses: 8 }),
+      ],
+      [{ winnerId: "howard", loserId: "perry", date: "2026-09-18", event: "Tournament of Champions" }],
+    )
+    const perry = list.find((x) => x.id === "perry")!
+    const howard = list.find((x) => x.id === "howard")!
+    expect(perry.lostTo).toContain("howard")
+    expect(howard.lostTo).not.toContain("perry")
+  })
+
+  it("keeps reporting a loss even when the winner is ranked above them", () => {
+    // beatenBy hides this case by design; lostTo must not, or a hand edit cannot be checked.
+    const list = buildPoundForPound(
+      [
+        w("strong", { classRank: 1, statePlace: 1, nationalPlace: 1, wins: 40, losses: 1 }),
+        w("weak", { classRank: 2, wins: 20, losses: 10 }),
+      ],
+      [{ winnerId: "strong", loserId: "weak", date: "2026-02-21" }],
+    )
+    const weak = list.find((x) => x.id === "weak")!
+    expect(weak.beatenBy).toEqual([])
+    expect(weak.lostTo).toContain("strong")
+  })
+})

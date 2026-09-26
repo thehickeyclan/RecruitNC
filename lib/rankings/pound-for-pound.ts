@@ -145,6 +145,16 @@ export type PoundForPoundEntry = PoundForPoundInput & {
   classOverride: number
   /** Wrestlers ranked below them on score who have beaten them. */
   beatenBy: string[]
+  /**
+   * Everyone on this list who has beaten them, by id, whatever their class or position.
+   *
+   * `beatenBy` is names, already filtered against the order this build produced, which makes it
+   * useless the moment somebody drags a row: the page cannot tell whether a hand-made order
+   * contradicts a result if all it holds is a sentence about the old one. Perry lost to Howard
+   * in the TOC semi-final and could be moved above him with nothing turning red, because the
+   * only rule the page could check was one about classmates.
+   */
+  lostTo: string[]
 }
 
 /**
@@ -275,5 +285,8 @@ export function buildPoundForPound(
     beatenBy: [...(beats.entries())]
       .filter(([winnerId, losers]) => losers.has(a.id) && (placeOf.get(winnerId) ?? 0) > i + 1)
       .map(([winnerId]) => nameOf.get(winnerId) ?? winnerId),
+    lostTo: [...(beats.entries())]
+      .filter(([, losers]) => losers.has(a.id))
+      .map(([winnerId]) => winnerId),
   }))
 }

@@ -32,6 +32,7 @@ type Entry = {
   score: number
   scoreRank: number
   classOverride: number
+  lostTo?: string[]
   statePlace?: number | null
   nationalPlace?: number | null
   nationalDivision?: string | null
@@ -183,15 +184,28 @@ export default function PoundForPoundPage() {
    */
   const breaksClassOrder = useMemo(() => {
     const flagged = new Map<string, string>()
+    const note = (id: string, message: string) => {
+      const held = flagged.get(id)
+      flagged.set(id, held ? `${held} ${message}` : message)
+    }
     for (let i = 0; i < entries.length; i += 1) {
       for (let j = i + 1; j < entries.length; j += 1) {
         const above = entries[i]!
         const below = entries[j]!
+        /*
+         * A result outranks any argument, in any class. This was checked only between
+         * classmates, so Jacob Perry could be dragged above Micah Howard - who beat him in the
+         * TOC semi-final - and the page said nothing, because they graduate in different years.
+         */
+        if (above.lostTo?.includes(below.id)) {
+          note(above.id, `Above ${below.name}, who beat them.`)
+          note(below.id, `Below ${above.name}, who they beat.`)
+        }
         if (above.graduationYear !== below.graduationYear) continue
         if (above.classRank == null || below.classRank == null) continue
         if (above.classRank > below.classRank) {
-          flagged.set(above.id, `Above ${below.name}, who the ${above.graduationYear} board ranks #${below.classRank} to his #${above.classRank}.`)
-          flagged.set(below.id, `Below ${above.name}, who the ${below.graduationYear} board ranks #${above.classRank} to his #${below.classRank}.`)
+          note(above.id, `Above ${below.name}, who the ${above.graduationYear} board ranks #${below.classRank} to his #${above.classRank}.`)
+          note(below.id, `Below ${above.name}, who the ${below.graduationYear} board ranks #${above.classRank} to his #${below.classRank}.`)
         }
       }
     }
@@ -310,7 +324,7 @@ export default function PoundForPoundPage() {
               </div>
               <div className={breaksClassOrder.size ? "bg-red-950/60 p-4" : "bg-slate-900 p-4"}>
                 <p className={breaksClassOrder.size ? "text-xs uppercase tracking-wide text-red-200" : "text-xs uppercase tracking-wide text-blue-300"}>
-                  Breaks class board
+                  Contradictions
                 </p>
                 <p className="text-2xl font-black">{breaksClassOrder.size}</p>
                 <p className={breaksClassOrder.size ? "text-xs text-red-200/80" : "text-xs text-blue-300/80"}>
@@ -411,7 +425,7 @@ export default function PoundForPoundPage() {
                     {breaksClassOrder.has(entry.id) && (
                       <p className="mt-1 flex items-center gap-1 text-xs font-semibold text-red-300">
                         <AlertTriangle className="h-3 w-3 shrink-0" />
-                        Breaks the class board — {breaksClassOrder.get(entry.id)}
+                        {breaksClassOrder.get(entry.id)}
                       </p>
                     )}
                     {/* Informational: the class board and this season disagree about them. */}
