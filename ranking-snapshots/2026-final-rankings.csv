@@ -1,0 +1,118 @@
+rank,previous_rank,name,highschool,weightclass,gender,athlete_id
+1,1,Bentley Sly,Stuart Cramer,190,Male,8c0162c0-b367-4675-bf9d-6ff862275adf
+2,2,Lorenzo Alston,Uwharrie Charter,175,Male,3fbbf559-1408-4261-8116-947276fc23cc
+3,3,Cael Dunn,Avery County,215,Male,66c4a776-62d1-44b7-b99d-9bd35d6ad8eb
+4,4,Dominic Blue,Union Pines,175,Male,b3aad978-ff65-40ec-8cec-621d3a3d410a
+5,5,Samuel Gantt,Pine Forest,144,Male,de889d58-93fe-484f-9050-da736a8ce23f
+6,7,Andrew Meadows,Mount Airy,175,Male,c94b5e5e-89d0-474e-be82-134cb3aa91cd
+7,8,Andrew Davis,Davie,150,Male,023e09d6-6d38-4a29-a280-c4c7a5af3c09
+8,6,Gabe Rogers,Seaforth,144,Male,2c787390-67e2-40fd-932f-6fd7bf698109
+9,9,Elijah Horton,John M. Morehead High School,138,Male,45e7dc80-aafb-43c5-9e27-92cc85b1b64b
+10,10,Trevelian Hall,Lumberton,113,Male,b1773066-06d0-4901-9e31-5570342c8d94
+11,11,Imon Freeman,Montgomery Central,157,Male,f260fac8-2f9a-4a1f-ae5a-18224659c19a
+12,12,Avery Rhymer,Saint Stephens,215,Male,06ac27a6-a327-4b0b-a397-6221eb352711
+13,14,Gavin Yow,A.L. Brown,190,Male,6e746ce8-9379-44e4-a75c-7c93263f6268
+14,16,Austin Green,Mooresville,144,Male,a478d4bf-0619-479e-9cd7-4b45e6f1a78a
+15,13,Jacob Reigel,Mount Pleasant,175,Male,3ed1246f-94ce-4cee-a076-12039d273cd5
+16,15,Landon Pope,Pisgah,215,Male,9f32006b-696a-46af-a67a-ca0aeb235828
+17,17,Elijah Oakley,Piedmont,150,Male,e26580fa-488e-4163-aa7f-2995b2625617
+18,19,Adair Panama,Robbinsville,120,Male,dcb9d989-bb76-4084-ab98-c4c3af7a1526
+19,18,Will Varner,Kings Mountain,165,Male,828ddfdb-ca1d-4150-9d6f-d7d8b5e5fd74
+21,21,Jose Trejo,Surry Central,120,Male,832c2814-182d-4cfc-950b-64607c1cae3b
+22,22,Sam Harper,South Iredell,190,Male,0c78806b-78b8-4672-a4ab-81c6a27ed51c
+23,23,Dominic Hittepole,Wheatmore,190,Male,ea66bfe1-1e47-49bf-bfae-58fda6a679cd
+24,24,Jordan Miller,Seaforth,120,Male,fb5dbc69-48c3-4041-a05f-ce9f9e3a20b3
+25,25,Loxston Hooper,Robbinsville,138,Male,8d95e518-4b84-497f-967d-bf01bb61abd7
+26,26,Corbin McCartney,Central Davidson,144,Male,84b2bea7-b6c6-4be2-aac6-57ace963f7b7
+27,27,Jace Barrier,Mooresville,126,Male,7f53ff0c-1c26-4b64-a9b3-23a9cad7e64d
+29,29,Cameron Gue,Mount Pleasant,132,Male,969fb4a7-fe96-4b95-bf3e-4adf2a3d16f8
+30,30,Austin Laws,Fred T. Foard,138,Male,ce0c9f13-48ca-4b4b-a080-5c7af6d87de3
+31,37,Michael Fischer,Mount Airy,138,Male,412f9731-8cd6-4e7a-a17b-fa78d7ba5819
+32,31,Max Davis,Jacksonville,138,Male,d884f0da-5ecb-4951-85f3-0b050b6bfcac
+33,32,Joseph Trahan,Trinity,285,Male,45ed28b2-aa00-4f50-a649-da36f6333c30
+34,33,Kavan Wilson,Smoky Mountain,157,Male,ca7f8f1b-a43d-4555-a578-3592950d0df1
+35,34,David Lambright,Eastern Randolph,126,Male,e137dd9f-59b4-425b-9806-2f0b5850dcbb
+36,35,Tiaj Thao,Davie,132,Male,f741f322-d67d-473b-9bc5-b1bc4e397daf
+37,39,Marcello Scaldaferri,South Mecklenburg,144,Male,c3cb14e8-beb0-4225-8e2b-5becb5554fa1
+38,36,Connor Reed,Leesville,165,Male,72b0b72d-bbb7-4d8f-b95c-957390ab9e41
+39,38,Alexander May,Hendersonville,144,Male,ec207f2a-0c51-46f6-b7af-794eca6e2cc4
+40,40,Alan Benitez,Forbush,120,Male,5ded1da6-a1e4-45b5-87ba-1b9bbe9db474
+41,41,Mac Kopelman,Laney,157,Male,dc22bb14-7685-4a54-b96a-81e2083509ae
+42,42,Thomas Gingerich,Green Level,157,Male,614b5aa8-ae72-4998-bad8-9c2d085c03b3
+43,43,Elliott Gould,Davie,157,Male,ca7e84c2-5278-4315-afda-a23444dc4b17
+44,44,Deyari El-Amin,Hillside,190,Male,eeed3df5-c73a-414e-b08c-83df4131c11f
+45,46,Damicquen Powell,Lumberton,132,Male,2bfda946-00ad-4086-9c56-f5a5ae5b6acf
+46,45,Samuel McQueen,Laney,138,Male,33d3c012-6dff-4b6f-b041-676cd594d706
+47,47,Stephen Ribustello,Tarboro,132,Male,8429e3c8-5cca-4541-9ff0-5a81a3530995
+48,68,Nathan Howard,John M. Morehead High School,150,Male,95c0cfc5-0d44-47e3-b4ac-37ad8d79c111
+49,49,Ikey Holt,South Stanly,132,Male,633e4e94-8c64-4604-9914-ed4e187c0b2a
+50,48,Aiden Frank,Mount Airy,285,Male,fe248f6a-f590-46ee-a27e-eba6507b391f
+51,50,Elijah Diouf,Easter Guilford,120,Male,a02005a2-fc5d-401c-bb52-bcb0847e50b9
+52,51,Jude Moulton,John T. Hoggard,175,Male,ff22991d-f32b-4b88-86a5-0c76cba7e62f
+53,52,Liam McConaughy,Charlotte Latin,120,Male,54466526-2f63-4c4c-8c13-dd21beba373c
+54,53,Jaden MCclary,Goldsboro,285,Male,abb8ebbc-ffa3-442e-a567-8c6be149ccf9
+55,54,John Stewart,AL,138,Male,54cc121b-bbc2-45da-ad79-e6b14dbd05f5
+56,55,Kayden Fogarty,Indian Land,138,Male,f6541eb4-b024-47e3-ba46-431e5d3b4336
+57,56,Stone Staton,AL,126,Male,aed618c2-eb4c-467e-b5c0-f8a589ccfdeb
+58,57,Copeland Grooms,James Island,190,Male,3f48cfe4-450a-477b-9704-acc362e30986
+59,58,Cooper Cook,Alabama Highschool,190,Male,58609b29-79ec-473a-a0eb-dc0402b0fbd1
+60,59,Ronny Marlow,GA Highschool,,Male,d0df2d0e-9b88-41b7-a5d3-8675b363e64a
+61,60,Josh Spontak,West Forsyth,157,Male,ab0ea63d-254b-4f2e-8725-6f6fc48437e6
+62,61,Spear Gorelick,Charlotte Latin,157,Male,e5e52931-335e-4c3b-8136-896f11efae3c
+63,62,Landyn Lioi,Spring Mill,113,Male,7081ffbd-a4cc-442c-ac38-2220b2a7e64e
+64,63,Eric Ellis,Boiling Springs,165,Male,62794c89-8eef-4953-9273-f9399358b5e0
+65,64,Gavin Ulrich,Metrolina Christian,138,Male,6771dee2-12e2-4908-8cce-3c8e69ca60fe
+66,65,Dylan Hersh,Hopewell Valley Central,144,Male,9680b708-0554-4258-8e0a-fc3fab07aadf
+67,66,Mycah Martin,Hoover,138,Male,57442cda-a7cf-4a0e-9b69-3f46553adc12
+68,67,Anthony DePaul,Delsea Regional,157,Male,f3b34ff9-88e2-4189-a0f5-2998e65f7bf1
+69,69,Braxton Bragg,East Mecklenburg,157,Male,ee6e54c2-da1f-475a-943a-01484d1d137c
+70,70,Zack Sheets,West Wilkes,150,Male,9c56ed2f-cf01-4ee4-8aae-f2ce6ac00992
+71,71,Dominic Basrawala,Charlotte Catholic,285,Male,a700a96a-5a60-41c4-ab5d-1c473eec1289
+72,72,Landon Jackson,Berkeley,215,Male,74a89a6a-400f-4d71-83fc-408846babb03
+73,73,Dallas Owens,Spring Mills,126,Male,48e50c94-2f2d-46a4-83a3-0e2c22d88e39
+74,74,Eli Thomas,Laney,150,Male,328539bf-4e26-4530-b6af-9cd153d00440
+75,75,Grayson Wallen,Fort Mill,132,Male,84bb71de-176f-41cd-8f96-d4477a32dea1
+76,76,Lleyton Hooper,Robbinsville,144,Male,d2eb531c-67e0-42be-aebc-0ca2fc96c8ad
+77,77,Arron,Florida Highschool,190,Male,390887f4-fe61-4c61-b998-fc03e5f88d78
+78,78,Keilan Adams,Bandys,150,Male,595c36a1-225a-4b06-902c-251a689fa77b
+79,79,Hutson Catullo,Green Hope,132,Male,b190475a-e149-4407-99df-ed6b46e8df86
+80,80,Kael Seneca,Fort Myers,,Male,91f06e2c-037d-40b6-a67d-fc079887274c
+81,81,Nate Gardner,Buford,144,Male,0a8b5eec-cf28-4c9e-80ad-85586699811e
+82,82,Jesse Farnsworth,Panther Creek,120,Male,727e7345-5faf-494a-a05e-236e53b70792
+83,83,Justin Harbin,AL,132,Male,d50acc5a-aac4-4a8c-8e06-8ec64f48b6ef
+84,84,Timothy Phillips,VA,126,Male,f96ae488-75de-45d7-a563-2261b29d6952
+85,85,Leyden Gentry,South Carolina C,144,Male,46806a4e-c9bf-43ea-bf76-ed927e799882
+86,86,Joshua Hill,Hanahan,,Male,5c643e4e-0aef-4eaa-ad86-71524053c160
+87,87,Josh Brezac,Green Level,144,Male,5bc36625-0cb4-4c33-9641-1b2f5a036116
+88,88,Spencer Moore,Wheatmore,144,Male,48914426-27e9-4d25-85f5-b62fa9ca1516
+89,89,Favio Jaramillo,Cedar Ridge,113,Male,5848d14c-63e3-4b8a-b25b-731f6cac6a02
+90,90,Noah Hebert,Cary,132,Male,a4496304-6d18-4492-a442-0a52ad3ab3e4
+91,91,Denzel Benton,South Garner,113,Male,6459464d-723c-45ed-bab8-6d6f142adb81
+92,92,Elias Marquez Flores,West Forsyth,106,Male,770700b6-883d-4194-a5f5-58e7b18253cd
+93,93,Brayden Smith,East Gaston,157,Male,e027afda-bca3-42f4-bfbc-707d161c7757
+94,94,Fares Alkurdasi,Jordan,175,Male,92aed440-05ee-4b4b-a82b-d5ae309f9b96
+95,95,Derek Mason,Cardinal Gibbons,150,Male,776ea4f4-80d0-43fb-9da6-3e190d4c7018
+96,96,Austin Mielcarek,North Johnston,138,Male,cfe0e030-23dd-4ae2-a146-e0b4ce24c99d
+97,97,Kenan Howard,Seventy-First,285,Male,048228d7-3d1b-4cf9-bd12-d62a8d3733fa
+98,98,TaZion williams,Triton,285,Male,5b6c9335-dc7a-4d6c-873e-64a7654542d8
+99,99,Omar Rushing,Western Alamance,132,Male,ae563cb2-e38a-4486-8b5d-140d6d03be33
+100,100,Aiden Carter,South Rowan,175,Male,4336edc3-1719-4224-a447-a8d87328e0b9
+101,101,Khalif Rhodes,Mallard Creek,150,Male,dcef3b92-0d48-4b4c-83dc-a9a8855f6350
+102,102,Corey Anstead,Louisburg Magnet,106,Male,69faa986-07a7-49cb-928e-e830d9af908b
+103,103,Corey Anstead,Louisburg Magnet,106,Male,8227c265-076d-40c9-be67-89e0a1c0862d
+104,104,Joseph Little,Jesse c carson,120,Male,bed1a918-89b3-4da7-9aa8-5126efd915ad
+105,105,Jahron Wardrick,Northern Nash,150,Male,d86b8969-71b2-4079-b0dc-a14b0f511f3c
+106,106,luis berdiel,Northern Nash,144,Male,e6119050-7b4d-401c-ab03-cd6e00f9cc31
+107,107,Dalton Gardner,South Davidson,144,Male,b7c4f451-5fae-4a7c-ad04-b5a8a6e4cb4b
+108,108,Cameron Massey,North Gaston,138,Male,310b920f-bf7a-4440-8c10-3e87c23da433
+109,109,Misael Rivera,Robert B. Glenn,157,Male,6ec0006c-553a-4b13-b730-69908205bc80
+110,110,brandon sanchez,middle creek,126,Male,e7e21f2b-fc53-4024-8897-69649aa63bb6
+111,111,Abdeen Zaggout,West Forsyth,157,Male,42a80909-8b96-45c9-aad2-e076ad6b5261
+112,112,Amon Villarreal,Polk County,132,Male,bd802438-b6de-4e7b-9429-b35c2193a56d
+113,113,Carson Manuel,Central Davidson,132,Male,a9a36b80-28db-4d50-aeb3-d2189be8e1bf
+114,114,Alejandro Flores,Spring Creek,144,Male,eb63e15d-c0ac-4e26-88ac-6d5013499474
+115,115,Cody Bui,Hough,138,Male,90b17a77-80b5-4643-92b7-903770e9d772
+116,116,Gage Klee,Weddington,132,Male,94c48d3f-2161-44f8-bf17-b27ace80ed4f
+117,117,Michael Shropshire,Uwharrie Charter,285,Male,4b45cfca-2955-4ede-a65c-d71da6200552
+118,118,Jack Kancler,Pine Forest,150,Male,6ff5019f-7b01-4e2c-ada7-6c9872eba1b3
+119,119,James Campos,White Oak,144,Male,68df5d96-e4c3-4f1b-b1aa-4a09046cb763
