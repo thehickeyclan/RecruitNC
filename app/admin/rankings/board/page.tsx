@@ -711,13 +711,13 @@ export default function RankingBoardPage() {
             file. They are named rather than counted, because a name is what makes somebody go
             and fix the record.
           */}
+          {/*
+            Opaque colours, not a tint. This was `bg-amber-500/10` with `text-amber-100` — a
+            ten-percent wash under near-white text, which is legible on the dark cards above
+            and invisible on the light background it actually renders against. A warning
+            nobody can read is worse than no warning, because it looks like nothing is wrong.
+          */}
           {excluded.length ? (
-            {/*
-              Opaque colours, not a tint. This was `bg-amber-500/10` with `text-amber-100` — a
-              ten-percent wash under near-white text, which is legible on the dark cards above
-              and invisible on the light background it actually renders against. A warning
-              nobody can read is worse than no warning, because it looks like nothing is wrong.
-            */}
             <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
               <p className="font-semibold">
                 {excluded.length} {excluded.length === 1 ? "athlete is" : "athletes are"} missing from this class

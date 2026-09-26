@@ -5,6 +5,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { yearFilterToApiParams } from "@/lib/prospects-directory"
 import { currentClassYears } from "@/lib/class-years"
+import { highestAchievement, type AchievementFacts } from "@/lib/prospect-achievements"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
 import { Badge } from "@/components/ui/badge"
@@ -84,6 +85,15 @@ const stateQualifiers2025 = [
 
 /** Resolved once at module load; the page is client-rendered per visit. */
 const CURRENT_CLASS_YEARS = currentClassYears()
+/*
+ * Written out from the classes actually in high school, never typed.
+ *
+ * These three labels read "Active (2026–2029)" while the filter beneath them selected 2027–2030,
+ * so the control said one thing and did another — and the class of 2026 it named had graduated in
+ * June. A label with a year in it goes stale every summer unless it is derived.
+ */
+const ACTIVE_YEARS_LABEL = `Active (${CURRENT_CLASS_YEARS[0]}–${CURRENT_CLASS_YEARS[CURRENT_CLASS_YEARS.length - 1]})`
+const GRADUATES_LABEL = `Graduates (${CURRENT_CLASS_YEARS[0]! - 1} and earlier)`
 
 export default function ProspectsAllClient({
   initialProspects = [],
@@ -228,6 +238,17 @@ export default function ProspectsAllClient({
   }
 
   const getHighestAchievement = (prospect: Prospect): { level: AchievementLevel; badge: string; color: string } => {
+    /*
+     * Prefer what the server worked out from the real tables.
+     *
+     * Everything below reads JSON on the athlete row, and one of the three columns it reaches
+     * for — `state_results` — does not exist, so every state check compared against undefined.
+     * Filtering by "State Champion" found two wrestlers in the whole directory. It is 37.
+     * The old path stays as a fallback for any row that arrives without the server's answer.
+     */
+    const served = (prospect as unknown as { achievement_facts?: AchievementFacts }).achievement_facts
+    if (served && Object.keys(served).length > 0) return highestAchievement(served)
+
     const nhscaResults = coerceTournamentResults(prospect.nhsca_results, buildLegacyNHSCAResults(prospect))
     const super32Results = coerceTournamentResults(
       prospect.super_32_results ?? prospect.super32_results,
@@ -671,9 +692,9 @@ export default function ProspectsAllClient({
                             <SelectValue placeholder="All Years" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="active">Active (2026–2029)</SelectItem>
+                            <SelectItem value="active">{ACTIVE_YEARS_LABEL}</SelectItem>
                             <SelectItem value="all">All Years</SelectItem>
-                            <SelectItem value="graduates">Graduates (2025 and earlier)</SelectItem>
+                            <SelectItem value="graduates">{GRADUATES_LABEL}</SelectItem>
                             {availableYears.map((year) => (
                               <SelectItem key={year} value={String(year)}>
                                 Class of {year}
@@ -832,7 +853,7 @@ export default function ProspectsAllClient({
               )}
               {yearFilter === "graduates" && (
                 <Badge variant="secondary" className="gap-1">
-                  Graduates (2025 and earlier)
+                  {GRADUATES_LABEL}
                   <button onClick={() => setYearFilter("active")} className="ml-1 hover:text-destructive">
                     <X className="h-3 w-3" />
                   </button>
@@ -848,7 +869,7 @@ export default function ProspectsAllClient({
               )}
               {yearFilter === "active" && (
                 <Badge variant="secondary" className="gap-1">
-                  Active (2026–2029)
+                  {ACTIVE_YEARS_LABEL}
                   <button onClick={() => setYearFilter("all")} className="ml-1 hover:text-destructive">
                     <X className="h-3 w-3" />
                   </button>
@@ -970,9 +991,9 @@ export default function ProspectsAllClient({
                     <SelectValue placeholder="All Years" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active (2026–2029)</SelectItem>
+                    <SelectItem value="active">{ACTIVE_YEARS_LABEL}</SelectItem>
                     <SelectItem value="all">All Years</SelectItem>
-                    <SelectItem value="graduates">Graduates (2025 and earlier)</SelectItem>
+                    <SelectItem value="graduates">{GRADUATES_LABEL}</SelectItem>
                     {availableYears.map((year) => (
                       <SelectItem key={year} value={String(year)}>
                         Class of {year}
