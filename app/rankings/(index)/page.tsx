@@ -145,7 +145,7 @@ export default function ClassOf2027RankingsPage() {
             <Badge className="mb-4 bg-primary text-primary-foreground hover:bg-primary">
               NC United · RecruitNC
             </Badge>
-            <h1 className="text-4xl font-black tracking-tight sm:text-5xl">
+            <h1 className="text-4xl font-light tracking-tight sm:text-5xl">
               North Carolina Prospect Rankings
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
@@ -175,7 +175,7 @@ export default function ClassOf2027RankingsPage() {
               <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Blue members
               </p>
-              <p className="mt-3 text-4xl font-black">Free</p>
+              <p className="mt-3 text-4xl font-semibold">Free</p>
               <p className="mt-1 text-sm text-muted-foreground">Included in your membership</p>
               <p className="mt-4 text-sm text-muted-foreground">
                 For the whole family. Verified college coaches free too, and every wrestler always
@@ -207,7 +207,7 @@ export default function ClassOf2027RankingsPage() {
                 <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                   {plan.name}
                 </p>
-                <p className="mt-3 text-4xl font-black">{plan.price}</p>
+                <p className="mt-3 text-4xl font-semibold">{plan.price}</p>
                 <p className="mt-1 text-sm text-muted-foreground">{plan.cadence}</p>
                 <p className="mt-4 text-sm text-foreground">{plan.note}</p>
                 <p className="mt-1 text-sm text-muted-foreground">Unlimited scouting reports included</p>
@@ -250,7 +250,7 @@ export default function ClassOf2027RankingsPage() {
                   { rank: 4, chips: ["State 2nd", "TOC champ", "49-6"] },
                 ].map((row) => (
                   <div key={row.rank} className="flex items-start gap-3 px-5 py-3">
-                    <span className="w-5 shrink-0 text-lg font-black text-primary">{row.rank}</span>
+                    <span className="w-5 shrink-0 text-lg font-semibold text-primary">{row.rank}</span>
                     <div className="min-w-0 flex-1">
                       <div className="mb-2 h-3.5 w-32 rounded bg-muted-foreground/40 blur-[3px]" />
                       <div className="flex flex-wrap gap-1">
@@ -338,19 +338,29 @@ export default function ClassOf2027RankingsPage() {
     <div className="min-h-screen profile-surface bg-background">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <div className="relative mx-auto w-24 h-24 mb-6">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/60 to-primary/20 rounded-full animate-pulse"></div>
-              <div className="absolute inset-2 bg-card rounded-full flex items-center justify-center">
-                <Trophy className="h-12 w-12 text-primary" />
-              </div>
-            </div>
-
-            <h1 className="text-5xl font-bold text-foreground mb-2 text-balance">
+            {/*
+              * No medallion.
+              *
+              * A pulsing trophy graphic above the headline is clip-art, and it was the first
+              * thing a college coach saw on a page selling a data product. The eyebrow does the
+              * same orienting job in a line of text and takes none of the screen.
+              */}
+            <p className="mb-3 text-sm font-medium uppercase tracking-[0.2em] text-primary">
+              RecruitNC Rankings
+            </p>
+            {/*
+              * Lighter on navy.
+              *
+              * Heavy weights that read as confident on white go muddy on a dark ground - the
+              * strokes bloom and the counters close up. Light at display size with wider
+              * tracking holds its shape, and the gold subhead carries the emphasis instead.
+              */}
+            <h1 className="mb-3 text-balance text-5xl font-light tracking-tight text-foreground">
               North Carolina College Prospect Rankings
             </h1>
-            <p className="text-2xl font-semibold text-primary mb-6">Class of 2027 · published rankings</p>
+            <p className="mb-6 text-xl font-normal text-primary">Class of 2027 · published rankings</p>
 
-            <div className="flex flex-wrap justify-center gap-4 mb-6 text-lg font-semibold">
+            <div className="flex flex-wrap justify-center gap-4 mb-6 text-lg font-normal">
               <Badge variant="secondary" className="text-lg px-4 py-2 bg-secondary text-foreground">
                 <Trophy className="h-4 w-4 mr-2" />
                 10 State Champions
@@ -376,7 +386,7 @@ export default function ClassOf2027RankingsPage() {
               <div className="flex items-start gap-4">
                 <GraduationCap className="h-6 w-6 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-lg mb-1">Athlete Academic Profiles</h3>
+                  <h3 className="font-medium text-lg mb-1">Athlete Academic Profiles</h3>
                   <p className="text-muted-foreground">GPA, SAT, ACT, transcripts (where available)</p>
                 </div>
               </div>
@@ -384,7 +394,7 @@ export default function ClassOf2027RankingsPage() {
               <div className="flex items-start gap-4">
                 <Phone className="h-6 w-6 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-lg mb-1">Direct Contact Details</h3>
+                  <h3 className="font-medium text-lg mb-1">Direct Contact Details</h3>
                   <p className="text-muted-foreground">Athlete e-mail, phone, social profiles</p>
                 </div>
               </div>
@@ -392,7 +402,7 @@ export default function ClassOf2027RankingsPage() {
               <div className="flex items-start gap-4">
                 <Bell className="h-6 w-6 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-lg mb-1">Frequent Updates</h3>
+                  <h3 className="font-medium text-lg mb-1">Frequent Updates</h3>
                   <p className="text-muted-foreground">Automatic alerts after major tournaments, wins, and rankings changes</p>
                 </div>
               </div>
@@ -400,7 +410,7 @@ export default function ClassOf2027RankingsPage() {
               <div className="flex items-start gap-4">
                 <Lock className="h-6 w-6 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-lg mb-1">Coaches Portal Access</h3>
+                  <h3 className="font-medium text-lg mb-1">Coaches Portal Access</h3>
                   <p className="text-muted-foreground">Secure dashboard to browse, sort, and manage North Carolina recruits</p>
                 </div>
               </div>
@@ -408,7 +418,7 @@ export default function ClassOf2027RankingsPage() {
               <div className="flex items-start gap-4">
                 <BarChart className="h-6 w-6 mt-1 flex-shrink-0" />
                 <div>
-                  <h3 className="font-semibold text-lg mb-1">Comprehensive Recruiting Data</h3>
+                  <h3 className="font-medium text-lg mb-1">Comprehensive Recruiting Data</h3>
                   <p className="text-muted-foreground">
                     Athletic results, progress metrics, highlight videos, and academic info in one place
                   </p>
@@ -434,25 +444,25 @@ export default function ClassOf2027RankingsPage() {
                 <div className="grid md:grid-cols-3 gap-6 my-8">
                   <Card className="bg-secondary border-blue-200">
                     <CardContent className="p-6 text-center">
-                      <div className="text-3xl font-bold text-primary mb-2">10</div>
+                      <div className="text-3xl font-light text-primary mb-2">10</div>
                       <div className="text-sm font-medium text-foreground">State Champions</div>
                     </CardContent>
                   </Card>
                   <Card className="bg-secondary border-red-200">
                     <CardContent className="p-6 text-center">
-                      <div className="text-3xl font-bold text-red-600 mb-2">7</div>
+                      <div className="text-3xl font-light text-red-600 mb-2">7</div>
                       <div className="text-sm font-medium text-foreground">NHSCA All-Americans</div>
                     </CardContent>
                   </Card>
                   <Card className="bg-secondary border-yellow-200">
                     <CardContent className="p-6 text-center">
-                      <div className="text-3xl font-bold text-yellow-600 mb-2">22/30</div>
+                      <div className="text-3xl font-light text-yellow-600 mb-2">22/30</div>
                       <div className="text-sm font-medium text-primary">Top 30 are NC United Blue</div>
                     </CardContent>
                   </Card>
                 </div>
 
-                <h3 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
+                <h3 className="text-2xl font-light text-foreground mb-4 flex items-center gap-2">
                   <Users className="h-6 w-6 text-primary" />
                   NC United Pipeline
                 </h3>
@@ -467,7 +477,7 @@ export default function ClassOf2027RankingsPage() {
                   their skills against the nation's best.
                 </p>
 
-                <h3 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
+                <h3 className="text-2xl font-light text-foreground mb-4 flex items-center gap-2">
                   <Trophy className="h-6 w-6 text-red-600" />
                   Making History Together
                 </h3>
@@ -483,7 +493,7 @@ export default function ClassOf2027RankingsPage() {
                   competed on the NC United team at Ultimate Club Duals, cementing North Carolina's national presence.
                 </p>
 
-                <h3 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
+                <h3 className="text-2xl font-light text-foreground mb-4 flex items-center gap-2">
                   <Target className="h-6 w-6 text-green-600" />
                   Highly Recruited Nationwide
                 </h3>
@@ -501,7 +511,7 @@ export default function ClassOf2027RankingsPage() {
                   translate directly into college recruiting success.
                 </p>
 
-                <h3 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
+                <h3 className="text-2xl font-light text-foreground mb-4 flex items-center gap-2">
                   <TrendingUp className="h-6 w-6 text-purple-600" />
                   The Road Ahead
                 </h3>
@@ -530,7 +540,7 @@ export default function ClassOf2027RankingsPage() {
 
           <Card className="mb-8">
             <CardContent className="p-8">
-              <h2 className="text-3xl font-bold text-foreground mb-4 text-center">Class of 2027 Rankings</h2>
+              <h2 className="text-3xl font-light text-foreground mb-4 text-center">Class of 2027 Rankings</h2>
               <p className="text-lg text-muted-foreground text-center max-w-4xl mx-auto leading-relaxed">
                 Below is the published top 30 for North Carolina's Class of 2027. This class has already
                 combined for 10 state titles, 34 total state placements, and 7 NHSCA All-American finishes — making it
@@ -670,7 +680,7 @@ export default function ClassOf2027RankingsPage() {
             <Card className="border-border bg-card text-foreground">
               <CardContent className="p-8 text-center">
                 <Instagram className="h-12 w-12 mx-auto mb-4 opacity-90" />
-                <h3 className="text-2xl font-bold mb-4">Follow Our Journey</h3>
+                <h3 className="text-2xl font-light mb-4">Follow Our Journey</h3>
                 <p className="mb-6 opacity-90">
                   Stay updated with the latest rankings, tournament results, and recruiting news.
                 </p>
@@ -686,7 +696,7 @@ export default function ClassOf2027RankingsPage() {
             <Card className="border-border bg-card text-foreground">
               <CardContent className="p-8 text-center">
                 <Trophy className="h-12 w-12 mx-auto mb-4 opacity-90" />
-                <h3 className="text-2xl font-bold mb-4">Join NC United Blue</h3>
+                <h3 className="text-2xl font-light mb-4">Join NC United Blue</h3>
                 <p className="mb-6 opacity-90">Train with the best and develop your skills in our elite program.</p>
                 <Button variant="secondary" size="lg" className="bg-card text-red-600 hover:bg-secondary">
                   <ExternalLink className="h-4 w-4 mr-2" />
