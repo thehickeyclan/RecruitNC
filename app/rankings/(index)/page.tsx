@@ -2,6 +2,11 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
+import {
+  SCOUTING_REPORT_PRICES,
+  annualSavingCents,
+  formatPrice,
+} from "@/lib/scouting-report-entitlement"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -54,6 +59,26 @@ export default function ClassOf2027RankingsPage() {
    * looking like a ranking we had failed to load rather than one they could buy.
    */
   const [locked, setLocked] = useState<"anonymous" | "unentitled" | null>(null)
+  const [checkingOut, setCheckingOut] = useState<string | null>(null)
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
+
+  const startCheckout = async (kind: "subscription" | "subscription_annual") => {
+    setCheckingOut(kind)
+    setCheckoutError(null)
+    try {
+      const response = await fetch("/api/scouting-report/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind, returnTo: "/rankings" }),
+      })
+      const payload = await response.json()
+      if (!response.ok || !payload?.url) throw new Error(payload?.error || "Could not start checkout")
+      window.location.href = payload.url
+    } catch (caught) {
+      setCheckoutError(caught instanceof Error ? caught.message : "Could not start checkout")
+      setCheckingOut(null)
+    }
+  }
 
   useEffect(() => {
     const fetchAthletes = async () => {
@@ -101,15 +126,56 @@ export default function ClassOf2027RankingsPage() {
               </>
             ) : (
               <>
-                <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
-                  <Link href="/blue">Join NC United Blue</Link>
+                {/*
+                  * Two ways in, and the cheaper one is not always Blue.
+                  *
+                  * Blue is a wrestling program with a programme fee; an out-of-state parent, a
+                  * recruiting service or a coach's colleague has no business joining it and,
+                  * until there was a subscription, no way to pay for the rankings at all. The
+                  * refusal was the whole offer.
+                  */}
+                <Button
+                  size="lg"
+                  disabled={checkingOut !== null}
+                  onClick={() => { void startCheckout("subscription") }}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {checkingOut === "subscription"
+                    ? "Starting…"
+                    : `${formatPrice(SCOUTING_REPORT_PRICES.subscription)} / month`}
+                </Button>
+                <Button
+                  size="lg"
+                  disabled={checkingOut !== null}
+                  onClick={() => { void startCheckout("subscription_annual") }}
+                  className="bg-slate-900 hover:bg-slate-800"
+                >
+                  {checkingOut === "subscription_annual"
+                    ? "Starting…"
+                    : `${formatPrice(SCOUTING_REPORT_PRICES.subscription_annual)} / year`}
                 </Button>
                 <Button asChild size="lg" variant="outline">
-                  <Link href="/auth/coach-signup">I am a college coach</Link>
+                  <Link href="/blue">Join NC United Blue</Link>
                 </Button>
               </>
             )}
           </div>
+          {locked === "unentitled" && (
+            <>
+              <p className="mt-4 text-sm text-gray-500">
+                Save {formatPrice(annualSavingCents())} a year. Cancel any time. A subscription also
+                includes unlimited scouting reports.
+              </p>
+              <p className="mt-2 text-sm text-gray-500">
+                Already an NC United Blue family, or a college coach?{" "}
+                <Link href="/auth/coach-signup" className="text-blue-600 underline">
+                  Verify your account
+                </Link>{" "}
+                — you do not pay for this.
+              </p>
+            </>
+          )}
+          {checkoutError && <p className="mt-4 text-sm text-red-600">{checkoutError}</p>}
         </div>
       </div>
     )

@@ -26,6 +26,13 @@ export type RankingViewer = {
   isBlueMember?: boolean
   /** The viewer is this athlete, or a parent linked to them. */
   isOwnProfile?: boolean
+  /**
+   * A live RecruitNC subscription — the way somebody outside the Blue program buys the
+   * rankings. Blue is a wrestling program with a membership fee; a college coach's colleague,
+   * a recruiting service or an out-of-state parent has no business joining it and until now
+   * had no way to pay for the rankings at all.
+   */
+  hasSubscription?: boolean
 }
 
 export function canSeeProspectRanking(viewer: RankingViewer | null | undefined): boolean {
@@ -39,7 +46,8 @@ export function canSeeProspectRanking(viewer: RankingViewer | null | undefined):
    * `viewer-role` folds them, and it is the same trap that filed 13 of 14 coaches as fans.
    */
   if (normalizeRole(viewer.role) === "college_coach") return true
-  return viewer.isBlueMember === true
+  if (viewer.isBlueMember === true) return true
+  return viewer.hasSubscription === true
 }
 
 /** What a viewer without access is told, which is an offer rather than a refusal. */

@@ -35,3 +35,23 @@ describe("canSeeProspectRanking", () => {
     expect(canSeeProspectRanking({ role: "coach" })).toBe(false)
   })
 })
+
+describe("the paid alternative to Blue", () => {
+  it("lets a RecruitNC subscriber see the rankings", () => {
+    expect(canSeeProspectRanking({ hasSubscription: true })).toBe(true)
+  })
+
+  it("still refuses an account with neither a membership nor a subscription", () => {
+    expect(canSeeProspectRanking({ isBlueMember: false, hasSubscription: false })).toBe(false)
+  })
+
+  it("does not require a subscription from a Blue member", () => {
+    expect(canSeeProspectRanking({ isBlueMember: true, hasSubscription: false })).toBe(true)
+  })
+
+  it("reads a hyphenated college coach role, which production also stores", () => {
+    // 13 of 14 coaches were misfiled once already by a literal comparison on this field.
+    expect(canSeeProspectRanking({ role: "college-coach" })).toBe(true)
+    expect(canSeeProspectRanking({ role: "college_coach" })).toBe(true)
+  })
+})

@@ -3,9 +3,16 @@ import Stripe from "stripe"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { readStripeSecretKey, stripeKeyMissingPayload } from "@/lib/stripe"
-import { SCOUTING_REPORT_PRICES, type ScoutingPurchaseKind } from "@/lib/scouting-report-entitlement"
+import {
+  SCOUTING_REPORT_PRICES,
+  SUBSCRIPTION_PLANS,
+  isSubscriptionKind,
+  type ScoutingPurchaseKind,
+} from "@/lib/scouting-report-entitlement"
 import { loadScoutingEntitlement } from "@/lib/scouting-report-entitlement-db"
 import { classifyViewer } from "@/lib/viewer-role"
+import { canSeeProspectRanking } from "@/lib/ranking-visibility"
+import { resolveRankingViewer } from "@/lib/ranking-access"
 
 /**
  * Start checkout for a scouting report — one report, or the unlimited subscription.
@@ -40,7 +47,11 @@ export async function POST(request: Request) {
     athleteId?: string
     kind?: ScoutingPurchaseKind
   }
-  const kind: ScoutingPurchaseKind = body.kind === "subscription" ? "subscription" : "single"
+  // Two recurring plans now, so the kind is taken as given when it names one.
+  const kind: ScoutingPurchaseKind = isSubscriptionKind(String(body.kind ?? ""))
+    ? (body.kind as ScoutingPurchaseKind)
+    : "single"
+  const plan = isSubscriptionKind(kind) ? SUBSCRIPTION_PLANS[kind] : null
   const athleteId = String(body.athleteId ?? "").trim()
   if (kind === "single" && !athleteId) {
     return NextResponse.json({ error: "Missing athleteId" }, { status: 400 })
@@ -71,6 +82,25 @@ export async function POST(request: Request) {
     }
   }
 
+  /*
+   * A subscription bought by somebody who already has the rankings free.
+   *
+   * The entitlement check above only runs when an athleteId is present, so the plain
+   * subscription path had none — and the rankings paywall sells exactly that path. A Blue
+   * family or a verified coach who lands on it from a shared link would have been charged
+   * $9.99 a month for something already included in what they pay, which is a refund and an
+   * email that starts "why did you charge me for".
+   */
+  if (plan) {
+    const { viewer } = await resolveRankingViewer({ supabase, admin })
+    if (canSeeProspectRanking(viewer)) {
+      return NextResponse.json(
+        { error: "Your account already includes the rankings.", reason: "already_entitled" },
+        { status: 409 },
+      )
+    }
+  }
+
   let athleteName = ""
   if (athleteId) {
     const { data: athlete } = await admin.from("athletes").select("name").eq("id", athleteId).maybeSingle()
@@ -79,11 +109,16 @@ export async function POST(request: Request) {
   }
 
   const stripe = new Stripe(secret)
-  const returnTo = athleteId ? `/athletes/${encodeURIComponent(athleteId)}/scouting-report` : "/prospects/all"
+  // A rankings subscriber should land back on the rankings, not a prospect list they never asked for.
+  const returnTo = athleteId
+    ? `/athletes/${encodeURIComponent(athleteId)}/scouting-report`
+    : String((body as { returnTo?: string }).returnTo ?? "").startsWith("/")
+      ? String((body as { returnTo?: string }).returnTo)
+      : "/prospects/all"
 
   try {
     const session = await stripe.checkout.sessions.create({
-      mode: kind === "subscription" ? "subscription" : "payment",
+      mode: plan ? "subscription" : "payment",
       customer_email: user.email ?? undefined,
       line_items: [
         {
@@ -91,16 +126,14 @@ export async function POST(request: Request) {
           price_data: {
             currency: "usd",
             unit_amount: SCOUTING_REPORT_PRICES[kind],
-            ...(kind === "subscription" ? { recurring: { interval: "month" as const } } : {}),
+            ...(plan ? { recurring: { interval: plan.interval } } : {}),
             product_data: {
-              name:
-                kind === "subscription"
-                  ? "RecruitNC scouting reports — unlimited"
-                  : `Scouting report — ${athleteName || "athlete"}`,
-              description:
-                kind === "subscription"
-                  ? "Unlimited scouting reports while the subscription is active."
-                  : "One athlete's scouting report: results, significant wins and losses, competition strength.",
+              name: plan
+                ? `RecruitNC ${plan.label.toLowerCase()} — rankings and scouting reports`
+                : `Scouting report — ${athleteName || "athlete"}`,
+              description: plan
+                ? "Full class rankings and unlimited scouting reports while the subscription is active."
+                : "One athlete's scouting report: results, significant wins and losses, competition strength.",
             },
           },
         },
@@ -113,8 +146,8 @@ export async function POST(request: Request) {
         user_id: user.id,
         athlete_id: athleteId,
       },
-      ...(kind === "subscription"
-        ? { subscription_data: { metadata: { source: "scouting_report", user_id: user.id } } }
+      ...(plan
+        ? { subscription_data: { metadata: { source: "scouting_report", kind, user_id: user.id } } }
         : {}),
       success_url: `${BASE}${returnTo}?purchased=1`,
       cancel_url: `${BASE}${returnTo}?canceled=1`,

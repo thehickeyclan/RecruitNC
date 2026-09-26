@@ -27,9 +27,34 @@ export const SCOUTING_REPORT_PRICES = {
    * not come back the way subscribers do.
    */
   subscription: 999,
+  /**
+   * The same subscription paid yearly, at a shade under seven months' price.
+   *
+   * Recruiting is seasonal and a monthly subscriber cancels in March; the discount buys the
+   * months nobody would otherwise pay for. Two months free is the conventional shape of this
+   * offer and the buyer recognises it without doing arithmetic.
+   */
+  subscription_annual: 7900,
 } as const
 
 export type ScoutingPurchaseKind = keyof typeof SCOUTING_REPORT_PRICES
+
+/** The recurring plans, and how Stripe should bill each one. */
+export const SUBSCRIPTION_PLANS = {
+  subscription: { interval: "month" as const, label: "Monthly", amount: SCOUTING_REPORT_PRICES.subscription },
+  subscription_annual: { interval: "year" as const, label: "Annual", amount: SCOUTING_REPORT_PRICES.subscription_annual },
+} as const
+
+export type SubscriptionPlanKind = keyof typeof SUBSCRIPTION_PLANS
+
+export function isSubscriptionKind(kind: string): kind is SubscriptionPlanKind {
+  return kind === "subscription" || kind === "subscription_annual"
+}
+
+/** What the annual plan saves against twelve months, for the page to state plainly. */
+export function annualSavingCents(): number {
+  return SCOUTING_REPORT_PRICES.subscription * 12 - SCOUTING_REPORT_PRICES.subscription_annual
+}
 
 export function formatPrice(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`

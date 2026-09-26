@@ -13,6 +13,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { normalizeRole } from "./viewer-role"
 import type { RankingViewer } from "./ranking-visibility"
+import { isSubscriptionLive } from "./scouting-report-entitlement"
 
 /**
  * A Blue membership is read from the payer, which is how a parent qualifies.
@@ -39,7 +40,7 @@ export async function resolveRankingViewer(options: {
   const user = auth?.user ?? null
   if (!user) return { viewer: {}, userId: null }
 
-  const [{ data: profile }, { data: memberships }] = await Promise.all([
+  const [{ data: profile }, { data: memberships }, { data: subscription }] = await Promise.all([
     supabase
       .from("user_profiles")
       .select("role, is_admin, verified_coach")
@@ -50,6 +51,16 @@ export async function resolveRankingViewer(options: {
       .select("status")
       .eq("payer_user_id", user.id)
       .in("status", [...ENTITLING_STATUSES]),
+    /*
+     * The paid alternative to Blue. `isSubscriptionLive` is stricter than the membership check
+     * above - it excludes `past_due` - and deliberately so: Blue is a family in a wrestling
+     * program we know, and a subscriber is a card.
+     */
+    admin
+      .from("recruitnc_subscriptions")
+      .select("status, current_period_end")
+      .eq("user_id", user.id)
+      .maybeSingle(),
   ])
 
   let isOwnProfile = false
@@ -70,6 +81,7 @@ export async function resolveRankingViewer(options: {
       isVerifiedCoach: profile?.verified_coach === true,
       role: profile?.role ?? null,
       isBlueMember: (memberships ?? []).length > 0,
+      hasSubscription: isSubscriptionLive(subscription ?? null),
       isOwnProfile,
     },
   }
