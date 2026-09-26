@@ -9,6 +9,7 @@ import {
 } from "@/lib/scouting-report-entitlement"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Trophy,
@@ -109,247 +110,217 @@ export default function ClassOf2027RankingsPage() {
   }, [])
 
   if (!loadingAthletes && locked) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-red-50">
-        <div className="mx-auto flex max-w-3xl flex-col items-center px-4 py-20 text-center">
-          <Badge className="mb-4 bg-blue-600 text-white">NC United</Badge>
-          <h1 className="mb-3 text-4xl font-bold text-gray-900">
-            North Carolina College Prospect Rankings
-          </h1>
-          <p className="mb-4 text-lg text-gray-600">
-            Built for college coaches and the North Carolina wrestling community: an evidence-based
-            read on who is ready to wrestle at the next level, and why.
-          </p>
-          <p className="mb-10 text-base text-gray-500">
-            Every ranking is reasoned from results on the mat — not reputation, not a poll.
-          </p>
+    /*
+     * A pricing page, not a leaflet.
+     *
+     * The first version explained the model in four paragraphs on a pale background and put
+     * the price underneath as an afterthought. Nobody reads a page to be convinced a ranking
+     * is rigorous; they look for what it costs, what they get, and whether they already have
+     * it. So: dark, three plans on one row, the claims cut to a line each, and the product
+     * shown rather than described.
+     */
+    const plans = [
+      {
+        kind: "subscription" as const,
+        name: "Monthly",
+        price: formatPrice(SCOUTING_REPORT_PRICES.subscription),
+        cadence: "per month",
+        note: "Cancel any time",
+        featured: false,
+      },
+      {
+        kind: "subscription_annual" as const,
+        name: "Annual",
+        price: formatPrice(SCOUTING_REPORT_PRICES.subscription_annual),
+        cadence: "per year",
+        note: `Save ${formatPrice(annualSavingCents())}`,
+        featured: true,
+      },
+    ]
 
-          {/*
-            * What the number actually rests on.
-            *
-            * A ranking nobody can interrogate is a rumour, and the first question every parent
-            * and coach asks is "on what basis". Each claim here is something the model does and
-            * the counts are real, so the page can be checked rather than believed.
-            */}
-          <div className="mb-10 grid gap-4 text-left sm:grid-cols-2">
-            {/*
-              * The first draft sold "26 years of NCHSAA results" here, which is a fact about the
-              * archive and not about the ranking. No college coach cares who placed in 2001 when
-              * deciding on a junior. What the model actually reads is the wrestler's own career,
-              * weighted towards what they did most recently — so that is what this says.
-              */}
-            <div className="rounded-xl border border-gray-200 bg-white p-5">
-              <p className="mb-1 font-semibold text-gray-900">A full career, weighted to now</p>
-              <p className="text-sm text-gray-600">
-                41,000+ individual bouts on file. Every season a wrestler has wrestled counts, with
-                the most recent counting most — who they wrestled, how it ended, and when.
-              </p>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-5">
-              <p className="mb-1 font-semibold text-gray-900">National competition, weighted properly</p>
-              <p className="text-sm text-gray-600">
-                NHSCA Nationals, Super 32, Journeymen, NHSCA Duals and the Interstate 64 duals.
-                NHSCA brackets by grade, so a freshman podium is not scored as a senior one.
-              </p>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-5">
-              <p className="mb-1 font-semibold text-gray-900">Head-to-head settles it</p>
-              <p className="text-sm text-gray-600">
-                A résumé argues; a result decides. When two ranked wrestlers have met inside twelve
-                months, the most recent meeting outranks the argument — and the ranking says so.
-              </p>
-            </div>
-            <div className="rounded-xl border border-gray-200 bg-white p-5">
-              <p className="mb-1 font-semibold text-gray-900">Strength of win, and how active they are</p>
-              <p className="text-sm text-gray-600">
-                Beating the state runner-up is not beating an unranked opponent, and the model
-                grades every win by who it was over. A wrestler who stopped competing stops
-                climbing.
-              </p>
-            </div>
+    return (
+      <div className="min-h-screen bg-[#04112b] text-white">
+        <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
+          <div className="text-center">
+            <Badge className="mb-4 bg-[#d6b75d] text-slate-950 hover:bg-[#d6b75d]">
+              NC United · RecruitNC
+            </Badge>
+            <h1 className="text-4xl font-black tracking-tight sm:text-5xl">
+              North Carolina Prospect Rankings
+            </h1>
+            <p className="mx-auto mt-4 max-w-xl text-lg text-blue-200">
+              See what college coaches see.
+            </p>
           </div>
 
-          <p className="mb-4 text-base text-gray-600">
-            Published top 30 in each class, plus a pound-for-pound list across classes scored on
-            the current season alone. Every wrestler can always see their own number, free.
-          </p>
+          {/* Four claims, one line each. The detail belongs in the product, not the pitch. */}
+          <div className="mx-auto mt-10 grid max-w-3xl gap-x-8 gap-y-3 text-sm text-blue-100 sm:grid-cols-2">
+            {[
+              "41,000+ bouts scored, weighted to this season",
+              "NHSCA, Super 32, Fargo and Journeymen all count",
+              "Head-to-head inside 12 months settles it",
+              "Every win graded by who it was over",
+              "NHSCA scored by grade division, not one flat podium",
+            ].map((claim) => (
+              <div key={claim} className="flex items-start gap-2">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#d6b75d]" />
+                <span>{claim}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Three ways to have it, and one of them is free — said before the price, not after. */}
+          <div className="mt-12 grid gap-4 md:grid-cols-3">
+            <div className="rounded-2xl border border-blue-800/70 bg-[#071f4a]/60 p-6">
+              <p className="text-sm font-semibold uppercase tracking-wide text-blue-300">
+                Blue members
+              </p>
+              <p className="mt-3 text-4xl font-black">Free</p>
+              <p className="mt-1 text-sm text-blue-300">Included in your membership</p>
+              <p className="mt-4 text-sm text-blue-200">
+                For the whole family. Verified college coaches free too, and every wrestler always
+                sees their own ranking.
+              </p>
+              <Button
+                asChild
+                variant="outline"
+                className="mt-6 w-full border-blue-600 bg-transparent text-white hover:bg-blue-900"
+              >
+                <Link href="/blue">About NC United Blue</Link>
+              </Button>
+            </div>
+
+            {plans.map((plan) => (
+              <div
+                key={plan.kind}
+                className={
+                  plan.featured
+                    ? "relative rounded-2xl border-2 border-[#d6b75d] bg-[#071f4a] p-6 shadow-xl"
+                    : "rounded-2xl border border-blue-800/70 bg-[#071f4a]/60 p-6"
+                }
+              >
+                {plan.featured && (
+                  <span className="absolute -top-3 left-6 rounded-full bg-[#d6b75d] px-3 py-0.5 text-xs font-bold text-slate-950">
+                    Best value
+                  </span>
+                )}
+                <p className="text-sm font-semibold uppercase tracking-wide text-blue-300">
+                  {plan.name}
+                </p>
+                <p className="mt-3 text-4xl font-black">{plan.price}</p>
+                <p className="mt-1 text-sm text-blue-300">{plan.cadence}</p>
+                <p className="mt-4 text-sm text-blue-200">{plan.note}</p>
+                <p className="mt-1 text-sm text-blue-200">Unlimited scouting reports included</p>
+                <Button
+                  disabled={checkingOut !== null}
+                  onClick={() => { void startCheckout(plan.kind) }}
+                  className={
+                    plan.featured
+                      ? "mt-6 w-full bg-[#d6b75d] text-slate-950 hover:bg-[#c5a84d]"
+                      : "mt-6 w-full bg-blue-600 text-white hover:bg-blue-500"
+                  }
+                >
+                  {checkingOut === plan.kind ? "Starting…" : "Subscribe"}
+                </Button>
+              </div>
+            ))}
+          </div>
+
+          {checkoutError && (
+            <p className="mt-4 text-center text-sm text-red-300">{checkoutError}</p>
+          )}
 
           {/*
-            * A look at the thing itself.
-            *
-            * Four cards describing a methodology is an argument; this is the product. The
-            * structure is real — these are the sections a college coach actually reads — and
-            * the names are blurred because they are the product and because they are minors.
-            * Showing the shape sells it; showing the names gives it away.
+            * The product itself. Names are blurred rather than invented: the layout is the real
+            * one, so the shape sells it, while the names stay withheld because they are the
+            * product and because they belong to minors.
             */}
-          <div className="mb-8 w-full">
-            <p className="mb-1 text-sm font-semibold uppercase tracking-wide text-gray-500">
-              See what college coaches see
-            </p>
-            <p className="mb-4 text-sm text-gray-500">
-              The same board and the same reports they open — not a summary of them.
-            </p>
-            <div className="grid gap-4 text-left lg:grid-cols-2">
-              <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-                <div className="border-b border-gray-100 bg-gray-50 px-4 py-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-600">
-                    Class rankings
-                  </p>
-                </div>
-                <div className="divide-y divide-gray-100">
-                  {[
-                    { rank: 1, chips: ["State champion", "TOC champion", "NHSCA 4th", "45-0"] },
-                    { rank: 2, chips: ["State champion", "TOC champion", "NHSCA 5th", "43-0"] },
-                    { rank: 3, chips: ["State champion", "TOC champion", "37-0"] },
-                    { rank: 4, chips: ["State 2nd", "TOC champion", "49-6"] },
-                  ].map((row) => (
-                    <div key={row.rank} className="flex items-start gap-3 px-4 py-3">
-                      <span className="w-5 shrink-0 text-lg font-black text-blue-600">{row.rank}</span>
-                      <div className="min-w-0 flex-1">
-                        {/* Blurred, not fake: the layout is the real one, the name is withheld. */}
-                        <div className="mb-2 h-3.5 w-32 rounded bg-gray-300 blur-[3px]" />
-                        <div className="flex flex-wrap gap-1">
-                          {row.chips.map((chip) => (
-                            <span
-                              key={chip}
-                              className="rounded bg-blue-50 px-1.5 py-0.5 text-[11px] font-medium text-blue-700"
-                            >
-                              {chip}
-                            </span>
-                          ))}
-                        </div>
+          <div className="mt-16 grid gap-4 lg:grid-cols-2">
+            <div className="overflow-hidden rounded-2xl border border-blue-800/70 bg-[#071f4a]/60">
+              <div className="border-b border-blue-800/70 px-5 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-300">
+                  Class rankings · top 30
+                </p>
+              </div>
+              <div className="divide-y divide-blue-900/60">
+                {[
+                  { rank: 1, chips: ["State champ", "TOC champ", "NHSCA 4th", "45-0"] },
+                  { rank: 2, chips: ["State champ", "TOC champ", "NHSCA 5th", "43-0"] },
+                  { rank: 3, chips: ["State champ", "TOC champ", "37-0"] },
+                  { rank: 4, chips: ["State 2nd", "TOC champ", "49-6"] },
+                ].map((row) => (
+                  <div key={row.rank} className="flex items-start gap-3 px-5 py-3">
+                    <span className="w-5 shrink-0 text-lg font-black text-[#d6b75d]">{row.rank}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-2 h-3.5 w-32 rounded bg-blue-200/30 blur-[3px]" />
+                      <div className="flex flex-wrap gap-1">
+                        {row.chips.map((chip) => (
+                          <span
+                            key={chip}
+                            className="rounded bg-blue-900/70 px-1.5 py-0.5 text-[11px] font-medium text-blue-200"
+                          >
+                            {chip}
+                          </span>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
+            </div>
 
-              <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-                <div className="border-b border-gray-100 bg-gray-50 px-4 py-2">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-600">
-                    Scouting report
-                  </p>
-                </div>
-                <div className="space-y-3 p-4">
-                  <div>
-                    <p className="text-xs font-semibold text-gray-700">In-season record</p>
-                    <div className="mt-1 h-3 w-24 rounded bg-gray-300 blur-[3px]" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-700">Wins over ranked opponents</p>
-                    <div className="mt-1 space-y-1.5">
-                      <div className="h-3 w-full rounded bg-gray-300 blur-[3px]" />
-                      <div className="h-3 w-4/5 rounded bg-gray-300 blur-[3px]" />
-                      <div className="h-3 w-3/5 rounded bg-gray-300 blur-[3px]" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-700">Losses to ranked opponents</p>
-                    <div className="mt-1 space-y-1.5">
-                      <div className="h-3 w-3/4 rounded bg-gray-300 blur-[3px]" />
-                      <div className="h-3 w-1/2 rounded bg-gray-300 blur-[3px]" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-gray-700">Competed at</p>
-                    <div className="mt-1 flex flex-wrap gap-1">
-                      {["NCHSAA", "Tournament of Champions", "NHSCA", "Super 32"].map((event) => (
-                        <span
-                          key={event}
-                          className="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] text-gray-600"
-                        >
-                          {event}
-                        </span>
+            <div className="overflow-hidden rounded-2xl border border-blue-800/70 bg-[#071f4a]/60">
+              <div className="border-b border-blue-800/70 px-5 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-blue-300">
+                  Scouting report
+                </p>
+              </div>
+              <div className="space-y-3 p-5">
+                {[
+                  { label: "In-season record", widths: ["w-24"] },
+                  { label: "Wins over ranked opponents", widths: ["w-full", "w-4/5", "w-3/5"] },
+                  { label: "Losses to ranked opponents", widths: ["w-3/4", "w-1/2"] },
+                ].map((section) => (
+                  <div key={section.label}>
+                    <p className="text-xs font-semibold text-blue-200">{section.label}</p>
+                    <div className="mt-1.5 space-y-1.5">
+                      {section.widths.map((w, i) => (
+                        <div key={i} className={`h-3 ${w} rounded bg-blue-200/30 blur-[3px]`} />
                       ))}
                     </div>
                   </div>
-                  {/*
-                    * Stated, because it is the part people assume is for sale and it is not.
-                    * Contact details and academics follow coach verification, never payment.
-                    */}
-                  <p className="border-t border-gray-100 pt-3 text-[11px] text-gray-500">
-                    Contact details and academics are shown to verified college coaches only —
-                    never sold, at any price.
-                  </p>
+                ))}
+                <div>
+                  <p className="text-xs font-semibold text-blue-200">Competed at</p>
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {["NCHSAA", "Tournament of Champions", "NHSCA", "Super 32"].map((event) => (
+                      <span
+                        key={event}
+                        className="rounded bg-blue-900/70 px-1.5 py-0.5 text-[11px] text-blue-200"
+                      >
+                        {event}
+                      </span>
+                    ))}
+                  </div>
                 </div>
+                {/* The part people assume is for sale, and is not. */}
+                <p className="border-t border-blue-900/60 pt-3 text-[11px] text-blue-300">
+                  Contact details and academics go to verified college coaches only — never sold.
+                </p>
               </div>
             </div>
           </div>
 
-          {/*
-            * Said plainly, and before the price rather than in the footnote under it.
-            *
-            * Blue families already pay for this, and a member who reaches a page showing
-            * $9.99 a month with no statement that it is included will reasonably conclude we
-            * are charging them twice.
-            */}
-          <div className="mb-8 w-full rounded-xl border border-blue-200 bg-blue-50 p-4">
-            <p className="font-semibold text-blue-900">
-              Free for NC United Blue program members
-            </p>
-            <p className="mt-1 text-sm text-blue-800">
-              Included in your membership, for the whole family — nothing more to buy. Verified
-              college coaches are free too, and so is every wrestler&apos;s own ranking.
-            </p>
-          </div>
-          <div className="flex flex-wrap justify-center gap-3">
-            {/*
-              * The price shows signed out too.
-              *
-              * Two ways in, and the cheaper one is not always Blue: an out-of-state parent, a
-              * recruiting service or a coach's colleague has no business joining a wrestling
-              * program. Hiding the price until somebody registers asks them to take a step
-              * before knowing what it costs, and the signed-out visitor is exactly the buyer
-              * this page is for — so the buttons carry the price either way and sign-in comes
-              * after the decision, not before it.
-              */}
-            <Button
-              size="lg"
-              disabled={checkingOut !== null}
-              onClick={() => { void startCheckout("subscription") }}
-              className="bg-blue-600 hover:bg-blue-700"
+          <p className="mt-10 text-center text-sm text-blue-300">
+            Already a Blue family or a college coach?{" "}
+            <Link
+              href={locked === "anonymous" ? "/auth/signin?returnTo=/rankings" : "/auth/coach-signup"}
+              className="text-[#d6b75d] underline"
             >
-              {checkingOut === "subscription"
-                ? "Starting…"
-                : `${formatPrice(SCOUTING_REPORT_PRICES.subscription)} / month`}
-            </Button>
-            <Button
-              size="lg"
-              disabled={checkingOut !== null}
-              onClick={() => { void startCheckout("subscription_annual") }}
-              className="bg-slate-900 hover:bg-slate-800"
-            >
-              {checkingOut === "subscription_annual"
-                ? "Starting…"
-                : `${formatPrice(SCOUTING_REPORT_PRICES.subscription_annual)} / year`}
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link href="/blue">Join NC United Blue</Link>
-            </Button>
-          </div>
-          <p className="mt-4 text-sm text-gray-500">
-            Save {formatPrice(annualSavingCents())} a year. Cancel any time. A subscription also
-            includes unlimited scouting reports.
+              {locked === "anonymous" ? "Sign in" : "Verify your account"}
+            </Link>
+            . Behind all of it: 26 years of NC wrestling history, free to ask Data Dawg about.
           </p>
-          <p className="mt-4 text-sm text-gray-500">
-            Behind all of it is 26 years of North Carolina wrestling history — 10,000+ NCHSAA
-            state placements and every national result we hold. Ask Data Dawg about any of it —
-            the dog in the corner of this page — free, whether you subscribe or not.
-          </p>
-          <p className="mt-2 text-sm text-gray-500">
-            NC United Blue family, or a college coach? You do not pay for this —{" "}
-            {locked === "anonymous" ? (
-              <Link href="/auth/signin?returnTo=/rankings" className="text-blue-600 underline">
-                sign in
-              </Link>
-            ) : (
-              <Link href="/auth/coach-signup" className="text-blue-600 underline">
-                verify your account
-              </Link>
-            )}
-            .
-          </p>
-          {checkoutError && <p className="mt-4 text-sm text-red-600">{checkoutError}</p>}
         </div>
       </div>
     )
