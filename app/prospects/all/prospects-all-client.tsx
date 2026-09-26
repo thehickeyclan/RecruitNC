@@ -6,6 +6,8 @@ import Image from "next/image"
 import { yearFilterToApiParams } from "@/lib/prospects-directory"
 import { currentClassYears } from "@/lib/class-years"
 import { highestAchievement, type AchievementFacts } from "@/lib/prospect-achievements"
+import { canSeeProspectRanking } from "@/lib/ranking-visibility"
+import { useAuth } from "@/contexts/auth-context"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
 import { Badge } from "@/components/ui/badge"
@@ -100,6 +102,42 @@ export default function ProspectsAllClient({
 }: {
   initialProspects?: Prospect[]
 }) {
+  /*
+   * The rank column is the product.
+   *
+   * It was printed for anybody who opened the directory, which is the whole board in one table —
+   * a faster way to read the rankings than the rankings page. Gated to the people it is for:
+   * NC United Blue members, verified college coaches and admins. Everyone else sees the
+   * directory without the numbers, which is still a useful page.
+   */
+  const { isAdmin, isVerifiedCoach, profile: viewerProfile } = useAuth()
+  const [isBlueMember, setIsBlueMember] = useState(false)
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const response = await fetch("/api/blue/my-memberships")
+        if (!response.ok) return
+        const data = await response.json()
+        const holds =
+          (Array.isArray(data?.memberships) && data.memberships.length > 0) ||
+          (Array.isArray(data?.wiqSubscriptions) && data.wiqSubscriptions.length > 0)
+        if (!cancelled) setIsBlueMember(holds)
+      } catch {
+        // A failed lookup leaves the column hidden, which is the safe way to be wrong.
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
+  }, [])
+  const maySeeRanking = canSeeProspectRanking({
+    isAdmin,
+    isVerifiedCoach,
+    role: viewerProfile?.role,
+    isBlueMember,
+  })
+
   const [prospects, setProspects] = useState<Prospect[]>(initialProspects)
   const [isLoading, setIsLoading] = useState(initialProspects.length === 0)
   const skipInitialActiveFetch = useRef(initialProspects.length > 0)
@@ -473,7 +511,7 @@ export default function ProspectsAllClient({
       const maxRankForClass = isRankedClass ? getPublicRankingsMax(gradYear) : 0
       const hasOfficialRank =
         Number.isFinite(rawRank) && rawRank >= 1 && rawRank <= maxRankForClass
-      const prospectRanking = isRankedClass && hasOfficialRank ? rawRank : null
+      const prospectRanking = maySeeRanking && isRankedClass && hasOfficialRank ? rawRank : null
       const rankDisplay = !isRankedClass && gradYear != null && gradYear <= 2025 ? "G" : undefined
 
       return {
