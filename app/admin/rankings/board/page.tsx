@@ -545,16 +545,19 @@ export default function RankingBoardPage() {
       <AdminHeader />
       <main className="min-h-screen bg-slate-950 px-4 py-8 text-white">
         <div className="mx-auto max-w-7xl space-y-6">
-          <section className="rounded-3xl border border-blue-800/60 bg-gradient-to-br from-[#041532] via-[#071f4a] to-[#010817] p-6 shadow-2xl">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          {/*
+            * The header was four lines naming every data source the formula reads — NCHSAA, NHSCA,
+            * Super32, Fargo, duals, RankWrestler, college opens — on a screen whose whole job is the
+            * order below it. Nobody reading this page needs the source list; the one thing that is
+            * actually worth saying is the rule, so that is all that is left.
+            */}
+          <section className="rounded-2xl border border-blue-800/60 bg-gradient-to-br from-[#041532] via-[#071f4a] to-[#010817] p-5 shadow-xl">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <Badge className="mb-3 bg-[#d6b75d] text-slate-950">TOC résumé formula · v2</Badge>
-                <h1 className="text-3xl font-black tracking-tight md:text-5xl">Formula Recommendation Board</h1>
-                <p className="mt-3 max-w-3xl text-sm text-blue-100 md:text-base">
-                  The same evidence-first approach as the TOC field board: current-season direct wins over athletes
-                  in the same graduation class, match résumé,
-                  NCHSAA depth, NHSCA, Super32, Fargo freestyle, NC United/NHSCA Duals, RankWrestler, college opens,
-                  and verified profile achievements. Direct winners break comparable résumés; you make the final call.
+                <Badge className="mb-2 bg-[#d6b75d] text-slate-950">TOC résumé formula · v2</Badge>
+                <h1 className="text-2xl font-black tracking-tight md:text-3xl">Formula Recommendation Board</h1>
+                <p className="mt-2 max-w-2xl text-sm text-blue-200">
+                  Résumé plus head-to-head. A direct win breaks comparable résumés; you make the final call.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -594,41 +597,38 @@ export default function RankingBoardPage() {
             </div>
           </section>
 
-          <section className="grid gap-4 md:grid-cols-5">
-            <Card className="border-blue-900 bg-slate-900 text-white">
-              <CardContent className="p-5">
-                <p className="text-sm text-blue-200">Candidates</p>
-                <p className="text-3xl font-black">{athletes.length}</p>
-              </CardContent>
-            </Card>
-            <Card className="border-blue-900 bg-slate-900 text-white">
-              <CardContent className="p-5">
-                <p className="text-sm text-blue-200">Currently published</p>
-                <p className="text-3xl font-black">{currentlyPublished}/{publicCap}</p>
-              </CardContent>
-            </Card>
-            <Card className="border-blue-900 bg-slate-900 text-white">
-              <CardContent className="p-5">
-                <p className="text-sm text-blue-200">High Confidence</p>
-                <p className="text-3xl font-black">{highConfidence}</p>
-              </CardContent>
-            </Card>
-            <Card className="border-blue-900 bg-slate-900 text-white">
-              <CardContent className="p-5">
-                <p className="text-sm text-blue-200">Needs Review</p>
-                <p className="text-3xl font-black">{needsReview}</p>
-              </CardContent>
-            </Card>
+          {/*
+            * Five separate cards, each with its own border and a 30px number, took a full band of the
+            * screen to say five small things. One strip says them in a third of the height and reads
+            * left to right as a sentence: how many candidates, how many published, how the formula
+            * feels about them, and what is missing. The gaps cell stays a button — it is the only one
+            * that goes anywhere.
+            */}
+          <section className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-blue-900 bg-blue-900 md:grid-cols-5">
+            <div className="bg-slate-900 p-4">
+              <p className="text-xs uppercase tracking-wide text-blue-300">Candidates</p>
+              <p className="text-2xl font-black">{athletes.length}</p>
+            </div>
+            <div className="bg-slate-900 p-4">
+              <p className="text-xs uppercase tracking-wide text-blue-300">Published</p>
+              <p className="text-2xl font-black">{currentlyPublished}/{publicCap}</p>
+            </div>
+            <div className="bg-slate-900 p-4">
+              <p className="text-xs uppercase tracking-wide text-blue-300">High confidence</p>
+              <p className="text-2xl font-black">{highConfidence}</p>
+            </div>
+            <div className="bg-slate-900 p-4">
+              <p className="text-xs uppercase tracking-wide text-blue-300">Needs review</p>
+              <p className="text-2xl font-black">{needsReview}</p>
+            </div>
             <button
               type="button"
               onClick={() => setView("gaps")}
-              className="rounded-lg border border-red-900 bg-red-950/50 text-left text-white transition hover:border-red-500 hover:bg-red-950"
+              className="bg-red-950/60 p-4 text-left transition hover:bg-red-950"
             >
-              <div className="p-5">
-                <p className="text-sm text-red-100">Match Data Gaps</p>
-                <p className="text-3xl font-black">{missingMatches + thinMatches}</p>
-                <p className="mt-1 text-xs text-red-100/80">{missingMatches} missing · {thinMatches} thin</p>
-              </div>
+              <p className="text-xs uppercase tracking-wide text-red-200">Match data gaps</p>
+              <p className="text-2xl font-black">{missingMatches + thinMatches}</p>
+              <p className="text-xs text-red-200/80">{missingMatches} missing · {thinMatches} thin</p>
             </button>
           </section>
 
