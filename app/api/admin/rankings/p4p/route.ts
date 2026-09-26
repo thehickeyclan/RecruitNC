@@ -26,7 +26,10 @@ export async function GET(request: Request) {
      * is admin-only for the same reason, and a ranking that is only hidden by the UI is not
      * hidden — the payload is one fetch away for anybody who guesses the path.
      */
-    const supabase = createClient()
+    // `createClient` awaits `cookies()`, so it is async: calling it without await hands back a
+    // promise whose `.auth` is undefined, and the route dies on "reading 'getUser'" before it
+    // ever reaches the ranking. Copied straight from the draft route, which has the same bug.
+    const supabase = await createClient()
     const {
       data: { user },
       error: authError,
