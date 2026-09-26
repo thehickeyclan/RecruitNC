@@ -187,6 +187,49 @@ export function buildPoundForPound(
     if (!moved) break
   }
 
+  /*
+   * Within a class, the class board is the authority — full stop.
+   *
+   * Scoring the season on its own produced two lists that contradicted each other about the same
+   * two wrestlers: the Class of 2027 board has Tobin McNair 2nd and Gavin Lopez 6th, and this
+   * list had Lopez 2nd and McNair 3rd. Both cannot be published. Whatever the season scores say,
+   * a reader opening the 2027 rankings and the pound-for-pound on the same afternoon sees us
+   * disagreeing with ourselves, and neither number survives that.
+   *
+   * There is no judgement to make here. Within a class the boards already weigh a full career,
+   * head-to-head included, and this list weighs one season — so the class board wins, and this
+   * list confines itself to the question it is actually the authority on: how wrestlers in
+   * different classes compare.
+   *
+   * The reshuffle holds the *positions* a class occupies and only reorders its members inside
+   * them, so nothing cross-class moves: the season score and head-to-head still decide entirely
+   * where each class's wrestlers sit relative to everyone else. A missing class rank sorts last
+   * within its class rather than jumping the ranked.
+   */
+  const slotsByClass = new Map<number, number[]>()
+  order.forEach((a, i) => {
+    const slots = slotsByClass.get(a.graduationYear) ?? []
+    slots.push(i)
+    slotsByClass.set(a.graduationYear, slots)
+  })
+  for (const [year, slots] of slotsByClass) {
+    const members = slots.map((i) => order[i]!)
+    /*
+     * Class rank alone, and nothing else. `members` is already in list order and sort is stable,
+     * so wrestlers with no class rank keep the position the score and head-to-head gave them —
+     * the first version broke the tie on score instead and undid the head-to-head override for
+     * every class where nobody is ranked.
+     */
+    members.sort(
+      (a, b) =>
+        (a.classRank ?? Number.MAX_SAFE_INTEGER) - (b.classRank ?? Number.MAX_SAFE_INTEGER),
+    )
+    slots.forEach((slot, k) => {
+      order[slot] = members[k]!
+    })
+    void year
+  }
+
   const placeOf = new Map(order.map((a, i) => [a.id, i + 1]))
   const nameOf = new Map(order.map((a) => [a.id, a.name]))
   return order.map((a, i) => ({

@@ -109,3 +109,36 @@ describe("NHSCA brackets by grade, so a placement is not comparable across divis
       .toBe(poundForPoundScore(w("b", { nationalPlace: 1, nationalDivision: null })))
   })
 })
+
+describe("the two lists never contradict each other", () => {
+  it("never places a wrestler above a classmate the class board ranks above them", () => {
+    /*
+     * The failure this prevents, from the real board: the Class of 2027 has Tobin McNair 2nd and
+     * Gavin Lopez 6th; scoring the season alone put Lopez 2nd on this list and McNair 3rd. A
+     * reader opening both on the same afternoon sees us disagreeing with ourselves.
+     */
+    const list = buildPoundForPound([
+      w("lopez", { classRank: 6, statePlace: 1, tocPlace: 1, nationalPlace: 4, wins: 45, losses: 0 }),
+      w("mcnair", { classRank: 2, statePlace: 1, tocPlace: 1, nationalPlace: 5, wins: 43, losses: 0 }),
+    ])
+    const at = (id: string) => list.findIndex((x) => x.id === id)
+    expect(at("mcnair")).toBeLessThan(at("lopez"))
+  })
+
+  it("still lets a lower-ranked wrestler from another class finish above them", () => {
+    // The cross-class question is the one this list exists to answer, so it must survive.
+    const list = buildPoundForPound([
+      w("senior", { graduationYear: 2027, classRank: 1, statePlace: 3, wins: 30, losses: 6 }),
+      w("soph", { graduationYear: 2029, classRank: 4, statePlace: 1, nationalPlace: 1, wins: 40, losses: 1 }),
+    ])
+    expect(list[0]!.id).toBe("soph")
+  })
+
+  it("sorts a wrestler with no class rank below their ranked classmates", () => {
+    const list = buildPoundForPound([
+      w("unranked", { classRank: null, statePlace: 1, tocPlace: 1, wins: 40, losses: 0 }),
+      w("ranked", { classRank: 9, wins: 10, losses: 9 }),
+    ])
+    expect(list[0]!.id).toBe("ranked")
+  })
+})
