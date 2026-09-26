@@ -20,7 +20,7 @@ import { AdminHeader } from "@/components/admin-header"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, AlertTriangle, Trophy } from "lucide-react"
+import { ArrowLeft, AlertTriangle, ArrowDown, ArrowUp, Save, Trophy } from "lucide-react"
 import { CLASS_OVERRIDE_ALERT } from "@/lib/rankings/pound-for-pound"
 
 type Entry = {
@@ -58,7 +58,19 @@ function placeLabel(place: number | null | undefined): string | null {
 }
 
 export default function PoundForPoundPage() {
+  /*
+   * The engine's order is a starting point, not the answer.
+   *
+   * It was read-only at first and that was wrong: the whole job here is a person looking at three
+   * classes of wrestlers and deciding. The engine still enforces the class boards when it builds
+   * the list, so the order that lands on screen never contradicts them — but once somebody starts
+   * moving wrestlers, a move that puts a kid above a classmate ranked over him is theirs to make
+   * and theirs to see, which is what the red is for.
+   */
   const [entries, setEntries] = useState<Entry[]>([])
+  const [dirty, setDirty] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState<string | null>(null)
   const [meta, setMeta] = useState<Meta | null>(null)
   const [gender, setGender] = useState("Male")
   const [depth, setDepth] = useState("20")
@@ -77,6 +89,7 @@ export default function PoundForPoundPage() {
         if (!response.ok) throw new Error(payload?.error || "Failed to load")
         setEntries(payload.entries ?? [])
         setMeta(payload.meta ?? null)
+        setDirty(false)
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : "Failed to load")
       } finally {
@@ -90,10 +103,71 @@ export default function PoundForPoundPage() {
     void load()
   }, [load])
 
+  const move = useCallback((index: number, direction: -1 | 1) => {
+    setEntries((current) => {
+      const target = index + direction
+      if (target < 0 || target >= current.length) return current
+      const next = [...current]
+      const [lifted] = next.splice(index, 1)
+      next.splice(target, 0, lifted!)
+      // Rank is position; recomputing it here keeps the numbers on screen honest mid-edit.
+      return next.map((entry, i) => ({ ...entry, rank: i + 1 }))
+    })
+    setDirty(true)
+    setSaved(null)
+  }, [])
+
+  const save = useCallback(async () => {
+    setSaving(true)
+    setError(null)
+    try {
+      const response = await fetch("/api/admin/rankings/p4p", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gender,
+          order: entries.map((entry, i) => ({ id: entry.id, rank: i + 1 })),
+        }),
+      })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload?.error || "Failed to save")
+      setDirty(false)
+      setSaved(new Date().toLocaleTimeString())
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Failed to save")
+    } finally {
+      setSaving(false)
+    }
+  }, [entries, gender])
+
   const shown = useMemo(
     () => (depth === "all" ? entries : entries.slice(0, Number(depth))),
     [entries, depth],
   )
+
+  /*
+   * Wrestlers sitting above a classmate their own board ranks higher.
+   *
+   * Computed from what is on screen rather than from the engine, because after a hand edit the
+   * engine's opinion is no longer what anybody is looking at. Both sides of a contradiction are
+   * marked: seeing only the lifted wrestler leaves you hunting for who he passed.
+   */
+  const breaksClassOrder = useMemo(() => {
+    const flagged = new Map<string, string>()
+    for (let i = 0; i < entries.length; i += 1) {
+      for (let j = i + 1; j < entries.length; j += 1) {
+        const above = entries[i]!
+        const below = entries[j]!
+        if (above.graduationYear !== below.graduationYear) continue
+        if (above.classRank == null || below.classRank == null) continue
+        if (above.classRank > below.classRank) {
+          flagged.set(above.id, `Above ${below.name}, who the ${above.graduationYear} board ranks #${below.classRank} to his #${above.classRank}.`)
+          flagged.set(below.id, `Below ${above.name}, who the ${below.graduationYear} board ranks #${above.classRank} to his #${below.classRank}.`)
+        }
+      }
+    }
+    return flagged
+  }, [entries])
 
   /*
    * How many classes are actually represented in what is on screen. A list that is eighteen
@@ -158,9 +232,17 @@ export default function PoundForPoundPage() {
                   onClick={() => { void load(true) }}
                   variant="outline"
                   className="border-blue-700 bg-slate-900 text-white hover:bg-blue-950"
-                  title="Rebuild from current data, skipping the ten-minute cache"
+                  title="Rebuild from current data, discarding unsaved moves"
                 >
                   Refresh
+                </Button>
+                <Button
+                  onClick={() => { void save() }}
+                  disabled={!dirty || saving}
+                  className="bg-[#d6b75d] text-slate-950 hover:bg-[#c5a84d] disabled:opacity-40"
+                >
+                  <Save className="mr-2 h-4 w-4" />
+                  {saving ? "Saving…" : dirty ? "Save order" : saved ? `Saved ${saved}` : "Saved"}
                 </Button>
               </div>
             </div>
@@ -180,13 +262,13 @@ export default function PoundForPoundPage() {
                 <p className="text-xs uppercase tracking-wide text-blue-300">Cross-class bouts</p>
                 <p className="text-2xl font-black">{meta.meetings}</p>
               </div>
-              <div className={contested ? "bg-red-950/50 p-4" : "bg-slate-900 p-4"}>
-                <p className={contested ? "text-xs uppercase tracking-wide text-red-200" : "text-xs uppercase tracking-wide text-blue-300"}>
-                  Board disagrees
+              <div className={breaksClassOrder.size ? "bg-red-950/60 p-4" : "bg-slate-900 p-4"}>
+                <p className={breaksClassOrder.size ? "text-xs uppercase tracking-wide text-red-200" : "text-xs uppercase tracking-wide text-blue-300"}>
+                  Breaks class board
                 </p>
-                <p className="text-2xl font-black">{contested}</p>
-                <p className={contested ? "text-xs text-red-200/80" : "text-xs text-blue-300/80"}>
-                  {CLASS_OVERRIDE_ALERT}+ places from their season
+                <p className="text-2xl font-black">{breaksClassOrder.size}</p>
+                <p className={breaksClassOrder.size ? "text-xs text-red-200/80" : "text-xs text-blue-300/80"}>
+                  {breaksClassOrder.size ? "fix before publishing" : `${contested} disagree with the season`}
                 </p>
               </div>
               <div className="bg-slate-900 p-4">
@@ -215,11 +297,31 @@ export default function PoundForPoundPage() {
                    * indication that his own class board is what put him there.
                    */
                   className={
-                    Math.abs(entry.classOverride) >= CLASS_OVERRIDE_ALERT
-                      ? "flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-red-900/70 bg-red-950/40 p-4 last:border-b-0"
+                    breaksClassOrder.has(entry.id)
+                      ? "flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-red-700 bg-red-950/60 p-4 last:border-b-0"
                       : "flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-blue-900/70 bg-slate-900 p-4 last:border-b-0"
                   }
                 >
+                  <div className="flex flex-col">
+                    <button
+                      type="button"
+                      onClick={() => move(entries.indexOf(entry), -1)}
+                      disabled={entry.rank === 1}
+                      className="rounded p-0.5 text-blue-300 hover:bg-blue-900 hover:text-white disabled:opacity-25"
+                      aria-label={`Move ${entry.name} up`}
+                    >
+                      <ArrowUp className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => move(entries.indexOf(entry), 1)}
+                      disabled={entry.rank === entries.length}
+                      className="rounded p-0.5 text-blue-300 hover:bg-blue-900 hover:text-white disabled:opacity-25"
+                      aria-label={`Move ${entry.name} down`}
+                    >
+                      <ArrowDown className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                   <span className="w-8 text-xl font-black text-[#d6b75d]">{entry.rank}</span>
                   <div className="min-w-[12rem] flex-1">
                     <Link href={`/athletes/${entry.id}`} className="font-semibold hover:text-blue-300">
@@ -241,9 +343,16 @@ export default function PoundForPoundPage() {
                       * on: within a class the board has already weighed it, and across classes
                       * the season can be far enough apart that one result should not move it.
                       */}
-                    {Math.abs(entry.classOverride) >= CLASS_OVERRIDE_ALERT && (
+                    {/* The rule: never above a classmate their own board ranks higher. */}
+                    {breaksClassOrder.has(entry.id) && (
                       <p className="mt-1 flex items-center gap-1 text-xs font-semibold text-red-300">
                         <AlertTriangle className="h-3 w-3 shrink-0" />
+                        Breaks the class board — {breaksClassOrder.get(entry.id)}
+                      </p>
+                    )}
+                    {/* Informational: the class board and this season disagree about them. */}
+                    {!breaksClassOrder.has(entry.id) && Math.abs(entry.classOverride) >= CLASS_OVERRIDE_ALERT && (
+                      <p className="mt-1 text-xs text-amber-300">
                         On this season alone they are {entry.scoreRank}
                         {entry.classOverride > 0
                           ? ` — the Class of ${entry.graduationYear} board holds them ${entry.classOverride} places lower.`

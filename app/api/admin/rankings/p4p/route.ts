@@ -17,34 +17,36 @@ const cachedBoard = unstable_cache(
   { revalidate: 600, tags: ["admin-p4p-board"] },
 )
 
+/** Admin or nothing. Both verbs need it, so it lives in one place. */
+async function requireAdmin(): Promise<{ ok: true } | { ok: false; response: NextResponse }> {
+  const supabase = await createClient()
+  const {
+    data: { user },
+    error: authError,
+  } = await supabase.auth.getUser()
+  if (authError || !user) {
+    return { ok: false, response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }) }
+  }
+  const { data: profile } = await supabase
+    .from("user_profiles")
+    .select("is_admin, role")
+    .eq("user_id", user.id)
+    .single()
+  if (!profile?.is_admin && profile?.role !== "admin") {
+    return { ok: false, response: NextResponse.json({ error: "Forbidden" }, { status: 403 }) }
+  }
+  return { ok: true }
+}
+
 export async function GET(request: Request) {
   try {
     /*
-     * Gated, and gated here rather than only in the page.
-     *
-     * This is an unpublished ranking of minors across three classes. The class board's own route
-     * is admin-only for the same reason, and a ranking that is only hidden by the UI is not
-     * hidden — the payload is one fetch away for anybody who guesses the path.
+     * Gated, and gated here rather than only in the page. This is an unpublished ranking of
+     * minors across three classes, and a ranking hidden only by the UI is one guessed path away
+     * from not being hidden at all.
      */
-    // `createClient` awaits `cookies()`, so it is async: calling it without await hands back a
-    // promise whose `.auth` is undefined, and the route dies on "reading 'getUser'" before it
-    // ever reaches the ranking. Copied straight from the draft route, which has the same bug.
-    const supabase = await createClient()
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("is_admin, role")
-      .eq("user_id", user.id)
-      .single()
-    if (!profile?.is_admin && profile?.role !== "admin") {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-    }
+    const gate = await requireAdmin()
+    if (!gate.ok) return gate.response
 
     const { searchParams } = new URL(request.url)
     const gender = searchParams.get("gender") || "Male"
@@ -52,11 +54,86 @@ export async function GET(request: Request) {
     const board = fresh
       ? await buildPoundForPoundBoard({ supabase: createAdminClient(), gender })
       : await cachedBoard(gender)
-    return NextResponse.json({ ...board, meta: { ...board.meta, gender } })
+
+    /*
+     * A saved hand order replaces the engine's, because the engine is a starting point and the
+     * person is the ranking. Never cached: an order saved thirty seconds ago has to be on screen
+     * now, and the class board learned that lesson by serving admins their own stale work.
+     * A missing table must not take the page down with it.
+     */
+    let savedOrder = new Map<string, number>()
+    try {
+      const { data } = await createAdminClient()
+        .from("p4p_drafts")
+        .select("athlete_id, rank")
+        .eq("gender", gender)
+      savedOrder = new Map((data ?? []).map((row) => [String(row.athlete_id), Number(row.rank)]))
+    } catch {
+      savedOrder = new Map()
+    }
+    const entries = savedOrder.size
+      ? [...board.entries]
+          .sort(
+            (a, b) =>
+              (savedOrder.get(a.id) ?? Number.MAX_SAFE_INTEGER) -
+                (savedOrder.get(b.id) ?? Number.MAX_SAFE_INTEGER) || a.rank - b.rank,
+          )
+          .map((entry, i) => ({ ...entry, rank: i + 1 }))
+      : board.entries
+
+    return NextResponse.json({
+      entries,
+      meta: { ...board.meta, gender, savedCount: savedOrder.size },
+    })
   } catch (error) {
     console.error("[rankings-p4p] GET failed", error)
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to build pound-for-pound board" },
+      { status: 500 },
+    )
+  }
+}
+
+/**
+ * Save the hand order.
+ *
+ * Stored whole rather than as a diff from the engine: the engine's order moves every time a
+ * result is imported, so a diff would silently mean something different tomorrow. The rows are
+ * replaced outright for the same reason a partial save is worse than none.
+ */
+export async function POST(request: Request) {
+  try {
+    const gate = await requireAdmin()
+    if (!gate.ok) return gate.response
+
+    const body = await request.json()
+    const gender = String(body?.gender || "Male")
+    const order = Array.isArray(body?.order) ? body.order : []
+    if (!order.length) {
+      return NextResponse.json({ error: "No order provided" }, { status: 400 })
+    }
+    const rows = order
+      .map((row: { id?: string; rank?: number }) => ({
+        athlete_id: String(row?.id ?? ""),
+        rank: Number(row?.rank),
+        gender,
+      }))
+      .filter((row: { athlete_id: string; rank: number }) => row.athlete_id && Number.isFinite(row.rank))
+    if (rows.length !== order.length) {
+      return NextResponse.json({ error: "Order contained an invalid row" }, { status: 400 })
+    }
+
+    const db = createAdminClient()
+    const { error: clearError } = await db.from("p4p_drafts").delete().eq("gender", gender)
+    if (clearError) throw clearError
+    const { error: insertError } = await db.from("p4p_drafts").insert(rows)
+    if (insertError) throw insertError
+
+    return NextResponse.json({ success: true, saved: rows.length })
+  } catch (error) {
+    console.error("[rankings-p4p] POST failed", error)
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Failed to save order" },
       { status: 500 },
     )
   }
