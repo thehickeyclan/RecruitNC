@@ -139,22 +139,22 @@ export default function ClassOf2027RankingsPage() {
     ]
 
     return (
-      <div className="min-h-screen bg-[#04112b] text-white">
+      <div className="profile-surface min-h-screen bg-background">
         <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
           <div className="text-center">
-            <Badge className="mb-4 bg-[#d6b75d] text-slate-950 hover:bg-[#d6b75d]">
+            <Badge className="mb-4 bg-primary text-primary-foreground hover:bg-primary">
               NC United · RecruitNC
             </Badge>
             <h1 className="text-4xl font-black tracking-tight sm:text-5xl">
               North Carolina Prospect Rankings
             </h1>
-            <p className="mx-auto mt-4 max-w-xl text-lg text-blue-200">
+            <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
               See what college coaches see.
             </p>
           </div>
 
           {/* Four claims, one line each. The detail belongs in the product, not the pitch. */}
-          <div className="mx-auto mt-10 grid max-w-3xl gap-x-8 gap-y-3 text-sm text-blue-100 sm:grid-cols-2">
+          <div className="mx-auto mt-10 grid max-w-3xl gap-x-8 gap-y-3 text-sm text-foreground sm:grid-cols-2">
             {[
               "41,000+ bouts scored, weighted to this season",
               "NHSCA, Super 32, Fargo and Journeymen all count",
@@ -163,7 +163,7 @@ export default function ClassOf2027RankingsPage() {
               "NHSCA scored by grade division, not one flat podium",
             ].map((claim) => (
               <div key={claim} className="flex items-start gap-2">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#d6b75d]" />
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                 <span>{claim}</span>
               </div>
             ))}
@@ -171,20 +171,20 @@ export default function ClassOf2027RankingsPage() {
 
           {/* Three ways to have it, and one of them is free — said before the price, not after. */}
           <div className="mt-12 grid gap-4 md:grid-cols-3">
-            <div className="rounded-2xl border border-blue-800/70 bg-[#071f4a]/60 p-6">
-              <p className="text-sm font-semibold uppercase tracking-wide text-blue-300">
+            <div className="rounded-2xl border border-border bg-card p-6">
+              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 Blue members
               </p>
               <p className="mt-3 text-4xl font-black">Free</p>
-              <p className="mt-1 text-sm text-blue-300">Included in your membership</p>
-              <p className="mt-4 text-sm text-blue-200">
+              <p className="mt-1 text-sm text-muted-foreground">Included in your membership</p>
+              <p className="mt-4 text-sm text-muted-foreground">
                 For the whole family. Verified college coaches free too, and every wrestler always
                 sees their own ranking.
               </p>
               <Button
                 asChild
                 variant="outline"
-                className="mt-6 w-full border-blue-600 bg-transparent text-white hover:bg-blue-900"
+                className="mt-6 w-full border-border bg-transparent text-foreground hover:bg-accent"
               >
                 <Link href="/blue">About NC United Blue</Link>
               </Button>
@@ -195,29 +195,29 @@ export default function ClassOf2027RankingsPage() {
                 key={plan.kind}
                 className={
                   plan.featured
-                    ? "relative rounded-2xl border-2 border-[#d6b75d] bg-[#071f4a] p-6 shadow-xl"
-                    : "rounded-2xl border border-blue-800/70 bg-[#071f4a]/60 p-6"
+                    ? "relative rounded-2xl border-2 border-primary bg-card p-6 shadow-xl"
+                    : "rounded-2xl border border-border bg-card p-6"
                 }
               >
                 {plan.featured && (
-                  <span className="absolute -top-3 left-6 rounded-full bg-[#d6b75d] px-3 py-0.5 text-xs font-bold text-slate-950">
+                  <span className="absolute -top-3 left-6 rounded-full bg-primary px-3 py-0.5 text-xs font-bold text-primary-foreground">
                     Best value
                   </span>
                 )}
-                <p className="text-sm font-semibold uppercase tracking-wide text-blue-300">
+                <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                   {plan.name}
                 </p>
                 <p className="mt-3 text-4xl font-black">{plan.price}</p>
-                <p className="mt-1 text-sm text-blue-300">{plan.cadence}</p>
-                <p className="mt-4 text-sm text-blue-200">{plan.note}</p>
-                <p className="mt-1 text-sm text-blue-200">Unlimited scouting reports included</p>
+                <p className="mt-1 text-sm text-muted-foreground">{plan.cadence}</p>
+                <p className="mt-4 text-sm text-foreground">{plan.note}</p>
+                <p className="mt-1 text-sm text-muted-foreground">Unlimited scouting reports included</p>
                 <Button
                   disabled={checkingOut !== null}
                   onClick={() => { void startCheckout(plan.kind) }}
                   className={
                     plan.featured
-                      ? "mt-6 w-full bg-[#d6b75d] text-slate-950 hover:bg-[#c5a84d]"
-                      : "mt-6 w-full bg-blue-600 text-white hover:bg-blue-500"
+                      ? "mt-6 w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                      : "mt-6 w-full bg-secondary text-secondary-foreground hover:bg-accent"
                   }
                 >
                   {checkingOut === plan.kind ? "Starting…" : "Subscribe"}
@@ -227,7 +227,7 @@ export default function ClassOf2027RankingsPage() {
           </div>
 
           {checkoutError && (
-            <p className="mt-4 text-center text-sm text-red-300">{checkoutError}</p>
+            <p className="mt-4 text-center text-sm text-destructive">{checkoutError}</p>
           )}
 
           {/*
@@ -236,13 +236,13 @@ export default function ClassOf2027RankingsPage() {
             * product and because they belong to minors.
             */}
           <div className="mt-16 grid gap-4 lg:grid-cols-2">
-            <div className="overflow-hidden rounded-2xl border border-blue-800/70 bg-[#071f4a]/60">
-              <div className="border-b border-blue-800/70 px-5 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-blue-300">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card">
+              <div className="border-b border-border px-5 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Class rankings · top 30
                 </p>
               </div>
-              <div className="divide-y divide-blue-900/60">
+              <div className="divide-y divide-border">
                 {[
                   { rank: 1, chips: ["State champ", "TOC champ", "NHSCA 4th", "45-0"] },
                   { rank: 2, chips: ["State champ", "TOC champ", "NHSCA 5th", "43-0"] },
@@ -250,14 +250,14 @@ export default function ClassOf2027RankingsPage() {
                   { rank: 4, chips: ["State 2nd", "TOC champ", "49-6"] },
                 ].map((row) => (
                   <div key={row.rank} className="flex items-start gap-3 px-5 py-3">
-                    <span className="w-5 shrink-0 text-lg font-black text-[#d6b75d]">{row.rank}</span>
+                    <span className="w-5 shrink-0 text-lg font-black text-primary">{row.rank}</span>
                     <div className="min-w-0 flex-1">
-                      <div className="mb-2 h-3.5 w-32 rounded bg-blue-200/30 blur-[3px]" />
+                      <div className="mb-2 h-3.5 w-32 rounded bg-muted-foreground/40 blur-[3px]" />
                       <div className="flex flex-wrap gap-1">
                         {row.chips.map((chip) => (
                           <span
                             key={chip}
-                            className="rounded bg-blue-900/70 px-1.5 py-0.5 text-[11px] font-medium text-blue-200"
+                            className="rounded bg-secondary px-1.5 py-0.5 text-[11px] font-medium text-secondary-foreground"
                           >
                             {chip}
                           </span>
@@ -269,9 +269,9 @@ export default function ClassOf2027RankingsPage() {
               </div>
             </div>
 
-            <div className="overflow-hidden rounded-2xl border border-blue-800/70 bg-[#071f4a]/60">
-              <div className="border-b border-blue-800/70 px-5 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-blue-300">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card">
+              <div className="border-b border-border px-5 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Scouting report
                 </p>
               </div>
@@ -282,21 +282,21 @@ export default function ClassOf2027RankingsPage() {
                   { label: "Losses to ranked opponents", widths: ["w-3/4", "w-1/2"] },
                 ].map((section) => (
                   <div key={section.label}>
-                    <p className="text-xs font-semibold text-blue-200">{section.label}</p>
+                    <p className="text-xs font-semibold text-foreground">{section.label}</p>
                     <div className="mt-1.5 space-y-1.5">
                       {section.widths.map((w, i) => (
-                        <div key={i} className={`h-3 ${w} rounded bg-blue-200/30 blur-[3px]`} />
+                        <div key={i} className={`h-3 ${w} rounded bg-muted-foreground/40 blur-[3px]`} />
                       ))}
                     </div>
                   </div>
                 ))}
                 <div>
-                  <p className="text-xs font-semibold text-blue-200">Competed at</p>
+                  <p className="text-xs font-semibold text-foreground">Competed at</p>
                   <div className="mt-1.5 flex flex-wrap gap-1">
                     {["NCHSAA", "Tournament of Champions", "NHSCA", "Super 32"].map((event) => (
                       <span
                         key={event}
-                        className="rounded bg-blue-900/70 px-1.5 py-0.5 text-[11px] text-blue-200"
+                        className="rounded bg-secondary px-1.5 py-0.5 text-[11px] text-secondary-foreground"
                       >
                         {event}
                       </span>
@@ -304,18 +304,18 @@ export default function ClassOf2027RankingsPage() {
                   </div>
                 </div>
                 {/* The part people assume is for sale, and is not. */}
-                <p className="border-t border-blue-900/60 pt-3 text-[11px] text-blue-300">
+                <p className="border-t border-border pt-3 text-[11px] text-muted-foreground">
                   Contact details and academics go to verified college coaches only — never sold.
                 </p>
               </div>
             </div>
           </div>
 
-          <p className="mt-10 text-center text-sm text-blue-300">
+          <p className="mt-10 text-center text-sm text-muted-foreground">
             Already a Blue family or a college coach?{" "}
             <Link
               href={locked === "anonymous" ? "/auth/signin?returnTo=/rankings" : "/auth/coach-signup"}
-              className="text-[#d6b75d] underline"
+              className="text-primary underline"
             >
               {locked === "anonymous" ? "Sign in" : "Verify your account"}
             </Link>
@@ -329,43 +329,43 @@ export default function ClassOf2027RankingsPage() {
   if (loadingAthletes) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-blue-600"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-red-50">
+    <div className="min-h-screen profile-surface bg-background">
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <div className="relative mx-auto w-24 h-24 mb-6">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-red-600 rounded-full animate-pulse"></div>
-              <div className="absolute inset-2 bg-white rounded-full flex items-center justify-center">
-                <Trophy className="h-12 w-12 text-blue-600" />
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/60 to-primary/20 rounded-full animate-pulse"></div>
+              <div className="absolute inset-2 bg-card rounded-full flex items-center justify-center">
+                <Trophy className="h-12 w-12 text-primary" />
               </div>
             </div>
 
-            <h1 className="text-5xl font-bold text-gray-900 mb-2 text-balance">
+            <h1 className="text-5xl font-bold text-foreground mb-2 text-balance">
               North Carolina College Prospect Rankings
             </h1>
-            <p className="text-2xl font-semibold text-blue-600 mb-6">Class of 2027 Dropping this Saturday</p>
+            <p className="text-2xl font-semibold text-primary mb-6">Class of 2027 · published rankings</p>
 
             <div className="flex flex-wrap justify-center gap-4 mb-6 text-lg font-semibold">
-              <Badge variant="secondary" className="text-lg px-4 py-2 bg-blue-100 text-blue-800">
+              <Badge variant="secondary" className="text-lg px-4 py-2 bg-secondary text-foreground">
                 <Trophy className="h-4 w-4 mr-2" />
                 10 State Champions
               </Badge>
-              <Badge variant="secondary" className="text-lg px-4 py-2 bg-red-100 text-red-800">
+              <Badge variant="secondary" className="text-lg px-4 py-2 bg-secondary text-foreground">
                 <Medal className="h-4 w-4 mr-2" />
                 34 State Placements
               </Badge>
-              <Badge variant="secondary" className="text-lg px-4 py-2 bg-yellow-100 text-yellow-800">
+              <Badge variant="secondary" className="text-lg px-4 py-2 bg-secondary text-primary">
                 <Award className="h-4 w-4 mr-2" />7 NHSCA All-Americans
               </Badge>
             </div>
           </div>
 
-          <Card className="mb-12 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+          <Card className="mb-12 border-border bg-card text-foreground">
             <CardHeader>
               <CardTitle className="text-3xl flex items-center gap-3">
                 <GraduationCap className="h-8 w-8" />
@@ -377,7 +377,7 @@ export default function ClassOf2027RankingsPage() {
                 <GraduationCap className="h-6 w-6 mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold text-lg mb-1">Athlete Academic Profiles</h3>
-                  <p className="text-blue-100">GPA, SAT, ACT, transcripts (where available)</p>
+                  <p className="text-muted-foreground">GPA, SAT, ACT, transcripts (where available)</p>
                 </div>
               </div>
 
@@ -385,7 +385,7 @@ export default function ClassOf2027RankingsPage() {
                 <Phone className="h-6 w-6 mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold text-lg mb-1">Direct Contact Details</h3>
-                  <p className="text-blue-100">Athlete e-mail, phone, social profiles</p>
+                  <p className="text-muted-foreground">Athlete e-mail, phone, social profiles</p>
                 </div>
               </div>
 
@@ -393,7 +393,7 @@ export default function ClassOf2027RankingsPage() {
                 <Bell className="h-6 w-6 mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold text-lg mb-1">Frequent Updates</h3>
-                  <p className="text-blue-100">Automatic alerts after major tournaments, wins, and rankings changes</p>
+                  <p className="text-muted-foreground">Automatic alerts after major tournaments, wins, and rankings changes</p>
                 </div>
               </div>
 
@@ -401,7 +401,7 @@ export default function ClassOf2027RankingsPage() {
                 <Lock className="h-6 w-6 mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold text-lg mb-1">Coaches Portal Access</h3>
-                  <p className="text-blue-100">Secure dashboard to browse, sort, and manage North Carolina recruits</p>
+                  <p className="text-muted-foreground">Secure dashboard to browse, sort, and manage North Carolina recruits</p>
                 </div>
               </div>
 
@@ -409,7 +409,7 @@ export default function ClassOf2027RankingsPage() {
                 <BarChart className="h-6 w-6 mt-1 flex-shrink-0" />
                 <div>
                   <h3 className="font-semibold text-lg mb-1">Comprehensive Recruiting Data</h3>
-                  <p className="text-blue-100">
+                  <p className="text-muted-foreground">
                     Athletic results, progress metrics, highlight videos, and academic info in one place
                   </p>
                 </div>
@@ -418,56 +418,56 @@ export default function ClassOf2027RankingsPage() {
           </Card>
 
           <Card className="mb-12 overflow-hidden">
-            <CardHeader className="bg-gradient-to-r from-blue-600 to-red-600 text-white">
+            <CardHeader className="border-b border-border bg-secondary text-foreground">
               <CardTitle className="text-2xl">Class of 2027 Overview</CardTitle>
             </CardHeader>
             <CardContent className="p-8">
               <div className="prose prose-lg max-w-none">
-                <p className="text-xl text-gray-700 mb-6 leading-relaxed">
+                <p className="text-xl text-muted-foreground mb-6 leading-relaxed">
                   The North Carolina Class of 2027 has quickly established itself as one of the most accomplished
-                  sophomore groups in state history. With 10 state championships, 34 total state placements, and 7 NHSCA
+                  groups in state history. With 10 state championships, 34 total state placements, and 7 NHSCA
                   All-American honors, this class is already setting a new standard for success. Their performance at
                   the 2025 NHSCA Nationals, where they produced six All-Americans (tied for the second-highest total in
                   state history), confirmed their place among the nation's elite.
                 </p>
 
                 <div className="grid md:grid-cols-3 gap-6 my-8">
-                  <Card className="bg-blue-50 border-blue-200">
+                  <Card className="bg-secondary border-blue-200">
                     <CardContent className="p-6 text-center">
-                      <div className="text-3xl font-bold text-blue-600 mb-2">10</div>
-                      <div className="text-sm font-medium text-blue-800">State Champions</div>
+                      <div className="text-3xl font-bold text-primary mb-2">10</div>
+                      <div className="text-sm font-medium text-foreground">State Champions</div>
                     </CardContent>
                   </Card>
-                  <Card className="bg-red-50 border-red-200">
+                  <Card className="bg-secondary border-red-200">
                     <CardContent className="p-6 text-center">
                       <div className="text-3xl font-bold text-red-600 mb-2">7</div>
-                      <div className="text-sm font-medium text-red-800">NHSCA All-Americans</div>
+                      <div className="text-sm font-medium text-foreground">NHSCA All-Americans</div>
                     </CardContent>
                   </Card>
-                  <Card className="bg-yellow-50 border-yellow-200">
+                  <Card className="bg-secondary border-yellow-200">
                     <CardContent className="p-6 text-center">
-                      <div className="text-3xl font-bold text-yellow-600 mb-2">22/25</div>
-                      <div className="text-sm font-medium text-yellow-800">Top 25 are NC United Blue</div>
+                      <div className="text-3xl font-bold text-yellow-600 mb-2">22/30</div>
+                      <div className="text-sm font-medium text-primary">Top 30 are NC United Blue</div>
                     </CardContent>
                   </Card>
                 </div>
 
-                <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Users className="h-6 w-6 text-blue-600" />
+                <h3 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
+                  <Users className="h-6 w-6 text-primary" />
                   NC United Pipeline
                 </h3>
                 <p className="mb-4">The Class of 2027 is deeply tied to the NC United Blue program:</p>
-                <ul className="list-disc list-inside mb-6 space-y-2 text-gray-700">
+                <ul className="list-disc list-inside mb-6 space-y-2 text-muted-foreground">
                   <li>All of the Top 10 ranked wrestlers are members of NC United Blue.</li>
-                  <li>22 of the Top 25 actively train and compete as part of Blue.</li>
-                  <li>9 of the Top 25 have already represented North Carolina on the NC United National Team.</li>
+                  <li>22 of the Top 30 actively train and compete as part of Blue.</li>
+                  <li>9 of the Top 30 have already represented North Carolina on the NC United National Team.</li>
                 </ul>
                 <p className="mb-6">
                   This integration has fueled both individual and team success, giving athletes opportunities to sharpen
                   their skills against the nation's best.
                 </p>
 
-                <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <h3 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
                   <Trophy className="h-6 w-6 text-red-600" />
                   Making History Together
                 </h3>
@@ -483,7 +483,7 @@ export default function ClassOf2027RankingsPage() {
                   competed on the NC United team at Ultimate Club Duals, cementing North Carolina's national presence.
                 </p>
 
-                <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <h3 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
                   <Target className="h-6 w-6 text-green-600" />
                   Highly Recruited Nationwide
                 </h3>
@@ -501,7 +501,7 @@ export default function ClassOf2027RankingsPage() {
                   translate directly into college recruiting success.
                 </p>
 
-                <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <h3 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-2">
                   <TrendingUp className="h-6 w-6 text-purple-600" />
                   The Road Ahead
                 </h3>
@@ -515,24 +515,24 @@ export default function ClassOf2027RankingsPage() {
             </CardContent>
           </Card>
 
-          <Card className="mb-12 bg-gradient-to-r from-gray-50 to-blue-50 border-l-4 border-l-blue-600">
+          <Card className="mb-12 border-border border-l-4 border-l-primary bg-card">
             <CardContent className="p-8">
-              <blockquote className="text-2xl font-medium text-gray-900 italic text-center mb-4">
+              <blockquote className="text-2xl font-medium text-foreground italic text-center mb-4">
                 "Exposure to the nation's top-ranked athletes and elite training opportunities is fueling unprecedented
                 college recruiting interest in North Carolina's Class of 2027."
               </blockquote>
               <div className="text-center">
-                <p className="text-lg font-semibold text-blue-600">Mike Macchiavello</p>
-                <p className="text-gray-600">Co-Founder, NC United</p>
+                <p className="text-lg font-semibold text-primary">Mike Macchiavello</p>
+                <p className="text-muted-foreground">Co-Founder, NC United</p>
               </div>
             </CardContent>
           </Card>
 
           <Card className="mb-8">
             <CardContent className="p-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4 text-center">Class of 2027 Rankings</h2>
-              <p className="text-lg text-gray-700 text-center max-w-4xl mx-auto leading-relaxed">
-                Below you'll find the full list of North Carolina's Top 25 sophomores for 2027. This class has already
+              <h2 className="text-3xl font-bold text-foreground mb-4 text-center">Class of 2027 Rankings</h2>
+              <p className="text-lg text-muted-foreground text-center max-w-4xl mx-auto leading-relaxed">
+                Below is the published top 30 for North Carolina's Class of 2027. This class has already
                 combined for 10 state titles, 34 total state placements, and 7 NHSCA All-American finishes — making it
                 one of the most accomplished groups in state history. These rankings reflect state and national
                 performance, quality of wins, and exposure against elite competition.
@@ -541,7 +541,7 @@ export default function ClassOf2027RankingsPage() {
           </Card>
 
           <div className="flex justify-center mb-6">
-            <div className="bg-white rounded-lg p-1 shadow-sm border">
+            <div className="bg-card rounded-lg p-1 shadow-sm border">
               <Button
                 variant={viewMode === "table" ? "default" : "ghost"}
                 size="sm"
@@ -569,65 +569,65 @@ export default function ClassOf2027RankingsPage() {
           </div>
 
           <Card className="mb-12">
-            <CardHeader className="bg-gradient-to-r from-blue-600 to-red-600 text-white">
+            <CardHeader className="border-b border-border bg-secondary text-foreground">
               <CardTitle className="text-2xl">Academic & Recruiting Profiles</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b">
+                  <thead className="bg-card border-b">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Rank
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Name
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         High School
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         GPA
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Weight
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                         Contact
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-card divide-y divide-border">
                     {loadingAthletes ? (
                       <tr>
                         <td colSpan={6} className="px-6 py-12 text-center">
                           <div className="flex justify-center">
-                            <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+                            <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-blue-600"></div>
                           </div>
                         </td>
                       </tr>
                     ) : athletes.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-6 py-12 text-center text-gray-500">
+                        <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground">
                           No athletes found
                         </td>
                       </tr>
                     ) : (
                       athletes.map((athlete) => (
-                        <tr key={athlete.id} className="hover:bg-gray-50">
+                        <tr key={athlete.id} className="hover:bg-card">
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
-                              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                              <Badge variant="secondary" className="bg-secondary text-foreground">
                                 #{athlete.prospect_ranking}
                               </Badge>
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">
+                            <div className="text-sm font-medium text-foreground">
                               {athlete.id ? (
                                 <a
                                   href={`/view-profile?id=${encodeURIComponent(athlete.id)}`}
-                                  className="text-blue-600 hover:text-blue-800 hover:underline"
+                                  className="text-primary hover:text-foreground hover:underline"
                                   onClick={(e) => {
                                     e.preventDefault()
                                     window.location.href = `/view-profile?id=${encodeURIComponent(athlete.id)}`
@@ -641,15 +641,15 @@ export default function ClassOf2027RankingsPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">{athlete.highschool}</div>
+                            <div className="text-sm text-muted-foreground">{athlete.highschool}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-900">
+                            <div className="text-sm text-foreground">
                               {athlete.academic_gpa ? athlete.academic_gpa.toFixed(2) : "N/A"}
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm text-gray-500">{athlete.weight_display}</div>
+                            <div className="text-sm text-muted-foreground">{athlete.weight_display}</div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <Button variant="outline" size="sm">
@@ -667,14 +667,14 @@ export default function ClassOf2027RankingsPage() {
           </Card>
 
           <div className="grid md:grid-cols-2 gap-6">
-            <Card className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+            <Card className="border-border bg-card text-foreground">
               <CardContent className="p-8 text-center">
                 <Instagram className="h-12 w-12 mx-auto mb-4 opacity-90" />
                 <h3 className="text-2xl font-bold mb-4">Follow Our Journey</h3>
                 <p className="mb-6 opacity-90">
                   Stay updated with the latest rankings, tournament results, and recruiting news.
                 </p>
-                <Button variant="secondary" size="lg" className="bg-white text-blue-600 hover:bg-gray-100" asChild>
+                <Button variant="secondary" size="lg" className="bg-card text-primary hover:bg-secondary" asChild>
                   <a href="https://www.instagram.com/ncwrestlingunited/" target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="h-4 w-4 mr-2" />
                     Follow NC United on Instagram
@@ -683,12 +683,12 @@ export default function ClassOf2027RankingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="bg-gradient-to-r from-red-600 to-red-700 text-white">
+            <Card className="border-border bg-card text-foreground">
               <CardContent className="p-8 text-center">
                 <Trophy className="h-12 w-12 mx-auto mb-4 opacity-90" />
                 <h3 className="text-2xl font-bold mb-4">Join NC United Blue</h3>
                 <p className="mb-6 opacity-90">Train with the best and develop your skills in our elite program.</p>
-                <Button variant="secondary" size="lg" className="bg-white text-red-600 hover:bg-gray-100">
+                <Button variant="secondary" size="lg" className="bg-card text-red-600 hover:bg-secondary">
                   <ExternalLink className="h-4 w-4 mr-2" />
                   Learn About NC United Blue
                 </Button>
