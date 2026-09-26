@@ -175,6 +175,108 @@ export default function ClassOf2027RankingsPage() {
           </p>
 
           {/*
+            * A look at the thing itself.
+            *
+            * Four cards describing a methodology is an argument; this is the product. The
+            * structure is real — these are the sections a college coach actually reads — and
+            * the names are blurred because they are the product and because they are minors.
+            * Showing the shape sells it; showing the names gives it away.
+            */}
+          <div className="mb-8 w-full">
+            <p className="mb-1 text-sm font-semibold uppercase tracking-wide text-gray-500">
+              See what college coaches see
+            </p>
+            <p className="mb-4 text-sm text-gray-500">
+              The same board and the same reports they open — not a summary of them.
+            </p>
+            <div className="grid gap-4 text-left lg:grid-cols-2">
+              <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                <div className="border-b border-gray-100 bg-gray-50 px-4 py-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-600">
+                    Class rankings
+                  </p>
+                </div>
+                <div className="divide-y divide-gray-100">
+                  {[
+                    { rank: 1, chips: ["State champion", "TOC champion", "NHSCA 4th", "45-0"] },
+                    { rank: 2, chips: ["State champion", "TOC champion", "NHSCA 5th", "43-0"] },
+                    { rank: 3, chips: ["State champion", "TOC champion", "37-0"] },
+                    { rank: 4, chips: ["State 2nd", "TOC champion", "49-6"] },
+                  ].map((row) => (
+                    <div key={row.rank} className="flex items-start gap-3 px-4 py-3">
+                      <span className="w-5 shrink-0 text-lg font-black text-blue-600">{row.rank}</span>
+                      <div className="min-w-0 flex-1">
+                        {/* Blurred, not fake: the layout is the real one, the name is withheld. */}
+                        <div className="mb-2 h-3.5 w-32 rounded bg-gray-300 blur-[3px]" />
+                        <div className="flex flex-wrap gap-1">
+                          {row.chips.map((chip) => (
+                            <span
+                              key={chip}
+                              className="rounded bg-blue-50 px-1.5 py-0.5 text-[11px] font-medium text-blue-700"
+                            >
+                              {chip}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
+                <div className="border-b border-gray-100 bg-gray-50 px-4 py-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-600">
+                    Scouting report
+                  </p>
+                </div>
+                <div className="space-y-3 p-4">
+                  <div>
+                    <p className="text-xs font-semibold text-gray-700">In-season record</p>
+                    <div className="mt-1 h-3 w-24 rounded bg-gray-300 blur-[3px]" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-700">Wins over ranked opponents</p>
+                    <div className="mt-1 space-y-1.5">
+                      <div className="h-3 w-full rounded bg-gray-300 blur-[3px]" />
+                      <div className="h-3 w-4/5 rounded bg-gray-300 blur-[3px]" />
+                      <div className="h-3 w-3/5 rounded bg-gray-300 blur-[3px]" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-700">Losses to ranked opponents</p>
+                    <div className="mt-1 space-y-1.5">
+                      <div className="h-3 w-3/4 rounded bg-gray-300 blur-[3px]" />
+                      <div className="h-3 w-1/2 rounded bg-gray-300 blur-[3px]" />
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-gray-700">Competed at</p>
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {["NCHSAA", "Tournament of Champions", "NHSCA", "Super 32"].map((event) => (
+                        <span
+                          key={event}
+                          className="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] text-gray-600"
+                        >
+                          {event}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  {/*
+                    * Stated, because it is the part people assume is for sale and it is not.
+                    * Contact details and academics follow coach verification, never payment.
+                    */}
+                  <p className="border-t border-gray-100 pt-3 text-[11px] text-gray-500">
+                    Contact details and academics are shown to verified college coaches only —
+                    never sold, at any price.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/*
             * Said plainly, and before the price rather than in the footnote under it.
             *
             * Blue families already pay for this, and a member who reaches a page showing
