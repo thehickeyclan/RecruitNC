@@ -131,9 +131,30 @@ export type PoundForPoundMeeting = {
 export type PoundForPoundEntry = PoundForPoundInput & {
   score: number
   rank: number
+  /**
+   * Where this season alone would have put them, before their class board had its say.
+   *
+   * The class order is enforced rather than negotiated, so a wrestler whose board position
+   * disagrees with their season is moved silently — and silently is exactly wrong. Josh
+   * Stonebraker won the state title and the TOC and went 42-1, a season the fourth best in the
+   * state, and the 2027 board has him 15th, so this list carries him at 17th with nothing on
+   * screen saying why. Keeping both numbers lets the page say it out loud.
+   */
+  scoreRank: number
+  /** Places the class board moved them from their season standing; negative is upward. */
+  classOverride: number
   /** Wrestlers ranked below them on score who have beaten them. */
   beatenBy: string[]
 }
+
+/**
+ * How far the class board can drag a wrestler from their season before it needs explaining.
+ *
+ * Small gaps are the normal condition and mean nothing — a board weighs a career and this
+ * weighs one winter, so they will never agree exactly. Eight places is where the two stop
+ * being different emphases and start being a claim one of them is wrong.
+ */
+export const CLASS_OVERRIDE_ALERT = 8
 
 /**
  * Score everybody, then let results override the score.
@@ -206,6 +227,9 @@ export function buildPoundForPound(
    * where each class's wrestlers sit relative to everyone else. A missing class rank sorts last
    * within its class rather than jumping the ranked.
    */
+  /** Where the season alone left everybody, captured before the class order is imposed. */
+  const scoreRankOf = new Map(order.map((a, i) => [a.id, i + 1]))
+
   const slotsByClass = new Map<number, number[]>()
   order.forEach((a, i) => {
     const slots = slotsByClass.get(a.graduationYear) ?? []
@@ -235,6 +259,8 @@ export function buildPoundForPound(
   return order.map((a, i) => ({
     ...a,
     rank: i + 1,
+    scoreRank: scoreRankOf.get(a.id) ?? i + 1,
+    classOverride: i + 1 - (scoreRankOf.get(a.id) ?? i + 1),
     beatenBy: [...(beats.entries())]
       .filter(([winnerId, losers]) => losers.has(a.id) && (placeOf.get(winnerId) ?? 0) > i + 1)
       .map(([winnerId]) => nameOf.get(winnerId) ?? winnerId),

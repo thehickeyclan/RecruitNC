@@ -142,3 +142,34 @@ describe("the two lists never contradict each other", () => {
     expect(list[0]!.id).toBe("ranked")
   })
 })
+
+describe("when the class board disagrees with the season", () => {
+  it("keeps the season standing so the page can show what the board moved", () => {
+    /*
+     * Josh Stonebraker's real case: state title, TOC title, 42-1 - the fourth best season in the
+     * state - and the 2027 board has him 15th. Enforcing the board is right; doing it without
+     * leaving a trace is what made the list look broken to anyone reading the score column.
+     */
+    const list = buildPoundForPound([
+      w("best", { classRank: 1, statePlace: 1, tocPlace: 1, nationalPlace: 4, wins: 45, losses: 0 }),
+      w("thin", { classRank: 2, wins: 36, losses: 0 }),
+      w("strong", { classRank: 3, statePlace: 1, tocPlace: 1, wins: 42, losses: 1 }),
+    ])
+    const by = (id: string) => list.find((x) => x.id === id)!
+    // The board order is obeyed exactly.
+    expect(list.map((x) => x.id)).toEqual(["best", "thin", "strong"])
+    // But the season said otherwise, and both numbers survive.
+    expect(by("strong").scoreRank).toBe(2)
+    expect(by("strong").classOverride).toBe(1)
+    expect(by("thin").scoreRank).toBe(3)
+    expect(by("thin").classOverride).toBe(-1)
+  })
+
+  it("reports no override when the two agree", () => {
+    const list = buildPoundForPound([
+      w("first", { classRank: 1, statePlace: 1, tocPlace: 1, wins: 40, losses: 0 }),
+      w("second", { classRank: 2, statePlace: 2, wins: 30, losses: 5 }),
+    ])
+    expect(list.every((x) => x.classOverride === 0)).toBe(true)
+  })
+})

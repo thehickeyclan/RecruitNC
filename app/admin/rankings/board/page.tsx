@@ -593,6 +593,10 @@ export default function RankingBoardPage() {
                 >
                   Refresh
                 </Button>
+                {/* The cross-class view of the same wrestlers; it has no other way in. */}
+                <Button asChild variant="outline" className="border-blue-700 bg-slate-900 text-white hover:bg-blue-950">
+                  <Link href="/admin/rankings/p4p">Pound for pound</Link>
+                </Button>
               </div>
             </div>
           </section>
