@@ -40,6 +40,18 @@ export function ConditionalAuthGuard({
     "/athletes-public",
     "/view-profile",
     "/prospects",
+    /*
+     * The rankings page is now the sales page for the rankings, and its audience is signed out.
+     *
+     * An out-of-state parent, a recruiting service, a college coach following a texted link —
+     * none of them have an account, and every one of them hit a generic sign-in wall instead of
+     * the page explaining what the board is and what it costs. We were gating the pitch.
+     *
+     * Nothing is given away: /api/public-rankings answers 401 signed out and 403 without a
+     * membership or subscription, so the page renders its locked state and no ranking is ever
+     * in the payload. Same arrangement as /prospects directly above.
+     */
+    "/rankings",
     "/schools",
     // A school's wrestling record is public history, same as /schools and /nchsaa — and Data
     // Dawg, which is open to everyone, links school names straight to /high-schools/[slug].

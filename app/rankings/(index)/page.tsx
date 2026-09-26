@@ -63,6 +63,12 @@ export default function ClassOf2027RankingsPage() {
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
 
   const startCheckout = async (kind: "subscription" | "subscription_annual") => {
+    // Stripe needs an account to attach the subscription to, so signing in comes first —
+    // but only once they have chosen, and the plan rides along so the choice is not lost.
+    if (locked === "anonymous") {
+      window.location.href = `/auth/signin?returnTo=${encodeURIComponent(`/rankings?plan=${kind}`)}`
+      return
+    }
     setCheckingOut(kind)
     setCheckoutError(null)
     try {
@@ -105,76 +111,114 @@ export default function ClassOf2027RankingsPage() {
   if (!loadingAthletes && locked) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-red-50">
-        <div className="mx-auto flex max-w-2xl flex-col items-center px-4 py-24 text-center">
-          <Badge className="mb-4 bg-blue-600 text-white">NC United Blue</Badge>
+        <div className="mx-auto flex max-w-3xl flex-col items-center px-4 py-20 text-center">
+          <Badge className="mb-4 bg-blue-600 text-white">NC United</Badge>
           <h1 className="mb-3 text-4xl font-bold text-gray-900">
             North Carolina College Prospect Rankings
           </h1>
-          <p className="mb-8 text-lg text-gray-600">
-            The published rankings are part of NC United Blue. Verified college coaches see them
-            free, and every wrestler can always see their own.
+          <p className="mb-4 text-lg text-gray-600">
+            Built for college coaches and the North Carolina wrestling community: an evidence-based
+            read on who is ready to wrestle at the next level, and why.
+          </p>
+          <p className="mb-10 text-base text-gray-500">
+            Every ranking is reasoned from results on the mat — not reputation, not a poll.
+          </p>
+
+          {/*
+            * What the number actually rests on.
+            *
+            * A ranking nobody can interrogate is a rumour, and the first question every parent
+            * and coach asks is "on what basis". Each claim here is something the model does and
+            * the counts are real, so the page can be checked rather than believed.
+            */}
+          <div className="mb-10 grid gap-4 text-left sm:grid-cols-2">
+            <div className="rounded-xl border border-gray-200 bg-white p-5">
+              <p className="mb-1 font-semibold text-gray-900">Every match, not just the big ones</p>
+              <p className="text-sm text-gray-600">
+                41,000+ individual bouts on file, alongside 26 years of NCHSAA state results. A
+                season is read in full — who they wrestled, how it ended, and when.
+              </p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-5">
+              <p className="mb-1 font-semibold text-gray-900">National competition, weighted properly</p>
+              <p className="text-sm text-gray-600">
+                NHSCA Nationals, Super 32, Journeymen, NHSCA Duals and the Interstate 64 duals.
+                NHSCA brackets by grade, so a freshman podium is not scored as a senior one.
+              </p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-5">
+              <p className="mb-1 font-semibold text-gray-900">Head-to-head settles it</p>
+              <p className="text-sm text-gray-600">
+                A résumé argues; a result decides. When two ranked wrestlers have met inside twelve
+                months, the most recent meeting outranks the argument — and the ranking says so.
+              </p>
+            </div>
+            <div className="rounded-xl border border-gray-200 bg-white p-5">
+              <p className="mb-1 font-semibold text-gray-900">Strength of win, and how active they are</p>
+              <p className="text-sm text-gray-600">
+                Beating the state runner-up is not beating an unranked opponent, and the model
+                grades every win by who it was over. A wrestler who stopped competing stops
+                climbing.
+              </p>
+            </div>
+          </div>
+
+          <p className="mb-8 text-base text-gray-600">
+            Published top 30 in each class, plus a pound-for-pound list across classes scored on
+            the current season alone. Every wrestler can always see their own number, free.
           </p>
           <div className="flex flex-wrap justify-center gap-3">
-            {locked === "anonymous" ? (
-              <>
-                <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
-                  <Link href="/auth/signin?returnTo=/rankings">Sign in</Link>
-                </Button>
-                <Button asChild size="lg" variant="outline">
-                  <Link href="/blue">See NC United Blue</Link>
-                </Button>
-              </>
-            ) : (
-              <>
-                {/*
-                  * Two ways in, and the cheaper one is not always Blue.
-                  *
-                  * Blue is a wrestling program with a programme fee; an out-of-state parent, a
-                  * recruiting service or a coach's colleague has no business joining it and,
-                  * until there was a subscription, no way to pay for the rankings at all. The
-                  * refusal was the whole offer.
-                  */}
-                <Button
-                  size="lg"
-                  disabled={checkingOut !== null}
-                  onClick={() => { void startCheckout("subscription") }}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  {checkingOut === "subscription"
-                    ? "Starting…"
-                    : `${formatPrice(SCOUTING_REPORT_PRICES.subscription)} / month`}
-                </Button>
-                <Button
-                  size="lg"
-                  disabled={checkingOut !== null}
-                  onClick={() => { void startCheckout("subscription_annual") }}
-                  className="bg-slate-900 hover:bg-slate-800"
-                >
-                  {checkingOut === "subscription_annual"
-                    ? "Starting…"
-                    : `${formatPrice(SCOUTING_REPORT_PRICES.subscription_annual)} / year`}
-                </Button>
-                <Button asChild size="lg" variant="outline">
-                  <Link href="/blue">Join NC United Blue</Link>
-                </Button>
-              </>
-            )}
+            {/*
+              * The price shows signed out too.
+              *
+              * Two ways in, and the cheaper one is not always Blue: an out-of-state parent, a
+              * recruiting service or a coach's colleague has no business joining a wrestling
+              * program. Hiding the price until somebody registers asks them to take a step
+              * before knowing what it costs, and the signed-out visitor is exactly the buyer
+              * this page is for — so the buttons carry the price either way and sign-in comes
+              * after the decision, not before it.
+              */}
+            <Button
+              size="lg"
+              disabled={checkingOut !== null}
+              onClick={() => { void startCheckout("subscription") }}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {checkingOut === "subscription"
+                ? "Starting…"
+                : `${formatPrice(SCOUTING_REPORT_PRICES.subscription)} / month`}
+            </Button>
+            <Button
+              size="lg"
+              disabled={checkingOut !== null}
+              onClick={() => { void startCheckout("subscription_annual") }}
+              className="bg-slate-900 hover:bg-slate-800"
+            >
+              {checkingOut === "subscription_annual"
+                ? "Starting…"
+                : `${formatPrice(SCOUTING_REPORT_PRICES.subscription_annual)} / year`}
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link href="/blue">Join NC United Blue</Link>
+            </Button>
           </div>
-          {locked === "unentitled" && (
-            <>
-              <p className="mt-4 text-sm text-gray-500">
-                Save {formatPrice(annualSavingCents())} a year. Cancel any time. A subscription also
-                includes unlimited scouting reports.
-              </p>
-              <p className="mt-2 text-sm text-gray-500">
-                Already an NC United Blue family, or a college coach?{" "}
-                <Link href="/auth/coach-signup" className="text-blue-600 underline">
-                  Verify your account
-                </Link>{" "}
-                — you do not pay for this.
-              </p>
-            </>
-          )}
+          <p className="mt-4 text-sm text-gray-500">
+            Save {formatPrice(annualSavingCents())} a year. Cancel any time. A subscription also
+            includes unlimited scouting reports.
+          </p>
+          <p className="mt-2 text-sm text-gray-500">
+            NC United Blue family, or a college coach? You do not pay for this —{" "}
+            {locked === "anonymous" ? (
+              <Link href="/auth/signin?returnTo=/rankings" className="text-blue-600 underline">
+                sign in
+              </Link>
+            ) : (
+              <Link href="/auth/coach-signup" className="text-blue-600 underline">
+                verify your account
+              </Link>
+            )}
+            .
+          </p>
           {checkoutError && <p className="mt-4 text-sm text-red-600">{checkoutError}</p>}
         </div>
       </div>
