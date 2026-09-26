@@ -46,12 +46,24 @@ export default function ClassOf2027RankingsPage() {
   const [viewMode, setViewMode] = useState<"table" | "cards">("table")
   const [athletes, setAthletes] = useState<Athlete[]>([])
   const [loadingAthletes, setLoadingAthletes] = useState(true)
+  /*
+   * Locked is a state, not an error.
+   *
+   * The fetch swallowed everything that was not a 200, so once the API started charging for
+   * this board a visitor without a membership got the page furniture and an empty table —
+   * looking like a ranking we had failed to load rather than one they could buy.
+   */
+  const [locked, setLocked] = useState<"anonymous" | "unentitled" | null>(null)
 
   useEffect(() => {
     const fetchAthletes = async () => {
       try {
         const response = await fetch("/api/public-rankings?year=2027&gender=Male")
-        if (response.ok) {
+        if (response.status === 401) {
+          setLocked("anonymous")
+        } else if (response.status === 403) {
+          setLocked("unentitled")
+        } else if (response.ok) {
           const data = await response.json()
           setAthletes(data.rankings || [])
         }
@@ -64,6 +76,44 @@ export default function ClassOf2027RankingsPage() {
 
     fetchAthletes()
   }, [])
+
+  if (!loadingAthletes && locked) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-red-50">
+        <div className="mx-auto flex max-w-2xl flex-col items-center px-4 py-24 text-center">
+          <Badge className="mb-4 bg-blue-600 text-white">NC United Blue</Badge>
+          <h1 className="mb-3 text-4xl font-bold text-gray-900">
+            North Carolina College Prospect Rankings
+          </h1>
+          <p className="mb-8 text-lg text-gray-600">
+            The published rankings are part of NC United Blue. Verified college coaches see them
+            free, and every wrestler can always see their own.
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            {locked === "anonymous" ? (
+              <>
+                <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
+                  <Link href="/auth/signin?returnTo=/rankings">Sign in</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline">
+                  <Link href="/blue">See NC United Blue</Link>
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
+                  <Link href="/blue">Join NC United Blue</Link>
+                </Button>
+                <Button asChild size="lg" variant="outline">
+                  <Link href="/auth/coach-signup">I am a college coach</Link>
+                </Button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (loadingAthletes) {
     return (

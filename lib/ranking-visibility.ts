@@ -15,6 +15,8 @@
  * and the wrestler inside the published cut — is a separate question answered before this one.
  */
 
+import { normalizeRole } from "./viewer-role"
+
 export type RankingViewer = {
   isAdmin?: boolean
   /** A coach whose credential has been checked, which is how college coaches are identified. */
@@ -31,7 +33,12 @@ export function canSeeProspectRanking(viewer: RankingViewer | null | undefined):
   if (viewer.isOwnProfile) return true
   if (viewer.isAdmin) return true
   if (viewer.isVerifiedCoach) return true
-  if (String(viewer.role ?? "").toLowerCase() === "college_coach") return true
+  /*
+   * Hyphen and underscore spellings both exist in production — "college-coach" and
+   * "college_coach" — so a literal comparison locks out whichever half is stored the other way.
+   * `viewer-role` folds them, and it is the same trap that filed 13 of 14 coaches as fans.
+   */
+  if (normalizeRole(viewer.role) === "college_coach") return true
   return viewer.isBlueMember === true
 }
 

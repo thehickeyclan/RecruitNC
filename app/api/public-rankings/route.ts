@@ -12,15 +12,30 @@ import {
   PUBLISHED_PUBLIC_RANKINGS_YEARS,
   getPublicRankingsMax,
 } from "@/lib/public-rankings-cap"
+import { canSeeProspectRanking } from "@/lib/ranking-visibility"
+import { RANKING_PAYWALL, resolveRankingViewer } from "@/lib/ranking-access"
 
 export async function GET(request: Request) {
   try {
+    /*
+     * Signed in was the whole test, and signing in is free.
+     *
+     * This route serves the published board for a class. Anyone who registered an account could
+     * open /rankings and read the top thirty of every published year — the product the Blue
+     * membership is sold on, given away to whoever asked. The gate is now the same one the
+     * profile pill and the compare tool use.
+     */
     const authClient = await createClient()
-    const {
-      data: { user },
-    } = await authClient.auth.getUser()
-    if (!user) {
+    const admin = createAdminClient()
+    const { viewer, userId } = await resolveRankingViewer({ supabase: authClient, admin })
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+    if (!canSeeProspectRanking(viewer)) {
+      return NextResponse.json(
+        { error: RANKING_PAYWALL.error, upgrade: RANKING_PAYWALL.upgradeHref, locked: true },
+        { status: 403 },
+      )
     }
 
     const { searchParams } = new URL(request.url)
@@ -43,7 +58,7 @@ export async function GET(request: Request) {
     // Public /public-rankings pages: always official published cap only
     const maxPublicRank = getPublicRankingsMax(yearNum)
 
-    const supabase = createAdminClient()
+    const supabase = admin
 
     console.log("[v0] Fetching public rankings for:", { year, gender, maxPublicRank })
 
