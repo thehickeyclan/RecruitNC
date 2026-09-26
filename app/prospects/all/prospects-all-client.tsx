@@ -695,7 +695,6 @@ export default function ProspectsAllClient({
                           { value: "state-champion" as AchievementLevel, label: "State Champion", color: "bg-yellow-500" },
                           { value: "state-placer" as AchievementLevel, label: "State Placer", color: "bg-blue-600" },
                           { value: "state-qualifier" as AchievementLevel, label: "State Qualifier", color: "bg-green-600" },
-                          { value: "dnq" as AchievementLevel, label: "DNQ", color: "bg-gray-400" },
                         ].map(({ value, label, color }) => {
                           const isChecked = achievementFilters.includes(value)
                           return (
@@ -983,7 +982,6 @@ export default function ProspectsAllClient({
                   { value: "state-champion" as AchievementLevel, label: "State Champion", color: "bg-yellow-500" },
                   { value: "state-placer" as AchievementLevel, label: "State Placer", color: "bg-blue-600" },
                   { value: "state-qualifier" as AchievementLevel, label: "State Qualifier", color: "bg-green-600" },
-                  { value: "dnq" as AchievementLevel, label: "DNQ", color: "bg-gray-400" },
                 ].map(({ value, label, color }) => {
                   const isChecked = achievementFilters.includes(value)
                   return (
