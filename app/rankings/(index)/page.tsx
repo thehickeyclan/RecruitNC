@@ -132,11 +132,17 @@ export default function ClassOf2027RankingsPage() {
             * the counts are real, so the page can be checked rather than believed.
             */}
           <div className="mb-10 grid gap-4 text-left sm:grid-cols-2">
+            {/*
+              * The first draft sold "26 years of NCHSAA results" here, which is a fact about the
+              * archive and not about the ranking. No college coach cares who placed in 2001 when
+              * deciding on a junior. What the model actually reads is the wrestler's own career,
+              * weighted towards what they did most recently — so that is what this says.
+              */}
             <div className="rounded-xl border border-gray-200 bg-white p-5">
-              <p className="mb-1 font-semibold text-gray-900">Every match, not just the big ones</p>
+              <p className="mb-1 font-semibold text-gray-900">A full career, weighted to now</p>
               <p className="text-sm text-gray-600">
-                41,000+ individual bouts on file, alongside 26 years of NCHSAA state results. A
-                season is read in full — who they wrestled, how it ended, and when.
+                41,000+ individual bouts on file. Every season a wrestler has wrestled counts, with
+                the most recent counting most — who they wrestled, how it ended, and when.
               </p>
             </div>
             <div className="rounded-xl border border-gray-200 bg-white p-5">
@@ -163,10 +169,27 @@ export default function ClassOf2027RankingsPage() {
             </div>
           </div>
 
-          <p className="mb-8 text-base text-gray-600">
+          <p className="mb-4 text-base text-gray-600">
             Published top 30 in each class, plus a pound-for-pound list across classes scored on
             the current season alone. Every wrestler can always see their own number, free.
           </p>
+
+          {/*
+            * Said plainly, and before the price rather than in the footnote under it.
+            *
+            * Blue families already pay for this, and a member who reaches a page showing
+            * $9.99 a month with no statement that it is included will reasonably conclude we
+            * are charging them twice.
+            */}
+          <div className="mb-8 w-full rounded-xl border border-blue-200 bg-blue-50 p-4">
+            <p className="font-semibold text-blue-900">
+              Free for NC United Blue program members
+            </p>
+            <p className="mt-1 text-sm text-blue-800">
+              Included in your membership, for the whole family — nothing more to buy. Verified
+              college coaches are free too, and so is every wrestler&apos;s own ranking.
+            </p>
+          </div>
           <div className="flex flex-wrap justify-center gap-3">
             {/*
               * The price shows signed out too.
@@ -205,6 +228,11 @@ export default function ClassOf2027RankingsPage() {
           <p className="mt-4 text-sm text-gray-500">
             Save {formatPrice(annualSavingCents())} a year. Cancel any time. A subscription also
             includes unlimited scouting reports.
+          </p>
+          <p className="mt-4 text-sm text-gray-500">
+            Behind all of it is 26 years of North Carolina wrestling history — 10,000+ NCHSAA
+            state placements and every national result we hold. Ask Data Dawg about any of it —
+            the dog in the corner of this page — free, whether you subscribe or not.
           </p>
           <p className="mt-2 text-sm text-gray-500">
             NC United Blue family, or a college coach? You do not pay for this —{" "}
