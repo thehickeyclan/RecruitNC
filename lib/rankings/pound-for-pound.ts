@@ -157,6 +157,17 @@ export type PoundForPoundEntry = PoundForPoundInput & {
 export const CLASS_OVERRIDE_ALERT = 8
 
 /**
+ * How many of the pound-for-pound list are published.
+ *
+ * The class boards stop at thirty because past that the order is a pool rather than a ranking.
+ * This list draws from three of those boards at once, so the same reasoning lands further down:
+ * the top fifty are wrestlers with a season worth comparing, and below that the differences are
+ * inside the noise of what we hold. Everyone stays visible to an admin - deciding the cut is
+ * most of the work - but only the fifty are published.
+ */
+export const P4P_PUBLIC_CAP = 50
+
+/**
  * Score everybody, then let results override the score.
  *
  * A wrestler who beat somebody is not placed below them, however the résumés compare — that is

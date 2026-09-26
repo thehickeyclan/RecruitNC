@@ -20,8 +20,8 @@ import { AdminHeader } from "@/components/admin-header"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, AlertTriangle, ArrowDown, ArrowUp, Save, Trophy } from "lucide-react"
-import { CLASS_OVERRIDE_ALERT } from "@/lib/rankings/pound-for-pound"
+import { ArrowLeft, AlertTriangle, ArrowDown, ArrowUp, Save, Trophy, UploadCloud } from "lucide-react"
+import { CLASS_OVERRIDE_ALERT, P4P_PUBLIC_CAP } from "@/lib/rankings/pound-for-pound"
 
 type Entry = {
   id: string
@@ -71,9 +71,11 @@ export default function PoundForPoundPage() {
   const [dirty, setDirty] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState<string | null>(null)
+  const [publishing, setPublishing] = useState(false)
+  const [publishedAt, setPublishedAt] = useState<string | null>(null)
   const [meta, setMeta] = useState<Meta | null>(null)
   const [gender, setGender] = useState("Male")
-  const [depth, setDepth] = useState("20")
+  const [depth, setDepth] = useState("all")
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -139,6 +141,33 @@ export default function PoundForPoundPage() {
       setSaving(false)
     }
   }, [entries, gender])
+
+  const publish = useCallback(async () => {
+    if (dirty) {
+      setError("Save the order before publishing, so what goes out is what you are looking at.")
+      return
+    }
+    setPublishing(true)
+    setError(null)
+    try {
+      const response = await fetch("/api/admin/rankings/p4p", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          gender,
+          action: "publish",
+          order: entries.map((entry, i) => ({ id: entry.id, rank: i + 1 })),
+        }),
+      })
+      const payload = await response.json()
+      if (!response.ok) throw new Error(payload?.error || "Failed to publish")
+      setPublishedAt(new Date().toLocaleTimeString())
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Failed to publish")
+    } finally {
+      setPublishing(false)
+    }
+  }, [dirty, entries, gender])
 
   const shown = useMemo(
     () => (depth === "all" ? entries : entries.slice(0, Number(depth))),
@@ -225,6 +254,7 @@ export default function PoundForPoundPage() {
                     <SelectItem value="10">Top 10</SelectItem>
                     <SelectItem value="15">Top 15</SelectItem>
                     <SelectItem value="20">Top 20</SelectItem>
+                    <SelectItem value="50">Published 50</SelectItem>
                     <SelectItem value="all">Everyone</SelectItem>
                   </SelectContent>
                 </Select>
@@ -243,6 +273,22 @@ export default function PoundForPoundPage() {
                 >
                   <Save className="mr-2 h-4 w-4" />
                   {saving ? "Saving…" : dirty ? "Save order" : saved ? `Saved ${saved}` : "Saved"}
+                </Button>
+                {/* Refused while a rule is broken: this is the one order that leaves the building. */}
+                <Button
+                  onClick={() => { void publish() }}
+                  disabled={publishing || dirty || breaksClassOrder.size > 0}
+                  title={
+                    breaksClassOrder.size
+                      ? "Fix the rows breaking their class board first"
+                      : dirty
+                        ? "Save the order first"
+                        : `Publish the top ${P4P_PUBLIC_CAP}`
+                  }
+                  className="bg-emerald-500 text-slate-950 hover:bg-emerald-400 disabled:opacity-40"
+                >
+                  <UploadCloud className="mr-2 h-4 w-4" />
+                  {publishing ? "Publishing…" : publishedAt ? `Published ${publishedAt}` : `Publish top ${P4P_PUBLIC_CAP}`}
                 </Button>
               </div>
             </div>
@@ -287,6 +333,22 @@ export default function PoundForPoundPage() {
           {!loading && !error && (
             <div className="overflow-hidden rounded-xl border border-blue-900">
               {shown.map((entry) => (
+                <div key={`${entry.id}-wrap`}>
+                {/*
+                  * The cut, drawn rather than implied. Everyone is on this page because deciding
+                  * who is inside fifty is most of the work, but a list where the published and
+                  * the unpublished look identical is one an admin has to count down by hand.
+                  */}
+                {entry.rank === P4P_PUBLIC_CAP + 1 && (
+                  <div className="flex items-center gap-3 border-y border-dashed border-[#d6b75d]/50 bg-slate-950 px-4 py-2">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-[#d6b75d]">
+                      Published top {P4P_PUBLIC_CAP} ends here
+                    </span>
+                    <span className="text-xs text-blue-300">
+                      Everyone below stays private — visible to admins, never published.
+                    </span>
+                  </div>
+                )}
                 <div
                   key={entry.id}
                   /*
@@ -299,7 +361,9 @@ export default function PoundForPoundPage() {
                   className={
                     breaksClassOrder.has(entry.id)
                       ? "flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-red-700 bg-red-950/60 p-4 last:border-b-0"
-                      : "flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-blue-900/70 bg-slate-900 p-4 last:border-b-0"
+                      : entry.rank > P4P_PUBLIC_CAP
+                        ? "flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-blue-900/70 bg-slate-900/50 p-4 opacity-60 last:border-b-0"
+                        : "flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-blue-900/70 bg-slate-900 p-4 last:border-b-0"
                   }
                 >
                   <div className="flex flex-col">
@@ -372,6 +436,7 @@ export default function PoundForPoundPage() {
                     class #{entry.classRank ?? "—"}
                   </span>
                   <span className="w-16 text-right font-mono text-sm text-blue-100">{entry.score}</span>
+                </div>
                 </div>
               ))}
               {!shown.length && (

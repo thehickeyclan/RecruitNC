@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { buildPoundForPoundBoard } from "@/lib/rankings/pound-for-pound-load"
+import { P4P_PUBLIC_CAP } from "@/lib/rankings/pound-for-pound"
 
 export const dynamic = "force-dynamic"
 
@@ -124,6 +125,35 @@ export async function POST(request: Request) {
     }
 
     const db = createAdminClient()
+
+    /*
+     * Publishing writes the cut, not the pool.
+     *
+     * The board holds everybody because choosing who is inside fifty is the work; what leaves
+     * the building is the fifty. Replacing the published table outright rather than merging
+     * means a wrestler who drops out of the cut actually disappears from it - the class boards
+     * had the opposite bug, where clearing a rank was the step everyone forgot.
+     */
+    if (String(body?.action) === "publish") {
+      const published = rows
+        .filter((row: { rank: number }) => row.rank <= P4P_PUBLIC_CAP)
+        .map((row: { athlete_id: string; rank: number }) => ({
+          athlete_id: row.athlete_id,
+          rank: row.rank,
+          gender,
+          published_at: new Date().toISOString(),
+        }))
+      const { error: clearPublished } = await db.from("p4p_rankings").delete().eq("gender", gender)
+      if (clearPublished) throw clearPublished
+      const { error: publishError } = await db.from("p4p_rankings").insert(published)
+      if (publishError) throw publishError
+      return NextResponse.json({
+        success: true,
+        published: published.length,
+        withheld: rows.length - published.length,
+      })
+    }
+
     const { error: clearError } = await db.from("p4p_drafts").delete().eq("gender", gender)
     if (clearError) throw clearError
     const { error: insertError } = await db.from("p4p_drafts").insert(rows)
