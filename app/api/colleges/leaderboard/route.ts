@@ -9,6 +9,7 @@ import {
   resolveCollegeCommitGroup,
 } from "@/lib/colleges"
 import { matchesDivisionFilter } from "@/lib/division-display"
+import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
 
 const supabase = createAdminClient()
 
@@ -369,16 +370,26 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Track ranked commits - only for classes 2026 and 2027 with prospect_ranking <= 30
-      const graduationYear = athlete.graduationyear
-      if ((graduationYear === 2026 || graduationYear === 2027) && athlete.prospect_ranking) {
-        const prospectRank = typeof athlete.prospect_ranking === "number" 
-          ? athlete.prospect_ranking 
-          : Number.parseInt(String(athlete.prospect_ranking))
-        
-        if (!isNaN(prospectRank) && prospectRank <= 30) {
-          stats.ranked_commits++
-        }
+      /*
+       * A ranked commit is any live ranking inside that class's published cut.
+       *
+       * This named two years, 2026 and 2027, so a ranked commit from 2028 or 2029 never counted
+       * at all — and archiving the Class of 2026 board dropped every college's total at once,
+       * because half the hardcoded list went null in a single update. "Ranked Commits" is a sort
+       * on /colleges that hides any school scoring zero, so a stale year list here quietly
+       * empties a public leaderboard.
+       *
+       * Asking whether the athlete holds a published ranking answers the same question and stays
+       * right on its own as classes graduate and new boards publish. The cut comes from the
+       * shared cap rather than a literal 30, which is the whole reason that file exists.
+       */
+      const prospectRank = Number(athlete.prospect_ranking)
+      if (
+        Number.isFinite(prospectRank) &&
+        prospectRank >= 1 &&
+        prospectRank <= getPublicRankingsMax(athlete.graduationyear)
+      ) {
+        stats.ranked_commits++
       }
     })
 
