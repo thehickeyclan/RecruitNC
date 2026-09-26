@@ -125,9 +125,18 @@ function Resume({ side }: { side: Comparison["left"] & { record?: string | null;
   )
 }
 
-export default function CompareClient({ athletes }: { athletes: Athlete[] }) {
-  const [leftId, setLeftId] = useState("")
-  const [rightId, setRightId] = useState("")
+export default function CompareClient({
+  athletes,
+  initialLeft = "",
+  initialRight = "",
+}: {
+  athletes: Athlete[]
+  /** Arriving from a wrestler's profile pre-selects them, so the coach only picks the other. */
+  initialLeft?: string
+  initialRight?: string
+}) {
+  const [leftId, setLeftId] = useState(initialLeft)
+  const [rightId, setRightId] = useState(initialRight)
   const [comparison, setComparison] = useState<Comparison | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)

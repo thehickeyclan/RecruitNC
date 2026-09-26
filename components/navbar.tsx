@@ -159,6 +159,8 @@ export function Navbar() {
    * because that is what people come to Athletes for.
    */
   const profilesItem = { href: "/prospects/all", label: "Browse Athlete Profiles" }
+  /** Sits with the profiles, because comparing two wrestlers is what you do after finding one. */
+  const compareItem = { href: "/compare", label: "Compare Wrestlers" }
   const commitmentItems = [
     { href: "/athletes", label: "College Commitments" },
     { href: "/high-schools", label: "Commitments by High School" },
@@ -166,7 +168,7 @@ export function Navbar() {
   ]
   const rankingsItem = { href: "/public-rankings", label: "Rankings" }
   const recruitingItem = { href: "/recruiting/tournaments", label: "Recruiting" }
-  const athletesItems = [profilesItem, ...commitmentItems, recruitingItem]
+  const athletesItems = [profilesItem, compareItem, ...commitmentItems, recruitingItem]
 
   const programsItems = [
     { href: "/blue", label: "NC United Blue", description: "Training, apparel, and member benefits" },

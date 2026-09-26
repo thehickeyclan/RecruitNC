@@ -4,7 +4,12 @@ import CompareClient from "./compare-client"
 
 export const revalidate = 300
 
-export default async function ComparePage() {
+export default async function ComparePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ left?: string; right?: string }>
+}) {
+  const { left = "", right = "" } = await searchParams
   let athletes: Array<{ id: string; name: string; highschool: string | null; graduationyear: number | null; weightclass: string | null }> = []
   try {
     const supabase = createAdminClient()
@@ -21,5 +26,5 @@ export default async function ComparePage() {
   } catch (error) {
     console.error("[compare] roster load failed:", error)
   }
-  return <CompareClient athletes={athletes} />
+  return <CompareClient athletes={athletes} initialLeft={left} initialRight={right} />
 }

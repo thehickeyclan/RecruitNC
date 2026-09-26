@@ -2142,13 +2142,29 @@ export function AthleteDetail({
                     Found an error or have updated information? Request an edit to this profile.
                   </p>
                 </div>
-                <Button
-                  onClick={() => setShowEditModal(true)}
-                  className="bg-red-600 hover:bg-red-700 text-white px-6 py-2"
-                  size="lg"
-                >
-                  Request Profile Edit
-                </Button>
+                <div className="flex flex-wrap items-center gap-2">
+                  {/*
+                    Shown to everyone, gated where it matters. The comparison itself is behind
+                    the same door as the rankings; the link is not, because a coach who cannot
+                    find the tool never learns it exists. Arriving from here pre-selects this
+                    wrestler, so only the other side has to be chosen.
+                  */}
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="lg"
+                    className="px-6 py-2"
+                  >
+                    <a href={`/compare?left=${athlete.id}`}>Compare with another wrestler</a>
+                  </Button>
+                  <Button
+                    onClick={() => setShowEditModal(true)}
+                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-2"
+                    size="lg"
+                  >
+                    Request Profile Edit
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
