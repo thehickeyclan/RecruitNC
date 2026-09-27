@@ -162,7 +162,7 @@ export default function ClassOf2027RankingsPage() {
               "Head-to-head results",
               "In-season performance",
               "How consistently a wrestler seeks out the best",
-              "Top 50 college prospects across 2027, 2028 and 2029",
+              "Top 70 College Ready athletes across all three classes",
               "College commitment alerts, pushed to your phone",
             ].map((claim) => (
               <div key={claim} className="flex items-start gap-2">
@@ -176,7 +176,7 @@ export default function ClassOf2027RankingsPage() {
             Big wins matter. Strength of schedule matters. Competing against the best matters.
           </p>
           <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground">
-            Anyone can subscribe. You get the rankings, the Top 50, and scouting reports — major
+            Anyone can subscribe. You get every ranking, the Top 70 College Ready list, and scouting reports — major
             tournament results, significant wins and strength of competition — updated as results
             and athlete-provided information come in, with every North Carolina college commitment
             pushed to your phone.
@@ -241,7 +241,7 @@ export default function ClassOf2027RankingsPage() {
             <div className="mt-5 grid gap-x-8 gap-y-2 text-sm text-muted-foreground sm:grid-cols-2">
               {[
                 "Every class ranked, 2027 through 2029",
-                "Top 50 college prospects across all three",
+                "Top 70 College Ready — the athletes most ready for your room",
                 "Full scouting reports on every ranked wrestler",
                 "Contact details, GPA, SAT and ACT — coaches only",
                 "Academic interests and intended majors",
@@ -329,7 +329,7 @@ export default function ClassOf2027RankingsPage() {
               <p className="mt-3 text-4xl font-semibold">{formatPrice(SCOUTING_REPORT_PRICES.subscription)}</p>
               <p className="mt-1 text-sm text-muted-foreground">per month</p>
               <p className="mt-4 text-sm text-muted-foreground">
-                All three classes and the Top 50, updated as results come in. Scouting reports,
+                All three classes and the Top 70 College Ready list, updated as results come in. Scouting reports,
                 commitment alerts, and who has viewed your profile.
               </p>
               <Button

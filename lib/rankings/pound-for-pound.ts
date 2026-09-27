@@ -167,13 +167,12 @@ export type PoundForPoundEntry = PoundForPoundInput & {
 export const CLASS_OVERRIDE_ALERT = 8
 
 /**
- * How many of the pound-for-pound list are published.
+ * How many College Ready athletes are published.
  *
- * The class boards stop at thirty because past that the order is a pool rather than a ranking.
- * This list draws from three of those boards at once, so the same reasoning lands further down:
- * the top fifty are wrestlers with a season worth comparing, and below that the differences are
- * inside the noise of what we hold. Everyone stays visible to an admin - deciding the cut is
- * most of the work - but only the official public cut is published.
+ * Seventy, because this draws on three class boards at once - a top thirty for 2027, a top
+ * thirty for 2028 and a top ten for 2029 - and a shorter cut threw away wrestlers those boards
+ * had already judged worth ranking. Everyone in the pool stays visible to an admin, since
+ * deciding the order is most of the work, but seventy is what goes out.
  */
 export const P4P_PUBLIC_CAP = 70
 

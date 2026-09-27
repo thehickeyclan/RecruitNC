@@ -22,7 +22,8 @@ export const DEFAULT_PUBLIC_RANKINGS_CAP = 30
 export const PUBLIC_RANKINGS_MAX_BY_YEAR: Record<number, number> = {
   2027: 30,
   2028: 30,
-  2029: 30,
+  // A top ten for now: the class is a year younger and the evidence thins out quickly below it.
+  2029: 10,
 }
 
 export const PUBLISHED_PUBLIC_RANKINGS_YEARS = Object.keys(PUBLIC_RANKINGS_MAX_BY_YEAR)

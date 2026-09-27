@@ -19,17 +19,17 @@ import { credentialsFrom, type PublicRankedAthlete } from "@/lib/rankings/public
  * moving around lives in `p4p_drafts` and never reaches this page.
  */
 
-export type Top50Prospect = PublicRankedAthlete
+export type CollegeReadyAthlete = PublicRankedAthlete
 
-export type Top50Board = {
+export type CollegeReadyBoard = {
   published: boolean
   cap: number
   classes: number[]
   publishedAt: string | null
-  athletes: Top50Prospect[]
+  athletes: CollegeReadyAthlete[]
 }
 
-async function buildTop50(gender: string): Promise<Top50Board> {
+async function buildCollegeReady(gender: string): Promise<CollegeReadyBoard> {
   const admin = createAdminClient()
 
   const { data: published } = await admin
@@ -68,7 +68,7 @@ async function buildTop50(gender: string): Promise<Top50Board> {
 
   const credentials = await loadAthleteCredentialsBatch(admin, athleteRows)
 
-  const athletes: Top50Prospect[] = athleteRows
+  const athletes: CollegeReadyAthlete[] = athleteRows
     .map((raw) => ({
       athleteId: String(raw.id),
       rank: rankOf.get(String(raw.id)) ?? Number.MAX_SAFE_INTEGER,
@@ -103,8 +103,8 @@ async function buildTop50(gender: string): Promise<Top50Board> {
   }
 }
 
-/** Bump the version whenever `Top50Board` changes shape; see the class ranking loader for why. */
-export const loadTop50 = unstable_cache(buildTop50, ["public-top-50", "v1"], {
+/** Bump the version whenever `CollegeReadyBoard` changes shape; see the class ranking loader for why. */
+export const loadCollegeReady = unstable_cache(buildCollegeReady, ["public-college-ready", "v1"], {
   revalidate: 3600,
   tags: ["public-rankings"],
 })

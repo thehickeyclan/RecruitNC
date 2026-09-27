@@ -244,9 +244,9 @@ export default function PoundForPoundPage() {
                   <ArrowLeft className="h-3 w-3" />
                   Class boards
                 </Link>
-                <h1 className="text-2xl font-black tracking-tight md:text-3xl">Top 50 Prospects</h1>
+                <h1 className="text-2xl font-black tracking-tight md:text-3xl">College Ready</h1>
                 <p className="mt-2 max-w-2xl text-sm text-blue-200">
-                  Published as <strong>Top 50 North Carolina College Prospects</strong>, across
+                  Published as <strong>Top {P4P_PUBLIC_CAP} College Ready</strong>, across
                   2027, 2028 and 2029. Scored on this season only; within a class the class board
                   decides the order.
                 </p>
