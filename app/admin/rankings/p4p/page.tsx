@@ -244,10 +244,11 @@ export default function PoundForPoundPage() {
                   <ArrowLeft className="h-3 w-3" />
                   Class boards
                 </Link>
-                <h1 className="text-2xl font-black tracking-tight md:text-3xl">Pound for Pound</h1>
+                <h1 className="text-2xl font-black tracking-tight md:text-3xl">Top 50 Prospects</h1>
                 <p className="mt-2 max-w-2xl text-sm text-blue-200">
-                  This season only, across every class. Within a class the board decides the order;
-                  this list only decides how classes compare to each other.
+                  Published as <strong>Top 50 North Carolina College Prospects</strong>, across
+                  2027, 2028 and 2029. Scored on this season only; within a class the class board
+                  decides the order.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">

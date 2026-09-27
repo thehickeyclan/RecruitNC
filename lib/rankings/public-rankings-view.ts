@@ -69,7 +69,7 @@ export type PublicClassRanking = {
  *
  * {@link loadAthleteCredentialsBatch} is now the only place that answers the question.
  */
-function credentialsFrom(held: AthleteCredentials | undefined): PublicRankingCredential[] {
+export function credentialsFrom(held: AthleteCredentials | undefined): PublicRankingCredential[] {
   const out: PublicRankingCredential[] = []
   if (!held) return out
 
