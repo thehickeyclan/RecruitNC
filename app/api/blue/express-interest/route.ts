@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { normalizePhoneForStorage } from "@/lib/phone-format"
+import { notifyStaffBlueInterest } from "@/lib/staff-alerts-sms"
 
 const ACHIEVEMENT_VALUES = ["all_american", "state_champion", "state_placer", "state_qualifier", "na"] as const
 
@@ -69,6 +70,22 @@ export async function POST(request: NextRequest) {
       }
       return NextResponse.json({ ok: false, error: "Failed to save submission" }, { status: 500 })
     }
+
+    /*
+     * Text staff, after the row is safely in.
+     *
+     * An interest submission is rare and wants a human response, and until now the only way to
+     * find out about one was to open the admin page and notice a new row. Awaited so the
+     * serverless function does not exit before Twilio is called, and it never throws — the
+     * submission is saved either way, and failing the form because a text failed would lose the
+     * thing we actually wanted.
+     */
+    await notifyStaffBlueInterest({
+      athleteName: `${firstName} ${lastName}`.trim(),
+      graduationYear,
+      highSchool,
+      parentEmail: emailRaw,
+    })
 
     return NextResponse.json({ ok: true })
   } catch (error) {

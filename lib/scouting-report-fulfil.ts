@@ -10,6 +10,10 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js"
+import {
+  notifyStaffSubscriptionCancelled,
+  notifyStaffSubscriptionStarted,
+} from "@/lib/staff-alerts-sms"
 
 export type ScoutingCheckoutMetadata = {
   source?: string | null
@@ -62,6 +66,20 @@ export async function fulfilScoutingReportCheckout(
       { onConflict: "user_id" },
     )
     if (error) return { ok: false, reason: error.message }
+
+    // Both plans land here; the kind in metadata says which was bought. The email is not in
+    // the session metadata, so it comes from the profile the subscription was granted to.
+    const interval = String(params.metadata.kind ?? "") === "subscription_annual" ? "yr" : "mo"
+    const { data: buyer } = await supabase
+      .from("user_profiles")
+      .select("email")
+      .eq("user_id", userId)
+      .maybeSingle()
+    await notifyStaffSubscriptionStarted({
+      email: (buyer?.email as string) ?? null,
+      amountCents: params.amountTotal,
+      interval,
+    })
     return { ok: true, granted: "subscription" }
   }
 
@@ -99,5 +117,30 @@ export async function syncScoutingSubscriptionStatus(
       updated_at: new Date().toISOString(),
     })
     .eq("stripe_subscription_id", params.stripeSubscriptionId)
+
+  /*
+   * A cancellation is the only one of these nobody would otherwise find out about, and the one
+   * where a phone call still changes the outcome. `past_due` is deliberately not alerted: Stripe
+   * retries for days and most of those recover on their own.
+   */
+  const status = String(params.status ?? "").toLowerCase()
+  if (!error && (status === "canceled" || status === "cancelled" || status === "unpaid")) {
+    const { data: row } = await supabase
+      .from("recruitnc_subscriptions")
+      .select("user_id")
+      .eq("stripe_subscription_id", params.stripeSubscriptionId)
+      .maybeSingle()
+    let email: string | null = null
+    if (row?.user_id) {
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("email")
+        .eq("user_id", row.user_id)
+        .maybeSingle()
+      email = (profile?.email as string) ?? null
+    }
+    await notifyStaffSubscriptionCancelled({ email, status })
+  }
+
   return !error
 }
