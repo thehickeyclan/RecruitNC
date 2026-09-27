@@ -10,17 +10,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Trophy,
-  Medal,
-  TrendingUp,
-  Users,
-  Target,
-  Award,
-  ExternalLink,
-  Instagram,
-  Mail,
-} from "lucide-react"
+import { Award, Check, ExternalLink, Instagram, Mail, Medal, Target, TrendingUp, Trophy, Users } from "lucide-react"
 import { RankingsTableView } from "@/components/rankings-table-view"
 import { RankingsCardView } from "@/components/rankings-card-view"
 
@@ -211,6 +201,40 @@ export default function ClassOf2027RankingsPage() {
                 <p className="mt-1 text-sm text-muted-foreground">{claim[1]}</p>
               </div>
             ))}
+          </div>
+
+          {/*
+            * How the order is arrived at, before the price.
+            *
+            * The page said what you get and what it costs and never what it rests on, which is
+            * the first question a coach or a parent asks and the only one that decides whether
+            * the rest is worth anything. Six lines, because the detail belongs in the product.
+            */}
+          <div className="mx-auto mt-10 max-w-4xl rounded-2xl border border-border bg-card p-6 text-left">
+            <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              How we rank
+            </p>
+            <p className="mt-2 text-lg text-foreground">
+              Big wins matter. Strength of schedule matters. Competing against the best matters.
+            </p>
+            <div className="mt-5 grid gap-x-8 gap-y-2 text-sm text-muted-foreground sm:grid-cols-2">
+              {[
+                "National results, individual and dual competition",
+                "Strength of competition, and quality wins",
+                "Head-to-head results between ranked wrestlers",
+                "In-season performance across the whole year",
+                "How consistently a wrestler seeks out the best",
+                "Updated as results and athlete information come in",
+              ].map((line) => (
+                <div key={line} className="flex items-start gap-2">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <span>{line}</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
+              Every place is reasoned from results on the mat — not reputation, and not a poll.
+            </p>
           </div>
 
           <div className="mx-auto mt-10 grid max-w-3xl gap-4 md:grid-cols-2">
