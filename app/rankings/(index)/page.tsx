@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import {
   SCOUTING_REPORT_PRICES,
@@ -48,6 +48,14 @@ interface Athlete {
   nationally_ranked_wins?: string | number
 }
 
+type RankingsSubscription = {
+  status: string
+  nextBillingAt: string | null
+  cancelAtPeriodEnd: boolean
+  interval: "month" | "year" | null
+  canManage: boolean
+}
+
 export default function ClassOf2027RankingsPage() {
   const [viewMode, setViewMode] = useState<"table" | "cards">("table")
   const [athletes, setAthletes] = useState<Athlete[]>([])
@@ -62,6 +70,11 @@ export default function ClassOf2027RankingsPage() {
   const [locked, setLocked] = useState<"anonymous" | "unentitled" | null>(null)
   const [checkingOut, setCheckingOut] = useState<string | null>(null)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
+  const [requestedPlan, setRequestedPlan] = useState<"subscription" | "subscription_annual" | null>(null)
+  const [checkoutReturned, setCheckoutReturned] = useState<"purchased" | "canceled" | null>(null)
+  const [subscription, setSubscription] = useState<RankingsSubscription | null>(null)
+  const [managingSubscription, setManagingSubscription] = useState(false)
+  const autoCheckoutStarted = useRef(false)
 
   const startCheckout = async (kind: "subscription" | "subscription_annual") => {
     // Stripe needs an account to attach the subscription to, so signing in comes first —
@@ -88,16 +101,32 @@ export default function ClassOf2027RankingsPage() {
   }
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const plan = params.get("plan")
+    if (plan === "subscription" || plan === "subscription_annual") setRequestedPlan(plan)
+    if (params.get("purchased") === "1") setCheckoutReturned("purchased")
+    if (params.get("canceled") === "1") setCheckoutReturned("canceled")
+
     const fetchAthletes = async () => {
       try {
-        const response = await fetch("/api/public-rankings?year=2027&gender=Male")
-        if (response.status === 401) {
-          setLocked("anonymous")
-        } else if (response.status === 403) {
-          setLocked("unentitled")
-        } else if (response.ok) {
-          const data = await response.json()
-          setAthletes(data.rankings || [])
+        const activating = params.get("purchased") === "1"
+        const attempts = activating ? 12 : 1
+        for (let attempt = 0; attempt < attempts; attempt += 1) {
+          const response = await fetch("/api/public-rankings?year=2027&gender=Male", { cache: "no-store" })
+          if (response.status === 403 && activating && attempt < attempts - 1) {
+            await new Promise((resolve) => window.setTimeout(resolve, 1000))
+            continue
+          }
+          if (response.status === 401) {
+            setLocked("anonymous")
+          } else if (response.status === 403) {
+            setLocked("unentitled")
+          } else if (response.ok) {
+            const data = await response.json()
+            setAthletes(data.rankings || [])
+            setLocked(null)
+          }
+          break
         }
       } catch (error) {
         console.error("Error fetching athletes:", error)
@@ -108,6 +137,34 @@ export default function ClassOf2027RankingsPage() {
 
     fetchAthletes()
   }, [])
+
+  useEffect(() => {
+    if (locked !== "unentitled" || !requestedPlan || autoCheckoutStarted.current) return
+    autoCheckoutStarted.current = true
+    void startCheckout(requestedPlan)
+  }, [locked, requestedPlan])
+
+  useEffect(() => {
+    if (loadingAthletes || locked) return
+    void fetch("/api/scouting-report/subscription", { cache: "no-store" })
+      .then((response) => response.ok ? response.json() : null)
+      .then((payload) => setSubscription(payload?.subscription ?? null))
+      .catch(() => setSubscription(null))
+  }, [loadingAthletes, locked])
+
+  const openSubscriptionPortal = async () => {
+    setManagingSubscription(true)
+    setCheckoutError(null)
+    try {
+      const response = await fetch("/api/scouting-report/subscription", { method: "POST" })
+      const payload = await response.json()
+      if (!response.ok || !payload?.url) throw new Error(payload?.error || "Could not open subscription management")
+      window.location.href = payload.url
+    } catch (caught) {
+      setCheckoutError(caught instanceof Error ? caught.message : "Could not open subscription management")
+      setManagingSubscription(false)
+    }
+  }
 
   if (!loadingAthletes && locked) {
     /*
@@ -154,6 +211,17 @@ export default function ClassOf2027RankingsPage() {
             </p>
           </div>
 
+          {checkoutReturned === "canceled" && (
+            <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-border bg-card p-4 text-center text-sm text-muted-foreground">
+              Checkout was canceled. You were not charged and can choose a plan whenever you are ready.
+            </div>
+          )}
+          {checkoutReturned === "purchased" && (
+            <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-primary/40 bg-primary/10 p-4 text-center text-sm text-foreground">
+              Payment was received, but access is still activating. Refresh in a moment; if it remains locked, contact support.
+            </div>
+          )}
+
           {/* Four claims, one line each. The detail belongs in the product, not the pitch. */}
           <div className="mx-auto mt-10 grid max-w-3xl gap-x-8 gap-y-3 text-sm text-foreground sm:grid-cols-2">
             {[
@@ -162,7 +230,7 @@ export default function ClassOf2027RankingsPage() {
               "Head-to-head results",
               "In-season performance",
               "How consistently a wrestler seeks out the best",
-              "Top 70 College Ready athletes across all three classes",
+              "Top 70 college prospects across all three classes",
               "College commitment alerts, pushed to your phone",
             ].map((claim) => (
               <div key={claim} className="flex items-start gap-2">
@@ -176,7 +244,7 @@ export default function ClassOf2027RankingsPage() {
             Big wins matter. Strength of schedule matters. Competing against the best matters.
           </p>
           <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground">
-            Anyone can subscribe. You get every ranking, the Top 70 College Ready list, and scouting reports — major
+            Anyone can subscribe. You get every ranking, the Top 70 college prospects, and scouting reports — major
             tournament results, significant wins and strength of competition — updated as results
             and athlete-provided information come in, with every North Carolina college commitment
             pushed to your phone.
@@ -241,7 +309,7 @@ export default function ClassOf2027RankingsPage() {
             <div className="mt-5 grid gap-x-8 gap-y-2 text-sm text-muted-foreground sm:grid-cols-2">
               {[
                 "Every class ranked, 2027 through 2029",
-                "Top 70 College Ready — the athletes most ready for your room",
+                "Top 70 college prospects — one list across every class",
                 "Full scouting reports on every ranked wrestler",
                 "Contact details, GPA, SAT and ACT — coaches only",
                 "Academic interests and intended majors",
@@ -329,7 +397,7 @@ export default function ClassOf2027RankingsPage() {
               <p className="mt-3 text-4xl font-semibold">{formatPrice(SCOUTING_REPORT_PRICES.subscription)}</p>
               <p className="mt-1 text-sm text-muted-foreground">per month</p>
               <p className="mt-4 text-sm text-muted-foreground">
-                All three classes and the Top 70 College Ready list, updated as results come in. Scouting reports,
+                All three classes and the Top 70 across them, updated as results come in. Scouting reports,
                 commitment alerts, and who has viewed your profile.
               </p>
               <Button
@@ -477,7 +545,12 @@ export default function ClassOf2027RankingsPage() {
   if (loadingAthletes) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-border border-t-blue-600"></div>
+        <div className="text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-border border-t-blue-600"></div>
+          {checkoutReturned === "purchased" && (
+            <p className="mt-4 text-sm text-muted-foreground">Activating your rankings subscription…</p>
+          )}
+        </div>
       </div>
     )
   }
@@ -521,6 +594,32 @@ export default function ClassOf2027RankingsPage() {
                 <Award className="h-4 w-4 mr-2" />7 NHSCA All-Americans
               </Badge>
             </div>
+            {checkoutReturned === "purchased" && (
+              <p className="mx-auto mb-5 max-w-xl rounded-lg border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-foreground">
+                Your subscription is active. Welcome to RecruitNC Rankings.
+              </p>
+            )}
+            {subscription && (
+              <div className="mx-auto mb-6 max-w-xl rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+                  <span>
+                    Rankings subscription: <strong className="text-foreground">{subscription.status}</strong>
+                    {subscription.interval ? ` · billed ${subscription.interval === "year" ? "annually" : "monthly"}` : ""}
+                    {subscription.nextBillingAt
+                      ? ` · ${subscription.cancelAtPeriodEnd ? "access through" : "next bill"} ${new Date(subscription.nextBillingAt).toLocaleDateString()}`
+                      : ""}
+                  </span>
+                  {subscription.canManage && (
+                    <Button type="button" variant="outline" size="sm" disabled={managingSubscription} onClick={() => { void openSubscriptionPortal() }}>
+                      {managingSubscription ? "Opening…" : "Manage subscription"}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+            {checkoutError && !locked && (
+              <p className="mx-auto mb-5 max-w-xl text-sm text-destructive">{checkoutError}</p>
+            )}
           </div>
 
           <Card className="mb-12 border-border bg-card text-foreground">
