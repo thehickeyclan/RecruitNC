@@ -1,3 +1,4 @@
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { loadProfileTournamentData } from "@/lib/profile-tournament-data"
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     })
 
     // Fetch athlete data
-    const { data: athlete, error } = await supabase.from("athletes").select("*").eq("id", params.id).single()
+    const { data: athlete, error } = await supabase.from("athletes").select(ATHLETE_PUBLIC_COLUMNS).eq("id", params.id).single()
 
     if (error || !athlete) {
       console.error("[v0] Bio generation error: Athlete not found", error)

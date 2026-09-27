@@ -28,10 +28,11 @@ const rankingLinks = [
   },
   {
     href: "/public-rankings/2029",
-    eyebrow: "Class rankings",
+    // Not a ranking: one high school season is not enough to put a number on this class.
+    eyebrow: "Prospects to watch",
     title: "Class of 2029",
-    // A year younger than the others, and the evidence thins out quickly below ten.
-    description: "The published Top 10.",
+    description: "Fifteen freshmen worth following.",
+    cta: "View the list",
     icon: Users,
   },
   {
@@ -83,15 +84,15 @@ export default async function PublicRankingsHomepage({
             College Prospect Rankings
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-white/65">
-            Class rankings, the Top 70 college prospects and scouting reports informed by results,
-            quality wins and strength of competition.
+            Class rankings, the Top 70 college prospects, the Class of 2029 prospects to watch, and
+            scouting reports informed by results, quality wins and strength of competition.
           </p>
         </div>
       </section>
 
       <section className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {releasedLinks.map(({ href, eyebrow, title, description, icon: Icon }) => (
+          {releasedLinks.map(({ href, eyebrow, title, description, cta, icon: Icon }) => (
             <HardLink key={href} href={href} className="group block h-full">
               <Card className="h-full border-white/10 bg-[#13294B] text-white transition hover:-translate-y-0.5 hover:border-[#D3B574]/70">
                 <CardHeader>
@@ -102,7 +103,7 @@ export default async function PublicRankingsHomepage({
                 </CardHeader>
                 <CardContent>
                   <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#D3B574]">
-                    View rankings
+                    {cta ?? "View rankings"}
                     <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </span>
                 </CardContent>

@@ -1,3 +1,4 @@
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NextResponse } from "next/server"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
@@ -21,7 +22,7 @@ export async function GET(request: Request) {
     let resolvedAthlete: Record<string, unknown> | null = null
 
     if (athleteId) {
-      const { data: athlete } = await supabase.from("athletes").select("*").eq("id", athleteId).single()
+      const { data: athlete } = await supabase.from("athletes").select(ATHLETE_PUBLIC_COLUMNS).eq("id", athleteId).single()
       if (athlete) {
         resolvedAthlete = athlete as Record<string, unknown>
         athleteName = (athlete.name ?? "").toString().trim() || athleteName

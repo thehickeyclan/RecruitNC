@@ -1,3 +1,4 @@
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 import { NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
 import { mapAthleteFromDatabase } from "@/lib/athlete-utils"
@@ -31,7 +32,7 @@ export async function GET() {
     ]
 
     // Fetch athletes by ID
-    const { data: athletesData, error } = await supabase.from("athletes").select("*").in("id", athleteIds)
+    const { data: athletesData, error } = await supabase.from("athletes").select(ATHLETE_PUBLIC_COLUMNS).in("id", athleteIds)
 
     if (error) {
       console.error("Error fetching athletes by ID:", error)

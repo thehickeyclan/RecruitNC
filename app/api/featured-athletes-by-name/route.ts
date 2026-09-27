@@ -1,3 +1,4 @@
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 import { NextResponse } from "next/server"
 import { supabase } from "@/lib/supabase"
 import { mapAthleteFromDatabase } from "@/lib/athlete-utils"
@@ -8,7 +9,7 @@ export async function GET() {
     const athleteNames = ["Liam Hickey", "Colt Campbell", "Bentley Sly", "Lorenzo Alston"]
 
     // Fetch athletes by exact name match
-    const { data: athletesData, error } = await supabase.from("athletes").select("*").in("name", athleteNames)
+    const { data: athletesData, error } = await supabase.from("athletes").select(ATHLETE_PUBLIC_COLUMNS).in("name", athleteNames)
 
     if (error) {
       console.error("Error fetching athletes by name:", error)

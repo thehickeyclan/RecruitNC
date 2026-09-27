@@ -84,9 +84,21 @@ const ATHLETE_LIST_SELECT = `
   nhsca_2025_record, nhsca_2025_placement,
   super_32_2023_record, super_32_2023_placement,
   super_32_2024_record, super_32_2024_placement,
-  super_32_2025_record, super_32_2025_placement,
-  prospect_ranking
+  super_32_2025_record, super_32_2025_placement
 `
+
+/*
+ * `athletes.prospect_ranking` is deliberately absent from that list.
+ *
+ * It is the draft rank, readable on a table the browser reaches with the anon key, and asking
+ * for it here published every unreleased board through the commitment cards. The grant was
+ * revoked, which turned the whole of /athletes into a 500 - PostgREST refuses the entire select
+ * over one ungranted column, so losing the leak also lost the page.
+ *
+ * `enrichProspectRankings` below fills the field from `public_rankings`, which holds only what
+ * has actually been released. Every row now arrives with a null rank and is filled from there,
+ * so an unreleased class simply shows no number.
+ */
 
 function bucketDivision(division: string | null | undefined): keyof CommitmentStats["divisions"] | null {
   const v = (division ?? "").toLowerCase()

@@ -1,14 +1,15 @@
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
 export async function GET() {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Get the actual featured athletes from the database
     const { data: athletes, error } = await supabase
       .from("athletes")
-      .select("*")
+      .select(ATHLETE_PUBLIC_COLUMNS)
       .in("name", ["Liam Hickey", "Colt Campbell", "Xavier Wilson"])
       .order("name")
 

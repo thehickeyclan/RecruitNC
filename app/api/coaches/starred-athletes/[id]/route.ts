@@ -1,3 +1,4 @@
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
@@ -47,7 +48,13 @@ export async function GET(request: Request, { params }: { params: { id: string }
     }
 
     // Get athlete data
-    const { data: athlete } = await supabase.from("athletes").select("*").eq("id", athleteId).single()
+    // Named columns: the athletes table no longer grants a blanket SELECT, so "*" 500s here.
+    // A verified coach still gets contact detail - through the scouting report, which gates it.
+    const { data: athlete } = await supabase
+      .from("athletes")
+      .select(ATHLETE_PUBLIC_COLUMNS)
+      .eq("id", athleteId)
+      .single()
 
     if (!athlete) {
       return NextResponse.json({ error: "Athlete not found" }, { status: 404 })

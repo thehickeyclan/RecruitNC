@@ -1,3 +1,4 @@
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { YouTubeEmbed } from "@/components/youtube-embed"
@@ -14,7 +15,7 @@ export default async function LiamHickeyPage() {
   const supabase = createClient()
 
   // Try to find Liam Hickey by name
-  const { data: athletes } = await supabase.from("athletes").select("*").ilike("name", "%liam%hickey%").limit(1)
+  const { data: athletes } = await supabase.from("athletes").select(ATHLETE_PUBLIC_COLUMNS).ilike("name", "%liam%hickey%").limit(1)
 
   // If not found, redirect to the athletes page
   if (!athletes || athletes.length === 0) {

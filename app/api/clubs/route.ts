@@ -1,3 +1,4 @@
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 
@@ -7,10 +8,10 @@ export const revalidate = 0
 export async function GET() {
   try {
     console.log("🤼 Clubs API: Starting fetch")
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Fetch all athletes from the database
-    const { data: athletes, error } = await supabase.from("athletes").select("*")
+    const { data: athletes, error } = await supabase.from("athletes").select(ATHLETE_PUBLIC_COLUMNS)
 
     if (error) {
       console.error("❌ Clubs API: Error fetching athletes:", error)

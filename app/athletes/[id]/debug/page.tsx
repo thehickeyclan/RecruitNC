@@ -1,3 +1,4 @@
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 import { createClient } from "@/lib/supabase/server"
 import { notFound } from "next/navigation"
 
@@ -11,7 +12,7 @@ async function getAthleteRawData(id: string) {
   try {
     const supabase = createClient()
 
-    const { data: athlete, error } = await supabase.from("athletes").select("*").eq("id", id).single()
+    const { data: athlete, error } = await supabase.from("athletes").select(ATHLETE_PUBLIC_COLUMNS).eq("id", id).single()
 
     if (error) {
       console.error("Error fetching athlete:", error)

@@ -1,3 +1,4 @@
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 
@@ -49,7 +50,17 @@ export async function GET() {
 
     const athleteIds = stars.map((s) => s.athlete_id)
 
-    const { data: athletes, error: athletesError } = await supabase.from("athletes").select("*").in("id", athleteIds)
+    const { data: athletes, error: athletesError } = await supabase
+      .from("athletes")
+      /*
+       * Named columns, not "*". The athletes table no longer grants a blanket SELECT - phone,
+       * GPA and test scores are column-granted to service-role only - so "*" now fails outright
+       * with "permission denied for table athletes" and this route 500s. The dashboard reads
+       * none of those fields; contact detail reaches a verified coach through the scouting
+       * report, which has its own gate.
+       */
+      .select(ATHLETE_PUBLIC_COLUMNS)
+      .in("id", athleteIds)
 
     if (athletesError) {
       console.error("Error fetching athletes:", athletesError)

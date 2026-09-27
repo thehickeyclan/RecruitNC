@@ -1,3 +1,4 @@
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 
@@ -8,7 +9,7 @@ export default async function LorenzoAlstonPage() {
   const supabase = createClient()
 
   // Try to find Lorenzo Alston by name
-  const { data: athletes } = await supabase.from("athletes").select("*").ilike("name", "%lorenzo%alston%").limit(1)
+  const { data: athletes } = await supabase.from("athletes").select(ATHLETE_PUBLIC_COLUMNS).ilike("name", "%lorenzo%alston%").limit(1)
 
   // If found, redirect to the athlete's ID-based page
   if (athletes && athletes.length > 0) {

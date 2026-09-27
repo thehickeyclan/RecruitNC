@@ -29,8 +29,33 @@ export const DEFAULT_PUBLIC_RANKINGS_CAP = 30
 export const PUBLIC_RANKINGS_MAX_BY_YEAR: Record<number, number> = {
   2027: 30,
   2028: 30,
-  // A year younger than the others, and the evidence thins out quickly below ten.
-  2029: 10,
+  /*
+   * 2029 is a watch list, not a ranking - see WATCHLIST_YEARS. Fifteen rather than ten because
+   * a list that only says "worth watching" can carry the wrestlers a ranking would have had to
+   * cut. Ten forced a choice between a 5A state champion and the only heavyweight in the group.
+   */
+  2029: 15,
+}
+
+/**
+ * Classes published as "Prospects to Watch" instead of a numbered ranking.
+ *
+ * A freshman class has one high-school season on the board. Ranking it implies a settled order
+ * that the results do not support, and it invites the argument we cannot win - a 5A champion at
+ * 106 against a third-place finisher at 165, on one year of evidence each. Presenting the same
+ * names as a watch list says what we actually know: these fifteen are the ones to follow.
+ *
+ * The order is still stored and still drives P4P class consistency. Only the framing changes.
+ */
+export const WATCHLIST_YEARS: readonly number[] = [2029]
+
+export function isWatchlistYear(year: number | null | undefined): boolean {
+  return year != null && Number.isFinite(year) && WATCHLIST_YEARS.includes(year)
+}
+
+/** The heading a class board carries: a ranking for most classes, a watch list for 2029. */
+export function classBoardKindLabel(year: number | null | undefined): string {
+  return isWatchlistYear(year) ? "Prospects to Watch" : "Rankings"
 }
 
 /**

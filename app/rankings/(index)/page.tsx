@@ -173,8 +173,8 @@ export default function ClassOf2027RankingsPage() {
               College Prospect Rankings
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              Classes of 2027–2029, the Top 70 college prospects across all classes, and
-              scouting reports.
+              Class rankings for 2027 and 2028, the Class of 2029 prospects to watch, the Top 70
+              college prospects across all classes, and scouting reports.
             </p>
           </div>
 
@@ -189,9 +189,10 @@ export default function ClassOf2027RankingsPage() {
             </div>
           )}
 
-          <div className="mx-auto mt-10 grid max-w-4xl gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mx-auto mt-10 grid max-w-4xl gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              ["2027–2029", "Frequently updated class rankings"],
+              ["2027 & 2028", "Frequently updated class rankings"],
+              ["Class of 2029", "Fifteen prospects to watch"],
               ["Top 70", "North Carolina College Prospects"],
               ["Scouting Reports", "Results, quality wins and competition"],
               ["Profile activity", "Which college programs are viewing you"],

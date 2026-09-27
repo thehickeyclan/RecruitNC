@@ -1,3 +1,4 @@
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { firstNonEmpty, normalizeClubName } from "@/lib/clubs/club-normalize"
@@ -235,7 +236,7 @@ export async function GET() {
       }
     }
 
-    const { data: athletes, error: athleteError } = await supabase.from("athletes").select("*")
+    const { data: athletes, error: athleteError } = await supabase.from("athletes").select(ATHLETE_PUBLIC_COLUMNS)
     if (athleteError) {
       return NextResponse.json({
         success: false,
