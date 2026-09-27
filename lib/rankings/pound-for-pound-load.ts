@@ -26,8 +26,17 @@ export const P4P_SEASON_LABEL = "2025-26"
 /** Classes still in high school. A graduated class has no season here to score. */
 export const P4P_CLASSES = [2027, 2028, 2029] as const
 
-/** How deep into each class board to look. Below this the order is a pool, not a ranking. */
+/**
+ * How deep into each published class board to look. The younger 2029 board is intentionally a
+ * Top 10; 2027 and 2028 are Top 30. P4P must use those exact public cuts so every class-ranked
+ * wrestler appears once without quietly promoting unranked 2029 athletes.
+ */
 export const P4P_CLASS_DEPTH = 30
+export const P4P_CLASS_DEPTHS: Readonly<Record<number, number>> = {
+  2027: 30,
+  2028: 30,
+  2029: 10,
+}
 
 /**
  * PostgREST returns a thousand rows and says nothing about the ones it dropped, so every fetch
@@ -94,7 +103,7 @@ export async function buildPoundForPoundBoard(options: {
   const classes = [...(options.classes ?? P4P_CLASSES)]
   const depth = options.depth ?? P4P_CLASS_DEPTH
 
-  const drafts = await fetchAll<{ athlete_id: string; rank: number; class_year: number }>(
+  const fetchedDrafts = await fetchAll<{ athlete_id: string; rank: number; class_year: number }>(
     (from, to) =>
       supabase
         .from("ranking_drafts")
@@ -103,6 +112,9 @@ export async function buildPoundForPoundBoard(options: {
         .eq("gender", gender)
         .lte("rank", depth)
         .range(from, to),
+  )
+  const drafts = fetchedDrafts.filter(
+    (draft) => Number(draft.rank) <= (P4P_CLASS_DEPTHS[Number(draft.class_year)] ?? depth),
   )
   const classRankOf = new Map(drafts.map((d) => [String(d.athlete_id), Number(d.rank)]))
   const ids = [...classRankOf.keys()]
