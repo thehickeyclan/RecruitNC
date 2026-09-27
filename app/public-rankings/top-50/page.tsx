@@ -68,9 +68,8 @@ export default async function Top50Page() {
             Top 50 College Prospects
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-white/60">
-            The best {board.cap} college prospects in North Carolina across the classes of 2027,
-            2028 and 2029 — scored on this season alone, so a senior does not outrank a sophomore
-            for having been here longer.
+            The best {board.cap} college prospects in North Carolina, across the classes of 2027,
+            2028 and 2029. Ranked on this season.
           </p>
 
           {!board.published ? (
