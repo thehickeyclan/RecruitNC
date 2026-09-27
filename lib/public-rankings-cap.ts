@@ -26,16 +26,42 @@ export const DEFAULT_PUBLIC_RANKINGS_CAP = 30
  * publication. Keeping this empty prevents draft boards from leaking through class pages, APIs,
  * profiles, schools, clubs or Data Dawg before the announcement.
  */
-export const PUBLIC_RANKINGS_MAX_BY_YEAR: Record<number, number> = {}
+export const PUBLIC_RANKINGS_MAX_BY_YEAR: Record<number, number> = {
+  2027: 30,
+  2028: 30,
+  // A year younger than the others, and the evidence thins out quickly below ten.
+  2029: 10,
+}
+
+/**
+ * Which classes are live to customers — separate from how deep each one goes.
+ *
+ * These were the same map, so locking the release meant emptying the caps, and the depths
+ * (30, 30 and 10) went with them: a publish would then have fallen back to the default 30 and
+ * put twenty unranked 2029 wrestlers on a public page. Depth is a property of the board;
+ * release is a decision about a date. Keeping them apart lets one change without the other.
+ *
+ * Empty means nothing is public. Admins still see every board, so the release can be checked
+ * before it is announced.
+ */
+export const PUBLIC_RELEASED_YEARS: readonly number[] = []
 
 /** The cross-class Top 70 is released separately from the class boards. */
 export const PUBLIC_TOP_PROSPECTS_RELEASED = false
 
-export const PUBLISHED_PUBLIC_RANKINGS_YEARS = Object.keys(PUBLIC_RANKINGS_MAX_BY_YEAR)
+export const PUBLISHED_PUBLIC_RANKINGS_YEARS = [...PUBLIC_RELEASED_YEARS].sort((a, b) => a - b)
+
+/** Every class the site ranks, released or not — what an admin preview may reach. */
+export const RANKED_CLASS_YEARS = Object.keys(PUBLIC_RANKINGS_MAX_BY_YEAR)
   .map(Number)
   .sort((a, b) => a - b)
 
 export function isPublicRankingsYearPublished(year: number | null | undefined): year is number {
+  return year != null && Number.isFinite(year) && PUBLIC_RELEASED_YEARS.includes(year)
+}
+
+/** A class an admin may preview: ranked by us, whether or not it has been released. */
+export function isRankedClassYear(year: number | null | undefined): year is number {
   return year != null && Number.isFinite(year) && PUBLIC_RANKINGS_MAX_BY_YEAR[year] != null
 }
 

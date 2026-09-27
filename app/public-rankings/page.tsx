@@ -27,6 +27,14 @@ const rankingLinks = [
     icon: Users,
   },
   {
+    href: "/public-rankings/2029",
+    eyebrow: "Class rankings",
+    title: "Class of 2029",
+    // A year younger than the others, and the evidence thins out quickly below ten.
+    description: "The published Top 10.",
+    icon: Users,
+  },
+  {
     href: "/public-rankings/prospects",
     eyebrow: "Across all classes",
     title: "Top 70 College Prospects",
@@ -35,12 +43,25 @@ const rankingLinks = [
   },
 ]
 
-export default async function PublicRankingsHomepage() {
+export default async function PublicRankingsHomepage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}) {
   const { viewer } = await resolveRankingViewer({
     supabase: await createClient(),
     admin: createAdminClient(),
   })
-  if (!canSeeProspectRanking(viewer)) redirect("/rankings")
+  if (!canSeeProspectRanking(viewer)) {
+    /*
+     * Stripe sends a paying customer here, and the webhook that grants access may not have
+     * landed yet. Carrying the flag back means they see "payment received, access activating"
+     * rather than the page that sold them the thing they just bought - which reads as a
+     * failed purchase.
+     */
+    const params = (await searchParams) ?? {}
+    redirect(params.purchased ? "/rankings?purchased=1" : "/rankings")
+  }
 
   const releasedLinks = rankingLinks.filter(({ href }) => {
     if (href === "/public-rankings/prospects") return PUBLIC_TOP_PROSPECTS_RELEASED
@@ -66,7 +87,7 @@ export default async function PublicRankingsHomepage() {
       </section>
 
       <section className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {releasedLinks.map(({ href, eyebrow, title, description, icon: Icon }) => (
             <HardLink key={href} href={href} className="group block h-full">
               <Card className="h-full border-white/10 bg-[#13294B] text-white transition hover:-translate-y-0.5 hover:border-[#D3B574]/70">

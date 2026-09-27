@@ -73,7 +73,9 @@ export default function ClassOf2027RankingsPage() {
       const response = await fetch("/api/scouting-report/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind, returnTo: "/rankings" }),
+        // Straight to the boards. Landing back on the sales page after paying reads as a
+        // failed purchase, and the index is what they just bought.
+        body: JSON.stringify({ kind, returnTo: "/public-rankings" }),
       })
       const payload = await response.json()
       if (!response.ok || !payload?.url) throw new Error(payload?.error || "Could not start checkout")
@@ -190,9 +192,9 @@ export default function ClassOf2027RankingsPage() {
           <div className="mx-auto mt-10 grid max-w-4xl gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
               ["2027–2029", "Frequently updated class rankings"],
-              ["Top 70", "College prospects across all classes"],
+              ["Top 70", "North Carolina College Prospects"],
               ["Scouting Reports", "Results, quality wins and competition"],
-              ["Profile activity", "See engagement with your profile"],
+              ["Profile activity", "Which college programs are viewing you"],
             ].map((claim) => (
               <div key={claim[0]} className="rounded-xl border border-border bg-card p-4 text-left">
                 <p className="text-xl font-semibold text-primary">{claim[0]}</p>
@@ -258,8 +260,9 @@ export default function ClassOf2027RankingsPage() {
               <p className="mt-3 text-4xl font-semibold">{formatPrice(SCOUTING_REPORT_PRICES.subscription)}</p>
               <p className="mt-1 text-sm text-muted-foreground">per month</p>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                Full profile management and activity, all class rankings, the Top 70 and scouting
-                reports. Cancel anytime.
+                All class rankings, the Top 70 North Carolina College Prospects, and scouting
+                reports. Full profile management, and see which college programs are viewing
+                your profile. Cancel anytime.
               </p>
               <Button
                 disabled={checkingOut !== null}
