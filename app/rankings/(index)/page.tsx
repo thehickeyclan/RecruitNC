@@ -222,7 +222,7 @@ export default function ClassOf2027RankingsPage() {
                 "National results, individual and dual competition",
                 "Strength of competition, and quality wins",
                 "Head-to-head results between ranked wrestlers",
-                "In-season performance across the whole year",
+                "Every match of the season, not only the podium finishes",
                 "How consistently a wrestler seeks out the best",
                 "Updated as results and athlete information come in",
               ].map((line) => (
