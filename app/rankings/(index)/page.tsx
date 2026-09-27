@@ -19,12 +19,7 @@ import {
   Award,
   ExternalLink,
   Instagram,
-  GraduationCap,
-  Phone,
   Mail,
-  Bell,
-  Lock,
-  BarChart,
 } from "lucide-react"
 import { RankingsTableView } from "@/components/rankings-table-view"
 import { RankingsCardView } from "@/components/rankings-card-view"
@@ -182,7 +177,7 @@ export default function ClassOf2027RankingsPage() {
             <Badge className="mb-4 bg-primary text-primary-foreground hover:bg-primary">
               NC United · RecruitNC
             </Badge>
-            <h1 className="text-4xl font-light tracking-tight sm:text-5xl">
+            <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
               College Prospect Rankings
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
@@ -319,7 +314,7 @@ export default function ClassOf2027RankingsPage() {
               * strokes bloom and the counters close up. Light at display size with wider
               * tracking holds its shape, and the gold subhead carries the emphasis instead.
               */}
-            <h1 className="mb-3 text-balance text-5xl font-light tracking-tight text-foreground">
+            <h1 className="mb-3 text-balance text-5xl font-bold tracking-tight text-foreground">
               North Carolina College Prospect Rankings
             </h1>
             <p className="mb-6 text-xl font-normal text-primary">Class of 2027 · published rankings</p>
@@ -364,58 +359,6 @@ export default function ClassOf2027RankingsPage() {
               <p className="mx-auto mb-5 max-w-xl text-sm text-destructive">{checkoutError}</p>
             )}
           </div>
-
-          <Card className="mb-12 border-border bg-card text-foreground">
-            <CardHeader>
-              <CardTitle className="text-3xl flex items-center gap-3">
-                <GraduationCap className="h-8 w-8" />
-                College Coaches — What to Expect
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-start gap-4">
-                <GraduationCap className="h-6 w-6 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-medium text-lg mb-1">Athlete Academic Profiles</h3>
-                  <p className="text-muted-foreground">GPA, SAT, ACT, transcripts (where available)</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <Phone className="h-6 w-6 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-medium text-lg mb-1">Direct Contact Details</h3>
-                  <p className="text-muted-foreground">Athlete e-mail, phone, social profiles</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <Bell className="h-6 w-6 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-medium text-lg mb-1">Frequent Updates</h3>
-                  <p className="text-muted-foreground">Automatic alerts after major tournaments, wins, and rankings changes</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <Lock className="h-6 w-6 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-medium text-lg mb-1">Coaches Portal Access</h3>
-                  <p className="text-muted-foreground">Secure dashboard to browse, sort, and manage North Carolina recruits</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <BarChart className="h-6 w-6 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-medium text-lg mb-1">Comprehensive Recruiting Data</h3>
-                  <p className="text-muted-foreground">
-                    Athletic results, progress metrics, highlight videos, and academic info in one place
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
 
           <Card className="mb-12 overflow-hidden">
             <CardHeader className="border-b border-border bg-secondary text-foreground">
