@@ -2,8 +2,10 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { classifyViewer } from "@/lib/viewer-role"
+import { hasPremiumAccess } from "@/lib/ranking-visibility"
+import { resolveRankingViewer } from "@/lib/ranking-access"
 import { getCoachViewsForAthlete, teaseCoachViews } from "@/lib/coach-profile-views"
-import { isOwnAthlete, hasActiveSubscription } from "@/lib/scouting-report-entitlement-db"
+import { isOwnAthlete } from "@/lib/scouting-report-entitlement-db"
 
 /**
  * Which college programs viewed this wrestler.
@@ -43,7 +45,15 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   }
 
   const summary = await getCoachViewsForAthlete(admin, id)
-  const subscribed = isAdmin || (await hasActiveSubscription(admin, user.id))
+  /*
+   * Blue counts here, and did not before.
+   *
+   * This asked only whether the account had a paid RecruitNC subscription, so a Blue family
+   * could not see which colleges had viewed their own child while a $9.99 subscriber could —
+   * exactly backwards, since this is one of the things Blue is sold on.
+   */
+  const { viewer: entitlement } = await resolveRankingViewer({ supabase, admin, athleteId: id })
+  const subscribed = isAdmin || hasPremiumAccess(entitlement)
 
   if (!subscribed) {
     // Free: the count, never the names. That is the thing worth subscribing for.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { canSeeProspectRanking } from "./ranking-visibility"
+import { canSeeProspectRanking, hasPremiumAccess } from "./ranking-visibility"
 
 describe("canSeeProspectRanking", () => {
   it("hides the ranking from a signed-out visitor", () => {
@@ -53,5 +53,33 @@ describe("the paid alternative to Blue", () => {
     // 13 of 14 coaches were misfiled once already by a literal comparison on this field.
     expect(canSeeProspectRanking({ role: "college-coach" })).toBe(true)
     expect(canSeeProspectRanking({ role: "college_coach" })).toBe(true)
+  })
+})
+
+describe("one entitlement for everything sold", () => {
+  it("gives a Blue member the analytics a subscriber gets", () => {
+    /*
+     * The bug this pins: coach views checked the paid subscription alone, so a Blue family
+     * could not see which colleges had viewed their own child while a $9.99 subscriber could.
+     */
+    expect(hasPremiumAccess({ isBlueMember: true })).toBe(true)
+    expect(hasPremiumAccess({ hasSubscription: true })).toBe(true)
+  })
+
+  it("gives a verified college coach access without paying", () => {
+    expect(hasPremiumAccess({ isVerifiedCoach: true })).toBe(true)
+    expect(hasPremiumAccess({ role: "college-coach" })).toBe(true)
+  })
+
+  it("gives a free account nothing", () => {
+    // They can still view profiles and edit their own; neither goes through this gate.
+    expect(hasPremiumAccess({ isBlueMember: false, hasSubscription: false })).toBe(false)
+    expect(hasPremiumAccess(null)).toBe(false)
+  })
+
+  it("does not let owning a profile unlock the whole platform", () => {
+    // A wrestler seeing their own ranking is a separate allowance, in canSeeProspectRanking.
+    expect(hasPremiumAccess({ isOwnProfile: true })).toBe(false)
+    expect(canSeeProspectRanking({ isOwnProfile: true })).toBe(true)
   })
 })

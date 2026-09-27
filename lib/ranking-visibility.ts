@@ -35,6 +35,28 @@ export type RankingViewer = {
   hasSubscription?: boolean
 }
 
+/**
+ * One entitlement, for everything the platform sells.
+ *
+ * Rankings, profile analytics and "who viewed my profile" were gated on three different
+ * questions, and one of them was plainly wrong: coach views checked the paid subscription
+ * alone, so a Blue family — who pay more, for a programme this is meant to be a benefit of —
+ * could not see which colleges had looked at their own child, while a $9.99 subscriber could.
+ *
+ * The deal is simple, so the code should be: Blue members get everything, a RecruitNC
+ * subscriber buys the same bundle, verified college coaches are free because their reading is
+ * what makes it worth buying, and a free account can view profiles and edit its own and
+ * nothing more.
+ */
+export function hasPremiumAccess(viewer: RankingViewer | null | undefined): boolean {
+  if (!viewer) return false
+  if (viewer.isAdmin) return true
+  if (viewer.isVerifiedCoach) return true
+  if (normalizeRole(viewer.role) === "college_coach") return true
+  if (viewer.isBlueMember === true) return true
+  return viewer.hasSubscription === true
+}
+
 export function canSeeProspectRanking(viewer: RankingViewer | null | undefined): boolean {
   if (!viewer) return false
   if (viewer.isOwnProfile) return true
