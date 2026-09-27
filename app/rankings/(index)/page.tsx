@@ -9,7 +9,6 @@ import {
 } from "@/lib/scouting-report-entitlement"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Trophy,
@@ -176,25 +175,6 @@ export default function ClassOf2027RankingsPage() {
      * it. So: dark, three plans on one row, the claims cut to a line each, and the product
      * shown rather than described.
      */
-    const plans = [
-      {
-        kind: "subscription" as const,
-        name: "Monthly",
-        price: formatPrice(SCOUTING_REPORT_PRICES.subscription),
-        cadence: "per month",
-        note: "Cancel any time",
-        featured: false,
-      },
-      {
-        kind: "subscription_annual" as const,
-        name: "Annual",
-        price: formatPrice(SCOUTING_REPORT_PRICES.subscription_annual),
-        cadence: "per year",
-        note: `Save ${formatPrice(annualSavingCents())}`,
-        featured: true,
-      },
-    ]
-
     return (
       <div className="profile-surface min-h-screen bg-background">
         <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
@@ -209,14 +189,6 @@ export default function ClassOf2027RankingsPage() {
               Frequently updated Class of 2027–2029 rankings, the Top 70 college prospects across
               all classes, and scouting reports built for real recruiting decisions.
             </p>
-            <div className="mt-7 flex flex-wrap justify-center gap-3">
-              <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
-                <Link href="/auth/signup?returnTo=/rankings">Create an account</Link>
-              </Button>
-              <Button asChild variant="outline" className="border-border bg-transparent text-foreground hover:bg-accent">
-                <Link href="/auth/signin?returnTo=/rankings">Sign in</Link>
-              </Button>
-            </div>
           </div>
 
           {checkoutReturned === "canceled" && (
@@ -244,135 +216,46 @@ export default function ClassOf2027RankingsPage() {
             ))}
           </div>
 
-          <p className="mx-auto mt-8 max-w-3xl text-center text-base text-muted-foreground">
-            Manage your RecruitNC profile, keep your information current, follow the rankings as
-            results come in, and know when college programs view your profile.
-          </p>
-          {/*
-            * The one thing a subscription does not buy, said plainly and in its own panel.
-            *
-            * The line before this listed GPA and contact details next to what a subscriber gets
-            * and qualified it at the end, which is the kind of sentence people read the first
-            * half of. These are minors' personal details; scoutingAccessTier releases them only
-            * to an admin or a human-verified college coach, so no amount of paying reaches them
-            * and the page should not leave that in any doubt.
-            */}
-          <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-border bg-card p-4">
-            <p className="text-sm font-semibold text-foreground">
-              What a subscription never includes
-            </p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Athlete contact details, GPA, SAT and ACT scores, and academic information are shown
-              only to college coaches we have verified by hand. They are not part of any
-              subscription, at any price, and they are never sold.
-            </p>
-          </div>
-
-          {/*
-            * College coaches get their own band, above the prices.
-            *
-            * They are the audience the rankings exist to serve and the reason they are worth
-            * buying to anybody else, and their ask is different: register and be verified, not
-            * pay. Sitting as one card in a row of three prices, the free tier read as the
-            * cheapest thing to buy rather than an invitation.
-            */}
-          <div className="mt-12 rounded-2xl border-2 border-primary bg-gradient-to-br from-card to-primary/10 p-6 text-left shadow-xl">
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-wide text-primary">
-                  College coaches
-                </p>
-                <h2 className="mt-1 text-2xl font-light tracking-tight text-foreground">
-                  Complete recruiting access. No cost.
-                </h2>
-                {/*
-                  * Why it is a recruiting tool, not a list.
-                  *
-                  * A coach does not need another ranking; they need to know which wrestlers in
-                  * a state they cannot visit every weekend are worth a phone call. That is what
-                  * the ordering is built to answer, so the page should say so rather than leave
-                  * them to infer it from a methodology list.
-                  */}
-                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                  Verified college coaches receive every ranking and every scouting report, plus
-                  the recruiting information the public cannot buy: GPA, test scores, academic
-                  interests, athlete contact information, and profile-management tools. Create a
-                  coach login and we will verify your program.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
-                  <Link href="/auth/coach-signup">Create coach login</Link>
-                </Button>
-                <Button asChild variant="outline" className="border-border bg-transparent text-foreground hover:bg-accent">
-                  <Link href="/auth/signin?returnTo=/rankings">Coach sign in</Link>
-                </Button>
-              </div>
-            </div>
-            <div className="mt-5 grid gap-x-8 gap-y-2 text-sm text-muted-foreground sm:grid-cols-2">
-              {[
-                "Every class ranked, 2027 through 2029",
-                "Top 70 college prospects — one list across every class",
-                "Full scouting reports on every ranked wrestler",
-                "Contact details, GPA, SAT and ACT — coaches only",
-                "Academic interests and intended majors",
-                "Updated as results and athlete information come in",
-              ].map((line) => (
-                <div key={line} className="flex items-start gap-2">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                  <span>{line}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mx-auto mt-8 grid max-w-3xl gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                NC United Blue
+          <div className="mt-10 grid gap-4 lg:grid-cols-3">
+            <div className="rounded-2xl border-2 border-primary bg-gradient-to-br from-card to-primary/10 p-6 shadow-lg">
+              <p className="text-sm font-semibold uppercase tracking-wide text-primary">College coaches</p>
+              <p className="mt-3 text-4xl font-semibold">Free</p>
+              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                Rankings, scouting reports, GPA, academics and athlete contact information for
+                verified college coaches.
               </p>
-              {/* No price: Blue is invitation only, and a figure here asks people to buy
-                  something they cannot, which costs a reply rather than earns a signup. */}
-              <p className="mt-3 text-4xl font-semibold">Included</p>
-              <p className="mt-1 text-sm text-muted-foreground">By invitation</p>
-              <p className="mt-4 text-sm text-foreground">
-                Rankings come with membership, for the whole family.
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Blue athletes and their parents receive full rankings access as part of their
-                existing Blue subscription. Nothing further to buy.
-              </p>
-              {/*
-                * The top of the Blue page, not the form at the bottom of it.
-                *
-                * Blue is invitation only and expressing interest does not equal acceptance, so
-                * somebody arriving from a rankings paywall needs to read what the programme is
-                * before deciding to ask. A deep link to the form would also be unreliable: that
-                * page renders its content client-side, so the hash target does not exist when
-                * the browser tries to scroll to it.
-                */}
-              <Button
-                asChild
-                variant="outline"
-                className="mt-6 w-full border-border bg-transparent text-foreground hover:bg-accent"
-              >
-                <Link href="/blue">Read about NC United Blue</Link>
+              <Button asChild className="mt-6 w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                <Link href="/auth/coach-signup">Create coach login</Link>
               </Button>
+              <Link href="/auth/signin?returnTo=/rankings" className="mt-3 block text-center text-sm text-primary underline">
+                Coach sign in
+              </Link>
             </div>
 
-            <div className="relative rounded-2xl border-2 border-primary bg-card p-6 shadow-xl">
+            <div className="rounded-2xl border border-border bg-card p-6">
+              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Blue families</p>
+              <p className="mt-3 text-4xl font-semibold">Included</p>
+              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                Blue athletes and parents receive full rankings access with their Blue membership.
+              </p>
+              <Button asChild variant="outline" className="mt-6 w-full border-border bg-transparent text-foreground hover:bg-accent">
+                <Link href="/blue">Learn about Blue</Link>
+              </Button>
+              <Link href="/auth/signin?returnTo=/rankings" className="mt-3 block text-center text-sm text-primary underline">
+                Blue family sign in
+              </Link>
+            </div>
+
+            <div className="relative rounded-2xl border-2 border-primary bg-card p-6 shadow-lg">
               <span className="absolute -top-3 left-6 rounded-full bg-primary px-3 py-0.5 text-xs font-bold text-primary-foreground">
                 Open to everyone
               </span>
-              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Rankings
-              </p>
+              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Full access</p>
               <p className="mt-3 text-4xl font-semibold">{formatPrice(SCOUTING_REPORT_PRICES.subscription)}</p>
               <p className="mt-1 text-sm text-muted-foreground">per month</p>
-              <p className="mt-4 text-sm text-muted-foreground">
-                Full profile management, college-program profile views, frequently updated
-                rankings for Classes 2027–2029, the Top 70 college prospects, and complete
-                scouting reports.
+              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                Full profile management, college-program views, all class rankings, the Top 70
+                and scouting reports. Cancel anytime.
               </p>
               <Button
                 disabled={checkingOut !== null}
@@ -396,18 +279,9 @@ export default function ClassOf2027RankingsPage() {
             </div>
           </div>
 
-          {/*
-            * Said next to the price, because a large share of the people who land here already
-            * have access — they followed the nav's "Rankings" link, which sends anybody without
-            * an entitlement to this page. Leaving sign-in to the footnote makes a Blue family
-            * read a sales pitch and conclude they have to pay again.
-            */}
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            Already a Blue family, a subscriber, or a verified college coach?{" "}
-            <Link href="/auth/signin?returnTo=/public-rankings" className="text-primary underline">
-              Sign in
-            </Link>{" "}
-            to see the rankings.
+          <p className="mx-auto mt-6 max-w-3xl text-center text-xs leading-relaxed text-muted-foreground">
+            GPA, test scores, academic information and athlete contact details are available only
+            to verified college coaches. They are never sold with a public subscription.
           </p>
 
           {checkoutError && (
