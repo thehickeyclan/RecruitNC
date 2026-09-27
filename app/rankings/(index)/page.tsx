@@ -247,18 +247,20 @@ export default function ClassOf2027RankingsPage() {
                 Nothing further to buy — everything on this page is already yours.
               </p>
               {/*
-                * Straight to the interest form, not the top of the page.
+                * The top of the Blue page, not the form at the bottom of it.
                 *
-                * Blue is invitation only and expressing interest is the only way in, so the
-                * button does that. The page above the form is still there to read for anyone
-                * who wants it, and the anchor means they land on the thing they came to do.
+                * Blue is invitation only and expressing interest does not equal acceptance, so
+                * somebody arriving from a rankings paywall needs to read what the programme is
+                * before deciding to ask. A deep link to the form would also be unreliable: that
+                * page renders its content client-side, so the hash target does not exist when
+                * the browser tries to scroll to it.
                 */}
               <Button
                 asChild
                 variant="outline"
                 className="mt-6 w-full border-border bg-transparent text-foreground hover:bg-accent"
               >
-                <Link href="/blue#interest">Interested in Blue?</Link>
+                <Link href="/blue">Interested in Blue?</Link>
               </Button>
             </div>
 
