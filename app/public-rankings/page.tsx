@@ -1,31 +1,40 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowRight, Users, Target, Award, TrendingUp } from "lucide-react"
-import Image from "next/image"
-import { HardLink } from "@/components/hard-link"
-import {
-  RANKINGS_BODY,
-  RANKINGS_PANEL,
-} from "@/lib/public-rankings-theme"
+import { ArrowRight, Award, ListOrdered, Users } from "lucide-react"
 import { redirect } from "next/navigation"
-import { createClient } from "@/lib/supabase/server"
-import { createAdminClient } from "@/lib/supabase/admin"
-import { canSeeProspectRanking } from "@/lib/ranking-visibility"
+
+import { HardLink } from "@/components/hard-link"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { resolveRankingViewer } from "@/lib/ranking-access"
+import { canSeeProspectRanking } from "@/lib/ranking-visibility"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
 
+const rankingLinks = [
+  {
+    href: "/public-rankings/2027",
+    eyebrow: "Class rankings",
+    title: "Class of 2027",
+    description: "The published Top 30.",
+    icon: ListOrdered,
+  },
+  {
+    href: "/public-rankings/2028",
+    eyebrow: "Class rankings",
+    title: "Class of 2028",
+    description: "The published Top 30.",
+    icon: Users,
+  },
+  {
+    href: "/public-rankings/prospects",
+    eyebrow: "Across all classes",
+    title: "Top 70 College Prospects",
+    description: "One pound-for-pound list across North Carolina.",
+    icon: Award,
+  },
+]
+
 export default async function PublicRankingsHomepage() {
-  /*
-   * Anyone who cannot read the rankings gets the page that sells them.
-   *
-   * This called redirectIfSignedOut, so a signed-out visitor landed on a login form — and the
-   * nav's "Rankings" link points here, not at /rankings, so the sales page was unreachable from
-   * the only link most people use. A login wall asks a stranger to open an account before
-   * learning what the thing is or what it costs.
-   *
-   * Everyone without access now lands on /rankings, which explains the rankings, shows the
-   * price, and offers sign-in for the Blue families and coaches who already have it.
-   */
   const { viewer } = await resolveRankingViewer({
     supabase: await createClient(),
     admin: createAdminClient(),
@@ -34,146 +43,49 @@ export default async function PublicRankingsHomepage() {
 
   return (
     <main className="min-h-screen bg-[#0A1628] text-white">
-      {/* Hero */}
-      <section className="relative overflow-hidden border-b border-white/10">
-        <div className="absolute inset-0">
-          <Image
-            src="/hero-banner-nchsaa-2026-arena.png"
-            alt="NCHSAA Wrestling Championship arena"
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628]/95 via-[#0A1628]/85 to-[#0A1628]/70" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628] via-transparent to-transparent" />
-        </div>
-
-        <div className="container relative mx-auto px-4 py-16 md:py-20">
-          <div className="mx-auto max-w-3xl text-center">
-            <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-[#D3B574]">
-              RecruitNC
-            </p>
-            <h1 className="text-4xl font-bold md:text-5xl mb-4 text-balance">
-              College Prospect Rankings
-            </h1>
-            <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto">
-              Official prospect rankings for North Carolina wrestling from a college recruiting
-              perspective
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Class links */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-white mb-4">Current Rankings</h2>
-          <p className={`${RANKINGS_BODY} max-w-2xl mx-auto`}>
-            Select a graduation class to view detailed prospect rankings with filters for men&apos;s
-            and women&apos;s wrestling
+      <section className="border-b border-white/10">
+        <div className="mx-auto max-w-5xl px-4 py-16 text-center sm:py-20">
+          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-[#D3B574]">
+            RecruitNC Rankings
+          </p>
+          <h1 className="text-balance text-4xl font-black tracking-tight text-white sm:text-6xl">
+            College Prospect Rankings
+          </h1>
+          <p className="mx-auto mt-4 max-w-2xl text-xl font-semibold text-white">
+            North Carolina wrestling rankings that stay current.
+          </p>
+          <p className="mx-auto mt-2 max-w-2xl text-base text-white/65">
+            Class rankings, the Top 70 college prospects and scouting reports informed by results,
+            quality wins and strength of competition.
           </p>
         </div>
-
-        <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto">
-          <HardLink href="/public-rankings/2027" className="block group">
-            <Card
-              className={`${RANKINGS_PANEL} h-full transition-colors hover:border-[#D3B574]/50 cursor-pointer`}
-            >
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl text-white group-hover:text-[#D3B574] transition-colors">
-                  Class of 2027
-                </CardTitle>
-                <CardDescription className="text-base text-white/60">
-                  Juniors climbing the ranks and preparing for the next recruiting stage.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-center">
-                <div className="flex items-center justify-center gap-2 text-[#D3B574] font-semibold">
-                  View Rankings
-                  <ArrowRight className="h-5 w-5" />
-                </div>
-              </CardContent>
-            </Card>
-          </HardLink>
-
-          <HardLink href="/public-rankings/2028" className="block group">
-            <Card
-              className={`${RANKINGS_PANEL} h-full transition-colors hover:border-[#D3B574]/50 cursor-pointer`}
-            >
-              <CardHeader className="text-center">
-                <CardTitle className="text-2xl text-white group-hover:text-[#D3B574] transition-colors">
-                  Class of 2028
-                </CardTitle>
-                <CardDescription className="text-base text-white/60">
-                  Sophomores building national credentials and early college recruiting interest.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-center">
-                <div className="flex items-center justify-center gap-2 text-[#D3B574] font-semibold">
-                  View Rankings
-                  <ArrowRight className="h-5 w-5" />
-                </div>
-              </CardContent>
-            </Card>
-          </HardLink>
-        </div>
       </section>
 
-      {/* Our approach */}
-      <section className="border-t border-white/10 bg-[#0f1c2e]/50">
-        <div className="container mx-auto px-4 py-16">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-white mb-8 text-center">Our Approach</h2>
-            <p className={`${RANKINGS_BODY} text-center mb-12 max-w-3xl mx-auto`}>
-              Our rankings are designed from a college recruiting perspective. They are not just a
-              reflection of local results, but an evaluation of how athletes perform against the
-              highest levels of national competition.
-            </p>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-              {[
-                {
-                  icon: Target,
-                  title: "Quality of Wins",
-                  body: "Victories against nationally ranked opponents carry the greatest weight",
-                },
-                {
-                  icon: Award,
-                  title: "Elite Tournaments",
-                  body: "Performance at Super 32, Journeymen, NHSCA Nationals, and other top events",
-                },
-                {
-                  icon: TrendingUp,
-                  title: "College Opens",
-                  body: "Results at NCAA-sanctioned opens provide insight into college readiness",
-                },
-                {
-                  icon: Users,
-                  title: "In-State Results",
-                  body: "Emphasis on matches against elite in-state opponents with national credentials",
-                },
-              ].map(({ icon: Icon, title, body }) => (
-                <Card key={title} className={`${RANKINGS_PANEL} text-center`}>
-                  <CardHeader>
-                    <Icon className="h-8 w-8 text-[#D3B574] mx-auto mb-2" />
-                    <CardTitle className="text-lg text-white">{title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-white/60">{body}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            <div className="rounded-xl border border-[#D3B574]/30 bg-[#D3B574]/10 p-8 text-center">
-              <h3 className="text-xl font-semibold text-[#D3B574] mb-4">Our Goal</h3>
-              <p className="text-white/80 leading-relaxed text-lg">
-                To highlight athletes whose achievements best translate to success at the college
-                level, ensuring that rankings reflect both accomplishment and projection.
-              </p>
-            </div>
-          </div>
+      <section className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
+        <div className="grid gap-4 md:grid-cols-3">
+          {rankingLinks.map(({ href, eyebrow, title, description, icon: Icon }) => (
+            <HardLink key={href} href={href} className="group block h-full">
+              <Card className="h-full border-white/10 bg-[#13294B] text-white transition hover:-translate-y-0.5 hover:border-[#D3B574]/70">
+                <CardHeader>
+                  <Icon className="mb-3 h-6 w-6 text-[#D3B574]" />
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/50">{eyebrow}</p>
+                  <CardTitle className="text-2xl font-bold text-white">{title}</CardTitle>
+                  <CardDescription className="text-sm text-white/65">{description}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#D3B574]">
+                    View rankings
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </span>
+                </CardContent>
+              </Card>
+            </HardLink>
+          ))}
         </div>
+
+        <p className="mx-auto mt-10 max-w-2xl text-center text-sm leading-relaxed text-white/55">
+          Rankings are updated as new results and verified athlete information become available.
+        </p>
       </section>
     </main>
   )
