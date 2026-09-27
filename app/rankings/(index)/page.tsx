@@ -220,11 +220,11 @@ export default function ClassOf2027RankingsPage() {
             <div className="mt-5 grid gap-x-8 gap-y-2 text-sm text-muted-foreground sm:grid-cols-2">
               {[
                 "National results, individual and dual competition",
+                "Every major tournament, in state and out",
                 "Strength of competition, and quality wins",
                 "Head-to-head results between ranked wrestlers",
-                "Every match of the season, not only the podium finishes",
+                "Every match on record, not only the podium finishes",
                 "How consistently a wrestler seeks out the best",
-                "Updated as results and athlete information come in",
               ].map((line) => (
                 <div key={line} className="flex items-start gap-2">
                   <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />

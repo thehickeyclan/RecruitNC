@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic"
 export const metadata: Metadata = {
   title: "Top 70 College Prospects | RecruitNC",
   description:
-    "North Carolina's top college wrestling prospects across the classes of 2027, 2028 and 2029, ranked on this season.",
+    "North Carolina's top college wrestling prospects across the classes of 2027, 2028 and 2029.",
 }
 
 /**
@@ -91,8 +91,8 @@ export default async function TopProspectsPage() {
                 * son is 14th in his class and 31st here.
                 */}
               <p className="mx-auto mt-10 max-w-2xl text-center text-xs leading-relaxed text-white/40">
-                Ranked on national results in individual and dual competition, strength of
-                competition, quality wins, head-to-head results, in-season performance, and how
+                Ranked on national results in individual and dual competition, every major
+                tournament, strength of competition, quality wins, head-to-head results, and how
                 consistently a wrestler seeks out the best. Within a class this list follows that
                 class&apos;s published board exactly.
               </p>
