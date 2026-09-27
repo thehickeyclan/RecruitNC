@@ -203,12 +203,20 @@ export default function ClassOf2027RankingsPage() {
               NC United · RecruitNC
             </Badge>
             <h1 className="text-4xl font-light tracking-tight sm:text-5xl">
-              North Carolina Prospect Rankings
+              See the wrestlers college programs are watching.
             </h1>
-            <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
-              Built to help college programs evaluate North Carolina wrestlers and their readiness
-              to compete at the next level.
+            <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+              Frequently updated Class of 2027–2029 rankings, the Top 70 college prospects across
+              all classes, and scouting reports built for real recruiting decisions.
             </p>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Link href="/auth/signup?returnTo=/rankings">Create an account</Link>
+              </Button>
+              <Button asChild variant="outline" className="border-border bg-transparent text-foreground hover:bg-accent">
+                <Link href="/auth/signin?returnTo=/rankings">Sign in</Link>
+              </Button>
+            </div>
           </div>
 
           {checkoutReturned === "canceled" && (
@@ -222,32 +230,23 @@ export default function ClassOf2027RankingsPage() {
             </div>
           )}
 
-          {/* Four claims, one line each. The detail belongs in the product, not the pitch. */}
-          <div className="mx-auto mt-10 grid max-w-3xl gap-x-8 gap-y-3 text-sm text-foreground sm:grid-cols-2">
+          <div className="mx-auto mt-10 grid max-w-4xl gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              "National results, individual and dual competition",
-              "Strength of competition, and quality wins",
-              "Head-to-head results",
-              "In-season performance",
-              "How consistently a wrestler seeks out the best",
-              "Top 70 college prospects across all three classes",
-              "College commitment alerts, pushed to your phone",
+              ["2027–2029", "Frequently updated class rankings"],
+              ["Top 70", "College prospects across all classes"],
+              ["Scouting", "Results, quality wins and competition"],
+              ["Profile activity", "See which college programs viewed you"],
             ].map((claim) => (
-              <div key={claim} className="flex items-start gap-2">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                <span>{claim}</span>
+              <div key={claim[0]} className="rounded-xl border border-border bg-card p-4 text-left">
+                <p className="text-xl font-semibold text-primary">{claim[0]}</p>
+                <p className="mt-1 text-sm text-muted-foreground">{claim[1]}</p>
               </div>
             ))}
           </div>
 
-          <p className="mx-auto mt-8 max-w-2xl text-base text-foreground">
-            Big wins matter. Strength of schedule matters. Competing against the best matters.
-          </p>
-          <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground">
-            Anyone can subscribe. You get every ranking, the Top 70 college prospects, and scouting reports — major
-            tournament results, significant wins and strength of competition — updated as results
-            and athlete-provided information come in, with every North Carolina college commitment
-            pushed to your phone.
+          <p className="mx-auto mt-8 max-w-3xl text-center text-base text-muted-foreground">
+            Manage your RecruitNC profile, keep your information current, follow the rankings as
+            results come in, and know when college programs view your profile.
           </p>
           {/*
             * The one thing a subscription does not buy, said plainly and in its own panel.
@@ -277,14 +276,14 @@ export default function ClassOf2027RankingsPage() {
             * pay. Sitting as one card in a row of three prices, the free tier read as the
             * cheapest thing to buy rather than an invitation.
             */}
-          <div className="mt-12 rounded-2xl border-2 border-primary bg-card p-6 text-left">
+          <div className="mt-12 rounded-2xl border-2 border-primary bg-gradient-to-br from-card to-primary/10 p-6 text-left shadow-xl">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-wide text-primary">
                   College coaches
                 </p>
                 <h2 className="mt-1 text-2xl font-light tracking-tight text-foreground">
-                  Free, always. Register and we verify you.
+                  Complete recruiting access. No cost.
                 </h2>
                 {/*
                   * Why it is a recruiting tool, not a list.
@@ -295,16 +294,20 @@ export default function ClassOf2027RankingsPage() {
                   * them to infer it from a methodology list.
                   */}
                 <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-                  Built for recruiting, not for argument. The order is reasoned from how a
-                  wrestler performs against real competition — nationally, at the TOC, and
-                  head-to-head with the wrestlers around them — so it answers the question you
-                  are actually asking: who in North Carolina is ready to wrestle for you, and who
-                  is worth the call first.
+                  Verified college coaches receive every ranking and every scouting report, plus
+                  the recruiting information the public cannot buy: GPA, test scores, academic
+                  interests, athlete contact information, and profile-management tools. Create a
+                  coach login and we will verify your program.
                 </p>
               </div>
-              <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
-                <Link href="/auth/coach-signup">Register free</Link>
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+                  <Link href="/auth/coach-signup">Create coach login</Link>
+                </Button>
+                <Button asChild variant="outline" className="border-border bg-transparent text-foreground hover:bg-accent">
+                  <Link href="/auth/signin?returnTo=/rankings">Coach sign in</Link>
+                </Button>
+              </div>
             </div>
             <div className="mt-5 grid gap-x-8 gap-y-2 text-sm text-muted-foreground sm:grid-cols-2">
               {[
@@ -323,38 +326,7 @@ export default function ClassOf2027RankingsPage() {
             </div>
           </div>
 
-          {/*
-            * Three tiers, cheapest first, because the cheapest is free and that is the point.
-            *
-            * A college coach pays nothing on purpose: their reading is what makes the rankings
-            * worth having to everyone else. Blue costs the most and includes the most, since it
-            * is a wrestling programme with the platform attached rather than the other way
-            * round. The subscription exists for the people who cannot join Blue and should not
-            * have to - an out-of-state parent, a recruiting service, a coach's colleague.
-            *
-            * Blue's price comes from the billing constant, not a number typed here: it is
-            * $55 for new signups and the $50 people remember is the legacy WrestlingIQ rate.
-            */}
-          <div className="mt-12 grid gap-4 md:grid-cols-3">
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Verified college coaches
-              </p>
-              <p className="mt-3 text-4xl font-semibold">Free</p>
-              <p className="mt-1 text-sm text-muted-foreground">Always</p>
-              <p className="mt-4 text-sm text-muted-foreground">
-                A 360-degree view: everything above, plus athlete contact details, GPA, test
-                scores, academic interests and intended majors. The only tier that reaches them.
-              </p>
-              <Button
-                asChild
-                variant="outline"
-                className="mt-6 w-full border-border bg-transparent text-foreground hover:bg-accent"
-              >
-                <Link href="/auth/coach-signup">Verify your program</Link>
-              </Button>
-            </div>
-
+          <div className="mx-auto mt-8 grid max-w-3xl gap-4 md:grid-cols-2">
             <div className="rounded-2xl border border-border bg-card p-6">
               <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
                 NC United Blue
@@ -367,7 +339,8 @@ export default function ClassOf2027RankingsPage() {
                 Rankings come with membership, for the whole family.
               </p>
               <p className="mt-1 text-sm text-muted-foreground">
-                Nothing further to buy — everything on this page is already yours.
+                Blue athletes and their parents receive full rankings access as part of their
+                existing Blue subscription. Nothing further to buy.
               </p>
               {/*
                 * The top of the Blue page, not the form at the bottom of it.
@@ -383,7 +356,7 @@ export default function ClassOf2027RankingsPage() {
                 variant="outline"
                 className="mt-6 w-full border-border bg-transparent text-foreground hover:bg-accent"
               >
-                <Link href="/blue">Interested in Blue?</Link>
+                <Link href="/blue">Read about NC United Blue</Link>
               </Button>
             </div>
 
@@ -397,8 +370,9 @@ export default function ClassOf2027RankingsPage() {
               <p className="mt-3 text-4xl font-semibold">{formatPrice(SCOUTING_REPORT_PRICES.subscription)}</p>
               <p className="mt-1 text-sm text-muted-foreground">per month</p>
               <p className="mt-4 text-sm text-muted-foreground">
-                All three classes and the Top 70 across them, updated as results come in. Scouting reports,
-                commitment alerts, and who has viewed your profile.
+                Full profile management, college-program profile views, frequently updated
+                rankings for Classes 2027–2029, the Top 70 college prospects, and complete
+                scouting reports.
               </p>
               <Button
                 disabled={checkingOut !== null}
