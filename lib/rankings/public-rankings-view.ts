@@ -156,6 +156,20 @@ async function buildPublicClassRanking(
       .lte("prospect_ranking", cap)
       .order("prospect_ranking", { ascending: true })
 
+  /*
+   * Movement arrows are only honest once there is a released board to have moved from.
+   *
+   * `previous_ranking` is rewritten by every publish, including the internal ones nobody
+   * outside staff ever saw. On an unreleased class that turns into fabricated history: the
+   * 2028 board told subscribers Garrett Young had fallen twelve places and Vincent Grack
+   * risen fifteen, against an order that had never been shown to a single customer. On a
+   * paid product that is worse than showing nothing.
+   *
+   * So movement is suppressed until the class is actually released. After the first real
+   * release, publishes produce movement against something readers have genuinely seen.
+   */
+  const showMovement = isPublicRankingsYearPublished(year)
+
   const credentials = await loadAthleteCredentialsBatch(admin, (rows ?? []) as unknown as Array<Record<string, unknown>>)
 
   const athletes: PublicRankedAthlete[] = (rows ?? []).map((row) => {
@@ -171,7 +185,7 @@ async function buildPublicClassRanking(
       club: (raw.wrestlingClub as string) || null,
       weightClass: raw.weightclass == null ? null : String(raw.weightclass),
       graduationYear: raw.graduationyear == null ? null : Number(raw.graduationyear),
-      previousRank: raw.previous_ranking == null ? null : Number(raw.previous_ranking),
+      previousRank: !showMovement || raw.previous_ranking == null ? null : Number(raw.previous_ranking),
       collegeCommit: (raw.college as string) || null,
       /**
        * Credentials only. Records, named quality wins and direct wins over other ranked
@@ -196,6 +210,6 @@ const PUBLIC_RANKING_CACHE_VERSION = "v6-shared-credential-engine"
 
 export const loadPublicClassRanking = unstable_cache(
   buildPublicClassRanking,
-  ["public-class-ranking", PUBLIC_RANKING_CACHE_VERSION, "v9-2029-top15"],
+  ["public-class-ranking", PUBLIC_RANKING_CACHE_VERSION, "v11-casing-fix"],
   { revalidate: 3600, tags: ["public-rankings"] },
 )
