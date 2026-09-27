@@ -336,7 +336,6 @@ export default function BluePage() {
             <div className="grid gap-8 md:grid-cols-3">
               <CoachCard imageSrc={images.blue_coach_colton_palmer} imageAlt="Colton Palmer" name="Colton Palmer" shortBio="Colton Palmer is a former NC State wrestler, four-year letter winner, team co-captain, and NCAA Tournament qualifier." longBio="A two-time NCHSAA state champion and former national record holder in career wins." />
               <CoachCard imageSrc={images.blue_coach_mike_macchiavello} imageAlt="Mike Macchiavello" name="Mike Macchiavello" shortBio="Mike Macchiavello is a North Carolina native, NCAA Division I National Champion at NC State, and Co-Founder of NC United." longBio="A former NC high school state champion and U.S. National Team member." />
-              <CoachCard imageSrc={images.blue_coach_araad_fischer} imageAlt="Araad Fisher" name="Araad Fisher" shortBio="Araad Fisher is a former Duke wrestler and four-year starter." longBio="A North Carolina state finalist and High School All-American." />
             </div>
           </section>
 

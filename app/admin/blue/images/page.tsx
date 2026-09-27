@@ -19,7 +19,6 @@ const SLOT_LABELS: Record<BlueImageKey, string> = {
   blue_pipeline: "National Team Pipeline (one wide rectangle)",
   blue_coach_colton_palmer: "Coaching Excellence — Colton Palmer",
   blue_coach_mike_macchiavello: "Coaching Excellence — Mike Macchiavello",
-  blue_coach_araad_fischer: "Coaching Excellence — Araad Fisher",
   blue_team_photo: "Blue Roster (team photo)",
   blue_shirt: "Blue shirt (Membership & Registration section)",
 }
@@ -38,7 +37,6 @@ const PAGE_IMAGE_KEYS: BlueImageKey[] = [
 const COACH_PHOTO_KEYS: BlueImageKey[] = [
   "blue_coach_colton_palmer",
   "blue_coach_mike_macchiavello",
-  "blue_coach_araad_fischer",
 ]
 
 export default function AdminBlueImagesPage() {
@@ -136,7 +134,7 @@ export default function AdminBlueImagesPage() {
           <section className="rounded-lg border-2 border-[#D3B574] bg-[#03154C]/5 p-4">
             <h2 className="text-lg font-semibold text-[#03154C] mb-1">Coach photos (Coaching Excellence)</h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Colton Palmer, Mike Macchiavello, Araad Fisher — update each photo below.
+              Colton Palmer and Mike Macchiavello — update each photo below.
             </p>
             <div className="space-y-6">
               {COACH_PHOTO_KEYS.map((key) => {
