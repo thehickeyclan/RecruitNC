@@ -63,7 +63,10 @@ export default async function PublicRankingsHomepage({
     redirect(params.purchased ? "/rankings?purchased=1" : "/rankings")
   }
 
+  // Staff read the boards before the announcement, on the same page customers will use.
+  const isAdmin = viewer.isAdmin === true
   const releasedLinks = rankingLinks.filter(({ href }) => {
+    if (isAdmin) return true
     if (href === "/public-rankings/prospects") return PUBLIC_TOP_PROSPECTS_RELEASED
     const year = Number(href.split("/").at(-1))
     return PUBLISHED_PUBLIC_RANKINGS_YEARS.includes(year)
@@ -107,6 +110,13 @@ export default async function PublicRankingsHomepage({
             </HardLink>
           ))}
         </div>
+
+        {isAdmin && PUBLISHED_PUBLIC_RANKINGS_YEARS.length === 0 ? (
+          <div className="mx-auto mb-8 max-w-xl rounded-xl border border-[#D3B574]/50 bg-[#D3B574]/10 px-6 py-4 text-center">
+            <p className="text-sm font-semibold text-[#D3B574]">Admin preview — not yet released</p>
+            <p className="mt-1 text-sm text-white/60">Only admins can open these boards right now.</p>
+          </div>
+        ) : null}
 
         {releasedLinks.length === 0 ? (
           <div className="mx-auto max-w-xl rounded-xl border border-white/10 bg-white/[0.03] px-6 py-10 text-center">

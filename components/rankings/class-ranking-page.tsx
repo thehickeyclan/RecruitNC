@@ -57,7 +57,7 @@ export async function ClassRankingPage({ year }: { year: number }) {
     )
   }
 
-  const ranking = await loadPublicClassRanking(year)
+  const ranking = await loadPublicClassRanking(year, viewer.isAdmin === true)
 
   return (
     <div className="min-h-screen bg-[#061224]">

@@ -58,6 +58,15 @@ export default async function TopProspectsPage() {
     )
   }
 
+  // Released to customers, or an admin previewing before the announcement.
+  if (!PUBLIC_TOP_PROSPECTS_RELEASED && viewer.isAdmin !== true) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#061224] px-4">
+        <p className="text-sm text-white/60">This list has not been published yet.</p>
+      </div>
+    )
+  }
+
   const board = await loadTopProspects("Male")
 
   return (

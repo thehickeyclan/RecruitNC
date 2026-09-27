@@ -8,7 +8,7 @@ import {
   type AthleteCredentials,
 } from "@/lib/credentials/athlete-credentials"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
+import { getPublicRankingsMax, isPublicRankingsYearPublished, isRankedClassYear } from "@/lib/public-rankings-cap"
 
 /**
  * The public read model for a class ranking — one server-side shape, the way the TOC field has one.
@@ -121,9 +121,17 @@ export function credentialsFrom(held: AthleteCredentials | undefined): PublicRan
  */
 const IDENTITY_COLUMNS = ["wrestling_name", '"firstName"', '"lastName"', "nhsca_results", "super32_results"] as const
 
-async function buildPublicClassRanking(year: number): Promise<PublicClassRanking> {
+async function buildPublicClassRanking(
+  year: number,
+  /**
+   * Admin preview. A board can be finished and reviewed before it is announced, and staff
+   * need to read exactly what customers will read - the same page, not a different one.
+   */
+  includeUnreleased = false,
+): Promise<PublicClassRanking> {
   const cap = getPublicRankingsMax(year)
-  if (!isPublicRankingsYearPublished(year)) {
+  const reachable = includeUnreleased ? isRankedClassYear(year) : isPublicRankingsYearPublished(year)
+  if (!reachable) {
     return { year, published: false, cap, athletes: [] }
   }
 
@@ -188,6 +196,6 @@ const PUBLIC_RANKING_CACHE_VERSION = "v6-shared-credential-engine"
 
 export const loadPublicClassRanking = unstable_cache(
   buildPublicClassRanking,
-  ["public-class-ranking", PUBLIC_RANKING_CACHE_VERSION],
+  ["public-class-ranking", PUBLIC_RANKING_CACHE_VERSION, "v7-preview-key"],
   { revalidate: 3600, tags: ["public-rankings"] },
 )
