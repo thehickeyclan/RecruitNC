@@ -8,10 +8,21 @@
  */
 export const DEFAULT_PUBLIC_RANKINGS_CAP = 30
 
-/** Per-class overrides. Keep the map limited to published years only. */
+/**
+ * Per-class caps, and the list of classes the public endpoints will serve at all.
+ *
+ * `/api/public-rankings` answers 404 for any year missing here, so a class left off cannot be
+ * published no matter what the board does — pressing Publish would write the ranks, sync the
+ * app and send the notification, and the page it linked to would still say the class does not
+ * exist. 2029 was in exactly that state.
+ *
+ * A year being listed does not make it visible: nothing shows until `prospect_ranking` is
+ * written, which only Publish does.
+ */
 export const PUBLIC_RANKINGS_MAX_BY_YEAR: Record<number, number> = {
   2027: 30,
   2028: 30,
+  2029: 30,
 }
 
 export const PUBLISHED_PUBLIC_RANKINGS_YEARS = Object.keys(PUBLIC_RANKINGS_MAX_BY_YEAR)

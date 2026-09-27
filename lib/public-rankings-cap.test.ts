@@ -9,14 +9,16 @@ import {
 } from "@/lib/public-rankings-cap"
 
 describe("public rankings cap", () => {
-  it("publishes top 30 only for active public class years", () => {
-    expect(PUBLISHED_PUBLIC_RANKINGS_YEARS).toEqual([2027, 2028])
+  it("serves a top 30 for each class the site is currently ranking", () => {
+    expect(PUBLISHED_PUBLIC_RANKINGS_YEARS).toEqual([2027, 2028, 2029])
     expect(PUBLIC_RANKINGS_MAX_BY_YEAR[2026]).toBeUndefined()
     expect(PUBLIC_RANKINGS_MAX_BY_YEAR[2027]).toBe(30)
     expect(PUBLIC_RANKINGS_MAX_BY_YEAR[2028]).toBe(30)
-    expect(PUBLIC_RANKINGS_MAX_BY_YEAR[2029]).toBeUndefined()
+    expect(PUBLIC_RANKINGS_MAX_BY_YEAR[2029]).toBe(30)
     expect(isPublicRankingsYearPublished(2027)).toBe(true)
-    expect(isPublicRankingsYearPublished(2029)).toBe(false)
+    expect(isPublicRankingsYearPublished(2029)).toBe(true)
+    // A graduated class is off the list entirely: it cannot be served at any cap.
+    expect(isPublicRankingsYearPublished(2026)).toBe(false)
   })
 
   it("clamps 'all' and oversized topN to top 30", () => {
