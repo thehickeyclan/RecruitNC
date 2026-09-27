@@ -183,7 +183,7 @@ export default function ClassOf2027RankingsPage() {
               NC United · RecruitNC
             </Badge>
             <h1 className="text-4xl font-light tracking-tight sm:text-5xl">
-              See the wrestlers college programs are watching.
+              North Carolina wrestling rankings that stay current.
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
               Frequently updated Class of 2027–2029 rankings, the Top 70 college prospects across
@@ -207,7 +207,7 @@ export default function ClassOf2027RankingsPage() {
               ["2027–2029", "Frequently updated class rankings"],
               ["Top 70", "College prospects across all classes"],
               ["Scouting", "Results, quality wins and competition"],
-              ["Profile activity", "See which college programs viewed you"],
+              ["Profile activity", "See engagement with your profile"],
             ].map((claim) => (
               <div key={claim[0]} className="rounded-xl border border-border bg-card p-4 text-left">
                 <p className="text-xl font-semibold text-primary">{claim[0]}</p>
@@ -216,22 +216,7 @@ export default function ClassOf2027RankingsPage() {
             ))}
           </div>
 
-          <div className="mt-10 grid gap-4 lg:grid-cols-3">
-            <div className="rounded-2xl border-2 border-primary bg-gradient-to-br from-card to-primary/10 p-6 shadow-lg">
-              <p className="text-sm font-semibold uppercase tracking-wide text-primary">College coaches</p>
-              <p className="mt-3 text-4xl font-semibold">Free</p>
-              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                Rankings, scouting reports, GPA, academics and athlete contact information for
-                verified college coaches.
-              </p>
-              <Button asChild className="mt-6 w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                <Link href="/auth/coach-signup">Create coach login</Link>
-              </Button>
-              <Link href="/auth/signin?returnTo=/rankings" className="mt-3 block text-center text-sm text-primary underline">
-                Coach sign in
-              </Link>
-            </div>
-
+          <div className="mx-auto mt-10 grid max-w-3xl gap-4 md:grid-cols-2">
             <div className="rounded-2xl border border-border bg-card p-6">
               <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Blue families</p>
               <p className="mt-3 text-4xl font-semibold">Included</p>
@@ -254,8 +239,8 @@ export default function ClassOf2027RankingsPage() {
               <p className="mt-3 text-4xl font-semibold">{formatPrice(SCOUTING_REPORT_PRICES.subscription)}</p>
               <p className="mt-1 text-sm text-muted-foreground">per month</p>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                Full profile management, college-program views, all class rankings, the Top 70
-                and scouting reports. Cancel anytime.
+                Full profile management and activity, all class rankings, the Top 70 and scouting
+                reports. Cancel anytime.
               </p>
               <Button
                 disabled={checkingOut !== null}
@@ -280,8 +265,8 @@ export default function ClassOf2027RankingsPage() {
           </div>
 
           <p className="mx-auto mt-6 max-w-3xl text-center text-xs leading-relaxed text-muted-foreground">
-            GPA, test scores, academic information and athlete contact details are available only
-            to verified college coaches. They are never sold with a public subscription.
+            Personal contact details, GPA, test scores and academic information are never included
+            with a public subscription.
           </p>
 
           {checkoutError && (
@@ -363,8 +348,8 @@ export default function ClassOf2027RankingsPage() {
                 </div>
                 {/* The part people assume is for sale, and is not. */}
                 <p className="border-t border-border pt-3 text-[11px] text-muted-foreground">
-                  Contact details, GPA and test scores: verified college coaches only. Not part of
-                  any subscription, at any price.
+                  Contact details, GPA and test scores are private and are not part of a public
+                  subscription.
                 </p>
               </div>
             </div>
@@ -376,13 +361,8 @@ export default function ClassOf2027RankingsPage() {
             North Carolina wrestlers with the ability and potential to compete at the next level.
           </p>
           <p className="mt-4 text-center text-sm text-muted-foreground">
-            Already a Blue family or a college coach?{" "}
-            <Link
-              href={locked === "anonymous" ? "/auth/signin?returnTo=/rankings" : "/auth/coach-signup"}
-              className="text-primary underline"
-            >
-              {locked === "anonymous" ? "Sign in" : "Verify your account"}
-            </Link>
+            Already a Blue family or subscriber?{" "}
+            <Link href="/auth/signin?returnTo=/rankings" className="text-primary underline">Sign in</Link>
             . Behind all of it: 26 years of NC wrestling history, free to ask Data Dawg about.
           </p>
         </div>
