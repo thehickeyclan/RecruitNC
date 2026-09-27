@@ -202,6 +202,60 @@ export default function ClassOf2027RankingsPage() {
           </div>
 
           {/*
+            * College coaches get their own band, above the prices.
+            *
+            * They are the audience the rankings exist to serve and the reason they are worth
+            * buying to anybody else, and their ask is different: register and be verified, not
+            * pay. Sitting as one card in a row of three prices, the free tier read as the
+            * cheapest thing to buy rather than an invitation.
+            */}
+          <div className="mt-12 rounded-2xl border-2 border-primary bg-card p-6 text-left">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-wide text-primary">
+                  College coaches
+                </p>
+                <h2 className="mt-1 text-2xl font-light tracking-tight text-foreground">
+                  Free, always. Register and we verify you.
+                </h2>
+                {/*
+                  * Why it is a recruiting tool, not a list.
+                  *
+                  * A coach does not need another ranking; they need to know which wrestlers in
+                  * a state they cannot visit every weekend are worth a phone call. That is what
+                  * the ordering is built to answer, so the page should say so rather than leave
+                  * them to infer it from a methodology list.
+                  */}
+                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                  Built for recruiting, not for argument. The order is reasoned from how a
+                  wrestler performs against real competition — nationally, at the TOC, and
+                  head-to-head with the wrestlers around them — so it answers the question you
+                  are actually asking: who in North Carolina is ready to wrestle for you, and who
+                  is worth the call first.
+                </p>
+              </div>
+              <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90">
+                <Link href="/auth/coach-signup">Register free</Link>
+              </Button>
+            </div>
+            <div className="mt-5 grid gap-x-8 gap-y-2 text-sm text-muted-foreground sm:grid-cols-2">
+              {[
+                "Every class ranked, 2027 through 2029",
+                "Top 50 college prospects across all three",
+                "Full scouting reports on every ranked wrestler",
+                "Contact details, GPA, SAT and ACT — coaches only",
+                "Academic interests and intended majors",
+                "Updated as results and athlete information come in",
+              ].map((line) => (
+                <div key={line} className="flex items-start gap-2">
+                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                  <span>{line}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/*
             * Three tiers, cheapest first, because the cheapest is free and that is the point.
             *
             * A college coach pays nothing on purpose: their reading is what makes the rankings
@@ -275,8 +329,8 @@ export default function ClassOf2027RankingsPage() {
               <p className="mt-3 text-4xl font-semibold">{formatPrice(SCOUTING_REPORT_PRICES.subscription)}</p>
               <p className="mt-1 text-sm text-muted-foreground">per month</p>
               <p className="mt-4 text-sm text-muted-foreground">
-                Rankings, the Top 50, scouting reports, commitment alerts, and who has viewed
-                your profile.
+                All three classes and the Top 50, updated as results come in. Scouting reports,
+                commitment alerts, and who has viewed your profile.
               </p>
               <Button
                 disabled={checkingOut !== null}
