@@ -6,9 +6,9 @@ import { ClassRankingPage } from "@/components/rankings/class-ranking-page"
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "Class of 2029 Prospects to Watch | RecruitNC",
+  title: "Class of 2029 Rankings | RecruitNC",
   description:
-    "North Carolina's Class of 2029 wrestlers to watch, chosen on results with the evidence behind every name.",
+    "North Carolina's top Class of 2029 wrestling prospects, ranked on results with the evidence behind every place.",
 }
 
 export default function Rankings2029Page() {
