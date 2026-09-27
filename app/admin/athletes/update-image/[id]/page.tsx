@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { createClient } from "@/lib/supabase/client"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 
 export default function UpdateAthleteImagePage({ params }: { params: { id: string } }) {
   const router = useRouter()
@@ -26,7 +27,7 @@ export default function UpdateAthleteImagePage({ params }: { params: { id: strin
     const fetchAthlete = async () => {
       try {
         const supabase = createClient()
-        const { data, error } = await supabase.from("athletes").select("*").eq("id", params.id).single()
+        const { data, error } = await supabase.from("athletes").select(ATHLETE_PUBLIC_COLUMNS).eq("id", params.id).single()
 
         if (error) throw error
         setAthlete(data)

@@ -7,6 +7,7 @@ import { FixedProductionFlipCard } from "@/components/fixed-production-flip-card
 import { AthletesHeroBanner } from "@/components/athletes-hero-banner"
 import { SearchAndFilter } from "@/components/search-and-filter"
 import { AthletesWelcomeMessage } from "@/components/athletes-welcome-message"
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 
 interface Athlete {
   id: string
@@ -62,7 +63,7 @@ export default function AthletesPage() {
         setLoading(true)
         const { data, error } = await supabase
           .from("athletes")
-          .select("*")
+          .select(ATHLETE_PUBLIC_COLUMNS)
           .not("college", "is", null)
           .not("college", "eq", "")
           .order("name")

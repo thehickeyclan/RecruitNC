@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 
 export default function DirectUpdatePage() {
   const [athleteId, setAthleteId] = useState("3fbbf559-1408-4261-8116-947276fc23cc") // Lorenzo's ID
@@ -26,7 +27,7 @@ export default function DirectUpdatePage() {
       // First, get the current data
       const { data: currentData, error: fetchError } = await supabase
         .from("athletes")
-        .select("*")
+        .select(ATHLETE_PUBLIC_COLUMNS)
         .eq("id", athleteId)
         .single()
 

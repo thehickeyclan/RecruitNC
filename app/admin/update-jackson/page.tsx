@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { createClient } from "@/lib/supabase/client"
 import Image from "next/image"
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 
 const JACKSON_ID = "02d7b368-67e0-4eb7-be9e-5aca85a3352d"
 
@@ -26,7 +27,7 @@ export default function UpdateJacksonPage() {
     const fetchAthlete = async () => {
       try {
         const supabase = createClient()
-        const { data, error } = await supabase.from("athletes").select("*").eq("id", JACKSON_ID).single()
+        const { data, error } = await supabase.from("athletes").select(ATHLETE_PUBLIC_COLUMNS).eq("id", JACKSON_ID).single()
 
         if (error) throw error
         setAthlete(data)

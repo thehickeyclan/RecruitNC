@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { LikeButton } from "@/components/like-button"
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 
 export default function LikesDebugPage() {
   const [athletes, setAthletes] = useState<any[]>([])
@@ -23,7 +24,7 @@ export default function LikesDebugPage() {
       setUser(user)
 
       // Fetch athletes
-      const { data: athletes } = await supabase.from("athletes").select("*").order("name").limit(10)
+      const { data: athletes } = await supabase.from("athletes").select(ATHLETE_PUBLIC_COLUMNS).order("name").limit(10)
 
       setAthletes(athletes || [])
 

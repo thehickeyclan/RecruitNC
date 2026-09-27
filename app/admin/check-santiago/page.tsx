@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { RefreshCw, User, Calendar, MapPin, Trophy, Search, CheckCircle, XCircle } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 
 interface Athlete {
   id: string
@@ -38,7 +39,7 @@ export default function CheckSantiagoPage() {
       // Search for Santiago Ruiz-Diaz specifically
       const { data: santiagoResults, error: santiagoError } = await supabase
         .from("athletes")
-        .select("*")
+        .select(ATHLETE_PUBLIC_COLUMNS)
         .ilike("name", "%santiago%ruiz%")
         .order("created_at", { ascending: false })
         .limit(1)
@@ -52,7 +53,7 @@ export default function CheckSantiagoPage() {
       // Get recent athletes (last 10)
       const { data: recentData, error: recentError } = await supabase
         .from("athletes")
-        .select("*")
+        .select(ATHLETE_PUBLIC_COLUMNS)
         .order("created_at", { ascending: false })
         .limit(10)
 
@@ -64,7 +65,7 @@ export default function CheckSantiagoPage() {
       }
 
       // Get total count
-      const { count, error: countError } = await supabase.from("athletes").select("*", { count: "exact", head: true })
+      const { count, error: countError } = await supabase.from("athletes").select(ATHLETE_PUBLIC_COLUMNS, { count: "exact", head: true })
 
       if (countError) {
         console.error("Error getting count:", countError)

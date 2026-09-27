@@ -5,6 +5,7 @@ import { ProfessionalCommitmentCard } from "@/components/professional-commitment
 import { supabase } from "@/lib/supabase"
 import { normalizeAthleteList } from "@/lib/professional-athlete"
 import type { Athlete } from "@/types/athlete"
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 
 export default function CommitmentCardsDebugPage() {
   const [athletes, setAthletes] = useState<Athlete[]>([])
@@ -18,7 +19,7 @@ export default function CommitmentCardsDebugPage() {
         // First try to get Liam Hickey and Hayden Litten specifically
         const { data: specificAthletes, error: specificError } = await supabase
           .from("athletes")
-          .select("*")
+          .select(ATHLETE_PUBLIC_COLUMNS)
           .or("name.ilike.%Liam Hickey%,name.ilike.%Hayden Litten%")
           .limit(10)
 
@@ -30,7 +31,7 @@ export default function CommitmentCardsDebugPage() {
           setAthletes(specificAthletes)
         } else {
           // If we couldn't find those specific athletes, get any athletes
-          const { data, error } = await supabase.from("athletes").select("*").order("name").limit(10)
+          const { data, error } = await supabase.from("athletes").select(ATHLETE_PUBLIC_COLUMNS).order("name").limit(10)
 
           if (error) {
             throw error

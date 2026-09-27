@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { supabase } from "@/lib/supabase"
 import { mapAthleteFromDatabase } from "@/lib/utils/athlete-mapper"
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 
 export default function AthleteFormDebugPage({ params }: { params: { id: string } }) {
   const [rawData, setRawData] = useState<any>(null)
@@ -19,7 +20,7 @@ export default function AthleteFormDebugPage({ params }: { params: { id: string 
         setLoading(true)
 
         // Fetch raw data from database
-        const { data, error } = await supabase.from("athletes").select("*").eq("id", id).single()
+        const { data, error } = await supabase.from("athletes").select(ATHLETE_PUBLIC_COLUMNS).eq("id", id).single()
 
         if (error) {
           throw new Error(`Error fetching athlete: ${error.message}`)
