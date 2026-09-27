@@ -208,7 +208,7 @@ export default function ClassOf2027RankingsPage() {
             {[
               ["2027–2029", "Frequently updated class rankings"],
               ["Top 70", "College prospects across all classes"],
-              ["Scouting", "Results, quality wins and competition"],
+              ["Scouting Reports", "Results, quality wins and competition"],
               ["Profile activity", "See engagement with your profile"],
             ].map((claim) => (
               <div key={claim[0]} className="rounded-xl border border-border bg-card p-4 text-left">
