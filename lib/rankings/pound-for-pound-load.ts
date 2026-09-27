@@ -63,6 +63,43 @@ function chunk<T>(items: readonly T[], size: number): T[][] {
   return out
 }
 
+/** Lowercased letters and single spaces, with the generational suffixes dropped. */
+function normaliseName(raw: string): string {
+  return raw
+    .toLowerCase()
+    .replace(/[^a-z ]/g, " ")
+    .replace(/\b(jr|sr|ii|iii|iv)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+/**
+ * One season-log entry, reduced to what a meeting needs.
+ *
+ * The logs store dates as "2/14/2026" rather than ISO, and the engine compares dates as strings
+ * to pick the most recent meeting per pair — so a raw log date would sort "2/14/2026" after
+ * "12/6/2025" and hand the pair to the wrong wrestler. They are converted here.
+ */
+function parseSeasonBouts(raw: unknown): Array<{ opponent: string; won: boolean; date: string | null; event: string | null }> {
+  if (!Array.isArray(raw)) return []
+  const out: Array<{ opponent: string; won: boolean; date: string | null; event: string | null }> = []
+  for (const entry of raw) {
+    const row = entry as Record<string, unknown>
+    const opponent = String(row.opponent ?? "").trim()
+    if (!opponent || /^forfeit$/i.test(opponent)) continue
+    const result = String(row.win_loss ?? "").trim().toUpperCase()
+    if (result !== "W" && result !== "L") continue
+    const parsed = new Date(String(row.date ?? ""))
+    out.push({
+      opponent,
+      won: result === "W",
+      date: Number.isNaN(parsed.getTime()) ? null : parsed.toISOString().slice(0, 10),
+      event: (row.venue as string) ?? null,
+    })
+  }
+  return out
+}
+
 function bestPlace(places: ReadonlyArray<unknown>): number | null {
   const valid = places.map(Number).filter((n) => Number.isFinite(n) && n >= 1)
   return valid.length ? Math.min(...valid) : null
@@ -162,11 +199,12 @@ export async function buildPoundForPoundBoard(options: {
       return out
     })(),
     (async () => {
-      const out: Array<{ athlete_id: string; wins: number | null; losses: number | null }> = []
+      const out: Array<{ athlete_id: string; wins: number | null; losses: number | null; matches?: unknown }> = []
       for (const part of chunk(ids, 100)) {
         const { data } = await supabase
           .from("matches")
-          .select("athlete_id, wins, losses")
+          // `matches` is the season log, read below for head-to-head as well as the record.
+          .select("athlete_id, wins, losses, matches")
           .eq("season", P4P_SEASON_LABEL)
           .in("athlete_id", part)
         out.push(...((data ?? []) as typeof out))
@@ -235,6 +273,39 @@ export async function buildPoundForPoundBoard(options: {
 
   const inPool = new Set(ids)
   const meetings: PoundForPoundMeeting[] = []
+
+  /*
+   * Season logs count as meetings, the same as they do on the class boards.
+   *
+   * This read `other_tournament_bouts` alone, which holds tournament imports — so state finals,
+   * regionals and duals were invisible here while the class engine, which parses the season
+   * logs, could see them. Aidan Szewczyk has beaten Aiden White three times, most recently at
+   * the 2026 7A West Regional, and the class board knows it while this list did not.
+   *
+   * 4,025 meetings between wrestlers we hold live only in those logs. Reading them here rather
+   * than copying them into the bout table keeps one source of truth: the logs are the season as
+   * imported, and the bout table is what specific tournament imports produced.
+   */
+  const poolNameToId = new Map<string, string>()
+  for (const athlete of athletes) {
+    const key = normaliseName(String(athlete.name ?? ""))
+    if (!key) continue
+    // A name shared by two wrestlers in the pool is not safe to resolve, so neither is used.
+    poolNameToId.set(key, poolNameToId.has(key) ? "" : String(athlete.id))
+  }
+  for (const [athleteId, rows] of matchBy) {
+    for (const row of rows) {
+      for (const bout of parseSeasonBouts((row as { matches?: unknown }).matches)) {
+        const opponentId = poolNameToId.get(normaliseName(bout.opponent))
+        if (!opponentId || opponentId === athleteId) continue
+        meetings.push(
+          bout.won
+            ? { winnerId: athleteId, loserId: opponentId, date: bout.date, event: bout.event }
+            : { winnerId: opponentId, loserId: athleteId, date: bout.date, event: bout.event },
+        )
+      }
+    }
+  }
   for (const part of chunk(ids, 40)) {
     const bouts = await fetchAll<{
       athlete_id: string
