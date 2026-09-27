@@ -2,7 +2,6 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { RankedAthleteCard } from "@/components/rankings/ranked-athlete-card"
 import { loadTop50 } from "@/lib/rankings/top-50-view"
-import { P4P_SEASON_LABEL } from "@/lib/rankings/pound-for-pound-load"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { hasPremiumAccess } from "@/lib/ranking-visibility"
@@ -89,9 +88,9 @@ export default async function Top50Page() {
                 * son is 14th in his class and 31st here.
                 */}
               <p className="mx-auto mt-10 max-w-2xl text-center text-xs leading-relaxed text-white/40">
-                Ranked on the {P4P_SEASON_LABEL} season. Within a class this list follows that
-                class&apos;s published board exactly; it only decides how wrestlers in different
-                classes compare.
+                Ranked on national results, in-state results and head-to-head — and what those
+                say about wrestling at the next level. Within a class this list follows that
+                class&apos;s published board exactly.
               </p>
             </>
           )}
