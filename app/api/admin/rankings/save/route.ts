@@ -12,6 +12,7 @@ import { createClient } from "@/lib/supabase/server"
 import { requireAdmin } from "@/lib/admin-auth"
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
 import { syncPublicRankingsTable } from "@/lib/rankings/publish-public-rankings"
+import { notifyRankingsPublished } from "@/lib/rankings-notification"
 
 export const dynamic = "force-dynamic"
 
@@ -127,12 +128,36 @@ export async function POST(request: NextRequest) {
     draft: draft.map((row) => ({ athlete_id: String(row.athlete_id), rank: Number(row.rank) })),
   })
 
+  /**
+   * Tell the phones, from the same press that published.
+   *
+   * The push existed and nothing fired it. It was wired to
+   * /api/admin/prospects/publish-rankings, a route no button calls any more, so every publish
+   * from this board went out in silence — and a publish run straight in SQL, which is how the
+   * last few went, never had a chance to send one.
+   *
+   * Only the published set is named, so the alert can never reveal more than the page it links
+   * to, and the order comes from what was just written rather than from the screen.
+   */
+  const publishedIds = draft
+    .filter((row) => Number(row.rank) <= cap)
+    .sort((a, b) => Number(a.rank) - Number(b.rank))
+    .map((row) => String(row.athlete_id))
+  const { data: namedRows } = await admin.from("athletes").select("id, name").in("id", publishedIds)
+  const nameById = new Map((namedRows ?? []).map((r) => [String(r.id), String(r.name ?? "")]))
+  const rankedNames = publishedIds.map((id) => nameById.get(id) ?? "").filter(Boolean)
+
+  // Never throws, and deliberately not awaited into the failure path: the rankings are public
+  // by now, and failing a publish because a notification failed would be the wrong trade.
+  const push = await notifyRankingsPublished({ graduationYear: year, gender, rankedNames })
+
   return NextResponse.json({
     ok: true,
     action,
     published: Math.min(cap, draft.length),
     publishedAt: now,
     app: appSync,
+    push: push ? { sent: push.sent, failed: push.failed } : { sent: 0, failed: 0, note: "not sent" },
   })
 }
 

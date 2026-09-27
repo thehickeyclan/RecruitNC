@@ -531,7 +531,19 @@ export default function RankingBoardPage() {
         : app?.note
           ? ` App NOT updated — ${app.note}`
           : ""
-      setStatus(`Published the top ${data.published}. Everyone below the cut stays private.${appLine}`)
+      /*
+       * Say whether the phones heard. A push that silently sends to nobody looks identical to a
+       * push that went out, and this one was wired to a route no button calls for long enough
+       * that every publish went out in silence.
+       */
+      const push = data.push as { sent?: number; failed?: number; note?: string } | undefined
+      const pushLine =
+        push?.note || push?.sent == null
+          ? " No push sent."
+          : push.sent > 0
+            ? ` Push sent to ${push.sent} device${push.sent === 1 ? "" : "s"}${push.failed ? `, ${push.failed} failed` : ""}.`
+            : " Push sent to 0 devices — nobody is subscribed to ranking alerts."
+      setStatus(`Published the top ${data.published}. Everyone below the cut stays private.${appLine}${pushLine}`)
       await loadBoard(true)
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not publish.")
