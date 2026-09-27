@@ -273,97 +273,10 @@ export default function ClassOf2027RankingsPage() {
             <p className="mt-4 text-center text-sm text-destructive">{checkoutError}</p>
           )}
 
-          {/*
-            * The product itself. Names are blurred rather than invented: the layout is the real
-            * one, so the shape sells it, while the names stay withheld because they are the
-            * product and because they belong to minors.
-            */}
-          <div className="mt-16 grid gap-4 lg:grid-cols-2">
-            <div className="overflow-hidden rounded-2xl border border-border bg-card">
-              <div className="border-b border-border px-5 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Class rankings · top 30
-                </p>
-              </div>
-              <div className="divide-y divide-border">
-                {[
-                  { rank: 1, chips: ["State champ", "TOC champ", "NHSCA 4th", "45-0"] },
-                  { rank: 2, chips: ["State champ", "TOC champ", "NHSCA 5th", "43-0"] },
-                  { rank: 3, chips: ["State champ", "TOC champ", "37-0"] },
-                  { rank: 4, chips: ["State 2nd", "TOC champ", "49-6"] },
-                ].map((row) => (
-                  <div key={row.rank} className="flex items-start gap-3 px-5 py-3">
-                    <span className="w-5 shrink-0 text-lg font-semibold text-primary">{row.rank}</span>
-                    <div className="min-w-0 flex-1">
-                      <div className="mb-2 h-3.5 w-32 rounded bg-muted-foreground/40 blur-[3px]" />
-                      <div className="flex flex-wrap gap-1">
-                        {row.chips.map((chip) => (
-                          <span
-                            key={chip}
-                            className="rounded bg-secondary px-1.5 py-0.5 text-[11px] font-medium text-secondary-foreground"
-                          >
-                            {chip}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="overflow-hidden rounded-2xl border border-border bg-card">
-              <div className="border-b border-border px-5 py-3">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Scouting report
-                </p>
-              </div>
-              <div className="space-y-3 p-5">
-                {[
-                  { label: "In-season record", widths: ["w-24"] },
-                  { label: "Wins over ranked opponents", widths: ["w-full", "w-4/5", "w-3/5"] },
-                  { label: "Losses to ranked opponents", widths: ["w-3/4", "w-1/2"] },
-                ].map((section) => (
-                  <div key={section.label}>
-                    <p className="text-xs font-semibold text-foreground">{section.label}</p>
-                    <div className="mt-1.5 space-y-1.5">
-                      {section.widths.map((w, i) => (
-                        <div key={i} className={`h-3 ${w} rounded bg-muted-foreground/40 blur-[3px]`} />
-                      ))}
-                    </div>
-                  </div>
-                ))}
-                <div>
-                  <p className="text-xs font-semibold text-foreground">Competed at</p>
-                  <div className="mt-1.5 flex flex-wrap gap-1">
-                    {["NCHSAA", "Tournament of Champions", "NHSCA", "Super 32"].map((event) => (
-                      <span
-                        key={event}
-                        className="rounded bg-secondary px-1.5 py-0.5 text-[11px] text-secondary-foreground"
-                      >
-                        {event}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                {/* The part people assume is for sale, and is not. */}
-                <p className="border-t border-border pt-3 text-[11px] text-muted-foreground">
-                  Contact details, GPA and test scores are private and are not part of a public
-                  subscription.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* The closing statement, not fine print: it is the sentence the whole page argues for. */}
-          <p className="mx-auto mt-12 max-w-2xl text-center text-base text-foreground">
-            The goal is simple: a comprehensive, current resource for identifying and evaluating
-            North Carolina wrestlers with the ability and potential to compete at the next level.
-          </p>
-          <p className="mt-4 text-center text-sm text-muted-foreground">
+          <p className="mt-8 text-center text-sm text-muted-foreground">
             Already a Blue family or subscriber?{" "}
             <Link href="/auth/signin?returnTo=/rankings" className="text-primary underline">Sign in</Link>
-            . Behind all of it: 26 years of NC wrestling history, free to ask Data Dawg about.
+            .
           </p>
         </div>
       </div>
