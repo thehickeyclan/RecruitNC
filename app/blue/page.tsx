@@ -78,7 +78,7 @@ export default function BluePage() {
 
         <div className="mb-10 rounded-xl border-2 border-[#B31B1B] bg-[#B31B1B] px-5 py-4 text-center text-white">
           <p className="font-semibold">
-            All 2026 State Qualifiers: fill out the form below to express interest in Blue.
+            Interested in NC United Blue? Fill out the form below to express interest.
           </p>
           <Link
             href="#state-qualifier"
@@ -374,9 +374,17 @@ export default function BluePage() {
           </section>
 
           <section id="state-qualifier">
-            <h2 className="mb-4 text-2xl font-bold text-[#003366]">State Qualifier Interest & Blue Membership</h2>
+            <h2 className="mb-4 text-2xl font-bold text-[#003366]">Express Interest &amp; Blue Membership</h2>
+            {/*
+              * Deliberately vague about who should apply.
+              *
+              * This named state qualifiers and the weekend they are decided, which reads as an
+              * eligibility rule and stops everybody else asking. Invites go on merit, fit and
+              * capacity - a standard nobody can check themselves against in advance - so the
+              * page should not imply a bar that does not exist.
+              */}
             <p className="mb-6 leading-relaxed text-[#003366]/90">
-              State qualifiers are determined the weekend before States. We will review submissions and extend invites to those who fit the program.
+              We review every submission and extend invites to wrestlers who fit the program.
             </p>
             <div className="flex flex-col md:flex-row md:items-start gap-6 md:gap-8" id="membership">
               <div className="flex-shrink-0 w-full md:w-[280px] overflow-hidden rounded-xl border-2 border-[#D3B574]/50 bg-white shadow-md">

@@ -33,7 +33,7 @@ const STEPS = [
     icon: UserPlus,
     links: [
       { href: "#qualification", label: "Qualification" },
-      { href: "#state-qualifier", label: "State Qualifier Interest" },
+      { href: "#state-qualifier", label: "Express Interest in Blue" },
     ],
   },
 ] as const
