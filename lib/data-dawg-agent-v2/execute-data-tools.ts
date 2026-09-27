@@ -90,9 +90,9 @@ export async function toolPublicRankingsSearch(_args: {
 }) {
   return {
     error:
-      "RecruitNC prospect rankings are for NC United Blue members and verified college coaches. They are on the athlete's profile once signed in, and at /public-rankings. I do not read rankings out here.",
+      "RecruitNC rankings aren’t available through Data Dawg. Sign in or subscribe on the Rankings page.",
     rankings: [] as unknown[],
-    where_to_look: `${RECRUITNC_APP_URL}/public-rankings`,
+    where_to_look: `${RECRUITNC_APP_URL}/rankings`,
   }
 }
 

@@ -11,7 +11,6 @@ import { athleteHasCompletedHighSchoolCareer } from "@/lib/data-dawg-athlete-car
 import { FOUR_TIME_STATE_CHAMPIONS, FOUR_TIME_STATE_CHAMPIONS_COUNT } from "@/lib/four-time-state-champions"
 import { namesMatch } from "@/lib/nhsca-live/names-match"
 import type { NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
-import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import type { TournamentResultForDisplay } from "@/lib/public-profile-data"
 
 export { athleteHasCompletedHighSchoolCareer } from "@/lib/data-dawg-athlete-career-status"
@@ -81,13 +80,10 @@ function hasCareerRecord(w?: number | null, l?: number | null): boolean {
 }
 
 function isOfficialPublishedProspectRank(rank?: number | null, graduationYear?: number | null): rank is number {
-  return (
-    rank != null &&
-    Number.isFinite(rank) &&
-    rank > 0 &&
-    isPublicRankingsYearPublished(graduationYear) &&
-    rank <= getPublicRankingsMax(graduationYear)
-  )
+  // Data Dawg never receives or repeats the paid editorial ranking product.
+  void rank
+  void graduationYear
+  return false
 }
 
 function recordStr(w: number, l: number): string {

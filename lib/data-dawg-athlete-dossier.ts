@@ -8,7 +8,6 @@ import { getAthleteProfileUrl } from "@/lib/athlete-profile-links"
 import { getSchoolPageUrl } from "@/lib/school-links"
 import { athleteHasCompletedHighSchoolCareer } from "@/lib/data-dawg-athlete-career-status"
 import { formatCommitChronologyLine } from "@/lib/data-dawg-college-commit"
-import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { resolveAthleteCollegeCommit } from "@/lib/data-dawg-college-commit"
 import { escapeForIlike } from "@/lib/nchsaa-results"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
@@ -788,14 +787,8 @@ export async function buildAthleteFacts(
         ? `${stats.careerWins}-${stats.careerLosses}`
         : null,
     career_wins_rank: stats.careerWinsRank ?? null,
-    // Only surface a rank from a class we actually publish, and only inside the published
-    // top N — otherwise an old internal number reads as a current public ranking.
-    prospect_rank:
-      stats.prospectRanking != null &&
-      isPublicRankingsYearPublished(stats.graduationYear) &&
-      stats.prospectRanking <= getPublicRankingsMax(stats.graduationYear)
-        ? stats.prospectRanking
-        : null,
+    // Rankings are never included in a Data Dawg dossier. Users must use /rankings.
+    prospect_rank: null,
     recruiting_status: stats.recruitingStatus ?? null,
     college: stats.college ?? null,
     previous_college: stats.previousCollege ?? null,
