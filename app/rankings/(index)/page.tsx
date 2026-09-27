@@ -183,11 +183,13 @@ export default function ClassOf2027RankingsPage() {
               NC United · RecruitNC
             </Badge>
             <h1 className="text-4xl font-light tracking-tight sm:text-5xl">
-              North Carolina wrestling rankings that stay current.
+              College Prospect Rankings
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              Frequently updated Class of 2027–2029 rankings, the Top 70 college prospects across
-              all classes, and scouting reports built for real recruiting decisions.
+              North Carolina wrestling rankings that stay current.
+              <span className="mt-1 block text-base">
+                Classes of 2027–2029, the Top 70 college prospects across all classes, and scouting reports.
+              </span>
             </p>
           </div>
 
