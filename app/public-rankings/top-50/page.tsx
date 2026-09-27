@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { RankedAthleteCard } from "@/components/rankings/ranked-athlete-card"
 import { loadTop50 } from "@/lib/rankings/top-50-view"
+import { P4P_SEASON_LABEL } from "@/lib/rankings/pound-for-pound-load"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { hasPremiumAccess } from "@/lib/ranking-visibility"
@@ -69,7 +70,7 @@ export default async function Top50Page() {
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-white/60">
             The best {board.cap} college prospects in North Carolina, across the classes of 2027,
-            2028 and 2029. Ranked on this season.
+            2028 and 2029.
           </p>
 
           {!board.published ? (
@@ -88,8 +89,9 @@ export default async function Top50Page() {
                 * son is 14th in his class and 31st here.
                 */}
               <p className="mx-auto mt-10 max-w-2xl text-center text-xs leading-relaxed text-white/40">
-                Within a class this list follows that class&apos;s published board exactly. It only
-                decides how wrestlers in different classes compare.
+                Ranked on the {P4P_SEASON_LABEL} season. Within a class this list follows that
+                class&apos;s published board exactly; it only decides how wrestlers in different
+                classes compare.
               </p>
             </>
           )}
