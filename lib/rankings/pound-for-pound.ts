@@ -167,7 +167,7 @@ export type PoundForPoundEntry = PoundForPoundInput & {
 export const CLASS_OVERRIDE_ALERT = 8
 
 /**
- * How many College Ready athletes are published.
+ * How many top prospects are published across the classes.
  *
  * Seventy, because this draws on three class boards at once - a top thirty for 2027, a top
  * thirty for 2028 and a top ten for 2029 - and a shorter cut threw away wrestlers those boards

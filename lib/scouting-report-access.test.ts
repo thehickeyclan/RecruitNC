@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { HUMAN_VERIFIED_METHOD, releasesPersonalData, scoutingAccessTier, scoutingReportAvailable, watermarkLine } from "@/lib/scouting-report-access"
+import { type ScoutingViewer, HUMAN_VERIFIED_METHOD, releasesPersonalData, scoutingAccessTier, scoutingReportAvailable, watermarkLine } from "@/lib/scouting-report-access"
 
 const coach = {
   isCollegeCoach: true,
@@ -91,18 +91,54 @@ describe("what a non-coach never sees on a report", () => {
    * a child rather than a fact about them.
    */
   it("withholds personal data from everyone except an admin or a human-verified coach", () => {
-    expect(releasesPersonalData(scoutingAccessTier({ isAdmin: true }))).toBe(true)
+    const viewer = (over: Partial<ScoutingViewer> = {}): ScoutingViewer => ({
+      isCollegeCoach: false,
+      isAdmin: false,
+      verifiedCoach: false,
+      ...over,
+    })
+    expect(releasesPersonalData(scoutingAccessTier(viewer({ isAdmin: true })))).toBe(true)
     expect(
       releasesPersonalData(
-        scoutingAccessTier({ isCollegeCoach: true, verifiedCoach: true, verifiedMethod: HUMAN_VERIFIED_METHOD }),
+        scoutingAccessTier(
+          viewer({ isCollegeCoach: true, verifiedCoach: true, verifiedMethod: HUMAN_VERIFIED_METHOD }),
+        ),
       ),
     ).toBe(true)
 
     // A paying subscriber, a Blue family, and a coach we have not verified by hand.
-    expect(releasesPersonalData(scoutingAccessTier({}))).toBe(false)
-    expect(releasesPersonalData(scoutingAccessTier({ isCollegeCoach: true, verifiedCoach: false }))).toBe(false)
+    expect(releasesPersonalData(scoutingAccessTier(viewer()))).toBe(false)
+    expect(releasesPersonalData(scoutingAccessTier(viewer({ isCollegeCoach: true })))).toBe(false)
     expect(
-      releasesPersonalData(scoutingAccessTier({ isCollegeCoach: true, verifiedCoach: true, verifiedMethod: "auto" })),
+      releasesPersonalData(
+        scoutingAccessTier(viewer({ isCollegeCoach: true, verifiedCoach: true, verifiedMethod: "auto" })),
+      ),
     ).toBe(false)
+  })
+})
+
+describe("graduated classes have no scouting report", () => {
+  const sept2026 = new Date("2026-09-27T12:00:00Z")
+
+  it("withholds a report from a class that has already graduated", () => {
+    // 2025 and 2026 are wrestling in college; the recruiting decision is made.
+    expect(scoutingReportAvailable({ gender: "Male", graduationyear: 2025 }, sept2026)).toBe(false)
+    expect(scoutingReportAvailable({ gender: "Male", graduationyear: 2026 }, sept2026)).toBe(false)
+  })
+
+  it("keeps it for classes still in high school", () => {
+    for (const year of [2027, 2028, 2029, 2030]) {
+      expect(scoutingReportAvailable({ gender: "Male", graduationyear: year }, sept2026)).toBe(true)
+    }
+  })
+
+  it("moves on its own each summer rather than needing a list", () => {
+    // Before July the current seniors are still in school and still recruitable.
+    expect(scoutingReportAvailable({ gender: "Male", graduationyear: 2027 }, new Date("2027-02-21T12:00:00Z"))).toBe(true)
+    expect(scoutingReportAvailable({ gender: "Male", graduationyear: 2027 }, new Date("2027-08-01T12:00:00Z"))).toBe(false)
+  })
+
+  it("still allows one whose graduation year we do not hold", () => {
+    expect(scoutingReportAvailable({ gender: "Male" }, sept2026)).toBe(true)
   })
 })

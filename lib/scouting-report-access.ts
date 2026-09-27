@@ -78,6 +78,28 @@ export function watermarkLine(viewer: {
  * An athlete with no gender recorded keeps their report: this holds back a group we can
  * identify, and must not widen into everyone we are unsure about.
  */
-export function scoutingReportAvailable(athlete: { gender?: unknown }): boolean {
-  return String(athlete?.gender ?? "").trim().toLowerCase() !== "female"
+export function scoutingReportAvailable(
+  athlete: { gender?: unknown; graduationyear?: unknown; graduationYear?: unknown },
+  now: Date = new Date(),
+): boolean {
+  if (String(athlete?.gender ?? "").trim().toLowerCase() === "female") return false
+
+  /*
+   * A graduated class has no scouting report.
+   *
+   * The report exists to help a college programme decide on somebody they might recruit. Once
+   * a class has graduated that decision is made, and what is left is a page carrying a former
+   * minor's phone number, GPA and test scores for no live purpose. The Classes of 2025 and
+   * 2026 are wrestling in college now.
+   *
+   * The cut-off is derived rather than listed, for the same reason the alumni list's was: a
+   * hard-coded year is right when it is typed and quietly wrong the following summer. A class
+   * graduates in the spring, so from July that year's wrestlers are alumni.
+   */
+  const year = Number(athlete?.graduationyear ?? athlete?.graduationYear)
+  if (Number.isFinite(year)) {
+    const graduated = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1
+    if (year <= graduated) return false
+  }
+  return true
 }

@@ -446,11 +446,10 @@ export default async function HomePage() {
           />
           <div className="rounded-xl border border-rnc-gold/30 bg-rnc-raised p-6 text-center">
             <p className="text-lg font-medium text-white">
-              North Carolina&apos;s top 30 in every class, ranked on results.
+              North Carolina&apos;s top college prospects, ranked on results.
             </p>
             <p className="mx-auto mt-2 max-w-xl text-sm text-white/60">
-              Free for NC United Blue members and verified college coaches. Every wrestler can
-              always see their own ranking.
+              Free for NC United Blue members and verified college coaches.
             </p>
             <Link
               href="/rankings"

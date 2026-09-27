@@ -21,10 +21,15 @@ describe("canSeeProspectRanking", () => {
     expect(canSeeProspectRanking({ isVerifiedCoach: true })).toBe(true)
   })
 
-  it("shows a wrestler their own ranking", () => {
-    // Telling somebody they are ranked and hiding the number from them is worse than not
-    // ranking them.
-    expect(canSeeProspectRanking({ isOwnProfile: true })).toBe(true)
+  it("does not show a wrestler their own ranking on its own", () => {
+    /*
+     * This used to be allowed, on the reasoning that telling somebody they are ranked and
+     * hiding the number is worse than not ranking them. It made the board readable one claimed
+     * account at a time, and gave the product away to the people most likely to pass it on.
+     * A ranked wrestler in a Blue family still sees it - through Blue.
+     */
+    expect(canSeeProspectRanking({ isOwnProfile: true })).toBe(false)
+    expect(canSeeProspectRanking({ isOwnProfile: true, hasSubscription: true })).toBe(true)
   })
 
   it("shows it to an admin", () => {
@@ -77,9 +82,14 @@ describe("one entitlement for everything sold", () => {
     expect(hasPremiumAccess(null)).toBe(false)
   })
 
-  it("does not let owning a profile unlock the whole platform", () => {
-    // A wrestler seeing their own ranking is a separate allowance, in canSeeProspectRanking.
+  it("does not let owning a profile unlock anything", () => {
+    /*
+     * Owning the profile used to grant the ranking. It does not now: that made the board
+     * readable one claimed account at a time, and gave the product away to the people most
+     * likely to pass it on. A ranked wrestler in a Blue family still sees it - through Blue.
+     */
     expect(hasPremiumAccess({ isOwnProfile: true })).toBe(false)
-    expect(canSeeProspectRanking({ isOwnProfile: true })).toBe(true)
+    expect(canSeeProspectRanking({ isOwnProfile: true })).toBe(false)
+    expect(canSeeProspectRanking({ isOwnProfile: true, isBlueMember: true })).toBe(true)
   })
 })

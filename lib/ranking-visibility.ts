@@ -6,10 +6,10 @@
  * the whole board could be reconstructed by walking the roster. A product given away on the
  * profile cannot be sold on the subscription.
  *
- * It stays visible to the people it is for: NC United Blue members, who pay for it; verified
- * college coaches, who are the audience the ranking exists to serve; and admins. A wrestler and
- * their linked parent can always see their own number, because telling somebody they are ranked
- * and then hiding the rank from them is worse than not ranking them.
+ * It stays visible to the people it is for: NC United Blue members, who pay for it; RecruitNC
+ * subscribers, who buy it; verified college coaches, who are the audience the ranking exists to
+ * serve; and admins. Owning the profile is not enough - a ranked wrestler sees their number
+ * through a Blue membership or a subscription, like everybody else.
  *
  * This decides visibility only. Whether a number exists at all — whether the class is published
  * and the wrestler inside the published cut — is a separate question answered before this one.
@@ -59,7 +59,17 @@ export function hasPremiumAccess(viewer: RankingViewer | null | undefined): bool
 
 export function canSeeProspectRanking(viewer: RankingViewer | null | undefined): boolean {
   if (!viewer) return false
-  if (viewer.isOwnProfile) return true
+  /*
+   * A wrestler seeing their own ranking used to be allowed, and is not any more.
+   *
+   * The reasoning was that telling somebody they are ranked and hiding the number is worse
+   * than not ranking them. In practice it made the ranking readable by anyone who claimed a
+   * profile, which is the whole board one account at a time, and it meant the product we sell
+   * was free to the people most motivated to share it.
+   *
+   * A ranked wrestler whose family is in Blue still sees it, as does one whose family
+   * subscribes. What no longer follows is owning the profile.
+   */
   if (viewer.isAdmin) return true
   if (viewer.isVerifiedCoach) return true
   /*

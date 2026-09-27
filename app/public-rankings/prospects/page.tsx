@@ -1,7 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { RankedAthleteCard } from "@/components/rankings/ranked-athlete-card"
-import { loadCollegeReady } from "@/lib/rankings/college-ready-view"
+import { loadTopProspects } from "@/lib/rankings/prospects-view"
 import { P4P_PUBLIC_CAP } from "@/lib/rankings/pound-for-pound"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -12,9 +12,9 @@ import { resolveRankingViewer } from "@/lib/ranking-access"
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "Top 70 College Ready | RecruitNC",
+  title: "Top 70 College Prospects | RecruitNC",
   description:
-    "North Carolina's College Ready athletes — the wrestlers across the classes of 2027, 2028 and 2029 most ready to compete at the next level.",
+    "North Carolina's top college wrestling prospects across the classes of 2027, 2028 and 2029, ranked on this season.",
 }
 
 /**
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
  * prospects in the state are. The engine name stays on the admin board, where it describes
  * what the scoring actually does.
  */
-export default async function CollegeReadyPage() {
+export default async function TopProspectsPage() {
   const { viewer } = await resolveRankingViewer({
     supabase: await createClient(),
     admin: createAdminClient(),
@@ -39,11 +39,11 @@ export default async function CollegeReadyPage() {
             RecruitNC
           </p>
           <h1 className="mt-3 text-3xl font-light uppercase tracking-tight text-white">
-            Top {P4P_PUBLIC_CAP} College Ready
+            Top {P4P_PUBLIC_CAP} College Prospects
           </h1>
           <p className="mt-4 text-sm leading-relaxed text-white/60">
-            Across the classes of 2027, 2028 and 2029. Included with NC United Blue, free for
-            verified college coaches.
+            One list across 2027, 2028 and 2029. Included with NC United Blue and RecruitNC
+            subscriptions, and free for verified college coaches.
           </p>
           <Link
             href="/rankings"
@@ -56,7 +56,7 @@ export default async function CollegeReadyPage() {
     )
   }
 
-  const board = await loadCollegeReady("Male")
+  const board = await loadTopProspects("Male")
 
   return (
     <div className="min-h-screen bg-[#061224]">
@@ -66,16 +66,16 @@ export default async function CollegeReadyPage() {
             RecruitNC · North Carolina prospect rankings
           </p>
           <h1 className="mt-3 text-center text-4xl font-light uppercase tracking-tight text-white sm:text-5xl">
-            Top {board.cap} College Ready
+            Top {board.cap} College Prospects
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-white/60">
-            The {board.cap} wrestlers in North Carolina most ready to compete at the next level,
-            across the classes of 2027, 2028 and 2029.
+            The top college prospects in North Carolina, across the classes of 2027, 2028 and
+            2029 — one list, every class.
           </p>
 
           {!board.published ? (
             <p className="mt-16 text-center text-sm text-white/50">
-              The College Ready list has not been published yet.
+              This list has not been published yet.
             </p>
           ) : (
             <>

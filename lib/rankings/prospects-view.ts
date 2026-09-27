@@ -19,17 +19,17 @@ import { credentialsFrom, type PublicRankedAthlete } from "@/lib/rankings/public
  * moving around lives in `p4p_drafts` and never reaches this page.
  */
 
-export type CollegeReadyAthlete = PublicRankedAthlete
+export type TopProspect = PublicRankedAthlete
 
-export type CollegeReadyBoard = {
+export type TopProspectBoard = {
   published: boolean
   cap: number
   classes: number[]
   publishedAt: string | null
-  athletes: CollegeReadyAthlete[]
+  athletes: TopProspect[]
 }
 
-async function buildCollegeReady(gender: string): Promise<CollegeReadyBoard> {
+async function buildTopProspects(gender: string): Promise<TopProspectBoard> {
   const admin = createAdminClient()
 
   const { data: published } = await admin
@@ -68,7 +68,7 @@ async function buildCollegeReady(gender: string): Promise<CollegeReadyBoard> {
 
   const credentials = await loadAthleteCredentialsBatch(admin, athleteRows)
 
-  const athletes: CollegeReadyAthlete[] = athleteRows
+  const athletes: TopProspect[] = athleteRows
     .map((raw) => ({
       athleteId: String(raw.id),
       rank: rankOf.get(String(raw.id)) ?? Number.MAX_SAFE_INTEGER,
@@ -103,8 +103,8 @@ async function buildCollegeReady(gender: string): Promise<CollegeReadyBoard> {
   }
 }
 
-/** Bump the version whenever `CollegeReadyBoard` changes shape; see the class ranking loader for why. */
-export const loadCollegeReady = unstable_cache(buildCollegeReady, ["public-college-ready", "v1"], {
+/** Bump the version whenever `TopProspectBoard` changes shape; see the class ranking loader for why. */
+export const loadTopProspects = unstable_cache(buildTopProspects, ["public-top-prospects", "v1"], {
   revalidate: 3600,
   tags: ["public-rankings"],
 })
