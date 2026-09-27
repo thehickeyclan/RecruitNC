@@ -32,7 +32,15 @@ export default async function TopProspectsPage() {
     admin: createAdminClient(),
   })
 
-  if (!hasPremiumAccess(viewer) || !PUBLIC_TOP_PROSPECTS_RELEASED) {
+  /*
+   * Entitlement only. The release check is the gate below, which lets an admin preview.
+   *
+   * These two conditions used to be one, so an unreleased list bounced everybody - including
+   * the admin who needed to check it before announcing - and the admin-preview branch under
+   * this block was unreachable. The class boards allow the preview; this page silently did
+   * not, which is precisely the page you cannot verify any other way.
+   */
+  if (!hasPremiumAccess(viewer)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#061224] px-4">
         <div className="max-w-md text-center">
@@ -43,9 +51,7 @@ export default async function TopProspectsPage() {
             Top {P4P_PUBLIC_CAP} College Prospects
           </h1>
           <p className="mt-4 text-sm leading-relaxed text-white/60">
-            {PUBLIC_TOP_PROSPECTS_RELEASED
-              ? "This list requires rankings access."
-              : "This list has not been released yet."}
+            This list requires rankings access.
           </p>
           <Link
             href="/rankings"
