@@ -7,6 +7,7 @@ import { resolveRankingViewer } from "@/lib/ranking-access"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { PUBLISHED_PUBLIC_RANKINGS_YEARS, PUBLIC_TOP_PROSPECTS_RELEASED } from "@/lib/public-rankings-cap"
 
 export const dynamic = "force-dynamic"
 
@@ -41,6 +42,12 @@ export default async function PublicRankingsHomepage() {
   })
   if (!canSeeProspectRanking(viewer)) redirect("/rankings")
 
+  const releasedLinks = rankingLinks.filter(({ href }) => {
+    if (href === "/public-rankings/prospects") return PUBLIC_TOP_PROSPECTS_RELEASED
+    const year = Number(href.split("/").at(-1))
+    return PUBLISHED_PUBLIC_RANKINGS_YEARS.includes(year)
+  })
+
   return (
     <main className="min-h-screen bg-[#0A1628] text-white">
       <section className="border-b border-white/10">
@@ -63,7 +70,7 @@ export default async function PublicRankingsHomepage() {
 
       <section className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
         <div className="grid gap-4 md:grid-cols-3">
-          {rankingLinks.map(({ href, eyebrow, title, description, icon: Icon }) => (
+          {releasedLinks.map(({ href, eyebrow, title, description, icon: Icon }) => (
             <HardLink key={href} href={href} className="group block h-full">
               <Card className="h-full border-white/10 bg-[#13294B] text-white transition hover:-translate-y-0.5 hover:border-[#D3B574]/70">
                 <CardHeader>
@@ -82,6 +89,13 @@ export default async function PublicRankingsHomepage() {
             </HardLink>
           ))}
         </div>
+
+        {releasedLinks.length === 0 ? (
+          <div className="mx-auto max-w-xl rounded-xl border border-white/10 bg-white/[0.03] px-6 py-10 text-center">
+            <p className="text-lg font-semibold text-white">New rankings are coming soon.</p>
+            <p className="mt-2 text-sm text-white/55">We will publish each board after its official release.</p>
+          </div>
+        ) : null}
 
         <p className="mx-auto mt-10 max-w-2xl text-center text-sm leading-relaxed text-white/55">
           Rankings are updated as new results and verified athlete information become available.

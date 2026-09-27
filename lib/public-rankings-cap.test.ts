@@ -9,20 +9,20 @@ import {
 } from "@/lib/public-rankings-cap"
 
 describe("public rankings cap", () => {
-  it("serves a top 30 for each class the site is currently ranking", () => {
-    expect(PUBLISHED_PUBLIC_RANKINGS_YEARS).toEqual([2027, 2028, 2029])
+  it("does not publish any class before the official release", () => {
+    expect(PUBLISHED_PUBLIC_RANKINGS_YEARS).toEqual([])
     expect(PUBLIC_RANKINGS_MAX_BY_YEAR[2026]).toBeUndefined()
-    expect(PUBLIC_RANKINGS_MAX_BY_YEAR[2027]).toBe(30)
-    expect(PUBLIC_RANKINGS_MAX_BY_YEAR[2028]).toBe(30)
-    expect(PUBLIC_RANKINGS_MAX_BY_YEAR[2029]).toBe(10)
-    expect(isPublicRankingsYearPublished(2027)).toBe(true)
-    expect(isPublicRankingsYearPublished(2029)).toBe(true)
+    expect(PUBLIC_RANKINGS_MAX_BY_YEAR[2027]).toBeUndefined()
+    expect(PUBLIC_RANKINGS_MAX_BY_YEAR[2028]).toBeUndefined()
+    expect(PUBLIC_RANKINGS_MAX_BY_YEAR[2029]).toBeUndefined()
+    expect(isPublicRankingsYearPublished(2027)).toBe(false)
+    expect(isPublicRankingsYearPublished(2029)).toBe(false)
     // A graduated class is off the list entirely: it cannot be served at any cap.
     expect(isPublicRankingsYearPublished(2026)).toBe(false)
   })
 
-  it("clamps 'all' and oversized topN to top 30", () => {
-    expect(clampProspectRankingsLimit(2029, null)).toBe(10)
+  it("keeps safe caps available for internal calculations", () => {
+    expect(clampProspectRankingsLimit(2029, null)).toBe(30)
     expect(clampProspectRankingsLimit(2027, null)).toBe(30)
     expect(clampProspectRankingsLimit(2027, 1000)).toBe(30)
     expect(clampProspectRankingsLimit(2027, 10)).toBe(10)

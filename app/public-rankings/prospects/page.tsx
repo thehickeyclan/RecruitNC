@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { hasPremiumAccess } from "@/lib/ranking-visibility"
 import { resolveRankingViewer } from "@/lib/ranking-access"
+import { PUBLIC_TOP_PROSPECTS_RELEASED } from "@/lib/public-rankings-cap"
 
 // Per-viewer: the board is gated, so it cannot be one static document for everybody.
 export const dynamic = "force-dynamic"
@@ -31,7 +32,7 @@ export default async function TopProspectsPage() {
     admin: createAdminClient(),
   })
 
-  if (!hasPremiumAccess(viewer)) {
+  if (!hasPremiumAccess(viewer) || !PUBLIC_TOP_PROSPECTS_RELEASED) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#061224] px-4">
         <div className="max-w-md text-center">
@@ -42,8 +43,9 @@ export default async function TopProspectsPage() {
             Top {P4P_PUBLIC_CAP} College Prospects
           </h1>
           <p className="mt-4 text-sm leading-relaxed text-white/60">
-            One list across 2027, 2028 and 2029. Included with NC United Blue and RecruitNC
-            subscriptions, and free for verified college coaches.
+            {PUBLIC_TOP_PROSPECTS_RELEASED
+              ? "This list requires rankings access."
+              : "This list has not been released yet."}
           </p>
           <Link
             href="/rankings"

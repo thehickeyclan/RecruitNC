@@ -19,12 +19,17 @@ export const DEFAULT_PUBLIC_RANKINGS_CAP = 30
  * A year being listed does not make it visible: nothing shows until `prospect_ranking` is
  * written, which only Publish does.
  */
-export const PUBLIC_RANKINGS_MAX_BY_YEAR: Record<number, number> = {
-  2027: 30,
-  2028: 30,
-  // A top ten for now: the class is a year younger and the evidence thins out quickly below it.
-  2029: 10,
-}
+/**
+ * Classes explicitly released to customers and public-facing ranking surfaces.
+ *
+ * A class must be added here only when Matt releases it. Saving ranks in the admin board is not
+ * publication. Keeping this empty prevents draft boards from leaking through class pages, APIs,
+ * profiles, schools, clubs or Data Dawg before the announcement.
+ */
+export const PUBLIC_RANKINGS_MAX_BY_YEAR: Record<number, number> = {}
+
+/** The cross-class Top 70 is released separately from the class boards. */
+export const PUBLIC_TOP_PROSPECTS_RELEASED = false
 
 export const PUBLISHED_PUBLIC_RANKINGS_YEARS = Object.keys(PUBLIC_RANKINGS_MAX_BY_YEAR)
   .map(Number)
