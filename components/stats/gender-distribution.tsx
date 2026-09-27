@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts"
 import { supabase } from "@/lib/supabase"
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 
 export function GenderDistribution() {
   const [data, setData] = useState([
@@ -17,13 +18,13 @@ export function GenderDistribution() {
         // Get men count
         const { count: menCount, error: menError } = await supabase
           .from("athletes")
-          .select("*", { count: "exact", head: true })
+          .select(ATHLETE_PUBLIC_COLUMNS, { count: "exact", head: true })
           .eq("gender", "male")
 
         // Get women count
         const { count: womenCount, error: womenError } = await supabase
           .from("athletes")
-          .select("*", { count: "exact", head: true })
+          .select(ATHLETE_PUBLIC_COLUMNS, { count: "exact", head: true })
           .eq("gender", "female")
 
         if (menError || womenError) {
