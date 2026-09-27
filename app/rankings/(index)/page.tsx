@@ -149,19 +149,21 @@ export default function ClassOf2027RankingsPage() {
               North Carolina Prospect Rankings
             </h1>
             <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
-              See what college coaches see.
+              Built to help college programs evaluate North Carolina wrestlers and their readiness
+              to compete at the next level.
             </p>
           </div>
 
           {/* Four claims, one line each. The detail belongs in the product, not the pitch. */}
           <div className="mx-auto mt-10 grid max-w-3xl gap-x-8 gap-y-3 text-sm text-foreground sm:grid-cols-2">
             {[
-              "41,000+ bouts scored, weighted to this season",
-              "NHSCA, Super 32, Fargo and Journeymen all count",
-              "Head-to-head inside 12 months settles it",
-              "Every win graded by who it was over",
-              "NHSCA scored by grade division, not one flat podium",
+              "National results, individual and dual competition",
+              "Strength of competition, and quality wins",
+              "Head-to-head results",
+              "In-season performance",
+              "How consistently a wrestler seeks out the best",
               "Top 50 college prospects across 2027, 2028 and 2029",
+              "College commitment alerts, pushed to your phone",
             ].map((claim) => (
               <div key={claim} className="flex items-start gap-2">
                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -169,6 +171,16 @@ export default function ClassOf2027RankingsPage() {
               </div>
             ))}
           </div>
+
+          <p className="mx-auto mt-8 max-w-2xl text-base text-foreground">
+            Big wins matter. Strength of schedule matters. Competing against the best matters.
+          </p>
+          <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground">
+            Rankings are paired with detailed scouting reports — major tournament results,
+            significant wins, GPA, academic interests and intended majors, and contact details for
+            verified college coaches. Both update as new results come in, and every North Carolina
+            college commitment reaches your phone.
+          </p>
 
           {/* Three ways to have it, and one of them is free — said before the price, not after. */}
           <div className="mt-12 grid gap-4 md:grid-cols-3">

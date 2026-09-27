@@ -69,7 +69,7 @@ export default async function Top50Page() {
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-white/60">
             The best {board.cap} college prospects in North Carolina, across the classes of 2027,
-            2028 and 2029.
+            2028 and 2029 — assessed on their readiness to compete at the next level.
           </p>
 
           {!board.published ? (
@@ -88,8 +88,9 @@ export default async function Top50Page() {
                 * son is 14th in his class and 31st here.
                 */}
               <p className="mx-auto mt-10 max-w-2xl text-center text-xs leading-relaxed text-white/40">
-                Ranked on national results, in-state results and head-to-head — and what those
-                say about wrestling at the next level. Within a class this list follows that
+                Ranked on national results in individual and dual competition, strength of
+                competition, quality wins, head-to-head results, in-season performance, and how
+                consistently a wrestler seeks out the best. Within a class this list follows that
                 class&apos;s published board exactly.
               </p>
             </>
