@@ -6,12 +6,31 @@ import {
   RANKINGS_BODY,
   RANKINGS_PANEL,
 } from "@/lib/public-rankings-theme"
-import { redirectIfSignedOut } from "@/lib/server-auth-redirect"
+import { redirect } from "next/navigation"
+import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { canSeeProspectRanking } from "@/lib/ranking-visibility"
+import { resolveRankingViewer } from "@/lib/ranking-access"
 
 export const dynamic = "force-dynamic"
 
 export default async function PublicRankingsHomepage() {
-  await redirectIfSignedOut("/public-rankings")
+  /*
+   * Anyone who cannot read the rankings gets the page that sells them.
+   *
+   * This called redirectIfSignedOut, so a signed-out visitor landed on a login form — and the
+   * nav's "Rankings" link points here, not at /rankings, so the sales page was unreachable from
+   * the only link most people use. A login wall asks a stranger to open an account before
+   * learning what the thing is or what it costs.
+   *
+   * Everyone without access now lands on /rankings, which explains the rankings, shows the
+   * price, and offers sign-in for the Blue families and coaches who already have it.
+   */
+  const { viewer } = await resolveRankingViewer({
+    supabase: await createClient(),
+    admin: createAdminClient(),
+  })
+  if (!canSeeProspectRanking(viewer)) redirect("/rankings")
 
   return (
     <main className="min-h-screen bg-[#0A1628] text-white">

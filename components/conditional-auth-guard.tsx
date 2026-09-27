@@ -52,6 +52,12 @@ export function ConditionalAuthGuard({
      * in the payload. Same arrangement as /prospects directly above.
      */
     "/rankings",
+    /*
+     * The nav's "Rankings" link points here, and the page itself decides: it sends anybody
+     * without access to /rankings to be sold them. The client guard bouncing them to a login
+     * form first defeats that entirely.
+     */
+    "/public-rankings",
     "/schools",
     // A school's wrestling record is public history, same as /schools and /nchsaa — and Data
     // Dawg, which is open to everyone, links school names straight to /high-schools/[slug].

@@ -300,6 +300,20 @@ export default function ClassOf2027RankingsPage() {
             </div>
           </div>
 
+          {/*
+            * Said next to the price, because a large share of the people who land here already
+            * have access — they followed the nav's "Rankings" link, which sends anybody without
+            * an entitlement to this page. Leaving sign-in to the footnote makes a Blue family
+            * read a sales pitch and conclude they have to pay again.
+            */}
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            Already a Blue family, a subscriber, or a verified college coach?{" "}
+            <Link href="/auth/signin?returnTo=/public-rankings" className="text-primary underline">
+              Sign in
+            </Link>{" "}
+            to see the rankings.
+          </p>
+
           {checkoutError && (
             <p className="mt-4 text-center text-sm text-destructive">{checkoutError}</p>
           )}
