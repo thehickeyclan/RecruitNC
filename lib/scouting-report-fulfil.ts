@@ -10,6 +10,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { isSubscriptionKind } from "@/lib/scouting-report-entitlement"
 import {
   notifyStaffSubscriptionCancelled,
   notifyStaffSubscriptionStarted,
@@ -53,7 +54,7 @@ export async function fulfilScoutingReportCheckout(
 
   const kind = String(params.metadata.kind ?? "single")
 
-  if (kind === "subscription") {
+  if (isSubscriptionKind(kind)) {
     const { error } = await supabase.from("recruitnc_subscriptions").upsert(
       {
         user_id: userId,

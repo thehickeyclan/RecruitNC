@@ -16,6 +16,17 @@ function fakeSupabase() {
             calls.push({ table, row, onConflict: opts?.onConflict })
             return Promise.resolve({ error: null })
           },
+          select() {
+            return {
+              eq() {
+                return {
+                  maybeSingle() {
+                    return Promise.resolve({ data: { email: "buyer@example.com" }, error: null })
+                  },
+                }
+              },
+            }
+          },
         }
       },
     } as never,
@@ -72,6 +83,19 @@ describe("fulfilScoutingReportCheckout", () => {
     expect(calls[0]!.table).toBe("recruitnc_subscriptions")
     expect(calls[0]!.onConflict).toBe("user_id")
     expect(calls[0]!.row).toMatchObject({ user_id: "u1", status: "active", stripe_subscription_id: "sub_1" })
+  })
+
+  it("records an annual subscription against the user, not as a single report", async () => {
+    const { client, calls } = fakeSupabase()
+    const result = await fulfilScoutingReportCheckout(client, {
+      ...base,
+      amountTotal: 7900,
+      metadata: { source: "scouting_report", kind: "subscription_annual", user_id: "u1" },
+      stripeSubscriptionId: "sub_annual",
+    })
+    expect(result).toEqual({ ok: true, granted: "subscription" })
+    expect(calls[0]!.table).toBe("recruitnc_subscriptions")
+    expect(calls[0]!.row).toMatchObject({ user_id: "u1", status: "active", stripe_subscription_id: "sub_annual" })
   })
 
   it("fails loudly when the money cannot be attributed", async () => {

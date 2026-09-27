@@ -89,8 +89,8 @@ export async function resolveRankingViewer(options: {
 
 /** What a locked surface says, and where it sends them. */
 export const RANKING_PAYWALL = {
-  error: "Rankings are for NC United Blue members and verified college coaches.",
-  upgradeHref: "/blue",
+  error: "Rankings require NC United Blue, a RecruitNC subscription, or verified college-coach access.",
+  upgradeHref: "/rankings",
 } as const
 
 export { normalizeRole }
