@@ -283,11 +283,6 @@ export default function ClassOf2027RankingsPage() {
             </div>
           </div>
 
-          <p className="mx-auto mt-6 max-w-3xl text-center text-xs leading-relaxed text-muted-foreground">
-            Personal contact details, GPA, test scores and academic information are never included
-            with a public subscription.
-          </p>
-
           {checkoutError && (
             <p className="mt-4 text-center text-sm text-destructive">{checkoutError}</p>
           )}
