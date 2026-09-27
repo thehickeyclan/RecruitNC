@@ -176,11 +176,29 @@ export default function ClassOf2027RankingsPage() {
             Big wins matter. Strength of schedule matters. Competing against the best matters.
           </p>
           <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground">
-            Rankings are paired with detailed scouting reports — major tournament results,
-            significant wins, GPA, academic interests and intended majors, and contact details for
-            verified college coaches. Both update as new results come in, and every North Carolina
-            college commitment reaches your phone.
+            Anyone can subscribe. You get the rankings, the Top 50, and scouting reports — major
+            tournament results, significant wins and strength of competition — updated as new
+            results come in, with every North Carolina college commitment pushed to your phone.
           </p>
+          {/*
+            * The one thing a subscription does not buy, said plainly and in its own panel.
+            *
+            * The line before this listed GPA and contact details next to what a subscriber gets
+            * and qualified it at the end, which is the kind of sentence people read the first
+            * half of. These are minors' personal details; scoutingAccessTier releases them only
+            * to an admin or a human-verified college coach, so no amount of paying reaches them
+            * and the page should not leave that in any doubt.
+            */}
+          <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-border bg-card p-4">
+            <p className="text-sm font-semibold text-foreground">
+              What a subscription never includes
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Athlete contact details, GPA, SAT and ACT scores, and academic information are shown
+              only to college coaches we have verified by hand. They are not part of any
+              subscription, at any price, and they are never sold.
+            </p>
+          </div>
 
           {/* Three ways to have it, and one of them is free — said before the price, not after. */}
           <div className="mt-12 grid gap-4 md:grid-cols-3">
@@ -318,7 +336,8 @@ export default function ClassOf2027RankingsPage() {
                 </div>
                 {/* The part people assume is for sale, and is not. */}
                 <p className="border-t border-border pt-3 text-[11px] text-muted-foreground">
-                  Contact details and academics go to verified college coaches only — never sold.
+                  Contact details, GPA and test scores: verified college coaches only. Not part of
+                  any subscription, at any price.
                 </p>
               </div>
             </div>
