@@ -373,7 +373,9 @@ export default function BluePage() {
             </p>
           </section>
 
+          {/* `interest` is linked from the rankings paywall; keep it even if the heading changes. */}
           <section id="state-qualifier">
+            <span id="interest" className="block scroll-mt-24" aria-hidden="true" />
             <h2 className="mb-4 text-2xl font-bold text-[#003366]">State Qualifier Interest & Blue Membership</h2>
             <p className="mb-6 leading-relaxed text-[#003366]/90">
               State qualifiers are determined the weekend before States. We will review submissions and extend invites to those who fit the program.

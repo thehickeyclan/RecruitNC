@@ -246,12 +246,19 @@ export default function ClassOf2027RankingsPage() {
               <p className="mt-1 text-sm text-muted-foreground">
                 Nothing further to buy — everything on this page is already yours.
               </p>
+              {/*
+                * Straight to the interest form, not the top of the page.
+                *
+                * Blue is invitation only and expressing interest is the only way in, so the
+                * button does that. The page above the form is still there to read for anyone
+                * who wants it, and the anchor means they land on the thing they came to do.
+                */}
               <Button
                 asChild
                 variant="outline"
                 className="mt-6 w-full border-border bg-transparent text-foreground hover:bg-accent"
               >
-                <Link href="/blue">About NC United Blue</Link>
+                <Link href="/blue#interest">Interested in Blue?</Link>
               </Button>
             </div>
 
