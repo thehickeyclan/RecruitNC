@@ -13,7 +13,23 @@ export type BlueAlumnus = {
   division: string
 }
 
-const ALUMNI_CUTOFF_YEAR = 2025
+/**
+ * The newest class that counts as alumni, derived rather than typed.
+ *
+ * This was `2025`, hardcoded. The Class of 2026 graduated in the spring and by September were
+ * wrestling in college, and the Blue alumni list still did not know they existed — the same
+ * shape of bug as every other date written as a constant: correct the year it was written and
+ * quietly wrong from the following summer.
+ *
+ * A class graduates in the spring of its graduation year, so from July onwards that year's
+ * wrestlers are alumni. Before July the current seniors are still in school and the cutoff is
+ * the year before.
+ */
+export function alumniCutoffYear(now: Date = new Date()): number {
+  const year = now.getFullYear()
+  // getMonth() is zero-based: 6 is July.
+  return now.getMonth() >= 6 ? year : year - 1
+}
 
 export async function getBlueAlumni(): Promise<BlueAlumnus[]> {
   try {
@@ -22,7 +38,7 @@ export async function getBlueAlumni(): Promise<BlueAlumnus[]> {
     const { data, error } = await supabase
       .from("athletes")
       .select("id, name, graduationyear, highschool, college, college_id, ncUnitedTeam")
-      .lte("graduationyear", ALUMNI_CUTOFF_YEAR)
+      .lte("graduationyear", alumniCutoffYear())
       .gte("graduationyear", CURRENT_YEAR - 20)
       .order("graduationyear", { ascending: false })
       .order("name", { ascending: true })
