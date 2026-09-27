@@ -83,3 +83,26 @@ describe("scoutingReportAvailable", () => {
     expect(scoutingReportAvailable({})).toBe(true)
   })
 })
+
+describe("what a non-coach never sees on a report", () => {
+  /*
+   * The rule, pinned: outside admins and verified college coaches, nobody reaches a wrestler's
+   * cell, email, GPA, SAT, ACT, intended major - or our star rating, which is an assessment of
+   * a child rather than a fact about them.
+   */
+  it("withholds personal data from everyone except an admin or a human-verified coach", () => {
+    expect(releasesPersonalData(scoutingAccessTier({ isAdmin: true }))).toBe(true)
+    expect(
+      releasesPersonalData(
+        scoutingAccessTier({ isCollegeCoach: true, verifiedCoach: true, verifiedMethod: HUMAN_VERIFIED_METHOD }),
+      ),
+    ).toBe(true)
+
+    // A paying subscriber, a Blue family, and a coach we have not verified by hand.
+    expect(releasesPersonalData(scoutingAccessTier({}))).toBe(false)
+    expect(releasesPersonalData(scoutingAccessTier({ isCollegeCoach: true, verifiedCoach: false }))).toBe(false)
+    expect(
+      releasesPersonalData(scoutingAccessTier({ isCollegeCoach: true, verifiedCoach: true, verifiedMethod: "auto" })),
+    ).toBe(false)
+  })
+})

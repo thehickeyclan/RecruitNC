@@ -65,6 +65,7 @@ export type EntitlementReason =
   | "admin"
   | "college_coach"
   | "own_profile"
+  | "blue_member"
   | "subscription"
   | "purchased"
   | "none"
@@ -85,6 +86,14 @@ export type EntitlementInput = {
   isCollegeCoach: boolean
   /** The viewer owns this profile, or is linked to it as a parent. */
   isOwnProfile: boolean
+  /**
+   * An NC United Blue membership on this account.
+   *
+   * Checked because it was not, and the platform sells Blue as including everything. A Blue
+   * family pays more than a subscriber and was the only group being told to buy a report they
+   * had already paid for.
+   */
+  isBlueMember: boolean
   hasActiveSubscription: boolean
   hasPurchasedThisAthlete: boolean
 }
@@ -114,6 +123,7 @@ export function resolveEntitlement(input: EntitlementInput): ScoutingEntitlement
    */
   if (input.isOwnProfile) return { canAccess: true, reason: "own_profile", purchasable: false }
 
+  if (input.isBlueMember) return { canAccess: true, reason: "blue_member", purchasable: false }
   if (input.hasActiveSubscription) return { canAccess: true, reason: "subscription", purchasable: false }
   if (input.hasPurchasedThisAthlete) return { canAccess: true, reason: "purchased", purchasable: false }
 

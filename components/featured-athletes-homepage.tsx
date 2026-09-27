@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import Image from "next/image"
 import { supabase } from "@/lib/supabase"
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 
 interface Athlete {
   id: string
@@ -34,7 +35,7 @@ export function FeaturedAthletesHomepage({ yearFilter }: FeaturedAthletesProps) 
         // Get specific featured athletes based on year filter
         let query = supabase
           .from("athletes")
-          .select("*")
+          .select(ATHLETE_PUBLIC_COLUMNS)
           .not("college", "is", null)
           .order("commitmentdate", { ascending: false })
 

@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import { normalizeSchoolNameForSearch, createSchoolSearchPatterns } from "@/lib/school-normalization"
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 
 interface AthleteResult {
   id: string
@@ -566,7 +567,7 @@ export default function SchoolsPage() {
 
       let commitsQuery = supabase
         .from("athletes")
-        .select("*")
+        .select(ATHLETE_PUBLIC_COLUMNS)
         .or("recruiting_status.eq.Committed,recruiting_status.eq.College Athlete")
         .order("graduationyear", { ascending: false })
 
@@ -635,7 +636,12 @@ export default function SchoolsPage() {
       setSchoolDetails({
         nhsca: nhscaData || [],
         nchsaa: nchsaaData || [],
-        commits: commitsData || [],
+        /*
+         * Cast because the column list is now a shared constant rather than a literal, and
+         * PostgREST's types infer the row shape from a literal only. The alternative was
+         * select("*"), which is what handed a minor's phone number and GPA to the browser.
+         */
+        commits: (commitsData as unknown as AthleteResult[]) || [],
         mostOutstanding: mostOutstandingData || [],
       })
       setSelectedSchool(schoolName)

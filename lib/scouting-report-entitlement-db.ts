@@ -90,6 +90,7 @@ export async function loadScoutingEntitlement(
       isAdmin: params.isAdmin,
       isCollegeCoach: params.isCollegeCoach,
       isOwnProfile: false,
+      isBlueMember: false,
       hasActiveSubscription: false,
       hasPurchasedThisAthlete: false,
     })
@@ -102,13 +103,15 @@ export async function loadScoutingEntitlement(
       isAdmin: params.isAdmin,
       isCollegeCoach: params.isCollegeCoach,
       isOwnProfile: false,
+      isBlueMember: false,
       hasActiveSubscription: false,
       hasPurchasedThisAthlete: false,
     })
   }
 
-  const [own, subscribed, purchased] = await Promise.all([
+  const [own, blue, subscribed, purchased] = await Promise.all([
     isOwnAthlete(supabase, params.userId, params.athleteId),
+    hasBlueMembership(supabase, params.userId),
     hasActiveSubscription(supabase, params.userId),
     hasPurchasedReport(supabase, params.userId, params.athleteId),
   ])
@@ -119,7 +122,29 @@ export async function loadScoutingEntitlement(
     isAdmin: false,
     isCollegeCoach: false,
     isOwnProfile: own,
+    isBlueMember: blue,
     hasActiveSubscription: subscribed,
     hasPurchasedThisAthlete: purchased,
   })
+}
+
+
+/**
+ * A Blue membership paid by this account.
+ *
+ * Read from `payer_user_id`, which is how a parent qualifies: they are the account that pays,
+ * often for a child with no account of their own. `past_due` counts, the same as it does for
+ * the rankings - a card that failed this morning is a billing problem, and locking a family
+ * out of what they pay for is the wrong way to collect.
+ */
+export async function hasBlueMembership(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("blue_memberships")
+    .select("status")
+    .eq("payer_user_id", userId)
+    .in("status", ["active", "trialing", "past_due"])
+  return (data ?? []).length > 0
 }

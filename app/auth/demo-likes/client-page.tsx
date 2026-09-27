@@ -5,6 +5,7 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { LikeButton } from "@/components/like-button"
 import { useAuth } from "@/contexts/auth-context"
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 
 export default function DemoLikesClient() {
   const { user, loading: authLoading } = useAuth()
@@ -15,7 +16,7 @@ export default function DemoLikesClient() {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true)
-      const { data: athletes } = await supabase.from("athletes").select("*").order("name").limit(10)
+      const { data: athletes } = await supabase.from("athletes").select(ATHLETE_PUBLIC_COLUMNS).order("name").limit(10)
       setAthletes(athletes || [])
       setLoading(false)
     }

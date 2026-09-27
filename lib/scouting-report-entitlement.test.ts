@@ -13,6 +13,7 @@ const base: EntitlementInput = {
   isAdmin: false,
   isCollegeCoach: false,
   isOwnProfile: false,
+  isBlueMember: false,
   hasActiveSubscription: false,
   hasPurchasedThisAthlete: false,
 }

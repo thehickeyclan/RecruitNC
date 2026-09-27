@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase"
 import { ProfessionalCommitmentCard } from "./professional-commitment-card"
 import type { Athlete } from "@/types/athlete"
 import { normalizeAthlete } from "@/lib/professional-athlete"
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 
 export function FeaturedTwoTwentySixAthletes() {
   const [athletes, setAthletes] = useState<Athlete[]>([])
@@ -19,7 +20,7 @@ export function FeaturedTwoTwentySixAthletes() {
         // Get Bentley Sly and Lorenzo Alston specifically
         const { data, error } = await supabase
           .from("athletes")
-          .select("*")
+          .select(ATHLETE_PUBLIC_COLUMNS)
           .in("name", ["Bentley Sly", "Lorenzo Alston"])
           .limit(3)
 

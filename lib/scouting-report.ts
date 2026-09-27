@@ -507,8 +507,16 @@ export function mapAcademics(
     gpa: personal ? text(athlete.academic_gpa) : null,
     sat: personal ? text(athlete.academic_sat) : null,
     act: personal ? text(athlete.academic_act) : null,
-    // Intended major is what a wrestler puts on a recruiting profile to be found.
-    academicInterest: text(athlete.academic_interest),
+    /*
+     * Coaches only, like the rest of it.
+     *
+     * This was released at both tiers on the reasoning that an intended major is what a
+     * wrestler puts on a recruiting profile in order to be found. True, but the people it is
+     * meant to be found by are college programmes, and "academic information" means all of it -
+     * a subscriber who is not a coach has no business reading what somebody else's child
+     * intends to study.
+     */
+    academicInterest: personal ? text(athlete.academic_interest) : null,
     academicSummary: personal ? text(athlete.academic_summary) : null,
   }
 }
@@ -638,9 +646,17 @@ export async function buildScoutingReport(
     }),
     prospectRanking: ranking,
     nationalRankings: nationalRankingHistory(rankings),
-    // Built from data already in hand — the bundle, the season's bouts and the rankings just
-    // loaded — so the star costs the report no extra queries.
-    starRating: isRatedAthlete({ gender: athlete.gender as string, graduationYear: gradYear })
+    /*
+     * Coaches and admins only, like the personal details.
+     *
+     * The star is our assessment of a wrestler, not a fact about them, and it was going out at
+     * both tiers. A parent reading a three-star verdict on somebody else's son is a different
+     * product from a coach reading one, and it is not the product being sold — the intelligence
+     * tier shows what a wrestler did, not what we think of them.
+     *
+     * Built from data already in hand, so withholding it costs the report nothing either way.
+     */
+    starRating: personal && isRatedAthlete({ gender: athlete.gender as string, graduationYear: gradYear })
       ? applyStarOverride(
           rateAthlete({
           exposure: summarizeNationalExposure(nationalEventRows(bundle as never)),
