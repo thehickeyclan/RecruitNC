@@ -104,6 +104,32 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `${failed.length} athletes failed to publish.` }, { status: 500 })
   }
 
+  /*
+   * Everyone outside the published cut loses their rank, whether or not they are on the draft.
+   *
+   * Publishing only ever wrote the draft rows, so a wrestler who had been published before and
+   * later dropped off the board kept the number they were last given. The class pages hid them,
+   * because those filter on the cap - but the rank stayed on the athlete's own profile, so the
+   * Class of 2029 had fourteen wrestlers carrying a ranking for a published top ten, and 2027
+   * had thirty-two for a top thirty.
+   *
+   * Clearing by exclusion rather than by draft membership is what makes "publish" mean the page
+   * shows exactly this and nothing else.
+   */
+  const publishedIdList = draft
+    .filter((row) => Number(row.rank) <= cap)
+    .map((row) => String(row.athlete_id))
+  const { error: clearError } = await admin
+    .from("athletes")
+    .update({ prospect_ranking: null, updated_at: now })
+    .eq("graduationyear", year)
+    .ilike("gender", gender)
+    .not("prospect_ranking", "is", null)
+    .not("id", "in", `(${publishedIdList.join(",")})`)
+  if (clearError) {
+    console.error("[rankings-save] clearing ranks outside the cut failed", clearError)
+  }
+
   await admin
     .from("ranking_editions")
     .upsert({ class_year: year, gender, published_at: now, published_by: userId }, { onConflict: "class_year,gender" })
