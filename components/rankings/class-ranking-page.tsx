@@ -1,4 +1,9 @@
+import Link from "next/link"
 import { RankedAthleteCard } from "@/components/rankings/ranked-athlete-card"
+import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { canSeeProspectRanking } from "@/lib/ranking-visibility"
+import { resolveRankingViewer } from "@/lib/ranking-access"
 import { loadPublicClassRanking } from "@/lib/rankings/public-rankings-view"
 import { PUBLISHED_PUBLIC_RANKINGS_YEARS } from "@/lib/public-rankings-cap"
 
@@ -10,6 +15,48 @@ import { PUBLISHED_PUBLIC_RANKINGS_YEARS } from "@/lib/public-rankings-cap"
  * states, different ways of saying the same thing.
  */
 export async function ClassRankingPage({ year }: { year: number }) {
+  /*
+   * Gated here, server side, because nothing else was gating it.
+   *
+   * These pages were statically rendered with no auth check at all. The route was missing from
+   * the public list in ConditionalAuthGuard, which sounds like protection and is not: that
+   * guard is a client component, so it redirects a browser after hydration and does nothing to
+   * a fetch. A signed-out `curl` of /public-rankings/2027 returned the entire published board —
+   * Worrick, McNair, Tye Johnson, Kostoff, Lopez — as plain HTML, cached for an hour and
+   * crawlable.
+   *
+   * The whole board is the product, so the check has to happen before the names are rendered,
+   * not after they have been sent.
+   */
+  const { viewer } = await resolveRankingViewer({
+    supabase: await createClient(),
+    admin: createAdminClient(),
+  })
+  if (!canSeeProspectRanking(viewer)) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#061224] px-4">
+        <div className="max-w-md text-center">
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#CC0000]">
+            RecruitNC · North Carolina prospect rankings
+          </p>
+          <h1 className="mt-3 text-3xl font-light uppercase tracking-tight text-white">
+            Class of {year}
+          </h1>
+          <p className="mt-4 text-sm leading-relaxed text-white/60">
+            The published rankings are for NC United Blue members, verified college coaches and
+            RecruitNC subscribers.
+          </p>
+          <Link
+            href="/rankings"
+            className="mt-6 inline-block rounded-lg bg-[#d6b75d] px-5 py-2.5 text-sm font-semibold text-[#061224] hover:bg-[#c5a84d]"
+          >
+            See what is included
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
   const ranking = await loadPublicClassRanking(year)
 
   return (

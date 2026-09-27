@@ -16,11 +16,9 @@ import { PUBLISHED_PUBLIC_RANKINGS_YEARS } from "@/lib/public-rankings-cap"
 import { StoreProductPromotion } from "@/components/store-product-promotion"
 import { HomeNewsHighlightsCarousel } from "@/components/home-news-highlights-carousel"
 import {
-  loadFeaturedRankings,
   loadFeaturedStoreProducts,
   loadCommitCountsByClass,
   loadLatestCommits,
-  type HomeRankedProspect,
 } from "@/lib/home-data"
 import { TOC_2026_AWARDS, TOC_FLO_URL, TOC_GOFAN_TICKETS_URL } from "@/lib/toc/constants"
 import { tocEventIsOver, tocTicketsOnSale } from "@/lib/toc/ticket-sale"
@@ -63,45 +61,6 @@ function StatCard({ value, label, tone }: { value: number; label: string; tone: 
   )
 }
 
-function RankingCard({ athlete }: { athlete: HomeRankedProspect }) {
-  return (
-    <Link href={`/view-profile?id=${encodeURIComponent(athlete.id)}`} className="group block">
-      <div className="flex items-center gap-4 rounded-xl border border-rnc-line bg-rnc-surface p-4 transition-colors hover:border-rnc-gold/40">
-        {athlete.photourl ? (
-          <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg ring-1 ring-rnc-gold/30">
-            <Image
-              src={athlete.photourl}
-              alt=""
-              fill
-              sizes="56px"
-              className="object-cover object-top"
-            />
-          </div>
-        ) : (
-          <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-lg bg-rnc-raised ring-1 ring-rnc-gold/30">
-            <span className="text-lg font-bold text-white/50">{athlete.name?.charAt(0)}</span>
-          </div>
-        )}
-
-        <div className="min-w-0 flex-1">
-          <div className="mb-0.5 flex items-center gap-2">
-            {athlete.prospect_ranking != null && (
-              <span className="flex-shrink-0 rounded bg-rnc-gold px-1.5 py-0.5 text-xs font-bold tabular-nums text-rnc-ink">
-                #{athlete.prospect_ranking}
-              </span>
-            )}
-            <h3 className="truncate font-semibold text-white">{athlete.name}</h3>
-          </div>
-          <p className="truncate text-sm text-white/60">{athlete.highschool}</p>
-          {athlete.weightclass && <p className="text-xs text-rnc-gold">{athlete.weightclass} lbs</p>}
-        </div>
-
-        <ArrowRight className="h-5 w-5 flex-shrink-0 text-white/25 transition-transform group-hover:translate-x-0.5 group-hover:text-rnc-gold" />
-      </div>
-    </Link>
-  )
-}
-
 function SectionHeader({
   title,
   href,
@@ -132,14 +91,23 @@ function SectionHeader({
 export default async function HomePage() {
   // One parallel server-side load instead of six client round-trips. Each loader degrades to
   // an empty result rather than throwing, so a slow table can't take down the front door.
-  const [commitsByClass, rankings, latestCommitsRaw, storeProducts] = await Promise.all([
+  const [commitsByClass, latestCommitsRaw, storeProducts] = await Promise.all([
     loadCommitCountsByClass(STATS_CLASS_YEARS),
-    loadFeaturedRankings([...RANKING_CLASSES], 3),
     loadLatestCommits(3),
     loadFeaturedStoreProducts(6),
   ])
 
-  const latestCommits = normalizeAthleteList(latestCommitsRaw)
+  /*
+   * Commitment cards carry the athlete's whole record, including their ranking, and the card
+   * back prints it. On a page that is public and statically cached there is no viewer to check,
+   * so the field is removed rather than hidden - it was in the payload too, readable by anyone
+   * who opened the page source whether the card was ever flipped or not.
+   */
+  const latestCommits = normalizeAthleteList(latestCommitsRaw).map((athlete) => ({
+    ...athlete,
+    prospect_ranking: undefined,
+    rankings: undefined,
+  }))
 
   return (
     <main className="min-h-screen bg-rnc-ink">
@@ -461,36 +429,36 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* Featured Rankings */}
+        {/*
+          * Rankings are sold, so they cannot be given away here.
+          *
+          * This section printed the top three of every published class, by name and by number,
+          * to anybody who loaded the homepage - and this page is public and statically cached
+          * on purpose, so there is no viewer to check and no way to show a number safely. The
+          * promo does the job the section was really doing: sending people to the rankings.
+          */}
         <section>
           <SectionHeader
-            title="Featured Rankings"
-            href="/public-rankings"
-            linkLabel="All rankings"
+            title="Prospect Rankings"
+            href="/rankings"
+            linkLabel="See what is included"
             icon={<TrendingUp className="h-5 w-5 text-rnc-gold" />}
           />
-          {rankings.length > 0 ? (
-            <div className="space-y-8">
-              {RANKING_CLASSES.map((year) => {
-                const forYear = rankings.filter((a) => a.graduationyear === year)
-                if (!forYear.length) return null
-                return (
-                  <div key={year}>
-                    <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-white/50">
-                      Class of {year}
-                    </h3>
-                    <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                      {forYear.map((athlete) => (
-                        <RankingCard key={athlete.id} athlete={athlete} />
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            <p className="py-8 text-center text-white/50">No ranked prospects available.</p>
-          )}
+          <div className="rounded-xl border border-rnc-gold/30 bg-rnc-raised p-6 text-center">
+            <p className="text-lg font-medium text-white">
+              North Carolina&apos;s top 30 in every class, ranked on results.
+            </p>
+            <p className="mx-auto mt-2 max-w-xl text-sm text-white/60">
+              Free for NC United Blue members and verified college coaches. Every wrestler can
+              always see their own ranking.
+            </p>
+            <Link
+              href="/rankings"
+              className="mt-5 inline-block rounded-lg bg-rnc-gold px-5 py-2.5 text-sm font-semibold text-rnc-ink hover:opacity-90"
+            >
+              See what is included
+            </Link>
+          </div>
         </section>
 
         {/* News */}

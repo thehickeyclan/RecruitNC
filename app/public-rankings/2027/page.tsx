@@ -1,8 +1,9 @@
 import type { Metadata } from "next"
 import { ClassRankingPage } from "@/components/rankings/class-ranking-page"
 
-// Cached in loadPublicClassRanking; the page itself re-renders hourly.
-export const revalidate = 3600
+// Per-viewer now: the board is gated inside ClassRankingPage, so this cannot be cached as one
+// static document for everybody.
+export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: "Class of 2027 Rankings | RecruitNC",
