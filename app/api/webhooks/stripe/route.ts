@@ -50,6 +50,7 @@ import {
   amountLooksLikeGuild,
   amountLooksLikePracticeDropIn,
 } from "@/lib/stripe-checkout-amounts"
+import { formatCalendarDate } from "@/lib/calendar-date"
 
 export const dynamic = "force-dynamic"
 
@@ -803,10 +804,39 @@ export async function POST(request: NextRequest) {
     }
 
     if (payload.items.length === 0 && payload.total > 0) {
+      /*
+       * A payment with no cart is usually a drop-in, and it was being filed as merchandise.
+       *
+       * The literal "NC United Store purchase" reached the order, the receipt and the staff
+       * text: Vincent Defreitas bought a drop-in for the 11 October practice and the alert said
+       * "1x NC United Store purchase" with no event and no date. The checkout had already put
+       * `drop_in_request_id` and `event_id` in the metadata and named the Stripe line item
+       * "NC United Drop-In: Blue Practice" - all of it discarded here.
+       *
+       * Naming it properly also fixes the order type on its own: `resolveOrderType` classifies
+       * from the item name, and it looks for exactly this word.
+       */
+      const dropInEventId = String((meta as Record<string, string>).event_id ?? "").trim()
+      const isDropIn = Boolean(String((meta as Record<string, string>).drop_in_request_id ?? "").trim() || dropInEventId)
+      let fallbackName = "NC United Store purchase"
+      if (isDropIn) {
+        fallbackName = "NC United Drop-In"
+        if (dropInEventId) {
+          const { data: dropInEvent } = await admin
+            .from("events")
+            .select("title, start_date")
+            .eq("id", dropInEventId)
+            .maybeSingle()
+          if (dropInEvent?.title) {
+            const when = dropInEvent.start_date ? ` — ${formatCalendarDate(String(dropInEvent.start_date))}` : ""
+            fallbackName = `NC United Drop-In: ${dropInEvent.title}${when}`
+          }
+        }
+      }
       payload.items = [
         {
           id: "drop-in",
-          name: "NC United Store purchase",
+          name: fallbackName,
           quantity: 1,
           price: payload.total,
           variant: { color: "", size: "" },
