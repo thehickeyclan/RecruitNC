@@ -41,6 +41,17 @@ function staffAlertE164Recipients(): string[] {
   return out
 }
 
+/** A shipping choice worth naming: "Pickup" and "Standard post" are different jobs. */
+function shippingMethodLabel(method: unknown): string {
+  if (typeof method === "string") return method.trim()
+  if (method && typeof method === "object") {
+    const m = method as Record<string, unknown>
+    const name = [m.name, m.label, m.title].find((v) => typeof v === "string" && v.trim())
+    if (typeof name === "string") return name.trim()
+  }
+  return ""
+}
+
 function formatMoney(amount: number): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount)
 }
@@ -96,18 +107,43 @@ export function formatStoreOrderItemsForStaffSms(itemRows: ItemRow[], maxChars =
   return text.slice(0, maxChars - 3) + "..."
 }
 
+/**
+ * What was bought, who bought it, and where to go — in that order.
+ *
+ * The alert used to open "NC United Store:" whatever the order was, so a practice drop-in read
+ * as a store sale, and it gave the customer's name but not their email, which is what you need
+ * to reply. The line ends with the admin URL because the first thing anyone does on reading one
+ * of these is go looking for the order.
+ */
 export function buildStoreOrderStaffSmsBody(params: {
   orderNumber: string
   customerName: string | null | undefined
   customerEmail: string | null | undefined
   total: number
   itemRows: ItemRow[]
+  /** "drop_in", "merchandise", and so on — labels the alert so a drop-in is not a store sale. */
+  orderType?: string | null
+  /** Shipping choice, when there is one: pickup and post are different jobs. */
+  shippingLabel?: string | null
 }): string {
   const who = customerLabel(params.customerName, params.customerEmail)
+  const email = (params.customerEmail ?? "").trim()
+  const showEmail = email && !email.includes("placeholder") && email !== who
   const items = formatStoreOrderItemsForStaffSms(params.itemRows)
   const total = formatMoney(params.total)
   const orderRef = params.orderNumber.trim() || "new order"
-  return `NC United Store: ${who} placed order ${orderRef} for ${total} — ${items}.`
+  const heading = params.orderType === "drop_in" ? "NC United drop-in" : "NC United Store"
+  // The item is named "NC United Drop-In: Blue Practice — …" so the heading would say it twice.
+  const body = heading === "NC United drop-in" ? items.replace(/NC United Drop-?In:\s*/gi, "") : items
+  const ship = (params.shippingLabel ?? "").trim()
+  return [
+    `${heading}: ${body}`,
+    `${total} — ${who}${showEmail ? ` (${email})` : ""}`,
+    ship ? `Ship: ${ship}` : "",
+    `${orderRef} · ncwrestlingunited.com/admin/orders`,
+  ]
+    .filter(Boolean)
+    .join("\n")
 }
 
 /** Idempotent staff SMS for paid merchandise store orders. Does not throw. */
@@ -132,7 +168,7 @@ export async function notifyStaffStoreOrderSmsIfEligible(
   const { data: order, error: orderErr } = await admin
     .from("orders")
     .select(
-      "id, order_number, customer_email, customer_name, total, status, channel, shipping_method",
+      "id, order_number, customer_email, customer_name, total, status, channel, shipping_method, order_type",
     )
     .eq("id", orderId)
     .maybeSingle()
@@ -146,6 +182,7 @@ export async function notifyStaffStoreOrderSmsIfEligible(
     status: string | null
     channel: string | null
     shipping_method: unknown
+    order_type: string | null
   }
 
   if (row.status !== "paid") return
@@ -162,6 +199,8 @@ export async function notifyStaffStoreOrderSmsIfEligible(
     customerEmail: row.customer_email,
     total: Number(row.total ?? 0),
     itemRows: itemRows ?? [],
+    orderType: row.order_type,
+    shippingLabel: shippingMethodLabel(row.shipping_method),
   })
 
   let sent = 0
