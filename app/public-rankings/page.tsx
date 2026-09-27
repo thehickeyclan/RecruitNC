@@ -58,10 +58,7 @@ export default async function PublicRankingsHomepage() {
           <h1 className="text-balance text-4xl font-black tracking-tight text-white sm:text-6xl">
             College Prospect Rankings
           </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-xl font-semibold text-white">
-            North Carolina wrestling rankings that stay current.
-          </p>
-          <p className="mx-auto mt-2 max-w-2xl text-base text-white/65">
+          <p className="mx-auto mt-4 max-w-2xl text-base text-white/65">
             Class rankings, the Top 70 college prospects and scouting reports informed by results,
             quality wins and strength of competition.
           </p>

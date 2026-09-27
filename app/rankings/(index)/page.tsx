@@ -171,10 +171,8 @@ export default function ClassOf2027RankingsPage() {
               College Prospect Rankings
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              North Carolina wrestling rankings that stay current.
-              <span className="mt-1 block text-base">
-                Classes of 2027–2029, the Top 70 college prospects across all classes, and scouting reports.
-              </span>
+              Classes of 2027–2029, the Top 70 college prospects across all classes, and
+              scouting reports.
             </p>
           </div>
 
