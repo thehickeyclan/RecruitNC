@@ -200,17 +200,51 @@ export default function ClassOf2027RankingsPage() {
             </p>
           </div>
 
-          {/* Three ways to have it, and one of them is free — said before the price, not after. */}
+          {/*
+            * Three tiers, cheapest first, because the cheapest is free and that is the point.
+            *
+            * A college coach pays nothing on purpose: their reading is what makes the rankings
+            * worth having to everyone else. Blue costs the most and includes the most, since it
+            * is a wrestling programme with the platform attached rather than the other way
+            * round. The subscription exists for the people who cannot join Blue and should not
+            * have to - an out-of-state parent, a recruiting service, a coach's colleague.
+            *
+            * Blue's price comes from the billing constant, not a number typed here: it is
+            * $55 for new signups and the $50 people remember is the legacy WrestlingIQ rate.
+            */}
           <div className="mt-12 grid gap-4 md:grid-cols-3">
             <div className="rounded-2xl border border-border bg-card p-6">
               <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Blue members
+                Verified college coaches
               </p>
               <p className="mt-3 text-4xl font-semibold">Free</p>
-              <p className="mt-1 text-sm text-muted-foreground">Included in your membership</p>
+              <p className="mt-1 text-sm text-muted-foreground">Always</p>
               <p className="mt-4 text-sm text-muted-foreground">
-                For the whole family. Verified college coaches free too, and every wrestler always
-                sees their own ranking.
+                Everything, plus athlete contact details, GPA and test scores — the only tier
+                that reaches them.
+              </p>
+              <Button
+                asChild
+                variant="outline"
+                className="mt-6 w-full border-border bg-transparent text-foreground hover:bg-accent"
+              >
+                <Link href="/auth/coach-signup">Verify your program</Link>
+              </Button>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card p-6">
+              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                NC United Blue
+              </p>
+              {/* No price: Blue is invitation only, and a figure here asks people to buy
+                  something they cannot, which costs a reply rather than earns a signup. */}
+              <p className="mt-3 text-4xl font-semibold">Included</p>
+              <p className="mt-1 text-sm text-muted-foreground">By invitation</p>
+              <p className="mt-4 text-sm text-foreground">
+                Rankings come with membership, for the whole family.
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Nothing further to buy — everything on this page is already yours.
               </p>
               <Button
                 asChild
@@ -221,40 +255,39 @@ export default function ClassOf2027RankingsPage() {
               </Button>
             </div>
 
-            {plans.map((plan) => (
-              <div
-                key={plan.kind}
-                className={
-                  plan.featured
-                    ? "relative rounded-2xl border-2 border-primary bg-card p-6 shadow-xl"
-                    : "rounded-2xl border border-border bg-card p-6"
-                }
+            <div className="relative rounded-2xl border-2 border-primary bg-card p-6 shadow-xl">
+              <span className="absolute -top-3 left-6 rounded-full bg-primary px-3 py-0.5 text-xs font-bold text-primary-foreground">
+                Open to everyone
+              </span>
+              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Rankings
+              </p>
+              <p className="mt-3 text-4xl font-semibold">{formatPrice(SCOUTING_REPORT_PRICES.subscription)}</p>
+              <p className="mt-1 text-sm text-muted-foreground">per month</p>
+              <p className="mt-4 text-sm text-muted-foreground">
+                Rankings, the Top 50, scouting reports, commitment alerts, and who has viewed
+                your profile.
+              </p>
+              <Button
+                disabled={checkingOut !== null}
+                onClick={() => { void startCheckout("subscription") }}
+                className="mt-6 w-full bg-secondary text-secondary-foreground hover:bg-accent"
               >
-                {plan.featured && (
-                  <span className="absolute -top-3 left-6 rounded-full bg-primary px-3 py-0.5 text-xs font-bold text-primary-foreground">
-                    Best value
-                  </span>
-                )}
-                <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                  {plan.name}
-                </p>
-                <p className="mt-3 text-4xl font-semibold">{plan.price}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{plan.cadence}</p>
-                <p className="mt-4 text-sm text-foreground">{plan.note}</p>
-                <p className="mt-1 text-sm text-muted-foreground">Unlimited scouting reports included</p>
-                <Button
-                  disabled={checkingOut !== null}
-                  onClick={() => { void startCheckout(plan.kind) }}
-                  className={
-                    plan.featured
-                      ? "mt-6 w-full bg-primary text-primary-foreground hover:bg-primary/90"
-                      : "mt-6 w-full bg-secondary text-secondary-foreground hover:bg-accent"
-                  }
-                >
-                  {checkingOut === plan.kind ? "Starting…" : "Subscribe"}
-                </Button>
-              </div>
-            ))}
+                {checkingOut === "subscription" ? "Starting…" : "Subscribe"}
+              </Button>
+              {/* The annual sits under the monthly rather than as a fourth column: it is the
+                  same tier, paid differently, and a column of its own implied otherwise. */}
+              <button
+                type="button"
+                disabled={checkingOut !== null}
+                onClick={() => { void startCheckout("subscription_annual") }}
+                className="mt-3 w-full text-sm text-primary underline disabled:opacity-50"
+              >
+                {checkingOut === "subscription_annual"
+                  ? "Starting…"
+                  : `or ${formatPrice(SCOUTING_REPORT_PRICES.subscription_annual)} a year — save ${formatPrice(annualSavingCents())}`}
+              </button>
+            </div>
           </div>
 
           {checkoutError && (
