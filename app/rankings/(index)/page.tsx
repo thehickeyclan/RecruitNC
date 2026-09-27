@@ -177,8 +177,9 @@ export default function ClassOf2027RankingsPage() {
           </p>
           <p className="mx-auto mt-3 max-w-2xl text-sm text-muted-foreground">
             Anyone can subscribe. You get the rankings, the Top 50, and scouting reports — major
-            tournament results, significant wins and strength of competition — updated as new
-            results come in, with every North Carolina college commitment pushed to your phone.
+            tournament results, significant wins and strength of competition — updated as results
+            and athlete-provided information come in, with every North Carolina college commitment
+            pushed to your phone.
           </p>
           {/*
             * The one thing a subscription does not buy, said plainly and in its own panel.
@@ -220,8 +221,8 @@ export default function ClassOf2027RankingsPage() {
               <p className="mt-3 text-4xl font-semibold">Free</p>
               <p className="mt-1 text-sm text-muted-foreground">Always</p>
               <p className="mt-4 text-sm text-muted-foreground">
-                Everything, plus athlete contact details, GPA and test scores — the only tier
-                that reaches them.
+                A 360-degree view: everything above, plus athlete contact details, GPA, test
+                scores, academic interests and intended majors. The only tier that reaches them.
               </p>
               <Button
                 asChild
@@ -385,7 +386,12 @@ export default function ClassOf2027RankingsPage() {
             </div>
           </div>
 
-          <p className="mt-10 text-center text-sm text-muted-foreground">
+          {/* The closing statement, not fine print: it is the sentence the whole page argues for. */}
+          <p className="mx-auto mt-12 max-w-2xl text-center text-base text-foreground">
+            The goal is simple: a comprehensive, current resource for identifying and evaluating
+            North Carolina wrestlers with the ability and potential to compete at the next level.
+          </p>
+          <p className="mt-4 text-center text-sm text-muted-foreground">
             Already a Blue family or a college coach?{" "}
             <Link
               href={locked === "anonymous" ? "/auth/signin?returnTo=/rankings" : "/auth/coach-signup"}
