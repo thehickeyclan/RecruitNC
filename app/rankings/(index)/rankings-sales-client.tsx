@@ -289,7 +289,7 @@ export function RankingsSalesClient() {
               <p className="mt-3 text-4xl font-semibold">{formatPrice(SCOUTING_REPORT_PRICES.subscription)}</p>
               <p className="mt-1 text-sm text-muted-foreground">per month</p>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                All class rankings, the Top 75 Ranked Prospects, and scouting
+                All class rankings, the Top 75 College Prospects, and scouting
                 reports. Full profile management, and see which college programs are viewing
                 your profile. Cancel anytime.
               </p>

@@ -51,8 +51,12 @@ export const PUBLIC_RANKINGS_MAX_BY_YEAR: Record<number, number> = {
  */
 export const PUBLIC_RELEASED_YEARS: readonly number[] = [2027, 2028, 2029]
 
-/** The cross-class Top 75 is released separately from the class boards. */
-export const PUBLIC_TOP_PROSPECTS_RELEASED = true
+/*
+ * Retired. The Top 75 Ranked Prospects could only hold wrestlers already ranked on a class
+ * board, which left state champions outside a deep 2027 invisible; the Top 75 College Prospects
+ * replaces it. Admins still reach it, so the old order stays readable.
+ */
+export const PUBLIC_TOP_PROSPECTS_RELEASED = false
 
 /*
  * Top 75 College Prospects: the deeper board, which reaches past each class's cut.

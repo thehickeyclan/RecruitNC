@@ -71,10 +71,6 @@ export default async function TopHundredPage() {
           <p className="mt-2 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-[#d6b75d] sm:text-xs">
             Classes of {board.classes.join(" & ")}
           </p>
-          <p className="mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-white/60">
-            Ranked against each other regardless of class or weight &mdash; the wrestlers a college
-            programme can contact now. The class of 2029 has its own board.
-          </p>
 
           <RankingsSummary athletes={board.athletes} />
 
