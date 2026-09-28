@@ -6,9 +6,11 @@ import { resolveRankingViewerForUser } from "@/lib/ranking-access"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { loadPublicClassRanking } from "@/lib/rankings/public-rankings-view"
 import { loadTopProspects } from "@/lib/rankings/prospects-view"
+import { loadTopHundred } from "@/lib/rankings/top-100-view"
 import {
   PUBLISHED_PUBLIC_RANKINGS_YEARS,
   PUBLIC_TOP_PROSPECTS_RELEASED,
+  PUBLIC_TOP_75_COLLEGE_RELEASED,
 } from "@/lib/public-rankings-cap"
 
 /**
@@ -74,6 +76,20 @@ export async function GET(request: NextRequest) {
   )
 
   const boards = classBoards.filter((b) => b.published && b.athletes.length > 0)
+
+  // The board that replaced the ranked list: classes of 2027 and 2028, past every class cut.
+  if (isAdmin || PUBLIC_TOP_75_COLLEGE_RELEASED) {
+    const college = await loadTopHundred("Male")
+    if (college.published && college.athletes.length > 0) {
+      boards.push({
+        key: "college-prospects",
+        title: `Top ${college.cap} College Prospects`,
+        cap: college.cap,
+        published: college.published,
+        athletes: college.athletes,
+      })
+    }
+  }
 
   if (isAdmin || PUBLIC_TOP_PROSPECTS_RELEASED) {
     const prospects = await loadTopProspects("Male")

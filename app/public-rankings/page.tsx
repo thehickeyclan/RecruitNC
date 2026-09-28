@@ -1,4 +1,4 @@
-import { ArrowRight, Award, ListOrdered, Users } from "lucide-react"
+import { ArrowRight, Award, GraduationCap, ListOrdered, Users } from "lucide-react"
 import { redirect } from "next/navigation"
 
 import { HardLink } from "@/components/hard-link"
@@ -7,7 +7,11 @@ import { resolveRankingViewer } from "@/lib/ranking-access"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
-import { PUBLISHED_PUBLIC_RANKINGS_YEARS, PUBLIC_TOP_PROSPECTS_RELEASED } from "@/lib/public-rankings-cap"
+import {
+  PUBLISHED_PUBLIC_RANKINGS_YEARS,
+  PUBLIC_TOP_PROSPECTS_RELEASED,
+  PUBLIC_TOP_75_COLLEGE_RELEASED,
+} from "@/lib/public-rankings-cap"
 
 export const dynamic = "force-dynamic"
 
@@ -40,6 +44,13 @@ const rankingLinks = [
     description: "Every ranked wrestler, one list.",
     icon: Award,
   },
+  {
+    href: "/public-rankings/college-prospects",
+    eyebrow: "Classes of 2027 & 2028",
+    title: "Top 75 College Prospects",
+    description: "Reaches past every class cut, for the wrestlers a programme can contact now.",
+    icon: GraduationCap,
+  },
 ]
 
 export default async function PublicRankingsHomepage({
@@ -67,6 +78,7 @@ export default async function PublicRankingsHomepage({
   const releasedLinks = rankingLinks.filter(({ href }) => {
     if (isAdmin) return true
     if (href === "/public-rankings/prospects") return PUBLIC_TOP_PROSPECTS_RELEASED
+    if (href === "/public-rankings/college-prospects") return PUBLIC_TOP_75_COLLEGE_RELEASED
     const year = Number(href.split("/").at(-1))
     return PUBLISHED_PUBLIC_RANKINGS_YEARS.includes(year)
   })
@@ -91,8 +103,8 @@ export default async function PublicRankingsHomepage({
             College Prospect Rankings
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-white/65">
-            Class rankings, the Top 75 ranked prospects and scouting reports informed by results,
-            quality wins and strength of competition.
+            Class rankings, the Top 75 College Prospects and scouting reports informed by
+            results, quality wins and strength of competition.
           </p>
         </div>
       </section>

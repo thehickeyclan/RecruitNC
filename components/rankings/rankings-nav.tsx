@@ -28,11 +28,11 @@ export function RankingsNav({
   const tabs: Array<{ href: string; label: string; key: number | "prospects" | "top-100" }> = [
     ...years.map((y) => ({ href: `/public-rankings/${y}`, label: `Class of ${y}`, key: y as number })),
     ...(showProspects
-      ? [{ href: "/public-rankings/prospects", label: "Top 75 Ranked", key: "prospects" as const }]
+      ? [{ href: "/public-rankings/prospects", label: "Top 75 Ranked (retired)", key: "prospects" as const }]
       : []),
     // Classes of 2027 and 2028, reaching past each class's published cut.
     ...(isAdmin || PUBLIC_TOP_75_COLLEGE_RELEASED
-      ? [{ href: "/public-rankings/college-prospects", label: "Top 75 College", key: "top-100" as const }]
+      ? [{ href: "/public-rankings/college-prospects", label: "Top 75 College Prospects", key: "top-100" as const }]
       : []),
   ]
 
