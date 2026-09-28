@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { resolveRankingViewer } from "@/lib/ranking-access"
+import { canSeeProspectRanking } from "@/lib/ranking-visibility"
+import { isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { normalizeCollegeToCanonical } from "@/lib/canonical-college"
 import { fetchCommitmentAthletes, fetchCommitmentStats, type CommitmentAthleteFilters } from "@/lib/athletes-commitments-fetch"
 import { jsonSafeClone } from "@/lib/json-safe-clone"
@@ -37,6 +41,40 @@ export async function GET(request: Request) {
       athletesPromise,
       statsPromise ?? Promise.resolve(null),
     ])
+    /*
+     * Rank numbers on the commitment list, for the people entitled to them.
+     *
+     * These went missing when `prospect_ranking` was dropped from the list select - the column
+     * is revoked for the browser key, so asking for it there took the whole page down with a
+     * permissions error. The fallback read `public_rankings`, which nothing syncs: it holds no
+     * 2029 at all and 83 rows for a class published as a top 30, so the numbers were simply
+     * absent. Gemma Amiott reported exactly that.
+     *
+     * The live board is `athletes.prospect_ranking`, readable by the service role. It is read
+     * here rather than in the shared fetch so the entitlement check sits next to it: a Blue
+     * family, coach or subscriber sees the numbers, and everybody else gets the same list
+     * without them, which is what the paywall on the boards means.
+     */
+    const { viewer } = await resolveRankingViewer({ supabase, admin: createAdminClient() })
+    if (canSeeProspectRanking(viewer) && athletes.length > 0) {
+      const ids = athletes.map((a) => String((a as Record<string, unknown>).id)).filter(Boolean)
+      const { data: ranked } = await createAdminClient()
+        .from("athletes")
+        .select("id, prospect_ranking, graduationyear")
+        .in("id", ids)
+        .not("prospect_ranking", "is", null)
+      const rankById = new Map(
+        (ranked ?? [])
+          // Only classes actually released; an unreleased board must not leak through this list.
+          .filter((r) => isPublicRankingsYearPublished(Number(r.graduationyear)))
+          .map((r) => [String(r.id), Number(r.prospect_ranking)]),
+      )
+      for (const athlete of athletes as Array<Record<string, unknown>>) {
+        const rank = rankById.get(String(athlete.id))
+        if (rank != null) athlete.prospect_ranking = rank
+      }
+    }
+
     const page = filters.page ?? 1
     const limit = Math.min(filters.limit ?? 100, 500)
     const totalPages = Math.ceil(total / limit)

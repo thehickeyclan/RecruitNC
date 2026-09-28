@@ -95,9 +95,13 @@ const ATHLETE_LIST_SELECT = `
  * revoked, which turned the whole of /athletes into a 500 - PostgREST refuses the entire select
  * over one ungranted column, so losing the leak also lost the page.
  *
- * `enrichProspectRankings` below fills the field from `public_rankings`, which holds only what
- * has actually been released. Every row now arrives with a null rank and is filled from there,
- * so an unreleased class simply shows no number.
+ * Nor is it filled from `public_rankings`, which this used to fall back to. Nothing syncs that
+ * table: it holds no 2029 at all, 83 rows for a class published as a top 30, and two graduated
+ * classes besides - so it served Elijah Oakley as 17th in a class that left last spring and
+ * Mason Hocker 50th in a top thirty. Wrong numbers are worse than none.
+ *
+ * `/api/athletes` fills the rank itself, from `athletes.prospect_ranking` through the service
+ * role, and only for a viewer entitled to see a ranking at all.
  */
 
 function bucketDivision(division: string | null | undefined): keyof CommitmentStats["divisions"] | null {
@@ -214,38 +218,6 @@ function mapAthleteRow(athlete: Record<string, unknown>, collegesMap: Map<string
   } satisfies CommitmentAthleteListItem
 }
 
-async function enrichProspectRankings(
-  supabase: SupabaseClient,
-  athletes: CommitmentAthleteListItem[],
-): Promise<void> {
-  const withoutRank = athletes.filter((a) => a.prospect_ranking == null)
-  if (withoutRank.length === 0) return
-
-  try {
-    const { data: pub } = await supabase
-      .from("public_rankings")
-      .select("prospect_id, graduation_year, prospect_ranking")
-      .in(
-        "prospect_id",
-        withoutRank.map((a) => a.id),
-      )
-    const key = (id: string, year: number) => `${id}:${year}`
-    const rankByKey = new Map(
-      (pub || []).map((p: { prospect_id: string; graduation_year: number; prospect_ranking: number | null }) => [
-        key(p.prospect_id, p.graduation_year),
-        p.prospect_ranking,
-      ]),
-    )
-    for (const a of athletes) {
-      if (a.prospect_ranking == null && a.graduationyear != null) {
-        const fromPub = rankByKey.get(key(a.id, a.graduationyear))
-        if (fromPub != null) a.prospect_ranking = fromPub
-      }
-    }
-  } catch {
-    // table may not exist
-  }
-}
 
 export async function fetchCommitmentAthletes(
   supabase: SupabaseClient,
@@ -275,7 +247,6 @@ export async function fetchCommitmentAthletes(
     athletes = athletes.filter((a) => matchesDivisionFilter(a.division, divisionFilter))
   }
 
-  await enrichProspectRankings(supabase, athletes)
 
   return { athletes, total: count ?? athletes.length }
 }
