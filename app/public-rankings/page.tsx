@@ -71,6 +71,15 @@ export default async function PublicRankingsHomepage({
     return PUBLISHED_PUBLIC_RANKINGS_YEARS.includes(year)
   })
 
+  /*
+   * Somebody who tried to buy what they already have.
+   *
+   * The checkout refuses a Blue member or verified coach rather than billing them, and sends
+   * them here. Arriving on the boards with no explanation looks like the purchase silently
+   * failed, so say plainly what happened: nothing was charged, and this is already yours.
+   */
+  const alreadyIncluded = Boolean(((await searchParams) ?? {}).included)
+
   return (
     <main className="min-h-screen bg-[#0A1628] text-white">
       <section className="border-b border-white/10">
@@ -89,6 +98,17 @@ export default async function PublicRankingsHomepage({
       </section>
 
       <section className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
+        {alreadyIncluded ? (
+          <div className="mx-auto mb-8 max-w-2xl rounded-xl border border-[#D3B574]/50 bg-[#D3B574]/10 px-6 py-4 text-center">
+            <p className="text-sm font-semibold text-[#D3B574]">
+              You already have the rankings &mdash; no payment needed.
+            </p>
+            <p className="mt-1 text-sm text-white/65">
+              They are included with your NC United Blue membership. You have not been charged.
+            </p>
+          </div>
+        ) : null}
+
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {releasedLinks.map(({ href, eyebrow, title, description, icon: Icon }) => (
             <HardLink key={href} href={href} className="group block h-full">

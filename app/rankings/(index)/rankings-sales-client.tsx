@@ -78,6 +78,20 @@ export function RankingsSalesClient() {
         body: JSON.stringify({ kind, returnTo: "/public-rankings" }),
       })
       const payload = await response.json()
+
+      /*
+       * Already included, so take them to it rather than charging them for it.
+       *
+       * The server refuses this with a 409 - a Blue family or verified coach must never be
+       * billed $9.99 for what their membership already covers. Showing that refusal as a red
+       * error reads as a failed purchase, when the true answer is better news than the one
+       * they came for: you have this already, here it is.
+       */
+      if (response.status === 409 && payload?.reason === "already_entitled") {
+        window.location.href = "/public-rankings?included=1"
+        return
+      }
+
       if (!response.ok || !payload?.url) throw new Error(payload?.error || "Could not start checkout")
       window.location.href = payload.url
     } catch (caught) {
