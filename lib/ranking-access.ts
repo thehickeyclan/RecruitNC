@@ -103,6 +103,7 @@ export async function resolveRankingViewerForUser(options: {
    * `isWiqCurrent` keeps a cancelled subscription inside its paid window, for the same reason
    * `past_due` entitles on the Stripe side: they have paid for those days.
    */
+  let isBlueViaAthlete = false
   let isWiqBlue = false
   if (!isBlueFromStripe(memberships)) {
     const [{ data: links }, { data: claimed }] = await Promise.all([
@@ -116,10 +117,25 @@ export async function resolveRankingViewerForUser(options: {
       ]),
     ]
     if (athleteIds.length > 0) {
-      const { data: wiq } = await admin
-        .from("blue_wiq_subscriptions")
-        .select("status, active_until")
-        .in("athlete_id", athleteIds)
+      /*
+       * A Blue membership belongs to the wrestler, not only to the card.
+       *
+       * `blue_memberships` was read by `payer_user_id` alone, so access followed whoever's
+       * card was on file and nobody else. In a real family that is one address out of three:
+       * Mike Valentino pays from a personal account and signs in from his work one, and
+       * Vincent - whose membership it is, and whose profile he has claimed - was refused
+       * outright. Reading it through the athlete as well is the same rule WrestlingIQ already
+       * gets, and it is what "parents of Blue members" was always meant to mean.
+       */
+      const [{ data: byAthlete }, { data: wiq }] = await Promise.all([
+        admin
+          .from("blue_memberships")
+          .select("status")
+          .in("athlete_id", athleteIds)
+          .in("status", [...ENTITLING_STATUSES]),
+        admin.from("blue_wiq_subscriptions").select("status, active_until").in("athlete_id", athleteIds),
+      ])
+      isBlueViaAthlete = (byAthlete ?? []).length > 0
       isWiqBlue = (wiq ?? []).some((row) => isWiqCurrent(row as never))
     }
   }
@@ -141,7 +157,7 @@ export async function resolveRankingViewerForUser(options: {
       isAdmin: profile?.is_admin === true,
       isVerifiedCoach: profile?.verified_coach === true,
       role: profile?.role ?? null,
-      isBlueMember: isBlueFromStripe(memberships) || isWiqBlue,
+      isBlueMember: isBlueFromStripe(memberships) || isBlueViaAthlete || isWiqBlue,
       hasSubscription: isSubscriptionLive(subscription ?? null),
       isOwnProfile,
     },
