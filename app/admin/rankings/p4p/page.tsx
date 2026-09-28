@@ -246,7 +246,7 @@ export default function PoundForPoundPage() {
                 </Link>
                 <h1 className="text-2xl font-black tracking-tight md:text-3xl">Top Prospects</h1>
                 <p className="mt-2 max-w-2xl text-sm text-blue-200">
-                  Published as <strong>Top {P4P_PUBLIC_CAP} College Prospects</strong>, across
+                  Published as <strong>Top {P4P_PUBLIC_CAP} Ranked Prospects</strong>, across
                   2027, 2028 and 2029. Scored on this season only; within a class the class board
                   decides the order.
                 </p>

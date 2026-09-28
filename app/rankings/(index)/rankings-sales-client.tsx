@@ -202,7 +202,7 @@ export function RankingsSalesClient() {
               College Prospect Rankings
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              Classes of 2027–2029, the Top 75 college prospects across all classes, and
+              Classes of 2027–2029, the Top 75 ranked prospects across all classes, and
               scouting reports.
             </p>
           </div>
@@ -221,7 +221,7 @@ export function RankingsSalesClient() {
           <div className="mx-auto mt-10 grid max-w-4xl gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
               ["2027–2029", "Frequently updated class rankings"],
-              ["Top 75", "North Carolina College Prospects"],
+              ["Top 75", "Ranked prospects, every class"],
               ["Scouting Reports", "Results, quality wins and competition"],
               ["Profile activity", "Which college programs are viewing you"],
             ].map((claim) => (
@@ -289,7 +289,7 @@ export function RankingsSalesClient() {
               <p className="mt-3 text-4xl font-semibold">{formatPrice(SCOUTING_REPORT_PRICES.subscription)}</p>
               <p className="mt-1 text-sm text-muted-foreground">per month</p>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                All class rankings, the Top 75 North Carolina College Prospects, and scouting
+                All class rankings, the Top 75 Ranked Prospects, and scouting
                 reports. Full profile management, and see which college programs are viewing
                 your profile. Cancel anytime.
               </p>

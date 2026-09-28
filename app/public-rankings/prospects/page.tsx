@@ -16,7 +16,7 @@ import { PUBLIC_TOP_PROSPECTS_RELEASED } from "@/lib/public-rankings-cap"
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "Top 75 College Prospects | RecruitNC",
+  title: "Top 75 Ranked Prospects | RecruitNC",
   description:
     "North Carolina's top college wrestling prospects across the classes of 2027, 2028 and 2029.",
 }
@@ -51,7 +51,7 @@ export default async function TopProspectsPage() {
             RecruitNC
           </p>
           <h1 className="mt-3 text-3xl font-light uppercase tracking-tight text-white">
-            Top {P4P_PUBLIC_CAP} College Prospects
+            Top {P4P_PUBLIC_CAP} Ranked Prospects
           </h1>
           <p className="mt-4 text-sm leading-relaxed text-white/60">
             This list requires rankings access.
@@ -85,12 +85,21 @@ export default async function TopProspectsPage() {
           <p className="text-center text-[11px] font-bold uppercase tracking-[0.22em] text-[#CC0000]">
             RecruitNC · North Carolina prospect rankings
           </p>
+          {/*
+            * "Ranked" carries the whole caveat in one word.
+            *
+            * "Top 75 College Prospects" claims to be the 75 best in North Carolina. It is not,
+            * and cannot be: the pool is the three class boards, so a wrestler just outside his
+            * own class cut is ineligible however he would fare here. The footnote says that,
+            * but a headline is what gets screenshotted, and the headline has to survive being
+            * read on its own.
+            */}
           <h1 className="mt-3 text-center text-4xl font-light uppercase tracking-tight text-white sm:text-5xl">
-            Top {board.cap} College Prospects
+            Top {board.cap} Ranked Prospects
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-white/60">
-            The top college prospects in North Carolina, across the classes of 2027, 2028 and
-            2029 — one list, every class.
+            Our class rankings merged into one list: the best of the ranked wrestlers in 2027,
+            2028 and 2029, ordered against each other regardless of class or weight.
           </p>
 
           <RankingsSummary athletes={board.athletes} />

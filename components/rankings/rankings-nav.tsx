@@ -28,7 +28,7 @@ export function RankingsNav({
   const tabs: Array<{ href: string; label: string; key: number | "prospects" }> = [
     ...years.map((y) => ({ href: `/public-rankings/${y}`, label: `Class of ${y}`, key: y as number })),
     ...(showProspects
-      ? [{ href: "/public-rankings/prospects", label: "Top 75 Prospects", key: "prospects" as const }]
+      ? [{ href: "/public-rankings/prospects", label: "Top 75 Ranked", key: "prospects" as const }]
       : []),
   ]
 

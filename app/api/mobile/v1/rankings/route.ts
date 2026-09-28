@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
     if (prospects.published && prospects.athletes.length > 0) {
       boards.push({
         key: "prospects",
-        title: `Top ${prospects.cap} College Prospects`,
+        title: `Top ${prospects.cap} Ranked Prospects`,
         cap: prospects.cap,
         published: prospects.published,
         athletes: prospects.athletes,
