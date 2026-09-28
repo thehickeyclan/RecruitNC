@@ -210,6 +210,6 @@ const PUBLIC_RANKING_CACHE_VERSION = "v6-shared-credential-engine"
 
 export const loadPublicClassRanking = unstable_cache(
   buildPublicClassRanking,
-  ["public-class-ranking", PUBLIC_RANKING_CACHE_VERSION, "v13-top75"],
+  ["public-class-ranking", PUBLIC_RANKING_CACHE_VERSION, "v14-data-order-2029"],
   { revalidate: 3600, tags: ["public-rankings"] },
 )
