@@ -40,7 +40,10 @@ export async function POST(request: Request) {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) {
-    return NextResponse.json({ error: "Sign in to buy a scouting report." }, { status: 401 })
+    // This route sells the rankings subscription as well as single scouting reports, and the
+    // rankings page is where most people meet it. "Scouting report" here reads as the wrong
+    // product to somebody who clicked Subscribe under a ranking.
+    return NextResponse.json({ error: "Sign in to subscribe." }, { status: 401 })
   }
 
   const body = (await request.json().catch(() => ({}))) as {
