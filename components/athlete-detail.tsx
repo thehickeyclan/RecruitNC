@@ -185,6 +185,9 @@ export function AthleteDetail({
   // the one section a reader wants before they have decided to look for anything.
   const [bioExpanded, setBioExpanded] = useState(true)
   const [linkedProfileViewAthleteIds, setLinkedProfileViewAthleteIds] = useState<Set<string>>(new Set())
+  // The narrower set: athletes this account is linked to through parent_athlete_links, which is
+  // what the self-edit route accepts. The wallet list above also counts user_profiles.athlete_id.
+  const [parentLinkedAthleteIds, setParentLinkedAthleteIds] = useState<Set<string>>(new Set())
   const { toast } = useToast()
 
   const handleShareProfile = async () => {
@@ -231,9 +234,11 @@ export function AthleteDetail({
   // Profile owner can see their own private info (cell, GPA, ACT, SAT)
   const isViewingOwnProfile = Boolean(currentUserId && athlete.claimed_by_user_id === currentUserId)
   const isLinkedParentProfile = Boolean(currentUserId && linkedProfileViewAthleteIds.has(athlete.id))
+  const isParentLinkedEditor = Boolean(currentUserId && parentLinkedAthleteIds.has(String(athlete.id)))
   const canViewProfileStats = isViewingOwnProfile || isLinkedParentProfile || isAdmin
-  // Owner, or admin, can edit (admins can edit any profile on public or when viewing)
-  const canEdit = Boolean(currentUserId) || isAdmin
+  // The same rule /api/athletes/[id]/self-edit enforces: owner, linked parent, or admin. Everyone
+  // else gets "Request Profile Edit", which queues the change for review.
+  const canEdit = isViewingOwnProfile || isParentLinkedEditor || isAdmin
   // Private info (contact, GPA, ACT, SAT) visible only to self, coaches, and admins
   const canSeePrivateInfo = isViewingOwnProfile || isAdmin || isVerifiedCoach
 
@@ -771,6 +776,7 @@ export function AthleteDetail({
     async function fetchLinkedProfileViewAthletes() {
       if (!currentUserId || isViewingOwnProfile || isAdmin) {
         setLinkedProfileViewAthleteIds(new Set())
+        setParentLinkedAthleteIds(new Set())
         return
       }
 
@@ -778,15 +784,22 @@ export function AthleteDetail({
         const response = await fetch("/api/profile/linked-athletes", { credentials: "include" })
         if (!response.ok) {
           setLinkedProfileViewAthleteIds(new Set())
+          setParentLinkedAthleteIds(new Set())
           return
         }
-        const data = (await response.json()) as { athletes?: Array<{ id?: string }> }
+        const data = (await response.json()) as { athletes?: Array<{ id?: string; canUnlink?: boolean }> }
+        const rows = data.athletes ?? []
         setLinkedProfileViewAthleteIds(
-          new Set((data.athletes ?? []).map((row) => String(row.id ?? "").trim()).filter(Boolean)),
+          new Set(rows.map((row) => String(row.id ?? "").trim()).filter(Boolean)),
+        )
+        // canUnlink is set exactly when the link is a parent_athlete_links row.
+        setParentLinkedAthleteIds(
+          new Set(rows.filter((row) => row.canUnlink).map((row) => String(row.id ?? "").trim()).filter(Boolean)),
         )
       } catch (error) {
         console.error("[v0] Error fetching linked profile-view athletes:", error)
         setLinkedProfileViewAthleteIds(new Set())
+        setParentLinkedAthleteIds(new Set())
       }
     }
 
@@ -1438,8 +1451,8 @@ export function AthleteDetail({
         Unclaimed: ask whose profile it is. Claimed: a parent can still link to their kid,
         which is what ParentLinkButton is for — the two never show at once.
 
-        Gated on ownership, not on canEdit. canEdit is true for ANY signed-in user, so this
-        whole block only ever rendered for signed-out visitors: a parent who made an account,
+        Gated on ownership, not on canEdit. canEdit used to be true for ANY signed-in user, so
+        this whole block only ever rendered for signed-out visitors: a parent who made an account,
         searched for their wrestler and landed here saw no way to claim the profile at all.
         273 of 404 profiles have no owner, and three quarters of the ranked ones do not — this
         is the door they were looking for. Admins are excluded so nobody claims a profile by

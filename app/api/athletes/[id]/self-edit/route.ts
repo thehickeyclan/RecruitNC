@@ -5,6 +5,7 @@ import { recordAthleteChanges } from "@/lib/athlete-audit"
 import { mapAthleteToDb } from "@/lib/athlete-utils"
 import { normalizePhoneForStorage } from "@/lib/phone-format"
 import { unknownColumnFrom } from "@/lib/clubs/update-club"
+import { resolveAthleteOwnership } from "@/lib/mobile/athlete-ownership"
 
 // Normalize for comparison: lowercase, no underscores (so careerRecord and career_record both match)
 const norm = (s: string) => s.toLowerCase().replace(/_/g, "")
@@ -84,7 +85,29 @@ export async function POST(
       return NextResponse.json({ error: "Athlete not found" }, { status: 404 })
     }
 
-    // Any logged-in user can edit; we track who made changes via audit log.
+    /*
+     * The athlete who claimed the profile, a parent linked to them, or an admin.
+     *
+     * This used to let any signed-in account through on the strength of the audit log, so anyone
+     * who made an account could overwrite a stranger's GPA, school, phone, email or photo. The
+     * owner rule is the one the mobile endpoints and tournament-results use.
+     *
+     * Admins are allowed here, unlike on those endpoints, because this route writes an audit row
+     * per field with the editor's user id: a staff change is attributed to the staff member, not
+     * passed off as the family's. The admin test matches the one the profile page uses.
+     */
+    const ownership = await resolveAthleteOwnership(adminSupabase, athleteId, user.id)
+    if (!ownership.ok) {
+      const { data: viewerProfile } = await adminSupabase
+        .from("user_profiles")
+        .select("is_admin, role")
+        .eq("user_id", user.id)
+        .maybeSingle()
+      const isAdmin = viewerProfile?.is_admin === true || viewerProfile?.role === "admin"
+      if (!isAdmin) {
+        return NextResponse.json({ error: ownership.error }, { status: ownership.status })
+      }
+    }
 
     for (const field of Object.keys(updates)) {
       if (RESTRICTED.has(norm(field))) {

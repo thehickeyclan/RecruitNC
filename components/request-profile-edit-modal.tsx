@@ -61,6 +61,9 @@ export function RequestProfileEditModal({
        * self-editable through the weight card on the profile, but this form queued it for review
        * instead, so whoever used the button waited on an admin — two of them were still waiting
        * months later. Weight now saves straight through and only the rest of the form is queued.
+       *
+       * Straight through only for someone self-edit accepts: the owner, a linked parent or an admin.
+       * Anyone else gets a 403, `res.ok` is false, and the weight is queued with everything else.
        */
       let weightSavedDirectly = false
       if (weight.trim()) {
