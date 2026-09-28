@@ -319,6 +319,21 @@ export function RankingsSalesClient() {
             <p className="mt-4 text-center text-sm text-destructive">{checkoutError}</p>
           )}
 
+          {/*
+            * Said at the moment of purchase, not buried in terms.
+            *
+            * A ranking is the whole product in one screenshot. Fine print stops nobody and
+            * earns no goodwill; a plain sentence with the reason attached does better, and
+            * naming which half of sharing is welcome makes it a rule people follow rather than
+            * one they resent. A parent posting "my son is fourth in North Carolina" is the best
+            * advertising this has.
+            */}
+          <p className="mx-auto mt-6 max-w-xl text-center text-xs leading-relaxed text-muted-foreground">
+            Your subscription is for you and your family. Share your own wrestler&apos;s ranking
+            anywhere &mdash; please don&apos;t repost the full boards or screenshots of them.
+            That&apos;s what keeps these rankings going.
+          </p>
+
           <p className="mt-8 text-center text-sm text-muted-foreground">
             Already a Blue family or subscriber?{" "}
             <Link href="/auth/signin?returnTo=/rankings" className="text-primary underline">Sign in</Link>

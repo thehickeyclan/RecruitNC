@@ -3,6 +3,7 @@ import Link from "next/link"
 import { RankedAthleteCard } from "@/components/rankings/ranked-athlete-card"
 import { RankingsNav } from "@/components/rankings/rankings-nav"
 import { RankingsSummary } from "@/components/rankings/rankings-summary"
+import { RankingsWatermark } from "@/components/rankings/rankings-watermark"
 import { loadTopProspects } from "@/lib/rankings/prospects-view"
 import { P4P_PUBLIC_CAP } from "@/lib/rankings/pound-for-pound"
 import { createClient } from "@/lib/supabase/server"
@@ -29,7 +30,7 @@ export const metadata: Metadata = {
  * what the scoring actually does.
  */
 export default async function TopProspectsPage() {
-  const { viewer } = await resolveRankingViewer({
+  const { viewer, userId } = await resolveRankingViewer({
     supabase: await createClient(),
     admin: createAdminClient(),
   })
@@ -113,6 +114,8 @@ export default async function TopProspectsPage() {
                   <RankedAthleteCard key={athlete.athleteId} athlete={athlete} />
                 ))}
               </ul>
+
+              <RankingsWatermark userId={userId} />
               {/*
                 * Said on the page, because it is the first question a parent asks when their
                 * son is 14th in his class and 31st here.

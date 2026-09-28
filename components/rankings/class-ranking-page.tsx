@@ -7,6 +7,7 @@ import { resolveRankingViewer } from "@/lib/ranking-access"
 import { loadPublicClassRanking } from "@/lib/rankings/public-rankings-view"
 import { RankingsNav } from "@/components/rankings/rankings-nav"
 import { RankingsSummary } from "@/components/rankings/rankings-summary"
+import { RankingsWatermark } from "@/components/rankings/rankings-watermark"
 
 /**
  * A published class ranking, laid out like the Tournament of Champions field.
@@ -29,7 +30,7 @@ export async function ClassRankingPage({ year }: { year: number }) {
    * The whole board is the product, so the check has to happen before the names are rendered,
    * not after they have been sent.
    */
-  const { viewer } = await resolveRankingViewer({
+  const { viewer, userId } = await resolveRankingViewer({
     supabase: await createClient(),
     admin: createAdminClient(),
   })
@@ -96,6 +97,8 @@ export async function ClassRankingPage({ year }: { year: number }) {
               ))}
             </ul>
           )}
+
+          <RankingsWatermark userId={userId} />
 
           <p className="mx-auto mt-10 max-w-2xl text-center text-[11px] leading-relaxed text-white/35">
             Rankings are reviewed by NC United staff before publication. A direct win between two ranked
