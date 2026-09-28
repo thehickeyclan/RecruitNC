@@ -54,6 +54,16 @@ export const PUBLIC_RELEASED_YEARS: readonly number[] = [2027, 2028, 2029]
 /** The cross-class Top 75 is released separately from the class boards. */
 export const PUBLIC_TOP_PROSPECTS_RELEASED = true
 
+/*
+ * Top 75 College Prospects: the deeper board, which reaches past each class's cut.
+ *
+ * Separate from publishing it. Publishing saves the cut so the board can be read back and
+ * checked; this flag is what lets a subscriber see it. Kept apart on purpose - the order is
+ * being worked on by hand, and a publish that also announces itself is one click from putting an
+ * unreviewed ranking of minors in front of paying strangers.
+ */
+export const PUBLIC_TOP_75_COLLEGE_RELEASED = true
+
 export const PUBLISHED_PUBLIC_RANKINGS_YEARS = [...PUBLIC_RELEASED_YEARS].sort((a, b) => a - b)
 
 /** Every class the site ranks, released or not — what an admin preview may reach. */

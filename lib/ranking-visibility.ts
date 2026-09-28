@@ -89,5 +89,23 @@ export function canSeeProspectRanking(viewer: RankingViewer | null | undefined):
   return viewer.hasSubscription === true
 }
 
+/**
+ * The rank badge on an athlete's own profile: verified college coaches only.
+ *
+ * Deliberately narrower than `canSeeProspectRanking`, which governs the boards. A rank printed
+ * on every profile lets the whole board be reconstructed one profile at a time by anyone who
+ * can walk the roster - and the roster is public. The boards are what is sold; the badge is a
+ * recruiting tool for the people the data was gathered for.
+ *
+ * The cost is real and worth naming: a Blue family no longer sees their own wrestler's number
+ * on his page. They see it on the board their membership already includes, which is the place
+ * it is published.
+ */
+export function canSeeRankingOnProfile(viewer: RankingViewer | null | undefined): boolean {
+  if (!viewer) return false
+  if (viewer.isAdmin) return true
+  return viewer.isVerifiedCoach === true
+}
+
 /** What a viewer without access is told, which is an offer rather than a refusal. */
 export const RANKING_LOCKED_LABEL = "Ranking · NC United Blue"

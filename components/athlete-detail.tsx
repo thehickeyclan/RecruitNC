@@ -21,7 +21,7 @@ import { RequestProfileEditModal } from "./request-profile-edit-modal"
 import { MatchDataSectionImproved } from "./match-data-section-improved"
 import { SignificantWinsSection } from "./significant-wins-section"
 import { useAuth } from "@/contexts/auth-context"
-import { canSeeProspectRanking } from "@/lib/ranking-visibility"
+import { canSeeRankingOnProfile } from "@/lib/ranking-visibility"
 import { InlineEditSection } from "./inline-edit-section"
 import { InlineEditHeader } from "./inline-edit-header"
 import { ImageUploadEditor } from "./image-upload-editor"
@@ -395,13 +395,7 @@ export function AthleteDetail({
    * name on every public profile — so the whole board could be read off the roster by anybody.
    * Gated here, at the single place it is computed, so every card that renders it is covered.
    */
-  const maySeeRanking = canSeeProspectRanking({
-    isAdmin,
-    isVerifiedCoach,
-    role: viewerProfile?.role,
-    isBlueMember,
-    isOwnProfile: isViewingOwnProfile || isLinkedParentProfile,
-  })
+  const maySeeRanking = canSeeRankingOnProfile({ isAdmin, isVerifiedCoach })
   const prospectRanking = maySeeRanking ? publishedRank : null
 
   const getAthletePhoto = () => {

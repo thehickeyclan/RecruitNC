@@ -134,6 +134,16 @@ export async function buildPoundForPoundBoard(options: {
   gender?: string
   classes?: readonly number[]
   depth?: number
+  /*
+   * Per-class pool depth, overriding P4P_CLASS_DEPTHS.
+   *
+   * The published Top 75 draws only from each class's published board, which means a wrestler
+   * just outside his class cut cannot appear however he compares - and 2027 is deep enough
+   * that five state champions sit in that gap. A second, deeper board needs a wider pool
+   * without changing what the existing one does, so the depths are injectable rather than
+   * fixed at module scope.
+   */
+  classDepths?: Readonly<Record<number, number>>
 }): Promise<PoundForPoundBoard> {
   const { supabase } = options
   const gender = options.gender ?? "Male"
@@ -147,11 +157,13 @@ export async function buildPoundForPoundBoard(options: {
         .select("athlete_id, rank, class_year")
         .in("class_year", classes)
         .eq("gender", gender)
-        .lte("rank", depth)
+        .lte("rank", Math.max(depth, ...Object.values(options.classDepths ?? {}), 0))
         .range(from, to),
   )
   const drafts = fetchedDrafts.filter(
-    (draft) => Number(draft.rank) <= (P4P_CLASS_DEPTHS[Number(draft.class_year)] ?? depth),
+    (draft) =>
+      Number(draft.rank) <=
+      ((options.classDepths ?? P4P_CLASS_DEPTHS)[Number(draft.class_year)] ?? depth),
   )
   const classRankOf = new Map(drafts.map((d) => [String(d.athlete_id), Number(d.rank)]))
   const ids = [...classRankOf.keys()]

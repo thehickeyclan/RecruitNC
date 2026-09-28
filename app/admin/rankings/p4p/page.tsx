@@ -47,7 +47,6 @@ type Meta = { season: number; pool: number; meetings: number; classes: number[];
 const CLASS_TONE: Record<number, string> = {
   2027: "bg-[#d6b75d] text-slate-950",
   2028: "bg-sky-500 text-slate-950",
-  2029: "bg-emerald-500 text-slate-950",
 }
 
 function placeLabel(place: number | null | undefined): string | null {
@@ -247,7 +246,7 @@ export default function PoundForPoundPage() {
                 <h1 className="text-2xl font-black tracking-tight md:text-3xl">Top Prospects</h1>
                 <p className="mt-2 max-w-2xl text-sm text-blue-200">
                   Published as <strong>Top {P4P_PUBLIC_CAP} Ranked Prospects</strong>, across
-                  2027, 2028 and 2029. Scored on this season only; within a class the class board
+                  2027 and 2028. Scored on this season only; within a class the class board
                   decides the order.
                 </p>
               </div>

@@ -7,14 +7,30 @@ import { P4P_PUBLIC_CAP } from "@/lib/rankings/pound-for-pound"
 
 export const dynamic = "force-dynamic"
 
-/** Three classes of results and every cross-class bout between them; the class board needs 60. */
+/** Two deep class pools plus every cross-class bout between them; the board needs 60 seconds. */
 export const maxDuration = 60
 
+// Admin-only working pool for the combined 2027-2028 College Prospects list. This does not
+// change either public class board or publish anything to the public prospect rankings.
+const COLLEGE_PROSPECT_CLASSES = [2027, 2028] as const
+const COLLEGE_PROSPECT_DEPTHS: Readonly<Record<number, number>> = {
+  2027: 50,
+  2028: 50,
+}
+
+const buildCollegeProspectBoard = (gender: string) =>
+  buildPoundForPoundBoard({
+    supabase: createAdminClient(),
+    gender,
+    classes: COLLEGE_PROSPECT_CLASSES,
+    classDepths: COLLEGE_PROSPECT_DEPTHS,
+  })
+
 const cachedBoard = unstable_cache(
-  async (gender: string) => buildPoundForPoundBoard({ supabase: createAdminClient(), gender }),
+  async (gender: string) => buildCollegeProspectBoard(gender),
   // Bump when `PoundForPoundEntry` changes shape: a cached payload outlives a deploy, and the
   // class board has already been taken down once by older data reaching newer code.
-  ["admin-p4p-board", "v1"],
+  ["admin-p4p-board", "v2", "college-prospects-2027-2028"],
   { revalidate: 600, tags: ["admin-p4p-board"] },
 )
 
@@ -43,7 +59,7 @@ export async function GET(request: Request) {
   try {
     /*
      * Gated, and gated here rather than only in the page. This is an unpublished ranking of
-     * minors across three classes, and a ranking hidden only by the UI is one guessed path away
+      * minors across two classes, and a ranking hidden only by the UI is one guessed path away
      * from not being hidden at all.
      */
     const gate = await requireAdmin()
@@ -53,7 +69,7 @@ export async function GET(request: Request) {
     const gender = searchParams.get("gender") || "Male"
     const fresh = searchParams.get("refresh") === "1"
     const board = fresh
-      ? await buildPoundForPoundBoard({ supabase: createAdminClient(), gender })
+      ? await buildCollegeProspectBoard(gender)
       : await cachedBoard(gender)
 
     /*

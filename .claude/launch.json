@@ -12,6 +12,20 @@
       "autoPort": true
     },
     {
+      "name": "guild-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/matthickey/LevelUp",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3005"
+      ],
+      "port": 3005
+    },
+    {
       "name": "badge-buddies",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
@@ -24,6 +38,20 @@
         "3100"
       ],
       "port": 3100
+    },
+    {
+      "name": "tarheel-giving",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/matthickey/tarheel-giving",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3200"
+      ],
+      "port": 3200
     }
   ]
 }
