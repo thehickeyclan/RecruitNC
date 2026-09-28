@@ -36,7 +36,7 @@ const rankingLinks = [
   {
     href: "/public-rankings/prospects",
     eyebrow: "Across all classes",
-    title: "Top 70 College Prospects",
+    title: "Top 75 College Prospects",
     description: "One pound-for-pound list across North Carolina.",
     icon: Award,
   },
@@ -82,7 +82,7 @@ export default async function PublicRankingsHomepage({
             College Prospect Rankings
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-white/65">
-            Class rankings, the Top 70 college prospects and scouting reports informed by results,
+            Class rankings, the Top 75 college prospects and scouting reports informed by results,
             quality wins and strength of competition.
           </p>
         </div>

@@ -104,7 +104,7 @@ async function buildTopProspects(gender: string): Promise<TopProspectBoard> {
 }
 
 /** Bump the version whenever `TopProspectBoard` changes shape; see the class ranking loader for why. */
-export const loadTopProspects = unstable_cache(buildTopProspects, ["public-top-prospects", "v2-kahsai-move"], {
+export const loadTopProspects = unstable_cache(buildTopProspects, ["public-top-prospects", "v4-top75"], {
   revalidate: 3600,
   tags: ["public-rankings"],
 })

@@ -51,7 +51,7 @@ export const PUBLIC_RANKINGS_MAX_BY_YEAR: Record<number, number> = {
  */
 export const PUBLIC_RELEASED_YEARS: readonly number[] = []
 
-/** The cross-class Top 70 is released separately from the class boards. */
+/** The cross-class Top 75 is released separately from the class boards. */
 export const PUBLIC_TOP_PROSPECTS_RELEASED = false
 
 export const PUBLISHED_PUBLIC_RANKINGS_YEARS = [...PUBLIC_RELEASED_YEARS].sort((a, b) => a - b)

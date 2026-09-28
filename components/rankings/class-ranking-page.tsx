@@ -5,7 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { loadPublicClassRanking } from "@/lib/rankings/public-rankings-view"
-import { PUBLISHED_PUBLIC_RANKINGS_YEARS } from "@/lib/public-rankings-cap"
+import { RankingsNav } from "@/components/rankings/rankings-nav"
 
 /**
  * A published class ranking, laid out like the Tournament of Champions field.
@@ -75,22 +75,8 @@ export async function ClassRankingPage({ year }: { year: number }) {
             who they wrestled, how they did against them, and what they have done outside this state.
           </p>
 
-          <nav className="mt-8 flex flex-wrap justify-center gap-2" aria-label="Ranked classes">
-            {PUBLISHED_PUBLIC_RANKINGS_YEARS.map((y) => (
-              <a
-                key={y}
-                href={`/public-rankings/${y}`}
-                aria-current={y === year ? "page" : undefined}
-                className={
-                  y === year
-                    ? "rounded-sm border-2 border-[#D7B95A] bg-[#D7B95A]/20 px-4 py-1.5 text-sm font-bold text-[#D7B95A]"
-                    : "rounded-sm border border-white/15 bg-white/[0.03] px-4 py-1.5 text-sm font-bold text-white/70 hover:border-white/35 hover:text-white"
-                }
-              >
-                {y}
-              </a>
-            ))}
-          </nav>
+          <RankingsNav current={year} isAdmin={viewer.isAdmin === true} />
+
 
           {!ranking.published ? (
             <p className="mt-10 rounded-sm border border-white/10 bg-white/[0.03] p-8 text-center text-sm text-white/55">

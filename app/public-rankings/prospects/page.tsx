@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { RankedAthleteCard } from "@/components/rankings/ranked-athlete-card"
+import { RankingsNav } from "@/components/rankings/rankings-nav"
 import { loadTopProspects } from "@/lib/rankings/prospects-view"
 import { P4P_PUBLIC_CAP } from "@/lib/rankings/pound-for-pound"
 import { createClient } from "@/lib/supabase/server"
@@ -13,7 +14,7 @@ import { PUBLIC_TOP_PROSPECTS_RELEASED } from "@/lib/public-rankings-cap"
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "Top 70 College Prospects | RecruitNC",
+  title: "Top 75 College Prospects | RecruitNC",
   description:
     "North Carolina's top college wrestling prospects across the classes of 2027, 2028 and 2029.",
 }
@@ -90,17 +91,25 @@ export default async function TopProspectsPage() {
             2029 — one list, every class.
           </p>
 
+          <RankingsNav current="prospects" isAdmin={viewer.isAdmin === true} />
+
           {!board.published ? (
             <p className="mt-16 text-center text-sm text-white/50">
               This list has not been published yet.
             </p>
           ) : (
             <>
-              <div className="mt-10 grid gap-3">
+              {/*
+                * Same grid as the class boards. This was a single-column `grid gap-3`, which
+                * stretched every card to the full width of the page - seventy of them, one per
+                * screen. It was also a <div> wrapping the <li> each card renders, which is
+                * invalid markup and why the list read as empty to anything walking the DOM.
+                */}
+              <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
                 {board.athletes.map((athlete) => (
                   <RankedAthleteCard key={athlete.athleteId} athlete={athlete} />
                 ))}
-              </div>
+              </ul>
               {/*
                 * Said on the page, because it is the first question a parent asks when their
                 * son is 14th in his class and 31st here.

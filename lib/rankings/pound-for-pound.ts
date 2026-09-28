@@ -174,7 +174,7 @@ export const CLASS_OVERRIDE_ALERT = 8
  * had already judged worth ranking. Everyone in the pool stays visible to an admin, since
  * deciding the order is most of the work, but seventy is what goes out.
  */
-export const P4P_PUBLIC_CAP = 70
+export const P4P_PUBLIC_CAP = 75
 
 /**
  * Score everybody, then let results override the score.
