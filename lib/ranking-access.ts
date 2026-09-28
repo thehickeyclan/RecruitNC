@@ -14,6 +14,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { normalizeRole } from "./viewer-role"
 import type { RankingViewer } from "./ranking-visibility"
 import { isSubscriptionLive } from "./scouting-report-entitlement"
+import { isWiqCurrent } from "./blue-membership"
 
 /**
  * A Blue membership is read from the payer, which is how a parent qualifies.
@@ -26,6 +27,11 @@ import { isSubscriptionLive } from "./scouting-report-entitlement"
  * out of the thing they pay for is the wrong way to collect.
  */
 const ENTITLING_STATUSES = ["active", "trialing", "past_due"] as const
+
+/** Stripe-side membership: any row already filtered to an entitling status. */
+function isBlueFromStripe(memberships: unknown[] | null | undefined): boolean {
+  return (memberships ?? []).length > 0
+}
 
 export async function resolveRankingViewer(options: {
   /** Session client, for the signed-in user and their profile. */
@@ -63,6 +69,42 @@ export async function resolveRankingViewer(options: {
       .maybeSingle(),
   ])
 
+  /*
+   * The other half of Blue, and the half that has paid longest.
+   *
+   * The original cohort was never migrated off WrestlingIQ - deliberately, because asking
+   * thirty-odd families to re-enter card details is itself a churn moment. `blue_memberships`
+   * is the Stripe side only, so reading membership from it alone told a family paying $51 a
+   * month for years that they needed to buy a $9.99 subscription to see the rankings their
+   * membership includes. Jim Bernthal reported exactly that on announcement day.
+   *
+   * The link runs parent -> athlete -> subscription, the same path `blue-wiq-for-parent` uses:
+   * athletes this account claimed, plus athletes it is recorded as a parent of.
+   *
+   * `isWiqCurrent` keeps a cancelled subscription inside its paid window, for the same reason
+   * `past_due` entitles on the Stripe side: they have paid for those days.
+   */
+  let isWiqBlue = false
+  if (!isBlueFromStripe(memberships)) {
+    const [{ data: links }, { data: claimed }] = await Promise.all([
+      admin.from("parent_athlete_links").select("athlete_id").eq("user_id", user.id),
+      admin.from("athletes").select("id").eq("claimed_by_user_id", user.id),
+    ])
+    const athleteIds = [
+      ...new Set([
+        ...(links ?? []).map((l) => String(l.athlete_id)).filter(Boolean),
+        ...(claimed ?? []).map((c) => String(c.id)).filter(Boolean),
+      ]),
+    ]
+    if (athleteIds.length > 0) {
+      const { data: wiq } = await admin
+        .from("blue_wiq_subscriptions")
+        .select("status, active_until")
+        .in("athlete_id", athleteIds)
+      isWiqBlue = (wiq ?? []).some((row) => isWiqCurrent(row as never))
+    }
+  }
+
   let isOwnProfile = false
   if (options.athleteId) {
     const { data: owned } = await admin
@@ -80,7 +122,7 @@ export async function resolveRankingViewer(options: {
       isAdmin: profile?.is_admin === true,
       isVerifiedCoach: profile?.verified_coach === true,
       role: profile?.role ?? null,
-      isBlueMember: (memberships ?? []).length > 0,
+      isBlueMember: isBlueFromStripe(memberships) || isWiqBlue,
       hasSubscription: isSubscriptionLive(subscription ?? null),
       isOwnProfile,
     },
