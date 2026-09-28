@@ -9,9 +9,18 @@ import type { PublicRankedAthlete, PublicRankingCredentialKind } from "@/lib/ran
  * titles were won between them. A wrestler with two is still one wrestler, which is the
  * number that describes how strong the board is.
  *
- * The placer counts exclude champions for the same reason the pills do - somebody who won it
- * is counted under champions, and counting them twice would inflate the board.
+ * The placer counts exclude champions: somebody who won it is counted under champions, and
+ * counting them twice inflates the board. The TOC pills already work that way. The state pills
+ * do not - a champion who placed in another year carries both, which is right on a card and
+ * wrong here. Counting pills made "State placers" 22 on the 2027 board when only eight of the
+ * thirty had placed without ever winning, so the summary drops the placer kind for anyone who
+ * holds the matching title.
  */
+const CHAMPION_OF: Partial<Record<PublicRankingCredentialKind, PublicRankingCredentialKind>> = {
+  "state-placer": "state-champion",
+  "toc-placer": "toc-champion",
+}
+
 const ROWS: Array<{ kind: PublicRankingCredentialKind; label: string; plural: string }> = [
   { kind: "toc-champion", label: "TOC champion", plural: "TOC champions" },
   { kind: "toc-placer", label: "TOC placer", plural: "TOC placers" },
@@ -20,16 +29,27 @@ const ROWS: Array<{ kind: PublicRankingCredentialKind; label: string; plural: st
   { kind: "state-placer", label: "State placer", plural: "State placers" },
 ]
 
-export function RankingsSummary({ athletes }: { athletes: PublicRankedAthlete[] }) {
-  if (athletes.length === 0) return null
-
+/** Wrestlers per credential kind, placers counted only when they hold no matching title. */
+export function summaryCounts(
+  athletes: Pick<PublicRankedAthlete, "credentials">[],
+): Map<PublicRankingCredentialKind, number> {
   const counts = new Map<PublicRankingCredentialKind, number>()
   for (const athlete of athletes) {
     // A kind can only appear once per card, but count distinctly in case that ever changes.
-    for (const kind of new Set(athlete.credentials.map((c) => c.kind))) {
+    const kinds = new Set(athlete.credentials.map((c) => c.kind))
+    for (const kind of kinds) {
+      const title = CHAMPION_OF[kind]
+      if (title && kinds.has(title)) continue
       counts.set(kind, (counts.get(kind) ?? 0) + 1)
     }
   }
+  return counts
+}
+
+export function RankingsSummary({ athletes }: { athletes: PublicRankedAthlete[] }) {
+  if (athletes.length === 0) return null
+
+  const counts = summaryCounts(athletes)
 
   const shown = ROWS.map((row) => ({ ...row, n: counts.get(row.kind) ?? 0 })).filter((row) => row.n > 0)
   if (shown.length === 0) return null
