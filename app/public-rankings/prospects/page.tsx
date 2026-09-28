@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { RankedAthleteCard } from "@/components/rankings/ranked-athlete-card"
 import { RankingsNav } from "@/components/rankings/rankings-nav"
+import { RankingsSummary } from "@/components/rankings/rankings-summary"
 import { loadTopProspects } from "@/lib/rankings/prospects-view"
 import { P4P_PUBLIC_CAP } from "@/lib/rankings/pound-for-pound"
 import { createClient } from "@/lib/supabase/server"
@@ -90,6 +91,8 @@ export default async function TopProspectsPage() {
             The top college prospects in North Carolina, across the classes of 2027, 2028 and
             2029 — one list, every class.
           </p>
+
+          <RankingsSummary athletes={board.athletes} />
 
           <RankingsNav current="prospects" isAdmin={viewer.isAdmin === true} />
 

@@ -27,7 +27,12 @@ import { getPublicRankingsMax, isPublicRankingsYearPublished, isRankedClassYear 
  * The only three credentials a public card carries. Narrowed deliberately: a wider union let
  * seven pills onto a card and buried the two that decide a ranking.
  */
-export type PublicRankingCredentialKind = "all-american" | "state-champion" | "state-placer"
+export type PublicRankingCredentialKind =
+  | "all-american"
+  | "state-champion"
+  | "state-placer"
+  | "toc-champion"
+  | "toc-placer"
 
 export type PublicRankingCredential = {
   kind: PublicRankingCredentialKind
@@ -81,6 +86,27 @@ export function credentialsFrom(held: AthleteCredentials | undefined): PublicRan
     })
   }
 
+  /*
+   * Tournament of Champions, above the state pills: it is an invitational drawn from the whole
+   * state, so a placing there says something a classification title cannot.
+   */
+  const tocTitles = held.toc.filter((r) => r.place === 1)
+  const tocPlaces = held.toc.filter((r) => r.place > 1)
+  if (tocTitles.length) {
+    out.push({
+      kind: "toc-champion",
+      label: tocTitles.length > 1 ? `${tocTitles.length}X TOC champ` : "TOC champ",
+      detail: tocTitles.map((t) => `${t.year} Tournament of Champions winner`).join(" · "),
+    })
+  } else if (tocPlaces.length) {
+    // Only when they have not won it - "TOC champ" already implies they placed.
+    out.push({
+      kind: "toc-placer",
+      label: tocPlaces.length > 1 ? `${tocPlaces.length}X TOC placer` : "TOC placer",
+      detail: tocPlaces.map((p) => `${p.year} Tournament of Champions ${ordinal(p.place)}`).join(" · "),
+    })
+  }
+
   const titles = held.state.filter((r) => r.place === 1)
   const placements = held.state.filter((r) => r.place != null && r.place > 1 && r.place <= 8)
 
@@ -101,11 +127,11 @@ export function credentialsFrom(held: AthleteCredentials | undefined): PublicRan
   }
 
   /**
-   * Three credentials, and no more.
+   * Four credentials, and no more.
    *
    * National placer, Super 32 qualifier, national team and significant wins were all shown too,
-   * so a card could carry seven pills and the two that decide a ranking — All-American and state
-   * title — were lost in the middle of them. A reader scanning a top thirty is comparing
+   * so a card could carry seven pills and the ones that decide a ranking — All-American, state
+   * title, and now a Tournament of Champions placing — were lost in the middle of them. A reader scanning a top thirty is comparing
    * wrestlers, and comparison needs the same small set on every card.
    *
    * The data behind the others is still collected and still scores; it is simply not a pill.
@@ -210,6 +236,6 @@ const PUBLIC_RANKING_CACHE_VERSION = "v6-shared-credential-engine"
 
 export const loadPublicClassRanking = unstable_cache(
   buildPublicClassRanking,
-  ["public-class-ranking", PUBLIC_RANKING_CACHE_VERSION, "v14-data-order-2029"],
+  ["public-class-ranking", PUBLIC_RANKING_CACHE_VERSION, "v15-toc-pills"],
   { revalidate: 3600, tags: ["public-rankings"] },
 )

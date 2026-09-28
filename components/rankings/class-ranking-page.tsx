@@ -6,6 +6,7 @@ import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { loadPublicClassRanking } from "@/lib/rankings/public-rankings-view"
 import { RankingsNav } from "@/components/rankings/rankings-nav"
+import { RankingsSummary } from "@/components/rankings/rankings-summary"
 
 /**
  * A published class ranking, laid out like the Tournament of Champions field.
@@ -74,6 +75,8 @@ export async function ClassRankingPage({ year }: { year: number }) {
             The top {ranking.cap} wrestlers in North Carolina&apos;s Class of {year}, ranked on results:
             who they wrestled, how they did against them, and what they have done outside this state.
           </p>
+
+          <RankingsSummary athletes={ranking.athletes} />
 
           <RankingsNav current={year} isAdmin={viewer.isAdmin === true} />
 

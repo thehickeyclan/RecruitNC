@@ -49,10 +49,10 @@ export const PUBLIC_RANKINGS_MAX_BY_YEAR: Record<number, number> = {
  * Empty means nothing is public. Admins still see every board, so the release can be checked
  * before it is announced.
  */
-export const PUBLIC_RELEASED_YEARS: readonly number[] = []
+export const PUBLIC_RELEASED_YEARS: readonly number[] = [2027, 2028, 2029]
 
 /** The cross-class Top 75 is released separately from the class boards. */
-export const PUBLIC_TOP_PROSPECTS_RELEASED = false
+export const PUBLIC_TOP_PROSPECTS_RELEASED = true
 
 export const PUBLISHED_PUBLIC_RANKINGS_YEARS = [...PUBLIC_RELEASED_YEARS].sort((a, b) => a - b)
 

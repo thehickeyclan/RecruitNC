@@ -62,9 +62,14 @@ export type NationalResult = {
   record: string | null
 }
 
+/** A placing at the NC United Tournament of Champions. Top four; the field is eight a weight. */
+export type TocFinish = { year: number; place: number }
+
 export type AthleteCredentials = {
   allAmerican: AllAmericanFinish[]
   state: StateFinish[]
+  /** Tournament of Champions placings, newest first. */
+  toc: TocFinish[]
   /** Every national appearance, newest first — placings and record-only trips alike. */
   national: NationalResult[]
 }
@@ -155,6 +160,25 @@ export async function loadAthleteCredentials(
     .filter((row) => Number.isFinite(row.year))
     .sort((a, b) => b.year - a.year)
 
+  /*
+   * The Tournament of Champions is ours, and it is not in the shared tournament bundle - it
+   * sits in `other_tournament_results` under a `toc-` event key. Queried here rather than
+   * added to the bundle because only this credential set needs it.
+   *
+   * Only a placing counts. Thirty-nine of the seventy-nine 2026 entries have no placement,
+   * and "competed at TOC" is not a credential worth a pill next to a state title.
+   */
+  const { data: tocRows } = await supabase
+    .from("other_tournament_results")
+    .select("year, placement")
+    .eq("athlete_id", String(athlete.id ?? ""))
+    .ilike("event_key", "toc-%")
+
+  const toc: TocFinish[] = ((tocRows ?? []) as Array<Record<string, unknown>>)
+    .map((row) => ({ year: Number(row.year), place: placementNumber(row.placement) ?? 0 }))
+    .filter((row) => Number.isFinite(row.year) && row.place >= 1 && row.place <= 4)
+    .sort((a, b) => b.year - a.year || a.place - b.place)
+
   const national: NationalResult[] = (
     [
       [bundle.nhsca, "NHSCA"],
@@ -190,7 +214,7 @@ export async function loadAthleteCredentials(
       return placed(a) - placed(b) || b.year - a.year || (a.place ?? 99) - (b.place ?? 99)
     })
 
-  return { allAmerican, state, national }
+  return { allAmerican, state, toc, national }
 }
 
 /**

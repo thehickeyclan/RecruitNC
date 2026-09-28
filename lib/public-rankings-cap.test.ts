@@ -10,17 +10,20 @@ import {
 } from "@/lib/public-rankings-cap"
 
 describe("public rankings cap", () => {
-  it("does not publish any class before the official release", () => {
+  it("serves exactly the three released classes, and nothing else", () => {
     /*
      * Depth and release used to be the same map, so locking the release meant emptying the
      * caps - and a publish would then have fallen back to the default thirty and put twenty
      * unranked 2029 wrestlers on a public page. They are separate now: the caps say how deep
      * each board goes, PUBLIC_RELEASED_YEARS says which are live.
      */
-    expect(PUBLISHED_PUBLIC_RANKINGS_YEARS).toEqual([])
-    expect(isPublicRankingsYearPublished(2027)).toBe(false)
-    expect(isPublicRankingsYearPublished(2029)).toBe(false)
+    expect(PUBLISHED_PUBLIC_RANKINGS_YEARS).toEqual([2027, 2028, 2029])
+    expect(isPublicRankingsYearPublished(2027)).toBe(true)
+    expect(isPublicRankingsYearPublished(2029)).toBe(true)
+    // Released is not the same as visible: the entitlement check runs first, so these boards
+    // still reach only Blue members, verified coaches and subscribers.
     expect(isPublicRankingsYearPublished(2026)).toBe(false)
+    expect(isPublicRankingsYearPublished(2030)).toBe(false)
   })
 
   it("keeps each board's depth regardless of whether it is released", () => {
