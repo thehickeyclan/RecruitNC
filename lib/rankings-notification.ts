@@ -42,7 +42,15 @@ export function buildRankingsPush(input: {
   return {
     title: `Class of ${graduationYear} ${who}rankings are out`.replace("  ", " "),
     body,
-    data: { kind: "rankings", graduationYear, gender, path: "/rankings" },
+    /*
+     * Deep-link to /public-rankings, not /rankings.
+     *
+     * /rankings is the sales page. /public-rankings is the hub, and it already sends anyone
+     * without access back to /rankings on its own - so this one link is right for everybody:
+     * a Blue family lands on the boards they were told about, and a stranger lands on the
+     * offer. Pointing the alert at the sales page sent paying members to be sold to.
+     */
+    data: { kind: "rankings", graduationYear, gender, path: "/public-rankings" },
   }
 }
 
