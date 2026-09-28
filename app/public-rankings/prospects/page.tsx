@@ -126,6 +126,24 @@ export default async function TopProspectsPage() {
                 consistently a wrestler seeks out the best. Within a class this list follows that
                 class&apos;s published board exactly.
               </p>
+
+              {/*
+                * The pool, stated plainly.
+                *
+                * This list is drawn from the published class boards and nowhere else - thirty
+                * from 2027, thirty from 2028, fifteen from 2029. So a wrestler sitting just
+                * outside his own class board cannot appear here however he would fare against
+                * the names at the bottom, and a deeper class is capped at the same thirty as a
+                * shallower one. That is a decision about how far each board goes, not a
+                * judgement that the 31st in one class is behind the 15th in another, and saying
+                * so is cheaper than the argument that follows from leaving it unsaid.
+                */}
+              <p className="mx-auto mt-4 max-w-2xl text-center text-xs leading-relaxed text-white/40">
+                This list is drawn only from wrestlers ranked on their class board &mdash; the
+                published Top 30 in 2027 and 2028, and the Top 15 in 2029. A wrestler outside
+                those cuts is not eligible for it, regardless of how he would compare with anyone
+                on this page.
+              </p>
             </>
           )}
         </div>
