@@ -48,7 +48,8 @@ const rankingLinks = [
     href: "/public-rankings/college-prospects",
     eyebrow: "Classes of 2027 & 2028",
     title: "Top 75 College Prospects",
-    description: "Reaches past every class cut, for the wrestlers a programme can contact now.",
+    description:
+      "Ranked against each other regardless of class or weight — the wrestlers a college programme can contact now. The class of 2029 has its own board.",
     icon: GraduationCap,
   },
 ]
