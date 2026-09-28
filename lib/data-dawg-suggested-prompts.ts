@@ -86,11 +86,25 @@ export function getRouteForSuggestedPrompt(userMessage: string): SuggestedRoute 
  */
 export function getSuggestedPrompts(pathname: string): string[] {
   if (pathname.includes("/rankings") || pathname.includes("/public-rankings")) {
+    /*
+     * Not a single ranking question, on the rankings pages.
+     *
+     * Rankings are a paid product and `prospect-rankings.ts` refuses every one of them by
+     * design, returning a subscribe link rather than a place. So these four chips - all of
+     * which asked for exactly that - were an invitation to be turned down, printed beside the
+     * board the reader had already opened. A chip is a promise that the question gets an
+     * answer; these promised the one thing the handler will never give.
+     *
+     * What is left is the record-book material Data Dawg answers well, which is also what
+     * somebody reading a ranking tends to ask next.
+     */
     return [
-      "Show me all Class of 2027 rankings",
-      "Show me all Class of 2028 rankings",
-      "Who are the top 10 ranked prospects?",
-      "What athletes are ranked in the top 20?",
+      "Who are our 4x state champions?",
+      "Who is the all-time winningest wrestler?",
+      "Which school has the most NHSCA All-Americans?",
+      // Not "most wins in a single season": that routes to winningest_wrestler and answers with
+      // the career record instead, which is a different question wearing the same words.
+      "Who are the 4x state placers?",
     ]
   }
   if (pathname.includes("/nchsaa")) {
