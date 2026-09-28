@@ -15,7 +15,6 @@
  * and the wrestler inside the published cut — is a separate question answered before this one.
  */
 
-import { normalizeRole } from "./viewer-role"
 
 export type RankingViewer = {
   isAdmin?: boolean
@@ -52,7 +51,6 @@ export function hasPremiumAccess(viewer: RankingViewer | null | undefined): bool
   if (!viewer) return false
   if (viewer.isAdmin) return true
   if (viewer.isVerifiedCoach) return true
-  if (normalizeRole(viewer.role) === "college_coach") return true
   if (viewer.isBlueMember === true) return true
   return viewer.hasSubscription === true
 }
@@ -71,13 +69,22 @@ export function canSeeProspectRanking(viewer: RankingViewer | null | undefined):
    * subscribes. What no longer follows is owning the profile.
    */
   if (viewer.isAdmin) return true
-  if (viewer.isVerifiedCoach) return true
   /*
-   * Hyphen and underscore spellings both exist in production — "college-coach" and
-   * "college_coach" — so a literal comparison locks out whichever half is stored the other way.
-   * `viewer-role` folds them, and it is the same trap that filed 13 of 14 coaches as fans.
+   * Verification, not the role the account picked for itself.
+   *
+   * "College Coach" is an option in the dropdown at /auth/signup, and the role it writes used
+   * to be enough on its own. That made the paywall optional: anyone willing to choose a
+   * different word about themselves got every board free. Six accounts already hold the role
+   * without verification, and they read like supporters rather than programmes.
+   *
+   * A real coach is not inconvenienced - 37 of the 43 college-coach accounts are already
+   * verified, and the rest sit in the approval queue where an admin can clear them in a click.
+   * `verified_coach` is set by that human check, which is the thing worth trusting.
+   *
+   * (Both "college-coach" and "college_coach" are stored in production; `normalizeRole` folds
+   * them, and is still used wherever the role legitimately decides something.)
    */
-  if (normalizeRole(viewer.role) === "college_coach") return true
+  if (viewer.isVerifiedCoach) return true
   if (viewer.isBlueMember === true) return true
   return viewer.hasSubscription === true
 }

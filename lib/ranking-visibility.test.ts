@@ -16,9 +16,21 @@ describe("canSeeProspectRanking", () => {
     expect(canSeeProspectRanking({ isBlueMember: true })).toBe(true)
   })
 
-  it("shows it to a college coach, by role or by verification", () => {
-    expect(canSeeProspectRanking({ role: "college_coach" })).toBe(true)
+  it("shows it to a verified college coach", () => {
     expect(canSeeProspectRanking({ isVerifiedCoach: true })).toBe(true)
+  })
+
+  it("does not take the account's word for being a college coach", () => {
+    /*
+     * "College Coach" is an option in the dropdown at /auth/signup. While the role alone
+     * granted access, the paywall was optional for anyone willing to pick a different word
+     * about themselves - six accounts held the role unverified, reading as supporters rather
+     * than programmes. Verification is a human check against a staff directory; the role is a
+     * self-description.
+     */
+    expect(canSeeProspectRanking({ role: "college_coach" })).toBe(false)
+    expect(canSeeProspectRanking({ role: "college-coach" })).toBe(false)
+    expect(canSeeProspectRanking({ role: "college_coach", isVerifiedCoach: true })).toBe(true)
   })
 
   it("does not show a wrestler their own ranking on its own", () => {
@@ -54,10 +66,10 @@ describe("the paid alternative to Blue", () => {
     expect(canSeeProspectRanking({ isBlueMember: true, hasSubscription: false })).toBe(true)
   })
 
-  it("reads a hyphenated college coach role, which production also stores", () => {
-    // 13 of 14 coaches were misfiled once already by a literal comparison on this field.
-    expect(canSeeProspectRanking({ role: "college-coach" })).toBe(true)
-    expect(canSeeProspectRanking({ role: "college_coach" })).toBe(true)
+  it("refuses both spellings of an unverified coach role", () => {
+    // Production stores both "college-coach" and "college_coach"; neither is a credential.
+    expect(canSeeProspectRanking({ role: "college-coach" })).toBe(false)
+    expect(canSeeProspectRanking({ role: "college_coach" })).toBe(false)
   })
 })
 
@@ -73,7 +85,8 @@ describe("one entitlement for everything sold", () => {
 
   it("gives a verified college coach access without paying", () => {
     expect(hasPremiumAccess({ isVerifiedCoach: true })).toBe(true)
-    expect(hasPremiumAccess({ role: "college-coach" })).toBe(true)
+    // The self-declared role buys nothing here either.
+    expect(hasPremiumAccess({ role: "college-coach" })).toBe(false)
   })
 
   it("gives a free account nothing", () => {
