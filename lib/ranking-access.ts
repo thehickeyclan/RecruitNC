@@ -45,6 +45,25 @@ export async function resolveRankingViewer(options: {
   const { data: auth } = await supabase.auth.getUser()
   const user = auth?.user ?? null
   if (!user) return { viewer: {}, userId: null }
+  return resolveRankingViewerForUser({ admin, userId: user.id, athleteId: options.athleteId })
+}
+
+/**
+ * The same decision, for a caller who already knows who is asking.
+ *
+ * The phone carries a bearer token rather than cookies, so it cannot use the session client
+ * above — and the answer to "may this person read a ranking" must not depend on which client
+ * asked. Both paths land here, which is what stops the app and the web drifting into two
+ * different policies, the way reading rankings straight from the table once did.
+ */
+export async function resolveRankingViewerForUser(options: {
+  admin: SupabaseClient
+  userId: string
+  athleteId?: string | null
+}): Promise<{ viewer: RankingViewer; userId: string | null }> {
+  const { admin } = options
+  const user = { id: options.userId }
+  const supabase = admin
 
   const [{ data: profile }, { data: memberships }, { data: subscription }] = await Promise.all([
     supabase
