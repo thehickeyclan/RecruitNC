@@ -3,6 +3,19 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        /*
+         * /ranking, singular. Nothing in this codebase links to it, but people keep arriving:
+         * 17 login-wall hits in one week, and it was the last page six named accounts saw. It
+         * is an old bookmark or an old link, and it has been answering 404 to the visitors most
+         * intent on reaching the rankings - during the launch week, no less.
+         *
+         * Not permanent: a browser caches a 308 forever, which would shadow a real page here.
+         */
+        source: "/ranking",
+        destination: "/rankings",
+        permanent: false,
+      },
+      {
         // There is no /dashboard page, but sign-up confirmation emails have sent new accounts
         // there (see app/auth/callback/route.ts), so people have it open, bookmarked, or in their
         // history. Not permanent: a browser caches a 308 for good, which would shadow a real page
