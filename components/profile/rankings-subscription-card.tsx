@@ -26,12 +26,16 @@ function formatDate(iso: string | null): string {
  * another way - Blue, a verified coach account, staff - which needs no subscription; or neither,
  * with the way to get it.
  */
-export function RankingsSubscriptionCard() {
-  const [subscription, setSubscription] = useState<Subscription | null>(null)
-  const [hasAccess, setHasAccess] = useState<boolean | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [opening, setOpening] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+export type RankingsAccess = {
+  loading: boolean
+  subscription: Subscription | null
+  /** Access through Blue, a verified coach account or staff - no subscription needed. */
+  hasAccess: boolean
+}
+
+/** Whether this account can see the rankings, and the paid subscription if there is one. */
+export function useRankingsAccess(): RankingsAccess {
+  const [state, setState] = useState<RankingsAccess>({ loading: true, subscription: null, hasAccess: false })
 
   useEffect(() => {
     let cancelled = false
@@ -44,14 +48,28 @@ export function RankingsSubscriptionCard() {
         .catch(() => null),
     ]).then(([sub, landing]) => {
       if (cancelled) return
-      setSubscription((sub as { subscription?: Subscription } | null)?.subscription ?? null)
-      setHasAccess((landing as { destination?: string } | null)?.destination === "/public-rankings")
-      setLoading(false)
+      setState({
+        loading: false,
+        subscription: (sub as { subscription?: Subscription } | null)?.subscription ?? null,
+        hasAccess: (landing as { destination?: string } | null)?.destination === "/public-rankings",
+      })
     })
     return () => {
       cancelled = true
     }
   }, [])
+
+  return state
+}
+
+export function isLiveSubscription(subscription: Subscription | null): boolean {
+  return !!subscription && ["active", "trialing", "past_due"].includes(subscription.status)
+}
+
+export function RankingsSubscriptionCard({ access }: { access: RankingsAccess }) {
+  const { subscription, hasAccess, loading } = access
+  const [opening, setOpening] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const manage = async () => {
     setOpening(true)
@@ -67,21 +85,21 @@ export function RankingsSubscriptionCard() {
     }
   }
 
-  const live = subscription && ["active", "trialing", "past_due"].includes(subscription.status)
+  const live = isLiveSubscription(subscription)
 
   return (
-    <Card className="bg-[#0F1E32] border-[#1e3a5f] shadow-md overflow-hidden">
+    <Card className="shadow-md overflow-hidden">
       <div className="h-1 w-full bg-gradient-to-r from-[#D3B574] to-[#c4a665]" aria-hidden />
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-white">
+        <CardTitle className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-[#D3B574]" />
           RecruitNC Rankings
         </CardTitle>
-        <CardDescription className="text-gray-400">
+        <CardDescription className="text-muted-foreground">
           Every published class ranking, the college prospects board and scouting reports.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3 text-sm text-gray-300">
+      <CardContent className="space-y-3 text-sm text-muted-foreground">
         {loading ? (
           <p className="flex items-center gap-2 text-gray-400">
             <Loader2 className="h-4 w-4 animate-spin" /> Loading…
@@ -91,11 +109,11 @@ export function RankingsSubscriptionCard() {
             <dl className="grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-3">
               <div>
                 <dt className="text-[11px] uppercase tracking-wide text-gray-500">Status</dt>
-                <dd className="font-medium text-white capitalize">{subscription!.status.replace(/_/g, " ")}</dd>
+                <dd className="font-medium text-foreground capitalize">{subscription!.status.replace(/_/g, " ")}</dd>
               </div>
               <div>
                 <dt className="text-[11px] uppercase tracking-wide text-gray-500">Billed</dt>
-                <dd className="font-medium text-white">
+                <dd className="font-medium text-foreground">
                   {subscription!.interval === "year" ? "Annually" : subscription!.interval === "month" ? "Monthly" : "—"}
                 </dd>
               </div>
@@ -103,7 +121,7 @@ export function RankingsSubscriptionCard() {
                 <dt className="text-[11px] uppercase tracking-wide text-gray-500">
                   {subscription!.cancelAtPeriodEnd ? "Access until" : "Next bill"}
                 </dt>
-                <dd className="font-medium text-white">{formatDate(subscription!.nextBillingAt)}</dd>
+                <dd className="font-medium text-foreground">{formatDate(subscription!.nextBillingAt)}</dd>
               </div>
             </dl>
             {subscription!.canManage ? (

@@ -38,7 +38,7 @@ function statusBadge(status: GuildCreditAllocationRow["status"]) {
     return <Badge className="bg-emerald-700 text-[10px] font-medium hover:bg-emerald-700">Applied</Badge>
   if (status === "failed") return <Badge variant="destructive" className="text-[10px] font-medium">Failed</Badge>
   return (
-    <Badge variant="outline" className="border-slate-200 text-[10px] font-medium text-slate-600">
+    <Badge variant="outline" className="border-border text-[10px] font-medium text-muted-foreground">
       Pending
     </Badge>
   )
@@ -179,7 +179,7 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
   const hasSuccessfulTransfer = allocations.some((a) => a.status === "guild_applied")
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen} className="overflow-hidden rounded-2xl border border-[#003366]/12 bg-white shadow-md shadow-[#003366]/5">
+    <Collapsible open={open} onOpenChange={setOpen} className="overflow-hidden rounded-2xl border border-border bg-card shadow-md shadow-[#003366]/5">
       <CollapsibleTrigger asChild>
         <button
           type="button"
@@ -193,7 +193,7 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
               role="status"
               className={cn(
                 "h-2.5 w-2.5 shrink-0 rounded-full ring-2 ring-white/60 transition-colors",
-                loading ? "animate-pulse bg-[#03154C]/30" : guildParentUserId ? "bg-emerald-500" : hasTransferHistory ? "bg-amber-500" : "bg-[#03154C]/35",
+                loading ? "animate-pulse bg-muted" : guildParentUserId ? "bg-emerald-500" : hasTransferHistory ? "bg-amber-500" : "bg-muted",
               )}
               aria-label={
                 loading
@@ -205,16 +205,16 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
                       : "Guild not linked yet"
               }
             />
-            <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-[#03154C] sm:text-sm">Transfer to Guild</span>
+            <span className="text-xs font-extrabold uppercase tracking-[0.18em] text-foreground sm:text-sm">Transfer to Guild</span>
           </span>
           <ChevronDown
-            className={cn("h-5 w-5 shrink-0 text-[#03154C] transition-transform duration-200", open && "rotate-180")}
+            className={cn("h-5 w-5 shrink-0 text-foreground transition-transform duration-200", open && "rotate-180")}
             aria-hidden
           />
         </button>
       </CollapsibleTrigger>
 
-      <CollapsibleContent className="border-t border-[#003366]/10 data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+      <CollapsibleContent className="border-t border-border data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
         <div className="space-y-4 px-4 py-5 sm:px-6 sm:py-6">
           <div className="flex justify-end">
             <Button
@@ -222,7 +222,7 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
               variant="outline"
               size="sm"
               disabled={loading}
-              className="rounded-xl border-[#003366]/20 text-[#03154C]"
+              className="rounded-xl border-border text-foreground"
               onClick={() =>
                 void (async () => {
                   await load()
@@ -236,13 +236,13 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
           </div>
 
           {loading ? (
-            <p className="flex items-center gap-2 text-sm text-slate-600">
-              <Loader2 className="h-4 w-4 animate-spin text-[#03154C]" aria-hidden />
+            <p className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin text-foreground" aria-hidden />
               Loading…
             </p>
           ) : !guildParentUserId ? (
             <div className="space-y-2">
-              <p className="rounded-xl border border-amber-200/90 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+              <p className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
                 {hasSuccessfulTransfer || hasTransferHistory ? (
                   <>
                     RecruitNC first tries your <strong className="font-semibold">email</strong>, then{" "}
@@ -260,31 +260,31 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
                 )}
               </p>
               {guildLinkFailureReason ? (
-                <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+                <p className="rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground">
                   {humanizeGuildLinkFailureReason(guildLinkFailureReason)}
                 </p>
               ) : null}
             </div>
           ) : !grantConfigured ? (
-            <p className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+            <p className="rounded-xl border border-border bg-muted px-4 py-3 text-sm text-foreground">
               Transfers aren&apos;t enabled yet for your account. Contact NC United if this is unexpected.
             </p>
           ) : spartanAthletes.length === 0 ? (
-            <p className="text-sm text-slate-600">Link wrestlers under Family & athletes first.</p>
+            <p className="text-sm text-muted-foreground">Link wrestlers under Family & athletes first.</p>
           ) : (
             <>
               {spartanLoading ? (
-                <p className="text-xs font-medium text-[#03154C]/80">Updating balances…</p>
+                <p className="text-xs font-medium text-foreground">Updating balances…</p>
               ) : null}
               <form onSubmit={onSubmit} className="max-w-lg space-y-4">
-                <div className="space-y-2 rounded-xl border border-[#003366]/10 bg-slate-50/60 px-3 py-3 text-sm sm:px-4">
+                <div className="space-y-2 rounded-xl border border-border bg-muted px-3 py-3 text-sm sm:px-4">
                   {allocatable.map((a) => (
                     <div key={a.athleteId} className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between">
-                      <span className="font-medium text-[#03154C]">{a.name}</span>
-                      <span className="tabular-nums text-slate-700">
-                        Up to <strong className="text-emerald-800">{formatUsd(a.allocatableToGuildCents)}</strong>
+                      <span className="font-medium text-foreground">{a.name}</span>
+                      <span className="tabular-nums text-foreground">
+                        Up to <strong className="text-green-300">{formatUsd(a.allocatableToGuildCents)}</strong>
                         {a.reservedToGuildCents > 0 ? (
-                          <span className="block text-xs font-normal text-slate-500 sm:ml-1 sm:inline">
+                          <span className="block text-xs font-normal text-muted-foreground sm:ml-1 sm:inline">
                             ({formatUsd(a.reservedToGuildCents)} in Guild)
                           </span>
                         ) : null}
@@ -295,7 +295,7 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
                 <div className="space-y-2">
                   <Label htmlFor="guild-athlete">Wrestler</Label>
                   <Select value={athleteId} onValueChange={setAthleteId} required>
-                    <SelectTrigger id="guild-athlete" className="border-[#003366]/15">
+                    <SelectTrigger id="guild-athlete" className="border-border">
                       <SelectValue placeholder="Select" />
                     </SelectTrigger>
                     <SelectContent>
@@ -316,11 +316,11 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     required
-                    className="border-[#003366]/15"
+                    className="border-border"
                     disabled={spartanLoading}
                   />
                   {selected && selected.allocatableToGuildCents > 0 ? (
-                    <p className="text-xs text-slate-500">Max {formatUsd(selected.allocatableToGuildCents)}</p>
+                    <p className="text-xs text-muted-foreground">Max {formatUsd(selected.allocatableToGuildCents)}</p>
                   ) : null}
                 </div>
                 <Button
@@ -331,7 +331,7 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
                     !selected ||
                     selected.allocatableToGuildCents <= 0
                   }
-                  className="w-full bg-[#03154C] text-white hover:bg-[#0a2a6e] sm:w-auto"
+                  className="w-full bg-[#13294B] text-white hover:bg-[#1e3a5f] sm:w-auto"
                 >
                   {submitting ? (
                     <>
@@ -347,33 +347,33 @@ export function GuildCreditAllocationSection({ spartanAthletes, spartanLoading, 
           )}
 
           {allocations.length > 0 ? (
-            <Collapsible defaultOpen={false} className="border-t border-slate-100 pt-4">
-              <CollapsibleTrigger className="group flex w-full items-center justify-between gap-2 rounded-xl px-2 py-2 text-left text-sm font-semibold text-[#03154C] outline-none hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-[#003366]/25 [&[data-state=open]_svg:last-child]:rotate-180">
+            <Collapsible defaultOpen={false} className="border-t border-border pt-4">
+              <CollapsibleTrigger className="group flex w-full items-center justify-between gap-2 rounded-xl px-2 py-2 text-left text-sm font-semibold text-foreground outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-[#003366]/25 [&[data-state=open]_svg:last-child]:rotate-180">
                 <span className="flex items-center gap-2">
-                  <History className="h-4 w-4 text-slate-500" aria-hidden />
+                  <History className="h-4 w-4 text-muted-foreground" aria-hidden />
                   History
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs tabular-nums text-slate-600">
+                  <span className="rounded-full bg-muted px-2 py-0.5 text-xs tabular-nums text-muted-foreground">
                     {allocations.length}
                   </span>
                 </span>
-                <ChevronDown className="h-4 w-4 shrink-0 text-slate-500 transition-transform group-data-[state=open]:rotate-180" />
+                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
               <CollapsibleContent className="data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
                 <ul className="space-y-2 pt-3">
                   {allocations.slice(0, 15).map((r) => (
                     <li
                       key={r.id}
-                      className="rounded-xl border border-slate-100 bg-white px-3 py-3 text-sm shadow-[inset_0_0_0_1px_rgba(15,23,42,0.04)]"
+                      className="rounded-xl border border-border bg-card px-3 py-3 text-sm shadow-[inset_0_0_0_1px_rgba(15,23,42,0.04)]"
                     >
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-                        <span className="font-semibold tabular-nums text-slate-900">{formatUsd(r.amount_cents)}</span>
-                        <span className="text-xs text-slate-500">
+                        <span className="font-semibold tabular-nums text-foreground">{formatUsd(r.amount_cents)}</span>
+                        <span className="text-xs text-muted-foreground">
                           {new Date(r.created_at).toLocaleString(undefined, { dateStyle: "short", timeStyle: "short" })}
                         </span>
                         {statusBadge(r.status)}
                       </div>
                       {r.status === "failed" && r.error_message ? (
-                        <p className="mt-2 text-xs leading-snug text-red-700">{r.error_message}</p>
+                        <p className="mt-2 text-xs leading-snug text-red-300">{r.error_message}</p>
                       ) : null}
                     </li>
                   ))}

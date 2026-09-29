@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { normalizePhoneForStorage, formatPhoneInput } from "@/lib/phone-format"
-import { Loader2, User, Mail, Phone, MapPin, Calendar, Trophy, CreditCard, Bell, MessageCircle, Upload, X, Users, Coins } from "lucide-react"
+import { Loader2, User, Mail, Phone, MapPin, Trophy, CreditCard, Bell, MessageCircle, Upload, X, Users, Coins, ChevronRight } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -22,7 +22,12 @@ import { WiqSubscriptionPanel } from "@/components/profile/wiq-subscription-pane
 import type { ParentWiqSubscription } from "@/lib/blue-wiq-for-parent"
 import { ProfileFamilyTab } from "@/components/profile/profile-family-tab"
 import { ProfileFundraiseTab } from "@/components/profile/profile-fundraise-tab"
-import { RankingsSubscriptionCard } from "@/components/profile/rankings-subscription-card"
+import {
+  RankingsSubscriptionCard,
+  isLiveSubscription,
+  useRankingsAccess,
+  type RankingsAccess,
+} from "@/components/profile/rankings-subscription-card"
 import { walletBalanceFromRow } from "@/lib/fundraising/wallet-balance"
 import type { ProfileSpartanSupportersAthletePayload } from "@/app/api/profile/spartan-fundraising-supporters/route"
 import { HardLink } from "@/components/hard-link"
@@ -110,6 +115,7 @@ export function ProfileClient() {
   /** Wallet totals load when the user opens Digital wallet (or links an athlete). */
   const [spartanWalletPanelActivated, setSpartanWalletPanelActivated] = useState(false)
   const [activeProfileTab, setActiveProfileTab] = useState("account")
+  const rankingsAccess = useRankingsAccess()
 
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
@@ -594,15 +600,36 @@ export function ProfileClient() {
     (spartanFundraising?.athletes ?? []).some((row) => walletBalanceFromRow(row as never).availableCents > 0)
 
   return (
-    <div className="min-h-screen bg-[#0A1628]">
-      {/* Dark Hero Header */}
+    <div className="profile-surface min-h-screen bg-[#0A1628]">
+      {/* Dark Hero Header: who you are, and what this account has, before any tab. */}
       <div className="bg-gradient-to-b from-[#13294B] to-[#0A1628] border-b border-[#1e3a5f]">
-        <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
-          <p className="text-xs font-semibold uppercase tracking-wider text-[#D3B574]">RecruitNC</p>
-          <h1 className="mt-2 text-3xl sm:text-4xl font-bold tracking-tight text-white">My Profile</h1>
-          <p className="text-gray-400 text-sm sm:text-base mt-2 max-w-2xl">
-            Your account, family &amp; athletes, and subscriptions — all in one place.
-          </p>
+        <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-16 w-16 rounded-full border-2 border-[#D3B574]/60">
+              <AvatarImage src={profile.headshot_url ?? undefined} alt="" />
+              <AvatarFallback className="bg-[#1e3a5f] text-[#D3B574] text-lg font-semibold">
+                {(profile.name || profile.email || "?").slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#D3B574]">My Profile</p>
+              <h1 className="mt-1 truncate text-2xl sm:text-3xl font-bold tracking-tight text-white">
+                {profile.name || profile.email}
+              </h1>
+              <p className="mt-1 text-sm text-gray-400">
+                <span className="capitalize">{profile.role || "Member"}</span>
+                {" · "}Member since {new Date(profile.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}
+              </p>
+            </div>
+          </div>
+
+          <MembershipStrip
+            rankings={rankingsAccess}
+            blueMemberships={blueMemberships}
+            wiqCount={wiqSubscriptions.length}
+            blueLoading={blueLoading}
+            onOpen={() => onProfileTabChange("blue")}
+          />
         </div>
       </div>
 
@@ -616,6 +643,15 @@ export function ProfileClient() {
               <span className="inline-flex items-center justify-center gap-1.5 min-w-0">
                 <User className="h-4 w-4 shrink-0" />
                 <span>Account</span>
+              </span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="blue"
+              className="rounded-lg py-2.5 px-2 text-xs sm:text-sm font-semibold text-gray-400 transition-all data-[state=active]:bg-[#D3B574] data-[state=active]:text-[#0A1628] data-[state=active]:shadow-md data-[state=inactive]:hover:bg-[#1e3a5f] data-[state=inactive]:hover:text-white"
+            >
+              <span className="inline-flex items-center justify-center gap-1.5 min-w-0">
+                <CreditCard className="h-4 w-4 shrink-0" />
+                <span>Subscriptions</span>
               </span>
             </TabsTrigger>
             <TabsTrigger
@@ -642,28 +678,19 @@ export function ProfileClient() {
               </span>
             </TabsTrigger>
             ) : null}
-            <TabsTrigger
-              value="blue"
-              className="rounded-lg py-2.5 px-2 text-xs sm:text-sm font-semibold text-gray-400 transition-all data-[state=active]:bg-[#D3B574] data-[state=active]:text-[#0A1628] data-[state=active]:shadow-md data-[state=inactive]:hover:bg-[#1e3a5f] data-[state=inactive]:hover:text-white"
-            >
-              <span className="inline-flex items-center justify-center gap-1.5 min-w-0">
-                <CreditCard className="h-4 w-4 shrink-0" />
-                <span>Subscriptions</span>
-              </span>
-            </TabsTrigger>
           </TabsList>
 
         <TabsContent value="account" className="mt-0 space-y-6 focus-visible:outline-none">
-            <Card className="border-[#003366]/10 shadow-md shadow-[#003366]/5 overflow-hidden">
+            <Card className="border-border shadow-md shadow-[#003366]/5 overflow-hidden">
               <div className="h-1 w-full bg-gradient-to-r from-[#03154C] via-[#B31B1B] to-[#CBAF5D]" aria-hidden />
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-[#03154C]">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#03154C] text-[#CBAF5D]">
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#13294B] text-[#CBAF5D]">
                     <User className="h-4 w-4" />
                   </span>
                   Profile information
                 </CardTitle>
-                <CardDescription className="text-slate-600">Update your personal information and contact details</CardDescription>
+                <CardDescription className="text-muted-foreground">Update your personal information and contact details</CardDescription>
               </CardHeader>
               <CardContent>
                 {error && (
@@ -673,8 +700,8 @@ export function ProfileClient() {
                 )}
 
                 {success && (
-                  <Alert className="mb-6 border-green-200 bg-green-50">
-                    <AlertDescription className="text-green-800">{success}</AlertDescription>
+                  <Alert className="mb-6 border-green-500/30 bg-green-500/10">
+                    <AlertDescription className="text-green-300">{success}</AlertDescription>
                   </Alert>
                 )}
 
@@ -683,9 +710,9 @@ export function ProfileClient() {
                   <Label className="text-sm font-medium">Profile photo</Label>
                   <p className="text-xs text-muted-foreground mt-0.5 mb-3">Shown next to your name in Community and messaging.</p>
                   <div className="flex items-center gap-4">
-                    <Avatar className="h-20 w-20 rounded-full border-2 border-gray-200">
+                    <Avatar className="h-20 w-20 rounded-full border-2 border-border">
                       <AvatarImage src={profile.headshot_url ?? undefined} alt="Profile" />
-                      <AvatarFallback className="bg-gray-200 text-gray-600 text-xl">
+                      <AvatarFallback className="bg-secondary text-muted-foreground text-xl">
                         {(profile.name || profile.email || "?").slice(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -730,9 +757,9 @@ export function ProfileClient() {
                       <Label htmlFor="email">Email Address</Label>
                       <div className="flex items-center gap-2">
                         <Mail className="h-4 w-4 text-gray-400" />
-                        <Input id="email" value={profile.email} disabled className="bg-gray-50" />
+                        <Input id="email" value={profile.email} disabled className="bg-muted" />
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">Email cannot be changed here</p>
+                      <p className="text-xs text-muted-foreground mt-1">Email cannot be changed here</p>
                     </div>
                   </div>
 
@@ -778,7 +805,7 @@ export function ProfileClient() {
                   <Button
                     type="submit"
                     disabled={isSaving}
-                    className="w-full bg-[#03154C] hover:bg-[#0a2a6e] text-white shadow-md"
+                    className="w-full bg-[#D3B574] hover:bg-[#c4a665] text-[#0A1628] font-semibold shadow-md"
                   >
                     {isSaving ? (
                       <>
@@ -794,15 +821,15 @@ export function ProfileClient() {
             </Card>
 
             {/* Notification preferences — messaging (SMS & email) */}
-            <Card className="border-[#003366]/10 shadow-sm">
+            <Card className="border-border shadow-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-[#03154C]">
-                  <span className="text-[#003366]">
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <span className="text-primary">
                     <Bell className="h-5 w-5" />
                   </span>
                   Message notifications
                 </CardTitle>
-                <CardDescription className="text-slate-600">
+                <CardDescription className="text-muted-foreground">
                   Get notified when someone messages you in RecruitNC Messages. Save your profile after changing these.
                 </CardDescription>
               </CardHeader>
@@ -810,7 +837,7 @@ export function ProfileClient() {
                 <div className="flex items-center justify-between gap-4">
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2 font-medium">
-                      <MessageCircle className="h-4 w-4 text-[#003366]" />
+                      <MessageCircle className="h-4 w-4 text-primary" />
                       Text me when I get new messages
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -823,14 +850,14 @@ export function ProfileClient() {
                   />
                 </div>
                 {!profile.cell_phone?.trim() && (
-                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
+                  <p className="text-xs text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-md px-3 py-2">
                     Add your cell phone in Profile Information above so we can send you texts.
                   </p>
                 )}
                 <div className="flex items-center justify-between gap-4 pt-2 border-t">
                   <div className="space-y-0.5">
                     <div className="flex items-center gap-2 font-medium">
-                      <Mail className="h-4 w-4 text-[#003366]" />
+                      <Mail className="h-4 w-4 text-primary" />
                       Email me when I get new messages
                     </div>
                     <p className="text-xs text-muted-foreground">
@@ -845,29 +872,9 @@ export function ProfileClient() {
               </CardContent>
             </Card>
 
-            <Card className="border-[#003366]/10 shadow-sm">
+            <Card className="border-border shadow-sm">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-[#03154C]">
-                  <Calendar className="h-5 w-5 text-[#003366]" />
-                  Account details
-                </CardTitle>
-                <CardDescription className="text-slate-600">Your sign-in and membership summary</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Role</p>
-                  <p className="capitalize">{profile.role || "User"}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-500">Member since</p>
-                  <p>{new Date(profile.created_at).toLocaleDateString()}</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-[#003366]/10 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-[#03154C]">
+                <CardTitle className="flex items-center gap-2 text-foreground">
                   <Trophy className="h-5 w-5 text-[#CBAF5D]" />
                   Quick actions
                 </CardTitle>
@@ -876,21 +883,21 @@ export function ProfileClient() {
                 <Button
                   asChild
                   variant="outline"
-                  className="w-full justify-start sm:max-w-md border-[#003366]/20 text-[#03154C] hover:bg-[#003366]/5"
+                  className="w-full justify-start sm:max-w-md border-border text-foreground hover:bg-muted"
                 >
                   <a href="/submit-commitment">Submit new commitment</a>
                 </Button>
                 <Button
                   asChild
                   variant="outline"
-                  className="w-full justify-start sm:max-w-md border-[#003366]/20 text-[#03154C] hover:bg-[#003366]/5"
+                  className="w-full justify-start sm:max-w-md border-border text-foreground hover:bg-muted"
                 >
                   <a href="/request-edit">Request profile edit</a>
                 </Button>
                 <Button
                   asChild
                   variant="outline"
-                  className="w-full justify-start sm:max-w-md border-[#003366]/20 text-[#03154C] hover:bg-[#003366]/5"
+                  className="w-full justify-start sm:max-w-md border-border text-foreground hover:bg-muted"
                 >
                   <a href="/athletes">Browse athletes</a>
                 </Button>
@@ -944,7 +951,7 @@ export function ProfileClient() {
 
         <TabsContent value="blue" className="mt-0 space-y-6 focus-visible:outline-none">
                 {/* Everything this account pays for, or gets through Blue, in one place. */}
-                <RankingsSubscriptionCard />
+                <RankingsSubscriptionCard access={rankingsAccess} />
                 {/* A WrestlingIQ family has no Stripe membership, so without this their
                     subscription tab was empty and invited them to join something they
                     already pay for. */}
@@ -986,6 +993,99 @@ export function ProfileClient() {
         </TabsContent>
         </Tabs>
       </div>
+    </div>
+  )
+}
+
+/**
+ * What this account has, shown above the tabs so nobody has to hunt for it: rankings access and
+ * each NC United Blue membership. Either tile opens the Subscriptions tab for the detail.
+ */
+function MembershipStrip({
+  rankings,
+  blueMemberships,
+  wiqCount,
+  blueLoading,
+  onOpen,
+}: {
+  rankings: RankingsAccess
+  blueMemberships: ParentBlueMembership[]
+  wiqCount: number
+  blueLoading: boolean
+  onOpen: () => void
+}) {
+  const current = blueMemberships.filter((m) => m.status !== "cancelled" && m.status !== "alumni")
+
+  const rankingsStatus = rankings.loading
+    ? null
+    : isLiveSubscription(rankings.subscription)
+      ? { label: "Subscribed", tone: "good" as const }
+      : rankings.hasAccess
+        ? { label: "Included", tone: "good" as const }
+        : { label: "Not subscribed", tone: "off" as const }
+
+  const blueDetail =
+    current.length > 0
+      ? current.map((m) => `${m.athleteName}${m.comped ? " (scholarship)" : m.status === "paused" ? " (paused)" : ""}`).join(", ")
+      : wiqCount > 0
+        ? `${wiqCount} membership${wiqCount === 1 ? "" : "s"} through WrestlingIQ`
+        : "No membership on this account"
+  const blueStatus = blueLoading
+    ? null
+    : current.length > 0 || wiqCount > 0
+      ? { label: "Member", tone: "good" as const }
+      : { label: "Not a member", tone: "off" as const }
+
+  const tiles = [
+    {
+      title: "RecruitNC Rankings",
+      icon: Trophy,
+      status: rankingsStatus,
+      detail: rankings.loading
+        ? "Checking…"
+        : isLiveSubscription(rankings.subscription)
+          ? "Paid subscription"
+          : rankings.hasAccess
+            ? "Through Blue, a coach account or staff"
+            : "Rankings, prospects board and scouting reports",
+    },
+    { title: "NC United Blue", icon: CreditCard, status: blueStatus, detail: blueLoading ? "Checking…" : blueDetail },
+  ]
+
+  return (
+    <div className="mt-6 grid gap-3 sm:grid-cols-2">
+      {tiles.map((tile) => (
+        <button
+          key={tile.title}
+          type="button"
+          onClick={onOpen}
+          className="group flex items-center gap-3 rounded-xl border border-[#1e3a5f] bg-[#0F1E32]/80 px-4 py-3 text-left transition-colors hover:border-[#D3B574]/50"
+        >
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#1e3a5f] text-[#D3B574]">
+            <tile.icon className="h-5 w-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-white">{tile.title}</span>
+              {tile.status ? (
+                <span
+                  className={
+                    tile.status.tone === "good"
+                      ? "rounded-full bg-green-500/15 px-2 py-0.5 text-[11px] font-medium text-green-300"
+                      : "rounded-full bg-white/10 px-2 py-0.5 text-[11px] font-medium text-gray-400"
+                  }
+                >
+                  {tile.status.label}
+                </span>
+              ) : (
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-gray-500" />
+              )}
+            </span>
+            <span className="mt-0.5 block truncate text-xs text-gray-400">{tile.detail}</span>
+          </span>
+          <ChevronRight className="h-4 w-4 shrink-0 text-gray-500 transition-colors group-hover:text-[#D3B574]" />
+        </button>
+      ))}
     </div>
   )
 }

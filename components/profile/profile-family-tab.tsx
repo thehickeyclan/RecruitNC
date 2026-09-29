@@ -125,7 +125,7 @@ export function ProfileFamilyTab({
           {profile.cell_phone?.trim() &&
             profile.bio?.trim() &&
             (linkedAthletes.length === 0 || linkedAthletes.every((a) => a.profileVerified)) &&
-            (blueMembershipsLength > 0 || linkedAthletes.length > 0) && <p className="text-gray-500">You&apos;re all set. Browse athletes or submit a commitment when ready.</p>}
+            (blueMembershipsLength > 0 || linkedAthletes.length > 0) && <p className="text-muted-foreground">You&apos;re all set. Browse athletes or submit a commitment when ready.</p>}
         </CardContent>
       </Card>
 
@@ -141,7 +141,7 @@ export function ProfileFamilyTab({
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="relative max-w-md">
-            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Search by name (e.g. Liam Hickey)"
               value={athleteSearchQuery}
@@ -149,9 +149,9 @@ export function ProfileFamilyTab({
               className="pl-8 bg-[#0A1628] border-[#1e3a5f] text-white placeholder:text-gray-500"
             />
           </div>
-          {athleteSearchLoading && <p className="text-xs text-gray-500">Searching...</p>}
+          {athleteSearchLoading && <p className="text-xs text-muted-foreground">Searching...</p>}
           {!athleteSearchLoading && athleteSearchQuery.trim().length >= 2 && athleteSearchResults.length === 0 && (
-            <p className="text-xs text-gray-500">No athletes found. Try a different name.</p>
+            <p className="text-xs text-muted-foreground">No athletes found. Try a different name.</p>
           )}
           {!athleteSearchLoading && athleteSearchResults.length > 0 && (
             <ul className="space-y-2 max-h-48 overflow-y-auto rounded-lg border border-[#1e3a5f] bg-[#0A1628] p-2 max-w-2xl">
@@ -207,9 +207,9 @@ export function ProfileFamilyTab({
                       <span className="text-amber-400">Not yet public</span>
                     )}
                   </p>
-                  {a.updatedAt && <p className="text-xs text-gray-500">Last updated: {new Date(a.updatedAt).toLocaleDateString()}</p>}
+                  {a.updatedAt && <p className="text-xs text-muted-foreground">Last updated: {new Date(a.updatedAt).toLocaleDateString()}</p>}
                   {completenessLoading && !comp ? (
-                    <p className="text-xs text-gray-500 mt-2">Loading profile completeness...</p>
+                    <p className="text-xs text-muted-foreground mt-2">Loading profile completeness...</p>
                   ) : comp ? (
                     <div className="mt-3">
                       <p className="text-xs font-medium text-gray-400 mb-1">Profile completeness: {comp.percent}%</p>
@@ -278,7 +278,7 @@ export function ProfileFamilyTab({
                     ) : null}
                   </div>
                   {a.isProfilePrimaryAthlete ? (
-                    <p className="text-[11px] text-gray-500 mt-2">
+                    <p className="text-[11px] text-muted-foreground mt-2">
                       Also set as your athlete on the <strong className="text-gray-400">Account</strong> tab — change there if this login should not be their parent account.
                     </p>
                   ) : null}
@@ -306,13 +306,13 @@ export function ProfileFamilyTab({
             {(() => {
               const comp = profile.athlete_id ? athleteCompleteness[profile.athlete_id] : undefined
               return completenessLoading && !comp ? (
-                <p className="text-xs text-gray-500">Loading profile completeness...</p>
+                <p className="text-xs text-muted-foreground">Loading profile completeness...</p>
               ) : comp ? (
                 <div>
                   <p className="text-xs font-medium text-gray-400 mb-1">Profile completeness: {comp.percent}%</p>
                   <Progress value={comp.percent} className="h-2 bg-[#1e3a5f]" />
                   {comp.missing.length > 0 && (
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-muted-foreground mt-1">
                       Missing: {comp.missing.map((m) => ATHLETE_COMPLETENESS_LABELS[m] ?? m).join(", ")}
                     </p>
                   )}

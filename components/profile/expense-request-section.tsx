@@ -146,16 +146,16 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
   }
 
   return (
-    <Card className="overflow-hidden rounded-2xl border border-[#003366]/12 bg-white shadow-md shadow-[#003366]/5">
+    <Card className="overflow-hidden rounded-2xl border border-border bg-card shadow-md shadow-[#003366]/5">
       <div className="h-1 w-full bg-gradient-to-r from-[#03154C] via-[#B31B1B] to-[#CBAF5D]" aria-hidden />
-      <div className="border-b border-[#003366]/8 bg-white px-4 py-5 sm:px-6">
+      <div className="border-b border-border bg-card px-4 py-5 sm:px-6">
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#03154C] text-[#CBAF5D] shadow-sm">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#13294B] text-[#CBAF5D] shadow-sm">
             <Receipt className="h-5 w-5" aria-hidden />
           </span>
           <div className="min-w-0 space-y-1">
-            <CardTitle className="text-lg font-bold tracking-tight text-[#03154C] sm:text-xl">Reimbursements</CardTitle>
-            <CardDescription className="text-xs text-slate-600 sm:text-sm">
+            <CardTitle className="text-lg font-bold tracking-tight text-foreground sm:text-xl">Reimbursements</CardTitle>
+            <CardDescription className="text-xs text-muted-foreground sm:text-sm">
               Submit a request — staff reviews and follows up by email.
             </CardDescription>
           </div>
@@ -170,7 +170,7 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
           }}
           className="w-full"
         >
-          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-xl bg-slate-100/90 p-1 text-slate-600">
+          <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-xl bg-muted p-1 text-muted-foreground">
             <TabsTrigger
               value="request"
               className="rounded-lg px-2 py-2.5 text-center text-[11px] font-semibold leading-tight shadow-none data-[state=active]:bg-white data-[state=active]:text-[#03154C] data-[state=active]:shadow-sm sm:text-sm sm:py-2"
@@ -183,7 +183,7 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
             >
               Reimbursement status
               {rows.length > 0 ? (
-                <span className="ml-0.5 tabular-nums text-slate-500 data-[state=active]:text-[#003366]">
+                <span className="ml-0.5 tabular-nums text-muted-foreground data-[state=active]:text-[#003366]">
                   ({rows.length})
                 </span>
               ) : null}
@@ -191,36 +191,36 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
           </TabsList>
 
           <TabsContent value="request" className="mt-4 space-y-4 focus-visible:outline-none">
-            <Collapsible className="rounded-xl border border-[#003366]/12 bg-white/90 shadow-sm">
-              <CollapsibleTrigger className="group flex w-full items-center gap-2 px-3 py-3 text-left text-sm font-semibold text-[#03154C] hover:bg-slate-50/80 rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[#003366]/30 data-[state=open]:rounded-b-none data-[state=open]:border-b data-[state=open]:border-[#003366]/10">
-                <CircleHelp className="h-4 w-4 shrink-0 text-[#003366]" aria-hidden />
+            <Collapsible className="rounded-xl border border-border bg-card shadow-sm">
+              <CollapsibleTrigger className="group flex w-full items-center gap-2 px-3 py-3 text-left text-sm font-semibold text-foreground hover:bg-muted rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-[#003366]/30 data-[state=open]:rounded-b-none data-[state=open]:border-b data-[state=open]:border-[#003366]/10">
+                <CircleHelp className="h-4 w-4 shrink-0 text-primary" aria-hidden />
                 <span className="min-w-0 flex-1">What can be reimbursed?</span>
-                <ChevronDown className="h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
               <CollapsibleContent className="overflow-hidden px-3 pb-3 pt-0 text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-                <div className="rounded-b-lg border-t border-[#003366]/8 bg-slate-50/60 px-1 py-3 sm:px-2">
-                  <p className="text-xs text-slate-700 leading-relaxed mb-3">
-                    NC United operates as a <strong className="font-semibold text-slate-900">501(c)(3)</strong> nonprofit.
+                <div className="rounded-b-lg border-t border-border bg-muted px-1 py-3 sm:px-2">
+                  <p className="text-xs text-foreground leading-relaxed mb-3">
+                    NC United operates as a <strong className="font-semibold text-foreground">501(c)(3)</strong> nonprofit.
                     Reimbursements are only for expenses that{" "}
-                    <strong className="font-semibold text-slate-900">support our exempt mission</strong>—for example
+                    <strong className="font-semibold text-foreground">support our exempt mission</strong>—for example
                     athlete training, competition, and team programs—and that we can document consistent with{" "}
-                    <strong className="font-semibold text-slate-900">IRS expectations</strong> for how tax-exempt
+                    <strong className="font-semibold text-foreground">IRS expectations</strong> for how tax-exempt
                     organizations spend and record funds. Personal, unrelated, or non-program costs are not eligible.
                   </p>
-                  <p className="text-xs text-slate-600 leading-relaxed mb-3">
+                  <p className="text-xs text-muted-foreground leading-relaxed mb-3">
                     Use the categories below when you submit a request. Staff reviews each submission; approval and payout
                     depend on program policy, available funds, and whether the expense clearly fits that nonprofit purpose—not
                     every submission will qualify.
                   </p>
-                  <ul className="list-disc pl-5 text-sm text-slate-800 space-y-1.5 marker:text-[#003366]">
+                  <ul className="list-disc pl-5 text-sm text-foreground space-y-1.5 marker:text-[#003366]">
                     {EXPENSE_TYPE_OPTIONS.map((o) => (
                       <li key={o.value}>{o.label}</li>
                     ))}
                   </ul>
-                  <p className="text-xs text-slate-500 mt-3 leading-relaxed">
-                    For <strong className="font-medium text-slate-700">Other</strong>, describe the expense in the notes so
+                  <p className="text-xs text-muted-foreground mt-3 leading-relaxed">
+                    For <strong className="font-medium text-foreground">Other</strong>, describe the expense in the notes so
                     we can see the nonprofit connection.{" "}
-                    <strong className="font-medium text-slate-700">Upload receipts or invoices whenever you have them</strong>
+                    <strong className="font-medium text-foreground">Upload receipts or invoices whenever you have them</strong>
                     —clear documentation helps us run reimbursements responsibly and keep records straight. (General
                     information only; not legal or tax advice for your family.)
                   </p>
@@ -229,8 +229,8 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
             </Collapsible>
 
             {linkedAthletes.length === 0 ? (
-              <p className="text-sm text-slate-600">
-                Link an athlete on the <span className="font-medium text-[#03154C]">Family &amp; athletes</span> tab to
+              <p className="text-sm text-muted-foreground">
+                Link an athlete on the <span className="font-medium text-foreground">Family &amp; athletes</span> tab to
                 submit a request.
               </p>
             ) : submissionAck ? (
@@ -240,27 +240,27 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
                 aria-live="polite"
               >
                 <div className="flex flex-col items-center text-center space-y-4">
-                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#0f5132]/15 text-[#0f5132]">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-full bg-[#0f5132]/15 text-green-300">
                     <CheckCircle2 className="h-8 w-8" aria-hidden />
                   </span>
                   <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-[#03154C]">We received your reimbursement request</h3>
-                    <p className="text-sm text-slate-700 leading-relaxed">
+                    <h3 className="text-lg font-semibold text-foreground">We received your reimbursement request</h3>
+                    <p className="text-sm text-foreground leading-relaxed">
                       Thank you. NC United staff will review it shortly and may follow up if we need anything else.
                     </p>
-                    <p className="text-sm text-slate-700 leading-relaxed">
-                      You&apos;ll get an <strong className="font-medium text-slate-800">email notification</strong> when
+                    <p className="text-sm text-foreground leading-relaxed">
+                      You&apos;ll get an <strong className="font-medium text-foreground">email notification</strong> when
                       the status changes (approved, not approved, or paid).
                     </p>
-                    <p className="text-sm text-slate-700 leading-relaxed">
+                    <p className="text-sm text-foreground leading-relaxed">
                       You can always confirm details on the{" "}
-                      <strong className="font-medium text-[#03154C]">Reimbursement status</strong> tab.
+                      <strong className="font-medium text-foreground">Reimbursement status</strong> tab.
                     </p>
                   </div>
                   <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-center pt-2">
                     <Button
                       type="button"
-                      className="w-full sm:w-auto bg-[#03154C] hover:bg-[#0a2a6e] text-white"
+                      className="w-full sm:w-auto bg-[#13294B] hover:bg-[#1e3a5f] text-white"
                       onClick={() => {
                         setSubmissionAck(false)
                         setTab("status")
@@ -268,7 +268,7 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
                     >
                       View reimbursement status
                     </Button>
-                    <Button type="button" variant="outline" className="w-full sm:w-auto border-[#003366]/25" onClick={() => setSubmissionAck(false)}>
+                    <Button type="button" variant="outline" className="w-full sm:w-auto border-border" onClick={() => setSubmissionAck(false)}>
                       Submit another request
                     </Button>
                   </div>
@@ -319,7 +319,7 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="venmo">Venmo @username</Label>
-                  <p className="text-xs text-slate-600">Reimbursements are sent via Venmo only.</p>
+                  <p className="text-xs text-muted-foreground">Reimbursements are sent via Venmo only.</p>
                   <Input
                     id="venmo"
                     autoComplete="off"
@@ -352,7 +352,7 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
                 <Button
                   type="submit"
                   disabled={submitting}
-                  className="w-full sm:w-auto bg-[#03154C] hover:bg-[#0a2a6e] text-white shadow-md"
+                  className="w-full sm:w-auto bg-[#13294B] hover:bg-[#1e3a5f] text-white shadow-md"
                 >
                   {submitting ? (
                     <>
@@ -368,26 +368,26 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
           </TabsContent>
 
           <TabsContent value="status" className="mt-4 space-y-3 focus-visible:outline-none">
-            <div className="rounded-lg border border-[#003366]/10 bg-slate-50/90 px-3 py-3 text-xs text-slate-600 space-y-2">
-              <p className="font-semibold text-slate-800">Status guide</p>
+            <div className="rounded-lg border border-border bg-muted px-3 py-3 text-xs text-muted-foreground space-y-2">
+              <p className="font-semibold text-foreground">Status guide</p>
               <ul className="grid gap-1.5 sm:grid-cols-2">
                 {(Object.keys(EXPENSE_STATUS_LABELS) as ExpenseRequestStatus[]).map((k) => (
                   <li key={k} className="leading-snug">
-                    <span className="font-medium text-[#03154C]">{EXPENSE_STATUS_LABELS[k]}:</span>{" "}
+                    <span className="font-medium text-foreground">{EXPENSE_STATUS_LABELS[k]}:</span>{" "}
                     {EXPENSE_STATUS_PARENT_DESCRIPTIONS[k]}
                   </li>
                 ))}
               </ul>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-muted-foreground">
                 All requests tied to your account, newest first.
               </p>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="shrink-0 border-[#003366]/20 text-[#03154C]"
+                className="shrink-0 border-border text-foreground"
                 disabled={loading}
                 onClick={() => void load()}
               >
@@ -403,55 +403,55 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
             </div>
             {loading ? (
               <p className="text-sm text-muted-foreground flex items-center gap-2 py-8 justify-center">
-                <Loader2 className="h-4 w-4 animate-spin text-[#003366]" />
+                <Loader2 className="h-4 w-4 animate-spin text-primary" />
                 Loading requests…
               </p>
             ) : rows.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-[#003366]/15 bg-slate-50/80 px-4 py-8 text-center">
-                <p className="text-sm text-slate-600">No reimbursement requests yet.</p>
-                <p className="text-xs text-slate-500 mt-1">Submit one from the other tab.</p>
+              <div className="rounded-xl border border-dashed border-border bg-muted px-4 py-8 text-center">
+                <p className="text-sm text-muted-foreground">No reimbursement requests yet.</p>
+                <p className="text-xs text-muted-foreground mt-1">Submit one from the other tab.</p>
               </div>
             ) : (
               <ul className="space-y-3">
                 {rows.map((r) => (
                   <li
                     key={r.id}
-                    className="rounded-xl border border-[#003366]/10 bg-slate-50/80 px-3 py-3 sm:px-4 sm:py-4"
+                    className="rounded-xl border border-border bg-muted px-3 py-3 sm:px-4 sm:py-4"
                   >
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
                       <div className="min-w-0 flex-1 space-y-1">
                         <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-semibold text-[#03154C] leading-tight">{r.athlete_name || "Athlete"}</p>
+                          <p className="font-semibold text-foreground leading-tight">{r.athlete_name || "Athlete"}</p>
                           <Badge variant={statusVariant(r.status)} className="text-[10px] font-normal leading-snug sm:text-xs max-w-[min(100%,14rem)] whitespace-normal text-center sm:text-left">
                             {EXPENSE_STATUS_LABELS[r.status]}
                           </Badge>
                         </div>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-xs text-muted-foreground">
                           Submitted {new Date(r.created_at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })}
                         </p>
-                        <p className="text-sm text-slate-700">{displayExpenseType(r.expense_type)}</p>
+                        <p className="text-sm text-foreground">{displayExpenseType(r.expense_type)}</p>
                         {r.parent_notes ? (
-                          <p className="text-xs text-slate-600 border-l-2 border-[#CBAF5D]/60 pl-2 mt-1">{r.parent_notes}</p>
+                          <p className="text-xs text-muted-foreground border-l-2 border-[#CBAF5D]/60 pl-2 mt-1">{r.parent_notes}</p>
                         ) : null}
                       </div>
                       <div className="shrink-0 space-y-1 sm:text-right">
-                        <p className="text-sm font-bold tabular-nums text-[#003366]">{formatMoney(r.amount_cents)}</p>
-                        <p className="text-[11px] font-medium uppercase tracking-wide text-slate-500">Requested</p>
+                        <p className="text-sm font-bold tabular-nums text-primary">{formatMoney(r.amount_cents)}</p>
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Requested</p>
                         {r.amount_approved_cents != null && r.amount_approved_cents !== r.amount_cents ? (
-                          <p className="text-xs text-slate-700 tabular-nums pt-1">
+                          <p className="text-xs text-foreground tabular-nums pt-1">
                             Approved: <span className="font-semibold">{formatMoney(r.amount_approved_cents)}</span>
                           </p>
                         ) : null}
                         {r.status === "paid" && r.paid_at ? (
-                          <p className="text-xs text-slate-600 pt-1">
+                          <p className="text-xs text-muted-foreground pt-1">
                             Paid {new Date(r.paid_at).toLocaleDateString(undefined, { dateStyle: "medium" })}
                           </p>
                         ) : null}
                       </div>
                     </div>
                     {r.admin_notes ? (
-                      <p className="text-xs text-slate-600 mt-3 pt-3 border-t border-[#003366]/8">
-                        <span className="font-medium text-slate-700">Staff note: </span>
+                      <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-border">
+                        <span className="font-medium text-foreground">Staff note: </span>
                         {r.admin_notes}
                       </p>
                     ) : null}
@@ -459,7 +459,7 @@ export function ExpenseRequestSection({ linkedAthletes = [] }: { linkedAthletes?
                       {r.document_url ? (
                         <a
                           href={r.document_url}
-                          className="inline-flex items-center gap-1 text-sm font-medium text-[#003366] underline underline-offset-2"
+                          className="inline-flex items-center gap-1 text-sm font-medium text-primary underline underline-offset-2"
                           target="_blank"
                           rel="noreferrer"
                         >

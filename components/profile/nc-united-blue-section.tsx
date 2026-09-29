@@ -214,15 +214,15 @@ export function NcUnitedBlueSection({
 
   if (loading) {
     return (
-      <Card className="border-[#03154C]/12 bg-white shadow-sm">
+      <Card className="border-border bg-card shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-[#03154C]">
+          <CardTitle className="flex items-center gap-2 text-foreground">
             <CreditCard className="h-5 w-5" />
             NC United Blue
           </CardTitle>
           <CardDescription>Loading your memberships…</CardDescription>
         </CardHeader>
-        <CardContent className="flex items-center gap-2 text-sm text-gray-500">
+        <CardContent className="flex items-center gap-2 text-sm text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin" />
           Loading billing details…
         </CardContent>
@@ -234,9 +234,9 @@ export function NcUnitedBlueSection({
 
   return (
     <div id="nc-united-blue" className="space-y-4 scroll-mt-24">
-      <p className="text-xs text-gray-600 bg-[#03154C]/5 border border-[#03154C]/10 rounded-lg px-3 py-2">
+      <p className="text-xs text-muted-foreground bg-muted border border-border rounded-lg px-3 py-2">
         Manage billing here: pause, cancel, update your card, and view invoices (Stripe portal).{" "}
-        <a href="/blue/billing" className="text-[#03154C] font-medium underline hover:no-underline">
+        <a href="/blue/billing" className="text-foreground font-medium underline hover:no-underline">
           Billing help
         </a>
       </p>
@@ -251,8 +251,8 @@ export function NcUnitedBlueSection({
         </Alert>
       )}
       {localSuccess && (
-        <Alert className="border-green-200 bg-green-50">
-          <AlertDescription className="text-green-800">{localSuccess}</AlertDescription>
+        <Alert className="border-green-500/30 bg-green-500/10">
+          <AlertDescription className="text-green-300">{localSuccess}</AlertDescription>
         </Alert>
       )}
 
@@ -296,8 +296,8 @@ export function NcUnitedBlueSection({
 
         if (m.comped && !isEnded) {
           return (
-            <div key={m.id} className="overflow-hidden rounded-xl border border-[#03154C]/15 bg-white shadow-sm">
-              <div className="bg-[#03154C] px-5 py-4 flex items-start justify-between gap-3">
+            <div key={m.id} className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+              <div className="bg-[#13294B] px-5 py-4 flex items-start justify-between gap-3">
                 <div>
                   <p className="text-[15px] font-semibold text-white leading-tight">{m.athleteName}</p>
                   <p className="mt-0.5 text-[12px] text-white/60">Blue Membership · Scholarship</p>
@@ -310,11 +310,11 @@ export function NcUnitedBlueSection({
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
                   <div>
                     <dt className="text-[11px] uppercase tracking-wide text-gray-400 mb-0.5">Member since</dt>
-                    <dd className="font-medium text-gray-900">{formatDate(m.startedAt)}</dd>
+                    <dd className="font-medium text-foreground">{formatDate(m.startedAt)}</dd>
                   </div>
                   <div>
                     <dt className="text-[11px] uppercase tracking-wide text-gray-400 mb-0.5">Billing</dt>
-                    <dd className="font-medium text-gray-900">None — covered by a scholarship</dd>
+                    <dd className="font-medium text-foreground">None — covered by a scholarship</dd>
                   </div>
                 </dl>
               </div>
@@ -326,17 +326,17 @@ export function NcUnitedBlueSection({
           return (
             <div
               key={m.id}
-              className="overflow-hidden rounded-xl border border-gray-200 bg-gray-50"
+              className="overflow-hidden rounded-xl border border-border bg-muted"
             >
-              <div className="px-5 py-4 flex items-start justify-between gap-3 bg-gray-100">
+              <div className="px-5 py-4 flex items-start justify-between gap-3 bg-muted">
                 <div>
-                  <p className="text-[15px] font-medium text-gray-600 leading-tight">{m.athleteName}</p>
+                  <p className="text-[15px] font-medium text-muted-foreground leading-tight">{m.athleteName}</p>
                   <p className="mt-0.5 text-[12px] text-gray-400">
                     {m.planName ?? "Blue Membership"}
                     {m.amountFormatted ? ` · ${m.amountFormatted} / cycle` : ""}
                   </p>
                 </div>
-                <span className="shrink-0 rounded-full px-3 py-0.5 text-[11px] font-medium tracking-wide bg-gray-200 text-gray-500">
+                <span className="shrink-0 rounded-full px-3 py-0.5 text-[11px] font-medium tracking-wide bg-secondary text-muted-foreground">
                   Ended
                 </span>
               </div>
@@ -344,11 +344,11 @@ export function NcUnitedBlueSection({
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
                   <div>
                     <dt className="text-[11px] uppercase tracking-wide text-gray-400 mb-0.5">Member since</dt>
-                    <dd className="font-medium text-gray-600">{formatDate(m.startedAt)}</dd>
+                    <dd className="font-medium text-muted-foreground">{formatDate(m.startedAt)}</dd>
                   </div>
                   <div>
                     <dt className="text-[11px] uppercase tracking-wide text-gray-400 mb-0.5">Ended</dt>
-                    <dd className="font-medium text-gray-600">{formatDate(m.endedAt)}</dd>
+                    <dd className="font-medium text-muted-foreground">{formatDate(m.endedAt)}</dd>
                   </div>
                 </dl>
                 <div className="flex gap-2 pt-1">
@@ -356,11 +356,11 @@ export function NcUnitedBlueSection({
                       form, so a lapsed family asking to come back was sent to apply as strangers. */}
                   <a
                     href="/blue/register"
-                    className="inline-flex items-center rounded-md bg-[#03154C] px-3 py-1.5 text-[13px] font-medium text-white hover:bg-[#0a2a6e]"
+                    className="inline-flex items-center rounded-md bg-[#13294B] px-3 py-1.5 text-[13px] font-medium text-white hover:bg-[#1e3a5f]"
                   >
                     Rejoin Blue
                   </a>
-                  <Button size="sm" variant="ghost" className="text-[13px] text-gray-500" asChild>
+                  <Button size="sm" variant="ghost" className="text-[13px] text-muted-foreground" asChild>
                     <a href={mailtoHref(m)}>
                       <Mail className="h-3.5 w-3.5 mr-1.5" />
                       Message NC United
@@ -373,8 +373,8 @@ export function NcUnitedBlueSection({
         }
 
         return (
-          <div key={m.id} className="overflow-hidden rounded-xl border border-[#03154C]/15 bg-white shadow-sm">
-            <div className="bg-[#03154C] px-5 py-4 flex items-start justify-between gap-3">
+          <div key={m.id} className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+            <div className="bg-[#13294B] px-5 py-4 flex items-start justify-between gap-3">
               <div>
                 <p className="text-[15px] font-semibold text-white leading-tight">{m.athleteName}</p>
                 <p className="mt-0.5 text-[12px] text-white/60">{planSubtitle}</p>
@@ -399,9 +399,9 @@ export function NcUnitedBlueSection({
 
             <div className="px-5 py-4 space-y-4">
               {isPending && (
-                <div className="flex gap-2.5 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3">
+                <div className="flex gap-2.5 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3.5 py-3">
                   <span className="text-amber-500 text-[13px] shrink-0 mt-px">!</span>
-                  <p className="text-[13px] text-amber-800 leading-snug">
+                  <p className="text-[13px] text-amber-200 leading-snug">
                     Your last payment didn&apos;t go through.{" "}
                     {m.stripeCustomerId && (
                       <>
@@ -422,17 +422,17 @@ export function NcUnitedBlueSection({
               <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-3 text-[13px]">
                 <div>
                   <dt className="text-[11px] uppercase tracking-wide text-gray-400 mb-0.5">Member since</dt>
-                  <dd className="font-medium text-gray-900">{formatDate(m.startedAt)}</dd>
+                  <dd className="font-medium text-foreground">{formatDate(m.startedAt)}</dd>
                 </div>
                 <div>
                   <dt className="text-[11px] uppercase tracking-wide text-gray-400 mb-0.5">Last payment</dt>
-                  <dd className={["font-medium", isPending ? "text-red-600" : "text-gray-900"].join(" ")}>
+                  <dd className={["font-medium", isPending ? "text-red-300" : "text-foreground"].join(" ")}>
                     {lastPaymentDisplay}
                   </dd>
                 </div>
                 <div>
                   <dt className="text-[11px] uppercase tracking-wide text-gray-400 mb-0.5">Next payment</dt>
-                  <dd className="font-medium text-gray-900 flex items-center gap-1.5">
+                  <dd className="font-medium text-foreground flex items-center gap-1.5">
                     {!isEnded && !isPaused && m.nextBillingAt && (
                       <span className={`inline-block w-1.5 h-1.5 rounded-full shrink-0 ${sourceDot}`} />
                     )}
@@ -441,17 +441,17 @@ export function NcUnitedBlueSection({
                 </div>
                 <div>
                   <dt className="text-[11px] uppercase tracking-wide text-gray-400 mb-0.5">Payments</dt>
-                  <dd className="font-medium text-gray-900">
+                  <dd className="font-medium text-foreground">
                     {m.paidInvoiceCount > 0 ? m.paidInvoiceCount : "—"}
                   </dd>
                 </div>
                 <div>
                   <dt className="text-[11px] uppercase tracking-wide text-gray-400 mb-0.5">Total paid</dt>
-                  <dd className="font-medium text-gray-900">{m.lifetimePaidFormatted ?? "—"}</dd>
+                  <dd className="font-medium text-foreground">{m.lifetimePaidFormatted ?? "—"}</dd>
                 </div>
                 <div>
                   <dt className="text-[11px] uppercase tracking-wide text-gray-400 mb-0.5">Card on file</dt>
-                  <dd className="font-medium text-gray-900">
+                  <dd className="font-medium text-foreground">
                     {cardDisplay ?? (
                       <span className="text-gray-400 font-normal">{m.stripeCustomerId ? "None on file" : "—"}</span>
                     )}
@@ -460,21 +460,21 @@ export function NcUnitedBlueSection({
               </dl>
 
               {(m.recentInvoices?.length ?? 0) > 0 && (
-                <div className="rounded-lg border border-gray-100 bg-gray-50/80 px-3 py-3">
+                <div className="rounded-lg border border-border bg-muted px-3 py-3">
                   <div className="flex items-center gap-2 mb-2">
-                    <Receipt className="h-4 w-4 text-[#03154C]" />
-                    <p className="text-[13px] font-semibold text-[#03154C]">Billing history</p>
+                    <Receipt className="h-4 w-4 text-foreground" />
+                    <p className="text-[13px] font-semibold text-foreground">Billing history</p>
                   </div>
                   <ul className="divide-y divide-gray-200/80">
                     {m.recentInvoices.map((inv) => (
                       <li key={inv.id} className="flex items-center justify-between py-2 text-[13px]">
-                        <span className="text-gray-600">{formatDate(inv.date)}</span>
-                        <span className="font-medium text-gray-900 tabular-nums">{inv.amountFormatted}</span>
+                        <span className="text-muted-foreground">{formatDate(inv.date)}</span>
+                        <span className="font-medium text-foreground tabular-nums">{inv.amountFormatted}</span>
                       </li>
                     ))}
                   </ul>
                   {m.stripeCustomerId && (
-                    <p className="mt-2 text-[11px] text-gray-500">
+                    <p className="mt-2 text-[11px] text-muted-foreground">
                       Full invoices and receipts are in Stripe via &quot;Update card &amp; invoices&quot; above.
                     </p>
                   )}
@@ -482,23 +482,23 @@ export function NcUnitedBlueSection({
               )}
 
               {m.stripeDetailsError && !isPending && (
-                <p className="text-[12px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                <p className="text-[12px] text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2">
                   Billing info may be outdated — {m.stripeDetailsError}
                 </p>
               )}
 
               {m.cancelAtPeriodEnd && isActive && (
-                <p className="text-[12px] text-amber-700 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+                <p className="text-[12px] text-amber-200 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2">
                   Cancels at the end of the current billing period.
                 </p>
               )}
 
-              <div className="border-t border-gray-100 pt-3 space-y-3">
+              <div className="border-t border-border pt-3 space-y-3">
                 <div className="flex flex-wrap gap-2">
                   {m.stripeCustomerId && (
                     <Button
                       size="sm"
-                      className="bg-[#03154C] hover:bg-[#0a2a6e] text-white text-[13px]"
+                      className="bg-[#13294B] hover:bg-[#1e3a5f] text-white text-[13px]"
                       onClick={() => onOpenBillingPortal(m.stripeCustomerId!)}
                       disabled={!!portalLoading}
                     >
@@ -515,7 +515,7 @@ export function NcUnitedBlueSection({
                     <Button
                       size="sm"
                       variant="outline"
-                      className="text-[13px] border-amber-300 text-amber-800 hover:bg-amber-50"
+                      className="text-[13px] border-amber-500/30 text-amber-200 hover:bg-amber-500/10"
                       onClick={() => openConfirm(m.id, "retry")}
                       disabled={actionLoading}
                     >
@@ -527,7 +527,7 @@ export function NcUnitedBlueSection({
                     <Button
                       size="sm"
                       variant="outline"
-                      className="text-[13px] border-green-300 text-green-800 hover:bg-green-50"
+                      className="text-[13px] border-green-500/30 text-green-300 hover:bg-green-500/10"
                       onClick={() => openConfirm(m.id, "resume")}
                       disabled={actionLoading}
                     >
@@ -542,7 +542,7 @@ export function NcUnitedBlueSection({
                         <Button
                           size="sm"
                           variant="outline"
-                          className="text-[13px] border-amber-300 text-amber-800 hover:bg-amber-50"
+                          className="text-[13px] border-amber-500/30 text-amber-200 hover:bg-amber-500/10"
                           onClick={() => {
                             setResumeAt("")
                             openConfirm(m.id, "pause")
@@ -556,7 +556,7 @@ export function NcUnitedBlueSection({
                       <Button
                         size="sm"
                         variant="outline"
-                        className="text-[13px] text-gray-600"
+                        className="text-[13px] text-muted-foreground"
                         onClick={() => openConfirm(m.id, "cancel")}
                         disabled={actionLoading}
                       >
@@ -566,7 +566,7 @@ export function NcUnitedBlueSection({
                     </>
                   )}
 
-                  <Button size="sm" variant="ghost" className="text-[13px] text-gray-500" asChild>
+                  <Button size="sm" variant="ghost" className="text-[13px] text-muted-foreground" asChild>
                     <a href={mailtoHref(m)} onClick={clearMessages}>
                       <Mail className="h-3.5 w-3.5 mr-1.5" />
                       Message NC United
@@ -575,8 +575,8 @@ export function NcUnitedBlueSection({
                 </div>
 
                 {isConfirmOpen("retry") && (
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 space-y-3">
-                    <p className="text-[13px] text-gray-800 leading-snug">
+                  <div className="rounded-lg border border-border bg-muted px-4 py-3 space-y-3">
+                    <p className="text-[13px] text-foreground leading-snug">
                       We&apos;ll charge the card on file now. Make sure your payment method is up to date before retrying.
                     </p>
                     <div className="flex gap-2">
@@ -597,27 +597,27 @@ export function NcUnitedBlueSection({
                 )}
 
                 {retryError[m.id] && (
-                  <div className="rounded-lg border border-red-200 bg-red-50 px-3.5 py-2.5">
-                    <p className="text-[13px] text-red-700">{retryError[m.id]}</p>
+                  <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3.5 py-2.5">
+                    <p className="text-[13px] text-red-300">{retryError[m.id]}</p>
                   </div>
                 )}
                 {retrySuccess[m.id] && (
-                  <div className="rounded-lg border border-green-200 bg-green-50 px-3.5 py-2.5">
-                    <p className="text-[13px] text-green-800">
+                  <div className="rounded-lg border border-green-500/30 bg-green-500/10 px-3.5 py-2.5">
+                    <p className="text-[13px] text-green-300">
                       Payment submitted — membership status will update shortly.
                     </p>
                   </div>
                 )}
 
                 {isConfirmOpen("resume") && (
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 space-y-3">
-                    <p className="text-[13px] text-gray-800 leading-snug">
+                  <div className="rounded-lg border border-border bg-muted px-4 py-3 space-y-3">
+                    <p className="text-[13px] text-foreground leading-snug">
                       Resuming will restart charges immediately. {m.athleteName}&apos;s next billing date will be set to today.
                     </p>
                     <div className="flex gap-2">
                       <Button
                         size="sm"
-                        className="bg-[#03154C] hover:bg-[#0a2a6e] text-white text-[13px]"
+                        className="bg-[#13294B] hover:bg-[#1e3a5f] text-white text-[13px]"
                         onClick={() => runResume(m.id)}
                         disabled={actionLoading}
                       >
@@ -632,8 +632,8 @@ export function NcUnitedBlueSection({
                 )}
 
                 {isConfirmOpen("pause") && (
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 space-y-3">
-                    <p className="text-[13px] text-gray-800 leading-snug">
+                  <div className="rounded-lg border border-border bg-muted px-4 py-3 space-y-3">
+                    <p className="text-[13px] text-foreground leading-snug">
                       Pausing stops future charges.{" "}
                       {m.nextBillingAt && (
                         <>
@@ -667,8 +667,8 @@ export function NcUnitedBlueSection({
                 )}
 
                 {isConfirmOpen("cancel") && (
-                  <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 space-y-3">
-                    <p className="text-[13px] text-gray-800 leading-snug">
+                  <div className="rounded-lg border border-border bg-muted px-4 py-3 space-y-3">
+                    <p className="text-[13px] text-foreground leading-snug">
                       Cancelling stops renewal.{" "}
                       {m.nextBillingAt ? (
                         <>
@@ -682,7 +682,7 @@ export function NcUnitedBlueSection({
                       <Button
                         size="sm"
                         variant="outline"
-                        className="text-[13px] border-red-300 text-red-700 hover:bg-red-50"
+                        className="text-[13px] border-red-500/30 text-red-300 hover:bg-red-500/10"
                         onClick={() => runCancel(m.id)}
                         disabled={actionLoading}
                       >
@@ -702,7 +702,7 @@ export function NcUnitedBlueSection({
       })}
 
       <p className="text-[12px] text-gray-400 leading-relaxed px-1">
-        For receipts or past invoices, use <strong className="text-gray-500">Update card &amp; invoices</strong> on any active membership
+        For receipts or past invoices, use <strong className="text-muted-foreground">Update card &amp; invoices</strong> on any active membership
         above.
       </p>
     </div>
