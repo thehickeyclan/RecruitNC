@@ -12,11 +12,9 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { loadAthleteTournamentBundle, type AthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
-import {
-  summarizeNationalExposure,
-  summarizeSeasonStrength,
-  type NationalEventRow,
-} from "@/lib/competition-strength"
+import type { NationalEventRow } from "@/lib/competition-strength"
+import { loadReportSignificantWins } from "@/lib/report-significant-wins"
+import type { OpponentIndex } from "@/lib/significant-wins"
 import {
   applyStarOverride,
   isRatedAthlete,
@@ -116,18 +114,21 @@ export type RatedAthlete = {
 /**
  * Everything the rating needs for one athlete.
  *
- * `nationallyRanked` is passed in rather than queried per athlete: rating a field means one
- * lookup of the ranked ids, not one per wrestler.
+ * `nationallyRanked` and the opponent index are passed in rather than loaded per athlete: rating
+ * a class means one lookup of each, not one per wrestler. The index should carry the state
+ * placers (`loadStatePlacerIndex`), as the scouting report's does, so a star counts the same wins
+ * the report prints.
  */
 export async function loadStarRatingInput(
   supabase: SupabaseClient,
   athlete: Record<string, unknown>,
   nationallyRankedIds: ReadonlySet<string>,
+  opponentIndex: OpponentIndex,
 ): Promise<StarRatingInput> {
   const athleteId = String(athlete.id)
-  const [bundle, { data: matchRows }] = await Promise.all([
+  const [bundle, significantWins] = await Promise.all([
     loadAthleteTournamentBundle(supabase, athlete),
-    supabase.from("matches").select("season,matches").eq("athlete_id", athleteId),
+    loadReportSignificantWins(supabase, athleteId, opponentIndex),
   ])
 
   const gradYear = athlete.graduationyear == null ? null : Number(athlete.graduationyear)
@@ -135,8 +136,8 @@ export async function loadStarRatingInput(
   const prospectRanking = rawRank != null && Number.isFinite(rawRank) && rawRank >= 1 ? rawRank : null
 
   return {
-    exposure: summarizeNationalExposure(nationalEventRows(bundle as AthleteTournamentBundle)),
-    strength: summarizeSeasonStrength(parseSeasonBouts(matchRows ?? [])),
+    nationalRows: nationalEventRows(bundle as AthleteTournamentBundle),
+    significantWins,
     prospectRanking,
     rankingPublished:
       prospectRanking != null &&
@@ -157,6 +158,7 @@ export async function rateOneAthlete(
   supabase: SupabaseClient,
   athlete: Record<string, unknown>,
   nationallyRankedIds: ReadonlySet<string>,
+  opponentIndex: OpponentIndex,
 ): Promise<RatedAthlete> {
   const graduationYear = athlete.graduationyear == null ? null : Number(athlete.graduationyear)
   const identity = {
@@ -169,6 +171,6 @@ export async function rateOneAthlete(
     return { ...identity, rating: null }
   }
 
-  const input = await loadStarRatingInput(supabase, athlete, nationallyRankedIds)
+  const input = await loadStarRatingInput(supabase, athlete, nationallyRankedIds, opponentIndex)
   return { ...identity, rating: applyStarOverride(rateAthlete(input), starOverrideOf(athlete)) }
 }

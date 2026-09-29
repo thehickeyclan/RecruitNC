@@ -13,7 +13,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { applyStarOverride, isRatedAthlete, rateAthlete, type StarRating } from "@/lib/athlete-star-rating"
 import { nationalEventRows, starOverrideOf, statePlaces } from "@/lib/athlete-star-rating-load"
-import { summarizeNationalExposure, summarizeSeasonStrength, type SeasonStrength } from "@/lib/competition-strength"
+import { summarizeSeasonStrength, type SeasonStrength } from "@/lib/competition-strength"
 import {
   buildStrengthOfCompetition,
   strengthOfCompetitionFacts,
@@ -29,11 +29,7 @@ import {
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import { buildTocFieldBoard } from "@/lib/toc/field-board"
 import { getQualifierSignificantWinBouts } from "@/lib/other-tournaments"
-import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
 import {
-  findSignificantLosses,
-  findSignificantWins,
-  withAccoladesOnly,
   accoladeLine,
   type Bout,
   type NationallyRankedOpponent,
@@ -45,7 +41,7 @@ import { isBlueTeam } from "@/lib/blue-team"
 import { sourceLabel } from "@/lib/national-rankings"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { releasesPersonalData, type ScoutingAccessTier } from "@/lib/scouting-report-access"
-import { mergeBoutSources } from "@/lib/bout-source-deduplication"
+import { reportSignificantBouts } from "@/lib/report-significant-wins"
 
 export type ScoutingReportIdentity = {
   name: string
@@ -557,28 +553,17 @@ export async function buildScoutingReport(
   const seasonsOnFile = new Set(
     (matchRows ?? []).map((r) => String((r as { season?: unknown }).season ?? "").trim()).filter(Boolean),
   ).size
-  const latestSeasonRows = latestSeasonMatchRows((matchRows ?? []) as never)
+  const significant = reportSignificantBouts({ qualifierBouts, matchRows: matchRows ?? [], opponentIndex })
+  const latestSeasonRows = significant.latestSeasonRows
   const seasonStrengthSeason =
     String((latestSeasonRows[0] as { season?: unknown } | undefined)?.season ?? "").trim() || null
 
-  const allSeasonBouts: Bout[] = latestSeasonRows.flatMap((row) => {
-    try {
-      const value = (row as { matches?: unknown }).matches
-      return Array.isArray(value) ? value : JSON.parse(String(value ?? "[]"))
-    } catch {
-      return []
-    }
-  })
   /*
    * Significant wins still consider every imported bout — a win over a ranked opponent at I-64
    * is a real win and belongs in that list. Only the record line is narrowed, because that one
    * is labelled in-season.
    */
-  const seasonBouts: Bout[] = allSeasonBouts.filter(isInSeasonBout)
-  // Event CSVs carry the exact score and are authoritative. RankWrestler also includes some of
-  // the same off-season bouts (notably I-64) and States; merging the raw arrays printed and
-  // scored those meetings twice in every scouting report.
-  const bouts: Bout[] = mergeBoutSources(qualifierBouts, allSeasonBouts)
+  const seasonBouts: Bout[] = significant.latestSeasonBouts.filter(isInSeasonBout)
 
   const lastCompeted = (
     athlete as {
@@ -593,32 +578,8 @@ export async function buildScoutingReport(
   const rawRank = athlete.prospect_ranking == null ? null : Number(athlete.prospect_ranking)
   // Built once: the panel counts the same rows the table prints, so the two cannot disagree.
   const resultRows = buildResultRows(bundle as never)
-  /*
-   * Plus every earlier-season win over a North Carolina state champion or placer. The current
-   * season carries the other reasons; a state finalist beaten as a freshman is still a win a coach
-   * should see. Only present when the caller loaded `statePlacers` into the index.
-   */
-  const latestSet = new Set(latestSeasonRows as unknown[])
-  const earlierBouts: Bout[] = ((matchRows ?? []) as unknown[])
-    .filter((row) => !latestSet.has(row))
-    .flatMap((row) => {
-      try {
-        const value = (row as { matches?: unknown }).matches
-        return Array.isArray(value) ? value : JSON.parse(String(value ?? "[]"))
-      } catch {
-        return []
-      }
-    })
-  const currentWins = findSignificantWins(bouts, opponentIndex)
-  const currentWinKeys = new Set(currentWins.map((w) => `${w.opponent.toLowerCase()}|${w.date}`))
-  // Accolades only - ranked, nationally ranked, state champion or placer - as on the profile.
-  const rankedWins = withAccoladesOnly([
-    ...currentWins,
-    ...findSignificantWins(earlierBouts, opponentIndex, { stateOnly: true }).filter(
-      (w) => !currentWinKeys.has(`${w.opponent.toLowerCase()}|${w.date}`),
-    ),
-  ])
-  const rankedLosses = withAccoladesOnly(findSignificantLosses(bouts, opponentIndex))
+  const rankedWins = significant.wins
+  const rankedLosses = significant.losses
   const seasonStrength = seasonBouts.length > 0 ? summarizeSeasonStrength(seasonBouts as never) : null
 
   const ranking = rawRank != null && Number.isFinite(rawRank) && rawRank >= 1 ? rawRank : null
@@ -685,8 +646,8 @@ export async function buildScoutingReport(
     starRating: personal && isRatedAthlete({ gender: athlete.gender as string, graduationYear: gradYear })
       ? applyStarOverride(
           rateAthlete({
-          exposure: summarizeNationalExposure(nationalEventRows(bundle as never)),
-          strength: summarizeSeasonStrength(seasonBouts as never),
+          nationalRows: nationalEventRows(bundle as never),
+          significantWins: rankedWins,
           prospectRanking: ranking,
           rankingPublished:
             ranking != null &&
