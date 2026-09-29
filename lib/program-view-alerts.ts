@@ -2,6 +2,7 @@ import "server-only"
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 
+import { isEntitled } from "@/lib/blue-membership"
 import { collegeForCoach } from "@/lib/college-domain-schools"
 import { sendToTokens } from "@/lib/push-send"
 
@@ -15,6 +16,9 @@ import { sendToTokens } from "@/lib/push-send"
  *   from a named adult watching a minor.
  * - **Verified college coaches only.** Anyone can pick "College coach" at sign-up; until staff
  *   review them, a parent or fan could otherwise trigger alerts to other people's children.
+ * - **Blue members only.** It is a benefit of NC United Blue, which belongs to the wrestler: the
+ *   alert goes out only when the wrestler holds a current membership (Stripe or WrestlingIQ,
+ *   paid or scholarship, not graduated) - the same `isEntitled` every other Blue feature uses.
  * - **Once per program per wrestler per week.** A coach clicking around a profile, or coming back
  *   to it, is one piece of news, not five.
  *
@@ -51,10 +55,21 @@ export async function alertFamilyOfProgramView(
 
     const { data: athlete } = await admin
       .from("athletes")
-      .select("id, name, claimed_by_user_id")
+      .select("id, name, claimed_by_user_id, graduationyear")
       .eq("id", input.athleteId)
       .maybeSingle()
     if (!athlete) return { sent: 0, skipped: "no athlete" }
+
+    const [{ data: stripe }, { data: wiq }] = await Promise.all([
+      admin.from("blue_memberships").select("status, stripe_subscription_id, source, ended_at").eq("athlete_id", athlete.id),
+      admin.from("blue_wiq_subscriptions").select("status, amount_cents, active_until, discount_code").eq("athlete_id", athlete.id),
+    ])
+    const blue = isEntitled({
+      stripe: (stripe ?? []) as never,
+      wiq: (wiq ?? []) as never,
+      graduationYear: athlete.graduationyear == null ? null : Number(athlete.graduationyear),
+    })
+    if (!blue) return { sent: 0, skipped: "not a Blue member" }
 
     const { data: links } = await admin.from("parent_athlete_links").select("user_id").eq("athlete_id", athlete.id)
     const family = new Set<string>(
