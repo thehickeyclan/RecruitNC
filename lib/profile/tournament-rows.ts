@@ -201,8 +201,17 @@ function compareNhscaBouts(a: NhscaNationalBout, b: NhscaNationalBout): number {
   return nhscaRoundRank(a.round) - nhscaRoundRank(b.round)
 }
 
-/** Put each NHSCA bout on the row for the year it was wrestled. */
-function attachNhscaBouts(rows: TournamentRow[], bouts: NhscaNationalBout[]): TournamentRow[] {
+/**
+ * Put each bout on the row for the year it was wrestled.
+ *
+ * NHSCA and Super 32 come from the same Trackwrestling export shape and print the same round
+ * vocabulary, so one bracket order serves both.
+ */
+function attachEventBouts(
+  rows: TournamentRow[],
+  bouts: NhscaNationalBout[],
+  event: { keyPrefix: string; eventName: string; roundFallback: string },
+): TournamentRow[] {
   if (!bouts.length) return rows
   return rows.map((row): TournamentRow => {
     const mine = bouts.filter((bout) => bout.year === row.year)
@@ -210,14 +219,14 @@ function attachNhscaBouts(rows: TournamentRow[], bouts: NhscaNationalBout[]): To
     return {
       ...row,
       bouts: [...mine].sort(compareNhscaBouts).map((bout, boutOrder) => ({
-        eventKey: `nhsca-nationals-${bout.year}`,
-        eventName: "NHSCA High School Nationals",
+        eventKey: `${event.keyPrefix}${bout.year}`,
+        eventName: event.eventName,
         year: bout.year,
         weight: String(bout.weight ?? row.weight ?? ""),
-        round: bout.round || "NHSCA Nationals",
+        round: bout.round || event.roundFallback,
         boutOrder,
         opponentName: bout.opponent,
-        // NHSCA seeds by state, so what we hold for an opponent is the state they wrestled for.
+        // Both events list the state an opponent wrestled for, not a school.
         opponentClub: bout.opponentState,
         opponentAthleteId: null,
         win: bout.outcome === "W",
@@ -257,6 +266,8 @@ export function buildTournamentRows(input: {
   /** Bout-level NHSCA results, attached to the year they were wrestled. */
   nhscaBouts?: NhscaNationalBout[]
   super32Results?: AccordionSummaryResult[]
+  /** Bout-level Super 32 results, attached the same way. */
+  super32Bouts?: NhscaNationalBout[]
   fargoResults?: AccordionSummaryResult[]
   nationalTeamResults?: NationalTeamEntry[]
 }): TournamentRow[] {
@@ -267,8 +278,17 @@ export function buildTournamentRows(input: {
      * naming anybody beaten is the one thing a college coach cannot use, and states has shown
      * every bout since its own import.
      */
-    ...attachNhscaBouts(rowsFromSummaries("NHSCA Nationals", input.nhscaResults ?? []), input.nhscaBouts ?? []),
-    ...rowsFromSummaries("Super 32", input.super32Results ?? []),
+    ...attachEventBouts(rowsFromSummaries("NHSCA Nationals", input.nhscaResults ?? []), input.nhscaBouts ?? [], {
+      keyPrefix: "nhsca-nationals-",
+      eventName: "NHSCA High School Nationals",
+      roundFallback: "NHSCA Nationals",
+    }),
+    // Super 32 on the same terms, from the 2025 import on. Earlier years are a record only.
+    ...attachEventBouts(rowsFromSummaries("Super 32", input.super32Results ?? []), input.super32Bouts ?? [], {
+      keyPrefix: "super32-",
+      eventName: "Super 32",
+      roundFallback: "Super 32",
+    }),
     /*
      * Freestyle and Greco are different tournaments, wrestled on different days, and a wrestler
      * can be an All-American in one and go 0-2 in the other. Labelled "Fargo" alone, a

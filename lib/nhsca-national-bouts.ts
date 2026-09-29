@@ -19,7 +19,7 @@ export type NhscaNationalBout = {
   weight: string | null
   round: string | null
   opponent: string
-  /** The state an opponent wrestled for — NHSCA seeds by state, not by school. */
+  /** The state an opponent wrestled for — NHSCA and Super 32 list a state, not a school. */
   opponentState: string | null
   outcome: "W" | "L"
   method: string | null
@@ -28,9 +28,32 @@ export type NhscaNationalBout = {
 
 export const NHSCA_NATIONAL_BOUT_PREFIX = "nhsca-nationals-"
 
-export async function getNhscaNationalBoutsForAthlete(
+/**
+ * Super 32's keys, `super32-<year>`, and nothing else. A bare `super32-` prefix would also take
+ * `super32-early-entry-nc-2026` — a different tournament, whose bouts belong on its own row.
+ * Four underscores match a year exactly.
+ */
+export const SUPER32_BOUT_KEY_PATTERN = "super32-____"
+
+export function getNhscaNationalBoutsForAthlete(
   supabase: SupabaseClient,
   athleteId: string,
+): Promise<NhscaNationalBout[]> {
+  return getEventBoutsForAthlete(supabase, athleteId, `${NHSCA_NATIONAL_BOUT_PREFIX}%`)
+}
+
+/** Super 32 bouts, imported by `scripts/import-super32-bouts.ts` on the same terms as NHSCA. */
+export function getSuper32BoutsForAthlete(
+  supabase: SupabaseClient,
+  athleteId: string,
+): Promise<NhscaNationalBout[]> {
+  return getEventBoutsForAthlete(supabase, athleteId, SUPER32_BOUT_KEY_PATTERN)
+}
+
+async function getEventBoutsForAthlete(
+  supabase: SupabaseClient,
+  athleteId: string,
+  eventKeyPattern: string,
 ): Promise<NhscaNationalBout[]> {
   if (!athleteId.trim()) return []
   try {
@@ -38,7 +61,7 @@ export async function getNhscaNationalBoutsForAthlete(
       .from("other_tournament_bouts")
       .select("year,event_date,weight_class,round,bout_order,opponent_name,opponent_club,win,win_type,score")
       .eq("athlete_id", athleteId)
-      .like("event_key", `${NHSCA_NATIONAL_BOUT_PREFIX}%`)
+      .like("event_key", eventKeyPattern)
       .order("year", { ascending: false })
       // Bracket order as the export recorded it. See the importer for why this is not derived
       // from the round label.

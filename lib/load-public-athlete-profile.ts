@@ -1,4 +1,4 @@
-import { getNhscaNationalBoutsForAthlete, type NhscaNationalBout } from "@/lib/nhsca-national-bouts"
+import { getNhscaNationalBoutsForAthlete, getSuper32BoutsForAthlete, type NhscaNationalBout } from "@/lib/nhsca-national-bouts"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
@@ -37,6 +37,7 @@ export type PublicAthleteProfile = Record<string, unknown> & {
   /** Bout-level state championship history when it exists in the athlete's match import. */
   nchsaa_state_bouts: NchsaaStateBout[]
   nhsca_bouts: NhscaNationalBout[]
+  super32_bouts: NhscaNationalBout[]
   super32_results: unknown[]
   fargo_results: unknown[]
   /** Qualifiers and open events (Super 32 Early Entry etc.) with strength-of-wins attached. */
@@ -124,12 +125,13 @@ export async function loadPublicAthleteProfile(
   if (wrestlingName && wrestlingName.toLowerCase() !== name.toLowerCase()) nameBases.push(wrestlingName)
 
   const athleteRow = athlete as Record<string, unknown>
-  const [bundle, nationalTeamData, otherTournamentBlocks, nchsaaStateBouts, nhscaBouts] = await Promise.all([
+  const [bundle, nationalTeamData, otherTournamentBlocks, nchsaaStateBouts, nhscaBouts, super32Bouts] = await Promise.all([
     loadAthleteTournamentBundle(client, athleteRow),
     loadPublicAthleteNationalTeamData(client, athleteRow),
     getOtherTournamentProfileBlocks(client, athleteRow),
     getNchsaaStateBoutsForAthlete(client, trimmed),
     getNhscaNationalBoutsForAthlete(client, trimmed),
+    getSuper32BoutsForAthlete(client, trimmed),
   ])
 
   const { nchsaa: nchsaaMergedRows, nhsca: nhscaMerged, super32: super32Merged, fargo: fargoMerged } = bundle
@@ -167,6 +169,7 @@ export async function loadPublicAthleteProfile(
       nchsaa_profile,
       nchsaa_state_bouts: nchsaaStateBouts,
       nhsca_bouts: nhscaBouts,
+      super32_bouts: super32Bouts,
       super32_results: super32Merged,
       fargo_results: fargoMerged,
       other_tournament_blocks: otherTournamentBlocks,

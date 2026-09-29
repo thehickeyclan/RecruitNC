@@ -80,7 +80,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const rows = buildTournamentRows({
     otherTournamentBlocks: loaded.athlete.other_tournament_blocks,
     nhscaResults: loaded.athlete.nhsca_results as AccordionSummaryResult[],
+    // The phone gets the same bouts as the web; it was sent NHSCA as a record only.
+    nhscaBouts: loaded.athlete.nhsca_bouts,
     super32Results: loaded.athlete.super32_results as AccordionSummaryResult[],
+    super32Bouts: loaded.athlete.super32_bouts,
     fargoResults: loaded.athlete.fargo_results as AccordionSummaryResult[],
     nationalTeamResults: loaded.athlete.national_team_results as NationalTeamEntry[],
   })

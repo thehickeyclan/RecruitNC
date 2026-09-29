@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { buildNchsaaStateRows, inferNchsaaStateRounds } from "@/lib/profile/tournament-rows"
+import { buildNchsaaStateRows, buildTournamentRows, inferNchsaaStateRounds } from "@/lib/profile/tournament-rows"
 
 describe("buildNchsaaStateRows", () => {
   it("uses the same expandable tournament-row shape as TOC", () => {
@@ -69,5 +69,43 @@ describe("inferNchsaaStateRounds", () => {
       method: "Dec",
     }]
     expect(inferNchsaaStateRounds(null, bouts)).toEqual(["State Championships"])
+  })
+})
+
+describe("buildTournamentRows Super 32 bouts", () => {
+  const s32 = (round: string, opponent: string, outcome: "W" | "L") => ({
+    year: 2025,
+    date: "2025-10-18",
+    weight: "157",
+    round,
+    opponent,
+    opponentState: "PA",
+    outcome,
+    method: "DEC",
+    score: "3-1",
+  })
+
+  it("puts each bout on the Super 32 row for its year, in bracket order", () => {
+    // Carson Worrick, 2025: a Round of 128 win, then two losses.
+    const rows = buildTournamentRows({
+      super32Results: [
+        { year: 2025, placement: "", record: "1-2", weight: "157" },
+        { year: 2024, placement: "", record: "1-2", weight: "144" },
+      ],
+      super32Bouts: [s32("Consi of 64 #2", "Paxon Legatt", "L"), s32("Round of 128", "Peter Mikedis", "W"), s32("Round of 64", "Sy Strobel", "L")],
+    })
+    const r2025 = rows.find((r) => r.event === "Super 32" && r.year === 2025)!
+    expect(r2025.bouts.map((b) => b.opponentName)).toEqual(["Peter Mikedis", "Sy Strobel", "Paxon Legatt"])
+    expect(r2025.bouts[0]).toMatchObject({ eventKey: "super32-2025", eventName: "Super 32", win: true, opponentClub: "PA" })
+    // 2024 has no bouts on file and stays a record.
+    expect(rows.find((r) => r.event === "Super 32" && r.year === 2024)!.bouts).toEqual([])
+  })
+
+  it("does not put Super 32 bouts on the NHSCA row of the same year", () => {
+    const rows = buildTournamentRows({
+      nhscaResults: [{ year: 2025, placement: "", record: "3-2", weight: "150" }],
+      super32Bouts: [s32("Round of 128", "Peter Mikedis", "W")],
+    })
+    expect(rows.find((r) => r.event === "NHSCA Nationals")!.bouts).toEqual([])
   })
 })

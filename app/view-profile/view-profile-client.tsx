@@ -72,6 +72,7 @@ export function ViewProfileClient({
     nhscaResults: nhscaResults as never[],
     nhscaBouts: (Array.isArray(athlete.nhsca_bouts) ? athlete.nhsca_bouts : []) as never[],
     super32Results: super32Results as never[],
+    super32Bouts: (Array.isArray(athlete.super32_bouts) ? athlete.super32_bouts : []) as never[],
     fargoResults: fargoResults as never[],
     nationalTeamResults: nationalTeamResults as never[],
   })
