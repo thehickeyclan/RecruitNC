@@ -41,22 +41,21 @@ const ELITE: StarRatingInput = {
   nationallyRanked: false,
 }
 
-describe("the five-star gate", () => {
-  it("caps the best résumé in the state at four without a national ranking", () => {
-    const rating = rateAthlete(ELITE)
-    expect(rating.stars).toBe(4)
-    expect(rating.score).toBeGreaterThan(90)
+describe("five stars", () => {
+  it("never comes from the formula, however strong the record", () => {
+    expect(rateAthlete(ELITE).stars).toBe(4)
+    expect(rateAthlete({ ...ELITE, nationallyRanked: true }).stars).toBe(4)
   })
 
-  it("awards five when an outlet ranks a record that already earns four", () => {
-    expect(rateAthlete({ ...ELITE, nationallyRanked: true }).stars).toBe(5)
-  })
-
-  it("holds a nationally ranked wrestler with no record at four, not five", () => {
+  it("holds a nationally ranked wrestler with no record at four", () => {
     // Devin Hord: ranked #19 nationally as a 2030 freshman. A projection is not a record.
     const rating = rateAthlete({ ...EMPTY, nationallyRanked: true })
     expect(rating.stars).toBe(4)
     expect(rating.provisional).toBe(true)
+  })
+
+  it("is reachable by hand", () => {
+    expect(applyStarOverride(rateAthlete(ELITE), { stars: 5, reason: "" }).stars).toBe(5)
   })
 
   it("never reaches five through the score bands", () => {
@@ -99,6 +98,11 @@ describe("in-state performance", () => {
     expect(toc.points).toBeGreaterThan(state.points)
   })
 
+  it("does not dilute a state title for skipping the Tournament of Champions", () => {
+    // Matt rated Morrison, Teeter and Hollar - state champions, no TOC result - 4 of 5 in-state.
+    expect(instate({ statePlaces: [1] }).points / 33).toBeGreaterThan(0.6)
+  })
+
   it("does not count the Tournament of Champions as a national event", () => {
     const rating = rateAthlete({
       ...EMPTY,
@@ -128,7 +132,13 @@ describe("nationals", () => {
     const deep = nationals([{ event: "NHSCA Nationals", year: 2026, placement: null, record: "7-2" }])
     const early = nationals([{ event: "NHSCA Nationals", year: 2026, placement: null, record: "0-2" }])
     expect(deep.parts?.[0].points).toBeGreaterThan(0)
-    expect(deep.points).toBeGreaterThan(early.points + 10)
+    expect(deep.points).toBeGreaterThan(early.points)
+  })
+
+  it("values a main-event place above a qualifier title", () => {
+    const nhsca = nationals([{ event: "NHSCA Nationals", year: 2026, placement: 4, record: "6-2" }])
+    const earlyEntry = nationals([{ event: "Super 32 Early Entry", year: 2026, placement: 1, record: "3-0" }])
+    expect(nhsca.parts?.[0].points).toBeGreaterThan(earlyEntry.parts?.[0].points ?? 0)
   })
 
   it("scores the record from the most recent year, not the career", () => {
@@ -142,10 +152,16 @@ describe("nationals", () => {
 })
 
 describe("ranking floors", () => {
-  it("keeps the top ten at four stars and the next ten at three", () => {
+  it("keeps the top ten at four stars and every other ranked wrestler at three", () => {
     expect(rateAthlete({ ...EMPTY, prospectRanking: 8, rankingPublished: true }).stars).toBe(4)
     expect(rateAthlete({ ...EMPTY, prospectRanking: 15, rankingPublished: true }).stars).toBe(3)
-    expect(rankingFloor(25, true)).toBe(1)
+    expect(rateAthlete({ ...EMPTY, prospectRanking: 28, rankingPublished: true }).stars).toBe(3)
+  })
+
+  it("holds any NCHSAA placer at two stars", () => {
+    expect(rateAthlete({ ...EMPTY, statePlaces: [8] }).stars).toBe(2)
+    // A qualifier who did not place is not a placer.
+    expect(rateAthlete({ ...EMPTY, statePlaces: [null] }).stars).toBe(1)
   })
 
   it("does not apply to an unpublished class", () => {
