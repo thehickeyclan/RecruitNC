@@ -21,6 +21,7 @@
 
 import type { NationalEventRow } from "@/lib/competition-strength"
 import type { SignificantWin } from "@/lib/significant-wins"
+import { getCurrentSigningClass } from "@/lib/commit-class-year"
 import { isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
 export type StarPart = {
@@ -322,20 +323,21 @@ export type StarRatingInput = {
 }
 
 /**
- * Whether a wrestler's class is rated at all.
+ * Whether a wrestler's class is rated at all: the current seniors and juniors, and only while
+ * their class ranking is published.
  *
- * Stars run on the classes RecruitNC already publishes rankings for — 2027 and 2028 today.
- * Deliberately read from `PUBLIC_RANKINGS_MAX_BY_YEAR` rather than listed again here, so the
- * two never drift: a class we do not rank is a class we do not know well enough to star, and
- * when a class is added to the rankings the stars follow it without a second edit.
+ * Matt, 29 September 2026: stars for 2027 and 2028, not 2029. The classes roll forward each July
+ * with the signing class, so next summer this becomes 2028 and 2029 without an edit.
  *
  * The younger classes are the reason. A freshman's record is thin by definition, and a rating
  * built only from results reads that thinness as weakness — Devin Hord, ranked #19 nationally
- * as a Class of 2030 wrestler, scored 14 out of 100. The honest answer for a ninth grader is
- * not one star, it is no star at all.
+ * as a Class of 2030 wrestler, scored 14 out of 100. When 2029 was published it came with 92
+ * one-star sophomores. The honest answer for an underclassman is no star at all.
  */
-export function isRatedClass(graduationYear: number | null | undefined): boolean {
-  return isPublicRankingsYearPublished(graduationYear)
+export function isRatedClass(graduationYear: number | null | undefined, now: Date = new Date()): boolean {
+  if (!isPublicRankingsYearPublished(graduationYear)) return false
+  const seniors = getCurrentSigningClass(now)
+  return graduationYear === seniors || graduationYear === seniors + 1
 }
 
 /**
