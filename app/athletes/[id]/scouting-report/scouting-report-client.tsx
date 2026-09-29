@@ -690,7 +690,9 @@ export function ScoutingReportDocument({
             MatScouts, ranked as North Carolina prospects, or who are NCHSAA/NCISA state champions or
             placers (top 8) — grouped by that standing, since they are not the same claim. State finishes
             count from any season on file; other results from the current season. This is not a complete
-            match list — routine results are omitted by design. Wins reported by the athlete or family are
+            match list — routine results are omitted by design. In-state and national are split by the
+            opponent, not the event: an out-of-state opponent is national wherever the bout was wrestled.
+            Wins reported by the athlete or family are
             included, with the opponent&apos;s accolade as they gave it.
           </p>
           <p className="mt-1">
@@ -954,8 +956,40 @@ const BOUT_GROUPS: Array<{
   { title: "State champions & placers", reasons: ["state-champion", "state-placer"] },
 ]
 
+/**
+ * North Carolina opponents first, then out-of-state ones.
+ *
+ * Matt: separate in-state wins from national. A coach reads a win over a Michigan placer and a win
+ * over a Greensboro placer as different evidence - one says he holds up outside the state. The
+ * opponent decides it, not the event: Luke Richards beat his Michigan and Wisconsin placers at the
+ * NC Super 32 Early Entry.
+ */
+function isOutOfState(row: BoutRow): boolean {
+  if (row.credential) return !/\b(NC|N\.C\.|North Carolina|NCHSAA|NCISA)\b/i.test(row.credential)
+  return row.reason === "national-ranked" && !!row.opponentState && row.opponentState.toUpperCase() !== "NC"
+}
+
 function GroupedBoutTables({ rows, kind }: { rows: BoutRow[]; kind: "win" | "loss" }) {
   if (!rows.length) return <BoutTable rows={rows} kind={kind} />
+  const scopes = [
+    { title: "In-state", rows: rows.filter((r) => !isOutOfState(r)) },
+    { title: "National (out-of-state opponents)", rows: rows.filter(isOutOfState) },
+  ].filter((s) => s.rows.length)
+  return (
+    <div className="space-y-5">
+      {scopes.map((scope) => (
+        <div key={scope.title}>
+          <h3 className="mb-2 border-b border-[#03154C]/30 pb-0.5 text-[11px] font-black uppercase tracking-[0.14em] text-[#B31B1B]">
+            {scope.title} <span className="font-mono text-gray-500">({scope.rows.length})</span>
+          </h3>
+          <StandingGroups rows={scope.rows} kind={kind} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function StandingGroups({ rows, kind }: { rows: BoutRow[]; kind: "win" | "loss" }) {
   return (
     <div className="space-y-4">
       {BOUT_GROUPS.map((group) => {

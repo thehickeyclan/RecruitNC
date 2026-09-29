@@ -171,6 +171,11 @@ export type SignificantWin = {
   /** Set when the opponent is nationally ranked: "#12 Sports Illustrated". */
   nationalRankLabel?: string
   /**
+   * The opponent's state, where a national ranking records one ("PA"). Everyone else a win can be
+   * recognised by - NC prospects, NCHSAA and NCISA placers, the TOC field - is North Carolina's.
+   */
+  opponentState?: string | null
+  /**
    * The opponent's North Carolina prospect ranking, where they carry one.
    *
    * Data, not display. Classes are ranked privately before they are published, so this must
@@ -398,7 +403,7 @@ function findSignificantBouts(
       ...(fargo ? { fargoLabel: fargo } : {}),
       opponentGraduationYear: ranked?.graduationYear ?? null,
       opponentRanking: ranked?.ranking ?? null,
-      ...(national ? { nationalRankLabel: `#${national.rank} ${national.source}` } : {}),
+      ...(national ? { nationalRankLabel: `#${national.rank} ${national.source}`, opponentState: national.state } : {}),
     })
   }
 
