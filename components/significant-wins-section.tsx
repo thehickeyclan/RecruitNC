@@ -96,11 +96,7 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
         </div>
       </div>
       <p className="mt-1 text-xs text-slate-400">
-        Significant wins over strong opponents.{" "}
-        <span className="whitespace-nowrap">
-          <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-rnc-gold/70 align-middle text-[9px] font-black leading-none text-rnc-gold">v</span>{" "}
-          verified · no mark: reported by the athlete or family
-        </span>
+        Significant wins over strong opponents.
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2" aria-label="Filter significant wins">
@@ -129,16 +125,7 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
           >
             <div className="min-w-0">
               <span className="font-semibold text-white">{win.opponent}</span>
-              {/* Verified against imported results; a win without the mark was reported by the family. */}
-              {win.source !== "athlete-reported" ? (
-                <span
-                  title="Verified against imported results"
-                  aria-label="Verified"
-                  className="ml-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full border border-rnc-gold/70 align-middle text-[10px] font-black leading-none text-rnc-gold"
-                >
-                  v
-                </span>
-              ) : null}
+
               {win.opponentSchool ? (
                 <span className="text-sm text-slate-400"> · {win.opponentSchool}</span>
               ) : null}

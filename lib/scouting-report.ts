@@ -145,7 +145,7 @@ export type ScoutingReport = {
   /**
    * Wins the athlete or family reported, with the opponent's accolade as they gave it.
    *
-   * Shown beside the verified wins without the verified mark, and kept out of everything that
+   * Listed with the rest - Matt checks them himself - but kept out of everything that
    * scores or summarises: the star, strength of competition and the written summary all rest on
    * results we imported. Out-of-state accolades live here - our placer list is North Carolina's.
    */

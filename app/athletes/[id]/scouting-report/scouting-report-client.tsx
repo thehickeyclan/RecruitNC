@@ -674,13 +674,13 @@ export function ScoutingReportDocument({
 
         <Block n={n()} title="Significant wins" count={report.significantWins.length + (report.reportedWins?.length ?? 0)}>
           <GroupedBoutTables
-            rows={[...report.significantWins.map((w) => ({ ...w, verified: true })), ...(report.reportedWins ?? []).map(reportedRow)]}
+            rows={[...report.significantWins, ...(report.reportedWins ?? []).map(reportedRow)]}
             kind="win"
           />
         </Block>
 
         <Block n={n()} title="Notable losses" count={report.significantLosses.length}>
-          <GroupedBoutTables rows={report.significantLosses.map((w) => ({ ...w, verified: true }))} kind="loss" />
+          <GroupedBoutTables rows={report.significantLosses} kind="loss" />
         </Block>
 
         <footer className="mt-7 border-t-2 border-[#03154C] pt-2 text-[9px] leading-relaxed text-gray-500">
@@ -690,9 +690,8 @@ export function ScoutingReportDocument({
             MatScouts, ranked as North Carolina prospects, or who are NCHSAA/NCISA state champions or
             placers (top 8) — grouped by that standing, since they are not the same claim. State finishes
             count from any season on file; other results from the current season. This is not a complete
-            match list — routine results are omitted by design. <VerifiedMark /> marks a win verified
-            against imported results; a win without it was reported by the athlete or family, with the
-            opponent&apos;s accolade as they gave it.
+            match list — routine results are omitted by design. Wins reported by the athlete or family are
+            included, with the opponent&apos;s accolade as they gave it.
           </p>
           <p className="mt-1">
             <span className="font-bold uppercase tracking-wider text-[#B31B1B]">Confidential.</span>{" "}
@@ -920,7 +919,7 @@ const STANDING: Record<
  * nationally ranked wrestler and one over a North Carolina-ranked wrestler are different claims,
  * so they get different headings; state champions and placers are a third.
  */
-type BoutRow = ScoutingReport["significantWins"][number] & { verified: boolean; credential?: string }
+type BoutRow = ScoutingReport["significantWins"][number] & { credential?: string }
 
 /**
  * A family-reported win placed in the group its accolade names. The accolade is their words,
@@ -942,22 +941,8 @@ function reportedRow(win: ScoutingReport["reportedWins"][number]): BoutRow {
     reason,
     opponentGraduationYear: null,
     opponentRanking: null,
-    verified: false,
     credential: win.credential,
   }
-}
-
-/** The circled v beside a verified win. No mark means the athlete or family reported it. */
-function VerifiedMark() {
-  return (
-    <span
-      title="Verified against imported results"
-      aria-label="Verified"
-      className="ml-1 inline-flex h-[11px] w-[11px] items-center justify-center rounded-full border border-[#1f6f43] align-middle text-[7px] font-black leading-none text-[#1f6f43]"
-    >
-      v
-    </span>
-  )
 }
 
 const BOUT_GROUPS: Array<{
@@ -1008,10 +993,7 @@ function BoutTable({ rows, kind }: { rows: BoutRow[]; kind: "win" | "loss" }) {
     >
       {rows.map((row, i) => (
         <tr key={i} className="border-t border-gray-200">
-          <Td bold>
-            {row.opponent}
-            {row.verified ? <VerifiedMark /> : null}
-          </Td>
+          <Td bold>{row.opponent}</Td>
           <Td>{row.opponentSchool ?? "—"}</Td>
           <td className="py-1.5 pr-2 align-top">
             <span
