@@ -42,6 +42,7 @@ import { sourceLabel } from "@/lib/national-rankings"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { releasesPersonalData, type ScoutingAccessTier } from "@/lib/scouting-report-access"
 import { reportSignificantBouts } from "@/lib/report-significant-wins"
+import { getSubmittedWins } from "@/lib/athlete-submitted-wins"
 
 export type ScoutingReportIdentity = {
   name: string
@@ -120,6 +121,15 @@ export type ScoutingReportResultRow = {
   weight: string | null
 }
 
+export type ReportedWin = {
+  opponent: string
+  opponentSchool: string | null
+  event: string | null
+  date: string | null
+  result: string | null
+  credential: string
+}
+
 export type ScoutingReport = {
   athleteId: string
   generatedAt: string
@@ -132,6 +142,14 @@ export type ScoutingReport = {
   results: ScoutingReportResultRow[]
   significantWins: SignificantWin[]
   significantLosses: SignificantWin[]
+  /**
+   * Wins the athlete or family reported, with the opponent's accolade as they gave it.
+   *
+   * Shown beside the verified wins without the verified mark, and kept out of everything that
+   * scores or summarises: the star, strength of competition and the written summary all rest on
+   * results we imported. Out-of-state accolades live here - our placer list is North Carolina's.
+   */
+  reportedWins: ReportedWin[]
   /**
    * How hard the season actually was, from the imported bouts.
    *
@@ -543,11 +561,12 @@ export async function buildScoutingReport(
   const personal = releasesPersonalData(accessTier)
   const athleteId = String(athlete.id)
 
-  const [bundle, { data: matchRows }, qualifierBouts, rankings] = await Promise.all([
+  const [bundle, { data: matchRows }, qualifierBouts, rankings, submitted] = await Promise.all([
     loadAthleteTournamentBundle(supabase, athlete),
     supabase.from("matches").select("season,matches").eq("athlete_id", athleteId),
     getQualifierSignificantWinBouts(supabase, athleteId, "all").catch(() => [] as Bout[]),
     getNationalRankingsForAthlete(supabase, athleteId).catch(() => []),
+    getSubmittedWins(supabase, athleteId).catch(() => []),
   ])
 
   const seasonsOnFile = new Set(
@@ -617,6 +636,17 @@ export async function buildScoutingReport(
     results: resultRows,
     significantWins: rankedWins,
     significantLosses: rankedLosses,
+    // As on the profile: only with the opponent's accolade filled in.
+    reportedWins: submitted
+      .filter((w) => w.credential.trim())
+      .map((w) => ({
+        opponent: w.opponent,
+        opponentSchool: w.opponentSchool,
+        event: w.event || null,
+        date: w.date,
+        result: w.result,
+        credential: w.credential.trim(),
+      })),
     recruitingStatus: text(athlete.recruiting_status),
     commitment: text(athlete.college),
     accessTier,
