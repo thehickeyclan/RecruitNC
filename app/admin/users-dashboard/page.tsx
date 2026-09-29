@@ -69,6 +69,8 @@ type UserProfile = {
   is_admin: boolean
   email_confirmed_at: string | null
   last_sign_in_at: string | null
+  /** Blue payer, linked or claimed wrestler, or admin: a person even without a sign-in. */
+  has_ties?: boolean
   last_activity_at: string | null
   last_activity_path: string | null
   last_activity_type: string | null
@@ -157,9 +159,13 @@ function effectiveLastActiveAt(user: Pick<UserProfile, "last_activity_at" | "las
   return activityTime >= signInTime ? user.last_activity_at : user.last_sign_in_at
 }
 
-/** Confirmed their email, or has signed in (Google sign-ins arrive confirmed). Anything else is not a user. */
-function isRealUser(p: { email_confirmed_at?: string | null; last_sign_in_at?: string | null }): boolean {
-  return Boolean(p.email_confirmed_at || p.last_sign_in_at)
+/**
+ * A user has signed in at least once, or is tied to something real (a Blue membership they pay
+ * for, a linked or claimed wrestler, or staff). An account that never signed in is not a user,
+ * whether or not its confirmation link was ever opened - email scanners open those links too.
+ */
+function isRealUser(p: { last_sign_in_at?: string | null; has_ties?: boolean }): boolean {
+  return Boolean(p.last_sign_in_at || p.has_ties)
 }
 
 export default function UsersDashboardPage() {
@@ -1256,7 +1262,7 @@ export default function UsersDashboardPage() {
             </Select>
             <label className="flex items-center gap-2 whitespace-nowrap text-sm text-gray-600">
               <input type="checkbox" checked={showUnconfirmed} onChange={(e) => setShowUnconfirmed(e.target.checked)} />
-              Show unconfirmed ({profiles.filter((p) => !isRealUser(p)).length})
+              Show never signed in ({profiles.filter((p) => !isRealUser(p)).length})
             </label>
           </div>
         </CardContent>

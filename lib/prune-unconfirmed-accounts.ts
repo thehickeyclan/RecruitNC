@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 /**
  * Remove sign-ups that never became users.
  *
- * An account that never confirmed its email and never signed in is not a user: a mistyped
+ * An account that has never signed in is not a user: a mistyped
  * address (gmail.con), a sign-up abandoned at the confirmation step, or a bot - 48 of the last kind
  * were cleared by hand on 29 September 2026. Seven days is the grace period: long enough to find a
  * confirmation email in a spam folder, short enough that the users list stays honest.
@@ -17,10 +17,14 @@ export const MAX_PER_RUN = 200
 
 type AuthUser = { id: string; email?: string | null; created_at: string; email_confirmed_at?: string | null; last_sign_in_at?: string | null }
 
-/** Accounts past the grace period that never confirmed and never signed in. Pure, for the tests. */
+/**
+ * Accounts past the grace period that never signed in, confirmed or not. A confirmation link can
+ * be opened by an email scanner without a person ever arriving; 51 accounts sat confirmed and
+ * never used. Pure, for the tests - the ties that keep a real person are checked by the caller.
+ */
 export function staleUnconfirmed(users: readonly AuthUser[], now = new Date()): AuthUser[] {
   const cutoff = now.getTime() - GRACE_DAYS * 86_400_000
-  return users.filter((u) => !u.email_confirmed_at && !u.last_sign_in_at && Date.parse(u.created_at) < cutoff)
+  return users.filter((u) => !u.last_sign_in_at && Date.parse(u.created_at) < cutoff)
 }
 
 export type PruneResult = { candidates: number; deleted: string[]; skipped: Array<{ email: string; reason: string }>; errors: string[]; capped: boolean }
@@ -40,12 +44,14 @@ export async function pruneUnconfirmedAccounts(admin: SupabaseClient, now = new 
 
   for (const user of stale) {
     const email = user.email ?? user.id
-    const [{ count: links }, { count: claimed }, { count: blue }] = await Promise.all([
+    const [{ count: links }, { count: claimed }, { count: blue }, { data: profile }] = await Promise.all([
       admin.from("parent_athlete_links").select("user_id", { count: "exact", head: true }).eq("user_id", user.id),
       admin.from("athletes").select("id", { count: "exact", head: true }).eq("claimed_by_user_id", user.id),
       admin.from("blue_memberships").select("id", { count: "exact", head: true }).eq("payer_user_id", user.id),
+      admin.from("user_profiles").select("is_admin, role").eq("user_id", user.id).maybeSingle(),
     ])
-    const ties = [links ? "linked wrestler" : "", claimed ? "claimed profile" : "", blue ? "Blue membership" : ""].filter(Boolean)
+    const staff = profile?.is_admin === true || profile?.role === "admin"
+    const ties = [links ? "linked wrestler" : "", claimed ? "claimed profile" : "", blue ? "Blue membership" : "", staff ? "staff" : ""].filter(Boolean)
     if (ties.length) {
       result.skipped.push({ email, reason: ties.join(", ") })
       continue

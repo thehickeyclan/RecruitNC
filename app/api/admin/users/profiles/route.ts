@@ -210,6 +210,23 @@ export async function GET() {
     }
 
     // Combine auth users with profile data
+    /*
+     * Accounts tied to something real - a Blue membership they pay for, a linked or claimed
+     * wrestler - are people even if they have never signed in: Blue accounts are created for the
+     * family at registration. The dashboard counts them as users; anything else that has never
+     * signed in is not one.
+     */
+    const [{ data: bluePayers }, { data: parentLinks }, { data: claimers }] = await Promise.all([
+      supabaseAdmin.from("blue_memberships").select("payer_user_id").not("payer_user_id", "is", null),
+      supabaseAdmin.from("parent_athlete_links").select("user_id"),
+      supabaseAdmin.from("athletes").select("claimed_by_user_id").not("claimed_by_user_id", "is", null),
+    ])
+    const tiedUserIds = new Set<string>([
+      ...(bluePayers ?? []).map((r) => String((r as { payer_user_id: string }).payer_user_id)),
+      ...(parentLinks ?? []).map((r) => String((r as { user_id: string }).user_id)),
+      ...(claimers ?? []).map((r) => String((r as { claimed_by_user_id: string }).claimed_by_user_id)),
+    ])
+
     const combinedProfiles = allAuthUsers.map((user) => {
       const profile = profileMap.get(user.id)
       const activity = activityByUser.get(user.id) ?? emptyActivity()
@@ -232,6 +249,7 @@ export async function GET() {
         // Whether this is a person or just a row. An unconfirmed account has never clicked the
         // link and cannot sign in, so counting it as a user overstates the audience.
         email_confirmed_at: user.email_confirmed_at || null,
+        has_ties: tiedUserIds.has(user.id) || Boolean(profile?.is_admin),
         last_sign_in_at: user.last_sign_in_at || null,
         ...activity,
       }

@@ -66,14 +66,15 @@ export async function GET(request: NextRequest) {
 
   // Sign-in times live on the auth user, not the profile.
   const lastSignIn = new Map<string, string | null>()
-  // Accounts that never confirmed and never signed in are not users; they are left off the board.
+  // Accounts that have never signed in are not users; they are left off the board.
   const realUsers = new Set<string>()
   for (let page = 1; page <= 50; page++) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 })
     if (error) break
     for (const u of data.users) {
       lastSignIn.set(u.id, u.last_sign_in_at ?? null)
-      if (u.email_confirmed_at || u.last_sign_in_at) realUsers.add(u.id)
+      // A coach who has never signed in has never used the site; they are not on the board.
+      if (u.last_sign_in_at) realUsers.add(u.id)
     }
     if (data.users.length < 1000) break
   }
