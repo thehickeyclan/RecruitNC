@@ -3,7 +3,7 @@ import { namesLikelySamePerson } from "@/lib/athlete-name-match"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { buildTocFieldBoard } from "@/lib/toc/field-board"
 import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
-import { findSignificantWins, withAccoladesOnly, type Bout, type RankedOpponent } from "@/lib/significant-wins"
+import { accoladeLine, findSignificantWins, withAccoladesOnly, type Bout, type RankedOpponent } from "@/lib/significant-wins"
 import { getQualifierSignificantWinBouts } from "@/lib/other-tournaments"
 import { getCuratedSignificantWins } from "@/lib/curated-significant-wins"
 import { getSubmittedWins } from "@/lib/athlete-submitted-wins"
@@ -33,7 +33,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     admin.from("toc_invitations").select("*, athletes(id,name)"),
     // Qualifier wins live in their own table, not in the match import.
     getQualifierSignificantWinBouts(admin, id).catch(() => [] as Bout[]),
-    loadStatePlacerIndex(admin).catch(() => ({ statePlacers: [], stateSchools: [] })),
+    loadStatePlacerIndex(admin).catch(() => ({ statePlacers: [], stateSchools: [], fargoAllAmericans: [] })),
   ])
 
   /*
@@ -129,11 +129,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     reason: win.reason,
     // The opponent's state finish, when they have one, is the label a reader recognises - beside
     // the stronger reason rather than instead of it.
-    credential: !win.stateLabel
+    credential: !accoladeLine(win)
       ? null
       : win.reason === "state-champion" || win.reason === "state-placer"
-        ? win.stateLabel
-        : `${win.reason === "toc-field" ? "TOC field" : win.reason === "national-ranked" ? "Nationally ranked" : "NC ranked"} · ${win.stateLabel}`,
+        ? accoladeLine(win)
+        : `${win.reason === "toc-field" ? "TOC field" : win.reason === "national-ranked" ? "Nationally ranked" : "NC ranked"} · ${accoladeLine(win)}`,
     scope: "in-state" as const,
   }))
 

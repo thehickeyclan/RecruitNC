@@ -964,6 +964,9 @@ function BoutTable({ rows, kind }: { rows: ScoutingReport["significantWins"]; ki
             {row.stateLabel ? (
               <div className="mt-0.5 text-[8.5px] leading-tight text-gray-500">{row.stateLabel}</div>
             ) : null}
+            {row.fargoLabel ? (
+              <div className="mt-0.5 text-[8.5px] leading-tight text-gray-500">{row.fargoLabel}</div>
+            ) : null}
           </td>
           <Td mono>{row.result ?? "—"}</Td>
           <Td>{row.event ?? "—"}</Td>

@@ -115,7 +115,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   // shares that loader and scores wins by reason.
   const [baseIndex, stateIndex] = await Promise.all([
     loadOpponentIndex(admin),
-    loadStatePlacerIndex(admin).catch(() => ({ statePlacers: [], stateSchools: [] })),
+    loadStatePlacerIndex(admin).catch(() => ({ statePlacers: [], stateSchools: [], fargoAllAmericans: [] })),
   ])
   const opponentIndex = { ...baseIndex, ...stateIndex }
   const report = await buildScoutingReport(
@@ -186,7 +186,10 @@ async function askForSummary(apiKey: string, facts: string): Promise<string | nu
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
+        // gpt-4o-mini turned a loss into a win and invented a state-tournament record on the same
+        // facts; gpt-4.1 kept every opponent's accolade and every result straight. A coach reads
+        // this paragraph first, so the better model is worth the fraction of a cent.
+        model: "gpt-4.1",
         temperature: 0.3,
         max_tokens: 320,
         messages: [

@@ -60,6 +60,33 @@ export type OpponentIndex = {
    * namesake it is.
    */
   stateSchools?: readonly string[]
+  /**
+   * Fargo All-Americans (lib/state-placers.ts). Loaded with the state placers and, like them,
+   * only by the profile and the scouting report: the label rides on a win that already earned its
+   * place, so a coach reads "Fargo All-American" beside the name rather than just "NC ranked".
+   */
+  fargoAllAmericans?: readonly FargoAllAmerican[]
+}
+
+export type FargoAllAmerican = {
+  name: string
+  schools: readonly string[]
+  finishes: readonly { year: number; division: string; placement: number | null }[]
+}
+
+/** "2026 Fargo 16U Freestyle All-American (4th)", or "2x Fargo All-American (2026 16U Freestyle)". */
+export function fargoLabel(finishes: FargoAllAmerican["finishes"]): string | null {
+  if (!finishes.length) return null
+  const newest = [...finishes].sort((a, b) => b.year - a.year || (a.placement ?? 99) - (b.placement ?? 99))[0]
+  const division = newest.division.replace(/\bBoys\s+/i, "").trim()
+  if (finishes.length > 1) return `${finishes.length}x Fargo All-American (${newest.year} ${division})`
+  const place = newest.placement ? ` (${newest.placement}${ordinalSuffix(newest.placement)})` : ""
+  return `${newest.year} Fargo ${division} All-American${place}`
+}
+
+/** Every accolade on a bout's opponent, for display: "2026 5A State Runner-up · 2026 Fargo ...". */
+export function accoladeLine(win: Pick<SignificantWin, "stateLabel" | "fargoLabel">): string | null {
+  return [win.stateLabel, win.fargoLabel].filter(Boolean).join(" · ") || null
 }
 
 export type StatePlacer = {
@@ -138,6 +165,8 @@ export type SignificantWin = {
    * stronger reasons too, because "TOC field" and "state champion" are different facts.
    */
   stateLabel?: string
+  /** The opponent's Fargo All-American finish, when they have one. */
+  fargoLabel?: string
   opponentGraduationYear: number | null
   /** Set when the opponent is nationally ranked: "#12 Sports Illustrated". */
   nationalRankLabel?: string
@@ -334,6 +363,14 @@ function findSignificantBouts(
     const stateLabel = statePlacerLabel(finishes)
     const bestPlace = finishes.length ? Math.min(...finishes.map((f) => f.place)) : null
     const placer = stateLabel && bestPlace != null ? { label: stateLabel, bestPlace } : null
+    const season = boutSeason(bout.date)
+    const fargo = fargoLabel(
+      (index.fargoAllAmericans ?? [])
+        .filter((f) => namesLikelySamePerson(f.name, name))
+        .filter((f) => schoolConsistent(bout.opponent_school, f.schools, index.stateSchools))
+        .flatMap((f) => f.finishes)
+        .filter((f) => season == null || Math.abs(f.year - season) <= 3),
+    )
     if (!national && !inField && !ranked && !placer) continue
 
     // One entry per opponent per day: the same bout is sometimes stored twice.
@@ -358,10 +395,31 @@ function findSignificantBouts(
               ? "state-champion"
               : "state-placer",
       ...(placer ? { stateLabel: placer.label } : {}),
+      ...(fargo ? { fargoLabel: fargo } : {}),
       opponentGraduationYear: ranked?.graduationYear ?? null,
       opponentRanking: ranked?.ranking ?? null,
       ...(national ? { nationalRankLabel: `#${national.rank} ${national.source}` } : {}),
     })
+  }
+
+  /*
+   * An accolade belongs to the person, not the bout. Brackets spell schools differently from one
+   * event to the next, so the same opponent could carry "2026 5A State Champion" at one meeting
+   * and nothing at the next - Luke Padgett did, twice on one report. Lend the label across.
+   */
+  const labelsByName = new Map<string, { stateLabel?: string; fargoLabel?: string }>()
+  for (const w of wins) {
+    const key = w.opponent.toLowerCase()
+    const seenLabels = labelsByName.get(key) ?? {}
+    labelsByName.set(key, {
+      stateLabel: seenLabels.stateLabel ?? w.stateLabel,
+      fargoLabel: seenLabels.fargoLabel ?? w.fargoLabel,
+    })
+  }
+  for (const w of wins) {
+    const labels = labelsByName.get(w.opponent.toLowerCase())
+    if (!w.stateLabel && labels?.stateLabel) w.stateLabel = labels.stateLabel
+    if (!w.fargoLabel && labels?.fargoLabel) w.fargoLabel = labels.fargoLabel
   }
 
   const reasonRank = { "national-ranked": 0, "toc-field": 1, ranked: 2, "state-champion": 3, "state-placer": 4 } as const

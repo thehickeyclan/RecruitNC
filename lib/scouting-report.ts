@@ -34,6 +34,7 @@ import {
   findSignificantLosses,
   findSignificantWins,
   withAccoladesOnly,
+  accoladeLine,
   type Bout,
   type NationallyRankedOpponent,
   type OpponentIndex,
@@ -717,12 +718,30 @@ export async function buildScoutingReport(
  * summary that blurs them oversells the first kind of athlete and undersells the second.
  */
 function standingPhrase(bout: SignificantWin): string {
+  // Accolades lead: "2026 5A State Champion" is what a coach recognises, and the model was
+  // keeping the first words of this phrase and dropping the rest.
+  const accolades = accoladeLine(bout)
   if (bout.reason === "national-ranked") {
-    return bout.nationalRankLabel ? `nationally ranked, ${bout.nationalRankLabel}` : "nationally ranked"
+    const rank = bout.nationalRankLabel ? `nationally ranked, ${bout.nationalRankLabel}` : "nationally ranked"
+    return accolades ? `${rank}; ${accolades}` : rank
   }
-  if (bout.reason === "state-champion" || bout.reason === "state-placer") return bout.stateLabel ?? "a state placer"
+  if (bout.reason === "state-champion" || bout.reason === "state-placer") return accolades ?? "a state placer"
   const base = bout.reason === "toc-field" ? "in the Tournament of Champions field" : "ranked in North Carolina"
-  return bout.stateLabel ? `${base}, ${bout.stateLabel}` : base
+  return accolades ? `${accolades}; also ${base}` : base
+}
+
+/**
+ * How the summary refers to the wrestler after the first mention.
+ *
+ * The record carries gender, and the prompt used to be told to write they/them instead - so
+ * Brieon Mayfield's report read "they had a 4-2 record". Singular they is never wanted here. With
+ * no gender on file the model is told to repeat the surname rather than use any pronoun.
+ */
+function pronounFact(gender: string | null): string {
+  const g = (gender ?? "").trim().toLowerCase()
+  if (g === "male" || g === "m" || g === "boys") return "Pronouns: he / him / his. Use these, never they/them."
+  if (g === "female" || g === "f" || g === "girls") return "Pronouns: she / her / hers. Use these, never they/them."
+  return "Pronouns: not on file. Repeat the surname instead of any pronoun; never write they/them."
 }
 
 function boutFact(bout: SignificantWin): string {
@@ -738,6 +757,7 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
   const lines: string[] = [
     seasonContext(),
     `Name: ${identity.name}`,
+    pronounFact(identity.gender),
     identity.graduationYear ? `Class of ${identity.graduationYear}` : "",
     identity.highSchool ? `High school: ${identity.highSchool}` : "",
     identity.club ? `Club: ${identity.club}` : "",
@@ -953,12 +973,12 @@ export function stripSeasonFraming(summary: string): string {
 export const SUMMARY_SYSTEM_PROMPT = `You write short scouting summaries for college wrestling coaches.
 
 Say things in this order, skipping anything the facts do not contain:
-1. Who they are: name, class year, high school and club, in one clause.
+1. Who the wrestler is: name, class year, high school and club, in one clause.
 2. National and out-of-state results first — NHSCA Nationals, Fargo, Super 32 (and Super 32
    Early Entry), Journeymen and I-64 Spring Duals — then North Carolina events, NCHSAA States
    and the Tournament of Champions. Name the tournament exactly as the facts name it.
    Give the weight, the record, and the placement ONLY when the facts state one. A line reading
-   "did not place" means exactly that: report the record and say they did not place. Never
+   "did not place" means exactly that: report the record and say the wrestler did not place. Never
    supply a placement, an All-American finish or a podium the facts do not contain.
 3. Refer to every result by the year the facts give it. NEVER write "this season", "last
    season", "currently" or "so far this year" — you are not told where in the calendar you are
@@ -969,9 +989,9 @@ Say things in this order, skipping anything the facts do not contain:
 6. Then GPA and test scores, last, in one short sentence.
 
 Two lines are worth a sentence of their own when the facts carry them:
-- "Competed at:" is the weight progression. For a young wrestler still filling out, where they
-  have actually competed says more than a listed weight. Report the direction.
-- "Strength of competition" is who they wrestled and beat. A record without it is the half
+- "Competed at:" is the weight progression. For a young wrestler still filling out, where the wrestler
+  has actually competed says more than a listed weight. Report the direction.
+- "Strength of competition" is who the wrestler faced and beat. A record without it is the half
   that misleads: 50-8 reads very differently once you know eight of those wins came over
   Tournament of Champions field opponents. Quote
   the figures as given, never call a schedule "weak", and if the coverage line says one season
@@ -984,8 +1004,18 @@ Rules:
   "competed at various competitions". Open with the strongest result on the page.
 - Write "a win over X" for one opponent and "wins over X and Y" for two. Never "a victory over"
   two people.
-- Use the surname after the first mention rather than a pronoun. Do not guess their gender; where
-  a pronoun is unavoidable use they/them.
+- After the first mention use the surname, or the pronoun given on the "Pronouns:" line. Never
+  refer to the wrestler as "they" or "them" - singular they is not used in these reports.
+- Name every opponent with the accolade the facts give them, in front of the name: "a win over
+  2026 5A State Champion Luke Padgett", "2026 Fargo 16U Freestyle All-American Braylen Yates".
+  State titles, state placings and Fargo All-American finishes are the facts a coach recognises;
+  never shorten them to "North Carolina ranked".
+- Call an opponent "nationally ranked" only when the facts mark that bout "nationally ranked", and
+  lead with that win - with the outlet and number. A state champion is not nationally ranked.
+- When an opponent carries two accolades, give both: "2026 5A State Runner-up and 2026 Fargo 16U
+  Freestyle All-American Braylen Yates".
+- State a record for a tournament only when the facts give one for it. Never compute or infer a
+  record.
 - Never write "ranked" on its own about an opponent. Say "nationally ranked", "ranked in North
   Carolina", or "in the Tournament of Champions field", matching exactly what the facts state.
 - A RecruitNC ranking is a North Carolina class ranking, not a national one. Write it as
