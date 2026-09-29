@@ -157,6 +157,11 @@ function effectiveLastActiveAt(user: Pick<UserProfile, "last_activity_at" | "las
   return activityTime >= signInTime ? user.last_activity_at : user.last_sign_in_at
 }
 
+/** Confirmed their email, or has signed in (Google sign-ins arrive confirmed). Anything else is not a user. */
+function isRealUser(p: { email_confirmed_at?: string | null; last_sign_in_at?: string | null }): boolean {
+  return Boolean(p.email_confirmed_at || p.last_sign_in_at)
+}
+
 export default function UsersDashboardPage() {
   const [profiles, setProfiles] = useState<UserProfile[]>([])
   const [colleges, setColleges] = useState<CollegeOption[]>([])
@@ -165,6 +170,11 @@ export default function UsersDashboardPage() {
   const [error, setError] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [roleFilter, setRoleFilter] = useState<string>("all")
+  /*
+   * An account that never confirmed its email and never signed in is not a user: a typo address,
+   * a sign-up abandoned at the email step, or a bot. They stay out of the list unless asked for.
+   */
+  const [showUnconfirmed, setShowUnconfirmed] = useState(false)
   const [sortField, setSortField] = useState<string>("created_at")
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc")
   const [editingUser, setEditingUser] = useState<UserProfile | null>(null)
@@ -530,7 +540,7 @@ export default function UsersDashboardPage() {
   }
 
   const filteredProfiles = useMemo(() => {
-    let filtered = profiles
+    let filtered = showUnconfirmed ? profiles : profiles.filter(isRealUser)
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
@@ -573,7 +583,7 @@ export default function UsersDashboardPage() {
     })
 
     return filtered
-  }, [profiles, searchQuery, roleFilter, sortField, sortDirection])
+  }, [profiles, searchQuery, roleFilter, sortField, sortDirection, showUnconfirmed])
 
   const pendingCoaches = useMemo(() => 
     filteredProfiles.filter(p => 
@@ -605,7 +615,7 @@ export default function UsersDashboardPage() {
    * above it no longer do.
    */
   const confirmedProfiles = useMemo(
-    () => profiles.filter(p => Boolean(p.email_confirmed_at)),
+    () => profiles.filter(isRealUser),
     [profiles]
   )
 
@@ -1244,6 +1254,10 @@ export default function UsersDashboardPage() {
                 <SelectItem value="admin">Admins</SelectItem>
               </SelectContent>
             </Select>
+            <label className="flex items-center gap-2 whitespace-nowrap text-sm text-gray-600">
+              <input type="checkbox" checked={showUnconfirmed} onChange={(e) => setShowUnconfirmed(e.target.checked)} />
+              Show unconfirmed ({profiles.filter((p) => !isRealUser(p)).length})
+            </label>
           </div>
         </CardContent>
       </Card>
