@@ -77,10 +77,16 @@ export async function viewerMaySeeAthletePrivateInfo(
 
   if (athlete?.claimed_by_user_id && String(athlete.claimed_by_user_id) === viewerId) return true
 
+  /*
+   * `user_id`, not `id`. `user_profiles.id` is the row's own key; the sign-in id is `user_id`, and
+   * the two match on 2 profiles in 1,000. Looking up by `id` found nobody, so every admin and
+   * every verified coach was treated as a stranger and sent the profile with GPA, test scores,
+   * phone and email stripped - approved GPAs looked as if they had never been saved.
+   */
   const { data: profile } = await supabase
     .from("user_profiles")
     .select("role, verified_coach, is_admin, profile_type")
-    .eq("id", viewerId)
+    .eq("user_id", viewerId)
     .maybeSingle()
 
   if (!profile) return false

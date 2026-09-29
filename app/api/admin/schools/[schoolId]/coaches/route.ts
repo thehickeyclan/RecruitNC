@@ -13,9 +13,14 @@ export async function GET(request: Request, { params }: { params: { schoolId: st
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { data: profile } = await supabase.from("user_profiles").select("role").eq("id", user.id).single()
+    // `user_id` is the sign-in id; `id` is the row key, so looking up by `id` refused every admin.
+    const { data: profile } = await supabase
+      .from("user_profiles")
+      .select("role, is_admin")
+      .eq("user_id", user.id)
+      .maybeSingle()
 
-    if (profile?.role !== "admin") {
+    if (profile?.is_admin !== true && profile?.role !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 })
     }
 
