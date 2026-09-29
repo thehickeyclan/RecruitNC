@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Award, Check, ExternalLink, Instagram, Mail, Medal, Target, TrendingUp, Trophy, Users } from "lucide-react"
 import { RankingsTableView } from "@/components/rankings-table-view"
+import { useAuth } from "@/contexts/auth-context"
 import { RankingsCardView } from "@/components/rankings-card-view"
 
 interface Athlete {
@@ -52,6 +53,20 @@ export function RankingsSalesClient() {
    * looking like a ranking we had failed to load rather than one they could buy.
    */
   const [locked, setLocked] = useState<"anonymous" | "unentitled" | null>(null)
+  const { user, signOut } = useAuth()
+  /*
+   * Signed in without access. The sign-in links below only loop such a person - the sign-in page
+   * sees they are already signed in and returns them here - which is how families ended up
+   * bouncing between this page and /auth/signin. They get their account and the real way forward.
+   */
+  const signedInWithoutAccess = locked === "unentitled"
+  const switchAccount = async () => {
+    try {
+      await signOut()
+    } finally {
+      window.location.href = "/auth/signin?returnTo=%2Fpublic-rankings"
+    }
+  }
   const [checkingOut, setCheckingOut] = useState<string | null>(null)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
   const [requestedPlan, setRequestedPlan] = useState<"subscription" | "subscription_annual" | null>(null)
@@ -276,9 +291,11 @@ export function RankingsSalesClient() {
               <Button asChild variant="outline" className="mt-6 w-full border-border bg-transparent text-foreground hover:bg-accent">
                 <Link href="/blue">Learn about Blue</Link>
               </Button>
-              <Link href="/auth/signin?returnTo=/rankings" className="mt-3 block text-center text-sm text-primary underline">
-                Blue family sign in
-              </Link>
+              {signedInWithoutAccess ? null : (
+                <Link href="/auth/signin?returnTo=/rankings" className="mt-3 block text-center text-sm text-primary underline">
+                  Blue family sign in
+                </Link>
+              )}
             </div>
 
             <div className="relative rounded-2xl border-2 border-primary bg-card p-6 shadow-lg">
@@ -334,11 +351,37 @@ export function RankingsSalesClient() {
             That&apos;s what keeps these rankings going.
           </p>
 
-          <p className="mt-8 text-center text-sm text-muted-foreground">
-            Already a Blue family or subscriber?{" "}
-            <Link href="/auth/signin?returnTo=/rankings" className="text-primary underline">Sign in</Link>
-            .
-          </p>
+          {signedInWithoutAccess ? (
+            <div className="mx-auto mt-8 max-w-xl rounded-lg border border-border bg-card px-4 py-4 text-center text-sm text-muted-foreground">
+              <p>
+                You&apos;re signed in{user?.email ? <> as <strong className="text-foreground">{user.email}</strong></> : null}.
+              </p>
+              <p className="mt-2">
+                Blue family and still seeing this? This account isn&apos;t linked to your wrestler yet. Open your
+                wrestler&apos;s profile and tap{" "}
+                <strong className="text-foreground">&ldquo;I&apos;m [their name]&apos;s parent&rdquo;</strong> to link it,
+                or{" "}
+                <a href="mailto:info@ncwrestlingunited.com?subject=Rankings%20access" className="text-primary underline">
+                  email us
+                </a>{" "}
+                and we&apos;ll link it for you.
+              </p>
+              <div className="mt-3 flex flex-wrap justify-center gap-3">
+                <Link href="/prospects/all" className="text-primary underline">
+                  Find your wrestler
+                </Link>
+                <button type="button" onClick={() => void switchAccount()} className="text-primary underline">
+                  Use a different account
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p className="mt-8 text-center text-sm text-muted-foreground">
+              Already a Blue family or subscriber?{" "}
+              <Link href="/auth/signin?returnTo=/rankings" className="text-primary underline">Sign in</Link>
+              .
+            </p>
+          )}
         </div>
       </div>
     )

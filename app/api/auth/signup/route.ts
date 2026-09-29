@@ -18,6 +18,15 @@ export async function POST(request: NextRequest) {
       profileType: body.profileType,
     })
 
+    /*
+     * Honeypot: the sign-up form has a field people never see. A wave of scripted sign-ups (random
+     * names, role "other", never signed in) came through this route in September 2026; they fill
+     * every field. Answer as if it worked and create nothing.
+     */
+    if (typeof body?.website === "string" && body.website.trim()) {
+      return NextResponse.json({ success: true, message: "Account created successfully! Please check your email to verify your account." })
+    }
+
     const { firstName, lastName, cellPhone, profileType, fullName, email, password, returnTo } = body as {
       firstName?: string
       lastName?: string

@@ -8,6 +8,7 @@ import { useSearchParams } from "next/navigation"
 import { AlertCircle, ChevronLeft, ChevronRight, Flag, GraduationCap, Heart, Shield, Trophy, Users } from "lucide-react"
 
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button"
+import { suggestEmailFix } from "@/lib/email-typo"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -134,6 +135,9 @@ function SignUpWizard() {
   const [resendMessage, setResendMessage] = useState("")
   const [success, setSuccess] = useState(false)
 
+  // "Did you mean gmail.com?" - a mistyped domain is an account that can never be confirmed.
+  const emailFix = suggestEmailFix(email)
+
   const isCollegeCoach = profileType === "college-coach"
   const roleNeedsPhone = profileType === "athlete" || profileType === "parent" || isCollegeCoach
   const role = ROLES.find((r) => r.value === profileType) ?? null
@@ -158,6 +162,10 @@ function SignUpWizard() {
     }
     if (isCollegeCoach && !college.trim()) {
       setError("Enter your college.")
+      return
+    }
+    if (emailFix) {
+      setError(`Check your email address. Did you mean ${emailFix}?`)
       return
     }
     setLoading(true)
@@ -199,6 +207,7 @@ function SignUpWizard() {
           cellPhone: cellPhone.trim() || undefined,
           profileType,
           returnTo: returnTo || undefined,
+          website,
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -369,6 +378,11 @@ function SignUpWizard() {
                   <div className="space-y-2">
                     <Label htmlFor="email">Email</Label>
                     <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={loading} />
+                    {emailFix ? (
+                      <button type="button" onClick={() => setEmail(emailFix)} className="text-left text-sm text-amber-700 underline">
+                        Did you mean {emailFix}?
+                      </button>
+                    ) : null}
                   </div>
 
                   {roleNeedsPhone ? (
