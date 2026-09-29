@@ -9,6 +9,7 @@ import { BLUE_IMAGE_KEYS, type BlueContent } from "@/lib/blue-content"
 import type { BlueAlumnus } from "@/lib/blue-alumni"
 import { BlueAlumniTable } from "./blue-alumni-table"
 import { BlueExpressInterestForm } from "./blue-express-interest-form"
+import { FormerMemberRejoin } from "./former-member-rejoin"
 import { BackToTop } from "./back-to-top"
 import { CoachCard } from "./coach-card"
 import { NextStepsCTA } from "./next-steps-cta"
@@ -88,6 +89,7 @@ export default function BluePage() {
           </Link>
         </div>
 
+        <FormerMemberRejoin />
         <article className="space-y-16">
           <section id="what-is">
             <h2 className="mb-4 text-2xl font-bold text-[#003366]">What Is NC United Blue</h2>

@@ -322,8 +322,10 @@ export function NcUnitedBlueSection({
                   </div>
                 </dl>
                 <div className="flex gap-2 pt-1">
+                  {/* Straight to registration. This linked to /blue, whose only way in is the interest
+                      form, so a lapsed family asking to come back was sent to apply as strangers. */}
                   <a
-                    href="/blue"
+                    href="/blue/register"
                     className="inline-flex items-center rounded-md bg-[#03154C] px-3 py-1.5 text-[13px] font-medium text-white hover:bg-[#0a2a6e]"
                   >
                     Rejoin Blue
