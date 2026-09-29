@@ -227,3 +227,31 @@ profile's **Other Tournaments** section — never in `super32_results`. Top 4 at
 earn a chance to enter Super 32 when registration opens.
 
 See `scripts/other-tournament-import-guide.md`.
+
+---
+
+## Bout-level results (who beat whom)
+
+`super32_results` holds a record and a placement only. Bouts come from the Trackwrestling export
+and go in `other_tournament_bouts` under `super32-<year>`, like NHSCA's — `super32_results` is
+not touched and stays the source of the record, so rankings never count the event twice.
+
+```bash
+NODE_PATH=$PWD/node_modules npx tsx --env-file=.env.local \
+  scripts/import-super32-bouts.ts --file <csv> --year 2025          # dry run
+NODE_PATH=$PWD/node_modules npx tsx --env-file=.env.local \
+  scripts/import-super32-bouts.ts --file <csv> --year 2025 --apply
+```
+
+- **NC only, boys' high school only.** The export mixes boys, girls, middle school and elementary
+  with no division column, and weights overlap (two brackets labelled 132 in 2025). The boys'
+  field is the largest bout-connected bracket at each of the 14 high school weights
+  (`lib/super32-bout-import.ts`); every other weight label is dropped.
+- **Linked only to a single NC boy in a high school class** for that season. Wrestlers with no
+  profile are skipped; name variants go in `ATHLETE_SAME_PERSON_ALIAS_GROUPS`.
+- **The dry run checks each record from the bouts against `super32_results`.**
+
+2025 (imported 29 Sept 2026): 91 NC entrants in the boys' brackets (matches the verified list),
+222 bouts for 74 linked wrestlers, 73/74 records agree. Lorenzo Alston's bouts give 4-2 at 157
+(lost to Liam Kelly R16, Jake Hughes Consi 8); `super32_results` says 5-2. 17 entrants have no
+profile and were not imported.

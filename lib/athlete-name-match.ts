@@ -20,6 +20,9 @@ export const ATHLETE_SAME_PERSON_ALIAS_GROUPS: string[][] = [
   ["Zach Smith", "Zack Smith"],
   ["Ammon Smith", "Amon Smith"],
   ["Jeshurun Mills", "Jeshrun Mills", "Jay Mills"],
+  // Super 32 2025 brackets carry the full surname; profiles carry the short one.
+  ["Campbell Tufts", "Campbell Tufts-Piercy"],
+  ["Gael Guerrero Perez", "Gael Guerrero"],
 ]
 
 /** Nickname / formal first-name pairs — expands search variants both directions. */
