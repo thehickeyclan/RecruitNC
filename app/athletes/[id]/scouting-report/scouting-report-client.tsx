@@ -464,6 +464,9 @@ export function ScoutingReportDocument({
                 {report.starRating.score}/100
                 {report.starRating.provisional ? " · provisional, thin record on file" : ""}
               </span>
+              {report.starRating.floor ? (
+                <span className="text-[10px] text-gray-500">{report.starRating.floor}</span>
+              ) : null}
             </div>
             <Table head={["Component", "Earned", "Basis"]} widths={["10rem", "4.5rem", "auto"]}>
               {report.starRating.components.map((c) => (

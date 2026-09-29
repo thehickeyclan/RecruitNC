@@ -54,6 +54,8 @@ export type StarRating = {
   provisional: boolean
   /** Set when a person overrode the computed rating. Carries what they gave as the reason. */
   override?: { stars: number; computedStars: number; reason: string }
+  /** When a credential, not the score, set the stars: "Held at 4: winning record at Super 32". */
+  floor?: string
 }
 
 export type StarOverride = {
@@ -293,7 +295,7 @@ export function starsForScore(score: number): number {
   if (score >= STAR_BANDS[2]) return 2
   return 1
 }
-const STAR_BANDS = [62, 45, 25] as const
+const STAR_BANDS = [66, 45, 25] as const
 
 /**
  * The fewest stars a published class ranking allows. Every wrestler Matt rated from the top ten
@@ -408,13 +410,68 @@ export function rateAthlete(input: StarRatingInput): StarRating {
    * ranking still holds a wrestler at four: it is a real credential, and never a reason for less.
    */
   const earned = starsForScore(score)
-  const stars = Math.max(
-    earned,
-    input.nationallyRanked ? 4 : 1,
-    rankingFloor(input.prospectRanking, input.rankingPublished),
-    // Matt: a state placer is never below two. Placing at NCHSAA is a credential on its own.
-    bestPlace(input.statePlaces) != null ? 2 : 1,
-  )
+  const floor = credentialFloor(input)
+  const stars = Math.max(earned, floor.stars)
 
-  return { stars, score, components, provisional }
+  return {
+    stars,
+    score,
+    components,
+    provisional,
+    ...(floor.stars > earned && floor.reason ? { floor: `Held at ${floor.stars}: ${floor.reason}` } : {}),
+  }
+}
+
+/** Distinct opponents among the significant wins. Beating one wrestler three times is one win here. */
+function distinctSignificantWins(wins: StarRatingInput["significantWins"]): number {
+  return new Set(wins.map((w) => w.opponent.trim().toLowerCase())).size
+}
+
+function recordAt(rows: readonly NationalEventRow[], event: RegExp): Array<{ wins: number; losses: number; placement: number | null }> {
+  return rows.filter((r) => event.test(r.event)).map((r) => ({ ...parseRecord(r.record), placement: r.placement }))
+}
+
+/**
+ * The fewest stars a credential allows, whatever the score. Matt's rules, 29 September 2026:
+ *
+ *   4  a winning record at Super 32 (the main event, not a qualifier)
+ *   4  NHSCA All-American, more than five significant wins, and a state placing - all three
+ *   4  a state placing and a win over a nationally ranked opponent
+ *   4  top-10 class ranking, or any national ranking
+ *   3  a state placing with wins over three or more state champions, or a winning NHSCA record
+ *
+ * The three-star rule counts state champions beaten, not every significant win: almost every
+ * placer has beaten three other placers on the way, and counting those put half the 2027 class
+ * at three stars.
+ *   3  any published class ranking
+ *   2  a state placing
+ *
+ * The score still decides everyone above their floor. A floor only ever raises a star, and it
+ * never reaches five: five is hand-set.
+ */
+export function credentialFloor(input: StarRatingInput): { stars: number; reason: string | null } {
+  const rules: Array<[number, boolean, string]> = []
+  const placer = bestPlace(input.statePlaces) != null
+  const sigWins = distinctSignificantWins(input.significantWins)
+  const beaten = (kind: (w: StarRatingInput["significantWins"][number]) => boolean) =>
+    distinctSignificantWins(input.significantWins.filter(kind))
+  const nationallyRankedBeaten = beaten((w) => w.reason === "national-ranked")
+  const championsBeaten = beaten((w) => w.reason === "state-champion" || /champion/i.test(w.stateLabel ?? ""))
+  const nhsca = recordAt(input.nationalRows, /^NHSCA Nationals$/i)
+  const super32 = recordAt(input.nationalRows, /^Super 32$/i)
+  const allAmerican = nhsca.some((r) => r.placement != null && r.placement <= 8)
+  const ranking = input.rankingPublished ? input.prospectRanking : null
+
+  rules.push([4, super32.some((r) => r.wins > r.losses), "winning record at Super 32"])
+  rules.push([4, allAmerican && sigWins > 5 && placer, "NHSCA All-American, state placer, more than five significant wins"])
+  rules.push([4, placer && nationallyRankedBeaten > 0, "state placer with a win over a nationally ranked opponent"])
+  rules.push([4, ranking != null && ranking <= 10, `RecruitNC top 10 (#${ranking})`])
+  rules.push([4, input.nationallyRanked, "nationally ranked"])
+  rules.push([3, placer && championsBeaten >= 3, `state placer who has beaten ${championsBeaten} state champions`])
+  rules.push([3, placer && nhsca.some((r) => r.wins > r.losses), "state placer with a winning NHSCA record"])
+  rules.push([3, ranking != null, `ranked in the class (#${ranking})`])
+  rules.push([2, placer, "state placer"])
+
+  const met = rules.filter(([, ok]) => ok).sort((a, b) => b[0] - a[0])[0]
+  return met ? { stars: met[0], reason: met[2] } : { stars: 1, reason: null }
 }

@@ -163,6 +163,44 @@ describe("ranking floors", () => {
     expect(rateAthlete({ ...EMPTY, statePlaces: [null] }).stars).toBe(1)
   })
 
+  const placer = (extra: Partial<StarRatingInput>) => rateAthlete({ ...EMPTY, statePlaces: [4], ...extra })
+  const wins = (n: number) => Array.from({ length: n }, (_, i) => ({ opponent: `W${i}`, reason: "state-placer" as const }))
+
+  const champs = (n: number) => Array.from({ length: n }, (_, i) => ({ opponent: `C${i}`, reason: "state-champion" as const }))
+
+  it("makes a state placer who has beaten three state champions a three", () => {
+    expect(placer({ significantWins: champs(3) }).stars).toBe(3)
+    expect(placer({ significantWins: champs(2) }).stars).toBe(2)
+  })
+
+  it("does not count wins over other placers toward three", () => {
+    expect(placer({ significantWins: wins(5) }).stars).toBe(2)
+  })
+
+  it("makes a state placer who has beaten a nationally ranked opponent a four", () => {
+    const rating = placer({ significantWins: [{ opponent: "N", reason: "national-ranked" }] })
+    expect(rating.stars).toBe(4)
+    expect(rating.floor).toContain("nationally ranked opponent")
+  })
+
+  it("makes a state placer with a winning NHSCA record a three", () => {
+    expect(placer({ nationalRows: [{ event: "NHSCA Nationals", year: 2026, placement: null, record: "3-2" }] }).stars).toBe(3)
+  })
+
+  it("makes an NHSCA All-American state placer with six significant wins a four", () => {
+    const rating = placer({
+      significantWins: wins(6),
+      nationalRows: [{ event: "NHSCA Nationals", year: 2026, placement: 7, record: "5-3" }],
+    })
+    expect(rating.stars).toBe(4)
+    expect(rating.floor).toContain("All-American")
+  })
+
+  it("makes a winning record at Super 32 a four, but not at a qualifier", () => {
+    expect(rateAthlete({ ...EMPTY, nationalRows: [{ event: "Super 32", year: 2025, placement: null, record: "3-2" }] }).stars).toBe(4)
+    expect(rateAthlete({ ...EMPTY, nationalRows: [{ event: "Super 32 Early Entry", year: 2026, placement: null, record: "3-2" }] }).stars).toBeLessThan(4)
+  })
+
   it("does not apply to an unpublished class", () => {
     expect(rankingFloor(1, false)).toBe(1)
   })
