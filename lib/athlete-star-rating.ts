@@ -448,7 +448,7 @@ function recordAt(rows: readonly NationalEventRow[], event: RegExp): Array<{ win
  *   4  a winning record at Super 32 (the main event, not a qualifier)
  *   4  NHSCA All-American, more than five significant wins, and a state placing - all three
  *   4  a state placing and a win over a nationally ranked opponent
- *   4  a state title and wins over three or more other state champions, for a ranked wrestler
+ *   4  a state title and wins over three or more other state champions, ranked in the top 20
  *   4  top-10 class ranking, or any national ranking
  *   3  a state placing with wins over three or more state champions, or a winning NHSCA record
  *
@@ -478,9 +478,9 @@ export function credentialFloor(input: StarRatingInput): { stars: number; reason
   rules.push([4, allAmerican && sigWins > 5 && placer, "NHSCA All-American, state placer, more than five significant wins"])
   rules.push([
     4,
-    // Ranked wrestlers only: two unranked champions scoring in the 30s would otherwise sit above
-    // most of the ranked 2027 class.
-    ranking != null && input.statePlaces.includes(1) && championsBeaten >= 3,
+    // Top 20 only. Unranked champions scoring in the 30s would otherwise sit above most of the
+    // ranked 2027 class, and Matt rates Nash Mullis (#23) and Aiden Burkholder (#30) a three.
+    ranking != null && ranking <= 20 && input.statePlaces.includes(1) && championsBeaten >= 3,
     `state champion who has beaten ${championsBeaten} state champions`,
   ])
   rules.push([4, placer && nationallyRankedBeaten > 0, "state placer with a win over a nationally ranked opponent"])

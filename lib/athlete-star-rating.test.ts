@@ -196,6 +196,8 @@ describe("ranking floors", () => {
     const ranked = { prospectRanking: 19, rankingPublished: true }
     expect(rateAthlete({ ...EMPTY, ...ranked, statePlaces: [1], significantWins: champs(3) }).stars).toBe(4)
     expect(rateAthlete({ ...EMPTY, ...ranked, statePlaces: [1], significantWins: champs(1) }).stars).toBeLessThan(4)
+    // Outside the top 20 (Mullis #23, Burkholder #30) it stays three.
+    expect(rateAthlete({ ...EMPTY, prospectRanking: 23, rankingPublished: true, statePlaces: [1], significantWins: champs(3) }).stars).toBe(3)
     // Unranked, the same record stays three.
     expect(rateAthlete({ ...EMPTY, statePlaces: [1], significantWins: champs(6) }).stars).toBe(3)
   })
