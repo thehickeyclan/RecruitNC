@@ -656,20 +656,21 @@ export function ScoutingReportDocument({
         </Block>
 
         <Block n={n()} title="Significant wins" count={report.significantWins.length}>
-          <BoutTable rows={report.significantWins} kind="win" />
+          <GroupedBoutTables rows={report.significantWins} kind="win" />
         </Block>
 
         <Block n={n()} title="Notable losses" count={report.significantLosses.length}>
-          <BoutTable rows={report.significantLosses} kind="loss" />
+          <GroupedBoutTables rows={report.significantLosses} kind="loss" />
         </Block>
 
         <footer className="mt-7 border-t-2 border-[#03154C] pt-2 text-[9px] leading-relaxed text-gray-500">
           <p>
             <span className="font-bold uppercase tracking-wider text-[#B31B1B]">Method.</span> Significant
             results are those against wrestlers ranked nationally by FloWrestling, Sports Illustrated or
-            MatScouts, in the NC Tournament of Champions field, or ranked as North Carolina prospects —
-            labelled per bout, since they are not the same standing. This is not a complete match list —
-            routine results are omitted by design.
+            MatScouts, ranked as North Carolina prospects, or who are NCHSAA/NCISA state champions or
+            placers (top 8) — grouped by that standing, since they are not the same claim. State finishes
+            count from any season on file; other results from the current season. This is not a complete
+            match list — routine results are omitted by design.
           </p>
           <p className="mt-1">
             <span className="font-bold uppercase tracking-wider text-[#B31B1B]">Confidential.</span>{" "}
@@ -887,6 +888,45 @@ const STANDING: Record<
   ranked: { label: "NC ranked", className: "bg-[#03154C] text-white" },
   "state-champion": { label: "State champ", className: "bg-[#1f6f43] text-white" },
   "state-placer": { label: "State placer", className: "bg-gray-200 text-gray-900" },
+}
+
+/**
+ * Significant results split by the opponent's standing, strongest first.
+ *
+ * One table with a coloured chip per row still asked a coach to read every chip to find the
+ * nationally ranked wins, and on a printed page the colours are the first thing lost. A win over a
+ * nationally ranked wrestler and one over a North Carolina-ranked wrestler are different claims,
+ * so they get different headings; state champions and placers are a third.
+ */
+const BOUT_GROUPS: Array<{
+  title: string
+  reasons: ReadonlyArray<ScoutingReport["significantWins"][number]["reason"]>
+}> = [
+  { title: "Nationally ranked opponents", reasons: ["national-ranked"] },
+  { title: "NC-ranked opponents", reasons: ["ranked", "toc-field"] },
+  { title: "State champions & placers", reasons: ["state-champion", "state-placer"] },
+]
+
+function GroupedBoutTables({ rows, kind }: { rows: ScoutingReport["significantWins"]; kind: "win" | "loss" }) {
+  if (!rows.length) return <BoutTable rows={rows} kind={kind} />
+  return (
+    <div className="space-y-4">
+      {BOUT_GROUPS.map((group) => {
+        const groupRows = rows.filter((r) => group.reasons.includes(r.reason))
+        if (!groupRows.length) return null
+        return (
+          <div key={group.title}>
+            <h4 className="mb-1 text-[10px] font-black uppercase tracking-[0.12em] text-[#03154C]">
+              {kind === "win" ? "Wins over " : "Losses to "}
+              {group.title.charAt(0).toLowerCase() + group.title.slice(1)}{" "}
+              <span className="font-mono text-gray-500">({groupRows.length})</span>
+            </h4>
+            <BoutTable rows={groupRows} kind={kind} />
+          </div>
+        )
+      })}
+    </div>
+  )
 }
 
 function BoutTable({ rows, kind }: { rows: ScoutingReport["significantWins"]; kind: "win" | "loss" }) {
