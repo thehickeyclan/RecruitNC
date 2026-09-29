@@ -4,57 +4,37 @@ import {
   isRatedAthlete,
   isRatedClass,
   rateAthlete,
+  rankingFloor,
   starsForScore,
   type StarRatingInput,
 } from "@/lib/athlete-star-rating"
 import { PUBLISHED_PUBLIC_RANKINGS_YEARS } from "@/lib/public-rankings-cap"
-import type { NationalExposure, SeasonStrength } from "@/lib/competition-strength"
 
-const noExposure: NationalExposure = {
-  events: 0,
-  latestYear: null,
-  wins: 0,
-  losses: 0,
-  bestPlacement: null,
-  bestPlacementEvent: null,
-  rows: [],
-}
-
-const noSeason: SeasonStrength = {
-  bouts: 0,
-  wins: 0,
-  losses: 0,
-  averageOpponentPercentile: null,
-  vsElite: 0,
-  eliteWins: 0,
-  eliteLosses: 0,
-  bonusRate: null,
-  eliteShare: null,
+const EMPTY: StarRatingInput = {
+  nationalRows: [],
+  significantWins: [],
+  prospectRanking: null,
+  rankingPublished: false,
+  statePlaces: [],
+  nationallyRanked: false,
 }
 
 /** The strongest résumé the state can produce, with no national ranking. */
 const ELITE: StarRatingInput = {
-  exposure: {
-    ...noExposure,
-    events: 4,
-    wins: 18,
-    losses: 3,
-    bestPlacement: 1,
-    bestPlacementEvent: "Super 32",
-    latestYear: 2026,
-  },
-  strength: {
-    ...noSeason,
-    bouts: 45,
-    wins: 43,
-    losses: 2,
-    averageOpponentPercentile: 92,
-    vsElite: 30,
-    eliteWins: 28,
-    eliteLosses: 2,
-    bonusRate: 70,
-    eliteShare: 66,
-  },
+  nationalRows: [
+    { event: "Tournament of Champions", year: 2026, placement: 1, record: "3-0" },
+    { event: "Super 32", year: 2026, placement: 1, record: "7-0" },
+    { event: "NHSCA Nationals", year: 2026, placement: 2, record: "6-1" },
+    { event: "Fargo", year: 2025, placement: 3, record: "7-2" },
+  ],
+  significantWins: [
+    { opponent: "A", reason: "national-ranked" },
+    { opponent: "B", reason: "national-ranked" },
+    { opponent: "C", reason: "state-champion", stateLabel: "2026 5A State Champion" },
+    { opponent: "D", reason: "state-champion", stateLabel: "2026 7A State Champion" },
+    { opponent: "E", reason: "state-champion", stateLabel: "2025 4A State Champion" },
+    ...Array.from({ length: 8 }, (_, i) => ({ opponent: `P${i}`, reason: "state-placer" as const, stateLabel: "2026 5A State 3rd" })),
+  ],
   prospectRanking: 1,
   rankingPublished: true,
   statePlaces: [1, 1],
@@ -65,99 +45,111 @@ describe("the five-star gate", () => {
   it("caps the best résumé in the state at four without a national ranking", () => {
     const rating = rateAthlete(ELITE)
     expect(rating.stars).toBe(4)
-    // Not a near miss on points — the score is near the ceiling and still capped.
-    expect(rating.score).toBeGreaterThan(80)
+    expect(rating.score).toBeGreaterThan(90)
   })
 
-  it("awards five as soon as an outlet ranks them", () => {
+  it("awards five when an outlet ranks a record that already earns four", () => {
     expect(rateAthlete({ ...ELITE, nationallyRanked: true }).stars).toBe(5)
   })
 
-  it("holds a ranked wrestler with no record at four, not five", () => {
-    // Devin Hord: ranked #19 nationally as a Class of 2030 freshman with nothing on file.
-    // A national outlet projecting a ninth grader is not a record, and five stars needs one.
-    const thin: StarRatingInput = {
-      exposure: noExposure,
-      strength: noSeason,
-      prospectRanking: null,
-      rankingPublished: false,
-      statePlaces: [],
-      nationallyRanked: true,
-    }
-    const rating = rateAthlete(thin)
+  it("holds a nationally ranked wrestler with no record at four, not five", () => {
+    // Devin Hord: ranked #19 nationally as a 2030 freshman. A projection is not a record.
+    const rating = rateAthlete({ ...EMPTY, nationallyRanked: true })
     expect(rating.stars).toBe(4)
     expect(rating.provisional).toBe(true)
   })
 
-  it("does not drop a ranked wrestler below four just because the record is thin", () => {
-    // The ranking is still a real credential; it floors them at four rather than scoring them.
-    expect(
-      rateAthlete({
-        exposure: noExposure,
-        strength: { ...noSeason, bouts: 3, wins: 1, losses: 2 },
-        prospectRanking: null,
-        rankingPublished: false,
-        statePlaces: [],
-        nationallyRanked: true,
-      }).stars,
-    ).toBe(4)
-  })
-
   it("never reaches five through the score bands", () => {
-    for (let score = 0; score <= 100; score++) {
-      expect(starsForScore(score)).toBeLessThanOrEqual(4)
-    }
+    for (let score = 0; score <= 100; score++) expect(starsForScore(score)).toBeLessThanOrEqual(4)
   })
 })
 
 describe("rateAthlete components", () => {
-  it("explains every axis so the star can be walked through", () => {
+  it("is three equal parts that each explain themselves", () => {
     const rating = rateAthlete(ELITE)
-    expect(rating.components.map((c) => c.key)).toEqual([
-      "national",
-      "competition",
-      "ranking",
-      "state",
-    ])
+    expect(rating.components.map((c) => c.key)).toEqual(["instate", "nationals", "ranking"])
+    expect(rating.components.reduce((t, c) => t + c.max, 0)).toBe(100)
     for (const component of rating.components) {
       expect(component.detail.length).toBeGreaterThan(0)
       expect(component.points).toBeLessThanOrEqual(component.max)
+      for (const part of component.parts ?? []) expect(part.points).toBeLessThanOrEqual(part.max)
     }
   })
 
-  it("scores an absent axis as zero rather than as a penalty", () => {
-    const rating = rateAthlete({
-      exposure: noExposure,
-      strength: noSeason,
-      prospectRanking: null,
-      rankingPublished: false,
-      statePlaces: [],
-      nationallyRanked: false,
-    })
+  it("scores an absent record as zero rather than as a penalty", () => {
+    const rating = rateAthlete(EMPTY)
     expect(rating.score).toBe(0)
     expect(rating.stars).toBe(1)
-    expect(rating.components.every((c) => c.points === 0)).toBe(true)
   })
 
   it("ignores an unpublished class ranking", () => {
-    // Showing a number from a class we have not published would leak it.
-    const withHidden = rateAthlete({ ...ELITE, rankingPublished: false })
-    const withShown = rateAthlete(ELITE)
-    expect(withHidden.score).toBeLessThan(withShown.score)
-    expect(withHidden.components.find((c) => c.key === "ranking")?.points).toBe(0)
+    const hidden = rateAthlete({ ...ELITE, rankingPublished: false })
+    expect(hidden.components.find((c) => c.key === "ranking")?.points).toBe(0)
+    expect(hidden.score).toBeLessThan(rateAthlete(ELITE).score)
+  })
+})
+
+describe("in-state performance", () => {
+  const instate = (input: Partial<StarRatingInput>) =>
+    rateAthlete({ ...EMPTY, ...input }).components.find((c) => c.key === "instate")!
+
+  it("weighs a Tournament of Champions title above a state title", () => {
+    const toc = instate({ nationalRows: [{ event: "Tournament of Champions", year: 2026, placement: 1, record: "3-0" }] })
+    const state = instate({ statePlaces: [1] })
+    expect(toc.points).toBeGreaterThan(state.points)
   })
 
-  it("flags a rating built on almost nothing as provisional", () => {
-    const thin = rateAthlete({
-      exposure: noExposure,
-      strength: { ...noSeason, bouts: 4, wins: 4 },
-      prospectRanking: null,
-      rankingPublished: false,
-      statePlaces: [],
-      nationallyRanked: false,
+  it("does not count the Tournament of Champions as a national event", () => {
+    const rating = rateAthlete({
+      ...EMPTY,
+      nationalRows: [{ event: "Tournament of Champions", year: 2026, placement: 1, record: "3-0" }],
     })
-    expect(thin.provisional).toBe(true)
-    expect(rateAthlete(ELITE).provisional).toBe(false)
+    expect(rating.components.find((c) => c.key === "nationals")?.points).toBe(0)
+  })
+
+  it("counts an opponent once however many times he was beaten", () => {
+    const once = instate({ significantWins: [{ opponent: "Luke Padgett", reason: "state-champion" }] })
+    const twice = instate({
+      significantWins: [
+        { opponent: "Luke Padgett", reason: "state-champion" },
+        { opponent: "luke padgett", reason: "ranked", stateLabel: "2026 5A State Champion" },
+      ],
+    })
+    expect(twice.points).toBe(once.points)
+  })
+})
+
+describe("nationals", () => {
+  const nationals = (rows: StarRatingInput["nationalRows"]) =>
+    rateAthlete({ ...EMPTY, nationalRows: rows }).components.find((c) => c.key === "nationals")!
+
+  it("credits a blood-round run without a place", () => {
+    // Campbell Tufts: 7-2 at the 2026 NHSCA Nationals, one win from All-American.
+    const deep = nationals([{ event: "NHSCA Nationals", year: 2026, placement: null, record: "7-2" }])
+    const early = nationals([{ event: "NHSCA Nationals", year: 2026, placement: null, record: "0-2" }])
+    expect(deep.parts?.[0].points).toBeGreaterThan(0)
+    expect(deep.points).toBeGreaterThan(early.points + 10)
+  })
+
+  it("scores the record from the most recent year, not the career", () => {
+    const rising = nationals([
+      { event: "NHSCA Nationals", year: 2026, placement: null, record: "7-2" },
+      { event: "NHSCA Nationals", year: 2024, placement: null, record: "0-2" },
+      { event: "NHSCA Nationals", year: 2025, placement: null, record: "1-2" },
+    ])
+    expect(rising.parts?.[1].detail).toContain("7-2")
+  })
+})
+
+describe("ranking floors", () => {
+  it("keeps the top ten at four stars and the next ten at three", () => {
+    expect(rateAthlete({ ...EMPTY, prospectRanking: 8, rankingPublished: true }).stars).toBe(4)
+    expect(rateAthlete({ ...EMPTY, prospectRanking: 15, rankingPublished: true }).stars).toBe(3)
+    expect(rankingFloor(25, true)).toBe(1)
+  })
+
+  it("does not apply to an unpublished class", () => {
+    expect(rankingFloor(1, false)).toBe(1)
   })
 })
 
@@ -172,41 +164,6 @@ describe("starsForScore bands", () => {
   })
 })
 
-describe("five stars needs the record, not only the ranking", () => {
-  /**
-   * The gate this pins down failed in production data, not in a fixture.
-   *
-   * The first version refused five only to a *provisional* athlete — under ten bouts and no
-   * national events — and gave it to every other ranked wrestler. Devin Hord had entered
-   * national events, so he was not provisional, and was rated five stars on a score of 14 out
-   * of 100: second from bottom of the entire Tournament of Champions field.
-   */
-  const thinButNotProvisional: StarRatingInput = {
-    exposure: { events: 2, latestYear: 2026, wins: 1, losses: 4, bestPlacement: null, bestPlacementEvent: null, rows: [] },
-    strength: noSeason,
-    prospectRanking: null,
-    rankingPublished: false,
-    statePlaces: [],
-    nationallyRanked: true,
-  }
-
-  it("holds a ranked wrestler with a weak record at four even when not provisional", () => {
-    const rating = rateAthlete(thinButNotProvisional)
-    expect(rating.provisional).toBe(false)
-    expect(rating.score).toBeLessThan(30)
-    expect(rating.stars).toBe(4)
-  })
-
-  it("reaches five only when the record alone is already worth four", () => {
-    expect(starsForScore(rateAthlete(ELITE).score)).toBe(4)
-    expect(rateAthlete({ ...ELITE, nationallyRanked: true }).stars).toBe(5)
-  })
-
-  it("never gives five to an unranked wrestler, however strong the record", () => {
-    expect(rateAthlete({ ...ELITE, nationallyRanked: false }).stars).toBe(4)
-  })
-})
-
 describe("isRatedClass", () => {
   it("rates the classes RecruitNC already ranks", () => {
     expect(isRatedClass(2027)).toBe(true)
@@ -215,8 +172,9 @@ describe("isRatedClass", () => {
 
   it("does not rate the younger classes", () => {
     // A freshman's record is thin by definition, and this rating reads thinness as weakness.
-    expect(isRatedClass(2029)).toBe(false)
+    // 2029 joined when its ranking was released; the classes below it are not ranked yet.
     expect(isRatedClass(2030)).toBe(false)
+    expect(isRatedClass(2031)).toBe(false)
   })
 
   it("does not rate a class that has already graduated", () => {

@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server"
+import { NextResponse, type NextRequest } from "next/server"
 import { loadStatePlacerIndex } from "@/lib/state-placers"
-import { createClient } from "@/lib/supabase/server"
+import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { classifyViewer } from "@/lib/viewer-role"
 import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
@@ -27,13 +27,12 @@ import { loadScoutingEntitlement } from "@/lib/scouting-report-entitlement-db"
 
 export const dynamic = "force-dynamic"
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  // The website sends cookies; the iPhone app sends its bearer token. Reading cookies alone
+  // treated every app request as signed out.
+  const user = await getUserFromRequest(request)
   if (!user) {
     return NextResponse.json({ error: "Sign in to view scouting reports." }, { status: 401 })
   }

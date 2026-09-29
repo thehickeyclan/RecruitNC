@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Fragment, useEffect, useState } from "react"
 import Image from "next/image"
 import { Printer, ArrowLeft, Loader2, Link2, Check } from "lucide-react"
 import Link from "next/link"
@@ -467,20 +467,37 @@ export function ScoutingReportDocument({
             </div>
             <Table head={["Component", "Earned", "Basis"]} widths={["10rem", "4.5rem", "auto"]}>
               {report.starRating.components.map((c) => (
-                <tr key={c.key} className="border-t border-gray-200">
-                  <Td bold>{c.label}</Td>
-                  <Td mono>
-                    {c.points}/{c.max}
-                  </Td>
-                  <Td>{c.detail}</Td>
-                </tr>
+                <Fragment key={c.key}>
+                  <tr className="border-t border-gray-200">
+                    <Td bold>{c.label}</Td>
+                    <Td mono bold>
+                      {c.points}/{c.max}
+                    </Td>
+                    <Td>{c.parts?.length ? "" : c.detail}</Td>
+                  </tr>
+                  {/* Each part on its own line: the star is only defensible if every point traces. */}
+                  {(c.parts ?? []).map((part) => (
+                    <tr key={`${c.key}-${part.label}`}>
+                      <Td>
+                        <span className="pl-3 text-gray-600">{part.label}</span>
+                      </Td>
+                      <Td mono>
+                        {part.points}/{part.max}
+                      </Td>
+                      <Td>{part.detail}</Td>
+                    </tr>
+                  ))}
+                </Fragment>
               ))}
             </Table>
             {/* The defence of the number is that it can be walked through, so it always is. */}
             <p className="mt-1.5 text-[9px] leading-relaxed text-gray-500">
-              Built only from results on file, never a projection of college ceiling. Five stars
-              requires a current national ranking from FloWrestling, Sports Illustrated or MatScouts
-              and a record that independently earns four. Rated for the classes RecruitNC ranks.
+              Built only from results on file, never a projection of college ceiling. Three equal
+              parts: in-state performance (Tournament of Champions, then significant wins, then
+              NCHSAA States), nationals, and the RecruitNC class ranking. A top-10 ranking holds a
+              wrestler at four stars and a top-20 at three. Five stars requires a current national
+              ranking from FloWrestling, Sports Illustrated or MatScouts and a record that
+              independently earns four. Rated for the classes RecruitNC ranks.
             </p>
           </Block>
         ) : null}

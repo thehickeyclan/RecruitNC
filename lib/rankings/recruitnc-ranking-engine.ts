@@ -8,10 +8,11 @@ import {
   type StarRating,
 } from "@/lib/athlete-star-rating"
 import { nationalEventRows, starOverrideOf, statePlaces as statePlacesOf } from "@/lib/athlete-star-rating-load"
-import { summarizeNationalExposure, summarizeSeasonStrength } from "@/lib/competition-strength"
 import { loadNationallyRankedIds } from "@/lib/national-rankings"
 import { findSignificantLosses, findSignificantWins, type SignificantWin } from "@/lib/significant-wins"
 import { loadOpponentIndex } from "@/lib/scouting-report"
+import { reportSignificantBouts } from "@/lib/report-significant-wins"
+import { loadStatePlacerIndex } from "@/lib/state-placers"
 import {
   buildNhscaDuals2026LiveProfileResults,
   mergeNationalTeamResultsForProfile,
@@ -854,10 +855,17 @@ export async function buildRecruitNcRankingBoard({
     }
   }
 
-  const [opponentIndex, nationallyRankedIds] = await Promise.all([
+  const [opponentIndex, nationallyRankedIds, stateIndex] = await Promise.all([
     loadOpponentIndex(supabase).catch(() => ({ tocField: [], ranked: [] })),
     loadNationallyRankedIds(supabase).catch(() => new Set<string>()),
+    loadStatePlacerIndex(supabase).catch(() => ({ statePlacers: [], stateSchools: [], fargoAllAmericans: [] })),
   ])
+  /*
+   * The star is scored on the scouting report's win list, which counts state champions and
+   * placers. Those stay out of `opponentIndex`: the ranking itself scores wins by reason, and
+   * adding them there would move the rankings. They go into a second index used only for stars.
+   */
+  const starOpponentIndex = { ...opponentIndex, ...stateIndex }
 
   /**
    * Qualifier wins, for the whole class in one query.
@@ -1396,8 +1404,12 @@ export async function buildRecruitNcRankingBoard({
         star_rating: isRatedAthlete({ gender: athlete.gender as string, graduationYear: toNumber(athlete.graduationyear) })
           ? applyStarOverride(
               rateAthlete({
-                exposure: summarizeNationalExposure(nationalEventRows(bundle as never)),
-                strength: summarizeSeasonStrength((currentSeasonBoutsByAthleteId.get(id) ?? []) as never),
+                nationalRows: nationalEventRows(bundle as never),
+                significantWins: reportSignificantBouts({
+                  qualifierBouts: (qualifierBoutsByAthleteId.get(id) ?? []) as never,
+                  matchRows: matchRowsByAthlete.get(id) ?? [],
+                  opponentIndex: starOpponentIndex,
+                }).wins,
                 prospectRanking: toNumber(athlete.prospect_ranking),
                 rankingPublished: true,
                 statePlaces: statePlacesOf(bundle as never),

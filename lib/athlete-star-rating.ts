@@ -3,12 +3,11 @@
  *
  * Football's stars are an analyst's projection of college ceiling. This is not that, and it
  * should never be described as that: it is a weighted read of what a wrestler has actually
- * done, on four axes a coach already asks about.
+ * done, in three equal parts a coach already asks about.
  *
- *   National      — do they leave North Carolina, and how do they do when they do
- *   Competition   — the quality of who they wrestle week to week in season
+ *   In-state      — Tournament of Champions, then significant wins, then NCHSAA States
+ *   Nationals     — placement (or how deep the run went), recent record, events entered
  *   Ranking       — where RecruitNC has them in their class
- *   State         — NCHSAA placement, the credential families recognise
  *
  * Every component is traceable to bouts and placements on file, and `StarRating.components`
  * carries the breakdown so the number is always explainable. Show the breakdown wherever the
@@ -20,11 +19,19 @@
  * they have done, not to what we lack.
  */
 
-import type { NationalExposure, SeasonStrength } from "@/lib/competition-strength"
+import type { NationalEventRow } from "@/lib/competition-strength"
+import type { SignificantWin } from "@/lib/significant-wins"
 import { isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
+export type StarPart = {
+  label: string
+  points: number
+  max: number
+  detail: string
+}
+
 export type StarComponent = {
-  key: "national" | "competition" | "ranking" | "state"
+  key: "instate" | "nationals" | "ranking"
   label: string
   /** Points earned on this axis. */
   points: number
@@ -32,6 +39,8 @@ export type StarComponent = {
   max: number
   /** One line a parent or coach can check against the record. */
   detail: string
+  /** What the component is made of, each line traceable to a result on file. */
+  parts?: StarPart[]
 }
 
 export type StarRating = {
@@ -81,52 +90,167 @@ export function applyStarOverride(rating: StarRating, override: StarOverride | n
   return { ...rating, stars, override: { stars, computedStars: rating.stars, reason } }
 }
 
-const MAX = { national: 30, competition: 25, ranking: 25, state: 20 } as const
+/**
+ * Three equal parts, a third of the score each.
+ *
+ * Matt, 29 September 2026: in-state performance, nationals and the ranking, weighted alike, and
+ * within in-state the Tournament of Champions above significant wins above NCHSAA States. A
+ * fourth part for consistency was tried and dropped: every wrestler with two or more national
+ * events already scored full marks on it, and the ones it marked down had no season on file
+ * because we never imported their school, not because they sat out.
+ */
+const MAX = { instate: 33, nationals: 33, ranking: 34 } as const
+const PART_MAX = { toc: 15, wins: 10, state: 8, depth: 16, record: 10, participation: 7 } as const
 
-/** Best finish at a national event, scored on how deep the bracket goes. */
-function nationalPoints(exposure: NationalExposure): { points: number; detail: string } {
-  if (exposure.events === 0) {
-    return { points: 0, detail: "No national events on file" }
-  }
-  let points = Math.min(exposure.events * 3, 12)
-  const place = exposure.bestPlacement
-  if (place != null) {
-    if (place === 1) points += 18
-    else if (place <= 4) points += 15
-    else if (place <= 8) points += 11
-    else points += 5
-  } else if (exposure.wins > 0) {
-    // Went and won matches without placing — still evidence of a national schedule.
-    points += Math.min(exposure.wins * 2, 8)
-  }
-  const finish =
-    place != null && exposure.bestPlacementEvent
-      ? `, best ${place === 1 ? "title" : `${place}${ordinalSuffix(place)}`} at ${exposure.bestPlacementEvent}`
-      : exposure.wins || exposure.losses
-        ? `, ${exposure.wins}-${exposure.losses} nationally`
-        : ""
+const TOURNAMENT_OF_CHAMPIONS = /tournament of champions|\btoc\b/i
+/** Brackets deep enough that six wins without a place is a blood-round run. */
+const DEEP_BRACKET = /^(NHSCA Nationals|Super 32|Fargo)$/i
+
+function parseRecord(record: string | null | undefined): { wins: number; losses: number } {
+  const m = String(record ?? "").match(/(\d+)\s*-\s*(\d+)/)
+  return m ? { wins: Number(m[1]), losses: Number(m[2]) } : { wins: 0, losses: 0 }
+}
+
+function bestPlace(places: ReadonlyArray<number | null | undefined>): number | null {
+  const placed = places.filter((p): p is number => p != null && p > 0)
+  return placed.length ? Math.min(...placed) : null
+}
+
+function placeWord(place: number): string {
+  return place === 1 ? "title" : `${place}${ordinalSuffix(place)}`
+}
+
+/** Tournament of Champions: the strongest in-state credential, because every classification enters it. */
+function tocPart(rows: readonly NationalEventRow[]): StarPart {
+  const max = PART_MAX.toc
+  if (!rows.length) return { label: "Tournament of Champions", points: 0, max, detail: "Not entered" }
+  const place = bestPlace(rows.map((r) => r.placement))
+  const points = place === 1 ? 15 : place === 2 ? 12 : place != null && place <= 4 ? 10 : place != null ? 7 : 4
+  const year = rows.find((r) => r.placement === place)?.year ?? rows[0].year
   return {
-    points: Math.min(points, MAX.national),
-    detail: `${exposure.events} national event${exposure.events === 1 ? "" : "s"}${finish}`,
+    label: "Tournament of Champions",
+    points,
+    max,
+    detail: place != null ? `${year} ${place === 1 ? "champion" : placeWord(place)}` : `Entered ${rows.map((r) => r.year).join(", ")}`,
   }
 }
 
-/** Quality of the in-season schedule, and how they fared in the hard part of it. */
-function competitionPoints(strength: SeasonStrength): { points: number; detail: string } {
-  if (strength.bouts === 0) {
-    return { points: 0, detail: "No in-season match data on file" }
+/**
+ * Significant wins, one count per opponent however many times he was beaten, weighted by the
+ * opponent's standing. Counting bouts rewarded wrestling the same good opponent four times.
+ */
+function winsPart(wins: StarRatingInput["significantWins"]): StarPart {
+  const best = new Map<string, "national" | "champion" | "other">()
+  const rank = { national: 0, champion: 1, other: 2 } as const
+  for (const w of wins) {
+    const kind =
+      w.reason === "national-ranked"
+        ? "national"
+        : w.reason === "state-champion" || /champion/i.test(w.stateLabel ?? "")
+          ? "champion"
+          : "other"
+    const key = w.opponent.trim().toLowerCase()
+    const seen = best.get(key)
+    if (!seen || rank[kind] < rank[seen]) best.set(key, kind)
   }
-  // Half the axis is who they faced, half is how they did against them.
-  const share = strength.eliteShare ?? 0
-  const facedPoints = Math.min((share / 100) * 14, 14)
-  const eliteBouts = strength.eliteWins + strength.eliteLosses
-  const eliteWinRate = eliteBouts > 0 ? strength.eliteWins / eliteBouts : 0
-  const performedPoints = eliteBouts > 0 ? eliteWinRate * 11 : 0
-  const detail =
-    eliteBouts > 0
-      ? `${strength.eliteWins}-${strength.eliteLosses} vs top-5% opponents (${share}% of schedule)`
-      : `${strength.bouts} bouts, none against top-5% opponents`
-  return { points: Math.round(facedPoints + performedPoints), detail }
+  const count = { national: 0, champion: 0, other: 0 }
+  for (const kind of best.values()) count[kind] += 1
+  const points = Math.round(
+    Math.min(count.national * 2, 4) + Math.min(count.champion * 1.5, 4) + Math.min(count.other * 0.25, 2),
+  )
+  const bits = [
+    count.national ? `${count.national} nationally ranked` : "",
+    count.champion ? `${count.champion} state champion${count.champion === 1 ? "" : "s"}` : "",
+    count.other ? `${count.other} other ranked or placer` : "",
+  ].filter(Boolean)
+  return {
+    label: "Significant wins",
+    points,
+    max: PART_MAX.wins,
+    detail: bits.length ? `Opponents beaten: ${bits.join(", ")}` : "None on file",
+  }
+}
+
+/** NCHSAA placement. A qualifier with no place still wrestled at States. */
+function statePart(places: ReadonlyArray<number | null>): StarPart {
+  const max = PART_MAX.state
+  const best = bestPlace(places)
+  const titles = places.filter((p) => p === 1).length
+  if (best == null) {
+    return places.length
+      ? { label: "NCHSAA States", points: 1, max, detail: "State qualifier" }
+      : { label: "NCHSAA States", points: 0, max, detail: "No NCHSAA result on file" }
+  }
+  const points = best === 1 ? 8 : best === 2 ? 7 : best <= 4 ? 5 : best <= 6 ? 4 : 3
+  return {
+    label: "NCHSAA States",
+    points,
+    max,
+    detail: titles > 0 ? `${titles}\u00d7 state champion` : `Best finish ${best}${ordinalSuffix(best)}`,
+  }
+}
+
+/**
+ * How far a wrestler got at a national event. A place counts most; a deep run without one still
+ * counts. Campbell Tufts went 7-2 at the 2026 NHSCA Nationals and lost in the blood round, one
+ * win from All-American, and the first version scored that the same as going 0-2.
+ */
+function depthPart(rows: readonly NationalEventRow[]): StarPart {
+  const max = PART_MAX.depth
+  const place = bestPlace(rows.map((r) => r.placement))
+  if (place != null && place <= 8) {
+    const row = rows.find((r) => r.placement === place)!
+    const points = place === 1 ? 16 : place <= 4 ? 13 : 10
+    return { label: "National placement", points, max, detail: `${placeWord(place)} at ${row.year} ${row.event}` }
+  }
+  const deepest = rows
+    .filter((r) => DEEP_BRACKET.test(r.event))
+    .map((r) => ({ row: r, wins: parseRecord(r.record).wins }))
+    .sort((a, b) => b.wins - a.wins)[0]
+  if (deepest && deepest.wins >= 4) {
+    const record = deepest.row.record ?? `${deepest.wins} wins`
+    return {
+      label: "National placement",
+      points: deepest.wins >= 6 ? 6 : 3,
+      max,
+      detail: `${record} at ${deepest.row.year} ${deepest.row.event}, no place${deepest.wins >= 6 ? " (blood round or deeper)" : ""}`,
+    }
+  }
+  return { label: "National placement", points: 0, max, detail: rows.length ? "No place or deep run" : "No national events on file" }
+}
+
+/**
+ * Record at national events in the most recent year he entered any. A freshman 0-2 should not
+ * cancel a junior 7-2: pooling a career did exactly that, and read a rising wrestler as a .500 one.
+ */
+function recordPart(rows: readonly NationalEventRow[]): StarPart {
+  const max = PART_MAX.record
+  if (!rows.length) return { label: "National record", points: 0, max, detail: "No national events on file" }
+  const latest = Math.max(...rows.map((r) => r.year))
+  const { wins, losses } = rows
+    .filter((r) => r.year === latest)
+    .reduce((t, r) => {
+      const x = parseRecord(r.record)
+      return { wins: t.wins + x.wins, losses: t.losses + x.losses }
+    }, { wins: 0, losses: 0 })
+  if (wins + losses < 3) {
+    return { label: "National record", points: 0, max, detail: `${wins}-${losses} in ${latest}, too few bouts to score` }
+  }
+  return {
+    label: "National record",
+    points: Math.round((wins / (wins + losses)) * max),
+    max,
+    detail: `${wins}-${losses} at national events in ${latest}`,
+  }
+}
+
+function participationPart(rows: readonly NationalEventRow[]): StarPart {
+  return {
+    label: "National events entered",
+    points: Math.round(Math.min(rows.length * 1.5, PART_MAX.participation)),
+    max: PART_MAX.participation,
+    detail: `${rows.length} national event${rows.length === 1 ? "" : "s"}`,
+  }
 }
 
 /** RecruitNC's own class ranking, when that class is published. */
@@ -134,36 +258,8 @@ function rankingPoints(ranking: number | null, published: boolean): { points: nu
   if (!published || ranking == null) {
     return { points: 0, detail: "Not in a published RecruitNC class ranking" }
   }
-  let points: number
-  if (ranking === 1) points = 25
-  else if (ranking <= 3) points = 22
-  else if (ranking <= 5) points = 19
-  else if (ranking <= 10) points = 15
-  else if (ranking <= 20) points = 10
-  else points = 6
+  const points = ranking === 1 ? 34 : ranking <= 3 ? 30 : ranking <= 5 ? 26 : ranking <= 10 ? 21 : ranking <= 20 ? 14 : 8
   return { points, detail: `RecruitNC #${ranking} in the class` }
-}
-
-/** NCHSAA placement — the credential a North Carolina family recognises first. */
-function statePoints(places: Array<number | null>): { points: number; detail: string } {
-  const placed = places.filter((p): p is number => p != null && p > 0)
-  if (placed.length === 0) {
-    return { points: 0, detail: "No NCHSAA placement on file" }
-  }
-  const best = Math.min(...placed)
-  const titles = placed.filter((p) => p === 1).length
-  let points: number
-  if (best === 1) points = 20
-  else if (best === 2) points = 16
-  else if (best <= 4) points = 13
-  else if (best <= 6) points = 9
-  else points = 6
-  if (titles > 1) points = Math.min(points + 2, MAX.state)
-  const detail =
-    titles > 0
-      ? `${titles}× NCHSAA state champion`
-      : `NCHSAA best finish ${best}${ordinalSuffix(best)}`
-  return { points, detail }
 }
 
 function ordinalSuffix(n: number): string {
@@ -176,23 +272,38 @@ function ordinalSuffix(n: number): string {
 }
 
 /**
- * Bands for one to four stars, calibrated against the current recruitable pool.
+ * Bands for one to four stars, calibrated against the 2027 and 2028 classes so the spread of
+ * stars stays close to what it was before the formula changed.
  *
  * Five is not in here. It is not a score at all — see `rateAthlete`.
  */
 export function starsForScore(score: number): number {
-  if (score >= 68) return 4
-  if (score >= 48) return 3
-  if (score >= 26) return 2
+  if (score >= STAR_BANDS[0]) return 4
+  if (score >= STAR_BANDS[1]) return 3
+  if (score >= STAR_BANDS[2]) return 2
+  return 1
+}
+const STAR_BANDS = [52, 32, 14] as const
+
+/**
+ * The fewest stars a published class ranking allows. Without it a wrestler ranked inside the top
+ * ten could show three stars beside a lower-ranked four, and a coach reads that as an error.
+ */
+export function rankingFloor(ranking: number | null, published: boolean): number {
+  if (!published || ranking == null) return 1
+  if (ranking <= 10) return 4
+  if (ranking <= 20) return 3
   return 1
 }
 
 export type StarRatingInput = {
-  exposure: NationalExposure
-  strength: SeasonStrength
+  /** Every national event row, the Tournament of Champions included; the rating separates it. */
+  nationalRows: readonly NationalEventRow[]
+  /** Accolade wins as the scouting report and profile show them (`withAccoladesOnly`). */
+  significantWins: ReadonlyArray<Pick<SignificantWin, "opponent" | "reason" | "stateLabel">>
   prospectRanking: number | null
   rankingPublished: boolean
-  /** NCHSAA finishing places across every year on file. */
+  /** NCHSAA finishing places across every year on file; null for a qualifier who did not place. */
   statePlaces: Array<number | null>
   /**
    * Ranked by FloWrestling, Sports Illustrated or MatScouts in a retained edition.
@@ -244,43 +355,52 @@ export function isRatedAthlete(athlete: {
 }
 
 export function rateAthlete(input: StarRatingInput): StarRating {
-  const national = nationalPoints(input.exposure)
-  const competition = competitionPoints(input.strength)
+  const tocRows = input.nationalRows.filter((r) => TOURNAMENT_OF_CHAMPIONS.test(r.event))
+  const nationalRows = input.nationalRows.filter((r) => !TOURNAMENT_OF_CHAMPIONS.test(r.event))
+
+  const instateParts = [tocPart(tocRows), winsPart(input.significantWins), statePart(input.statePlaces)]
+  const nationalParts = [depthPart(nationalRows), recordPart(nationalRows), participationPart(nationalRows)]
   const ranking = rankingPoints(input.prospectRanking, input.rankingPublished)
-  const state = statePoints(input.statePlaces)
+  const sum = (parts: StarPart[]) => parts.reduce((t, p) => t + p.points, 0)
 
   const components: StarComponent[] = [
-    { key: "national", label: "National competition", points: national.points, max: MAX.national, detail: national.detail },
-    { key: "competition", label: "Quality of competition", points: competition.points, max: MAX.competition, detail: competition.detail },
+    {
+      key: "instate",
+      label: "In-state performance",
+      points: sum(instateParts),
+      max: MAX.instate,
+      detail: instateParts.map((p) => p.detail).join(" · "),
+      parts: instateParts,
+    },
+    {
+      key: "nationals",
+      label: "Nationals",
+      points: sum(nationalParts),
+      max: MAX.nationals,
+      detail: nationalParts.map((p) => p.detail).join(" · "),
+      parts: nationalParts,
+    },
     { key: "ranking", label: "Class ranking", points: ranking.points, max: MAX.ranking, detail: ranking.detail },
-    { key: "state", label: "State results", points: state.points, max: MAX.state, detail: state.detail },
   ]
 
-  const score = components.reduce((sum, c) => sum + c.points, 0)
+  const score = components.reduce((total, c) => total + c.points, 0)
 
   // Rating somebody off almost nothing is how a rating loses its credibility. Say so instead.
-  const provisional = input.strength.bouts < 10 && input.exposure.events === 0
+  const provisional =
+    input.nationalRows.length === 0 && input.statePlaces.length === 0 && input.significantWins.length === 0
 
   /**
    * Five stars needs a national ranking AND a record that already earns four. Both.
    *
-   * The ranking is necessary: no résumé we can assemble earns five on its own, which keeps
-   * the top band a fact we point at rather than a judgement we defend.
+   * A national ranking floors a wrestler at four - it is a real credential - but only reaches five
+   * when the record independently earns four. Devin Hord, a 2030 freshman ranked #19 nationally,
+   * scored 14 of 100 and was once rated five; nobody arrives at five on a projection.
    *
-   * It is emphatically not sufficient, and the first version of this rule only half-enforced
-   * that. It refused five to a *provisional* athlete — one with under ten bouts and no
-   * national events — and handed it to everybody else who was ranked. Devin Hord, a Class of
-   * 2030 freshman ranked #19 nationally, has entered national events and so is not
-   * provisional; he scored 14 out of 100, second from bottom of the Tournament of Champions
-   * field, and was rated five stars. A national outlet projecting a ninth grader is exactly
-   * the projection this rating exists not to launder.
-   *
-   * So a national ranking floors a wrestler at four — it is a real credential and worth that
-   * on its own — but it only reaches five when the record independently earns four. Hord holds
-   * at four. Nobody arrives at five on a projection.
+   * The ranking floor applies after, and never lifts anyone to five.
    */
   const earned = starsForScore(score)
-  const stars = input.nationallyRanked ? Math.max(earned === 4 ? 5 : 4, earned) : earned
+  const withNational = input.nationallyRanked ? Math.max(earned === 4 ? 5 : 4, earned) : earned
+  const stars = Math.max(withNational, rankingFloor(input.prospectRanking, input.rankingPublished))
 
   return { stars, score, components, provisional }
 }
