@@ -54,7 +54,7 @@ export type StarRating = {
   provisional: boolean
   /** Set when a person overrode the computed rating. Carries what they gave as the reason. */
   override?: { stars: number; computedStars: number; reason: string }
-  /** When a credential, not the score, set the stars: "Held at 4: winning record at Super 32". */
+  /** When a credential, not the score, set the stars: "4 stars: winning record at Super 32". */
   floor?: string
 }
 
@@ -418,9 +418,9 @@ export function rateAthlete(input: StarRatingInput): StarRating {
     components,
     provisional,
     ...(stars === 5
-      ? { floor: "Five stars: nationally ranked and a Super 32 placer" }
+      ? { floor: "5 stars: nationally ranked and a Super 32 placer" }
       : floor.stars > earned && floor.reason
-        ? { floor: `Held at ${floor.stars}: ${floor.reason}` }
+        ? { floor: `${floor.stars} stars: ${floor.reason}` }
         : {}),
   }
 }

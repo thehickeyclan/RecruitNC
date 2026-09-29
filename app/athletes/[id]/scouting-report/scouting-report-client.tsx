@@ -458,34 +458,31 @@ export function ScoutingReportDocument({
 
         {report.starRating ? (
           <Block n={n()} title="Star rating">
-            <div className="flex items-baseline gap-3">
+            {/*
+              * Stars and the facts behind them, not points. A coach who sees a 69 at four stars
+              * beside a 70 at three argues about the formula instead of reading the wrestler; the
+              * basis column is what he came for. Points stay on the admin ranking board.
+              */}
+            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
               <Stars stars={report.starRating.stars} />
-              <span className="font-mono text-[11px] text-gray-600">
-                {report.starRating.score}/100
-                {report.starRating.provisional ? " · provisional, thin record on file" : ""}
-              </span>
               {report.starRating.floor ? (
-                <span className="text-[10px] text-gray-500">{report.starRating.floor}</span>
+                <span className="text-[10.5px] font-medium text-[#03154C]">{report.starRating.floor}</span>
+              ) : null}
+              {report.starRating.provisional ? (
+                <span className="text-[10px] text-gray-500">Provisional: thin record on file</span>
               ) : null}
             </div>
-            <Table head={["Component", "Earned", "Basis"]} widths={["10rem", "4.5rem", "auto"]}>
+            <Table head={["Component", "Basis"]} widths={["11rem", "auto"]}>
               {report.starRating.components.map((c) => (
                 <Fragment key={c.key}>
                   <tr className="border-t border-gray-200">
                     <Td bold>{c.label}</Td>
-                    <Td mono bold>
-                      {c.points}/{c.max}
-                    </Td>
                     <Td>{c.parts?.length ? "" : c.detail}</Td>
                   </tr>
-                  {/* Each part on its own line: the star is only defensible if every point traces. */}
                   {(c.parts ?? []).map((part) => (
                     <tr key={`${c.key}-${part.label}`}>
                       <Td>
                         <span className="pl-3 text-gray-600">{part.label}</span>
-                      </Td>
-                      <Td mono>
-                        {part.points}/{part.max}
                       </Td>
                       <Td>{part.detail}</Td>
                     </tr>
@@ -493,13 +490,12 @@ export function ScoutingReportDocument({
                 </Fragment>
               ))}
             </Table>
-            {/* The defence of the number is that it can be walked through, so it always is. */}
             <p className="mt-1.5 text-[9px] leading-relaxed text-gray-500">
               Built only from results on file, never a projection of college ceiling. Three equal
               parts: in-state performance (best Tournament of Champions or NCHSAA finish, plus
               significant wins), nationals (NHSCA, Super 32 and Fargo placing weigh most), and the
               RecruitNC class ranking. A top-10 ranking holds a wrestler at four stars and any other
-              ranking at three; some credentials also set a minimum, named under the stars. Five
+              ranking at three; some credentials also set a minimum, named beside the stars. Five
               stars requires a current national ranking and a top-eight finish at Super 32.
               Rated for the classes RecruitNC ranks.
             </p>
