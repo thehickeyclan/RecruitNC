@@ -211,13 +211,19 @@ export async function GET() {
 
     // Combine auth users with profile data
     /*
-     * Accounts tied to something real - a Blue membership they pay for, a linked or claimed
+     * Accounts tied to something real - a current Blue membership they pay for, a linked or claimed
      * wrestler - are people even if they have never signed in: Blue accounts are created for the
      * family at registration. The dashboard counts them as users; anything else that has never
      * signed in is not one.
      */
     const [{ data: bluePayers }, { data: parentLinks }, { data: claimers }] = await Promise.all([
-      supabaseAdmin.from("blue_memberships").select("payer_user_id").not("payer_user_id", "is", null),
+      // Current members only: a family whose Blue has ended and who never signed in is not a user
+      // (the daily cleanup still keeps them, for their billing history).
+      supabaseAdmin
+        .from("blue_memberships")
+        .select("payer_user_id")
+        .not("payer_user_id", "is", null)
+        .in("status", ["active", "paused", "pending_payment"]),
       supabaseAdmin.from("parent_athlete_links").select("user_id"),
       supabaseAdmin.from("athletes").select("claimed_by_user_id").not("claimed_by_user_id", "is", null),
     ])
