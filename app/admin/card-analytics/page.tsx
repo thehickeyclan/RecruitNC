@@ -10,6 +10,7 @@ import Link from "next/link"
 import { Loader2, Eye, Users, TrendingUp, User, RefreshCw, Calendar } from "lucide-react"
 import { ProfileViewersDialog } from "@/components/admin/profile-viewers-dialog"
 import { CollegeProgramLeaderboard } from "@/components/admin/college-program-leaderboard"
+import { ScoutingReportActivity } from "@/components/admin/scouting-report-activity"
 
 const RANGE_OPTIONS = [
   { value: "today", label: "Today" },
@@ -267,6 +268,9 @@ export default function CardAnalyticsPage() {
 
       {/* Which college programs are using RecruitNC, and on whom. */}
       <CollegeProgramLeaderboard range={range} />
+
+      {/* Who is pulling scouting reports, and who keeps them. */}
+      <ScoutingReportActivity range={range} />
 
       {/* Most viewed by everyone (anyone who clicks / opens a profile) */}
       <Card>

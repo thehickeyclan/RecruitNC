@@ -53,6 +53,22 @@ export function ScoutingReportClient({ athleteId }: { athleteId: string }) {
     }
   }, [athleteId])
 
+  /*
+   * Log each download. Listening for the print itself catches the button and Cmd+P alike - both
+   * go through the browser's dialog, which is where the PDF is saved.
+   */
+  useEffect(() => {
+    const logDownload = () => {
+      void fetch(`/api/athletes/${encodeURIComponent(athleteId)}/scouting-report/download`, {
+        method: "POST",
+        credentials: "include",
+        keepalive: true,
+      }).catch(() => {})
+    }
+    window.addEventListener("beforeprint", logDownload)
+    return () => window.removeEventListener("beforeprint", logDownload)
+  }, [athleteId])
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-white text-gray-600">

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { requireAdmin } from "@/lib/admin-auth"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { analyticsRangeStart, parseAnalyticsRange } from "@/lib/analytics-range"
 
 export const dynamic = "force-dynamic"
 
@@ -13,18 +14,6 @@ export const dynamic = "force-dynamic"
  * A coach's program is the school they are assigned to, falling back to the college they typed
  * at sign-up, so a coach who has not been assigned yet still appears under their own program.
  */
-
-/** The ranges /admin/card-analytics offers, so the leaderboard follows the page's picker. */
-type Range = "today" | "last7" | "last30" | "last90" | "year" | "all"
-const RANGES: Range[] = ["today", "last7", "last30", "last90", "year", "all"]
-
-function rangeStart(range: Range): string | null {
-  const now = new Date()
-  if (range === "today") return new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString()
-  if (range === "year") return new Date(now.getFullYear(), 0, 1).toISOString()
-  const days = { last7: 7, last30: 30, last90: 90 }[range as "last7" | "last30" | "last90"]
-  return days ? new Date(now.getTime() - days * 86_400_000).toISOString() : null
-}
 
 type Visit = { athleteId: string; name: string; classYear: number | null; school: string | null; views: number; lastViewedAt: string }
 type CoachRow = {
@@ -53,9 +42,8 @@ export async function GET(request: NextRequest) {
   const gate = await requireAdmin()
   if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status })
 
-  const rangeParam = request.nextUrl.searchParams.get("range") as Range | null
-  const range: Range = rangeParam && RANGES.includes(rangeParam) ? rangeParam : "all"
-  const since = rangeStart(range)
+  const range = parseAnalyticsRange(request.nextUrl.searchParams.get("range"))
+  const since = analyticsRangeStart(range)
 
   const admin = createAdminClient()
 
