@@ -883,6 +883,35 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
     lines.push("", "Losses to nationally ranked, NC state-ranked or Tournament of Champions wrestlers:")
     for (const l of report.significantLosses.slice(0, 12)) lines.push(`- lost to ${boutFact(l)}`)
   }
+
+  /*
+   * The absence, stated — the fourth time a gap became an invention.
+   *
+   * Carson Worrick's record carried 35 wins over North Carolina ranked opponents and none over a
+   * nationally ranked one, and a summary said he "has notable wins over nationally ranked and North
+   * Carolina ranked opponents". The section heading above names all three standings at once, and
+   * with nothing saying "none" the model borrowed the one it was not given.
+   *
+   * "On file", and told not to claim the absence either: national_rankings keeps only the latest
+   * editions, so an NHSCA opponent ranked in March, or a senior who has since graduated, is not in
+   * it. We cannot say he was ranked, and we cannot say he was not.
+   */
+  const hasNational = (bouts: SignificantWin[]) => bouts.some((b) => b.reason === "national-ranked")
+  if (!hasNational(report.significantWins) && !report.strengthOfCompetition?.rankedWins.national) {
+    lines.push(
+      "",
+      "Wins over nationally ranked opponents: none on file. Do not describe any win as over a" +
+        " nationally ranked opponent, and do not remark on the absence — our national rankings" +
+        " cover only recent editions.",
+    )
+  }
+  if (!hasNational(report.significantLosses)) {
+    lines.push(
+      "",
+      "Losses to nationally ranked opponents: none on file. Do not describe any loss as to a" +
+        " nationally ranked opponent.",
+    )
+  }
   if (academicLines.length) lines.push("", "Academics:", ...academicLines.map((line) => `- ${line}`))
   return lines.join("\n")
 }
@@ -928,6 +957,22 @@ export function unsupportedSummaryClaims(summary: string, facts: string): string
     if (new RegExp(`\\b${word}\\b`, "i").test(summary) && !factText.includes(word)) {
       problems.push(`a ${word} claim the facts do not contain`)
     }
+  }
+
+  // A nationally ranked opponent is the strongest credential a summary can name, and the model
+  // has claimed one over a record that had none. Each mention is read as a win or a loss by the
+  // nearest result word before it, so "a win over X and a loss to nationally ranked Y" is a loss.
+  const supportsNational = {
+    win: /^- beat .*\(nationally ranked/m.test(facts) || /ranked wins:.*\d+ over nationally ranked/.test(factText),
+    loss: /^- lost to .*\(nationally ranked/m.test(facts),
+  }
+  for (const match of summary.matchAll(/\bnational(?:ly)?[\s-]+ranked\b/gi)) {
+    const before = summary.slice(0, match.index).toLowerCase()
+    const lastWin = Math.max(...[...before.matchAll(/\b(wins?|won|beat|beats|beating|victor(?:y|ies)|defeat(?:ed|s|ing)?|over)\b/g)].map((m) => m.index ?? -1), -1)
+    const lastLoss = Math.max(...[...before.matchAll(/\b(loss(?:es)?|lost|los(?:e|ing)|fell|falls?|to)\b/g)].map((m) => m.index ?? -1), -1)
+    if (lastWin < 0 && lastLoss < 0) continue
+    const kind = lastWin > lastLoss ? "win" : "loss"
+    if (!supportsNational[kind]) problems.push(`a nationally ranked ${kind} the facts do not contain`)
   }
   return [...new Set(problems)]
 }

@@ -266,6 +266,91 @@ describe("unsupportedSummaryClaims", () => {
   })
 })
 
+describe("a nationally ranked opponent the facts do not contain", () => {
+  /*
+   * Carson Worrick, 29 Sept 2026: 35 wins over North Carolina ranked opponents, none over a
+   * nationally ranked one, one loss to #2 Sports Illustrated Zack Aquila. A summary said he "has
+   * notable wins over nationally ranked and North Carolina ranked opponents".
+   */
+  const aquila = bout({
+    opponent: "Zack Aquila",
+    reason: "national-ranked",
+    nationalRankLabel: "#2 Sports Illustrated",
+    event: "2026 NHSCA High School Nationals",
+    result: "DEC 5-0",
+  })
+  const worrick = {
+    ...REPORT_BASE,
+    significantWins: [bout({ opponent: "Tobin McNair", event: "2026 NHSCA High School Nationals" })],
+    significantLosses: [aquila],
+    strengthOfCompetition: { rankedWins: { total: 35, national: 0, tocField: 0, stateRanked: 35 } },
+  }
+  const facts = summaryFacts(worrick as never)
+
+  it("states the missing national win, and not the loss that is there", () => {
+    expect(facts).toContain("Wins over nationally ranked opponents: none on file.")
+    expect(facts).not.toContain("Losses to nationally ranked opponents: none on file.")
+  })
+
+  it("states neither absence when both are on file", () => {
+    const both = summaryFacts({
+      ...worrick,
+      significantWins: [bout({ reason: "national-ranked", nationalRankLabel: "#8 FloWrestling" })],
+    } as never)
+    expect(both).not.toContain("none on file. Do not describe any win")
+    expect(both).not.toContain("Losses to nationally ranked opponents: none on file.")
+  })
+
+  it("trusts the panel's count when the national win is not among the printed bouts", () => {
+    const counted = summaryFacts({
+      ...worrick,
+      strengthOfCompetition: { rankedWins: { total: 36, national: 1, tocField: 0, stateRanked: 35 } },
+    } as never)
+    expect(counted).not.toContain("Wins over nationally ranked opponents: none on file.")
+  })
+
+  it("states the missing national loss", () => {
+    expect(summaryFacts(REPORT_BASE as never)).toContain("Losses to nationally ranked opponents: none on file.")
+  })
+
+  it("catches the sentence that was written", () => {
+    const invented = "Worrick has notable wins over nationally ranked and North Carolina ranked opponents."
+    expect(unsupportedSummaryClaims(invented, facts)).toEqual(["a nationally ranked win the facts do not contain"])
+    expect(unsupportedSummaryClaims("He beat national-ranked Sy Strobel.", facts)).toHaveLength(1)
+  })
+
+  it("passes the loss that is on file, even beside a win", () => {
+    expect(unsupportedSummaryClaims("His only NHSCA loss came to nationally ranked Zack Aquila, #2 Sports Illustrated.", facts)).toEqual([])
+    expect(unsupportedSummaryClaims("He has a win over Tobin McNair and a loss to nationally ranked Zack Aquila.", facts)).toEqual([])
+  })
+
+  it("catches a nationally ranked loss when none is on file", () => {
+    const noLoss = summaryFacts({ ...worrick, significantLosses: [] } as never)
+    expect(unsupportedSummaryClaims("He lost to nationally ranked Zack Aquila.", noLoss)).toEqual([
+      "a nationally ranked loss the facts do not contain",
+    ])
+  })
+
+  it("passes a nationally ranked win that is on file", () => {
+    const withWin = summaryFacts({
+      ...worrick,
+      significantWins: [bout({ opponent: "Sy Strobel", reason: "national-ranked", nationalRankLabel: "#8 FloWrestling" })],
+    } as never)
+    expect(unsupportedSummaryClaims("He beat nationally ranked Sy Strobel, #8 FloWrestling.", withWin)).toEqual([])
+  })
+
+  it("strips the invented sentence and keeps the rest", () => {
+    const summary =
+      "Carson Worrick is a Class of 2027 wrestler from Davie. " +
+      "Worrick has notable wins over nationally ranked and North Carolina ranked opponents. " +
+      "He lost to nationally ranked Zack Aquila at the 2026 NHSCA High School Nationals."
+    expect(stripUnsupportedSentences(summary, facts)).toBe(
+      "Carson Worrick is a Class of 2027 wrestler from Davie. " +
+        "He lost to nationally ranked Zack Aquila at the 2026 NHSCA High School Nationals.",
+    )
+  })
+})
+
 describe("stripUnsupportedSentences", () => {
   // The TOC line is here because the summary below claims it. Before placements were checked,
   // this fixture asserted a 4th-place finish the facts never mentioned and nothing objected.
