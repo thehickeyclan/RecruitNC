@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import Link from "next/link"
 import { Loader2, Eye, Users, TrendingUp, User, RefreshCw, Calendar } from "lucide-react"
 import { ProfileViewersDialog } from "@/components/admin/profile-viewers-dialog"
+import { CollegeProgramLeaderboard } from "@/components/admin/college-program-leaderboard"
 
 const RANGE_OPTIONS = [
   { value: "today", label: "Today" },
@@ -263,6 +264,9 @@ export default function CardAnalyticsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Which college programs are using RecruitNC, and on whom. */}
+      <CollegeProgramLeaderboard range={range} />
 
       {/* Most viewed by everyone (anyone who clicks / opens a profile) */}
       <Card>
