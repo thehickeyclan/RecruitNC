@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server"
+import { namesLikelySamePerson } from "@/lib/athlete-name-match"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { buildTocFieldBoard } from "@/lib/toc/field-board"
 import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
-import { findSignificantWins, type Bout, type RankedOpponent } from "@/lib/significant-wins"
+import { findSignificantWins, withAccoladesOnly, type Bout, type RankedOpponent } from "@/lib/significant-wins"
 import { getQualifierSignificantWinBouts } from "@/lib/other-tournaments"
 import { getCuratedSignificantWins } from "@/lib/curated-significant-wins"
 import { getSubmittedWins } from "@/lib/athlete-submitted-wins"
+import { loadStatePlacerIndex } from "@/lib/state-placers"
+import { mergeBoutSources } from "@/lib/bout-source-deduplication"
 
 /**
  * The wins on a profile worth a reader's attention: over the TOC field, or over a ranked prospect.
@@ -25,11 +28,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { id } = await params
   const admin = createAdminClient()
 
-  const [{ data: rows }, { data: invitations }, qualifierBouts] = await Promise.all([
+  const [{ data: rows }, { data: invitations }, qualifierBouts, stateIndex] = await Promise.all([
     admin.from("matches").select("season,matches").eq("athlete_id", id),
     admin.from("toc_invitations").select("*, athletes(id,name)"),
     // Qualifier wins live in their own table, not in the match import.
     getQualifierSignificantWinBouts(admin, id).catch(() => [] as Bout[]),
+    loadStatePlacerIndex(admin).catch(() => ({ statePlacers: [], stateSchools: [] })),
   ])
 
   /*
@@ -39,7 +43,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
    * the difference between a win we imported off a bracket and one someone typed into a form —
    * and the label is also what makes publishing-without-review safe to offer.
    */
-  const submittedWins = (await getSubmittedWins(admin, id)).map((win) => ({
+  // Only with the opponent's accolade filled in: a win with no accolade does not make this list.
+  const submittedWins = (await getSubmittedWins(admin, id)).filter((win) => win.credential.trim()).map((win) => ({
     opponent: win.opponent,
     opponentSchool: win.opponentSchool,
     event: win.event,
@@ -52,21 +57,32 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     source: "athlete-reported" as const,
   }))
 
-  const matchBouts: Bout[] = latestSeasonMatchRows((rows ?? []) as never).flatMap((row) => {
+  const boutsOf = (row: unknown): Bout[] => {
     try {
       const value = (row as { matches?: unknown }).matches
       return Array.isArray(value) ? value : JSON.parse(String(value ?? "[]"))
     } catch {
       return []
     }
-  })
-  const bouts: Bout[] = [...matchBouts, ...qualifierBouts]
+  }
+  const latestRows = latestSeasonMatchRows((rows ?? []) as never)
+  const matchBouts: Bout[] = latestRows.flatMap(boutsOf)
+  /*
+   * Earlier seasons count for one thing: a win over a state champion or placer. Every known win
+   * over one belongs on the profile - a college coach wants to see who a wrestler has beaten, and
+   * a state finalist beaten as a freshman is still a state finalist beaten. The other reasons keep
+   * the current-season window above.
+   */
+  const earlierBouts: Bout[] = ((rows ?? []) as unknown[]).filter((r) => !latestRows.includes(r as never)).flatMap(boutsOf)
+  // The same bout arrives from both the season import and an event CSV; merge them the way the
+  // scouting report does, preferring the event row, so a win is not listed twice.
+  const bouts: Bout[] = mergeBoutSources(qualifierBouts, matchBouts)
   const curatedWins = getCuratedSignificantWins(id).map((win) => ({
     ...win,
     reason: "credentialed" as const,
     scope: "national" as const,
   }))
-  if (bouts.length === 0 && curatedWins.length === 0 && submittedWins.length === 0) {
+  if (bouts.length === 0 && earlierBouts.length === 0 && curatedWins.length === 0 && submittedWins.length === 0) {
     return NextResponse.json({ wins: submittedWins })
   }
 
@@ -96,7 +112,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     if (data.length < 1000) break
   }
 
-  const calculatedWins = findSignificantWins(bouts, { tocField, ranked }).map((win) => ({
+  const index = { tocField, ranked, ...stateIndex }
+  const currentWins = findSignificantWins(bouts, index)
+  const currentKeys = new Set(currentWins.map((w) => `${w.opponent.toLowerCase()}|${w.date}`))
+  const earlierStateWins = findSignificantWins(earlierBouts, index, { stateOnly: true }).filter(
+    (w) => !currentKeys.has(`${w.opponent.toLowerCase()}|${w.date}`),
+  )
+  // Accolades only: ranked (NC or national) or a state champion/placer. TOC field alone is dropped.
+  const calculatedWins = withAccoladesOnly([...currentWins, ...earlierStateWins]).map((win) => ({
     opponent: win.opponent,
     opponentSchool: win.opponentSchool,
     event: win.event,
@@ -104,22 +127,36 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     result: win.result,
     weight: win.weight,
     reason: win.reason,
-    credential: null,
+    // The opponent's state finish, when they have one, is the label a reader recognises - beside
+    // the stronger reason rather than instead of it.
+    credential: !win.stateLabel
+      ? null
+      : win.reason === "state-champion" || win.reason === "state-placer"
+        ? win.stateLabel
+        : `${win.reason === "toc-field" ? "TOC field" : win.reason === "national-ranked" ? "Nationally ranked" : "NC ranked"} · ${win.stateLabel}`,
     scope: "in-state" as const,
   }))
 
-  const curatedKeys = new Set(curatedWins.map((win) => `${win.opponent.toLowerCase()}|${win.date}`))
-  // A submitted win that the import later picks up should not appear twice.
-  const submittedKeys = new Set(submittedWins.map((win) => `${win.opponent.toLowerCase()}|${win.date}`))
-  const wins = [
-    ...submittedWins,
-    ...curatedWins.filter((win) => !submittedKeys.has(`${win.opponent.toLowerCase()}|${win.date}`)),
-    ...calculatedWins.filter(
-      (win) =>
-        !curatedKeys.has(`${win.opponent.toLowerCase()}|${win.date}`) &&
-        !submittedKeys.has(`${win.opponent.toLowerCase()}|${win.date}`),
-    ),
-  ]
+  /*
+   * The same bout, reported twice. A family's submitted win and the imported bracket rarely agree
+   * to the letter - JT Hill's TOC win arrived as "Jay Mills", 19 September, from the family and as
+   * "Jeshurun Mills", 18 September, from the bracket - so two entries are one bout when the names
+   * could be the same person and the dates are within two days. The earlier list wins.
+   */
+  const dayOf = (date: string | null) => {
+    const t = date ? Date.parse(date) : Number.NaN
+    return Number.isNaN(t) ? null : t / 86_400_000
+  }
+  const sameBout = (a: { opponent: string; date: string | null }, b: { opponent: string; date: string | null }) => {
+    if (!namesLikelySamePerson(a.opponent, b.opponent)) return false
+    const da = dayOf(a.date)
+    const db = dayOf(b.date)
+    return da == null || db == null ? a.date === b.date : Math.abs(da - db) <= 2
+  }
+  const wins: Array<(typeof submittedWins)[number] | (typeof curatedWins)[number] | (typeof calculatedWins)[number]> = []
+  for (const win of [...submittedWins, ...curatedWins, ...calculatedWins]) {
+    if (!wins.some((kept) => sameBout(kept, win))) wins.push(win)
+  }
 
   return NextResponse.json({ wins })
 }

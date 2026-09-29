@@ -150,7 +150,7 @@ export function honourPills(
 
 export type GuideWin = {
   opponent: string
-  reason: "national-ranked" | "toc-field" | "ranked"
+  reason: "national-ranked" | "toc-field" | "ranked" | "state-champion" | "state-placer"
   nationalRankLabel?: string
 }
 
@@ -159,6 +159,9 @@ const REASON_ORDER: Record<GuideWin["reason"], number> = {
   "national-ranked": 0,
   "toc-field": 1,
   ranked: 2,
+  // Never produced for the guide (its index carries no state results), but the shared type allows them.
+  "state-champion": 3,
+  "state-placer": 4,
 }
 
 /**

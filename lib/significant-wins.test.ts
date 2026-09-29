@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { findSignificantLosses, findSignificantWins, isLoss, isWin, type OpponentIndex } from "./significant-wins"
+import { findSignificantLosses, findSignificantWins, isLoss, isWin, withAccoladesOnly, type OpponentIndex } from "./significant-wins"
 
 const index: OpponentIndex = {
   tocField: ["Adam Walker", "Liam Myles"],
@@ -178,4 +178,83 @@ describe("isLoss", () => {
 describe("isWin", () => {
   it.each(["W", "w", "WIN", "W 5-2"])("reads %s as a win", (v) => expect(isWin({ win_loss: v })).toBe(true))
   it.each(["L", "LOSS", "", null])("does not read %s as a win", (v) => expect(isWin({ win_loss: v })).toBe(false))
+})
+
+describe("state champions and placers", () => {
+  const index = {
+    tocField: [],
+    ranked: [],
+    statePlacers: [
+      { name: "Jay Mills", schools: ["Lincolnton"], finishes: [{ year: 2026, place: 2, classification: "3A" }, { year: 2025, place: 5, classification: "2A" }] },
+      { name: "Rylin Walker", schools: ["South Caldwell"], finishes: [{ year: 2026, place: 3, classification: "6A" }] },
+      { name: "Carson Worrick", schools: ["Alleghany", "Davie"], finishes: [{ year: 2026, place: 1, classification: "7A" }, { year: 2025, place: 1, classification: "1A" }, { year: 2024, place: 3, classification: "1A" }] },
+      { name: "Joshua Wilson", schools: ["Richlands"], finishes: [{ year: 2020, place: 2, classification: "3A" }] },
+    ],
+  }
+  const win = (opponent: string, school: string | null, date = "1/10/2026") =>
+    ({ opponent, opponent_school: school, win_loss: "W", result: "Dec 5-2", date, venue: "Somewhere" })
+
+  it("counts a win over a state champion or placer", () => {
+    const wins = findSignificantWins([win("Carson Worrick", "Davie"), win("Rylin Walker", "South Caldwell")], index)
+    expect(wins.map((w) => [w.opponent, w.reason, w.stateLabel])).toEqual([
+      ["Carson Worrick", "state-champion", "2x State Champion (2026 7A)"],
+      ["Rylin Walker", "state-placer", "2026 6A State 3rd"],
+    ])
+  })
+
+  it("follows a transfer through every school the name placed for", () => {
+    expect(findSignificantWins([win("Carson Worrick", "Alleghany")], index)).toHaveLength(1)
+  })
+
+  it("does not credit a namesake at a different known NC school", () => {
+    const withSchools = { ...index, stateSchools: ["Lincolnton", "Hoke County", "South Caldwell"] }
+    expect(findSignificantWins([win("Jay Mills", "Hoke County")], withSchools)).toEqual([])
+  })
+
+  it("treats a club or unknown school as no evidence", () => {
+    const withSchools = { ...index, stateSchools: ["Lincolnton", "Hoke County"] }
+    expect(findSignificantWins([win("Jay Mills", "Catawba Rasslin")], withSchools)).toHaveLength(1)
+  })
+
+  it("trusts the name when the bout has no school", () => {
+    expect(findSignificantWins([win("Jay Mills", null)], index)).toHaveLength(1)
+  })
+
+  it("stateOnly ignores the other reasons", () => {
+    const withRanked = { ...index, ranked: [{ name: "Some Ranked Kid", ranking: 3, graduationYear: 2027 }] }
+    expect(findSignificantWins([win("Some Ranked Kid", "Apex")], withRanked, { stateOnly: true })).toEqual([])
+    expect(findSignificantWins([win("Some Ranked Kid", "Apex")], withRanked)).toHaveLength(1)
+  })
+
+  it("ignores a finish from outside a four-season career", () => {
+    // The 2020 runner-up is not the Richlands wrestler beaten in 2026.
+    expect(findSignificantWins([win("Joshua Wilson", "Richlands", "2/14/2026")], index)).toEqual([])
+    expect(findSignificantWins([win("Joshua Wilson", "Richlands", "2/14/2021")], index)).toHaveLength(1)
+  })
+
+  it("keeps the stronger reason and still carries the state finish", () => {
+    const both = { ...index, tocField: ["Jay Mills"] }
+    const [w] = findSignificantWins([win("Jay Mills", "Lincolnton")], both)
+    expect(w.reason).toBe("toc-field")
+    expect(w.stateLabel).toBe("2026 3A State Runner-up")
+  })
+})
+
+describe("withAccoladesOnly", () => {
+  const base = { opponentSchool: null, event: null, date: null, result: null, weight: null, opponentGraduationYear: null }
+  it("drops a TOC-field win with no ranking or state finish, and relabels one that has either", () => {
+    const out = withAccoladesOnly([
+      { ...base, opponent: "Invitee Only", reason: "toc-field", opponentRanking: null },
+      { ...base, opponent: "Ranked Invitee", reason: "toc-field", opponentRanking: 7 },
+      { ...base, opponent: "Placer Invitee", reason: "toc-field", opponentRanking: null, stateLabel: "2026 6A State Runner-up" },
+      { ...base, opponent: "Champ Invitee", reason: "toc-field", opponentRanking: null, stateLabel: "2026 8A State Champion" },
+      { ...base, opponent: "Nat", reason: "national-ranked", opponentRanking: null },
+    ])
+    expect(out.map((w) => [w.opponent, w.reason])).toEqual([
+      ["Ranked Invitee", "ranked"],
+      ["Placer Invitee", "state-placer"],
+      ["Champ Invitee", "state-champion"],
+      ["Nat", "national-ranked"],
+    ])
+  })
 })

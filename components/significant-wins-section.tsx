@@ -13,7 +13,7 @@ type SignificantWin = {
   date: string | null
   result: string | null
   weight: number | null
-  reason: "credentialed" | "toc-field" | "ranked" | "national-ranked"
+  reason: "credentialed" | "toc-field" | "ranked" | "national-ranked" | "state-champion" | "state-placer"
   credential?: string | null
   /** "athlete-reported" for a win published from the submission form, unverified. */
   source?: string | null
@@ -27,8 +27,9 @@ type SignificantWin = {
  * alike. This answers the question a college coach actually opens a profile with: who has he
  * beaten that I have heard of.
  *
- * Most recent season only, the same window seeding uses. A win from three seasons ago is a
- * different claim than one from this year and does not belong in the same list.
+ * Most recent season, the same window seeding uses - except wins over North Carolina state
+ * champions and placers, which count from any season on file: every known win over one belongs
+ * here.
  *
  * When there are no documented wins yet, the section still provides the community submission
  * path so missing results can be sent to NC United for review.
@@ -135,7 +136,7 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
               {win.date ? <span className="text-xs text-slate-500">{win.date}</span> : null}
               <span
                 className={
-                  win.reason === "toc-field"
+                  win.reason === "toc-field" || win.reason === "state-champion"
                     ? "rounded-full bg-rnc-gold/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rnc-gold"
                     : "rounded-full border border-rnc-line px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-400"
                 }
@@ -151,7 +152,11 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
                     ? "TOC field"
                     : win.reason === "national-ranked"
                       ? "Nationally ranked"
-                      : "NC ranked"}
+                      : win.reason === "state-champion"
+                        ? "State champion"
+                        : win.reason === "state-placer"
+                          ? "State placer"
+                          : "NC ranked"}
               </span>
               {win.source === "athlete-reported" ? (
                 <span

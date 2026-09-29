@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { loadStatePlacerIndex } from "@/lib/state-placers"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { classifyViewer } from "@/lib/viewer-role"
@@ -110,7 +111,13 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         })
       : null
 
-  const opponentIndex = await loadOpponentIndex(admin)
+  // State champions and placers are added here, not in loadOpponentIndex: the ranking engine
+  // shares that loader and scores wins by reason.
+  const [baseIndex, stateIndex] = await Promise.all([
+    loadOpponentIndex(admin),
+    loadStatePlacerIndex(admin).catch(() => ({ statePlacers: [], stateSchools: [] })),
+  ])
+  const opponentIndex = { ...baseIndex, ...stateIndex }
   const report = await buildScoutingReport(
     admin,
     loaded.athlete as Record<string, unknown>,

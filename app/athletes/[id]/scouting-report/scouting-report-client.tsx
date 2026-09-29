@@ -885,6 +885,8 @@ const STANDING: Record<
   "national-ranked": { label: "Nat'l ranked", className: "bg-[#B31B1B] text-white" },
   "toc-field": { label: "TOC field", className: "bg-[#D3B574] text-[#0A1628]" },
   ranked: { label: "NC ranked", className: "bg-[#03154C] text-white" },
+  "state-champion": { label: "State champ", className: "bg-[#1f6f43] text-white" },
+  "state-placer": { label: "State placer", className: "bg-gray-200 text-gray-900" },
 }
 
 function BoutTable({ rows, kind }: { rows: ScoutingReport["significantWins"]; kind: "win" | "loss" }) {
@@ -892,8 +894,8 @@ function BoutTable({ rows, kind }: { rows: ScoutingReport["significantWins"]; ki
     return (
       <Note>
         {kind === "win"
-          ? "No wins over nationally ranked, state-ranked or Tournament of Champions wrestlers on file."
-          : "No losses to nationally ranked, state-ranked or Tournament of Champions wrestlers on file."}
+          ? "No wins over nationally ranked, NC-ranked, state champion or state-placing wrestlers on file."
+          : "No losses to nationally ranked, NC-ranked, state champion or state-placing wrestlers on file."}
       </Note>
     )
   }
@@ -917,6 +919,10 @@ function BoutTable({ rows, kind }: { rows: ScoutingReport["significantWins"]; ki
             {/* The outlet and number, because "nationally ranked" invites "by whom, and where". */}
             {row.nationalRankLabel ? (
               <div className="mt-0.5 text-[8.5px] leading-tight text-gray-500">{row.nationalRankLabel}</div>
+            ) : null}
+            {/* The finish itself - "2026 7A State Champion" - which is what a coach recognises. */}
+            {row.stateLabel ? (
+              <div className="mt-0.5 text-[8.5px] leading-tight text-gray-500">{row.stateLabel}</div>
             ) : null}
           </td>
           <Td mono>{row.result ?? "—"}</Td>

@@ -47,6 +47,70 @@ export type OpponentIndex = {
    * result can carry, and most of them will never be in our own athlete table.
    */
   nationallyRanked?: readonly NationallyRankedOpponent[]
+  /**
+   * North Carolina state champions and placers (lib/state-placers.ts). Optional, and loaded only
+   * by the profile and the scouting report: the ranking engine shares this index and scores wins
+   * by `reason`, so adding state results there would silently change the rankings.
+   */
+  statePlacers?: readonly StatePlacer[]
+  /**
+   * Every North Carolina high school seen in the state results. A bout's opponent school only
+   * rules out a placer when it is one of these: tournament brackets often list a club instead
+   * ("Catawba Rasslin" for Tommy Kishpaugh of St. Stephens), and a club says nothing about which
+   * namesake it is.
+   */
+  stateSchools?: readonly string[]
+}
+
+export type StatePlacer = {
+  name: string
+  /** Every school this name placed for; a bout at a different school is a namesake. */
+  schools: readonly string[]
+  /** Every top-8 finish on file for this name. */
+  finishes: readonly StateFinish[]
+}
+
+export type StateFinish = { year: number; place: number; classification: string | null }
+
+function ordinalSuffix(n: number): string {
+  return n % 100 >= 11 && n % 100 <= 13 ? "th" : n % 10 === 1 ? "st" : n % 10 === 2 ? "nd" : n % 10 === 3 ? "rd" : "th"
+}
+
+/** "2026 7A State Champion", "2x State Champion (2026 7A)", "2025 4A State 4th". */
+export function statePlacerLabel(finishes: readonly StateFinish[]): string | null {
+  if (!finishes.length) return null
+  const best = [...finishes].sort((a, b) => a.place - b.place || b.year - a.year)[0]
+  const titles = finishes.filter((f) => f.place === 1).length
+  const cls = best.classification ? ` ${best.classification}` : ""
+  if (best.place === 1) return titles > 1 ? `${titles}x State Champion (${best.year}${cls})` : `${best.year}${cls} State Champion`
+  if (best.place === 2) return `${best.year}${cls} State Runner-up`
+  return `${best.year}${cls} State ${best.place}${ordinalSuffix(best.place)}`
+}
+
+/**
+ * The high-school season a bout belongs to, as the year of that season's state tournament:
+ * a December 2025 bout is in the 2026 season. Null when the date will not parse.
+ */
+function boutSeason(date: string | null | undefined): number | null {
+  const text = String(date ?? "").trim()
+  if (!text) return null
+  let y: number, m: number
+  const iso = text.match(/^(\d{4})-(\d{1,2})-/)
+  const us = text.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/)
+  if (iso) [y, m] = [Number(iso[1]), Number(iso[2])]
+  else if (us) [m, y] = [Number(us[1]), Number(us[3].length === 2 ? `20${us[3]}` : us[3])]
+  else return null
+  return m >= 8 ? y + 1 : y
+}
+
+/**
+ * A wrestler's high-school career is four seasons, so a finish more than three seasons from the
+ * bout is somebody else with the same name - the 2020 3A runner-up "Joshua Wilson" is not the
+ * Richlands wrestler JT Hill beat in 2026. Undated bouts keep every finish.
+ */
+function finishesInReach(finishes: readonly StateFinish[], date: string | null | undefined): StateFinish[] {
+  const season = boutSeason(date)
+  return season == null ? [...finishes] : finishes.filter((f) => Math.abs(f.year - season) <= 3)
 }
 
 export type NationallyRankedOpponent = {
@@ -68,7 +132,12 @@ export type SignificantWin = {
    * Why it earned its place, strongest first: a national ranking outranks the TOC field,
    * which outranks a state prospect ranking.
    */
-  reason: "national-ranked" | "toc-field" | "ranked"
+  reason: "national-ranked" | "toc-field" | "ranked" | "state-champion" | "state-placer"
+  /**
+   * The opponent's best North Carolina state finish, whenever they have one - shown beside the
+   * stronger reasons too, because "TOC field" and "state champion" are different facts.
+   */
+  stateLabel?: string
   opponentGraduationYear: number | null
   /** Set when the opponent is nationally ranked: "#12 Sports Illustrated". */
   nationalRankLabel?: string
@@ -111,8 +180,12 @@ function toWeight(value: Bout["weight"]): number | null {
  * uses the shared matcher rather than comparing strings. Getting this wrong credits a wrestler
  * with a win over somebody they never met.
  */
-export function findSignificantWins(bouts: readonly Bout[], index: OpponentIndex): SignificantWin[] {
-  return findSignificantBouts(bouts, index, "win")
+export function findSignificantWins(
+  bouts: readonly Bout[],
+  index: OpponentIndex,
+  options?: { stateOnly?: boolean },
+): SignificantWin[] {
+  return findSignificantBouts(bouts, index, "win", options)
 }
 
 /**
@@ -124,8 +197,62 @@ export function findSignificantWins(bouts: readonly Bout[], index: OpponentIndex
  * reader has heard of, so this stays a short list of meaningful results rather than a dump
  * of every dropped match.
  */
-export function findSignificantLosses(bouts: readonly Bout[], index: OpponentIndex): SignificantWin[] {
-  return findSignificantBouts(bouts, index, "loss")
+export function findSignificantLosses(
+  bouts: readonly Bout[],
+  index: OpponentIndex,
+  options?: { stateOnly?: boolean },
+): SignificantWin[] {
+  return findSignificantBouts(bouts, index, "loss", options)
+}
+
+/** Lowercase words of a school name, without the words every school name shares. */
+function schoolWords(value: string | null | undefined): string[] {
+  return String(value ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w && !["high", "school", "hs", "senior", "the", "of", "academy", "christian"].includes(w))
+}
+
+/**
+ * Whether a bout's opponent school is consistent with a placer's schools. Unknown on either side
+ * counts as consistent - most bouts carry a school, and the check is there to stop a namesake, not
+ * to demand data we do not have. Transfers are covered because every school the name placed for
+ * is kept.
+ */
+function sameSchool(a: string[], b: string[]): boolean {
+  return a.length > 0 && b.length > 0 && (a.every((w) => b.includes(w)) || b.every((w) => a.includes(w)))
+}
+
+function schoolConsistent(
+  boutSchool: string | null | undefined,
+  placerSchools: readonly string[],
+  knownSchools: readonly string[] | undefined,
+): boolean {
+  const bout = schoolWords(boutSchool)
+  if (!bout.length || !placerSchools.length) return true
+  if (placerSchools.some((school) => sameSchool(schoolWords(school), bout))) return true
+  // A different school rules the placer out only when it is a known NC high school; a club or an
+  // out-of-state school is no evidence either way.
+  const isKnownSchool = (knownSchools ?? []).some((school) => sameSchool(schoolWords(school), bout))
+  return !isKnownSchool
+}
+
+/** Placers sharing this opponent's name, resolved once per name per index like the rest. */
+const placersByIndex = new WeakMap<OpponentIndex, Map<string, StatePlacer[]>>()
+function statePlacersNamed(index: OpponentIndex, name: string): StatePlacer[] {
+  if (!index.statePlacers?.length) return []
+  let cache = placersByIndex.get(index)
+  if (!cache) {
+    cache = new Map()
+    placersByIndex.set(index, cache)
+  }
+  const key = name.trim().toLowerCase()
+  const hit = cache.get(key)
+  if (hit) return hit
+  const found = index.statePlacers.filter((p) => namesLikelySamePerson(p.name, name))
+  cache.set(key, found)
+  return found
 }
 
 type OpponentResolution = {
@@ -186,6 +313,7 @@ function findSignificantBouts(
   bouts: readonly Bout[],
   index: OpponentIndex,
   outcome: "win" | "loss",
+  options?: { stateOnly?: boolean },
 ): SignificantWin[] {
   const wins: SignificantWin[] = []
   const seen = new Set<string>()
@@ -196,8 +324,17 @@ function findSignificantBouts(
     const name = opponentName(bout)
     if (!name) continue
 
-    const { national, inField, ranked } = resolveOpponent(index, name)
-    if (!national && !inField && !ranked) continue
+    const resolved = options?.stateOnly ? { national: null, inField: false, ranked: null } : resolveOpponent(index, name)
+    const { national, inField, ranked } = resolved
+    // Finishes of same-named placers whose school fits this bout and who could have been this
+    // opponent at the time.
+    const finishes = statePlacersNamed(index, name)
+      .filter((p) => schoolConsistent(bout.opponent_school, p.schools, index.stateSchools))
+      .flatMap((p) => finishesInReach(p.finishes, bout.date))
+    const stateLabel = statePlacerLabel(finishes)
+    const bestPlace = finishes.length ? Math.min(...finishes.map((f) => f.place)) : null
+    const placer = stateLabel && bestPlace != null ? { label: stateLabel, bestPlace } : null
+    if (!national && !inField && !ranked && !placer) continue
 
     // One entry per opponent per day: the same bout is sometimes stored twice.
     const key = `${name.toLowerCase()}|${bout.date ?? ""}`
@@ -211,14 +348,23 @@ function findSignificantBouts(
       date: bout.date ?? null,
       result: bout.result ?? null,
       weight: toWeight(bout.weight),
-      reason: national ? "national-ranked" : inField ? "toc-field" : "ranked",
+      reason: national
+        ? "national-ranked"
+        : inField
+          ? "toc-field"
+          : ranked
+            ? "ranked"
+            : placer!.bestPlace === 1
+              ? "state-champion"
+              : "state-placer",
+      ...(placer ? { stateLabel: placer.label } : {}),
       opponentGraduationYear: ranked?.graduationYear ?? null,
       opponentRanking: ranked?.ranking ?? null,
       ...(national ? { nationalRankLabel: `#${national.rank} ${national.source}` } : {}),
     })
   }
 
-  const reasonRank = { "national-ranked": 0, "toc-field": 1, ranked: 2 } as const
+  const reasonRank = { "national-ranked": 0, "toc-field": 1, ranked: 2, "state-champion": 3, "state-placer": 4 } as const
   return wins.sort((a, b) => {
     // Nationally ranked first, then TOC, then state-ranked; within a tier, newest first.
     // Undated rows sink rather than jump.
@@ -230,4 +376,26 @@ function findSignificantBouts(
     if (Number.isNaN(bt)) return -1
     return bt - at
   })
+}
+
+/**
+ * Only wins whose opponent carries an accolade a reader recognises: a national ranking, a North
+ * Carolina ranking, or a state title or placing. A place in the Tournament of Champions field is
+ * an invitation, not an accolade - a TOC-field win stays only when that opponent is also ranked or
+ * a state placer, and it is then shown under that accolade instead. Everything else is dropped.
+ *
+ * Used by the profile and the scouting report. The ranking engine and the TOC recruiting guide do
+ * their own weighing and keep TOC-field wins.
+ */
+export function withAccoladesOnly(wins: readonly SignificantWin[]): SignificantWin[] {
+  const out: SignificantWin[] = []
+  for (const win of wins) {
+    if (win.reason !== "toc-field") {
+      out.push(win)
+      continue
+    }
+    if (win.opponentRanking != null) out.push({ ...win, reason: "ranked" })
+    else if (win.stateLabel) out.push({ ...win, reason: /champion/i.test(win.stateLabel) ? "state-champion" : "state-placer" })
+  }
+  return out
 }

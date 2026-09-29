@@ -33,6 +33,7 @@ import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
 import {
   findSignificantLosses,
   findSignificantWins,
+  withAccoladesOnly,
   type Bout,
   type NationallyRankedOpponent,
   type OpponentIndex,
@@ -591,8 +592,32 @@ export async function buildScoutingReport(
   const rawRank = athlete.prospect_ranking == null ? null : Number(athlete.prospect_ranking)
   // Built once: the panel counts the same rows the table prints, so the two cannot disagree.
   const resultRows = buildResultRows(bundle as never)
-  const rankedWins = findSignificantWins(bouts, opponentIndex)
-  const rankedLosses = findSignificantLosses(bouts, opponentIndex)
+  /*
+   * Plus every earlier-season win over a North Carolina state champion or placer. The current
+   * season carries the other reasons; a state finalist beaten as a freshman is still a win a coach
+   * should see. Only present when the caller loaded `statePlacers` into the index.
+   */
+  const latestSet = new Set(latestSeasonRows as unknown[])
+  const earlierBouts: Bout[] = ((matchRows ?? []) as unknown[])
+    .filter((row) => !latestSet.has(row))
+    .flatMap((row) => {
+      try {
+        const value = (row as { matches?: unknown }).matches
+        return Array.isArray(value) ? value : JSON.parse(String(value ?? "[]"))
+      } catch {
+        return []
+      }
+    })
+  const currentWins = findSignificantWins(bouts, opponentIndex)
+  const currentWinKeys = new Set(currentWins.map((w) => `${w.opponent.toLowerCase()}|${w.date}`))
+  // Accolades only - ranked, nationally ranked, state champion or placer - as on the profile.
+  const rankedWins = withAccoladesOnly([
+    ...currentWins,
+    ...findSignificantWins(earlierBouts, opponentIndex, { stateOnly: true }).filter(
+      (w) => !currentWinKeys.has(`${w.opponent.toLowerCase()}|${w.date}`),
+    ),
+  ])
+  const rankedLosses = withAccoladesOnly(findSignificantLosses(bouts, opponentIndex))
   const seasonStrength = seasonBouts.length > 0 ? summarizeSeasonStrength(seasonBouts as never) : null
 
   const ranking = rawRank != null && Number.isFinite(rawRank) && rawRank >= 1 ? rawRank : null
@@ -695,7 +720,9 @@ function standingPhrase(bout: SignificantWin): string {
   if (bout.reason === "national-ranked") {
     return bout.nationalRankLabel ? `nationally ranked, ${bout.nationalRankLabel}` : "nationally ranked"
   }
-  return bout.reason === "toc-field" ? "in the Tournament of Champions field" : "ranked in North Carolina"
+  if (bout.reason === "state-champion" || bout.reason === "state-placer") return bout.stateLabel ?? "a state placer"
+  const base = bout.reason === "toc-field" ? "in the Tournament of Champions field" : "ranked in North Carolina"
+  return bout.stateLabel ? `${base}, ${bout.stateLabel}` : base
 }
 
 function boutFact(bout: SignificantWin): string {
