@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { classifyViewer } from "@/lib/viewer-role"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { alertFamilyOfProgramView } from "@/lib/program-view-alerts"
 
 export async function POST(request: Request) {
   try {
@@ -60,7 +62,14 @@ export async function POST(request: Request) {
       // Don't fail the request if tracking fails
     }
 
-    return NextResponse.json({ success: true })
+    // A college program opened this profile: tell the wrestler's family on their phones. Awaited
+    // because a serverless function may stop once it has responded; it never throws.
+    if (user && eventType === "profile_view" && viewer.isCollegeCoach) {
+      const alert = await alertFamilyOfProgramView(createAdminClient(), { athleteId: String(athleteId), viewerUserId: user.id })
+      if (alert.sent) console.info(`[track-card-view] program-view alert sent to ${alert.sent} device(s)`)
+    }
+
+        return NextResponse.json({ success: true })
   } catch (error) {
     console.error("Card tracking error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

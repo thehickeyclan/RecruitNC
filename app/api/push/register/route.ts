@@ -7,7 +7,32 @@ const EXPO_TOKEN = /^Expo(nent)?PushToken\[[^\]]+\]$/
 type RegisterBody = {
   expoPushToken?: string
   platform?: string
-  prefs?: { commits?: boolean; rankings?: boolean; events?: boolean; toc?: boolean; news?: boolean; college?: boolean }
+  prefs?: {
+    commits?: boolean
+    rankings?: boolean
+    events?: boolean
+    toc?: boolean
+    news?: boolean
+    college?: boolean
+    programViews?: boolean
+  }
+  /** The app signed out: this phone should stop receiving alerts meant for that account. */
+  signedOut?: boolean
+}
+
+/**
+ * The account this phone is signed in to, from the app's bearer token.
+ *
+ * Devices were anonymous - one row per Expo token and nothing else - which is fine for "every new
+ * commit" and useless for "a college viewed your son's profile". A phone that registers while
+ * signed in is now tied to that account; one that signs out is untied. A bad or expired token is
+ * treated as no account rather than an error, so alerts that need no account keep working.
+ */
+async function accountFrom(request: Request, admin: ReturnType<typeof createAdminClient>): Promise<string | null> {
+  const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim()
+  if (!token) return null
+  const { data } = await admin.auth.getUser(token)
+  return data.user?.id ?? null
 }
 
 /**
@@ -30,6 +55,7 @@ export async function POST(request: Request) {
     const prefs = body?.prefs ?? {}
 
     const admin = createAdminClient()
+    const userId = await accountFrom(request, admin)
     const base = {
       expo_push_token: token,
       platform,
@@ -47,10 +73,22 @@ export async function POST(request: Request) {
       // Defaults on: a college reminder only ever concerns a team this device chose to follow.
       alert_college: prefs.college !== false,
     }
+    // Linked to an account only when signed in; cleared on sign-out; otherwise left as it was.
+    const withAccount: Record<string, unknown> = {
+      ...withNew,
+      alert_program_views: prefs.programViews !== false,
+      ...(userId ? { user_id: userId } : body?.signedOut ? { user_id: null } : {}),
+    }
 
     let { error } = await admin
       .from("push_devices")
-      .upsert(withNew, { onConflict: "expo_push_token" })
+      .upsert(withAccount, { onConflict: "expo_push_token" })
+
+    // The account columns ship with program-view alerts and exist only once that SQL has run.
+    if (error && (error.code === "42703" || /user_id|alert_program_views/.test(error.message ?? ""))) {
+      console.warn("[push/register] push_devices account columns missing - run the program-view alert SQL")
+      ;({ error } = await admin.from("push_devices").upsert(withNew, { onConflict: "expo_push_token" }))
+    }
 
     // The alert_toc migration may not have run yet. A device that cannot register is a device
     // that gets no alerts at all, which is far worse than one missing TOC opt-in — so fall back
@@ -65,7 +103,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Could not save this device." }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, linked: Boolean(userId) })
   } catch (error) {
     console.error("[push/register] unexpected", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
