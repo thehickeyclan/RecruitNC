@@ -109,6 +109,7 @@ export async function GET() {
         is_admin,
         verified_coach,
         verification_status,
+        institution,
         school_id,
         schools:school_id (
           name
@@ -125,6 +126,7 @@ export async function GET() {
         is_admin,
         verified_coach,
         verification_status,
+        institution,
         school_id,
         athlete_id,
         schools:school_id (
@@ -223,6 +225,8 @@ export async function GET() {
         verification_status: profile?.verification_status || null,
         school_id: profile?.school_id || null,
         school_name: profile?.schools?.name || null,
+        // The college a coach typed at sign-up, before anybody has assigned one.
+        institution: (profile as { institution?: string | null } | undefined)?.institution ?? null,
         athlete_id: (profile as { athlete_id?: string | null } | undefined)?.athlete_id ?? null,
         created_at: user.created_at,
         // Whether this is a person or just a row. An unconfirmed account has never clicked the

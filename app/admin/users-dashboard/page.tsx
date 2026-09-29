@@ -78,6 +78,7 @@ type UserProfile = {
   verification_status: string | null
   school_id: string | null
   school_name: string | null
+  institution?: string | null
 }
 
 type CollegeOption = {
@@ -386,7 +387,9 @@ export default function UsersDashboardPage() {
       const res = await fetch(`/api/admin/users/${userId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ verified_coach: approved }),
+        // Approving by hand is the review, so record it: otherwise an approved coach still reads
+        // as "Unreviewed" wherever needsCoachReview looks at the status.
+        body: JSON.stringify(approved ? { verified_coach: true, verification_status: "approved" } : { verified_coach: false }),
         credentials: "include"
       })
 
@@ -398,7 +401,9 @@ export default function UsersDashboardPage() {
       })
 
       setProfiles(prev => prev.map(p => 
-        p.user_id === userId ? { ...p, verified_coach: approved } : p
+        p.user_id === userId
+          ? { ...p, verified_coach: approved, ...(approved ? { verification_status: "approved" } : {}) }
+          : p
       ))
     } catch (e: any) {
       toast({
@@ -806,7 +811,7 @@ export default function UsersDashboardPage() {
           <>
             <td className="px-4 py-3">
               {needsCoachReview(user) ? (
-                <Badge variant="default" className="bg-amber-500" title="Auto-approved on a .edu address — not yet reviewed by a person">
+                <Badge variant="default" className="bg-amber-500" title="Let in automatically (coach sign-up form or a .edu address) — not yet reviewed by a person">
                   <AlertCircle className="h-3 w-3 mr-1" />
                   Unreviewed
                 </Badge>
@@ -828,9 +833,11 @@ export default function UsersDashboardPage() {
               )}
             </td>
             <td className="px-4 py-3 text-sm">
-              {user.school_name || (
+              {user.school_name || (user.institution ? (
+                <span title="The college they entered at sign-up; not yet assigned">{user.institution}</span>
+              ) : (
                 <span className="text-gray-400 italic">Not assigned</span>
-              )}
+              ))}
             </td>
           </>
         )}

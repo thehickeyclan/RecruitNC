@@ -370,6 +370,14 @@ export default function SignUpPage() {
         <CardContent className="relative z-10">
           {error && <div className="mb-4 text-sm text-red-600">{error}</div>}
 
+          <p className="mb-4 rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-900">
+            College coach?{" "}
+            <Link href="/auth/coach-signup" className="font-semibold underline">
+              Get free access here
+            </Link>
+            {" "}— six fields, instant access.
+          </p>
+
           <form method="post" onSubmit={handleSubmit} className="space-y-4" noValidate>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -435,7 +443,19 @@ export default function SignUpPage() {
 
             <div className="space-y-2">
               <Label>Profile type <span className="text-gray-400 text-xs">(choose before phone if athlete/parent)</span></Label>
-              <Select value={profileType} onValueChange={setProfileType} disabled={loading}>
+              {/* College coaches have their own five-field form with no password or email step:
+                  staff verify them by hand. Picking it here sends them there. */}
+              <Select
+                value={profileType}
+                onValueChange={(value) => {
+                  if (value === "college-coach") {
+                    window.location.href = "/auth/coach-signup"
+                    return
+                  }
+                  setProfileType(value)
+                }}
+                disabled={loading}
+              >
                 <SelectTrigger aria-label="Profile type">
                   <SelectValue placeholder="Select a profile type (optional)" />
                 </SelectTrigger>

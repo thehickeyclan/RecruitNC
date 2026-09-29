@@ -100,3 +100,21 @@ export async function notifyStaffSubscriptionCancelled(input: {
   const why = String(input.status ?? "").trim()
   return send(`RecruitNC: subscription cancelled — ${who}${why ? ` (${why})` : ""}.`, "subscription-cancelled")
 }
+
+/**
+ * A college coach signed up and was let straight in.
+ *
+ * Coach access is granted first and reviewed after, so this text is the review prompt: until
+ * someone confirms or rejects them on the users dashboard, an unchecked account can see athlete
+ * contact details.
+ */
+export async function notifyStaffCoachSignup(input: {
+  name: string
+  college: string
+  email: string
+}): Promise<number> {
+  return send(
+    `College coach signed up (has access): ${input.name} — ${input.college} (${input.email}). Review: /admin/users-dashboard`,
+    "coach-signup",
+  )
+}

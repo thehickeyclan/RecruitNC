@@ -54,6 +54,12 @@ export async function ClassRankingPage({ year }: { year: number }) {
           >
             See what is included
           </Link>
+          <Link
+            href="/auth/coach-signup"
+            className="mt-4 block text-sm text-white/70 underline hover:text-white"
+          >
+            College coach? Get free access
+          </Link>
         </div>
       </div>
     )
