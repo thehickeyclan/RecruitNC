@@ -22,6 +22,8 @@ import { WiqSubscriptionPanel } from "@/components/profile/wiq-subscription-pane
 import type { ParentWiqSubscription } from "@/lib/blue-wiq-for-parent"
 import { ProfileFamilyTab } from "@/components/profile/profile-family-tab"
 import { ProfileFundraiseTab } from "@/components/profile/profile-fundraise-tab"
+import { RankingsSubscriptionCard } from "@/components/profile/rankings-subscription-card"
+import { walletBalanceFromRow } from "@/lib/fundraising/wallet-balance"
 import type { ProfileSpartanSupportersAthletePayload } from "@/app/api/profile/spartan-fundraising-supporters/route"
 import { HardLink } from "@/components/hard-link"
 
@@ -84,8 +86,6 @@ export function ProfileClient() {
   const [athleteSearchLoading, setAthleteSearchLoading] = useState(false)
   const [linkAthleteLoading, setLinkAthleteLoading] = useState<string | null>(null)
   const [headshotUploading, setHeadshotUploading] = useState(false)
-  const [eventHubs, setEventHubs] = useState<{ id: string; slug: string; name: string; href: string }[]>([])
-  const [eventHubsLoading, setEventHubsLoading] = useState(true)
   const [spartanFundraising, setSpartanFundraising] = useState<{
     athletes: {
       athleteId: string
@@ -116,12 +116,12 @@ export function ProfileClient() {
       fetchProfile()
       fetchBlueMemberships()
       fetchLinkedAthletes()
-      fetchEventHubs()
+      // Loaded up front so the Digital wallet tab can appear only when there is money in it.
+      void fetchSpartanFundraisingTotals()
     } else if (!authLoading && !isAuthenticated) {
       setIsLoading(false)
       setBlueLoading(false)
       setLinkedLoading(false)
-      setEventHubsLoading(false)
       setSpartanFundraisingLoading(false)
       setSpartanFundraising(null)
       setSpartanWalletError(null)
@@ -131,19 +131,6 @@ export function ProfileClient() {
       setSupporterContactsLoading(false)
     }
   }, [authLoading, isAuthenticated])
-
-  const fetchEventHubs = async () => {
-    setEventHubsLoading(true)
-    try {
-      const res = await fetch("/api/communities/hubs", { credentials: "include" })
-      const data = await res.json().catch(() => ({}))
-      setEventHubs(data.hubs ?? [])
-    } catch {
-      setEventHubs([])
-    } finally {
-      setEventHubsLoading(false)
-    }
-  }
 
   const fetchSpartanSupporterContacts = async () => {
     setSupporterContactsLoading(true)
@@ -597,6 +584,15 @@ export function ProfileClient() {
     )
   }
 
+  /*
+   * The wallet is fundraising money. Most families never had any, and for them the tab was an
+   * empty screen of zeros; it now shows only when a linked athlete still has a balance (or when a
+   * link opens it directly).
+   */
+  const showWalletTab =
+    activeProfileTab === "fundraise" ||
+    (spartanFundraising?.athletes ?? []).some((row) => walletBalanceFromRow(row as never).availableCents > 0)
+
   return (
     <div className="min-h-screen bg-[#0A1628]">
       {/* Dark Hero Header */}
@@ -605,14 +601,14 @@ export function ProfileClient() {
           <p className="text-xs font-semibold uppercase tracking-wider text-[#D3B574]">RecruitNC</p>
           <h1 className="mt-2 text-3xl sm:text-4xl font-bold tracking-tight text-white">My Profile</h1>
           <p className="text-gray-400 text-sm sm:text-base mt-2 max-w-2xl">
-            Account, family &amp; athletes, digital wallet, and NC United Blue — all in one place.
+            Your account, family &amp; athletes, and subscriptions — all in one place.
           </p>
         </div>
       </div>
 
       <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         <Tabs value={activeProfileTab} onValueChange={onProfileTabChange} className="w-full space-y-6">
-          <TabsList className="mb-0 grid w-full grid-cols-2 sm:grid-cols-4 gap-2 rounded-xl bg-[#0F1E32] border border-[#1e3a5f] p-2 h-auto">
+          <TabsList className={`mb-0 grid w-full grid-cols-2 ${showWalletTab ? "sm:grid-cols-4" : "sm:grid-cols-3"} gap-2 rounded-xl bg-[#0F1E32] border border-[#1e3a5f] p-2 h-auto`}>
             <TabsTrigger
               value="account"
               className="rounded-lg py-2.5 px-2 text-xs sm:text-sm font-semibold text-gray-400 transition-all data-[state=active]:bg-[#D3B574] data-[state=active]:text-[#0A1628] data-[state=active]:shadow-md data-[state=inactive]:hover:bg-[#1e3a5f] data-[state=inactive]:hover:text-white"
@@ -633,6 +629,7 @@ export function ProfileClient() {
                 <span className="sm:hidden">Family</span>
               </span>
             </TabsTrigger>
+            {showWalletTab ? (
             <TabsTrigger
               value="fundraise"
               title="Digital wallet"
@@ -644,14 +641,14 @@ export function ProfileClient() {
                 <span className="sm:hidden">Wallet</span>
               </span>
             </TabsTrigger>
+            ) : null}
             <TabsTrigger
               value="blue"
               className="rounded-lg py-2.5 px-2 text-xs sm:text-sm font-semibold text-gray-400 transition-all data-[state=active]:bg-[#D3B574] data-[state=active]:text-[#0A1628] data-[state=active]:shadow-md data-[state=inactive]:hover:bg-[#1e3a5f] data-[state=inactive]:hover:text-white"
             >
               <span className="inline-flex items-center justify-center gap-1.5 min-w-0">
                 <CreditCard className="h-4 w-4 shrink-0" />
-                <span className="hidden sm:inline">NC United Blue</span>
-                <span className="sm:hidden">Blue</span>
+                <span>Subscriptions</span>
               </span>
             </TabsTrigger>
           </TabsList>
@@ -851,41 +848,6 @@ export function ProfileClient() {
             <Card className="border-[#003366]/10 shadow-sm">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-[#03154C]">
-                  <Bell className="h-5 w-5 text-[#CBAF5D]" />
-                  Fundraising page notifications
-                </CardTitle>
-                <CardDescription className="text-slate-600">
-                  Get an alert when your NC United fundraising page is activated. Use{" "}
-                  <strong>Save Changes</strong> on Profile Information above after changing these.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2 font-medium">
-                      <Bell className="h-4 w-4 text-[#003366]" />
-                      Text me when my page is activated
-                    </div>
-                    <p className="text-xs text-muted-foreground">Default on — requires cell phone above.</p>
-                  </div>
-                  <Switch
-                    checked={profile.notify_sms_fundraising_activation !== false}
-                    onCheckedChange={(checked) =>
-                      profile && setProfile({ ...profile, notify_sms_fundraising_activation: checked })
-                    }
-                  />
-                </div>
-                {!profile.cell_phone?.trim() && profile.notify_sms_fundraising_activation !== false && (
-                    <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-3 py-2">
-                      Add your cell phone in Profile Information so we can send fundraising texts.
-                    </p>
-                  )}
-              </CardContent>
-            </Card>
-
-            <Card className="border-[#003366]/10 shadow-sm">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-[#03154C]">
                   <Calendar className="h-5 w-5 text-[#003366]" />
                   Account details
                 </CardTitle>
@@ -951,8 +913,6 @@ export function ProfileClient() {
               linkAthlete={linkAthlete}
               athleteCompleteness={athleteCompleteness}
               completenessLoading={completenessLoading}
-              eventHubs={eventHubs}
-              eventHubsLoading={eventHubsLoading}
               unlinkAthlete={unlinkLinkedAthlete}
               unlinkAthleteId={unlinkAthleteId}
             />
@@ -983,6 +943,8 @@ export function ProfileClient() {
         </TabsContent>
 
         <TabsContent value="blue" className="mt-0 space-y-6 focus-visible:outline-none">
+                {/* Everything this account pays for, or gets through Blue, in one place. */}
+                <RankingsSubscriptionCard />
                 {/* A WrestlingIQ family has no Stripe membership, so without this their
                     subscription tab was empty and invited them to join something they
                     already pay for. */}

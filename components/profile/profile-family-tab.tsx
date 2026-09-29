@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Progress } from "@/components/ui/progress"
 import { PublicImageUpload } from "@/components/public-image-upload"
 import { HardLink } from "@/components/hard-link"
-import { Loader2, Camera, CheckCircle, LayoutDashboard, Link2, Search, ExternalLink, Sparkles, Users, ArrowRight, UserMinus } from "lucide-react"
+import { Loader2, Camera, CheckCircle, Link2, Search, Sparkles, Users, ArrowRight, UserMinus } from "lucide-react"
 
 const ATHLETE_COMPLETENESS_LABELS: Record<string, string> = {
   bio: "Bio",
@@ -49,8 +49,6 @@ type ProfileFamilyTabProps = {
   linkAthlete: (id: string) => void
   athleteCompleteness: Record<string, { percent: number; completed: string[]; missing: string[] }>
   completenessLoading: boolean
-  eventHubs: { id: string; slug: string; name: string; href: string }[]
-  eventHubsLoading: boolean
   onProfilePhotoUploaded?: (url: string) => void
   unlinkAthlete?: (athleteId: string) => void
   unlinkAthleteId?: string | null
@@ -70,8 +68,6 @@ export function ProfileFamilyTab({
   linkAthlete,
   athleteCompleteness,
   completenessLoading,
-  eventHubs,
-  eventHubsLoading,
   onProfilePhotoUploaded,
   unlinkAthlete,
   unlinkAthleteId,
@@ -133,45 +129,6 @@ export function ProfileFamilyTab({
         </CardContent>
       </Card>
 
-      <p className="text-xs text-gray-500 -mt-2">
-        <strong className="text-[#D3B574] font-semibold">Fundraising</strong> totals and{" "}
-        <strong className="text-[#D3B574] font-semibold">reimbursement requests</strong> are on the{" "}
-        <span className="font-medium text-gray-300">Digital wallet</span> tab.
-      </p>
-
-      {/* Event Hubs */}
-      <Card className="bg-[#0F1E32] border-[#1e3a5f] shadow-md">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-white">
-            <LayoutDashboard className="h-5 w-5 text-[#D3B574]" />
-            Event hubs
-          </CardTitle>
-          <CardDescription className="text-gray-400">Roster, gear sizes, and team chat for events you&apos;re registered for</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {eventHubsLoading ? (
-            <p className="text-sm text-gray-500 flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Loading...
-            </p>
-          ) : eventHubs.length === 0 ? (
-            <p className="text-sm text-gray-500">
-              When you register for a National Team event (e.g. NHSCA Duals), the hub will appear here.
-            </p>
-          ) : (
-            <ul className="space-y-2">
-              {eventHubs.map((hub) => (
-                <li key={hub.id}>
-                  <a href={hub.href} className="inline-flex items-center gap-2 text-sm font-medium text-[#D3B574] hover:text-white transition-colors">
-                    {hub.name}
-                    <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Link Athlete */}
       <Card className="bg-[#0F1E32] border-[#1e3a5f] shadow-md">

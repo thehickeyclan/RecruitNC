@@ -30,6 +30,8 @@ type BlueMembershipForParent = {
   paidInvoiceCount: number
   lifetimePaidFormatted: string | null
   recentInvoices: BlueStripeInvoiceRow[]
+  /** A scholarship or staff place: a member, never billed. */
+  comped: boolean
 }
 
 export type { BlueStripeInvoiceRow } from "@/lib/blue-membership-stripe-details"
@@ -59,11 +61,16 @@ export async function GET(request: NextRequest) {
   const { data: rows, error } = await admin
     .from("blue_memberships")
     .select(
-      "id, athlete_id, status, started_at, ended_at, stripe_customer_id, stripe_subscription_id, resume_at, next_billing_at"
+      "id, athlete_id, status, started_at, ended_at, stripe_customer_id, stripe_subscription_id, resume_at, next_billing_at, source"
     )
     .eq("payer_user_id", user.id)
     .in("status", ["active", "paused", "pending_payment", "cancelled", "alumni"])
-    .not("stripe_subscription_id", "is", null)
+    /*
+     * A Stripe subscription, or a scholarship/staff place. Scholarships have no subscription, so
+     * requiring one hid them entirely - Gavin Hickey is an active scholarship member and his
+     * father's Blue tab said he had none. A row with neither is the retired placeholder batch.
+     */
+    .or("stripe_subscription_id.not.is.null,source.in.(scholarship,staff,comp)")
     .order("started_at", { ascending: false })
 
   /*
@@ -161,6 +168,7 @@ export async function GET(request: NextRequest) {
       paidInvoiceCount,
       lifetimePaidFormatted,
       recentInvoices,
+      comped: ["scholarship", "staff", "comp"].includes(String((r as { source?: string | null }).source ?? "").toLowerCase()),
     })
   }
 

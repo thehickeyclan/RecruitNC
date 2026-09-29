@@ -43,6 +43,8 @@ export type ParentBlueMembership = {
   paidInvoiceCount: number
   lifetimePaidFormatted: string | null
   recentInvoices: { id: string; date: string; amountFormatted: string; amountCents: number; status: string }[]
+  /** Scholarship or staff place: shown as a membership with nothing to bill. */
+  comped?: boolean
 }
 
 type ConfirmKind = "pause" | "cancel" | "resume" | "retry"
@@ -291,6 +293,34 @@ export function NcUnitedBlueSection({
           : isPending
             ? "Payment failed"
             : "—"
+
+        if (m.comped && !isEnded) {
+          return (
+            <div key={m.id} className="overflow-hidden rounded-xl border border-[#03154C]/15 bg-white shadow-sm">
+              <div className="bg-[#03154C] px-5 py-4 flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[15px] font-semibold text-white leading-tight">{m.athleteName}</p>
+                  <p className="mt-0.5 text-[12px] text-white/60">Blue Membership · Scholarship</p>
+                </div>
+                <span className="shrink-0 rounded-full px-3 py-0.5 text-[11px] font-medium tracking-wide bg-green-400/20 text-green-300">
+                  {isPaused ? "Paused" : "Active"}
+                </span>
+              </div>
+              <div className="px-5 py-4">
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-[13px]">
+                  <div>
+                    <dt className="text-[11px] uppercase tracking-wide text-gray-400 mb-0.5">Member since</dt>
+                    <dd className="font-medium text-gray-900">{formatDate(m.startedAt)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[11px] uppercase tracking-wide text-gray-400 mb-0.5">Billing</dt>
+                    <dd className="font-medium text-gray-900">None — covered by a scholarship</dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+          )
+        }
 
         if (isEnded) {
           return (
