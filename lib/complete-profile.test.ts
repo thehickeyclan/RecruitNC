@@ -5,22 +5,16 @@ const decide = (requestedType: string, email: string, existingRole: string | nul
   decideCompleteProfile({ requestedType, email, existingRole })
 
 describe("decideCompleteProfile", () => {
-  it("auto-approves a college coach on a .edu address", () => {
-    expect(decide("college-coach", "coach@ncsu.edu")).toEqual({
-      ok: true,
-      role: "college_coach",
-      verifiedCoach: true,
-      redirectTo: "/athletes",
-    })
-  })
-
-  it("makes a college coach on a personal address wait for a human", () => {
-    expect(decide("college-coach", "coach@gmail.com")).toEqual({
-      ok: true,
-      role: "college_coach",
-      verifiedCoach: false,
-      redirectTo: "/auth/coach-pending",
-    })
+  it("lets every college coach straight in, whatever the address", () => {
+    // Access first, review after: the account stays pending for staff to confirm or reject.
+    for (const email of ["coach@ncsu.edu", "coach@gmail.com"]) {
+      expect(decide("college-coach", email)).toEqual({
+        ok: true,
+        role: "college_coach",
+        verifiedCoach: true,
+        redirectTo: "/public-rankings",
+      })
+    }
   })
 
   it("writes the spelling the admin approval queue actually reads", () => {

@@ -22,10 +22,16 @@ import { createClient } from "@/lib/supabase/client"
 export function GoogleSignInButton({
   returnTo,
   label = "Continue with Google",
+  profileType,
 }: {
   /** Where to land afterwards. Same-origin paths only — an open redirect here is a phishing tool. */
   returnTo?: string | null
   label?: string
+  /**
+   * The role chosen in the sign-up wizard. Carried through Google so the account comes back
+   * already knowing who it is, and /auth/complete-profile asks only what Google cannot supply.
+   */
+  profileType?: string | null
 }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -34,7 +40,10 @@ export function GoogleSignInButton({
     setBusy(true)
     setError(null)
     try {
-      const safeNext = returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/"
+      const safeReturn = returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/"
+      const safeNext = profileType
+        ? `/auth/complete-profile?type=${encodeURIComponent(profileType)}&next=${encodeURIComponent(safeReturn)}`
+        : safeReturn
       const supabase = createClient()
       const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: "google",

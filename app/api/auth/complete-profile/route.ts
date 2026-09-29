@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { decideCompleteProfile } from "@/lib/complete-profile"
+import { notifyStaffCoachSignup } from "@/lib/staff-alerts-sms"
 
 /**
  * "Who are you?", for accounts that arrived without saying.
@@ -30,7 +31,7 @@ export async function POST(request: NextRequest) {
   const admin = createAdminClient()
   const { data: existing } = await admin
     .from("user_profiles")
-    .select("user_id, role, verified_coach, is_admin")
+    .select("user_id, role, verified_coach, is_admin, full_name")
     .eq("user_id", user.id)
     .maybeSingle()
 
@@ -71,6 +72,21 @@ export async function POST(request: NextRequest) {
   console.log(
     `[complete-profile] ${user.email} -> role=${decision.role} verified_coach=${decision.verifiedCoach}`,
   )
+
+  // A college coach is in before anybody has looked, so tell staff now - the same text the coach
+  // sign-up form sends.
+  if (decision.verifiedCoach) {
+    const meta = (user.user_metadata ?? {}) as Record<string, unknown>
+    const name =
+      String(existing?.full_name ?? "").trim() ||
+      String(meta.full_name ?? meta.name ?? "").trim() ||
+      String(user.email ?? "")
+    await notifyStaffCoachSignup({
+      name,
+      college: institution || "college not given",
+      email: String(user.email ?? ""),
+    }).catch(() => 0)
+  }
 
   return NextResponse.json({
     ok: true,

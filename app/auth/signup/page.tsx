@@ -1,20 +1,19 @@
 "use client"
 
-import { Label } from "@/components/ui/label"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertCircle, Trophy, Users, Edit } from "lucide-react"
-import { GoogleSignInButton } from "@/components/auth/google-sign-in-button"
-
 import type React from "react"
 
-import { useEffect, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
+import { Suspense, useEffect, useState } from "react"
 import Link from "next/link"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useSearchParams } from "next/navigation"
+import { AlertCircle, ChevronLeft, ChevronRight, Flag, GraduationCap, Heart, Shield, Trophy, Users } from "lucide-react"
+
+import { GoogleSignInButton } from "@/components/auth/google-sign-in-button"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 function authIntentForPath(path: string | null) {
   const target = path || ""
@@ -78,21 +77,56 @@ function authIntentForPath(path: string | null) {
   }
 }
 
-export default function SignUpPage() {
-  const router = useRouter()
+type Role = "athlete" | "parent" | "college-coach" | "hs-club-coach" | "referee" | "fan"
+
+/**
+ * Step one. Every role is a card and one must be picked: the old form made this an optional
+ * dropdown halfway down the page, so coaches signed up as nobody and never got access.
+ */
+const ROLES: Array<{ value: Role; title: string; blurb: string; icon: typeof Trophy }> = [
+  { value: "athlete", title: "Athlete", blurb: "Claim and manage your wrestling profile", icon: Trophy },
+  { value: "parent", title: "Parent", blurb: "Manage your wrestler's profile and NC United", icon: Users },
+  { value: "college-coach", title: "College coach", blurb: "Free rankings and athlete profiles, instantly", icon: GraduationCap },
+  { value: "hs-club-coach", title: "High school or club coach", blurb: "Follow your wrestlers and events", icon: Shield },
+  { value: "referee", title: "Referee", blurb: "Officials and event staff", icon: Flag },
+  { value: "fan", title: "Fan", blurb: "Follow commitments, rankings and results", icon: Heart },
+]
+
+const isRole = (value: string | null): value is Role => ROLES.some((r) => r.value === value)
+
+function track(event: string, returnTo: string | null, extra: Record<string, unknown> = {}) {
+  void fetch("/api/track-funnel-event", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    keepalive: true,
+    body: JSON.stringify({ event, path: "/auth/signup", target: returnTo || null, source: "signup_page", ...extra }),
+  }).catch(() => {})
+}
+
+/**
+ * Sign-up as a two-step wizard: who are you, then only the fields that role needs.
+ *
+ * College coaches are created by /api/auth/coach-signup - already confirmed, let straight in,
+ * reviewed by staff afterwards - and signed in on the spot. Everyone else goes through
+ * /api/auth/signup and confirms their email as before. Google sits on step two and carries the
+ * role with it, so /auth/complete-profile only asks what Google cannot supply.
+ *
+ * `?type=college-coach` opens straight on the coach step; /auth/coach-signup redirects here with it.
+ */
+function SignUpWizard() {
   const searchParams = useSearchParams()
   const returnTo = searchParams.get("returnTo")
   const authIntent = authIntentForPath(returnTo)
+  const presetType = searchParams.get("type")
 
-  // Required fields
+  const [profileType, setProfileType] = useState<Role | null>(isRole(presetType) ? presetType : null)
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-
-  // Optional fields (additive, non-breaking)
   const [cellPhone, setCellPhone] = useState("")
-  const [profileType, setProfileType] = useState<string>("")
+  const [college, setCollege] = useState("")
+  const [website, setWebsite] = useState("")
 
   const [loading, setLoading] = useState(false)
   const [resending, setResending] = useState(false)
@@ -100,45 +134,58 @@ export default function SignUpPage() {
   const [resendMessage, setResendMessage] = useState("")
   const [success, setSuccess] = useState(false)
 
-  const roleNeedsPhone = profileType === "athlete" || profileType === "parent"
+  const isCollegeCoach = profileType === "college-coach"
+  const roleNeedsPhone = profileType === "athlete" || profileType === "parent" || isCollegeCoach
+  const role = ROLES.find((r) => r.value === profileType) ?? null
 
   useEffect(() => {
-    void fetch("/api/track-funnel-event", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      keepalive: true,
-      body: JSON.stringify({
-        event: "signup_started",
-        path: "/auth/signup",
-        target: returnTo || null,
-        source: "signup_page",
-      }),
-    }).catch(() => {})
+    track("signup_started", returnTo)
   }, [returnTo])
+
+  const pickRole = (value: Role) => {
+    setProfileType(value)
+    setError("")
+    track("signup_role_chosen", returnTo, { role: value })
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
     setError("")
-
+    if (!profileType) return
     if (roleNeedsPhone && cellPhone.replace(/\D/g, "").length < 10) {
-      setError("Athlete and parent accounts require a cell phone (at least 10 digits).")
-      setLoading(false)
+      setError("Enter a 10-digit cell number.")
       return
     }
+    if (isCollegeCoach && !college.trim()) {
+      setError("Enter your college.")
+      return
+    }
+    setLoading(true)
+    track("signup_submitted", returnTo, { role: profileType })
 
     try {
-      void fetch("/api/track-funnel-event", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        keepalive: true,
-        body: JSON.stringify({
-          event: "signup_submitted",
-          path: "/auth/signup",
-          target: returnTo || null,
-          source: "signup_page",
-        }),
-      }).catch(() => {})
+      if (isCollegeCoach) {
+        const res = await fetch("/api/auth/coach-signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ firstName, lastName, email, cellPhone, college, password, website }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(typeof data?.error === "string" ? data.error : "Something went wrong. Please try again.")
+        track("signup_completed", returnTo, { role: profileType })
+
+        // No email step for coaches: sign in with the password they just chose and go.
+        const signIn = await fetch("/api/auth/signin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ email: email.trim(), password }),
+        })
+        const destination =
+          returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/public-rankings"
+        window.location.replace(signIn.ok ? destination : `/auth/signin?returnTo=${encodeURIComponent(destination)}`)
+        return
+      }
 
       const res = await fetch("/api/auth/signup", {
         method: "POST",
@@ -149,73 +196,23 @@ export default function SignUpPage() {
           fullName: `${firstName.trim()} ${lastName.trim()}`.trim(),
           email: email.trim(),
           password,
-          // Optional extras; safe even if the API ignores them
           cellPhone: cellPhone.trim() || undefined,
-          profileType: profileType || undefined,
+          profileType,
           returnTo: returnTo || undefined,
         }),
       })
-
       const data = await res.json().catch(() => ({}))
       if (!res.ok) {
-        const errorMessage = (data as any)?.error || data?.message || `An error occurred during sign up (${res.status})`
-        console.error("[Signup] API error:", res.status, errorMessage, data)
-        void fetch("/api/track-funnel-event", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          keepalive: true,
-          body: JSON.stringify({
-            event: "signup_error",
-            path: "/auth/signup",
-            target: returnTo || null,
-            source: "signup_page",
-            message: errorMessage,
-          }),
-        }).catch(() => {})
-        setError(errorMessage)
-        setLoading(false)
-        return
+        throw new Error((data as { error?: string; message?: string })?.error || (data as { message?: string })?.message || `An error occurred during sign up (${res.status})`)
       }
-
-      console.log("[Signup] Success:", data)
-      void fetch("/api/track-funnel-event", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        keepalive: true,
-        body: JSON.stringify({
-          event: "signup_completed",
-          path: "/auth/signup",
-          target: returnTo || null,
-          source: "signup_page",
-        }),
-      }).catch(() => {})
-      void fetch("/api/track-funnel-event", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        keepalive: true,
-        body: JSON.stringify({
-          event: "verification_email_sent",
-          path: "/auth/signup",
-          target: returnTo || null,
-          source: "signup_page",
-        }),
-      }).catch(() => {})
+      track("signup_completed", returnTo, { role: profileType })
+      track("verification_email_sent", returnTo)
       setSuccess(true)
-    } catch (err: any) {
-      console.error("[Signup] Exception:", err)
-      void fetch("/api/track-funnel-event", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        keepalive: true,
-        body: JSON.stringify({
-          event: "signup_error",
-          path: "/auth/signup",
-          target: returnTo || null,
-          source: "signup_page_exception",
-          message: err?.message || "Unexpected signup exception",
-        }),
-      }).catch(() => {})
-      setError(err?.message || "An unexpected error occurred during sign up. Please try again.")
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "An unexpected error occurred during sign up. Please try again."
+      track("signup_error", returnTo, { message })
+      setError(message)
+    } finally {
       setLoading(false)
     }
   }
@@ -224,17 +221,7 @@ export default function SignUpPage() {
     setResending(true)
     setResendMessage("")
     try {
-      void fetch("/api/track-funnel-event", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        keepalive: true,
-        body: JSON.stringify({
-          event: "verification_resend_requested",
-          path: "/auth/signup",
-          target: returnTo || null,
-          source: "signup_success",
-        }),
-      }).catch(() => {})
+      track("verification_resend_requested", returnTo)
       const res = await fetch("/api/auth/resend-verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -260,20 +247,6 @@ export default function SignUpPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {profileType === "college-coach" && (
-              <Alert className="mb-4 bg-blue-50 border-blue-200">
-                <AlertCircle className="h-4 w-4 text-blue-600" />
-                <AlertDescription className="text-blue-900">
-                  <strong>Welcome, Coach!</strong> After verifying your email, you&apos;ll have immediate access to browse 
-                  prospect rankings and profiles. Within 1 hour of admin approval, you&apos;ll gain access to:
-                  <ul className="list-disc list-inside mt-2 ml-2 space-y-1">
-                    <li>Athlete GPA, SAT, ACT scores</li>
-                    <li>Phone numbers and email addresses</li>
-                    <li>Watch list and recruiting tools</li>
-                  </ul>
-                </AlertDescription>
-              </Alert>
-            )}
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
                 <strong>Important:</strong> protected actions like rankings, profile claiming/editing, TOC confirmations, wallet, and recruiting tools
@@ -309,224 +282,148 @@ export default function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-start pt-8 md:items-center md:pt-0 justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 px-4 pb-8">
-      <div className="w-full max-w-2xl space-y-6">
-        {/* Prominent Benefits Banner */}
-        <Card className="w-full shadow-xl border-2 border-[#B31B1B] bg-gradient-to-br from-[#03154C] to-[#1e3a8a] text-white overflow-hidden pointer-events-none">
-          <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10"></div>
-          <CardContent className="relative p-6 md:p-8">
-            <div className="text-center mb-6">
-              <Badge className="mb-4 bg-[#D3B574] text-[#03154C] text-sm font-bold px-4 py-1">
-                {authIntent.badge}
-              </Badge>
-                <h2 className="text-2xl md:text-3xl font-bold mb-3">
-                  {authIntent.title}
-                </h2>
-                <p className="text-lg md:text-xl text-blue-100 mb-6">
-                {authIntent.description}
-              </p>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-4 mb-6">
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                <Edit className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
-                <h3 className="font-semibold mb-1 text-center text-sm md:text-base">Claim & Edit</h3>
-                <p className="text-xs md:text-sm text-blue-100 text-center">{authIntent.bullets[0]}</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                <Users className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
-                <h3 className="font-semibold mb-1 text-center text-sm md:text-base">Rankings & Interest</h3>
-                <p className="text-xs md:text-sm text-blue-100 text-center">{authIntent.bullets[1]}</p>
-              </div>
-              <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-                <Trophy className="h-8 w-8 text-[#D3B574] mb-2 mx-auto" />
-                <h3 className="font-semibold mb-1 text-center text-sm md:text-base">RecruitNC Tools</h3>
-                <p className="text-xs md:text-sm text-blue-100 text-center">{authIntent.bullets[2]}</p>
-              </div>
-            </div>
+    <div className="min-h-screen flex items-start justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 px-4 pb-8 pt-8 md:items-center md:pt-0">
+      <div className="w-full max-w-xl space-y-5">
+        <div className="text-center">
+          <Badge className="mb-3 bg-[#D3B574] px-3 py-1 text-xs font-bold text-[#03154C]">{authIntent.badge}</Badge>
+          <h1 className="text-2xl font-bold text-[#03154C] md:text-3xl">{authIntent.title}</h1>
+        </div>
 
-            <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 border border-white/20">
-              <div className="flex items-start gap-3">
-                <Edit className="h-5 w-5 text-[#D3B574] mt-0.5 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold mb-1 text-sm md:text-base">Why account-only?</h3>
-                  <p className="text-xs md:text-sm text-blue-100">
-                    Rankings, profile creation/claims, edits, contact info, GPA/recruiting data, messaging, payments, wallet, and analytics stay protected.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Sign Up Form */}
-        <Card className="w-full shadow-lg relative z-10">
-          <CardHeader>
-            <CardTitle>Create Your Free Account</CardTitle>
-            <CardDescription>
-              {returnTo ? `Sign up, verify your email, and we’ll send you back to ${returnTo}.` : "Sign up takes less than 2 minutes. Email verification protects profiles, rankings, and recruiting tools."}
-            </CardDescription>
-          </CardHeader>
-        <CardContent className="relative z-10">
-          {error && <div className="mb-4 text-sm text-red-600">{error}</div>}
-
-          <p className="mb-4 rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-900">
-            College coach?{" "}
-            <Link href="/auth/coach-signup" className="font-semibold underline">
-              Get free access here
-            </Link>
-            {" "}— six fields, instant access.
-          </p>
-
-          <form method="post" onSubmit={handleSubmit} className="space-y-4" noValidate>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input
-                  id="firstName"
-                  name="firstName"
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  onInput={(e) => setFirstName((e.target as HTMLInputElement).value)}
-                  autoComplete="given-name"
-                  required
+        <Card className="w-full shadow-lg">
+          {!role ? (
+            <>
+              <CardHeader>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Step 1 of 2</p>
+                <CardTitle>Who are you?</CardTitle>
+                <CardDescription>We&apos;ll only ask for what you need.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {ROLES.map(({ value, title, blurb, icon: Icon }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => pickRole(value)}
+                    className="flex w-full items-center gap-4 rounded-lg border border-gray-200 bg-white p-4 text-left transition-colors hover:border-[#03154C] hover:bg-blue-50"
+                  >
+                    <Icon className="h-6 w-6 flex-shrink-0 text-[#03154C]" aria-hidden />
+                    <span className="flex-1">
+                      <span className="block font-semibold text-gray-900">{title}</span>
+                      <span className="block text-sm text-muted-foreground">{blurb}</span>
+                    </span>
+                    <ChevronRight className="h-5 w-5 text-gray-400" aria-hidden />
+                  </button>
+                ))}
+                <p className="pt-3 text-center text-sm text-gray-600">
+                  Already have an account?{" "}
+                  <Link
+                    href={`/auth/signin${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`}
+                    className="text-blue-600 hover:underline"
+                  >
+                    Sign in
+                  </Link>
+                </p>
+              </CardContent>
+            </>
+          ) : (
+            <>
+              <CardHeader>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setProfileType(null)
+                    setError("")
+                  }}
+                  className="mb-1 inline-flex w-fit items-center gap-1 text-sm text-blue-600 hover:underline"
                   disabled={loading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input
-                  id="lastName"
-                  name="lastName"
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  onInput={(e) => setLastName((e.target as HTMLInputElement).value)}
-                  autoComplete="family-name"
-                  required
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onInput={(e) => setEmail((e.target as HTMLInputElement).value)}
-                autoComplete="email"
-                required
-                disabled={loading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onInput={(e) => setPassword((e.target as HTMLInputElement).value)}
-                autoComplete="new-password"
-                required
-                disabled={loading}
-                minLength={6}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Profile type <span className="text-gray-400 text-xs">(choose before phone if athlete/parent)</span></Label>
-              {/* College coaches have their own five-field form with no password or email step:
-                  staff verify them by hand. Picking it here sends them there. */}
-              <Select
-                value={profileType}
-                onValueChange={(value) => {
-                  if (value === "college-coach") {
-                    window.location.href = "/auth/coach-signup"
-                    return
-                  }
-                  setProfileType(value)
-                }}
-                disabled={loading}
-              >
-                <SelectTrigger aria-label="Profile type">
-                  <SelectValue placeholder="Select a profile type (optional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="athlete">Athlete</SelectItem>
-                  <SelectItem value="parent">Parent</SelectItem>
-                  <SelectItem value="college-coach">College Coach</SelectItem>
-                  <SelectItem value="hs-club-coach">High School/Club Coach</SelectItem>
-                  <SelectItem value="referee">Referee</SelectItem>
-                  <SelectItem value="fan">Fan</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="cellPhone">
-                Cell phone{" "}
-                {roleNeedsPhone ? (
-                  <span className="text-red-600 dark:text-red-400">*</span>
-                ) : (
-                  <span className="text-gray-400 text-xs">(optional)</span>
+                >
+                  <ChevronLeft className="h-4 w-4" aria-hidden /> Change
+                </button>
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Step 2 of 2 · {role.title}</p>
+                <CardTitle>{isCollegeCoach ? "Get your free coach access" : "Create your account"}</CardTitle>
+                <CardDescription>
+                  {isCollegeCoach
+                    ? "No email to confirm. You'll go straight to the rankings."
+                    : "We'll email you a link to confirm your address."}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {error && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
                 )}
-              </Label>
-              <Input
-                id="cellPhone"
-                name="cellPhone"
-                type="tel"
-                inputMode="tel"
-                autoComplete="tel"
-                placeholder="+1 555 555 5555"
-                value={cellPhone}
-                onChange={(e) => setCellPhone(e.target.value)}
-                onInput={(e) => setCellPhone((e.target as HTMLInputElement).value)}
-                disabled={loading}
-                required={roleNeedsPhone}
-              />
-              {roleNeedsPhone ? (
-                <p className="text-xs text-muted-foreground">Required for athlete &amp; parent profiles (fundraising &amp; outreach).</p>
-              ) : null}
-            </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Creating account..." : "Sign Up"}
-            </Button>
-          </form>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First name</Label>
+                      <Input id="firstName" autoComplete="given-name" value={firstName} onChange={(e) => setFirstName(e.target.value)} required disabled={loading} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last name</Label>
+                      <Input id="lastName" autoComplete="family-name" value={lastName} onChange={(e) => setLastName(e.target.value)} required disabled={loading} />
+                    </div>
+                  </div>
 
-          {/* The same button as sign-in: with Google there is no difference between making an
-              account and using one, and a third of new accounts never survive the email step. */}
-          <div className="mt-5">
-            <div className="mb-4 flex items-center gap-3">
-              <span className="h-px flex-1 bg-gray-200" />
-              <span className="text-xs font-medium uppercase tracking-wide text-gray-400">or</span>
-              <span className="h-px flex-1 bg-gray-200" />
-            </div>
-            <GoogleSignInButton returnTo={returnTo} label="Sign up with Google" />
-          </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required disabled={loading} />
+                  </div>
 
-          <div className="mt-4 text-center">
-            <p className="text-sm text-gray-600">
-              Already have an account?{" "}
-              <Link
-                href={`/auth/signin${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`}
-                className="text-blue-600 hover:underline"
-              >
-                Sign in
-              </Link>
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+                  {roleNeedsPhone ? (
+                    <div className="space-y-2">
+                      <Label htmlFor="cellPhone">Cell</Label>
+                      <Input id="cellPhone" type="tel" inputMode="tel" autoComplete="tel" value={cellPhone} onChange={(e) => setCellPhone(e.target.value)} required disabled={loading} />
+                    </div>
+                  ) : null}
+
+                  {isCollegeCoach ? (
+                    <div className="space-y-2">
+                      <Label htmlFor="college">College</Label>
+                      <Input id="college" autoComplete="organization" placeholder="e.g. NC State" value={college} onChange={(e) => setCollege(e.target.value)} required disabled={loading} />
+                    </div>
+                  ) : null}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="password">Create a password</Label>
+                    <Input id="password" type="password" autoComplete="new-password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} required disabled={loading} />
+                  </div>
+
+                  {/* Honeypot: hidden from people, filled in by bots. Coach sign-up checks it. */}
+                  <div aria-hidden className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+                    <label htmlFor="website">Website</label>
+                    <input id="website" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
+                  </div>
+
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? "Creating your account…" : isCollegeCoach ? "Get access" : "Create account"}
+                  </Button>
+                </form>
+
+                {/* Coaches owe us a cell and a college, which Google does not have; /auth/complete-profile
+                    asks for just those afterwards. */}
+                <div className="mt-5">
+                  <div className="mb-4 flex items-center gap-3">
+                    <span className="h-px flex-1 bg-gray-200" />
+                    <span className="text-xs font-medium uppercase tracking-wide text-gray-400">or</span>
+                    <span className="h-px flex-1 bg-gray-200" />
+                  </div>
+                  <GoogleSignInButton returnTo={returnTo} profileType={profileType} label="Sign up with Google" />
+                </div>
+              </CardContent>
+            </>
+          )}
+        </Card>
       </div>
     </div>
+  )
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignUpWizard />
+    </Suspense>
   )
 }

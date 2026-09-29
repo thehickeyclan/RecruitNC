@@ -4,6 +4,7 @@ import { cookies } from "next/headers"
 import type { User } from "@supabase/supabase-js"
 import { buildUserProfileUpsertPayload } from "@/lib/user-profile-from-auth"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { alreadyAnswered } from "@/lib/complete-profile"
 
 export async function GET(req: NextRequest) {
   console.log("[v0] ===== AUTH CALLBACK ROUTE CALLED =====")
@@ -188,9 +189,22 @@ export async function GET(req: NextRequest) {
       redirectPath = "/athletes"
     }
 
+    /*
+     * The sign-up wizard sends Google sign-ups here with `next` already pointing at
+     * /auth/complete-profile?type=<role>, so the role they picked comes with them. Two cases:
+     * an account that has already answered (someone signing back in through the wizard) skips it
+     * and goes where it was headed; a new one must not have a second complete-profile wrapped
+     * around the first.
+     */
+    const wizardCompletion = redirectPath.startsWith("/auth/complete-profile")
+    if (wizardCompletion && profile && (alreadyAnswered(profile.role) || profile.is_admin)) {
+      const inner = new URL(redirectPath, requestUrl.origin).searchParams.get("next")
+      redirectPath = inner && inner.startsWith("/") && !inner.startsWith("//") ? inner : "/"
+    }
+
     // Ask the new account who it is before sending it anywhere else. `next` is carried through
     // so the destination they originally asked for still happens afterwards.
-    if (needsProfileType && type !== "recovery" && redirectPath !== "/auth/reset-password") {
+    if (needsProfileType && !wizardCompletion && type !== "recovery" && redirectPath !== "/auth/reset-password") {
       redirectPath = `/auth/complete-profile?next=${encodeURIComponent(redirectPath)}`
     }
 

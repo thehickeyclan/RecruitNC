@@ -1,4 +1,4 @@
-import { canonicalRole, shouldAutoApproveCoach } from "@/lib/coach-auto-approve"
+import { canonicalRole, isCollegeCoachRole } from "@/lib/coach-auto-approve"
 
 /**
  * What a brand-new account is allowed to declare itself, and what that earns.
@@ -43,16 +43,22 @@ export function decideCompleteProfile(input: {
   }
 
   // The one-time rule. Without it, any signed-in account could re-declare itself a college coach
-  // and — on a .edu address — approve itself straight into minors' contact details.
+  // and let itself straight into minors' contact details.
   if (alreadyAnswered(input.existingRole)) {
     return { ok: false, status: 409, error: "This account already has a profile type. Ask an admin to change it." }
   }
 
   const role = canonicalRole(requested)!
-  const verifiedCoach = shouldAutoApproveCoach({ role, email: input.email })
-  // Not the coach dashboard: it has one view in thirteen months. Coaches live on athlete
-  // profiles — 15,836 views — which is also where verified_coach actually buys them something.
-  const redirectTo = role === "college_coach" ? (verifiedCoach ? "/athletes" : "/auth/coach-pending") : "/"
+  /*
+   * Every college coach is let in, then reviewed. This used to admit only `.edu` addresses and
+   * park everyone else on a pending page nobody was told about - a coach who signed in with Google
+   * on a personal address waited on a person who did not know they existed. Access now comes
+   * first, the account stays "pending" for staff to confirm or reject, and staff are texted.
+   * `email` is kept on the input for callers; it no longer decides anything.
+   */
+  const verifiedCoach = isCollegeCoachRole(role)
+  // The rankings are what coaches sign up for.
+  const redirectTo = verifiedCoach ? "/public-rankings" : "/"
 
   return { ok: true, role, verifiedCoach, redirectTo }
 }

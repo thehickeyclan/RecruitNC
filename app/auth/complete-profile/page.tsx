@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useState } from "react"
+import { Suspense, useEffect, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -15,23 +15,36 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
  * profile picker in front of that tap would spend the only advantage the button has, so it is
  * asked here instead — once, immediately afterwards, for brand-new accounts only.
  */
+const PROFILE_TYPES = new Set(["athlete", "parent", "college-coach", "hs-club-coach", "referee", "fan"])
+
 function CompleteProfileForm() {
   const params = useSearchParams()
   const requestedNext = params.get("next")
-  const [profileType, setProfileType] = useState("")
+  /*
+   * The sign-up wizard asks "who are you?" before Google, and passes the answer here as `type`.
+   * With it, this screen only asks for what Google could not supply - and nothing at all for the
+   * roles that need nothing more, which submit themselves.
+   */
+  const presetType = PROFILE_TYPES.has(params.get("type") ?? "") ? (params.get("type") as string) : ""
+  const [profileType, setProfileType] = useState(presetType)
   const [cellPhone, setCellPhone] = useState("")
   const [institution, setInstitution] = useState("")
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const isCollegeCoach = profileType === "college-coach"
-  const needsPhone = profileType === "athlete" || profileType === "parent"
+  const needsPhone = profileType === "athlete" || profileType === "parent" || isCollegeCoach
+  const needsNothingMore = Boolean(presetType) && !needsPhone && !isCollegeCoach
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const safeNext =
+    requestedNext && requestedNext.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : null
+
+  const submit = async (e?: React.FormEvent) => {
+    e?.preventDefault()
     setError(null)
     if (!profileType) return setError("Choose what brings you here.")
-    if (needsPhone && !cellPhone.trim()) return setError("A cell number is required for athlete and parent accounts.")
+    if (needsPhone && cellPhone.replace(/\D/g, "").length < 10) return setError("Enter a 10-digit cell number.")
+    if (isCollegeCoach && !institution.trim()) return setError("Enter your college.")
 
     setSaving(true)
     try {
@@ -41,12 +54,15 @@ function CompleteProfileForm() {
         body: JSON.stringify({ profileType, cellPhone, institution }),
       })
       const data = await res.json().catch(() => ({}))
+      // Already has a role: somebody signing back in through the wizard. Nothing to ask; carry on.
+      if (res.status === 409) {
+        window.location.href = safeNext || "/"
+        return
+      }
       if (!res.ok || !data.ok) throw new Error(data.error || "Could not save that.")
 
-      // The server decides where this lands: an approved coach goes to the dashboard, one
-      // waiting on a human goes to the pending page, everyone else goes where they were headed.
-      const safeNext =
-        requestedNext && requestedNext.startsWith("/") && !requestedNext.startsWith("//") ? requestedNext : null
+      // The server decides where a college coach lands (the rankings); everyone else goes where
+      // they were headed.
       window.location.href = data.redirectTo && data.redirectTo !== "/" ? data.redirectTo : safeNext || "/"
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save that.")
@@ -54,17 +70,32 @@ function CompleteProfileForm() {
     }
   }
 
+  const autoSubmitted = useRef(false)
+  useEffect(() => {
+    if (!needsNothingMore || autoSubmitted.current) return
+    autoSubmitted.current = true
+    void submit()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needsNothingMore])
+
+  if (needsNothingMore && !error) {
+    return <div className="flex min-h-screen items-center justify-center text-sm text-muted-foreground">Setting up your account…</div>
+  }
+
   return (
     <div className="flex min-h-screen items-start justify-center bg-gray-50 px-4 pt-20 md:items-center md:pt-0">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle>One quick question</CardTitle>
+          <CardTitle>{presetType ? "Almost done" : "One quick question"}</CardTitle>
           <CardDescription>
-            You&apos;re signed in. Tell us what brings you to RecruitNC so we show you the right things.
+            {presetType
+              ? "You're signed in with Google. Just this, and you're set."
+              : "You're signed in. Tell us what brings you to RecruitNC so we show you the right things."}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={submit} className="space-y-4">
+            {presetType ? null : (
             <div className="space-y-2">
               <Label>I am a</Label>
               <Select value={profileType} onValueChange={setProfileType} disabled={saving}>
@@ -81,6 +112,7 @@ function CompleteProfileForm() {
                 </SelectContent>
               </Select>
             </div>
+            )}
 
             {needsPhone ? (
               <div className="space-y-2">
@@ -102,7 +134,7 @@ function CompleteProfileForm() {
 
             {isCollegeCoach ? (
               <div className="space-y-2">
-                <Label htmlFor="institution">School</Label>
+                <Label htmlFor="institution">College</Label>
                 <Input
                   id="institution"
                   placeholder="NC State University"
@@ -110,10 +142,6 @@ function CompleteProfileForm() {
                   onChange={(e) => setInstitution(e.target.value)}
                   disabled={saving}
                 />
-                <p className="text-xs text-muted-foreground">
-                  Coaches signing in from a <span className="font-semibold">.edu</span> address are approved
-                  immediately. Any other address is reviewed by an admin first.
-                </p>
               </div>
             ) : null}
 
