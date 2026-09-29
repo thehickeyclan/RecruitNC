@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { UsageAnalyticsPanel } from "@/components/admin/usage-analytics-panel"
+import { CollegePicker } from "@/components/admin/college-picker"
 import { formatPhoneForDisplay } from "@/lib/phone-format"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -40,6 +41,7 @@ import {
   ClipboardCopy,
   ChevronDown,
   LayoutDashboard,
+  XCircle,
 } from "lucide-react"
 import { HardLink } from "@/components/hard-link"
 import { cn } from "@/lib/utils"
@@ -1568,22 +1570,15 @@ export default function UsersDashboardPage() {
                   </div>
                   <div>
                     <Label>Assign to College</Label>
-                    <Select
-                      value={editForm.college_id || "unassigned"}
-                      onValueChange={(value) => setEditForm({ ...editForm, college_id: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a college..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="unassigned">None</SelectItem>
-                        {colleges.map(college => (
-                          <SelectItem key={college.id} value={college.id}>
-                            {college.name}{college.division ? ` — ${college.division}` : ""}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <CollegePicker
+                      colleges={colleges}
+                      value={editForm.college_id === "unassigned" ? "" : editForm.college_id}
+                      onChange={(id) => setEditForm({ ...editForm, college_id: id || "unassigned" })}
+                      onCollegeAdded={(college) =>
+                        setColleges((prev) => [...prev, college].sort((a, b) => a.name.localeCompare(b.name)))
+                      }
+                      hint={{ institution: editingUser?.institution, email: editingUser?.email }}
+                    />
                   </div>
                 </>
               )}

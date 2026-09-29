@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { requireAdmin } from "@/lib/admin-auth"
 
 export const dynamic = "force-dynamic"
 
@@ -51,6 +52,10 @@ export async function GET() {
 /** Add a new college to the colleges table. Shows up in the college dropdown on admin profiles. */
 export async function POST(request: NextRequest) {
   try {
+    // Anyone signed in could add a college here; the only guard was whatever RLS allowed.
+    const gate = await requireAdmin()
+    if (!gate.ok) return NextResponse.json({ success: false, error: gate.error }, { status: gate.status })
+
     const body = await request.json()
     const name = typeof body.name === "string" ? body.name.trim() : ""
     const division = typeof body.division === "string" ? body.division : ""
