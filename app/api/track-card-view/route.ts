@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { isBotRequest } from "@/lib/bot-traffic"
 import { NextResponse } from "next/server"
 import { classifyViewer } from "@/lib/viewer-role"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -6,6 +7,9 @@ import { alertFamilyOfProgramView } from "@/lib/program-view-alerts"
 
 export async function POST(request: Request) {
   try {
+    // Crawlers and scripts are not visitors; recording them inflated every view count.
+    if (isBotRequest(request)) return NextResponse.json({ success: true, ignored: "bot" })
+
     const supabase = await createClient()
     const { athleteId, athleteName, eventType = "card_view" } = await request.json()
 

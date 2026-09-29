@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
+import { isBotRequest } from "@/lib/bot-traffic"
 import { type NextRequest, NextResponse } from "next/server"
 
 function cleanPath(value: unknown): string {
@@ -13,6 +14,9 @@ function cleanPath(value: unknown): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // Crawlers and scripts are not visitors; recording them inflated every view count.
+    if (isBotRequest(request)) return NextResponse.json({ success: true, ignored: "bot" })
+
     const supabase = await createClient()
 
     // Get current user

@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { isBotRequest } from "@/lib/bot-traffic"
 import { createClient as createSupabase } from "@supabase/supabase-js"
 
 function need(v: string | undefined, key: string) {
@@ -23,6 +24,9 @@ function serviceClient() {
 
 export async function POST(req: NextRequest) {
   try {
+    // Crawlers and scripts are not visitors; recording them inflated every view count.
+    if (isBotRequest(req)) return NextResponse.json({ success: true, ignored: "bot" })
+
     const authz = req.headers.get("authorization") || ""
     const token = authz.startsWith("Bearer ") ? authz.slice(7) : null
     if (!token) return NextResponse.json({ error: "Missing Authorization Bearer token" }, { status: 401 })

@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { isBotRequest } from "@/lib/bot-traffic"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
@@ -27,6 +28,9 @@ function cleanPath(value: unknown): string {
 
 export async function POST(request: NextRequest) {
   try {
+    // Crawlers and scripts are not visitors; recording them inflated every view count.
+    if (isBotRequest(request)) return NextResponse.json({ success: true, ignored: "bot" })
+
     const body = await request.json().catch(() => ({}))
     const event = typeof body.event === "string" ? body.event : ""
     if (!ALLOWED_EVENTS.has(event)) {
