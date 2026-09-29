@@ -50,6 +50,13 @@ describe("suggestColleges", () => {
     expect(got[0]).toBe("UNC Chapel Hill")
   })
 
+  it("ignores a bracketed abbreviation", () => {
+    const list = [{ id: "r", name: "Rochester Institute of Technology (RIT)" }]
+    expect(names(suggestColleges(list, { institution: "Rochester Institute of Technology", email: "x@rit.edu" }))).toEqual([
+      "Rochester Institute of Technology (RIT)",
+    ])
+  })
+
   it("does not match on generic words alone", () => {
     // "State" appears in both, but it is not what makes either of them a school.
     expect(names(suggestColleges(colleges, { institution: "Penn State" }))).not.toContain("NC State")

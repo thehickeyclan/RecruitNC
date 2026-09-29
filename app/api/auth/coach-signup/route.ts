@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { canonicalRole } from "@/lib/coach-auto-approve"
 import { normalizePhoneForStorage } from "@/lib/phone-format"
 import { notifyStaffCoachSignup } from "@/lib/staff-alerts-sms"
+import { assignCoachCollege, collegeResultNote } from "@/lib/coach-college"
 
 export const dynamic = "force-dynamic"
 
@@ -120,7 +121,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "We couldn't create the account. Please try again." }, { status: 500 })
   }
 
-  await notifyStaffCoachSignup({ name: fullName, college, email }).catch(() => 0)
+  // Settle their college from what they typed and their email, so nobody has to afterwards.
+  const assigned = await assignCoachCollege(admin, { userId: created.user.id, institution: college, email })
+  await notifyStaffCoachSignup({ name: fullName, college, email, collegeNote: collegeResultNote(assigned) }).catch(() => 0)
 
   return NextResponse.json({ success: true })
 }

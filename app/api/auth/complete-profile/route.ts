@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { decideCompleteProfile } from "@/lib/complete-profile"
 import { notifyStaffCoachSignup } from "@/lib/staff-alerts-sms"
+import { assignCoachCollege, collegeResultNote } from "@/lib/coach-college"
 
 /**
  * "Who are you?", for accounts that arrived without saying.
@@ -81,10 +82,12 @@ export async function POST(request: NextRequest) {
       String(existing?.full_name ?? "").trim() ||
       String(meta.full_name ?? meta.name ?? "").trim() ||
       String(user.email ?? "")
+    const assigned = await assignCoachCollege(admin, { userId: user.id, institution, email: user.email })
     await notifyStaffCoachSignup({
       name,
       college: institution || "college not given",
       email: String(user.email ?? ""),
+      collegeNote: collegeResultNote(assigned),
     }).catch(() => 0)
   }
 

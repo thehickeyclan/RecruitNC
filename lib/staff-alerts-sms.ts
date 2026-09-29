@@ -112,9 +112,12 @@ export async function notifyStaffCoachSignup(input: {
   name: string
   college: string
   email: string
+  /** What automatic college assignment did, e.g. "assigned to Campbell". */
+  collegeNote?: string
 }): Promise<number> {
+  const note = input.collegeNote ? ` [${input.collegeNote}]` : ""
   return send(
-    `College coach signed up (has access): ${input.name} — ${input.college} (${input.email}). Review: /admin/users-dashboard`,
+    `College coach signed up (has access): ${input.name} — ${input.college} (${input.email})${note}. Review: /admin/users-dashboard`,
     "coach-signup",
   )
 }

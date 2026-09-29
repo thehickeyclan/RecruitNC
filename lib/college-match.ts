@@ -15,6 +15,8 @@ export function collegeWords(value: string | null | undefined): string[] {
   return String(value ?? "")
     .toLowerCase()
     .replace(/&/g, " and ")
+    // A bracketed abbreviation is a label, not part of the name: "Rochester Institute of Technology (RIT)".
+    .replace(/\([^)]*\)/g, " ")
     // "North Carolina State University" and "NC State" are one school.
     .replace(/\bnorth carolina\b/g, "nc")
     .replace(/[^a-z0-9\s]/g, " ")

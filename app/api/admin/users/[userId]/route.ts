@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { createClient as createServiceClient } from "@supabase/supabase-js"
 import { normalizePhoneForStorage } from "@/lib/phone-format"
 import { VERIFICATION_STATUSES } from "@/lib/coach-auto-approve"
+import { schoolForCollege } from "@/lib/coach-college"
 
 export const dynamic = "force-dynamic"
 
@@ -84,41 +85,14 @@ export async function PATCH(
           return NextResponse.json({ error: "College not found" }, { status: 400 })
         }
 
-        let { data: institution, error: institutionError } = await supabaseAdmin
-          .from("schools")
-          .select("id, name")
-          .ilike("name", college.name)
-          .limit(1)
-          .maybeSingle()
-
-        if (institutionError) {
+        let institution: { id: string; name: string }
+        try {
+          institution = await schoolForCollege(supabaseAdmin, college)
+        } catch (e) {
           return NextResponse.json(
-            { error: "Failed to resolve college assignment", details: institutionError.message },
+            { error: "Failed to resolve college assignment", details: e instanceof Error ? e.message : String(e) },
             { status: 500 },
           )
-        }
-
-        if (!institution) {
-          const inserted = await supabaseAdmin
-            .from("schools")
-            .insert({
-              name: college.name,
-              canonical_name: college.name,
-              logo_url: college.logo_url || null,
-              is_test: false,
-              is_active: true,
-              notes: "College institution created from canonical colleges table",
-            })
-            .select("id, name")
-            .single()
-
-          if (inserted.error || !inserted.data) {
-            return NextResponse.json(
-              { error: "Failed to create college portal assignment", details: inserted.error?.message },
-              { status: 500 },
-            )
-          }
-          institution = inserted.data
         }
 
         updateData.school_id = institution.id
