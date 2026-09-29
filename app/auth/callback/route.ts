@@ -5,6 +5,7 @@ import type { User } from "@supabase/supabase-js"
 import { buildUserProfileUpsertPayload } from "@/lib/user-profile-from-auth"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { alreadyAnswered } from "@/lib/complete-profile"
+import { postSignInDestination } from "@/lib/post-sign-in-destination"
 
 export async function GET(req: NextRequest) {
   console.log("[v0] ===== AUTH CALLBACK ROUTE CALLED =====")
@@ -181,12 +182,13 @@ export async function GET(req: NextRequest) {
     // and next=/auth/reset-password (PKCE may send code without type).
     if (type === "recovery" || next === "/auth/reset-password") {
       redirectPath = "/auth/reset-password"
-    } else if (!hasExplicitNext && (profile?.role === "coach" || session.user.user_metadata?.profile_type === "college-coach")) {
-      redirectPath = "/athletes"
-    } else if (!hasExplicitNext && (profile?.role === "admin" || profile?.is_admin)) {
-      redirectPath = "/admin"
-    } else if (!hasExplicitNext && session.user.user_metadata?.profile_type === "athlete") {
-      redirectPath = "/athletes"
+    } else if (!hasExplicitNext) {
+      /*
+       * Nowhere asked for: the rankings for anyone who can read them, the rankings sales page for
+       * everyone else - the same rule as the password sign-in. This used to split by role
+       * (coaches and athletes to /athletes, admins to /admin, the rest to the homepage).
+       */
+      redirectPath = await postSignInDestination(createAdminClient(), session.user.id)
     }
 
     /*

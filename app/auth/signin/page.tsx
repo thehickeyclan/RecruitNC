@@ -38,6 +38,21 @@ function getSafeReturnTo(value: string | null): string | null {
   return value
 }
 
+/**
+ * Where to go when nothing asked for a specific page: the rankings for anyone who can read them,
+ * the rankings sales page for everyone else (see lib/post-sign-in-destination.ts).
+ */
+async function defaultDestination(): Promise<string> {
+  try {
+    const res = await fetch("/api/auth/landing", { credentials: "include", cache: "no-store" })
+    const data = (await res.json().catch(() => ({}))) as { destination?: unknown }
+    const dest = typeof data.destination === "string" ? data.destination : ""
+    return dest.startsWith("/") && !dest.startsWith("//") ? dest : "/rankings"
+  } catch {
+    return "/rankings"
+  }
+}
+
 function authIntentForPath(path: string | null) {
   const target = path || ""
 
@@ -154,11 +169,10 @@ export default function SignInPage() {
   useEffect(() => {
     if (isLoading || !user) return
     let cancelled = false
-    const target = returnTo || "/"
     fetch("/api/profile", { credentials: "include" })
-      .then((r) => {
+      .then(async (r) => {
         if (cancelled) return
-        if (r.ok) window.location.href = target
+        if (r.ok) window.location.href = returnTo || (await defaultDestination())
         // 401 = server doesn't see session (e.g. Chrome dropped cookie); don't redirect so user can sign in again
         // Silently ignore 401 - it's expected when not logged in
       })
@@ -249,9 +263,8 @@ export default function SignInPage() {
         }),
       }).catch(() => {})
       setRedirectingAfterSignIn(true)
-      const target = returnTo || "/"
-      // Redirect immediately so login isn't blocked by a flaky profile check
-      window.location.replace(target)
+      // Where they asked to go, or the rankings (members) / rankings sales page (everyone else).
+      window.location.replace(returnTo || (await defaultDestination()))
       return
     }
     const errorMsg = typeof data === "object" && data !== null && "error" in data && typeof data.error === "string" ? data.error : null

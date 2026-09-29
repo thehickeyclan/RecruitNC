@@ -53,21 +53,6 @@ export function Navbar() {
   const [notifications, setNotifications] = useState<NavNotification[]>([])
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const pathname = usePathname() ?? ""
-  /*
-   * Bring people back to the page they signed in from.
-   *
-   * These were bare /auth/signin links, and sign-in lands on the homepage when it is given no
-   * destination. The phone app's Rankings tab opens /rankings in a browser sheet, and the header
-   * Sign In is the first button there, so a family signing in to see the rankings was dropped on
-   * the homepage and had to find them again. The page's own sign-in links already passed
-   * returnTo; the header did not.
-   */
-  const returnToQuery =
-    pathname && pathname !== "/" && !pathname.startsWith("/auth")
-      ? `?returnTo=${encodeURIComponent(pathname)}`
-      : ""
-  const signInHref = `/auth/signin${returnToQuery}`
-  const signUpHref = `/auth/signup${returnToQuery}`
   const { user, signOut, isLoading, profile } = useAuth()
   const cartItems = useCartStore((s) => s.items)
   const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0)
@@ -742,10 +727,10 @@ export function Navbar() {
                   size="sm"
                   className="h-10 border-white text-white hover:bg-white hover:text-[#003366] bg-transparent mobile-optimized rounded-lg"
                 >
-                  <Link href={signInHref} target="_top" rel="noopener">Sign In</Link>
+                  <Link href="/auth/signin" target="_top" rel="noopener">Sign In</Link>
                 </Button>
                 <Button asChild size="sm" className="h-10 bg-red-600 text-white hover:bg-red-700 mobile-optimized rounded-lg">
-                  <Link href={signUpHref} target="_top" rel="noopener">Sign Up</Link>
+                  <Link href="/auth/signup" target="_top" rel="noopener">Sign Up</Link>
                 </Button>
               </div>
             )}
@@ -848,14 +833,14 @@ export function Navbar() {
                   size="sm"
                   className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white bg-transparent mobile-optimized min-h-[44px] px-3"
                 >
-                  <Link href={signInHref} target="_top" rel="noopener">Sign In</Link>
+                  <Link href="/auth/signin" target="_top" rel="noopener">Sign In</Link>
                 </Button>
                 <Button
                   asChild
                   size="sm"
                   className="bg-red-600 text-white hover:bg-red-700 mobile-optimized min-h-[44px] px-3"
                 >
-                  <Link href={signUpHref} target="_top" rel="noopener">Sign Up</Link>
+                  <Link href="/auth/signup" target="_top" rel="noopener">Sign Up</Link>
                 </Button>
               </div>
             )}
@@ -1081,14 +1066,14 @@ export function Navbar() {
                     <div className="border-t pt-4 mt-4">
                       <div className="space-y-2">
                         <a
-                          href={signInHref}
+                          href="/auth/signin"
                           onClick={() => setIsOpen(false)}
                           className="flex items-center justify-center w-full min-h-[44px] rounded-md border border-red-600 text-red-600 hover:bg-red-600 hover:text-white bg-transparent px-4 py-2 text-sm font-medium"
                         >
                           Sign In
                         </a>
                         <a
-                          href={signUpHref}
+                          href="/auth/signup"
                           onClick={() => setIsOpen(false)}
                           className="flex items-center justify-center w-full min-h-[44px] rounded-md bg-red-600 text-white hover:bg-red-700 px-4 py-2 text-sm font-medium"
                         >
