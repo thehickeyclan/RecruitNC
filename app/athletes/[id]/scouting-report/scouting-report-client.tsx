@@ -499,7 +499,8 @@ export function ScoutingReportDocument({
               parts: in-state performance (best Tournament of Champions or NCHSAA finish, plus
               significant wins), nationals (NHSCA, Super 32 and Fargo placing weigh most), and the
               RecruitNC class ranking. A top-10 ranking holds a wrestler at four stars and any other
-              ranking at three. The formula tops out at four; five stars is set by RecruitNC staff.
+              ranking at three; some credentials also set a minimum, named under the stars. Five
+              stars requires a current national ranking and a top-eight finish at Super 32.
               Rated for the classes RecruitNC ranks.
             </p>
           </Block>

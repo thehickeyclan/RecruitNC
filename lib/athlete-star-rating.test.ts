@@ -41,9 +41,27 @@ const ELITE: StarRatingInput = {
 }
 
 describe("five stars", () => {
-  it("never comes from the formula, however strong the record", () => {
+  const s32 = { event: "Super 32", year: 2025, placement: 6, record: "6-2" }
+
+  it("needs a national ranking and a Super 32 place, together", () => {
+    expect(rateAthlete({ ...ELITE, nationallyRanked: true, nationalRows: [...ELITE.nationalRows, s32] }).stars).toBe(5)
+    expect(rateAthlete({ ...ELITE, nationallyRanked: false, nationalRows: [...ELITE.nationalRows, s32] }).stars).toBe(4)
+  })
+
+  it("does not come from the score, however strong the record", () => {
+    // ELITE's Super 32 row is a title, but without a national ranking it stays four.
     expect(rateAthlete(ELITE).stars).toBe(4)
-    expect(rateAthlete({ ...ELITE, nationallyRanked: true }).stars).toBe(4)
+  })
+
+  it("does not come from a national ranking and an NHSCA place", () => {
+    // Keyshon Morrison: nationally ranked, 3rd at NHSCA, never placed at Super 32. Matt rates him a four.
+    const rating = rateAthlete({
+      ...EMPTY,
+      nationallyRanked: true,
+      statePlaces: [1],
+      nationalRows: [{ event: "NHSCA Nationals", year: 2024, placement: 3, record: "6-2" }],
+    })
+    expect(rating.stars).toBe(4)
   })
 
   it("holds a nationally ranked wrestler with no record at four", () => {
@@ -51,10 +69,6 @@ describe("five stars", () => {
     const rating = rateAthlete({ ...EMPTY, nationallyRanked: true })
     expect(rating.stars).toBe(4)
     expect(rating.provisional).toBe(true)
-  })
-
-  it("is reachable by hand", () => {
-    expect(applyStarOverride(rateAthlete(ELITE), { stars: 5, reason: "" }).stars).toBe(5)
   })
 
   it("never reaches five through the score bands", () => {
@@ -175,6 +189,15 @@ describe("ranking floors", () => {
 
   it("does not count wins over other placers toward three", () => {
     expect(placer({ significantWins: wins(5) }).stars).toBe(2)
+  })
+
+  it("makes a state champion who has beaten three state champions a four", () => {
+    // Jekai Sedgwick and Luke Padgett; Matthew Akins, a champion with one such win, stays three.
+    const ranked = { prospectRanking: 19, rankingPublished: true }
+    expect(rateAthlete({ ...EMPTY, ...ranked, statePlaces: [1], significantWins: champs(3) }).stars).toBe(4)
+    expect(rateAthlete({ ...EMPTY, ...ranked, statePlaces: [1], significantWins: champs(1) }).stars).toBeLessThan(4)
+    // Unranked, the same record stays three.
+    expect(rateAthlete({ ...EMPTY, statePlaces: [1], significantWins: champs(6) }).stars).toBe(3)
   })
 
   it("makes a state placer who has beaten a nationally ranked opponent a four", () => {

@@ -295,7 +295,7 @@ export function starsForScore(score: number): number {
   if (score >= STAR_BANDS[2]) return 2
   return 1
 }
-const STAR_BANDS = [66, 45, 25] as const
+const STAR_BANDS = [72, 45, 25] as const
 
 /**
  * The fewest stars a published class ranking allows. Every wrestler Matt rated from the top ten
@@ -319,7 +319,7 @@ export type StarRatingInput = {
   statePlaces: Array<number | null>
   /**
    * Ranked by FloWrestling, Sports Illustrated or MatScouts in a retained edition.
-   * Holds a wrestler at four stars at least. Five is only ever set by hand.
+   * Holds a wrestler at four stars at least; five also needs a Super 32 place (`isFiveStar`).
    */
   nationallyRanked: boolean
 }
@@ -403,23 +403,34 @@ export function rateAthlete(input: StarRatingInput): StarRating {
     input.nationalRows.length === 0 && input.statePlaces.length === 0 && input.significantWins.length === 0
 
   /**
-   * The formula tops out at four. Five stars is a person's call, set by hand on the ranking board.
-   *
-   * Matt, 29 September 2026. The earlier rule gave five to any nationally ranked wrestler whose
-   * record earned four, which made Keyshon Morrison a five when Matt rates him a four. A national
-   * ranking still holds a wrestler at four: it is a real credential, and never a reason for less.
+   * Five stars is a credential, not a score: nationally ranked AND a top-eight finish at the main
+   * Super 32. Matt, 29 September 2026. A score-based five made Keyshon Morrison - nationally
+   * ranked, 2-2 at NHSCA and 1-2 at Super 32 - a five; and a formula capped at four put Aaron
+   * Ruiz-Angel on the same star as Carson Worrick. Nobody in 2027 or 2028 holds it today.
    */
   const earned = starsForScore(score)
   const floor = credentialFloor(input)
-  const stars = Math.max(earned, floor.stars)
+  const stars = isFiveStar(input) ? 5 : Math.max(earned, floor.stars)
 
   return {
     stars,
     score,
     components,
     provisional,
-    ...(floor.stars > earned && floor.reason ? { floor: `Held at ${floor.stars}: ${floor.reason}` } : {}),
+    ...(stars === 5
+      ? { floor: "Five stars: nationally ranked and a Super 32 placer" }
+      : floor.stars > earned && floor.reason
+        ? { floor: `Held at ${floor.stars}: ${floor.reason}` }
+        : {}),
   }
+}
+
+/** Nationally ranked and a top-eight finish at the main Super 32 - the only route to five. */
+export function isFiveStar(input: StarRatingInput): boolean {
+  return (
+    input.nationallyRanked &&
+    input.nationalRows.some((r) => /^Super 32$/i.test(r.event) && r.placement != null && r.placement <= 8)
+  )
 }
 
 /** Distinct opponents among the significant wins. Beating one wrestler three times is one win here. */
@@ -437,6 +448,7 @@ function recordAt(rows: readonly NationalEventRow[], event: RegExp): Array<{ win
  *   4  a winning record at Super 32 (the main event, not a qualifier)
  *   4  NHSCA All-American, more than five significant wins, and a state placing - all three
  *   4  a state placing and a win over a nationally ranked opponent
+ *   4  a state title and wins over three or more other state champions, for a ranked wrestler
  *   4  top-10 class ranking, or any national ranking
  *   3  a state placing with wins over three or more state champions, or a winning NHSCA record
  *
@@ -447,7 +459,7 @@ function recordAt(rows: readonly NationalEventRow[], event: RegExp): Array<{ win
  *   2  a state placing
  *
  * The score still decides everyone above their floor. A floor only ever raises a star, and it
- * never reaches five: five is hand-set.
+ * never reaches five: five is `isFiveStar`, or a person's call.
  */
 export function credentialFloor(input: StarRatingInput): { stars: number; reason: string | null } {
   const rules: Array<[number, boolean, string]> = []
@@ -464,6 +476,13 @@ export function credentialFloor(input: StarRatingInput): { stars: number; reason
 
   rules.push([4, super32.some((r) => r.wins > r.losses), "winning record at Super 32"])
   rules.push([4, allAmerican && sigWins > 5 && placer, "NHSCA All-American, state placer, more than five significant wins"])
+  rules.push([
+    4,
+    // Ranked wrestlers only: two unranked champions scoring in the 30s would otherwise sit above
+    // most of the ranked 2027 class.
+    ranking != null && input.statePlaces.includes(1) && championsBeaten >= 3,
+    `state champion who has beaten ${championsBeaten} state champions`,
+  ])
   rules.push([4, placer && nationallyRankedBeaten > 0, "state placer with a win over a nationally ranked opponent"])
   rules.push([4, ranking != null && ranking <= 10, `RecruitNC top 10 (#${ranking})`])
   rules.push([4, input.nationallyRanked, "nationally ranked"])
