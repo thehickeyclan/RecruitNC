@@ -221,6 +221,70 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* Scouting reports and rankings, free for college coaches. The coach is the reader the
+          whole database exists for, and neither product is findable from the page otherwise:
+          reports sit one click inside a profile, rankings behind a sales page. The button goes
+          straight to the coach sign-up, which grants access on submit. */}
+      <section className="border-b border-rnc-gold/25 bg-gradient-to-b from-rnc-ink to-[#0B1D3A]">
+        <div className="container mx-auto px-4 py-10 sm:py-14">
+          <div className="flex flex-col items-center gap-8 lg:flex-row lg:gap-12">
+            <div className="max-w-xl text-center lg:text-left">
+              <p className="inline-flex items-center gap-2 rounded-full border border-rnc-gold/50 bg-rnc-gold/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-rnc-gold">
+                New · Free for college coaches
+              </p>
+              <h2 className="mt-3 text-3xl font-extrabold leading-tight text-white sm:text-4xl lg:text-5xl">
+                Scouting reports &amp; prospect rankings
+              </h2>
+              <p className="mt-3 text-base leading-relaxed text-white/75 sm:text-lg">
+                A complete, objective look at North Carolina talent. Every athlete profile now has a
+                one-page scouting report, and every published class is ranked on results.
+              </p>
+              <ul className="mt-5 grid gap-x-6 gap-y-2 text-left text-sm text-white/80 sm:grid-cols-2">
+                {[
+                  "Evaluation and star rating",
+                  "Academics — GPA and test scores",
+                  "Competition record",
+                  "Significant wins and losses",
+                  "Strength of competition",
+                  "Class rankings, ranked on results",
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-2">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-rnc-gold" aria-hidden="true" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row lg:items-center">
+                <Link
+                  href="/auth/signup?type=college-coach"
+                  className="inline-flex items-center gap-2 rounded-xl bg-rnc-gold px-8 py-4 text-base font-extrabold text-rnc-ink transition-colors hover:bg-[#c4a665] sm:text-lg"
+                >
+                  College coaches: get free access
+                  <ArrowRight className="h-5 w-5" />
+                </Link>
+                <Link href="/rankings" className="text-sm font-semibold text-white/70 hover:text-white">
+                  Everyone else: see what&apos;s included
+                </Link>
+              </div>
+              <p className="mt-3 text-xs text-white/50">
+                Coaches: name, email, cell and college — access is immediate. Included for NC United Blue members.
+              </p>
+            </div>
+
+            <div className="w-full max-w-xl shrink-0 lg:max-w-[560px]">
+              <Image
+                src="/scouting-report-sample.jpg"
+                alt="A sample NC United prospect scouting report: evaluation, academics, star rating, competition record, significant wins, strength of competition and notable losses"
+                width={1222}
+                height={885}
+                sizes="(min-width: 1024px) 560px, 100vw"
+                className="h-auto w-full rounded-xl border border-white/10 shadow-2xl"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* The app is the newest thing here and the one a visitor cannot discover by browsing, so
           it gets a full-width block of its own rather than a strip. It sits under the tickets bar
           because that sale is on a clock and this is not.
