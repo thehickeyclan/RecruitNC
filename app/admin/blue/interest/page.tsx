@@ -242,6 +242,18 @@ export default function AdminBlueInterestPage() {
    * needs a decision; the rest is a click away rather than in the way.
    */
   const [view, setView] = useState<"open" | "invited" | "done" | "all">("open")
+  /*
+   * Seventeen of the open rows are wrestlers who have already graduated - they cannot join, and
+   * they will never become actionable, so they sit in the queue forever. Hidden unless asked for.
+   */
+  const CURRENT_CLASS = 2027
+  const [showGraduated, setShowGraduated] = useState(false)
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [closing, setClosing] = useState(false)
+
+  const hasGraduated = (r: Submission) =>
+    typeof r.graduation_year === "number" && r.graduation_year < CURRENT_CLASS
+
 
   const isDone = (r: Submission) =>
     r.enrolled || r.status === "registered" || r.status === "declined"
@@ -255,9 +267,42 @@ export default function AdminBlueInterestPage() {
     all: submissions.length,
   }
 
-  const visible = submissions.filter((r) =>
-    view === "all" ? true : view === "open" ? isOpen(r) : view === "invited" ? isInvited(r) : isDone(r),
-  )
+  const visible = submissions
+    .filter((r) => (showGraduated ? true : !hasGraduated(r)))
+    .filter((r) =>
+      view === "all" ? true : view === "open" ? isOpen(r) : view === "invited" ? isInvited(r) : isDone(r),
+    )
+
+  const graduatedHidden = showGraduated ? 0 : submissions.filter(hasGraduated).length
+
+  /* Clear a backlog in one pass rather than sixty-one dropdowns. */
+  const closeSelected = async () => {
+    if (!selected.size) return
+    if (!window.confirm(`Mark ${selected.size} submission${selected.size === 1 ? "" : "s"} as declined?`)) return
+    setClosing(true)
+    const ids = [...selected]
+    let failed = 0
+    for (const id of ids) {
+      const res = await fetch("/api/admin/blue-express-interest", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, status: "declined" }),
+      }).catch(() => null)
+      if (!res || !res.ok) failed++
+    }
+    setSubmissions((prev) =>
+      prev.map((r) => (selected.has(r.id) && !failed ? { ...r, status: "declined" } : r)),
+    )
+    setSelected(new Set())
+    setClosing(false)
+    toast(
+      failed
+        ? { title: `${ids.length - failed} closed, ${failed} failed`, variant: "destructive" }
+        : { title: `${ids.length} closed` },
+    )
+    if (failed) void loadSubmissions()
+  }
 
   const [acceptingId, setAcceptingId] = useState<string | null>(null)
   const acceptIntoBlue = async (row: Submission) => {
@@ -475,10 +520,48 @@ alter table public.blue_express_interest
                       {label}
                     </button>
                   ))}
+
+                  <label className="ml-auto flex cursor-pointer items-center gap-2 text-sm text-slate-300">
+                    <input
+                      type="checkbox"
+                      checked={showGraduated}
+                      onChange={(e) => setShowGraduated(e.target.checked)}
+                      className="h-4 w-4"
+                    />
+                    Show graduated{graduatedHidden ? ` (${graduatedHidden} hidden)` : ""}
+                  </label>
                 </div>
+
+                {selected.size > 0 && (
+                  <div className="mb-3 flex flex-wrap items-center gap-3 rounded-lg border border-[#D3B574]/40 bg-[#D3B574]/10 px-3 py-2">
+                    <span className="text-sm text-slate-200">{selected.size} selected</span>
+                    <Button size="sm" onClick={() => void closeSelected()} disabled={closing}>
+                      {closing ? "Closing…" : "Mark as declined"}
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => setSelected(new Set())}
+                      className="text-sm text-slate-300 underline"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                )}
                 <Table>
                   <TableHeader>
                     <TableRow className="border-[#1e3a5f] hover:bg-transparent [&>th]:text-slate-300">
+                      <TableHead className="w-10">
+                        <input
+                          type="checkbox"
+                          aria-label="Select all shown"
+                          className="h-4 w-4"
+                          checked={visible.length > 0 && visible.every((r) => selected.has(r.id))}
+                          onChange={(e) =>
+                            setSelected(e.target.checked ? new Set(visible.map((r) => r.id)) : new Set())
+                          }
+                        />
+                      </TableHead>
+                      <TableHead className="w-[110px]">Submitted</TableHead>
                       <TableHead className="w-[120px]">Status</TableHead>
                       <TableHead className="w-[90px]">Regional</TableHead>
                       <TableHead className="w-[90px]">Placement</TableHead>
@@ -500,6 +583,25 @@ alter table public.blue_express_interest
                   <TableBody>
                     {visible.map((row) => (
                       <TableRow key={row.id} className="border-[#1e3a5f] hover:bg-white/[0.04]">
+                        <TableCell>
+                          <input
+                            type="checkbox"
+                            aria-label={`Select ${row.first_name} ${row.last_name}`}
+                            className="h-4 w-4"
+                            checked={selected.has(row.id)}
+                            onChange={(e) =>
+                              setSelected((prev) => {
+                                const next = new Set(prev)
+                                if (e.target.checked) next.add(row.id)
+                                else next.delete(row.id)
+                                return next
+                              })
+                            }
+                          />
+                        </TableCell>
+                        <TableCell className="whitespace-nowrap text-sm text-slate-300">
+                          {new Date(row.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
+                        </TableCell>
                         <TableCell>
                           <Select
                             value={row.status ?? BLANK_VALUE}
