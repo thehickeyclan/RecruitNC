@@ -59,6 +59,37 @@ export async function GET(request: Request) {
     }
 
     /*
+     * A wrestler can be placed by hand and still be outside the engine's pool - Miller Menteer is
+     * a 5A state champion who was never ranked on the 2027 board, so no class depth reaches him.
+     * Without this he vanished from a saved order on the next load and the engine backfilled his
+     * slot with a wrestler who had been deliberately removed. The saved board is the board: if
+     * somebody is on it, he is rendered, pool or not.
+     */
+    const missing = [...savedOrder.keys()].filter((id) => !board.entries.some((e) => e.id === id))
+    if (missing.length) {
+      const { data: strays } = await admin
+        .from("athletes")
+        .select("id, name, graduationyear, prospect_ranking")
+        .in("id", missing)
+      for (const row of strays ?? []) {
+        board.entries.push({
+          id: String(row.id),
+          name: String(row.name ?? "Unnamed"),
+          graduationYear: Number(row.graduationyear),
+          classRank: row.prospect_ranking == null ? null : Number(row.prospect_ranking),
+          rank: savedOrder.get(String(row.id)) ?? Number.MAX_SAFE_INTEGER,
+          score: 0,
+          /* No season was scored for him, so nothing is claimed about one. */
+          scoreRank: Number.MAX_SAFE_INTEGER,
+          classOverride: 0,
+          beatenBy: [],
+          lostTo: [],
+        })
+      }
+      console.warn("[rankings-top-100] hand-placed wrestlers outside the pool:", missing.length)
+    }
+
+    /*
      * A saved order is the board; the rest of the pool are candidates and sort below it. They are
      * kept visible because the wrestlers just outside the cut are the ones worth reconsidering,
      * but they must never displace a hand-placed wrestler.
