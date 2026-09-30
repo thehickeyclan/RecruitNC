@@ -381,7 +381,7 @@ export function ScoutingReportDocument({
             <Vital label="Club" value={identity.club} />
             <Vital label="Career" value={report.careerRecord} />
             <PhoneVital label="Cell" value={contact.cell} />
-            <Vital label="Email" value={contact.email} last />
+            <EmailVital label="Email" value={contact.email} last />
             {report.accessTier !== "full" ? (
               <div className="pt-1 text-[9.5px] italic leading-snug text-gray-500">
                 Contact details released to verified college coaching staff.
@@ -746,6 +746,21 @@ function Stars({ stars }: { stars: number }) {
  * approach to a recruit is far more often a text. Both actions are spelled out so the coach
  * picks, rather than the phone picking for him.
  */
+/** The address, as something a coach can tap rather than copy out by hand. */
+function EmailVital({ label, value, last }: { label: string; value: string | null; last?: boolean }) {
+  if (!value) return null
+  return (
+    <div className={`flex justify-between gap-3 py-1 ${last ? "" : "border-b border-gray-200"}`}>
+      <dt className="shrink-0 uppercase tracking-wider text-gray-500">{label}</dt>
+      <dd className="min-w-0 break-all text-right font-semibold leading-tight">
+        <a href={`mailto:${value}`} className="text-[#B31B1B] underline underline-offset-2">
+          {value}
+        </a>
+      </dd>
+    </div>
+  )
+}
+
 function PhoneVital({ label, value, last }: { label: string; value: string | null; last?: boolean }) {
   if (!value) return null
   const digits = value.replace(/\D/g, "")
