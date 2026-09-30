@@ -111,10 +111,25 @@ export async function POST(request: Request) {
   const sent = await sendBlueAcceptanceEmail({ to, athleteName, registerUrl })
   if (!sent.success) return NextResponse.json({ error: sent.error || "Email failed" }, { status: 502 })
 
-  await db
+  /*
+   * "approved" is not one of this column's allowed values - there is a check constraint, and the
+   * admin list only ever offers text_sent / invite_sent / registered / declined. The update was
+   * failing silently, so a family who had been written to still read as never contacted and was
+   * one click away from a second welcome.
+   */
+  const { error: stampError } = await db
     .from("blue_express_interest")
-    .update({ approval_email_sent_at: nowIso, status: "approved" })
+    .update({ approval_email_sent_at: nowIso, status: "invite_sent" })
     .eq("id", interest.id)
+
+  if (stampError) {
+    // The email is already gone; say so rather than implying nothing happened.
+    console.error("[blue/accept] welcome sent but the row was not stamped:", stampError.message)
+    return NextResponse.json(
+      { ok: true, to, registerUrl, sentAt: nowIso, warning: `Email sent, but the row was not marked: ${stampError.message}` },
+      { status: 200 },
+    )
+  }
 
   return NextResponse.json({ ok: true, to, registerUrl, sentAt: nowIso })
 }
