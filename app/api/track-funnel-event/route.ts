@@ -6,6 +6,12 @@ import { createClient } from "@/lib/supabase/server"
 const ALLOWED_EVENTS = new Set([
   "login_wall_view",
   "signup_started",
+  /*
+     Step one of the wizard. Added to the page on 28 Sep and rejected here ever since, so the
+     biggest drop in the funnel - open to submit - stayed a single number with two opposite
+     causes behind it: could not pick a role, or would not fill the fields.
+  */
+  "signup_role_chosen",
   "signup_submitted",
   "signup_error",
   "signup_completed",
@@ -66,6 +72,8 @@ export async function POST(request: NextRequest) {
         path,
         target,
         message,
+        /* Which role the wizard was on. Whitelisted, not spread: the body is public input. */
+        role: typeof body.role === "string" ? body.role.slice(0, 40) : null,
         timestamp: new Date().toISOString(),
       },
       created_at: new Date().toISOString(),
