@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, Trophy, FileSearch, LayoutGrid, List, ArrowLeft, GraduationCap } from "lucide-react"
+import { Search, Trophy, FileSearch, LayoutGrid, List, ArrowLeft, GraduationCap, UserPlus } from "lucide-react"
 import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
 import { normalizeAthleteList } from "@/lib/professional-athlete"
 import { AthletesLegacySearchContent } from "@/components/athletes-legacy-search-content"
@@ -169,7 +169,7 @@ export function AthletesCommitmentsClient({
           <p className="text-white/70 text-lg max-w-xl leading-relaxed">
             {tab === "commitments"
               ? "Browse North Carolina wrestlers who have committed to college programs."
-              : "Legacy NC: search by name across NHSCA, NCHSAA, awards, Super32, and more."}
+              : "Search by name across NHSCA, NCHSAA, awards, Super 32 and more."}
           </p>
           <div className="flex gap-3 mt-6">
             <Button
@@ -194,7 +194,22 @@ export function AthletesCommitmentsClient({
               }
             >
               <FileSearch className="h-4 w-4 mr-1.5" />
-              Wrestlers (Legacy NC)
+              Search wrestlers
+            </Button>
+            {/*
+              * Most wrestlers already have a page - 376 of 512 are unclaimed - so searching comes
+              * first and this is the way out when the search genuinely finds nobody. Making a
+              * second profile for someone who already has one is how a record gets split in two.
+              */}
+            <Button
+              size="sm"
+              asChild
+              className="bg-white/10 text-white/70 hover:bg-white/20 border-0 backdrop-blur-sm"
+            >
+              <Link href="/create-profile">
+                <UserPlus className="h-4 w-4 mr-1.5" />
+                Create new profile
+              </Link>
             </Button>
           </div>
         </div>

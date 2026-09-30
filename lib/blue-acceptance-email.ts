@@ -49,9 +49,9 @@ function steps(registerUrl: string | null): Step[] {
     },
     {
       title: "Create his wrestling profile",
-      body: "Free, and it is the page college coaches actually read - results, film, GPA. If a profile already exists for him, claim it instead of making a second one.",
+      body: "Search his name first - most wrestlers already have a page here, built from their results, and you claim it rather than start again. Only create a new one if the search genuinely finds nobody. Then add the film, GPA and the rest: this is the page college coaches read.",
       href: `${SITE_URL}/athletes`,
-      cta: "Find or create the profile",
+      cta: "Search for his profile",
     },
     {
       title: "Check the calendar",
