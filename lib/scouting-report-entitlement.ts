@@ -98,6 +98,14 @@ export type EntitlementInput = {
   hasPurchasedThisAthlete: boolean
 }
 
+/**
+ * Is the scouting report on sale?
+ *
+ * False for now: it is a college-coach product, free to the coaches whose reading is the whole
+ * point of it. Families see their own wrestler's and nobody else's.
+ */
+export const SCOUTING_REPORTS_ARE_SOLD = false
+
 export function resolveEntitlement(input: EntitlementInput): ScoutingEntitlement {
   // Pre-launch, the allowlist is the only rule — see lib/scouting-report-release.ts.
   if (input.allowlistActive) {
@@ -123,11 +131,24 @@ export function resolveEntitlement(input: EntitlementInput): ScoutingEntitlement
    */
   if (input.isOwnProfile) return { canAccess: true, reason: "own_profile", purchasable: false }
 
-  if (input.isBlueMember) return { canAccess: true, reason: "blue_member", purchasable: false }
-  if (input.hasActiveSubscription) return { canAccess: true, reason: "subscription", purchasable: false }
-  if (input.hasPurchasedThisAthlete) return { canAccess: true, reason: "purchased", purchasable: false }
+  /*
+   * Everything below is switched off while the report is a college-coach product.
+   *
+   * It is not on sale, so a Blue membership and a rankings subscription do not include it and
+   * should not say they do. A wrestler and his own family keep their access above, because the
+   * report is built out of his results and it is what makes them fill in the film and the GPA.
+   *
+   * A row already exists for anyone who bought one; when this opens up, drop the flag and the
+   * three checks below come back exactly as they were.
+   */
+  if (SCOUTING_REPORTS_ARE_SOLD) {
+    if (input.isBlueMember) return { canAccess: true, reason: "blue_member", purchasable: false }
+    if (input.hasActiveSubscription) return { canAccess: true, reason: "subscription", purchasable: false }
+    if (input.hasPurchasedThisAthlete) return { canAccess: true, reason: "purchased", purchasable: false }
+  }
 
-  return { canAccess: false, reason: "none", purchasable: true }
+  // Not purchasable while it is not for sale: a refusal is not a paywall.
+  return { canAccess: false, reason: "none", purchasable: SCOUTING_REPORTS_ARE_SOLD }
 }
 
 /** Stripe subscription statuses that still grant access. */

@@ -1071,7 +1071,7 @@ function MembershipStrip({
           ? "Paid subscription"
           : rankings.hasAccess
             ? "Through Blue, a coach account or staff"
-            : "Rankings, prospects board and scouting reports",
+            : "Class rankings and the College Prospects board",
     },
     { title: "NC United Blue", icon: CreditCard, status: blueStatus, detail: blueLoading ? "Checking…" : blueDetail },
   ]

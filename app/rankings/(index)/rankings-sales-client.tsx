@@ -217,8 +217,8 @@ export function RankingsSalesClient() {
               College Prospect Rankings
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              Classes of 2027–2029, the Top 75 ranked prospects across all classes, and
-              scouting reports.
+              Classes of 2027–2029, and the Top 75 College Prospects across the classes a
+              college programme can contact now.
             </p>
           </div>
 
@@ -237,7 +237,7 @@ export function RankingsSalesClient() {
             {[
               ["2027–2029", "Frequently updated class rankings"],
               ["Top 75", "Ranked prospects, every class"],
-              ["Scouting Reports", "Results, quality wins and competition"],
+              ["Head-to-head", "Who beat whom, and when"],
               ["Profile activity", "Which college programs are viewing you"],
             ].map((claim) => (
               <div key={claim[0]} className="rounded-xl border border-border bg-card p-4 text-left">
@@ -306,7 +306,7 @@ export function RankingsSalesClient() {
               <p className="mt-3 text-4xl font-semibold">{formatPrice(SCOUTING_REPORT_PRICES.subscription)}</p>
               <p className="mt-1 text-sm text-muted-foreground">per month</p>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                All class rankings, the Top 75 College Prospects, and scouting
+                All class rankings and the Top 75 College Prospects
                 reports. Full profile management, and see which college programs are viewing
                 your profile. Cancel anytime.
               </p>

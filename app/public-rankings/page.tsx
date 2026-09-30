@@ -94,8 +94,8 @@ export default async function PublicRankingsHomepage({
             College Prospect Rankings
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-base text-white/65">
-            Class rankings, the Top 75 College Prospects and scouting reports informed by
-            results, quality wins and strength of competition.
+            Class rankings and the Top 75 College Prospects, informed by results, quality wins
+            and strength of competition.
           </p>
         </div>
       </section>

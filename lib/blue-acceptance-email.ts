@@ -17,6 +17,8 @@ export const BLUE_INSTAGRAM_URL = "https://instagram.com/ncwrestlingunited"
 export const BLUE_APP_STORE_URL = "https://apps.apple.com/app/id6803202791"
 export const BLUE_CONTACT_EMAIL = "info@ncwrestlingunited.com"
 export const BLUE_CONTACT_CELL = "631.662.5409"
+/* Absolute, because an email client has no site to resolve a relative path against. */
+export const BLUE_LOGO_URL = `${SITE_URL}/images/nc-united-logo-white.png`
 
 type Step = { title: string; body: string; href?: string; cta?: string }
 
@@ -27,7 +29,7 @@ function steps(registerUrl: string | null): Step[] {
       ? [
           {
             title: "Complete your registration",
-            body: "One private link, just for your family. It covers the waiver, shirt size and billing. Start here - the rest can wait until after.",
+            body: "One private link, just for your family. It covers the waiver, billing, and the size for your free NC United Blue shirt. Start here - the rest can wait.",
             href: registerUrl,
             cta: "Complete registration",
           },
@@ -63,7 +65,7 @@ function steps(registerUrl: string | null): Step[] {
     },
     {
       title: "Your rankings access is included",
-      body: "Every class ranking, the Top 75 College Prospects and the scouting reports come with Blue. No separate subscription.",
+      body: "Every class ranking and the Top 75 College Prospects come with Blue. No separate subscription.",
       href: `${SITE_URL}/public-rankings`,
       cta: "Open the rankings",
     },
@@ -109,6 +111,7 @@ export async function sendBlueAcceptanceEmail(params: {
     <tr><td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background:#ffffff;border-radius:10px;overflow:hidden;">
         <tr><td style="background:#03154C;padding:26px 28px;">
+          <img src="${BLUE_LOGO_URL}" alt="NC United" width="132" style="display:block;border:0;margin:0 0 14px;max-width:132px;height:auto;" />
           <p style="margin:0;color:#D3B574;font-size:11px;letter-spacing:2px;font-weight:700;">NC UNITED BLUE</p>
           <h1 style="margin:8px 0 0;color:#ffffff;font-size:24px;">You&rsquo;re in${athlete ? `, ${athlete}` : ""}.</h1>
           ${
