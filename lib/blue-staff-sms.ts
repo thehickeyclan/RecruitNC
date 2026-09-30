@@ -61,7 +61,22 @@ export async function notifyStaffBlueNewSubscription(
   const athlete = (params.athleteName || "New member").trim()
   const email = (params.parentEmail || "").trim()
   const amount = formatMoney(params.amountDollars > 0 ? params.amountDollars : 55)
-  const body = `RecruitNC Blue: New member ${athlete}${email ? ` (${email})` : ""}. ${amount}/mo. Admin: /admin/blue/subscriptions`
+
+  /*
+   * The shirt size, read here rather than threaded through three callers - the signup row is a
+   * lookup away and this is the one message that actually gets read. It was the first thing
+   * asked for on a new member and the only place it lived was an individual detail page.
+   */
+  let shirt = ""
+  const { data: signup } = await admin
+    .from("blue_signups")
+    .select("tshirt_size")
+    .eq("id", params.signupId)
+    .maybeSingle()
+  const size = String((signup as { tshirt_size?: string | null } | null)?.tshirt_size ?? "").trim()
+  if (size) shirt = ` Shirt ${size}.`
+
+  const body = `RecruitNC Blue: New member ${athlete}${email ? ` (${email})` : ""}. ${amount}/mo.${shirt} Admin: /admin/blue/subscriptions`
 
   let sent = 0
   for (const e164 of recipients) {
