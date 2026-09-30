@@ -218,7 +218,7 @@ export async function loadInviteInterestPrefill(
   }
 }
 
-function athleteFromRow(row: AthleteRow): Omit<BlueRegisterAthleteOption, "id" | "name" | "alreadyInBlue" | "missingFields"> {
+export function athleteFromRow(row: AthleteRow): Omit<BlueRegisterAthleteOption, "id" | "name" | "alreadyInBlue" | "missingFields"> {
   const { firstName, lastName } = splitName(row)
   const gradRaw = row.graduationyear ?? row.graduation_year
   const gradNum = typeof gradRaw === "number" ? gradRaw : parseInt(String(gradRaw ?? ""), 10)

@@ -55,6 +55,9 @@ const emptyAthleteForm = (): AthleteForm => ({
   interestWrestlingCollege: false,
 })
 
+/** A wrestler found by searching the roster, shaped like a linked one so the form treats them alike. */
+type SearchHit = BlueRegisterAthleteOption & { claimed: boolean; claimedByMe: boolean }
+
 function athleteToForm(a: BlueRegisterAthleteOption | null): AthleteForm {
   if (!a) return emptyAthleteForm()
   return {
@@ -103,6 +106,12 @@ export default function BlueRegisterPage() {
   const [context, setContext] = useState<BlueRegisterContext | null>(null)
 
   const [selectedAthleteId, setSelectedAthleteId] = useState<string>("")
+  const [searchQuery, setSearchQuery] = useState("")
+  const [searchHits, setSearchHits] = useState<SearchHit[]>([])
+  const [searching, setSearching] = useState(false)
+  const [searched, setSearched] = useState(false)
+  const [foundAthlete, setFoundAthlete] = useState<SearchHit | null>(null)
+  const [skipSearch, setSkipSearch] = useState(false)
   const [parentPhone, setParentPhone] = useState("")
   const [parentFirstName, setParentFirstName] = useState("")
   const [parentLastName, setParentLastName] = useState("")
@@ -202,6 +211,7 @@ export default function BlueRegisterPage() {
   const parentMissing = context?.parentMissingFields ?? []
   const invitePrefill = context?.invitePrefill ?? null
   const athleteMissing = useMemo(() => {
+    if (foundAthlete) return foundAthlete.missingFields
     if (selectedAthlete) return selectedAthlete.missingFields
     if (invitePrefill) return invitePrefill.missingFields
     return [
@@ -215,12 +225,57 @@ export default function BlueRegisterPage() {
       "email",
       "gpa",
     ]
-  }, [selectedAthlete, invitePrefill])
+  }, [foundAthlete, selectedAthlete, invitePrefill])
 
   const needsAthletePicker = eligibleAthletes.length > 1
   const noLinkedAthletes = (context?.athletes.length ?? 0) === 0
 
+  /*
+   * Search the whole roster, not just what is linked to this account.
+   *
+   * Most families arrive with nothing linked - 376 of 512 profiles are unclaimed - and the blank
+   * form below then builds a second profile for a wrestler who already has one, splitting his
+   * record in two. Searching first is also what lets the family say which wrestler is theirs
+   * rather than leaving a fuzzy name match to decide between brothers.
+   */
+  async function runAthleteSearch() {
+    const q = searchQuery.trim()
+    if (q.length < 2) return
+    setSearching(true)
+    try {
+      const res = await fetch(`/api/blue/register/athlete-search?q=${encodeURIComponent(q)}`, {
+        credentials: "include",
+      })
+      const data = await res.json()
+      setSearchHits(Array.isArray(data.results) ? data.results : [])
+      setSearched(true)
+    } catch {
+      setSearchHits([])
+      setSearched(true)
+    } finally {
+      setSearching(false)
+    }
+  }
+
+  function chooseFoundAthlete(hit: SearchHit) {
+    setFoundAthlete(hit)
+    setSelectedAthleteId(hit.id)
+    setAthlete((a) => ({
+      ...a,
+      firstName: hit.firstName || a.firstName,
+      lastName: hit.lastName || a.lastName,
+      graduationYear: hit.graduationYear ? String(hit.graduationYear) : a.graduationYear,
+      highSchool: hit.highSchool || a.highSchool,
+      weightClass: hit.weightClass || a.weightClass,
+      wrestlingClub: hit.wrestlingClub || a.wrestlingClub,
+      cellPhone: hit.cellPhone || a.cellPhone,
+      email: hit.email || a.email,
+      gpa: hit.gpa || a.gpa,
+    }))
+  }
+
   function onSelectAthlete(id: string) {
+
     setSelectedAthleteId(id)
     const row = eligibleAthletes.find((a) => a.id === id) ?? null
     setAthlete(athleteToForm(row))
@@ -519,17 +574,112 @@ export default function BlueRegisterPage() {
                   </p>
                 )}
 
-                {noLinkedAthletes && !invitePrefill && (
-                  <p className="text-sm text-muted-foreground">
-                    Tip:{" "}
-                    <HardLink href="/profile" className="text-[#03154C] underline">
-                      Add your athlete on Profile
-                    </HardLink>{" "}
-                    first next time — registration will be even faster.
-                  </p>
+                {noLinkedAthletes && !invitePrefill && !foundAthlete && !skipSearch && (
+                  <div className="space-y-3 rounded-lg border border-[#D3B574]/60 bg-[#FBF6E9] p-4">
+                    <div>
+                      <Label className="text-[#03154C]">Find your wrestler</Label>
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        Most wrestlers already have a page here, built from their results. Search his
+                        name so we add Blue to it instead of starting a second one.
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Input
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault()
+                            void runAthleteSearch()
+                          }
+                        }}
+                        placeholder="First and last name"
+                        disabled={loading || searching}
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => void runAthleteSearch()}
+                        disabled={loading || searching || searchQuery.trim().length < 2}
+                        className="bg-[#03154C] hover:bg-[#0a2571] text-white shrink-0"
+                      >
+                        {searching ? "Searching…" : "Search"}
+                      </Button>
+                    </div>
+
+                    {searched && searchHits.length > 0 && (
+                      <ul className="space-y-2">
+                        {searchHits.map((hit) => (
+                          <li key={hit.id}>
+                            <button
+                              type="button"
+                              onClick={() => chooseFoundAthlete(hit)}
+                              className="w-full rounded-md border border-[#03154C]/20 bg-white px-3 py-2 text-left hover:border-[#03154C] hover:bg-[#F4F7FF]"
+                            >
+                              <span className="block text-sm font-semibold text-[#03154C]">{hit.name}</span>
+                              {/* Year, school, club and weight, because brothers share a surname and a school. */}
+                              <span className="block text-xs text-muted-foreground">
+                                {[
+                                  hit.graduationYear ? `Class of ${hit.graduationYear}` : null,
+                                  hit.highSchool,
+                                  hit.wrestlingClub,
+                                  hit.weightClass ? `${hit.weightClass} lbs` : null,
+                                ]
+                                  .filter(Boolean)
+                                  .join(" · ") || "No details on file"}
+                              </span>
+                              {hit.claimed && !hit.claimedByMe && (
+                                <span className="mt-1 block text-xs text-amber-700">
+                                  Already claimed by another account — pick him only if he is your wrestler.
+                                </span>
+                              )}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    {searched && searchHits.length === 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        Nobody by that name. Check the spelling, or add him as a new wrestler below.
+                      </p>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setSkipSearch(true)}
+                      className="text-sm text-[#03154C] underline underline-offset-2"
+                    >
+                      He is not here — add him as a new wrestler
+                    </button>
+                  </div>
                 )}
 
-                {(noLinkedAthletes && (!invitePrefill || athleteMissing.length > 0)) ||
+                {foundAthlete && (
+                  <div className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-900">
+                    <span>
+                      <strong>{foundAthlete.name}</strong>
+                      {foundAthlete.graduationYear ? ` · Class of ${foundAthlete.graduationYear}` : ""}
+                      {foundAthlete.highSchool ? ` · ${foundAthlete.highSchool}` : ""}
+                      {athleteMissing.length === 0 ? " — profile complete." : " — fill the gaps below."}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFoundAthlete(null)
+                        setSelectedAthleteId("")
+                        setSearched(false)
+                        setSearchHits([])
+                      }}
+                      className="underline underline-offset-2"
+                    >
+                      Not him
+                    </button>
+                  </div>
+                )}
+
+                {(noLinkedAthletes &&
+                  (foundAthlete || skipSearch || invitePrefill) &&
+                  (!invitePrefill || athleteMissing.length > 0)) ||
                 (selectedAthleteId && athleteMissing.length > 0) ? (
                   <div className="space-y-4">
                     {(athleteMissing.includes("firstName") || athleteMissing.includes("lastName")) && (
