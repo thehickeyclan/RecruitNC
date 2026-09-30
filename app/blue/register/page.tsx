@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { formatPhoneForDisplay, formatPhoneInput, normalizePhoneForStorage } from "@/lib/phone-format"
@@ -238,24 +238,56 @@ export default function BlueRegisterPage() {
    * record in two. Searching first is also what lets the family say which wrestler is theirs
    * rather than leaving a fuzzy name match to decide between brothers.
    */
-  async function runAthleteSearch() {
-    const q = searchQuery.trim()
-    if (q.length < 2) return
-    setSearching(true)
-    try {
-      const res = await fetch(`/api/blue/register/athlete-search?q=${encodeURIComponent(q)}`, {
-        credentials: "include",
-      })
-      const data = await res.json()
-      setSearchHits(Array.isArray(data.results) ? data.results : [])
-      setSearched(true)
-    } catch {
-      setSearchHits([])
-      setSearched(true)
-    } finally {
-      setSearching(false)
-    }
-  }
+  const runAthleteSearch = useCallback(
+    async (term?: string, auto = false) => {
+      const q = (term ?? searchQuery).trim()
+      if (q.length < 2) return
+      setSearching(true)
+      try {
+        const res = await fetch(`/api/blue/register/athlete-search?q=${encodeURIComponent(q)}`, {
+          credentials: "include",
+        })
+        const data = await res.json()
+        const hits: SearchHit[] = Array.isArray(data.results) ? data.results : []
+        setSearchHits(hits)
+        setSearched(true)
+        /*
+         * Nothing found on a search the family never asked for: open the form rather than making
+         * them dismiss an empty result. A search only ever costs them a step when it finds him.
+         */
+        if (auto && hits.length === 0) setSkipSearch(true)
+      } catch {
+        setSearchHits([])
+        setSearched(true)
+        if (auto) setSkipSearch(true)
+      } finally {
+        setSearching(false)
+      }
+    },
+    [searchQuery],
+  )
+
+  /*
+   * The invite carries the wrestler's name from the interest form, and that path skipped the
+   * search entirely - so the families we invite were the ones most likely to end up with a
+   * second profile. Search on their behalf the moment the page knows who they are.
+   */
+  const autoSearched = useRef(false)
+  useEffect(() => {
+    if (autoSearched.current || !context || !noLinkedAthletes || foundAthlete) return
+    const name = [invitePrefill?.firstName, invitePrefill?.lastName].filter(Boolean).join(" ").trim()
+    if (name.length < 2) return
+    autoSearched.current = true
+    setSearchQuery(name)
+    void runAthleteSearch(name, true)
+  }, [context, noLinkedAthletes, invitePrefill, foundAthlete, runAthleteSearch])
+
+  /* Typing searches on its own, so the button is there for people who expect one, not required. */
+  useEffect(() => {
+    if (!searchQuery.trim() || searchQuery.trim().length < 3 || foundAthlete || skipSearch) return
+    const t = setTimeout(() => void runAthleteSearch(), 450)
+    return () => clearTimeout(t)
+  }, [searchQuery, foundAthlete, skipSearch, runAthleteSearch])
 
   function chooseFoundAthlete(hit: SearchHit) {
     setFoundAthlete(hit)
@@ -574,13 +606,16 @@ export default function BlueRegisterPage() {
                   </p>
                 )}
 
-                {noLinkedAthletes && !invitePrefill && !foundAthlete && !skipSearch && (
+                {noLinkedAthletes && !foundAthlete && !skipSearch && (
                   <div className="space-y-3 rounded-lg border border-[#D3B574]/60 bg-[#FBF6E9] p-4">
                     <div>
-                      <Label className="text-[#03154C]">Find your wrestler</Label>
+                      <Label className="text-[#03154C]">
+                        {searched && searchHits.length > 0 ? "Is this your wrestler?" : "Find your wrestler"}
+                      </Label>
                       <p className="mt-1 text-sm text-muted-foreground">
-                        Most wrestlers already have a page here, built from their results. Search his
-                        name so we add Blue to it instead of starting a second one.
+                        {searched && searchHits.length > 0
+                          ? "Pick him and we will add Blue to the page he already has, so his results stay in one place. Only what is missing gets asked for."
+                          : "Most wrestlers already have a page here, built from their results. Start typing his name and we will look."}
                       </p>
                     </div>
                     <div className="flex gap-2">
@@ -678,7 +713,7 @@ export default function BlueRegisterPage() {
                 )}
 
                 {(noLinkedAthletes &&
-                  (foundAthlete || skipSearch || invitePrefill) &&
+                  (foundAthlete || skipSearch) &&
                   (!invitePrefill || athleteMissing.length > 0)) ||
                 (selectedAthleteId && athleteMissing.length > 0) ? (
                   <div className="space-y-4">
