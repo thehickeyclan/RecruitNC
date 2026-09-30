@@ -231,6 +231,40 @@ export default function AdminBlueInterestPage() {
   const handleRegionalChange = (id: string, value: string) => patchField(id, "regional", value === BLANK_VALUE ? null : value)
   const handlePlacementChange = (id: string, value: string) => patchField(id, "placement", value === BLANK_VALUE ? null : value)
 
+  /*
+   * One button for the whole acceptance: mints the registration link if the family needs one,
+   * sends the welcome with the steps in it, and marks the row. The Create invite flow below
+   * stays for the cases that need a hand-written note instead.
+   */
+  const [acceptingId, setAcceptingId] = useState<string | null>(null)
+  const acceptIntoBlue = async (row: Submission) => {
+    if (!row.parent_email?.trim()) {
+      toast({ title: "No email on this row", description: "Add a parent email before sending the welcome.", variant: "destructive" })
+      return
+    }
+    if (!window.confirm(`Send the Blue welcome to ${row.parent_email.trim()}?`)) return
+    setAcceptingId(row.id)
+    try {
+      const res = await fetch("/api/admin/blue/accept", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ interestId: row.id }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        toast({ title: data.error || "Could not send", variant: "destructive" })
+        return
+      }
+      toast({ title: "Welcome sent", description: `To ${data.to}` })
+      loadSubmissions()
+    } catch {
+      toast({ title: "Could not send", variant: "destructive" })
+    } finally {
+      setAcceptingId(null)
+    }
+  }
+
   const handleCreateInvite = async () => {
     if (!createInviteRow || !createInviteEmail.trim()) {
       toast({ title: "Email required", variant: "destructive" })
@@ -517,14 +551,20 @@ alter table public.blue_express_interest
                               View invite
                             </Link>
                           ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openCreateInvite(row)}
-                            >
-                              <Mail className="h-3 w-3 mr-1" />
-                              Create invite
-                            </Button>
+                            <div className="flex flex-wrap justify-end gap-2">
+                              <Button
+                                size="sm"
+                                className="bg-[#03154C] hover:bg-[#04205f]"
+                                disabled={acceptingId === row.id}
+                                onClick={() => void acceptIntoBlue(row)}
+                              >
+                                <Mail className="h-3 w-3 mr-1" />
+                                {acceptingId === row.id ? "Sending…" : "Accept & send welcome"}
+                              </Button>
+                              <Button variant="outline" size="sm" onClick={() => openCreateInvite(row)}>
+                                Invite link only
+                              </Button>
+                            </div>
                           )}
                         </TableCell>
                       </TableRow>
