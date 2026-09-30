@@ -256,7 +256,7 @@ export function ProfileFamilyTab({
                         * the only page in the app nothing else links to - it had fallen three
                         * weeks behind the profile it was meant to edit.
                         */}
-                      <a href={`/view-profile?id=${encodeURIComponent(a.id)`}>
+                      <a href={`/view-profile?id=${encodeURIComponent(a.id)}`}>
                         {comp && comp.percent === 0 ? "Complete profile" : "Edit profile"}
                       </a>
                     </Button>
@@ -335,7 +335,7 @@ export function ProfileFamilyTab({
                 <a href={`/view-profile?id=${encodeURIComponent(profile.athlete_id!)}`}>View {profile.athlete_name}&apos;s profile</a>
               </Button>
               <Button asChild variant="outline" size="sm" className="border-[#1e3a5f] text-gray-300 hover:bg-[#1e3a5f] hover:text-white">
-                <a href={`/view-profile?id=${encodeURIComponent(profile.athlete_id!)`}>Edit profile</a>
+                <a href={`/view-profile?id=${encodeURIComponent(profile.athlete_id!)}`}>Edit profile</a>
               </Button>
             </div>
           </CardContent>
