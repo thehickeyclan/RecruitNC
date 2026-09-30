@@ -250,7 +250,13 @@ export function ProfileFamilyTab({
                       className={comp && comp.percent === 0 ? "bg-[#D3B574] hover:bg-[#c4a665] text-[#0A1628]" : "border-[#1e3a5f] text-gray-300 hover:bg-[#1e3a5f] hover:text-white"}
                       variant={comp && comp.percent === 0 ? "default" : "outline"}
                     >
-                      <a href={`/athletes/${a.id}/edit`}>
+                      {/*
+                        * The profile itself, not the standalone form at /athletes/<id>/edit. A
+                        * linked parent already edits every field inline there, and that form is
+                        * the only page in the app nothing else links to - it had fallen three
+                        * weeks behind the profile it was meant to edit.
+                        */}
+                      <a href={`/view-profile?id=${encodeURIComponent(a.id)`}>
                         {comp && comp.percent === 0 ? "Complete profile" : "Edit profile"}
                       </a>
                     </Button>
@@ -329,7 +335,7 @@ export function ProfileFamilyTab({
                 <a href={`/view-profile?id=${encodeURIComponent(profile.athlete_id!)}`}>View {profile.athlete_name}&apos;s profile</a>
               </Button>
               <Button asChild variant="outline" size="sm" className="border-[#1e3a5f] text-gray-300 hover:bg-[#1e3a5f] hover:text-white">
-                <a href={`/athletes/${profile.athlete_id}/edit`}>Edit profile</a>
+                <a href={`/view-profile?id=${encodeURIComponent(profile.athlete_id!)`}>Edit profile</a>
               </Button>
             </div>
           </CardContent>
