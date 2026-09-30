@@ -41,7 +41,7 @@ export async function GET(request: Request) {
    * which answered "Invalid or expired link" - so the one button worth checking was the one that
    * looked broken. Every other link is live and worth clicking.
    */
-  const { html } = renderBlueAcceptanceEmail({ athleteName, registerUrl: "#registration-link" })
+  const { html } = renderBlueAcceptanceEmail({ athleteName, registerUrl: "#registration-link", preview: true })
   const banner = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#1f2937;color:#fff;padding:12px 16px;font-size:13px;text-align:center;">
     Preview${athleteName ? ` &mdash; ${athleteName}` : ""}. Nothing has been sent. The registration button is disabled here; the real email carries that family&rsquo;s private link.
   </div>`

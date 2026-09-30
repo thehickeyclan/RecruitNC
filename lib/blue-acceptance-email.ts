@@ -112,6 +112,8 @@ export const BLUE_ACCEPTANCE_SUBJECT = "Welcome to NC United Blue"
 export function renderBlueAcceptanceEmail(params: {
   athleteName?: string | null
   registerUrl?: string | null
+  /** Renders the registration button greyed and labelled, so a preview is not mistaken for broken. */
+  preview?: boolean
 }): { subject: string; html: string; text: string } {
   const athlete = (params.athleteName || "").trim()
   const list = steps(params.registerUrl?.trim() || null)
@@ -127,8 +129,11 @@ export function renderBlueAcceptanceEmail(params: {
           <h1 style="margin:8px 0 0;color:#ffffff;font-size:24px;">You&rsquo;re in${athlete ? `, ${athlete}` : ""}.</h1>
           ${
             params.registerUrl?.trim()
-              ? `<p style="margin:18px 0 0;"><a href="${params.registerUrl.trim()}" style="display:inline-block;background:#D3B574;color:#03154C;padding:13px 26px;text-decoration:none;border-radius:6px;font-weight:700;font-size:15px;">Complete your registration</a></p>
-                 <p style="margin:8px 0 0;color:#ffffff;opacity:.7;font-size:12px;">This link is just for your family.</p>`
+              ? params.preview
+                ? `<p style="margin:18px 0 0;"><span style="display:inline-block;background:#6b7280;color:#e5e7eb;padding:13px 26px;border-radius:6px;font-weight:700;font-size:15px;">Complete your registration</span></p>
+                   <p style="margin:8px 0 0;color:#ffffff;opacity:.7;font-size:12px;">Disabled in preview &mdash; the real email carries this family&rsquo;s private link.</p>`
+                : `<p style="margin:18px 0 0;"><a href="${params.registerUrl.trim()}" style="display:inline-block;background:#D3B574;color:#03154C;padding:13px 26px;text-decoration:none;border-radius:6px;font-weight:700;font-size:15px;">Complete your registration</a></p>
+                   <p style="margin:8px 0 0;color:#ffffff;opacity:.7;font-size:12px;">This link is just for your family.</p>`
               : ""
           }
         </td></tr>
