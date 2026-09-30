@@ -188,3 +188,52 @@ export async function sendBlueAcceptanceEmail(params: {
     return { success: false, error: caught instanceof Error ? caught.message : "Send failed" }
   }
 }
+
+/**
+ * Tell staff a family just registered, and what size shirt to bring.
+ *
+ * The size was captured from the first signup and then only readable one member at a time on a
+ * detail page, so the answer to "what size does the new kid need" was a click hunt. Nothing
+ * announced a registration at all.
+ */
+export async function sendBlueRegistrationAlert(params: {
+  athleteName: string
+  tshirtSize: string | null
+  graduationYear?: number | string | null
+  highSchool?: string | null
+  parentEmail?: string | null
+  parentPhone?: string | null
+}): Promise<{ success: boolean; error?: string }> {
+  if (!process.env.RESEND_API_KEY) return { success: false, error: "Email service not configured" }
+  const size = (params.tshirtSize || "").trim() || "NOT GIVEN"
+  const facts: Array<[string, string]> = [
+    ["Shirt size", size],
+    ["Class", String(params.graduationYear ?? "—")],
+    ["High school", params.highSchool || "—"],
+    ["Parent", [params.parentEmail, params.parentPhone].filter(Boolean).join(" · ") || "—"],
+  ]
+  const html = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;max-width:480px;">
+    <p style="margin:0 0 4px;color:#6b7280;font-size:12px;letter-spacing:1px;font-weight:700;">NC UNITED BLUE</p>
+    <h2 style="margin:0 0 6px;color:#03154C;font-size:20px;">${params.athleteName} registered</h2>
+    <p style="margin:0 0 16px;font-size:26px;font-weight:700;color:#03154C;">Shirt: ${size}</p>
+    <table cellpadding="0" cellspacing="0" style="font-size:14px;color:#374151;">
+      ${facts.map(([k, v]) => `<tr><td style="padding:2px 14px 2px 0;color:#6b7280;">${k}</td><td style="padding:2px 0;font-weight:600;">${v}</td></tr>`).join("")}
+    </table>
+  </div>`
+  const text = `${params.athleteName} registered.\nShirt: ${size}\n` + facts.map(([k, v]) => `${k}: ${v}`).join("\n")
+  try {
+    const { Resend } = await import("resend")
+    const resend = new Resend(process.env.RESEND_API_KEY)
+    const { error } = await resend.emails.send({
+      from: FROM_BLUE,
+      to: BLUE_CONTACT_EMAIL,
+      subject: `Blue registration — ${params.athleteName} — shirt ${size}`,
+      html,
+      text,
+    })
+    if (error) return { success: false, error: String((error as { message?: string }).message ?? error) }
+    return { success: true }
+  } catch (caught) {
+    return { success: false, error: caught instanceof Error ? caught.message : "Send failed" }
+  }
+}

@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
 import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
 import { NC_UNITED_LIABILITY_WAIVER_TYPE, NC_UNITED_LIABILITY_WAIVER_VERSION } from "@/lib/nc-united-liability-waiver"
+import { sendBlueRegistrationAlert } from "@/lib/blue-acceptance-email"
 
 export const dynamic = "force-dynamic"
 
@@ -346,6 +347,16 @@ export async function POST(request: NextRequest) {
     if (!session.url) {
       return NextResponse.json({ error: "Could not create checkout session." }, { status: 500 })
     }
+
+    /* Staff need the shirt size the moment it is given, not a click hunt on a detail page. */
+    void sendBlueRegistrationAlert({
+      athleteName: `${athlete.firstName.trim()} ${athlete.lastName.trim()}`.trim(),
+      tshirtSize: tshirtSize,
+      graduationYear: athlete.graduationYear ?? null,
+      highSchool: athlete.highSchool?.trim() || null,
+      parentEmail: parent.email?.trim() || null,
+      parentPhone: parent.phone?.trim() || null,
+    }).catch(() => {})
 
     return NextResponse.json({
       success: true,
