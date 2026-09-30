@@ -24,6 +24,9 @@ type AthleteHit = {
  * instead of describing one. Someone with no profile is told to make one first; that is the only
  * way the commitment can appear on their page afterwards.
  */
+/** The NCAA weight classes. College starts at 125, which is the point of asking. */
+const COLLEGE_WEIGHTS = ["125", "133", "141", "149", "157", "165", "174", "184", "197", "285"] as const
+
 export function CommitmentForm({ colleges }: { colleges: readonly CollegeOption[] }) {
   const [query, setQuery] = useState("")
   const [hits, setHits] = useState<AthleteHit[]>([])
@@ -33,6 +36,7 @@ export function CommitmentForm({ colleges }: { colleges: readonly CollegeOption[
 
   const [collegeId, setCollegeId] = useState("")
   const [major, setMajor] = useState("")
+  const [collegeWeight, setCollegeWeight] = useState("")
   const [photoUrl, setPhotoUrl] = useState("")
   const [uploading, setUploading] = useState(false)
 
@@ -112,6 +116,7 @@ export function CommitmentForm({ colleges }: { colleges: readonly CollegeOption[
           weightClass: athlete.weightClass,
           college: college.name,
           division: college.division,
+          collegeWeightClass: collegeWeight || null,
           intendedMajor: major.trim() || null,
           commitPictureUrl: photoUrl || null,
         }),
@@ -235,7 +240,27 @@ export function CommitmentForm({ colleges }: { colleges: readonly CollegeOption[
           : "Division is filled in from the college, so you don't have to know it."}
       </p>
 
-      <Step n={3} label="What do you plan to study?" optional />
+      {/*
+        * The weight a college programme will actually use him at. The high-school class comes
+        * across with the athlete and is often two or three weights below it, and college starts
+        * at 125 - so a 113lb senior's card said nothing a coach could recruit against.
+        */}
+      <Step n={3} label="What weight do you anticipate competing at in college?" optional />
+      <select
+        value={collegeWeight}
+        onChange={(e) => setCollegeWeight(e.target.value)}
+        disabled={!athlete}
+        className="mb-8 w-full rounded-lg border border-white/10 bg-[#0A1628] px-4 py-3 text-white outline-none focus:border-[#D3B574] disabled:opacity-40"
+      >
+        <option value="">Not sure yet</option>
+        {COLLEGE_WEIGHTS.map((w) => (
+          <option key={w} value={w}>
+            {w} lbs
+          </option>
+        ))}
+      </select>
+
+      <Step n={4} label="What do you plan to study?" optional />
       <input
         value={major}
         onChange={(e) => setMajor(e.target.value)}
@@ -244,7 +269,7 @@ export function CommitmentForm({ colleges }: { colleges: readonly CollegeOption[
         className="mb-8 w-full rounded-lg border border-white/10 bg-[#0A1628] px-4 py-3 text-white outline-none placeholder:text-white/40 focus:border-[#D3B574] disabled:opacity-40"
       />
 
-      <Step n={4} label="Signing photo" optional />
+      <Step n={5} label="Signing photo" optional />
       <div className="mb-8">
         <input
           ref={fileInput}

@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
         athlete_id: data.athleteId || null,
         college: data.college,
         division: data.division || null,
+        college_weight_class: data.collegeWeightClass || null,
         intended_major: data.intendedMajor || null,
         achievements: data.achievements || null,
         notes: data.notes || null,
