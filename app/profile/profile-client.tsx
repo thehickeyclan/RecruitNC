@@ -656,13 +656,13 @@ export function ProfileClient() {
             </TabsTrigger>
             <TabsTrigger
               value="family"
-              title="Family and athletes"
+              title="My wrestlers"
               className="rounded-lg py-2.5 px-2 text-xs sm:text-sm font-semibold text-gray-400 transition-all data-[state=active]:bg-[#D3B574] data-[state=active]:text-[#0A1628] data-[state=active]:shadow-md data-[state=inactive]:hover:bg-[#1e3a5f] data-[state=inactive]:hover:text-white"
             >
               <span className="inline-flex items-center justify-center gap-1.5 min-w-0">
                 <Users className="h-4 w-4 shrink-0" />
-                <span className="hidden sm:inline truncate">Family &amp; athletes</span>
-                <span className="sm:hidden">Family</span>
+                <span className="hidden sm:inline truncate">My wrestlers</span>
+                <span className="sm:hidden">Wrestlers</span>
               </span>
             </TabsTrigger>
             {showWalletTab ? (
@@ -681,6 +681,30 @@ export function ProfileClient() {
           </TabsList>
 
         <TabsContent value="account" className="mt-0 space-y-6 focus-visible:outline-none">
+            {/*
+              * "Profile" means two different things here and parents kept landing on the wrong
+              * one: this tab is their own login and contact details, while the page a college
+              * coach reads belongs to their wrestler and lives a tab away. Said plainly, with
+              * the wrestlers named, rather than left to be inferred from a tab called Account.
+              */}
+            {linkedAthletes.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => onProfileTabChange("family")}
+                className="flex w-full items-center justify-between gap-3 rounded-xl border border-[#D3B574]/40 bg-[#D3B574]/[0.07] px-4 py-3 text-left transition-colors hover:bg-[#D3B574]/[0.12]"
+              >
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-[#D3B574]">
+                    Looking for {linkedAthletes.length === 1 ? `${linkedAthletes[0]!.name.split(" ")[0]}'s` : "your wrestlers’"} profile?
+                  </span>
+                  <span className="mt-0.5 block truncate text-xs text-gray-400">
+                    This tab is your own account. The profile college coaches read is under My wrestlers
+                    {linkedAthletes.length === 1 ? "" : ` — ${linkedAthletes.map((a) => a.name.split(" ")[0]).join(", ")}`}.
+                  </span>
+                </span>
+                <Users className="h-5 w-5 shrink-0 text-[#D3B574]" />
+              </button>
+            ) : null}
             <Card className="border-border shadow-md shadow-[#003366]/5 overflow-hidden">
               <div className="h-1 w-full bg-gradient-to-r from-[#03154C] via-[#B31B1B] to-[#CBAF5D]" aria-hidden />
               <CardHeader>
