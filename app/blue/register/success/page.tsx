@@ -1,11 +1,46 @@
 "use client"
 
+import { useEffect, useState } from "react"
+
 import { HardLink } from "@/components/hard-link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { CreditCard, Calendar, Users, CheckCircle2, ExternalLink } from "lucide-react"
 
 export default function BlueRegisterSuccessPage() {
+  /*
+   * Land them on the wrestler, not on their own settings.
+   *
+   * This pointed at /profile - the account page - so the first thing after paying was "go and
+   * find your son's page somewhere". Registration has just resolved or created that athlete and
+   * linked him to this account, so the page he needs is knowable: take the most recently touched
+   * linked wrestler, which is the one that just came through.
+   */
+  const [athlete, setAthlete] = useState<{ id: string; name: string } | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    fetch("/api/profile/linked-athletes", { credentials: "include", cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled) return
+        const rows: Array<{ id: string; name: string; updatedAt?: string | null }> = Array.isArray(data?.athletes)
+          ? data.athletes
+          : []
+        if (!rows.length) return
+        /* Registration just wrote to this row, so the most recently touched one is the new member. */
+        const newest = [...rows].sort((a, b) =>
+          String(b.updatedAt ?? "").localeCompare(String(a.updatedAt ?? "")),
+        )[0]!
+        setAthlete({ id: String(newest.id), name: String(newest.name ?? "your wrestler") })
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const firstName = athlete?.name.split(" ")[0] ?? null
+
   return (
     <div className="min-h-screen bg-[#0A1628] py-10 px-4">
       <div className="max-w-2xl mx-auto space-y-6">
@@ -24,14 +59,17 @@ export default function BlueRegisterSuccessPage() {
           </CardHeader>
           <CardContent className="space-y-6">
             <section className="rounded-lg border-2 border-[#03154C]/15 bg-[#03154C]/5 p-4 space-y-3">
-              <p className="font-semibold text-[#03154C] text-lg">Set up your athlete&apos;s recruiting profile</p>
-              <p className="text-sm text-gray-700">
-                College coaches search RecruitNC for NC wrestlers. Sign in and complete your athlete&apos;s profile — GPA,
-                weight, highlights, and contact info.
+              <p className="font-semibold text-[#03154C] text-lg">
+                {firstName ? `Finish ${firstName}'s profile` : "Finish your wrestler's profile"}
               </p>
-              <HardLink href="/profile">
+              <p className="text-sm text-gray-700">
+                College coaches search RecruitNC for North Carolina wrestlers. What you entered at
+                registration is already on {firstName ? `${firstName}'s` : "his"} page &mdash; add the
+                film, GPA and anything else a coach would want next.
+              </p>
+              <HardLink href={athlete ? `/view-profile?id=${encodeURIComponent(athlete.id)}` : "/profile"}>
                 <Button className="w-full sm:w-auto bg-[#03154C] hover:bg-[#0a2571] text-white">
-                  Open Profile — recruiting setup
+                  {firstName ? `Open ${firstName}'s profile` : "Open the profile"}
                 </Button>
               </HardLink>
             </section>
