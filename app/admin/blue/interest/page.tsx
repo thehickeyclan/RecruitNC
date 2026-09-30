@@ -236,6 +236,29 @@ export default function AdminBlueInterestPage() {
    * sends the welcome with the steps in it, and marks the row. The Create invite flow below
    * stays for the cases that need a hand-written note instead.
    */
+  /*
+   * A hundred and four rows, of which most are finished business - texted, invited, enrolled or
+   * declined - and the new ones arrive at the bottom of all of it. The list opens on what still
+   * needs a decision; the rest is a click away rather than in the way.
+   */
+  const [view, setView] = useState<"open" | "invited" | "done" | "all">("open")
+
+  const isDone = (r: Submission) =>
+    r.enrolled || r.status === "registered" || r.status === "declined"
+  const isInvited = (r: Submission) => !isDone(r) && (r.invite_sent || r.status === "invite_sent")
+  const isOpen = (r: Submission) => !isDone(r) && !isInvited(r)
+
+  const counts = {
+    open: submissions.filter(isOpen).length,
+    invited: submissions.filter(isInvited).length,
+    done: submissions.filter(isDone).length,
+    all: submissions.length,
+  }
+
+  const visible = submissions.filter((r) =>
+    view === "all" ? true : view === "open" ? isOpen(r) : view === "invited" ? isInvited(r) : isDone(r),
+  )
+
   const [acceptingId, setAcceptingId] = useState<string | null>(null)
   const acceptIntoBlue = async (row: Submission) => {
     if (!row.parent_email?.trim()) {
@@ -302,7 +325,7 @@ export default function AdminBlueInterestPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div className="min-h-screen bg-[#0A1628] p-4 text-slate-100 md:p-8">
       <div className="mx-auto max-w-6xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -312,12 +335,12 @@ export default function AdminBlueInterestPage() {
               </Link>
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-[#13294B] flex items-center gap-2">
+              <h1 className="flex items-center gap-2 text-2xl font-bold text-white">
                 <Users className="h-7 w-7 text-[#D3B574]" />
                 Blue Interest Forms
               </h1>
-              <p className="text-sm text-gray-600">
-                State qualifier interest. Create invites and track who has been invited and who enrolled.
+              <p className="text-sm text-slate-400">
+                State qualifier interest. Accept a family and the welcome goes out with their private registration link.
               </p>
             </div>
           </div>
@@ -345,11 +368,11 @@ export default function AdminBlueInterestPage() {
           <BlueAdminAuthBanner returnTo="/admin/blue/interest" />
         )}
 
-        <Card>
+        <Card className="border-[#1e3a5f] bg-[#0F1E32]">
           <CardHeader>
-            <CardTitle>Submissions</CardTitle>
-            <CardDescription>
-              {submissions.length} submission{submissions.length !== 1 ? "s" : ""}. Checkboxes show invite sent and enrolled.
+            <CardTitle className="text-white">Submissions</CardTitle>
+            <CardDescription className="text-slate-400">
+              Showing {visible.length} of {submissions.length}. Checkboxes show invite sent and enrolled.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -360,7 +383,7 @@ export default function AdminBlueInterestPage() {
                   <Card className="mb-6 border-amber-200 bg-amber-50">
                     <CardHeader>
                       <CardTitle className="text-base">Create the table in Supabase</CardTitle>
-                      <CardDescription>
+                      <CardDescription className="text-slate-400">
                         In Supabase Dashboard go to SQL Editor and run the following. Then click Refresh above.
                       </CardDescription>
                     </CardHeader>
@@ -411,9 +434,15 @@ alter table public.blue_express_interest
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-[#13294B]" />
               </div>
-            ) : submissions.length === 0 ? (
+            ) : visible.length === 0 ? (
               <div className="py-8 space-y-4">
-                <p className="text-center text-gray-500">No submissions yet.</p>
+                <p className="text-center text-slate-400">
+                  {submissions.length === 0
+                    ? "No submissions yet."
+                    : view === "open"
+                      ? "Nothing waiting — every submission has been invited, enrolled or declined."
+                      : "Nothing in this view."}
+                </p>
                 {zeroRowsHint && (
                   <div className="max-w-xl mx-auto rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
                     <p className="font-medium">Seeing zero rows but you have data in Supabase?</p>
@@ -423,9 +452,33 @@ alter table public.blue_express_interest
               </div>
             ) : (
               <div className="overflow-x-auto">
+                {/* Four states, each with its count, so the size of the queue is visible. */}
+                <div className="mb-4 flex flex-wrap gap-2">
+                  {(
+                    [
+                      ["open", `Needs action (${counts.open})`],
+                      ["invited", `Invited (${counts.invited})`],
+                      ["done", `Enrolled or closed (${counts.done})`],
+                      ["all", `All (${counts.all})`],
+                    ] as const
+                  ).map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setView(key)}
+                      className={`rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
+                        view === key
+                          ? "bg-[#D3B574] text-[#0A1628]"
+                          : "bg-white/10 text-slate-300 hover:bg-white/20"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="border-[#1e3a5f] hover:bg-transparent [&>th]:text-slate-300">
                       <TableHead className="w-[120px]">Status</TableHead>
                       <TableHead className="w-[90px]">Regional</TableHead>
                       <TableHead className="w-[90px]">Placement</TableHead>
@@ -445,8 +498,8 @@ alter table public.blue_express_interest
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {submissions.map((row) => (
-                      <TableRow key={row.id}>
+                    {visible.map((row) => (
+                      <TableRow key={row.id} className="border-[#1e3a5f] hover:bg-white/[0.04]">
                         <TableCell>
                           <Select
                             value={row.status ?? BLANK_VALUE}
@@ -545,9 +598,9 @@ alter table public.blue_express_interest
                         </TableCell>
                         <TableCell className="text-right">
                           {row.enrolled ? (
-                            <span className="text-sm text-green-600">Enrolled</span>
+                            <span className="text-sm text-emerald-400">Enrolled</span>
                           ) : row.invite_sent ? (
-                            <Link href="/admin/blue/invites" className="text-sm text-[#03154C] hover:underline">
+                            <Link href="/admin/blue/invites" className="text-sm text-[#D3B574] hover:underline">
                               View invite
                             </Link>
                           ) : (
