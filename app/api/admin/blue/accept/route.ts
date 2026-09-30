@@ -3,7 +3,7 @@ import { randomBytes } from "node:crypto"
 
 import { requireAdmin } from "@/lib/admin-auth"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { sendBlueAcceptanceEmail } from "@/lib/blue-acceptance-email"
+import { renderBlueAcceptanceEmail, sendBlueAcceptanceEmail } from "@/lib/blue-acceptance-email"
 
 /**
  * Accept a family into Blue: one button, one email.
@@ -15,6 +15,34 @@ import { sendBlueAcceptanceEmail } from "@/lib/blue-acceptance-email"
  */
 
 export const dynamic = "force-dynamic"
+
+/**
+ * GET: the exact email, rendered, without sending it or minting anything.
+ *
+ * Nothing about an email is obvious from its code, and this one carries eight steps and a
+ * family's only registration link. Read it first.
+ */
+export async function GET(request: Request) {
+  const gate = await requireAdmin()
+  if (!gate.ok) return NextResponse.json({ error: gate.error }, { status: gate.status })
+
+  const interestId = new URL(request.url).searchParams.get("interestId")?.trim()
+  let athleteName: string | null = null
+  if (interestId) {
+    const { data } = await createAdminClient()
+      .from("blue_express_interest")
+      .select("first_name, last_name")
+      .eq("id", interestId)
+      .maybeSingle()
+    athleteName = [data?.first_name, data?.last_name].filter(Boolean).join(" ").trim() || null
+  }
+  // A sample link: previewing must never burn a real one.
+  const { html } = renderBlueAcceptanceEmail({
+    athleteName,
+    registerUrl: `${process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin}/blue/register?invite=PREVIEW`,
+  })
+  return new NextResponse(html, { headers: { "Content-Type": "text/html; charset=utf-8" } })
+}
 
 const INVITE_DAYS = 30
 

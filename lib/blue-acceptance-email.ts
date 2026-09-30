@@ -64,6 +64,12 @@ function steps(registerUrl: string | null): Step[] {
       cta: "@ncwrestlingunited",
     },
     {
+      title: "Kit up at the NC United store",
+      body: "Singlets, tees, hoodies and warmups. Your free member shirt comes separately - this is everything else.",
+      href: `${SITE_URL}/store-app`,
+      cta: "Visit the store",
+    },
+    {
       title: "Your rankings access is included",
       body: "Every class ranking and the Top 75 College Prospects come with Blue. No separate subscription.",
       href: `${SITE_URL}/public-rankings`,
@@ -94,14 +100,13 @@ function stepHtml(s: Step, n: number): string {
   </tr>`
 }
 
-export async function sendBlueAcceptanceEmail(params: {
-  to: string
+export const BLUE_ACCEPTANCE_SUBJECT = "Welcome to NC United Blue"
+
+/** Rendered separately from sending so the admin can read the real thing before it goes. */
+export function renderBlueAcceptanceEmail(params: {
   athleteName?: string | null
   registerUrl?: string | null
-}): Promise<{ success: boolean; error?: string }> {
-  if (!process.env.RESEND_API_KEY) {
-    return { success: false, error: "Email service not configured" }
-  }
+}): { subject: string; html: string; text: string } {
   const athlete = (params.athleteName || "").trim()
   const list = steps(params.registerUrl?.trim() || null)
 
@@ -154,13 +159,25 @@ export async function sendBlueAcceptanceEmail(params: {
     `Questions: ${BLUE_CONTACT_EMAIL} or text Matt at ${BLUE_CONTACT_CELL}.`,
   ].join("\n")
 
+  return { subject: BLUE_ACCEPTANCE_SUBJECT, html, text }
+}
+
+export async function sendBlueAcceptanceEmail(params: {
+  to: string
+  athleteName?: string | null
+  registerUrl?: string | null
+}): Promise<{ success: boolean; error?: string }> {
+  if (!process.env.RESEND_API_KEY) {
+    return { success: false, error: "Email service not configured" }
+  }
+  const { subject, html, text } = renderBlueAcceptanceEmail(params)
   try {
     const { Resend } = await import("resend")
     const resend = new Resend(process.env.RESEND_API_KEY)
     const { error } = await resend.emails.send({
       from: FROM_BLUE,
       to: params.to,
-      subject: "Welcome to NC United Blue",
+      subject,
       html,
       text,
       replyTo: BLUE_CONTACT_EMAIL,

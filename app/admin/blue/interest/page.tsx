@@ -561,6 +561,15 @@ alter table public.blue_express_interest
                                 <Mail className="h-3 w-3 mr-1" />
                                 {acceptingId === row.id ? "Sending…" : "Accept & send welcome"}
                               </Button>
+                              <Button variant="outline" size="sm" asChild>
+                                <a
+                                  href={`/api/admin/blue/accept?interestId=${encodeURIComponent(row.id)}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                >
+                                  Preview
+                                </a>
+                              </Button>
                               <Button variant="outline" size="sm" onClick={() => openCreateInvite(row)}>
                                 Invite link only
                               </Button>
