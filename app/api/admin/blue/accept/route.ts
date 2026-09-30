@@ -36,12 +36,16 @@ export async function GET(request: Request) {
       .maybeSingle()
     athleteName = [data?.first_name, data?.last_name].filter(Boolean).join(" ").trim() || null
   }
-  // A sample link: previewing must never burn a real one.
-  const { html } = renderBlueAcceptanceEmail({
-    athleteName,
-    registerUrl: `${process.env.NEXT_PUBLIC_APP_URL || new URL(request.url).origin}/blue/register?invite=PREVIEW`,
-  })
-  return new NextResponse(html, { headers: { "Content-Type": "text/html; charset=utf-8" } })
+  /*
+   * The registration button is inert here. It used to carry a PREVIEW token into the real page,
+   * which answered "Invalid or expired link" - so the one button worth checking was the one that
+   * looked broken. Every other link is live and worth clicking.
+   */
+  const { html } = renderBlueAcceptanceEmail({ athleteName, registerUrl: "#registration-link" })
+  const banner = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;background:#1f2937;color:#fff;padding:12px 16px;font-size:13px;text-align:center;">
+    Preview${athleteName ? ` &mdash; ${athleteName}` : ""}. Nothing has been sent. The registration button is disabled here; the real email carries that family&rsquo;s private link.
+  </div>`
+  return new NextResponse(banner + html, { headers: { "Content-Type": "text/html; charset=utf-8" } })
 }
 
 const INVITE_DAYS = 30

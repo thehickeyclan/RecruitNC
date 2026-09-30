@@ -18,7 +18,7 @@ export const BLUE_APP_STORE_URL = "https://apps.apple.com/app/id6803202791"
 export const BLUE_CONTACT_EMAIL = "info@ncwrestlingunited.com"
 export const BLUE_CONTACT_CELL = "631.662.5409"
 /* Absolute, because an email client has no site to resolve a relative path against. */
-export const BLUE_LOGO_URL = `${SITE_URL}/images/nc-united-logo-white.png`
+export const BLUE_LOGO_URL = `${SITE_URL}/images/nc-united-logo-official.png`
 
 type Step = { title: string; body: string; href?: string; cta?: string }
 
@@ -42,10 +42,16 @@ function steps(registerUrl: string | null): Step[] {
       cta: "Join the GroupMe",
     },
     {
-      title: "Set up your wrestler's profile",
-      body: "Claim the profile if it already exists, or create one. This is the page college coaches read - results, film, academics.",
-      href: `${SITE_URL}/profile`,
-      cta: "Open my account",
+      title: "Create your RecruitNC logins",
+      body: "One for you and one for your wrestler - both free. Parents pick \u201cParent\u201d at sign-up so you can manage his page; he signs up as \u201cAthlete\u201d with his own email.",
+      href: `${SITE_URL}/auth/signup`,
+      cta: "Create an account",
+    },
+    {
+      title: "Create his athlete profile",
+      body: "Free, and it is the page college coaches actually read - results, film, GPA. If a profile already exists for him, claim it instead of making a second one.",
+      href: `${SITE_URL}/athletes`,
+      cta: "Find or create the profile",
     },
     {
       title: "Check the calendar",
@@ -115,8 +121,8 @@ export function renderBlueAcceptanceEmail(params: {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f7;padding:24px 12px;">
     <tr><td align="center">
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background:#ffffff;border-radius:10px;overflow:hidden;">
-        <tr><td style="background:#03154C;padding:26px 28px;">
-          <img src="${BLUE_LOGO_URL}" alt="NC United" width="132" style="display:block;border:0;margin:0 0 14px;max-width:132px;height:auto;" />
+        <tr><td align="center" style="background:#03154C;padding:26px 28px;text-align:center;">
+          <img src="${BLUE_LOGO_URL}" alt="NC United" width="76" style="display:block;border:0;margin:0 auto 14px;max-width:76px;height:auto;" />
           <p style="margin:0;color:#D3B574;font-size:11px;letter-spacing:2px;font-weight:700;">NC UNITED BLUE</p>
           <h1 style="margin:8px 0 0;color:#ffffff;font-size:24px;">You&rsquo;re in${athlete ? `, ${athlete}` : ""}.</h1>
           ${
