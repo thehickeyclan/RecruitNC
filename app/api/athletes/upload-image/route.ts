@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAthletesColumnNames } from "@/lib/athletes-schema"
 import { nanoid } from "nanoid"
+import { resolveAthleteOwnership } from "@/lib/mobile/athlete-ownership"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -46,6 +47,24 @@ export async function POST(request: NextRequest) {
       .single()
     if (athleteErr) {
       return NextResponse.json({ error: "Athlete not found" }, { status: 404 })
+    }
+
+    /*
+     * The same rule as /api/athletes/[id]/self-edit: the athlete, a linked parent, or an admin.
+     * This only checked that someone was signed in, so any account could replace any wrestler's
+     * photo by posting here directly - the edit button being hidden was the only thing in the way.
+     */
+    const ownership = await resolveAthleteOwnership(adminSupabase, athleteId, user.id)
+    if (!ownership.ok) {
+      const { data: viewerProfile } = await adminSupabase
+        .from("user_profiles")
+        .select("is_admin, role")
+        .eq("user_id", user.id)
+        .maybeSingle()
+      const isAdmin = viewerProfile?.is_admin === true || viewerProfile?.role === "admin"
+      if (!isAdmin) {
+        return NextResponse.json({ error: ownership.error }, { status: ownership.status })
+      }
     }
 
     const uniqueId = nanoid(8)
