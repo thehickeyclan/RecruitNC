@@ -24,12 +24,22 @@ type Step = { title: string; body: string; href?: string; cta?: string }
 
 function steps(registerUrl: string | null): Step[] {
   return [
-    /* Registration leads: it is the only step with a deadline behind it. */
+    /*
+     * Account first, then registration. The registration page signs you in and pulls your
+     * details across, so a family sent straight to it hits a login wall for an account they
+     * have not made - which reads as a broken link, not as a step.
+     */
+    {
+      title: "Create your RecruitNC account",
+      body: "Free, and you need it before you can register - the registration page signs you in and carries your details across. Pick \u201cParent\u201d so you can manage his page. Your wrestler should make his own too, as \u201cAthlete\u201d, with his own email.",
+      href: `${SITE_URL}/auth/signup`,
+      cta: "Create an account",
+    },
     ...(registerUrl
       ? [
           {
             title: "Complete your registration",
-            body: "One private link, just for your family. It covers the waiver, billing, and the size for your free NC United Blue shirt. Start here - the rest can wait.",
+            body: "One private link, just for your family. It covers the waiver, billing, and the size for your free NC United Blue shirt. Sign in with the account you just made.",
             href: registerUrl,
             cta: "Complete registration",
           },
@@ -40,12 +50,6 @@ function steps(registerUrl: string | null): Step[] {
       body: "Where practice changes, last-minute notes and everything else get posted first. Turn notifications on.",
       href: BLUE_GROUPME_URL,
       cta: "Join the GroupMe",
-    },
-    {
-      title: "Create your RecruitNC accounts",
-      body: "One account for you and one for your wrestler, both free. Pick \u201cParent\u201d at sign-up so you can manage his page; he signs up as \u201cAthlete\u201d with his own email. An account is your login - it is not his wrestling profile, which comes next.",
-      href: `${SITE_URL}/auth/signup`,
-      cta: "Create an account",
     },
     {
       title: "Create his wrestling profile",
@@ -133,7 +137,7 @@ export function renderBlueAcceptanceEmail(params: {
                 ? `<p style="margin:18px 0 0;"><span style="display:inline-block;background:#6b7280;color:#e5e7eb;padding:13px 26px;border-radius:6px;font-weight:700;font-size:15px;">Complete your registration</span></p>
                    <p style="margin:8px 0 0;color:#ffffff;opacity:.7;font-size:12px;">Disabled in preview &mdash; the real email carries this family&rsquo;s private link.</p>`
                 : `<p style="margin:18px 0 0;"><a href="${params.registerUrl.trim()}" style="display:inline-block;background:#D3B574;color:#03154C;padding:13px 26px;text-decoration:none;border-radius:6px;font-weight:700;font-size:15px;">Complete your registration</a></p>
-                   <p style="margin:8px 0 0;color:#ffffff;opacity:.7;font-size:12px;">This link is just for your family.</p>`
+                   <p style="margin:8px 0 0;color:#ffffff;opacity:.7;font-size:12px;">Just for your family &mdash; make your free account first, step 1 below.</p>`
               : ""
           }
         </td></tr>
