@@ -1,4 +1,4 @@
-import { PUBLIC_RANKINGS_MAX_BY_YEAR, PUBLISHED_PUBLIC_RANKINGS_YEARS, PUBLIC_TOP_PROSPECTS_RELEASED, PUBLIC_TOP_75_COLLEGE_RELEASED, RANKED_CLASS_YEARS } from "@/lib/public-rankings-cap"
+import { PUBLIC_RANKINGS_MAX_BY_YEAR, PUBLISHED_PUBLIC_RANKINGS_YEARS, PUBLIC_TOP_75_COLLEGE_RELEASED, RANKED_CLASS_YEARS } from "@/lib/public-rankings-cap"
 
 /**
  * One switcher across every ranking board.
@@ -23,13 +23,9 @@ export function RankingsNav({
   const years = (isAdmin ? RANKED_CLASS_YEARS : PUBLISHED_PUBLIC_RANKINGS_YEARS).filter(
     (y) => PUBLIC_RANKINGS_MAX_BY_YEAR[y] != null,
   )
-  const showProspects = isAdmin || PUBLIC_TOP_PROSPECTS_RELEASED
 
   const tabs: Array<{ href: string; label: string; key: number | "prospects" | "top-100" }> = [
     ...years.map((y) => ({ href: `/public-rankings/${y}`, label: `Class of ${y}`, key: y as number })),
-    ...(showProspects
-      ? [{ href: "/public-rankings/prospects", label: "Top 75 Ranked (retired)", key: "prospects" as const }]
-      : []),
     // Classes of 2027 and 2028, reaching past each class's published cut.
     ...(isAdmin || PUBLIC_TOP_75_COLLEGE_RELEASED
       ? [{ href: "/public-rankings/college-prospects", label: "Top 75 College Prospects", key: "top-100" as const }]

@@ -5,11 +5,9 @@ import { resolveRequestUserId } from "@/lib/request-user"
 import { resolveRankingViewerForUser } from "@/lib/ranking-access"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { loadPublicClassRanking } from "@/lib/rankings/public-rankings-view"
-import { loadTopProspects } from "@/lib/rankings/prospects-view"
 import { loadTopHundred } from "@/lib/rankings/top-100-view"
 import {
   PUBLISHED_PUBLIC_RANKINGS_YEARS,
-  PUBLIC_TOP_PROSPECTS_RELEASED,
   PUBLIC_TOP_75_COLLEGE_RELEASED,
 } from "@/lib/public-rankings-cap"
 
@@ -91,18 +89,11 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  if (isAdmin || PUBLIC_TOP_PROSPECTS_RELEASED) {
-    const prospects = await loadTopProspects("Male")
-    if (prospects.published && prospects.athletes.length > 0) {
-      boards.push({
-        key: "prospects",
-        title: `Top ${prospects.cap} Ranked Prospects`,
-        cap: prospects.cap,
-        published: prospects.published,
-        athletes: prospects.athletes,
-      })
-    }
-  }
+  /*
+   * The Top 75 Ranked Prospects is retired and deliberately absent here, for admins too. On the
+   * website an admin previewing an unreleased board is useful; in the app it just puts two lists
+   * called "Top 75" in front of the person least able to tell them apart from a phone.
+   */
 
   return NextResponse.json({ ok: true, entitled: true, boards })
 }

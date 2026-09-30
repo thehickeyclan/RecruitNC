@@ -1,4 +1,4 @@
-import { ArrowRight, Award, GraduationCap, ListOrdered, Users } from "lucide-react"
+import { ArrowRight, GraduationCap, ListOrdered, Users } from "lucide-react"
 import { redirect } from "next/navigation"
 
 import { HardLink } from "@/components/hard-link"
@@ -9,7 +9,6 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import {
   PUBLISHED_PUBLIC_RANKINGS_YEARS,
-  PUBLIC_TOP_PROSPECTS_RELEASED,
   PUBLIC_TOP_75_COLLEGE_RELEASED,
 } from "@/lib/public-rankings-cap"
 
@@ -36,13 +35,6 @@ const rankingLinks = [
     title: "Class of 2029",
     description: "The published Top 15.",
     icon: Users,
-  },
-  {
-    href: "/public-rankings/prospects",
-    eyebrow: "Across all classes",
-    title: "Top 75 Ranked Prospects",
-    description: "Every ranked wrestler, one list.",
-    icon: Award,
   },
   {
     href: "/public-rankings/college-prospects",
@@ -77,7 +69,6 @@ export default async function PublicRankingsHomepage({
   const isAdmin = viewer.isAdmin === true
   const releasedLinks = rankingLinks.filter(({ href }) => {
     if (isAdmin) return true
-    if (href === "/public-rankings/prospects") return PUBLIC_TOP_PROSPECTS_RELEASED
     if (href === "/public-rankings/college-prospects") return PUBLIC_TOP_75_COLLEGE_RELEASED
     const year = Number(href.split("/").at(-1))
     return PUBLISHED_PUBLIC_RANKINGS_YEARS.includes(year)
