@@ -559,7 +559,7 @@ export default function BlueRegisterPage() {
                     {noLinkedAthletes
                       ? invitePrefill
                         ? "We pulled your wrestler's info from your Blue application — fill any gaps below."
-                        : "Link your athlete on Profile first, or enter their info below."
+                        : "Find your wrestler below, or add him if he is new to us."
                       : "Select your wrestler — we already have their RecruitNC profile."}
                   </CardDescription>
                 </div>
@@ -712,6 +712,18 @@ export default function BlueRegisterPage() {
                   </div>
                 )}
 
+                {/*
+                  * These fields are the wrestling profile. A family typing a GPA into a billing
+                  * form should know it lands on the page college coaches read, not in an invoice.
+                  */}
+                {((noLinkedAthletes && (foundAthlete || skipSearch)) ||
+                  (selectedAthleteId && athleteMissing.length > 0)) && (
+                  <p className="rounded-md border border-[#03154C]/15 bg-[#F4F7FF] p-3 text-sm text-[#03154C]">
+                    What you enter here builds your wrestler&rsquo;s profile &mdash; the page college
+                    coaches read. You can add film, results and more to it any time afterwards.
+                  </p>
+                )}
+
                 {(noLinkedAthletes &&
                   (foundAthlete || skipSearch) &&
                   (!invitePrefill || athleteMissing.length > 0)) ||
@@ -757,30 +769,30 @@ export default function BlueRegisterPage() {
                     )}
                     {athleteMissing.includes("wrestlingClub") && (
                       <div className="space-y-2">
-                        <Label>Club</Label>
-                        <Input value={athlete.wrestlingClub} onChange={(e) => setAthlete((a) => ({ ...a, wrestlingClub: e.target.value }))} required disabled={loading} />
+                        <Label>Club <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                        <Input value={athlete.wrestlingClub} onChange={(e) => setAthlete((a) => ({ ...a, wrestlingClub: e.target.value }))} disabled={loading} />
                       </div>
                     )}
                     {(athleteMissing.includes("cellPhone") || athleteMissing.includes("email")) && (
                       <div className="grid gap-4 sm:grid-cols-2">
                         {athleteMissing.includes("cellPhone") && (
                           <div className="space-y-2">
-                            <Label>Cell phone</Label>
-                            <Input type="tel" value={athlete.cellPhone} onChange={(e) => setAthlete((a) => ({ ...a, cellPhone: formatPhoneInput(e.target.value) }))} required disabled={loading} />
+                            <Label>Cell phone <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                            <Input type="tel" value={athlete.cellPhone} onChange={(e) => setAthlete((a) => ({ ...a, cellPhone: formatPhoneInput(e.target.value) }))} disabled={loading} />
                           </div>
                         )}
                         {athleteMissing.includes("email") && (
                           <div className="space-y-2">
-                            <Label>Email</Label>
-                            <Input type="email" value={athlete.email} onChange={(e) => setAthlete((a) => ({ ...a, email: e.target.value }))} required disabled={loading} />
+                            <Label>Email <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                            <Input type="email" value={athlete.email} onChange={(e) => setAthlete((a) => ({ ...a, email: e.target.value }))} disabled={loading} />
                           </div>
                         )}
                       </div>
                     )}
                     {athleteMissing.includes("gpa") && (
                       <div className="space-y-2">
-                        <Label>GPA</Label>
-                        <Input value={athlete.gpa} onChange={(e) => setAthlete((a) => ({ ...a, gpa: e.target.value }))} required disabled={loading} />
+                        <Label>GPA <span className="font-normal text-muted-foreground">(optional)</span></Label>
+                        <Input value={athlete.gpa} onChange={(e) => setAthlete((a) => ({ ...a, gpa: e.target.value }))} disabled={loading} />
                       </div>
                     )}
                   </div>
@@ -809,6 +821,13 @@ export default function BlueRegisterPage() {
               </div>
 
               <div className="space-y-3 border-t pt-4">
+                <div>
+                  <Label className="text-[#03154C]">Waiver and release of liability</Label>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Required to take part in NC United Blue practices and events. Read it in full
+                    below, then tick to sign &mdash; we record the version you signed and the date.
+                  </p>
+                </div>
                 <div className="max-h-[180px] overflow-y-auto rounded-md border bg-muted/30 p-3 text-xs whitespace-pre-wrap">
                   {NC_UNITED_LIABILITY_WAIVER_TEXT}
                 </div>
