@@ -161,8 +161,14 @@ async function getUnlinkedRowsByAthleteName(
         row.verification_status != null &&
         String(row.verification_status).toLowerCase() !== "verified"
       ) continue
-      // Result rows are unique per event/weight; bout rows additionally need their order.
-      const key = [row.event_key, row.weight_class, row.bout_order ?? "result"].join("|")
+      /*
+       * Result rows are unique per event/weight; bout rows additionally need their order - and
+       * the opponent, because a dual-meet import has no rounds. Every I-64 bout arrives with
+       * bout_order 0 and an empty round, so keying on order alone collapsed a wrestler's whole
+       * tournament into one bout: Adam Walker went 4-1 there and his profile showed a single
+       * match.
+       */
+      const key = [row.event_key, row.weight_class, row.bout_order ?? "result", row.opponent_name ?? ""].join("|")
       if (seen.has(key)) continue
       seen.add(key)
       rows.push(row)
@@ -216,10 +222,13 @@ export async function getOtherTournamentBoutsForAthleteRecord(
     getUnlinkedRowsByAthleteName(supabase, "other_tournament_results", athlete),
   ])
   const verifiedKeys = new Set(verifiedResults.map((row) => `${row.event_key}|${row.weight_class}`))
-  const merged = new Map(linked.map((row) => [`${row.eventKey}|${row.weight}|${row.boutOrder}`, row]))
+  // Keyed by the bout, not the row: same reason as above, duals carry no round or order.
+  const boutKey = (row: { eventKey: string; weight: string; boutOrder: number; opponentName?: string | null }) =>
+    `${row.eventKey}|${row.weight}|${row.boutOrder}|${row.opponentName ?? ""}`
+  const merged = new Map(linked.map((row) => [boutKey(row), row]))
   for (const row of rows.map(toBout)) {
     if (!verifiedKeys.has(`${row.eventKey}|${row.weight}`)) continue
-    merged.set(`${row.eventKey}|${row.weight}|${row.boutOrder}`, row)
+    merged.set(boutKey(row), row)
   }
   return [...merged.values()].sort((a, b) => a.boutOrder - b.boutOrder)
 }

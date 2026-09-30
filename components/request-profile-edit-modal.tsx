@@ -16,6 +16,8 @@ interface RequestProfileEditModalProps {
   athleteId: string
   athleteName: string
   currentUserEmail?: string
+  /** The athlete who claimed this profile, or a linked parent. Their field edits save directly. */
+  isOwner?: boolean
 }
 
 export function RequestProfileEditModal({
@@ -24,11 +26,10 @@ export function RequestProfileEditModal({
   athleteId,
   athleteName,
   currentUserEmail,
+  isOwner = false,
 }: RequestProfileEditModalProps) {
   const { toast } = useToast()
   const [submitting, setSubmitting] = useState(false)
-
-  console.log("[v0] RequestProfileEditModal rendered - open:", open, "athleteId:", athleteId)
 
   // Bio fields
   const [highSchool, setHighSchool] = useState("")
@@ -55,50 +56,89 @@ export function RequestProfileEditModal({
       setSubmitting(true)
 
       /**
-       * Weight does not need anyone's approval.
+       * The family's own fields do not need anyone's approval.
        *
-       * Wrestlers move weight mid-season and the profile should follow the same day. It was already
-       * self-editable through the weight card on the profile, but this form queued it for review
-       * instead, so whoever used the button waited on an admin — two of them were still waiting
-       * months later. Weight now saves straight through and only the rest of the form is queued.
-       *
-       * Straight through only for someone self-edit accepts: the owner, a linked parent or an admin.
-       * Anyone else gets a 403, `res.ok` is false, and the weight is queued with everything else.
+       * Weight already saved straight through, for anyone. For the athlete who owns the profile
+       * or a linked parent, so now does everything else on this form that is a plain profile
+       * field: school, club, phone, highlight video, GPA, SAT, ACT. The Academics card's inline
+       * editor already wrote GPA directly, but the pencil on the photo opens this form, and a
+       * wrestler who typed a GPA here was told it was "waiting for confirmation" — Jake McCord,
+       * September 2026. Only the free-text boxes (achievements, other notes) stay queued: the
+       * tournament record is ours to import, and free text there is a claim, not a field.
        */
-      let weightSavedDirectly = false
-      if (weight.trim()) {
+      const direct: Record<string, unknown> = {}
+      /** Which boxes went live, so only the rest are queued. */
+      const live = new Set<string>()
+      if (weight.trim()) direct.weightclass = weight.trim()
+      if (isOwner) {
+        /*
+         * Only a value that looks like the field goes live. The queue holds a "High School" box
+         * with a paragraph of accolades in it and a GPA written as a sentence; saved directly,
+         * those would print on the profile as the school name and as "3.80". Anything that does
+         * not fit still goes to review rather than being dropped.
+         */
+        const score = (raw: string, min: number, max: number) => {
+          const v = raw.trim()
+          if (!/^\d+(\.\d+)?$/.test(v)) return null
+          const n = Number(v)
+          return n >= min && n <= max ? n : null
+        }
+        const shortText = (raw: string) => {
+          const v = raw.trim()
+          return v && v.length <= 60 ? v : null
+        }
+        const take = (box: string, column: string, value: unknown) => {
+          if (value == null) return
+          direct[column] = value
+          live.add(box)
+        }
+        take("gpa", "academic_gpa", score(gpa, 0, 5))
+        take("sat", "academic_sat", score(sat, 400, 1600))
+        take("act", "academic_act", score(act, 1, 36))
+        take("highSchool", "highschool", shortText(highSchool))
+        take("club", "wrestlingclub", shortText(club))
+        take("cellNumber", "cell", /^[\d\s().+-]{7,20}$/.test(cellNumber.trim()) ? cellNumber.trim() : null)
+        take("highlightVideo", "highlight_video_url", /^https?:\/\/\S+$/i.test(highlightVideo.trim()) ? highlightVideo.trim() : null)
+      }
+
+      let savedDirectly = false
+      if (Object.keys(direct).length > 0) {
         try {
           const res = await fetch(`/api/athletes/${athleteId}/self-edit`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ updates: { weightclass: weight.trim() } }),
+            body: JSON.stringify({ updates: direct }),
           })
-          weightSavedDirectly = res.ok
+          savedDirectly = res.ok
         } catch {
           /** Fall through and queue it like any other field. */
         }
       }
+      const weightSavedDirectly = savedDirectly && "weightclass" in direct
+      const isLive = (box: string) => savedDirectly && live.has(box)
 
       const descriptionParts: string[] = []
 
-      if (highSchool) descriptionParts.push(`High School: ${highSchool}`)
-      if (club) descriptionParts.push(`Wrestling Club: ${club}`)
+      if (highSchool && !isLive("highSchool")) descriptionParts.push(`High School: ${highSchool}`)
+      if (club && !isLive("club")) descriptionParts.push(`Wrestling Club: ${club}`)
       if (weight && !weightSavedDirectly) descriptionParts.push(`Weight Class: ${weight}`)
-      if (cellNumber) descriptionParts.push(`Cell Number: ${cellNumber}`)
-      if (highlightVideo) descriptionParts.push(`Highlight Video: ${highlightVideo}`)
+      if (cellNumber && !isLive("cellNumber")) descriptionParts.push(`Cell Number: ${cellNumber}`)
+      if (highlightVideo && !isLive("highlightVideo")) descriptionParts.push(`Highlight Video: ${highlightVideo}`)
       if (bioOther) descriptionParts.push(`Bio Info: ${bioOther}`)
       if (achievements) descriptionParts.push(`Achievements: ${achievements}`)
-      if (gpa) descriptionParts.push(`GPA: ${gpa}`)
-      if (sat) descriptionParts.push(`SAT: ${sat}`)
-      if (act) descriptionParts.push(`ACT: ${act}`)
+      if (gpa && !isLive("gpa")) descriptionParts.push(`GPA: ${gpa}`)
+      if (sat && !isLive("sat")) descriptionParts.push(`SAT: ${sat}`)
+      if (act && !isLive("act")) descriptionParts.push(`ACT: ${act}`)
       if (other) descriptionParts.push(`Other: ${other}`)
 
       const description = descriptionParts.join(" | ")
 
       if (!description) {
-        if (weightSavedDirectly) {
-          toast({ title: "Weight Updated", description: `Weight class is now ${weight.trim()} lbs.` })
-          setWeight("")
+        if (savedDirectly) {
+          toast({
+            title: "Profile Updated",
+            description: live.size > 0 ? "Your changes are live." : `Weight class is now ${weight.trim()} lbs.`,
+          })
           setSubmitting(false)
           onOpenChange(false)
           window.location.reload()
@@ -122,18 +162,18 @@ export function RequestProfileEditModal({
         description: description, // ✓ Required field
         currentData: {
           bio: {
-            highSchool: highSchool || null,
-            club: club || null,
+            highSchool: isLive("highSchool") ? null : highSchool || null,
+            club: isLive("club") ? null : club || null,
             weight: weightSavedDirectly ? null : weight || null,
-            cellNumber: cellNumber || null,
-            highlightVideo: highlightVideo || null,
+            cellNumber: isLive("cellNumber") ? null : cellNumber || null,
+            highlightVideo: isLive("highlightVideo") ? null : highlightVideo || null,
             other: bioOther || null,
           },
           achievements: achievements || null,
           academics: {
-            gpa: gpa || null,
-            sat: sat || null,
-            act: act || null,
+            gpa: isLive("gpa") ? null : gpa || null,
+            sat: isLive("sat") ? null : sat || null,
+            act: isLive("act") ? null : act || null,
           },
           other: other || null,
         },
@@ -158,10 +198,13 @@ export function RequestProfileEditModal({
 
       toast({
         title: "Edit Request Submitted",
-        description: weightSavedDirectly
-          ? `Weight class updated to ${weight.trim()} lbs right away. The rest has been submitted for review.`
-          : "Your profile edit request has been submitted for review.",
+        description: savedDirectly && live.size > 0
+          ? "Your changes are live. Anything else you added has been sent to us to review."
+          : weightSavedDirectly
+            ? `Weight class updated to ${weight.trim()} lbs right away. The rest has been submitted for review.`
+            : "Your profile edit request has been submitted for review.",
       })
+      if (savedDirectly) window.location.reload()
 
       // Reset form
       setHighSchool("")
@@ -193,9 +236,11 @@ export function RequestProfileEditModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Request Profile Edit</DialogTitle>
+          <DialogTitle>{isOwner ? "Edit Profile" : "Request Profile Edit"}</DialogTitle>
           <DialogDescription>
-            Submit changes for {athleteName}'s profile. An admin will review and approve your request.
+            {isOwner
+              ? `Changes to ${athleteName}'s profile save right away. Only achievements and notes are sent to us to review.`
+              : `Submit changes for ${athleteName}'s profile. An admin will review and approve your request.`}
           </DialogDescription>
         </DialogHeader>
 
@@ -357,7 +402,7 @@ export function RequestProfileEditModal({
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={submitting}>
-            {submitting ? "Submitting..." : "Submit Request"}
+            {submitting ? "Saving..." : isOwner ? "Save Changes" : "Submit Request"}
           </Button>
         </div>
       </DialogContent>

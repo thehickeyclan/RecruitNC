@@ -2185,6 +2185,7 @@ export function AthleteDetail({
         athleteId={athlete.id}
         athleteName={athleteName}
         currentUserEmail={currentUserEmail || undefined}
+        isOwner={isViewingOwnProfile || isLinkedParentProfile}
       />
     </div>
   )
