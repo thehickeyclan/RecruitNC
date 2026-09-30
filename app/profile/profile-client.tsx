@@ -612,7 +612,7 @@ export function ProfileClient() {
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-wider text-[#D3B574]">My Profile</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#D3B574]">My Account</p>
               <h1 className="mt-1 truncate text-2xl sm:text-3xl font-bold tracking-tight text-white">
                 {profile.name || profile.email}
               </h1>
@@ -695,10 +695,10 @@ export function ProfileClient() {
               >
                 <span className="min-w-0">
                   <span className="block text-sm font-semibold text-[#D3B574]">
-                    Looking for {linkedAthletes.length === 1 ? `${linkedAthletes[0]!.name.split(" ")[0]}'s` : "your wrestlers’"} profile?
+                    Looking for {linkedAthletes.length === 1 ? `${linkedAthletes[0]!.name.split(" ")[0]}'s` : "your wrestlers’"} wrestling profile?
                   </span>
                   <span className="mt-0.5 block truncate text-xs text-gray-400">
-                    This tab is your own account. The profile college coaches read is under My wrestlers
+                    This is your account — your login and contact details. The wrestling profile college coaches read is under My wrestlers
                     {linkedAthletes.length === 1 ? "" : ` — ${linkedAthletes.map((a) => a.name.split(" ")[0]).join(", ")}`}.
                   </span>
                 </span>

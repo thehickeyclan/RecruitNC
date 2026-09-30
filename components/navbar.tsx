@@ -748,7 +748,9 @@ export function Navbar() {
                 aria-current={pathname.startsWith("/profile") ? "page" : undefined}
               >
                 <User className="h-5 w-5 shrink-0" />
-                <span className="max-[380px]:sr-only">Profile</span>
+                {/* "Account", not "Profile": a profile here is a wrestler's page, and one in five
+                    people who followed this link left immediately looking for one. */}
+                <span className="max-[380px]:sr-only">Account</span>
               </a>
             )}
             {user && !pathname.startsWith("/forum") && (

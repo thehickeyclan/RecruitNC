@@ -42,13 +42,13 @@ function steps(registerUrl: string | null): Step[] {
       cta: "Join the GroupMe",
     },
     {
-      title: "Create your RecruitNC logins",
-      body: "One for you and one for your wrestler - both free. Parents pick \u201cParent\u201d at sign-up so you can manage his page; he signs up as \u201cAthlete\u201d with his own email.",
+      title: "Create your RecruitNC accounts",
+      body: "One account for you and one for your wrestler, both free. Pick \u201cParent\u201d at sign-up so you can manage his page; he signs up as \u201cAthlete\u201d with his own email. An account is your login - it is not his wrestling profile, which comes next.",
       href: `${SITE_URL}/auth/signup`,
       cta: "Create an account",
     },
     {
-      title: "Create his athlete profile",
+      title: "Create his wrestling profile",
       body: "Free, and it is the page college coaches actually read - results, film, GPA. If a profile already exists for him, claim it instead of making a second one.",
       href: `${SITE_URL}/athletes`,
       cta: "Find or create the profile",
