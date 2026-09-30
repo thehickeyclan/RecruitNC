@@ -414,19 +414,27 @@ export default function BlueRegisterPage() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
         <Card className="max-w-md w-full">
           <CardHeader>
-            <CardTitle className="text-[#03154C]">Sign in to join Blue</CardTitle>
+            <CardTitle className="text-[#03154C]">First, a free RecruitNC account</CardTitle>
             <CardDescription>
-              Use your RecruitNC account — we&apos;ll pull your info so you don&apos;t re-type it. Same login manages
-              billing and your athlete&apos;s recruiting profile.
+              {/*
+                * Most people arriving here have no account - they came from the welcome email,
+                * which is the first thing we ever send them - and this page led with Sign in.
+                * The free account takes a minute, and it is what manages billing and your
+                * wrestler's page afterwards.
+              */}
+              It takes a minute, and it brings you straight back here to finish registering. The
+              same login manages your billing and your wrestler&apos;s profile from then on.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <HardLink href={`/auth/signin?returnTo=${encodeURIComponent(returnTo)}`}>
-              <Button className="w-full bg-[#03154C] hover:bg-[#0a2571] text-white">Sign in</Button>
-            </HardLink>
             <HardLink href={`/auth/signup?returnTo=${encodeURIComponent(returnTo)}`}>
+              <Button className="w-full bg-[#03154C] hover:bg-[#0a2571] text-white">
+                Create my free account
+              </Button>
+            </HardLink>
+            <HardLink href={`/auth/signin?returnTo=${encodeURIComponent(returnTo)}`}>
               <Button variant="outline" className="w-full">
-                Create free RecruitNC account
+                I already have one — sign in
               </Button>
             </HardLink>
             <HardLink href="/blue" className="block text-center text-sm text-muted-foreground hover:underline">
