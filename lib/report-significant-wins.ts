@@ -18,6 +18,7 @@ import {
   type SignificantWin,
 } from "@/lib/significant-wins"
 import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
+import { highSchoolBouts, isHighSchoolSeason } from "@/lib/high-school-window"
 
 export type MatchSeasonRow = { season?: unknown; matches?: unknown }
 
@@ -36,6 +37,8 @@ export function reportSignificantBouts(input: {
   qualifierBouts: readonly Bout[]
   matchRows: readonly MatchSeasonRow[]
   opponentIndex: OpponentIndex
+  /** No middle school seasons or bouts (Matt, 1 October 2026). Omitted, nothing is filtered. */
+  graduationYear?: number | null
 }): {
   wins: SignificantWin[]
   losses: SignificantWin[]
@@ -43,12 +46,14 @@ export function reportSignificantBouts(input: {
   latestSeasonBouts: Bout[]
   latestSeasonRows: MatchSeasonRow[]
 } {
-  const latestSeasonRows = latestSeasonMatchRows(input.matchRows as never) as MatchSeasonRow[]
-  const latestSeasonBouts = boutsOf(latestSeasonRows)
+  const grad = input.graduationYear ?? null
+  const matchRows = input.matchRows.filter((r) => isHighSchoolSeason(String(r.season ?? ""), grad, (r as { grade?: unknown }).grade))
+  const latestSeasonRows = latestSeasonMatchRows(matchRows as never) as MatchSeasonRow[]
+  const latestSeasonBouts = highSchoolBouts(boutsOf(latestSeasonRows) as never[], grad) as Bout[]
   // Event CSVs carry the exact score and are authoritative. RankWrestler also includes some of
   // the same off-season bouts (notably I-64) and States; merging the raw arrays printed and
   // scored those meetings twice.
-  const bouts = mergeBoutSources(input.qualifierBouts, latestSeasonBouts)
+  const bouts = mergeBoutSources(highSchoolBouts(input.qualifierBouts as never[], grad) as Bout[], latestSeasonBouts)
 
   /*
    * Plus every earlier-season win over a North Carolina state champion or placer. The current
@@ -56,7 +61,7 @@ export function reportSignificantBouts(input: {
    * should see. Only present when the caller loaded `statePlacers` into the index.
    */
   const latestSet = new Set<unknown>(latestSeasonRows)
-  const earlierBouts = boutsOf(input.matchRows.filter((row) => !latestSet.has(row)))
+  const earlierBouts = highSchoolBouts(boutsOf(matchRows.filter((row) => !latestSet.has(row))) as never[], grad) as Bout[]
   const currentWins = findSignificantWins(bouts, input.opponentIndex)
   const currentWinKeys = new Set(currentWins.map((w) => `${w.opponent.toLowerCase()}|${w.date}`))
   // Accolades only - ranked, nationally ranked, state champion or placer - as on the profile.
@@ -75,10 +80,11 @@ export async function loadReportSignificantWins(
   supabase: SupabaseClient,
   athleteId: string,
   opponentIndex: OpponentIndex,
+  graduationYear?: number | null,
 ): Promise<SignificantWin[]> {
   const [{ data: matchRows }, qualifierBouts] = await Promise.all([
     supabase.from("matches").select("season,matches").eq("athlete_id", athleteId),
     getQualifierSignificantWinBouts(supabase, athleteId, "all").catch(() => [] as Bout[]),
   ])
-  return reportSignificantBouts({ qualifierBouts, matchRows: matchRows ?? [], opponentIndex }).wins
+  return reportSignificantBouts({ qualifierBouts, matchRows: matchRows ?? [], opponentIndex, graduationYear }).wins
 }

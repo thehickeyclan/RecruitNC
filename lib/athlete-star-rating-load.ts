@@ -128,7 +128,7 @@ export async function loadStarRatingInput(
   const athleteId = String(athlete.id)
   const [bundle, significantWins] = await Promise.all([
     loadAthleteTournamentBundle(supabase, athlete),
-    loadReportSignificantWins(supabase, athleteId, opponentIndex),
+    loadReportSignificantWins(supabase, athleteId, opponentIndex, athlete.graduationyear == null ? null : Number(athlete.graduationyear)),
   ])
 
   const gradYear = athlete.graduationyear == null ? null : Number(athlete.graduationyear)

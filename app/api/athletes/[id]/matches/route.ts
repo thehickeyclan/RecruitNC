@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { isHighSchoolSeason } from "@/lib/high-school-window"
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
@@ -12,7 +13,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // First, get the athlete's information
     const { data: athlete, error: athleteError } = await supabase
       .from("athletes")
-      .select("id, name")
+      .select("id, name, graduationyear")
       .eq("id", athleteId)
       .single()
 
@@ -485,8 +486,11 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       })
     }
 
-    // Remove duplicates based on season and grade combination
-    const uniqueMatches = athleteMatches.filter(
+    // Remove duplicates based on season and grade combination; no middle school seasons.
+    const grad = (athlete as { graduationyear?: number | null }).graduationyear ?? null
+    const uniqueMatches = athleteMatches.filter((match) =>
+      Object.keys(match.wrestler?.seasons ?? {}).every((season) => isHighSchoolSeason(season, grad)),
+    ).filter(
       (match, index, self) =>
         index ===
         self.findIndex((m) => {

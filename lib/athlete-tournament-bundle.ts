@@ -16,6 +16,7 @@ import {
   type TournamentResultForDisplay,
 } from "@/lib/public-profile-data"
 import { loadLinkedSourceRows, resultLinksEnabled } from "@/lib/identity/linked-results"
+import { isHighSchoolEvent } from "@/lib/high-school-window"
 import {
   getOtherTournamentResultsForAthleteRecord,
   type OtherTournamentResult,
@@ -58,5 +59,15 @@ export async function loadAthleteTournamentBundle(
     linked.then((l) => getFargoForAthlete(supabase, athlete, l)),
     getOtherTournamentResultsForAthleteRecord(supabase, athlete),
   ])
-  return { nchsaa, nhsca, super32, fargo, other }
+  // No middle school results anywhere (Matt, 1 October 2026). Every surface reads this bundle.
+  const grad = Number(athlete.graduationyear) || null
+  const hs = (year: unknown, event: string, eventDate?: string | null) =>
+    isHighSchoolEvent({ graduationYear: grad, year: Number(year), event, eventDate })
+  return {
+    nchsaa: nchsaa.filter((r) => hs(r.year, "NCHSAA")),
+    nhsca: nhsca.filter((r) => hs(r.year, "NHSCA")),
+    super32: super32.filter((r) => hs(r.year, "Super 32")),
+    fargo: fargo.filter((r) => hs(r.year, "Fargo")),
+    other: other.filter((r) => hs(r.year, r.eventShortName, r.eventDate)),
+  }
 }

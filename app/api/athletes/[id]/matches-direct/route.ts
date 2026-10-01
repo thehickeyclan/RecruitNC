@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { inSeasonBoutsOnly } from "@/lib/out-of-season-bouts"
+import { highSchoolBouts, isHighSchoolSeason } from "@/lib/high-school-window"
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
@@ -121,8 +122,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       }
     }
 
+    // No middle school seasons anywhere (Matt, 1 October 2026).
+    const { data: gradRow } = await supabase.from("athletes").select("graduationyear").eq("id", athleteId).maybeSingle()
+    const grad = (gradRow as { graduationyear?: number | null } | null)?.graduationyear ?? null
+    results = (results || []).filter((row: any) => isHighSchoolSeason(row.season, grad, row.grade))
+
     // Normalize/parse matches column to arrays, and shape the response to what the UI expects
-    const processed = (results || []).map((row) => ({
+    const processed = (results || []).map((row: any) => ({
       id: row.id,
       season: row.season,
       grade: row.grade,
@@ -141,7 +147,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
        * minus its Interstate 64 results — so leaving the bouts in made the log disagree with the
        * record printed above it. Significant wins and TOC seeding still read the full array.
        */
-      matches: inSeasonBoutsOnly(parseMatchesField(row.matches)),
+      matches: highSchoolBouts(inSeasonBoutsOnly(parseMatchesField(row.matches)), grad),
       high_school: row.high_school || null,
       meta: {
         athlete_id: row.athlete_id || null,

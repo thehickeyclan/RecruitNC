@@ -8,6 +8,7 @@ import { getQualifierSignificantWinBouts } from "@/lib/other-tournaments"
 import { HEAD_TO_HEAD_WINDOW_DAYS } from "@/lib/head-to-head"
 import { getCuratedSignificantWins } from "@/lib/curated-significant-wins"
 import { getSubmittedWins } from "@/lib/athlete-submitted-wins"
+import { highSchoolBouts, isHighSchoolSeason } from "@/lib/high-school-window"
 import { loadStatePlacerIndex } from "@/lib/state-placers"
 import { mergeBoutSources } from "@/lib/bout-source-deduplication"
 
@@ -29,8 +30,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { id } = await params
   const admin = createAdminClient()
 
-  const [{ data: rows }, { data: invitations }, tournamentBouts, stateIndex] = await Promise.all([
-    admin.from("matches").select("season,matches").eq("athlete_id", id),
+  const [{ data: rawRows }, { data: invitations }, rawTournamentBouts, stateIndex, { data: gradRow }] = await Promise.all([
+    admin.from("matches").select("season,matches,grade").eq("athlete_id", id),
     admin.from("toc_invitations").select("*, athletes(id,name)"),
     // Qualifier and national-event wins live in their own table, not in the match import.
     getQualifierSignificantWinBouts(admin, id, "wins", "any").catch(() => [] as Bout[]),
@@ -40,7 +41,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       stateSchools: [],
       fargoAllAmericans: [],
     })),
+    admin.from("athletes").select("graduationyear").eq("id", id).maybeSingle(),
   ])
+  // No middle school seasons or bouts anywhere (Matt, 1 October 2026).
+  const grad = (gradRow as { graduationyear?: number | null } | null)?.graduationyear ?? null
+  const rows = (rawRows ?? []).filter((r: any) => isHighSchoolSeason(r.season, grad, r.grade))
+  const tournamentBouts = highSchoolBouts(rawTournamentBouts as never[], grad) as Bout[]
   // Inside the head-to-head window they count for every reason; older ones only for a state
   // placer, like the earlier seasons of the match import below.
   const cutoff = Date.now() - HEAD_TO_HEAD_WINDOW_DAYS * 86_400_000
@@ -59,7 +65,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
    * and the label is also what makes publishing-without-review safe to offer.
    */
   // Only with the opponent's accolade filled in: a win with no accolade does not make this list.
-  const submittedWins = (await getSubmittedWins(admin, id)).filter((win) => win.credential.trim()).map((win) => ({
+  const submittedWins = highSchoolBouts((await getSubmittedWins(admin, id)).filter((win) => win.credential.trim()), grad).map((win) => ({
     opponent: win.opponent,
     opponentSchool: win.opponentSchool,
     event: win.event,
@@ -81,17 +87,20 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     }
   }
   const latestRows = latestSeasonMatchRows((rows ?? []) as never)
-  const matchBouts: Bout[] = latestRows.flatMap(boutsOf)
+  const matchBouts: Bout[] = highSchoolBouts(latestRows.flatMap(boutsOf) as never[], grad) as Bout[]
   /*
    * Earlier seasons count for one thing: a win over a state champion or placer. Every known win
    * over one belongs on the profile - a college coach wants to see who a wrestler has beaten, and
    * a state finalist beaten as a freshman is still a state finalist beaten. The other reasons keep
    * the current-season window above.
    */
-  const earlierBouts: Bout[] = [
-    ...olderTournamentBouts,
-    ...((rows ?? []) as unknown[]).filter((r) => !latestRows.includes(r as never)).flatMap(boutsOf),
-  ]
+  const earlierBouts: Bout[] = highSchoolBouts(
+    [
+      ...olderTournamentBouts,
+      ...((rows ?? []) as unknown[]).filter((r) => !latestRows.includes(r as never)).flatMap(boutsOf),
+    ] as never[],
+    grad,
+  ) as Bout[]
   // The same bout arrives from both the season import and an event CSV; merge them the way the
   // scouting report does, preferring the event row, so a win is not listed twice.
   const bouts: Bout[] = mergeBoutSources(qualifierBouts, matchBouts)

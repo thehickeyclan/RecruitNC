@@ -12,6 +12,7 @@ import { loadNationallyRankedIds } from "@/lib/national-rankings"
 import { findSignificantLosses, findSignificantWins, type SignificantWin } from "@/lib/significant-wins"
 import { loadOpponentIndex } from "@/lib/scouting-report"
 import { reportSignificantBouts } from "@/lib/report-significant-wins"
+import { isHighSchoolSeason } from "@/lib/high-school-window"
 import { loadStatePlacerIndex } from "@/lib/state-placers"
 import {
   buildNhscaDuals2026LiveProfileResults,
@@ -814,8 +815,15 @@ export async function buildRecruitNcRankingBoard({
 
   const athleteRows = (athletes || []) as Array<Record<string, unknown>>
   const athleteIds = athleteRows.map((athlete) => String(athlete.id)).filter(Boolean)
+  const gradByAthlete = new Map(athleteRows.map((a) => [String(a.id), toNumber(a.graduationyear)]))
   const [matchRowsByAthlete, dualsByAthlete, qualifierHeadToHead, dualsResumeByAthlete] = await Promise.all([
-    fetchMatchRows(supabase, athleteIds),
+    // No middle school seasons in a ranking (Matt, 1 October 2026).
+    fetchMatchRows(supabase, athleteIds).then((byAthlete) => {
+      for (const [id, rows] of byAthlete) {
+        byAthlete.set(id, rows.filter((r) => isHighSchoolSeason(String(r.season ?? ""), gradByAthlete.get(id), (r as { grade?: unknown }).grade)))
+      }
+      return byAthlete
+    }),
     loadRankingDualsByAthlete(supabase, athleteRows),
     loadQualifierHeadToHead(supabase, athleteIds).catch(() => new Map() as QualifierHeadToHeadIndex),
     /*
@@ -1409,6 +1417,7 @@ export async function buildRecruitNcRankingBoard({
                   qualifierBouts: (qualifierBoutsByAthleteId.get(id) ?? []) as never,
                   matchRows: matchRowsByAthlete.get(id) ?? [],
                   opponentIndex: starOpponentIndex,
+                  graduationYear: toNumber(athlete.graduationyear),
                 }).wins,
                 prospectRanking: toNumber(athlete.prospect_ranking),
                 rankingPublished: true,

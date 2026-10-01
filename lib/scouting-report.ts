@@ -572,7 +572,12 @@ export async function buildScoutingReport(
   const seasonsOnFile = new Set(
     (matchRows ?? []).map((r) => String((r as { season?: unknown }).season ?? "").trim()).filter(Boolean),
   ).size
-  const significant = reportSignificantBouts({ qualifierBouts, matchRows: matchRows ?? [], opponentIndex })
+  const significant = reportSignificantBouts({
+    qualifierBouts,
+    matchRows: matchRows ?? [],
+    opponentIndex,
+    graduationYear: athlete.graduationyear == null ? null : Number(athlete.graduationyear),
+  })
   const latestSeasonRows = significant.latestSeasonRows
   const seasonStrengthSeason =
     String((latestSeasonRows[0] as { season?: unknown } | undefined)?.season ?? "").trim() || null
