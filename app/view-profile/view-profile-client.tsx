@@ -48,8 +48,8 @@ export function ViewProfileClient({
             <a href={`/view-profile?id=${encodeURIComponent(id)}`} className="text-[#D3B574] underline">
               Try again
             </a>
-            <a href="/athletes" className="text-[#D3B574] underline">
-              Browse commits
+            <a href="/prospects/all" className="text-[#D3B574] underline">
+              Browse athletes
             </a>
           </div>
         </div>
@@ -84,7 +84,7 @@ export function ViewProfileClient({
     <main className="min-h-screen bg-[#0A1628]">
       <div className="border-b border-white/10 bg-[#0A1628] px-4 py-3 lg:hidden">
         <Link
-          href="/athletes"
+          href="/prospects/all"
           className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-[#D3B574] transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -104,7 +104,7 @@ export function ViewProfileClient({
         </div>
         <div className="container relative mx-auto px-4 py-8">
           <Link
-            href="/athletes"
+            href="/prospects/all"
             className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-[#D3B574] transition-colors"
           >
             <ArrowLeft className="h-4 w-4" />
