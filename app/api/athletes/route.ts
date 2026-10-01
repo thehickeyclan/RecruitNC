@@ -7,6 +7,7 @@ import { isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { normalizeCollegeToCanonical } from "@/lib/canonical-college"
 import { fetchCommitmentAthletes, fetchCommitmentStats, type CommitmentAthleteFilters } from "@/lib/athletes-commitments-fetch"
 import { jsonSafeClone } from "@/lib/json-safe-clone"
+import { adminGate } from "@/lib/admin-gate"
 
 export const revalidate = 120
 
@@ -124,6 +125,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const supabase = await createClient()
     const body = await request.json()

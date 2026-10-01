@@ -1,7 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { put } from "@vercel/blob"
+import { adminGate } from "@/lib/admin-gate"
 
 export async function POST(request: NextRequest) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const { imageUrl, athleteId, filename } = await request.json()
 
