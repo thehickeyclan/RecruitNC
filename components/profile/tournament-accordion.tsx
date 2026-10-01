@@ -161,6 +161,7 @@ export function TournamentAccordion({
   emptyText = "No tournament results recorded yet",
   hideWhenEmpty = false,
   icon: Icon = Globe,
+  duelsLabel = "Duals & team events",
 }: {
   rows: TournamentRow[]
   theme?: "light" | "dark"
@@ -172,6 +173,8 @@ export function TournamentAccordion({
   hideWhenEmpty?: boolean
   /** One icon per section: ten identical trophies give a reader nothing to navigate by. */
   icon?: LucideIcon
+  /** Heading over the duals group; the Olympic-styles section calls it "Dual results". */
+  duelsLabel?: string
 }) {
   const isDark = theme === "dark"
   const [open, setOpen] = useState<string | null>(null)
@@ -184,7 +187,7 @@ export function TournamentAccordion({
    */
   const groups = [
     { label: "Individual", rows: rows.filter((r) => !r.isDuals) },
-    { label: "Duals & team events", rows: rows.filter((r) => r.isDuals) },
+    { label: duelsLabel, rows: rows.filter((r) => r.isDuals) },
   ].filter((group) => group.rows.length > 0)
 
   const cardClass = isDark

@@ -152,6 +152,9 @@ export function ScoutingReportDocument({
   const olympicRow = (style: ReturnType<typeof styleOfEvent>) => isInternationalStyle(style)
   const folkResults = report.results.filter((r) => !olympicRow(r.style ?? styleOfEvent(r.event, r.detail)))
   const olympicResults = report.results.filter((r) => olympicRow(r.style ?? styleOfEvent(r.event, r.detail)))
+  // Individual events first, then dual results (Junior National Duals), as on the profile.
+  const olympicDuals = olympicResults.filter((r) => /\bduals?\b/i.test(r.event))
+  const olympicIndividual = olympicResults.filter((r) => !/\bduals?\b/i.test(r.event))
   const allWins: BoutRow[] = [...report.significantWins, ...(report.reportedWins ?? []).map(reportedRow)]
   const folkWins = allWins.filter((w) => !olympicRow(styleOfEvent(w.event)))
   const olympicWins = allWins.filter((w) => olympicRow(styleOfEvent(w.event)))
@@ -699,15 +702,25 @@ export function ScoutingReportDocument({
           />
           <Block n={n()} title="Olympic Styles — Freestyle & Greco-Roman">
             <Note>
-              Fargo, the NC Freestyle &amp; Greco State Championships and the Tar Heel State Classic. Not folkstyle,
-              and not part of the record above.
+              Fargo, the NC Freestyle &amp; Greco State Championships, the Tar Heel State Classic and the Junior National
+              Duals. Not folkstyle, and not part of the record above.
             </Note>
             <div className="mt-3 space-y-5">
               <div>
                 <h3 className="mb-2 border-b border-[#03154C]/30 pb-0.5 text-[11px] font-black uppercase tracking-[0.14em] text-[#B31B1B]">
-                  Results <span className="font-mono text-gray-500">({olympicResults.length})</span>
+                  Individual results <span className="font-mono text-gray-500">({olympicIndividual.length})</span>
                 </h3>
-                {olympicResults.length ? <ResultsTable rows={olympicResults} /> : <Note>No freestyle or Greco results on file.</Note>}
+                {olympicIndividual.length ? <ResultsTable rows={olympicIndividual} /> : <Note>No individual freestyle or Greco results on file.</Note>}
+              </div>
+              {olympicDuals.length ? (
+                <div>
+                  <h3 className="mb-2 border-b border-[#03154C]/30 pb-0.5 text-[11px] font-black uppercase tracking-[0.14em] text-[#B31B1B]">
+                    Dual results <span className="font-mono text-gray-500">({olympicDuals.length})</span>
+                  </h3>
+                  <ResultsTable rows={olympicDuals} />
+                </div>
+              ) : null}
+              <div>
               </div>
               <div>
                 <h3 className="mb-2 border-b border-[#03154C]/30 pb-0.5 text-[11px] font-black uppercase tracking-[0.14em] text-[#B31B1B]">
