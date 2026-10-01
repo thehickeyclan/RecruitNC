@@ -317,3 +317,29 @@ describe("other states' placers", () => {
     expect(findSignificantWins([win("Holt Quincy", "VA")], narrowed)).toHaveLength(1)
   })
 })
+
+describe("nationally ranked opponents with a school on file", () => {
+  const index = {
+    tocField: [],
+    ranked: [],
+    nationallyRanked: [{ name: "Marcus Killgore", rank: 9, source: "Sports Illustrated (150)", state: "AZ", school: "Sahuarita" }],
+    stateSchools: ["Mooresville"],
+  }
+  const win = (school: string | null) =>
+    ({ opponent: "Marcus Killgore", opponent_school: school, win_loss: "W", result: "DEC 4-1", date: "5/23/2026", venue: "Duals" })
+
+  it("credits the ranking when the bout lists his state", () => {
+    const [w] = findSignificantWins([win("AZ")], index)
+    expect(w.reason).toBe("national-ranked")
+    expect(w.nationalRankLabel).toBe("#9 Sports Illustrated (150)")
+  })
+
+  it("credits it on his school", () => {
+    expect(findSignificantWins([win("Sahuarita High School")], index)).toHaveLength(1)
+  })
+
+  it("refuses the name alone, and a North Carolina namesake", () => {
+    expect(findSignificantWins([win("Team Gotcha - HSB")], index)).toEqual([])
+    expect(findSignificantWins([win("Mooresville")], index)).toEqual([])
+  })
+})

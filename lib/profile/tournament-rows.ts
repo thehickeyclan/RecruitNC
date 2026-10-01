@@ -12,7 +12,7 @@ import type { NhscaNationalBout } from "@/lib/nhsca-national-bouts"
 import { displayName, placementLabel, type OtherTournamentProfileBlock } from "@/lib/other-tournaments"
 import { parseFargoDivisionString } from "@/lib/fargo-division"
 import type { NchsaaStateBout } from "@/lib/nchsaa-state-bouts"
-import type { NcUnitedDualsBout } from "@/lib/other-tournaments"
+import { fargoEventKey, NC_UNITED_DUALS_EVENT_KEY, type AttachedEventBout } from "@/lib/other-tournaments"
 
 export type AccordionSummaryResult = {
   year: number
@@ -271,9 +271,16 @@ export function buildTournamentRows(input: {
   super32Bouts?: NhscaNationalBout[]
   fargoResults?: AccordionSummaryResult[]
   nationalTeamResults?: NationalTeamEntry[]
-  /** NC United's NHSCA Duals bouts, hung under the matching team row (National or Select). */
-  ncUnitedDualsBouts?: NcUnitedDualsBout[]
+  /**
+   * Bouts for rows that come from elsewhere - NC United's NHSCA Duals (under the team row) and
+   * Fargo (under each division's row) - from getAttachedEventBouts.
+   */
+  attachedEventBouts?: AttachedEventBout[]
 }): TournamentRow[] {
+  const attached = (eventKey: string, filter: (b: AttachedEventBout) => boolean = () => true): TournamentRow["bouts"] =>
+    (input.attachedEventBouts ?? [])
+      .filter((b) => b.eventKey === eventKey && filter(b))
+      .map(({ team: _team, ...bout }) => bout)
   /*
    * "NHSCA Duals" is the National team's row and "NHSCA Duals (Select)" the Select team's, as
    * lib/national-team-live-profile-results.ts names them.
@@ -281,9 +288,7 @@ export function buildTournamentRows(input: {
   const ncUnitedBoutsFor = (event: string, year: number): TournamentRow["bouts"] => {
     const team = /select/i.test(event) ? "select" : /nhsca duals/i.test(event) ? "national" : null
     if (!team) return []
-    return (input.ncUnitedDualsBouts ?? [])
-      .filter((b) => b.team === team && b.year === year)
-      .map(({ team: _team, ...bout }) => bout)
+    return year === 2026 ? attached(NC_UNITED_DUALS_EVENT_KEY, (b) => b.team === team) : []
   }
   const rows = [
     ...rowsFromBlocks(input.otherTournamentBlocks ?? []),
@@ -312,10 +317,12 @@ export function buildTournamentRows(input: {
       const parsed = result.division ? parseFargoDivisionString(result.division) : null
       const style = parsed ? (parsed.style === "GR" ? "Greco-Roman" : "Freestyle") : null
       const age = parsed && parsed.age_division !== "Unknown" ? parsed.age_division : null
+      const bouts = parsed && age ? attached(fargoEventKey(result.year, age, parsed.style)) : []
       return rowsFromSummaries(style ? `Fargo · ${style}` : "Fargo", [result]).map((row) => ({
         ...row,
         id: `fargo-${result.year}-${i}`,
         team: age,
+        bouts: bouts.length ? bouts : row.bouts,
       }))
     }),
     /*

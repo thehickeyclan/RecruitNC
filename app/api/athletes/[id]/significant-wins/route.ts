@@ -148,10 +148,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     // The opponent's state finish, when they have one, is the label a reader recognises - beside
     // the stronger reason rather than instead of it.
     credential: !accoladeLine(win)
-      ? null
+      ? win.reason === "national-ranked"
+        ? (win.nationalRankLabel ?? "Nationally ranked")
+        : null
       : win.reason === "state-champion" || win.reason === "state-placer"
         ? accoladeLine(win)
-        : `${win.reason === "toc-field" ? "TOC field" : win.reason === "national-ranked" ? "Nationally ranked" : "NC ranked"} · ${accoladeLine(win)}`,
+        : `${win.reason === "toc-field" ? "TOC field" : win.reason === "national-ranked" ? win.nationalRankLabel ?? "Nationally ranked" : "NC ranked"} · ${accoladeLine(win)}`,
     // A win over another state's placer is a national result, and the filter should say so.
     scope: win.opponentState && win.opponentState !== "NC" ? ("national" as const) : ("in-state" as const),
   }))

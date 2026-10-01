@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { accoladeLine, findSignificantWins } from "@/lib/significant-wins"
+import { accoladeLineWithRank, findSignificantWins } from "@/lib/significant-wins"
 import { loadStatePlacerIndex } from "@/lib/state-placers"
 
 /**
@@ -33,6 +33,7 @@ export async function POST(request: Request) {
   const index = {
     tocField: [],
     ranked: [],
+    // National rankings ride along with outOfState, each checked against the bout's evidence.
     ...(await loadStatePlacerIndex(createAdminClient(), new Date(), { outOfState: true }).catch(() => ({
       statePlacers: [],
       stateSchools: [],
@@ -53,9 +54,8 @@ export async function POST(request: Request) {
     const [found] = findSignificantWins(
       [{ opponent: name, opponent_school: club, win_loss: "W", date: year ? `${year}-03-01` : null }],
       index,
-      { stateOnly: true },
     )
-    const line = found ? accoladeLine(found) : null
+    const line = found ? accoladeLineWithRank(found) : null
     if (line) labels[key] = line
   }
   return NextResponse.json({ labels })

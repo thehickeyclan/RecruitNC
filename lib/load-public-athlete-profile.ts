@@ -20,7 +20,7 @@ import {
 } from "@/lib/last-competed-weight"
 import { getUltimateClubDualsFromTables } from "@/lib/tournament-tables"
 import {
-  getNcUnitedDualsBouts,
+  getAttachedEventBouts,
   getOtherTournamentProfileBlocks,
   type OtherTournamentProfileBlock,
 } from "@/lib/other-tournaments"
@@ -126,14 +126,14 @@ export async function loadPublicAthleteProfile(
   if (wrestlingName && wrestlingName.toLowerCase() !== name.toLowerCase()) nameBases.push(wrestlingName)
 
   const athleteRow = athlete as Record<string, unknown>
-  const [bundle, nationalTeamData, otherTournamentBlocks, nchsaaStateBouts, nhscaBouts, super32Bouts, ncUnitedDualsBouts] = await Promise.all([
+  const [bundle, nationalTeamData, otherTournamentBlocks, nchsaaStateBouts, nhscaBouts, super32Bouts, attachedEventBouts] = await Promise.all([
     loadAthleteTournamentBundle(client, athleteRow),
     loadPublicAthleteNationalTeamData(client, athleteRow),
     getOtherTournamentProfileBlocks(client, athleteRow),
     getNchsaaStateBoutsForAthlete(client, trimmed),
     getNhscaNationalBoutsForAthlete(client, trimmed),
     getSuper32BoutsForAthlete(client, trimmed),
-    getNcUnitedDualsBouts(client, trimmed).catch(() => []),
+    getAttachedEventBouts(client, trimmed).catch(() => []),
   ])
 
   const { nchsaa: nchsaaMergedRows, nhsca: nhscaMerged, super32: super32Merged, fargo: fargoMerged } = bundle
@@ -175,7 +175,7 @@ export async function loadPublicAthleteProfile(
       super32_results: super32Merged,
       fargo_results: fargoMerged,
       other_tournament_blocks: otherTournamentBlocks,
-      nc_united_duals_bouts: ncUnitedDualsBouts,
+      attached_event_bouts: attachedEventBouts,
       national_team_results,
       national_team_highlight_videos,
       profile_quality_wins,

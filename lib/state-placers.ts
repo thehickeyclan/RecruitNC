@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 
-import type { FargoAllAmerican, StatePlacer } from "@/lib/significant-wins"
+import { sourceLabel } from "@/lib/national-rankings"
+import type { FargoAllAmerican, NationallyRankedOpponent, StatePlacer } from "@/lib/significant-wins"
 
 /**
  * North Carolina state champions and placers (top 8, NCHSAA and NCISA), for recognising a win
@@ -22,7 +23,13 @@ type Row = { year: number; place: number; classification: string | null; wrestle
  * they should. `stateSchools` stays North Carolina's either way: it is the list that marks a bout
  * as against an NC kid, which is what rules a Virginia namesake out.
  */
-type StatePlacerIndex = { statePlacers: StatePlacer[]; stateSchools: string[]; fargoAllAmericans: FargoAllAmerican[] }
+type StatePlacerIndex = {
+  statePlacers: StatePlacer[]
+  stateSchools: string[]
+  fargoAllAmericans: FargoAllAmerican[]
+  /** Only with `outOfState`: the national lists, schools included so each bout is checked. */
+  nationallyRanked?: NationallyRankedOpponent[]
+}
 
 /**
  * Held for ten minutes per server instance. The index is the same for every profile and changes
@@ -52,13 +59,55 @@ async function buildStatePlacerIndex(
   now: Date,
   options?: { outOfState?: boolean },
 ): Promise<StatePlacerIndex> {
-  const [ncPlacers, otherPlacers, fargoAllAmericans] = await Promise.all([
+  const [ncPlacers, otherPlacers, fargoAllAmericans, nationallyRanked] = await Promise.all([
     loadStatePlacers(supabase, now),
     options?.outOfState ? loadOutOfStatePlacers(supabase, now).catch(() => []) : Promise.resolve([]),
     loadFargoAllAmericans(supabase, now).catch(() => []),
+    options?.outOfState ? loadNationallyRanked(supabase).catch(() => []) : Promise.resolve(undefined),
   ])
   const stateSchools = [...new Set(ncPlacers.flatMap((p) => p.schools))]
-  return { statePlacers: [...ncPlacers, ...otherPlacers], stateSchools, fargoAllAmericans }
+  return {
+    statePlacers: [...ncPlacers, ...otherPlacers],
+    stateSchools,
+    fargoAllAmericans,
+    ...(nationallyRanked ? { nationallyRanked } : {}),
+  }
+}
+
+/**
+ * The newest edition of each outlet's national rankings, one entry per wrestler at his best rank:
+ * "#9 Sports Illustrated (150)", "#3 FloWrestling P4P". Carries the school so a bout is credited
+ * only with evidence it was him (nationalRankFits in lib/significant-wins.ts).
+ */
+export async function loadNationallyRanked(supabase: SupabaseClient): Promise<NationallyRankedOpponent[]> {
+  const { data, error } = await supabase
+    .from("national_rankings")
+    .select("athlete_name, rank, source, state, high_school, scope, weight_class, ranking_month")
+    .order("rank", { ascending: true })
+    .limit(5000)
+  if (error || !data) return []
+  type Row = { athlete_name: string; rank: number; source: string; state: string | null; high_school: string | null; scope: string; weight_class: string | null; ranking_month: string }
+  const rows = data as Row[]
+  const newest = new Map<string, string>()
+  for (const r of rows) if ((newest.get(r.source) ?? "") < r.ranking_month) newest.set(r.source, r.ranking_month)
+  const best = new Map<string, NationallyRankedOpponent>()
+  for (const r of rows) {
+    if (r.ranking_month !== newest.get(r.source)) continue
+    const name = String(r.athlete_name ?? "").trim()
+    if (!name) continue
+    const key = `${name.toLowerCase()}|${r.state ?? ""}`
+    // Sorted by rank, so the first row per wrestler is his best across outlets and lists.
+    if (best.has(key)) continue
+    const where = r.scope === "p4p" ? " P4P" : r.weight_class ? ` (${r.weight_class})` : ""
+    best.set(key, {
+      name,
+      rank: Number(r.rank),
+      source: `${sourceLabel(r.source)}${where}`,
+      state: r.state ?? null,
+      school: r.high_school ?? null,
+    })
+  }
+  return [...best.values()]
 }
 
 type OutOfStateRow = {

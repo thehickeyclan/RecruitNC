@@ -92,6 +92,11 @@ export function accoladeLine(win: Pick<SignificantWin, "stateLabel" | "fargoLabe
   return [win.stateLabel, win.fargoLabel].filter(Boolean).join(" · ") || null
 }
 
+/** The same with a national ranking in front: "#9 Sports Illustrated · 2026 AZ D3 State Champion". */
+export function accoladeLineWithRank(win: Pick<SignificantWin, "stateLabel" | "fargoLabel" | "nationalRankLabel">): string | null {
+  return [win.nationalRankLabel, accoladeLine(win)].filter(Boolean).join(" · ") || null
+}
+
 export type StatePlacer = {
   name: string
   /** Every school this name placed for; a bout at a different school is a namesake. */
@@ -159,6 +164,12 @@ export type NationallyRankedOpponent = {
   /** "FloWrestling", "Sports Illustrated", "MatScouts". */
   source: string
   state: string | null
+  /**
+   * The ranked wrestler's school. When present, a bout is credited only with evidence it was him
+   * (`nationalRankFits`), the bar out-of-state placers clear; when absent (the scouting report's
+   * loader), the older name-only match stands.
+   */
+  school?: string | null
 }
 
 export type SignificantWin = {
@@ -307,6 +318,20 @@ function outOfStatePlacerFits(
   return !(knownSchools ?? []).some((school) => sameSchool(schoolWords(school), bout))
 }
 
+/**
+ * Whether a bout can be credited to a nationally ranked wrestler. His state on the bout ("AZ",
+ * "Storm Wrestling Center - HSB (GA)"), his school, or his name already confirmed as a placer in
+ * that state - never the name alone, since the national lists name boys from every state and NC
+ * has namesakes of most of them. A North Carolinian ranked nationally gets the in-state check.
+ */
+function nationalRankFits(boutSchool: string | null | undefined, ranked: NationallyRankedOpponent, index: OpponentIndex): boolean {
+  const schools = ranked.school ? [ranked.school] : []
+  const state = String(ranked.state ?? "").toUpperCase()
+  if (!state || state === "NC") return schoolConsistent(boutSchool, schools, index.stateSchools)
+  const confirmed = statePlacersNamed(index, ranked.name).some((p) => p.state === state && p.identityConfirmed)
+  return outOfStatePlacerFits(boutSchool, { name: ranked.name, schools, finishes: [], state, identityConfirmed: confirmed }, index.stateSchools)
+}
+
 /** Placers sharing this opponent's name, resolved once per name per index like the rest. */
 const placersByIndex = new WeakMap<OpponentIndex, Map<string, StatePlacer[]>>()
 
@@ -423,7 +448,11 @@ function findSignificantBouts(
     if (!name) continue
 
     const resolved = options?.stateOnly ? { national: null, inField: false, ranked: null } : resolveOpponent(index, name)
-    const { national, inField, ranked } = resolved
+    const { inField, ranked } = resolved
+    const national =
+      resolved.national && resolved.national.school !== undefined && !nationalRankFits(bout.opponent_school, resolved.national, index)
+        ? null
+        : resolved.national
     // Finishes of same-named placers whose school fits this bout and who could have been this
     // opponent at the time.
     const fitting = statePlacersNamed(index, name).filter((p) =>

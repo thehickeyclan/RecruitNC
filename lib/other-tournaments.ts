@@ -523,20 +523,25 @@ export async function getQualifierSignificantWinBouts(
 /** NC United's own NHSCA Duals bouts (scripts/import-nc-united-duals-2026.py). */
 export const NC_UNITED_DUALS_EVENT_KEY = "nhsca-duals-2026-nc-united"
 
-export type NcUnitedDualsBout = OtherTournamentBout & { team: "national" | "select" }
+/** Fargo bouts (scripts/import-fargo-bouts.py): fargo-2026-16u-fs, fargo-2026-junior-gr. */
+export function fargoEventKey(year: number, age: string, style: "FS" | "GR" | string): string {
+  return `fargo-${year}-${age.toLowerCase()}-${String(style).toLowerCase() === "gr" ? "gr" : "fs"}`
+}
+
+export type AttachedEventBout = OtherTournamentBout & { team: "national" | "select" }
 
 /**
- * An athlete's bouts for NC United at the 2026 NHSCA Duals. They carry no results row - the
- * profile already lists the event as the NC United team record - so the tournament list hangs them
- * under that row instead of adding another.
+ * An athlete's bouts for events whose row on the profile comes from elsewhere: NC United at the
+ * 2026 NHSCA Duals (the team record) and Fargo (fargo_results). They carry no results row, so the
+ * tournament list hangs them under the row that already exists instead of adding a second one.
  */
-export async function getNcUnitedDualsBouts(supabase: SupabaseClient, athleteId: string): Promise<NcUnitedDualsBout[]> {
+export async function getAttachedEventBouts(supabase: SupabaseClient, athleteId: string): Promise<AttachedEventBout[]> {
   if (!athleteId?.trim()) return []
   const { data, error } = await supabase
     .from("other_tournament_bouts")
     .select("event_key, event_name, year, weight_class, round, bout_order, opponent_name, opponent_club, athlete_club, win, is_bye, win_type, score")
     .eq("athlete_id", athleteId)
-    .eq("event_key", NC_UNITED_DUALS_EVENT_KEY)
+    .or(`event_key.eq.${NC_UNITED_DUALS_EVENT_KEY},event_key.like.fargo-%`)
     .order("bout_order", { ascending: true })
   if (error || !data) return []
   return data.map((row) => ({
