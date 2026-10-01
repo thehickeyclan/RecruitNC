@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireTocInvitationManager } from "@/lib/toc/require-toc-invitation-manager"
 import { tocProjectSeedTasks } from "@/lib/toc/project-plan"
@@ -16,6 +17,9 @@ function seedPayload(userId: string) {
 }
 
 export async function POST() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   const auth = await requireTocInvitationManager()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 

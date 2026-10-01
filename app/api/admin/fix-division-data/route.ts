@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { supabase } from "@/lib/supabase"
 
 // Expected division counts - update these to match the actual counts
@@ -11,6 +12,9 @@ const EXPECTED_COUNTS = {
 }
 
 export async function POST(request: Request) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const { force = false } = await request.json()
 

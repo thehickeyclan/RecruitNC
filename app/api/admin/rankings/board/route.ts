@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { unstable_cache } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
@@ -38,6 +39,9 @@ const cachedBoard = unstable_cache(
 )
 
 export async function GET(request: Request) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const { searchParams } = new URL(request.url)
     const year = searchParams.get("year") || "2027"
@@ -144,6 +148,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const body = await request.json()
     const rankings = Array.isArray(body.rankings) ? body.rankings : []

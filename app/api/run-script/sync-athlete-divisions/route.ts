@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createClient } from "@supabase/supabase-js"
 
 export async function POST() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -33,6 +37,9 @@ export async function POST() {
 }
 
 export async function GET() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   return NextResponse.json({
     message: "POST to this endpoint to run the sync via Supabase RPC.",
   })

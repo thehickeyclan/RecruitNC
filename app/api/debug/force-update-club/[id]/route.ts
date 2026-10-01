@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const id = params.id
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { recordTocProjectActivity } from "@/lib/toc/project-activity"
 import { requireTocInvitationManager } from "@/lib/toc/require-toc-invitation-manager"
@@ -9,6 +10,9 @@ const TABLE = "toc_project_documents"
 const BUCKET = "toc-project-documents"
 
 export async function DELETE(_request: Request, ctx: { params: Promise<{ id: string }> }) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   const auth = await requireTocInvitationManager()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 

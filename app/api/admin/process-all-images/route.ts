@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { adminGate } from "@/lib/admin-gate"
 import * as fal from '@fal-ai/serverless-client'
 import { createClient } from '@supabase/supabase-js'
 
@@ -46,6 +47,9 @@ async function processImage(imageUrl: string): Promise<string | null> {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   const encoder = new TextEncoder()
   let messageId = 0
 

@@ -1,8 +1,12 @@
 import { createClient } from "@/lib/supabase/server"
+import { adminGate } from "@/lib/admin-gate"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
 export async function POST() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const cookieStore = cookies()
     const supabase = createClient(cookieStore)

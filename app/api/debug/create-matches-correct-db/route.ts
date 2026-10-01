@@ -1,8 +1,12 @@
 import { createClient } from "@supabase/supabase-js"
+import { adminGate } from "@/lib/admin-gate"
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 export async function POST() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     console.log("=== CREATING MATCHES TABLE IN CORRECT DATABASE ===")
 
@@ -157,6 +161,9 @@ export async function POST() {
 }
 
 export async function GET() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     console.log("=== TESTING MATCHES TABLE ACCESS ===")
 
@@ -194,6 +201,9 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     console.log("=== UPLOADING SAMPLE MATCH DATA ===")
 

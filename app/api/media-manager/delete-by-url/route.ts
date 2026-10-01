@@ -1,8 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { del } from "@vercel/blob"
 import { createClient } from "@/lib/supabase/server"
 
 export async function DELETE(request: NextRequest) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const { url } = await request.json()
 

@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createClient } from "@supabase/supabase-js"
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 export async function POST(request: Request) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const { college_name, division } = await request.json()
 
@@ -111,6 +115,9 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   return NextResponse.json({
     message: "College mappings debug API",
     usage: "Send POST request with college_name and division",

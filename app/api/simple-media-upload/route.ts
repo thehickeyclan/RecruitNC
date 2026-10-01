@@ -1,8 +1,12 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { put } from "@vercel/blob"
 import { nanoid } from "nanoid"
 
 export async function POST(request: NextRequest) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     console.log("[v0] Simple media upload API called")
 

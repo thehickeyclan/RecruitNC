@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createClient } from "@supabase/supabase-js"
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
@@ -15,6 +16,9 @@ function formatGradeLevel(grade: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const { athleteId, athleteName, athleteSchool, yearData } = await request.json()
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { put } from "@vercel/blob"
 import { nanoid } from "nanoid"
 
@@ -6,6 +7,9 @@ export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
 
 export async function POST(request: Request) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     console.log("[v0] Upload request received")
 

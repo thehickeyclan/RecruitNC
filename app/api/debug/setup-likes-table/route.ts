@@ -1,10 +1,14 @@
 import { createRouteHandlerClient } from "@supabase/auth-helpers-nextjs"
+import { adminGate } from "@/lib/admin-gate"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import fs from "fs"
 import path from "path"
 
 export async function POST() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   const supabase = createRouteHandlerClient({ cookies })
 
   try {

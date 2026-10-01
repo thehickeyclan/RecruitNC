@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { supabase } from "@/lib/supabase"
 
 export async function POST(request: Request) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const { collegeMap } = await request.json()
 
@@ -67,6 +71,9 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     // Check if the table exists
     const { error: checkError } = await supabase.from("college_division_map").select("*").limit(1)

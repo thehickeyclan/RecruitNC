@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { put } from "@vercel/blob"
 import { createClient } from "@supabase/supabase-js"
 
@@ -8,6 +9,9 @@ const supabaseKey = process.env.SUPABASE_ANON_KEY!
 const supabase = createClient(supabaseUrl, supabaseKey)
 
 export async function POST(request: NextRequest) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const formData = await request.formData()
     const file = formData.get("file") as File

@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createClient } from "@/lib/supabase/server"
 import fs from "fs"
 import path from "path"
 
 export async function POST() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const supabase = createClient()
 

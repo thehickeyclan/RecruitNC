@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createClient } from "@supabase/supabase-js"
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
@@ -7,6 +8,9 @@ export async function POST(
   req: Request,
   { params }: { params: { schoolId: string } },
 ) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const schoolId = params.schoolId
     const { primaryColor, secondaryColor } = await req.json()

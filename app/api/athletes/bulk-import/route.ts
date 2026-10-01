@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { supabase } from "@/lib/supabase"
 
 export const runtime = "nodejs"
 
 export async function POST(request: Request) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const athletes = await request.json()
 

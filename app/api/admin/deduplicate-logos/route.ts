@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createClient } from "@/lib/supabase/server"
 
 export async function GET() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const supabase = createClient()
 
@@ -48,6 +52,9 @@ export async function GET() {
 }
 
 export async function DELETE(request: Request) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const { idsToDelete } = await request.json()
 

@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 
 import { createAdminClientFresh } from "@/lib/supabase/admin"
 import { toE164 } from "@/lib/sms"
@@ -156,6 +157,9 @@ async function loadRoster(admin: ReturnType<typeof createAdminClientFresh>): Pro
 }
 
 export async function GET() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   const auth = await requireTocWeighInStaff()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
@@ -179,6 +183,9 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   const auth = await requireTocWeighInStaff()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
@@ -255,6 +262,9 @@ export async function POST(request: NextRequest) {
  * when a station has to start that line again.
  */
 export async function DELETE(request: NextRequest) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   const auth = await requireTocWeighInStaff()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 

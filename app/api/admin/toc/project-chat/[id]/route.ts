@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { recordTocProjectActivity } from "@/lib/toc/project-activity"
 import { requireTocInvitationManager } from "@/lib/toc/require-toc-invitation-manager"
@@ -43,6 +44,9 @@ function asReactions(value: unknown): TocProjectChatReaction[] {
 }
 
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   const auth = await requireTocInvitationManager()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
@@ -103,6 +107,9 @@ export async function PATCH(request: Request, ctx: { params: Promise<{ id: strin
 }
 
 export async function DELETE(_request: Request, ctx: { params: Promise<{ id: string }> }) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   const auth = await requireTocInvitationManager()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 

@@ -1,9 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createClient } from "@supabase/supabase-js"
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 export async function POST(request: NextRequest) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     // Delete ALL existing match records for Colt Campbell to start clean
     await supabase.from("matches").delete().ilike("first_name", "%colt%").ilike("last_name", "%campbell%")

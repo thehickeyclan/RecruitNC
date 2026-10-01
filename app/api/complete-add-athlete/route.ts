@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createClient } from "@/lib/supabase/server"
 import { autoFetchNHSCAForProfile } from "@/lib/nhsca-auto-fetch"
 import { normalizeCollegeToCanonical } from "@/lib/canonical-college"
 
 export async function POST(request: Request) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const body = await request.json()
     console.log("[v0] Complete athlete creation - received data:", body)

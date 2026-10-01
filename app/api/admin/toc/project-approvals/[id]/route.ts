@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { recordTocProjectActivity } from "@/lib/toc/project-activity"
 import { requireTocInvitationManager } from "@/lib/toc/require-toc-invitation-manager"
@@ -16,6 +17,9 @@ const STATUS_LABEL: Record<string, string> = {
 }
 
 export async function PATCH(request: Request, ctx: { params: Promise<{ id: string }> }) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   const auth = await requireTocInvitationManager()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 

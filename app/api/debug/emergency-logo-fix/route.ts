@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createClient } from '@supabase/supabase-js'
 
 const supabase = createClient(
@@ -7,6 +8,9 @@ const supabase = createClient(
 )
 
 export async function POST() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     let logosRestored = 0
     let mappingsCreated = 0

@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createClient } from "@/lib/supabase/server"
 import { normalizeEntityName, normalizeEntityType } from "@/lib/logo-mappings-normalize"
 
@@ -25,6 +26,9 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   console.log("[v0] ===== PATCH HANDLER CALLED =====")
   console.log("[v0] PATCH params:", params)
   console.log("[v0] PATCH request URL:", request.url)
@@ -91,6 +95,9 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
 }
 
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const supabase = await createClient()
 

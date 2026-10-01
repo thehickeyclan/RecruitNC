@@ -1,8 +1,12 @@
 import { createClient } from "@supabase/supabase-js"
+import { adminGate } from "@/lib/admin-gate"
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 export async function POST() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     console.log("=== TESTING MATCHES TABLE ACCESS ===")
 
@@ -70,6 +74,9 @@ export async function POST() {
 }
 
 export async function PUT(request: Request) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const body = await request.json()
     console.log("=== ATTEMPTING TO UPLOAD SAMPLE DATA ===")
@@ -105,6 +112,9 @@ export async function PUT(request: Request) {
 }
 
 export async function PATCH() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     console.log("=== RUNNING FULL DATABASE DIAGNOSTICS ===")
 

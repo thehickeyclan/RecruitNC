@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createClient } from "@supabase/supabase-js"
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
@@ -29,6 +30,9 @@ function calculateWinPercentage(wins: number, losses: number): number {
 }
 
 export async function GET(request: NextRequest) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const { searchParams } = new URL(request.url)
     const state = searchParams.get("state") || "NC"

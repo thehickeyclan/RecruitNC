@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createClient } from "@/lib/supabase/server"
 import { normalizeEntityName, normalizeEntityType } from "@/lib/logo-mappings-normalize"
 
@@ -44,6 +45,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const body = await request.json()
     const { entity_name, entity_type, logo_url, aliases, division } = body

@@ -1,9 +1,13 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createClient } from "@/lib/supabase/server"
 import { put } from "@vercel/blob"
 import { normalizeEntityName, normalizeEntityType } from "@/lib/logo-mappings-normalize"
 
 export async function POST(request: NextRequest) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const formData = await request.formData()
     const entityName = formData.get("entityName") as string

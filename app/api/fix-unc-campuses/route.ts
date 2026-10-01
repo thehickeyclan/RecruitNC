@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { supabase } from "@/lib/supabase"
 
 export async function GET() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     // Define campus-specific division mappings
     const campusDivisions = [

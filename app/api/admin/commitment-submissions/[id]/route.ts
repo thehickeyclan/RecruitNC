@@ -1,7 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createClient } from "@/lib/supabase/server"
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const { status } = await request.json()
     const supabase = await createClient()

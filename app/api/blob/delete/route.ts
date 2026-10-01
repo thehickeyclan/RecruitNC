@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { del } from "@vercel/blob"
 
 export async function DELETE(request: Request) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const { searchParams } = new URL(request.url)
     const url = searchParams.get("url")

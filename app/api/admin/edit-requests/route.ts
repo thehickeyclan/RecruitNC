@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic"
 export const revalidate = 0
 
 import { type NextRequest, NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createClient } from "@supabase/supabase-js"
 import { buildAthleteUpdateFromRequest, freeTextForApplying, FREE_TEXT_TARGETS, type FreeTextTarget } from "@/lib/admin/apply-edit-request"
 import { resolveClubName, resolveSchoolName } from "@/lib/admin/canonical-affiliations"
@@ -20,6 +21,9 @@ function createServiceClient() {
 }
 
 export async function GET(request: NextRequest) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const svc = createServiceClient()
     const url = new URL(request.url)
@@ -100,6 +104,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const svc = createServiceClient()
     const body = await request.json()

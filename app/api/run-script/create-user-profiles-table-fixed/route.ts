@@ -1,9 +1,13 @@
 import { createClient } from "@/lib/supabase/server"
+import { adminGate } from "@/lib/admin-gate"
 import { NextResponse } from "next/server"
 import { readFileSync } from "fs"
 import { join } from "path"
 
 export async function POST() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const supabase = createClient()
 

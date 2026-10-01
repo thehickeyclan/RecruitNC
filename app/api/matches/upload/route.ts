@@ -1,8 +1,12 @@
 import { createClient } from "@supabase/supabase-js"
+import { adminGate } from "@/lib/admin-gate"
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 export async function POST(request: Request) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     console.log("=== MATCH UPLOAD START ===")
 

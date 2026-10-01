@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
@@ -8,6 +9,9 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const { id } = await params
     if (!id) {

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { recordTocProjectActivity } from "@/lib/toc/project-activity"
 import { reviewTocProjectDocumentWithAi } from "@/lib/toc/project-document-ai"
@@ -22,6 +23,9 @@ function parseCurrency(value: string): number | null {
 }
 
 export async function GET() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   const auth = await requireTocInvitationManager()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
@@ -42,6 +46,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   const auth = await requireTocInvitationManager()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 

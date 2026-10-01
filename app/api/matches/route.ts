@@ -1,8 +1,12 @@
 import { createClient } from "@supabase/supabase-js"
+import { adminGate } from "@/lib/admin-gate"
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
 export async function GET() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const { data, error } = await supabase.from("matches").select("*").order("created_at", { ascending: false })
 
@@ -19,6 +23,9 @@ export async function GET() {
 }
 
 export async function DELETE(request: Request) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const { searchParams } = new URL(request.url)
     const wrestler_id = searchParams.get("wrestler_id")

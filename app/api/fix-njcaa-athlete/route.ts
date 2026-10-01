@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { supabase } from "@/lib/supabase"
 
 // List of known NJCAA schools
@@ -21,6 +22,9 @@ const njcaaSchools = [
 ]
 
 export async function GET() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     // First, check if we have any athletes with NJCAA division
     const { data: njcaaAthletes, error: njcaaError } = await supabase

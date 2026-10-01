@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireTocInvitationManager } from "@/lib/toc/require-toc-invitation-manager"
 
@@ -40,6 +41,9 @@ async function displayNameForCurrentUser(admin: ReturnType<typeof createAdminCli
 }
 
 export async function GET() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   const auth = await requireTocInvitationManager()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
@@ -69,6 +73,9 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   const auth = await requireTocInvitationManager()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 

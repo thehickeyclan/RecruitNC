@@ -1,7 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { createServerClient } from "@supabase/ssr"
 
 export async function POST(request: NextRequest) {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const { athleteId, athleteName, grade } = await request.json()
 

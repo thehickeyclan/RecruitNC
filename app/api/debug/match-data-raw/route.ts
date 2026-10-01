@@ -1,7 +1,11 @@
 import { createClient } from "@/lib/supabase/server"
+import { adminGate } from "@/lib/admin-gate"
 import { NextResponse } from "next/server"
 
 export async function GET() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     const supabase = createClient()
 

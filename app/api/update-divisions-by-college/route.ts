@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server"
+import { adminGate } from "@/lib/admin-gate"
 import { supabase } from "@/lib/supabase"
 import { getCollegeDivision, standardizeDivision } from "@/lib/college-utils-v2"
 
 export async function GET() {
+  const denied = await adminGate()
+  if (denied) return denied
+
   try {
     // Get all athletes
     const { data: athletes, error } = await supabase
