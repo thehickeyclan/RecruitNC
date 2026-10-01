@@ -43,13 +43,13 @@ export const ATHLETE_FIRST_NAME_EQUIVALENT_GROUPS: string[][] = [
   ["Daniel", "Dan", "Danny"],
   ["Joshua", "Josh"],
   ["Thomas", "Tom", "Tommy"],
-  ["Andrew", "Andy"],
+  ["Andrew", "Andy", "Drew"],
   ["Patrick", "Pat"],
   ["Charles", "Chuck", "Charlie"],
   ["Edward", "Ed", "Eddie"],
   ["Kenneth", "Ken", "Kenny"],
   ["Donald", "Don"],
-  ["Timothy", "Tim"],
+  ["Timothy", "Tim", "Timmy"],
   ["Stephen", "Steve"],
   ["Zachary", "Zach", "Zack"],
   ["Cameron", "Cam"],
@@ -68,6 +68,10 @@ export const ATHLETE_FIRST_NAME_EQUIVALENT_GROUPS: string[][] = [
   // under "Eli …" are never queried when the profile is "Elijah …" (and vice versa)
   // once older years already matched under the formal name.
   ["Elijah", "Eli"],
+  // Brackets print the nickname as often as the formal name: Aaron Ellison's NHSCA quarterfinal
+  // opponent "Timmy Boda" is the 2026 Florida champion Timothy Boda.
+  ["Jacob", "Jake"],
+  ["Gabriel", "Gabe"],
 ]
 
 export type AthleteMatchContext = {

@@ -74,12 +74,31 @@ export async function loadOutOfStatePlacers(supabase: SupabaseClient, now = new 
     byName.set(key, entry)
   }
 
+  // A state that runs one bracket has nothing worth naming: its "classification" is whatever the
+  // source called the whole tournament - "Open", "Boys", "KHSAA Boys/Coed State Championship".
+  const classesByState = new Map<string, Set<string>>()
+  for (const r of rows) {
+    const set = classesByState.get(r.state) ?? new Set<string>()
+    set.add(String(r.classification ?? ""))
+    classesByState.set(r.state, set)
+  }
+  const classLabel = (r: OutOfStateRow): string | null => {
+    if ((classesByState.get(r.state)?.size ?? 0) <= 1) return null
+    // "Boys 4A" (WA, OK), "6A Boys" (OR), "Class 5A" (AR) -> "4A", "6A", "5A". Class A/B keep "Class".
+    const cleaned = String(r.classification ?? "")
+      .replace(/\b(boys|girls|coed)\b/gi, "")
+      .replace(/^class\s+(?=\d)/i, "")
+      .replace(/\s+/g, " ")
+      .trim()
+    return cleaned || null
+  }
+
   return [...byName.values()].map((e) => ({
     name: e.name,
     state: e.state,
     identityConfirmed: e.confirmed,
     schools: [...e.schools],
-    finishes: e.rows.map((r) => ({ year: r.season, place: r.place, classification: r.classification, state: r.state })),
+    finishes: e.rows.map((r) => ({ year: r.season, place: r.place, classification: classLabel(r), state: r.state })),
   }))
 }
 
