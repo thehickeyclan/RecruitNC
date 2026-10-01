@@ -674,6 +674,7 @@ export function ScoutingReportDocument({
           State Championships and the NC Freestyle & Greco State Championships are different titles
           and must never share a table.
         */}
+        <StyleDivider title="Folkstyle" note="NCHSAA State Championships, national tournaments, duals and the high-school season" />
         <Block n={n()} title="Competition record — Folkstyle">
           {folkResults.length ? (
             <ResultsTable rows={folkResults} />
@@ -691,6 +692,11 @@ export function ScoutingReportDocument({
         </Block>
 
         {olympicResults.length || olympicWins.length || olympicLosses.length ? (
+          <>
+          <StyleDivider
+            title="Olympic Styles — Freestyle & Greco-Roman"
+            note="Fargo, the NC Freestyle & Greco State Championships and the Tar Heel State Classic — not folkstyle"
+          />
           <Block n={n()} title="Olympic Styles — Freestyle & Greco-Roman">
             <Note>
               Fargo, the NC Freestyle &amp; Greco State Championships and the Tar Heel State Classic. Not folkstyle,
@@ -717,6 +723,7 @@ export function ScoutingReportDocument({
               </div>
             </div>
           </Block>
+          </>
         ) : null}
 
         <footer className="mt-7 border-t-2 border-[#03154C] pt-2 text-[9px] leading-relaxed text-gray-500">
@@ -826,6 +833,19 @@ function Vital({ label, value, last }: { label: string; value: string | null; la
       {/* Wraps rather than truncating: "Last competed" carries weight, event and date, and a
           clipped event name is the half a coach needs. */}
       <dd className="min-w-0 text-right font-semibold leading-tight text-[#03154C]">{value}</dd>
+    </div>
+  )
+}
+
+/**
+ * A full-width navy bar between the folkstyle record and the Olympic-styles one (Matt): on a
+ * printed page the two must read as different records at a glance, not as more rows of one.
+ */
+function StyleDivider({ title, note }: { title: string; note: string }) {
+  return (
+    <div className="mt-8 break-inside-avoid break-after-avoid bg-[#03154C] px-3 py-2 text-white">
+      <div className="text-[12px] font-black uppercase tracking-[0.2em]">{title}</div>
+      <div className="text-[9.5px] text-white/75">{note}</div>
     </div>
   )
 }

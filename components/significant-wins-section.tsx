@@ -104,7 +104,7 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [], style
         <div className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-rnc-gold" aria-hidden="true" />
           <h2 className="text-lg font-bold text-white">
-            {styles === "olympic" ? "Significant wins — Freestyle & Greco-Roman" : "Significant wins"}
+            {styles === "olympic" ? "Significant wins — Freestyle & Greco-Roman" : "Significant wins — Folkstyle"}
           </h2>
         </div>
         <div className="flex flex-wrap items-center gap-2">

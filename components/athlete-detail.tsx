@@ -1188,6 +1188,9 @@ export function AthleteDetail({
                     ) : null}
                   </div>
 
+                  {/* The phone hero carries the same Competes line as the desktop one. */}
+                  <CompetitionStrip competition={competition} className="mt-3" />
+
                   {renderHeroContactRow("pills")}
                 </div>
               </div>
@@ -1787,6 +1790,32 @@ export function AthleteDetail({
         {tournamentResultsComponent}
       </div>
 
+      {/*
+        The folkstyle record reads as one run: tournaments, then who he beat, then the season's
+        match log - before the highlight reel and honours, and before the Olympic-styles section,
+        which is always last (Matt).
+      */}
+      {/* Significant wins sit above the full match list: who somebody has beaten is the question
+          a profile gets opened with, and the list underneath answers how many. */}
+      <div className={cn("min-w-0 max-w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.qualityWins)}>
+        <SignificantWinsSection athleteId={String(athlete.id)} qualityWinBlocks={profileQualityWins} styles="folkstyle" />
+      </div>
+
+      {/* 10. High School Career Match Results */}
+      <div
+        /** MatchDataSectionImproved takes its own theme prop; it needs no override hook. */
+        className={cn("min-w-0 max-w-full w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.inSeason)}
+      >
+        <MatchDataSectionImproved
+          athleteId={athlete.id}
+          athleteName={athleteName}
+          graduationYear={graduationYear}
+          theme={isDark ? "dark" : "light"}
+          collapseOnMobile={mobileRecruiterLayout}
+        />
+      </div>
+
+
       {/* 5. Academics - always show for consistent structure */}
       {hasAcademicData || canEdit ? (
       <Card
@@ -2115,26 +2144,6 @@ export function AthleteDetail({
             </div>
           </Card>
       ) : null}
-
-      {/* Significant wins sit above the full match list: who somebody has beaten is the question
-          a profile gets opened with, and the list underneath answers how many. */}
-      <div className={cn("min-w-0 max-w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.qualityWins)}>
-        <SignificantWinsSection athleteId={String(athlete.id)} qualityWinBlocks={profileQualityWins} styles="folkstyle" />
-      </div>
-
-      {/* 10. High School Career Match Results */}
-      <div
-        /** MatchDataSectionImproved takes its own theme prop; it needs no override hook. */
-        className={cn("min-w-0 max-w-full w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.inSeason)}
-      >
-        <MatchDataSectionImproved
-          athleteId={athlete.id}
-          athleteName={athleteName}
-          graduationYear={graduationYear}
-          theme={isDark ? "dark" : "light"}
-          collapseOnMobile={mobileRecruiterLayout}
-        />
-      </div>
 
       {olympicStylesSection ? (
         <div className={cn("min-w-0 max-w-full w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.olympicStyles)}>

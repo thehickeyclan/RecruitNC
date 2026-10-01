@@ -176,7 +176,12 @@ export function ViewProfileClient({
                 rows={folkstyleRows.filter(isTocRow)}
                 hideWhenEmpty
               />
-              <TournamentAccordion theme="dark" rows={folkstyleRows.filter((row) => !isTocRow(row))} />
+              <TournamentAccordion
+                theme="dark"
+                title="National Tournaments — Folkstyle"
+                subtitle="Super 32, NHSCA, Journeymen, duals and open events"
+                rows={folkstyleRows.filter((row) => !isTocRow(row))}
+              />
             </div>
           }
         />

@@ -23,7 +23,8 @@ export const PROFILE_SECTION_ORDER = {
   academics: "order-8 lg:order-6",
   collegeOpens: "order-9 lg:order-9",
   achievements: "order-10 lg:order-10",
-  inSeason: "order-11 lg:order-11",
+  /** Straight after Significant wins (same slot, later in the page): the folkstyle record in one run. */
+  inSeason: "order-4 lg:order-5",
   /** Freestyle & Greco-Roman, after every folkstyle section (Matt: always the last section). */
   olympicStyles: "order-12 lg:order-12",
   /** Inline weight editor — after nav when open. */
