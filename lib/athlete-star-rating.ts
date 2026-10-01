@@ -228,7 +228,34 @@ function depthPart(rows: readonly NationalEventRow[]): StarPart {
 
   const best = options.sort((a, b) => b.points - a.points)[0]
   if (!best) return { label: "National placement", points: 0, max, detail: rows.length ? "No place or deep run" : "No national events on file" }
-  return { label: "National placement", points: best.points, max, detail: best.detail }
+  /*
+   * Scored on the best one; every placement is named. Matt: a coach reading the star wants to see
+   * a Fargo All-American beside an NHSCA 4th, not just whichever scored higher.
+   */
+  const placings = nationalPlacings(rows)
+  return {
+    label: "National placement",
+    points: best.points,
+    max,
+    // Named the same way whether there is one placing or five; a deep run with no place keeps its own.
+    detail: placings.length ? placings.join(" · ") : best.detail,
+  }
+}
+
+/**
+ * Every national placement, best first: "4th at 2025 NHSCA Nationals (All-American)", "5th at 2026
+ * Fargo 16U Freestyle (All-American)", "2nd at 2025 Journeymen (OF)". NHSCA, Fargo and Super 32
+ * place eight, and those eight are their All-Americans.
+ */
+function nationalPlacings(rows: readonly NationalEventRow[]): string[] {
+  return rows
+    .filter((r) => r.placement != null && r.placement > 0 && r.placement <= 8)
+    .sort((a, b) => Number(MAIN_EVENT.test(b.event)) - Number(MAIN_EVENT.test(a.event)) || a.placement! - b.placement! || b.year - a.year)
+    .map((r) => {
+      const division = r.division ? ` ${r.division.replace(/\bBoys\s+/i, "").trim()}` : ""
+      const aa = /^(NHSCA Nationals|Fargo)$/i.test(r.event) ? " (All-American)" : ""
+      return `${placeWord(r.placement!)} at ${r.year} ${r.event}${division}${aa}`
+    })
 }
 
 /**

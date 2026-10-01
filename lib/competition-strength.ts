@@ -136,6 +136,8 @@ export type NationalEventRow = {
   year: number
   placement: number | null
   record: string | null
+  /** Fargo's division, "16U Boys Freestyle" / "Junior Boys Greco-Roman": which tournament it was. */
+  division?: string | null
 }
 
 export type NationalExposure = {
