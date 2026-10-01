@@ -97,7 +97,17 @@ export type EventPlacer = {
  */
 export function eventPlacementLabel(finishes: readonly EventPlacement[]): string | null {
   if (!finishes.length) return null
-  return [...finishes]
+  // The same finish can reach here twice, once from each bracket entry of one wrestler.
+  const unique = [...new Map(finishes.map((f) => [`${f.event}|${f.year}|${f.place}|${f.weight}`, f])).values()]
+  const nhscaAA = unique.filter((f) => /nhsca/i.test(f.event))
+  if (nhscaAA.length > 1) {
+    const rest = unique.filter((f) => !/nhsca/i.test(f.event))
+    const years = nhscaAA.map((f) => f.year).sort().join(", ")
+    const head = `${nhscaAA.length}x NHSCA All-American (${years})`
+    const tail = eventPlacementLabel(rest)
+    return tail ? `${head} · ${tail}` : head
+  }
+  return [...unique]
     .sort((a, b) => b.year - a.year || a.place - b.place)
     .slice(0, 2)
     .map((f) => {

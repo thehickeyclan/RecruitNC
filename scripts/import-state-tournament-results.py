@@ -308,12 +308,23 @@ def mark_nc_namesakes(db, placers):
         parts = key.split()
         return len(parts) >= 2 and any(fargo.first_names_alike(parts[0], f, groups) for f in by_surname.get(parts[-1], ()))
 
-    for value in (True, False):
-        changed = [p["id"] for p in placers if namesake(p["wrestler_name"]) == value and bool(p.get("nc_namesake")) != value]
-        for chunk in range(0, len(changed), 200):
-            db.request("PATCH", "state_tournament_placers", f"?id=in.({','.join(changed[chunk:chunk + 200])})",
-                       {"nc_namesake": value}, "return=minimal")
-    print(f"nc_namesake: {sum(1 for p in placers if namesake(p['wrestler_name']))} placers share a name with a North Carolinian")
+    def write(table, rows):
+        for value in (True, False):
+            changed = [p["id"] for p in rows if namesake(p["wrestler_name"]) == value and p.get("nc_namesake") is not value]
+            for chunk in range(0, len(changed), 200):
+                db.request("PATCH", table, f"?id=in.({','.join(changed[chunk:chunk + 200])})",
+                           {"nc_namesake": value}, "return=minimal")
+        print(f"nc_namesake ({table}): {sum(1 for p in rows if namesake(p['wrestler_name']))} of {len(rows)} share a name with a North Carolinian")
+
+    write("state_tournament_placers", placers)
+    # National-event placers (Super 32, NHSCA, Journeymen), when that table exists. A North
+    # Carolinian's own placing is marked too, which is right: NC kids are never credited on name alone.
+    try:
+        events = db.get_all("national_event_placers", "select=id,wrestler_name,nc_namesake")
+    except SystemExit:
+        events = []
+    if events:
+        write("national_event_placers", events)
 
 
 class Supabase:

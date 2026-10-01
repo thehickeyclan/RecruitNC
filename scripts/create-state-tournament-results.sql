@@ -122,9 +122,12 @@ create table if not exists public.national_event_placers (
   wrestler_name text not null,
   team text,
   state text,
+  -- Set by the confirmation pass: a North Carolinian shares this name, so it is never credited alone.
+  nc_namesake boolean,
   created_at timestamptz not null default now(),
   unique (event_key, weight, place, wrestler_name)
 );
+alter table public.national_event_placers add column if not exists nc_namesake boolean;
 create index if not exists idx_national_event_placers_name on public.national_event_placers (lower(wrestler_name));
 alter table public.national_event_placers enable row level security;
 drop policy if exists "national_event_placers_public_read" on public.national_event_placers;

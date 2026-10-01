@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { findSignificantLosses, findSignificantWins, isLoss, isWin, withAccoladesOnly, type OpponentIndex } from "./significant-wins"
+import { eventPlacementLabel, findSignificantLosses, findSignificantWins, isLoss, isWin, withAccoladesOnly, type OpponentIndex } from "./significant-wins"
 
 const index: OpponentIndex = {
   tocField: ["Adam Walker", "Liam Myles"],
@@ -373,5 +373,31 @@ describe("distinctive out-of-state names", () => {
   it("never treats a shared name as distinctive", () => {
     const shared = { ...index, statePlacers: [{ ...wilder, distinctive: false }] }
     expect(findSignificantWins([bout("Spec Ops (FL)", 190)], shared)).toEqual([])
+  })
+})
+
+describe("national event placings", () => {
+  const sandlin = [
+    { event: "NHSCA", year: 2025, place: 8, weight: 170 },
+    { event: "NHSCA", year: 2026, place: 8, weight: 182 },
+  ]
+
+  it("reads two NHSCA finishes as a multiple All-American", () => {
+    expect(eventPlacementLabel(sandlin)).toBe("2x NHSCA All-American (2025, 2026)")
+    expect(eventPlacementLabel([{ event: "Super 32", year: 2025, place: 3, weight: 190 }])).toBe("2025 Super 32 3rd (190)")
+  })
+
+  it("credits a distinctive event placer on an all-star team when the weight fits", () => {
+    const index = {
+      tocField: [],
+      ranked: [],
+      eventPlacers: [{ name: "Noah Sandlin", state: "OH", schools: [], distinctive: true, finishes: sandlin }],
+    }
+    const bout = (weight: number) =>
+      ({ opponent: "Noah Sandlin", opponent_school: "Freakztyle Supremacy - HSB", win_loss: "L", result: "DEC", date: "5/23/2026", venue: "Duals", weight })
+    const [loss] = findSignificantLosses([bout(182)], index)
+    expect(loss.reason).toBe("national-placer")
+    expect(loss.eventLabel).toBe("2x NHSCA All-American (2025, 2026)")
+    expect(findSignificantLosses([bout(120)], index)).toEqual([])
   })
 })

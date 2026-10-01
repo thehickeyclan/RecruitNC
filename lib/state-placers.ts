@@ -69,11 +69,9 @@ async function buildStatePlacerIndex(
     options?.outOfState ? loadNationallyRanked(supabase).catch(() => []) : Promise.resolve(undefined),
   ])
   const stateSchools = [...new Set(ncPlacers.flatMap((p) => p.schools))]
-  if (otherPlacers.length) {
-    const ncNames = await loadNcAthleteNames(supabase).catch(() => [])
-    markDistinctive(otherPlacers, [...ncPlacers.map((p) => p.name), ...ncNames])
-  }
-  const eventPlacers = options?.outOfState ? await loadEventPlacers(supabase, otherPlacers).catch(() => []) : undefined
+  const ncNames = otherPlacers.length ? [...ncPlacers.map((p) => p.name), ...(await loadNcAthleteNames(supabase).catch(() => []))] : []
+  if (otherPlacers.length) markDistinctive(otherPlacers, ncNames)
+  const eventPlacers = options?.outOfState ? await loadEventPlacers(supabase, otherPlacers, ncNames).catch(() => []) : undefined
   return {
     statePlacers: [...ncPlacers, ...otherPlacers],
     stateSchools,
@@ -124,20 +122,27 @@ export async function loadNationallyRanked(supabase: SupabaseClient): Promise<Na
  * are borrowed from the same wrestler's state placing (same name, same state): a name only proven
  * safe there may be credited on name alone here, so no namesake slips in through Super 32.
  */
-async function loadEventPlacers(supabase: SupabaseClient, statePlacers: StatePlacer[]): Promise<EventPlacer[]> {
-  type Row = { event_name: string; year: number; place: number; weight: string | null; wrestler_name: string; team: string | null; state: string | null }
+async function loadEventPlacers(supabase: SupabaseClient, statePlacers: StatePlacer[], ncNames: string[]): Promise<EventPlacer[]> {
+  type Row = {
+    event_name: string
+    year: number
+    place: number
+    weight: string | null
+    wrestler_name: string
+    team: string | null
+    state: string | null
+    nc_namesake?: boolean | null
+  }
   const rows: Row[] = []
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase
-      .from("national_event_placers")
-      .select("event_name, year, place, weight, wrestler_name, team, state")
-      .range(from, from + 999)
+    const { data, error } = await supabase.from("national_event_placers").select("*").range(from, from + 999)
     if (error || !data?.length) break
     rows.push(...(data as Row[]))
     if (data.length < 1000) break
   }
   const stateFlags = new Map(statePlacers.map((p) => [`${p.state}|${p.name.toLowerCase()}`, p]))
-  const byKey = new Map<string, EventPlacer & { finishes: EventPlacer["finishes"][number][]; schools: string[] }>()
+  type Entry = EventPlacer & { finishes: EventPlacer["finishes"][number][]; schools: string[]; ncNamesake: boolean }
+  const byKey = new Map<string, Entry>()
   for (const r of rows) {
     const name = String(r.wrestler_name ?? "").trim()
     if (!name) continue
@@ -149,12 +154,56 @@ async function loadEventPlacers(supabase: SupabaseClient, statePlacers: StatePla
       schools: !r.state && r.team ? [r.team] : [],
       identityConfirmed: Boolean(flags?.identityConfirmed),
       distinctive: Boolean(flags?.distinctive),
+      ncNamesake: false,
       finishes: [],
     }
+    // Not yet checked counts as a namesake, as for state placers.
+    entry.ncNamesake ||= r.nc_namesake !== false
     entry.finishes.push({ event: r.event_name, year: r.year, place: r.place, weight: Number.parseInt(String(r.weight ?? ""), 10) || null })
     byKey.set(key, entry)
   }
-  return [...byKey.values()]
+  const entries = [...byKey.values()]
+
+  /*
+   * One wrestler, several brackets: Noah Sandlin placed at NHSCA for California in 2025 (170) and
+   * for Ohio in 2026 (182). Entries with the same name are joined when every pair of weights is
+   * plausible for one growing boy, so each carries both finishes ("2x NHSCA All-American").
+   */
+  const byName = new Map<string, Entry[]>()
+  for (const e of entries) byName.set(e.name.toLowerCase(), [...(byName.get(e.name.toLowerCase()) ?? []), e])
+  const consistent = (group: Entry[]) => {
+    const ws = group.flatMap((e) => e.finishes.map((f) => f.weight)).filter((w): w is number => !!w)
+    return ws.every((a) => ws.every((b) => a <= b * 1.3 && b <= a * 1.3))
+  }
+  for (const group of byName.values()) {
+    if (group.length < 2 || !consistent(group)) continue
+    const all = group.flatMap((e) => e.finishes)
+    for (const e of group) e.finishes = all
+  }
+
+  /*
+   * An event-only name (no state placing to borrow from) is distinctive when no other placer, event
+   * or state, and no North Carolinian could carry it, and the confirmation pass found no NC namesake.
+   */
+  const pool = [...statePlacers.map((p) => p.name), ...entries.map((e) => e.name), ...ncNames]
+  const byWord = new Map<string, string[]>()
+  for (const name of pool) {
+    for (const word of new Set(nameWords(name))) byWord.set(word, [...(byWord.get(word) ?? []), name])
+  }
+  for (const e of entries) {
+    if (e.distinctive || e.ncNamesake) continue
+    const group = byName.get(e.name.toLowerCase()) ?? [e]
+    if (group.length > 1 && !consistent(group)) continue
+    const rivals = new Set<string>()
+    for (const word of nameWords(e.name)) {
+      for (const other of byWord.get(word) ?? []) {
+        // The same spelling is this wrestler (his other brackets, or himself).
+        if (other.toLowerCase() !== e.name.toLowerCase() && namesLikelySamePerson(other, e.name)) rivals.add(other)
+      }
+    }
+    e.distinctive = rivals.size === 0
+  }
+  return entries
 }
 
 /** Every North Carolina profile's name: a placer sharing one is never credited on name alone. */
