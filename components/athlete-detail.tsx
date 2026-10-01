@@ -16,7 +16,7 @@ import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Award, ChevronDown, Edit, ExternalLink, FileText, GraduationCap, Mail, Phone, Share2, TrendingUp, Trophy, Video } from "lucide-react"
+import { Award, Camera, ChevronDown, Edit, ExternalLink, FileText, GraduationCap, Mail, Pencil, Phone, Scale, School, Share2, TrendingUp, Trophy, Video } from "lucide-react"
 import { UnifiedProfileMobileNav } from "./unified-profile-mobile-nav"
 import type { ProfileQualityWinsTournamentBlock } from "@/lib/profile-quality-wins"
 import {
@@ -1601,9 +1601,107 @@ export function AthleteDetail({
         </div>
       )}
 
+      {/*
+        Owner toolbar. Matt: if someone owns the profile, make it obvious they can edit it. The
+        section "Edit" buttons were small ghost links in each header, and the phone banner had no
+        way to change the photo at all; this puts every editor one tap from the top.
+      */}
+      {canEdit && mobileRecruiterLayout ? (
+        <div
+          className={cn(
+            "rounded-xl border border-[#D3B574]/50 bg-gradient-to-r from-[#D3B574]/15 to-[#D3B574]/5 p-4 lg:p-5",
+            PROFILE_SECTION_ORDER.panels,
+          )}
+        >
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#D3B574] text-[#0A1628]">
+              <Pencil className="h-4 w-4" aria-hidden />
+            </span>
+            <div className="min-w-0">
+              <p className="text-base font-bold text-white">
+                {isViewingOwnProfile ? "This is your profile" : isAdmin && !isParentLinkedEditor ? "You can edit this profile (admin)" : "You can edit this profile"}
+              </p>
+              <p className="text-sm text-white/70">
+                College coaches read this page. Keep the photo, weight, bio and video current.
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {(
+              [
+                { key: "photo", label: "Photo", icon: Camera, target: null },
+                { key: "weight", label: "Weight", icon: Scale, target: null },
+                { key: "bio", label: "Bio", icon: FileText, target: "bio" },
+                { key: "contact", label: "Contact", icon: Phone, target: null },
+                { key: "highlight-video", label: "Video", icon: Video, target: "highlights" },
+                { key: "school-club", label: "School & club", icon: School, target: "programs" },
+                { key: "academics", label: "Academics", icon: GraduationCap, target: "[data-section=academics]" },
+              ] as const
+            ).map(({ key, label, icon: Icon, target }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => {
+                  if (key === "bio") setBioExpanded(true)
+                  setEditingSection(key)
+                  // Forms for photo, weight and contact open just below this bar; the rest open in
+                  // their own section, so take the owner there.
+                  window.setTimeout(() => {
+                    const el = target
+                      ? document.querySelector<HTMLElement>(target.startsWith("[") ? target : `#${target}`)
+                      : document.querySelector<HTMLElement>("[data-owner-editor]")
+                    el?.scrollIntoView({ behavior: "smooth", block: "start" })
+                  }, 50)
+                }}
+                className={cn(
+                  "inline-flex min-h-[40px] items-center gap-2 rounded-lg border px-3.5 py-2 text-sm font-semibold transition-colors",
+                  editingSection === key
+                    ? "border-[#D3B574] bg-[#D3B574] text-[#0A1628]"
+                    : "border-white/20 bg-white/10 text-white hover:bg-white/20",
+                )}
+              >
+                <Icon className="h-4 w-4" aria-hidden />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {canEdit && editingSection === "photo" && (
+        <Card
+          data-owner-editor
+          className={cn("profile-card border-t-4 border-t-[#D3B574] shadow-md", mobileRecruiterLayout && PROFILE_SECTION_ORDER.weightEdit)}
+        >
+          <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-2xl font-bold text-white">Profile photo</h2>
+              <Button size="sm" variant="ghost" className="text-white hover:bg-white/20" onClick={() => setEditingSection(null)}>
+                Done
+              </Button>
+            </div>
+          </div>
+          <div className="profile-card-body p-6">
+            <p className="mb-4 text-sm text-muted-foreground">
+              Use a clear action or portrait photo with no text or app overlays on it.
+            </p>
+            <div className="relative mx-auto aspect-[4/5] w-full max-w-xs overflow-hidden rounded-xl">
+              <ImageUploadEditor
+                athleteId={athlete.id}
+                currentImageUrl={athletePhoto || undefined}
+                onUpload={handleImageUpload}
+                canEdit={canEdit}
+                className="h-full w-full"
+              />
+            </div>
+          </div>
+        </Card>
+      )}
+
       {/* Weight / contact edit forms (opened from hero) */}
       {canEdit && editingSection === "weight" && (
         <Card
+          data-owner-editor
           className={cn(
             "profile-card border-t-4 border-t-[#D3B574] shadow-md",
             mobileRecruiterLayout && PROFILE_SECTION_ORDER.weightEdit,
@@ -1628,6 +1726,7 @@ export function AthleteDetail({
 
       {canEdit && editingSection === "contact" && (
         <Card
+          data-owner-editor
           className={cn(
             "profile-card border-t-4 border-t-[#D3B574] shadow-md",
             mobileRecruiterLayout && PROFILE_SECTION_ORDER.weightEdit,
