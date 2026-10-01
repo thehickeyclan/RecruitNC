@@ -65,6 +65,12 @@ def text(v):
     return s
 
 
+def wrestler(raw):
+    """A wrestler's name, or None where the sheet put a placeholder in the name column."""
+    s = text(raw)
+    return None if s and s.lower() in {"forfeit", "bye", "tbd", "unknown", "n/a"} else s
+
+
 def normalize_class(raw):
     s = text(raw)
     m = re.fullmatch(r"Class\s+(\d)", s or "", re.I)
@@ -102,7 +108,7 @@ def read_workbook(path):
 
     bouts = []
     for i, r in enumerate(sheet_rows(wb, "matches"), start=2):
-        winner, loser = text(r.get("Winner")), text(r.get("Loser"))
+        winner, loser = wrestler(r.get("Winner")), wrestler(r.get("Loser"))
         if not winner and not loser:
             continue  # bout row not collected yet
         b = {
@@ -124,8 +130,10 @@ def read_workbook(path):
         }
         where = f"matches row {i} ({b['classification']} {b['weight']} {b['bout']})"
         div = divisions.get(tuple(b[k] for k in DIVISION_KEY))
-        if not winner or not loser:
-            errors.append(f"{where}: winner or loser missing")
+        # A placement bout with no loser happens - the other wrestler forfeited or never made the
+        # bout - and the winner still placed. Only a bout with no winner is unusable.
+        if not winner:
+            errors.append(f"{where}: winner missing")
         if b["bout"] not in BOUT_PLACES:
             errors.append(f"{where}: bout must be 1st/3rd/5th/7th")
         elif div and BOUT_PLACES[b["bout"]][1] > div["places_awarded"]:
@@ -166,6 +174,8 @@ def read_workbook(path):
         win_place, lose_place = BOUT_PLACES[b["bout"]]
         for place, name, school in ((win_place, b["winner_name"], b["winner_school"]),
                                     (lose_place, b["loser_name"], b["loser_school"])):
+            if not name:
+                continue
             row = {k: b[k] for k in DIVISION_KEY + ("weight",)}
             row.update(place=place, wrestler_name=name, school_raw=school, source_url=b["source_url"])
             row.update(extras.get((b["classification"], b["weight"], place), {}))

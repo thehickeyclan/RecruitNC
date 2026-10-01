@@ -39,7 +39,7 @@ create table if not exists public.state_tournament_bouts (
   bout text not null check (bout in ('1st', '3rd', '5th', '7th')),
   winner_name text not null,
   winner_school text,
-  loser_name text not null,
+  loser_name text,              -- null when the loser forfeited out of a placement bout
   loser_school text,
   result_type text check (result_type in ('F', 'TF', 'MD', 'DEC', 'SV', 'TB', 'UTB', 'INJ', 'DQ', 'FF')),
   score text,
@@ -81,8 +81,9 @@ create table if not exists public.state_tournament_placers (
     on delete cascade
 );
 
--- Added after the first run; safe on a table that already has it.
+-- Added after the first run; safe on a table that already has them.
 alter table public.state_tournament_placers add column if not exists identity_confirmed boolean not null default false;
+alter table public.state_tournament_bouts alter column loser_name drop not null;
 
 create index if not exists idx_state_tournament_placers_name on public.state_tournament_placers (lower(wrestler_name));
 create index if not exists idx_state_tournament_placers_state_season on public.state_tournament_placers (state, season);
