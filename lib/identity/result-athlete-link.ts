@@ -27,7 +27,7 @@ import {
 } from "@/lib/athlete-name-match"
 
 /** Bump when the rules change, so links made under older rules can be found and re-checked. */
-export const LINK_MATCHER_VERSION = "2026-10-01.1"
+export const LINK_MATCHER_VERSION = "2026-10-01.2"
 
 export type AthleteForLink = {
   id: string
@@ -102,6 +102,11 @@ function assess(row: ResultRowForLink, a: AthleteForLink): Assessed {
   const impliedGrad = row.classYear ?? gradYearFromDivision(row.division, row.year)
   const divisionComparable = impliedGrad != null && a.graduationYear != null
   const divisionAgrees = divisionComparable && impliedGrad === a.graduationYear
+  // NHSCA lets a wrestler enter an older grade's bracket, never a younger one: a 2029 freshman in
+  // the Junior division is wrestling up. Only a division younger than the athlete rules him out.
+  // A recorded class year (national rankings) is exact, so any difference counts there.
+  const divisionContradicts =
+    divisionComparable && (row.classYear != null ? impliedGrad !== a.graduationYear : impliedGrad! > a.graduationYear!)
   const rowState = normState(row.state)
   const athleteState = normState(a.state)
   const stateContradicts = rowState != null && athleteState != null && rowState !== athleteState
@@ -109,7 +114,8 @@ function assess(row: ResultRowForLink, a: AthleteForLink): Assessed {
   if (schoolAgrees) signals.push("school")
   else if (schoolComparable) signals.push("school differs")
   if (divisionAgrees) signals.push("division class")
-  else if (divisionComparable) signals.push(`division says ${impliedGrad}`)
+  else if (divisionContradicts) signals.push(`division says ${impliedGrad}`)
+  else if (divisionComparable) signals.push("wrestled up a division")
   if (yearStrict) signals.push("year")
   else if (yearComparable && !yearLoose) signals.push("year out of range")
   if (stateContradicts) signals.push(`state ${rowState}`)
@@ -118,7 +124,7 @@ function assess(row: ResultRowForLink, a: AthleteForLink): Assessed {
   // wrestler whatever the name says. Then the read path's rule: every comparable signal disagrees.
   const softContradiction =
     (schoolComparable || yearComparable) && !(schoolComparable && schoolAgrees) && !(yearComparable && yearLoose)
-  const contradicted = (divisionComparable && !divisionAgrees) || stateContradicts || softContradiction
+  const contradicted = divisionContradicts || stateContradicts || softContradiction
   // Name plus a year window is how namesakes got in; corroboration needs the school or the division.
   const corroborated = !contradicted && (schoolAgrees || divisionAgrees)
 

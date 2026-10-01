@@ -28,6 +28,12 @@ describe("decideLink", () => {
     expect(d).toMatchObject({ status: "no_match", reason: "namesake_rejected" })
   })
 
+  it("does not reject a wrestler who wrestled up a division", () => {
+    // Isaac Young, class of 2029, in the 2026 Junior bracket: allowed, and not a namesake.
+    const d = decideLink({ name: "Campbell Tufts", school: null, year: 2026, division: "Senior" }, [athlete({ highSchool: null })])
+    expect(d.status).not.toBe("no_match")
+  })
+
   it("rejects a namesake from another school years outside the career", () => {
     // Joshua Wilson: a 2020 runner-up is not the 2027 wrestler.
     const d = decideLink(

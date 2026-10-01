@@ -14,7 +14,7 @@ views, and names collide across states. Step 1 records the answer once.
 - **Fills it with a backfill script** (`scripts/identity/backfill-result-links.ts`), dry run by
   default, using the matcher in `lib/identity/result-athlete-link.ts`.
 
-## Matching rules (`LINK_MATCHER_VERSION = 2026-10-01.1`)
+## Matching rules (`LINK_MATCHER_VERSION = 2026-10-01.2`)
 
 Built on the read path's own rules (`lib/athlete-name-match.ts`), so a stored link agrees with what
 the profile already shows.
@@ -33,7 +33,7 @@ Name plus a plausible year is never enough on its own — that is how namesakes 
 | Table | Rows | Linked | of which already linked | Review | Namesakes rejected |
 |---|---|---|---|---|---|
 | wrestling_nchsaa_results | 10,785 | 699 | 648 | 16 | 3 |
-| nhsca_placements | 1,497 | 392 | 334 | 7 | 0 |
+| nhsca_placements | 1,497 | 399 | 341 | 0 | 0 |
 | wrestling_nhsca_results | 356 | 59 | — | 0 | 2 |
 | super32_results | 835 | 157 | — | 43 | 1 |
 | fargo_results | 191 | 101 | 97 | 9 | 0 |
@@ -43,9 +43,17 @@ Name plus a plausible year is never enough on its own — that is how namesakes 
 Everything else is wrestlers with no profile, as expected — results tables cover every wrestler, the
 site has 512 profiles.
 
-**15 links stored today are wrong** (an existing `athlete_id` the record contradicts), e.g. Jonathan
-Burns' 2007–08 NCHSAA results for Cardinal Gibbons linked to the 2027 Jonathan Burns at Franklinton.
-They go to review rather than being changed automatically.
+**8 links stored today are wrong**: old NCHSAA results attached to a current wrestler of the same
+name, e.g. Jonathan Burns' 2005–08 results for Cary and Cardinal Gibbons linked to the 2027 Jonathan
+Burns at Franklinton. The profile's own namesake filter already hides them, so nothing wrong is shown;
+they sit in review rather than being changed automatically.
+
+Written 1 October: 1,669 links and 94 review rows (`result_athlete_links`).
+
+**Rule learned on the first run:** NHSCA lets a wrestler enter an older grade's bracket, never a
+younger one. Version .1 treated any division mismatch as a different person and flagged seven correct
+links (Jacob Campos, a junior, in the Senior bracket). Version .2 rejects only a division younger than
+the wrestler.
 
 ## Next steps
 
