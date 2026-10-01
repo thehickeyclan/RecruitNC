@@ -51,8 +51,14 @@ EVENTS = {
         "name": "2026 AAU Scholastic Duals Boys",
         "teams": {"NC United": "national"},
     },
+    # Ultimate Club Fall Duals, 20 Sept 2025: the boys' and the girls' teams.
+    "ucd": {
+        "key": "ucd-2025-nc-united",
+        "name": "Ultimate Club Fall Duals",
+        "teams": {"NC United - BHS": "national", "NC United - W": "national"},
+    },
 }
-EVENT = EVENTS["aau" if "aau" in sys.argv[sys.argv.index("--event") + 1:sys.argv.index("--event") + 2] else "nhsca"] if "--event" in sys.argv else EVENTS["nhsca"]
+EVENT = EVENTS[sys.argv[sys.argv.index("--event") + 1]] if "--event" in sys.argv else EVENTS["nhsca"]
 EVENT_KEY, EVENT_NAME, NC_TEAMS = EVENT["key"], EVENT["name"], EVENT["teams"]
 
 
@@ -149,9 +155,14 @@ def aau_linker(db):
                 if len(words) >= 2:
                     by_surname[words[-1]].append((words[0], a["id"]))
     groups = fargo.nickname_groups()
+    # An NC United wrestler whose profile is not flagged NC (Jack Harty): exact full name only.
+    anyone = collections.defaultdict(set)
+    for a in db.get_all("athletes?select=id,name"):
+        if a.get("name"):
+            anyone[name_key(a["name"])].add(a["id"])
 
     def link(_team, wrestler):
-        ids = profiles.get(name_key(wrestler), set())
+        ids = profiles.get(name_key(wrestler), set()) or anyone.get(name_key(wrestler), set())
         if not ids:
             words = name_key(wrestler).split()
             if len(words) >= 2:
@@ -172,7 +183,8 @@ def main():
 
     load_env()
     db = Db()
-    if EVENT is EVENTS["aau"]:
+    if EVENT is not EVENTS["nhsca"]:
+        # No roster table outside the NHSCA Duals: link by name, as the Fargo import does.
         link = aau_linker(db)
     else:
         link = roster_linker(db)

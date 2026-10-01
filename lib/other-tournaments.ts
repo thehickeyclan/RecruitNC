@@ -526,6 +526,9 @@ export const NC_UNITED_DUALS_EVENT_KEY = "nhsca-duals-2026-nc-united"
 /** NC United's AAU Scholastic Duals bouts (the same script, --event aau). */
 export const NC_UNITED_AAU_DUALS_EVENT_KEY = "aau-scholastic-duals-2026-nc-united"
 
+/** NC United's 2025 Ultimate Club Fall Duals bouts, boys and girls (the same script, --event ucd). */
+export const NC_UNITED_UCD_2025_EVENT_KEY = "ucd-2025-nc-united"
+
 /** Fargo bouts (scripts/import-fargo-bouts.py): fargo-2026-16u-fs, fargo-2026-junior-gr. */
 export function fargoEventKey(year: number, age: string, style: "FS" | "GR" | string): string {
   return `fargo-${year}-${age.toLowerCase()}-${String(style).toLowerCase() === "gr" ? "gr" : "fs"}`
@@ -544,7 +547,12 @@ export async function getAttachedEventBouts(supabase: SupabaseClient, athleteId:
     .from("other_tournament_bouts")
     .select("event_key, event_name, year, weight_class, round, bout_order, opponent_name, opponent_club, athlete_club, win, is_bye, win_type, score")
     .eq("athlete_id", athleteId)
-    .or(`event_key.eq.${NC_UNITED_DUALS_EVENT_KEY},event_key.eq.${NC_UNITED_AAU_DUALS_EVENT_KEY},event_key.like.fargo-%`)
+    .or(
+      [NC_UNITED_DUALS_EVENT_KEY, NC_UNITED_AAU_DUALS_EVENT_KEY, NC_UNITED_UCD_2025_EVENT_KEY]
+        .map((key) => `event_key.eq.${key}`)
+        .concat("event_key.like.fargo-%")
+        .join(","),
+    )
     .order("bout_order", { ascending: true })
   if (error || !data) return []
   return data.map((row) => ({

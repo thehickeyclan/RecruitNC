@@ -16,6 +16,7 @@ import {
   fargoEventKey,
   NC_UNITED_AAU_DUALS_EVENT_KEY,
   NC_UNITED_DUALS_EVENT_KEY,
+  NC_UNITED_UCD_2025_EVENT_KEY,
   type AttachedEventBout,
 } from "@/lib/other-tournaments"
 
@@ -292,6 +293,7 @@ export function buildTournamentRows(input: {
    */
   const ncUnitedBoutsFor = (event: string, year: number): TournamentRow["bouts"] => {
     if (/aau scholastic/i.test(event)) return year === 2026 ? attached(NC_UNITED_AAU_DUALS_EVENT_KEY) : []
+    if (/ultimate club/i.test(event)) return year === 2025 ? attached(NC_UNITED_UCD_2025_EVENT_KEY) : []
     const team = /select/i.test(event) ? "select" : /nhsca duals/i.test(event) ? "national" : null
     if (!team) return []
     return year === 2026 ? attached(NC_UNITED_DUALS_EVENT_KEY, (b) => b.team === team) : []
