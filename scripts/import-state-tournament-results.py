@@ -197,7 +197,8 @@ class Supabase:
             with urllib.request.urlopen(req) as res:
                 return res.read()
         except urllib.error.HTTPError as e:
-            sys.exit(f"{method} {table} failed: {e.code} {e.read().decode()}")
+            hint = " — table missing; run scripts/create-state-tournament-results.sql first" if e.code == 404 else ""
+            sys.exit(f"{method} {table} failed: {e.code} {e.read().decode()}{hint}")
 
     def division_filter(self, key):
         return "?" + "&".join(f"{k}=eq.{urllib.parse.quote(str(v))}" for k, v in zip(DIVISION_KEY, key))
