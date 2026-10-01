@@ -159,6 +159,12 @@ async function main() {
   if (!apply) {
     console.log("\nDRY RUN — pass --apply to write")
     for (const p of payload.slice(0, 8)) console.log(`   ${p.athlete_name} ${p.win ? "beat" : "lost to"} ${p.opponent_name} (${p.opponent_club}) ${p.win_type} ${p.score} — ${p.round}`)
+    // Every wrestler with his bout count, so a re-run can be compared with what is stored.
+    if (process.argv.includes("--list")) {
+      const counts = new Map<string, number>()
+      for (const p of payload) counts.set(`${p.athlete_id}\t${p.athlete_name}`, (counts.get(`${p.athlete_id}\t${p.athlete_name}`) ?? 0) + 1)
+      for (const [k, n] of [...counts].sort()) console.log(`LIST\t${k}\t${n}`)
+    }
     return
   }
 
