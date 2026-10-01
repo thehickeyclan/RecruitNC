@@ -46,6 +46,9 @@ export const LINK_SOURCES: Source[] = [
     map: (r) => ({ name: r.athlete_name, school: r.high_school, year: r.year, state: r.state, existingAthleteId: r.athlete_id, schoolMayBeClub: true }) },
   { table: "other_tournament_results", nameColumn: "athlete_name", select: "id,athlete_name,high_school,year,state,athlete_id",
     map: (r) => ({ name: r.athlete_name, school: r.high_school, year: r.year, state: r.state, existingAthleteId: r.athlete_id }) },
+  // The live NHSCA dashboard: NC wrestlers only, no year column - the row is made the week of the event.
+  { table: "nhsca_roster", nameColumn: "name", select: "id,name,school,classification,created_at",
+    map: (r) => ({ name: r.name, school: r.school, year: r.created_at ? Number(String(r.created_at).slice(0, 4)) : null, division: r.classification, state: "NC" }) },
   { table: "national_rankings", nameColumn: "athlete_name", timeColumns: ["created_at"], select: "id,athlete_name,high_school,ranking_month,class_year,state,athlete_id",
     map: (r) => ({ name: r.athlete_name, school: r.high_school, year: r.ranking_month ? Number(String(r.ranking_month).slice(0, 4)) : null, classYear: r.class_year, state: r.state, existingAthleteId: r.athlete_id }) },
 ]
@@ -87,9 +90,12 @@ function lastNameToken(name: string): string | null {
 }
 
 export async function linkResults(admin: SupabaseClient, options: LinkRunOptions = {}): Promise<LinkRunResult> {
+  // identity_changed_at is stamped by a trigger when a name, class, school, club or state changes
+  // (scripts/sql/athletes-identity-changed-at.sql); updated_at alone missed wrestling-name edits.
+  const columns = "id,name,wrestling_name,graduationyear,highschool,wrestlingClub,state,created_at,updated_at"
   const athleteRows = await pageAll((from) =>
-    admin.from("athletes").select("id,name,wrestling_name,graduationyear,highschool,wrestlingClub,state,created_at,updated_at").order("id").range(from, from + 999),
-  )
+    admin.from("athletes").select(`${columns},identity_changed_at`).order("id").range(from, from + 999),
+  ).catch(() => pageAll((from) => admin.from("athletes").select(columns).order("id").range(from, from + 999)))
   const athletes: AthleteForLink[] = athleteRows.map((a) => ({
     id: a.id, name: a.name ?? "", wrestlingName: a.wrestling_name, graduationYear: a.graduationyear, highSchool: a.highschool, club: a.wrestlingClub, state: a.state,
   }))
@@ -99,7 +105,7 @@ export async function linkResults(admin: SupabaseClient, options: LinkRunOptions
   const changedSurnames = options.since
     ? [...new Set(
         athleteRows
-          .filter((a) => String(a.created_at ?? "") >= options.since! || String(a.updated_at ?? "") >= options.since!)
+          .filter((a) => [a.created_at, a.updated_at, a.identity_changed_at].some((t) => t && String(t) >= options.since!))
           .flatMap((a) => [a.name, a.wrestling_name].filter(Boolean).map((n: string) => lastNameToken(n)))
           .filter((t): t is string => Boolean(t)),
       )]

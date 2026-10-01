@@ -80,6 +80,9 @@ function nhscaRosterRowTournamentYear(r: Record<string, unknown>): number {
     const n = typeof y === "number" ? y : parseInt(String(y), 10)
     if (Number.isFinite(n) && n >= 1990 && n <= 2100) return n
   }
+  // No year column: the row is created the week of the event.
+  const created = Number(String(r.created_at ?? "").slice(0, 4))
+  if (Number.isFinite(created) && created >= 1990 && created <= 2100) return created
   return NHSCA_ROSTER_DEFAULT_TOURNAMENT_YEAR
 }
 
@@ -138,42 +141,46 @@ async function queryNhscaRosterRowsByName(
   return loose
 }
 
+/** Roster rows inside the athlete's NHSCA years, one per year by bracket - for the name search and the stored links alike. */
+function selectNhscaRosterRows(raw: Record<string, unknown>[], graduationYear: number): TournamentResultRow[] {
+  const startYear = graduationYear - 4
+  const yearMax = nhscaYearUpperBound(graduationYear)
+  if (!raw.length) return []
+  const inGradWindow = raw.filter((r) => {
+    const y = nhscaRosterRowTournamentYear(r)
+    return y >= startYear && y <= yearMax
+  })
+  const rowsToUse = inGradWindow.length ? inGradWindow : raw
+  const asResults = rowsToUse.map((r) => mapNhscaRosterRowToResult(r))
+  const scored = asResults.map((row, i) => {
+    const ty = nhscaRosterRowTournamentYear(rowsToUse[i] as Record<string, unknown>)
+    const want = preferredNhscaBracketKeyword(graduationYear, ty)
+    return {
+      row,
+      score: want ? scoreNhscaDivisionMatch(rowsToUse[i].classification as string | undefined, want) : 0,
+    }
+  })
+  const matched = scored.filter((s) => s.score > 0)
+  const list = matched.length ? matched.map((s) => s.row) : asResults
+  if (list.length === 1) return list
+  const ty0 = nhscaRosterRowTournamentYear(rowsToUse[0] as Record<string, unknown>)
+  const wantPick = preferredNhscaBracketKeyword(graduationYear, ty0) ?? "junior"
+  const picked = pickNhscaRowWhenUnscored(list, wantPick)
+  return picked ? [picked] : []
+}
+
 /**
  * Live dashboard table `nhsca_roster`: NC kids, tournament record, optional placement.
- * Matches profile by name variants + NHSCA division vs graduation year (same rules as bracket dedupe).
+ * Read through stored links when given; otherwise matched by name variants + NHSCA division vs graduation year.
  */
 async function getNHSCAFromNhscaRosterTable(
   supabase: SupabaseClient,
   athleteName: string,
   graduationYear: number,
+  linked?: LinkedSourceRows | null,
 ): Promise<TournamentResultRow[]> {
-  const startYear = graduationYear - 4
-  const yearMax = nhscaYearUpperBound(graduationYear)
-
-  const mapRows = (raw: Record<string, unknown>[]): TournamentResultRow[] => {
-    if (!raw.length) return []
-    const inGradWindow = raw.filter((r) => {
-      const y = nhscaRosterRowTournamentYear(r)
-      return y >= startYear && y <= yearMax
-    })
-    const rowsToUse = inGradWindow.length ? inGradWindow : raw
-    const asResults = rowsToUse.map((r) => mapNhscaRosterRowToResult(r))
-    const scored = asResults.map((row, i) => {
-      const ty = nhscaRosterRowTournamentYear(rowsToUse[i] as Record<string, unknown>)
-      const want = preferredNhscaBracketKeyword(graduationYear, ty)
-      return {
-        row,
-        score: want ? scoreNhscaDivisionMatch(rowsToUse[i].classification as string | undefined, want) : 0,
-      }
-    })
-    const matched = scored.filter((s) => s.score > 0)
-    const list = matched.length ? matched.map((s) => s.row) : asResults
-    if (list.length === 1) return list
-    const ty0 = nhscaRosterRowTournamentYear(rowsToUse[0] as Record<string, unknown>)
-    const wantPick = preferredNhscaBracketKeyword(graduationYear, ty0) ?? "junior"
-    const picked = pickNhscaRowWhenUnscored(list, wantPick)
-    return picked ? [picked] : []
-  }
+  const mapRows = (raw: Record<string, unknown>[]) => selectNhscaRosterRows(raw, graduationYear)
+  if (linked) return mapRows(linked.nhsca_roster)
 
   const primary = await queryNhscaRosterRowsByName(supabase, athleteName)
   if (primary.length) return mapRows(primary)
@@ -361,11 +368,10 @@ export async function getNHSCAFromTables(
   const exactName = normalizeApostrophes(athleteName.trim())
 
   // Stored links replace the placement and legacy name searches, inside the same year window.
-  // nhsca_roster is not in the link table yet and is still found by name.
   const window = (rows: Record<string, unknown>[]) =>
     inYearWindow(rows, graduationYear - 4, nhscaYearUpperBound(graduationYear)).sort((a, b) => Number(b.year) - Number(a.year))
   const [rosterRows, placementRows, legacyRows] = await Promise.all([
-    getNHSCAFromNhscaRosterTable(supabase, athleteName, graduationYear),
+    Promise.resolve(linked).then((l) => getNHSCAFromNhscaRosterTable(supabase, athleteName, graduationYear, l)),
     Promise.resolve(linked).then((l) =>
       l
         ? window(l.nhsca_placements).map(mapPlacementRow)
@@ -640,7 +646,7 @@ export async function getNHSCAFromTablesAllTime(
     const placementRows = all(linked.nhsca_placements).map(mapPlacementRow)
     const legacyRows = all(linked.wrestling_nhsca_results).map(mapLegacyNhscaRow)
     const rosterRows = isFiniteGradYearForNhsca(graduationYearForRoster)
-      ? await getNHSCAFromNhscaRosterTable(supabase, athleteName, Math.floor(Number(graduationYearForRoster)))
+      ? await getNHSCAFromNhscaRosterTable(supabase, athleteName, Math.floor(Number(graduationYearForRoster)), linked)
       : []
     return mergeNhscaByYearPreferRoster(rosterRows, placementRows, legacyRows)
   }

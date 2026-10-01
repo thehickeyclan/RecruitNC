@@ -17,6 +17,7 @@ export const LINKED_TABLES = [
   "wrestling_nhsca_results",
   "super32_results",
   "fargo_results",
+  "nhsca_roster",
 ] as const
 
 export type LinkedTable = (typeof LINKED_TABLES)[number]
