@@ -486,6 +486,11 @@ export async function getQualifierSignificantWinBouts(
   athleteId: string,
   /** "wins" for the profile list; "all" for a scouting report, which names losses too. */
   include: "wins" | "all" = "wins",
+  /**
+   * "head-to-head" keeps the last 12 months, as seeding does. "any" keeps every season, for the
+   * profile's wins over state placers, which count from any season on file.
+   */
+  window: "head-to-head" | "any" = "head-to-head",
 ): Promise<Bout[]> {
   if (!athleteId?.trim()) return []
   let query = supabase
@@ -501,7 +506,7 @@ export async function getQualifierSignificantWinBouts(
   for (const row of data) {
     if (row.is_bye || !row.opponent_name) continue
     const at = row.event_date ? Date.parse(String(row.event_date)) : NaN
-    if (Number.isFinite(at) && at < cutoff) continue
+    if (window === "head-to-head" && Number.isFinite(at) && at < cutoff) continue
     out.push({
       opponent: displayName(String(row.opponent_name)),
       opponent_school: (row.opponent_club as string) ?? null,

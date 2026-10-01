@@ -14,17 +14,73 @@ const YEARS_BACK = 6
 
 type Row = { year: number; place: number; classification: string | null; wrestler_name: string; school: string | null }
 
-/** State placers plus every NC high school seen in those results, for the namesake check. */
+/**
+ * State placers plus every NC high school seen in those results, for the namesake check.
+ *
+ * `outOfState` adds other states' placers (state_tournament_placers). Opt-in, because the ranking
+ * engine and star ratings share this index and would score those wins without anyone deciding
+ * they should. `stateSchools` stays North Carolina's either way: it is the list that marks a bout
+ * as against an NC kid, which is what rules a Virginia namesake out.
+ */
 export async function loadStatePlacerIndex(
   supabase: SupabaseClient,
   now = new Date(),
+  options?: { outOfState?: boolean },
 ): Promise<{ statePlacers: StatePlacer[]; stateSchools: string[]; fargoAllAmericans: FargoAllAmerican[] }> {
-  const [statePlacers, fargoAllAmericans] = await Promise.all([
+  const [ncPlacers, otherPlacers, fargoAllAmericans] = await Promise.all([
     loadStatePlacers(supabase, now),
+    options?.outOfState ? loadOutOfStatePlacers(supabase, now).catch(() => []) : Promise.resolve([]),
     loadFargoAllAmericans(supabase, now).catch(() => []),
   ])
-  const stateSchools = [...new Set(statePlacers.flatMap((p) => p.schools))]
-  return { statePlacers, stateSchools, fargoAllAmericans }
+  const stateSchools = [...new Set(ncPlacers.flatMap((p) => p.schools))]
+  return { statePlacers: [...ncPlacers, ...otherPlacers], stateSchools, fargoAllAmericans }
+}
+
+type OutOfStateRow = {
+  season: number
+  state: string
+  place: number
+  classification: string | null
+  wrestler_name: string
+  school_raw: string | null
+  identity_confirmed?: boolean | null
+}
+
+/** Other states' placers over the same window, one entry per name per state. */
+export async function loadOutOfStatePlacers(supabase: SupabaseClient, now = new Date()): Promise<StatePlacer[]> {
+  const rows: OutOfStateRow[] = []
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await supabase
+      .from("state_tournament_placers")
+      // `*` rather than naming identity_confirmed, so a database without that column still loads.
+      .select("*")
+      .gte("season", now.getFullYear() - YEARS_BACK)
+      .order("season", { ascending: false })
+      .range(from, from + 999)
+    if (error || !data?.length) break
+    rows.push(...(data as OutOfStateRow[]))
+    if (data.length < 1000) break
+  }
+
+  const byName = new Map<string, { name: string; state: string; schools: Set<string>; confirmed: boolean; rows: OutOfStateRow[] }>()
+  for (const row of rows) {
+    const name = String(row.wrestler_name ?? "").trim()
+    if (!name) continue
+    const key = `${row.state}|${name.toLowerCase().replace(/\s+/g, " ")}`
+    const entry = byName.get(key) ?? { name, state: row.state, schools: new Set<string>(), confirmed: false, rows: [] }
+    if (row.school_raw) entry.schools.add(row.school_raw)
+    entry.confirmed ||= Boolean(row.identity_confirmed)
+    entry.rows.push(row)
+    byName.set(key, entry)
+  }
+
+  return [...byName.values()].map((e) => ({
+    name: e.name,
+    state: e.state,
+    identityConfirmed: e.confirmed,
+    schools: [...e.schools],
+    finishes: e.rows.map((r) => ({ year: r.season, place: r.place, classification: r.classification, state: r.state })),
+  }))
 }
 
 /** Fargo All-Americans over the same window, one entry per name with every school and finish. */

@@ -71,6 +71,8 @@ create table if not exists public.state_tournament_placers (
   source_athlete_id text,
   source_athlete_id_source text,
   source_url text,
+  -- Set by the import: some NC bout on file ties this name to this state (his school, or "VA").
+  identity_confirmed boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   unique (season, state, association, gender, classification, weight, place),
@@ -78,6 +80,9 @@ create table if not exists public.state_tournament_placers (
     references public.state_tournament_divisions (season, state, association, gender, classification)
     on delete cascade
 );
+
+-- Added after the first run; safe on a table that already has it.
+alter table public.state_tournament_placers add column if not exists identity_confirmed boolean not null default false;
 
 create index if not exists idx_state_tournament_placers_name on public.state_tournament_placers (lower(wrestler_name));
 create index if not exists idx_state_tournament_placers_state_season on public.state_tournament_placers (state, season);

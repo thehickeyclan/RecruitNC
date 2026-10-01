@@ -16,6 +16,12 @@ Prerequisite: run scripts/create-state-tournament-results.sql in the Supabase SQ
 
   python3 scripts/import-state-tournament-results.py "~/Downloads/Virginia 2026 Wrestling Results.xlsx" --dry-run
   python3 scripts/import-state-tournament-results.py "~/Downloads/Virginia 2026 Wrestling Results.xlsx"
+
+After writing, it marks identity_confirmed on every placer that some NC bout on file already ties to
+him - his school on the bout, or the bout listing his state. Re-run that step alone after importing
+new national bouts, since a new bout can confirm a name:
+
+  python3 scripts/import-state-tournament-results.py --confirm-only
 """
 
 import json
@@ -178,6 +184,63 @@ def coverage(divisions, bouts):
     return "\n".join(lines)
 
 
+SCHOOL_STOP = {"high", "school", "hs", "senior", "the", "of", "academy", "christian"}
+
+
+def school_words(value):
+    """Mirror of schoolWords in lib/significant-wins.ts — the two must agree on what a match is."""
+    return [w for w in re.split(r"\s+", re.sub(r"[^a-z0-9\s]", " ", str(value or "").lower())) if w and w not in SCHOOL_STOP]
+
+
+def same_school(a, b):
+    return bool(a) and bool(b) and (all(w in b for w in a) or all(w in a for w in b))
+
+
+def name_key(value):
+    return " ".join(re.sub(r"[^a-z ]", "", re.sub(r"[-'.]", " ", str(value or "").lower())).split())
+
+
+def bout_confirms(placer, school):
+    """The same evidence outOfStatePlacerFits accepts on its own: his state listed, or his school."""
+    text = str(school or "").strip().upper()
+    state = placer["state"].upper()
+    if text == state or f"({state})" in text:
+        return True
+    return same_school(school_words(placer["school_raw"]), school_words(school))
+
+
+def confirm_identities(db):
+    placers = db.get_all("state_tournament_placers", "select=id,state,wrestler_name,school_raw")
+    by_name = defaultdict(list)
+    for p in placers:
+        by_name[name_key(p["wrestler_name"])].append(p)
+
+    sightings = []  # (opponent name, school or club as the bout lists it)
+    for b in db.get_all("other_tournament_bouts", "select=opponent_name,opponent_club&is_bye=eq.false"):
+        sightings.append((b["opponent_name"], b["opponent_club"]))
+    for r in db.get_all("matches", "select=matches", page=200):
+        bouts = r["matches"] if isinstance(r["matches"], list) else json.loads(r["matches"] or "[]")
+        sightings += [(m.get("opponent"), m.get("opponent_school")) for m in bouts]
+
+    confirmed = set()
+    for name, school in sightings:
+        for p in by_name.get(name_key(name), []):
+            if bout_confirms(p, school):
+                confirmed.add(p["id"])
+
+    ids = [p["id"] for p in placers]
+    for chunk in range(0, len(ids), 200):
+        part = ids[chunk:chunk + 200]
+        yes = [i for i in part if i in confirmed]
+        no = [i for i in part if i not in confirmed]
+        for value, group in ((True, yes), (False, no)):
+            if group:
+                db.request("PATCH", "state_tournament_placers", f"?id=in.({','.join(group)})",
+                           {"identity_confirmed": value}, "return=minimal")
+    names = {name_key(p["wrestler_name"]) for p in placers if p["id"] in confirmed}
+    print(f"identity_confirmed: {len(names)} of {len(by_name)} placer names tied to their state by a bout on file")
+
+
 class Supabase:
     def __init__(self):
         self.url = (os.environ.get("NEXT_PUBLIC_SUPABASE_URL") or os.environ.get("SUPABASE_URL") or "").rstrip("/")
@@ -200,11 +263,24 @@ class Supabase:
             hint = " — table missing; run scripts/create-state-tournament-results.sql first" if e.code == 404 else ""
             sys.exit(f"{method} {table} failed: {e.code} {e.read().decode()}{hint}")
 
+    def get_all(self, table, select, page=1000):
+        out, offset = [], 0
+        while True:
+            rows = json.loads(self.request("GET", table, f"?{select}&limit={page}&offset={offset}"))
+            out += rows
+            offset += page
+            if len(rows) < page:
+                return out
+
     def division_filter(self, key):
         return "?" + "&".join(f"{k}=eq.{urllib.parse.quote(str(v))}" for k, v in zip(DIVISION_KEY, key))
 
 
 def main():
+    if "--confirm-only" in sys.argv:
+        load_env()
+        confirm_identities(Supabase())
+        return
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
     if len(args) != 1:
         sys.exit(__doc__)
@@ -231,6 +307,7 @@ def main():
     db.request("POST", "state_tournament_bouts", "", bouts, "return=minimal")
     db.request("POST", "state_tournament_placers", "", placers, "return=minimal")
     print("\nWritten.")
+    confirm_identities(db)
 
 
 if __name__ == "__main__":

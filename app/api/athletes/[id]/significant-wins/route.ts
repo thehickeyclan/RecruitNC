@@ -5,6 +5,7 @@ import { buildTocFieldBoard } from "@/lib/toc/field-board"
 import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
 import { accoladeLine, findSignificantWins, withAccoladesOnly, type Bout, type RankedOpponent } from "@/lib/significant-wins"
 import { getQualifierSignificantWinBouts } from "@/lib/other-tournaments"
+import { HEAD_TO_HEAD_WINDOW_DAYS } from "@/lib/head-to-head"
 import { getCuratedSignificantWins } from "@/lib/curated-significant-wins"
 import { getSubmittedWins } from "@/lib/athlete-submitted-wins"
 import { loadStatePlacerIndex } from "@/lib/state-placers"
@@ -28,13 +29,27 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { id } = await params
   const admin = createAdminClient()
 
-  const [{ data: rows }, { data: invitations }, qualifierBouts, stateIndex] = await Promise.all([
+  const [{ data: rows }, { data: invitations }, tournamentBouts, stateIndex] = await Promise.all([
     admin.from("matches").select("season,matches").eq("athlete_id", id),
     admin.from("toc_invitations").select("*, athletes(id,name)"),
-    // Qualifier wins live in their own table, not in the match import.
-    getQualifierSignificantWinBouts(admin, id).catch(() => [] as Bout[]),
-    loadStatePlacerIndex(admin).catch(() => ({ statePlacers: [], stateSchools: [], fargoAllAmericans: [] })),
+    // Qualifier and national-event wins live in their own table, not in the match import.
+    getQualifierSignificantWinBouts(admin, id, "wins", "any").catch(() => [] as Bout[]),
+    // Other states' placers too: a win over a Virginia champion at NHSCA belongs here.
+    loadStatePlacerIndex(admin, new Date(), { outOfState: true }).catch(() => ({
+      statePlacers: [],
+      stateSchools: [],
+      fargoAllAmericans: [],
+    })),
   ])
+  // Inside the head-to-head window they count for every reason; older ones only for a state
+  // placer, like the earlier seasons of the match import below.
+  const cutoff = Date.now() - HEAD_TO_HEAD_WINDOW_DAYS * 86_400_000
+  const isOlder = (bout: Bout) => {
+    const at = bout.date ? Date.parse(String(bout.date)) : Number.NaN
+    return Number.isFinite(at) && at < cutoff
+  }
+  const qualifierBouts = tournamentBouts.filter((b) => !isOlder(b))
+  const olderTournamentBouts = tournamentBouts.filter(isOlder)
 
   /*
    * Wins the athlete reported themselves, published without review.
@@ -73,7 +88,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
    * a state finalist beaten as a freshman is still a state finalist beaten. The other reasons keep
    * the current-season window above.
    */
-  const earlierBouts: Bout[] = ((rows ?? []) as unknown[]).filter((r) => !latestRows.includes(r as never)).flatMap(boutsOf)
+  const earlierBouts: Bout[] = [
+    ...olderTournamentBouts,
+    ...((rows ?? []) as unknown[]).filter((r) => !latestRows.includes(r as never)).flatMap(boutsOf),
+  ]
   // The same bout arrives from both the season import and an event CSV; merge them the way the
   // scouting report does, preferring the event row, so a win is not listed twice.
   const bouts: Bout[] = mergeBoutSources(qualifierBouts, matchBouts)
@@ -134,7 +152,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       : win.reason === "state-champion" || win.reason === "state-placer"
         ? accoladeLine(win)
         : `${win.reason === "toc-field" ? "TOC field" : win.reason === "national-ranked" ? "Nationally ranked" : "NC ranked"} · ${accoladeLine(win)}`,
-    scope: "in-state" as const,
+    // A win over another state's placer is a national result, and the filter should say so.
+    scope: win.opponentState && win.opponentState !== "NC" ? ("national" as const) : ("in-state" as const),
   }))
 
   /*

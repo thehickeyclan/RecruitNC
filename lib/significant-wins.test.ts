@@ -258,3 +258,53 @@ describe("withAccoladesOnly", () => {
     ])
   })
 })
+
+describe("other states' placers", () => {
+  const va = (name: string, school: string, place: number, cls: string, identityConfirmed = false) => ({
+    name,
+    schools: [school],
+    state: "VA",
+    identityConfirmed,
+    finishes: [{ year: 2026, place, classification: cls, state: "VA" }],
+  })
+  const index = {
+    tocField: [],
+    ranked: [],
+    statePlacers: [
+      va("Canaan Spears", "Union", 1, "2A"),
+      va("Gavin Walker", "Grayson County", 6, "1A"),
+      va("Levi Wright", "Glenvar", 1, "2A", true),
+    ],
+    // North Carolina's high schools, as the state results list them.
+    stateSchools: ["Mooresville", "West Craven", "East Wilkes"],
+  }
+  const win = (opponent: string, school: string | null) =>
+    ({ opponent, opponent_school: school, win_loss: "W", result: "Dec", date: "12/6/2025", venue: "Somewhere" })
+
+  it("credits a win when the bout carries his school, and labels the state", () => {
+    const [w] = findSignificantWins([win("Canaan Spears", "Union (VA)")], index)
+    expect(w.reason).toBe("state-champion")
+    expect(w.stateLabel).toBe("2026 VA 2A State Champion")
+    expect(w.opponentState).toBe("VA")
+  })
+
+  it("credits a win when the bout lists only his state", () => {
+    expect(findSignificantWins([win("Canaan Spears", "VA")], index)).toHaveLength(1)
+  })
+
+  it("does not hand a Virginia placing to a North Carolina namesake", () => {
+    expect(findSignificantWins([win("Gavin Walker", "Mooresville")], index)).toEqual([])
+  })
+
+  it("needs evidence for a club-only line when the name is unconfirmed", () => {
+    expect(findSignificantWins([win("Gavin Walker", "OTM Walters Wrestling")], index)).toEqual([])
+  })
+
+  it("accepts a club-only line for a name another bout has confirmed", () => {
+    expect(findSignificantWins([win("Levi Wright", "Noke Wrestling RTC")], index)).toHaveLength(1)
+  })
+
+  it("still refuses a confirmed name at a North Carolina school", () => {
+    expect(findSignificantWins([win("Levi Wright", "East Wilkes")], index)).toEqual([])
+  })
+})

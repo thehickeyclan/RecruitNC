@@ -51,6 +51,9 @@ export type OpponentIndex = {
    * North Carolina state champions and placers (lib/state-placers.ts). Optional, and loaded only
    * by the profile and the scouting report: the ranking engine shares this index and scores wins
    * by `reason`, so adding state results there would silently change the rankings.
+   *
+   * The profile also asks for other states' placers (`state` set, e.g. "VA"); see
+   * `outOfStatePlacerFits` for the stricter bar they have to clear.
    */
   statePlacers?: readonly StatePlacer[]
   /**
@@ -95,9 +98,17 @@ export type StatePlacer = {
   schools: readonly string[]
   /** Every top-8 finish on file for this name. */
   finishes: readonly StateFinish[]
+  /** Two-letter state for another state's placer; absent for North Carolina. */
+  state?: string | null
+  /**
+   * Another state's placer whom some bout on file has already tied to that state - by school or
+   * by a "VA" listing (scripts/import-state-tournament-results.py sets it). Lets a club-only
+   * bracket line count for a name we know is the Virginia wrestler.
+   */
+  identityConfirmed?: boolean
 }
 
-export type StateFinish = { year: number; place: number; classification: string | null }
+export type StateFinish = { year: number; place: number; classification: string | null; state?: string | null }
 
 function ordinalSuffix(n: number): string {
   return n % 100 >= 11 && n % 100 <= 13 ? "th" : n % 10 === 1 ? "st" : n % 10 === 2 ? "nd" : n % 10 === 3 ? "rd" : "th"
@@ -108,7 +119,9 @@ export function statePlacerLabel(finishes: readonly StateFinish[]): string | nul
   if (!finishes.length) return null
   const best = [...finishes].sort((a, b) => a.place - b.place || b.year - a.year)[0]
   const titles = finishes.filter((f) => f.place === 1).length
-  const cls = best.classification ? ` ${best.classification}` : ""
+  // "2026 VA 2A State Champion": an unmarked title is read as North Carolina's.
+  const where = best.state && best.state !== "NC" ? ` ${best.state}` : ""
+  const cls = `${where}${best.classification ? ` ${best.classification}` : ""}`
   if (best.place === 1) return titles > 1 ? `${titles}x State Champion (${best.year}${cls})` : `${best.year}${cls} State Champion`
   if (best.place === 2) return `${best.year}${cls} State Runner-up`
   return `${best.year}${cls} State ${best.place}${ordinalSuffix(best.place)}`
@@ -272,6 +285,28 @@ function schoolConsistent(
   return !isKnownSchool
 }
 
+/**
+ * Whether a bout can be credited to another state's placer. Stricter than `schoolConsistent`:
+ * there, a club says nothing and so passes, which is safe for North Carolina's placers because
+ * our bouts are mostly against North Carolinians. Another state's placer needs positive evidence -
+ * his school on the bout, the bout listing his state ("VA", "Tallwood (VA)"), or a name already
+ * confirmed elsewhere and a bout that does not put him at a North Carolina school. Otherwise every
+ * NC "Gavin Walker" or "John Smith" would collect a Virginia title.
+ */
+function outOfStatePlacerFits(
+  boutSchool: string | null | undefined,
+  placer: StatePlacer,
+  knownSchools: readonly string[] | undefined,
+): boolean {
+  const state = String(placer.state ?? "").toUpperCase()
+  const text = String(boutSchool ?? "").trim().toUpperCase()
+  if (state && (text === state || text.includes(`(${state})`))) return true
+  const bout = schoolWords(boutSchool)
+  if (placer.schools.some((school) => sameSchool(schoolWords(school), bout))) return true
+  if (!placer.identityConfirmed) return false
+  return !(knownSchools ?? []).some((school) => sameSchool(schoolWords(school), bout))
+}
+
 /** Placers sharing this opponent's name, resolved once per name per index like the rest. */
 const placersByIndex = new WeakMap<OpponentIndex, Map<string, StatePlacer[]>>()
 function statePlacersNamed(index: OpponentIndex, name: string): StatePlacer[] {
@@ -362,9 +397,12 @@ function findSignificantBouts(
     const { national, inField, ranked } = resolved
     // Finishes of same-named placers whose school fits this bout and who could have been this
     // opponent at the time.
-    const finishes = statePlacersNamed(index, name)
-      .filter((p) => schoolConsistent(bout.opponent_school, p.schools, index.stateSchools))
-      .flatMap((p) => finishesInReach(p.finishes, bout.date))
+    const fitting = statePlacersNamed(index, name).filter((p) =>
+      p.state
+        ? outOfStatePlacerFits(bout.opponent_school, p, index.stateSchools)
+        : schoolConsistent(bout.opponent_school, p.schools, index.stateSchools),
+    )
+    const finishes = fitting.flatMap((p) => finishesInReach(p.finishes, bout.date))
     const stateLabel = statePlacerLabel(finishes)
     const bestPlace = finishes.length ? Math.min(...finishes.map((f) => f.place)) : null
     const placer = stateLabel && bestPlace != null ? { label: stateLabel, bestPlace } : null
@@ -403,7 +441,11 @@ function findSignificantBouts(
       ...(fargo ? { fargoLabel: fargo } : {}),
       opponentGraduationYear: ranked?.graduationYear ?? null,
       opponentRanking: ranked?.ranking ?? null,
-      ...(national ? { nationalRankLabel: `#${national.rank} ${national.source}`, opponentState: national.state } : {}),
+      ...(national
+        ? { nationalRankLabel: `#${national.rank} ${national.source}`, opponentState: national.state }
+        : placer && finishes.some((f) => f.state && f.state !== "NC")
+          ? { opponentState: finishes.find((f) => f.state && f.state !== "NC")!.state }
+          : {}),
     })
   }
 
