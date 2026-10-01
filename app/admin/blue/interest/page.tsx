@@ -370,11 +370,11 @@ export default function AdminBlueInterestPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0A1628] p-4 text-slate-100 md:p-8">
+    <div className="admin-dark-page min-h-screen bg-[#0A1628] p-4 text-slate-100 md:p-8">
       <div className="mx-auto max-w-6xl">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Button variant="outline" size="icon" asChild>
+            <Button variant="outline" size="icon" className="border-white/20 bg-transparent text-white hover:bg-white/10" asChild>
               <Link href="/admin/blue" prefetch={false}>
                 <ArrowLeft className="h-4 w-4" />
               </Link>
@@ -392,6 +392,7 @@ export default function AdminBlueInterestPage() {
           <div className="flex gap-2">
             <Button
               variant="outline"
+              className="border-white/20 bg-transparent text-white hover:bg-white/10"
               onClick={handleExportSpreadsheet}
               disabled={exporting || submissions.length === 0}
             >
@@ -580,7 +581,7 @@ alter table public.blue_express_interest
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
+                  <TableBody className="text-slate-100">
                     {visible.map((row) => (
                       <TableRow key={row.id} className="border-[#1e3a5f] hover:bg-white/[0.04]">
                         <TableCell>
@@ -608,7 +609,7 @@ alter table public.blue_express_interest
                             onValueChange={(value) => handleStatusChange(row.id, value)}
                             disabled={updatingFieldId === row.id}
                           >
-                            <SelectTrigger className="h-8 w-[120px]">
+                            <SelectTrigger className="h-8 w-[120px] border-white/15 bg-white/5 text-white">
                               <SelectValue placeholder="—" />
                             </SelectTrigger>
                             <SelectContent>
@@ -627,7 +628,7 @@ alter table public.blue_express_interest
                             onValueChange={(value) => handleRegionalChange(row.id, value)}
                             disabled={updatingFieldId === row.id}
                           >
-                            <SelectTrigger className="h-8 w-[90px]">
+                            <SelectTrigger className="h-8 w-[90px] border-white/15 bg-white/5 text-white">
                               <SelectValue placeholder="—" />
                             </SelectTrigger>
                             <SelectContent>
@@ -645,7 +646,7 @@ alter table public.blue_express_interest
                             onValueChange={(value) => handlePlacementChange(row.id, value)}
                             disabled={updatingFieldId === row.id}
                           >
-                            <SelectTrigger className="h-8 w-[90px]">
+                            <SelectTrigger className="h-8 w-[90px] border-white/15 bg-white/5 text-white">
                               <SelectValue placeholder="—" />
                             </SelectTrigger>
                             <SelectContent>
@@ -657,21 +658,21 @@ alter table public.blue_express_interest
                             </SelectContent>
                           </Select>
                         </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
+                        <TableCell className="text-sm text-slate-400">
                           {row.placement_2026 ?? "—"}
                         </TableCell>
                         <TableCell className="text-center">
                           {row.invite_sent ? (
                             <Checkbox checked disabled className="pointer-events-none" />
                           ) : (
-                            <span className="text-muted-foreground">—</span>
+                            <span className="text-slate-400">—</span>
                           )}
                         </TableCell>
                         <TableCell className="text-center">
                           {row.enrolled ? (
                             <Checkbox checked disabled className="pointer-events-none" />
                           ) : (
-                            <span className="text-muted-foreground">—</span>
+                            <span className="text-slate-400">—</span>
                           )}
                         </TableCell>
                         <TableCell className="font-medium">
@@ -695,7 +696,7 @@ alter table public.blue_express_interest
                         <TableCell className="min-w-[200px] max-w-[400px] whitespace-normal text-sm align-top">
                           {row.comments || "—"}
                         </TableCell>
-                        <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
+                        <TableCell className="text-slate-400 text-sm whitespace-nowrap">
                           {new Date(row.created_at).toLocaleString()}
                         </TableCell>
                         <TableCell className="text-right">
