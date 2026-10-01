@@ -18,8 +18,13 @@ The source prints names abbreviated - "C. Raper" vs "J. Brechler" - and opponent
     as printed, and no accolade can attach to it.
   - Duals have no placement; the record is the result.
 
+The 16U National Duals file (USA Bracketing) prints full names and team codes like NOCA/UTBL:
+full names link straight to a profile, and are never "expanded".
+
   python3 scripts/import-junior-duals.py ~/Downloads/junior-duals-2026-freestyle-bouts.csv \\
       --year 2026 --date 2026-06-18 [--dry-run]
+  python3 scripts/import-junior-duals.py ~/Downloads/16u-duals-2026-greco-bouts.csv \\
+      --year 2026 --date 2026-06-09 --slug 16u-national-duals --short "16U National Duals" --state UT
 """
 
 import collections
@@ -33,8 +38,13 @@ import urllib.parse
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEAM_STATE = {
     "FLOR": "FL", "TA": "AL", "SDR": "SD", "TIB": "IN", "ARKA": "AR", "TKS": "KS", "MISS": "MO",
-    "GEOR": "GA", "TM": "MD", "OR": "OK", "CG": "CA", "WASH": "WA", "NC": "NC",
+    "GEOR": "GA", "TM": "MD", "OR": "OK", "CG": "CA", "WASH": "WA", "NC": "NC", "NOCA": "NC",
+    # 16U National Duals (USA Bracketing's four-letter codes)
+    "UTBL": "UT", "ARIZ": "AZ", "NEBR": "NE", "OKRE": "OK", "IOBL": "IA", "VIRG": "VA", "WYBR": "WY",
+    "WYGO": "WY", "TEXA": "TX", "PENN": "PA",
 }
+OUR_TEAMS = {"NC", "NOCA"}
+ABBREVIATED = re.compile(r"^[A-Za-z]\.\s")
 CODES = {"fall": "F", "tf": "TF", "dec": "DEC", "md": "MD", "forfeit": "FF", "inj": "INJ"}
 
 
@@ -44,7 +54,7 @@ def arg(name):
 
 def main():
     files = [a for i, a in enumerate(sys.argv[1:], start=1)
-             if not a.startswith("--") and sys.argv[i - 1] not in ("--year", "--date")]
+             if not a.startswith("--") and sys.argv[i - 1] not in ("--year", "--date", "--slug", "--short", "--state")]
     year, date = arg("--year"), arg("--date")
     if len(files) != 1 or not year or not date:
         sys.exit(__doc__)
@@ -86,8 +96,23 @@ def main():
             return False
         return listed > 0 and dual > 0 and 0.85 * listed <= dual <= 1.2 * listed
 
+    by_name = collections.defaultdict(set)
+    for a in db.get_all("athletes?select=id,name,wrestling_name&is_nc_athlete=eq.true"):
+        for n in (a.get("name"), a.get("wrestling_name")):
+            if n:
+                by_name[key(n)].add(a["id"])
+
     def our_wrestler(abbrev, weight):
         """(full name, profile id or None), or None when it cannot be said which wrestler it is."""
+        if not ABBREVIATED.match(abbrev):
+            # A full name: its own profile, else the one Fargo roster spelling it matches.
+            ids = by_name.get(key(abbrev), set())
+            if len(ids) == 1:
+                return abbrev, next(iter(ids))
+            for full, aid in roster.get(initial_surname(abbrev) or ("", ""), {}).values():
+                if key(full) == key(abbrev):
+                    return full, aid
+            return (abbrev, None)
         k = initial_surname(abbrev) or ("", "")
         names = roster.get(k, {})
         if len(names) == 1:
@@ -113,6 +138,8 @@ def main():
             known[(p["state"],) + k].add(p["athlete_name"].strip())
 
     def full_name(abbrev, state):
+        if not ABBREVIATED.match(abbrev):
+            return abbrev
         k = initial_surname(abbrev)
         names = known.get((state,) + k, set()) if k and state else set()
         # One distinct full name: the same wrestler under every source.
@@ -122,12 +149,12 @@ def main():
     tournament = rows[0]["tournament"]
     event_name = tournament
     style = "gr" if "greco" in tournament.lower() else "fs"
-    event_key = f"junior-national-duals-{year}-{style}"
+    event_key = f"{arg('--slug') or 'junior-national-duals'}-{year}-{style}"
     results, bouts, unlinked, expanded = {}, [], collections.Counter(), 0
     order = collections.Counter()
     for r in rows:
         for side, other in (("winner", "loser"), ("loser", "winner")):
-            if r[f"{side}_team"].strip() != "NC":
+            if r[f"{side}_team"].strip() not in OUR_TEAMS:
                 continue
             abbrev = r[f"{side}_name"].strip()
             found = our_wrestler(abbrev, r["weight"])
@@ -141,8 +168,8 @@ def main():
             expanded += opp != r[f"{other}_name"].strip()
             rk = (athlete_id, r["weight"])
             res = results.setdefault(rk, {
-                "event_key": event_key, "event_name": event_name, "event_short_name": "Junior National Duals",
-                "event_state": "OK", "event_date": date, "year": int(year), "athlete_name": me, "athlete_id": athlete_id,
+                "event_key": event_key, "event_name": event_name, "event_short_name": arg("--short") or "Junior National Duals",
+                "event_state": arg("--state") or "OK", "event_date": date, "year": int(year), "athlete_name": me, "athlete_id": athlete_id,
                 "club": "Team North Carolina", "high_school": None, "gender": None, "weight_class": r["weight"].strip(),
                 "wins": 0, "losses": 0, "byes": 0, "record": "", "placement": None, "qualified": False, "entrants": None,
                 "source_file": os.path.basename(path), "verification_status": "verified",

@@ -142,7 +142,7 @@ export function ViewProfileClient({
                   theme="dark"
                   sectionId="olympic-styles-results"
                   title="Olympic Styles — Freestyle & Greco-Roman"
-                  subtitle="Fargo, the NC Freestyle & Greco State Championships, Tar Heel State Classic, Junior National Duals — not folkstyle"
+                  subtitle="Fargo, the NC Freestyle & Greco State Championships, Tar Heel State Classic, Junior and 16U National Duals — not folkstyle"
                   rows={olympicRows}
                   duelsLabel="Dual results"
                 />

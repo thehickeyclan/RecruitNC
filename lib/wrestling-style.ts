@@ -67,6 +67,8 @@ export type CompetitionSummary = {
 }
 
 const SHORT_NAMES: Array<[RegExp, string]> = [
+  [/junior national duals/i, "Junior National Duals"],
+  [/16u national duals/i, "16U National Duals"],
   [/nhsca.*duals|national duals/i, "NHSCA Duals"],
   [/nhsca/i, "NHSCA Nationals"],
   [/early entry/i, "Super 32 Early Entry"],
