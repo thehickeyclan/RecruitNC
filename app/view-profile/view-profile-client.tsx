@@ -10,6 +10,7 @@ import { ProfileViewTracker } from "@/components/profile-view-tracker"
 import { useAuth } from "@/contexts/auth-context"
 import type { PublicAthleteProfile } from "@/lib/load-public-athlete-profile"
 import type { TournamentRow } from "@/lib/profile/tournament-rows"
+import { profileCredentials } from "@/lib/profile/credentials"
 
 /**
  * "2026 NC Freestyle & Greco State Championships - 16U Boys Freestyle" -> "NC Freestyle & Greco
@@ -111,6 +112,13 @@ export function ViewProfileClient({
     .filter(isOlympicRow)
     .map((row) => ({ ...row, event: shortOlympicEvent(row.event) }))
   const tocRows = folkstyleRows.filter(isTocRow)
+  // Key finishes for the banner's cards (Matt's mock): national, TOC, NCHSAA, NC Freestyle titles.
+  const credentials = profileCredentials({
+    stateRows: stateTournamentRows,
+    tocRows,
+    tournamentRows: profileTournamentRows,
+    max: 6,
+  })
 
   return (
     <main className="min-h-screen bg-[#0A1628]">
@@ -132,6 +140,7 @@ export function ViewProfileClient({
           theme="dark"
           mobileRecruiterLayout
           competition={competition}
+          credentials={credentials}
           olympicStylesSection={
             olympicRows.length ? (
               <div className="w-full min-w-0 max-w-full space-y-6" id="olympic-styles">

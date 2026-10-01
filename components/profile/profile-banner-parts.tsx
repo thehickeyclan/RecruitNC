@@ -1,0 +1,172 @@
+"use client"
+
+/**
+ * The profile banner's pieces (Matt's mock, 1 Oct 2026): an eyebrow, the name set large in two
+ * weights, a gold ribbon for the ranking, a stat row, a card per key finish, and a Competes bar.
+ * Shared by the phone and desktop heroes so the two cannot drift.
+ */
+
+import type { ReactNode } from "react"
+import { Crown, Medal, Trophy } from "lucide-react"
+import { cn } from "@/lib/utils"
+import type { Credential } from "@/lib/profile/credentials"
+import { STYLE_LABEL, type CompetitionSummary } from "@/lib/wrestling-style"
+
+const GOLD = "#D3B574"
+
+export function BannerEyebrow({ className }: { className?: string }) {
+  return (
+    <p className={cn("text-[10px] font-semibold uppercase tracking-[0.45em] text-[#D3B574] lg:text-xs", className)}>
+      North Carolina Wrestling
+    </p>
+  )
+}
+
+/** "Aaron" light over "ELLISON" heavy; suffixes stay with the surname ("Smith Jr."). */
+export function BannerName({ name, className }: { name: string; className?: string }) {
+  const words = name.trim().split(/\s+/)
+  const suffix = words.length > 2 && /^(jr\.?|sr\.?|ii|iii|iv)$/i.test(words[words.length - 1]) ? 2 : 1
+  const first = words.slice(0, -suffix).join(" ")
+  const last = words.slice(-suffix).join(" ")
+  return (
+    <h1 className={cn("uppercase leading-[0.9] text-white", className)}>
+      {first ? (
+        <span className="block text-[2rem] font-semibold tracking-tight text-white/90 sm:text-5xl lg:text-6xl">{first}</span>
+      ) : null}
+      <span className="block text-[2.75rem] font-black tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)] sm:text-6xl lg:text-7xl">
+        {last}
+      </span>
+    </h1>
+  )
+}
+
+export function BannerRibbon({ children, className }: { children: ReactNode; className?: string }) {
+  return (
+    <div
+      className={cn(
+        "inline-flex items-center rounded-md bg-[#D3B574] px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.25em] text-[#0A1628] shadow-lg shadow-black/30 lg:px-5 lg:py-2 lg:text-sm",
+        className,
+      )}
+    >
+      {children}
+    </div>
+  )
+}
+
+export type BannerStat = { label: string; value: ReactNode; sub?: ReactNode; action?: ReactNode }
+
+export function BannerStats({ stats, className }: { stats: BannerStat[]; className?: string }) {
+  return (
+    // A fixed grid on a phone (a wrapping row left "Last competed" alone with a stray divider),
+    // a divided row from desktop up.
+    <dl className={cn("grid grid-cols-[auto_auto_minmax(0,1fr)] lg:flex lg:items-stretch", className)}>
+      {stats.map((s, i) => (
+        <div key={s.label} className={cn("min-w-0 pr-4 lg:pr-8", i > 0 && "border-l border-white/15 pl-4 lg:pl-8")}>
+          <dt className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.1em] text-white/60 lg:gap-2 lg:text-xs lg:tracking-[0.3em]">
+            <span className="truncate">{s.label}</span>
+            {s.action}
+          </dt>
+          <dd className="mt-1 text-xl font-black leading-none text-white lg:text-[2rem]">{s.value}</dd>
+          {s.sub ? <dd className="mt-1 text-[11px] leading-snug text-white/65 lg:text-sm">{s.sub}</dd> : null}
+        </div>
+      ))}
+    </dl>
+  )
+}
+
+/** North Carolina's outline, for the NCHSAA cards. */
+function NcShape({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 100 42" fill="none" className={className} aria-hidden="true">
+      <path
+        fill="currentColor"
+        d="M0 38 L7 33 L13 31 L17 26 L24 22 L29 16 L35 12 L41 9 L47 7 L96 2 L99 6 L95 9 L98 13 L93 18 L96 21 L89 26 L85 31 L79 34 L72 40 L62 34 L53 30 L45 30 L40 32 L24 33 Z"
+      />
+    </svg>
+  )
+}
+
+function CredentialIcon({ tier }: { tier: Credential["tier"] }) {
+  const cls = "h-5 w-5 text-[#D3B574] lg:h-6 lg:w-6"
+  if (tier === "toc") return <Crown className={cls} aria-hidden />
+  if (tier === "state") return <NcShape className="h-4 w-7 text-[#D3B574] lg:h-6 lg:w-10" />
+  if (tier === "olympic-state") return <Medal className={cls} aria-hidden />
+  return <Trophy className={cls} aria-hidden />
+}
+
+export function CredentialCards({ credentials, className }: { credentials: Credential[]; className?: string }) {
+  if (!credentials.length) return null
+  return (
+    <ul className={cn("grid grid-cols-2 gap-2 lg:gap-2.5 xl:grid-cols-3", className)} aria-label="Key results">
+      {credentials.map((c) => (
+        <li
+          key={c.label}
+          className="flex items-center gap-2.5 rounded-xl border border-[#D3B574]/40 bg-[#0A1628]/55 px-3 py-2.5 backdrop-blur-sm lg:gap-3 lg:px-3.5 lg:py-3"
+        >
+          <span className="flex w-7 shrink-0 justify-center lg:w-10">
+            <CredentialIcon tier={c.tier} />
+          </span>
+          <span className="min-w-0">
+            <span
+              className={cn(
+                "block text-[11px] font-extrabold uppercase leading-tight tracking-[0.1em] lg:truncate lg:text-[13px] lg:tracking-[0.14em]",
+                c.tier === "national" ? "text-[#D3B574]" : "text-white",
+              )}
+            >
+              {c.title}
+            </span>
+            <span className="mt-0.5 block text-[10px] font-semibold uppercase tracking-[0.06em] text-white/75 lg:text-xs lg:tracking-[0.1em]">
+              {c.detail}
+            </span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+export function CompetesBar({
+  competition,
+  contact,
+  className,
+}: {
+  competition?: CompetitionSummary | null
+  contact?: ReactNode
+  className?: string
+}) {
+  if (!competition && !contact) return null
+  return (
+    <div
+      className={cn(
+        "rounded-xl border border-white/10 bg-[#0A1628]/70 p-4 backdrop-blur-md lg:flex lg:items-center lg:gap-6 lg:px-6",
+        className,
+      )}
+    >
+      {competition ? (
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5">
+            <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white lg:text-xs">Competes</span>
+            <span className="hidden h-4 w-px bg-[#D3B574]/60 sm:block" aria-hidden />
+            <span className="text-xs font-semibold uppercase tracking-[0.15em] text-white/85">
+              {competition.scope === "national" ? "Nationally" : "North Carolina only"}
+            </span>
+            {competition.styles.map((st) => (
+              <span key={st} className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-[#D3B574]">
+                <span className="h-1 w-1 rounded-full" style={{ background: GOLD }} aria-hidden />
+                {STYLE_LABEL[st]}
+              </span>
+            ))}
+          </div>
+          {competition.scope === "national" && competition.nationalEvents.length ? (
+            <p className="mt-2 text-xs leading-relaxed text-white/60 lg:text-sm">{competition.nationalEvents.join(", ")}</p>
+          ) : null}
+        </div>
+      ) : null}
+      {contact ? (
+        <div className={cn(competition && "mt-3 border-t border-white/10 pt-3 lg:mt-0 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0")}>
+          {contact}
+        </div>
+      ) : null}
+    </div>
+  )
+}

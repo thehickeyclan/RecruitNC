@@ -1,6 +1,16 @@
 "use client"
 
 import { STYLE_LABEL, type CompetitionSummary } from "@/lib/wrestling-style"
+import type { Credential } from "@/lib/profile/credentials"
+import {
+  BannerEyebrow,
+  BannerName,
+  BannerRibbon,
+  BannerStats,
+  CompetesBar,
+  CredentialCards,
+  type BannerStat,
+} from "@/components/profile/profile-banner-parts"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -141,6 +151,8 @@ interface AthleteDetailProps {
   mobileRecruiterLayout?: boolean
   /** In North Carolina only or nationally, and in which styles (lib/wrestling-style.ts). */
   competition?: CompetitionSummary | null
+  /** Key finishes for the banner's cards, built from the result rows (lib/profile/credentials). */
+  credentials?: Credential[]
   /**
    * Freestyle & Greco-Roman results and wins: their own section, last, after every folkstyle one -
    * Matt: a Fargo or freestyle-states result is never to read as part of the folkstyle record.
@@ -185,6 +197,7 @@ export function AthleteDetail({
   theme = "light",
   mobileRecruiterLayout = false,
   competition = null,
+  credentials = [],
   olympicStylesSection = null,
 }: AthleteDetailProps) {
   const isDark = theme === "dark"
@@ -1059,6 +1072,55 @@ export function AthleteDetail({
     )
   }
 
+  const lastCompeted = profileWeightDisplay?.lastCompeted ?? null
+  const bannerStats: BannerStat[] = [
+    { label: "Year", value: graduationYear || "—" },
+    {
+      label: "Weight",
+      value: weightClassLabel === "Not specified" ? "—" : `${weightClassLabel} lbs`,
+      action: canEdit ? (
+        <button
+          type="button"
+          className="inline-flex items-center rounded p-0.5 text-white/60 hover:bg-white/10 hover:text-white"
+          onClick={() => setEditingSection("weight")}
+          aria-label="Edit weight"
+        >
+          <Edit className="h-3.5 w-3.5" />
+        </button>
+      ) : undefined,
+    },
+    ...(lastCompeted
+      ? [
+          {
+            label: "Last competed",
+            value: <span className="text-lg font-bold lg:text-2xl">{lastCompeted.weight} lbs</span>,
+            sub: `${lastCompeted.event} ${lastCompeted.year}`,
+          },
+        ]
+      : []),
+  ]
+  const bannerRibbon = prospectRanking
+    ? `RecruitNC #${prospectRanking}  ·  Class of ${graduationYear || "—"}`
+    : graduationYear
+      ? `Class of ${graduationYear}`
+      : null
+  const bannerCommitted =
+    isCommittedStatus && college && college !== "Not specified" ? (
+      <div className="flex items-center gap-3">
+        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full border border-white/30 bg-white">
+          {collegeLogo ? <Image src={collegeLogo} alt={`${college} logo`} fill className="object-contain p-1.5" /> : null}
+        </div>
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-white/60">Committed to</p>
+          <p className="truncate text-lg font-bold text-white">{college}</p>
+          {collegeTransferLabel ? <p className="text-xs text-white/55">{collegeTransferLabel}</p> : null}
+        </div>
+      </div>
+    ) : null
+  const bannerContact = showHeroContactRow ? (
+    <div className="[&>div]:mt-0">{renderHeroContactRow("buttons")}</div>
+  ) : null
+
   return (
     <div
       className={cn(
@@ -1073,6 +1135,8 @@ export function AthleteDetail({
         className={cn(
           "profile-card overflow-hidden",
           mobileRecruiterLayout && PROFILE_SECTION_ORDER.hero,
+          // The card's own padding left an empty strip above the banner.
+          mobileRecruiterLayout && "gap-0 py-0",
           mobileRecruiterLayout && "-mx-4 rounded-none border-x-0 lg:mx-0 lg:rounded-lg lg:border-x",
         )}
       >
@@ -1139,70 +1203,15 @@ export function AthleteDetail({
                   </div>
                 </div>
 
-                {/* Identity panel below the photo — readable, no overlay fight */}
-                <div className="bg-[#0A1628] text-white px-4 pt-4 pb-5">
-                  <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight">{athleteName}</h1>
-
-                  {isCommittedStatus && college && college !== "Not specified" && (
-                    <div className="mt-3 flex items-center gap-2.5">
-                      {collegeLogo ? (
-                        <div className="relative h-10 w-10 shrink-0 rounded-full overflow-hidden border border-white/30 bg-white shadow-sm">
-                          <Image
-                            src={collegeLogo}
-                            alt={`${college} logo`}
-                            fill
-                            className="object-contain p-1"
-                          />
-                        </div>
-                      ) : (
-                        <div className="h-10 w-10 shrink-0 rounded-full border border-white/30 bg-white/15 flex items-center justify-center text-white text-sm font-semibold">
-                          {college
-                            .split(" ")
-                            .slice(0, 2)
-                            .map((word) => word[0]?.toUpperCase())
-                            .join("") || "C"}
-                        </div>
-                      )}
-                      <div className="min-w-0">
-                        <p className="text-[10px] font-semibold uppercase tracking-wider text-white/60">Committed to</p>
-                        <p className="text-base font-semibold truncate text-white">{college}</p>
-                        {collegeTransferLabel ? (
-                          <p className="text-[10px] text-white/55 truncate">{collegeTransferLabel}</p>
-                        ) : null}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    {prospectRanking ? (
-                      <Badge className="bg-[#D3B574] text-[#13294B] px-2.5 py-1 text-xs font-bold">
-                        RecruitNC #{prospectRanking} · Class of {graduationYear || "—"}
-                      </Badge>
-                    ) : graduationYear ? (
-                      <Badge className="bg-white/15 text-white border border-white/20 px-2.5 py-1 text-xs font-semibold">
-                        Class of {graduationYear}
-                      </Badge>
-                    ) : null}
-                    {weightClassLabel !== "Not specified" ? (
-                      <button
-                        type="button"
-                        className={cn(
-                          "inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-xs font-semibold text-white",
-                          canEdit && "hover:bg-white/15",
-                        )}
-                        onClick={canEdit ? () => setEditingSection("weight") : undefined}
-                        disabled={!canEdit}
-                      >
-                        {weightClassLabel} lbs
-                        {canEdit ? <Edit className="h-3 w-3 opacity-80" aria-hidden /> : null}
-                      </button>
-                    ) : null}
-                  </div>
-
-                  {/* The phone hero carries the same Competes line as the desktop one. */}
-                  <CompetitionStrip competition={competition} className="mt-3" />
-
-                  {renderHeroContactRow("pills")}
+                {/* Identity panel below the photo: the banner's pieces, stacked. */}
+                <div className="relative bg-[#0A1628] px-4 pb-6 pt-5 text-white">
+                  <BannerEyebrow />
+                  <BannerName name={athleteName} className="mt-2" />
+                  {bannerRibbon ? <BannerRibbon className="mt-4">{bannerRibbon}</BannerRibbon> : null}
+                  {bannerCommitted ? <div className="mt-4">{bannerCommitted}</div> : null}
+                  <BannerStats stats={bannerStats} className="mt-5" />
+                  <CredentialCards credentials={credentials} className="mt-5" />
+                  <CompetesBar competition={competition} contact={bannerContact} className="mt-4" />
                 </div>
               </div>
             ) : (
@@ -1331,6 +1340,80 @@ export function AthleteDetail({
 
           {/* Desktop view */}
           <div className="hidden lg:block">
+            {mobileRecruiterLayout ? (
+              <div className="relative min-h-[540px] overflow-hidden bg-[#0A1628]">
+                <Image src="/hero-banner-nchsaa-2026-arena.png" alt="" fill className="object-cover opacity-[0.14]" sizes="100vw" />
+                <div className="absolute inset-0 bg-gradient-to-br from-[#13294B]/85 via-[#0A1628]/75 to-[#0A1628]" />
+
+                {/* The photo bleeds off the left edge and fades into the banner: masked, not overlaid,
+                    so it dissolves into whatever the background is behind it. */}
+                <div
+                  className="absolute inset-y-0 left-0 w-[40%]"
+                  style={{
+                    maskImage: "linear-gradient(to right, #000 55%, transparent 100%), linear-gradient(to top, transparent 0%, #000 28%)",
+                    WebkitMaskImage: "linear-gradient(to right, #000 55%, transparent 100%), linear-gradient(to top, transparent 0%, #000 28%)",
+                    maskComposite: "intersect",
+                    WebkitMaskComposite: "source-in",
+                  }}
+                >
+                  {canEdit ? (
+                    <ImageUploadEditor
+                      athleteId={athlete.id}
+                      currentImageUrl={athletePhoto || undefined}
+                      onUpload={handleImageUpload}
+                      canEdit={canEdit}
+                      className="h-full w-full"
+                    />
+                  ) : (
+                    <Image
+                      src={athletePhoto || "/wrestler-silhouette.png"}
+                      alt={athleteName}
+                      fill
+                      className="object-cover object-top"
+                      sizes="40vw"
+                      onError={() => setImageError(true)}
+                      priority
+                    />
+                  )}
+                </div>
+
+                <div className="absolute right-6 top-6 z-20 flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-white/80 hover:bg-white/10 hover:text-white"
+                    onClick={handleShareProfile}
+                    aria-label="Share profile"
+                  >
+                    <Share2 className="mr-2 h-4 w-4" />
+                    Share
+                  </Button>
+                  {athlete.id && !isViewingOwnProfile && (
+                    <MessageAthleteButton
+                      athleteId={athlete.id}
+                      claimedByUserId={athlete.claimed_by_user_id}
+                      athleteName={athleteName}
+                      className="h-9 border-0 px-2 text-white/80 hover:bg-white/10 hover:text-white"
+                      size="md"
+                      iconClassName="w-4 h-4 mr-1"
+                    />
+                  )}
+                  <WatchListButton athleteId={athlete.id} />
+                </div>
+
+                <div className="relative z-10 ml-[34%] flex flex-col gap-6 px-10 py-10 xl:pr-14">
+                  <div>
+                    <BannerEyebrow />
+                    <BannerName name={athleteName} className="mt-3" />
+                    {bannerRibbon ? <BannerRibbon className="mt-5">{bannerRibbon}</BannerRibbon> : null}
+                  </div>
+                  {bannerCommitted}
+                  <BannerStats stats={bannerStats} />
+                  <CredentialCards credentials={credentials} />
+                  <CompetesBar competition={competition} contact={bannerContact} />
+                </div>
+              </div>
+            ) : (
             <div className="relative min-h-[360px] bg-gradient-to-r from-[#13294B] to-[#1e3a5f]">
               <div className="absolute inset-0 bg-black/10" />
 
@@ -1458,6 +1541,7 @@ export function AthleteDetail({
                 </div>
               </div>
             </div>
+            )}
           </div>
         </div>
       </Card>
