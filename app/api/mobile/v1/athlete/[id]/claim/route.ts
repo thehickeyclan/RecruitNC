@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveRequestUserId } from "@/lib/request-user"
+import { recordClaimConsent } from "@/lib/profile-claim"
 
 /**
  * Claiming a wrestler's profile from the phone.
@@ -66,6 +67,16 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         return NextResponse.json({ ok: false, error: "Could not link that athlete." }, { status: 500 })
       }
     }
+    if (!existing) {
+      await recordClaimConsent(admin, {
+        userId: viewerId,
+        athleteId,
+        relationship: "parent",
+        athleteName: athlete.name ?? null,
+        ip: request.headers.get("x-forwarded-for"),
+        userAgent: request.headers.get("user-agent"),
+      })
+    }
     return NextResponse.json({
       ok: true,
       relationship,
@@ -95,6 +106,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     console.error("[mobile] claim failed:", error.message)
     return NextResponse.json({ ok: false, error: "Could not claim that profile." }, { status: 500 })
   }
+
+  await recordClaimConsent(admin, {
+    userId: viewerId,
+    athleteId,
+    relationship: "self",
+    athleteName: athlete.name ?? null,
+    ip: request.headers.get("x-forwarded-for"),
+    userAgent: request.headers.get("user-agent"),
+  })
 
   return NextResponse.json({ ok: true, relationship, athleteName: athlete.name ?? null })
 }

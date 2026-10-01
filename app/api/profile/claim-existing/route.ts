@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { auditIpFrom, recordAthleteEvent } from "@/lib/athlete-audit"
 import { notifyProfileClaim } from "@/lib/profile-claim-notify"
+import { recordClaimConsent } from "@/lib/profile-claim"
 
 /**
  * Connect a signed-in account to an existing athlete.
@@ -69,6 +70,16 @@ export async function POST(request: NextRequest) {
         changeType: "parent_linked",
         detail: `linked as parent by ${user.id}${user.email ? ` (${user.email})` : ""}`,
         ipAddress: auditIpFrom(request),
+      })
+
+      await recordClaimConsent(adminSupabase, {
+        userId: user.id,
+        athleteId,
+        relationship: "parent",
+        athleteName: (athlete as { name?: string }).name ?? null,
+        viewerName: user.user_metadata?.full_name ?? user.email ?? null,
+        ip: auditIpFrom(request),
+        userAgent: request.headers.get("user-agent"),
       })
 
       await notifyProfileClaim({
