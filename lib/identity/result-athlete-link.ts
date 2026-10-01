@@ -28,7 +28,7 @@ import {
 } from "@/lib/athlete-name-match"
 
 /** Bump when the rules change, so links made under older rules can be found and re-checked. */
-export const LINK_MATCHER_VERSION = "2026-10-01.7"
+export const LINK_MATCHER_VERSION = "2026-10-01.8"
 
 export type AthleteForLink = {
   id: string
@@ -323,6 +323,15 @@ export function decideLink(row: ResultRowForLink, athletes: readonly AthleteForL
     }
     if (decision.status === "linked" || (decision.status === "no_match" && decision.reason === "namesake_rejected")) {
       return { status: "review", reason: "existing link disagrees with the record", candidates }
+    }
+    /*
+     * An earlier link the record does not confirm. If the source names a different school it is a
+     * transfer or a namesake - a person's call: Eli Thomas of Laney was linked to an Alleghany
+     * third place that belongs to another Eli Thomas. Only a link nothing speaks against is kept.
+     */
+    const linkedCandidate = candidates.find((c) => c.athleteId === existing)
+    if (!linkedCandidate || linkedCandidate.signals.includes("school differs")) {
+      return { status: "review", reason: "earlier link names a different school (transfer or namesake?)", candidates }
     }
     return { status: "linked", athleteId: existing, score: 0, reason: "existing link kept (matcher could not confirm)", candidates }
   }

@@ -20,6 +20,7 @@ import {
   nhscaDisplayPlacement,
   type TournamentResult,
 } from "@/lib/tournament-utils"
+import type { LinkedSourceRows } from "@/lib/identity/linked-results"
 
 export interface TournamentResultForDisplay {
   year: number
@@ -225,7 +226,7 @@ export function mergeNhscaForPublicRankings(
 export async function getNHSCAForAthlete(
   supabase: SupabaseClient,
   athlete: Record<string, unknown>,
-  options?: { tablesAllTime?: boolean },
+  options?: { tablesAllTime?: boolean; linked?: LinkedSourceRows | null | Promise<LinkedSourceRows | null> },
 ): Promise<TournamentResultForDisplay[]> {
   const useAllTime = options?.tablesAllTime === true
   const gradYear = resolveGraduationYear(athlete)
@@ -244,8 +245,8 @@ export async function getNHSCAForAthlete(
   const merged: Awaited<ReturnType<typeof getNHSCAFromTables>> = []
   for (const n of bases) {
     const rows = useAllTime
-      ? await getNHSCAFromTablesAllTime(supabase, n, gradYear)
-      : await getNHSCAFromTables(supabase, n, gradYear)
+      ? await getNHSCAFromTablesAllTime(supabase, n, gradYear, options?.linked)
+      : await getNHSCAFromTables(supabase, n, gradYear, options?.linked)
     merged.push(...rows)
   }
   const uniq = uniqNhscaTableRows(merged)
@@ -309,6 +310,7 @@ export function mergeSuper32ForPublicRankings(
 export async function getSuper32ForAthlete(
   supabase: SupabaseClient,
   athlete: Record<string, unknown>,
+  linked?: LinkedSourceRows | null,
 ): Promise<TournamentResultForDisplay[]> {
   const gradYear = resolveGraduationYear(athlete)
   const highSchool = String(athlete.highschool ?? athlete.high_school ?? "").trim()
@@ -318,8 +320,9 @@ export async function getSuper32ForAthlete(
   if (name) bases.add(name)
   if (wrestlingName && wrestlingName.toLowerCase() !== name.toLowerCase()) bases.add(wrestlingName)
   const merged: TournamentResultRow[] = []
-  for (const n of bases) {
-    const rows = await getSuper32FromTable(supabase, n, gradYear, { highSchool: highSchool || undefined })
+  // Linked rows do not depend on which name is searched: read them once.
+  for (const n of linked ? [...bases].slice(0, 1) : bases) {
+    const rows = await getSuper32FromTable(supabase, n, gradYear, { highSchool: highSchool || undefined, linked })
     merged.push(...rows)
   }
   const uniq = uniqNhscaTableRows(merged)
@@ -374,6 +377,7 @@ function sortFargoProfileRows(a: TournamentResultForDisplay, b: TournamentResult
 export async function getFargoForAthlete(
   supabase: SupabaseClient,
   athlete: Record<string, unknown>,
+  linked?: LinkedSourceRows | null,
 ): Promise<TournamentResultForDisplay[]> {
   const gradYear = resolveGraduationYear(athlete)
   const highSchool = String(athlete.highschool ?? athlete.high_school ?? "").trim()
@@ -383,8 +387,8 @@ export async function getFargoForAthlete(
   if (name) bases.add(name)
   if (wrestlingName && wrestlingName.toLowerCase() !== name.toLowerCase()) bases.add(wrestlingName)
   const merged: TournamentResultRow[] = []
-  for (const n of bases) {
-    const rows = await getFargoFromTable(supabase, n, gradYear, { highSchool: highSchool || undefined })
+  for (const n of linked ? [...bases].slice(0, 1) : bases) {
+    const rows = await getFargoFromTable(supabase, n, gradYear, { highSchool: highSchool || undefined, linked })
     merged.push(...rows)
   }
   return fargoTableRowsToDisplay(merged)

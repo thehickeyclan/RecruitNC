@@ -17,6 +17,7 @@ import {
   formatFargoRecord,
   parseFargoPlacement,
 } from "@/lib/fargo-results"
+import { inYearWindow, type LinkedSourceRows } from "@/lib/identity/linked-results"
 
 export interface TournamentResultRow {
   year: number
@@ -352,15 +353,29 @@ async function getNhscaLegacyFromTablesForAthlete(
 export async function getNHSCAFromTables(
   supabase: SupabaseClient,
   athleteName: string,
-  graduationYear: number
+  graduationYear: number,
+  /** Stored links, or a promise of them: the roster search starts without waiting for it. */
+  linked?: LinkedSourceRows | null | Promise<LinkedSourceRows | null>,
 ): Promise<TournamentResultRow[]> {
   if (!athleteName?.trim() || !graduationYear || isNaN(graduationYear)) return []
   const exactName = normalizeApostrophes(athleteName.trim())
 
+  // Stored links replace the placement and legacy name searches, inside the same year window.
+  // nhsca_roster is not in the link table yet and is still found by name.
+  const window = (rows: Record<string, unknown>[]) =>
+    inYearWindow(rows, graduationYear - 4, nhscaYearUpperBound(graduationYear)).sort((a, b) => Number(b.year) - Number(a.year))
   const [rosterRows, placementRows, legacyRows] = await Promise.all([
     getNHSCAFromNhscaRosterTable(supabase, athleteName, graduationYear),
-    getNhscaPlacementsFromTablesForAthlete(supabase, athleteName, graduationYear, exactName),
-    getNhscaLegacyFromTablesForAthlete(supabase, athleteName, graduationYear, exactName),
+    Promise.resolve(linked).then((l) =>
+      l
+        ? window(l.nhsca_placements).map(mapPlacementRow)
+        : getNhscaPlacementsFromTablesForAthlete(supabase, athleteName, graduationYear, exactName),
+    ),
+    Promise.resolve(linked).then((l) =>
+      l
+        ? window(l.wrestling_nhsca_results).map(mapLegacyNhscaRow)
+        : getNhscaLegacyFromTablesForAthlete(supabase, athleteName, graduationYear, exactName),
+    ),
   ])
 
   const merged = mergeNhscaByYearPreferRoster(rosterRows, placementRows, legacyRows)
@@ -613,10 +628,22 @@ export async function getNHSCAFromTablesAllTime(
   supabase: SupabaseClient,
   athleteName: string,
   graduationYearForRoster?: number | null,
+  linkedInput?: LinkedSourceRows | null | Promise<LinkedSourceRows | null>,
 ): Promise<TournamentResultRow[]> {
   if (!athleteName?.trim()) return []
 
   const exactName = normalizeApostrophes(athleteName.trim())
+  const linked = await linkedInput
+
+  if (linked) {
+    const all = (rows: Record<string, unknown>[]) => inYearWindow(rows, null, null).sort((a, b) => Number(b.year) - Number(a.year))
+    const placementRows = all(linked.nhsca_placements).map(mapPlacementRow)
+    const legacyRows = all(linked.wrestling_nhsca_results).map(mapLegacyNhscaRow)
+    const rosterRows = isFiniteGradYearForNhsca(graduationYearForRoster)
+      ? await getNHSCAFromNhscaRosterTable(supabase, athleteName, Math.floor(Number(graduationYearForRoster)))
+      : []
+    return mergeNhscaByYearPreferRoster(rosterRows, placementRows, legacyRows)
+  }
 
   // Always merge placements + legacy (all years). Never return only one table — older history often
   // lives only in wrestling_nhsca_results while recent years are in nhsca_placements.
@@ -645,10 +672,14 @@ export async function getSuper32FromTable(
   supabase: SupabaseClient,
   athleteName: string,
   graduationYear: number,
-  options?: { highSchool?: string }
+  options?: { highSchool?: string; linked?: LinkedSourceRows | null }
 ): Promise<TournamentResultRow[]> {
   if ((!athleteName?.trim() && !options?.highSchool?.trim()) || !graduationYear || isNaN(graduationYear)) return []
   const startYear = graduationYear - 4
+  if (options?.linked) {
+    const rows = inYearWindow(options.linked.super32_results, startYear, graduationYear).sort((a, b) => Number(b.year) - Number(a.year))
+    return dedupeSuper32ByYear(mapSuper32Rows(rows))
+  }
   const exactName = normalizeApostrophes(athleteName.trim())
 
   const filterBySchool = (rows: any[]) => {
@@ -830,12 +861,18 @@ export async function getFargoFromTable(
   supabase: SupabaseClient,
   athleteName: string,
   graduationYear: number,
-  options?: { highSchool?: string },
+  options?: { highSchool?: string; linked?: LinkedSourceRows | null },
 ): Promise<TournamentResultRow[]> {
   if ((!athleteName?.trim() && !options?.highSchool?.trim()) || !graduationYear || isNaN(graduationYear)) {
     return []
   }
   const startYear = graduationYear - 4
+  if (options?.linked) {
+    const rows = inYearWindow(options.linked.fargo_results, startYear, graduationYear)
+      .filter((r) => r.verification_status !== MISATTRIBUTED)
+      .sort((a, b) => Number(b.year) - Number(a.year))
+    return dedupeFargoRows(mapFargoRows(rows))
+  }
   const exactName = normalizeApostrophes(athleteName.trim())
 
   const filterBySchool = (rows: any[]) => {

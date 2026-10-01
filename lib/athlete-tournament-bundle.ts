@@ -15,6 +15,7 @@ import {
   getFargoForAthlete,
   type TournamentResultForDisplay,
 } from "@/lib/public-profile-data"
+import { loadLinkedSourceRows, resultLinksEnabled } from "@/lib/identity/linked-results"
 import {
   getOtherTournamentResultsForAthleteRecord,
   type OtherTournamentResult,
@@ -32,6 +33,8 @@ export type AthleteTournamentBundle = {
 export type LoadAthleteTournamentBundleOptions = {
   /** NHSCA placement tables across all years (Blue all-time tiles, dossiers). */
   nhscaAllTime?: boolean
+  /** Override RESULT_LINKS_READ for this call (the step-2 comparison runs both ways). */
+  linkedRead?: boolean
 }
 
 export function useLegacyTournamentBundle(): boolean {
@@ -44,11 +47,15 @@ export async function loadAthleteTournamentBundle(
   athlete: Record<string, unknown>,
   options?: LoadAthleteTournamentBundleOptions,
 ): Promise<AthleteTournamentBundle> {
+  // Wrestler identity, step 2: read stored links when switched on. null means fall back to names.
+  // Started, not awaited: the NHSCA roster and other-event searches do not need it and run alongside.
+  const useLinks = options?.linkedRead ?? resultLinksEnabled()
+  const linked = useLinks && athlete.id ? loadLinkedSourceRows(supabase, String(athlete.id)) : Promise.resolve(null)
   const [nchsaa, nhsca, super32, fargo, other] = await Promise.all([
-    getMergedNchsaaForAthlete(supabase, athlete),
-    getNHSCAForAthlete(supabase, athlete, { tablesAllTime: options?.nhscaAllTime === true }),
-    getSuper32ForAthlete(supabase, athlete),
-    getFargoForAthlete(supabase, athlete),
+    linked.then((l) => getMergedNchsaaForAthlete(supabase, athlete, l)),
+    getNHSCAForAthlete(supabase, athlete, { tablesAllTime: options?.nhscaAllTime === true, linked }),
+    linked.then((l) => getSuper32ForAthlete(supabase, athlete, l)),
+    linked.then((l) => getFargoForAthlete(supabase, athlete, l)),
     getOtherTournamentResultsForAthleteRecord(supabase, athlete),
   ])
   return { nchsaa, nhsca, super32, fargo, other }

@@ -25,6 +25,7 @@ export {
   namesReferToSamePerson,
   normalizeApostrophes,
 } from "@/lib/athlete-name-match"
+import { inYearWindow, type LinkedSourceRows } from "@/lib/identity/linked-results"
 
 /** Same name variations as /api/wrestling-achievements — delegates to shared athlete-name-match. */
 export function getNameVariations(name: string): string[] {
@@ -375,11 +376,36 @@ export async function getMergedNchsaaForAthlete(
     high_school?: string | null
     graduationyear?: number | null
   },
+  linked?: LinkedSourceRows | null,
 ): Promise<NchsaaRowForProfile[]> {
   const displayName = String(athlete.name ?? "").trim()
   const wrestlingName = String(athlete.wrestling_name ?? "").trim()
   const gradYear = Number(athlete.graduationyear) || undefined
   const schoolHint = String(athlete.highschool ?? athlete.high_school ?? "").trim() || undefined
+
+  if (linked) {
+    /*
+     * Stored links replace the four name passes. Same display window and the same placer-over-
+     * qualifier rule; the namesake filters are not needed because a link is already one person.
+     */
+    const range = gradYear ? plausibleNchsaaYearsForGradYear(gradYear) : null
+    const tableRows: NchsaaRowForProfile[] = inYearWindow(linked.wrestling_nchsaa_results, range?.min ?? null, range?.max ?? null)
+      .map((row) => ({
+        year: Number(row.year),
+        classification: String(row.classification ?? ""),
+        weight_class: String(row.weight_class ?? ""),
+        place: row.place != null ? Number(row.place) : null,
+        school: String(row.school ?? ""),
+        wrestler_name: String(row.wrestler_name ?? ""),
+      }))
+      .sort((x, y) => y.year - x.year)
+    const placerKeys = new Set(
+      tableRows.filter((r) => r.place != null && r.place >= 1).map((r) => `${r.year}-${r.classification}-${r.weight_class}`),
+    )
+    const deduped = tableRows.filter((r) => !(r.place === 0 && placerKeys.has(`${r.year}-${r.classification}-${r.weight_class}`)))
+    const fromRow = nchsaaJsonToProfileRows(athlete.nchsaa_results, displayName || wrestlingName)
+    return mergeCuratedFourTimeNchsaaIfMatch(mergeNchsaaResults(deduped, fromRow), displayName, wrestlingName)
+  }
 
   /**
    * The "wide" passes below deliberately drop the school hint, so a row whose school is

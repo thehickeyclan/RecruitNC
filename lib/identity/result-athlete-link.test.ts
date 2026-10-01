@@ -78,6 +78,14 @@ describe("decideLink", () => {
   })
 })
 
+describe("earlier links", () => {
+  it("sends an earlier link at a different school to review", () => {
+    // Eli Thomas (Laney) was linked to another Eli Thomas's Alleghany result.
+    const d = decideLink({ name: "Campbell Tufts", school: "Broughton", year: 2026, existingAthleteId: "a1" }, [athlete({})])
+    expect(d.status).toBe("review")
+  })
+})
+
 describe("gradYearFromDivision", () => {
   it("reads the grade", () => {
     expect(gradYearFromDivision("Junior", 2026)).toBe(2027)
