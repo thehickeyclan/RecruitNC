@@ -3,13 +3,28 @@
 import { isInternationalStyle, styleOfEvent, summarizeCompetition } from "@/lib/wrestling-style"
 import { SignificantWinsSection } from "@/components/significant-wins-section"
 import Link from "next/link"
-import Image from "next/image"
 import { ArrowLeft, Medal, Trophy } from "lucide-react"
 import { AthleteDetail } from "@/components/athlete-detail"
 import { TournamentAccordion, buildNchsaaStateRows, buildTournamentRows, isTocRow } from "@/components/profile/tournament-accordion"
 import { ProfileViewTracker } from "@/components/profile-view-tracker"
 import { useAuth } from "@/contexts/auth-context"
 import type { PublicAthleteProfile } from "@/lib/load-public-athlete-profile"
+import { profileCredentials } from "@/lib/profile/credentials"
+import type { TournamentRow } from "@/lib/profile/tournament-rows"
+
+/**
+ * "2026 NC Freestyle & Greco State Championships - 16U Boys Freestyle" -> "NC Freestyle & Greco
+ * States · 16U Freestyle", so the Olympic rows read like the Fargo ones ("Fargo · Freestyle").
+ */
+function shortOlympicEvent(event: string): string {
+  const [rawName, rawDivision] = event.replace(/^\d{4}\s+/, "").split(" - ")
+  if (!rawDivision) return rawName
+  const name = rawName.replace(/State Championships$/i, "States")
+  let division = rawDivision.replace(/\bBoys\s+/i, "").replace(/\bGreco\b(?!-)/i, "Greco-Roman").trim()
+  const age = division.match(/^(16U|Junior)\s+/i)
+  if (age && new RegExp(`\\b${age[1]}\\b`, "i").test(name)) division = division.slice(age[0].length)
+  return `${name} · ${division}`
+}
 
 type NchsaaResult = { year: number; place: number | null; classification: string; weight_class: string }
 
@@ -93,31 +108,20 @@ export function ViewProfileClient({
   // Freestyle and Greco-Roman go in their own section, last on the page; folkstyle keeps the rest.
   const isOlympicRow = (row: { event: string; team: string | null }) => isInternationalStyle(styleOfEvent(row.event, row.team))
   const folkstyleRows = profileTournamentRows.filter((row) => !isOlympicRow(row))
-  const olympicRows = profileTournamentRows.filter(isOlympicRow)
+  const olympicRows: TournamentRow[] = profileTournamentRows
+    .filter(isOlympicRow)
+    .map((row) => ({ ...row, event: shortOlympicEvent(row.event) }))
+  const tocRows = folkstyleRows.filter(isTocRow)
+  const credentials = profileCredentials({
+    stateRows: stateTournamentRows,
+    tocRows,
+    tournamentRows: profileTournamentRows,
+  })
 
   return (
     <main className="min-h-screen bg-[#0A1628]">
-      <div className="border-b border-white/10 bg-[#0A1628] px-4 py-3 lg:hidden">
-        <Link
-          href="/prospects/all"
-          className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-[#D3B574] transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Athletes
-        </Link>
-      </div>
-      <section className="relative hidden overflow-hidden border-b border-white/10 lg:block">
-        <div className="absolute inset-0">
-          <Image
-            src="/hero-banner-nchsaa-2026-arena.png"
-            alt=""
-            fill
-            className="object-cover opacity-30"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628]/95 via-[#0A1628]/90 to-[#0A1628]/80" />
-        </div>
-        <div className="container relative mx-auto px-4 py-8">
+      <div className="border-b border-white/10 bg-[#0A1628]">
+        <div className="container mx-auto px-4 py-3">
           <Link
             href="/prospects/all"
             className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-[#D3B574] transition-colors"
@@ -125,9 +129,8 @@ export function ViewProfileClient({
             <ArrowLeft className="h-4 w-4" />
             Back to Athletes
           </Link>
-          <h1 className="mt-4 text-3xl font-black tracking-tight text-white md:text-4xl">{athleteName}</h1>
         </div>
-      </section>
+      </div>
 
       <div className="container mx-auto min-w-0 max-w-full px-4 py-4 lg:py-8">
         <ProfileViewTracker athleteId={String(athlete.id)} athleteName={athleteName} />
@@ -135,6 +138,7 @@ export function ViewProfileClient({
           theme="dark"
           mobileRecruiterLayout
           competition={competition}
+          credentials={credentials}
           olympicStylesSection={
             olympicRows.length ? (
               <div className="w-full min-w-0 max-w-full space-y-6" id="olympic-styles">
@@ -142,7 +146,7 @@ export function ViewProfileClient({
                   theme="dark"
                   sectionId="olympic-styles-results"
                   title="Olympic Styles — Freestyle & Greco-Roman"
-                  subtitle="Fargo, the NC Freestyle & Greco State Championships, Tar Heel State Classic, Junior and 16U National Duals — not folkstyle"
+                  subtitle="USA Wrestling events — not folkstyle"
                   rows={olympicRows}
                   duelsLabel="Dual results"
                 />
@@ -158,27 +162,31 @@ export function ViewProfileClient({
           currentUserId={viewerId}
           tournamentResultsComponent={
             <div className="w-full min-w-0 max-w-full space-y-6">
-              {/* States on its own, everything else as one collapsed list. See tournament-accordion. */}
+              {/* In-state first: the Tournament of Champions, then NCHSAA States (Matt). Then the
+                  national folkstyle events as one collapsed list. See tournament-accordion. */}
+              <div id="in-state" className="space-y-6">
+                <TournamentAccordion
+                  theme="dark"
+                  sectionId="toc"
+                  icon={Trophy}
+                  title="Tournament of Champions"
+                  subtitle="North Carolina's invitational championship"
+                  rows={tocRows}
+                  hideWhenEmpty
+                />
+                <TournamentAccordion
+                  rows={stateTournamentRows}
+                  theme="dark"
+                  sectionId="nchsaa-states"
+                  icon={Medal}
+                  title="NCHSAA State Championships"
+                  subtitle="Folkstyle — the North Carolina high school state tournament"
+                  emptyText="No NCHSAA state results recorded"
+                />
+              </div>
               <TournamentAccordion
-                rows={stateTournamentRows}
                 theme="dark"
-                sectionId="nchsaa-states"
-                icon={Medal}
-                title="NCHSAA State Championships"
-                subtitle="Folkstyle — the North Carolina high school state tournament"
-                emptyText="No NCHSAA state results recorded"
-              />
-              <TournamentAccordion
-                theme="dark"
-                sectionId="toc"
-                icon={Trophy}
-                title="Tournament of Champions"
-                subtitle="North Carolina's invitational championship"
-                rows={folkstyleRows.filter(isTocRow)}
-                hideWhenEmpty
-              />
-              <TournamentAccordion
-                theme="dark"
+                sectionId="tournaments"
                 title="National Tournaments — Folkstyle"
                 subtitle="Super 32, NHSCA, Journeymen, duals and open events"
                 rows={folkstyleRows.filter((row) => !isTocRow(row))}

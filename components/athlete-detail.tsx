@@ -1,6 +1,7 @@
 "use client"
 
 import { STYLE_LABEL, type CompetitionSummary } from "@/lib/wrestling-style"
+import type { Credential } from "@/lib/profile/credentials"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -141,6 +142,8 @@ interface AthleteDetailProps {
   mobileRecruiterLayout?: boolean
   /** In North Carolina only or nationally, and in which styles (lib/wrestling-style.ts). */
   competition?: CompetitionSummary | null
+  /** The finishes a coach decides on, built from the result rows (lib/profile/credentials). */
+  credentials?: Credential[]
   /**
    * Freestyle & Greco-Roman results and wins: their own section, last, after every folkstyle one -
    * Matt: a Fargo or freestyle-states result is never to read as part of the folkstyle record.
@@ -149,10 +152,43 @@ interface AthleteDetailProps {
 }
 
 /** "Competes nationally · Folkstyle · Freestyle · Greco-Roman", under the year and weight. */
-function CompetitionStrip({ competition, className }: { competition?: CompetitionSummary | null; className?: string }) {
-  if (!competition) return null
+function CompetitionStrip({
+  competition,
+  credentials = [],
+  className,
+}: {
+  competition?: CompetitionSummary | null
+  credentials?: Credential[]
+  className?: string
+}) {
+  if (!competition && !credentials.length) return null
   return (
-    <div className={cn("rounded-lg border border-white/20 bg-white/10 p-3 backdrop-blur-sm", className)}>
+    <div className={cn("space-y-3", className)}>
+      {credentials.length ? (
+        <ul className="flex flex-wrap gap-1.5" aria-label="Key results">
+          {credentials.map((c) => (
+            <li
+              key={c.label}
+              className={cn(
+                "rounded-full border px-2.5 py-1 text-xs font-semibold leading-none",
+                c.tier === "national"
+                  ? "border-[#D3B574]/60 bg-[#D3B574]/15 text-[#E9D6A6]"
+                  : "border-white/20 bg-white/[0.07] text-white/85",
+              )}
+            >
+              {c.label}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {competition ? <CompetitionBox competition={competition} /> : null}
+    </div>
+  )
+}
+
+function CompetitionBox({ competition }: { competition: CompetitionSummary }) {
+  return (
+    <div className="rounded-lg border border-white/20 bg-white/10 p-3 backdrop-blur-sm">
       <p className="text-xs font-semibold uppercase tracking-wider text-white/70">Competes</p>
       <p className="text-sm font-bold text-white">
         {competition.scope === "national" ? "Nationally" : "North Carolina only"}
@@ -175,6 +211,7 @@ export function AthleteDetail({
   theme = "light",
   mobileRecruiterLayout = false,
   competition = null,
+  credentials = [],
   olympicStylesSection = null,
 }: AthleteDetailProps) {
   const isDark = theme === "dark"
@@ -212,7 +249,8 @@ export function AthleteDetail({
   const [editingSection, setEditingSection] = useState<string | null>(null)
   // Open by default. It is the athlete introducing themselves, directly under the banner —
   // the one section a reader wants before they have decided to look for anything.
-  const [bioExpanded, setBioExpanded] = useState(true)
+  // A preview until asked: the full bio ran four phone screens before the first result.
+  const [bioExpanded, setBioExpanded] = useState(!mobileRecruiterLayout)
   const [linkedProfileViewAthleteIds, setLinkedProfileViewAthleteIds] = useState<Set<string>>(new Set())
   // The narrower set: athletes this account is linked to through parent_athlete_links, which is
   // what the self-edit route accepts. The wallet list above also counts user_profiles.athlete_id.
@@ -1189,7 +1227,7 @@ export function AthleteDetail({
                   </div>
 
                   {/* The phone hero carries the same Competes line as the desktop one. */}
-                  <CompetitionStrip competition={competition} className="mt-3" />
+                  <CompetitionStrip competition={competition} credentials={credentials} className="mt-3" />
 
                   {renderHeroContactRow("pills")}
                 </div>
@@ -1310,7 +1348,7 @@ export function AthleteDetail({
                   </p>
                 </div>
               </div>
-              <CompetitionStrip competition={competition} className="mt-3" />
+              <CompetitionStrip competition={competition} credentials={credentials} className="mt-3" />
 
               {renderHeroContactRow("buttons")}
             </div>
@@ -1441,7 +1479,7 @@ export function AthleteDetail({
                       ) : null}
                     </div>
                   </div>
-                  <CompetitionStrip competition={competition} className="mt-4 max-w-md" />
+                  <CompetitionStrip competition={competition} credentials={credentials} className="mt-4 max-w-md" />
 
                   {renderHeroContactRow("buttons")}
                 </div>
@@ -1452,21 +1490,21 @@ export function AthleteDetail({
       </Card>
 
       {mobileRecruiterLayout ? (
-        <div className={PROFILE_SECTION_ORDER.nav}>
-          <UnifiedProfileMobileNav showQualityWins={profileQualityWins.length > 0} />
-        </div>
+        // No wrapper: a sticky element only sticks within its parent, and a wrapper its own height
+        // left the links scrolling away with the page.
+        <UnifiedProfileMobileNav className={PROFILE_SECTION_ORDER.nav} />
       ) : null}
 
       {/* Who is recruiting this wrestler. Renders nothing unless the viewer is the athlete,
           a linked parent, or an admin — the endpoint refuses everybody else. */}
-      <div className="px-1">
+      <div className={cn("px-1", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels)}>
         <CoachViewsPanel athleteId={String(athlete.id)} />
       </div>
 
       {/* Recruiters want one page they can take into a staff meeting. Coaches only — the
           report pulls academics and results together in a way the public profile does not. */}
       {canSeeScoutingReport && (
-        <div className="px-1">
+        <div className={cn("px-1", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels)}>
           <a
             href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`}
             className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-[#D3B574] bg-[#D3B574]/10 px-4 py-2 text-sm font-semibold text-[#D3B574] transition-colors hover:bg-[#D3B574]/20"
@@ -1493,7 +1531,7 @@ export function AthleteDetail({
         reflex while checking somebody else's page.
       */}
       {!isViewingOwnProfile && !isAdmin && (
-        <div className="px-1">
+        <div className={cn("px-1", mobileRecruiterLayout && PROFILE_SECTION_ORDER.claim)}>
           {athlete.claimed_by_user_id ? (
             <ParentLinkButton athleteId={String(athlete.id)} athleteName={athleteName} />
           ) : (
@@ -1569,14 +1607,12 @@ export function AthleteDetail({
         />
       )}
 
-      {/* Athlete Profile (Bio) — first card after the hero.
-          No `order` class: every other section computes to order 0, and flexbox puts 0 before 1,
-          so the one card marked "first" was the only one pushed to the very bottom of the page.
-          Its position in the DOM is already right, so the ordering is left to say nothing. */}
+      {/* Athlete Profile (Bio) — after the jump links, as a three-line preview with "Read full
+          profile". Every sibling now carries an order class, so this one can too. */}
       {SHOW_ATHLETE_BIO_SECTION && (hasBioContent || canEdit) ? (
       <Card
         id="bio"
-        className={cn("profile-card border-t-4 border-t-[#D3B574] shadow-md")}
+        className={cn("profile-card border-t-4 border-t-[#D3B574] shadow-md", mobileRecruiterLayout && PROFILE_SECTION_ORDER.bio)}
         data-section="bio"
       >
         <div className={cn(mobileRecruiterLayout ? PROFILE_SECTION_HEADER : "bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6")}>
@@ -1626,7 +1662,7 @@ export function AthleteDetail({
           </div>
           <div
             id={`athlete-bio-${athlete.id}`}
-            hidden={!bioExpanded && editingSection !== "bio"}
+            hidden={!mobileRecruiterLayout && !bioExpanded && editingSection !== "bio"}
             className={cn(mobileRecruiterLayout ? PROFILE_CARD_BODY : "profile-card-body p-8")}
           >
             {editingSection === "bio" ? (
@@ -1642,13 +1678,30 @@ export function AthleteDetail({
                 <div className="mb-4">
                   <div className="flex-1">
                     {athleteData?.bio_headline && (
-                      <h3 className="profile-headline text-xl font-semibold text-primary mb-4 leading-relaxed">{athleteData.bio_headline}</h3>
+                      <h3 className={cn("profile-headline font-semibold text-primary leading-relaxed", mobileRecruiterLayout ? "text-base lg:text-lg mb-3" : "text-xl mb-4")}>{athleteData.bio_headline}</h3>
                     )}
                   </div>
                 </div>
                 {athleteData?.bio ? (
-                  <div className="profile-panel bg-card rounded-lg p-6 shadow-sm border border-border">
-                    <p className="text-base text-foreground/80 leading-relaxed whitespace-pre-wrap">{athleteData.bio}</p>
+                  <div className={cn(!mobileRecruiterLayout && "profile-panel bg-card rounded-lg p-6 shadow-sm border border-border")}>
+                    <p
+                      className={cn(
+                        "text-base text-foreground/80 leading-relaxed whitespace-pre-wrap",
+                        mobileRecruiterLayout && !bioExpanded && "line-clamp-3",
+                      )}
+                    >
+                      {athleteData.bio}
+                    </p>
+                    {mobileRecruiterLayout ? (
+                      <button
+                        type="button"
+                        className="mt-3 text-sm font-semibold text-[#D3B574] hover:underline"
+                        aria-expanded={bioExpanded}
+                        onClick={() => setBioExpanded((v) => !v)}
+                      >
+                        {bioExpanded ? "Show less" : "Read full profile"}
+                      </button>
+                    ) : null}
                   </div>
                 ) : (
                   <p className="profile-text-muted text-muted-foreground italic">{canEdit ? "No bio yet. Click Edit to add." : "No bio available."}</p>
@@ -1919,11 +1972,11 @@ export function AthleteDetail({
         )}
         data-section="highlights"
       >
-        <div className="bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6">
+        <div className={cn(mobileRecruiterLayout ? PROFILE_SECTION_HEADER : "bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6")}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Video className="h-6 w-6 text-white" />
-                <h2 className="text-2xl font-bold text-white">Highlight Reel</h2>
+                <Video className={cn("text-white", mobileRecruiterLayout ? "h-5 w-5" : "h-6 w-6")} />
+                <h2 className={cn(mobileRecruiterLayout ? PROFILE_SECTION_TITLE : "text-2xl font-bold text-white")}>Highlight Reel</h2>
               </div>
               {canEdit && !editingSection && (
                 <Button
@@ -1938,7 +1991,8 @@ export function AthleteDetail({
               )}
             </div>
           </div>
-          <div className="profile-card-body p-8">
+          {/* Capped on desktop: a full-width player filled the screen and buried the results. */}
+          <div className={cn(mobileRecruiterLayout ? cn(PROFILE_CARD_BODY, "[&>*]:mx-auto [&>*]:max-w-3xl") : "profile-card-body p-8")}>
             {editingSection === "highlight-video" ? (
               <InlineHighlightVideoEditor
                 athleteId={athlete.id}

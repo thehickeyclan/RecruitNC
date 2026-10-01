@@ -99,7 +99,7 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [], style
   if (styles === "olympic" && allWins.length === 0) return null
 
   return (
-    <section id="quality-wins" className="rounded-xl border border-rnc-gold/30 bg-rnc-surface p-5" data-section="quality-wins">
+    <section id={styles === "olympic" ? "olympic-wins" : "quality-wins"} className="rounded-xl border border-rnc-gold/30 bg-rnc-surface p-5" data-section="quality-wins">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-rnc-gold" aria-hidden="true" />

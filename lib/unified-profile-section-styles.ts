@@ -6,30 +6,34 @@ export const PROFILE_SECTION_TITLE = "text-lg lg:text-2xl font-bold text-white"
 
 export const PROFILE_CARD_BODY = "profile-card-body p-4 md:p-6 lg:p-8"
 
-/** Flex order: mobile recruiter-first, desktop original document order. */
+/**
+ * Flex order, the same on phone and desktop: who he is, then the jump links, a short bio and the
+ * video, then the folkstyle record in one run - in-state (Tournament of Champions, then NCHSAA
+ * States), national, significant wins, the season log - then school and honours, and Freestyle &
+ * Greco-Roman last (Matt). The claim prompt and edit request sit at the foot of the page.
+ * Every child of the profile column needs a class: an unclassed one computes to order 0 and
+ * floats above the jump links.
+ */
 export const PROFILE_SECTION_ORDER = {
-  hero: "order-first lg:order-first",
-  nav: "order-2 lg:order-none",
-  /** Own-profile/admin-only analytics follow the public bio card. */
-  profileViews: "order-[3] lg:order-[2]",
-  /** First card after the hero; the body is collapsible so this does not bury results. */
-  bio: "order-1 lg:order-1",
-  nationalResults: "order-3 lg:order-4",
-  /** NCHSAA/States sits with tournament block; desktop order after national. */
-  nchsaaStates: "order-3 lg:order-4",
-  qualityWins: "order-4 lg:order-5",
-  highlights: "order-5 lg:order-8",
-  programs: "order-7 lg:order-3",
-  academics: "order-8 lg:order-6",
-  collegeOpens: "order-9 lg:order-9",
-  achievements: "order-10 lg:order-10",
-  /** Straight after Significant wins (same slot, later in the page): the folkstyle record in one run. */
-  inSeason: "order-4 lg:order-5",
-  /** Freestyle & Greco-Roman, after every folkstyle section (Matt: always the last section). */
-  olympicStyles: "order-12 lg:order-12",
-  /** Inline weight editor — after nav when open. */
-  weightEdit: "order-[2] lg:order-[2]",
-  /** Must stay after all profile sections (default order:0 would float above the hero). */
-  requestEdit: "order-[98] lg:order-[98]",
-  footer: "order-[99] lg:order-[99]",
+  hero: "order-first",
+  nav: "order-[1]",
+  /** Viewer-specific panels (recruiting views, scouting report link, profile stats, edit forms). */
+  panels: "order-[2]",
+  profileViews: "order-[2]",
+  weightEdit: "order-[2]",
+  bio: "order-[3]",
+  highlights: "order-[4]",
+  nationalResults: "order-[5]",
+  /** Kept for callers: the NCHSAA block now renders inside the tournament results slot. */
+  nchsaaStates: "order-[5]",
+  qualityWins: "order-[6]",
+  inSeason: "order-[7]",
+  programs: "order-[8]",
+  academics: "order-[9]",
+  collegeOpens: "order-[10]",
+  achievements: "order-[11]",
+  olympicStyles: "order-[12]",
+  claim: "order-[97]",
+  requestEdit: "order-[98]",
+  footer: "order-[99]",
 } as const
