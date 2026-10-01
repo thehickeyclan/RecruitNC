@@ -177,6 +177,22 @@ export function namesLikelySamePerson(nameA: string, nameB: string): boolean {
   return firstNamesLikelySame(pa.first, pb.first)
 }
 
+/**
+ * The words of a name, as `namesLikelySamePerson` compares them. Two names it calls the same
+ * person always share one of these - the same words in any order, or the same surname - unless
+ * an alias group links them (`hasNameAlias`). That makes them a safe index for narrowing a long
+ * list of candidates before running the real comparison.
+ */
+export function nameWords(name: string): string[] {
+  return normalizeApostrophes((name ?? "").trim().toLowerCase()).split(/[\s,]+/).filter(Boolean)
+}
+
+/** Whether a name belongs to an alias group, the one way two names can match sharing no word. */
+export function hasNameAlias(name: string): boolean {
+  const key = cached(aliasKeyCache, name, () => normalizeForAlias(name))
+  return ALIAS_GROUP_NORMS.some((norms) => norms.has(key))
+}
+
 export function rowNameMatchesAthleteContext(rowName: string, context: AthleteMatchContext): boolean {
   const rn = (rowName ?? "").trim()
   if (!rn) return false

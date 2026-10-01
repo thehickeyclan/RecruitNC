@@ -317,7 +317,8 @@ def main():
     db.request("POST", "state_tournament_bouts", "", bouts, "return=minimal")
     db.request("POST", "state_tournament_placers", "", placers, "return=minimal")
     print("\nWritten.")
-    confirm_identities(db)
+    if "--no-confirm" not in sys.argv:  # loading many states: confirm once at the end instead
+        confirm_identities(db)
 
 
 if __name__ == "__main__":

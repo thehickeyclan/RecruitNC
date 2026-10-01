@@ -1,4 +1,4 @@
-import { namesLikelySamePerson } from "@/lib/athlete-name-match"
+import { hasNameAlias, nameWords, namesLikelySamePerson } from "@/lib/athlete-name-match"
 
 /**
  * Wins worth showing on a profile: the ones over somebody the reader has heard of.
@@ -309,6 +309,35 @@ function outOfStatePlacerFits(
 
 /** Placers sharing this opponent's name, resolved once per name per index like the rest. */
 const placersByIndex = new WeakMap<OpponentIndex, Map<string, StatePlacer[]>>()
+
+/**
+ * Placers by the words of their names. With every state's placers loaded there are over eleven
+ * thousand, and running the fuzzy comparison against each for every opponent took a profile six
+ * seconds. Only placers sharing a word with the opponent can match (see `nameWords`), so the
+ * comparison runs on those alone; a name in an alias group still gets the full list.
+ */
+const placerWordsByIndex = new WeakMap<OpponentIndex, Map<string, StatePlacer[]>>()
+function placerCandidates(index: OpponentIndex, name: string): readonly StatePlacer[] {
+  const all = index.statePlacers ?? []
+  if (hasNameAlias(name)) return all
+  let byWord = placerWordsByIndex.get(index)
+  if (!byWord) {
+    byWord = new Map()
+    for (const placer of all) {
+      for (const word of new Set(nameWords(placer.name))) {
+        const list = byWord.get(word)
+        if (list) list.push(placer)
+        else byWord.set(word, [placer])
+      }
+    }
+    placerWordsByIndex.set(index, byWord)
+  }
+  const out = new Set<StatePlacer>()
+  for (const word of nameWords(name)) for (const placer of byWord.get(word) ?? []) out.add(placer)
+  // Keep the index's order, so results come out exactly as the full scan returned them.
+  return out.size ? all.filter((p) => out.has(p)) : []
+}
+
 function statePlacersNamed(index: OpponentIndex, name: string): StatePlacer[] {
   if (!index.statePlacers?.length) return []
   let cache = placersByIndex.get(index)
@@ -319,7 +348,7 @@ function statePlacersNamed(index: OpponentIndex, name: string): StatePlacer[] {
   const key = name.trim().toLowerCase()
   const hit = cache.get(key)
   if (hit) return hit
-  const found = index.statePlacers.filter((p) => namesLikelySamePerson(p.name, name))
+  const found = placerCandidates(index, name).filter((p) => namesLikelySamePerson(p.name, name))
   cache.set(key, found)
   return found
 }

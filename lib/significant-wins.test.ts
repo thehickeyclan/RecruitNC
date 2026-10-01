@@ -307,4 +307,13 @@ describe("other states' placers", () => {
   it("still refuses a confirmed name at a North Carolina school", () => {
     expect(findSignificantWins([win("Levi Wright", "East Wilkes")], index)).toEqual([])
   })
+  it("narrows by name word without losing a nickname or an alias-group spelling", () => {
+    const narrowed = {
+      ...index,
+      statePlacers: [va("Zachary Miracle", "Hudsonville", 2, "D1", true), va("Holton Quickny", "Harlan", 1, "1A", true), ...index.statePlacers],
+    }
+    // Zach / Zachary share the surname; Quincy / Quickny share no word but are an alias group.
+    expect(findSignificantWins([win("Zach Miracle", "VA")], narrowed)).toHaveLength(1)
+    expect(findSignificantWins([win("Holt Quincy", "VA")], narrowed)).toHaveLength(1)
+  })
 })
