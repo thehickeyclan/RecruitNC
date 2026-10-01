@@ -138,6 +138,9 @@ describe("looseNameMatch", () => {
     expect(looseNameMatch("Favio Jaramillo Esparza", "Favio Jaramillo")).toBe(true)
     expect(looseNameMatch("Abdel Adams", "Abdel Adam")).toBe(true)
   })
+  it("accepts a nickname for the first name", () => {
+    expect(looseNameMatch("Joshua Figueredo Morehead", "Josh Figueredo")).toBe(true)
+  })
   it("never crosses first names", () => {
     expect(looseNameMatch("Julian Figueredo", "Josh Figueredo")).toBe(false)
   })
@@ -156,6 +159,16 @@ describe("loose names and graduation", () => {
     // Class of 2027: first state tournament is February 2024.
     expect(decideLink({ name: "Campbell Tufts", school: "Ravenscroft", year: 2023, highSchoolSeason: true }, [athlete({})]).status).toBe("no_match")
     expect(decideLink({ name: "Campbell Tufts", school: "Ravenscroft", year: 2024, highSchoolSeason: true }, [athlete({})]).status).toBe("linked")
+  })
+
+  it("allows an NCISA state result in middle school", () => {
+    // Josh Stonebraker: 2023 NCISA title at Cary Christian as an 8th grader, class of 2027.
+    expect(decideLink({ name: "Campbell Tufts", school: "Ravenscroft", year: 2023, highSchoolSeason: true, middleSchoolEligible: true }, [athlete({})]).status).toBe("linked")
+  })
+
+  it("accepts the school as printed for a loose name", () => {
+    const a = athlete({ name: "Favio Jaramillo", highSchool: "Cedar Ridge", graduationYear: 2026 })
+    expect(decideLink({ name: "Favio Jaramillo Esparza", school: "Cedar Ridge", year: 2026 }, [a]).status).toBe("linked")
   })
 
   it("rejects a high-school result dated after his class graduated", () => {

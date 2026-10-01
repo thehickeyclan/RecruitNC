@@ -18,6 +18,7 @@
  */
 
 import {
+  firstNamesLikelySame,
   rowNameMatchesAthleteContext,
   schoolsLikelySame,
   scoreAthleteRowMatch,
@@ -27,7 +28,7 @@ import {
 } from "@/lib/athlete-name-match"
 
 /** Bump when the rules change, so links made under older rules can be found and re-checked. */
-export const LINK_MATCHER_VERSION = "2026-10-01.6"
+export const LINK_MATCHER_VERSION = "2026-10-01.7"
 
 export type AthleteForLink = {
   id: string
@@ -59,6 +60,11 @@ export type ResultRowForLink = {
    * someone else: Connor Byrd, class of 2024, was linked to a 2026 state result at his old school.
    */
   highSchoolSeason?: boolean
+  /**
+   * NCISA lets 7th and 8th graders wrestle varsity: Josh Stonebraker won a 2023 NCISA title at Cary
+   * Christian in 8th grade. Its window opens three years earlier than the NCHSAA's.
+   */
+  middleSchoolEligible?: boolean
   /** A link already stored on the source row by an earlier import. */
   existingAthleteId?: string | null
 }
@@ -156,11 +162,12 @@ function nameTokens(s: string): string[] {
  *   - hyphenated or double surnames: "Jalen Terry-Winston", "Favio Jaramillo Esparza"
  *   - one letter off in a long surname: "Abdel Adams" for "Abdel Adam"
  *
- * The first name must agree exactly, so "Julian Figueredo" is never taken for "Josh Figueredo".
+ * The first name must agree, nicknames included (Josh / Joshua), so "Julian Figueredo" is never
+ * taken for "Josh Figueredo".
  */
 export function looseNameMatch(rowName: string, athleteName: string): boolean {
   const r = nameTokens(rowName), a = nameTokens(athleteName)
-  if (r.length < 2 || a.length < 2 || r[0] !== a[0]) return false
+  if (r.length < 2 || a.length < 2 || !(r[0] === a[0] || firstNamesLikelySame(r[0], a[0]))) return false
   const last = a[a.length - 1]
   return r.slice(1).some((t) => {
     if (t === last) return true
@@ -211,7 +218,7 @@ function assess(row: ResultRowForLink, a: AthleteForLink, looseName = false): As
   const extra = looseName ? trailingWords(row.name, a.name) : ""
   const rowSchool = looseName && extra ? `${extra} ${row.school ?? ""}`.trim() : row.school
   const schoolAgrees = looseName
-    ? Boolean(rowSchool?.trim()) && (schoolWordsEqual(a.highSchool, rowSchool) || schoolWordsEqual(a.club, rowSchool))
+    ? [rowSchool, row.school].some((s) => Boolean(s?.trim()) && (schoolWordsEqual(a.highSchool, s) || schoolWordsEqual(a.club, s)))
     : Boolean(row.school?.trim()) && (schoolsMatch(a.highSchool, row.school) || schoolsMatch(a.club, row.school))
   // A club-or-school column that names something else is silence, not disagreement.
   const schoolComparable = Boolean(row.school?.trim()) && Boolean(a.highSchool?.trim()) && (schoolAgrees || !row.schoolMayBeClub)
@@ -247,8 +254,8 @@ function assess(row: ResultRowForLink, a: AthleteForLink, looseName = false): As
   if (afterGraduation) signals.push("after he graduated")
   // The state tournament is high school only, and a class's first one is the February of its
   // freshman year: three before graduation. Eli Thomas (2026) was linked to 2020 and 2021 titles.
-  const beforeHighSchool =
-    Boolean(row.highSchoolSeason) && row.year != null && a.graduationYear != null && row.year < a.graduationYear - 3
+  const firstSeason = a.graduationYear == null ? null : a.graduationYear - (row.middleSchoolEligible ? 6 : 3)
+  const beforeHighSchool = Boolean(row.highSchoolSeason) && row.year != null && firstSeason != null && row.year < firstSeason
   if (beforeHighSchool) signals.push("before he reached high school")
   const contradicted = divisionContradicts || stateContradicts || softContradiction || afterGraduation || beforeHighSchool
   // Name plus a year window is how namesakes got in; corroboration needs the school or the division.
