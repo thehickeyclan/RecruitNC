@@ -60,6 +60,20 @@ the wrestler.
 
 `/admin/identity-review` (Result review in the admin bar): the result beside each candidate profile — Same wrestler, Not him, or Skip. Decisions are final; the backfill never rewrites a row with `reviewed_at` set. After version .3: **36 rows** (26 school differs, 8 wrong stored links, 2 with two profiles).
 
+## Keeping links current (1 October 2026)
+
+`lib/identity/link-results.ts` is the one routine that decides and stores links:
+
+- **Importers** call it right after inserting (public-import approval for NCHSAA and Fargo, both
+  NHSCA admin importers), so new results show immediately.
+- **Hourly cron** `/api/cron/link-results` (`:20` past each hour) covers rows created or changed in
+  the last three hours and the results of profiles created or changed in that window - script and
+  SQL imports, and a profile made after its results were loaded.
+- **Backfill script** runs it over everything.
+
+NHSCA admin importers delete and re-insert a year, so a hand decision on a re-imported NHSCA row
+comes back to review.
+
 ## Next steps
 
 2. Review the 101 rows (admin screen), then the site reads stored links first and falls back to name

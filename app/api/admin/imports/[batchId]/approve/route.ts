@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { isMissingImportsTable } from "@/lib/public-imports/stage"
 import { promoteStagedRow } from "@/lib/public-imports/promote"
+import { linkResults } from "@/lib/identity/link-results"
 import type {
   ClassificationProposed,
   DualTeamProposed,
@@ -71,6 +72,7 @@ export async function POST(
   }
 
   const now = new Date().toISOString()
+  const importStarted = now
   let approved = 0
   let rejected = 0
   const failed: Array<{ id: string; error: string }> = []
@@ -111,6 +113,13 @@ export async function POST(
         .update({ promote_error: msg })
         .eq("id", row.id)
     }
+  }
+
+  // Link what was just promoted, so it shows on profiles now rather than at the next hourly run.
+  if (approved > 0) {
+    await linkResults(admin, { since: importStarted }).catch((e) => {
+      console.error("[import approve] linking failed; the hourly run will retry", e)
+    })
   }
 
   const { count: pendingCount } = await admin

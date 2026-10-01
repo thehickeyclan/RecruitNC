@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { linkResults } from "@/lib/identity/link-results"
 import { getAdminAuth } from "@/lib/cached-auth-check"
 import {
   parseNhscaRosterTsv,
@@ -52,6 +53,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createAdminClient()
+    const importStarted = new Date().toISOString()
 
     if (deleteMode === "source") {
       const { error: delErr } = await supabase
@@ -116,6 +118,13 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Link what was just imported, so it shows on profiles now rather than at the next hourly run.
+    const linking = await linkResults(supabase, { since: importStarted }).catch((e) => {
+      console.error("[nhsca import] linking failed; the hourly run will retry", e)
+      return null
+    })
+    const needsReview = linking?.review.length ?? 0
+
     const participantsCount = parsed.rows.length
     const placersCount = parsed.rows.filter((r) => r.placement != null).length
 
@@ -123,6 +132,7 @@ export async function POST(request: NextRequest) {
       success: true,
       imported: participantsCount,
       placers: placersCount,
+      needsReview,
       nonPlacers: participantsCount - placersCount,
       year,
       state,

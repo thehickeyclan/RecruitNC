@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { linkResults } from "@/lib/identity/link-results"
 import { getAdminAuth } from "@/lib/cached-auth-check"
 
 interface NHSCAPlacementRow {
@@ -22,6 +23,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createAdminClient()
+    const importStarted = new Date().toISOString()
     const { placements, year = 2025 } = await request.json()
 
     if (!Array.isArray(placements) || placements.length === 0) {
@@ -120,6 +122,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to import participants", details: error.message }, { status: 500 })
     }
 
+    // Link what was just imported, so it shows on profiles now rather than at the next hourly run.
+    const linking = await linkResults(supabase, { since: importStarted }).catch((e) => {
+      console.error("[nhsca import] linking failed; the hourly run will retry", e)
+      return null
+    })
+    const needsReview = linking?.review.length ?? 0
+
     // Count placers vs non-placers for better messaging
     const placersCount = data?.filter((p: any) => p.placement !== null && p.placement !== undefined).length || 0
     const participantsCount = data?.length || 0
@@ -130,6 +139,7 @@ export async function POST(request: NextRequest) {
       placers: placersCount,
       nonPlacers: participantsCount - placersCount,
       warnings: warnings.length ? warnings : undefined,
+      needsReview,
       message: `Successfully imported ${participantsCount} NHSCA participants (${placersCount} placers, ${participantsCount - placersCount} non-placers)`,
     })
   } catch (error: any) {
