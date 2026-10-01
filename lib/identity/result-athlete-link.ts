@@ -27,7 +27,7 @@ import {
 } from "@/lib/athlete-name-match"
 
 /** Bump when the rules change, so links made under older rules can be found and re-checked. */
-export const LINK_MATCHER_VERSION = "2026-10-01.4"
+export const LINK_MATCHER_VERSION = "2026-10-01.6"
 
 export type AthleteForLink = {
   id: string
@@ -54,6 +54,11 @@ export type ResultRowForLink = {
    * "Boomer"). Then a different name there is not evidence of a different wrestler.
    */
   schoolMayBeClub?: boolean
+  /**
+   * A high-school season result (NCHSAA). One dated after the athlete's class graduated belongs to
+   * someone else: Connor Byrd, class of 2024, was linked to a 2026 state result at his old school.
+   */
+  highSchoolSeason?: boolean
   /** A link already stored on the source row by an earlier import. */
   existingAthleteId?: string | null
 }
@@ -135,11 +140,60 @@ export function schoolsMatch(a: string | null | undefined, b: string | null | un
   return longest >= 6 && editDistance(ca, cb) <= (longest >= 12 ? 2 : 1)
 }
 
+function nameTokens(s: string): string[] {
+  return s
+    .toLowerCase()
+    .replace(/[’'`]/g, "")
+    .replace(/[^a-z\s-]/g, " ")
+    .split(/[\s]+/)
+    .filter(Boolean)
+}
+
+/**
+ * A looser name match for import quirks the exact rules miss, used only with corroboration:
+ *
+ *   - extra words after the name: some NHSCA rows carry the school glued on ("Garrison Raper China")
+ *   - hyphenated or double surnames: "Jalen Terry-Winston", "Favio Jaramillo Esparza"
+ *   - one letter off in a long surname: "Abdel Adams" for "Abdel Adam"
+ *
+ * The first name must agree exactly, so "Julian Figueredo" is never taken for "Josh Figueredo".
+ */
+export function looseNameMatch(rowName: string, athleteName: string): boolean {
+  const r = nameTokens(rowName), a = nameTokens(athleteName)
+  if (r.length < 2 || a.length < 2 || r[0] !== a[0]) return false
+  const last = a[a.length - 1]
+  return r.slice(1).some((t) => {
+    if (t === last) return true
+    const parts = t.split("-")
+    if (parts.includes(last)) return true
+    if (last.includes("-") && last.split("-").includes(t)) return true
+    return last.length >= 4 && t.length >= 4 && Math.abs(t.length - last.length) <= 1 && editDistance(t, last) <= 1
+  })
+}
+
+/** Words in the row's name after the athlete's surname (the glued-on school, if any). */
+function trailingWords(rowName: string, athleteName: string): string {
+  const r = nameTokens(rowName), last = nameTokens(athleteName).pop() ?? ""
+  const i = r.findIndex((t, k) => k > 0 && (t === last || t.split("-").includes(last) || editDistance(t, last) <= 1))
+  return i >= 0 ? r.slice(i + 1).join(" ") : ""
+}
+
+/** Whole-school agreement for loose names: same core words, spelling forgiven, no substrings. */
+function schoolWordsEqual(a: string | null | undefined, b: string | null | undefined): boolean {
+  if (!a?.trim() || !b?.trim()) return false
+  const core = (s: string) => schoolWords(s).filter((x) => !SCHOOL_STOP.has(x)).join(" ")
+  const ca = core(a), cb = core(b)
+  if (!ca || !cb) return false
+  return ca === cb || (Math.max(ca.length, cb.length) >= 6 && editDistance(ca, cb) <= 1)
+}
+
 function contextOf(a: AthleteForLink): AthleteMatchContext {
   return { displayName: a.name, wrestlingName: a.wrestlingName, graduationYear: a.graduationYear, highSchool: a.highSchool }
 }
 
 type Assessed = LinkCandidate & {
+  /** Matched only through `looseNameMatch`: needs school or division to back it up. */
+  looseName: boolean
   contradicted: boolean
   corroborated: boolean
   schoolAgrees: boolean
@@ -147,10 +201,18 @@ type Assessed = LinkCandidate & {
   silentSchoolYearFits: boolean
 }
 
-function assess(row: ResultRowForLink, a: AthleteForLink): Assessed {
+function assess(row: ResultRowForLink, a: AthleteForLink, looseName = false): Assessed {
   const signals: string[] = []
-  const schoolAgrees =
-    Boolean(row.school?.trim()) && (schoolsMatch(a.highSchool, row.school) || schoolsMatch(a.club, row.school))
+  /*
+   * A loosely matched name may have swallowed the start of the school: NHSCA printed "Garrison
+   * Raper China" with school "Grove". Rebuild "China Grove" and require that - "Grove" alone would
+   * match Providence Grove too.
+   */
+  const extra = looseName ? trailingWords(row.name, a.name) : ""
+  const rowSchool = looseName && extra ? `${extra} ${row.school ?? ""}`.trim() : row.school
+  const schoolAgrees = looseName
+    ? Boolean(rowSchool?.trim()) && (schoolWordsEqual(a.highSchool, rowSchool) || schoolWordsEqual(a.club, rowSchool))
+    : Boolean(row.school?.trim()) && (schoolsMatch(a.highSchool, row.school) || schoolsMatch(a.club, row.school))
   // A club-or-school column that names something else is silence, not disagreement.
   const schoolComparable = Boolean(row.school?.trim()) && Boolean(a.highSchool?.trim()) && (schoolAgrees || !row.schoolMayBeClub)
   const yearComparable = row.year != null && a.graduationYear != null
@@ -181,7 +243,14 @@ function assess(row: ResultRowForLink, a: AthleteForLink): Assessed {
   // wrestler whatever the name says. Then the read path's rule: every comparable signal disagrees.
   const softContradiction =
     (schoolComparable || yearComparable) && !(schoolComparable && schoolAgrees) && !(yearComparable && yearLoose)
-  const contradicted = divisionContradicts || stateContradicts || softContradiction
+  const afterGraduation = Boolean(row.highSchoolSeason) && row.year != null && a.graduationYear != null && row.year > a.graduationYear
+  if (afterGraduation) signals.push("after he graduated")
+  // The state tournament is high school only, and a class's first one is the February of its
+  // freshman year: three before graduation. Eli Thomas (2026) was linked to 2020 and 2021 titles.
+  const beforeHighSchool =
+    Boolean(row.highSchoolSeason) && row.year != null && a.graduationYear != null && row.year < a.graduationYear - 3
+  if (beforeHighSchool) signals.push("before he reached high school")
+  const contradicted = divisionContradicts || stateContradicts || softContradiction || afterGraduation || beforeHighSchool
   // Name plus a year window is how namesakes got in; corroboration needs the school or the division.
   const corroborated = !contradicted && (schoolAgrees || divisionAgrees)
 
@@ -192,19 +261,22 @@ function assess(row: ResultRowForLink, a: AthleteForLink): Assessed {
     highSchool: a.highSchool,
     score: scoreAthleteRowMatch(contextOf(a), { name: row.name, school: row.school, year: row.year }),
     signals,
+    looseName,
     contradicted,
     corroborated,
     schoolAgrees,
-    silentSchoolYearFits: !contradicted && !schoolComparable && !schoolAgrees && yearStrict,
+    silentSchoolYearFits: !looseName && !contradicted && !schoolComparable && !schoolAgrees && yearStrict,
   }
 }
 
-const strip = ({ contradicted: _c, corroborated: _r, schoolAgrees: _s, silentSchoolYearFits: _y, ...rest }: Assessed): LinkCandidate =>
+const strip = ({ looseName: _l, contradicted: _c, corroborated: _r, schoolAgrees: _s, silentSchoolYearFits: _y, ...rest }: Assessed): LinkCandidate =>
   rest
 
 export function decideLink(row: ResultRowForLink, athletes: readonly AthleteForLink[]): LinkDecision {
-  const named = athletes.filter((a) => rowNameMatchesAthleteContext(row.name, contextOf(a)))
-  const assessed = named.map((a) => assess(row, a)).sort((x, y) => y.score - x.score)
+  const exact = athletes.filter((a) => rowNameMatchesAthleteContext(row.name, contextOf(a)))
+  const loose = exact.length ? [] : athletes.filter((a) => looseNameMatch(row.name, a.name))
+  const named = [...exact, ...loose]
+  const assessed = [...exact.map((a) => assess(row, a)), ...loose.map((a) => assess(row, a, true))].sort((x, y) => y.score - x.score)
   const candidates = assessed.map(strip)
   const viable = assessed.filter((c) => !c.contradicted)
   const corroborated = viable.filter((c) => c.corroborated)

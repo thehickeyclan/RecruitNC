@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { buildNameIndex, decideLink, gradYearFromDivision, schoolsMatch, type AthleteForLink } from "@/lib/identity/result-athlete-link"
+import { buildNameIndex, decideLink, gradYearFromDivision, looseNameMatch, schoolsMatch, type AthleteForLink } from "@/lib/identity/result-athlete-link"
 
 const athlete = (over: Partial<AthleteForLink>): AthleteForLink => ({
   id: "a1",
@@ -128,5 +128,41 @@ describe("a school column that may hold a club", () => {
       [athlete({})],
     )
     expect(d.status).not.toBe("linked")
+  })
+})
+
+describe("looseNameMatch", () => {
+  it("reads past import quirks", () => {
+    expect(looseNameMatch("Garrison Raper China", "Garrison Raper")).toBe(true)
+    expect(looseNameMatch("Jalen Terry-Winston", "Jalen Terry")).toBe(true)
+    expect(looseNameMatch("Favio Jaramillo Esparza", "Favio Jaramillo")).toBe(true)
+    expect(looseNameMatch("Abdel Adams", "Abdel Adam")).toBe(true)
+  })
+  it("never crosses first names", () => {
+    expect(looseNameMatch("Julian Figueredo", "Josh Figueredo")).toBe(false)
+  })
+})
+
+describe("loose names and graduation", () => {
+  it("links a loose name only when the school backs it up", () => {
+    // NHSCA printed "Garrison Raper China" / "Grove": the school rebuilt from both pieces agrees.
+    const a = athlete({ name: "Garrison Raper", highSchool: "China Grove" })
+    expect(decideLink({ name: "Garrison Raper China", school: "Grove", year: 2026 }, [a]).status).toBe("linked")
+    // "Grove" must not stand in for a different Grove.
+    const b = athlete({ name: "Garrison Raper", highSchool: "Providence Grove" })
+    expect(decideLink({ name: "Garrison Raper China", school: "Grove", year: 2026 }, [b]).status).not.toBe("linked")
+  })
+  it("rejects a state result from before his freshman season", () => {
+    // Class of 2027: first state tournament is February 2024.
+    expect(decideLink({ name: "Campbell Tufts", school: "Ravenscroft", year: 2023, highSchoolSeason: true }, [athlete({})]).status).toBe("no_match")
+    expect(decideLink({ name: "Campbell Tufts", school: "Ravenscroft", year: 2024, highSchoolSeason: true }, [athlete({})]).status).toBe("linked")
+  })
+
+  it("rejects a high-school result dated after his class graduated", () => {
+    const d = decideLink(
+      { name: "Campbell Tufts", school: "Ravenscroft", year: 2029, highSchoolSeason: true },
+      [athlete({})],
+    )
+    expect(d.status).toBe("no_match")
   })
 })

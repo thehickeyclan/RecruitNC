@@ -27,7 +27,7 @@ type Source = {
 
 const SOURCES: Source[] = [
   { table: "wrestling_nchsaa_results", select: "id,wrestler_name,school,year,athlete_id",
-    map: (r) => ({ name: r.wrestler_name, school: r.school, year: r.year, state: "NC", existingAthleteId: r.athlete_id }) },
+    map: (r) => ({ name: r.wrestler_name, school: r.school, year: r.year, state: "NC", existingAthleteId: r.athlete_id, highSchoolSeason: true }) },
   { table: "nhsca_placements", select: "id,athlete_name,high_school,year,division,state,athlete_id",
     map: (r) => ({ name: r.athlete_name, school: r.high_school, year: r.year, division: r.division, state: r.state, existingAthleteId: r.athlete_id }) },
   { table: "wrestling_nhsca_results", select: "id,athlete_name,high_school,year,division,state",
