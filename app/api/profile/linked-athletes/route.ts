@@ -27,6 +27,25 @@ export async function GET() {
     return NextResponse.json({ error: e instanceof Error ? e.message : "Server error" }, { status: 500 })
   }
 
+  /*
+   * One definition of "my wrestlers", shared with the app.
+   *
+   * The app listed anyone claimed by this account plus the parent links; the website listed the
+   * account's own athlete plus the parent links, and never looked at claims. So a claim made in
+   * the app was invisible on the website - which is how Cheryl Shuster could see Austin Laws,
+   * another family's son claimed by a tap, and had no way to remove him. The list a person is
+   * shown has to include everything attached to them, or they cannot undo it.
+   */
+  const { data: claimedRows } = await admin
+    .from("athletes")
+    .select("id")
+    .eq("claimed_by_user_id", user.id)
+
+  for (const row of claimedRows ?? []) {
+    const id = String((row as { id?: string }).id ?? "").trim()
+    if (id && !athleteIds.includes(id)) athleteIds.push(id)
+  }
+
   if (athleteIds.length === 0) return NextResponse.json({ athletes: [], profileAthleteId: null as string | null })
 
   const { data: prof } = await admin.from("user_profiles").select("athlete_id").eq("user_id", user.id).maybeSingle()
