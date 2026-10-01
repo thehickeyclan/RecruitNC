@@ -18,7 +18,7 @@ import { loadStatePlacerIndex } from "@/lib/state-placers"
 
 export const dynamic = "force-dynamic"
 
-type BoutIn = { name?: unknown; club?: unknown; year?: unknown }
+type BoutIn = { name?: unknown; club?: unknown; year?: unknown; weight?: unknown }
 
 /** The key the client looks a label up by. Kept in step with components/profile/tournament-accordion.tsx. */
 function boutKey(name: string, club: string | null, year: number | null) {
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     // Treated as a win only so the finder looks at it; the outcome plays no part in an accolade.
     // Mid-March places a bout in the season of its own year, close enough for the four-season check.
     const [found] = findSignificantWins(
-      [{ opponent: name, opponent_school: club, win_loss: "W", date: year ? `${year}-03-01` : null }],
+      [{ opponent: name, opponent_school: club, win_loss: "W", date: year ? `${year}-03-01` : null, weight: typeof raw.weight === "string" || typeof raw.weight === "number" ? raw.weight : null }],
       index,
     )
     const line = found ? accoladeLineWithRank(found) : null

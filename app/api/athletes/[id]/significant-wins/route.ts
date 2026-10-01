@@ -151,7 +151,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       ? win.reason === "national-ranked"
         ? (win.nationalRankLabel ?? "Nationally ranked")
         : null
-      : win.reason === "state-champion" || win.reason === "state-placer"
+      : win.reason === "state-champion" || win.reason === "state-placer" || win.reason === "national-placer"
         ? accoladeLine(win)
         : `${win.reason === "toc-field" ? "TOC field" : win.reason === "national-ranked" ? win.nationalRankLabel ?? "Nationally ranked" : "NC ranked"} · ${accoladeLine(win)}`,
     // A win over another state's placer is a national result, and the filter should say so.

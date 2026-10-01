@@ -343,3 +343,35 @@ describe("nationally ranked opponents with a school on file", () => {
     expect(findSignificantWins([win("Mooresville")], index)).toEqual([])
   })
 })
+
+describe("distinctive out-of-state names", () => {
+  const wilder = {
+    name: "Ryder Wilder",
+    schools: ["Camden County"],
+    state: "GA",
+    distinctive: true,
+    finishes: [{ year: 2026, place: 1, classification: "6A", state: "GA", weight: 190 }],
+  }
+  const index = { tocField: [], ranked: [], statePlacers: [wilder], stateSchools: ["Mooresville"] }
+  const bout = (school: string | null, weight: number | null) =>
+    ({ opponent: "Ryder Wilder", opponent_school: school, win_loss: "W", result: "TF", date: "6/24/2026", venue: "AAU", weight })
+
+  it("credits a distinctive name on an all-star team when the weight fits", () => {
+    const [w] = findSignificantWins([bout("Spec Ops (FL)", 215)], index)
+    expect(w.stateLabel).toBe("2026 GA 6A State Champion")
+  })
+
+  it("refuses it at a weight he could not have wrestled", () => {
+    expect(findSignificantWins([bout("Spec Ops (FL)", 132)], index)).toEqual([])
+  })
+
+  it("refuses it with no weight, and at a North Carolina school", () => {
+    expect(findSignificantWins([bout("Spec Ops (FL)", null)], index)).toEqual([])
+    expect(findSignificantWins([bout("Mooresville", 190)], index)).toEqual([])
+  })
+
+  it("never treats a shared name as distinctive", () => {
+    const shared = { ...index, statePlacers: [{ ...wilder, distinctive: false }] }
+    expect(findSignificantWins([bout("Spec Ops (FL)", 190)], shared)).toEqual([])
+  })
+})

@@ -84,6 +84,8 @@ create table if not exists public.state_tournament_placers (
 -- Added after the first run; safe on a table that already has them.
 alter table public.state_tournament_placers add column if not exists identity_confirmed boolean not null default false;
 alter table public.state_tournament_bouts alter column loser_name drop not null;
+-- Set by the confirmation pass: a North Carolinian shares this name, so it is never credited alone.
+alter table public.state_tournament_placers add column if not exists nc_namesake boolean;
 
 create index if not exists idx_state_tournament_placers_name on public.state_tournament_placers (lower(wrestler_name));
 create index if not exists idx_state_tournament_placers_state_season on public.state_tournament_placers (state, season);
@@ -107,3 +109,25 @@ create policy "state_tournament_placers_public_read" on public.state_tournament_
 
 grant select on public.state_tournament_divisions, public.state_tournament_bouts, public.state_tournament_placers
   to anon, authenticated;
+
+-- Placers at national events (Super 32, NHSCA Nationals, Journeymen), worked out from full brackets
+-- by scripts/import-national-event-placers.py. team is the state code or club the bracket listed.
+create table if not exists public.national_event_placers (
+  id uuid primary key default gen_random_uuid(),
+  event_key text not null,
+  event_name text not null,
+  year integer not null,
+  weight text not null,
+  place integer not null check (place between 1 and 8),
+  wrestler_name text not null,
+  team text,
+  state text,
+  created_at timestamptz not null default now(),
+  unique (event_key, weight, place, wrestler_name)
+);
+create index if not exists idx_national_event_placers_name on public.national_event_placers (lower(wrestler_name));
+alter table public.national_event_placers enable row level security;
+drop policy if exists "national_event_placers_public_read" on public.national_event_placers;
+create policy "national_event_placers_public_read" on public.national_event_placers
+  for select to anon, authenticated using (true);
+grant select on public.national_event_placers to anon, authenticated;

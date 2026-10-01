@@ -13,7 +13,7 @@ type SignificantWin = {
   date: string | null
   result: string | null
   weight: number | null
-  reason: "credentialed" | "toc-field" | "ranked" | "national-ranked" | "state-champion" | "state-placer"
+  reason: "credentialed" | "toc-field" | "ranked" | "national-ranked" | "state-champion" | "national-placer" | "state-placer"
   credential?: string | null
   /** "athlete-reported" for a win published from the submission form, unverified. */
   source?: string | null
@@ -165,6 +165,8 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
                         ? "State champion"
                         : win.reason === "state-placer"
                           ? "State placer"
+                          : win.reason === "national-placer"
+                            ? "National placer"
                           : "NC ranked"}
               </span>
 

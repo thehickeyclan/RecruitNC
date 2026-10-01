@@ -46,12 +46,13 @@ function boutKey(name: string, club: string | null, year: number | null) {
  */
 function useOpponentAccolades(rows: TournamentRow[]): Record<string, string> {
   const bouts = useMemo(() => {
-    const seen = new Map<string, { name: string; club: string | null; year: number }>()
+    const seen = new Map<string, { name: string; club: string | null; year: number; weight: string | null }>()
     for (const row of rows) {
       for (const bout of row.bouts) {
         if (bout.isBye || !bout.opponentName) continue
         const key = boutKey(bout.opponentName, bout.opponentClub, bout.year)
-        if (!seen.has(key)) seen.set(key, { name: bout.opponentName, club: bout.opponentClub, year: bout.year })
+        // The weight lets a distinctive name count on its own (outOfStatePlacerFits).
+        if (!seen.has(key)) seen.set(key, { name: bout.opponentName, club: bout.opponentClub, year: bout.year, weight: bout.weight || null })
       }
     }
     // A string, so a parent re-render that rebuilds identical rows does not fetch again.

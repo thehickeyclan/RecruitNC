@@ -69,6 +69,46 @@ export type OpponentIndex = {
    * place, so a coach reads "Fargo All-American" beside the name rather than just "NC ranked".
    */
   fargoAllAmericans?: readonly FargoAllAmerican[]
+  /**
+   * Placers at national events - Super 32, NHSCA Nationals, Journeymen - worked out from full
+   * brackets (scripts/import-national-event-placers.py). Profile and bout tables only, with the
+   * out-of-state evidence rules.
+   */
+  eventPlacers?: readonly EventPlacer[]
+}
+
+export type EventPlacement = { event: string; year: number; place: number; weight: number | null }
+
+export type EventPlacer = {
+  name: string
+  /** The state code the bracket listed, or null where it listed a club (Journeymen). */
+  state: string | null
+  /** The club or school the bracket listed, when it was not a state. */
+  schools: readonly string[]
+  /** Borrowed from his state placing: confirmed, distinctive, or shared with a North Carolinian. */
+  identityConfirmed?: boolean
+  distinctive?: boolean
+  finishes: readonly EventPlacement[]
+}
+
+/**
+ * "2025 Super 32 3rd (190)", "2026 NHSCA All-American (3rd, 138)", "2026 NHSCA Champion (138)";
+ * the newest two when he has more.
+ */
+export function eventPlacementLabel(finishes: readonly EventPlacement[]): string | null {
+  if (!finishes.length) return null
+  return [...finishes]
+    .sort((a, b) => b.year - a.year || a.place - b.place)
+    .slice(0, 2)
+    .map((f) => {
+      const at = f.weight ? ` (${f.weight})` : ""
+      if (f.place === 1) return `${f.year} ${f.event} Champion${at}`
+      const ord = `${f.place}${ordinalSuffix(f.place)}`
+      return /nhsca/i.test(f.event)
+        ? `${f.year} NHSCA All-American (${ord}${f.weight ? `, ${f.weight}` : ""})`
+        : `${f.year} ${f.event} ${ord}${at}`
+    })
+    .join(" · ")
 }
 
 export type FargoAllAmerican = {
@@ -88,12 +128,14 @@ export function fargoLabel(finishes: FargoAllAmerican["finishes"]): string | nul
 }
 
 /** Every accolade on a bout's opponent, for display: "2026 5A State Runner-up · 2026 Fargo ...". */
-export function accoladeLine(win: Pick<SignificantWin, "stateLabel" | "fargoLabel">): string | null {
-  return [win.stateLabel, win.fargoLabel].filter(Boolean).join(" · ") || null
+export function accoladeLine(win: Pick<SignificantWin, "stateLabel" | "fargoLabel" | "eventLabel">): string | null {
+  return [win.stateLabel, win.eventLabel, win.fargoLabel].filter(Boolean).join(" · ") || null
 }
 
 /** The same with a national ranking in front: "#9 Sports Illustrated · 2026 AZ D3 State Champion". */
-export function accoladeLineWithRank(win: Pick<SignificantWin, "stateLabel" | "fargoLabel" | "nationalRankLabel">): string | null {
+export function accoladeLineWithRank(
+  win: Pick<SignificantWin, "stateLabel" | "fargoLabel" | "eventLabel" | "nationalRankLabel">,
+): string | null {
   return [win.nationalRankLabel, accoladeLine(win)].filter(Boolean).join(" · ") || null
 }
 
@@ -111,9 +153,25 @@ export type StatePlacer = {
    * bracket line count for a name we know is the Virginia wrestler.
    */
   identityConfirmed?: boolean
+  /**
+   * Another state's placer whose name no other placer and no North Carolina profile or placer could
+   * share (lib/state-placers.ts). Credited on the name alone when the bout's weight fits his - see
+   * `outOfStatePlacerFits`. Ryder Wilder, Georgia's 6A champion, wrestled AAU for Spec Ops, an
+   * all-star side mostly from Florida: no bout line could ever name his state.
+   */
+  distinctive?: boolean
+  /** A North Carolinian shares this name (nc_namesake, set by the confirmation pass). */
+  ncNamesake?: boolean
 }
 
-export type StateFinish = { year: number; place: number; classification: string | null; state?: string | null }
+export type StateFinish = {
+  year: number
+  place: number
+  classification: string | null
+  state?: string | null
+  /** The weight he placed at, when the source gives one. */
+  weight?: number | null
+}
 
 function ordinalSuffix(n: number): string {
   return n % 100 >= 11 && n % 100 <= 13 ? "th" : n % 10 === 1 ? "st" : n % 10 === 2 ? "nd" : n % 10 === 3 ? "rd" : "th"
@@ -183,7 +241,7 @@ export type SignificantWin = {
    * Why it earned its place, strongest first: a national ranking outranks the TOC field,
    * which outranks a state prospect ranking.
    */
-  reason: "national-ranked" | "toc-field" | "ranked" | "state-champion" | "state-placer"
+  reason: "national-ranked" | "toc-field" | "ranked" | "state-champion" | "national-placer" | "state-placer"
   /**
    * The opponent's best North Carolina state finish, whenever they have one - shown beside the
    * stronger reasons too, because "TOC field" and "state champion" are different facts.
@@ -191,6 +249,8 @@ export type SignificantWin = {
   stateLabel?: string
   /** The opponent's Fargo All-American finish, when they have one. */
   fargoLabel?: string
+  /** His Super 32 / NHSCA / Journeymen placings: "2025 Super 32 3rd (190)". */
+  eventLabel?: string
   opponentGraduationYear: number | null
   /** Set when the opponent is nationally ranked: "#12 Sports Illustrated". */
   nationalRankLabel?: string
@@ -308,14 +368,30 @@ function outOfStatePlacerFits(
   boutSchool: string | null | undefined,
   placer: StatePlacer,
   knownSchools: readonly string[] | undefined,
+  boutWeight?: number | string | null,
 ): boolean {
   const state = String(placer.state ?? "").toUpperCase()
   const text = String(boutSchool ?? "").trim().toUpperCase()
   if (state && (text === state || text.includes(`(${state})`))) return true
   const bout = schoolWords(boutSchool)
   if (placer.schools.some((school) => sameSchool(schoolWords(school), bout))) return true
-  if (!placer.identityConfirmed) return false
-  return !(knownSchools ?? []).some((school) => sameSchool(schoolWords(school), bout))
+  const atNcSchool = (knownSchools ?? []).some((school) => sameSchool(schoolWords(school), bout))
+  if (atNcSchool) return false
+  if (placer.identityConfirmed) return true
+  // A name nobody else on file could carry, at a weight he could have wrestled.
+  return Boolean(placer.distinctive) && weightFits(boutWeight, placer.finishes)
+}
+
+/**
+ * Whether a bout's weight could be this placer's: from one class below the weight he placed at to
+ * two above, as a share of it (0.9x-1.2x), since kids grow between a February final and a summer
+ * dual. Unknown on either side is no evidence. The check that sorts namesakes from the real thing:
+ * "Wyatt Nichols" at 113 is not West Virginia's 175-pound placer.
+ */
+function weightFits(boutWeight: number | string | null | undefined, finishes: readonly StateFinish[]): boolean {
+  const bout = Number.parseInt(String(boutWeight ?? ""), 10)
+  if (!Number.isFinite(bout) || bout <= 0) return false
+  return finishes.some((f) => f.weight != null && f.weight > 0 && bout >= 0.9 * f.weight && bout <= 1.2 * f.weight)
 }
 
 /**
@@ -361,6 +437,44 @@ function placerCandidates(index: OpponentIndex, name: string): readonly StatePla
   for (const word of nameWords(name)) for (const placer of byWord.get(word) ?? []) out.add(placer)
   // Keep the index's order, so results come out exactly as the full scan returned them.
   return out.size ? all.filter((p) => out.has(p)) : []
+}
+
+/** Event placers sharing an opponent's name, narrowed by name word like `placerCandidates`. */
+const eventWordsByIndex = new WeakMap<OpponentIndex, Map<string, EventPlacer[]>>()
+function eventPlacersNamed(index: OpponentIndex, name: string): EventPlacer[] {
+  const all = index.eventPlacers ?? []
+  if (!all.length) return []
+  let byWord = eventWordsByIndex.get(index)
+  if (!byWord) {
+    byWord = new Map()
+    for (const placer of all) {
+      for (const word of new Set(nameWords(placer.name))) {
+        const list = byWord.get(word)
+        if (list) list.push(placer)
+        else byWord.set(word, [placer])
+      }
+    }
+    eventWordsByIndex.set(index, byWord)
+  }
+  const pool = hasNameAlias(name) ? all : [...new Set(nameWords(name).flatMap((w) => byWord!.get(w) ?? []))]
+  return pool.filter((p) => namesLikelySamePerson(p.name, name))
+}
+
+/** An event placer judged by the out-of-state rules, with his bracket's state or club as evidence. */
+function eventPlacerFits(bout: Bout, placer: EventPlacer, index: OpponentIndex): boolean {
+  return outOfStatePlacerFits(
+    bout.opponent_school,
+    {
+      name: placer.name,
+      schools: placer.schools,
+      state: placer.state ?? "",
+      identityConfirmed: placer.identityConfirmed,
+      distinctive: placer.distinctive,
+      finishes: placer.finishes.map((f) => ({ year: f.year, place: f.place, classification: null, weight: f.weight })),
+    },
+    index.stateSchools,
+    bout.weight,
+  )
 }
 
 function statePlacersNamed(index: OpponentIndex, name: string): StatePlacer[] {
@@ -457,7 +571,7 @@ function findSignificantBouts(
     // opponent at the time.
     const fitting = statePlacersNamed(index, name).filter((p) =>
       p.state
-        ? outOfStatePlacerFits(bout.opponent_school, p, index.stateSchools)
+        ? outOfStatePlacerFits(bout.opponent_school, p, index.stateSchools, bout.weight)
         : schoolConsistent(bout.opponent_school, p.schools, index.stateSchools),
     )
     const finishes = fitting.flatMap((p) => finishesInReach(p.finishes, bout.date))
@@ -472,7 +586,12 @@ function findSignificantBouts(
         .flatMap((f) => f.finishes)
         .filter((f) => season == null || Math.abs(f.year - season) <= 3),
     )
-    if (!national && !inField && !ranked && !placer) continue
+    const eventPlacers = eventPlacersNamed(index, name).filter((p) => eventPlacerFits(bout, p, index))
+    const eventLabel = eventPlacementLabel(
+      eventPlacers.flatMap((p) => p.finishes).filter((f) => season == null || Math.abs(f.year - season) <= 3),
+    )
+    const eventState = eventLabel ? eventPlacers.find((p) => p.state && p.state !== "NC")?.state ?? null : null
+    if (!national && !inField && !ranked && !placer && !eventLabel) continue
 
     // One entry per opponent per day: the same bout is sometimes stored twice.
     const key = `${name.toLowerCase()}|${bout.date ?? ""}`
@@ -492,10 +611,13 @@ function findSignificantBouts(
           ? "toc-field"
           : ranked
             ? "ranked"
-            : placer!.bestPlace === 1
+            : placer?.bestPlace === 1
               ? "state-champion"
-              : "state-placer",
+              : !placer
+                ? "national-placer"
+                : "state-placer",
       ...(placer ? { stateLabel: placer.label } : {}),
+      ...(eventLabel ? { eventLabel } : {}),
       ...(fargo ? { fargoLabel: fargo } : {}),
       opponentGraduationYear: ranked?.graduationYear ?? null,
       opponentRanking: ranked?.ranking ?? null,
@@ -503,7 +625,9 @@ function findSignificantBouts(
         ? { nationalRankLabel: `#${national.rank} ${national.source}`, opponentState: national.state }
         : placer && finishes.some((f) => f.state && f.state !== "NC")
           ? { opponentState: finishes.find((f) => f.state && f.state !== "NC")!.state }
-          : {}),
+          : eventState
+            ? { opponentState: eventState }
+            : {}),
     })
   }
 
@@ -512,22 +636,31 @@ function findSignificantBouts(
    * event to the next, so the same opponent could carry "2026 5A State Champion" at one meeting
    * and nothing at the next - Luke Padgett did, twice on one report. Lend the label across.
    */
-  const labelsByName = new Map<string, { stateLabel?: string; fargoLabel?: string }>()
+  const labelsByName = new Map<string, { stateLabel?: string; fargoLabel?: string; eventLabel?: string }>()
   for (const w of wins) {
     const key = w.opponent.toLowerCase()
     const seenLabels = labelsByName.get(key) ?? {}
     labelsByName.set(key, {
       stateLabel: seenLabels.stateLabel ?? w.stateLabel,
       fargoLabel: seenLabels.fargoLabel ?? w.fargoLabel,
+      eventLabel: seenLabels.eventLabel ?? w.eventLabel,
     })
   }
   for (const w of wins) {
     const labels = labelsByName.get(w.opponent.toLowerCase())
     if (!w.stateLabel && labels?.stateLabel) w.stateLabel = labels.stateLabel
     if (!w.fargoLabel && labels?.fargoLabel) w.fargoLabel = labels.fargoLabel
+    if (!w.eventLabel && labels?.eventLabel) w.eventLabel = labels.eventLabel
   }
 
-  const reasonRank = { "national-ranked": 0, "toc-field": 1, ranked: 2, "state-champion": 3, "state-placer": 4 } as const
+  const reasonRank = {
+    "national-ranked": 0,
+    "toc-field": 1,
+    ranked: 2,
+    "state-champion": 3,
+    "national-placer": 4,
+    "state-placer": 5,
+  } as const
   return wins.sort((a, b) => {
     // Nationally ranked first, then TOC, then state-ranked; within a tier, newest first.
     // Undated rows sink rather than jump.
@@ -559,6 +692,7 @@ export function withAccoladesOnly(wins: readonly SignificantWin[]): SignificantW
     }
     if (win.opponentRanking != null) out.push({ ...win, reason: "ranked" })
     else if (win.stateLabel) out.push({ ...win, reason: /champion/i.test(win.stateLabel) ? "state-champion" : "state-placer" })
+    else if (win.eventLabel) out.push({ ...win, reason: "national-placer" })
   }
   return out
 }

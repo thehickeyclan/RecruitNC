@@ -24,6 +24,7 @@ new national bouts, since a new bout can confirm a name:
   python3 scripts/import-state-tournament-results.py --confirm-only
 """
 
+import importlib.util
 import json
 import os
 import time
@@ -230,7 +231,7 @@ MANUAL_CONFIRMED = {
 
 
 def confirm_identities(db):
-    placers = db.get_all("state_tournament_placers", "select=id,state,wrestler_name,school_raw,identity_confirmed")
+    placers = db.get_all("state_tournament_placers", "select=*")
     by_name = defaultdict(list)
     for p in placers:
         by_name[name_key(p["wrestler_name"])].append(p)
@@ -256,6 +257,63 @@ def confirm_identities(db):
                        {"identity_confirmed": value}, "return=minimal")
     names = {name_key(p["wrestler_name"]) for p in placers if p["id"] in confirmed}
     print(f"identity_confirmed: {len(names)} of {len(by_name)} placer names tied to their state by a bout on file")
+    mark_nc_namesakes(db, placers)
+
+
+NC_SCHOOL_STOP = {"high", "school", "hs", "senior", "the", "of", "academy", "christian"}
+
+
+def mark_nc_namesakes(db, placers):
+    """
+    nc_namesake: someone with this placer's name - exactly, or by surname and a nickname - has
+    wrestled for a North Carolina high school in our season records. The profile credits a
+    distinctive out-of-state name on its own (outOfStatePlacerFits), and only when this is false:
+    Mooresville's Gavin Walker is not Virginia's.
+    """
+    if "nc_namesake" not in placers[0]:
+        print("nc_namesake: column missing - run the ALTER in scripts/create-state-tournament-results.sql")
+        return
+    words = lambda v: [w for w in name_key(v).split() if w not in NC_SCHOOL_STOP]
+    nc_schools = [words(r["school"]) for r in db.get_all("wrestling_nchsaa_results", "select=school&year=gte.2018") if r.get("school")]
+    nc_schools = [w for w in nc_schools if w]
+
+    def at_nc_school(school):
+        b = words(school)
+        return bool(b) and any(all(x in b for x in a) or all(x in a for x in b) for a in nc_schools)
+
+    seen = set()
+    for r in db.get_all("matches", "select=matches", page=100):
+        bouts = r["matches"] if isinstance(r["matches"], list) else json.loads(r["matches"] or "[]")
+        for m in bouts:
+            if m.get("opponent") and at_nc_school(m.get("opponent_school")):
+                seen.add(name_key(m["opponent"]))
+    for a in db.get_all("athletes", "select=name&is_nc_athlete=eq.true"):
+        if a.get("name"):
+            seen.add(name_key(a["name"]))
+
+    spec = importlib.util.spec_from_file_location("fargo", os.path.join(ROOT, "scripts", "import-fargo-bouts.py"))
+    fargo = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(fargo)
+    groups = fargo.nickname_groups()
+    by_surname = defaultdict(set)
+    for n in seen:
+        parts = n.split()
+        if len(parts) >= 2:
+            by_surname[parts[-1]].add(parts[0])
+
+    def namesake(name):
+        key = name_key(name)
+        if key in seen:
+            return True
+        parts = key.split()
+        return len(parts) >= 2 and any(fargo.first_names_alike(parts[0], f, groups) for f in by_surname.get(parts[-1], ()))
+
+    for value in (True, False):
+        changed = [p["id"] for p in placers if namesake(p["wrestler_name"]) == value and bool(p.get("nc_namesake")) != value]
+        for chunk in range(0, len(changed), 200):
+            db.request("PATCH", "state_tournament_placers", f"?id=in.({','.join(changed[chunk:chunk + 200])})",
+                       {"nc_namesake": value}, "return=minimal")
+    print(f"nc_namesake: {sum(1 for p in placers if namesake(p['wrestler_name']))} placers share a name with a North Carolinian")
 
 
 class Supabase:
