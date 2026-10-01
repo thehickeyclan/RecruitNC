@@ -93,7 +93,7 @@ export type EventPlacer = {
 
 /**
  * "2025 Super 32 3rd (190)", "2026 NHSCA All-American (3rd, 138)", "2026 NHSCA Champion (138)";
- * the newest two when he has more.
+ * the newest three when he has more.
  */
 export function eventPlacementLabel(finishes: readonly EventPlacement[]): string | null {
   if (!finishes.length) return null
@@ -109,7 +109,9 @@ export function eventPlacementLabel(finishes: readonly EventPlacement[]): string
   }
   return [...unique]
     .sort((a, b) => b.year - a.year || a.place - b.place)
-    .slice(0, 2)
+    // Three: with Beast of the East and Ironman on file, two 2025 finishes pushed a 2024 NHSCA
+    // All-American off the end (Jack Abramson).
+    .slice(0, 3)
     .map((f) => {
       const at = f.weight ? ` (${f.weight})` : ""
       if (f.place === 1) return `${f.year} ${f.event} Champion${at}`

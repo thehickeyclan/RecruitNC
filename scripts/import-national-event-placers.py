@@ -16,6 +16,11 @@ Each run replaces its event key. Run the SQL in scripts/create-state-tournament-
 
   python3 scripts/import-national-event-placers.py ~/Downloads/2025DefenseSoapSuper32Challenge.csv \
       --event super32-2025 --name "Super 32" --year 2025 [--dry-run]
+
+A placer list (Muse's format: tournament, weight, place, wrestler_name, team) loads directly:
+
+  python3 scripts/import-national-event-placers.py ~/Downloads/beast-2025-placers.csv \
+      --event beast-of-the-east-2025 --name "Beast of the East" --year 2025
 """
 
 import csv
@@ -77,6 +82,18 @@ def main():
     rows = [{cell(k): cell(v) for k, v in r.items()} for r in csv.DictReader(open(os.path.expanduser(files[0]), encoding="utf-8-sig"))]
 
     placers, seen = [], set()
+    if rows and "place" in rows[0] and "wrestler_name" in rows[0]:
+        # A placer list: one row per finish, the team a school or club (Ironman, Beast of the East).
+        for r in rows:
+            who, team = r["wrestler_name"].strip(), (r.get("team") or "").strip() or None
+            if not who or not r["place"].strip().isdigit():
+                continue
+            placers.append({
+                "event_key": event_key, "event_name": name, "year": int(year), "weight": r["weight"].strip(),
+                "place": int(r["place"]), "wrestler_name": who, "team": team,
+                "state": team if team and re.fullmatch(r"[A-Z]{2}", team) else None,
+            })
+        rows = []
     for r in rows:
         places = PLACES.get(r["Round"].strip().lower())
         if not places:

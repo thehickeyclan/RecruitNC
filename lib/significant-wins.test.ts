@@ -386,6 +386,16 @@ describe("national event placings", () => {
     { event: "NHSCA", year: 2026, place: 8, weight: 182 },
   ]
 
+  it("keeps a third finish rather than dropping an older All-American", () => {
+    expect(
+      eventPlacementLabel([
+        { event: "Beast of the East", year: 2025, place: 8, weight: 138 },
+        { event: "Journeymen", year: 2025, place: 6, weight: 140 },
+        { event: "NHSCA", year: 2024, place: 7, weight: 120 },
+      ]),
+    ).toBe("2025 Journeymen 6th (140) · 2025 Beast of the East 8th (138) · 2024 NHSCA All-American (7th, 120)")
+  })
+
   it("reads two NHSCA finishes as a multiple All-American", () => {
     expect(eventPlacementLabel(sandlin)).toBe("2x NHSCA All-American (2025, 2026)")
     expect(eventPlacementLabel([{ event: "Super 32", year: 2025, place: 3, weight: 190 }])).toBe("2025 Super 32 3rd (190)")
