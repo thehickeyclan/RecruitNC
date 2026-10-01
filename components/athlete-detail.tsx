@@ -1,7 +1,6 @@
 "use client"
 
 import { STYLE_LABEL, type CompetitionSummary } from "@/lib/wrestling-style"
-import type { Credential } from "@/lib/profile/credentials"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -142,8 +141,6 @@ interface AthleteDetailProps {
   mobileRecruiterLayout?: boolean
   /** In North Carolina only or nationally, and in which styles (lib/wrestling-style.ts). */
   competition?: CompetitionSummary | null
-  /** The finishes a coach decides on, built from the result rows (lib/profile/credentials). */
-  credentials?: Credential[]
   /**
    * Freestyle & Greco-Roman results and wins: their own section, last, after every folkstyle one -
    * Matt: a Fargo or freestyle-states result is never to read as part of the folkstyle record.
@@ -152,36 +149,13 @@ interface AthleteDetailProps {
 }
 
 /** "Competes nationally · Folkstyle · Freestyle · Greco-Roman", under the year and weight. */
-function CompetitionStrip({
-  competition,
-  credentials = [],
-  className,
-}: {
-  competition?: CompetitionSummary | null
-  credentials?: Credential[]
-  className?: string
-}) {
-  if (!competition && !credentials.length) return null
+// The hero says how far and in which styles he competes; the finishes themselves are the
+// sections below and the scouting report (Matt: no credential pills on the banner).
+function CompetitionStrip({ competition, className }: { competition?: CompetitionSummary | null; className?: string }) {
+  if (!competition) return null
   return (
-    <div className={cn("space-y-3", className)}>
-      {credentials.length ? (
-        <ul className="flex flex-wrap gap-1.5" aria-label="Key results">
-          {credentials.map((c) => (
-            <li
-              key={c.label}
-              className={cn(
-                "rounded-full border px-2.5 py-1 text-xs font-semibold leading-none",
-                c.tier === "national"
-                  ? "border-[#D3B574]/60 bg-[#D3B574]/15 text-[#E9D6A6]"
-                  : "border-white/20 bg-white/[0.07] text-white/85",
-              )}
-            >
-              {c.label}
-            </li>
-          ))}
-        </ul>
-      ) : null}
-      {competition ? <CompetitionBox competition={competition} /> : null}
+    <div className={className}>
+      <CompetitionBox competition={competition} />
     </div>
   )
 }
@@ -211,7 +185,6 @@ export function AthleteDetail({
   theme = "light",
   mobileRecruiterLayout = false,
   competition = null,
-  credentials = [],
   olympicStylesSection = null,
 }: AthleteDetailProps) {
   const isDark = theme === "dark"
@@ -1227,7 +1200,7 @@ export function AthleteDetail({
                   </div>
 
                   {/* The phone hero carries the same Competes line as the desktop one. */}
-                  <CompetitionStrip competition={competition} credentials={credentials} className="mt-3" />
+                  <CompetitionStrip competition={competition} className="mt-3" />
 
                   {renderHeroContactRow("pills")}
                 </div>
@@ -1348,7 +1321,7 @@ export function AthleteDetail({
                   </p>
                 </div>
               </div>
-              <CompetitionStrip competition={competition} credentials={credentials} className="mt-3" />
+              <CompetitionStrip competition={competition} className="mt-3" />
 
               {renderHeroContactRow("buttons")}
             </div>
@@ -1479,7 +1452,7 @@ export function AthleteDetail({
                       ) : null}
                     </div>
                   </div>
-                  <CompetitionStrip competition={competition} credentials={credentials} className="mt-4 max-w-md" />
+                  <CompetitionStrip competition={competition} className="mt-4 max-w-md" />
 
                   {renderHeroContactRow("buttons")}
                 </div>

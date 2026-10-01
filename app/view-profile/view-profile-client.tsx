@@ -9,7 +9,6 @@ import { TournamentAccordion, buildNchsaaStateRows, buildTournamentRows, isTocRo
 import { ProfileViewTracker } from "@/components/profile-view-tracker"
 import { useAuth } from "@/contexts/auth-context"
 import type { PublicAthleteProfile } from "@/lib/load-public-athlete-profile"
-import { profileCredentials } from "@/lib/profile/credentials"
 import type { TournamentRow } from "@/lib/profile/tournament-rows"
 
 /**
@@ -112,11 +111,6 @@ export function ViewProfileClient({
     .filter(isOlympicRow)
     .map((row) => ({ ...row, event: shortOlympicEvent(row.event) }))
   const tocRows = folkstyleRows.filter(isTocRow)
-  const credentials = profileCredentials({
-    stateRows: stateTournamentRows,
-    tocRows,
-    tournamentRows: profileTournamentRows,
-  })
 
   return (
     <main className="min-h-screen bg-[#0A1628]">
@@ -138,7 +132,6 @@ export function ViewProfileClient({
           theme="dark"
           mobileRecruiterLayout
           competition={competition}
-          credentials={credentials}
           olympicStylesSection={
             olympicRows.length ? (
               <div className="w-full min-w-0 max-w-full space-y-6" id="olympic-styles">
