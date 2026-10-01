@@ -388,7 +388,8 @@ function outOfStatePlacerFits(
    * rules out Arizona's Logan Bailey, whatever the name says. A team's "(FL)" is only where most of
    * the team is from - Georgia's Ryder Wilder wrestled for Spec Ops (FL) - so it does not.
    */
-  if (/^[A-Z]{2}$/.test(text) && text !== state) return false
+  // Only when his state is known: a Journeymen placing lists a club, not a state.
+  if (state && /^[A-Z]{2}$/.test(text) && text !== state) return false
   const bout = schoolWords(boutSchool)
   if (placer.schools.some((school) => sameSchool(schoolWords(school), bout))) return true
   const atNcSchool = (knownSchools ?? []).some((school) => sameSchool(schoolWords(school), bout))

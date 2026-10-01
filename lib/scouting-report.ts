@@ -722,6 +722,8 @@ function standingPhrase(bout: SignificantWin): string {
     return accolades ? `${rank}; ${accolades}` : rank
   }
   if (bout.reason === "state-champion" || bout.reason === "state-placer") return accolades ?? "a state placer"
+  // Super 32 / NHSCA / Journeymen placer with no state placing: the event is the credential.
+  if (bout.reason === "national-placer") return accolades ?? "a national tournament placer"
   const base = bout.reason === "toc-field" ? "in the Tournament of Champions field" : "ranked in North Carolina"
   return accolades ? `${accolades}; also ${base}` : base
 }
@@ -948,6 +950,14 @@ export function unsupportedSummaryClaims(summary: string, facts: string): string
   for (const match of summary.matchAll(/\b(\d{1,2}(?:st|nd|rd|th))\b/gi)) {
     const ordinalText = match[1].toLowerCase()
     if (!factText.includes(ordinalText)) problems.push(`placement ${match[1]}`)
+  }
+  // "Champion" is the strongest word a summary can attach to an opponent, and with other states'
+  // and national events in the facts the model has more champions to borrow from. It survives only
+  // over facts that name one.
+  // "Tournament of Champions" is an event, not a claim about anyone.
+  const championClaim = /\bchampions?\b/i.test(summary.replace(/tournament of champions/gi, ""))
+  if (championClaim && !/\bchampion\b/.test(factText.replace(/tournament of champions/g, ""))) {
+    problems.push("a champion claim the facts do not contain")
   }
   for (const word of ["all-american", "runner-up"]) {
     if (new RegExp(`\\b${word}\\b`, "i").test(summary) && !factText.includes(word)) {

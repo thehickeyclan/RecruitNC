@@ -368,6 +368,13 @@ describe("stripUnsupportedSentences", () => {
     )
   })
 
+  it("drops a champion the facts do not name, but not the Tournament of Champions", () => {
+    expect(unsupportedSummaryClaims("He beat a state champion at the Tournament of Champions.", facts)).toContain(
+      "a champion claim the facts do not contain",
+    )
+    expect(unsupportedSummaryClaims("He placed 4th at the Tournament of Champions.", facts)).toEqual([])
+  })
+
   it("gives up when too little would survive", () => {
     expect(stripUnsupportedSentences("Walker is RecruitNC #13. He has a GPA of 3.8.", facts)).toBeNull()
   })

@@ -391,6 +391,18 @@ describe("national event placings", () => {
     expect(eventPlacementLabel([{ event: "Super 32", year: 2025, place: 3, weight: 190 }])).toBe("2025 Super 32 3rd (190)")
   })
 
+  it("lets a club-listed placing through a bout that prints a state code", () => {
+    const index = {
+      tocField: [],
+      ranked: [],
+      eventPlacers: [
+        { name: "Jack Abramson", state: null, schools: ["Pingry"], distinctive: true, finishes: [{ event: "Journeymen", year: 2025, place: 6, weight: 140 }] },
+      ],
+    }
+    const bout = { opponent: "Jack Abramson", opponent_school: "NJ", win_loss: "L", result: "DEC", date: "3/26/2026", venue: "NHSCA", weight: 138 }
+    expect(findSignificantLosses([bout], index)[0]?.eventLabel).toBe("2025 Journeymen 6th (140)")
+  })
+
   it("credits a distinctive event placer on an all-star team when the weight fits", () => {
     const index = {
       tocField: [],

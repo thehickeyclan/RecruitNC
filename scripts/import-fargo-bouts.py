@@ -125,6 +125,11 @@ def main():
                 if len(words) >= 2:
                     by_surname[words[-1]].append((words[0], a["id"]))
     groups = nickname_groups()
+    # A North Carolinian whose profile is not flagged NC (Jack Harty): exact full name only.
+    anyone = collections.defaultdict(set)
+    for a in db.get_all("athletes?select=id,name"):
+        if a.get("name"):
+            anyone[name_key(a["name"])].add(a["id"])
 
     def profile_ids(name):
         """Exact name first; else the one profile with the same surname and a compatible first
@@ -135,7 +140,8 @@ def main():
         words = name_key(name).split()
         if len(words) < 2:
             return set()
-        return {i for first, i in by_surname.get(words[-1], []) if first_names_alike(words[0], first, groups)}
+        alike = {i for first, i in by_surname.get(words[-1], []) if first_names_alike(words[0], first, groups)}
+        return alike or anyone.get(name_key(name), set())
 
     out, unlinked, keys = [], collections.Counter(), set()
     per_wrestler = collections.Counter()

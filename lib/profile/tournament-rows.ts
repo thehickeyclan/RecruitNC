@@ -298,6 +298,51 @@ export function buildTournamentRows(input: {
     if (!team) return []
     return year === 2026 ? attached(NC_UNITED_DUALS_EVENT_KEY, (b) => b.team === team) : []
   }
+  const usedFargoKeys = new Set<string>()
+  const fargoFromResults: TournamentRow[] = (input.fargoResults ?? []).flatMap((result, i) => {
+    const parsed = result.division ? parseFargoDivisionString(result.division) : null
+    const style = parsed ? (parsed.style === "GR" ? "Greco-Roman" : "Freestyle") : null
+    const age = parsed && parsed.age_division !== "Unknown" ? parsed.age_division : null
+    const key = parsed && age ? fargoEventKey(result.year, age, parsed.style) : null
+    if (key) usedFargoKeys.add(key)
+    const bouts = key ? attached(key) : []
+    return rowsFromSummaries(style ? `Fargo · ${style}` : "Fargo", [result]).map((row) => ({
+      ...row,
+      id: `fargo-${result.year}-${i}`,
+      team: age,
+      bouts: bouts.length ? bouts : row.bouts,
+    }))
+  })
+  /*
+   * Bouts for a Fargo division with no placement record of ours - most of NC's 2025 Greco entries.
+   * The row is built from the bouts, record counted from them, so they are not stored and hidden.
+   */
+  const orphanFargo = new Map<string, AttachedEventBout[]>()
+  for (const b of input.attachedEventBouts ?? []) {
+    if (b.eventKey.startsWith("fargo-") && !usedFargoKeys.has(b.eventKey)) {
+      orphanFargo.set(b.eventKey, [...(orphanFargo.get(b.eventKey) ?? []), b])
+    }
+  }
+  const fargoRows: TournamentRow[] = [
+    ...fargoFromResults,
+    ...[...orphanFargo.entries()].map(([key, bouts]): TournamentRow => {
+      const [, year, age, style] = key.split("-")
+      const wins = bouts.filter((b) => b.win).length
+      return {
+        id: key,
+        event: `Fargo · ${style === "gr" ? "Greco-Roman" : "Freestyle"}`,
+        team: age === "16u" ? "16U" : age.charAt(0).toUpperCase() + age.slice(1),
+        isDuals: false,
+        year: Number(year),
+        sortKey: `${year}-07-15`,
+        weight: bouts[0]?.weight || null,
+        placement: null,
+        record: `${wins}-${bouts.length - wins}`,
+        entrants: null,
+        bouts: bouts.map(({ team: _team, ...bout }) => bout),
+      }
+    }),
+  ]
   const rows = [
     ...rowsFromBlocks(input.otherTournamentBlocks ?? []),
     /*
@@ -321,18 +366,7 @@ export function buildTournamentRows(input: {
      * can be an All-American in one and go 0-2 in the other. Labelled "Fargo" alone, a
      * profile printed two rows at the same weight and year with no way to tell which was which.
      */
-    ...(input.fargoResults ?? []).flatMap((result, i) => {
-      const parsed = result.division ? parseFargoDivisionString(result.division) : null
-      const style = parsed ? (parsed.style === "GR" ? "Greco-Roman" : "Freestyle") : null
-      const age = parsed && parsed.age_division !== "Unknown" ? parsed.age_division : null
-      const bouts = parsed && age ? attached(fargoEventKey(result.year, age, parsed.style)) : []
-      return rowsFromSummaries(style ? `Fargo · ${style}` : "Fargo", [result]).map((row) => ({
-        ...row,
-        id: `fargo-${result.year}-${i}`,
-        team: age,
-        bouts: bouts.length ? bouts : row.bouts,
-      }))
-    }),
+    ...fargoRows,
     /*
      * The event is the duals; NC United is who they wrestled for.
      *

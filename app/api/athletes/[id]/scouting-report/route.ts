@@ -111,10 +111,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       : null
 
   // State champions and placers are added here, not in loadOpponentIndex: the ranking engine
-  // shares that loader and scores wins by reason.
+  // shares that loader and scores wins by reason. The same index as the profile: other states'
+  // placers, Super 32 / NHSCA / Journeymen placers, and national rankings checked against each
+  // bout's evidence - the last replacing loadOpponentIndex's name-only list, so the report and the
+  // profile never disagree about who a wrestler beat.
   const [baseIndex, stateIndex] = await Promise.all([
     loadOpponentIndex(admin),
-    loadStatePlacerIndex(admin).catch(() => ({ statePlacers: [], stateSchools: [], fargoAllAmericans: [] })),
+    loadStatePlacerIndex(admin, new Date(), { outOfState: true }).catch(() => ({
+      statePlacers: [],
+      stateSchools: [],
+      fargoAllAmericans: [],
+    })),
   ])
   const opponentIndex = { ...baseIndex, ...stateIndex }
   const report = await buildScoutingReport(
