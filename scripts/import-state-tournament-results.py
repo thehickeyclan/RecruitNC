@@ -26,6 +26,7 @@ new national bouts, since a new bout can confirm a name:
 
 import json
 import os
+import time
 import re
 import sys
 import urllib.parse
@@ -219,8 +220,17 @@ def bout_confirms(placer, school):
     return same_school(school_words(placer["school_raw"]), school_words(school))
 
 
+# Placers confirmed by hand where the data cannot: a distinctive name on a bout that carries no
+# state or school. Each line says why. The pass below always marks these confirmed.
+MANUAL_CONFIRMED = {
+    # Beat Jake Amiott at the 2026 NHSCA National Duals for Team Shutt Rioux, an all-star side with
+    # no home state. Only Tyler Traves among 11,600 placers; wrestled 145 there, won VA 6A at 150.
+    ("VA", "tyler traves"),
+}
+
+
 def confirm_identities(db):
-    placers = db.get_all("state_tournament_placers", "select=id,state,wrestler_name,school_raw")
+    placers = db.get_all("state_tournament_placers", "select=id,state,wrestler_name,school_raw,identity_confirmed")
     by_name = defaultdict(list)
     for p in placers:
         by_name[name_key(p["wrestler_name"])].append(p)
@@ -232,21 +242,18 @@ def confirm_identities(db):
         bouts = r["matches"] if isinstance(r["matches"], list) else json.loads(r["matches"] or "[]")
         sightings += [(m.get("opponent"), m.get("opponent_school")) for m in bouts]
 
-    confirmed = set()
+    confirmed = {p["id"] for p in placers if (p["state"], name_key(p["wrestler_name"])) in MANUAL_CONFIRMED}
     for name, school in sightings:
         for p in by_name.get(name_key(name), []):
             if bout_confirms(p, school):
                 confirmed.add(p["id"])
 
-    ids = [p["id"] for p in placers]
-    for chunk in range(0, len(ids), 200):
-        part = ids[chunk:chunk + 200]
-        yes = [i for i in part if i in confirmed]
-        no = [i for i in part if i not in confirmed]
-        for value, group in ((True, yes), (False, no)):
-            if group:
-                db.request("PATCH", "state_tournament_placers", f"?id=in.({','.join(group)})",
-                           {"identity_confirmed": value}, "return=minimal")
+    # Only rows whose flag changes: rewriting all 11,600 every run exhausted local ports.
+    for value in (True, False):
+        changed = [p["id"] for p in placers if (p["id"] in confirmed) == value and bool(p.get("identity_confirmed")) != value]
+        for chunk in range(0, len(changed), 200):
+            db.request("PATCH", "state_tournament_placers", f"?id=in.({','.join(changed[chunk:chunk + 200])})",
+                       {"identity_confirmed": value}, "return=minimal")
     names = {name_key(p["wrestler_name"]) for p in placers if p["id"] in confirmed}
     print(f"identity_confirmed: {len(names)} of {len(by_name)} placer names tied to their state by a bout on file")
 
@@ -266,12 +273,16 @@ class Supabase:
         req.add_header("Content-Type", "application/json")
         if prefer:
             req.add_header("Prefer", prefer)
-        try:
-            with urllib.request.urlopen(req) as res:
-                return res.read()
-        except urllib.error.HTTPError as e:
-            hint = " — table missing; run scripts/create-state-tournament-results.sql first" if e.code == 404 else ""
-            sys.exit(f"{method} {table} failed: {e.code} {e.read().decode()}{hint}")
+        for attempt in range(5):
+            try:
+                with urllib.request.urlopen(req) as res:
+                    return res.read()
+            except urllib.error.HTTPError as e:
+                hint = " — table missing; run scripts/create-state-tournament-results.sql first" if e.code == 404 else ""
+                sys.exit(f"{method} {table} failed: {e.code} {e.read().decode()}{hint}")
+            except urllib.error.URLError:
+                time.sleep(2 * (attempt + 1))
+        sys.exit(f"{method} {table} failed: network unavailable")
 
     def get_all(self, table, select, page=1000):
         out, offset = [], 0

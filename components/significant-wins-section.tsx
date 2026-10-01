@@ -72,7 +72,15 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
       scope: win.state.trim().toUpperCase() === "NC" ? "in-state" : "national",
     })),
   )
-  const allWins = [...wins, ...qualityWins]
+  /*
+   * AAU wins arrive twice: the hand-built quality-win list, with its fuller credentials
+   * ("2× Michigan State Placer"), and the bout import. Keep the hand-built one.
+   */
+  const handBuilt = new Set(qualityWins.map((w) => w.opponent.trim().toLowerCase()))
+  const allWins = [
+    ...wins.filter((w) => !(/aau scholastic/i.test(w.event ?? "") && handBuilt.has(w.opponent.trim().toLowerCase()))),
+    ...qualityWins,
+  ]
   const visibleWins = filter === "all" ? allWins : allWins.filter((win) => win.scope === filter)
   const displayedWins = expanded ? visibleWins : visibleWins.slice(0, 3)
 

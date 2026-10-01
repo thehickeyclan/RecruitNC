@@ -21,20 +21,39 @@ these rows - full names from the official export - are what lets a win be recogn
     stay untagged - their wrestlers come from everywhere.
 
   python3 scripts/import-nc-united-duals-2026.py "~/Downloads/2026NHSCANationalDuals.csv" --dry-run
+  python3 scripts/import-nc-united-duals-2026.py "~/Downloads/2026AAUScholasticDualsBoys.csv" --event aau
+
+--event aau loads the 2026 AAU Scholastic Duals the same way. AAU has no roster table, so NC United
+wrestlers link by exact name or the site's nickname rule among NC profiles (as the Fargo import
+does), and only when one profile fits.
 """
 
 import collections
 import csv
+import importlib.util
+import time
 import json
 import os
 import re
 import sys
+import urllib.parse
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-EVENT_KEY = "nhsca-duals-2026-nc-united"
-EVENT_NAME = "2026 NHSCA National Duals"
-NC_TEAMS = {"NC United - HSB": "national", "NC United Select - HSB": "select"}
+EVENTS = {
+    "nhsca": {
+        "key": "nhsca-duals-2026-nc-united",
+        "name": "2026 NHSCA National Duals",
+        "teams": {"NC United - HSB": "national", "NC United Select - HSB": "select"},
+    },
+    "aau": {
+        "key": "aau-scholastic-duals-2026-nc-united",
+        "name": "2026 AAU Scholastic Duals Boys",
+        "teams": {"NC United": "national"},
+    },
+}
+EVENT = EVENTS["aau" if "aau" in sys.argv[sys.argv.index("--event") + 1:sys.argv.index("--event") + 2] else "nhsca"] if "--event" in sys.argv else EVENTS["nhsca"]
+EVENT_KEY, EVENT_NAME, NC_TEAMS = EVENT["key"], EVENT["name"], EVENT["teams"]
 
 
 def load_env():
@@ -71,12 +90,17 @@ class Db:
             req.add_header(k, v)
         if prefer:
             req.add_header("Prefer", prefer)
-        try:
-            with urllib.request.urlopen(req) as res:
-                text = res.read()
-                return json.loads(text) if text else None
-        except urllib.error.HTTPError as e:
-            sys.exit(f"{method} {path} failed: {e.code} {e.read().decode()}")
+        for attempt in range(5):
+            try:
+                with urllib.request.urlopen(req) as res:
+                    text = res.read()
+                    return json.loads(text) if text else None
+            except urllib.error.HTTPError as e:
+                sys.exit(f"{method} {path} failed: {e.code} {e.read().decode()}")
+            except urllib.error.URLError:
+                # Many short requests can exhaust local ports; give them a moment back.
+                time.sleep(2 * (attempt + 1))
+        sys.exit(f"{method} {path} failed: network unavailable")
 
     def get_all(self, path, page=1000):
         out, offset = [], 0
@@ -111,8 +135,35 @@ def team_states(rows, placers):
     return out
 
 
+def aau_linker(db):
+    """NC profiles by exact name, else unique surname + compatible first name (import-fargo-bouts.py)."""
+    spec = importlib.util.spec_from_file_location("fargo", os.path.join(ROOT, "scripts", "import-fargo-bouts.py"))
+    fargo = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(fargo)
+    profiles, by_surname = collections.defaultdict(set), collections.defaultdict(list)
+    for a in db.get_all("athletes?select=id,name,wrestling_name&is_nc_athlete=eq.true"):
+        for n in (a.get("name"), a.get("wrestling_name")):
+            if n:
+                profiles[name_key(n)].add(a["id"])
+                words = name_key(n).split()
+                if len(words) >= 2:
+                    by_surname[words[-1]].append((words[0], a["id"]))
+    groups = fargo.nickname_groups()
+
+    def link(_team, wrestler):
+        ids = profiles.get(name_key(wrestler), set())
+        if not ids:
+            words = name_key(wrestler).split()
+            if len(words) >= 2:
+                ids = {i for first, i in by_surname.get(words[-1], []) if fargo.first_names_alike(words[0], first, groups)}
+        return next(iter(ids)) if len(ids) == 1 else None
+
+    return link
+
+
 def main():
-    args = [a for a in sys.argv[1:] if not a.startswith("--")]
+    args = [a for i, a in enumerate(sys.argv[1:], start=1)
+            if not a.startswith("--") and sys.argv[i - 1] != "--event"]
     if len(args) != 1:
         sys.exit(__doc__)
     path = os.path.expanduser(args[0])
@@ -121,6 +172,16 @@ def main():
 
     load_env()
     db = Db()
+    if EVENT is EVENTS["aau"]:
+        link = aau_linker(db)
+    else:
+        link = roster_linker(db)
+    placers = db.get_all("state_tournament_placers?select=state,wrestler_name")
+    states = team_states(rows, placers)
+    write_event(db, path, rows, link, states)
+
+
+def roster_linker(db):
     teams = {t["name"]: t["id"] for t in db.request("GET", "nhsca_duals_teams?select=id,name&is_nc_united=eq.true")}
     team_id = {
         "national": next(i for n, i in teams.items() if "Select" not in n),
@@ -142,9 +203,11 @@ def main():
         words = [w for w in key.split() if w not in {"jr", "sr", "ii", "iii"}]
         same = by_surname.get((tid, words[-1] if words else ""), [])
         return same[0] if len(same) == 1 else None
-    placers = db.get_all("state_tournament_placers?select=state,wrestler_name")
-    states = team_states(rows, placers)
 
+    return link
+
+
+def write_event(db, path, rows, link, states):
     out, unlinked = [], collections.Counter()
     order = collections.Counter()
     for r in rows:
@@ -199,6 +262,27 @@ def main():
     for i in range(0, len(out), 250):
         db.request("POST", "other_tournament_bouts", out[i:i + 250], "return=minimal")
     print("Written.")
+    if EVENT is EVENTS["nhsca"]:
+        tag_club_duals(db, states)
+
+
+CLUB_DUALS_EVENT_KEY = "nhsca-national-duals-2026"
+
+
+def tag_club_duals(db, states):
+    """
+    The same home-state suffix on the club-team import's rows (scripts/import-nhsca-national-duals-
+    2026.ts writes them untagged), so an NC kid wrestling for a club gets the evidence too. Rerun
+    this script after that import, which replaces its rows untagged.
+    """
+    rows = db.get_all(f"other_tournament_bouts?select=opponent_club&event_key=eq.{CLUB_DUALS_EVENT_KEY}")
+    tagged = 0
+    for club in sorted({r["opponent_club"] for r in rows if r["opponent_club"] in states}):
+        db.request("PATCH",
+                   f"other_tournament_bouts?event_key=eq.{CLUB_DUALS_EVENT_KEY}&opponent_club=eq.{urllib.parse.quote(club)}",
+                   {"opponent_club": f"{club} ({states[club]})"}, "return=minimal")
+        tagged += sum(1 for r in rows if r["opponent_club"] == club)
+    print(f"club-team duals: tagged {tagged} bouts with their opponent's home state")
 
 
 if __name__ == "__main__":
