@@ -24,6 +24,7 @@ only the biggest bracket at each weight, the high-school one where Super 32 runs
 bracket at a shared weight; brackets are told apart by who wrestled whom. NHSCA does not need it:
 its four grade divisions share each weight and are all high school, so it keeps the largest four
 (--largest-brackets 4), which drops the smaller girls' bracket sharing a boys' weight.
+--main-bracket-only (Journeymen) drops overflow-bracket placings: see the comment where it is applied.
 
 A placer list (Muse's format: tournament, weight, place, wrestler_name, team) loads directly:
 
@@ -173,6 +174,35 @@ def main():
         before = len(placers)
         placers = [p for p in placers if find((p["weight"], p["wrestler_name"])) in kept]
         print(f"largest {keep} bracket(s) per weight only: dropped {before - len(placers)} placings from smaller brackets")
+
+    if "--main-bracket-only" in sys.argv and rows:
+        # Journeymen runs overflow ("OF") brackets, and the export calls their last round "Finals"
+        # too: Jekai Sedgwick lost twice at 119, then won an overflow final and read as the
+        # Journeymen champion. Only what the main bracket proves is kept: a "Finals" winner with no
+        # loss at the weight is its champion (at 119, Brayden Wenrich, of five "Finals" winners), and
+        # the wrestler he beat in that final is the runner-up. Overflow entrants may never have
+        # wrestled the main bracket, so 3rd-8th cannot be proven and are dropped.
+        losses = {}
+        for r in rows:
+            who = r["Losing Wrestler"].strip()
+            if who:
+                losses[(r["Weight"], who.lower())] = losses.get((r["Weight"], who.lower()), 0) + 1
+        main_finals = {
+            (r["Weight"], r["Winning Wrestler"].strip().lower(), r["Losing Wrestler"].strip().lower())
+            for r in rows
+            if r["Round"].strip().lower() in ("finals", "1st place", "1st place match")
+            and r["Winning Wrestler"].strip()
+            and losses.get((r["Weight"], r["Winning Wrestler"].strip().lower()), 0) == 0
+        }
+        champions = {(w, a) for w, a, _ in main_finals}
+        runners_up = {(w, b) for w, _, b in main_finals}
+        before = len(placers)
+        placers = [
+            p for p in placers
+            if (p["place"] == 1 and (p["weight"], p["wrestler_name"].lower()) in champions)
+            or (p["place"] == 2 and (p["weight"], p["wrestler_name"].lower()) in runners_up)
+        ]
+        print(f"main bracket only: kept {len(placers)} proven champions and runners-up, dropped {before - len(placers)}")
 
     by_place = {p: sum(1 for x in placers if x["place"] == p) for p in range(1, 9)}
     print(f"{name} {year}: {len(placers)} placers from {len(rows)} bouts; by place {by_place}")
