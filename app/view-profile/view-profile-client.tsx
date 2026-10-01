@@ -1,5 +1,6 @@
 "use client"
 
+import { summarizeCompetition } from "@/lib/wrestling-style"
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowLeft, Medal, Trophy } from "lucide-react"
@@ -78,6 +79,15 @@ export function ViewProfileClient({
     attachedEventBouts: (Array.isArray(athlete.attached_event_bouts) ? athlete.attached_event_bouts : []) as never[],
   })
   const stateTournamentRows = buildNchsaaStateRows(nchsaaResults, nchsaaStateBouts)
+  // Every event on the record, bouts included (NC United duals and Fargo Greco have no results row).
+  // A North Carolina wrestler has a folkstyle season whatever else he wrestles.
+  const competition = summarizeCompetition(
+    [...profileTournamentRows, ...stateTournamentRows].flatMap((row) => [
+      `${row.event} ${row.team ?? ""}`,
+      ...row.bouts.map((b) => b.eventName),
+    ]),
+    athlete.is_nc_athlete !== false,
+  )
   const athleteName = String(athlete.name ?? "Athlete")
 
   return (
@@ -119,6 +129,7 @@ export function ViewProfileClient({
         <AthleteDetail
           theme="dark"
           mobileRecruiterLayout
+          competition={competition}
           athlete={athlete as unknown as Parameters<typeof AthleteDetail>[0]["athlete"]}
           nchsaaResults={nchsaaResults.map((r) => ({
             ...r,

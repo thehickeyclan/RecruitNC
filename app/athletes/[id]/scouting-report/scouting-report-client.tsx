@@ -7,6 +7,7 @@ import Link from "next/link"
 import type { ScoutingReport } from "@/lib/scouting-report"
 import { weightProgression } from "@/lib/scouting-report"
 import { cn } from "@/lib/utils"
+import { competitionLine, isInternationalStyle, styleOfEvent, stylesLine } from "@/lib/wrestling-style"
 import { RETAINED_EDITIONS } from "@/lib/national-rankings"
 import { ELITE_OPPONENT_PERCENTILE } from "@/lib/competition-strength"
 
@@ -380,6 +381,9 @@ export function ScoutingReportDocument({
             <Vital label="High school" value={identity.highSchool} />
             <Vital label="Club" value={identity.club} />
             <Vital label="Career" value={report.careerRecord} />
+            {/* Where and how he wrestles frames everything below it, so it sits with the vitals. */}
+            {report.competition ? <Vital label="Competes" value={competitionLine(report.competition)} /> : null}
+            {report.competition ? <Vital label="Styles" value={stylesLine(report.competition)} /> : null}
             <PhoneVital label="Cell" value={contact.cell} />
             <EmailVital label="Email" value={contact.email} last />
             {report.accessTier !== "full" ? (
@@ -657,30 +661,44 @@ export function ScoutingReportDocument({
 
         <Block n={n()} title="Competition record">
           {report.results.length ? (
-            <Table head={["Date", "Event", "Result"]} widths={["5.2rem", "11rem", "auto"]}>
-              {report.results.map((row, i) => (
-                <tr key={i} className="border-t border-gray-200">
-                  {/* The day where we have it, the year where the source only published one. */}
-                  <Td mono>{row.date ? dayLabel(row.date) : row.year}</Td>
-                  <Td bold>{row.event}</Td>
-                  <Td>{row.detail}</Td>
-                </tr>
-              ))}
-            </Table>
+            /* Folkstyle and freestyle/Greco apart: an NCHSAA finish and a Fargo finish are different evidence. */
+            <StyleSplit
+              items={report.results}
+              styleOf={(row) => styleOfEvent(row.event, row.detail)}
+              render={(rows) => (
+                <Table head={["Date", "Event", "Result"]} widths={["5.2rem", "11rem", "auto"]}>
+                  {rows.map((row, i) => (
+                    <tr key={i} className="border-t border-gray-200">
+                      {/* The day where we have it, the year where the source only published one. */}
+                      <Td mono>{row.date ? dayLabel(row.date) : row.year}</Td>
+                      <Td bold>{row.event}</Td>
+                      <Td>{row.detail}</Td>
+                    </tr>
+                  ))}
+                </Table>
+              )}
+            />
           ) : (
             <Note>No tournament results on file.</Note>
           )}
         </Block>
 
         <Block n={n()} title="Significant wins" count={report.significantWins.length + (report.reportedWins?.length ?? 0)}>
-          <GroupedBoutTables
-            rows={[...report.significantWins, ...(report.reportedWins ?? []).map(reportedRow)]}
-            kind="win"
+          <StyleSplit
+            items={[...report.significantWins, ...(report.reportedWins ?? []).map(reportedRow)]}
+            styleOf={(row) => styleOfEvent(row.event)}
+            render={(rows) => <GroupedBoutTables rows={rows} kind="win" />}
+            empty={<GroupedBoutTables rows={[]} kind="win" />}
           />
         </Block>
 
         <Block n={n()} title="Notable losses" count={report.significantLosses.length}>
-          <GroupedBoutTables rows={report.significantLosses} kind="loss" />
+          <StyleSplit
+            items={report.significantLosses}
+            styleOf={(row) => styleOfEvent(row.event)}
+            render={(rows) => <GroupedBoutTables rows={rows} kind="loss" />}
+            empty={<GroupedBoutTables rows={[]} kind="loss" />}
+          />
         </Block>
 
         <footer className="mt-7 border-t-2 border-[#03154C] pt-2 text-[9px] leading-relaxed text-gray-500">
@@ -953,6 +971,7 @@ const STANDING: Record<
   "toc-field": { label: "TOC field", className: "bg-[#D3B574] text-[#0A1628]" },
   ranked: { label: "NC ranked", className: "bg-[#03154C] text-white" },
   "state-champion": { label: "State champ", className: "bg-[#1f6f43] text-white" },
+  "national-placer": { label: "Nat'l placer", className: "bg-[#5b3f8c] text-white" },
   "state-placer": { label: "State placer", className: "bg-gray-200 text-gray-900" },
 }
 
@@ -997,6 +1016,8 @@ const BOUT_GROUPS: Array<{
   { title: "Nationally ranked opponents", reasons: ["national-ranked"] },
   { title: "NC-ranked opponents", reasons: ["ranked", "toc-field"] },
   { title: "State champions & placers", reasons: ["state-champion", "state-placer"] },
+  // Super 32 / NHSCA / Journeymen / Beast / Ironman placers with no state placing on file.
+  { title: "National tournament placers", reasons: ["national-placer"] },
 ]
 
 /**
@@ -1009,7 +1030,44 @@ const BOUT_GROUPS: Array<{
  */
 function isOutOfState(row: BoutRow): boolean {
   if (row.credential) return !/\b(NC|N\.C\.|North Carolina|NCHSAA|NCISA)\b/i.test(row.credential)
-  return row.reason === "national-ranked" && !!row.opponentState && row.opponentState.toUpperCase() !== "NC"
+  // Any standing: a Virginia state champion is out-of-state whatever reason put him on the list.
+  return !!row.opponentState && row.opponentState.toUpperCase() !== "NC"
+}
+
+/**
+ * Folkstyle first, then freestyle and Greco-Roman together, each under its own heading - only when
+ * both are present, so a folkstyle-only wrestler's page reads exactly as before.
+ */
+function StyleSplit<T>({
+  items,
+  styleOf,
+  render,
+  empty,
+}: {
+  items: T[]
+  styleOf: (item: T) => ReturnType<typeof styleOfEvent>
+  render: (items: T[]) => React.ReactNode
+  empty?: React.ReactNode
+}) {
+  const folk = items.filter((i) => !isInternationalStyle(styleOf(i)))
+  const intl = items.filter((i) => isInternationalStyle(styleOf(i)))
+  if (!items.length) return <>{empty ?? null}</>
+  if (!folk.length || !intl.length) return <>{render(items)}</>
+  return (
+    <div className="space-y-6">
+      {[
+        { title: "Folkstyle", rows: folk },
+        { title: "Freestyle & Greco-Roman", rows: intl },
+      ].map((group) => (
+        <div key={group.title}>
+          <h3 className="mb-2 bg-[#03154C] px-2 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-white">
+            {group.title} <span className="font-mono text-white/70">({group.rows.length})</span>
+          </h3>
+          {render(group.rows)}
+        </div>
+      ))}
+    </div>
+  )
 }
 
 function GroupedBoutTables({ rows, kind }: { rows: BoutRow[]; kind: "win" | "loss" }) {

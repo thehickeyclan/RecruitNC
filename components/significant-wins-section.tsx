@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Fragment, useEffect, useState } from "react"
 import { Trophy } from "lucide-react"
 import type { ProfileQualityWinsTournamentBlock } from "@/lib/profile-quality-wins"
 import { SignificantWinSubmissionDialog } from "@/components/significant-win-submission-dialog"
@@ -18,6 +18,8 @@ type SignificantWin = {
   /** "athlete-reported" for a win published from the submission form, unverified. */
   source?: string | null
   scope?: "in-state" | "national"
+  /** Folkstyle, freestyle or Greco-Roman, from the event (lib/wrestling-style.ts). */
+  style?: "folkstyle" | "freestyle" | "greco"
 }
 
 /**
@@ -70,6 +72,7 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
       reason: "credentialed",
       credential: `${win.state} · ${win.credentials}`,
       scope: win.state.trim().toUpperCase() === "NC" ? "in-state" : "national",
+      style: "folkstyle",
     })),
   )
   /*
@@ -82,7 +85,14 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
     ...qualityWins,
   ]
   const visibleWins = filter === "all" ? allWins : allWins.filter((win) => win.scope === filter)
-  const displayedWins = expanded ? visibleWins : visibleWins.slice(0, 3)
+  /*
+   * Folkstyle first, then freestyle and Greco-Roman under their own heading - Matt: a Fargo win and
+   * a folkstyle win are different evidence. Headings only appear when a wrestler has both.
+   */
+  const isIntl = (w: SignificantWin) => w.style === "freestyle" || w.style === "greco"
+  const ordered = [...visibleWins.filter((w) => !isIntl(w)), ...visibleWins.filter(isIntl)]
+  const displayedWins = expanded ? ordered : ordered.slice(0, 3)
+  const splitByStyle = visibleWins.some(isIntl) && visibleWins.some((w) => !isIntl(w))
 
   if (loading) return null
 
@@ -127,8 +137,13 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
 
       <ul className="mt-4 flex flex-col gap-2">
         {displayedWins.map((win, index) => (
+          <Fragment key={`${win.opponent}-${win.date}-${win.event}-${index}`}>
+          {splitByStyle && (index === 0 || isIntl(win) !== isIntl(displayedWins[index - 1])) ? (
+            <li className="mt-1 list-none text-[11px] font-bold uppercase tracking-[0.14em] text-rnc-gold">
+              {isIntl(win) ? "Freestyle & Greco-Roman" : "Folkstyle"}
+            </li>
+          ) : null}
           <li
-            key={`${win.opponent}-${win.date}-${win.event}-${index}`}
             className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-lg border border-rnc-line bg-rnc-ink px-3 py-2"
           >
             <div className="min-w-0">
@@ -172,6 +187,7 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
 
             </div>
           </li>
+          </Fragment>
         ))}
       </ul>
       {visibleWins.length > 3 ? (

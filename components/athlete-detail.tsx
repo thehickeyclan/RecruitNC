@@ -1,5 +1,6 @@
 "use client"
 
+import { STYLE_LABEL, type CompetitionSummary } from "@/lib/wrestling-style"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -138,6 +139,27 @@ interface AthleteDetailProps {
   theme?: "light" | "dark"
   /** Mobile: national-first section order, jump nav, compact school block, collapsed match log. */
   mobileRecruiterLayout?: boolean
+  /** In North Carolina only or nationally, and in which styles (lib/wrestling-style.ts). */
+  competition?: CompetitionSummary | null
+}
+
+/** "Competes nationally · Folkstyle · Freestyle · Greco-Roman", under the year and weight. */
+function CompetitionStrip({ competition, className }: { competition?: CompetitionSummary | null; className?: string }) {
+  if (!competition) return null
+  return (
+    <div className={cn("rounded-lg border border-white/20 bg-white/10 p-3 backdrop-blur-sm", className)}>
+      <p className="text-xs font-semibold uppercase tracking-wider text-white/70">Competes</p>
+      <p className="text-sm font-bold text-white">
+        {competition.scope === "national" ? "Nationally" : "North Carolina only"}
+        {competition.styles.length ? (
+          <span className="font-semibold text-[#D3B574]"> · {competition.styles.map((st) => STYLE_LABEL[st]).join(" · ")}</span>
+        ) : null}
+      </p>
+      {competition.scope === "national" && competition.nationalEvents.length ? (
+        <p className="mt-0.5 text-xs leading-snug text-white/65">{competition.nationalEvents.join(", ")}</p>
+      ) : null}
+    </div>
+  )
 }
 
 export function AthleteDetail({
@@ -147,6 +169,7 @@ export function AthleteDetail({
   tournamentResultsComponent,
   theme = "light",
   mobileRecruiterLayout = false,
+  competition = null,
 }: AthleteDetailProps) {
   const isDark = theme === "dark"
   const { isAdmin, isVerifiedCoach, profile: viewerProfile } = useAuth()
@@ -1278,6 +1301,7 @@ export function AthleteDetail({
                   </p>
                 </div>
               </div>
+              <CompetitionStrip competition={competition} className="mt-3" />
 
               {renderHeroContactRow("buttons")}
             </div>
@@ -1408,6 +1432,7 @@ export function AthleteDetail({
                       ) : null}
                     </div>
                   </div>
+                  <CompetitionStrip competition={competition} className="mt-4 max-w-md" />
 
                   {renderHeroContactRow("buttons")}
                 </div>

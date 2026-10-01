@@ -10,6 +10,7 @@
  * from these same facts and never introduces one of its own.
  */
 
+import { competitionLine, stylesLine, styleOfEvent, STYLE_LABEL, summarizeCompetition, type CompetitionSummary } from "@/lib/wrestling-style"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { applyStarOverride, isRatedAthlete, rateAthlete, type StarRating } from "@/lib/athlete-star-rating"
 import { nationalEventRows, starOverrideOf, statePlaces } from "@/lib/athlete-star-rating-load"
@@ -138,6 +139,11 @@ export type ScoutingReport = {
   academics: ScoutingReportAcademics
   membership: ScoutingReportMembership
   careerRecord: string | null
+  /**
+   * In North Carolina only or nationally, and in which styles - first thing on the report, because
+   * it frames every result below it (lib/wrestling-style.ts, shared with the profile).
+   */
+  competition: CompetitionSummary
   /** State, national and qualifier results, newest first. */
   results: ScoutingReportResultRow[]
   significantWins: SignificantWin[]
@@ -561,12 +567,15 @@ export async function buildScoutingReport(
   const personal = releasesPersonalData(accessTier)
   const athleteId = String(athlete.id)
 
-  const [bundle, { data: matchRows }, qualifierBouts, rankings, submitted] = await Promise.all([
+  const [bundle, { data: matchRows }, qualifierBouts, rankings, submitted, { data: eventRows }] = await Promise.all([
     loadAthleteTournamentBundle(supabase, athlete),
     supabase.from("matches").select("season,matches").eq("athlete_id", athleteId),
     getQualifierSignificantWinBouts(supabase, athleteId, "all").catch(() => [] as Bout[]),
     getNationalRankingsForAthlete(supabase, athleteId).catch(() => []),
     getSubmittedWins(supabase, athleteId).catch(() => []),
+    // Every event on file, any season - the competition line describes the whole record, while
+    // the bouts above are windowed for head-to-head.
+    supabase.from("other_tournament_bouts").select("event_name").eq("athlete_id", athleteId).limit(2000),
   ])
 
   const seasonsOnFile = new Set(
@@ -607,6 +616,15 @@ export async function buildScoutingReport(
   const seasonStrength = seasonBouts.length > 0 ? summarizeSeasonStrength(seasonBouts as never) : null
 
   const ranking = rawRank != null && Number.isFinite(rawRank) && rawRank >= 1 ? rawRank : null
+  // Results and every imported bout - NC United's duals and the Fargo Greco bouts have no results
+  // row - and a North Carolina season counts as folkstyle.
+  const competition = summarizeCompetition(
+    [
+      ...resultRows.map((r) => `${r.event} ${r.detail}`),
+      ...((eventRows ?? []) as Array<{ event_name: string | null }>).map((r) => r.event_name),
+    ],
+    seasonsOnFile > 0 || (bundle.nchsaa?.length ?? 0) > 0,
+  )
   return {
     athleteId,
     generatedAt: new Date().toISOString(),
@@ -638,6 +656,7 @@ export async function buildScoutingReport(
       isBlue: isBlueTeam(athlete),
     },
     careerRecord: mapCareerRecord(athlete),
+    competition,
     results: resultRows,
     significantWins: rankedWins,
     significantLosses: rankedLosses,
@@ -743,10 +762,13 @@ function pronounFact(gender: string | null): string {
 }
 
 function boutFact(bout: SignificantWin): string {
+  const style = styleOfEvent(bout.event)
   return (
     `${bout.opponent} (${standingPhrase(bout)})` +
     `${bout.result ? ` ${bout.result}` : ""}${bout.event ? ` at ${bout.event}` : ""}` +
-    `${bout.date ? `, ${bout.date}` : ""}`
+    `${bout.date ? `, ${bout.date}` : ""}` +
+    // Folkstyle is the default; a freestyle or Greco result is a different kind of evidence.
+    (style === "folkstyle" ? "" : ` [${STYLE_LABEL[style]}]`)
   )
 }
 
@@ -770,6 +792,9 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
             : "")
       : "",
     report.careerRecord ? `Career record: ${report.careerRecord}` : "",
+    // Read before the results it frames. Every bout below names its style when it is not folkstyle.
+    report.competition ? `Competes: ${competitionLine(report.competition)}` : "",
+    report.competition ? `Styles: ${stylesLine(report.competition)}` : "",
     membership.ncUnitedTeam ? `NC United: ${membership.ncUnitedTeam}` : "",
     report.commitment ? `Committed: ${report.commitment}` : "",
     report.rankingPublished && report.prospectRanking

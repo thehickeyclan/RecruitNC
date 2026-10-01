@@ -11,6 +11,7 @@ import { getSubmittedWins } from "@/lib/athlete-submitted-wins"
 import { highSchoolBouts, isHighSchoolSeason } from "@/lib/high-school-window"
 import { loadStatePlacerIndex } from "@/lib/state-placers"
 import { mergeBoutSources } from "@/lib/bout-source-deduplication"
+import { styleOfEvent } from "@/lib/wrestling-style"
 
 /**
  * The wins on a profile worth a reader's attention: over the TOC field, or over a ranked prospect.
@@ -188,5 +189,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     if (!wins.some((kept) => sameBout(kept, win))) wins.push(win)
   }
 
-  return NextResponse.json({ wins })
+  // Folkstyle or freestyle/Greco, so the profile can list them apart.
+  return NextResponse.json({ wins: wins.map((w) => ({ ...w, style: styleOfEvent(w.event) })) })
 }
