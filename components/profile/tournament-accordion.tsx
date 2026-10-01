@@ -91,8 +91,58 @@ function BoutTable({
   const headRow = isDark ? "bg-white/5 border-white/10" : "bg-gray-50"
   const headCell = isDark ? "font-semibold text-white/60" : "font-semibold"
   const bodyRow = isDark ? "border-white/10 text-white/80" : ""
+  const accoladeFor = (bout: TournamentRow["bouts"][number]) =>
+    bout.opponentName ? accolades[boutKey(bout.opponentName, bout.opponentClub, bout.year)] : undefined
+  const accoladeClass = (accolade: string) =>
+    cn(
+      "rounded-xl px-2 py-0.5 text-[10px] font-bold uppercase leading-snug tracking-wide",
+      /champion/i.test(accolade)
+        ? "bg-[#D3B574]/15 text-[#D3B574]"
+        : isDark
+          ? "border border-white/15 text-white/60"
+          : "border border-gray-300 text-gray-600",
+    )
+  const resultBadge = (win: boolean) => (
+    <span
+      className={cn(
+        "inline-flex min-w-6 justify-center rounded px-1.5 py-0.5 text-[11px] font-bold text-white",
+        win ? "bg-emerald-600" : "bg-red-700",
+      )}
+    >
+      {win ? "W" : "L"}
+    </span>
+  )
   return (
-    <div className={cn(scrollTableXClass, isDark ? "rounded-lg border border-white/10" : "rounded-lg border")}>
+    <>
+    {/* Phones: a card per bout. In the table the Opponent column - name and accolade, the reason
+        to open the row - sat off-screen behind a sideways scroll. */}
+    <ul className={cn("flex flex-col gap-1.5 sm:hidden")}>
+      {bouts.map((bout, index) => {
+        const accolade = accoladeFor(bout)
+        return (
+          <li
+            key={`${bout.round}-${index}`}
+            className={cn("rounded-lg border px-3 py-2", isDark ? "border-white/10 bg-white/[0.03]" : "border-gray-200")}
+          >
+            <div className={cn("flex items-center justify-between gap-2 text-xs", isDark ? "text-white/55" : "text-gray-500")}>
+              <span className="truncate">{bout.round || "—"}</span>
+              <span className={cn("flex shrink-0 items-center gap-1.5 font-mono", isDark ? "text-white/80" : "text-gray-800")}>
+                {resultBadge(bout.win)}
+                {[bout.winType, bout.score].filter(Boolean).join(" ")}
+              </span>
+            </div>
+            <div className={cn("mt-1 text-sm font-semibold", isDark ? "text-white" : "text-gray-900")}>
+              {displayName(bout.opponentName)}
+              {bout.opponentClub ? (
+                <span className={cn("ml-1.5 text-xs font-normal", isDark ? "text-white/40" : "text-gray-500")}>{bout.opponentClub}</span>
+              ) : null}
+            </div>
+            {accolade ? <div className="mt-1"><span className={cn("inline-block max-w-full", accoladeClass(accolade))}>{accolade}</span></div> : null}
+          </li>
+        )
+      })}
+    </ul>
+    <div className={cn(scrollTableXClass, "hidden sm:block", isDark ? "rounded-lg border border-white/10" : "rounded-lg border")}>
       <Table>
         <TableHeader>
           <TableRow className={headRow}>
@@ -149,6 +199,7 @@ function BoutTable({
         </TableBody>
       </Table>
     </div>
+    </>
   )
 }
 

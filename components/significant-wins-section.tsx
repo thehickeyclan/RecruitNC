@@ -153,15 +153,17 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [], style
               ) : null}
               {win.event ? <span className="block text-xs text-slate-500">{win.event}</span> : null}
             </div>
-            <div className="flex shrink-0 items-center gap-2">
+            {/* Wraps on a phone: a long credential ("NC ranked · 2026 NCHSAA 5A champion") ran
+                past the card's edge when this row could not shrink. */}
+            <div className="flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-1 sm:shrink-0">
               {win.result ? <span className="text-xs font-semibold text-slate-300">{win.result}</span> : null}
               {win.weight ? <span className="text-xs text-slate-500">{win.weight} lbs</span> : null}
               {win.date ? <span className="text-xs text-slate-500">{win.date}</span> : null}
               <span
                 className={
                   win.reason === "toc-field" || win.reason === "state-champion"
-                    ? "rounded-full bg-rnc-gold/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rnc-gold"
-                    : "rounded-full border border-rnc-line px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-slate-400"
+                    ? "max-w-full rounded-xl bg-rnc-gold/15 px-2 py-0.5 text-[10px] font-bold uppercase leading-snug tracking-wide text-rnc-gold"
+                    : "max-w-full rounded-xl border border-rnc-line px-2 py-0.5 text-[10px] font-bold uppercase leading-snug tracking-wide text-slate-400"
                 }
               >
                 {/*

@@ -163,6 +163,10 @@ interface AthleteDetailProps {
 /** "Competes nationally · Folkstyle · Freestyle · Greco-Roman", under the year and weight. */
 // The hero says how far and in which styles he competes; the finishes themselves are the
 // sections below and the scouting report (Matt: no credential pills on the banner).
+/** The phone photo's share / message / watch-list buttons. */
+const PHOTO_ACTION =
+  "inline-flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white ring-1 ring-white/25 backdrop-blur-md transition-colors hover:bg-black/60 disabled:opacity-50"
+
 function CompetitionStrip({ competition, className }: { competition?: CompetitionSummary | null; className?: string }) {
   if (!competition) return null
   return (
@@ -1137,7 +1141,7 @@ export function AthleteDetail({
           mobileRecruiterLayout && PROFILE_SECTION_ORDER.hero,
           // The card's own padding left an empty strip above the banner.
           mobileRecruiterLayout && "gap-0 py-0",
-          mobileRecruiterLayout && "-mx-4 rounded-none border-x-0 lg:mx-0 lg:rounded-lg lg:border-x",
+          mobileRecruiterLayout && "-mx-4 rounded-none border-x-0 border-t-0 lg:mx-0 lg:rounded-lg lg:border-x lg:border-t",
         )}
       >
         <div className="relative">
@@ -1161,43 +1165,39 @@ export function AthleteDetail({
                     onError={() => setImageError(true)}
                   />
 
-                  <div className="absolute top-3 left-3 right-3 z-20 flex items-center justify-between gap-2">
+                  {/* Photo actions: matching frosted circles, centred icons (the old pill ran off the
+                      photo's edge and the mail icon sat off-centre). */}
+                  <div className="absolute inset-x-3 top-3 z-20 flex items-center justify-between">
                     {currentUserId ? (
-                      <Button
-                        size="sm"
-                        className="h-9 w-9 bg-black/45 hover:bg-black/60 text-white border border-white/25 shadow-md p-0"
+                      <button
+                        type="button"
+                        className={PHOTO_ACTION}
                         onClick={() => setShowEditModal(true)}
                         aria-label="Request edit"
                       >
-                        <Edit className="w-4 h-4" />
-                      </Button>
+                        <Edit className="h-4 w-4" />
+                      </button>
                     ) : (
-                      <span className="w-9" />
+                      <span />
                     )}
-                    <div className="flex items-center gap-1.5 rounded-full bg-black/45 border border-white/20 p-1 backdrop-blur-sm">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-white hover:text-white hover:bg-white/15 h-8 w-8 p-0"
-                        onClick={handleShareProfile}
-                        aria-label="Share profile"
-                      >
-                        <Share2 className="w-4 h-4" />
-                      </Button>
+                    <div className="flex items-center gap-2">
+                      <button type="button" className={PHOTO_ACTION} onClick={handleShareProfile} aria-label="Share profile">
+                        <Share2 className="h-4 w-4" />
+                      </button>
                       {athlete.id && !isViewingOwnProfile && (
                         <MessageAthleteButton
                           athleteId={athlete.id}
                           claimedByUserId={athlete.claimed_by_user_id}
                           athleteName={athleteName}
-                          className="h-8 w-8 px-0 text-white hover:text-white hover:bg-white/15 border-0"
+                          className={PHOTO_ACTION}
                           size="md"
-                          iconClassName="w-4 h-4"
+                          iconClassName="h-4 w-4"
                         />
                       )}
                       <WatchListButton
                         athleteId={athlete.id}
                         compact
-                        className="border-0 shadow-none data-[starred=false]:bg-transparent data-[starred=false]:text-white data-[starred=false]:hover:bg-white/15"
+                        className={cn(PHOTO_ACTION, "border-0 shadow-none data-[starred=false]:bg-black/40 data-[starred=false]:text-white")}
                       />
                     </div>
                   </div>

@@ -134,7 +134,7 @@ export function ViewProfileClient({
         </div>
       </div>
 
-      <div className="container mx-auto min-w-0 max-w-full px-4 py-4 lg:py-8">
+      <div className="container mx-auto min-w-0 max-w-full px-4 pb-4 pt-0 lg:py-8">
         <ProfileViewTracker athleteId={String(athlete.id)} athleteName={athleteName} />
         <AthleteDetail
           theme="dark"
