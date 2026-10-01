@@ -142,8 +142,9 @@ export function ViewProfileClient({
                   theme="dark"
                   sectionId="olympic-styles-results"
                   title="Olympic Styles — Freestyle & Greco-Roman"
-                  subtitle="Fargo, the NC Freestyle & Greco State Championships, Tar Heel State Classic — not folkstyle"
+                  subtitle="Fargo, the NC Freestyle & Greco State Championships, Tar Heel State Classic, Junior National Duals — not folkstyle"
                   rows={olympicRows}
+                  duelsLabel="Dual results"
                 />
                 <SignificantWinsSection athleteId={String(athlete.id)} styles="olympic" />
               </div>

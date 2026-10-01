@@ -67,7 +67,13 @@ export function nationalEventRows(bundle: AthleteTournamentBundle): NationalEven
     rows.push({ event: "Super 32", year: Number(r.year), placement: placementNumber(r.placement), record: r.record ?? null })
   }
   for (const r of bundle.fargo ?? []) {
-    rows.push({ event: "Fargo", year: Number(r.year), placement: placementNumber(r.placement), record: r.record ?? null })
+    rows.push({
+      event: "Fargo",
+      year: Number(r.year),
+      placement: placementNumber(r.placement),
+      record: r.record ?? null,
+      division: (r as { division?: string | null }).division ?? null,
+    })
   }
   for (const r of bundle.other ?? []) {
     // In-state freestyle/Greco events are not nationals: the NC Freestyle & Greco State

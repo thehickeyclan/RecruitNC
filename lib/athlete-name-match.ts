@@ -10,6 +10,8 @@ export const ATHLETE_SAME_PERSON_ALIAS_GROUPS: string[][] = [
   ["Holt Quincy", "Holton Quincy", "Holt Quickny", "Holton Quickny"],
   // The 2026 NHSCA National Duals export spells him "Sammuel"; the roster calls him "Sammy".
   ["Samuel Gantt", "Sammuel Gantt", "Sammy Gantt"],
+  // Fargo and Flo bracket him by his given name; he wrestles as Cole (Matt, 1 Oct 2026).
+  ["Cole Goucher", "Christopher Goucher"],
   ["Colt Cambruzzi", "Colt Cambruzi", "Cole Cambruzzi", "Cole Cambruzi"],
   ["Carter Furman", "Carter Furmann", "Carter Forman"],
   ["Miller Menteer", "Miller Mentzer"],

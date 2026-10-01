@@ -162,6 +162,19 @@ describe("nationals", () => {
     ])
     expect(rising.parts?.[1].detail).toContain("7-2")
   })
+  it("names every national placing, Fargo All-American included, and scores the best one", () => {
+    const both = nationals([
+      { event: "NHSCA Nationals", year: 2025, placement: 4, record: "6-2" },
+      { event: "Fargo", year: 2026, placement: 6, record: "6-3", division: "16U Boys Freestyle" },
+    ])
+    const nhscaOnly = nationals([{ event: "NHSCA Nationals", year: 2025, placement: 4, record: "6-2" }])
+    expect(both.parts?.[0].detail).toBe(
+      "4th at 2025 NHSCA Nationals (All-American) · 6th at 2026 Fargo 16U Freestyle (All-American)",
+    )
+    // The score is still the best placing's: listing Fargo does not change it.
+    expect(both.parts?.[0].points).toBe(nhscaOnly.parts?.[0].points)
+    expect(nhscaOnly.parts?.[0].detail).toBe("4th at 2025 NHSCA Nationals (All-American)")
+  })
 })
 
 describe("ranking floors", () => {
