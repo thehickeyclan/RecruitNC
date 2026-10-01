@@ -22,11 +22,36 @@ type Row = { year: number; place: number; classification: string | null; wrestle
  * they should. `stateSchools` stays North Carolina's either way: it is the list that marks a bout
  * as against an NC kid, which is what rules a Virginia namesake out.
  */
+type StatePlacerIndex = { statePlacers: StatePlacer[]; stateSchools: string[]; fargoAllAmericans: FargoAllAmerican[] }
+
+/**
+ * Held for ten minutes per server instance. The index is the same for every profile and changes
+ * only when someone imports results, while each profile load was re-reading twelve pages of
+ * placers - and now the bout tables ask for it too.
+ */
+const INDEX_TTL_MS = 10 * 60_000
+const indexCache = new Map<string, { at: number; value: Promise<StatePlacerIndex> }>()
+
 export async function loadStatePlacerIndex(
   supabase: SupabaseClient,
   now = new Date(),
   options?: { outOfState?: boolean },
-): Promise<{ statePlacers: StatePlacer[]; stateSchools: string[]; fargoAllAmericans: FargoAllAmerican[] }> {
+): Promise<StatePlacerIndex> {
+  const key = `${now.getFullYear()}|${options?.outOfState ? "all" : "nc"}`
+  const hit = indexCache.get(key)
+  if (hit && Date.now() - hit.at < INDEX_TTL_MS) return hit.value
+  const value = buildStatePlacerIndex(supabase, now, options)
+  indexCache.set(key, { at: Date.now(), value })
+  // A failed load must not be served for ten minutes.
+  value.catch(() => indexCache.delete(key))
+  return value
+}
+
+async function buildStatePlacerIndex(
+  supabase: SupabaseClient,
+  now: Date,
+  options?: { outOfState?: boolean },
+): Promise<StatePlacerIndex> {
   const [ncPlacers, otherPlacers, fargoAllAmericans] = await Promise.all([
     loadStatePlacers(supabase, now),
     options?.outOfState ? loadOutOfStatePlacers(supabase, now).catch(() => []) : Promise.resolve([]),

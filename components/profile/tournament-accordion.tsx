@@ -15,7 +15,7 @@
  * keeps its own section above this one.
  */
 
-import { useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { ChevronDown, Globe, Trophy, type LucideIcon } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -34,7 +34,59 @@ import {
 export { buildNchsaaStateRows, buildTournamentRows, isTocRow }
 export type { AccordionSummaryResult, NationalTeamEntry, TournamentRow }
 
-function BoutTable({ bouts, isDark }: { bouts: TournamentRow["bouts"]; isDark: boolean }) {
+/** Kept in step with the key app/api/opponent-accolades/route.ts answers by. */
+function boutKey(name: string, club: string | null, year: number | null) {
+  return `${name.trim().toLowerCase()}|${(club ?? "").trim().toLowerCase()}|${year ?? ""}`
+}
+
+/**
+ * Each opponent's accolades - "2026 FL 1A State Champion", "2026 7A State 3rd" - fetched once for
+ * every bout in the list. Losses too: a 7-1 loss to a state finalist is part of the record a coach
+ * is reading. Empty until it arrives, and on any failure, so the table never waits on it.
+ */
+function useOpponentAccolades(rows: TournamentRow[]): Record<string, string> {
+  const bouts = useMemo(() => {
+    const seen = new Map<string, { name: string; club: string | null; year: number }>()
+    for (const row of rows) {
+      for (const bout of row.bouts) {
+        if (bout.isBye || !bout.opponentName) continue
+        const key = boutKey(bout.opponentName, bout.opponentClub, bout.year)
+        if (!seen.has(key)) seen.set(key, { name: bout.opponentName, club: bout.opponentClub, year: bout.year })
+      }
+    }
+    // A string, so a parent re-render that rebuilds identical rows does not fetch again.
+    return JSON.stringify([...seen.values()])
+  }, [rows])
+  const [labels, setLabels] = useState<Record<string, string>>({})
+  useEffect(() => {
+    if (bouts === "[]") return
+    let cancelled = false
+    fetch("/api/opponent-accolades", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: `{"bouts":${bouts}}`,
+    })
+      .then((res) => (res.ok ? res.json() : { labels: {} }))
+      .then((data) => {
+        if (!cancelled) setLabels(data.labels ?? {})
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [bouts])
+  return labels
+}
+
+function BoutTable({
+  bouts,
+  isDark,
+  accolades,
+}: {
+  bouts: TournamentRow["bouts"]
+  isDark: boolean
+  accolades: Record<string, string>
+}) {
   const headRow = isDark ? "bg-white/5 border-white/10" : "bg-gray-50"
   const headCell = isDark ? "font-semibold text-white/60" : "font-semibold"
   const bodyRow = isDark ? "border-white/10 text-white/80" : ""
@@ -70,6 +122,26 @@ function BoutTable({ bouts, isDark }: { bouts: TournamentRow["bouts"]; isDark: b
                     {bout.opponentClub}
                   </span>
                 ) : null}
+                {(() => {
+                  const accolade = bout.opponentName
+                    ? accolades[boutKey(bout.opponentName, bout.opponentClub, bout.year)]
+                    : undefined
+                  if (!accolade) return null
+                  return (
+                    <span
+                      className={cn(
+                        "ml-2 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+                        /champion/i.test(accolade)
+                          ? "bg-[#D3B574]/15 text-[#D3B574]"
+                          : isDark
+                            ? "border border-white/15 text-white/60"
+                            : "border border-gray-300 text-gray-600",
+                      )}
+                    >
+                      {accolade}
+                    </span>
+                  )
+                })()}
               </TableCell>
             </TableRow>
           ))}
@@ -102,6 +174,7 @@ export function TournamentAccordion({
 }) {
   const isDark = theme === "dark"
   const [open, setOpen] = useState<string | null>(null)
+  const accolades = useOpponentAccolades(rows)
 
   /*
    * Individual results and duals read differently: a placement says where a wrestler finished in a
@@ -215,7 +288,7 @@ export function TournamentAccordion({
                 </button>
                 {isOpen && expandable ? (
                   <div className="px-3 pb-3">
-                    <BoutTable bouts={row.bouts} isDark={isDark} />
+                    <BoutTable bouts={row.bouts} isDark={isDark} accolades={accolades} />
                   </div>
                 ) : null}
                   </div>

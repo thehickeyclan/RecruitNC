@@ -9,6 +9,20 @@ export type CuratedSignificantWin = {
 }
 
 const BY_ATHLETE_ID: Readonly<Record<string, readonly CuratedSignificantWin[]>> = {
+  // Aidan Gore. The NC United duals sheet records this opponent as "M. Kilgore" of Team Gotcha,
+  // which no automatic match can tie to anyone; he is Marcus Killgore of Sahuarita, the 2026 AZ
+  // D3 157 champion and #9 at 150 in Sports Illustrated's September 2026 rankings.
+  "58aaa26d-f206-4bb1-aee3-7d465b64ff39": [
+    {
+      opponent: "Marcus Killgore",
+      opponentSchool: "Team Gotcha",
+      event: "2026 NHSCA National Duals",
+      date: "5/23/2026",
+      result: "DEC 4-1",
+      weight: 152,
+      credential: "#9 Sports Illustrated · 2026 AZ D3 State Champion",
+    },
+  ],
   "ddea34af-ae6a-4880-8a1c-687576bef1fe": [
     {
       opponent: "Jin Davis",
