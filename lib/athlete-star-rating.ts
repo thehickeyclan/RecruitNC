@@ -244,7 +244,7 @@ function depthPart(rows: readonly NationalEventRow[]): StarPart {
 
 /**
  * Every national placement, best first: "4th at 2025 NHSCA Nationals (All-American)", "5th at 2026
- * Fargo 16U Freestyle (All-American)", "2nd at 2025 Journeymen (OF)". NHSCA, Fargo and Super 32
+ * Fargo 16U Freestyle (All-American)", "1st at 2025 Journeymen". NHSCA, Fargo and Super 32
  * place eight, and those eight are their All-Americans.
  */
 function nationalPlacings(rows: readonly NationalEventRow[]): string[] {

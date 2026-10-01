@@ -57,6 +57,8 @@ export function placementNumber(raw: string | null | undefined): number | null {
  */
 /** USA Wrestling events held in North Carolina (scripts/import-usab-freestyle-events.py). */
 const IN_STATE_FREESTYLE = /tar heel state classic|nc freestyle|freestyle & greco|freestyle and greco|nc state championships/i
+/** Overflow brackets ("Journeymen Fall Classic (OF)"): the bouts count, the place does not (Matt). */
+const OVERFLOW = /\(OF\)|\boverflow\b/i
 
 export function nationalEventRows(bundle: AthleteTournamentBundle): NationalEventRow[] {
   const rows: NationalEventRow[] = []
@@ -82,7 +84,7 @@ export function nationalEventRows(bundle: AthleteTournamentBundle): NationalEven
     rows.push({
       event: r.eventShortName || "Qualifier",
       year: Number(r.year),
-      placement: r.placement ?? null,
+      placement: OVERFLOW.test(`${r.eventShortName ?? ""} ${r.eventName ?? ""}`) ? null : r.placement ?? null,
       record: r.record ?? null,
     })
   }
