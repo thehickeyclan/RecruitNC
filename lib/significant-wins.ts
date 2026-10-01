@@ -383,6 +383,12 @@ function outOfStatePlacerFits(
   const state = String(placer.state ?? "").toUpperCase()
   const text = String(boutSchool ?? "").trim().toUpperCase()
   if (state && (text === state || text.includes(`(${state})`))) return true
+  /*
+   * A bare state code is the wrestler's own state, as NHSCA, Super 32 and Fargo print it: "CT"
+   * rules out Arizona's Logan Bailey, whatever the name says. A team's "(FL)" is only where most of
+   * the team is from - Georgia's Ryder Wilder wrestled for Spec Ops (FL) - so it does not.
+   */
+  if (/^[A-Z]{2}$/.test(text) && text !== state) return false
   const bout = schoolWords(boutSchool)
   if (placer.schools.some((school) => sameSchool(schoolWords(school), bout))) return true
   const atNcSchool = (knownSchools ?? []).some((school) => sameSchool(schoolWords(school), bout))

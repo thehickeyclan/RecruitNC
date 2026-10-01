@@ -370,6 +370,10 @@ describe("distinctive out-of-state names", () => {
     expect(findSignificantWins([bout("Mooresville", 190)], index)).toEqual([])
   })
 
+  it("refuses it when the bout prints the wrestler's own state as another state", () => {
+    expect(findSignificantWins([bout("CT", 190)], index)).toEqual([])
+  })
+
   it("never treats a shared name as distinctive", () => {
     const shared = { ...index, statePlacers: [{ ...wilder, distinctive: false }] }
     expect(findSignificantWins([bout("Spec Ops (FL)", 190)], shared)).toEqual([])
