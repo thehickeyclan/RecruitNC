@@ -33,9 +33,9 @@ const SOURCES: Source[] = [
   { table: "wrestling_nhsca_results", select: "id,athlete_name,high_school,year,division,state",
     map: (r) => ({ name: r.athlete_name, school: r.high_school, year: r.year, division: r.division, state: r.state }) },
   { table: "super32_results", select: "id,athlete_name,high_school,school,year,state",
-    map: (r) => ({ name: r.athlete_name, school: r.high_school || r.school, year: r.year, state: r.state }) },
+    map: (r) => ({ name: r.athlete_name, school: r.high_school || r.school, year: r.year, state: r.state, schoolMayBeClub: true }) },
   { table: "fargo_results", select: "id,athlete_name,high_school,year,state,athlete_id",
-    map: (r) => ({ name: r.athlete_name, school: r.high_school, year: r.year, state: r.state, existingAthleteId: r.athlete_id }) },
+    map: (r) => ({ name: r.athlete_name, school: r.high_school, year: r.year, state: r.state, existingAthleteId: r.athlete_id, schoolMayBeClub: true }) },
   { table: "other_tournament_results", select: "id,athlete_name,high_school,year,state,athlete_id",
     map: (r) => ({ name: r.athlete_name, school: r.high_school, year: r.year, state: r.state, existingAthleteId: r.athlete_id }) },
   { table: "national_rankings", select: "id,athlete_name,high_school,ranking_month,class_year,state,athlete_id",
@@ -56,8 +56,8 @@ async function all(admin: any, table: string, select: string) {
 async function main() {
   const write = process.argv.includes("--write")
   const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
-  const athletes: AthleteForLink[] = (await all(admin, "athletes", "id,name,wrestling_name,graduationyear,highschool,state")).map((a) => ({
-    id: a.id, name: a.name ?? "", wrestlingName: a.wrestling_name, graduationYear: a.graduationyear, highSchool: a.highschool, state: a.state,
+  const athletes: AthleteForLink[] = (await all(admin, "athletes", "id,name,wrestling_name,graduationyear,highschool,wrestlingClub,state")).map((a) => ({
+    id: a.id, name: a.name ?? "", wrestlingName: a.wrestling_name, graduationYear: a.graduationyear, highSchool: a.highschool, club: a.wrestlingClub, state: a.state,
   }))
   const find = buildNameIndex(athletes)
   const summary: Record<string, Record<string, number>> = {}
@@ -109,6 +109,16 @@ async function main() {
     if (error) throw new Error(`write: ${error.message}`)
   }
   console.log(`wrote ${toWrite.length} link decisions`)
+  // Rows an earlier run queued or linked that the current rules now leave unlinked (no profile, or a
+  // namesake): remove them, unless a person decided them.
+  const current = new Set(records.map((r) => `${r.source_table}|${r.source_id}`))
+  const existingRows = await all(admin, "result_athlete_links", "id,source_table,source_id,reviewed_at")
+  const stale = existingRows.filter((r: any) => !r.reviewed_at && !current.has(`${r.source_table}|${r.source_id}`)).map((r: any) => r.id)
+  for (let i = 0; i < stale.length; i += 200) {
+    const { error } = await admin.from("result_athlete_links").delete().in("id", stale.slice(i, i + 200))
+    if (error) throw new Error(`cleanup: ${error.message}`)
+  }
+  console.log(`removed ${stale.length} rows the current rules no longer link or queue`)
 }
 
 main().catch((e) => { console.error(e); process.exit(1) })

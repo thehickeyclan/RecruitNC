@@ -27,7 +27,7 @@ import {
 } from "@/lib/athlete-name-match"
 
 /** Bump when the rules change, so links made under older rules can be found and re-checked. */
-export const LINK_MATCHER_VERSION = "2026-10-01.3"
+export const LINK_MATCHER_VERSION = "2026-10-01.4"
 
 export type AthleteForLink = {
   id: string
@@ -35,6 +35,8 @@ export type AthleteForLink = {
   wrestlingName: string | null
   graduationYear: number | null
   highSchool: string | null
+  /** The athlete's club: some brackets print the team a wrestler entered under, not his school. */
+  club?: string | null
   state: string | null
 }
 
@@ -47,6 +49,11 @@ export type ResultRowForLink = {
   /** The class year the source itself records (national rankings do). Strongest signal there is. */
   classYear?: number | null
   state?: string | null
+  /**
+   * The source's "school" column often holds a club or team instead (Super 32: "Point", "Valley",
+   * "Boomer"). Then a different name there is not evidence of a different wrestler.
+   */
+  schoolMayBeClub?: boolean
   /** A link already stored on the source row by an earlier import. */
   existingAthleteId?: string | null
 }
@@ -86,6 +93,48 @@ function normState(s: string | null | undefined): string | null {
   return t.length === 2 ? t : null
 }
 
+const SCHOOL_STOP = new Set(["high", "school", "hs", "the", "of", "and", "senior", "magnet", "charter", "academy", "county"])
+
+function schoolWords(s: string): string[] {
+  return s
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[.'’,\-()]/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => (w === "saint" ? "st" : w === "mount" ? "mt" : w === "fort" ? "ft" : w))
+}
+
+function editDistance(a: string, b: string): number {
+  const dp = Array.from({ length: a.length + 1 }, (_, i) => [i, ...Array(b.length).fill(0)])
+  for (let j = 1; j <= b.length; j++) dp[0][j] = j
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1))
+  return dp[a.length][b.length]
+}
+
+/**
+ * Same school, allowing for how differently brackets spell one: "Pine Forest" / "Pine Forrest",
+ * "Mt. Pleasant" / "Mount Pleasant", "Fred T. Foard" / "Fred T Foard", "St. Stephens" / "Saint
+ * Stephens", and "CATA" for Central Academy of Technology and Arts. Most of Matt's first "same
+ * wrestler" calls were spelling, not judgment.
+ */
+export function schoolsMatch(a: string | null | undefined, b: string | null | undefined): boolean {
+  if (!a?.trim() || !b?.trim()) return false
+  if (schoolsLikelySame(a, b)) return true
+  const wa = schoolWords(a), wb = schoolWords(b)
+  const core = (w: string[]) => w.filter((x) => !SCHOOL_STOP.has(x)).join(" ")
+  const ca = core(wa), cb = core(wb)
+  if (!ca || !cb) return false
+  if (ca === cb || ca.includes(cb) || cb.includes(ca)) return true
+  const initials = (w: string[]) => w.filter((x) => !["of", "and", "the"].includes(x)).map((x) => x[0]).join("")
+  if (ca.length <= 5 && !ca.includes(" ") && (ca === initials(wb) || ca === initials(wb.filter((x) => !SCHOOL_STOP.has(x))))) return true
+  if (cb.length <= 5 && !cb.includes(" ") && (cb === initials(wa) || cb === initials(wa.filter((x) => !SCHOOL_STOP.has(x))))) return true
+  const longest = Math.max(ca.length, cb.length)
+  return longest >= 6 && editDistance(ca, cb) <= (longest >= 12 ? 2 : 1)
+}
+
 function contextOf(a: AthleteForLink): AthleteMatchContext {
   return { displayName: a.name, wrestlingName: a.wrestlingName, graduationYear: a.graduationYear, highSchool: a.highSchool }
 }
@@ -100,8 +149,10 @@ type Assessed = LinkCandidate & {
 
 function assess(row: ResultRowForLink, a: AthleteForLink): Assessed {
   const signals: string[] = []
-  const schoolComparable = Boolean(row.school?.trim()) && Boolean(a.highSchool?.trim())
-  const schoolAgrees = schoolComparable && schoolsLikelySame(a.highSchool, row.school)
+  const schoolAgrees =
+    Boolean(row.school?.trim()) && (schoolsMatch(a.highSchool, row.school) || schoolsMatch(a.club, row.school))
+  // A club-or-school column that names something else is silence, not disagreement.
+  const schoolComparable = Boolean(row.school?.trim()) && Boolean(a.highSchool?.trim()) && (schoolAgrees || !row.schoolMayBeClub)
   const yearComparable = row.year != null && a.graduationYear != null
   const yearStrict = yearComparable && tournamentYearFitsGradYear(row.year!, a.graduationYear!)
   const yearLoose = yearComparable && tournamentYearFitsGradYearLoose(row.year!, a.graduationYear!)
@@ -144,7 +195,7 @@ function assess(row: ResultRowForLink, a: AthleteForLink): Assessed {
     contradicted,
     corroborated,
     schoolAgrees,
-    silentSchoolYearFits: !contradicted && !schoolComparable && !row.school?.trim() && yearStrict,
+    silentSchoolYearFits: !contradicted && !schoolComparable && !schoolAgrees && yearStrict,
   }
 }
 

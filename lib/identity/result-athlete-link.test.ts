@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { buildNameIndex, decideLink, gradYearFromDivision, type AthleteForLink } from "@/lib/identity/result-athlete-link"
+import { buildNameIndex, decideLink, gradYearFromDivision, schoolsMatch, type AthleteForLink } from "@/lib/identity/result-athlete-link"
 
 const athlete = (over: Partial<AthleteForLink>): AthleteForLink => ({
   id: "a1",
@@ -90,5 +90,43 @@ describe("buildNameIndex", () => {
   it("finds a hyphenated surname by either half", () => {
     const find = buildNameIndex([athlete({})])
     expect(find("Campbell Tufts-piercy")).toHaveLength(1)
+  })
+})
+
+describe("schoolsMatch", () => {
+  it("forgives how brackets spell a school", () => {
+    expect(schoolsMatch("Pine Forest", "Pine Forrest")).toBe(true)
+    expect(schoolsMatch("Mt. Pleasant", "Mount Pleasant")).toBe(true)
+    expect(schoolsMatch("Fred T. Foard", "Fred T Foard")).toBe(true)
+    expect(schoolsMatch("St. Stephens", "Saint Stephens")).toBe(true)
+    expect(schoolsMatch("Newton-Conover", "Newton Conover")).toBe(true)
+    expect(schoolsMatch("East Davidson", "East Davison")).toBe(true)
+    expect(schoolsMatch("CATA", "Central Academy of Technology and Arts")).toBe(true)
+  })
+
+  it("still tells different schools apart", () => {
+    expect(schoolsMatch("Cardinal Gibbons", "Franklinton")).toBe(false)
+    expect(schoolsMatch("East Surry", "Mount Airy")).toBe(false)
+    expect(schoolsMatch("Laney", "Forbush")).toBe(false)
+    expect(schoolsMatch("Albemarle", "South Stanly")).toBe(false)
+  })
+})
+
+describe("a school column that may hold a club", () => {
+  it("does not count a club name against the wrestler", () => {
+    // Super 32 2023 lists Carson Worrick under "Valley"; he wrestles for Davie.
+    const d = decideLink(
+      { name: "Campbell Tufts", school: "Valley", year: 2026, schoolMayBeClub: true },
+      [athlete({})],
+    )
+    expect(d.status).toBe("linked")
+  })
+
+  it("still rejects a namesake whose years fall outside the career", () => {
+    const d = decideLink(
+      { name: "Campbell Tufts", school: "Valley", year: 2015, schoolMayBeClub: true },
+      [athlete({})],
+    )
+    expect(d.status).not.toBe("linked")
   })
 })
