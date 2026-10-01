@@ -48,8 +48,18 @@ describe("decideLink", () => {
     expect(d.status).toBe("no_match")
   })
 
-  it("sends name-only matches to review instead of guessing", () => {
-    const d = decideLink({ name: "Campbell Tufts", school: null, year: 2026 }, [athlete({ highSchool: null })])
+  it("links one profile when the source lists no school and the class year fits", () => {
+    const d = decideLink({ name: "Campbell Tufts", school: null, year: 2026 }, [athlete({})])
+    expect(d.status).toBe("linked")
+  })
+
+  it("sends a different school to review: transfer or namesake is a person's call", () => {
+    const d = decideLink({ name: "Campbell Tufts", school: "Broughton", year: 2026 }, [athlete({})])
+    expect(d.status).toBe("review")
+  })
+
+  it("sends a name with nothing to check it against to review", () => {
+    const d = decideLink({ name: "Campbell Tufts", school: null, year: null }, [athlete({})])
     expect(d.status).toBe("review")
   })
 

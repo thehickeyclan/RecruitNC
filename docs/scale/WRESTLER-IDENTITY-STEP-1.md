@@ -14,7 +14,7 @@ views, and names collide across states. Step 1 records the answer once.
 - **Fills it with a backfill script** (`scripts/identity/backfill-result-links.ts`), dry run by
   default, using the matcher in `lib/identity/result-athlete-link.ts`.
 
-## Matching rules (`LINK_MATCHER_VERSION = 2026-10-01.2`)
+## Matching rules (`LINK_MATCHER_VERSION = 2026-10-01.3`)
 
 Built on the read path's own rules (`lib/athlete-name-match.ts`), so a stored link agrees with what
 the profile already shows.
@@ -22,6 +22,7 @@ the profile already shows.
 | Outcome | When |
 |---|---|
 | **linked** | Exactly one profile fits the name, nothing contradicts it, and the record corroborates it: same school, or a grade division / recorded class year that pins the graduation year. |
+| **linked (no school listed)** | One profile has the name, the source lists no school, and the class year fits. Matt's call, 1 October: these already show on profiles through name matching, so storing them changes nothing visible. |
 | **review** | The name fits but nothing corroborates it; two profiles fit; or an existing stored link disagrees with the record. A person decides. |
 | **no_match / namesake_rejected** | The division, class year, state, or every comparable signal points to someone else. Not stored. |
 | **no_match / no_profile** | The wrestler has no profile. Not stored. |
@@ -54,6 +55,10 @@ Written 1 October: 1,669 links and 94 review rows (`result_athlete_links`).
 younger one. Version .1 treated any division mismatch as a different person and flagged seven correct
 links (Jacob Campos, a junior, in the Senior bracket). Version .2 rejects only a division younger than
 the wrestler.
+
+## Review screen
+
+`/admin/identity-review` (Result review in the admin bar): the result beside each candidate profile — Same wrestler, Not him, or Skip. Decisions are final; the backfill never rewrites a row with `reviewed_at` set. After version .3: **36 rows** (26 school differs, 8 wrong stored links, 2 with two profiles).
 
 ## Next steps
 

@@ -57,6 +57,11 @@ const adminNavItems: {
     icon: "📋",
   },
   {
+    title: "Result review",
+    href: "/admin/identity-review",
+    icon: "🔗",
+  },
+  {
     title: "Logo Manager",
     href: "/admin/enhanced-logo-manager",
     icon: "🎨",

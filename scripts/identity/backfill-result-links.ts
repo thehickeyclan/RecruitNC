@@ -94,11 +94,21 @@ async function main() {
   console.log(`review list: ${review.length} rows -> ${out}`)
 
   if (!write) { console.log("dry run: nothing written"); return }
-  for (let i = 0; i < records.length; i += 500) {
-    const { error } = await admin.from("result_athlete_links").upsert(records.slice(i, i + 500), { onConflict: "source_table,source_id", ignoreDuplicates: false })
+  // A person's decision is final: rows reviewed by hand are never rewritten by a rerun.
+  const reviewed = new Set(
+    (await all(admin, "result_athlete_links", "id,source_table,source_id,reviewed_at"))
+      .filter((r: any) => r.reviewed_at)
+      .map((r: any) => `${r.source_table}|${r.source_id}`),
+  )
+  const toWrite = records
+    .filter((r) => !reviewed.has(`${r.source_table}|${r.source_id}`))
+    .map((r) => ({ ...r, updated_at: new Date().toISOString() }))
+  console.log(`keeping ${reviewed.size} hand-reviewed decisions`)
+  for (let i = 0; i < toWrite.length; i += 500) {
+    const { error } = await admin.from("result_athlete_links").upsert(toWrite.slice(i, i + 500), { onConflict: "source_table,source_id", ignoreDuplicates: false })
     if (error) throw new Error(`write: ${error.message}`)
   }
-  console.log(`wrote ${records.length} link decisions`)
+  console.log(`wrote ${toWrite.length} link decisions`)
 }
 
 main().catch((e) => { console.error(e); process.exit(1) })

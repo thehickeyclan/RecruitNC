@@ -27,7 +27,7 @@ import {
 } from "@/lib/athlete-name-match"
 
 /** Bump when the rules change, so links made under older rules can be found and re-checked. */
-export const LINK_MATCHER_VERSION = "2026-10-01.2"
+export const LINK_MATCHER_VERSION = "2026-10-01.3"
 
 export type AthleteForLink = {
   id: string
@@ -90,7 +90,13 @@ function contextOf(a: AthleteForLink): AthleteMatchContext {
   return { displayName: a.name, wrestlingName: a.wrestlingName, graduationYear: a.graduationYear, highSchool: a.highSchool }
 }
 
-type Assessed = LinkCandidate & { contradicted: boolean; corroborated: boolean; schoolAgrees: boolean }
+type Assessed = LinkCandidate & {
+  contradicted: boolean
+  corroborated: boolean
+  schoolAgrees: boolean
+  /** Nothing to compare the school against, and the class year fits the strict window. */
+  silentSchoolYearFits: boolean
+}
 
 function assess(row: ResultRowForLink, a: AthleteForLink): Assessed {
   const signals: string[] = []
@@ -138,10 +144,12 @@ function assess(row: ResultRowForLink, a: AthleteForLink): Assessed {
     contradicted,
     corroborated,
     schoolAgrees,
+    silentSchoolYearFits: !contradicted && !schoolComparable && !row.school?.trim() && yearStrict,
   }
 }
 
-const strip = ({ contradicted: _c, corroborated: _r, schoolAgrees: _s, ...rest }: Assessed): LinkCandidate => rest
+const strip = ({ contradicted: _c, corroborated: _r, schoolAgrees: _s, silentSchoolYearFits: _y, ...rest }: Assessed): LinkCandidate =>
+  rest
 
 export function decideLink(row: ResultRowForLink, athletes: readonly AthleteForLink[]): LinkDecision {
   const named = athletes.filter((a) => rowNameMatchesAthleteContext(row.name, contextOf(a)))
@@ -156,6 +164,16 @@ export function decideLink(row: ResultRowForLink, athletes: readonly AthleteForL
   else if (corroborated.length === 1 && viable.length === 1) {
     const c = corroborated[0]
     decision = { status: "linked", athleteId: c.athleteId, score: c.score, reason: c.signals.join(", "), candidates }
+  } else if (viable.length === 1 && viable[0].silentSchoolYearFits) {
+    /*
+     * The source lists no school, one profile has the name, and its class year fits. Matt, 1
+     * October 2026: link these rather than queue them. The profile already shows these results
+     * through name matching, so storing the link changes nothing anyone sees - 59 of the first 94
+     * review rows were this, mostly Super 32 and qualifier brackets. A school that differs still
+     * goes to review: that is a transfer or a namesake, and only a person can tell which.
+     */
+    const c = viable[0]
+    decision = { status: "linked", athleteId: c.athleteId, score: c.score, reason: "name and class year; source lists no school", candidates }
   } else if (corroborated.length === 1) {
     // Two profiles share the name; one is corroborated and the other merely not contradicted.
     // Common with duplicate profiles - exactly what a person should see.
