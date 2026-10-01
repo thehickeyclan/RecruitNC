@@ -20,7 +20,10 @@ export const STYLE_LABEL: Record<WrestlingStyle, string> = {
 }
 
 export function styleOfEvent(...parts: Array<string | null | undefined>): WrestlingStyle {
-  const text = parts.filter(Boolean).join(" ").toLowerCase()
+  // A division, where one is named, decides: "2026 NC Freestyle & Greco State Championships - 16U
+  // Boys Freestyle" is freestyle, though the event's own name says both.
+  const divisions = parts.filter(Boolean).map((p) => String(p)).filter((p) => p.includes(" - ")).map((p) => p.split(" - ").pop()!)
+  const text = (divisions.length ? divisions : parts.filter(Boolean)).join(" ").toLowerCase()
   if (/\bgreco\b/.test(text)) return "greco"
   // A Fargo row with no style named is freestyle, the larger of its two tournaments.
   if (/\bfreestyle\b|\bfargo\b/.test(text)) return "freestyle"

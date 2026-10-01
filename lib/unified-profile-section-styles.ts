@@ -24,6 +24,8 @@ export const PROFILE_SECTION_ORDER = {
   collegeOpens: "order-9 lg:order-9",
   achievements: "order-10 lg:order-10",
   inSeason: "order-11 lg:order-11",
+  /** Freestyle & Greco-Roman, after every folkstyle section (Matt: always the last section). */
+  olympicStyles: "order-12 lg:order-12",
   /** Inline weight editor — after nav when open. */
   weightEdit: "order-[2] lg:order-[2]",
   /** Must stay after all profile sections (default order:0 would float above the hero). */

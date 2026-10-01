@@ -55,6 +55,9 @@ export function placementNumber(raw: string | null | undefined): number | null {
  * NHSCA, Super 32, Fargo and the Super 32 qualifiers. Deliberately excludes NCHSAA — that is
  * the state axis, and counting it twice would let one strong state run carry two components.
  */
+/** USA Wrestling events held in North Carolina (scripts/import-usab-freestyle-events.py). */
+const IN_STATE_FREESTYLE = /tar heel state classic|nc freestyle|freestyle & greco|freestyle and greco|nc state championships/i
+
 export function nationalEventRows(bundle: AthleteTournamentBundle): NationalEventRow[] {
   const rows: NationalEventRow[] = []
   for (const r of bundle.nhsca ?? []) {
@@ -67,6 +70,9 @@ export function nationalEventRows(bundle: AthleteTournamentBundle): NationalEven
     rows.push({ event: "Fargo", year: Number(r.year), placement: placementNumber(r.placement), record: r.record ?? null })
   }
   for (const r of bundle.other ?? []) {
+    // In-state freestyle/Greco events are not nationals: the NC Freestyle & Greco State
+    // Championships read as a "national title" on Luke Richards' report.
+    if (IN_STATE_FREESTYLE.test(r.eventShortName ?? "")) continue
     rows.push({
       event: r.eventShortName || "Qualifier",
       year: Number(r.year),

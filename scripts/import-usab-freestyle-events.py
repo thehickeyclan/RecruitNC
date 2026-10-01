@@ -52,7 +52,7 @@ def fargo_module():
 
 def main():
     files = [a for i, a in enumerate(sys.argv[1:], start=1)
-             if not a.startswith("--") and sys.argv[i - 1] not in ("--slug", "--date")]
+             if not a.startswith("--") and sys.argv[i - 1] not in ("--slug", "--date", "--event-name")]
     slug, date = arg("--slug"), arg("--date")
     if len(files) != 1 or not slug or not date:
         sys.exit(__doc__)
@@ -88,6 +88,11 @@ def main():
 
     def event_parts(tournament):
         name, division = tournament.split(" - ", 1)
+        # USA Bracketing calls the USA Wrestling state tournament "NC State Championships", which
+        # reads as the NCHSAA folkstyle title; --event-name gives it its own name.
+        if arg("--event-name"):
+            name = f"{year} {arg('--event-name')}"
+            tournament = f"{name} - {division}"
         style = "gr" if "greco" in division.lower() else "fs"
         div_slug = re.sub(r"[^a-z0-9]+", "-", division.lower().replace("freestyle", "").replace("greco", "")).strip("-")
         return f"{slug}-{year}-{div_slug}-{style}", tournament, re.sub(r"^\d{4}\s+", "", name)

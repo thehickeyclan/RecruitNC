@@ -147,6 +147,16 @@ export function ScoutingReportDocument({
   const fileNumber = `NCU-${athleteId.slice(0, 8).toUpperCase()}`
   let section = 0
   const n = () => String(++section).padStart(2, "0")
+  // Folkstyle and Olympic styles never share a section: the NCHSAA State Championships and the NC
+  // Freestyle & Greco State Championships are different titles (Matt).
+  const olympicRow = (style: ReturnType<typeof styleOfEvent>) => isInternationalStyle(style)
+  const folkResults = report.results.filter((r) => !olympicRow(r.style ?? styleOfEvent(r.event, r.detail)))
+  const olympicResults = report.results.filter((r) => olympicRow(r.style ?? styleOfEvent(r.event, r.detail)))
+  const allWins: BoutRow[] = [...report.significantWins, ...(report.reportedWins ?? []).map(reportedRow)]
+  const folkWins = allWins.filter((w) => !olympicRow(styleOfEvent(w.event)))
+  const olympicWins = allWins.filter((w) => olympicRow(styleOfEvent(w.event)))
+  const folkLosses = report.significantLosses.filter((w) => !olympicRow(styleOfEvent(w.event)))
+  const olympicLosses = report.significantLosses.filter((w) => olympicRow(styleOfEvent(w.event)))
 
   return (
     <div className="min-h-screen bg-[#e9eaee] print:bg-white">
@@ -659,47 +669,55 @@ export function ScoutingReportDocument({
           </Block>
         ) : null}
 
-        <Block n={n()} title="Competition record">
-          {report.results.length ? (
-            /* Folkstyle and freestyle/Greco apart: an NCHSAA finish and a Fargo finish are different evidence. */
-            <StyleSplit
-              items={report.results}
-              styleOf={(row) => styleOfEvent(row.event, row.detail)}
-              render={(rows) => (
-                <Table head={["Date", "Event", "Result"]} widths={["5.2rem", "11rem", "auto"]}>
-                  {rows.map((row, i) => (
-                    <tr key={i} className="border-t border-gray-200">
-                      {/* The day where we have it, the year where the source only published one. */}
-                      <Td mono>{row.date ? dayLabel(row.date) : row.year}</Td>
-                      <Td bold>{row.event}</Td>
-                      <Td>{row.detail}</Td>
-                    </tr>
-                  ))}
-                </Table>
-              )}
-            />
+        {/*
+          Folkstyle here; freestyle and Greco-Roman get their own section, last (Matt). The NCHSAA
+          State Championships and the NC Freestyle & Greco State Championships are different titles
+          and must never share a table.
+        */}
+        <Block n={n()} title="Competition record — Folkstyle">
+          {folkResults.length ? (
+            <ResultsTable rows={folkResults} />
           ) : (
-            <Note>No tournament results on file.</Note>
+            <Note>No folkstyle tournament results on file.</Note>
           )}
         </Block>
 
-        <Block n={n()} title="Significant wins" count={report.significantWins.length + (report.reportedWins?.length ?? 0)}>
-          <StyleSplit
-            items={[...report.significantWins, ...(report.reportedWins ?? []).map(reportedRow)]}
-            styleOf={(row) => styleOfEvent(row.event)}
-            render={(rows) => <GroupedBoutTables rows={rows} kind="win" />}
-            empty={<GroupedBoutTables rows={[]} kind="win" />}
-          />
+        <Block n={n()} title="Significant wins — Folkstyle" count={folkWins.length}>
+          <GroupedBoutTables rows={folkWins} kind="win" />
         </Block>
 
-        <Block n={n()} title="Notable losses" count={report.significantLosses.length}>
-          <StyleSplit
-            items={report.significantLosses}
-            styleOf={(row) => styleOfEvent(row.event)}
-            render={(rows) => <GroupedBoutTables rows={rows} kind="loss" />}
-            empty={<GroupedBoutTables rows={[]} kind="loss" />}
-          />
+        <Block n={n()} title="Notable losses — Folkstyle" count={folkLosses.length}>
+          <GroupedBoutTables rows={folkLosses} kind="loss" />
         </Block>
+
+        {olympicResults.length || olympicWins.length || olympicLosses.length ? (
+          <Block n={n()} title="Olympic Styles — Freestyle & Greco-Roman">
+            <Note>
+              Fargo, the NC Freestyle &amp; Greco State Championships and the Tar Heel State Classic. Not folkstyle,
+              and not part of the record above.
+            </Note>
+            <div className="mt-3 space-y-5">
+              <div>
+                <h3 className="mb-2 border-b border-[#03154C]/30 pb-0.5 text-[11px] font-black uppercase tracking-[0.14em] text-[#B31B1B]">
+                  Results <span className="font-mono text-gray-500">({olympicResults.length})</span>
+                </h3>
+                {olympicResults.length ? <ResultsTable rows={olympicResults} /> : <Note>No freestyle or Greco results on file.</Note>}
+              </div>
+              <div>
+                <h3 className="mb-2 border-b border-[#03154C]/30 pb-0.5 text-[11px] font-black uppercase tracking-[0.14em] text-[#B31B1B]">
+                  Significant wins <span className="font-mono text-gray-500">({olympicWins.length})</span>
+                </h3>
+                <GroupedBoutTables rows={olympicWins} kind="win" />
+              </div>
+              <div>
+                <h3 className="mb-2 border-b border-[#03154C]/30 pb-0.5 text-[11px] font-black uppercase tracking-[0.14em] text-[#B31B1B]">
+                  Notable losses <span className="font-mono text-gray-500">({olympicLosses.length})</span>
+                </h3>
+                <GroupedBoutTables rows={olympicLosses} kind="loss" />
+              </div>
+            </div>
+          </Block>
+        ) : null}
 
         <footer className="mt-7 border-t-2 border-[#03154C] pt-2 text-[9px] leading-relaxed text-gray-500">
           <p>
@@ -1034,39 +1052,19 @@ function isOutOfState(row: BoutRow): boolean {
   return !!row.opponentState && row.opponentState.toUpperCase() !== "NC"
 }
 
-/**
- * Folkstyle first, then freestyle and Greco-Roman together, each under its own heading - only when
- * both are present, so a folkstyle-only wrestler's page reads exactly as before.
- */
-function StyleSplit<T>({
-  items,
-  styleOf,
-  render,
-  empty,
-}: {
-  items: T[]
-  styleOf: (item: T) => ReturnType<typeof styleOfEvent>
-  render: (items: T[]) => React.ReactNode
-  empty?: React.ReactNode
-}) {
-  const folk = items.filter((i) => !isInternationalStyle(styleOf(i)))
-  const intl = items.filter((i) => isInternationalStyle(styleOf(i)))
-  if (!items.length) return <>{empty ?? null}</>
-  if (!folk.length || !intl.length) return <>{render(items)}</>
+/** One results table, the same for the folkstyle record and the Olympic-styles section. */
+function ResultsTable({ rows }: { rows: ScoutingReport["results"] }) {
   return (
-    <div className="space-y-6">
-      {[
-        { title: "Folkstyle", rows: folk },
-        { title: "Freestyle & Greco-Roman", rows: intl },
-      ].map((group) => (
-        <div key={group.title}>
-          <h3 className="mb-2 bg-[#03154C] px-2 py-1 text-[11px] font-black uppercase tracking-[0.16em] text-white">
-            {group.title} <span className="font-mono text-white/70">({group.rows.length})</span>
-          </h3>
-          {render(group.rows)}
-        </div>
+    <Table head={["Date", "Event", "Result"]} widths={["5.2rem", "11rem", "auto"]}>
+      {rows.map((row, i) => (
+        <tr key={i} className="border-t border-gray-200">
+          {/* The day where we have it, the year where the source only published one. */}
+          <Td mono>{row.date ? dayLabel(row.date) : row.year}</Td>
+          <Td bold>{row.event}</Td>
+          <Td>{row.detail}</Td>
+        </tr>
       ))}
-    </div>
+    </Table>
   )
 }
 

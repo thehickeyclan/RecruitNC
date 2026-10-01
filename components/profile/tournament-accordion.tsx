@@ -22,7 +22,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn, scrollTableXClass } from "@/lib/utils"
 import { PROFILE_SECTION_HEADER, PROFILE_SECTION_TITLE } from "@/lib/unified-profile-section-styles"
 import { displayName, type OtherTournamentProfileBlock } from "@/lib/other-tournaments"
-import { isInternationalStyle, styleOfEvent } from "@/lib/wrestling-style"
 import {
   buildNchsaaStateRows,
   buildTournamentRows,
@@ -183,12 +182,9 @@ export function TournamentAccordion({
    * field, a duals record says how he did against whoever his team drew. Printing "1st of 8" beside
    * "5-0" as if they were the same claim is what the split avoids.
    */
-  // Freestyle and Greco-Roman apart from folkstyle (Matt): a Fargo finish is a different claim.
-  const intl = (r: TournamentRow) => isInternationalStyle(styleOfEvent(r.event, r.team))
   const groups = [
-    { label: "Individual", rows: rows.filter((r) => !r.isDuals && !intl(r)) },
-    { label: "Duals & team events", rows: rows.filter((r) => r.isDuals && !intl(r)) },
-    { label: "Freestyle & Greco-Roman", rows: rows.filter(intl) },
+    { label: "Individual", rows: rows.filter((r) => !r.isDuals) },
+    { label: "Duals & team events", rows: rows.filter((r) => r.isDuals) },
   ].filter((group) => group.rows.length > 0)
 
   const cardClass = isDark

@@ -197,8 +197,8 @@ describe("state champions and placers", () => {
   it("counts a win over a state champion or placer", () => {
     const wins = findSignificantWins([win("Carson Worrick", "Davie"), win("Rylin Walker", "South Caldwell")], index)
     expect(wins.map((w) => [w.opponent, w.reason, w.stateLabel])).toEqual([
-      ["Carson Worrick", "state-champion", "2x State Champion (2026 7A)"],
-      ["Rylin Walker", "state-placer", "2026 6A State 3rd"],
+      ["Carson Worrick", "state-champion", "2x State Champion (2026 NCHSAA 7A)"],
+      ["Rylin Walker", "state-placer", "2026 NCHSAA 6A State 3rd"],
     ])
   })
 
@@ -236,7 +236,7 @@ describe("state champions and placers", () => {
     const both = { ...index, tocField: ["Jay Mills"] }
     const [w] = findSignificantWins([win("Jay Mills", "Lincolnton")], both)
     expect(w.reason).toBe("toc-field")
-    expect(w.stateLabel).toBe("2026 3A State Runner-up")
+    expect(w.stateLabel).toBe("2026 NCHSAA 3A State Runner-up")
   })
 })
 

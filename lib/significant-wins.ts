@@ -194,9 +194,12 @@ export function statePlacerLabel(finishes: readonly StateFinish[]): string | nul
   if (!finishes.length) return null
   const best = [...finishes].sort((a, b) => a.place - b.place || b.year - a.year)[0]
   const titles = finishes.filter((f) => f.place === 1).length
-  // "2026 VA 2A State Champion": an unmarked title is read as North Carolina's.
-  const where = best.state && best.state !== "NC" ? ` ${best.state}` : ""
-  const cls = `${where}${best.classification ? ` ${best.classification}` : ""}`
+  // Every title names whose it is: "2026 VA 2A State Champion", "2026 NCHSAA 7A State Champion",
+  // "2026 NCISA State Champion" - never a bare "State Champion" a reader could take for the
+  // freestyle states (Matt: crystal clear on which state championship).
+  const ncisa = /^ncisa$/i.test(best.classification ?? "")
+  const where = best.state && best.state !== "NC" ? ` ${best.state}` : ncisa ? " NCISA" : " NCHSAA"
+  const cls = `${where}${best.classification && !ncisa ? ` ${best.classification}` : ""}`
   if (best.place === 1) return titles > 1 ? `${titles}x State Champion (${best.year}${cls})` : `${best.year}${cls} State Champion`
   if (best.place === 2) return `${best.year}${cls} State Runner-up`
   return `${best.year}${cls} State ${best.place}${ordinalSuffix(best.place)}`

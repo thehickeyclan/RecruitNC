@@ -36,9 +36,14 @@ type SignificantWin = {
  * When there are no documented wins yet, the section still provides the community submission
  * path so missing results can be sent to NC United for review.
  */
-export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
+export function SignificantWinsSection({ athleteId, qualityWinBlocks = [], styles = "folkstyle" }: {
   athleteId: string
   qualityWinBlocks?: ProfileQualityWinsTournamentBlock[]
+  /**
+   * Which record this list belongs to. Folkstyle sits with the folkstyle sections; freestyle and
+   * Greco-Roman wins get their own list inside the Olympic Styles section, last on the page.
+   */
+  styles?: "folkstyle" | "olympic"
 }) {
   const [wins, setWins] = useState<SignificantWin[]>([])
   const [loading, setLoading] = useState(true)
@@ -80,28 +85,27 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
    * ("2× Michigan State Placer"), and the bout import. Keep the hand-built one.
    */
   const handBuilt = new Set(qualityWins.map((w) => w.opponent.trim().toLowerCase()))
+  const isOlympic = (w: SignificantWin) => w.style === "freestyle" || w.style === "greco"
   const allWins = [
     ...wins.filter((w) => !(/aau scholastic/i.test(w.event ?? "") && handBuilt.has(w.opponent.trim().toLowerCase()))),
     ...qualityWins,
-  ]
+  ].filter((w) => (styles === "olympic" ? isOlympic(w) : !isOlympic(w)))
   const visibleWins = filter === "all" ? allWins : allWins.filter((win) => win.scope === filter)
-  /*
-   * Folkstyle first, then freestyle and Greco-Roman under their own heading - Matt: a Fargo win and
-   * a folkstyle win are different evidence. Headings only appear when a wrestler has both.
-   */
-  const isIntl = (w: SignificantWin) => w.style === "freestyle" || w.style === "greco"
-  const ordered = [...visibleWins.filter((w) => !isIntl(w)), ...visibleWins.filter(isIntl)]
-  const displayedWins = expanded ? ordered : ordered.slice(0, 3)
-  const splitByStyle = visibleWins.some(isIntl) && visibleWins.some((w) => !isIntl(w))
+  const displayedWins = expanded ? visibleWins : visibleWins.slice(0, 3)
 
   if (loading) return null
+  // The Olympic-styles list is only shown when there is something in it; the folkstyle one always
+  // shows, because it carries the submit-a-win path.
+  if (styles === "olympic" && allWins.length === 0) return null
 
   return (
     <section id="quality-wins" className="rounded-xl border border-rnc-gold/30 bg-rnc-surface p-5" data-section="quality-wins">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-rnc-gold" aria-hidden="true" />
-          <h2 className="text-lg font-bold text-white">Significant wins</h2>
+          <h2 className="text-lg font-bold text-white">
+            {styles === "olympic" ? "Significant wins — Freestyle & Greco-Roman" : "Significant wins"}
+          </h2>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <SignificantWinSubmissionDialog athleteId={athleteId} />
@@ -138,11 +142,6 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [] }: {
       <ul className="mt-4 flex flex-col gap-2">
         {displayedWins.map((win, index) => (
           <Fragment key={`${win.opponent}-${win.date}-${win.event}-${index}`}>
-          {splitByStyle && (index === 0 || isIntl(win) !== isIntl(displayedWins[index - 1])) ? (
-            <li className="mt-1 list-none text-[11px] font-bold uppercase tracking-[0.14em] text-rnc-gold">
-              {isIntl(win) ? "Freestyle & Greco-Roman" : "Folkstyle"}
-            </li>
-          ) : null}
           <li
             className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 rounded-lg border border-rnc-line bg-rnc-ink px-3 py-2"
           >

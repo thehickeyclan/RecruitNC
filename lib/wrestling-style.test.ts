@@ -10,6 +10,9 @@ describe("styleOfEvent", () => {
     expect(styleOfEvent("2026 NHSCA High School Nationals")).toBe("folkstyle")
     expect(styleOfEvent("NCHSAA States")).toBe("folkstyle")
     expect(styleOfEvent(null)).toBe("folkstyle")
+    // The division decides when the event's name mentions both styles.
+    expect(styleOfEvent("2026 NC Freestyle & Greco State Championships - 16U Boys Freestyle")).toBe("freestyle")
+    expect(styleOfEvent("2026 NC Freestyle & Greco State Championships - Junior Boys Greco", "NC Freestyle & Greco State Championships")).toBe("greco")
   })
 })
 

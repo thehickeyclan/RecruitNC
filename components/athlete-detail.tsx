@@ -141,6 +141,11 @@ interface AthleteDetailProps {
   mobileRecruiterLayout?: boolean
   /** In North Carolina only or nationally, and in which styles (lib/wrestling-style.ts). */
   competition?: CompetitionSummary | null
+  /**
+   * Freestyle & Greco-Roman results and wins: their own section, last, after every folkstyle one -
+   * Matt: a Fargo or freestyle-states result is never to read as part of the folkstyle record.
+   */
+  olympicStylesSection?: React.ReactNode
 }
 
 /** "Competes nationally · Folkstyle · Freestyle · Greco-Roman", under the year and weight. */
@@ -170,6 +175,7 @@ export function AthleteDetail({
   theme = "light",
   mobileRecruiterLayout = false,
   competition = null,
+  olympicStylesSection = null,
 }: AthleteDetailProps) {
   const isDark = theme === "dark"
   const { isAdmin, isVerifiedCoach, profile: viewerProfile } = useAuth()
@@ -2113,7 +2119,7 @@ export function AthleteDetail({
       {/* Significant wins sit above the full match list: who somebody has beaten is the question
           a profile gets opened with, and the list underneath answers how many. */}
       <div className={cn("min-w-0 max-w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.qualityWins)}>
-        <SignificantWinsSection athleteId={String(athlete.id)} qualityWinBlocks={profileQualityWins} />
+        <SignificantWinsSection athleteId={String(athlete.id)} qualityWinBlocks={profileQualityWins} styles="folkstyle" />
       </div>
 
       {/* 10. High School Career Match Results */}
@@ -2129,6 +2135,12 @@ export function AthleteDetail({
           collapseOnMobile={mobileRecruiterLayout}
         />
       </div>
+
+      {olympicStylesSection ? (
+        <div className={cn("min-w-0 max-w-full w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.olympicStyles)}>
+          {olympicStylesSection}
+        </div>
+      ) : null}
 
       {/* Last Edited By - Footer */}
       {(athlete.last_edited_by || athlete.last_edited_at) && (

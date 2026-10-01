@@ -1,6 +1,7 @@
 "use client"
 
-import { summarizeCompetition } from "@/lib/wrestling-style"
+import { isInternationalStyle, styleOfEvent, summarizeCompetition } from "@/lib/wrestling-style"
+import { SignificantWinsSection } from "@/components/significant-wins-section"
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowLeft, Medal, Trophy } from "lucide-react"
@@ -89,6 +90,10 @@ export function ViewProfileClient({
     athlete.is_nc_athlete !== false,
   )
   const athleteName = String(athlete.name ?? "Athlete")
+  // Freestyle and Greco-Roman go in their own section, last on the page; folkstyle keeps the rest.
+  const isOlympicRow = (row: { event: string; team: string | null }) => isInternationalStyle(styleOfEvent(row.event, row.team))
+  const folkstyleRows = profileTournamentRows.filter((row) => !isOlympicRow(row))
+  const olympicRows = profileTournamentRows.filter(isOlympicRow)
 
   return (
     <main className="min-h-screen bg-[#0A1628]">
@@ -130,6 +135,20 @@ export function ViewProfileClient({
           theme="dark"
           mobileRecruiterLayout
           competition={competition}
+          olympicStylesSection={
+            olympicRows.length ? (
+              <div className="w-full min-w-0 max-w-full space-y-6" id="olympic-styles">
+                <TournamentAccordion
+                  theme="dark"
+                  sectionId="olympic-styles-results"
+                  title="Olympic Styles — Freestyle & Greco-Roman"
+                  subtitle="Fargo, the NC Freestyle & Greco State Championships, Tar Heel State Classic — not folkstyle"
+                  rows={olympicRows}
+                />
+                <SignificantWinsSection athleteId={String(athlete.id)} styles="olympic" />
+              </div>
+            ) : null
+          }
           athlete={athlete as unknown as Parameters<typeof AthleteDetail>[0]["athlete"]}
           nchsaaResults={nchsaaResults.map((r) => ({
             ...r,
@@ -144,8 +163,8 @@ export function ViewProfileClient({
                 theme="dark"
                 sectionId="nchsaa-states"
                 icon={Medal}
-                title="State Championships"
-                subtitle="North Carolina high school state tournament results"
+                title="NCHSAA State Championships"
+                subtitle="Folkstyle — the North Carolina high school state tournament"
                 emptyText="No NCHSAA state results recorded"
               />
               <TournamentAccordion
@@ -154,10 +173,10 @@ export function ViewProfileClient({
                 icon={Trophy}
                 title="Tournament of Champions"
                 subtitle="North Carolina's invitational championship"
-                rows={profileTournamentRows.filter(isTocRow)}
+                rows={folkstyleRows.filter(isTocRow)}
                 hideWhenEmpty
               />
-              <TournamentAccordion theme="dark" rows={profileTournamentRows.filter((row) => !isTocRow(row))} />
+              <TournamentAccordion theme="dark" rows={folkstyleRows.filter((row) => !isTocRow(row))} />
             </div>
           }
         />

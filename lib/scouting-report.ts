@@ -120,6 +120,11 @@ export type ScoutingReportResultRow = {
   date: string | null
   /** The weight actually wrestled, for the progression line. Null when the source omits it. */
   weight: string | null
+  /**
+   * Folkstyle, freestyle or Greco-Roman, from the full event name. Set explicitly because the short
+   * names ("Tar Heel State Classic") do not say, and the report files rows by it.
+   */
+  style?: "folkstyle" | "freestyle" | "greco"
 }
 
 export type ReportedWin = {
@@ -441,7 +446,7 @@ export function buildResultRows(bundle: {
   nhsca: Array<{ year: number; placement?: string; record?: string; weight?: string }>
   super32: Array<{ year: number; placement?: string; record?: string; weight?: string }>
   fargo: Array<{ year: number; placement?: string; record?: string; weight?: string; division?: string }>
-  other: Array<{ year: number; eventShortName: string; placement: number | null; record: string; weight: string; qualified: boolean; eventDate?: string | null }>
+  other: Array<{ year: number; eventName?: string; eventShortName: string; placement: number | null; record: string; weight: string; qualified: boolean; eventDate?: string | null }>
 }): ScoutingReportResultRow[] {
   const rows: Array<ScoutingReportResultRow & { when: string }> = []
   const when = (event: string, year: number) => eventSortKey(event, year, null)
@@ -449,7 +454,9 @@ export function buildResultRows(bundle: {
   for (const r of bundle.nchsaa ?? []) {
     const place = r.place && r.place > 0 ? (r.place === 1 ? "Champion" : ordinal(r.place)) : "Qualifier"
     // The state tournament publishes a year, not a day: `when` is a sort key, never a date.
-    rows.push({ event: "NCHSAA States", year: r.year, when: when("NCHSAA States", r.year), date: null, weight: String(r.weight_class ?? "") || null, detail: `${r.classification} · ${r.weight_class} · ${place}` })
+    // Named in full: "NCHSAA State Championships" is the folkstyle title, never to be confused with
+    // the NC Freestyle & Greco State Championships.
+    rows.push({ event: "NCHSAA State Championships", style: "folkstyle", year: r.year, when: when("NCHSAA States", r.year), date: null, weight: String(r.weight_class ?? "") || null, detail: `${r.classification} · ${r.weight_class} · ${place}` })
   }
   const national: Array<[string, typeof bundle.fargo]> = [
     ["NHSCA Nationals", bundle.nhsca ?? []],
@@ -471,15 +478,20 @@ export function buildResultRows(bundle: {
       const detail = [division, r.weight, placement, r.record ? `${r.record} record` : ""]
         .filter(Boolean)
         .join(" · ")
-      if (detail) rows.push({ event: label, year: r.year, when: when(label, r.year), date: null, weight: String(r.weight ?? "") || null, detail })
+      if (detail) rows.push({ event: label, style: styleOfEvent(label, division), year: r.year, when: when(label, r.year), date: null, weight: String(r.weight ?? "") || null, detail })
     }
   }
   for (const r of bundle.other ?? []) {
     const place = r.placement ? (r.placement === 1 ? "Champion" : ordinal(r.placement)) : "did not place"
-    const detail = [r.weight, place, r.record ? `${r.record} record` : "", r.qualified ? "Super 32 qualifier" : ""]
+    // The full name carries the division ("... - 16U Boys Freestyle"), which decides the style.
+    const style = styleOfEvent(r.eventName || r.eventShortName)
+    // A freestyle/Greco event's division says the style and age group: "16U Boys Freestyle".
+    const division = style === "folkstyle" ? "" : (String(r.eventName ?? "").split(" - ")[1] ?? "").trim()
+    const detail = [division, r.weight, place, r.record ? `${r.record} record` : "", r.qualified ? "Super 32 qualifier" : ""]
       .filter(Boolean)
       .join(" · ")
     rows.push({
+      style,
       event: r.eventShortName,
       year: r.year,
       weight: String(r.weight ?? "") || null,
