@@ -12,6 +12,7 @@ import type { NhscaNationalBout } from "@/lib/nhsca-national-bouts"
 import { displayName, placementLabel, type OtherTournamentProfileBlock } from "@/lib/other-tournaments"
 import { parseFargoDivisionString } from "@/lib/fargo-division"
 import type { NchsaaStateBout } from "@/lib/nchsaa-state-bouts"
+import type { NcUnitedDualsBout } from "@/lib/other-tournaments"
 
 export type AccordionSummaryResult = {
   year: number
@@ -270,7 +271,20 @@ export function buildTournamentRows(input: {
   super32Bouts?: NhscaNationalBout[]
   fargoResults?: AccordionSummaryResult[]
   nationalTeamResults?: NationalTeamEntry[]
+  /** NC United's NHSCA Duals bouts, hung under the matching team row (National or Select). */
+  ncUnitedDualsBouts?: NcUnitedDualsBout[]
 }): TournamentRow[] {
+  /*
+   * "NHSCA Duals" is the National team's row and "NHSCA Duals (Select)" the Select team's, as
+   * lib/national-team-live-profile-results.ts names them.
+   */
+  const ncUnitedBoutsFor = (event: string, year: number): TournamentRow["bouts"] => {
+    const team = /select/i.test(event) ? "select" : /nhsca duals/i.test(event) ? "national" : null
+    if (!team) return []
+    return (input.ncUnitedDualsBouts ?? [])
+      .filter((b) => b.team === team && b.year === year)
+      .map(({ team: _team, ...bout }) => bout)
+  }
   const rows = [
     ...rowsFromBlocks(input.otherTournamentBlocks ?? []),
     /*
@@ -313,21 +327,24 @@ export function buildTournamentRows(input: {
      */
     ...(input.nationalTeamResults ?? [])
       .filter((r) => !r.isPlaceholder)
-      .flatMap((r, i) => [
-        {
-          id: `national-team-${r.year}-${i}`,
-          event: r.event,
-          team: "NC United National Team",
-          isDuals: true,
-          year: r.year,
-          sortKey: `${r.year}-06-01`,
-          weight: null,
-          placement: null,
-          record: r.record || null,
-          entrants: null,
-          bouts: [],
-        } satisfies TournamentRow,
-      ]),
+      .flatMap((r, i) => {
+        const bouts = ncUnitedBoutsFor(r.event, r.year)
+        return [
+          {
+            id: `national-team-${r.year}-${i}`,
+            event: r.event,
+            team: /select/i.test(r.event) ? "NC United Select Team" : "NC United National Team",
+            isDuals: true,
+            year: r.year,
+            sortKey: `${r.year}-06-01`,
+            weight: bouts[0]?.weight || null,
+            placement: null,
+            record: r.record || null,
+            entrants: null,
+            bouts,
+          } satisfies TournamentRow,
+        ]
+      }),
   ]
   // Most recent first: the result a coach is asking about is almost always the last one.
   return rows.sort((a, b) => b.sortKey.localeCompare(a.sortKey) || b.year - a.year)

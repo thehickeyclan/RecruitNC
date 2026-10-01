@@ -520,6 +520,43 @@ export async function getQualifierSignificantWinBouts(
   return out
 }
 
+/** NC United's own NHSCA Duals bouts (scripts/import-nc-united-duals-2026.py). */
+export const NC_UNITED_DUALS_EVENT_KEY = "nhsca-duals-2026-nc-united"
+
+export type NcUnitedDualsBout = OtherTournamentBout & { team: "national" | "select" }
+
+/**
+ * An athlete's bouts for NC United at the 2026 NHSCA Duals. They carry no results row - the
+ * profile already lists the event as the NC United team record - so the tournament list hangs them
+ * under that row instead of adding another.
+ */
+export async function getNcUnitedDualsBouts(supabase: SupabaseClient, athleteId: string): Promise<NcUnitedDualsBout[]> {
+  if (!athleteId?.trim()) return []
+  const { data, error } = await supabase
+    .from("other_tournament_bouts")
+    .select("event_key, event_name, year, weight_class, round, bout_order, opponent_name, opponent_club, athlete_club, win, is_bye, win_type, score")
+    .eq("athlete_id", athleteId)
+    .eq("event_key", NC_UNITED_DUALS_EVENT_KEY)
+    .order("bout_order", { ascending: true })
+  if (error || !data) return []
+  return data.map((row) => ({
+    eventKey: String(row.event_key),
+    eventName: String(row.event_name),
+    year: Number(row.year),
+    weight: String(row.weight_class ?? ""),
+    round: String(row.round ?? ""),
+    boutOrder: Number(row.bout_order ?? 0),
+    opponentName: (row.opponent_name as string) ?? null,
+    opponentClub: (row.opponent_club as string) ?? null,
+    opponentAthleteId: null,
+    win: Boolean(row.win),
+    isBye: Boolean(row.is_bye),
+    winType: String(row.win_type ?? ""),
+    score: String(row.score ?? ""),
+    team: /select/i.test(String(row.athlete_club ?? "")) ? "select" : "national",
+  }))
+}
+
 /** One meeting between two wrestlers, dated so the most recent one can be weighed highest. */
 export type QualifierMeeting = {
   /** Epoch ms of the event date, or null when the event carried no date. */

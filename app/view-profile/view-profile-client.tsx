@@ -75,6 +75,7 @@ export function ViewProfileClient({
     super32Bouts: (Array.isArray(athlete.super32_bouts) ? athlete.super32_bouts : []) as never[],
     fargoResults: fargoResults as never[],
     nationalTeamResults: nationalTeamResults as never[],
+    ncUnitedDualsBouts: (Array.isArray(athlete.nc_united_duals_bouts) ? athlete.nc_united_duals_bouts : []) as never[],
   })
   const stateTournamentRows = buildNchsaaStateRows(nchsaaResults, nchsaaStateBouts)
   const athleteName = String(athlete.name ?? "Athlete")
