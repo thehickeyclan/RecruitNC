@@ -15,7 +15,15 @@ it is stored as the evidence the profile's matching rules read.
 Each run replaces its event key. Run the SQL in scripts/create-state-tournament-results.sql first.
 
   python3 scripts/import-national-event-placers.py ~/Downloads/2025DefenseSoapSuper32Challenge.csv \
-      --event super32-2025 --name "Super 32" --year 2025 [--dry-run]
+      --event super32-2025 --name "Super 32" --year 2025 --hs-weights nfhs --largest-bracket [--dry-run]
+
+No middle-school results: Super 32 and NHSCA run middle-school (and girls') brackets in the same
+export without labelling them. --hs-weights keeps only high-school weights ("nfhs" or "nhsca", or a
+comma list) - 100 and 112 are middle-school weights, never high school. --largest-bracket then keeps
+only the biggest bracket at each weight, the high-school one where Super 32 runs a middle-school
+bracket at a shared weight; brackets are told apart by who wrestled whom. NHSCA does not need it:
+its four grade divisions share each weight and are all high school, so it keeps the largest four
+(--largest-brackets 4), which drops the smaller girls' bracket sharing a boys' weight.
 
 A placer list (Muse's format: tournament, weight, place, wrestler_name, team) loads directly:
 
@@ -73,9 +81,34 @@ def request(method, path, body=None, prefer=None):
         sys.exit(f"{method} {path} failed: {e.code} {e.read().decode()}{hint}")
 
 
+HS_WEIGHTS = {
+    "nfhs": {"106", "113", "120", "126", "132", "138", "144", "150", "157", "165", "175", "190", "215", "285"},
+    "nhsca": {"106", "113", "120", "126", "132", "138", "145", "152", "160", "170", "182", "195", "220", "285"},
+}
+
+
+def brackets(rows):
+    """Wrestler -> bracket id per weight: connected groups of who wrestled whom."""
+    parent = {}
+
+    def find(x):
+        while parent.setdefault(x, x) != x:
+            parent[x] = parent[parent[x]]
+            x = parent[x]
+        return x
+
+    for r in rows:
+        a, b = (r["Weight"], r["Winning Wrestler"].strip()), (r["Weight"], r["Losing Wrestler"].strip())
+        if a[1] and b[1]:
+            parent[find(a)] = find(b)
+        elif a[1]:
+            find(a)
+    return find
+
+
 def main():
     files = [a for i, a in enumerate(sys.argv[1:], start=1)
-             if not a.startswith("--") and sys.argv[i - 1] not in ("--event", "--name", "--year")]
+             if not a.startswith("--") and sys.argv[i - 1] not in ("--event", "--name", "--year", "--hs-weights", "--largest-brackets")]
     event_key, name, year = arg("--event"), arg("--name"), arg("--year")
     if len(files) != 1 or not (event_key and name and year):
         sys.exit(__doc__)
@@ -118,6 +151,28 @@ def main():
                 "team": team,
                 "state": team if team and re.fullmatch(r"[A-Z]{2}", team) else None,
             })
+
+    hs = arg("--hs-weights")
+    if hs:
+        allowed = HS_WEIGHTS.get(hs) or {w.strip() for w in hs.split(",")}
+        before = len(placers)
+        placers = [p for p in placers if p["weight"] in allowed]
+        print(f"high-school weights only: dropped {before - len(placers)} middle-school/other placings")
+    keep = int(arg("--largest-brackets") or (1 if "--largest-bracket" in sys.argv else 0))
+    if keep and rows:
+        find = brackets(rows)
+        size = {}
+        for r in rows:
+            for who in (r["Winning Wrestler"].strip(), r["Losing Wrestler"].strip()):
+                if who:
+                    size.setdefault(find((r["Weight"], who)), set()).add(who)
+        by_weight = {}
+        for root, members in size.items():
+            by_weight.setdefault(root[0], []).append((len(members), root))
+        kept = {root for groups in by_weight.values() for _, root in sorted(groups, reverse=True)[:keep]}
+        before = len(placers)
+        placers = [p for p in placers if find((p["weight"], p["wrestler_name"])) in kept]
+        print(f"largest {keep} bracket(s) per weight only: dropped {before - len(placers)} placings from smaller brackets")
 
     by_place = {p: sum(1 for x in placers if x["place"] == p) for p in range(1, 9)}
     print(f"{name} {year}: {len(placers)} placers from {len(rows)} bouts; by place {by_place}")
