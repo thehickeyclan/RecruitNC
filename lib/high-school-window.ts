@@ -7,6 +7,9 @@
  * year without a date, so each event's month decides which side of the line it sits on - Super 32
  * in late October is freshman fall, so "Super 32 2023" is high school for the class of 2027, while
  * NCHSAA States in February 2023 would be his eighth-grade season.
+ *
+ * One exception, applied where state results are loaded: an NCISA state tournament result counts
+ * at any grade. Private schools wrestle eighth graders on varsity, and a state title is a state title.
  */
 
 /** When each event runs, for results that carry a year only. Same calendar as the scouting report. */

@@ -64,7 +64,9 @@ export async function loadAthleteTournamentBundle(
   const hs = (year: unknown, event: string, eventDate?: string | null) =>
     isHighSchoolEvent({ graduationYear: grad, year: Number(year), event, eventDate })
   return {
-    nchsaa: nchsaa.filter((r) => hs(r.year, "NCHSAA")),
+    // Except a high school state tournament itself: NCISA private schools wrestle eighth graders on
+    // varsity, and Josh Stonebraker's 2023 NCISA title is a state title (Matt, 1 October 2026).
+    nchsaa: nchsaa.filter((r) => r.classification === "NCISA" || hs(r.year, "NCHSAA")),
     nhsca: nhsca.filter((r) => hs(r.year, "NHSCA")),
     super32: super32.filter((r) => hs(r.year, "Super 32")),
     fargo: fargo.filter((r) => hs(r.year, "Fargo")),
