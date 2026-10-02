@@ -16,6 +16,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { collegeForCoach } from "@/lib/college-domain-schools"
+import { classifyViewer } from "@/lib/viewer-role"
 
 export type CoachViewSummary = {
   /** Distinct programs that have viewed, most recent first. */
@@ -55,36 +56,62 @@ export async function getCoachViewsForAthlete(
   const empty: CoachViewSummary = { schools: [], visits: [], totalViews: 0, distinctCoaches: 0, recentViews: 0 }
   if (!athleteId?.trim()) return empty
 
+  /*
+   * Who counts as a coach is decided on read, not from the event.
+   *
+   * `is_college_coach` is written into the payload when the view happens, from `profile_type` -
+   * a field nobody maintains, on which most college coaches were recorded as "fan". Filtering on
+   * it silently dropped real coach views: NC State opened Connor Reece's profile in February and
+   * the family panel showed two views instead of three, while the admin page - which classifies
+   * by current role - showed all three. Same event, two answers.
+   *
+   * So the athlete is filtered server-side and the coach test happens here, through the one
+   * classifier the admin pages use. History corrects itself as roles are fixed, with no backfill,
+   * and the two surfaces cannot disagree again.
+   */
   const { data, error } = await supabase
     .from("user_analytics")
     .select("user_id, created_at, event_data")
     .eq("event_type", "profile_view")
-    .contains("event_data", { athlete_id: athleteId, is_college_coach: true })
+    .contains("event_data", { athlete_id: athleteId })
     .order("created_at", { ascending: false })
-    .limit(500)
+    .limit(2000)
   if (error || !data?.length) return empty
 
-  const coachIds = [...new Set(data.map((row) => String(row.user_id)).filter(Boolean))]
+  /* Signed-out views carry a null user_id, and String(null) is "null" - a truthy string that
+     filter(Boolean) keeps and Postgres rejects as a uuid, failing the whole lookup. */
+  const viewerIds = [
+    ...new Set(data.map((row) => row.user_id).filter((id): id is string => typeof id === "string" && id.length > 0)),
+  ]
   const schoolByCoach = new Map<string, string | null>()
-  if (coachIds.length) {
-    const { data: coaches } = await supabase
+  const isCoach = new Set<string>()
+  if (viewerIds.length) {
+    const { data: viewers } = await supabase
       .from("user_profiles")
-      .select("user_id, email, institution")
-      .in("user_id", coachIds)
-    for (const coach of coaches ?? []) {
+      .select("user_id, email, institution, role, profile_type, verified_coach, is_admin")
+      .in("user_id", viewerIds)
+    for (const viewer of viewers ?? []) {
+      const id = String(viewer.user_id)
+      /* Admins are their own bucket in classifyViewer, so staff browsing never reads as interest. */
+      if (!classifyViewer(viewer as never).isCollegeCoach) continue
+      isCoach.add(id)
       schoolByCoach.set(
-        String(coach.user_id),
-        collegeForCoach({ institution: coach.institution as string, email: coach.email as string }),
+        id,
+        collegeForCoach({ institution: viewer.institution as string, email: viewer.email as string }),
       )
     }
   }
+
+  const coachRows = data.filter((row) => isCoach.has(String(row.user_id)))
+  if (!coachRows.length) return empty
+  const coachIds = [...new Set(coachRows.map((row) => String(row.user_id)))]
 
   const cutoff = Date.now() - RECENT_WINDOW_DAYS * 86_400_000
   const bySchool = new Map<string, { school: string; lastViewedAt: string; views: number }>()
   const visits: Array<{ school: string | null; at: string }> = []
   let recentViews = 0
 
-  for (const row of data) {
+  for (const row of coachRows) {
     const at = String(row.created_at)
     if (Date.parse(at) >= cutoff) recentViews += 1
     /* Every view, named or not. The query already returns newest first. */
@@ -108,7 +135,7 @@ export async function getCoachViewsForAthlete(
   return {
     schools: [...bySchool.values()].sort((a, b) => b.lastViewedAt.localeCompare(a.lastViewedAt)),
     visits,
-    totalViews: data.length,
+    totalViews: coachRows.length,
     distinctCoaches: coachIds.length,
     recentViews,
   }
