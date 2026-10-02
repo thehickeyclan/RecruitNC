@@ -15,7 +15,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { AdminHeader } from "@/components/admin-header"
 import { HardLink } from "@/components/hard-link"
-import { Loader2, ArrowLeft, Send, Inbox, FolderOpen, Trash2, Eye, Mail, Users, ChevronDown, ChevronUp } from "lucide-react"
+import { Loader2, ArrowLeft, Send, Inbox, FolderOpen, Trash2, Eye, Mail, Users, ChevronDown, ChevronUp, Copy, Check, X } from "lucide-react"
+import type { CollegeProgramOption } from "@/app/api/admin/messaging/college-programs/route"
 import { cn } from "@/lib/utils"
 import { RichTextEditor } from "@/components/rich-text-editor"
 import type { ProfileOption, AudienceGroupOption } from "@/app/api/admin/messaging/audiences/route"
@@ -55,6 +56,57 @@ export default function AdminMessagingPage() {
   const [bodyHtml, setBodyHtml] = useState("")
   const [showRecipients, setShowRecipients] = useState(false)
 
+  /*
+   * College coach filters (Matt: send by program, by division, to all on BCC). They ride in the
+   * group id - "toc-college-coaches?division=...&programs=A|B" - so the preview, test and send
+   * routes need no new parameters.
+   */
+  const [coachDivisions, setCoachDivisions] = useState<string[]>([])
+  const [coachStates, setCoachStates] = useState<string[]>([])
+  const [coachRole, setCoachRole] = useState<"all" | "head" | "assistant">("all")
+  const [coachPrograms, setCoachPrograms] = useState<string[]>([])
+  const [programSearch, setProgramSearch] = useState("")
+  const [programOptions, setProgramOptions] = useState<{ programs: CollegeProgramOption[]; divisions: string[]; states: string[] }>({
+    programs: [],
+    divisions: [],
+    states: [],
+  })
+  const [deliveryMode, setDeliveryMode] = useState<"individual" | "bcc">("individual")
+  const [copiedBcc, setCopiedBcc] = useState(false)
+  const isCoachList = group === "toc-college-coaches"
+  const effectiveGroup = (() => {
+    if (!isCoachList) return group
+    const q = new URLSearchParams()
+    if (coachDivisions.length) q.set("division", coachDivisions.join(","))
+    if (coachStates.length) q.set("state", coachStates.join(","))
+    if (coachRole !== "all") q.set("role", coachRole)
+    if (coachPrograms.length) q.set("programs", coachPrograms.join("|"))
+    const qs = q.toString()
+    return qs ? `toc-college-coaches?${qs}` : "toc-college-coaches"
+  })()
+
+  useEffect(() => {
+    if (!isCoachList || programOptions.programs.length) return
+    fetch("/api/admin/messaging/college-programs", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => setProgramOptions({ programs: data.programs ?? [], divisions: data.divisions ?? [], states: data.states ?? [] }))
+      .catch(() => undefined)
+  }, [isCoachList, programOptions.programs.length])
+
+  /** Every matching address, comma-separated, for pasting into the BCC line of a mail client. */
+  const copyBccList = async () => {
+    const params = new URLSearchParams()
+    if (profile && profile !== "all") params.set("profile", profile)
+    if (effectiveGroup && effectiveGroup !== "all") params.set("group", effectiveGroup)
+    if (excludeCollegeCoaches && profile === "all") params.set("excludeCollegeCoaches", "true")
+    params.set("limit", "5000")
+    const data = await fetch(`/api/admin/messaging/recipients?${params}`, { credentials: "include" }).then((r) => r.json())
+    const emails = [...new Set(((data.recipients ?? []) as RecipientRow[]).map((x) => x.email?.trim()).filter(Boolean))]
+    await navigator.clipboard.writeText(emails.join(", "))
+    setCopiedBcc(true)
+    setTimeout(() => setCopiedBcc(false), 2500)
+  }
+
   const [activeTab, setActiveTab] = useState<"compose" | "sent" | "folders">("compose")
   const [sent, setSent] = useState<SentBlastRow[]>([])
   const [sentHasMore, setSentHasMore] = useState(false)
@@ -81,7 +133,7 @@ export default function AdminMessagingPage() {
     setError(null)
     const params = new URLSearchParams()
     if (profile && profile !== "all") params.set("profile", profile)
-    if (group && group !== "all") params.set("group", group)
+    if (effectiveGroup && effectiveGroup !== "all") params.set("group", effectiveGroup)
     if (excludeCollegeCoaches && profile === "all") params.set("excludeCollegeCoaches", "true")
     params.set("limit", "500")
     fetch(`/api/admin/messaging/recipients?${params}`, { credentials: "include" })
@@ -103,7 +155,7 @@ export default function AdminMessagingPage() {
     if (!loadingAudiences) {
       loadRecipients()
     }
-  }, [loadingAudiences, profile, group, excludeCollegeCoaches])
+  }, [loadingAudiences, profile, effectiveGroup, excludeCollegeCoaches])
 
   const loadSent = (before?: string) => {
     setSentLoading(true)
@@ -383,6 +435,117 @@ export default function AdminMessagingPage() {
                 </div>
               </div>
 
+              {count ? (
+                <button
+                  type="button"
+                  onClick={() => void copyBccList()}
+                  className="mt-3 mr-2 inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white/80 hover:bg-white/10"
+                >
+                  {copiedBcc ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
+                  {copiedBcc ? "Copied — paste into BCC" : "Copy all emails for BCC"}
+                </button>
+              ) : null}
+
+              {isCoachList ? (
+                <div className="mt-3 space-y-3 rounded-lg border border-[#C8A94A]/30 bg-[#C8A94A]/5 p-3">
+                  <div className="text-xs font-semibold uppercase tracking-wider text-[#C8A94A]">College coaches — narrow the list</div>
+                  {programOptions.divisions.length ? (
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="mr-1 text-xs text-white/50">Division</span>
+                      {programOptions.divisions.map((d) => (
+                        <button
+                          key={d}
+                          type="button"
+                          onClick={() => setCoachDivisions((cur) => (cur.includes(d) ? cur.filter((x) => x !== d) : [...cur, d]))}
+                          className={cn(
+                            "rounded-full border px-2.5 py-1 text-xs",
+                            coachDivisions.includes(d) ? "border-[#C8A94A] bg-[#C8A94A] text-[#0A1628]" : "border-white/20 text-white/70 hover:bg-white/10",
+                          )}
+                        >
+                          {d.replace("NCAA Division ", "D-")}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-white/40">Division filters appear once the division column is added (scripts/toc-college-coaches.sql).</p>
+                  )}
+                  <div className="flex flex-wrap items-center gap-3">
+                    <label className="flex items-center gap-2 text-xs text-white/50">
+                      Coaches
+                      <select
+                        value={coachRole}
+                        onChange={(e) => setCoachRole(e.target.value as "all" | "head" | "assistant")}
+                        className="rounded border border-white/20 bg-[#0A1628] px-2 py-1 text-xs text-white"
+                      >
+                        <option value="all">All coaches</option>
+                        <option value="head">Head coaches only</option>
+                        <option value="assistant">Assistants only</option>
+                      </select>
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-white/50">
+                      State
+                      <select
+                        value=""
+                        onChange={(e) => e.target.value && setCoachStates((cur) => (cur.includes(e.target.value) ? cur : [...cur, e.target.value]))}
+                        className="rounded border border-white/20 bg-[#0A1628] px-2 py-1 text-xs text-white"
+                      >
+                        <option value="">Add a state…</option>
+                        {programOptions.states.map((st) => (
+                          <option key={st} value={st}>{st}</option>
+                        ))}
+                      </select>
+                    </label>
+                    {coachStates.map((st) => (
+                      <button key={st} type="button" onClick={() => setCoachStates((cur) => cur.filter((x) => x !== st))} className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-xs text-white">
+                        {st} <X className="h-3 w-3" />
+                      </button>
+                    ))}
+                  </div>
+                  <div>
+                    <Input
+                      value={programSearch}
+                      onChange={(e) => setProgramSearch(e.target.value)}
+                      placeholder="Search programs to send to specific schools…"
+                      className="h-8 bg-white/5 border-white/20 text-sm text-white placeholder:text-white/40"
+                    />
+                    {programSearch.trim().length >= 2 ? (
+                      <div className="mt-1 max-h-44 overflow-y-auto rounded border border-white/10 bg-[#0A1628]">
+                        {programOptions.programs
+                          .filter((p) => p.program.toLowerCase().includes(programSearch.trim().toLowerCase()))
+                          .slice(0, 40)
+                          .map((p) => (
+                            <label key={p.program} className="flex cursor-pointer items-center gap-2 px-2 py-1.5 text-sm text-white/80 hover:bg-white/5">
+                              <Checkbox
+                                checked={coachPrograms.includes(p.program)}
+                                onCheckedChange={(c) =>
+                                  setCoachPrograms((cur) => (c ? [...cur, p.program] : cur.filter((x) => x !== p.program)))
+                                }
+                                className="border-white/30 data-[state=checked]:bg-[#C8A94A] data-[state=checked]:border-[#C8A94A]"
+                              />
+                              <span className="flex-1">{p.program}</span>
+                              <span className="text-xs text-white/40">
+                                {[p.division?.replace("NCAA Division ", "D-"), p.state, `${p.coaches} coach${p.coaches === 1 ? "" : "es"}`].filter(Boolean).join(" · ")}
+                              </span>
+                            </label>
+                          ))}
+                      </div>
+                    ) : null}
+                    {coachPrograms.length ? (
+                      <div className="mt-2 flex flex-wrap gap-1.5">
+                        {coachPrograms.map((p) => (
+                          <button key={p} type="button" onClick={() => setCoachPrograms((cur) => cur.filter((x) => x !== p))} className="inline-flex items-center gap-1 rounded-full bg-[#C8A94A]/20 px-2 py-0.5 text-xs text-[#E9D6A6]">
+                            {p} <X className="h-3 w-3" />
+                          </button>
+                        ))}
+                        <button type="button" onClick={() => setCoachPrograms([])} className="text-xs text-white/50 underline">
+                          Clear programs
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
+
               {profile === "all" && (
                 <label className="mt-3 inline-flex items-center gap-2 cursor-pointer rounded-lg border border-white/10 bg-white/5 px-3 py-2">
                   <Checkbox
@@ -436,7 +599,7 @@ export default function AdminMessagingPage() {
                           credentials: "include",
                           body: JSON.stringify({
                             profile: profile === "all" ? undefined : profile,
-                            group: group === "all" ? undefined : group,
+                            group: effectiveGroup === "all" ? undefined : effectiveGroup,
                             subject: subject || "Update from RecruitNC",
                             body: body.trim(),
                             bodyHtml: bodyHtml.trim() || undefined,
@@ -548,6 +711,20 @@ export default function AdminMessagingPage() {
                   </div>
                 </div>
 
+                {channels.email ? (
+                  <div className="flex flex-wrap items-center gap-4 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm">
+                    <span className="text-white/50">Email delivery</span>
+                    <label className="flex cursor-pointer items-center gap-2 text-white/80">
+                      <input type="radio" checked={deliveryMode === "individual"} onChange={() => setDeliveryMode("individual")} />
+                      One email each <span className="text-xs text-white/40">(recommended — personal unsubscribe link)</span>
+                    </label>
+                    <label className="flex cursor-pointer items-center gap-2 text-white/80">
+                      <input type="radio" checked={deliveryMode === "bcc"} onChange={() => setDeliveryMode("bcc")} />
+                      Everyone on BCC <span className="text-xs text-white/40">(groups of 49; replies go to your inbox)</span>
+                    </label>
+                  </div>
+                ) : null}
+
                 {/* Error */}
                 {error && (
                   <p className="text-sm text-red-400 bg-red-500/10 px-3 py-2 rounded-lg">{error}</p>
@@ -620,12 +797,13 @@ export default function AdminMessagingPage() {
                           credentials: "include",
                           body: JSON.stringify({
                             profile: profile === "all" ? undefined : profile,
-                            group: group === "all" ? undefined : group,
+                            group: effectiveGroup === "all" ? undefined : effectiveGroup,
                             subject: subject || "Update from RecruitNC",
                             body: body.trim(),
                             bodyHtml: bodyHtml.trim() || undefined,
                             emailSender,
                             excludeCollegeCoaches: excludeCollegeCoaches && profile === "all",
+                            deliveryMode,
                             channels,
                           }),
                         })

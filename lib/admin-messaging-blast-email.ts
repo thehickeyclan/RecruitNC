@@ -213,3 +213,91 @@ export async function sendAdminBlastEmails(
     sampleError: result.sampleError,
   }
 }
+
+/** Resend counts to + cc + bcc together, 50 at most per email; one slot goes to the To line. */
+const BCC_PER_EMAIL = 49
+
+/** "NC United <info@x.com>" -> "info@x.com". */
+function addressOf(from: string): string {
+  return from.match(/<([^>]+)>/)?.[1]?.trim() ?? from.trim()
+}
+
+/**
+ * One message with everyone blind-copied (Matt: "to all on bcc"), sent in groups of 49 because
+ * that is Resend's ceiling per email. The To line is our own sending address, so no recipient
+ * sees another's.
+ *
+ * What it costs, and why individual sends stay the default: a shared message cannot carry a
+ * per-recipient one-click unsubscribe link, so the footer asks for a reply instead - and the
+ * suppression list still applies, so anyone already unsubscribed is left out.
+ */
+export async function sendAdminBccEmails(
+  recipients: AdminMessagingRecipientRow[],
+  opts: { subject: string; htmlBody: string; sender: AdminBlastSender; replyTo?: string },
+): Promise<BlastEmailSendResult> {
+  const withEmail = recipients.filter((r) => r.email?.trim())
+  const skippedNoEmail = recipients.length - withEmail.length
+  if (!withEmail.length) return { sent: 0, failed: 0, skippedNoEmail, skippedUnsubscribed: 0 }
+  if (!process.env.RESEND_API_KEY) {
+    return { sent: 0, failed: withEmail.length, skippedNoEmail, skippedUnsubscribed: 0, sampleError: "RESEND_API_KEY not configured" }
+  }
+
+  const admin = createAdminClient()
+  const { allowed, suppressed } = await filterUnsubscribed(admin, withEmail.map((r) => r.email!.trim()))
+  const emails = [...new Set(allowed.map((e) => e.trim().toLowerCase()))]
+  if (!emails.length) return { sent: 0, failed: 0, skippedNoEmail, skippedUnsubscribed: suppressed.length }
+
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://app.ncwrestlingunited.com").replace(/\/$/, "")
+  const footer =
+    '<p style="margin:24px 0 0;font-size:12px;color:#6b7280;line-height:1.5">' +
+    "You are receiving this as a college wrestling coach. To stop receiving these emails, reply with “unsubscribe”." +
+    "</p>"
+  const html = buildAdminBlastEmailHtml(opts.subject, opts.htmlBody + footer, baseUrl, opts.sender.logoVariant, opts.sender.footer)
+  const to = addressOf(opts.sender.from)
+
+  const { Resend } = await import("resend")
+  const resend = new Resend(process.env.RESEND_API_KEY)
+  let sent = 0
+  let failed = 0
+  let sampleError: string | undefined
+  const parts = chunk(emails, BCC_PER_EMAIL)
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i]!
+    let done = false
+    for (let attempt = 1; attempt <= 3 && !done; attempt++) {
+      try {
+        const result = await resend.emails.send({
+          from: opts.sender.from,
+          to: [to],
+          bcc: part,
+          subject: opts.subject.trim() || "Update from RecruitNC",
+          html,
+          ...(opts.replyTo ? { reply_to: opts.replyTo } : {}),
+        })
+        if (result.error) {
+          const msg = result.error.message ?? String(result.error)
+          sampleError ??= msg
+          if (/rate|429|too many/i.test(msg) && attempt < 3) {
+            await sleep(2000 * attempt)
+            continue
+          }
+          failed += part.length
+        } else {
+          sent += part.length
+        }
+        done = true
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : "send failed"
+        sampleError ??= msg
+        if (/rate|429|too many/i.test(msg) && attempt < 3) {
+          await sleep(2000 * attempt)
+          continue
+        }
+        failed += part.length
+        done = true
+      }
+    }
+    if (i < parts.length - 1) await sleep(600)
+  }
+  return { sent, failed, skippedNoEmail, skippedUnsubscribed: suppressed.length, sampleError }
+}

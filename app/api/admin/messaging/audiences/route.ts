@@ -60,7 +60,8 @@ export async function GET() {
   groups.push({
     id: "toc-college-coaches",
     type: "contacts",
-    name: "TOC · College Coaches",
+    // Choosing this opens the division / state / head-coach / program filters on the page.
+    name: "College Coaches · all (filter by division, state, program)",
   })
   groups.push({ id: "toc-college-coaches:NC-SC-TN-VA", type: "contacts", name: "TOC · College Coaches · NC/SC/TN/VA" })
 

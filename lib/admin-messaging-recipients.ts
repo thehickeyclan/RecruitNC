@@ -45,6 +45,80 @@ async function fetchAuthEmailsByUserId(admin: SupabaseClient, userIds: string[])
 /** Addresses added to every TOC family send, so the owner can see what actually went out. */
 const TOC_FAMILY_SEND_WATCHERS = ["thehickeyclan@gmail.com", "lisa.hickey@yahoo.com"] as const
 
+/**
+ * The college coach list, filtered. The group id carries the filters so every caller that already
+ * passes a group (recipients preview, send, test) works unchanged:
+ *
+ *   toc-college-coaches                      everyone
+ *   toc-college-coaches:NC  / :NC-SC-TN-VA   by state (the original TOC groups)
+ *   toc-college-coaches?division=NCAA Division I&state=NC,VA&role=head&programs=Duke University|Campbell University
+ */
+export function parseCollegeCoachFilter(groupFilter: string): {
+  states: string[]
+  divisions: string[]
+  programs: string[]
+  role: "head" | "assistant" | null
+} {
+  const out = { states: [] as string[], divisions: [] as string[], programs: [] as string[], role: null as "head" | "assistant" | null }
+  if (groupFilter.startsWith("toc-college-coaches:")) {
+    const v = groupFilter.split(":")[1] ?? ""
+    out.states = v === "NC-SC-TN-VA" ? ["NC", "SC", "TN", "VA"] : v ? [v] : []
+    return out
+  }
+  const q = groupFilter.split("?")[1]
+  if (!q) return out
+  const params = new URLSearchParams(q)
+  out.states = (params.get("state") ?? "").split(",").map((x) => x.trim()).filter(Boolean)
+  out.divisions = (params.get("division") ?? "").split(",").map((x) => x.trim()).filter(Boolean)
+  out.programs = (params.get("programs") ?? "").split("|").map((x) => x.trim()).filter(Boolean)
+  const role = params.get("role")
+  out.role = role === "head" || role === "assistant" ? role : null
+  return out
+}
+
+/** "Head Coach", "Head Wrestling Coach" - but not "Assistant to the Head Coach". */
+export function isHeadCoachTitle(title: string | null | undefined): boolean {
+  const t = (title ?? "").toLowerCase()
+  return /\bhead\b/.test(t) && !/\b(assistant|associate|asst)\b/.test(t)
+}
+
+async function collegeCoachRecipients(admin: SupabaseClient, groupFilter: string, limit: number): Promise<AdminMessagingRecipientRow[]> {
+  const f = parseCollegeCoachFilter(groupFilter)
+  const build = (columns: string) => {
+    let query = admin
+      .from("toc_college_coaches")
+      .select(columns)
+      .eq("opted_out", false)
+      .neq("status", "declined")
+      .order("college_program")
+      .limit(limit)
+    if (f.states.length) query = query.in("state", f.states)
+    if (f.programs.length) query = query.in("college_program", f.programs)
+    if (f.divisions.length) query = query.in("division", f.divisions)
+    return query
+  }
+  // Division and title arrive with scripts/toc-college-coaches.sql; until it has run, a select
+  // naming them fails whole, so fall back to the old columns (and ignore those two filters).
+  let { data, error } = await build("id, coach_name, email, mobile_phone, college_program, division, title")
+  if (error && !f.divisions.length && !f.role) {
+    ;({ data, error } = await build("id, coach_name, email, mobile_phone, college_program"))
+  }
+  if (error) {
+    console.error("[admin-messaging-recipients] college coaches:", error.message)
+    return []
+  }
+  type Row = { id: string; coach_name: string | null; email: string | null; mobile_phone: string | null; title?: string | null }
+  let rows = (data ?? []) as unknown as Row[]
+  if (f.role === "head") rows = rows.filter((r) => isHeadCoachTitle(r.title))
+  if (f.role === "assistant") rows = rows.filter((r) => r.title && !isHeadCoachTitle(r.title))
+  return rows.map((row) => ({
+    user_id: `toc-college-coach:${row.id}`,
+    email: row.email?.trim() || null,
+    display_name: row.coach_name ?? null,
+    cell_phone: row.mobile_phone ?? null,
+  }))
+}
+
 export async function getAdminMessagingRecipients(
   admin: SupabaseClient,
   profileFilter: string | null,
@@ -53,21 +127,7 @@ export async function getAdminMessagingRecipients(
   excludeCollegeCoaches = false,
 ): Promise<AdminMessagingRecipientRow[]> {
   if (groupFilter?.startsWith("toc-college-coaches")) {
-    const stateFilter = groupFilter.includes(":") ? groupFilter.split(":")[1] : null
-    let query = admin.from("toc_college_coaches").select("id, coach_name, email, mobile_phone").eq("opted_out", false).neq("status", "declined").order("college_program").limit(limit)
-    if (stateFilter === "NC-SC-TN-VA") query = query.in("state", ["NC", "SC", "TN", "VA"])
-    else if (stateFilter) query = query.eq("state", stateFilter)
-    const { data, error } = await query
-    if (error) {
-      console.error("[admin-messaging-recipients] college coaches:", error.message)
-      return []
-    }
-    return (data ?? []).map((row) => ({
-      user_id: `toc-college-coach:${row.id}`,
-      email: row.email?.trim() || null,
-      display_name: row.coach_name ?? null,
-      cell_phone: row.mobile_phone ?? null,
-    }))
+    return collegeCoachRecipients(admin, groupFilter, limit)
   }
 
   /**

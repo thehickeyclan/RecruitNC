@@ -24,3 +24,9 @@ alter table public.toc_college_coaches enable row level security;
 drop policy if exists "Service role full toc_college_coaches" on public.toc_college_coaches;
 create policy "Service role full toc_college_coaches"
   on public.toc_college_coaches for all to service_role using (true) with check (true);
+
+-- 2 Oct 2026: division and title, so a send can target D-I head coaches, one program, etc.
+alter table public.toc_college_coaches add column if not exists division text;
+alter table public.toc_college_coaches add column if not exists title text;
+create index if not exists toc_college_coaches_division on public.toc_college_coaches (division);
+create index if not exists toc_college_coaches_program on public.toc_college_coaches (college_program);

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { markdownToHtml, toPlainText } from "@/lib/blast-format"
-import { sendAdminBlastEmails } from "@/lib/admin-messaging-blast-email"
+import { sendAdminBccEmails, sendAdminBlastEmails } from "@/lib/admin-messaging-blast-email"
 import { resolveAdminBlastSender } from "@/lib/admin-blast-senders"
 import { getAdminMessagingRecipients } from "@/lib/admin-messaging-recipients"
 import { sendSms, toE164 } from "@/lib/sms"
@@ -58,6 +58,8 @@ export async function POST(request: NextRequest) {
     logoVariant?: string
     emailSender?: string
     excludeCollegeCoaches?: boolean
+    /** "bcc": one message per 49 recipients, everyone blind-copied. Default: one email each. */
+    deliveryMode?: "individual" | "bcc"
     channels?: { inApp?: boolean; email?: boolean; sms?: boolean }
   } = {}
   try {
@@ -74,6 +76,7 @@ export async function POST(request: NextRequest) {
   const testEmail = typeof body.testEmail === "string" ? body.testEmail.trim() || null : null
   const testOnly = body.testOnly === true
   const excludeCollegeCoaches = body.excludeCollegeCoaches === true
+  const deliveryMode = body.deliveryMode === "bcc" ? "bcc" : "individual"
   const sender = resolveAdminBlastSender({
     emailSender: body.emailSender,
     logoVariant: body.logoVariant,
@@ -200,7 +203,7 @@ export async function POST(request: NextRequest) {
   let emailSkippedNoAddress = 0
   let emailSampleError: string | undefined
   if (channels.email) {
-    const emailResult = await sendAdminBlastEmails(recipients, {
+    const emailResult = await (deliveryMode === "bcc" && !testOnly ? sendAdminBccEmails : sendAdminBlastEmails)(recipients, {
       subject,
       htmlBody,
       sender,
