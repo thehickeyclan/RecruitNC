@@ -22,10 +22,14 @@ type CoachRow = {
   email: string
   verified: boolean
   reviewed: boolean
+  /** When the account was created - what makes "signed up today" answerable. */
+  signedUpAt: string | null
   lastLoginAt: string | null
   lastActiveAt: string | null
   profileViews: number
   uniqueAthletes: number
+  /** Scouting reports this coach has opened. The number the outreach is really waiting on. */
+  reports: number
   visits: Visit[]
 }
 type ProgramRow = {
@@ -49,7 +53,7 @@ export async function GET(request: NextRequest) {
 
   const { data: profiles, error: profileError } = await admin
     .from("user_profiles")
-    .select("user_id, full_name, email, institution, verified_coach, verification_status, schools:school_id (name)")
+    .select("user_id, full_name, email, institution, verified_coach, verification_status, created_at, schools:school_id (name)")
     .in("role", ["college_coach", "college-coach"])
   if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 })
 
@@ -60,6 +64,7 @@ export async function GET(request: NextRequest) {
     institution: string | null
     verified_coach: boolean | null
     verification_status: string | null
+    created_at: string | null
     schools: { name: string | null } | { name: string | null }[] | null
   }>
   const coachIds = coaches.map((c) => c.user_id)
@@ -121,6 +126,19 @@ export async function GET(request: NextRequest) {
     for (const a of data ?? []) athletes.set(String(a.id), a as never)
   }
 
+  /* Reports opened, per coach. Counted here because it is the step after a profile view and the
+     one the college outreach is actually waiting on. */
+  const reportsByCoach = new Map<string, number>()
+  if (coachIds.length) {
+    let q = admin.from("scouting_report_access").select("viewer_user_id, created_at").in("viewer_user_id", coachIds)
+    if (since) q = q.gte("created_at", since)
+    const { data: reportRows } = await q
+    for (const r of reportRows ?? []) {
+      const id = String((r as { viewer_user_id: string }).viewer_user_id)
+      reportsByCoach.set(id, (reportsByCoach.get(id) ?? 0) + 1)
+    }
+  }
+
   const coachRows: CoachRow[] = coaches.map((c) => {
     const mine = events.filter((e) => e.user_id === c.user_id)
     const visitsById = new Map<string, Visit>()
@@ -149,10 +167,12 @@ export async function GET(request: NextRequest) {
       email: c.email ?? "",
       verified: c.verified_coach === true,
       reviewed: status === "approved",
+      signedUpAt: c.created_at ?? null,
       lastLoginAt: lastSignIn.get(c.user_id) ?? null,
       lastActiveAt: mine[0]?.created_at ?? null,
       profileViews: visits.reduce((n, v) => n + v.views, 0),
       uniqueAthletes: visits.length,
+      reports: reportsByCoach.get(c.user_id) ?? 0,
       visits,
     }
   })

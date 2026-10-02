@@ -10,6 +10,7 @@ import Link from "next/link"
 import { Loader2, Eye, Users, TrendingUp, User, RefreshCw, Calendar } from "lucide-react"
 import { ProfileViewersDialog } from "@/components/admin/profile-viewers-dialog"
 import { CollegeProgramLeaderboard } from "@/components/admin/college-program-leaderboard"
+import { NewCoachSignups } from "@/components/admin/new-coach-signups"
 import { ScoutingReportActivity } from "@/components/admin/scouting-report-activity"
 
 const RANGE_OPTIONS = [
@@ -267,6 +268,10 @@ export default function CardAnalyticsPage() {
       </div>
 
       {/* Which college programs are using RecruitNC, and on whom. */}
+      {/* Newest first: who arrived during a send and what they did. Above the leaderboard,
+          which answers the slower question of which programmes use the site most. */}
+      <NewCoachSignups range={range} />
+
       <CollegeProgramLeaderboard range={range} />
 
       {/* Who is pulling scouting reports, and who keeps them. */}
