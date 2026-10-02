@@ -1,6 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server"
 
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
+import { classifyViewer } from "@/lib/viewer-role"
+import { canAccessScoutingReport } from "@/lib/scouting-report-release"
+import { scoutingReportAvailable } from "@/lib/scouting-report-access"
 
 /**
  * The athlete directory for the app: search, plus the filters a coach actually sorts by.
@@ -11,6 +15,12 @@ import { createAdminClient } from "@/lib/supabase/admin"
  * our athletes is now linked, so a filter returns the full set rather than a sample of it.
  *
  * Public: the website's directory is public too, and these are the same profiles.
+ *
+ * One viewer-level field is not public: `scoutingReports` says whether this account may open a
+ * report at all. It is answered once for the list rather than per wrestler, because the app would
+ * otherwise fire a request for every row a coach scrolls past. Each athlete then carries
+ * `scoutingReport`, the same availability test the report route runs, so a button never appears
+ * for a wrestler the endpoint would refuse.
  */
 
 export const dynamic = "force-dynamic"
@@ -121,7 +131,25 @@ export async function GET(request: NextRequest) {
   const { data, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
+  /* Decided on the server: the allowlist and the role rules must never ship in a bundle. */
+  const user = await getUserFromRequest(request)
+  let canSeeReports = false
+  if (user) {
+    const { data: profile } = await db
+      .from("user_profiles")
+      .select("role, profile_type, verified_coach, is_admin, email")
+      .eq("user_id", user.id)
+      .maybeSingle()
+    const viewer = classifyViewer(profile ?? null)
+    canSeeReports = canAccessScoutingReport({
+      email: (profile?.email as string) ?? user.email,
+      isCollegeCoach: viewer.isCollegeCoach,
+      isAdmin: viewer.kind === "admin" || profile?.is_admin === true,
+    })
+  }
+
   return NextResponse.json({
+    scoutingReports: canSeeReports,
     athletes: (data ?? []).map((a) => ({
       id: String(a.id),
       name: String(a.name ?? ""),
@@ -131,6 +159,7 @@ export async function GET(request: NextRequest) {
       weightClass: a.weightclass == null ? null : String(a.weightclass),
       photoUrl: (a.photourl as string) || null,
       claimed: Boolean(a.claimed_by_user_id),
+      scoutingReport: canSeeReports && scoutingReportAvailable(a as { gender?: unknown; graduationyear?: unknown }),
     })),
     total: data?.length ?? 0,
   })

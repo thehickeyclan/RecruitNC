@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, Trophy, FileSearch, LayoutGrid, List, ArrowLeft, GraduationCap, UserPlus } from "lucide-react"
+import { Search, Trophy, FileSearch, FileText, LayoutGrid, List, ArrowLeft, GraduationCap, UserPlus } from "lucide-react"
 import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
 import { normalizeAthleteList } from "@/lib/professional-athlete"
 import { AthletesLegacySearchContent } from "@/components/athletes-legacy-search-content"
@@ -70,7 +70,14 @@ export function AthletesCommitmentsClient({
   const [selectedDivision, setSelectedDivision] = useState<string>(initialFilters.division ?? "all")
   const [stats, setStats] = useState<CommitmentStats>(initialStats)
   const [statsLoading, setStatsLoading] = useState(false)
-  const [commitViewMode, setCommitViewMode] = useState<CommitViewMode>("cards")
+  /*
+   * The table is the default, for everyone.
+   *
+   * Cards show one wrestler at a time and look best; the table shows forty and answers the
+   * question people arrive with - who is in this class, where did they go, what did they do.
+   * Cards are still a tap away.
+   */
+  const [commitViewMode, setCommitViewMode] = useState<CommitViewMode>("table")
 
   useEffect(() => {
     const key = commitmentFiltersKey({
@@ -467,16 +474,21 @@ export function AthletesCommitmentsClient({
                         {canSeeScoutingReports ? (
                           <td className="p-3 text-center">
                             {scoutingReportAvailable(athlete as { gender?: unknown; graduationyear?: unknown }) ? (
-                              <HardLink
-                                href={`/athletes/${encodeURIComponent(athlete.id)}/scouting-report`}
-                                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[#D3B574] transition-colors hover:bg-[#D3B574]/15"
-                              >
-                                <FileSearch className="h-4 w-4" />
-                                {/* An icon alone is unreadable to a screen reader, and HardLink takes no aria props. */}
-                                <span className="sr-only">Scouting report for {athlete.name}</span>
-                              </HardLink>
+                              /* The tooltip sits on the wrapper: HardLink takes no title or aria props. */
+                              <span title="Scouting report" className="inline-flex">
+                                <HardLink
+                                  href={`/athletes/${encodeURIComponent(athlete.id)}/scouting-report`}
+                                  className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[#D3B574] transition-colors hover:bg-[#D3B574]/15"
+                                >
+                                  <FileText className="h-4 w-4" />
+                                  {/* An icon alone is unreadable to a screen reader. */}
+                                  <span className="sr-only">Scouting report for {athlete.name}</span>
+                                </HardLink>
+                              </span>
                             ) : (
-                              <span className="text-white/20">—</span>
+                              <span className="text-white/20" title="No scouting report for this athlete">
+                                —
+                              </span>
                             )}
                           </td>
                         ) : null}
@@ -488,7 +500,26 @@ export function AthletesCommitmentsClient({
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {normalizeAthleteList(filteredAthletes).map((athlete) => (
-                  <ProfessionalCommitmentCard key={athlete.id} athlete={athlete} listMode />
+                  <div key={athlete.id} className="flex flex-col gap-2">
+                    <ProfessionalCommitmentCard athlete={athlete} listMode />
+                    {/*
+                      * The report link belongs on the cards too, because cards are the default
+                      * view - a column in the table only reaches a coach who thought to switch.
+                      * Outside the card rather than inside it: the card is a flip card used on
+                      * five other pages, and a link in its face would turn every click into a
+                      * guess about whether the card flips or navigates.
+                      */}
+                    {canSeeScoutingReports &&
+                    scoutingReportAvailable(athlete as { gender?: unknown; graduationyear?: unknown }) ? (
+                      <HardLink
+                        href={`/athletes/${encodeURIComponent(athlete.id)}/scouting-report`}
+                        className="inline-flex min-h-[36px] items-center justify-center gap-2 rounded-lg border border-[#D3B574]/40 bg-[#D3B574]/10 px-3 text-xs font-semibold uppercase tracking-wider text-[#D3B574] transition-colors hover:bg-[#D3B574]/20"
+                      >
+                        <FileText className="h-3.5 w-3.5" />
+                        Scouting report
+                      </HardLink>
+                    ) : null}
+                  </div>
                 ))}
               </div>
             )}
