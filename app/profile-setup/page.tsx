@@ -42,6 +42,11 @@ export default async function ProfileSetupPage({
     return ""
   }
   const name = str("name")
+  const social = row.socialMedia
+  const socialInstagram =
+    social && typeof social === "object" && !Array.isArray(social)
+      ? String((social as Record<string, unknown>).instagram ?? "").trim()
+      : ""
   const initial: ProfileSetupValues = {
     ...EMPTY_PROFILE_SETUP,
     firstName: str("firstName", "firstname") || name.split(" ")[0] || "",
@@ -54,7 +59,8 @@ export default async function ProfileSetupPage({
     sat: str("academic_sat"),
     act: str("academic_act"),
     academicInterest: str("academic_interest"),
-    instagram: str("instagram_handle"),
+    /* Handles we already hold live in the `socialMedia` json, not the newer column. */
+    instagram: str("instagram_handle") || socialInstagram,
     cell: str("phone", "cell_number"),
     email: str("contactEmail", "contact_email"),
     apClasses: row.takes_ap_classes === true,

@@ -32,7 +32,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   /* The owner, a linked parent, or an admin. Nobody else edits a wrestler's page. */
   const [{ data: athlete }, { data: link }, { data: profile }] = await Promise.all([
-    admin.from("athletes").select("id, claimed_by_user_id").eq("id", id).maybeSingle(),
+    admin.from("athletes").select("id, claimed_by_user_id, socialMedia").eq("id", id).maybeSingle(),
     admin.from("parent_athlete_links").select("user_id").eq("athlete_id", id).eq("user_id", user.id).maybeSingle(),
     admin.from("user_profiles").select("is_admin").eq("user_id", user.id).maybeSingle(),
   ])
@@ -47,6 +47,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!body) return NextResponse.json({ error: "Nothing to save." }, { status: 400 })
 
   const str = (v: unknown) => (typeof v === "string" ? v.trim() : "")
+
+  /* Handles arrive as "@name", "name", or a pasted profile URL. Store the bare name. */
+  const handle = str(body.instagram)
+    .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
+    .replace(/\/.*$/, "")
+    .replace(/^@/, "")
+    .trim()
+
+  const raw = (athlete as { socialMedia?: unknown }).socialMedia
+  const existingSocial: Record<string, unknown> =
+    raw && typeof raw === "object" && !Array.isArray(raw) ? { ...(raw as Record<string, unknown>) } : {}
+
   const payload: Record<string, unknown> = {
     firstName: str(body.firstName),
     lastName: str(body.lastName),
@@ -59,7 +71,20 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     academic_sat: str(body.sat) || null,
     academic_act: str(body.act) || null,
     academic_interest: str(body.academicInterest) || null,
-    instagram_handle: str(body.instagram).replace(/^@/, "") || null,
+    instagram_handle: handle || null,
+    /*
+     * Instagram lives in two places, so it gets written to both.
+     *
+     * Every handle we already hold - 94 of them - sits in the `socialMedia` json, and that is what
+     * the profile card, the athlete list and the mobile detail route all read. `instagram_handle`
+     * is the newer column and nothing displays it yet. Writing only the new one made a wrestler's
+     * handle vanish from their own page the moment they filled this form in.
+     */
+    socialMedia: handle
+      ? { ...existingSocial, instagram: handle }
+      : Object.keys(existingSocial).length
+        ? existingSocial
+        : null,
     takes_ap_classes: body.apClasses === true ? true : body.apClasses === false ? false : null,
     takes_honors_classes: body.honorsClasses === true ? true : body.honorsClasses === false ? false : null,
     phone: str(body.cell) || null,
