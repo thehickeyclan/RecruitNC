@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { ExternalLink, Star } from "lucide-react"
-import { MessageAthleteButton } from "@/components/messaging/message-athlete-button"
 import { useState, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { isValidProfileId } from "@/lib/profile-id"
@@ -227,18 +226,6 @@ export function RankingsCardView({
                           }`}
                         />
                       </Button>
-                    )}
-                    {athlete.id && isValidProfileId(athlete.id) && (
-                      <MessageAthleteButton
-                        athleteId={athlete.id}
-                        athleteName={athlete.name}
-                        className={`inline-flex h-7 w-7 items-center justify-center rounded border cursor-pointer ${
-                          isDark
-                            ? "border-white/10 bg-white/5 hover:bg-white/10"
-                            : "bg-white hover:bg-gray-50"
-                        }`}
-                        size="sm"
-                      />
                     )}
                     <a
                       href={athlete.id && isValidProfileId(athlete.id) ? `/view-profile?id=${encodeURIComponent(athlete.id)}` : "/create-profile"}

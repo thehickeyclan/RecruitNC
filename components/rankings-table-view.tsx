@@ -2,7 +2,6 @@
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { ExternalLink, ChevronUp, ChevronDown, FileText, Star } from "lucide-react"
-import { MessageAthleteButton } from "@/components/messaging/message-athlete-button"
 import { Fragment, useEffect, useState } from "react"
 import Image from "next/image"
 import { useAuth } from "@/contexts/auth-context"
@@ -599,15 +598,6 @@ export function RankingsTableView({
                     </TableCell>
                     <TableCell>
                       <div className="inline-flex items-center gap-1">
-                        {athlete.id && isValidProfileId(athlete.id) && (
-                          <MessageAthleteButton
-                            athleteId={athlete.id}
-                            athleteName={athlete.name}
-                            className={`inline-flex h-8 w-8 items-center justify-center rounded border border-transparent ${
-                              isDark ? "hover:bg-white/10" : "hover:bg-gray-100"
-                            }`}
-                          />
-                        )}
                         {canSeeScoutingReports &&
                           athlete.id &&
                           isValidProfileId(athlete.id) &&
