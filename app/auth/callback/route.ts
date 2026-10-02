@@ -126,10 +126,14 @@ export async function GET(req: NextRequest) {
     // A brand-new account that never said what it is. The password form asks on the way in;
     // the Google button cannot, so the question is asked once, on the next screen.
     let needsProfileType = false
+    /* The role of a profile created on this request: `profile` is null for exactly the accounts
+       the welcome exists for, so reading it from there would skip every new sign-up. */
+    let createdRole = ""
 
     if (!profile) {
       console.log("[v0] Creating user profile...")
       const payload = buildUserProfileUpsertPayload(session.user as User)
+      createdRole = String(payload.role ?? "").trim()
       const { error: insertError } = await supabase.from("user_profiles").insert(payload)
 
       if (insertError) {
@@ -208,6 +212,24 @@ export async function GET(req: NextRequest) {
     // so the destination they originally asked for still happens afterwards.
     if (needsProfileType && !wizardCompletion && type !== "recovery" && redirectPath !== "/auth/reset-password") {
       redirectPath = `/auth/complete-profile?next=${encodeURIComponent(redirectPath)}`
+    }
+
+    /*
+     * A verified account arrives knowing what it wants and not where that is.
+     *
+     * The welcome flag rides on the destination and the modal in the root layout reads it, so an
+     * athlete lands being told to build their profile rather than on a page that never mentions
+     * one. Only on the e-mail verification hop: a password reset or an ordinary sign-in is not a
+     * first run, and complete-profile asks its own question first - the flag would be stripped by
+     * that redirect anyway.
+     */
+    if (isEmailVerificationCallback && !redirectPath.startsWith("/auth/")) {
+      const role = String(profile?.role ?? "").trim() || createdRole
+      if (role) {
+        const url = new URL(redirectPath, requestUrl.origin)
+        url.searchParams.set("welcome", role)
+        redirectPath = `${url.pathname}${url.search}`
+      }
     }
 
     console.log("[v0] Redirecting authenticated user to:", redirectPath)

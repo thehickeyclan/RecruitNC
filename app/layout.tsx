@@ -7,7 +7,7 @@ import "@/app/flip-card.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/toaster"
 import { AuthProvider } from "@/contexts/auth-context"
-import { CoachWelcomeModal } from "@/components/coach-welcome-modal"
+import { WelcomeModal } from "@/components/welcome-modal"
 import { AppChrome } from "@/components/app-chrome"
 import { LayoutOptionalClients } from "@/components/layout-optional-clients"
 import { BulletproofInternalLinks } from "@/components/bulletproof-internal-links"
@@ -144,8 +144,8 @@ export default function RootLayout({
             <UserActivityTracker />
             <LayoutOptionalClients />
             <AppChrome>{children}</AppChrome>
-            {/* Renders nothing without ?welcome=coach, which only the sign-up redirect sets. */}
-            <CoachWelcomeModal />
+            {/* Renders nothing without ?welcome=<role>, set at verification and at coach sign-up. */}
+            <WelcomeModal />
             <Toaster />
             <Analytics />
           </AuthProvider>
