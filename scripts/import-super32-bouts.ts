@@ -52,12 +52,26 @@ async function main() {
   if (error) throw new Error(`Loading athletes: ${error.message}`)
   const pool = (athletes ?? [])
     .filter((a) => hsClasses.has(Number(a.graduationyear)))
-    .filter((a) => String(a.gender ?? "").toLowerCase().startsWith("m"))
+    // Boys' brackets: leave out girls, not profiles with no gender recorded (most of them).
+    .filter((a) => !String(a.gender ?? "").toLowerCase().startsWith("f"))
     .map((a) => ({
       id: String(a.id),
       name: String(a.name ?? ""),
       keys: [String(a.name ?? ""), String(a.wrestling_name ?? "")].filter(Boolean),
     }))
+
+  // A profile not flagged NC (Jack Harty) still links on an exact full name and an HS class:
+  // the bout already says NC, so a same-named out-of-state profile cannot be the one meant.
+  const { data: everyone } = await client.from("athletes").select("id,name,wrestling_name,graduationyear,gender")
+  const exact = new Map<string, Set<string>>()
+  for (const a of everyone ?? []) {
+    if (!hsClasses.has(Number(a.graduationyear)) || String(a.gender ?? "").toLowerCase().startsWith("f")) continue
+    for (const n of [a.name, a.wrestling_name]) {
+      if (!n) continue
+      const k = String(n).trim().toLowerCase()
+      exact.set(k, new Set([...(exact.get(k) ?? []), String(a.id)]))
+    }
+  }
 
   const resolved = new Map<string, string | null>()
   const ambiguous = new Set<string>()
@@ -66,7 +80,8 @@ async function main() {
     if (resolved.has(key)) return resolved.get(key)!
     const hits = pool.filter((a) => a.keys.some((k) => namesLikelySamePerson(k, name)))
     if (hits.length > 1) ambiguous.add(`${name} → ${hits.map((h) => h.name).join(" / ")}`)
-    const id = hits.length === 1 ? hits[0]!.id : null
+    const fallback = hits.length === 0 ? exact.get(key) : undefined
+    const id = hits.length === 1 ? hits[0]!.id : fallback?.size === 1 ? [...fallback][0]! : null
     resolved.set(key, id)
     return id
   }
