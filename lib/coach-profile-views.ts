@@ -17,6 +17,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { collegeForCoach } from "@/lib/college-domain-schools"
 import { classifyViewer } from "@/lib/viewer-role"
+import { isInternalAccount } from "@/lib/internal-accounts"
 
 export type CoachViewSummary = {
   /** Distinct programs that have viewed, most recent first. */
@@ -94,6 +95,8 @@ export async function getCoachViewsForAthlete(
       const id = String(viewer.user_id)
       /* Admins are their own bucket in classifyViewer, so staff browsing never reads as interest. */
       if (!classifyViewer(viewer as never).isCollegeCoach) continue
+      /* Apple's reviewers hold a working coach login for every release; it is not interest. */
+      if (isInternalAccount(viewer.email as string)) continue
       isCoach.add(id)
       schoolByCoach.set(
         id,
