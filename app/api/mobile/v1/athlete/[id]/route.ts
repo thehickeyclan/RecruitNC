@@ -5,7 +5,12 @@ import { buildAthleteEditPatch, mergeInstagram } from "@/lib/mobile/athlete-edit
 import { resolveAthleteOwnership } from "@/lib/mobile/athlete-ownership"
 import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
 import { buildProfileReveal } from "@/lib/profile-reveal"
+import { labelOpponents, accoladeKey, type AccoladeBout } from "@/lib/opponent-accolades"
+import { profileCredentials, type Credential } from "@/lib/profile/credentials"
+import { shortOlympicEvent } from "@/lib/profile/olympic-event"
+import { isInternationalStyle, styleOfEvent, summarizeCompetition, type CompetitionSummary } from "@/lib/wrestling-style"
 import {
+  buildNchsaaStateRows,
   buildTournamentRows,
   isTocRow,
   type AccordionSummaryResult,
@@ -33,7 +38,10 @@ import {
 export const dynamic = "force-dynamic"
 
 /** Bump when the shape changes: the cache keys on the id, not on what comes back. */
-const PAYLOAD_VERSION = "v1"
+const PAYLOAD_VERSION = "v2"
+
+/** A bout as sent to the phone: the web's, plus the opponent's accolade where one is on file. */
+type MobileRow = Omit<TournamentRow, "bouts"> & { bouts: Array<TournamentRow["bouts"][number] & { accolade: string | null }> }
 
 export type MobileAthleteProfile = {
   id: string
@@ -54,7 +62,18 @@ export type MobileAthleteProfile = {
   stateResults: { year: number; place: number | null; classification: string | null; weightClass: string | null }[]
   /** The Tournament of Champions sits with the state title; everything else is national. */
   toc: TournamentRow[]
+  /** Every non-TOC row, any style. Kept for builds before 1.1.5, which read only this. */
   national: TournamentRow[]
+  /**
+   * v2, for the redesigned profile (1 Oct 2026): the banner's cards and Competes line, NCHSAA
+   * States with their bouts, and the national rows split by style - folkstyle, then Freestyle &
+   * Greco-Roman last (Matt). Every bout carries its opponent's accolade.
+   */
+  banner: { credentials: Credential[]; competition: CompetitionSummary }
+  stateRows: MobileRow[]
+  tocRows: MobileRow[]
+  folkstyle: MobileRow[]
+  olympic: MobileRow[]
 }
 
 function asText(value: unknown): string | null {
@@ -86,7 +105,35 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     super32Bouts: loaded.athlete.super32_bouts,
     fargoResults: loaded.athlete.fargo_results as AccordionSummaryResult[],
     nationalTeamResults: loaded.athlete.national_team_results as NationalTeamEntry[],
+    // NC United duals, AAU, UCD and Fargo bouts with no results row of their own - the phone never
+    // got these, so its AAU and Fargo rows had no bouts under them.
+    attachedEventBouts: loaded.athlete.attached_event_bouts as never[],
   })
+  const stateRows = buildNchsaaStateRows(
+    (loaded.athlete.nchsaa_profile ?? []) as never[],
+    (loaded.athlete.nchsaa_state_bouts ?? []) as never[],
+  )
+  const isOlympic = (r: TournamentRow) => isInternationalStyle(styleOfEvent(r.event, r.team))
+  const tocRows = rows.filter(isTocRow)
+  const folkstyleRows = rows.filter((r) => !isTocRow(r) && !isOlympic(r))
+  const olympicRows = rows.filter(isOlympic).map((r) => ({ ...r, event: shortOlympicEvent(r.event) }))
+
+  // One accolade lookup for every bout on the page, as the web's bout tables do.
+  const toLabel: AccoladeBout[] = []
+  for (const r of [...stateRows, ...rows]) {
+    for (const b of r.bouts) {
+      if (b.opponentName) toLabel.push({ name: b.opponentName, club: b.opponentClub, year: b.year, weight: b.weight || null })
+    }
+  }
+  const labels = await labelOpponents(admin, toLabel).catch(() => ({}) as Record<string, string>)
+  const withAccolades = (list: TournamentRow[]): MobileRow[] =>
+    list.map((r) => ({
+      ...r,
+      bouts: r.bouts.map((b) => ({
+        ...b,
+        accolade: b.opponentName ? (labels[accoladeKey(b.opponentName, b.opponentClub, b.year)] ?? null) : null,
+      })),
+    }))
 
   const weightDisplay = loaded.athlete.profile_weight_display
   const college = asText(row.college)
@@ -121,6 +168,17 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     })),
     toc: rows.filter(isTocRow),
     national: rows.filter((r) => !isTocRow(r)),
+    banner: {
+      credentials: profileCredentials({ stateRows, tocRows, tournamentRows: rows, max: 6 }),
+      competition: summarizeCompetition(
+        [...rows, ...stateRows].flatMap((r) => [`${r.event} ${r.team ?? ""}`, ...r.bouts.map((b) => b.eventName)]),
+        row.is_nc_athlete !== false,
+      ),
+    },
+    stateRows: withAccolades(stateRows),
+    tocRows: withAccolades(tocRows),
+    folkstyle: withAccolades(folkstyleRows),
+    olympic: withAccolades(olympicRows),
   }
 
   return NextResponse.json(
