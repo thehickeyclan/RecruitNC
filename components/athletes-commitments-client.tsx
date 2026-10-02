@@ -21,6 +21,8 @@ import {
 } from "@/lib/athletes-commitments-fetch"
 import { prefetchAthleteProfile } from "@/lib/prefetch-athlete-profile"
 import { RankingsCrosslink } from "@/components/rankings-crosslink"
+import { useAuth } from "@/contexts/auth-context"
+import { scoutingReportAvailable } from "@/lib/scouting-report-access"
 
 type AthletesTab = "commitments" | "legacy"
 type CommitViewMode = "cards" | "table"
@@ -38,6 +40,17 @@ export function AthletesCommitmentsClient({
 }: AthletesCommitmentsClientProps) {
   const initialFiltersKey = useMemo(() => commitmentFiltersKey(initialFilters), [initialFilters])
   const searchParams = useSearchParams()
+  /*
+   * The scouting-report column, for coaches and admins only.
+   *
+   * `scouting_report_access` is decided on the server (/api/profile) - the allowlist and the
+   * role rules must not be re-derived on the client, where they could disagree with the
+   * endpoint. `scoutingReportAvailable` is the same test the report route runs, so the icon is
+   * absent for exactly the athletes it would refuse rather than leading a coach to a 404.
+   */
+  const { profile: viewerProfile } = useAuth()
+  const canSeeScoutingReports = viewerProfile?.scouting_report_access === true
+
   const [tab, setTab] = useState<AthletesTab>("commitments")
   const [athletes, setAthletes] = useState<CommitmentAthleteListItem[]>(initialAthletes)
 
@@ -416,6 +429,11 @@ export function AthletesCommitmentsClient({
                       <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">Weight</th>
                       <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">Gender</th>
                       <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">NHSCA 2025</th>
+                      {canSeeScoutingReports ? (
+                        <th className="p-3 text-center font-semibold text-white/60 text-xs uppercase tracking-wider">
+                          Report
+                        </th>
+                      ) : null}
                     </tr>
                   </thead>
                   <tbody>
@@ -446,6 +464,22 @@ export function AthletesCommitmentsClient({
                               ? athlete.nhsca_2025_record
                               : "—"}
                         </td>
+                        {canSeeScoutingReports ? (
+                          <td className="p-3 text-center">
+                            {scoutingReportAvailable(athlete as { gender?: unknown; graduationyear?: unknown }) ? (
+                              <HardLink
+                                href={`/athletes/${encodeURIComponent(athlete.id)}/scouting-report`}
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[#D3B574] transition-colors hover:bg-[#D3B574]/15"
+                              >
+                                <FileSearch className="h-4 w-4" />
+                                {/* An icon alone is unreadable to a screen reader, and HardLink takes no aria props. */}
+                                <span className="sr-only">Scouting report for {athlete.name}</span>
+                              </HardLink>
+                            ) : (
+                              <span className="text-white/20">—</span>
+                            )}
+                          </td>
+                        ) : null}
                       </tr>
                     ))}
                   </tbody>

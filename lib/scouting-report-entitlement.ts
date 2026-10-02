@@ -124,24 +124,22 @@ export function resolveEntitlement(input: EntitlementInput): ScoutingEntitlement
   // backwards.
   if (input.isCollegeCoach) return { canAccess: true, reason: "college_coach", purchasable: false }
 
-  /**
-   * A family never pays for their own wrestler's report. We are monetising their kid's
-   * results; charging them to see it is the kind of thing that turns into a post rather than
-   * a purchase, and it is also what drives them to fill in the film and GPA the report needs.
-   */
-  if (input.isOwnProfile) return { canAccess: true, reason: "own_profile", purchasable: false }
-
   /*
    * Everything below is switched off while the report is a college-coach product.
    *
    * It is not on sale, so a Blue membership and a rankings subscription do not include it and
-   * should not say they do. A wrestler and his own family keep their access above, because the
-   * report is built out of his results and it is what makes them fill in the film and the GPA.
+   * should not say they do.
    *
-   * A row already exists for anyone who bought one; when this opens up, drop the flag and the
-   * three checks below come back exactly as they were.
+   * The family's own-wrestler access is in here too, which it did not used to be. It was
+   * granted unconditionally while no entry point was ever rendered for a parent or an athlete -
+   * the link is shown from `scouting_report_access`, which only a coach or an admin gets - so
+   * the only way to reach it was to guess the URL. Two gates disagreeing is not a policy, and
+   * the one that was reachable by typing was the wider one. Coaches and admins today; when the
+   * report goes on sale a family reads their own wrestler's for nothing, which is why the grant
+   * is kept rather than deleted.
    */
   if (SCOUTING_REPORTS_ARE_SOLD) {
+    if (input.isOwnProfile) return { canAccess: true, reason: "own_profile", purchasable: false }
     if (input.isBlueMember) return { canAccess: true, reason: "blue_member", purchasable: false }
     if (input.hasActiveSubscription) return { canAccess: true, reason: "subscription", purchasable: false }
     if (input.hasPurchasedThisAthlete) return { canAccess: true, reason: "purchased", purchasable: false }

@@ -39,11 +39,12 @@ describe("pre-launch allowlist", () => {
 })
 
 describe("free access", () => {
-  it("never charges a family for their own wrestler", () => {
+  it("refuses a family their own wrestler's report while it is a coach-only product", () => {
+    // The link is only ever rendered for a coach or an admin, so granting this let a parent in
+    // by guessing the URL and nowhere else. Coaches and admins today.
     expect(resolveEntitlement({ ...base, isOwnProfile: true })).toMatchObject({
-      canAccess: true,
-      reason: "own_profile",
-      purchasable: false,
+      canAccess: false,
+      reason: "none",
     })
   })
 
