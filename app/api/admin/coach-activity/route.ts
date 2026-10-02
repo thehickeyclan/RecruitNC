@@ -30,6 +30,8 @@ type CoachRow = {
   uniqueAthletes: number
   /** Scouting reports this coach has opened. The number the outreach is really waiting on. */
   reports: number
+  /** Which ones, newest first - a count alone cannot be acted on. */
+  reportVisits: Array<{ athleteId: string; name: string; at: string; tier: string | null }>
   visits: Visit[]
 }
 type ProgramRow = {
@@ -128,14 +130,36 @@ export async function GET(request: NextRequest) {
 
   /* Reports opened, per coach. Counted here because it is the step after a profile view and the
      one the college outreach is actually waiting on. */
-  const reportsByCoach = new Map<string, number>()
+  const reportsByCoach = new Map<string, CoachRow["reportVisits"]>()
   if (coachIds.length) {
-    let q = admin.from("scouting_report_access").select("viewer_user_id, created_at").in("viewer_user_id", coachIds)
+    let q = admin
+      .from("scouting_report_access")
+      .select("viewer_user_id, athlete_id, created_at, access_tier")
+      .in("viewer_user_id", coachIds)
+      .order("created_at", { ascending: false })
     if (since) q = q.gte("created_at", since)
     const { data: reportRows } = await q
+
+    /* The athlete names: a report can be opened without the profile ever being viewed, so these
+       ids are not necessarily in the set already loaded for profile views. */
+    const reportAthleteIds = [...new Set((reportRows ?? []).map((r) => String((r as { athlete_id: string }).athlete_id)))]
+    const missing = reportAthleteIds.filter((id) => id && !athletes.has(id))
+    for (let i = 0; i < missing.length; i += 500) {
+      const { data } = await admin.from("athletes").select("id, name, graduationyear, highschool").in("id", missing.slice(i, i + 500))
+      for (const a of data ?? []) athletes.set(String(a.id), a as never)
+    }
+
     for (const r of reportRows ?? []) {
-      const id = String((r as { viewer_user_id: string }).viewer_user_id)
-      reportsByCoach.set(id, (reportsByCoach.get(id) ?? 0) + 1)
+      const row = r as { viewer_user_id: string; athlete_id: string; created_at: string; access_tier: string | null }
+      const id = String(row.viewer_user_id)
+      const list = reportsByCoach.get(id) ?? []
+      list.push({
+        athleteId: String(row.athlete_id),
+        name: athletes.get(String(row.athlete_id))?.name ?? "Unknown athlete",
+        at: row.created_at,
+        tier: row.access_tier ?? null,
+      })
+      reportsByCoach.set(id, list)
     }
   }
 
@@ -172,7 +196,8 @@ export async function GET(request: NextRequest) {
       lastActiveAt: mine[0]?.created_at ?? null,
       profileViews: visits.reduce((n, v) => n + v.views, 0),
       uniqueAthletes: visits.length,
-      reports: reportsByCoach.get(c.user_id) ?? 0,
+      reports: (reportsByCoach.get(c.user_id) ?? []).length,
+      reportVisits: reportsByCoach.get(c.user_id) ?? [],
       visits,
     }
   })

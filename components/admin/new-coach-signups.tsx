@@ -20,6 +20,7 @@ type Coach = {
   profileViews: number
   uniqueAthletes: number
   reports: number
+  reportVisits: Array<{ athleteId: string; name: string; at: string; tier: string | null }>
   visits: Visit[]
 }
 type Program = { program: string; coaches: Coach[] }
@@ -163,7 +164,7 @@ export function NewCoachSignups({ range }: { range: string }) {
                       >
                         <td className="py-2 pr-3 whitespace-nowrap text-gray-600">
                           <span className="inline-flex items-center gap-1">
-                            {c.uniqueAthletes > 0 ? (
+                            {c.uniqueAthletes > 0 || c.reports > 0 ? (
                               isOpen ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />
                             ) : (
                               <span className="inline-block w-3" />
@@ -198,9 +199,41 @@ export function NewCoachSignups({ range }: { range: string }) {
                         </td>
                       </tr>
 
-                      {isOpen && c.visits.length > 0 && (
+                      {isOpen && (c.visits.length > 0 || c.reportVisits.length > 0) && (
                         <tr className="bg-gray-50">
                           <td colSpan={7} className="px-6 py-3">
+                            {/* Reports first: it is the rarer, stronger signal, and the column
+                                above it was only ever a count nobody could act on. */}
+                            {c.reportVisits.length > 0 && (
+                              <div className="mb-4">
+                                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-green-700">
+                                  Scouting reports opened
+                                </p>
+                                <ul className="space-y-1">
+                                  {c.reportVisits.map((r, i) => (
+                                    <li key={`${r.athleteId}-${r.at}-${i}`} className="flex items-center gap-2 text-sm">
+                                      <span className="w-16 shrink-0 text-xs text-gray-500">{clockTime(r.at)}</span>
+                                      <FileText className="h-3 w-3 shrink-0 text-green-700" />
+                                      <Link
+                                        href={`/athletes/${encodeURIComponent(r.athleteId)}/scouting-report`}
+                                        target="_blank"
+                                        className="font-medium text-green-700 hover:underline"
+                                      >
+                                        {r.name}
+                                      </Link>
+                                      {r.tier ? (
+                                        <span className="text-xs text-gray-400">
+                                          {r.tier === "full" ? "full report" : "no contact or academics"}
+                                        </span>
+                                      ) : null}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {c.visits.length > 0 && (
+                              <>
                             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">
                               Profiles opened
                             </p>
@@ -222,6 +255,8 @@ export function NewCoachSignups({ range }: { range: string }) {
                                 </li>
                               ))}
                             </ul>
+                              </>
+                            )}
                           </td>
                         </tr>
                       )}
