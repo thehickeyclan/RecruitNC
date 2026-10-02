@@ -70,6 +70,9 @@ export function ClaimProfileButton({
     }
   }, [athleteId, claimedByUserId])
 
+  const [signing, setSigning] = useState(false)
+  const [signedName, setSignedName] = useState("")
+
   async function claim(relationship: "self" | "parent") {
     setState("claiming")
     try {
@@ -77,7 +80,7 @@ export function ClaimProfileButton({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ athleteId, relationship }),
+        body: JSON.stringify({ athleteId, relationship, signedName: signedName.trim() || undefined }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || "Could not claim this profile")
@@ -174,7 +177,7 @@ export function ClaimProfileButton({
           Yes, this is me
         </Button>
         <Button
-          onClick={() => void claim("parent")}
+          onClick={() => setSigning(true)}
           disabled={state === "claiming"}
           variant="outline"
           size="sm"
@@ -184,6 +187,55 @@ export function ClaimProfileButton({
           This is my son or daughter
         </Button>
       </div>
+
+      {/*
+        * A parent claiming a child's page signs for it.
+        *
+        * Cole Shuster claimed Austin Laws - another family's son - with one tap, and nothing
+        * asked who he was. Typing a name is not proof, but it is a statement by a person, it is
+        * recorded with the wording they agreed to, and it makes the claim a deliberate act
+        * rather than a mis-tap.
+        */}
+      {signing && (
+        <div className="mt-4 space-y-3 rounded-sm border border-white/15 bg-[#0A1628] p-4">
+          <p className="text-sm leading-relaxed text-white/80">
+            I confirm I am the parent or legal guardian of <strong className="text-white">{athleteName}</strong>.
+            I consent, on their behalf, to RecruitNC showing their wrestling results, school, weight
+            class and graduating year on a public profile, and to managing that profile for them. I
+            can ask for it to be removed at any time.
+          </p>
+          <div className="space-y-2">
+            <label htmlFor="claim-signature" className="block text-xs font-semibold uppercase tracking-wide text-white/50">
+              Type your full name to sign
+            </label>
+            <input
+              id="claim-signature"
+              value={signedName}
+              onChange={(e) => setSignedName(e.target.value)}
+              className="w-full rounded-sm border border-white/20 bg-transparent px-3 py-2 text-white outline-none focus:border-[#D3B574]"
+              autoComplete="name"
+            />
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Button
+              onClick={() => void claim("parent")}
+              disabled={state === "claiming" || signedName.trim().length < 3}
+              size="sm"
+              className="min-h-[44px] bg-[#B31B1B] text-white hover:bg-[#8f1616]"
+            >
+              {state === "claiming" ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Sign and link {firstName}
+            </Button>
+            <button
+              type="button"
+              onClick={() => setSigning(false)}
+              className="text-sm text-white/60 underline underline-offset-2"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

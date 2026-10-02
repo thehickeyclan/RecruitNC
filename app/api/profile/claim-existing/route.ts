@@ -76,6 +76,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         athleteId,
         relationship: "parent",
+        signedName: typeof body?.signedName === "string" ? body.signedName : null,
         athleteName: (athlete as { name?: string }).name ?? null,
         viewerName: user.user_metadata?.full_name ?? user.email ?? null,
         ip: auditIpFrom(request),
