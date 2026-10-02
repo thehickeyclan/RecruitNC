@@ -75,12 +75,30 @@ export async function GET(request: NextRequest) {
       narrow((data ?? []).map((r) => String(r.athlete_id)))
     }
     if (cred === "all_american") {
-      const { data } = await db
-        .from("nhsca_placements")
-        .select("athlete_id")
-        .not("athlete_id", "is", null)
-        .not("placement", "is", null)
-      narrow((data ?? []).map((r) => String(r.athlete_id)))
+      /*
+       * All-American means a podium at a national event, so it is a union across the ones we
+       * hold: NHSCA, Fargo, and Super 32 once its rows carry a link.
+       *
+       * Beast of the East and the Ironman are deliberately absent - there is no table and no row
+       * for either, because North Carolina eligibility rules have kept our wrestlers out of
+       * them. A filter for an event we hold nothing on returns nobody while looking like a fact.
+       */
+      const [nhsca, fargo, super32] = await Promise.all([
+        db.from("nhsca_placements").select("athlete_id").not("athlete_id", "is", null).not("placement", "is", null),
+        db.from("fargo_results").select("athlete_id").not("athlete_id", "is", null).not("placement", "is", null),
+        db
+          .from("super32_results")
+          .select("athlete_id")
+          .not("athlete_id", "is", null)
+          .not("placement", "is", null),
+      ])
+      const ids = [
+        ...(nhsca.data ?? []).map((r) => String(r.athlete_id)),
+        ...(fargo.data ?? []).map((r) => String(r.athlete_id)),
+        /* Tolerated: the column may not exist yet, and a missing one must not empty the filter. */
+        ...(super32.error ? [] : (super32.data ?? []).map((r) => String(r.athlete_id))),
+      ]
+      narrow(ids)
     }
   }
 
