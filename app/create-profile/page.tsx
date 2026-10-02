@@ -35,20 +35,61 @@ export default function CreateProfilePage() {
     )
   }
 
+  /*
+   * Searching is open; the account is asked for at the point it is needed.
+   *
+   * The whole page used to sit behind a sign-in wall, which contradicted the thing it is built
+   * around: showing a wrestler the record we already hold is what makes claiming it worth doing,
+   * and nobody creates an account to see something they have not been shown. A campaign sends
+   * people here cold, so the search and the reveal are public and the wall moves to the two
+   * places that genuinely need an owner - claiming, and creating from scratch.
+   */
+  if (step === "find") {
+    return (
+      <div className="min-h-screen bg-[#0A1628] px-4 py-12">
+        <FindExistingStep
+          onClaim={(match: ExistingMatch) => {
+            setMatchedId(match.id)
+            setStep("reveal")
+          }}
+          onCreateNew={(name) => {
+            setTypedName(name)
+            setStep("create")
+          }}
+        />
+      </div>
+    )
+  }
+
+  if (step === "reveal" && matchedId) {
+    return (
+      <div className="min-h-screen bg-[#0A1628] px-4 py-12">
+        <RevealStep
+          athleteId={matchedId}
+          onConfirm={(reveal) => {
+            /** Claiming happens on the profile itself, where the claim card asks for the account. */
+            router.push(`/view-profile?id=${encodeURIComponent(reveal.athleteId)}&claim=1`)
+          }}
+          onReject={() => {
+            setMatchedId(null)
+            setStep("find")
+          }}
+        />
+      </div>
+    )
+  }
+
+  /* Building a new profile writes to an owner, so this step is the one that needs the account. */
   if (!user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-rnc-ink p-4 text-white">
         <div className="w-full max-w-md rounded-sm border border-rnc-line bg-rnc-surface p-6">
           <h1 className="text-2xl font-black">First, a free account</h1>
           <p className="mt-2 text-white/60">
-            It takes a minute and brings you straight back here. Your account is how you manage the
-            profile afterwards &mdash; adding film, results and the rest.
+            We could not find {typedName ? `${typedName}` : "that wrestler"}, so we will build the
+            profile from scratch. It takes a minute and brings you straight back here &mdash; the
+            account is how you manage the profile afterwards.
           </p>
-          {/*
-            * Create leads, and both carry a way back. This said "Sign in required" with a single
-            * Sign In button and no returnTo - so somebody arriving cold, which is everybody in a
-            * campaign, was told to do the one thing they could not do and then lost their place.
-            */}
           <Button asChild className="mt-5 w-full rounded-sm bg-rnc-red text-white hover:bg-rnc-red-hover">
             <a href="/auth/signup?returnTo=%2Fcreate-profile">Create my free account</a>
           </Button>
@@ -57,52 +98,15 @@ export default function CreateProfilePage() {
               I already have an account
             </a>
           </p>
+          <button
+            type="button"
+            onClick={() => setStep("find")}
+            className="mt-4 block w-full text-center text-sm text-white/50 underline underline-offset-2"
+          >
+            Back to search
+          </button>
         </div>
       </div>
-    )
-  }
-
-  if (step === "find") {
-    return (
-      <AuthGuard>
-        <div className="min-h-screen bg-[#0A1628] px-4 py-12">
-          <FindExistingStep
-            onClaim={(match: ExistingMatch) => {
-              /**
-               * Show the record before the claim. Most wrestlers do not know NC United already
-               * built their profile, and seeing their own results is what makes claiming it
-               * obviously worth doing.
-               */
-              setMatchedId(match.id)
-              setStep("reveal")
-            }}
-            onCreateNew={(name) => {
-              setTypedName(name)
-              setStep("create")
-            }}
-          />
-        </div>
-      </AuthGuard>
-    )
-  }
-
-  if (step === "reveal" && matchedId) {
-    return (
-      <AuthGuard>
-        <div className="min-h-screen bg-[#0A1628] px-4 py-12">
-          <RevealStep
-            athleteId={matchedId}
-            onConfirm={(reveal) => {
-              /** Claiming happens on the profile itself, where they can see what they are taking. */
-              router.push(`/view-profile?id=${encodeURIComponent(reveal.athleteId)}&claim=1`)
-            }}
-            onReject={() => {
-              setMatchedId(null)
-              setStep("find")
-            }}
-          />
-        </div>
-      </AuthGuard>
     )
   }
 
