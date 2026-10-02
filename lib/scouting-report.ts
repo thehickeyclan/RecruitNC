@@ -98,6 +98,28 @@ export type ScoutingReportContact = {
   /** Public profiles a coach would otherwise go hunting for, to check the record themselves. */
   floProfileUrl: string | null
   trackWrestlingProfileUrl: string | null
+  /** The athlete's public Instagram, as a URL. Public on the profile, so released at both tiers. */
+  instagramUrl: string | null
+}
+
+/** Instagram from `socialMedia` (or legacy `social_media`), handle or URL, as a link. */
+export function instagramUrlFrom(athlete: Record<string, unknown>): string | null {
+  for (const raw of [athlete.socialMedia, athlete.social_media]) {
+    let data: unknown = raw
+    if (typeof raw === "string") {
+      try {
+        data = JSON.parse(raw)
+      } catch {
+        continue
+      }
+    }
+    if (data && typeof data === "object") {
+      const value = (data as Record<string, unknown>).instagram ?? (data as Record<string, unknown>).Instagram
+      const handle = typeof value === "string" ? value.trim().replace(/^@/, "").replace(/^https?:\/\/(www\.)?instagram\.com\//i, "").replace(/\/+$/, "") : ""
+      if (handle) return `https://www.instagram.com/${handle}`
+    }
+  }
+  return null
 }
 
 export type ScoutingReportMembership = {
@@ -529,6 +551,7 @@ export function mapContact(athlete: Record<string, unknown>, personal: boolean):
      */
     floProfileUrl: text(athlete.flo_profile_url),
     trackWrestlingProfileUrl: text(athlete.track_wrestling_profile_url),
+    instagramUrl: instagramUrlFrom(athlete),
   }
 }
 
@@ -963,6 +986,25 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
  * Only claims of the kind the model has actually invented are checked: rankings, GPA and test
  * scores. Returns the offending claims, empty when the summary is clean.
  */
+/** Never in a summary, whatever the facts: opinions, not results. */
+export const SUBJECTIVE_PHRASES = [
+  "elite",
+  "high ceiling",
+  "ceiling",
+  "technically sound",
+  "great motor",
+  "high motor",
+  "high character",
+  "college[- ]ready",
+  "blue[- ]chip",
+  "dominant",
+  "dynamic",
+  "gritty",
+  "relentless",
+  "phenom",
+  "natural talent",
+]
+
 export function unsupportedSummaryClaims(summary: string, facts: string): string[] {
   const problems: string[] = []
   const factText = facts.toLowerCase()
@@ -995,6 +1037,12 @@ export function unsupportedSummaryClaims(summary: string, facts: string): string
   const championClaim = /\bchampions?\b/i.test(summary.replace(/tournament of champions/gi, ""))
   if (championClaim && !/\bchampion\b/.test(factText.replace(/tournament of champions/g, ""))) {
     problems.push("a champion claim the facts do not contain")
+  }
+  // Scouting adjectives the record cannot prove. The report's whole claim is that it says only
+  // what results show; "elite" and "high ceiling" are opinions, and a coach discounts the facts
+  // around them once he spots one.
+  for (const phrase of SUBJECTIVE_PHRASES) {
+    if (new RegExp(`\\b${phrase}\\b`, "i").test(summary)) problems.push(`subjective claim "${phrase}"`)
   }
   for (const word of ["all-american", "runner-up"]) {
     if (new RegExp(`\\b${word}\\b`, "i").test(summary) && !factText.includes(word)) {

@@ -9,6 +9,7 @@ import { weightProgression } from "@/lib/scouting-report"
 import { cn } from "@/lib/utils"
 import { competitionLine, isInternationalStyle, styleOfEvent, stylesLine } from "@/lib/wrestling-style"
 import { RETAINED_EDITIONS } from "@/lib/national-rankings"
+import { keyFacts, snapshotFigures, starPart } from "@/lib/scouting-report-snapshot"
 import { ELITE_OPPONENT_PERCENTILE } from "@/lib/competition-strength"
 
 /**
@@ -160,6 +161,8 @@ export function ScoutingReportDocument({
   const olympicWins = allWins.filter((w) => olympicRow(styleOfEvent(w.event)))
   const folkLosses = report.significantLosses.filter((w) => !olympicRow(styleOfEvent(w.event)))
   const olympicLosses = report.significantLosses.filter((w) => olympicRow(styleOfEvent(w.event)))
+  const snapshot = snapshotFigures(report)
+  const facts = keyFacts(report)
 
   return (
     <div className="min-h-screen bg-[#e9eaee] print:bg-white">
@@ -168,7 +171,11 @@ export function ScoutingReportDocument({
         the footer and the Data Dawg button onto the page. Hiding those individually breaks
         whenever the shell changes; hiding everything and re-showing this document does not.
       */}
-      <style>{`
+      {/* Raw, not children: React escapes quote marks in a <style> child, which broke the
+          quoted page-footer strings below in the server-rendered page. */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
         @media print {
           /*
            * Hide everything that is not this document, its ancestors, or inside it.
@@ -214,8 +221,25 @@ export function ScoutingReportDocument({
           #scouting-report li,
           #scouting-report dl > div { break-inside: avoid; }
           #scouting-report section > div:first-child { break-after: avoid; }
+          #scouting-report h3 { break-after: avoid; }
           #scouting-report thead { display: table-header-group; }
-          @page { margin: 0.45in; }
+          /*
+           * Our own running footer instead of the browser's date, title and URL. The page margin
+           * boxes print on every sheet; the browser's header/footer option has nothing to add.
+           */
+          @page {
+            margin: 0.45in 0.45in 0.6in;
+            @top-left { content: none; }
+            @top-right { content: none; }
+            @bottom-left {
+              content: "NC UNITED · RECRUITNC · CONFIDENTIAL";
+              font: 700 7.5pt/1 system-ui, sans-serif; letter-spacing: 0.12em; color: #4b5563;
+            }
+            @bottom-right {
+              content: "PAGE " counter(page) " / " counter(pages) "   ·   FILE ${fileNumber}";
+              font: 600 7.5pt/1 system-ui, sans-serif; letter-spacing: 0.08em; color: #4b5563;
+            }
+          }
         }
         #scouting-report { font-variant-numeric: tabular-nums; position: relative; }
         /* Faint across the page and repeated in the footer: a coach whose own name is on the
@@ -226,11 +250,13 @@ export function ScoutingReportDocument({
           display: flex; align-items: center; justify-content: center;
           transform: rotate(-28deg);
           font-size: 34px; font-weight: 800; letter-spacing: 0.08em;
-          color: rgba(3, 21, 76, 0.055);
+          color: rgba(3, 21, 76, 0.045);
           pointer-events: none; z-index: 0; white-space: nowrap;
         }
         #scouting-report > * { position: relative; z-index: 1; }
-      `}</style>
+      `,
+        }}
+      />
 
       <div className="sticky top-0 z-10 border-b bg-white px-4 py-3 print:hidden">
         <div className="mx-auto flex max-w-[8.5in] items-center justify-between gap-4">
@@ -265,188 +291,167 @@ export function ScoutingReportDocument({
         data-watermark={report.watermark ?? undefined}
         className="mx-auto my-6 max-w-[8.5in] border border-gray-300 bg-white px-10 py-8 shadow-sm print:my-0 print:border-0 print:px-0 print:shadow-none"
       >
-        {/* Masthead — file number and date on the right, the way a dossier is headed. */}
-        <div className="flex items-start justify-between gap-6 border-b-[3px] border-[#03154C] pb-3">
-          <div className="flex items-center gap-3">
+        {/* Masthead: small and professional - a scouting document, not an advertisement. */}
+        <div className="flex items-center justify-between gap-6 border-b-2 border-[#03154C] pb-2.5">
+          <div className="flex items-center gap-2.5">
             <Image
               src="/nc-united-logo.png"
               alt="NC United Wrestling"
-              width={44}
-              height={44}
-              className="h-11 w-11 object-contain"
+              width={36}
+              height={36}
+              className="h-9 w-9 object-contain"
               unoptimized
             />
-            <div>
-              <div className="text-[13px] font-black uppercase tracking-[0.18em] text-[#03154C]">
-                NC United Wrestling
-              </div>
-              <div className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#B31B1B]">
-                Prospect scouting report
-              </div>
+            <div className="leading-tight">
+              <div className="text-[12px] font-black uppercase tracking-[0.2em] text-[#03154C]">NC United</div>
+              <div className="text-[9.5px] font-bold uppercase tracking-[0.22em] text-gray-600">Prospect scouting report</div>
             </div>
           </div>
-          <div className="text-right text-[10px] leading-relaxed text-gray-600">
+          <div className="text-right text-[9.5px] leading-relaxed text-gray-600">
             <div>
-              <span className="uppercase tracking-wider text-gray-400">File</span>{" "}
-              <span className="font-mono font-semibold text-[#03154C]">{fileNumber}</span>
+              File <span className="font-mono font-semibold text-[#03154C]">{fileNumber}</span> · Issued{" "}
+              <span className="font-mono">{dayLabel(report.generatedAt)}</span>
             </div>
-            <div>
-              <span className="uppercase tracking-wider text-gray-400">Issued</span>{" "}
-              <span className="font-mono">{generated.toLocaleDateString()}</span>
-            </div>
-            <div className="mt-0.5 font-semibold uppercase tracking-wider text-[#B31B1B]">Confidential</div>
+            <div className="font-bold uppercase tracking-[0.2em] text-[#B31B1B]">Confidential</div>
           </div>
         </div>
 
-        {/* Subject line + vitals block, two columns like a dossier header. */}
-        <div className="mt-5 flex items-start justify-between gap-5">
-          {/* File photo, sized and bordered like one — a dossier has a portrait, not a hero image. */}
+        {/*
+          Identity. A coach should know who this is, how good, and how to reach him without
+          turning the page: photo, name, stars, ranking, status, weight, school - and contact on
+          the right.
+        */}
+        <div className="mt-5 grid grid-cols-[auto_minmax(0,1fr)_2.6in] items-start gap-5 break-inside-avoid">
           {identity.photoUrl ? (
-            <div className="shrink-0 border border-gray-300 bg-gray-50 p-1">
+            <div className="border border-gray-300 bg-gray-50 p-1">
               <Image
                 src={identity.photoUrl}
                 alt={identity.name}
-                width={104}
-                height={130}
-                className="h-[130px] w-[104px] object-cover object-top"
+                width={136}
+                height={170}
+                className="h-[170px] w-[136px] object-cover object-top"
                 unoptimized
               />
             </div>
-          ) : null}
-          <div className="min-w-0 flex-1">
-            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-400">Subject</div>
-            <h1 className="mt-0.5 font-serif text-[34px] font-bold leading-none tracking-tight text-[#03154C]">
+          ) : (
+            <div />
+          )}
+          <div className="min-w-0">
+            <h1 className="break-words text-[32px] font-black uppercase leading-[0.95] tracking-tight text-[#03154C]">
               {identity.name}
             </h1>
             {report.starRating ? (
-              <div className="mt-2 flex items-center gap-2">
+              <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1">
                 <Stars stars={report.starRating.stars} />
-                <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                  {report.starRating.stars} star{report.starRating.stars === 1 ? "" : "s"}
-                  {report.starRating.provisional ? " · provisional" : ""}
+                <span className="text-[11px] font-black uppercase tracking-[0.16em] text-[#03154C]">
+                  {report.starRating.stars}-star prospect
                 </span>
+                {report.starRating.provisional ? (
+                  <span className="text-[9.5px] font-semibold uppercase tracking-wider text-gray-600">Provisional</span>
+                ) : null}
               </div>
             ) : null}
-            <div className="mt-3 flex flex-wrap items-center gap-1.5">
-              {report.nationalRankings.length ? (
-                <span className="bg-[#B31B1B] px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
-                  National #{report.nationalRankings[0]!.current} ·{" "}
-                  {report.nationalRankings[0]!.sourceLabel}
-                </span>
-              ) : null}
-              {report.rankingPublished && report.prospectRanking ? (
-                <span className="bg-[#D3B574] px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-[#0A1628]">
-                  NC #{report.prospectRanking} · Class of {identity.graduationYear}
-                </span>
-              ) : null}
-              {membership.ncUnitedTeam ? (
-                <span className="bg-[#03154C] px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
-                  NC United {membership.ncUnitedTeam}
-                </span>
-              ) : null}
-              <span className="border border-gray-300 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-gray-600">
-                {report.commitment ? `Committed · ${report.commitment}` : report.recruitingStatus ?? "Uncommitted"}
-              </span>
+            <div className="mt-2 text-[13px] font-bold text-[#03154C]">
+              {[
+                report.rankingPublished && report.prospectRanking ? `RecruitNC #${report.prospectRanking}` : null,
+                identity.graduationYear ? `Class of ${identity.graduationYear}` : null,
+              ]
+                .filter(Boolean)
+                .join("  ·  ")}
             </div>
-            <div className="mt-3 flex items-center gap-3">
-              {/*
-                A logo only renders from something that is actually a URL.
-                Twenty athlete records had their NCHSAA classification in this column — "7A",
-                "8A", "NCISAA" — and the report drew a broken image with the school's name as its
-                alt text, on the page a college coach pays for.
-              */}
-              {isImageUrl(identity.highSchoolLogoUrl) ? (
-                <Image
-                  src={identity.highSchoolLogoUrl}
-                  alt={identity.highSchool ?? ""}
-                  width={38}
-                  height={38}
-                  className="h-9 w-9 object-contain"
-                  unoptimized
-                />
+            {report.nationalRankings.length ? (
+              <div className="mt-1 text-[11.5px] font-bold text-[#03154C]">
+                National #{report.nationalRankings[0]!.current} · {report.nationalRankings[0]!.sourceLabel}
+              </div>
+            ) : null}
+            {/* Status, unmissable but plain: the first thing a recruiter checks. */}
+            <div className="mt-2.5 inline-block border-2 border-[#03154C] px-2.5 py-0.5 text-[11px] font-black uppercase tracking-[0.16em] text-[#03154C]">
+              {report.commitment ? `Committed · ${report.commitment}` : (report.recruitingStatus ?? "Uncommitted")}
+            </div>
+            <div className="mt-2.5 space-y-0.5 text-[11.5px] text-gray-800">
+              {identity.weightClass ? (
+                <div>
+                  <span className="font-bold text-[#03154C]">{identity.weightClass} lbs</span>
+                  {identity.lastCompetedWeight && String(identity.lastCompetedWeight) !== String(identity.weightClass) ? (
+                    <span className="text-gray-600"> · last competed {identity.lastCompetedWeight}</span>
+                  ) : null}
+                </div>
               ) : null}
-              {isImageUrl(identity.clubLogoUrl) ? (
-                <Image
-                  src={identity.clubLogoUrl}
-                  alt={identity.club ?? ""}
-                  width={38}
-                  height={38}
-                  className="h-9 w-9 object-contain"
-                  unoptimized
-                />
+              {identity.highSchool ? <div className="break-words">{identity.highSchool}</div> : null}
+              {identity.club ? <div className="break-words">{identity.club}</div> : null}
+              {membership.ncUnitedTeam ? (
+                <div className="text-gray-600">
+                  NC United {membership.ncUnitedTeam.charAt(0).toUpperCase() + membership.ncUnitedTeam.slice(1)}
+                </div>
               ) : null}
             </div>
           </div>
 
-          <dl className="w-[2.9in] shrink-0 border border-gray-300 bg-[#f7f8fa] px-3 py-2 text-[11px] leading-tight">
-            <Vital label="Class" value={identity.graduationYear ? String(identity.graduationYear) : null} />
-            {/* "Weight" on its own read as the weight he wrestles. It is the weight he is
-                listed at, which is often not the same — naming both stops the reader guessing
-                which of the two they are looking at. */}
-            <Vital label="Listed weight" value={identity.weightClass ? `${identity.weightClass} lbs` : null} />
-            <Vital label="Last competed weight" value={lastCompetedLine(identity)} />
-            {/* Sits with the two real weights, since the three together are the honest picture:
-                what he is listed at, what he last made, and where he thinks he lands. */}
-            <Vital
-              label="Projected college"
-              value={identity.collegeWeightClass ? `${identity.collegeWeightClass} lbs · athlete-stated` : null}
-            />
-            <Vital label="High school" value={identity.highSchool} />
-            <Vital label="Club" value={identity.club} />
-            <Vital label="Career" value={report.careerRecord} />
-            {/* Where and how he wrestles frames everything below it, so it sits with the vitals. */}
-            {report.competition ? <Vital label="Competes" value={competitionLine(report.competition)} /> : null}
-            {report.competition ? <Vital label="Styles" value={stylesLine(report.competition)} /> : null}
-            <PhoneVital label="Cell" value={contact.cell} />
-            <EmailVital label="Email" value={contact.email} last />
-            {report.accessTier !== "full" ? (
-              <div className="pt-1 text-[9.5px] italic leading-snug text-gray-500">
-                Contact details released to verified college coaching staff.
+          {/* Contact: discover, evaluate, contact - so it sits beside the name, every line a link. */}
+          <div className="border border-gray-300 bg-[#f3f5f8] px-3 py-2.5 text-[11px]">
+            <div className="mb-1.5 text-[9.5px] font-black uppercase tracking-[0.2em] text-[#03154C]">Contact</div>
+            {report.accessTier === "full" ? (
+              <dl className="space-y-1">
+                <ContactLine label="Text" value={contact.cell} href={contact.cell ? `sms:${contact.cell.replace(/[^\d+]/g, "")}` : null} />
+                <ContactLine label="Call" value={contact.cell} href={contact.cell ? `tel:${contact.cell.replace(/[^\d+]/g, "")}` : null} />
+                <ContactLine label="Email" value={contact.email} href={contact.email ? `mailto:${contact.email}` : null} />
+                <ContactLine
+                  label="Instagram"
+                  value={contact.instagramUrl ? `@${contact.instagramUrl.replace(/^https:\/\/www\.instagram\.com\//, "")}` : null}
+                  href={contact.instagramUrl}
+                />
+              </dl>
+            ) : (
+              <>
+                {contact.instagramUrl ? (
+                  <ContactLine
+                    label="Instagram"
+                    value={`@${contact.instagramUrl.replace(/^https:\/\/www\.instagram\.com\//, "")}`}
+                    href={contact.instagramUrl}
+                  />
+                ) : null}
+                <p className="mt-1 text-[9.5px] italic leading-snug text-gray-600">
+                  Cell and email are released to verified college coaching staff.
+                </p>
+              </>
+            )}
+            {contact.highlightVideoUrl || contact.floProfileUrl || contact.trackWrestlingProfileUrl ? (
+              <div className="mt-2 border-t border-gray-300 pt-1.5 text-[10.5px]">
+                {contact.highlightVideoUrl ? <ProfileLink label="Highlight film" href={contact.highlightVideoUrl} /> : null}
+                {contact.floProfileUrl ? <ProfileLink label="FloWrestling" href={contact.floProfileUrl} /> : null}
+                {contact.trackWrestlingProfileUrl ? <ProfileLink label="TrackWrestling" href={contact.trackWrestlingProfileUrl} /> : null}
               </div>
             ) : null}
-          </dl>
+          </div>
         </div>
 
-        {report.summary ? (
-          <Block n={n()} title="Evaluation">
-            <p className="font-serif text-[12.5px] leading-[1.65] text-gray-900">{report.summary}</p>
-          </Block>
+        {/* Recruiting snapshot: the record in five figures, each from the sections behind it. */}
+        {snapshot.length ? (
+          <section className="mt-5 break-inside-avoid">
+            <div className="mb-1.5 text-[9.5px] font-black uppercase tracking-[0.2em] text-[#03154C]">Recruiting snapshot</div>
+            <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${snapshot.length}, minmax(0, 1fr))` }}>
+              {snapshot.map((f) => (
+                <SummaryCard key={f.label} label={f.label} value={f.value} sub={f.sub} />
+              ))}
+            </div>
+          </section>
         ) : null}
 
-        {/*
-          Film and the public profiles, which the report has always carried and never drawn.
-          `highlightVideoUrl` is released at both access tiers on purpose, and our own claim
-          wizard tells athletes film is "the first thing a college coach asks for after your
-          record" — it was reaching the page and stopping there.
-        */}
-        {contact.highlightVideoUrl || contact.floProfileUrl || contact.trackWrestlingProfileUrl ? (
-          <Block n={n()} title="Film and profiles">
-            <ul className="space-y-1 text-[11.5px] text-gray-900">
-              {contact.highlightVideoUrl ? (
-                <li>
-                  <span className="font-semibold">Highlight film</span>{" "}
-                  <a href={contact.highlightVideoUrl} className="break-all underline" target="_blank" rel="noreferrer">
-                    {contact.highlightVideoUrl}
-                  </a>
-                </li>
-              ) : null}
-              {contact.floProfileUrl ? (
-                <li>
-                  <span className="font-semibold">FloWrestling</span>{" "}
-                  <a href={contact.floProfileUrl} className="break-all underline" target="_blank" rel="noreferrer">
-                    {contact.floProfileUrl}
-                  </a>
-                </li>
-              ) : null}
-              {contact.trackWrestlingProfileUrl ? (
-                <li>
-                  <span className="font-semibold">TrackWrestling</span>{" "}
-                  <a href={contact.trackWrestlingProfileUrl} className="break-all underline" target="_blank" rel="noreferrer">
-                    {contact.trackWrestlingProfileUrl}
-                  </a>
-                </li>
-              ) : null}
-            </ul>
+        {facts.length || report.summary ? (
+          <Block n={n()} title="Evaluation">
+            {facts.length ? (
+              <ul className="grid grid-cols-2 gap-x-6 gap-y-1 text-[11.5px] text-gray-900">
+                {facts.map((fact) => (
+                  <li key={fact} className="flex gap-2">
+                    <span aria-hidden className="mt-[5px] h-1.5 w-1.5 shrink-0 bg-[#03154C]" />
+                    <span>{fact}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {report.summary ? (
+              <p className={cn("font-serif text-[12px] leading-[1.6] text-gray-900", facts.length && "mt-3")}>{report.summary}</p>
+            ) : null}
           </Block>
         ) : null}
 
@@ -456,66 +461,93 @@ export function ScoutingReportDocument({
               Academic records are released to verified college coaching staff.
               {academics.academicInterest ? ` Intended major: ${academics.academicInterest}.` : ""}
             </Note>
-          ) : academics.gpa || academics.sat || academics.act || academics.academicInterest ? (
-            <div className="grid grid-cols-4 gap-px border border-gray-300 bg-gray-300">
-              <Cell label="GPA" value={academics.gpa} />
-              <Cell label="SAT" value={academics.sat} />
-              <Cell label="ACT" value={academics.act} />
-              <Cell label="Intended major" value={academics.academicInterest} />
-            </div>
           ) : (
-            <Note>No academic information on file.</Note>
+            <div className="grid grid-cols-4 gap-2">
+              <SummaryCard label="GPA" value={academics.gpa ?? "—"} />
+              <SummaryCard label="SAT" value={academics.sat ?? "—"} />
+              <SummaryCard label="ACT" value={academics.act ?? "—"} />
+              <SummaryCard label="Intended major" value={academics.academicInterest ?? "—"} small />
+            </div>
           )}
           {academics.academicSummary ? (
-            <p className="mt-2 font-serif text-[12px] leading-relaxed text-gray-800">
-              {academics.academicSummary}
-            </p>
+            <p className="mt-2 font-serif text-[12px] leading-relaxed text-gray-800">{academics.academicSummary}</p>
           ) : null}
         </Block>
 
         {report.starRating ? (
           <Block n={n()} title="Star rating">
-            {/*
-              * Stars and the facts behind them, not points. A coach who sees a 69 at four stars
-              * beside a 70 at three argues about the formula instead of reading the wrestler; the
-              * basis column is what he came for. Points stay on the admin ranking board.
-              */}
-            <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-              <Stars stars={report.starRating.stars} />
-              {report.starRating.floor ? (
-                <span className="text-[10.5px] font-medium text-[#03154C]">{report.starRating.floor}</span>
+            {/* The verdict and why, in four lines. The full method is at the end of the report. */}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <Stars stars={report.starRating.stars} large />
+              <span className="text-[13px] font-black uppercase tracking-[0.16em] text-[#03154C]">
+                {report.starRating.stars}-star prospect
+              </span>
+              {report.starRating.floor ? <span className="text-[10.5px] text-gray-700">{report.starRating.floor}</span> : null}
+              {report.starRating.provisional ? <span className="text-[10px] text-gray-600">Provisional: thin record on file</span> : null}
+            </div>
+            <table className="mt-2 w-full border-collapse text-[11.5px]">
+              <tbody>
+                {starRows(report).map((row) => (
+                  <tr key={row.label} className="border-t border-gray-300">
+                    <td className="w-[12rem] py-1.5 pr-3 align-top text-[9.5px] font-black uppercase tracking-[0.14em] text-[#03154C]">
+                      {row.label}
+                    </td>
+                    <td className="py-1.5 align-top text-gray-900">{row.value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Block>
+        ) : null}
+
+        {/*
+          Competition profile - what "tested 6/6" was made of, in figures a coach reads at once:
+          the season, ranked wins, national and post/preseason events, the weight he last made.
+          Same strength-of-competition fields as before; only the presentation changed.
+        */}
+        {report.seasonStrength && report.seasonStrength.bouts > 0 ? (
+          <Block n={n()} title="Competition profile">
+            <div className="grid grid-cols-5 gap-2 break-inside-avoid">
+              <SummaryCard
+                label="In-season record"
+                value={`${report.seasonStrength.wins}-${report.seasonStrength.losses}`}
+                sub={report.seasonStrengthSeason ?? undefined}
+              />
+              <SummaryCard label="Wins over ranked" value={String(report.strengthOfCompetition.rankedWins.total)} />
+              <SummaryCard label="National events" value={String(report.strengthOfCompetition.nationalEvents.length)} />
+              <SummaryCard label="Post/preseason events" value={String(report.strengthOfCompetition.offSeasonEvents)} />
+              <SummaryCard
+                label="Last competed"
+                value={identity.lastCompetedWeight ? `${identity.lastCompetedWeight} lbs` : "—"}
+                sub={identity.lastCompetedEvent ?? undefined}
+              />
+            </div>
+            <div className="mt-2 space-y-0.5 text-[10.5px] leading-snug text-gray-700">
+              <div>
+                <span className="font-bold text-[#03154C]">Ranked wins:</span>{" "}
+                {report.strengthOfCompetition.rankedWins.national} nationally ranked ·{" "}
+                {report.strengthOfCompetition.rankedWins.stateRanked} NC-ranked ·{" "}
+                {report.strengthOfCompetition.rankedWins.tocField} Tournament of Champions field.{" "}
+                <span className="font-bold text-[#03154C]">Losses to ranked opponents:</span>{" "}
+                {report.strengthOfCompetition.credentialedLosses}, listed under Notable losses.
+              </div>
+              {weightProgression(report.results) ? (
+                <div>
+                  <span className="font-bold text-[#03154C]">Competed at:</span> {weightProgression(report.results)}
+                </div>
               ) : null}
-              {report.starRating.provisional ? (
-                <span className="text-[10px] text-gray-500">Provisional: thin record on file</span>
+              <div>
+                <span className="font-bold text-[#03154C]">Competition level:</span> {report.strengthOfCompetition.grade.label}.{" "}
+                {report.strengthOfCompetition.grade.verdict}
+                {report.strengthOfCompetition.grade.nextStep ? ` Next step: ${report.strengthOfCompetition.grade.nextStep}` : ""}
+              </div>
+              {report.strengthOfCompetition.seasonsOnFile <= 1 ? (
+                <div className="italic text-gray-600">
+                  One season on file. A wrestler who transferred in, or is in a first year, reads as quiet here whatever was
+                  done elsewhere.
+                </div>
               ) : null}
             </div>
-            <Table head={["Component", "Basis"]} widths={["11rem", "auto"]}>
-              {report.starRating.components.map((c) => (
-                <Fragment key={c.key}>
-                  <tr className="border-t border-gray-200">
-                    <Td bold>{c.label}</Td>
-                    <Td>{c.parts?.length ? "" : c.detail}</Td>
-                  </tr>
-                  {(c.parts ?? []).map((part) => (
-                    <tr key={`${c.key}-${part.label}`}>
-                      <Td>
-                        <span className="pl-3 text-gray-600">{part.label}</span>
-                      </Td>
-                      <Td>{part.detail}</Td>
-                    </tr>
-                  ))}
-                </Fragment>
-              ))}
-            </Table>
-            <p className="mt-1.5 text-[9px] leading-relaxed text-gray-500">
-              Built only from results on file, never a projection of college ceiling. Three equal
-              parts: in-state performance (best Tournament of Champions or NCHSAA finish, plus
-              significant wins), nationals (NHSCA, Super 32 and Fargo placing weigh most), and the
-              RecruitNC class ranking. A top-10 ranking holds a wrestler at four stars and any other
-              ranking at three; some credentials also set a minimum, named beside the stars. Five
-              stars requires a current national ranking and a top-eight finish at Super 32.
-              Rated for the classes RecruitNC ranks.
-            </p>
           </Block>
         ) : null}
 
@@ -533,142 +565,10 @@ export function ScoutingReportDocument({
                 </tr>
               ))}
             </Table>
-            <p className="mt-1.5 text-[9px] leading-relaxed text-gray-500">
+            <p className="mt-1.5 text-[9px] leading-relaxed text-gray-600">
               Weight class as published by the outlet. Only the {RETAINED_EDITIONS} most recent monthly
               editions are retained, so movement describes that window and no further back.
             </p>
-          </Block>
-        ) : null}
-
-        {/*
-          Strength of competition — renamed from "schedule", which only ever described the
-          in-season half. The season figures come from the same bouts the star rating is built
-          on; the ranked-win counts come from the same bouts the table below prints.
-
-          No composite score, deliberately. A single number would have to answer "out of what?",
-          and the previous copy here claimed a 95th percentile we cannot define: the value is
-          pasted in from an outside source and 41% of all rated bouts on file clear it. The
-          rating is reported; the population is not named.
-        */}
-        {report.seasonStrength && report.seasonStrength.bouts > 0 ? (
-          <Block n={n()} title="Strength of competition">
-            {/*
-              One table, in the same language as Significant wins and Notable losses below, so
-              the section reads as part of the report rather than a dashboard bolted to it.
-
-              Each row carries its own basis, on the same line as the number.
-
-              The two rows built on the imported opponent rating are gone. The rating still
-              arrives with every import — 88% of 2025-26 bouts carry one — so this is not about
-              stale data. It is that nobody here can say what the number measures: it is pasted
-              in from an outside source, no definition travels with it, and a figure a college
-              coach cannot have explained to them does not belong on a report they paid for.
-              Bonus rate went too: falls, techs and majors are well recorded and simply do not
-              answer the question this section asks, which is who a wrestler has faced.
-            */}
-            <Table head={["Measure", "Value", "Basis"]} widths={["12rem", "6.5rem", "auto"]}>
-              <tr className="border-t border-gray-200">
-                <Td bold>In-season record</Td>
-                <Td mono>{`${report.seasonStrength.wins}-${report.seasonStrength.losses}`}</Td>
-                <Td>
-                  {report.seasonStrength.bouts} bouts
-                  {report.seasonStrengthSeason ? ` in the ${report.seasonStrengthSeason} season` : ""} — duals, tris,
-                  invitationals and the NCHSAA postseason. National and post/preseason events are listed under
-                  Competition record, not counted here.
-                </Td>
-              </tr>
-              <tr className="border-t border-gray-200">
-                <Td bold>Wins over ranked opponents</Td>
-                <Td mono>{report.strengthOfCompetition.rankedWins.total}</Td>
-                <Td>
-                  {report.strengthOfCompetition.rankedWins.national} nationally ranked ·{" "}
-                  {report.strengthOfCompetition.rankedWins.tocField} Tournament of Champions field ·{" "}
-                  {report.strengthOfCompetition.rankedWins.stateRanked} NC ranked
-                </Td>
-              </tr>
-              <tr className="border-t border-gray-200">
-                <Td bold>Losses to ranked opponents</Td>
-                <Td mono>{report.strengthOfCompetition.credentialedLosses}</Td>
-                <Td>Listed in full under Notable losses</Td>
-              </tr>
-              {weightProgression(report.results) ? (
-                <tr className="border-t border-gray-200">
-                  <Td bold>Competed at</Td>
-                  <Td mono>—</Td>
-                  <Td>{weightProgression(report.results)}</Td>
-                </tr>
-              ) : null}
-            </Table>
-
-            {/*
-              The verdict, not a measurement.
-              
-              A family reading this is owed the thing a college coach already knows: a state
-              title does not prove you have been tested. Red means no ranked wins, no national
-              competition, in-season only. Green means all three. Every band names the cheapest
-              step up, because the point of showing it is to get kids wrestling the best, and a
-              grade nobody can act on is only a judgement.
-            */}
-            <div
-              className={cn(
-                // Never split. It is a verdict: a grade and half its reasons on one page with
-                // the rest overleaf reads as two different findings. Small enough to move whole.
-                "mt-3 break-inside-avoid rounded border p-3",
-                report.strengthOfCompetition.grade.band === "green" && "border-emerald-300 bg-emerald-50",
-                report.strengthOfCompetition.grade.band === "amber" && "border-amber-300 bg-amber-50",
-                report.strengthOfCompetition.grade.band === "orange" && "border-orange-300 bg-orange-50",
-                report.strengthOfCompetition.grade.band === "red" && "border-red-300 bg-red-50",
-              )}
-            >
-              <div className="flex items-baseline justify-between">
-                <span
-                  className={cn(
-                    "text-[13px] font-bold uppercase tracking-wide",
-                    report.strengthOfCompetition.grade.band === "green" && "text-emerald-800",
-                    report.strengthOfCompetition.grade.band === "amber" && "text-amber-800",
-                    report.strengthOfCompetition.grade.band === "orange" && "text-orange-800",
-                    report.strengthOfCompetition.grade.band === "red" && "text-red-800",
-                  )}
-                >
-                  {report.strengthOfCompetition.grade.label}
-                </span>
-                <span className="font-mono text-[11px] text-gray-600">
-                  {report.strengthOfCompetition.grade.score}/6
-                </span>
-              </div>
-              <p className="mt-1 text-[11px] leading-snug text-gray-800">
-                {report.strengthOfCompetition.grade.verdict}
-              </p>
-              <ul className="mt-2 space-y-1">
-                {report.strengthOfCompetition.grade.factors.map((factor) => (
-                  <li key={factor.key} className="flex items-baseline gap-2 text-[11px]">
-                    <span
-                      aria-hidden
-                      className={cn(
-                        "inline-block h-2 w-2 shrink-0 rounded-full",
-                        factor.points === 2 && "bg-emerald-600",
-                        factor.points === 1 && "bg-amber-500",
-                        factor.points === 0 && "bg-red-500",
-                      )}
-                    />
-                    <span className="font-medium text-gray-700">{factor.label}:</span>
-                    <span className="text-gray-600">{factor.detail}</span>
-                  </li>
-                ))}
-              </ul>
-              {report.strengthOfCompetition.grade.nextStep ? (
-                <p className="mt-2 text-[11px] font-semibold text-gray-800">
-                  Next step: {report.strengthOfCompetition.grade.nextStep}
-                </p>
-              ) : null}
-            </div>
-
-            {report.strengthOfCompetition.seasonsOnFile <= 1 ? (
-              <p className="mt-2 text-[9.5px] leading-snug text-amber-700">
-                One season on file. A wrestler who transferred in, or is in their first year, will read as quiet here
-                whatever they have done elsewhere.
-              </p>
-            ) : null}
           </Block>
         ) : null}
 
@@ -739,7 +639,7 @@ export function ScoutingReportDocument({
           </>
         ) : null}
 
-        <footer className="mt-7 border-t-2 border-[#03154C] pt-2 text-[9px] leading-relaxed text-gray-500">
+        <footer className="mt-8 break-inside-avoid border-t-2 border-[#03154C] pt-2 text-[9px] leading-relaxed text-gray-700">
           <p>
             <span className="font-bold uppercase tracking-wider text-[#B31B1B]">Method.</span> Significant
             results are those against wrestlers ranked nationally by FloWrestling, Sports Illustrated or
@@ -751,6 +651,17 @@ export function ScoutingReportDocument({
             Wins reported by the athlete or family are
             included, with the opponent&apos;s accolade as they gave it.
           </p>
+          {report.starRating ? (
+            <p className="mt-1">
+              <span className="font-bold uppercase tracking-wider text-[#B31B1B]">Star rating.</span> Built only from
+              results on file, never a projection of college ceiling. Three equal parts: in-state performance (best
+              Tournament of Champions or NCHSAA finish, plus significant wins), nationals (NHSCA, Super 32 and Fargo
+              placing weigh most), and the RecruitNC class ranking. A top-10 ranking holds a wrestler at four stars and
+              any other ranking at three; some credentials also set a minimum, named beside the stars. Five stars
+              requires a current national ranking and a top-eight finish at Super 32. Rated for the classes RecruitNC
+              ranks.
+            </p>
+          ) : null}
           <p className="mt-1">
             <span className="font-bold uppercase tracking-wider text-[#B31B1B]">Confidential.</span>{" "}
             {report.watermark ? (
@@ -778,15 +689,16 @@ export function ScoutingReportDocument({
  * Always five outlines so the number is read at a glance against a fixed scale — three filled
  * of five, not three marks floating on their own.
  */
-function Stars({ stars }: { stars: number }) {
+function Stars({ stars, large }: { stars: number; large?: boolean }) {
   return (
     <span className="inline-flex gap-px" aria-label={`${stars} out of 5 stars`}>
       {[1, 2, 3, 4, 5].map((i) => (
-        <svg key={i} viewBox="0 0 20 20" className="h-4 w-4" aria-hidden>
+        <svg key={i} viewBox="0 0 20 20" className={large ? "h-5 w-5" : "h-4 w-4"} aria-hidden>
           <path
             d="M10 1.5l2.6 5.3 5.9.9-4.2 4.1 1 5.8-5.3-2.8-5.3 2.8 1-5.8L1.5 7.7l5.9-.9z"
             fill={i <= stars ? "#D3B574" : "none"}
-            stroke={i <= stars ? "#B8963F" : "#C8CDD4"}
+            /* Outlines dark enough to survive a greyscale office printer. */
+            stroke={i <= stars ? "#9C7A2E" : "#9AA3AE"}
             strokeWidth="1.2"
           />
         </svg>
@@ -962,6 +874,65 @@ function movementLabel(movement: number | null): string {
   return movement > 0 ? `Up ${movement} ${places}` : `Down ${Math.abs(movement)} ${places}`
 }
 
+/** A snapshot figure: label, value, and the year or basis beneath. Pale tint, navy type. */
+function SummaryCard({ label, value, sub, small }: { label: string; value: string; sub?: string; small?: boolean }) {
+  return (
+    <div className="min-w-0 border border-[#cfd6e0] bg-[#f3f5f8] px-2.5 py-2">
+      <div className="truncate text-[8.5px] font-bold uppercase tracking-[0.14em] text-gray-600">{label}</div>
+      <div className={cn("mt-0.5 font-black leading-tight text-[#03154C]", small ? "break-words text-[12px]" : "text-[19px]")}>{value}</div>
+      {sub ? <div className="mt-0.5 truncate text-[9.5px] text-gray-600">{sub}</div> : null}
+    </div>
+  )
+}
+
+/** Text / Call / Email / Instagram: a link where there is one, a dash where there is not. */
+function ContactLine({ label, value, href }: { label: string; value: string | null; href: string | null }) {
+  return (
+    <div className="flex items-baseline gap-2">
+      <dt className="w-[4.6rem] shrink-0 text-[9px] font-black uppercase tracking-[0.14em] text-[#03154C]">{label}</dt>
+      <dd className="min-w-0 break-words text-[10.5px] font-semibold text-gray-900 [overflow-wrap:anywhere]">
+        {value && href ? (
+          <a href={href} className="underline decoration-gray-400 underline-offset-2" target={href.startsWith("http") ? "_blank" : undefined} rel="noreferrer">
+            {value}
+          </a>
+        ) : (
+          (value ?? "—")
+        )}
+      </dd>
+    </div>
+  )
+}
+
+function ProfileLink({ label, href }: { label: string; href: string }) {
+  return (
+    <div>
+      <a href={href} className="font-semibold text-[#03154C] underline decoration-gray-400 underline-offset-2" target="_blank" rel="noreferrer">
+        {label}
+      </a>
+    </div>
+  )
+}
+
+/**
+ * The star rating's supporting lines, from its own component details: in-state finish,
+ * significant wins, national competition, and the class ranking.
+ */
+function starRows(report: ScoutingReport): Array<{ label: string; value: string }> {
+  const rating = report.starRating
+  if (!rating) return []
+  const component = (key: string) => rating.components.find((c) => c.key === key)
+  const rows: Array<{ label: string; value: string }> = []
+  const inState = starPart(report, "Best in-state finish") ?? component("instate")?.detail
+  if (inState) rows.push({ label: "In-state performance", value: inState })
+  const wins = starPart(report, "Significant wins")
+  if (wins) rows.push({ label: "Significant wins", value: wins })
+  const national = [starPart(report, "National placement"), starPart(report, "National record")].filter(Boolean).join(" · ")
+  if (national || component("nationals")?.detail) rows.push({ label: "National competition", value: national || component("nationals")!.detail })
+  const ranking = component("ranking")?.detail
+  if (ranking) rows.push({ label: "RecruitNC ranking", value: ranking })
+  return rows
+}
+
 function Note({ children }: { children: React.ReactNode }) {
   return <p className="font-serif text-[12px] italic text-gray-500">{children}</p>
 }
@@ -998,8 +969,8 @@ function Table({
 function Td({ children, mono, bold }: { children: React.ReactNode; mono?: boolean; bold?: boolean }) {
   return (
     <td
-      className={`py-1.5 pr-2 align-top ${mono ? "font-mono text-gray-700" : ""} ${
-        bold ? "font-semibold text-[#03154C]" : "text-gray-700"
+      className={`py-1.5 pr-2 align-top ${mono ? "whitespace-nowrap font-mono text-gray-800" : ""} ${
+        bold ? "font-semibold text-[#03154C]" : "text-gray-800"
       }`}
     >
       {children}
@@ -1018,12 +989,14 @@ const STANDING: Record<
   ScoutingReport["significantWins"][number]["reason"],
   { label: string; className: string }
 > = {
-  "national-ranked": { label: "Nat'l ranked", className: "bg-[#B31B1B] text-white" },
-  "toc-field": { label: "TOC field", className: "bg-[#D3B574] text-[#0A1628]" },
-  ranked: { label: "NC ranked", className: "bg-[#03154C] text-white" },
-  "state-champion": { label: "State champ", className: "bg-[#1f6f43] text-white" },
-  "national-placer": { label: "Nat'l placer", className: "bg-[#5b3f8c] text-white" },
-  "state-placer": { label: "State placer", className: "bg-gray-200 text-gray-900" },
+  // Navy fill for the national claims, navy outline for the in-state ones, grey for placers:
+  // told apart by weight and fill rather than hue, so the distinction survives a greyscale printer.
+  "national-ranked": { label: "Nat'l ranked", className: "bg-[#03154C] text-white" },
+  "national-placer": { label: "Nat'l placer", className: "bg-[#03154C] text-white" },
+  ranked: { label: "NC ranked", className: "border border-[#03154C] text-[#03154C]" },
+  "toc-field": { label: "TOC field", className: "border border-[#03154C] text-[#03154C]" },
+  "state-champion": { label: "State champ", className: "border border-[#03154C] text-[#03154C]" },
+  "state-placer": { label: "State placer", className: "border border-gray-500 text-gray-700" },
 }
 
 /**
@@ -1088,7 +1061,7 @@ function isOutOfState(row: BoutRow): boolean {
 /** One results table, the same for the folkstyle record and the Olympic-styles section. */
 function ResultsTable({ rows }: { rows: ScoutingReport["results"] }) {
   return (
-    <Table head={["Date", "Event", "Result"]} widths={["5.2rem", "11rem", "auto"]}>
+    <Table head={["Date", "Event", "Result"]} widths={["6.4rem", "12rem", "auto"]}>
       {rows.map((row, i) => (
         <tr key={i} className="border-t border-gray-200">
           {/* The day where we have it, the year where the source only published one. */}
