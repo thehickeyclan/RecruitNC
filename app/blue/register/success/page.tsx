@@ -64,10 +64,10 @@ export default function BlueRegisterSuccessPage() {
               </p>
               <p className="text-sm text-gray-700">
                 College coaches search RecruitNC for North Carolina wrestlers. What you entered at
-                registration is already on {firstName ? `${firstName}'s` : "his"} page &mdash; add the
-                film, GPA and anything else a coach would want next.
+                registration is already on {firstName ? `${firstName}'s` : "his"} page &mdash; check it and add the
+                GPA, film and anything else a coach would want next.
               </p>
-              <HardLink href={athlete ? `/view-profile?id=${encodeURIComponent(athlete.id)}` : "/profile"}>
+              <HardLink href={athlete ? `/profile-setup?id=${encodeURIComponent(athlete.id)}` : "/profile"}>
                 <Button className="w-full sm:w-auto bg-[#03154C] hover:bg-[#0a2571] text-white">
                   {firstName ? `Open ${firstName}'s profile` : "Open the profile"}
                 </Button>

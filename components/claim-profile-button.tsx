@@ -87,9 +87,15 @@ export function ClaimProfileButton({
         title: relationship === "self" ? "Profile claimed" : "Linked",
         description:
           relationship === "self"
-            ? "This profile is now yours to edit."
+            ? "Now check the details are right."
             : `${athleteName} is now on your account.`,
       })
+      /*
+       * Straight into the one form. A claim used to end here, on a page built from results, with
+       * nothing saying what to do next - so families arrived at a profile and left it exactly as
+       * they found it. Claiming is the start of filling it in, not the end of anything.
+       */
+      window.location.href = `/profile-setup?id=${encodeURIComponent(athleteId)}`
     } catch (error: any) {
       setState("idle")
       toast({

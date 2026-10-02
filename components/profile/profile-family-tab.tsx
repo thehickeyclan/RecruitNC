@@ -256,7 +256,17 @@ export function ProfileFamilyTab({
                         * the only page in the app nothing else links to - it had fallen three
                         * weeks behind the profile it was meant to edit.
                         */}
-                      <a href={`/view-profile?id=${encodeURIComponent(a.id)}`}>
+                      {/*
+                        * An empty profile goes to the form that asks for what it needs; one with
+                        * something on it goes to the page, where the fields are editable in place.
+                        */}
+                      <a
+                        href={
+                          comp && comp.percent === 0
+                            ? `/profile-setup?id=${encodeURIComponent(a.id)}`
+                            : `/view-profile?id=${encodeURIComponent(a.id)}`
+                        }
+                      >
                         {comp && comp.percent === 0 ? "Complete profile" : "Edit profile"}
                       </a>
                     </Button>

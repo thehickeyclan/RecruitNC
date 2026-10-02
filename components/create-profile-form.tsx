@@ -212,7 +212,7 @@ export function CreateProfileForm({
       }
       if (response.ok && data.athleteId) {
         setForceCreate(false)
-        window.location.href = `/view-profile?id=${encodeURIComponent(data.athleteId)}`
+        window.location.href = `/profile-setup?id=${encodeURIComponent(data.athleteId)}`
         return
       }
       if (response.ok) {
@@ -247,7 +247,7 @@ export function CreateProfileForm({
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || "Failed to link profile")
       setExistingCandidate(null)
-      window.location.href = `/view-profile?id=${encodeURIComponent(data.athleteId)}`
+      window.location.href = `/profile-setup?id=${encodeURIComponent(data.athleteId)}`
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not link profile")
     } finally {
