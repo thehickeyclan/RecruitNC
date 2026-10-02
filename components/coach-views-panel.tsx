@@ -128,11 +128,6 @@ export function CoachViewsPanel({ athleteId }: { athleteId: string }) {
               </li>
             ))}
           </ul>
-          {/* Says what is deliberately not shown, so nobody assumes we are hiding a name by accident. */}
-          <p className="mt-3 text-[11px] leading-relaxed text-white/35">
-            Programs are named; individual coaches are not. A view shows as &ldquo;a college
-            program&rdquo; when the coach&apos;s address is not one we can place.
-          </p>
         </div>
       )}
     </div>
