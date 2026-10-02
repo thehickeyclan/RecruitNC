@@ -96,7 +96,14 @@ export function ConditionalAuthGuard({
    * see something they have not been shown. The page asks for the account itself at the two
    * points that need an owner: claiming, and building one from scratch.
    */
-  const publicExactRoutes = new Set(["/blue", "/create-profile"])
+  /*
+   * `/sample-scouting-report` is the one report a signed-out reader may open.
+   *
+   * It is the link in the college-coach outreach, and its whole job is to be read by somebody who
+   * has no account yet — a login wall in front of it would waste every send. The page itself is
+   * pinned to one consenting athlete, so "public" cannot mean a report on anybody else.
+   */
+  const publicExactRoutes = new Set(["/blue", "/create-profile", "/sample-scouting-report"])
   const isAuthRoute = path.startsWith("/auth/")
   const isPublicPrefix = publicRoutePrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
   const isPublicExact = publicExactRoutes.has(path)
