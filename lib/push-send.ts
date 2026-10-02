@@ -57,6 +57,8 @@ export type PushCategory =
   | "alert_college"
   /** A college program opened a wrestler's profile - sent only to that wrestler's own family. */
   | "alert_program_views"
+  /** An event's results landed - one digest per event, to accounts following somebody who was there. */
+  | "alert_results"
 
 /** Everyone who has this category switched on. */
 export async function sendToSubscribers(

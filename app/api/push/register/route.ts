@@ -15,6 +15,7 @@ type RegisterBody = {
     news?: boolean
     college?: boolean
     programViews?: boolean
+    results?: boolean
   }
   /** The app signed out: this phone should stop receiving alerts meant for that account. */
   signedOut?: boolean
@@ -77,6 +78,8 @@ export async function POST(request: Request) {
     const withAccount: Record<string, unknown> = {
       ...withNew,
       alert_program_views: prefs.programViews !== false,
+      /* Defaults on: a result digest only concerns a wrestler this account chose to follow. */
+      alert_results: prefs.results !== false,
       ...(userId ? { user_id: userId } : body?.signedOut ? { user_id: null } : {}),
     }
 
@@ -85,8 +88,8 @@ export async function POST(request: Request) {
       .upsert(withAccount, { onConflict: "expo_push_token" })
 
     // The account columns ship with program-view alerts and exist only once that SQL has run.
-    if (error && (error.code === "42703" || /user_id|alert_program_views/.test(error.message ?? ""))) {
-      console.warn("[push/register] push_devices account columns missing - run the program-view alert SQL")
+    if (error && (error.code === "42703" || /user_id|alert_program_views|alert_results/.test(error.message ?? ""))) {
+      console.warn("[push/register] push_devices account columns missing - run the program-view and result-digest SQL")
       ;({ error } = await admin.from("push_devices").upsert(withNew, { onConflict: "expo_push_token" }))
     }
 
