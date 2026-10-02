@@ -189,8 +189,15 @@ function SignUpWizard() {
           credentials: "include",
           body: JSON.stringify({ email: email.trim(), password }),
         })
-        const destination =
-          returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/public-rankings"
+        /*
+         * First run gets a signpost. A coach arrives wanting North Carolina wrestlers and lands on
+         * a rankings table, which teaches them that is all this is; the modal names the other two
+         * places and the scouting report. The flag rides on the destination so it survives a
+         * returnTo, and the modal strips it on dismissal.
+         */
+        const landing =
+          returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/rankings"
+        const destination = `${landing}${landing.includes("?") ? "&" : "?"}welcome=coach`
         window.location.replace(signIn.ok ? destination : `/auth/signin?returnTo=${encodeURIComponent(destination)}`)
         return
       }

@@ -62,7 +62,13 @@ export default async function PublicRankingsHomepage({
      * failed purchase.
      */
     const params = (await searchParams) ?? {}
-    redirect(params.purchased ? "/rankings?purchased=1" : "/rankings")
+    /* The coach welcome flag rides along too, for the same reason: a redirect that drops it
+       swallows the one message a new coach was meant to see. */
+    const carried = new URLSearchParams()
+    if (params.purchased) carried.set("purchased", "1")
+    if (params.welcome === "coach") carried.set("welcome", "coach")
+    const query = carried.toString()
+    redirect(query ? `/rankings?${query}` : "/rankings")
   }
 
   // Staff read the boards before the announcement, on the same page customers will use.
