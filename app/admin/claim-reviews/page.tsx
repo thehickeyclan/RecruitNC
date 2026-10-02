@@ -125,7 +125,8 @@ export default function ClaimReviewsPage() {
                   <p className="mt-2 text-xs text-slate-500">
                     {new Date(c.at).toLocaleString()}
                     {c.ip ? ` · ${c.ip}` : ""}
-                    {c.stillClaimed ? "" : " · profile no longer claimed"}
+                    {/* Only meaningful for a self claim: a parent link never sets ownership. */}
+                    {c.relationship === "self" && !c.stillClaimed ? " · profile no longer claimed" : ""}
                   </p>
                 </div>
                 <div className="flex shrink-0 flex-wrap gap-2">

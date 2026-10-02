@@ -58,8 +58,29 @@ export async function recordClaimConsent(
 ): Promise<{ needsReview: boolean; reviewReason: string | null }> {
   const reasons: string[] = []
   const name = String(input.athleteName ?? "")
-  if (input.viewerName && surname(input.viewerName) && surname(name)) {
-    if (surname(input.viewerName) !== surname(name)) reasons.push("different surname")
+
+  /*
+   * Whose name to compare against.
+   *
+   * This read auth user_metadata, which is empty for almost everybody - a real name lives on
+   * user_profiles - so the surname check silently skipped and nothing was ever flagged. Caught
+   * by walking a claim through with a deliberately mismatched surname and watching it pass.
+   *
+   * The typed signature comes first, because it is what the person asserted at the moment of
+   * claiming rather than whatever they typed when they signed up.
+   */
+  let claimerName = String(input.signedName ?? "").trim() || String(input.viewerName ?? "").trim()
+  if (!surname(claimerName)) {
+    const { data: prof } = await admin
+      .from("user_profiles")
+      .select("full_name, first_name, last_name")
+      .eq("user_id", input.userId)
+      .maybeSingle()
+    const p = prof as { full_name?: string; first_name?: string; last_name?: string } | null
+    claimerName = (p?.full_name ?? `${p?.first_name ?? ""} ${p?.last_name ?? ""}`).trim()
+  }
+  if (surname(claimerName) && surname(name) && surname(claimerName) !== surname(name)) {
+    reasons.push("different surname")
   }
   const { count } = await admin
     .from("athletes")
