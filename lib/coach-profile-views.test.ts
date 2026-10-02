@@ -3,6 +3,7 @@ import { teaseCoachViews, type CoachViewSummary } from "@/lib/coach-profile-view
 
 const summary = (over: Partial<CoachViewSummary> = {}): CoachViewSummary => ({
   schools: [],
+  visits: [],
   totalViews: 0,
   distinctCoaches: 0,
   recentViews: 0,

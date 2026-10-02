@@ -22,6 +22,8 @@ type Locked = { locked: true; hasViews: boolean; programCount: number; totalView
 type Unlocked = {
   locked: false
   schools: Array<{ school: string; lastViewedAt: string; views: number }>
+  /** Every view, newest first, all time. `school` is null when the address is not placeable. */
+  visits: Array<{ school: string | null; at: string }>
   totalViews: number
   distinctCoaches: number
   recentViews: number
@@ -99,28 +101,37 @@ export function CoachViewsPanel({ athleteId }: { athleteId: string }) {
         <div className="mt-3">
           <p className="text-sm text-white/60">
             {data.schools.length} program{data.schools.length === 1 ? "" : "s"} · {total} view
-            {total === 1 ? "" : "s"}
-            {data.recentViews > 0 ? ` · ${data.recentViews} in the last 30 days` : ""}
+            {total === 1 ? "" : "s"} · all time
           </p>
+          {/*
+            * Every view, newest first, rather than one row per programme.
+            *
+            * The grouped version answered "who is interested" and hid "when" - a programme that
+            * looked three times in March and once last night read the same as one that looked
+            * four times in March. Families re-open this page to see whether anything happened
+            * since last time, which only a dated list answers.
+            */}
           <ul className="mt-2 space-y-1.5">
-            {data.schools.map((s) => (
+            {data.visits.map((v, i) => (
               <li
-                key={s.school}
+                key={`${v.at}-${i}`}
                 className="flex flex-wrap items-baseline gap-x-2 rounded-sm bg-white/5 px-3 py-2 text-sm"
               >
-                <span className="font-semibold text-white">{s.school}</span>
-                <span className="text-xs text-white/40">
-                  {s.views} view{s.views === 1 ? "" : "s"}
+                <span className={v.school ? "font-semibold text-white" : "font-semibold text-white/50"}>
+                  {v.school ?? "A college program"}
                 </span>
                 <span className="ml-auto font-mono text-xs text-white/50">
-                  {new Date(s.lastViewedAt).toLocaleDateString()}
+                  {new Date(v.at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                  {" · "}
+                  {new Date(v.at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
                 </span>
               </li>
             ))}
           </ul>
           {/* Says what is deliberately not shown, so nobody assumes we are hiding a name by accident. */}
           <p className="mt-3 text-[11px] leading-relaxed text-white/35">
-            Programs are named; individual coaches are not.
+            Programs are named; individual coaches are not. A view shows as &ldquo;a college
+            program&rdquo; when the coach&apos;s address is not one we can place.
           </p>
         </div>
       )}

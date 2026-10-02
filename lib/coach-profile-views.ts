@@ -20,6 +20,19 @@ import { collegeForCoach } from "@/lib/college-domain-schools"
 export type CoachViewSummary = {
   /** Distinct programs that have viewed, most recent first. */
   schools: Array<{ school: string; lastViewedAt: string; views: number }>
+  /**
+   * Every view, newest first, all time.
+   *
+   * The grouped list answers "who is interested"; this answers "when did they look", which is
+   * the question a family actually re-opens the page for. A programme that looked three times
+   * in March and once last night is a different story from one that looked four times in March,
+   * and grouping hid the difference.
+   *
+   * `school` is null when the coach's address is not a .edu we can place. The view is still
+   * listed - it happened, and a list that does not add up to the stated total reads as a bug -
+   * but no programme is named, because naming one would be a guess.
+   */
+  visits: Array<{ school: string | null; at: string }>
   totalViews: number
   distinctCoaches: number
   /** Views in the last 30 days — the number worth a notification. */
@@ -39,7 +52,7 @@ export async function getCoachViewsForAthlete(
   supabase: SupabaseClient,
   athleteId: string,
 ): Promise<CoachViewSummary> {
-  const empty: CoachViewSummary = { schools: [], totalViews: 0, distinctCoaches: 0, recentViews: 0 }
+  const empty: CoachViewSummary = { schools: [], visits: [], totalViews: 0, distinctCoaches: 0, recentViews: 0 }
   if (!athleteId?.trim()) return empty
 
   const { data, error } = await supabase
@@ -68,11 +81,14 @@ export async function getCoachViewsForAthlete(
 
   const cutoff = Date.now() - RECENT_WINDOW_DAYS * 86_400_000
   const bySchool = new Map<string, { school: string; lastViewedAt: string; views: number }>()
+  const visits: Array<{ school: string | null; at: string }> = []
   let recentViews = 0
 
   for (const row of data) {
     const at = String(row.created_at)
     if (Date.parse(at) >= cutoff) recentViews += 1
+    /* Every view, named or not. The query already returns newest first. */
+    visits.push({ school: schoolByCoach.get(String(row.user_id)) ?? null, at })
 
     // A coach on a non-.edu address has no school we can state. Their view still counts
     // toward the totals — it happened — but naming a program we cannot identify would be a
@@ -91,6 +107,7 @@ export async function getCoachViewsForAthlete(
 
   return {
     schools: [...bySchool.values()].sort((a, b) => b.lastViewedAt.localeCompare(a.lastViewedAt)),
+    visits,
     totalViews: data.length,
     distinctCoaches: coachIds.length,
     recentViews,
