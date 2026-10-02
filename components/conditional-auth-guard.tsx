@@ -90,12 +90,26 @@ export function ConditionalAuthGuard({
     "/support",
     "/contact",
   ]
-  const publicExactRoutes = new Set(["/blue"])
+  /*
+   * /create-profile searches for the profile we already hold and shows a wrestler his own
+   * results, which is the thing that makes claiming worth doing - nobody creates an account to
+   * see something they have not been shown. The page asks for the account itself at the two
+   * points that need an owner: claiming, and building one from scratch.
+   */
+  const publicExactRoutes = new Set(["/blue", "/create-profile"])
   const isAuthRoute = path.startsWith("/auth/")
   const isPublicPrefix = publicRoutePrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
   const isPublicExact = publicExactRoutes.has(path)
+  /*
+   * /create-profile is deliberately not here any more.
+   *
+   * It searches for the profile we already hold and shows the wrestler his own results, and that
+   * is the thing that makes claiming worth doing - nobody creates an account to see something
+   * they have not been shown. The page asks for the account itself at the two points that need
+   * an owner: claiming, and building one from scratch. Guarding the whole route put the wall in
+   * front of the reason to pass it, which mattered most for a campaign sending people here cold.
+   */
   const isProfileManagementRoute =
-    path === "/create-profile" ||
     path === "/submit-profile" ||
     path.startsWith("/edit-profile/") ||
     /^\/athletes\/[^/]+\/edit(?:\/|$)/.test(path) ||
