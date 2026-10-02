@@ -107,15 +107,28 @@ export function ClaimProfileButton({
       <div className="rounded-sm border border-[#D3B574]/40 bg-[#D3B574]/10 p-4">
         <p className="text-sm font-semibold text-white">Is this you, or your wrestler?</p>
         <p className="mt-1 text-sm text-white/60">
-          Sign in to claim {athleteName}&apos;s profile — then you can change the photo, weight,
-          club, contact details and more.
+          A free account lets you claim {athleteName}&apos;s profile — then you can change the
+          photo, weight, club, contact details and more.
         </p>
-        <a
-          href={`/auth/signin?returnTo=${encodeURIComponent(returnTo)}`}
-          className="mt-3 inline-flex min-h-[44px] items-center rounded-sm bg-[#B31B1B] px-4 text-sm font-bold text-white hover:bg-[#8f1616]"
-        >
-          Sign in to claim this profile
-        </a>
+        {/*
+          * Create first, sign in second. Someone who has just found their son's page almost
+          * never has an account yet, and the only button said Sign in - the one thing they
+          * could not do. Both return here once they are done.
+          */}
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <a
+            href={`/auth/signup?returnTo=${encodeURIComponent(returnTo)}`}
+            className="inline-flex min-h-[44px] items-center rounded-sm bg-[#B31B1B] px-4 text-sm font-bold text-white hover:bg-[#8f1616]"
+          >
+            Create a free account
+          </a>
+          <a
+            href={`/auth/signin?returnTo=${encodeURIComponent(returnTo)}`}
+            className="text-sm font-semibold text-white/80 underline underline-offset-2 hover:text-white"
+          >
+            I already have one
+          </a>
+        </div>
       </div>
     )
   }
