@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useState } from "react"
 import { Trophy } from "lucide-react"
 import type { ProfileQualityWinsTournamentBlock } from "@/lib/profile-quality-wins"
+import { styleOfEvent } from "@/lib/wrestling-style"
 import { SignificantWinSubmissionDialog } from "@/components/significant-win-submission-dialog"
 import { TournamentResultSubmissionDialog } from "@/components/tournament-result-submission-dialog"
 
@@ -77,7 +78,8 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [], style
       reason: "credentialed",
       credential: `${win.state} · ${win.credentials}`,
       scope: win.state.trim().toUpperCase() === "NC" ? "in-state" : "national",
-      style: "folkstyle",
+      // From the event, like the bout-import wins: a hand-built list can be a freestyle event.
+      style: styleOfEvent(block.eventLabel),
     })),
   )
   /*

@@ -36,3 +36,14 @@ describe("summarizeCompetition", () => {
     expect(isNationalEvent("Beast of the East")).toBe(true)
   })
 })
+
+describe("events that never name their style", () => {
+  it("files Tar Heel, the U.S. Open and the Southeast Regional as freestyle", () => {
+    expect(styleOfEvent("Tar Heel State Classic")).toBe("freestyle")
+    expect(styleOfEvent("2026 U.S. Open Event: (U17)")).toBe("freestyle")
+    expect(styleOfEvent("Frank E. Rader Southeast Regional Championships")).toBe("freestyle")
+    expect(styleOfEvent("2026 Tar Heel State Classic - 16U Boys Greco")).toBe("greco")
+    expect(styleOfEvent("NHSCA Nationals")).toBe("folkstyle")
+    expect(styleOfEvent("2026 NHSCA National Duals")).toBe("folkstyle")
+  })
+})
