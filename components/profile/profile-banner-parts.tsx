@@ -109,7 +109,7 @@ export function CredentialCards({ credentials, className }: { credentials: Crede
           <span className="min-w-0">
             <span
               className={cn(
-                "block text-[12.5px] font-extrabold uppercase leading-tight tracking-[0.08em] lg:truncate lg:text-[15px] lg:tracking-[0.12em]",
+                "block text-[12.5px] font-extrabold uppercase leading-tight tracking-[0.08em] lg:text-[15px] lg:tracking-[0.1em]",
                 c.tier === "national" ? "text-[#D3B574]" : "text-white",
               )}
             >
@@ -154,7 +154,9 @@ export function CompetesBar({
   return (
     <div
       className={cn(
-        "rounded-xl border border-white/10 bg-[#0A1628]/70 p-4 backdrop-blur-md lg:flex lg:items-center lg:gap-6 lg:px-6",
+        // Contact sits under Competes, not beside it: side by side, three contact buttons squeezed
+        // the styles into a one-word column.
+        "rounded-xl border border-white/10 bg-[#0A1628]/70 p-4 backdrop-blur-md lg:px-6",
         className,
       )}
     >
@@ -179,7 +181,7 @@ export function CompetesBar({
         </div>
       ) : null}
       {contact ? (
-        <div className={cn(competition && "mt-3 border-t border-white/10 pt-3 lg:mt-0 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0")}>
+        <div className={cn(competition && "mt-3 border-t border-white/10 pt-3")}>
           {contact}
         </div>
       ) : null}

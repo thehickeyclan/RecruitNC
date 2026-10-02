@@ -1385,9 +1385,6 @@ export function AthleteDetail({
                 </div>
 
                 <div className="absolute right-6 top-6 z-20 flex items-center gap-2">
-                  {canSeeScoutingReport ? (
-                    <ScoutingReportAction href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`} />
-                  ) : null}
                   <Button
                     size="sm"
                     variant="ghost"
@@ -1411,11 +1408,20 @@ export function AthleteDetail({
                   <WatchListButton athleteId={athlete.id} />
                 </div>
 
-                <div className="relative z-10 ml-[34%] flex flex-col gap-6 px-10 py-10 xl:pr-14">
+                <div className="relative z-10 ml-[34%] flex flex-col gap-6 px-10 pb-10 pt-16 xl:pr-14">
                   <div>
                     <BannerEyebrow />
                     <BannerName name={athleteName} className="mt-3" />
-                    {bannerRibbon ? <BannerRibbon className="mt-5">{bannerRibbon}</BannerRibbon> : null}
+                    {/* The scouting report beside the ribbon: in the content, where it cannot collide
+                        with the name or the eyebrow at narrower desktop widths. */}
+                    {bannerRibbon || canSeeScoutingReport ? (
+                      <div className="mt-5 flex flex-wrap items-center gap-3">
+                        {bannerRibbon ? <BannerRibbon>{bannerRibbon}</BannerRibbon> : null}
+                        {canSeeScoutingReport ? (
+                          <ScoutingReportAction href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`} />
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
                   {bannerCommitted}
                   <BannerStats stats={bannerStats} />
