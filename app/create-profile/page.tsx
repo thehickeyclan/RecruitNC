@@ -39,11 +39,24 @@ export default function CreateProfilePage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-rnc-ink p-4 text-white">
         <div className="w-full max-w-md rounded-sm border border-rnc-line bg-rnc-surface p-6">
-          <h1 className="text-2xl font-black">Sign in required</h1>
-          <p className="mt-2 text-white/60">Please sign in to create your athlete profile.</p>
+          <h1 className="text-2xl font-black">First, a free account</h1>
+          <p className="mt-2 text-white/60">
+            It takes a minute and brings you straight back here. Your account is how you manage the
+            profile afterwards &mdash; adding film, results and the rest.
+          </p>
+          {/*
+            * Create leads, and both carry a way back. This said "Sign in required" with a single
+            * Sign In button and no returnTo - so somebody arriving cold, which is everybody in a
+            * campaign, was told to do the one thing they could not do and then lost their place.
+            */}
           <Button asChild className="mt-5 w-full rounded-sm bg-rnc-red text-white hover:bg-rnc-red-hover">
-            <a href="/auth/signin">Sign In</a>
+            <a href="/auth/signup?returnTo=%2Fcreate-profile">Create my free account</a>
           </Button>
+          <p className="mt-3 text-center text-sm text-white/60">
+            <a href="/auth/signin?returnTo=%2Fcreate-profile" className="underline underline-offset-2">
+              I already have an account
+            </a>
+          </p>
         </div>
       </div>
     )
