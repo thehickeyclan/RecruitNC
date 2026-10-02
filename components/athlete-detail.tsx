@@ -9,6 +9,7 @@ import {
   BannerStats,
   CompetesBar,
   CredentialCards,
+  ScoutingReportAction,
   type BannerStat,
 } from "@/components/profile/profile-banner-parts"
 import { useState, useEffect } from "react"
@@ -1129,7 +1130,7 @@ export function AthleteDetail({
     <div
       className={cn(
         mobileRecruiterLayout
-          ? "flex flex-col gap-6 lg:gap-8 min-w-0 max-w-full"
+          ? "flex flex-col gap-7 lg:gap-10 min-w-0 max-w-full"
           : "space-y-8 min-w-0 max-w-full",
         isDark && "profile-surface",
       )}
@@ -1208,6 +1209,12 @@ export function AthleteDetail({
                   <BannerEyebrow />
                   <BannerName name={athleteName} className="mt-2" />
                   {bannerRibbon ? <BannerRibbon className="mt-4">{bannerRibbon}</BannerRibbon> : null}
+                  {canSeeScoutingReport ? (
+                    <ScoutingReportAction
+                      href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`}
+                      className="mt-4 flex w-full"
+                    />
+                  ) : null}
                   {bannerCommitted ? <div className="mt-4">{bannerCommitted}</div> : null}
                   <BannerStats stats={bannerStats} className="mt-5" />
                   <CredentialCards credentials={credentials} className="mt-5" />
@@ -1378,6 +1385,9 @@ export function AthleteDetail({
                 </div>
 
                 <div className="absolute right-6 top-6 z-20 flex items-center gap-2">
+                  {canSeeScoutingReport ? (
+                    <ScoutingReportAction href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`} />
+                  ) : null}
                   <Button
                     size="sm"
                     variant="ghost"
@@ -1554,14 +1564,16 @@ export function AthleteDetail({
 
       {/* Who is recruiting this wrestler. Renders nothing unless the viewer is the athlete,
           a linked parent, or an admin — the endpoint refuses everybody else. */}
-      <div className={cn("px-1", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels)}>
+      {/* empty:hidden - the panel renders nothing for most viewers, and an empty wrapper still
+          takes a gap, which left the space under the banner looking unfinished. */}
+      <div className={cn("px-1 empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels)}>
         <CoachViewsPanel athleteId={String(athlete.id)} />
       </div>
 
       {/* Recruiters want one page they can take into a staff meeting. Coaches only — the
           report pulls academics and results together in a way the public profile does not. */}
-      {canSeeScoutingReport && (
-        <div className={cn("px-1", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels)}>
+      {canSeeScoutingReport && !mobileRecruiterLayout && (
+        <div className="px-1">
           <a
             href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`}
             className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-[#D3B574] bg-[#D3B574]/10 px-4 py-2 text-sm font-semibold text-[#D3B574] transition-colors hover:bg-[#D3B574]/20"
@@ -1588,7 +1600,7 @@ export function AthleteDetail({
         reflex while checking somebody else's page.
       */}
       {!isViewingOwnProfile && !isAdmin && (
-        <div className={cn("px-1", mobileRecruiterLayout && PROFILE_SECTION_ORDER.claim)}>
+        <div className={cn("px-1 empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.claim)}>
           {athlete.claimed_by_user_id ? (
             <ParentLinkButton athleteId={String(athlete.id)} athleteName={athleteName} />
           ) : (

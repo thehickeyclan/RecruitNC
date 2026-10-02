@@ -1,8 +1,13 @@
 /** Shared responsive spacing for public unified / view-profile sections. */
+/**
+ * Section headers in the banner's language (Matt, 1 Oct 2026): flat, a gold icon and a heavy
+ * uppercase title over a hairline - not the gradient bar, which read as an admin panel under the
+ * banner.
+ */
 export const PROFILE_SECTION_HEADER =
-  "bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-4 lg:p-6"
+  "border-b border-white/10 bg-transparent px-4 pb-3 pt-4 lg:px-7 lg:pb-4 lg:pt-6"
 
-export const PROFILE_SECTION_TITLE = "text-lg lg:text-2xl font-bold text-white"
+export const PROFILE_SECTION_TITLE = "text-base lg:text-xl font-black uppercase tracking-[0.06em] text-white"
 
 export const PROFILE_CARD_BODY = "profile-card-body p-4 md:p-6 lg:p-8"
 
