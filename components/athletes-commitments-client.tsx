@@ -20,6 +20,7 @@ import {
   type CommitmentStats,
 } from "@/lib/athletes-commitments-fetch"
 import { prefetchAthleteProfile } from "@/lib/prefetch-athlete-profile"
+import { RankingsCrosslink } from "@/components/rankings-crosslink"
 
 type AthletesTab = "commitments" | "legacy"
 type CommitViewMode = "cards" | "table"
@@ -171,6 +172,7 @@ export function AthletesCommitmentsClient({
               ? "Browse North Carolina wrestlers who have committed to college programs."
               : "Search by name across NHSCA, NCHSAA, awards, Super 32 and more."}
           </p>
+          <RankingsCrosslink />
           <div className="flex gap-3 mt-6">
             <Button
               size="sm"

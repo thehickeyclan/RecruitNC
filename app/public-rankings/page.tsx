@@ -97,6 +97,27 @@ export default async function PublicRankingsHomepage({
             Class rankings and the Top 75 College Prospects, informed by results, quality wins
             and strength of competition.
           </p>
+          {/*
+            * The other half of the job. A verified coach lands here when he signs in; the boards
+            * say who is good and the profiles say what they did, and neither page mentioned the
+            * other. Shown to coaches only - a family browsing their own class board does not
+            * need pointing at a directory of other people's children.
+            */}
+          {viewer.isVerifiedCoach === true ? (
+            <HardLink
+              href="/athletes"
+              className="mx-auto mt-8 flex max-w-2xl items-center gap-3 rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 transition-colors hover:bg-white/[0.08]"
+            >
+              <Users className="h-5 w-5 shrink-0 text-[#D3B574]" aria-hidden />
+              <span className="min-w-0 flex-1 text-sm text-white">
+                <span className="font-semibold">Every North Carolina wrestler, ranked or not</span>
+                <span className="ml-2 text-white/60">
+                  Full profiles — results, film, academics and contact details.
+                </span>
+              </span>
+              <ArrowRight className="h-4 w-4 shrink-0 text-[#D3B574]" aria-hidden />
+            </HardLink>
+          ) : null}
         </div>
       </section>
 
