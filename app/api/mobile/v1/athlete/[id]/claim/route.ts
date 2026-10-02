@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveRequestUserId } from "@/lib/request-user"
 import { recordClaimConsent } from "@/lib/profile-claim"
+import { notifyProfileClaim } from "@/lib/profile-claim-notify"
 
 /**
  * Claiming a wrestler's profile from the phone.
@@ -38,6 +39,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   }
 
   const admin = createAdminClient()
+
+  /* For the alert: who claimed it, in the same shape the website sends. */
+  const { data: viewerProfile } = await admin
+    .from("user_profiles")
+    .select("email")
+    .eq("user_id", viewerId)
+    .maybeSingle()
+  const viewerEmail = (viewerProfile as { email?: string } | null)?.email ?? null
+
   const { data: athlete, error: loadError } = await admin
     .from("athletes")
     .select("id, name, claimed_by_user_id")
@@ -68,6 +78,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       }
     }
     if (!existing) {
+      await notifyProfileClaim({
+        athleteId,
+        athleteName: String(athlete.name ?? "Athlete"),
+        relationship: "parent",
+        claimantName: null,
+        claimantEmail: viewerEmail,
+        previousOwnerUserId: null,
+      })
       await recordClaimConsent(admin, {
         userId: viewerId,
         athleteId,
@@ -107,6 +125,15 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ ok: false, error: "Could not claim that profile." }, { status: 500 })
   }
 
+  /* The website has told somebody about every claim for months; the app told nobody. */
+  await notifyProfileClaim({
+    athleteId,
+    athleteName: String(athlete.name ?? "Athlete"),
+    relationship: "self",
+    claimantName: null,
+    claimantEmail: viewerEmail,
+    previousOwnerUserId: null,
+  })
   await recordClaimConsent(admin, {
     userId: viewerId,
     athleteId,
