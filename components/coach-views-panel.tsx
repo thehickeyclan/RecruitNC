@@ -60,9 +60,17 @@ export function CoachViewsPanel({ athleteId }: { athleteId: string }) {
       {total === 0 ? (
         <div className="mt-3">
           <p className="text-sm text-white/60">No college coach has viewed this profile yet.</p>
+          {/*
+            * The advice, without the audience size.
+            *
+            * This used to open with how many college coaches had used the site - a true number
+            * and a self-defeating one. A family reading "no coach has viewed this profile yet"
+            * followed by a small headcount concludes nobody is looking and stops filling the
+            * page in, which is the opposite of what the panel is for. What they can act on is
+            * what the coaches who do visit actually open.
+            */}
           <p className="mt-2 text-xs text-white/40">
-            21 college coaches used the site this year. Profiles with film, a GPA and an intended
-            major are the ones they open.
+            Profiles with film, a GPA and an intended major are the ones coaches open.
           </p>
         </div>
       ) : data.locked ? (
