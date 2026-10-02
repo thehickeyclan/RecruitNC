@@ -265,7 +265,8 @@ export function ScoutingReportDocument({
             className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-[#03154C]"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to profile
+            <span className="sm:hidden">Back</span>
+            <span className="hidden sm:inline">Back to profile</span>
           </Link>
           <div className="flex items-center gap-2">
             <button
@@ -280,7 +281,10 @@ export function ScoutingReportDocument({
               className="inline-flex items-center gap-2 rounded-md bg-[#B31B1B] px-4 py-2 text-sm font-semibold text-white hover:bg-[#8f1616]"
             >
               <Printer className="h-4 w-4" />
-              Download PDF
+              <span className="whitespace-nowrap">
+                <span className="sm:hidden">PDF</span>
+                <span className="hidden sm:inline">Download PDF</span>
+              </span>
             </button>
           </div>
         </div>
@@ -289,10 +293,10 @@ export function ScoutingReportDocument({
       <div
         id="scouting-report"
         data-watermark={report.watermark ?? undefined}
-        className="mx-auto my-6 max-w-[8.5in] border border-gray-300 bg-white px-10 py-8 shadow-sm print:my-0 print:border-0 print:px-0 print:shadow-none"
+        className="mx-auto max-w-[8.5in] bg-white px-4 py-5 sm:my-6 sm:border sm:border-gray-300 sm:px-10 sm:py-8 sm:shadow-sm print:my-0 print:border-0 print:px-0 print:shadow-none"
       >
         {/* Masthead: small and professional - a scouting document, not an advertisement. */}
-        <div className="flex items-center justify-between gap-6 border-b-2 border-[#03154C] pb-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1.5 border-b-2 border-[#03154C] pb-2.5">
           <div className="flex items-center gap-2.5">
             <Image
               src="/nc-united-logo.png"
@@ -307,7 +311,7 @@ export function ScoutingReportDocument({
               <div className="text-[9.5px] font-bold uppercase tracking-[0.22em] text-gray-600">Prospect scouting report</div>
             </div>
           </div>
-          <div className="text-right text-[9.5px] leading-relaxed text-gray-600">
+          <div className="text-[9.5px] leading-relaxed text-gray-600 sm:text-right">
             <div>
               File <span className="font-mono font-semibold text-[#03154C]">{fileNumber}</span> · Issued{" "}
               <span className="font-mono">{dayLabel(report.generatedAt)}</span>
@@ -321,7 +325,7 @@ export function ScoutingReportDocument({
           turning the page: photo, name, stars, ranking, status, weight, school - and contact on
           the right.
         */}
-        <div className="mt-5 grid grid-cols-[auto_minmax(0,1fr)_2.6in] items-start gap-5 break-inside-avoid">
+        <div className="mt-5 grid grid-cols-[auto_minmax(0,1fr)] items-start gap-4 break-inside-avoid sm:grid-cols-[auto_minmax(0,1fr)_2.6in] sm:gap-5">
           {identity.photoUrl ? (
             <div className="border border-gray-300 bg-gray-50 p-1">
               <Image
@@ -329,7 +333,7 @@ export function ScoutingReportDocument({
                 alt={identity.name}
                 width={136}
                 height={170}
-                className="h-[170px] w-[136px] object-cover object-top"
+                className="h-[125px] w-[100px] object-cover object-top sm:h-[170px] sm:w-[136px]"
                 unoptimized
               />
             </div>
@@ -337,7 +341,7 @@ export function ScoutingReportDocument({
             <div />
           )}
           <div className="min-w-0">
-            <h1 className="break-words text-[32px] font-black uppercase leading-[0.95] tracking-tight text-[#03154C]">
+            <h1 className="break-words text-[24px] font-black uppercase leading-[0.95] tracking-tight text-[#03154C] sm:text-[32px]">
               {identity.name}
             </h1>
             {report.starRating ? (
@@ -388,7 +392,7 @@ export function ScoutingReportDocument({
           </div>
 
           {/* Contact: discover, evaluate, contact - so it sits beside the name, every line a link. */}
-          <div className="border border-gray-300 bg-[#f3f5f8] px-3 py-2.5 text-[11px]">
+          <div className="col-span-2 border border-gray-300 bg-[#f3f5f8] px-3 py-2.5 text-[11px] sm:col-span-1">
             <div className="mb-1.5 text-[9.5px] font-black uppercase tracking-[0.2em] text-[#03154C]">Contact</div>
             {report.accessTier === "full" ? (
               <dl className="space-y-1">
@@ -429,7 +433,10 @@ export function ScoutingReportDocument({
         {snapshot.length ? (
           <section className="mt-5 break-inside-avoid">
             <div className="mb-1.5 text-[9.5px] font-black uppercase tracking-[0.2em] text-[#03154C]">Recruiting snapshot</div>
-            <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${snapshot.length}, minmax(0, 1fr))` }}>
+            <div
+              className="grid grid-cols-2 gap-2 sm:[grid-template-columns:repeat(var(--cards),minmax(0,1fr))]"
+              style={{ ["--cards" as string]: snapshot.length }}
+            >
               {snapshot.map((f) => (
                 <SummaryCard key={f.label} label={f.label} value={f.value} sub={f.sub} />
               ))}
@@ -440,7 +447,7 @@ export function ScoutingReportDocument({
         {facts.length || report.summary ? (
           <Block n={n()} title="Evaluation">
             {facts.length ? (
-              <ul className="grid grid-cols-2 gap-x-6 gap-y-1 text-[11.5px] text-gray-900">
+              <ul className="grid grid-cols-1 gap-x-6 gap-y-1 text-[11.5px] text-gray-900 sm:grid-cols-2">
                 {facts.map((fact) => (
                   <li key={fact} className="flex gap-2">
                     <span aria-hidden className="mt-[5px] h-1.5 w-1.5 shrink-0 bg-[#03154C]" />
@@ -462,7 +469,7 @@ export function ScoutingReportDocument({
               {academics.academicInterest ? ` Intended major: ${academics.academicInterest}.` : ""}
             </Note>
           ) : (
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <SummaryCard label="GPA" value={academics.gpa ?? "—"} />
               <SummaryCard label="SAT" value={academics.sat ?? "—"} />
               <SummaryCard label="ACT" value={academics.act ?? "—"} />
@@ -489,7 +496,7 @@ export function ScoutingReportDocument({
               <tbody>
                 {starRows(report).map((row) => (
                   <tr key={row.label} className="border-t border-gray-300">
-                    <td className="w-[12rem] py-1.5 pr-3 align-top text-[9.5px] font-black uppercase tracking-[0.14em] text-[#03154C]">
+                    <td className="w-[7.5rem] py-1.5 pr-3 align-top text-[9.5px] font-black uppercase tracking-[0.14em] text-[#03154C] sm:w-[12rem]">
                       {row.label}
                     </td>
                     <td className="py-1.5 align-top text-gray-900">{row.value}</td>
@@ -507,7 +514,7 @@ export function ScoutingReportDocument({
         */}
         {report.seasonStrength && report.seasonStrength.bouts > 0 ? (
           <Block n={n()} title="Competition profile">
-            <div className="grid grid-cols-5 gap-2 break-inside-avoid">
+            <div className="grid grid-cols-2 gap-2 break-inside-avoid sm:grid-cols-5">
               <SummaryCard
                 label="In-season record"
                 value={`${report.seasonStrength.wins}-${report.seasonStrength.losses}`}
@@ -792,7 +799,7 @@ function Block({
         <span className="font-mono text-[10px] font-bold text-[#B31B1B]">{n}</span>
         <h2 className="text-[11px] font-black uppercase tracking-[0.18em] text-[#03154C]">{title}</h2>
         {count !== undefined ? (
-          <span className="ml-auto font-mono text-[10px] text-gray-500">{count} recorded</span>
+          <span className="ml-auto shrink-0 whitespace-nowrap font-mono text-[10px] text-gray-500">{count} recorded</span>
         ) : null}
       </div>
       {children}
@@ -1061,6 +1068,20 @@ function isOutOfState(row: BoutRow): boolean {
 /** One results table, the same for the folkstyle record and the Olympic-styles section. */
 function ResultsTable({ rows }: { rows: ScoutingReport["results"] }) {
   return (
+    <>
+    {/* Phones: one line per event. Desktop and print keep the table (print is md width). */}
+    <ul className="divide-y divide-gray-200 border-y border-gray-200 sm:hidden">
+      {rows.map((row, i) => (
+        <li key={i} className="py-2 text-[12px]">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="font-semibold text-[#03154C]">{row.event}</span>
+            <span className="shrink-0 font-mono text-[10.5px] text-gray-600">{row.date ? dayLabel(row.date) : row.year}</span>
+          </div>
+          <div className="mt-0.5 text-gray-800">{row.detail}</div>
+        </li>
+      ))}
+    </ul>
+    <div className="hidden sm:block">
     <Table head={["Date", "Event", "Result"]} widths={["6.4rem", "12rem", "auto"]}>
       {rows.map((row, i) => (
         <tr key={i} className="border-t border-gray-200">
@@ -1071,6 +1092,8 @@ function ResultsTable({ rows }: { rows: ScoutingReport["results"] }) {
         </tr>
       ))}
     </Table>
+    </div>
+    </>
   )
 }
 
@@ -1125,7 +1148,37 @@ function BoutTable({ rows, kind }: { rows: BoutRow[]; kind: "win" | "loss" }) {
       </Note>
     )
   }
+  const standingLines = (row: BoutRow) =>
+    [row.nationalRankLabel, row.stateLabel, row.fargoLabel, row.credential].filter((x): x is string => Boolean(x))
   return (
+    <>
+    {/* Phones: a card per bout - six columns cannot fit. Desktop and print keep the table. */}
+    <ul className="divide-y divide-gray-200 border-y border-gray-200 sm:hidden">
+      {rows.map((row, i) => (
+        <li key={i} className="py-2 text-[12px]">
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="font-semibold text-[#03154C]">
+              {row.opponent}
+              {row.opponentSchool ? <span className="font-normal text-gray-600"> · {row.opponentSchool}</span> : null}
+            </span>
+            <span className="shrink-0 font-mono text-[11px] text-gray-800">{row.result ?? "—"}</span>
+          </div>
+          <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+            <span className={`inline-block whitespace-nowrap px-1 py-0.5 text-[8.5px] font-black uppercase tracking-wider ${STANDING[row.reason].className}`}>
+              {STANDING[row.reason].label}
+            </span>
+            {standingLines(row).map((line) => (
+              <span key={line} className="text-[10.5px] text-gray-600">{line}</span>
+            ))}
+          </div>
+          <div className="mt-0.5 flex items-baseline justify-between gap-3 text-[10.5px] text-gray-600">
+            <span>{row.event ?? "—"}</span>
+            <span className="shrink-0 font-mono">{row.date ? dayLabel(row.date) : "—"}</span>
+          </div>
+        </li>
+      ))}
+    </ul>
+    <div className="hidden sm:block">
     <Table
       head={["Opponent", "Affiliation", "Standing", "Result", "Event", "Date"]}
       widths={["7.5rem", "6.5rem", "6rem", "4.25rem", "auto", "5.5rem"]}
@@ -1165,6 +1218,8 @@ function BoutTable({ rows, kind }: { rows: BoutRow[]; kind: "win" | "loss" }) {
         </tr>
       ))}
     </Table>
+    </div>
+    </>
   )
 }
 
