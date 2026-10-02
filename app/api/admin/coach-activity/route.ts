@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 import { requireAdmin } from "@/lib/admin-auth"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { countsAsCoachView } from "@/lib/coach-view-rule"
 import { analyticsRangeStart, parseAnalyticsRange } from "@/lib/analytics-range"
 
 export const dynamic = "force-dynamic"
@@ -55,7 +56,9 @@ export async function GET(request: NextRequest) {
 
   const { data: profiles, error: profileError } = await admin
     .from("user_profiles")
-    .select("user_id, full_name, email, institution, verified_coach, verification_status, created_at, schools:school_id (name)")
+    .select(
+      "user_id, full_name, email, institution, verified_coach, verification_status, created_at, role, profile_type, is_admin, schools:school_id (name)",
+    )
     .in("role", ["college_coach", "college-coach"])
   if (profileError) return NextResponse.json({ error: profileError.message }, { status: 500 })
 
@@ -69,6 +72,10 @@ export async function GET(request: NextRequest) {
     created_at: string | null
     schools: { name: string | null } | { name: string | null }[] | null
   }>
+  /* Apple's reviewers hold a coach login for every release. They are not a programme. */
+  const real = coaches.filter((c) => countsAsCoachView(c as never))
+  coaches.length = 0
+  coaches.push(...real)
   const coachIds = coaches.map((c) => c.user_id)
 
   // Sign-in times live on the auth user, not the profile.

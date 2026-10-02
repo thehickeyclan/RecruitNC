@@ -18,6 +18,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { collegeForCoach } from "@/lib/college-domain-schools"
+import { countsAsCoachView } from "@/lib/coach-view-rule"
 
 export const UNIDENTIFIED_PROGRAM = "Unidentified program" as const
 
@@ -157,8 +158,11 @@ export function rollUpCollegeInterest(
  * Loads college-coach profile views and rolls them up.
  *
  * Paged, because PostgREST caps a response at 1,000 rows and coach traffic will outgrow that.
- * The `is_college_coach` flag was written when the view was recorded, so this agrees with what
- * the athlete's own page shows rather than re-deriving the classification here.
+ *
+ * Who counts is decided on read, through `countsAsCoachView`, the same test the athlete's own
+ * page uses. This used to filter on the `is_college_coach` flag in the payload - written at view
+ * time from a field nobody maintains - which is how this report and a wrestler's profile came to
+ * disagree about the same events.
  */
 export async function loadCollegeInterest(
   admin: SupabaseClient,
@@ -167,12 +171,13 @@ export async function loadCollegeInterest(
   const since = cutoffForRange(range)
   const rows: CollegeInterestRow[] = []
 
+  /* Every profile view in the window; the coach test happens below, once the viewers are known. */
+  const seen: Array<{ coachId: string; athleteId: string; athleteName: string | null; at: string }> = []
   for (let from = 0; ; from += 1000) {
     let query = admin
       .from("user_analytics")
       .select("user_id, created_at, event_data")
       .eq("event_type", "profile_view")
-      .contains("event_data", { is_college_coach: true })
       .order("created_at", { ascending: false })
       .range(from, from + 999)
     if (since) query = query.gte("created_at", since)
@@ -182,7 +187,7 @@ export async function loadCollegeInterest(
     for (const row of data ?? []) {
       const payload = (row.event_data ?? {}) as { athlete_id?: string; athlete_name?: string }
       if (!row.user_id || !payload.athlete_id) continue
-      rows.push({
+      seen.push({
         coachId: String(row.user_id),
         athleteId: String(payload.athlete_id),
         athleteName: payload.athlete_name ?? null,
@@ -191,6 +196,20 @@ export async function loadCollegeInterest(
     }
     if ((data ?? []).length < 1000) break
   }
+
+  /* Which of those viewers are college coaches, by the one shared rule. */
+  const viewerIds = [...new Set(seen.map((row) => row.coachId))]
+  const isCoach = new Set<string>()
+  for (let i = 0; i < viewerIds.length; i += 100) {
+    const { data } = await admin
+      .from("user_profiles")
+      .select("user_id, email, institution, role, profile_type, verified_coach, is_admin")
+      .in("user_id", viewerIds.slice(i, i + 100))
+    for (const viewer of data ?? []) {
+      if (countsAsCoachView(viewer as never)) isCoach.add(String(viewer.user_id))
+    }
+  }
+  rows.push(...seen.filter((row) => isCoach.has(row.coachId)))
 
   const coachIds = [...new Set(rows.map((row) => row.coachId))]
   const schoolByCoach = new Map<string, string | null>()
