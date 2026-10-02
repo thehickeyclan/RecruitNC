@@ -1,12 +1,13 @@
 "use client"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ExternalLink, ChevronUp, ChevronDown, Star } from "lucide-react"
+import { ExternalLink, ChevronUp, ChevronDown, FileText, Star } from "lucide-react"
 import { MessageAthleteButton } from "@/components/messaging/message-athlete-button"
 import { Fragment, useEffect, useState } from "react"
 import Image from "next/image"
 import { useAuth } from "@/contexts/auth-context"
 import { isValidProfileId } from "@/lib/profile-id"
+import { scoutingReportAvailable } from "@/lib/scouting-report-access"
 
 interface NHSCAResult {
   text: string
@@ -30,7 +31,12 @@ interface Athlete {
   id?: string
   name: string
   highschool: string
-  high_school_division?: string | null
+  /** "Super 32 · 2025" - built server-side in lib/prospect-last-competed.ts. */
+  last_competed?: string | null
+  /* Both spellings reach this table: the directory selects `graduationyear`, other callers map
+     it to `graduation_year`. The scouting-report test needs whichever one arrived. */
+  graduationyear?: number | string | null
+  gender?: string | null
   weight_display: string
   graduation_year?: number | null
   achievement_badge?: string
@@ -77,6 +83,14 @@ export function RankingsTableView({
   const [sortDirection, setSortDirection] = useState<SortDirection>(defaultSortDirection ?? "asc")
   const [collegeLogos, setCollegeLogos] = useState<Record<string, string>>({})
   const { user, profile, isAdmin, isCoach } = useAuth()
+  /*
+   * The scouting report link, for coaches and admins.
+   *
+   * `scouting_report_access` is decided in /api/profile - the allowlist and the role rules are
+   * not re-derived here, where they could drift from the endpoint. `scoutingReportAvailable` is
+   * the report route's own test, so the icon is absent for exactly the wrestlers it refuses.
+   */
+  const canSeeScoutingReports = (profile as { scouting_report_access?: boolean } | null)?.scouting_report_access === true
   const [canSeeWatchList, setCanSeeWatchList] = useState(false)
   const [starredAthletes, setStarredAthletes] = useState<Set<string>>(new Set())
   const [starringInProgress, setStarringInProgress] = useState<Set<string>>(new Set())
@@ -367,7 +381,7 @@ export function RankingsTableView({
                   School <SortIcon field="school" />
                 </Button>
               </TableHead>
-              <TableHead className="w-24 text-white font-semibold text-center">HS Division</TableHead>
+              <TableHead className="min-w-[150px] text-white font-semibold">Last competed</TableHead>
               <TableHead className="w-20 text-white font-semibold">
                 <Button
                   variant="ghost"
@@ -573,10 +587,8 @@ export function RankingsTableView({
                     >
                       {athlete.highschool || "-"}
                     </TableCell>
-                    <TableCell
-                      className={`text-center text-sm ${isDark ? "text-white/60" : "text-gray-600"}`}
-                    >
-                      {athlete.high_school_division ?? "—"}
+                    <TableCell className={`text-sm ${isDark ? "text-white/60" : "text-gray-600"}`}>
+                      {athlete.last_competed ?? "—"}
                     </TableCell>
                     <TableCell>
                       <span
@@ -596,6 +608,24 @@ export function RankingsTableView({
                             }`}
                           />
                         )}
+                        {canSeeScoutingReports &&
+                          athlete.id &&
+                          isValidProfileId(athlete.id) &&
+                          scoutingReportAvailable({
+                            gender: athlete.gender,
+                            graduationyear: athlete.graduationyear ?? athlete.graduation_year,
+                          }) && (
+                            <a
+                              href={`/athletes/${encodeURIComponent(athlete.id)}/scouting-report`}
+                              title="Scouting report"
+                              aria-label={`Scouting report for ${athlete.name}`}
+                              className={`inline-flex h-8 w-8 items-center justify-center rounded border border-transparent cursor-pointer ${
+                                isDark ? "hover:bg-white/10" : "hover:bg-gray-100"
+                              }`}
+                            >
+                              <FileText className="w-3.5 h-3.5 text-[#D3B574]" />
+                            </a>
+                          )}
                         <a
                           href={athlete.id && isValidProfileId(athlete.id) ? `/view-profile?id=${encodeURIComponent(athlete.id)}` : "/create-profile"}
                           className={`inline-flex h-8 w-8 items-center justify-center rounded border bg-transparent cursor-pointer ${

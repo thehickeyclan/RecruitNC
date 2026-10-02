@@ -531,6 +531,16 @@ export default function ProspectsAllClient({
         college: prospect.college ?? undefined,
         recruiting_status: prospect.recruiting_status ?? undefined,
         commitment_status_display: commitmentDisplay,
+        /*
+         * Carried through for the table's own columns and gates.
+         *
+         * `gender` is not decoration here: the scouting-report link is hidden for female
+         * wrestlers, whose national results are too thinly imported for a report to be fair,
+         * and a row that arrives without it would be read as "not female" and offered one.
+         */
+        gender: (prospect as { gender?: string | null }).gender ?? null,
+        graduationyear: prospect.graduationyear ?? null,
+        last_competed: (prospect as { last_competed?: string | null }).last_competed ?? null,
       }
     })
 

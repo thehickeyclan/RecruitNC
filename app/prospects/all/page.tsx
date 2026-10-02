@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { fetchProspectDirectoryAll, yearFilterToApiParams } from "@/lib/prospects-directory"
 import { highestAchievement, loadAchievements } from "@/lib/prospect-achievements"
+import { lastCompetedLabel, loadLastCompeted } from "@/lib/prospect-last-competed"
 import ProspectsAllClient from "./prospects-all-client"
 
 export const revalidate = 120
@@ -17,14 +18,19 @@ export default async function ProspectsAllPage() {
      * The client used to derive these itself from `state_results` — a column that does not
      * exist — so filtering by "State Champion" returned two wrestlers out of 261. It is 37.
      */
-    const facts = await loadAchievements(
-      supabase,
-      (initialProspects as Array<{ id: string; name?: string | null }>).map((p) => ({ id: p.id, name: p.name })),
-    )
+    const ids = (initialProspects as Array<{ id: string }>).map((p) => String(p.id))
+    const [facts, lastCompeted] = await Promise.all([
+      loadAchievements(
+        supabase,
+        (initialProspects as Array<{ id: string; name?: string | null }>).map((p) => ({ id: p.id, name: p.name })),
+      ),
+      loadLastCompeted(supabase, ids),
+    ])
     initialProspects = (initialProspects as Array<Record<string, unknown>>).map((p) => ({
       ...p,
       achievement_facts: facts.get(String(p.id)) ?? {},
       achievement_level: highestAchievement(facts.get(String(p.id)) ?? {}).level,
+      last_competed: lastCompetedLabel(lastCompeted.get(String(p.id))),
     })) as unknown as typeof initialProspects
   } catch (error) {
     console.error("[prospects/all] SSR prefetch failed:", error)
