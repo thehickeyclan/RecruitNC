@@ -56,7 +56,6 @@ export function ProfileSetupForm({
 }) {
   const router = useRouter()
   const [v, setV] = useState<ProfileSetupValues>(initial)
-  const [noClub, setNoClub] = useState(!initial.club)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
 
@@ -72,7 +71,7 @@ export function ProfileSetupForm({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ ...v, club: noClub ? "" : v.club }),
+        body: JSON.stringify(v),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -130,18 +129,15 @@ export function ProfileSetupForm({
           <Input value={v.highSchool} onChange={(e) => set("highSchool", e.target.value)} required />
         </div>
         <div className="space-y-2">
-          <Label className="text-white">Club</Label>
+          {/* Plenty of wrestlers are school-only. Blank is the answer, and there is nothing to tick. */}
+          <Label className="text-white">
+            Club<span className="font-normal text-white/40"> (optional)</span>
+          </Label>
           <Input
-            value={noClub ? "" : v.club}
+            value={v.club}
             onChange={(e) => set("club", e.target.value)}
-            disabled={noClub}
-            placeholder="e.g. Triangle Wrestling Academy"
+            placeholder="Leave blank if school only"
           />
-          {/* Plenty of wrestlers are school-only; blocking them on a club they do not have is how a form gets abandoned. */}
-          <label className="flex cursor-pointer items-center gap-2 text-sm text-white/60">
-            <input type="checkbox" checked={noClub} onChange={(e) => setNoClub(e.target.checked)} className="h-4 w-4" />
-            School only — no club
-          </label>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
