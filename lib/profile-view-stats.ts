@@ -73,14 +73,16 @@ export async function loadProfileViewStats(athleteId: string, now = Date.now()):
 
     const rows = data as ViewRow[]
 
-    // Pre-backfill rows have no viewer_kind — classify those from the current role.
-    const needsLookup = [
-      ...new Set(
-        rows
-          .filter((r) => r.user_id && r.event_data?.viewer_kind == null)
-          .map((r) => r.user_id as string),
-      ),
-    ]
+    /*
+     * Every signed-in viewer, not only the ones missing a stored viewer_kind.
+     *
+     * This used to fetch profiles only for rows written before the backfill, because the rest were
+     * classified from the flag on the event. The classification moved to the live role and this
+     * did not follow, so a viewer whose row carried a stored kind was never looked up at all and
+     * read as nobody: Addison Gore's page showed Delaware Valley twice in College coach views and
+     * "no coach views yet" in the panel directly beneath it.
+     */
+    const needsLookup = [...new Set(rows.map((r) => r.user_id).filter((id): id is string => typeof id === "string" && id.length > 0))]
 
     const roleByUser = new Map<string, { role: unknown; verified_coach: unknown }>()
     for (let i = 0; i < needsLookup.length; i += 50) {
