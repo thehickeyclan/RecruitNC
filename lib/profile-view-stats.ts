@@ -16,6 +16,7 @@
 import "server-only"
 
 import { createAdminClient } from "@/lib/supabase/admin"
+import { countsAsCoachView } from "@/lib/coach-view-rule"
 import { classifyViewer } from "@/lib/viewer-role"
 
 export type ProfileViewStats = {
@@ -85,24 +86,25 @@ export async function loadProfileViewStats(athleteId: string, now = Date.now()):
     for (let i = 0; i < needsLookup.length; i += 50) {
       const { data: profs } = await supabase
         .from("user_profiles")
-        .select("user_id, role, verified_coach")
+        .select("user_id, role, profile_type, verified_coach, is_admin, email")
         .in("user_id", needsLookup.slice(i, i + 50))
       for (const p of profs ?? []) {
-        roleByUser.set((p as any).user_id, { role: (p as any).role, verified_coach: (p as any).verified_coach })
+        roleByUser.set((p as any).user_id, p as any)
       }
     }
 
+    /*
+     * Classified from who the viewer is now, never from the flag stored on the event.
+     *
+     * That flag is written at view time from `profile_type`, which nobody maintains and on which
+     * most college coaches are filed as "fan". Preferring it made this panel disagree with the
+     * College coach views panel directly above it on the same page - one said three views from
+     * two programmes, the other said two views from one coach, about the same events.
+     */
     const isCoachRow = (r: ViewRow): { coach: boolean; college: boolean } => {
-      const stored = r.event_data?.viewer_kind
-      if (stored != null) {
-        return {
-          coach: r.event_data?.is_coach === true,
-          college: r.event_data?.is_college_coach === true,
-        }
-      }
       if (!r.user_id) return { coach: false, college: false }
-      const v = classifyViewer(roleByUser.get(r.user_id) ?? null)
-      return { coach: v.isCoach, college: v.isCollegeCoach }
+      const profile = roleByUser.get(r.user_id) ?? null
+      return { coach: classifyViewer(profile).isCoach, college: countsAsCoachView(profile) }
     }
 
     const cutoff = now - 30 * 24 * 60 * 60 * 1000

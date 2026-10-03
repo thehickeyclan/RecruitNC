@@ -13,6 +13,7 @@ import "server-only"
 
 import { createAdminClient } from "@/lib/supabase/admin"
 import { classifyViewer, type ViewerKind } from "@/lib/viewer-role"
+import { countsAsCoachView } from "@/lib/coach-view-rule"
 
 export type ProfileViewer = {
   userId: string | null
@@ -118,14 +119,15 @@ export async function loadAdminProfileViewers(athleteId: string): Promise<AdminP
         // rows written before scripts/backfill-profile-view-roles.sql ran.
         const stored = r.event_data?.viewer_kind as ViewerKind | undefined
         const live = classifyViewer(p ?? null)
+        /* Coach-ness comes from the live role, never the stored flag - see lib/coach-view-rule.ts. */
         v = {
           userId: r.user_id,
           name: displayName(p, r.user_id),
           email: p?.email ?? null,
           role: (r.event_data?.viewer_role as string) ?? live.role,
           kind: stored ?? live.kind,
-          isCoach: stored ? r.event_data?.is_coach === true : live.isCoach,
-          isCollegeCoach: stored ? r.event_data?.is_college_coach === true : live.isCollegeCoach,
+          isCoach: live.isCoach,
+          isCollegeCoach: countsAsCoachView(p ?? null),
           verifiedCoach: p?.verified_coach === true,
           institution: p?.institution?.trim() || null,
           views: 0,

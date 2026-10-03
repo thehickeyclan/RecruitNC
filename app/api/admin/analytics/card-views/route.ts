@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextRequest, NextResponse } from "next/server"
 import { classifyViewer } from "@/lib/viewer-role"
+import { countsAsCoachView } from "@/lib/coach-view-rule"
 
 // Supabase/PostgREST caps at 1000 rows per query. We paginate to fetch all for aggregation.
 const PAGE_SIZE = 1000
@@ -155,13 +156,13 @@ export async function GET(request: NextRequest) {
       }
       if (!ed?.athlete_id) continue
 
-      // Prefer the classification denormalized at write time; fall back to the live role for
-      // rows predating scripts/backfill-profile-view-roles.sql.
-      const live = classifyViewer(record.user_id ? (userProfiles[record.user_id] ?? null) : null)
-      const stored = ed.viewer_kind as string | undefined
-      const kind = stored ?? live.kind
-      const isCoach = stored ? ed.is_coach === true : live.isCoach
-      const isCollegeCoach = stored ? ed.is_college_coach === true : live.isCollegeCoach
+      /* Classified from the live role. The flag stored at write time came from `profile_type`,
+         which nobody maintains and on which most college coaches are filed as "fan". */
+      const viewerProfile = record.user_id ? (userProfiles[record.user_id] ?? null) : null
+      const live = classifyViewer(viewerProfile)
+      const kind = live.kind
+      const isCoach = live.isCoach
+      const isCollegeCoach = countsAsCoachView(viewerProfile)
 
       viewerKindStats[kind] = (viewerKindStats[kind] || 0) + 1
 
