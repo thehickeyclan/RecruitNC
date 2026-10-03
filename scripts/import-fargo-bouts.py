@@ -32,6 +32,11 @@ import urllib.request
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Fargo is wrestled in mid-July; the date only places a bout in its season and the 12-month window.
 EVENT_DATE = "{year}-07-15"
+# --all-states keeps the whole national field instead of North Carolina alone; see
+# scripts/import-nhsca-nationals-bouts.ts for the reasoning. An unresolved wrestler is still
+# recorded, with a null athlete_id and her state in athlete_club.
+ALL_STATES = "--all-states" in sys.argv
+
 RESULT_CODES = {"fall": "F", "tf": "TF", "dec": "DEC", "md": "MD", "forfeit": "FF", "for": "FF", "inj": "INJ", "dq": "DQ"}
 
 
@@ -152,15 +157,20 @@ def main():
         code = RESULT_CODES.get(r["result_type"].strip().lower(), r["result_type"].strip().upper())
         score = " ".join(x for x in (r["score"].strip(), r["time"].strip()) if x)
         for side, other in (("winner", "loser"), ("loser", "winner")):
-            if r[f"{side}_state"].strip().upper() != "NC":
+            my_state = r[f"{side}_state"].strip().upper()
+            if not ALL_STATES and my_state != "NC":
                 continue
             me = r[f"{side}_name"].strip()
+            if not me:
+                continue
             ids = profile_ids(me)
             athlete_id = next(iter(ids)) if len(ids) == 1 else None
             if not athlete_id:
                 unlinked[f"{me} ({'none' if not ids else 'ambiguous'})"] += 1
             opp = r[f"{other}_name"].strip() or None
-            per_wrestler[(key, me)] += 1
+            # Keyed with the state: two wrestlers of the same name from different states each need
+            # their own bracket order, or one overwrites the other's.
+            per_wrestler[(key, me, my_state)] += 1
             out.append({
                 "event_key": key,
                 "event_name": f"{year} Fargo {label}",
@@ -169,10 +179,10 @@ def main():
                 "weight_class": r["weight"].strip(),
                 "round": r["round"].strip(),
                 "source_round": r["round"].strip(),
-                "bout_order": per_wrestler[(key, me)],
+                "bout_order": per_wrestler[(key, me, my_state)],
                 "athlete_name": me,
                 "athlete_id": athlete_id,
-                "athlete_club": "NC",
+                "athlete_club": my_state or None,
                 "opponent_name": opp,
                 "opponent_id": None,
                 "opponent_club": r[f"{other}_state"].strip().upper() or None,
@@ -184,18 +194,47 @@ def main():
             })
 
     wins = sum(1 for b in out if b["win"])
-    print(f"{len(rows)} bouts -> {len(out)} NC bout rows ({wins}-{len(out) - wins}), "
-          f"{len({b['athlete_name'] for b in out})} wrestlers, {sum(1 for b in out if b['athlete_id'])} linked")
+    label_scope = "bout rows" if ALL_STATES else "NC bout rows"
+    print(f"{len(rows)} bouts -> {len(out)} {label_scope} ({wins}-{len(out) - wins}), "
+          f"{len({(b['athlete_name'], b['athlete_club']) for b in out})} wrestlers, "
+          f"{sum(1 for b in out if b['athlete_id'])} linked")
     print("event keys:", sorted(keys))
-    if unlinked:
+    if ALL_STATES:
+        print("states:", len({b["athlete_club"] for b in out if b["athlete_club"]}))
+    elif unlinked:
+        # Naming them is useful for NC; under --all-states it is every other state's field.
         print("not linked to a profile:", dict(unlinked))
     if "--dry-run" in sys.argv:
         print("Dry run — nothing written.")
         return
+    # This file's own rows only. The girls' Fargo brackets share these keys (fargo-2026-16u-fs
+    # carries no gender) and arrive in their own export, so deleting by event key erased them.
+    src = os.path.basename(path)
     for key in keys:
-        db.request("DELETE", f"other_tournament_bouts?event_key=eq.{key}", prefer="return=minimal")
-    for i in range(0, len(out), 250):
-        db.request("POST", "other_tournament_bouts", out[i:i + 250], "return=minimal")
+        db.request("DELETE", f"other_tournament_bouts?event_key=eq.{key}&source_file=eq.{src}",
+                   prefer="return=minimal")
+    # And never insert over a bout another import holds: the table's unique key is
+    # (event, weight, round, athlete, opponent) and one duplicate aborts the whole batch.
+    held = set()
+    for key in keys:
+        offset = 0
+        while True:
+            page = db.request(
+                "GET",
+                f"other_tournament_bouts?event_key=eq.{key}"
+                f"&select=weight_class,round,athlete_name,opponent_name&limit=1000&offset={offset}",
+            ) or []
+            for b in page:
+                held.add((key, b["weight_class"], b["round"], b["athlete_name"], b["opponent_name"]))
+            if len(page) < 1000:
+                break
+            offset += 1000
+    fresh = [b for b in out
+             if (b["event_key"], b["weight_class"], b["round"], b["athlete_name"], b["opponent_name"]) not in held]
+    if len(fresh) != len(out):
+        print(f"{len(out) - len(fresh)} bouts already held by another import, left alone")
+    for i in range(0, len(fresh), 250):
+        db.request("POST", "other_tournament_bouts", fresh[i:i + 250], "return=minimal")
     print("Written.")
 
 

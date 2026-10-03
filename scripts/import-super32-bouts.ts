@@ -16,6 +16,15 @@
  *   NODE_PATH=$PWD/node_modules npx tsx --env-file=.env.local \
  *     scripts/import-super32-bouts.ts --file <csv> --year 2025 [--apply]
  */
+/**
+ * `--all-states` keeps the whole bracket instead of North Carolina alone. See
+ * scripts/import-nhsca-nationals-bouts.ts, which carries the same switch and the reasoning: the
+ * export is the national field and the wrestlers we dropped are the ones our kids faced. The
+ * boys' high school filter stays either way - that one is about divisions, not states, and no
+ * middle school result belongs here.
+ */
+const ALL_STATES = process.argv.includes("--all-states")
+
 import fs from "node:fs"
 import path from "node:path"
 import { createClient } from "@supabase/supabase-js"
@@ -98,17 +107,21 @@ async function main() {
     if (row.loserTeam === "NC") ncEntrants.add(`${row.loser}|${row.weight}`)
     if (row.winType.toUpperCase() === "BYE" || !row.loser) continue
     for (const won of [true, false]) {
-      if ((won ? row.winnerTeam : row.loserTeam) !== "NC") continue
+      const myTeam = won ? row.winnerTeam : row.loserTeam
+      if (!ALL_STATES && myTeam !== "NC") continue
       const me = won ? row.winner : row.loser
+      if (!me) continue
+      // Unresolved under --all-states is kept: null athlete_id, state in athlete_club.
       const athleteId = resolve(me)
-      if (!athleteId) { unlinked.add(`${me} (${row.weight})`); continue }
+      if (!athleteId) { unlinked.add(`${me} (${row.weight})`); if (!ALL_STATES) continue }
       const opponent = won ? row.loser : row.winner
       const opponentTeam = won ? row.loserTeam : row.winnerTeam
-      const key = `${athleteId}|${row.round}|${opponent}|${row.weight}`
+      const who = athleteId ?? `${me.toLowerCase()}|${String(myTeam ?? "").toUpperCase()}`
+      const key = `${who}|${row.round}|${opponent}|${row.weight}`
       if (seen.has(key)) continue
       seen.add(key)
-      const order = (nextOrder.get(athleteId) ?? 0) + 1
-      nextOrder.set(athleteId, order)
+      const order = (nextOrder.get(who) ?? 0) + 1
+      nextOrder.set(who, order)
       payload.push({
         bout_order: order,
         // Head-to-head keys on opponent_id, so an NC opponent we hold is linked too.
@@ -121,6 +134,7 @@ async function main() {
         round: row.round,
         athlete_name: me,
         athlete_id: athleteId,
+        athlete_club: myTeam,
         opponent_name: opponent,
         opponent_club: opponentTeam,
         win: won,
@@ -132,11 +146,20 @@ async function main() {
     }
   }
 
-  const linked = new Set(payload.map((p) => p.athlete_id))
+  const linked = new Set(payload.filter((p) => p.athlete_id).map((p) => p.athlete_id))
   console.log(`${all.length} rows in file, ${hs.length} in the boys' high school brackets`)
   console.log(`  NC entrants in those brackets: ${ncEntrants.size}`)
-  console.log(`  importing ${payload.length} bouts for ${linked.size} linked athletes`)
-  if (unlinked.size) console.log(`  not linked (no single NC HS boy by that name): ${[...unlinked].join(", ")}`)
+  console.log(`  importing ${payload.length} wrestler-rows`)
+  if (ALL_STATES) {
+    const byName = new Set(payload.filter((p) => !p.athlete_id).map((p) => `${String(p.athlete_name).toLowerCase()}|${p.athlete_club}`))
+    const states = new Set(payload.map((p) => String(p.athlete_club ?? "").toUpperCase()).filter(Boolean))
+    console.log(`    on a profile we hold : ${linked.size}`)
+    console.log(`    name and state only  : ${byName.size} across ${states.size} states`)
+  } else {
+    console.log(`    for ${linked.size} linked athletes`)
+    // Naming them is useful for NC only; under --all-states it is every other state's field.
+    if (unlinked.size) console.log(`  not linked (no single NC HS boy by that name): ${[...unlinked].join(", ")}`)
+  }
   if (ambiguous.size) console.log(`  ambiguous, left out: ${[...ambiguous].join("; ")}`)
 
   // The record the bouts give against the record already on file.
@@ -172,10 +195,36 @@ async function main() {
     return
   }
 
-  const { error: clearError } = await client.from("other_tournament_bouts").delete().eq("event_key", eventKey)
+  /*
+   * This file's own rows only, and never a bout another import already holds - the girls' Super 32
+   * brackets arrive separately and land under the same event key. Deleting by event key alone
+   * erased them; inserting over them aborts on the table's unique key. Same two traps as NHSCA.
+   */
+  const { error: clearError } = await client
+    .from("other_tournament_bouts")
+    .delete()
+    .eq("event_key", eventKey)
+    .eq("source_file", path.basename(file))
   if (clearError) throw new Error(`Clearing ${eventKey}: ${clearError.message}`)
-  for (let i = 0; i < payload.length; i += 250) {
-    const { error: insertError } = await client.from("other_tournament_bouts").insert(payload.slice(i, i + 250))
+
+  const held = new Set<string>()
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await client
+      .from("other_tournament_bouts")
+      .select("weight_class,round,athlete_name,opponent_name")
+      .eq("event_key", eventKey)
+      .order("id", { ascending: true })
+      .range(from, from + 999)
+    if (error) throw new Error(`Reading ${eventKey}: ${error.message}`)
+    for (const r of data ?? []) held.add(`${r.weight_class}|${r.round}|${r.athlete_name}|${r.opponent_name}`)
+    if (!data || data.length < 1000) break
+  }
+  const fresh = payload.filter((p) => !held.has(`${p.weight_class}|${p.round}|${p.athlete_name}|${p.opponent_name}`))
+  if (fresh.length !== payload.length) {
+    console.log(`  ${payload.length - fresh.length} bouts already held by another import, left alone`)
+  }
+  for (let i = 0; i < fresh.length; i += 250) {
+    const { error: insertError } = await client.from("other_tournament_bouts").insert(fresh.slice(i, i + 250))
     if (insertError) throw new Error(`Inserting: ${insertError.message}`)
   }
   const { count } = await client
