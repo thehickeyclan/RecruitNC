@@ -24,6 +24,17 @@ import { namesLikelySamePerson } from "@/lib/athlete-name-match"
 
 const EVENT_NAME_PREFIX = "NHSCA High School Nationals"
 
+/**
+ * Keep the whole national field, not just North Carolina.
+ *
+ * The export has always carried every state - 5,729 wrestlers across 52 states in 2026 - and we
+ * stored the 500 from North Carolina and dropped the rest. That is why an out-of-state wrestler
+ * our kids actually faced exists here only as a name on somebody else's bout, with no record, no
+ * grade and nothing to join on. Off by default: turning it on multiplies this table by roughly
+ * ten and is a decision about what the database is for.
+ */
+const ALL_STATES = process.argv.includes("--all-states")
+
 /** Excel exports every cell as ="value". */
 function parseCells(line: string): string[] {
   const out: string[] = []
@@ -108,20 +119,31 @@ async function main() {
     if (String(winType ?? "").toUpperCase() === "BYE") { byes += 1; continue }
     const ncIsWinner = winnerTeam === "NC"
     const ncIsLoser = loserTeam === "NC"
-    if (!ncIsWinner && !ncIsLoser) { outOfState += 1; continue }
+    if (!ALL_STATES && !ncIsWinner && !ncIsLoser) { outOfState += 1; continue }
 
     for (const won of [true, false]) {
-      if (won && !ncIsWinner) continue
-      if (!won && !ncIsLoser) continue
+      if (!ALL_STATES && won && !ncIsWinner) continue
+      if (!ALL_STATES && !won && !ncIsLoser) continue
       const me = won ? winner! : loser!
+      if (!me) continue
+      const myTeam = (won ? winnerTeam : loserTeam) ?? null
+      /*
+       * `resolve` only knows North Carolina, because North Carolina is the only state we hold
+       * profiles for. Under --all-states a wrestler we cannot resolve is still recorded, with a
+       * null `athlete_id` and her state in `athlete_club` - the same shape an opponent already
+       * has. The row is evidence waiting for an identity, which is what the matcher is for; the
+       * alternative is what we did until now, which was to delete her.
+       */
       const athleteId = resolve(me)
-      if (!athleteId) continue
+      if (!athleteId && !ALL_STATES) continue
       const opponent = won ? loser! : winner!
-      const key = `${athleteId}|${round}|${opponent}|${weight}`
+      // Identity for ordering and de-duplication: the profile where we have one, else name+state.
+      const who = athleteId ?? `${me.toLowerCase()}|${String(myTeam ?? "").toUpperCase()}`
+      const key = `${who}|${round}|${opponent}|${weight}`
       if (seen.has(key)) continue
       seen.add(key)
-      const order = (nextOrder.get(athleteId) ?? 0) + 1
-      nextOrder.set(athleteId, order)
+      const order = (nextOrder.get(who) ?? 0) + 1
+      nextOrder.set(who, order)
       /*
        * Resolve the opponent too when they are also a North Carolina wrestler we hold.
        * `loadQualifierHeadToHead` keys on `opponent_id` and skips any bout without one, so a
@@ -140,6 +162,7 @@ async function main() {
         round,
         athlete_name: me,
         athlete_id: athleteId,
+        athlete_club: myTeam,
         opponent_name: opponent,
         opponent_club: won ? loserTeam : winnerTeam,
         win: won,
@@ -151,10 +174,14 @@ async function main() {
     }
   }
 
-  const perAthlete = new Set(payload.map((p) => p.athlete_id))
+  const linked = new Set(payload.filter((p) => p.athlete_id).map((p) => p.athlete_id))
+  const unlinked = new Set(payload.filter((p) => !p.athlete_id).map((p) => `${String(p.athlete_name).toLowerCase()}|${p.athlete_club}`))
+  const states = new Set(payload.map((p) => String(p.athlete_club ?? "").toUpperCase()).filter(Boolean))
   console.log(`${rows.length} rows in file`)
   console.log(`  skipped: ${byes} byes, ${outOfState} with no North Carolina wrestler`)
-  console.log(`  importing ${payload.length} bouts for ${perAthlete.size} boys' high school athletes`)
+  console.log(`  importing ${payload.length} wrestler-rows`)
+  console.log(`    on a profile we hold : ${linked.size}`)
+  console.log(`    name and state only  : ${unlinked.size}${ALL_STATES ? ` across ${states.size} states` : ""}`)
 
   if (!apply) {
     console.log("\nDRY RUN — pass --apply to write")
@@ -168,10 +195,49 @@ async function main() {
     return
   }
 
-  const { error: clearError } = await client.from("other_tournament_bouts").delete().eq("event_key", eventKey)
+  /*
+   * Clear this file's own rows, not the whole event.
+   *
+   * The event key is shared: the girls' brackets arrive in their own export and land under the
+   * same `nhsca-nationals-<year>`, written by scripts/import-girls-bouts.ts. Deleting by event key
+   * alone took them with it - a re-run of the boys' import silently erased every girl's NHSCA
+   * matches, which is exactly the absence that sent us looking in the first place.
+   */
+  const { error: clearError } = await client
+    .from("other_tournament_bouts")
+    .delete()
+    .eq("event_key", eventKey)
+    .eq("source_file", path.basename(file))
   if (clearError) throw new Error(`Clearing ${eventKey}: ${clearError.message}`)
-  for (let i = 0; i < payload.length; i += 250) {
-    const { error: insertError } = await client.from("other_tournament_bouts").insert(payload.slice(i, i + 250))
+
+  /*
+   * Yield to bouts another importer already holds.
+   *
+   * The national export is the whole venue - the girls' and middle school divisions wrestle it too
+   * - so under --all-states it reaches bouts that arrived earlier in their own curated file, where
+   * both wrestlers' states are recorded rather than just the team text. Those rows are the better
+   * record, and the table's unique key (event, weight, round, athlete, opponent) refuses the
+   * duplicate anyway: without this the whole insert aborts on the first one.
+   */
+  const held = new Set<string>()
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await client
+      .from("other_tournament_bouts")
+      .select("weight_class,round,athlete_name,opponent_name")
+      .eq("event_key", eventKey)
+      .order("id", { ascending: true })
+      .range(from, from + 999)
+    if (error) throw new Error(`Reading ${eventKey}: ${error.message}`)
+    for (const r of data ?? []) held.add(`${r.weight_class}|${r.round}|${r.athlete_name}|${r.opponent_name}`)
+    if (!data || data.length < 1000) break
+  }
+  const fresh = payload.filter((p) => !held.has(`${p.weight_class}|${p.round}|${p.athlete_name}|${p.opponent_name}`))
+  if (fresh.length !== payload.length) {
+    console.log(`  ${payload.length - fresh.length} bouts already held by another import, left alone`)
+  }
+
+  for (let i = 0; i < fresh.length; i += 250) {
+    const { error: insertError } = await client.from("other_tournament_bouts").insert(fresh.slice(i, i + 250))
     if (insertError) throw new Error(`Inserting: ${insertError.message}`)
   }
   const { count } = await client
