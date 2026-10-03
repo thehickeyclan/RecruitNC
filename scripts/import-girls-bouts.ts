@@ -37,6 +37,12 @@ const sb = createClient(
   { auth: { persistSession: false } },
 )
 const WRITE = process.argv.includes("--write")
+/*
+ * Keep every wrestler in the bracket, not only North Carolina's, for the files that carry the
+ * national field. See scripts/import-nhsca-nationals-bouts.ts for why. Per source, because most
+ * of these files were collected NC-only and their "state" column really is a state.
+ */
+const ALL_FIELD_FILES = new Set(["usaw-womens-nationals-2026-bouts-all.csv"])
 /**
  * One entry per bracket file. `key` is how the bouts find their row.
  *
@@ -69,6 +75,22 @@ const SOURCES: Array<{
    * rather than from the file's text, or the bouts would land beside the row instead of under it.
    */
   { file: "usaw-womens-nationals-nc-bouts-2023-2026-v2.csv", year: 0, date: "",
+    key: (d) => {
+      const y = (d.match(/(20\d\d)/) ?? [])[1] ?? ""
+      const age = (d.match(/U(15|17|20)/i) ?? [])[0]?.toUpperCase() ?? "U17"
+      return `usaw-womens-nationals-${y}-${`${age} Women's Freestyle`.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`
+    },
+    name: (d) => {
+      const y = (d.match(/(20\d\d)/) ?? [])[1] ?? ""
+      const age = (d.match(/U(15|17|20)/i) ?? [])[0]?.toUpperCase() ?? "U17"
+      return `${y} USAW Women's Nationals — ${age} Women's Freestyle`
+    } },
+  /*
+   * The 2026 national field, U15 and U17. Its team column holds a club ("Sanderson Wrestling
+   * Academy"), not a state, so nobody passes the North Carolina test - hence ALL_FIELD_FILES.
+   * The NC-collected file above covers U17 and U20; between them 2026 is complete.
+   */
+  { file: "usaw-womens-nationals-2026-bouts-all.csv", year: 2026, date: "",
     key: (d) => {
       const y = (d.match(/(20\d\d)/) ?? [])[1] ?? ""
       const age = (d.match(/U(15|17|20)/i) ?? [])[0]?.toUpperCase() ?? "U17"
@@ -126,6 +148,12 @@ async function main() {
   const toCreate = new Set<string>()
   const unmatched = new Map<string, number>()
   const ambiguous = new Set<string>()
+  /*
+   * The same bout reaches us from two files: the NC-collected women's nationals export and the
+   * national one both carry 2026 U17. Whichever source is listed first in SOURCES wins, and the
+   * duplicate is dropped - otherwise the insert dies on the table's unique key.
+   */
+  const emitted = new Set<string>()
 
   for (const src of SOURCES) {
     if (!fs.existsSync(path.join(`${process.env.HOME}/Downloads`, src.file))) { console.log(`${src.file}: not present, skipped`); continue }
@@ -138,14 +166,27 @@ async function main() {
       const key = typeof src.key === "function" ? src.key(division, year) : src.key
       const name = typeof src.name === "function" ? src.name(division, year) : src.name
       /* One row per North Carolina wrestler in the bout — both when it is NC against NC. */
+      const wholeField = ALL_FIELD_FILES.has(src.file)
       for (const side of ["winner", "loser"] as const) {
         const wrestler = b[`${side}_name`]
-        if (!isNC(b[`${side}_state`])) continue
+        if (!wrestler) continue
+        if (!wholeField && !isNC(b[`${side}_state`])) continue
         const other = side === "winner" ? "loser" : "winner"
+        const team = b[`${side}_state`] || null
 
-        const hits = girls.filter((g) => namesLikelySamePerson(g.name, wrestler))
+        /*
+         * A whole-field file is never linked to a profile by name.
+         *
+         * Our profiles are North Carolina's and this is the national bracket, so a name that
+         * matches is overwhelmingly a different girl - 1,104 of 2,814 rows "matched" on the first
+         * run, which is the namesake trap at national scale, not a discovery. North Carolina's own
+         * bouts come from the NC-collected file, which is processed first and does carry a state.
+         */
+        const hits = wholeField ? [] : girls.filter((g) => namesLikelySamePerson(g.name, wrestler))
         if (hits.length > 1) { ambiguous.add(wrestler); continue }
-        if (hits.length === 0) {
+        // Only North Carolina gets a profile made for her; the rest of the field is recorded as
+        // evidence, with a null athlete_id, for the matcher to resolve later.
+        if (hits.length === 0 && !wholeField) {
           unmatched.set(wrestler, (unmatched.get(wrestler) ?? 0) + 1)
           /*
            * Keyed case-insensitively, or one wrestler becomes two profiles: the brackets spell her
@@ -155,6 +196,9 @@ async function main() {
           if (![...toCreate].some((n) => n.toLowerCase() === key)) toCreate.add(wrestler)
         }
 
+        const identity = `${key}|${b.weight ?? ""}|${b.round ?? ""}|${wrestler}|${b[`${other}_name`] ?? ""}`
+        if (emitted.has(identity)) continue
+        emitted.add(identity)
         rows.push({
           event_key: key,
           event_name: name,
@@ -165,7 +209,7 @@ async function main() {
           bout_order: Number(b.bout_number) || order,
           athlete_name: wrestler,
           athlete_id: hits[0]?.id ?? null,
-          athlete_club: "NC",
+          athlete_club: wholeField ? team : "NC",
           opponent_name: b[`${other}_name`] || null,
           opponent_club: b[`${other}_state`] || null,
           win: side === "winner",
