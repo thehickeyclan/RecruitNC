@@ -14,6 +14,15 @@ export type LastCompetedWeightCandidate = {
   date?: string | null
   /** Higher = preferred when years tie (live duals > nationals > Super32 > NCHSAA). */
   priority?: number
+  /**
+   * The month an annual event is always held in, 1-12, where the source records no day.
+   *
+   * Fargo is mid-July and the Tar Heel State Classic was mid-April, both in 2026, and Brianna
+   * Palmer's profile said she last competed at the Tar Heel - because the qualifier priority
+   * outranks Fargo's and the date test only fires when both sides carry a real day. A month is
+   * not a date and is not displayed; it only orders two events inside the same year.
+   */
+  month?: number
 }
 
 export type LastCompetedWeight = {
@@ -63,9 +72,10 @@ export function resolveLastCompetedWeight(
         event: (c.event ?? "").trim() || "Tournament",
         date: c.date ?? null,
         priority: c.priority ?? 0,
+        month: c.month ?? null,
       }
     })
-    .filter((x): x is LastCompetedWeight & { priority: number } => x != null)
+    .filter((x): x is LastCompetedWeight & { priority: number; month: number | null } => x != null)
 
   /*
    * A real date beats the priority table.
@@ -76,11 +86,19 @@ export function resolveLastCompetedWeight(
    * candidates record an actual day, that decides it; the priority order still settles the
    * annual events that carry only a year.
    */
+  // A real day where we have one, else the month the event is always held in, else the ranking.
+  const monthOf = (x: { date: string | null; month: number | null }) => {
+    const parsed = x.date ? Date.parse(x.date) : NaN
+    return Number.isFinite(parsed) ? new Date(parsed).getUTCMonth() + 1 : x.month
+  }
   withPriority.sort((a, b) => {
     if (b.year !== a.year) return b.year - a.year
     const aDate = a.date ? Date.parse(a.date) : NaN
     const bDate = b.date ? Date.parse(b.date) : NaN
     if (Number.isFinite(aDate) && Number.isFinite(bDate) && aDate !== bDate) return bDate - aDate
+    const aMonth = monthOf(a)
+    const bMonth = monthOf(b)
+    if (aMonth != null && bMonth != null && aMonth !== bMonth) return bMonth - aMonth
     return b.priority - a.priority
   })
 
@@ -165,6 +183,7 @@ export function candidatesFromPublicProfilePayload(athlete: {
       weight: r.weight,
       event: "Fargo",
       priority: 35,
+      month: 7,
     })
   }
   for (const r of athlete.nhsca_results ?? []) {
@@ -173,6 +192,7 @@ export function candidatesFromPublicProfilePayload(athlete: {
       weight: r.weight,
       event: "NHSCA Nationals",
       priority: 30,
+      month: 3,
     })
   }
   for (const r of athlete.super32_results ?? []) {
@@ -181,6 +201,7 @@ export function candidatesFromPublicProfilePayload(athlete: {
       weight: r.weight,
       event: "Super32",
       priority: 20,
+      month: 10,
     })
   }
   for (const r of athlete.nchsaa_profile ?? []) {
@@ -189,6 +210,7 @@ export function candidatesFromPublicProfilePayload(athlete: {
       weight: r.weight_class,
       event: "NCHSAA States",
       priority: 10,
+      month: 2,
     })
   }
 

@@ -114,3 +114,31 @@ describe("candidatesFromPublicProfilePayload", () => {
     expect(display.differsFromListed).toBe(true)
   })
 })
+
+describe("same-year ordering by month", () => {
+  it("prefers Fargo in July over an open event in April", () => {
+    // Brianna Palmer: the Tar Heel State Classic on 18 April outranked Fargo because the qualifier
+    // priority is higher and only Tar Heel carried a day.
+    const best = resolveLastCompetedWeight([
+      { year: 2026, weight: "105", event: "Tar Heel State Classic", date: "2026-04-18", priority: 50 },
+      { year: 2026, weight: "105", event: "Fargo", priority: 35, month: 7 },
+    ])
+    expect(best).toMatchObject({ event: "Fargo", year: 2026 })
+  })
+
+  it("still prefers a later year whatever the month", () => {
+    const best = resolveLastCompetedWeight([
+      { year: 2026, weight: "113", event: "NCHSAA States", priority: 10, month: 2 },
+      { year: 2025, weight: "106", event: "Fargo", priority: 35, month: 7 },
+    ])
+    expect(best).toMatchObject({ event: "NCHSAA States", year: 2026 })
+  })
+
+  it("falls back to priority when neither records a day or a month", () => {
+    const best = resolveLastCompetedWeight([
+      { year: 2026, weight: "120", event: "National Team", priority: 40 },
+      { year: 2026, weight: "126", event: "Something", priority: 5 },
+    ])
+    expect(best).toMatchObject({ event: "National Team" })
+  })
+})
