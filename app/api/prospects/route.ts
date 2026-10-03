@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { fetchProspectDirectoryPage } from "@/lib/prospects-directory"
+import { lastCompetedLabel, loadLastCompeted } from "@/lib/prospect-last-competed"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -30,9 +31,23 @@ export async function GET(request: NextRequest) {
       offset,
     })
 
+    /*
+     * The directory table has a "Last competed" column, and the client replaces the
+     * server-rendered rows with this response the moment a filter changes - so without it here
+     * the column fills in on load and then empties itself.
+     */
+    const lastCompeted = await loadLastCompeted(
+      supabase,
+      (prospects as Array<{ id: string }>).map((p) => String(p.id)),
+    )
+    const withLastCompeted = (prospects as Array<Record<string, unknown>>).map((p) => ({
+      ...p,
+      last_competed: lastCompetedLabel(lastCompeted.get(String(p.id))),
+    }))
+
     return NextResponse.json(
       {
-        prospects,
+        prospects: withLastCompeted,
         pagination: {
           limit,
           offset,

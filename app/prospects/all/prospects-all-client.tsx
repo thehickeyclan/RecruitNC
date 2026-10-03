@@ -1171,8 +1171,11 @@ export default function ProspectsAllClient({
               </div>
             ) : viewMode === "table" ? (
               <div className="overflow-x-auto px-2 pb-6">
+                {/* The page is bg-[#0A1628]; the table defaults to light and was rendering a
+                    white body under a navy header. */}
                 <RankingsTableView
                   athletes={tableAthletes}
+                  theme="dark"
                   hideRankColumn={false}
                   showRankColumn={true}
                   defaultSortField="name"
@@ -1185,6 +1188,7 @@ export default function ProspectsAllClient({
               <div className="px-2 pb-6">
                 <RankingsCardView
                   athletes={tableAthletes}
+                  theme="dark"
                   loading={false}
                   showRankBadges={false}
                   showAdditionalDivider={false}
