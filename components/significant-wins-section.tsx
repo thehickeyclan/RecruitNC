@@ -91,7 +91,12 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [], style
   const allWins = [
     ...wins.filter((w) => !(/aau scholastic/i.test(w.event ?? "") && handBuilt.has(w.opponent.trim().toLowerCase()))),
     ...qualityWins,
-  ].filter((w) => (styles === "olympic" ? isOlympic(w) : !isOlympic(w)))
+  ]
+    .filter((w) => (styles === "olympic" ? isOlympic(w) : !isOlympic(w)))
+    // Latest first across both sources; hand-built wins without a date go last.
+    .map((w, i) => ({ w, i, t: w.date ? Date.parse(w.date) : Number.NaN }))
+    .sort((x, y) => (Number.isNaN(x.t) ? 1 : 0) - (Number.isNaN(y.t) ? 1 : 0) || (y.t || 0) - (x.t || 0) || x.i - y.i)
+    .map(({ w }) => w)
   const visibleWins = filter === "all" ? allWins : allWins.filter((win) => win.scope === filter)
   const displayedWins = expanded ? visibleWins : visibleWins.slice(0, 3)
 
