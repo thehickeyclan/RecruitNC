@@ -52,6 +52,7 @@ import { WorkingEntityLogo } from "./working-entity-logo"
 import { useToast } from "@/components/ui/use-toast"
 import { getYouTubeVideoId, isDirectHighlightVideoUrl } from "@/lib/highlight-video-url"
 import { ProfileViewStatsPanel } from "./profile-view-stats-panel"
+import { BannerViewStats } from "./profile/banner-view-stats"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { scoutingReportAvailable } from "@/lib/scouting-report-access"
 
@@ -1219,6 +1220,10 @@ export function AthleteDetail({
                   <BannerStats stats={bannerStats} className="mt-5" />
                   <CredentialCards credentials={credentials} className="mt-5" />
                   <CompetesBar competition={competition} contact={bannerContact} className="mt-4" />
+                  {/* Owner and admins only; the endpoint refuses anybody else. */}
+                  {canViewProfileStats && athlete.id ? (
+                    <BannerViewStats athleteId={String(athlete.id)} className="mt-3" />
+                  ) : null}
                 </div>
               </div>
             ) : (
@@ -1427,6 +1432,9 @@ export function AthleteDetail({
                   <BannerStats stats={bannerStats} />
                   <CredentialCards credentials={credentials} />
                   <CompetesBar competition={competition} contact={bannerContact} />
+                  {canViewProfileStats && athlete.id ? (
+                    <BannerViewStats athleteId={String(athlete.id)} className="mt-3" />
+                  ) : null}
                 </div>
               </div>
             ) : (
