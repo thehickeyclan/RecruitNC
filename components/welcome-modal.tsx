@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useAuth } from "@/contexts/auth-context"
 import Link from "next/link"
 import {
   BarChart3,
@@ -176,8 +177,22 @@ function welcomeFor(raw: string): Welcome | null {
   return WELCOMES[normalised] ?? WELCOMES.fan
 }
 
+/** "Welcome, Coach Juster" (Matt) - the coach's surname, from the account; generic until it loads. */
+function headingFor(
+  welcome: Welcome,
+  asked: string | null,
+  profile: { last_name?: string | null; full_name?: string | null } | null,
+): string {
+  const role = (asked ?? "").toLowerCase().replace(/-/g, "_")
+  if (role !== "coach" && role !== "college_coach") return welcome.heading
+  const surname = profile?.last_name?.trim() || profile?.full_name?.trim().split(/\s+/).slice(-1)[0] || ""
+  return surname ? `Welcome, Coach ${surname}` : "Welcome, Coach"
+}
+
 export function WelcomeModal() {
   const [welcome, setWelcome] = useState<Welcome | null>(null)
+  const [asked, setAsked] = useState<string | null>(null)
+  const { profile } = useAuth()
 
   useEffect(() => {
     /*
@@ -186,7 +201,10 @@ export function WelcomeModal() {
      */
     if (typeof window === "undefined") return
     const asked = new URLSearchParams(window.location.search).get("welcome")
-    if (asked) setWelcome(welcomeFor(asked))
+    if (asked) {
+      setAsked(asked)
+      setWelcome(welcomeFor(asked))
+    }
   }, [])
 
   const dismiss = () => {
@@ -218,7 +236,7 @@ export function WelcomeModal() {
 
         <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#D3B574]">NC United · RecruitNC</p>
         <h2 id="welcome-title" className="mt-2 pr-8 text-2xl font-black text-white">
-          {welcome.heading}
+          {headingFor(welcome, asked, profile)}
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-white/70">{welcome.intro}</p>
 

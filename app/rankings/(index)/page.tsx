@@ -24,13 +24,27 @@ export const dynamic = "force-dynamic"
  * No redirect loop: /public-rankings sends viewers *without* access here, and this sends
  * viewers *with* access there. A viewer is one or the other, never both.
  */
-export default async function RankingsIndexPage() {
+export default async function RankingsIndexPage({
+  searchParams,
+}: {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
+}) {
   const { viewer } = await resolveRankingViewer({
     supabase: await createClient(),
     admin: createAdminClient(),
   })
 
-  if (canSeeProspectRanking(viewer)) redirect("/public-rankings")
+  if (canSeeProspectRanking(viewer)) {
+    /*
+     * Keep the query. A new coach is sent to /rankings?welcome=coach and the welcome modal opens
+     * from that flag; dropping it here meant no coach ever saw the modal (2 Oct-3 Oct 2026).
+     */
+    const params = (await searchParams) ?? {}
+    const carried = new URLSearchParams()
+    for (const [k, v] of Object.entries(params)) if (typeof v === "string") carried.set(k, v)
+    const query = carried.toString()
+    redirect(query ? `/public-rankings?${query}` : "/public-rankings")
+  }
 
   return <RankingsSalesClient />
 }
