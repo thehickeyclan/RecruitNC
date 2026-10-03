@@ -13,20 +13,19 @@ describe("scoutingAccessTier", () => {
     expect(scoutingAccessTier(coach)).toBe("full")
   })
 
-  it("withholds them from a coach auto-approved on a .edu address alone", () => {
-    // A .edu address proves affiliation with an institution, not that somebody coaches —
-    // students and alumni hold one for life. Not enough for a portable dossier on a minor.
-    expect(scoutingAccessTier({ ...coach, verifiedMethod: "edu_auto" })).toBe("intelligence")
+  it("releases them however the coach was verified", () => {
+    // Access first, reviewed after. Demanding a second human-confirmed method on top meant a
+    // coach who signed up and opened a report got one with no phone number and no GPA - while
+    // reading both on the profile page, one click away. The gate protected nothing and made the
+    // page and the report disagree about the same wrestler.
+    for (const method of ["edu_auto", "coach_signup_form", null, undefined]) {
+      expect(scoutingAccessTier({ ...coach, verifiedMethod: method })).toBe("full")
+    }
   })
 
   it("withholds them when the coach was never verified at all", () => {
+    // Rejecting a coach clears verified_coach, which closes the report and the rankings together.
     expect(scoutingAccessTier({ ...coach, verifiedCoach: false })).toBe("intelligence")
-  })
-
-  it("withholds them when no verification method was recorded", () => {
-    // 33 of 36 existing coaches predate the audit columns. Absent evidence is not consent.
-    expect(scoutingAccessTier({ ...coach, verifiedMethod: null })).toBe("intelligence")
-    expect(scoutingAccessTier({ ...coach, verifiedMethod: undefined })).toBe("intelligence")
   })
 
   it("gives a non-coach the intelligence tier even if somehow marked verified", () => {
@@ -106,14 +105,17 @@ describe("what a non-coach never sees on a report", () => {
       ),
     ).toBe(true)
 
-    // A paying subscriber, a Blue family, and a coach we have not verified by hand.
-    expect(releasesPersonalData(scoutingAccessTier(viewer()))).toBe(false)
-    expect(releasesPersonalData(scoutingAccessTier(viewer({ isCollegeCoach: true })))).toBe(false)
+    // Verified on sign-up is enough: access first, reviewed after. A coach reads the same cell,
+    // email and GPA on the profile page, so withholding them from the report protected nothing.
     expect(
       releasesPersonalData(
-        scoutingAccessTier(viewer({ isCollegeCoach: true, verifiedCoach: true, verifiedMethod: "auto" })),
+        scoutingAccessTier(viewer({ isCollegeCoach: true, verifiedCoach: true, verifiedMethod: "coach_signup_form" })),
       ),
-    ).toBe(false)
+    ).toBe(true)
+
+    // Nobody else: not a signed-in stranger, and not a coach whose verification was withdrawn.
+    expect(releasesPersonalData(scoutingAccessTier(viewer()))).toBe(false)
+    expect(releasesPersonalData(scoutingAccessTier(viewer({ isCollegeCoach: true })))).toBe(false)
   })
 })
 

@@ -36,14 +36,21 @@ export const HUMAN_VERIFIED_METHOD = "staff_directory"
 /**
  * The field set this viewer may receive.
  *
- * Admins get the full set — they administer the data already. A college coach needs both the
- * verified flag and the human-confirmed method; the `.edu` rule alone is not enough for the
- * portable document.
+ * A verified college coach gets the full set. That is the agreed model for this site - access
+ * first, reviewed after - and the sign-up already grants `verified_coach` on the way in.
+ *
+ * This used to demand a second, human-confirmed method on top, so a coach who signed up and
+ * opened a report got one with no phone number and no GPA until somebody reviewed them. It
+ * protected nothing: the same coach reads the same wrestler's cell, email and GPA on the profile
+ * page one click away, which has always been the `.edu` bar. All the extra gate did was hand the
+ * first five coaches off the Division III mailing list a hollowed-out document and make the page
+ * and the report disagree about the same athlete.
+ *
+ * Rejecting a coach clears `verified_coach`, which closes both at once.
  */
 export function scoutingAccessTier(viewer: ScoutingViewer): ScoutingAccessTier {
   if (viewer.isAdmin) return "full"
-  if (!viewer.isCollegeCoach || !viewer.verifiedCoach) return "intelligence"
-  return viewer.verifiedMethod === HUMAN_VERIFIED_METHOD ? "full" : "intelligence"
+  return viewer.isCollegeCoach && viewer.verifiedCoach ? "full" : "intelligence"
 }
 
 /** True when the tier releases personal detail belonging to the athlete. */
