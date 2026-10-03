@@ -1,22 +1,22 @@
 #!/usr/bin/env npx tsx
 /**
- * Fargo women's freestyle bouts - the matches behind the placements.
+ * Girls' bout-by-bout results — Fargo, NHSCA Nationals, Super 32 and USAW Women's Nationals.
  *
- * We held 515 bout-by-bout Fargo results and every one was a boys' bracket, so a girl's profile
- * showed "Fargo · Freestyle 2026, 3-2" with nothing under it when you opened the row. The summary
- * import gave us the row; this gives us the five matches behind Brianna Palmer's record.
+ * Every bout scraper on this site was pointed at the boys' brackets. NHSCA held 1,330 bouts and
+ * not one was a girl; Super 32 held 446, same. So a girl's profile showed "NHSCA 2026, 0-2" and
+ * nothing underneath, because we had her record and none of her matches.
  *
  * The files are winner/loser per bout. The table is athlete/opponent per wrestler, so a bout
  * becomes one row for each North Carolina wrestler in it - two rows when both are ours, which is
- * right: each of them has that match on their own record, one as a win and one as a loss.
+ * right: each has that match on her own record, one as a win and one as a loss.
  *
- * The event key carries no gender: fargo-2026-16u-fs is the same string for the boys' bracket.
- * That is the existing scheme and it is safe because bouts are only ever fetched by athlete_id,
- * and the summary row's key is built the same way - change it here and a girl's row would find no
- * matches at all.
+ * Event keys are not invented here. Bouts hang under the key of the row they belong to, so they
+ * must match what already exists - `nhsca-nationals-2026`, `super32-2025`, and for the USAW
+ * summaries the key those rows were written with. A new key means a wrestler's row shows her
+ * record and no matches, which is the bug this script exists to fix.
  *
- *   npx tsx scripts/import-fargo-girls-bouts.ts          # dry run
- *   npx tsx scripts/import-fargo-girls-bouts.ts --write
+ *   npx tsx scripts/import-girls-bouts.ts          # dry run
+ *   npx tsx scripts/import-girls-bouts.ts --write
  */
 import fs from "fs"
 import path from "path"
@@ -37,9 +37,48 @@ const sb = createClient(
   { auth: { persistSession: false } },
 )
 const WRITE = process.argv.includes("--write")
-const FILES = [
-  { file: "fargo-2025-nc-girls-freestyle-bouts.csv", year: 2025 },
-  { file: "fargo-2026-nc-girls-freestyle-bouts.csv", year: 2026 },
+/**
+ * One entry per bracket file. `key` is how the bouts find their row.
+ *
+ * Fargo keys carry no gender - `fargo-2026-16u-fs` is the boys' key too - which is safe because
+ * bouts are only ever fetched by athlete_id, and changing it would orphan every girl's row.
+ */
+const SOURCES: Array<{
+  file: string
+  year: number
+  date: string
+  /** Fixed key, or one derived from the row's division when a file spans several brackets. */
+  key: string | ((division: string, year: number) => string)
+  name: string | ((division: string, year: number) => string)
+}> = [
+  { file: "fargo-2025-nc-girls-freestyle-bouts.csv", year: 2025, date: "2025-07-15",
+    key: (d, y) => `fargo-${y}-${/16u/i.test(d) ? "16u" : "junior"}-${/\bgr\b|greco/i.test(d) ? "gr" : "fs"}`,
+    name: (d, y) => `${y} Fargo ${/16u/i.test(d) ? "16U" : "Junior"} Women's ${/\bgr\b|greco/i.test(d) ? "Greco-Roman" : "Freestyle"}` },
+  { file: "fargo-2026-nc-girls-freestyle-bouts.csv", year: 2026, date: "2026-07-15",
+    key: (d, y) => `fargo-${y}-${/16u/i.test(d) ? "16u" : "junior"}-${/\bgr\b|greco/i.test(d) ? "gr" : "fs"}`,
+    name: (d, y) => `${y} Fargo ${/16u/i.test(d) ? "16U" : "Junior"} Women's ${/\bgr\b|greco/i.test(d) ? "Greco-Roman" : "Freestyle"}` },
+  { file: "nhsca-2023-nc-girls-bouts.csv", year: 2023, date: "2023-03-27", key: "nhsca-nationals-2023", name: "2023 NHSCA High School Nationals" },
+  { file: "nhsca-2024-nc-girls-bouts.csv", year: 2024, date: "2024-03-27", key: "nhsca-nationals-2024", name: "2024 NHSCA High School Nationals" },
+  { file: "nhsca-2025-nc-girls-bouts.csv", year: 2025, date: "2025-03-27", key: "nhsca-nationals-2025", name: "2025 NHSCA High School Nationals" },
+  { file: "nhsca-2026-nc-girls-bouts.csv", year: 2026, date: "2026-03-27", key: "nhsca-nationals-2026", name: "2026 NHSCA High School Nationals" },
+  { file: "super32-2023-nc-girls-bouts.csv", year: 2023, date: "2023-10-21", key: "super32-2023", name: "2023 Super 32" },
+  { file: "super32-2025-nc-girls-bouts.csv", year: 2025, date: "2025-10-18", key: "super32-2025", name: "2025 Super 32" },
+  /*
+   * The USAW file's division carries its own year ("2023 U17 Women"), and the summary rows were
+   * written with a slug of "U17 Women's Freestyle" - so the key is rebuilt the same way here
+   * rather than from the file's text, or the bouts would land beside the row instead of under it.
+   */
+  { file: "usaw-womens-nationals-nc-bouts-2023-2026-v2.csv", year: 0, date: "",
+    key: (d) => {
+      const y = (d.match(/(20\d\d)/) ?? [])[1] ?? ""
+      const age = (d.match(/U(15|17|20)/i) ?? [])[0]?.toUpperCase() ?? "U17"
+      return `usaw-womens-nationals-${y}-${`${age} Women's Freestyle`.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`
+    },
+    name: (d) => {
+      const y = (d.match(/(20\d\d)/) ?? [])[1] ?? ""
+      const age = (d.match(/U(15|17|20)/i) ?? [])[0]?.toUpperCase() ?? "U17"
+      return `${y} USAW Women's Nationals — ${age} Women's Freestyle`
+    } },
 ]
 
 function csv(file: string): Array<Record<string, string>> {
@@ -62,19 +101,17 @@ function csv(file: string): Array<Record<string, string>> {
 
 const isNC = (s: string) => String(s ?? "").trim().toUpperCase() === "NC"
 
-/** "16U Girls FS", "16U Girls", "JR Girls FS" → the key the summary row will look for. */
-function eventKey(year: number, division: string): string {
-  const d = division.toLowerCase()
-  const age = /16u/.test(d) ? "16u" : "junior"
-  const style = /\bgr\b|greco/.test(d) ? "gr" : "fs"
-  return `fargo-${year}-${age}-${style}`
-}
-function eventName(year: number, division: string): string {
-  const d = division.toLowerCase()
-  const age = /16u/.test(d) ? "16U" : "Junior"
-  const style = /\bgr\b|greco/.test(d) ? "Greco-Roman" : "Freestyle"
-  return `${year} Fargo ${age} Women's ${style}`
-}
+/**
+ * A name as it should read on a profile.
+ *
+ * Only a name the bracket typed entirely in lower case is touched ("clara ealy"). One that already
+ * carries capitals is left exactly as it is, because title-casing would turn DaCosta into Dacosta
+ * and Zadroga-McNulty into Zadroga-Mcnulty.
+ */
+const displayName = (name: string) =>
+  /[A-Z]/.test(name)
+    ? name
+    : name.replace(/(^|[\s('-])([a-z])/g, (_m, pre, ch) => pre + ch.toUpperCase())
 
 async function main() {
   console.log(WRITE ? "WRITING\n" : "DRY RUN — nothing is written\n")
@@ -90,39 +127,43 @@ async function main() {
   const unmatched = new Map<string, number>()
   const ambiguous = new Set<string>()
 
-  for (const { file, year } of FILES) {
-    const bouts = csv(file)
+  for (const src of SOURCES) {
+    if (!fs.existsSync(path.join(`${process.env.HOME}/Downloads`, src.file))) { console.log(`${src.file}: not present, skipped`); continue }
+    const bouts = csv(src.file)
     let order = 0
     for (const b of bouts) {
       order += 1
+      const division = b.division ?? ""
+      const year = src.year || Number((division.match(/(20\d\d)/) ?? [])[1]) || 0
+      const key = typeof src.key === "function" ? src.key(division, year) : src.key
+      const name = typeof src.name === "function" ? src.name(division, year) : src.name
       /* One row per North Carolina wrestler in the bout — both when it is NC against NC. */
       for (const side of ["winner", "loser"] as const) {
-        const name = b[`${side}_name`]
+        const wrestler = b[`${side}_name`]
         if (!isNC(b[`${side}_state`])) continue
         const other = side === "winner" ? "loser" : "winner"
 
-        const hits = girls.filter((g) => namesLikelySamePerson(g.name, name))
-        if (hits.length > 1) { ambiguous.add(name); continue }
-        /*
-         * No profile? Make one. These are girls' brackets, so a North Carolina wrestler in them is
-         * a North Carolina girl - there is nothing to infer and nothing to guess. Leaving her out
-         * would discard a real result because we had not met her yet, which is how 306 girls came
-         * to have state placements attached to nobody.
-         */
+        const hits = girls.filter((g) => namesLikelySamePerson(g.name, wrestler))
+        if (hits.length > 1) { ambiguous.add(wrestler); continue }
         if (hits.length === 0) {
-          unmatched.set(name, (unmatched.get(name) ?? 0) + 1)
-          toCreate.add(name)
+          unmatched.set(wrestler, (unmatched.get(wrestler) ?? 0) + 1)
+          /*
+           * Keyed case-insensitively, or one wrestler becomes two profiles: the brackets spell her
+           * "omarzria (ria) wright" in one round and "Omarzria (Ria) wright" in the next.
+           */
+          const key = wrestler.toLowerCase()
+          if (![...toCreate].some((n) => n.toLowerCase() === key)) toCreate.add(wrestler)
         }
 
         rows.push({
-          event_key: eventKey(year, b.division),
-          event_name: eventName(year, b.division),
+          event_key: key,
+          event_name: name,
           year,
           weight_class: b.weight || null,
           round: b.round || null,
           source_round: b.round || null,
-          bout_order: order,
-          athlete_name: name,
+          bout_order: Number(b.bout_number) || order,
+          athlete_name: wrestler,
           athlete_id: hits[0]?.id ?? null,
           athlete_club: "NC",
           opponent_name: b[`${other}_name`] || null,
@@ -130,14 +171,13 @@ async function main() {
           win: side === "winner",
           is_bye: /bye/i.test(b[`${other}_name`] ?? ""),
           win_type: b.result_type || null,
-          /* The published line: "4-3" or a fall time, whichever the bracket gave. */
           score: [b.score, b.time].filter(Boolean).join(" ") || null,
-          source_file: file,
-          event_date: `${year}-07-15`,
+          source_file: src.file,
+          event_date: src.date || null,
         })
       }
     }
-    console.log(`${file}: ${bouts.length} bouts read`)
+    console.log(`${src.file}: ${bouts.length} bouts read`)
   }
 
   const linked = rows.filter((r) => r.athlete_id)
@@ -177,9 +217,9 @@ async function main() {
     const { data: made, error } = await sb
       .from("athletes")
       .insert({
-        name,
-        firstName: name.split(" ")[0],
-        lastName: name.split(" ").slice(1).join(" "),
+        name: displayName(name),
+        firstName: displayName(name).split(" ")[0],
+        lastName: displayName(name).split(" ").slice(1).join(" "),
         gender: "Female",
         highschool: (own as any)?.school ?? null,
         is_nc_athlete: true,
@@ -192,13 +232,24 @@ async function main() {
     console.log(`  created ${name}${(own as any)?.school ? ` (${(own as any).school})` : " — no school on file"}`)
   }
 
-  /* Re-runnable: clear what this importer wrote before, never anyone else's rows. */
-  for (const { file } of FILES) await sb.from("other_tournament_bouts").delete().eq("source_file", file)
+  /*
+   * Re-runnable: clear what this importer wrote before, never anyone else's rows.
+   *
+   * Superseded names are cleared too. A second pull arrives under a new filename - the USAW file
+   * was re-sent carrying 2026 and both wrestlers' states - and the rows from the first one answer
+   * to a `source_file` no longer in SOURCES. Left behind, they survive the delete and then collide
+   * with the re-import on the table's own unique key, which aborts the run half-written.
+   */
+  const SUPERSEDED = ["usaw-womens-nationals-nc-bouts-2023-2026.csv"]
+  for (const file of [...SOURCES.map((s) => s.file), ...SUPERSEDED]) {
+    await sb.from("other_tournament_bouts").delete().eq("source_file", file)
+  }
   let inserted = 0
   for (let i = 0; i < rows.length; i += 200) {
-    const { error } = await sb.from("other_tournament_bouts").insert(rows.slice(i, i + 200) as never)
+    const chunk = rows.slice(i, i + 200)
+    const { error } = await sb.from("other_tournament_bouts").insert(chunk as never)
     if (error) { console.error("FAILED:", error.message); break }
-    inserted += rows.slice(i, i + 200).length
+    inserted += chunk.length
   }
   console.log(`\ninserted ${inserted}`)
 }
