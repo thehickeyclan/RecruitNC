@@ -69,10 +69,37 @@ def first_names_alike(a, b, groups):
     return any(a in g and b in g for g in groups)
 
 
+# Fargo's national export spells the state out; our own collector sent the code. Both reach here.
+STATE_CODES = {
+    "alabama": "AL", "alaska": "AK", "arizona": "AZ", "arkansas": "AR", "california": "CA",
+    "colorado": "CO", "connecticut": "CT", "delaware": "DE", "district of columbia": "DC",
+    "florida": "FL", "georgia": "GA", "hawaii": "HI", "idaho": "ID", "illinois": "IL",
+    "indiana": "IN", "iowa": "IA", "kansas": "KS", "kentucky": "KY", "louisiana": "LA",
+    "maine": "ME", "maryland": "MD", "massachusetts": "MA", "michigan": "MI", "minnesota": "MN",
+    "mississippi": "MS", "missouri": "MO", "montana": "MT", "nebraska": "NE", "nevada": "NV",
+    "new hampshire": "NH", "new jersey": "NJ", "new mexico": "NM", "new york": "NY",
+    "north carolina": "NC", "north dakota": "ND", "ohio": "OH", "oklahoma": "OK", "oregon": "OR",
+    "pennsylvania": "PA", "rhode island": "RI", "south carolina": "SC", "south dakota": "SD",
+    "tennessee": "TN", "texas": "TX", "utah": "UT", "vermont": "VT", "virginia": "VA",
+    "washington": "WA", "west virginia": "WV", "wisconsin": "WI", "wyoming": "WY",
+}
+
+
+def state_code(value):
+    """'ILLINOIS' and 'IL' both become 'IL'; anything else is left as written."""
+    v = (value or "").strip()
+    if len(v) == 2:
+        return v.upper()
+    return STATE_CODES.get(v.lower(), v.upper())
+
+
 def event_parts(division):
-    """'Junior Boys Freestyle' -> ('junior', 'fs', 'Junior Freestyle')."""
+    """'Junior Boys Freestyle' -> ('junior', 'fs', 'Junior Freestyle'); 'JR Girls' is junior too."""
     d = division.lower()
-    age = "16u" if "16u" in d else "junior" if "junior" in d else re.sub(r"\W+", "", d.split()[0])
+    # The girls' national brackets are labelled "JR Girls" and "16U Girls" - no style named, and
+    # "jr" rather than "junior". Left alone, "JR Girls" made its own age division and its bouts
+    # hung under a key no results row uses.
+    age = "16u" if "16u" in d else "junior" if ("junior" in d or re.match(r"^jr\b", d)) else re.sub(r"\W+", "", d.split()[0])
     style = "gr" if "greco" in d else "fs"
     label = f"{'16U' if age == '16u' else age.title()} {'Greco-Roman' if style == 'gr' else 'Freestyle'}"
     return age, style, label
@@ -157,7 +184,7 @@ def main():
         code = RESULT_CODES.get(r["result_type"].strip().lower(), r["result_type"].strip().upper())
         score = " ".join(x for x in (r["score"].strip(), r["time"].strip()) if x)
         for side, other in (("winner", "loser"), ("loser", "winner")):
-            my_state = r[f"{side}_state"].strip().upper()
+            my_state = state_code(r[f"{side}_state"])
             if not ALL_STATES and my_state != "NC":
                 continue
             me = r[f"{side}_name"].strip()
@@ -185,7 +212,7 @@ def main():
                 "athlete_club": my_state or None,
                 "opponent_name": opp,
                 "opponent_id": None,
-                "opponent_club": r[f"{other}_state"].strip().upper() or None,
+                "opponent_club": state_code(r[f"{other}_state"]) or None,
                 "win": side == "winner",
                 "is_bye": not opp,
                 "win_type": code,
