@@ -10,6 +10,7 @@ import {
   placementLabel,
   scoreWin,
   summarizeDirectResults,
+  weightKey,
   type OpponentCredential,
   type OtherTournamentBout,
 } from "@/lib/other-tournaments"
@@ -337,5 +338,19 @@ describe("summarizeDirectResults", () => {
       boutOf({ opponentName: "Unlinked Kid", opponentAthleteId: null }),
     ])
     expect(summary).toEqual([])
+  })
+})
+
+describe("weightKey", () => {
+  it("reads a kilo bracket and a pound bracket as the number they are", () => {
+    // The women's national placement rows say "50 kg" and their bout rows say "50".
+    expect(weightKey("50 kg")).toBe(weightKey("50"))
+    expect(weightKey("114 lbs")).toBe(weightKey("114"))
+    expect(weightKey("106.0")).toBe(weightKey("106"))
+  })
+
+  it("keeps a bracket letter, which is a different bracket", () => {
+    // The Tar Heel State Classic splits 105 into two brackets a wrestler enters separately.
+    expect(weightKey("105a")).not.toBe(weightKey("105"))
   })
 })

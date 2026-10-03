@@ -223,8 +223,16 @@ function attachEventBouts(
   return rows.map((row): TournamentRow => {
     const mine = bouts.filter((bout) => bout.year === row.year)
     if (!mine.length) return row
+    /*
+     * Count the record off the bouts where the placement table has none. Leah Edwards placed
+     * fifth at Super 32 in 2023 and the row carried no win or loss count, so her seven matches
+     * sat under a line reading "0-0".
+     */
+    const stated = String(row.record ?? "").trim()
+    const wins = mine.filter((bout) => bout.outcome === "W").length
     return {
       ...row,
+      record: stated && stated !== "0-0" ? row.record : `${wins}-${mine.length - wins}`,
       bouts: [...mine].sort(compareNhscaBouts).map((bout, boutOrder) => ({
         eventKey: `${event.keyPrefix}${bout.year}`,
         eventName: event.eventName,

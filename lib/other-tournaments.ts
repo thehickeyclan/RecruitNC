@@ -111,6 +111,28 @@ function toBout(row: Record<string, unknown>): OtherTournamentBout {
   }
 }
 
+/**
+ * A weight as written by two different importers, reduced to one key.
+ *
+ * Bouts hang under their result row by event and weight, compared as strings. The women's
+ * national brackets are in kilos and the two files disagree about saying so: the placement rows
+ * read "50 kg" and the bout rows "50", so Brianna Palmer's USAW row showed 1-2 with none of the
+ * three matches under it. The unit is noise - the bracket is the number.
+ *
+ * A bracket letter is not noise: the Tar Heel State Classic splits 105 into "105" and "105a",
+ * two brackets a wrestler can enter separately, so that suffix is kept and the rows stay apart.
+ */
+export function weightKey(weight: unknown): string {
+  const text = String(weight ?? "")
+    .toLowerCase()
+    .replace(/[#"']/g, "")
+    .replace(/\b(kgs?|kilos?|kilograms?|lbs?|pounds?)\b/g, "")
+    .replace(/\s+/g, "")
+  const numeric = text.match(/^(\d+(?:\.\d+)?)([a-z]*)$/)
+  // "105.0" and "105" are the same bracket; "105a" keeps its letter.
+  return numeric ? `${Number(numeric[1])}${numeric[2]}` : text
+}
+
 /** Newest event first, then heaviest weight, so a profile reads most-recent-first. */
 function sortResults(a: OtherTournamentResult, b: OtherTournamentResult): number {
   const dateDiff = String(b.eventDate ?? b.year).localeCompare(String(a.eventDate ?? a.year))
@@ -221,13 +243,13 @@ export async function getOtherTournamentBoutsForAthleteRecord(
     getUnlinkedRowsByAthleteName(supabase, "other_tournament_bouts", athlete),
     getUnlinkedRowsByAthleteName(supabase, "other_tournament_results", athlete),
   ])
-  const verifiedKeys = new Set(verifiedResults.map((row) => `${row.event_key}|${row.weight_class}`))
+  const verifiedKeys = new Set(verifiedResults.map((row) => `${row.event_key}|${weightKey(row.weight_class)}`))
   // Keyed by the bout, not the row: same reason as above, duals carry no round or order.
   const boutKey = (row: { eventKey: string; weight: string; boutOrder: number; opponentName?: string | null }) =>
     `${row.eventKey}|${row.weight}|${row.boutOrder}|${row.opponentName ?? ""}`
   const merged = new Map(linked.map((row) => [boutKey(row), row]))
   for (const row of rows.map(toBout)) {
-    if (!verifiedKeys.has(`${row.eventKey}|${row.weight}`)) continue
+    if (!verifiedKeys.has(`${row.eventKey}|${weightKey(row.weight)}`)) continue
     merged.set(boutKey(row), row)
   }
   return [...merged.values()].sort((a, b) => a.boutOrder - b.boutOrder)
@@ -459,8 +481,20 @@ export async function getOtherTournamentProfileBlocks(
     bouts.map((b) => b.opponentAthleteId).filter((id): id is string => Boolean(id)),
   )
 
+  /*
+   * A result row is one bracket entry, so its bouts are the ones at its own weight. Where an
+   * event gave a wrestler a single row, every bout of that event belongs to it whatever the two
+   * files called the weight - a bout with nowhere to hang is a match a coach never sees.
+   */
+  const rowsPerEvent = new Map<string, number>()
+  for (const r of results) rowsPerEvent.set(r.eventKey, (rowsPerEvent.get(r.eventKey) ?? 0) + 1)
+
   return results.map((result) => {
-    const eventBouts = bouts.filter((b) => b.eventKey === result.eventKey && b.weight === result.weight)
+    const eventBouts = bouts.filter(
+      (b) =>
+        b.eventKey === result.eventKey &&
+        (weightKey(b.weight) === weightKey(result.weight) || rowsPerEvent.get(result.eventKey) === 1),
+    )
     const strengthOfWins = buildStrengthOfWins(eventBouts, credentials, profileFacts)
     return {
       result,

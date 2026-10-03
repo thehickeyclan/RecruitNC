@@ -109,3 +109,28 @@ describe("buildTournamentRows Super 32 bouts", () => {
     expect(rows.find((r) => r.event === "NHSCA Nationals")!.bouts).toEqual([])
   })
 })
+
+describe("attached event bouts", () => {
+  it("counts the record off the bouts when the placement row has none", () => {
+    // Leah Edwards placed fifth at Super 32 in 2023 with no win or loss count on the row, so her
+    // seven matches sat under a line reading "0-0".
+    const rows = buildTournamentRows({
+      super32Results: [{ year: 2023, placement: "5th", record: "0-0", weight: "106" }] as never[],
+      super32Bouts: [
+        { year: 2023, date: "2023-10-21", weight: "106", round: "Round of 64", opponent: "A", opponentState: "VA", outcome: "W", method: "Dec", score: "5-2" },
+        { year: 2023, date: "2023-10-21", weight: "106", round: "Round of 32", opponent: "B", opponentState: "PA", outcome: "L", method: "Dec", score: "2-5" },
+      ] as never[],
+    })
+    expect(rows[0]).toMatchObject({ event: "Super 32", year: 2023, record: "1-1" })
+  })
+
+  it("leaves a stated record alone", () => {
+    const rows = buildTournamentRows({
+      super32Results: [{ year: 2023, placement: "5th", record: "5-2", weight: "106" }] as never[],
+      super32Bouts: [
+        { year: 2023, date: "2023-10-21", weight: "106", round: "Round of 64", opponent: "A", opponentState: "VA", outcome: "W", method: "Dec", score: "5-2" },
+      ] as never[],
+    })
+    expect(rows[0].record).toBe("5-2")
+  })
+})
