@@ -49,6 +49,26 @@ export const LINK_SOURCES: Source[] = [
   // The live NHSCA dashboard: NC wrestlers only, no year column - the row is made the week of the event.
   { table: "nhsca_roster", nameColumn: "name", select: "id,name,school,classification,created_at",
     map: (r) => ({ name: r.name, school: r.school, year: r.created_at ? Number(String(r.created_at).slice(0, 4)) : null, division: r.classification, state: "NC" }) },
+  /*
+   * Other states' state-tournament placers. The one national result set that was never offered to
+   * the matcher, so an out-of-state placer could not be joined to anything - not to his own NHSCA
+   * bouts, not to a profile, not to himself a season later.
+   *
+   * `grad_year` is the strongest signal the row carries and is read as `classYear`. South Carolina
+   * has it on 265 of 280; every other state is still mostly null, so most rows fall back to name,
+   * school and state. `source_athlete_id` is deliberately NOT passed as `existingAthleteId`: it
+   * holds a RankWrestlers id, which identifies the wrestler in their system, not in ours.
+   */
+  { table: "state_tournament_placers", nameColumn: "wrestler_name",
+    select: "id,wrestler_name,school_raw,school_clean,season,state,grad_year",
+    map: (r) => ({
+      name: r.wrestler_name,
+      school: r.school_clean || r.school_raw,
+      year: r.season,
+      state: r.state,
+      classYear: r.grad_year ?? null,
+      highSchoolSeason: true,
+    }) },
   { table: "national_rankings", nameColumn: "athlete_name", timeColumns: ["created_at"], select: "id,athlete_name,high_school,ranking_month,class_year,state,athlete_id",
     map: (r) => ({ name: r.athlete_name, school: r.high_school, year: r.ranking_month ? Number(String(r.ranking_month).slice(0, 4)) : null, classYear: r.class_year, state: r.state, existingAthleteId: r.athlete_id }) },
 ]
