@@ -548,9 +548,18 @@ export async function getAttachedEventBouts(supabase: SupabaseClient, athleteId:
     .select("event_key, event_name, year, weight_class, round, bout_order, opponent_name, opponent_club, athlete_club, win, is_bye, win_type, score")
     .eq("athlete_id", athleteId)
     .or(
-      [NC_UNITED_DUALS_EVENT_KEY, NC_UNITED_AAU_DUALS_EVENT_KEY, NC_UNITED_UCD_2025_EVENT_KEY]
+      [NC_UNITED_DUALS_EVENT_KEY, NC_UNITED_AAU_DUALS_EVENT_KEY]
         .map((key) => `event_key.eq.${key}`)
-        .concat("event_key.like.fargo-%")
+        /*
+         * Ultimate Club Duals by prefix rather than by one named key.
+         *
+         * It was `ucd-2025-nc-united` alone, which was every North Carolina team at the time. It
+         * is not any more: Carolina Gold wrestled it in 2025, and in 2026 the same girls under
+         * the name NC Gold, alongside Capital City. Each team keeps its own key so a wrestler's
+         * club is on the row, and a prefix means next year's team needs no code change - the same
+         * arrangement Fargo already has.
+         */
+        .concat("event_key.like.fargo-%", "event_key.like.ucd-%")
         .join(","),
     )
     .order("bout_order", { ascending: true })
