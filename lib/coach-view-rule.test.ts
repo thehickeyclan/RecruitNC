@@ -34,6 +34,12 @@ describe("countsAsCoachView", () => {
     expect(countsAsCoachView(profile({ email: "appreview@ncwrestlingunited.com" }) as never)).toBe(false)
   })
 
+  it("does not count somebody who merely picked the role at sign-up", () => {
+    // Four of these existed: yahoo and gmail addresses, no institution, never verified, one
+    // rejected - and they were showing on profiles as "a college program".
+    expect(countsAsCoachView(profile({ verified_coach: false, email: "someone@yahoo.com" }) as never)).toBe(false)
+  })
+
   it("counts nobody when there is no profile", () => {
     expect(countsAsCoachView(null)).toBe(false)
   })
