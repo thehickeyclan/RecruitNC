@@ -118,11 +118,17 @@ export default async function TopProspectsPage() {
                 * screen. It was also a <div> wrapping the <li> each card renders, which is
                 * invalid markup and why the list read as empty to anything walking the DOM.
                 */}
+              <>
+                {/* Tells a coach the names open profiles, and that the scouting report is behind them. */}
+                <p className="mt-8 text-center text-sm text-white/70">
+                Tap any wrestler for full results, significant wins and the scouting report.
+                </p>
               <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
                 {board.athletes.map((athlete) => (
                   <RankedAthleteCard key={athlete.athleteId} athlete={athlete} />
                 ))}
               </ul>
+              </>
 
               <RankingsWatermark userId={userId} />
               {/*

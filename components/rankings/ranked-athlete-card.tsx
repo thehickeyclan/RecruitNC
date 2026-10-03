@@ -84,6 +84,15 @@ export function RankedAthleteCard({ athlete }: { athlete: PublicRankedAthlete })
         ) : null}
 
         {/* An outside number, labelled as one. It orders nothing on this page. */}
+
+        {/* Plain text read as plain text: coaches scanned the list and never opened a profile.
+            On a phone there is no hover to hint the name is a link. */}
+        <a
+          href={profileHref}
+          className="mt-3 inline-flex items-center gap-1 text-xs font-bold uppercase tracking-[0.12em] text-[#D7B95A] hover:underline"
+        >
+          View profile <span aria-hidden>→</span>
+        </a>
       </div>
     </li>
   )

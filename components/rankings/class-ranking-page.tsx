@@ -97,11 +97,17 @@ export async function ClassRankingPage({ year }: { year: number }) {
               No ranked wrestlers on file for this class.
             </p>
           ) : (
+            <>
+              {/* Tells a coach the names open profiles, and that the scouting report is behind them. */}
+              <p className="mt-8 text-center text-sm text-white/70">
+              Tap any wrestler for full results, significant wins and the scouting report.
+              </p>
             <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
               {ranking.athletes.map((athlete) => (
                 <RankedAthleteCard key={athlete.athleteId} athlete={athlete} />
               ))}
             </ul>
+            </>
           )}
 
           <RankingsWatermark userId={userId} />
