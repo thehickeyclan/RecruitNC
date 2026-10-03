@@ -580,71 +580,91 @@ export function ScoutingReportDocument({
         ) : null}
 
         {/*
-          Folkstyle here; freestyle and Greco-Roman get their own section, last (Matt). The NCHSAA
-          State Championships and the NC Freestyle & Greco State Championships are different titles
-          and must never share a table.
+          Which style leads depends on the wrestler.
+          
+          For the boys, folkstyle is the sport: the NCHSAA season, NHSCA, Super 32, the duals and
+          the TOC are all folkstyle, and freestyle and Greco are the off-season.
+          
+          For the girls it is the other way round. College women's wrestling is freestyle, so
+          freestyle is the standard a women's coach reads first and the in-season folkstyle record
+          - NCHSAA, NHSCA - is the secondary one. Leading with folkstyle on a girl's report puts
+          the less relevant half at the top and buries Fargo.
+          
+          The NCHSAA State Championships and the NC Freestyle & Greco State Championships are
+          different titles and must never share a table, whichever order they appear in.
         */}
-        <StyleDivider title="Folkstyle" note="NCHSAA State Championships, national tournaments, duals and the high-school season" />
-        <Block n={n()} title="Competition record — Folkstyle">
-          {folkResults.length ? (
-            <ResultsTable rows={folkResults} />
-          ) : (
-            <Note>No folkstyle tournament results on file.</Note>
-          )}
-        </Block>
-
-        <Block n={n()} title="Significant wins — Folkstyle" count={folkWins.length}>
-          <GroupedBoutTables rows={folkWins} kind="win" />
-        </Block>
-
-        <Block n={n()} title="Notable losses — Folkstyle" count={folkLosses.length}>
-          <GroupedBoutTables rows={folkLosses} kind="loss" />
-        </Block>
-
-        {olympicResults.length || olympicWins.length || olympicLosses.length ? (
-          <>
-          <StyleDivider
-            title="Olympic Styles — Freestyle & Greco-Roman"
-            note="Fargo, the NC Freestyle & Greco State Championships and the Tar Heel State Classic — not folkstyle"
-          />
-          <Block n={n()} title="Olympic Styles — Freestyle & Greco-Roman">
-            <Note>
-              Fargo, the NC Freestyle &amp; Greco State Championships, the Tar Heel State Classic and the Junior National
-              Duals. Not folkstyle, and not part of the record above.
-            </Note>
-            <div className="mt-3 space-y-5">
-              <div>
-                <h3 className="mb-2 border-b border-[#03154C]/30 pb-0.5 text-[11px] font-black uppercase tracking-[0.14em] text-[#B31B1B]">
-                  Individual results <span className="font-mono text-gray-500">({olympicIndividual.length})</span>
-                </h3>
-                {olympicIndividual.length ? <ResultsTable rows={olympicIndividual} /> : <Note>No individual freestyle or Greco results on file.</Note>}
-              </div>
-              {olympicDuals.length ? (
+{(() => {
+  const folkstyleSection = (
+    <>
+          <StyleDivider title="Folkstyle" note="NCHSAA State Championships, national tournaments, duals and the high-school season" />
+          <Block n={n()} title="Competition record — Folkstyle">
+            {folkResults.length ? (
+              <ResultsTable rows={folkResults} />
+            ) : (
+              <Note>No folkstyle tournament results on file.</Note>
+            )}
+          </Block>
+  
+          <Block n={n()} title="Significant wins — Folkstyle" count={folkWins.length}>
+            <GroupedBoutTables rows={folkWins} kind="win" />
+          </Block>
+  
+          <Block n={n()} title="Notable losses — Folkstyle" count={folkLosses.length}>
+            <GroupedBoutTables rows={folkLosses} kind="loss" />
+          </Block>
+    </>
+  )
+  const olympicSection = (
+    <>
+          {olympicResults.length || olympicWins.length || olympicLosses.length ? (
+            <>
+            <StyleDivider
+              title="Olympic Styles — Freestyle & Greco-Roman"
+              note="Fargo, the NC Freestyle & Greco State Championships and the Tar Heel State Classic — not folkstyle"
+            />
+            <Block n={n()} title="Olympic Styles — Freestyle & Greco-Roman">
+              <Note>
+                Fargo, the NC Freestyle &amp; Greco State Championships, the Tar Heel State Classic and the Junior National
+                Duals. Not folkstyle, and not part of the record above.
+              </Note>
+              <div className="mt-3 space-y-5">
                 <div>
                   <h3 className="mb-2 border-b border-[#03154C]/30 pb-0.5 text-[11px] font-black uppercase tracking-[0.14em] text-[#B31B1B]">
-                    Dual results <span className="font-mono text-gray-500">({olympicDuals.length})</span>
+                    Individual results <span className="font-mono text-gray-500">({olympicIndividual.length})</span>
                   </h3>
-                  <ResultsTable rows={olympicDuals} />
+                  {olympicIndividual.length ? <ResultsTable rows={olympicIndividual} /> : <Note>No individual freestyle or Greco results on file.</Note>}
                 </div>
-              ) : null}
-              <div>
+                {olympicDuals.length ? (
+                  <div>
+                    <h3 className="mb-2 border-b border-[#03154C]/30 pb-0.5 text-[11px] font-black uppercase tracking-[0.14em] text-[#B31B1B]">
+                      Dual results <span className="font-mono text-gray-500">({olympicDuals.length})</span>
+                    </h3>
+                    <ResultsTable rows={olympicDuals} />
+                  </div>
+                ) : null}
+                <div>
+                </div>
+                <div>
+                  <h3 className="mb-2 border-b border-[#03154C]/30 pb-0.5 text-[11px] font-black uppercase tracking-[0.14em] text-[#B31B1B]">
+                    Significant wins <span className="font-mono text-gray-500">({olympicWins.length})</span>
+                  </h3>
+                  <GroupedBoutTables rows={olympicWins} kind="win" />
+                </div>
+                <div>
+                  <h3 className="mb-2 border-b border-[#03154C]/30 pb-0.5 text-[11px] font-black uppercase tracking-[0.14em] text-[#B31B1B]">
+                    Notable losses <span className="font-mono text-gray-500">({olympicLosses.length})</span>
+                  </h3>
+                  <GroupedBoutTables rows={olympicLosses} kind="loss" />
+                </div>
               </div>
-              <div>
-                <h3 className="mb-2 border-b border-[#03154C]/30 pb-0.5 text-[11px] font-black uppercase tracking-[0.14em] text-[#B31B1B]">
-                  Significant wins <span className="font-mono text-gray-500">({olympicWins.length})</span>
-                </h3>
-                <GroupedBoutTables rows={olympicWins} kind="win" />
-              </div>
-              <div>
-                <h3 className="mb-2 border-b border-[#03154C]/30 pb-0.5 text-[11px] font-black uppercase tracking-[0.14em] text-[#B31B1B]">
-                  Notable losses <span className="font-mono text-gray-500">({olympicLosses.length})</span>
-                </h3>
-                <GroupedBoutTables rows={olympicLosses} kind="loss" />
-              </div>
-            </div>
-          </Block>
-          </>
-        ) : null}
+            </Block>
+            </>
+          ) : null}
+    </>
+  )
+  const freestyleFirst = String(identity.gender ?? "").trim().toLowerCase() === "female"
+  return freestyleFirst ? <>{olympicSection}{folkstyleSection}</> : <>{folkstyleSection}{olympicSection}</>
+})()}
 
         <footer className="mt-8 break-inside-avoid border-t-2 border-[#03154C] pt-2 text-[9px] leading-relaxed text-gray-700">
           <p>

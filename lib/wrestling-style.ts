@@ -69,7 +69,7 @@ export type CompetitionSummary = {
   scope: "national" | "in-state"
   /** The national events entered, by short name, as the report and profile print them. */
   nationalEvents: string[]
-  /** Styles on file, folkstyle first. */
+  /** Styles on file. Folkstyle first for the boys; freestyle first for the girls. */
   styles: WrestlingStyle[]
 }
 
@@ -90,10 +90,19 @@ const SHORT_NAMES: Array<[RegExp, string]> = [
 ]
 
 /**
- * A wrestler's reach and styles from the events on his record. `hasSeason` says whether he has a
- * North Carolina season on file, which is folkstyle whatever else he wrestles.
+ * A wrestler's reach and styles from the events on their record. `hasSeason` says whether they
+ * have a North Carolina season on file, which is folkstyle whatever else they wrestle.
+ *
+ * `gender` decides which style is named first. For the boys folkstyle is the sport - the NCHSAA
+ * season, NHSCA, Super 32, the duals and the TOC are all folkstyle, and the Olympic styles are the
+ * off-season. For the girls it is the other way round: college women's wrestling is freestyle, so
+ * freestyle is the standard a women's coach reads first and the folkstyle record is secondary.
  */
-export function summarizeCompetition(events: Array<string | null | undefined>, hasSeason: boolean): CompetitionSummary {
+export function summarizeCompetition(
+  events: Array<string | null | undefined>,
+  hasSeason: boolean,
+  gender?: string | null,
+): CompetitionSummary {
   const styles = new Set<WrestlingStyle>()
   if (hasSeason) styles.add("folkstyle")
   const national = new Set<string>()
@@ -105,7 +114,10 @@ export function summarizeCompetition(events: Array<string | null | undefined>, h
       national.add(short)
     }
   }
-  const order: WrestlingStyle[] = ["folkstyle", "freestyle", "greco"]
+  const order: WrestlingStyle[] =
+    String(gender ?? "").trim().toLowerCase() === "female"
+      ? ["freestyle", "greco", "folkstyle"]
+      : ["folkstyle", "freestyle", "greco"]
   return {
     scope: national.size ? "national" : "in-state",
     nationalEvents: [...national],

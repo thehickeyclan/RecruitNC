@@ -659,6 +659,8 @@ export async function buildScoutingReport(
       ...((eventRows ?? []) as Array<{ event_name: string | null }>).map((r) => r.event_name),
     ],
     seasonsOnFile > 0 || (bundle.nchsaa?.length ?? 0) > 0,
+    /* Girls lead with freestyle: that is the college standard, folkstyle is the in-season one. */
+    text(athlete.gender),
   )
   return {
     athleteId,

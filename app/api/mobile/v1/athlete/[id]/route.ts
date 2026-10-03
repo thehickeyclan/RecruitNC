@@ -173,6 +173,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       competition: summarizeCompetition(
         [...rows, ...stateRows].flatMap((r) => [`${r.event} ${r.team ?? ""}`, ...r.bouts.map((b) => b.eventName)]),
         row.is_nc_athlete !== false,
+        /* Girls lead with freestyle - the college standard. */
+        (row as { gender?: string | null }).gender,
       ),
     },
     stateRows: withAccolades(stateRows),

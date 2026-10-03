@@ -83,13 +83,15 @@ export function ViewProfileClient({
   })
   const stateTournamentRows = buildNchsaaStateRows(nchsaaResults, nchsaaStateBouts)
   // Every event on the record, bouts included (NC United duals and Fargo Greco have no results row).
-  // A North Carolina wrestler has a folkstyle season whatever else he wrestles.
+  // A North Carolina wrestler has a folkstyle season whatever else they wrestle.
   const competition = summarizeCompetition(
     [...profileTournamentRows, ...stateTournamentRows].flatMap((row) => [
       `${row.event} ${row.team ?? ""}`,
       ...row.bouts.map((b) => b.eventName),
     ]),
     athlete.is_nc_athlete !== false,
+    /* Girls lead with freestyle - the college standard. */
+    (athlete as { gender?: string | null })?.gender,
   )
   const athleteName = String(athlete.name ?? "Athlete")
   // Freestyle and Greco-Roman go in their own section, last on the page; folkstyle keeps the rest.

@@ -47,3 +47,19 @@ describe("events that never name their style", () => {
     expect(styleOfEvent("2026 NHSCA National Duals")).toBe("folkstyle")
   })
 })
+
+describe("style order follows the wrestler", () => {
+  const events = ["NCHSAA States", "2026 Fargo 16U Women's Freestyle", "NC Freestyle & Greco State Championships"]
+
+  it("leads with folkstyle for a boy — the NCHSAA season and NHSCA are the sport", () => {
+    expect(summarizeCompetition(events, true, "Male").styles[0]).toBe("folkstyle")
+  })
+
+  it("leads with freestyle for a girl — college women's wrestling is freestyle", () => {
+    expect(summarizeCompetition(events, true, "Female").styles[0]).toBe("freestyle")
+  })
+
+  it("keeps folkstyle first when no gender is known, as before", () => {
+    expect(summarizeCompetition(events, true).styles[0]).toBe("folkstyle")
+  })
+})
