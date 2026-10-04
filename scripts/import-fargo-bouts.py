@@ -94,14 +94,31 @@ def state_code(value):
 
 
 def event_parts(division):
-    """'Junior Boys Freestyle' -> ('junior', 'fs', 'Junior Freestyle'); 'JR Girls' is junior too."""
+    """'Junior Boys Freestyle' -> ('junior', 'fs', 'Junior Freestyle'); 'JR Girls' is junior too.
+
+    The girls' brackets get "Women's" in the label and the SAME key as the boys'. That split is
+    deliberate and both halves matter:
+
+    The key is gender-blind because lib/other-tournaments.ts fargoEventKey(year, age, style)
+    builds it from a fargo_results row, which carries no gender - so a girl's bouts only reach her
+    profile's Fargo row under the boys' key. Putting gender in the key detaches every girl's
+    matches from her own profile.
+
+    The label is NOT, because it is what people read. 17,774 rows from the girls' national files
+    were written as "2025 Fargo Junior Freestyle", so a girl's Fargo row carried the boys' bracket
+    name and the event, asked about as an event, answered with a mixed field of both.
+    """
     d = division.lower()
     # The girls' national brackets are labelled "JR Girls" and "16U Girls" - no style named, and
     # "jr" rather than "junior". Left alone, "JR Girls" made its own age division and its bouts
     # hung under a key no results row uses.
     age = "16u" if "16u" in d else "junior" if ("junior" in d or re.match(r"^jr\b", d)) else re.sub(r"\W+", "", d.split()[0])
     style = "gr" if "greco" in d else "fs"
-    label = f"{'16U' if age == '16u' else age.title()} {'Greco-Roman' if style == 'gr' else 'Freestyle'}"
+    women = "girls" in d or "women" in d
+    style_label = "Greco-Roman" if style == "gr" else "Freestyle"
+    age_label = "16U" if age == "16u" else age.title()
+    women_label = "Women's " if women else ""
+    label = f"{age_label} {women_label}{style_label}"
     return age, style, label
 
 

@@ -34,7 +34,15 @@ for (const f of [".env.local", ".env"]) {
 }
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } })
 const WRITE = process.argv.includes("--write")
-const FILE = "southeast-regionals-2025-2026-all.csv"
+/*
+ * The file to load, because there is more than one now.
+ *
+ * The first run used the combined 2025+2026 export, but at that point it held 2026 only — 2025
+ * was added to the file afterwards, which is why 1,351 rows landed and 1,474 did not. Deletes are
+ * scoped to the file's own name, so loading the 2025-only export adds that season without
+ * touching the 2026 rows that are already right.
+ */
+const FILE = process.argv.find((a) => a.endsWith(".csv")) ?? "southeast-regionals-2025-2026-all.csv"
 /** Held in May, after the high-school season and before Fargo. */
 const EVENT_DATE = (year: number) => `${year}-05-16`
 
@@ -61,7 +69,16 @@ function division(raw: string): { age: "16u" | "junior"; style: "fs" | "gr"; lab
   const d = raw.toLowerCase()
   const age = /16u/.test(d) ? "16u" : "junior"
   const style = /\bgr\b|greco/.test(d) ? "gr" : "fs"
-  const who = /girls|women/.test(d) ? "Girls " : /boys|men/.test(d) ? "Boys " : ""
+  /*
+   * The girls' brackets are named; the men's are not.
+   *
+   * The two exports disagree: 2026 says "16U FS" and 2025 says "16U Boys FS", which would give
+   * one bracket two names across seasons — "16U Freestyle" in 2026 and "16U Boys Freestyle" in
+   * 2025 — and split a wrestler's two years into unrelated events. The 2026 rows are already
+   * stored unmarked, and Fargo reads the same way, so the unmarked name is the men's bracket and
+   * only the women's carries a word.
+   */
+  const who = /girls|women/.test(d) ? "Girls " : ""
   return { age, style, label: `${age === "16u" ? "16U" : "Junior"} ${who}${style === "gr" ? "Greco-Roman" : "Freestyle"}` }
 }
 

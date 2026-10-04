@@ -91,9 +91,9 @@ async function main() {
       if (placementFill.has(k)) placementFill.get(k)!.states = new Set(data.filter((r) => r.year === y).map((r) => r.state)).size
     }
   }
-  const otherResults = await page<{ year: number; event_name: string; placement: unknown }>(
+  const otherResults = await page<{ year: number; event_name: string; placement: unknown; state?: string }>(
     "other_tournament_results",
-    "year, event_name, placement",
+    "year, event_name, placement, state",
   )
   const otherResultFill = new Map<string, { rows: number; filled: number }>()
   for (const r of otherResults) {
@@ -139,6 +139,43 @@ async function main() {
     console.log(
       [year, event, a.rows, a.ours, a.theirs, a.teams.size, scope, store?.label ?? (fill ? "other_tournament_results" : "-"), filled].join("\t"),
     )
+  }
+
+  /*
+   * Events that exist only as placements, with no bouts at all.
+   *
+   * The first version of this report walked the bout store alone, so the Southeast Regionals —
+   * 2,825 placement rows and not one bout — did not appear in the tournament section. Reading its
+   * coverage off a truncated query instead, I called 2025 missing and imported it a second time.
+   * An event we hold is worse than useless if the report that lists our holdings cannot see it.
+   */
+  const boutEvents = new Set([...byEvent.keys()].map((k) => k.split("|")[1]))
+  const placementOnly = new Map<string, { rows: number; filled: number; states: Set<string> }>()
+  for (const r of otherResults) {
+    if (boutEvents.has(r.event_name)) continue
+    const k = `${r.year}|${r.event_name}`
+    if (!placementOnly.has(k)) placementOnly.set(k, { rows: 0, filled: 0, states: new Set() })
+    const a = placementOnly.get(k)!
+    a.rows++
+    if (r.placement != null && String(r.placement) !== "") a.filled++
+    const st = (r as { state?: string }).state
+    if (st) a.states.add(String(st))
+  }
+  if (placementOnly.size) {
+    console.log("\n\nTOURNAMENTS — placements only, no bouts held\n")
+    console.log(["year", "event", "result_rows", "placement_filled", "states"].join("\t"))
+    for (const [k, a] of [...placementOnly.entries()].sort()) {
+      const [year, event] = k.split("|")
+      rows.push({
+        section: "tournament (placements only)",
+        year,
+        name: event,
+        bout_rows: 0,
+        placement_filled: `${a.filled}/${a.rows}`,
+        scope: a.states.size <= 1 ? "NC only" : a.states.size < 20 ? "regional" : "national",
+      })
+      console.log([year, event, a.rows, `${a.filled}/${a.rows}`, a.states.size].join("\t"))
+    }
   }
 
   /* ---- state tournaments ---- */
