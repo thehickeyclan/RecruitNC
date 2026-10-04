@@ -10,6 +10,7 @@ import {
   findUnprofiledWrestler,
   loadBoutsForAthlete,
   loadBoutsForUnprofiled,
+  summarizeBoutsByEvent,
   loadMeetings,
 } from "@/lib/data-dawg-agent-v2/tournament-bouts"
 import { fetchCollegeCommits } from "@/lib/college-commit-query"
@@ -2298,6 +2299,8 @@ export async function toolTournamentBoutsSearch(args: {
       team,
       count: only.length,
       noProfile: true,
+      // Record and finish per event, so the answer can lead with them instead of a list of bouts.
+      events: summarizeBoutsByEvent(theirBouts),
       coverage:
         `${unprofiled.name} has no profile on RecruitNC — these bouts are from imported brackets, ` +
         `matched on name and team, and are every one we hold (${wins}-${theirBouts.length - wins}). ` +
@@ -2317,6 +2320,7 @@ export async function toolTournamentBoutsSearch(args: {
   return {
     wrestler: found.name,
     count: filtered.length,
+    events: summarizeBoutsByEvent(bouts),
     // Stated plainly, because an empty list here means we lack the bracket, not that the
     // wrestler never competed. Records and placements live in the NHSCA and Super 32 tools.
     coverage:

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { buildHeadToHead, describeBout, toBoutRow, type BoutRow } from "./tournament-bouts"
+import { buildHeadToHead, describeBout, toBoutRow, type BoutRow, summarizeBoutsByEvent } from "./tournament-bouts"
 
 const bout = (over: Partial<BoutRow> = {}): BoutRow => ({
   event: "2026 NHSCA High School Nationals",
@@ -51,5 +51,48 @@ describe("toBoutRow", () => {
     expect(row.outcome).toBe("L")
     expect(row.event).toBe("Unknown event")
     expect(row.score).toBeNull()
+  })
+})
+
+describe("summarizeBoutsByEvent", () => {
+  const bout = (year: number, event: string, round: string, outcome: "W" | "L", weight = "170") => ({
+    event, year, date: null, round, weight, opponent: "x", opponentTeam: null, outcome, method: null, score: null,
+  })
+
+  it("gives each event its record and reads the finish off the placement round", () => {
+    // Micah Engelman, 2025 NHSCA: 5-2 and fifth, which is what a reader wants before ten bouts.
+    const out = summarizeBoutsByEvent([
+      bout(2025, "2025 NHSCA High School Nationals", "Round of 32", "W"),
+      bout(2025, "2025 NHSCA High School Nationals", "Round of 16", "W"),
+      bout(2025, "2025 NHSCA High School Nationals", "Quarter-Finals", "L"),
+      bout(2025, "2025 NHSCA High School Nationals", "Consi of 8 #2", "W"),
+      bout(2025, "2025 NHSCA High School Nationals", "Consi of 4", "W"),
+      bout(2025, "2025 NHSCA High School Nationals", "Consi-Semis", "L"),
+      bout(2025, "2025 NHSCA High School Nationals", "5th Place", "W"),
+    ])
+    expect(out).toHaveLength(1)
+    expect(out[0]).toMatchObject({ record: "5-2", placement: 5, weight: "170" })
+  })
+
+  it("losing the placement match is the lower place", () => {
+    const [third] = summarizeBoutsByEvent([bout(2026, "E", "3rd Place", "W")])
+    const [fourth] = summarizeBoutsByEvent([bout(2026, "E", "3rd Place", "L")])
+    expect(third!.placement).toBe(3)
+    expect(fourth!.placement).toBe(4)
+  })
+
+  it("leaves placement null when he never reached a placement match", () => {
+    // Null is "did not get there", not "we are missing it".
+    const [only] = summarizeBoutsByEvent([bout(2026, "E", "Round of 64", "L")])
+    expect(only!.placement).toBeNull()
+    expect(only!.record).toBe("0-1")
+  })
+
+  it("keeps each year of the same event apart, newest first", () => {
+    const out = summarizeBoutsByEvent([
+      bout(2025, "NHSCA", "Round of 64", "W"),
+      bout(2026, "NHSCA", "Round of 64", "L"),
+    ])
+    expect(out.map((e) => e.year)).toEqual([2026, 2025])
   })
 })

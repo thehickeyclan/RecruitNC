@@ -82,6 +82,61 @@ export function buildHeadToHead(wrestler: string, opponent: string, meetings: Bo
 const SELECT = "event_name,year,event_date,round,weight_class,opponent_name,opponent_club,win,win_type,score,athlete_id"
 
 /**
+ * Each event's record and finish, worked out from the bouts.
+ *
+ * A reader wants "5th at NHSCA 2025, 7-3" before a list of ten matches; the list alone makes them
+ * count. For a wrestler with no profile there is no placement row to read, so the finish comes
+ * from the placement rounds the same way scripts/import-national-event-placers.py derives it:
+ * winning the 3rd-place match is third, losing it is fourth.
+ */
+const PLACEMENT_ROUNDS: Array<[RegExp, number, number]> = [
+  [/1st place|^finals$|championship final/i, 1, 2],
+  [/3rd place/i, 3, 4],
+  [/5th place/i, 5, 6],
+  [/7th place/i, 7, 8],
+]
+
+export type EventSummary = {
+  event: string
+  year: number | null
+  weight: string | null
+  wins: number
+  losses: number
+  record: string
+  /** Null when the wrestler did not reach a placement match — not a claim that he did not place. */
+  placement: number | null
+}
+
+export function summarizeBoutsByEvent(bouts: BoutRow[]): EventSummary[] {
+  const byEvent = new Map<string, BoutRow[]>()
+  for (const b of bouts) {
+    const key = `${b.year ?? ""}|${b.event}`
+    byEvent.set(key, [...(byEvent.get(key) ?? []), b])
+  }
+  return [...byEvent.values()]
+    .map((list): EventSummary => {
+      const wins = list.filter((b) => b.outcome === "W").length
+      let placement: number | null = null
+      for (const b of list) {
+        const hit = PLACEMENT_ROUNDS.find(([re]) => re.test(String(b.round ?? "")))
+        if (!hit) continue
+        placement = b.outcome === "W" ? hit[1] : hit[2]
+        break
+      }
+      return {
+        event: list[0]!.event,
+        year: list[0]!.year,
+        weight: list.find((b) => b.weight)?.weight ?? null,
+        wins,
+        losses: list.length - wins,
+        record: `${wins}-${list.length - wins}`,
+        placement,
+      }
+    })
+    .sort((a, b) => (b.year ?? 0) - (a.year ?? 0) || a.event.localeCompare(b.event))
+}
+
+/**
  * A wrestler we hold results for but no profile.
  *
  * Since the national imports kept every state, `other_tournament_bouts` carries roughly ten

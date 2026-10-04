@@ -97,6 +97,8 @@ export async function tryAthleteNameFastPath(message: string): Promise<AthleteFa
           placements.length
             ? "state_placements below is his own state's finish. Lead with it — it outranks any national result."
             : "We hold no state placement for him, and outside North Carolina we hold the 2026 season only. Say we do not have it rather than that he did not place.",
+          "results.events gives each event's record and finish. Summarise the event FIRST — \"5th at NHSCA 2025 at 170, 7-3\" — and only then list bouts, if the reader asked for them. A list of ten matches with no record above it makes them count.",
+          "A null placement means he did not reach a placement match, not that we are missing it.",
           "These are the bouts we hold, not necessarily the whole career: we may not have imported every event.",
         ],
         state_placements: placements,
