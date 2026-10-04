@@ -7,6 +7,7 @@ import {
   timelineInputFromCrossStore,
 } from "@/lib/data-dawg-athlete-timeline"
 import { formatFargoCareerAnswerLines, summarizeFargoCareer } from "@/lib/fargo-career"
+import { namesLikelySamePerson } from "@/lib/athlete-name-match"
 
 type CrossStorePayload = {
   searched_for?: string
@@ -267,6 +268,33 @@ export function formatCrossStoreAthleteMarkdown(displayName: string, data: Cross
   }
 
   return lines.join("\n")
+}
+
+/**
+ * Does anything in a cross-store payload actually name the wrestler we asked about?
+ *
+ * `crossStoreHasUsefulHits` only asks whether something came back, and the historical search is
+ * fuzzy enough to answer a search for Nick Meza with Nick Sweet of Havelock. One weak hit on a
+ * shared first name was enough to stop the national brackets from ever being read, so the 2026
+ * Arizona champion came back as "no records" with a stranger offered in his place.
+ *
+ * Judged by the product's own matcher, which already knows Nick is Nicholas and that Adrian Meza
+ * is somebody else.
+ */
+export function crossStoreNamesWrestler(data: CrossStorePayload, wanted: string): boolean {
+  const target = String(wanted ?? "").trim()
+  if (target.length < 3) return false
+  for (const value of Object.values(data as Record<string, unknown>)) {
+    if (!Array.isArray(value)) continue
+    for (const row of value) {
+      if (!row || typeof row !== "object") continue
+      for (const [key, cell] of Object.entries(row as Record<string, unknown>)) {
+        if (!/name|wrestler|athlete/i.test(key) || typeof cell !== "string") continue
+        if (namesLikelySamePerson(cell, target)) return true
+      }
+    }
+  }
+  return false
 }
 
 export function crossStoreHasUsefulHits(data: CrossStorePayload): boolean {

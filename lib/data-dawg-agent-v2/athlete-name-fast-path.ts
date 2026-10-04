@@ -21,7 +21,10 @@ import {
   toolTournamentBoutsSearch,
   toolWrestlingCrossStoreSearch,
 } from "./execute-data-tools"
-import { crossStoreHasUsefulHits } from "./format-cross-store-athlete-markdown"
+import {
+  crossStoreHasUsefulHits,
+  crossStoreNamesWrestler,
+} from "./format-cross-store-athlete-markdown"
 import { searchWebForWrestler } from "@/lib/data-dawg-web-search"
 import { buildCareerSummary } from "./tournament-bouts"
 import { namesLikelySamePerson } from "@/lib/athlete-name-match"
@@ -86,7 +89,18 @@ export async function tryAthleteNameFastPath(
     toolWrestlingCrossStoreSearch({ query: phrase, limit: 40 }),
     toolTournamentBoutsSearch({ wrestler: phrase }),
   ])
-  if (!crossStoreHasUsefulHits(cross as never)) {
+  /*
+   * The historical stores win only when they are about the wrestler asked for.
+   *
+   * Their search is fuzzy, and one hit on a shared first name used to be enough to skip the
+   * national brackets: "what do we have on Nick Meza" came back with no records and an unrelated
+   * Nick Sweet from Havelock, while thirteen of Meza's bouts sat in the bracket table. So a hit
+   * that does not name him gives way to brackets that do.
+   */
+  const boutsName = !("error" in bouts) && bouts.bouts?.length ? String(bouts.name ?? "") : ""
+  const boutsAreHim = boutsName.length > 0 && namesLikelySamePerson(boutsName, phrase)
+  const crossIsHim = crossStoreNamesWrestler(cross as never, phrase)
+  if (!crossStoreHasUsefulHits(cross as never) || (!crossIsHim && boutsAreHim)) {
     /*
      * Nobody in the directory and nobody in the historical tables — but the national brackets are
      * imported in full, so we hold complete records for thousands of wrestlers who are a name and

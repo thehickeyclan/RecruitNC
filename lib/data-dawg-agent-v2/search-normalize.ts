@@ -6,6 +6,14 @@ const LEADING_PATTERNS: RegExp[] = [
   /^(tell me (more )?about|who is|who are|who's|whos|what (do you know )?about|what about)\s+/i,
   /^(info(rmation)? on|information about|look up|look for|find|show me|search for|give me)\s+/i,
   /^(can you tell me about|i want to know about|do you know|tell me)\s+/i,
+  /*
+   * "What do we have on Nick Meza" — the phrasing used more than any other, and it resolved to
+   * nobody. The leading patterns took off "what do" and the stopwords took "on", leaving
+   * "we have nick meza", which matches no wrestler. The brackets held thirteen of his bouts and
+   * the answer was that we had no records, offering an unrelated Nick Sweet from Havelock.
+   */
+  /^(what (do|have) we (have|got|hold)|do we have (anything|any(thing)? (on|about))?|what do we know about|what (have|do) we got)\s+/i,
+  /^(anything|what) (on|about)\s+/i,
   /^(about|regarding)\s+/i,
 ]
 
@@ -50,6 +58,29 @@ const STOPWORDS = new Set([
   "someone",
   "named",
   "called",
+  /*
+   * Function words from "what do we have on X" / "do we hold anything on X". None of these is
+   * ever part of a wrestler's name or a school's, and left in they poisoned the whole lookup:
+   * the leading patterns above catch the common phrasings, and these catch the rest.
+   */
+  "we",
+  "us",
+  "our",
+  "have",
+  "has",
+  "had",
+  "got",
+  "get",
+  "hold",
+  "know",
+  "any",
+  "anything",
+  "something",
+  "show",
+  "need",
+  "want",
+  "looking",
+  "look",
 ])
 
 export function stripConversationalNoise(input: string): string {

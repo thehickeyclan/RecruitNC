@@ -1,3 +1,4 @@
+import { crossStoreNamesWrestler } from "./format-cross-store-athlete-markdown"
 import { describe, expect, it } from "vitest"
 import { buildHeadToHead, describeBout, toBoutRow, type BoutRow, summarizeBoutsByEvent, buildCareerSummary } from "./tournament-bouts"
 
@@ -140,5 +141,25 @@ describe("buildCareerSummary", () => {
     const c = buildCareerSummary("NC", [], [ev(2026, "2026 NHSCA National Duals")])
     expect(c.nhsca).toEqual([])
     expect(c.other).toHaveLength(1)
+  })
+})
+
+describe("crossStoreNamesWrestler", () => {
+  it("rejects a hit that only shares a first name", () => {
+    // The hit that cost us Nick Meza: fuzzy historical search answered with Nick Sweet.
+    const payload = { total_hits: 1, nchsaa_state: [{ wrestler_name: "Nick Sweet" }] }
+    expect(crossStoreNamesWrestler(payload as never, "nick meza")).toBe(false)
+  })
+
+  it("accepts the wrestler asked for, including a short form", () => {
+    const payload = { total_hits: 3, nchsaa_state: [{ wrestler_name: "Brandon Palmer" }] }
+    expect(crossStoreNamesWrestler(payload as never, "brandon palmer")).toBe(true)
+    const nicholas = { total_hits: 1, nchsaa_state: [{ wrestler_name: "Nicholas Meza" }] }
+    expect(crossStoreNamesWrestler(nicholas as never, "nick meza")).toBe(true)
+  })
+
+  it("is false on an empty payload rather than throwing", () => {
+    expect(crossStoreNamesWrestler({ total_hits: 0 } as never, "nick meza")).toBe(false)
+    expect(crossStoreNamesWrestler({} as never, "")).toBe(false)
   })
 })
