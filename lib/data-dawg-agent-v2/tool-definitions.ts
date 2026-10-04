@@ -245,6 +245,24 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
   {
     type: "function",
     function: {
+      name: "state_placers_search",
+      description:
+        "State-tournament placers for the OTHER 49 states — every placer from the 2026 state tournaments, with finish, classification, weight and school. Use whenever the wrestler is NOT from North Carolina: 'did Andrew Uszenski place at states' for a New York wrestler is a question about New York's tournament, and nchsaa_state_results_search answers about North Carolina's, which he never wrestled. For a North Carolina wrestler use nchsaa_state_results_search instead. Coverage is the 2026 season only, so an empty result means we do not hold it, never that the wrestler did not place.",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          wrestler: { type: "string", description: "Wrestler's name." },
+          state: { type: "string", description: "Optional two-letter state code to narrow it, e.g. 'NY'." },
+          limit: { type: "integer" },
+        },
+        required: ["wrestler"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "nchsaa_multi_time_state_champions",
       description:
         "List ALL North Carolina wrestlers who won exactly N individual NCHSAA state championships (place=1), for N = 2, 3, or 4. Use for questions like 'who are the four-time state champions?', '4x state champs', 'three-time state champs', 'how many 4x champs' (call with times=4 then cite total_wrestlers). Does not require a wrestler name. Do NOT use for '4x state placers' / 'place winners' — use nchsaa_multi_time_state_placers.",

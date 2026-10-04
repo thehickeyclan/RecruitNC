@@ -2021,6 +2021,7 @@ export async function toolFargoResultsByYear(args: { year?: number | string | nu
 
 export type DataToolName =
   | "tournament_bouts_search"
+  | "state_placers_search"
   | "head_to_head_search"
   | "suggest_athlete_names"
   | "search_athletes"
@@ -2100,6 +2101,10 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
           await toolTournamentBoutsSearch(
             args as { wrestler: string; event?: string | null; year?: number | null; outcome?: "wins" | "losses" | null; limit?: number },
           ),
+        )
+      case "state_placers_search":
+        return JSON.stringify(
+          await toolStatePlacersSearch(args as { wrestler: string; state?: string | null; limit?: number }),
         )
       case "head_to_head_search":
         return JSON.stringify(
@@ -2325,4 +2330,49 @@ export async function toolHeadToHeadSearch(args: { wrestler: string; opponent: s
   if (opponentName.length < 2) return { error: "Give the opponent's name." }
   const meetings = await loadMeetings(admin, found.id, opponentName)
   return buildHeadToHead(found.name, opponentName, meetings)
+}
+
+
+/**
+ * State-tournament placers outside North Carolina.
+ *
+ * `state_tournament_placers` holds 16,551 placers across 49 states and no tool read it, so "did he
+ * place at states" about a New York wrestler was answered from the NCHSAA tables — a tournament he
+ * was never eligible for — and came back "no records", which reads as "he did not place".
+ *
+ * Coverage is the 2026 season alone. That is said in every answer, because here an empty result is
+ * far more likely to be a gap in ours than a fact about the wrestler.
+ */
+export async function toolStatePlacersSearch(args: { wrestler: string; state?: string | null; limit?: number }) {
+  const admin = getSupabaseAdmin()
+  const q = sanitizeFragment(args.wrestler || "").trim()
+  if (q.length < 2) return { error: "Give a wrestler's name." }
+  let query = admin
+    .from("state_tournament_placers")
+    .select("wrestler_name,school_raw,state,season,classification,weight,place,gender,grad_year")
+    .ilike("wrestler_name", `%${escapeForIlike(q)}%`)
+  const state = String(args.state ?? "").trim().toUpperCase()
+  if (/^[A-Z]{2}$/.test(state)) query = query.eq("state", state)
+  const { data, error } = await query.limit(Math.min(Math.max(args.limit ?? 25, 1), 100))
+  if (error) return { error: error.message }
+  const rows = (data ?? []).map((r) => ({
+    wrestler: String(r.wrestler_name ?? ""),
+    school: String(r.school_raw ?? "") || null,
+    state: String(r.state ?? ""),
+    season: Number(r.season) || null,
+    classification: String(r.classification ?? "") || null,
+    weight: String(r.weight ?? "") || null,
+    place: Number(r.place) || null,
+    gender: String(r.gender ?? "") || null,
+    classYear: Number(r.grad_year) || null,
+  }))
+  return {
+    wrestler: q,
+    count: rows.length,
+    coverage:
+      "State placers for the 49 states outside North Carolina, 2026 season only. North Carolina's own " +
+      "placers are in the NCHSAA tables (nchsaa_state_results_search). An empty result means we do not " +
+      "hold a 2026 placement for that name — not that the wrestler never placed.",
+    placers: rows,
+  }
 }
