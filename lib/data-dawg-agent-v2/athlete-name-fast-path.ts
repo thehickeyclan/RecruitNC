@@ -15,6 +15,7 @@ import {
 import {
   toolGetAthleteFullDossier,
   toolSearchAthletes,
+  toolStatePlacersSearch,
   toolTournamentBoutsSearch,
   toolWrestlingCrossStoreSearch,
 } from "./execute-data-tools"
@@ -68,14 +69,37 @@ export async function tryAthleteNameFastPath(message: string): Promise<AthleteFa
     const bouts = await toolTournamentBoutsSearch({ wrestler: phrase })
     if ("error" in bouts) return null
     if (!bouts.bouts?.length) return null
+
+    /*
+     * His own state's tournament, fetched here rather than left to a follow-up.
+     *
+     * Asked whether Dustin Kohn placed at states, Data Dawg answered that he did not place at the
+     * NCHSAA state tournament. He wrestles for Virginia and is the 2026 Virginia 6A champion at
+     * 190. The tool to answer that existed and the model did not call it, so the lookup happens
+     * here and the answer is in the facts before the question is asked.
+     *
+     * Narrowed by state: there is a Dustin Kohn in Virginia and another in Oregon.
+     */
+    const state = typeof bouts.team === "string" && /^[A-Z]{2}$/.test(bouts.team) ? bouts.team : null
+    const placers = state ? await toolStatePlacersSearch({ wrestler: bouts.name ?? phrase, state }) : null
+    const placements = placers && !("error" in placers) ? placers.placers : []
+
     return {
       facts: {
         profile_url: null,
+        wrestles_for: state,
         writing_notes: [
           `${bouts.wrestler} has no RecruitNC profile. Write the name as plain text — do NOT link it, and never invent a profile URL.`,
           "Say plainly that this wrestler has no RecruitNC profile and that the record is matched on name and team from imported brackets.",
+          state
+            ? `He wrestles for ${state}. "Did he place at states" means ${state}'s state tournament, NOT the NCHSAA — never answer about North Carolina's tournament for a wrestler from another state.`
+            : "No state on file for this wrestler; do not guess which state tournament applies.",
+          placements.length
+            ? "state_placements below is his own state's finish. Lead with it — it outranks any national result."
+            : "We hold no state placement for him, and outside North Carolina we hold the 2026 season only. Say we do not have it rather than that he did not place.",
           "These are the bouts we hold, not necessarily the whole career: we may not have imported every event.",
         ],
+        state_placements: placements,
         results: bouts,
       },
       athleteId: null,

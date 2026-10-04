@@ -2292,6 +2292,10 @@ export async function toolTournamentBoutsSearch(args: {
     const wins = theirBouts.filter((b) => b.outcome === "W").length
     return {
       wrestler: team ? `${unprofiled.name} (${team})` : unprofiled.name,
+      name: unprofiled.name,
+      // The team is the state at NHSCA, Super 32 and Fargo — the thing that says whose state
+      // tournament "did he place at states" is even asking about.
+      team,
       count: only.length,
       noProfile: true,
       coverage:
