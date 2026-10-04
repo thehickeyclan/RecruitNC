@@ -321,6 +321,16 @@ export type CareerSummary = {
     fargoFreestyle: string | null
     fargoGreco: string | null
   }
+  /*
+   * The five answers, already written.
+   *
+   * Told in the prompt not to claim attendance for an empty section, the model still reported that
+   * Nick Meza "has participated in the NHSCA Nationals, but we do not have any recorded results".
+   * He may never have entered; the section is empty because the import does not reach him. That
+   * was the third time today a rule about phrasing lost to a sentence the model preferred, so the
+   * sentence is written here and the model is given it rather than told about it.
+   */
+  lines: string[]
 }
 
 function totalRecord(events: EventSummary[]): string | null {
@@ -353,7 +363,7 @@ export function buildCareerSummary(
   const nhsca = events.filter(is(/nhsca/i)).filter((e) => !/duals/i.test(e.event)).sort(newestFirst)
   const super32 = events.filter(is(/super 32|super32/i)).sort(newestFirst)
   const claimed = new Set<EventSummary>([...nhsca, ...super32, ...fargo])
-  return {
+  const summary: CareerSummary = {
     state,
     stateTournament: statePlacements
       .map((p) => ({
@@ -375,5 +385,62 @@ export function buildCareerSummary(
       fargoFreestyle: totalRecord(fargo.filter((e) => !/greco/i.test(e.event))),
       fargoGreco: totalRecord(fargo.filter(is(/greco/i))),
     },
+    lines: [],
   }
+  summary.lines = careerSummaryLines(summary)
+  return summary
+}
+
+const ORDINAL = ["", "1st", "2nd", "3rd", "4th", "5th", "6th", "7th", "8th"]
+const place = (n: number | null) => (n && ORDINAL[n] ? ORDINAL[n] : n ? `${n}th` : null)
+
+/**
+ * One finished sentence per section, in the order people ask in: state, his own state tournament,
+ * NHSCA, Super 32, Fargo freestyle. An empty section says we hold nothing and says nothing about
+ * whether he entered, because we do not know.
+ */
+function careerSummaryLines(c: CareerSummary): string[] {
+  const years = (events: EventSummary[]) =>
+    events
+      .map((e) => {
+        const finish = place(e.placement)
+        return `${e.year} at ${e.weight} (${e.record}${finish ? `, ${finish}` : ""})`
+      })
+      .join("; ")
+  const section = (label: string, events: EventSummary[], total: string | null) =>
+    events.length
+      ? `${label}: ${total} overall — ${years(events)}.`
+      /*
+       * A statement of what we hold, with no instruction in it: these lines are meant to be
+       * printed, and an imperative here comes out in the answer addressed to the reader.
+       */
+      : `${label}: none on file — we hold no ${label} results for this wrestler.`
+
+  const lines: string[] = []
+  lines.push(c.state ? `Wrestles for ${c.state}.` : "No state on file for this wrestler.")
+  if (c.stateTournament.length) {
+    lines.push(
+      `State tournament: ${c.stateTournament
+        .map((p) => {
+          const finish = place(p.place)
+          const division = p.classification ? ` ${p.classification}` : ""
+          return `${p.year} ${p.state}${division} at ${p.weight} — ${finish ?? "placed"}${p.place === 1 ? " (champion)" : ""}`
+        })
+        .join("; ")}.`,
+    )
+  } else {
+    lines.push(
+      "State tournament: none on file — we hold no state placement for this wrestler. Outside North Carolina our collection covers the 2026 season only.",
+    )
+  }
+  lines.push(section("NHSCA Nationals", c.nhsca, c.careerRecords.nhsca))
+  lines.push(section("Super 32", c.super32, c.careerRecords.super32))
+  lines.push(section("Fargo freestyle", c.fargoFreestyle, c.careerRecords.fargoFreestyle))
+  if (c.fargoGreco.length) {
+    lines.push(`Fargo Greco-Roman: ${c.careerRecords.fargoGreco} overall — ${years(c.fargoGreco)}.`)
+  }
+  if (c.other.length) {
+    lines.push(`Also on file: ${c.other.map((e) => `${e.year} ${e.event} (${e.record})`).join("; ")}.`)
+  }
+  return lines
 }

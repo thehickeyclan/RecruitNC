@@ -192,6 +192,7 @@ export async function tryAthleteNameFastPath(
           placements.length
             ? "state_placements below is his own state's finish. Lead with it — it outranks any national result."
             : "We hold no state placement for him, and outside North Carolina we hold the 2026 season only. Say we do not have it rather than that he did not place.",
+          "career_summary.lines IS THE ANSWER, already written and in the right order. Use those sentences — keep their wording for anything we do not hold, and never replace \"none on file\" with a claim that he entered, attended or \"has no recorded results\". You may tidy them into prose and add the bouts beneath, nothing more.",
           "ANSWER IN THIS ORDER, from career_summary: (1) which state he wrestles for, in the first sentence; (2) his own state tournament — the finish and year, every year on file; (3) NHSCA with record and placement, every year; (4) Super 32 with record; (5) Fargo freestyle with record. Greco and anything else come after, briefly.",
           "Where a section of career_summary is empty, SAY it is empty — \"no Super 32 on file\" — and never leave it out. Silence reads as \"he never went\", which is a claim we cannot make: we may simply not have imported it.",
           "An empty section means WE DO NOT HOLD IT. Never write that he entered, attended, participated in or competed at an event whose section is empty, and never that he has \"no recorded results\" there — both state as fact something we do not know. The only honest sentence is that we have none on file.",

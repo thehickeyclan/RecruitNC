@@ -197,3 +197,46 @@ describe("buildCareerSummary career records", () => {
     expect(c.careerRecords.fargoGreco).toBe("1-2")
   })
 })
+
+describe("buildCareerSummary.lines", () => {
+  const ev = (year: number, event: string, wins: number, losses: number, placement: number | null = null) => ({
+    event, year, weight: "144", wins, losses, record: `${wins}-${losses}`, placement,
+  })
+
+  it("writes an empty section as ours to hold, not as his to have entered", () => {
+    const c = buildCareerSummary("AZ", [], [ev(2025, "2025 Super 32", 1, 2)])
+    const nhsca = c.lines.find((l) => l.startsWith("NHSCA"))!
+    expect(nhsca).toContain("none on file")
+    // The sentence the model kept writing instead, and the claim underneath it.
+    expect(nhsca).not.toMatch(/has no recorded results|participated|competed at|attended/i)
+    expect(nhsca).toContain("we hold no NHSCA Nationals results")
+    // These lines get printed, so they must read as facts and carry no instruction to the reader.
+    expect(nhsca).not.toMatch(/\bdo not\b/i)
+  })
+
+  it("leads with the state and then his own state tournament", () => {
+    const c = buildCareerSummary(
+      "AZ",
+      [{ state: "AZ", season: 2026, classification: "D1", weight: "144", place: 1 }],
+      [],
+    )
+    expect(c.lines[0]).toBe("Wrestles for AZ.")
+    expect(c.lines[1]).toContain("2026 AZ D1 at 144 — 1st (champion)")
+  })
+
+  it("gives the career total it was told, never a sum of its own", () => {
+    const c = buildCareerSummary("VA", [], [
+      ev(2026, "2026 NHSCA High School Nationals", 2, 2),
+      ev(2025, "2025 NHSCA High School Nationals", 6, 2, 5),
+    ])
+    const nhsca = c.lines.find((l) => l.startsWith("NHSCA"))!
+    expect(nhsca).toContain("8-4 overall")
+    expect(nhsca).toContain("2025 at 144 (6-2, 5th)")
+  })
+
+  it("says a missing state tournament is a gap in our data", () => {
+    const c = buildCareerSummary("NY", [], [ev(2025, "2025 NHSCA High School Nationals", 5, 2, 5)])
+    expect(c.lines[1]).toContain("none on file — we hold no state placement")
+    expect(c.lines[1]).not.toMatch(/\bdo not say\b/i)
+  })
+})
