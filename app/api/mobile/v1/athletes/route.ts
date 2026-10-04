@@ -33,6 +33,8 @@ export async function GET(request: NextRequest) {
   const q = (p.get("q") ?? "").trim()
   const gender = (p.get("gender") ?? "").trim()
   const gradYear = Number(p.get("gradYear")) || null
+  /** The app's default view: current high-school classes only, so graduates do not lead the list. */
+  const minYear = Number(p.get("minYear")) || null
   const creds = (p.get("cred") ?? "")
     .split(",")
     .map((c) => c.trim())
@@ -126,6 +128,7 @@ export async function GET(request: NextRequest) {
   if (q.length >= 2) query = query.ilike("name", `%${q.replace(/[%_]/g, "")}%`)
   if (gender === "Male" || gender === "Female") query = query.eq("gender", gender)
   if (gradYear) query = query.eq("graduationyear", gradYear)
+  else if (minYear) query = query.gte("graduationyear", minYear)
   if (allowed !== null) query = query.in("id", [...(allowed as Set<string>)].slice(0, 400))
 
   const { data, error } = await query
