@@ -20,7 +20,7 @@ const wrestler = (id: string, name: string, text: string) =>
   `<li style="margin-bottom:8px;"><a href="${profile(id)}" target="_blank" style="color:#003366;font-weight:bold;">${name}</a> ${text}</li>`
 
 const JOURNEYMEN_2026 = `
-<a href="${ARTICLE}" target="_blank"><img src="${SITE}/images/news/journeymen-fall-classic-2026/nc-made-noise.png" width="512" alt="NC Made Noise: 5 main event placers, 1 Overflow champion, 4 state champions defeated, 8 wins over All-Americans" style="display:block;width:100%;height:auto;border:0;border-radius:8px;"></a>
+<a href="${ARTICLE}" target="_blank"><img src="${SITE}/images/news/journeymen-fall-classic-2026/nc-made-noise-v2.png" width="512" alt="NC Made Noise: 5 main event placers, 1 Overflow champion, 4 state champions defeated, 8 wins over All-Americans" style="display:block;width:100%;height:auto;border:0;border-radius:8px;"></a>
 <h1 style="margin:22px 0 12px;font-size:22px;line-height:1.25;color:#0A1628;">NC Made Noise at the Journeymen Fall Classic</h1>
 <p style="margin:0 0 14px;">The Journeymen Fall Classic drew one of the toughest fields in the country: state champions, All-Americans and nationally ranked wrestlers from New York, Pennsylvania, New Jersey and beyond. Eighteen North Carolina wrestlers took it on, and NC made noise.</p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 18px;"><tr>
