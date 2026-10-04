@@ -77,6 +77,32 @@ async function main() {
     if (!data || data.length < 1000) break
   }
 
+  /*
+   * The 2026 half of the file carries no state at all (1,341 of 1,351 rows blank), so the rule
+   * below linked nobody. A club stands in for it: the clubs our North Carolina wrestlers are on
+   * record wrestling for at any event, normalised. A name alone is still never enough.
+   */
+  const normClub = (c: string) =>
+    c.toLowerCase().replace(/&amp;/g, "&").replace(/\b(wrestling|club|wc|academy|rtc|training center|the)\b/g, "").replace(/[^a-z0-9]/g, "")
+  const ncClubs = new Set<string>()
+  {
+    const ncIds = new Set<string>()
+    for (let from = 0; ; from += 1000) {
+      const { data } = await sb.from("athletes").select("id,wrestlingClub").eq("is_nc_athlete", true).order("id").range(from, from + 999)
+      for (const a of (data ?? []) as Array<{ id: string; wrestlingClub: string | null }>) {
+        ncIds.add(a.id)
+        if (a.wrestlingClub) ncClubs.add(normClub(a.wrestlingClub))
+      }
+      if (!data || data.length < 1000) break
+    }
+    for (let from = 0; ; from += 1000) {
+      const { data } = await sb.from("other_tournament_results").select("athlete_id,club").not("athlete_id", "is", null).not("club", "is", null).order("id").range(from, from + 999)
+      for (const r of (data ?? []) as Array<{ athlete_id: string; club: string }>) if (ncIds.has(r.athlete_id)) ncClubs.add(normClub(r.club))
+      if (!data || data.length < 1000) break
+    }
+    ncClubs.delete("")
+  }
+
   const rows: Array<Record<string, unknown>> = []
   const keys = new Set<string>()
   let linked = 0, ambiguous = 0
@@ -92,7 +118,8 @@ async function main() {
      * regional - Georgia, South Carolina, Tennessee and Virginia are all in it - so a name
      * matching one of our profiles is often somebody else's wrestler.
      */
-    const fromNc = (r.state ?? "").trim().toUpperCase() === "NC"
+    const stateCell = (r.state ?? "").trim().toUpperCase()
+    const fromNc = stateCell === "NC" || (!stateCell && ncClubs.has(normClub(r.club ?? "")))
     const hits = fromNc ? athletes.filter((a) => namesLikelySamePerson(a.name, who)) : []
     if (hits.length > 1) ambiguous += 1
     const athleteId = hits.length === 1 ? hits[0].id : null
