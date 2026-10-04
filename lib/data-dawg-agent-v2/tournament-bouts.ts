@@ -81,6 +81,69 @@ export function buildHeadToHead(wrestler: string, opponent: string, meetings: Bo
 
 const SELECT = "event_name,year,event_date,round,weight_class,opponent_name,opponent_club,win,win_type,score,athlete_id"
 
+/**
+ * A wrestler we hold results for but no profile.
+ *
+ * Since the national imports kept every state, `other_tournament_bouts` carries roughly ten
+ * thousand wrestlers who exist only as a name and a team: Micah Engelman of Pennsylvania has his
+ * whole two-year NHSCA record here, 16 bouts and two fifth places, and no `athlete_id`. Every tool
+ * keyed on a profile id, so Data Dawg answered "no athlete found" while holding the answer —
+ * confidently empty, which is worse than saying nothing.
+ *
+ * Matched on name AND team, never name alone. Two wrestlers of a name in different states are two
+ * people, and merging them would invent a record neither of them has. Where the name appears under
+ * more than one team the caller is told, rather than one being picked.
+ */
+export type UnprofiledWrestler = { name: string; teams: Array<{ team: string; bouts: number }> }
+
+export async function findUnprofiledWrestler(
+  supabase: SupabaseClient,
+  name: string,
+): Promise<UnprofiledWrestler | null> {
+  const q = name.trim()
+  if (q.length < 2) return null
+  const { data, error } = await supabase
+    .from("other_tournament_bouts")
+    .select("athlete_name,athlete_club")
+    .is("athlete_id", null)
+    .ilike("athlete_name", q)
+    .limit(200)
+  if (error || !data?.length) return null
+  /*
+   * Counted per team, because the same wrestler is often recorded two ways: NHSCA and Fargo store
+   * a state code and USAW and Journeymen a club, so "Wyoming Seminary" and "PA" can be one person.
+   * The caller is given the counts rather than a bare list, so the question it asks is answerable.
+   */
+  const counts = new Map<string, number>()
+  for (const r of data) {
+    const team = String(r.athlete_club ?? "").trim()
+    if (team) counts.set(team, (counts.get(team) ?? 0) + 1)
+  }
+  const teams = [...counts.entries()]
+    .map(([team, bouts]) => ({ team, bouts }))
+    .sort((a, b) => b.bouts - a.bouts)
+  return { name: String(data[0]!.athlete_name ?? q).trim() || q, teams }
+}
+
+/** That wrestler's bouts, keyed on the name and team rather than a profile. */
+export async function loadBoutsForUnprofiled(
+  supabase: SupabaseClient,
+  name: string,
+  team: string | null,
+  options: { event?: string | null; year?: number | null; limit?: number } = {},
+): Promise<BoutRow[]> {
+  let query = supabase.from("other_tournament_bouts").select(SELECT).is("athlete_id", null).ilike("athlete_name", name)
+  if (team) query = query.eq("athlete_club", team)
+  if (options.event) query = query.ilike("event_name", `%${options.event}%`)
+  if (options.year) query = query.eq("year", options.year)
+  const { data, error } = await query
+    .order("year", { ascending: false })
+    .order("bout_order", { ascending: true })
+    .limit(Math.min(Math.max(options.limit ?? 60, 1), 200))
+  if (error || !data) return []
+  return data.map((row) => toBoutRow(row as Record<string, unknown>))
+}
+
 /** Every recorded bout for one athlete, newest first. */
 export async function loadBoutsForAthlete(
   supabase: SupabaseClient,

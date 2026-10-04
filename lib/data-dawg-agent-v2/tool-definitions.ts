@@ -175,7 +175,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "tournament_bouts_search",
       description:
-        "Individual BOUTS for one wrestler — who they actually wrestled and what happened, with opponent, round, method and score. Use for 'who did X beat at NHSCA', 'who has beaten X', 'show me X's TOC matches', 'X's losses this year'. Covers NHSCA Nationals, the NCHSAA state tournament, the Tournament of Champions, Super 32 Early Entry, I-64 Spring Duals, Journeymen and NHSCA Duals. For a wrestler's RECORD or PLACEMENT rather than their matches, use nhsca_placements_search, nchsaa_state_results_search or get_athlete_full_dossier.",
+        "Individual BOUTS for one wrestler — who they actually wrestled and what happened, with opponent, round, method and score. Use for 'who did X beat at NHSCA', 'who has beaten X', 'show me X's TOC matches', 'X's losses this year'. Covers NHSCA Nationals, Super 32, Fargo, the NCHSAA state tournament, the Tournament of Champions, Super 32 Early Entry, I-64 Spring Duals, Journeymen, the Ultimate Club Duals and NHSCA Duals. **Works for out-of-state wrestlers with no RecruitNC profile** — the national brackets are imported in full, so ask about any wrestler in them by name; the answer says when they have no profile and which team the record is matched on. For a wrestler's RECORD or PLACEMENT rather than their matches, use nhsca_placements_search, nchsaa_state_results_search or get_athlete_full_dossier.",
       parameters: {
         type: "object",
         additionalProperties: false,

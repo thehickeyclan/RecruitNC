@@ -7,7 +7,9 @@ import { getSupabaseAdmin } from "@/lib/server-supabase"
 import {
   buildHeadToHead,
   describeBout,
+  findUnprofiledWrestler,
   loadBoutsForAthlete,
+  loadBoutsForUnprofiled,
   loadMeetings,
 } from "@/lib/data-dawg-agent-v2/tournament-bouts"
 import { fetchCollegeCommits } from "@/lib/college-commit-query"
@@ -2253,7 +2255,47 @@ export async function toolTournamentBoutsSearch(args: {
 }) {
   const admin = getSupabaseAdmin()
   const found = await resolveOneAthlete(admin, args.wrestler)
-  if ("error" in found) return found
+  /*
+   * No profile does not mean no results. The national imports kept every state, so about ten
+   * thousand wrestlers are a name and a team with a full record behind them - Micah Engelman of
+   * Pennsylvania has two NHSCA fifth places here and no `athlete_id`. Keyed on a profile alone the
+   * tool said "no athlete found" while holding the answer.
+   */
+  if ("error" in found) {
+    const unprofiled = await findUnprofiledWrestler(admin, args.wrestler)
+    if (!unprofiled) return found
+    // Two wrestlers of a name in different states are two people; say so rather than merge them.
+    if (unprofiled.teams.length > 1) {
+      return {
+        error:
+          `"${unprofiled.name}" has no profile here and appears under ${unprofiled.teams.length} teams. ` +
+          `These may be one wrestler recorded two ways — a state code at NHSCA and Fargo, a club at ` +
+          `USAW and Journeymen — or different people of the same name. Ask which, and say so.`,
+        candidates: unprofiled.teams.map((t) => `${t.team} (${t.bouts} bouts)`),
+      }
+    }
+    const team = unprofiled.teams[0]?.team ?? null
+    const theirBouts = await loadBoutsForUnprofiled(admin, unprofiled.name, team, {
+      event: args.event ?? null,
+      year: args.year ?? null,
+      limit: args.limit,
+    })
+    const only =
+      args.outcome === "wins" ? theirBouts.filter((b) => b.outcome === "W")
+        : args.outcome === "losses" ? theirBouts.filter((b) => b.outcome === "L")
+          : theirBouts
+    const wins = theirBouts.filter((b) => b.outcome === "W").length
+    return {
+      wrestler: team ? `${unprofiled.name} (${team})` : unprofiled.name,
+      count: only.length,
+      noProfile: true,
+      coverage:
+        `${unprofiled.name} has no profile on RecruitNC — these bouts are from imported brackets, ` +
+        `matched on name and team, and are every one we hold (${wins}-${theirBouts.length - wins}). ` +
+        `There may be results at events we have not imported.`,
+      bouts: only.map((b) => ({ ...b, narrative: describeBout(b, unprofiled.name) })),
+    }
+  }
   const bouts = await loadBoutsForAthlete(admin, found.id, {
     event: args.event ?? null,
     year: args.year ?? null,
