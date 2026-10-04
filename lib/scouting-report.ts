@@ -10,7 +10,7 @@
  * from these same facts and never introduces one of its own.
  */
 
-import { competitionLine, stylesLine, styleOfEvent, STYLE_LABEL, summarizeCompetition, type CompetitionSummary } from "@/lib/wrestling-style"
+import { competitionLine, stylesLine, styleOfEvent, STYLE_LABEL, summarizeCompetition, type CompetitionSummary, styleOfEventForAthlete } from "@/lib/wrestling-style"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { applyStarOverride, isRatedAthlete, rateAthlete, type StarRating } from "@/lib/athlete-star-rating"
 import { nationalEventRows, starOverrideOf, statePlaces } from "@/lib/athlete-star-rating-load"
@@ -463,13 +463,18 @@ export function isNationalEvent(event: string): boolean {
 }
 
 /** Tournament results flattened into printable lines, newest first. */
+/**
+ * `gender` decides the events that are one style for the men and another for the women - the
+ * Ultimate Club Duals are folkstyle for the boys and freestyle for the girls (Matt). The report
+ * must agree with the profile about this or the two documents contradict each other.
+ */
 export function buildResultRows(bundle: {
   nchsaa: Array<{ year: number; place: number | null; classification: string; weight_class: string }>
   nhsca: Array<{ year: number; placement?: string; record?: string; weight?: string }>
   super32: Array<{ year: number; placement?: string; record?: string; weight?: string }>
   fargo: Array<{ year: number; placement?: string; record?: string; weight?: string; division?: string }>
   other: Array<{ year: number; eventName?: string; eventShortName: string; placement: number | null; record: string; weight: string; qualified: boolean; eventDate?: string | null }>
-}): ScoutingReportResultRow[] {
+}, gender: string | null = null): ScoutingReportResultRow[] {
   const rows: Array<ScoutingReportResultRow & { when: string }> = []
   const when = (event: string, year: number) => eventSortKey(event, year, null)
 
@@ -500,13 +505,13 @@ export function buildResultRows(bundle: {
       const detail = [division, r.weight, placement, r.record ? `${r.record} record` : ""]
         .filter(Boolean)
         .join(" · ")
-      if (detail) rows.push({ event: label, style: styleOfEvent(label, division), year: r.year, when: when(label, r.year), date: null, weight: String(r.weight ?? "") || null, detail })
+      if (detail) rows.push({ event: label, style: styleOfEventForAthlete(label, division, gender), year: r.year, when: when(label, r.year), date: null, weight: String(r.weight ?? "") || null, detail })
     }
   }
   for (const r of bundle.other ?? []) {
     const place = r.placement ? (r.placement === 1 ? "Champion" : ordinal(r.placement)) : "did not place"
     // The full name carries the division ("... - 16U Boys Freestyle"), which decides the style.
-    const style = styleOfEvent(r.eventName || r.eventShortName)
+    const style = styleOfEventForAthlete(r.eventName || r.eventShortName, null, gender)
     // A freestyle/Greco event's division says the style and age group: "16U Boys Freestyle".
     const division = style === "folkstyle" ? "" : (String(r.eventName ?? "").split(" - ")[1] ?? "").trim()
     const detail = [division, r.weight, place, r.record ? `${r.record} record` : "", r.qualified ? "Super 32 qualifier" : ""]
@@ -645,7 +650,7 @@ export async function buildScoutingReport(
   const gradYear = athlete.graduationyear == null ? null : Number(athlete.graduationyear)
   const rawRank = athlete.prospect_ranking == null ? null : Number(athlete.prospect_ranking)
   // Built once: the panel counts the same rows the table prints, so the two cannot disagree.
-  const resultRows = buildResultRows(bundle as never)
+  const resultRows = buildResultRows(bundle as never, text(athlete.gender))
   const rankedWins = significant.wins
   const rankedLosses = significant.losses
   const seasonStrength = seasonBouts.length > 0 ? summarizeSeasonStrength(seasonBouts as never) : null
@@ -798,8 +803,8 @@ function pronounFact(gender: string | null): string {
   return "Pronouns: not on file. Repeat the surname instead of any pronoun; never write they/them."
 }
 
-function boutFact(bout: SignificantWin): string {
-  const style = styleOfEvent(bout.event)
+function boutFact(bout: SignificantWin, gender: string | null): string {
+  const style = styleOfEventForAthlete(bout.event, null, gender)
   return (
     `${bout.opponent} (${standingPhrase(bout)})` +
     `${bout.result ? ` ${bout.result}` : ""}${bout.event ? ` at ${bout.event}` : ""}` +
@@ -937,11 +942,11 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
   }
   if (report.significantWins.length) {
     lines.push("", "Wins over nationally ranked, NC state-ranked or Tournament of Champions wrestlers:")
-    for (const w of report.significantWins.slice(0, 12)) lines.push(`- beat ${boutFact(w)}`)
+    for (const w of report.significantWins.slice(0, 12)) lines.push(`- beat ${boutFact(w, report.identity.gender)}`)
   }
   if (report.significantLosses.length) {
     lines.push("", "Losses to nationally ranked, NC state-ranked or Tournament of Champions wrestlers:")
-    for (const l of report.significantLosses.slice(0, 12)) lines.push(`- lost to ${boutFact(l)}`)
+    for (const l of report.significantLosses.slice(0, 12)) lines.push(`- lost to ${boutFact(l, report.identity.gender)}`)
   }
 
   /*

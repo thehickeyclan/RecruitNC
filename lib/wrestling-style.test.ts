@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { competitionLine, isNationalEvent, styleOfEvent, stylesLine, summarizeCompetition } from "./wrestling-style"
+import { competitionLine, isNationalEvent, styleOfEvent, styleOfEventForAthlete, stylesLine, summarizeCompetition } from "./wrestling-style"
 
 describe("styleOfEvent", () => {
   it("reads freestyle and Greco from the event, and everything else as folkstyle", () => {
@@ -61,5 +61,24 @@ describe("style order follows the wrestler", () => {
 
   it("keeps folkstyle first when no gender is known, as before", () => {
     expect(summarizeCompetition(events, true).styles[0]).toBe("folkstyle")
+  })
+})
+
+describe("styleOfEventForAthlete", () => {
+  it("reads the Ultimate Club Duals as freestyle for a girl and folkstyle for a boy", () => {
+    // Matt, 3 Oct 2026. The event name says neither style, so it cannot be read from the text.
+    expect(styleOfEventForAthlete("Ultimate Club Duals", "NC Gold", "Female")).toBe("freestyle")
+    expect(styleOfEventForAthlete("Ultimate Club Duals", "NC United", "Male")).toBe("folkstyle")
+  })
+
+  it("leaves every other event to the name, whoever wrestled it", () => {
+    expect(styleOfEventForAthlete("NHSCA Nationals", null, "Female")).toBe("folkstyle")
+    expect(styleOfEventForAthlete("Fargo \u00b7 Freestyle", "16U", "Male")).toBe("freestyle")
+    expect(styleOfEventForAthlete("2026 Fargo 16U Greco", null, "Female")).toBe("greco")
+  })
+
+  it("falls back to folkstyle when no gender is on file", () => {
+    // A guess either way would be wrong for half the field; the event's own default stands.
+    expect(styleOfEventForAthlete("Ultimate Club Duals", "NC Gold", null)).toBe("folkstyle")
   })
 })

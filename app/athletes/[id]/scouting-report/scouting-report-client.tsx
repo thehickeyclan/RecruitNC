@@ -7,7 +7,7 @@ import Link from "next/link"
 import type { ScoutingReport } from "@/lib/scouting-report"
 import { weightProgression } from "@/lib/scouting-report"
 import { cn } from "@/lib/utils"
-import { competitionLine, isInternationalStyle, styleOfEvent, stylesLine } from "@/lib/wrestling-style"
+import { competitionLine, isInternationalStyle, styleOfEvent, stylesLine, styleOfEventForAthlete } from "@/lib/wrestling-style"
 import { RETAINED_EDITIONS } from "@/lib/national-rankings"
 import { keyFacts, snapshotFigures, starPart } from "@/lib/scouting-report-snapshot"
 import { ELITE_OPPONENT_PERCENTILE } from "@/lib/competition-strength"
@@ -151,16 +151,23 @@ export function ScoutingReportDocument({
   // Folkstyle and Olympic styles never share a section: the NCHSAA State Championships and the NC
   // Freestyle & Greco State Championships are different titles (Matt).
   const olympicRow = (style: ReturnType<typeof styleOfEvent>) => isInternationalStyle(style)
-  const folkResults = report.results.filter((r) => !olympicRow(r.style ?? styleOfEvent(r.event, r.detail)))
-  const olympicResults = report.results.filter((r) => olympicRow(r.style ?? styleOfEvent(r.event, r.detail)))
+  /*
+   * The Ultimate Club Duals are folkstyle for the men and freestyle for the women (Matt), so the
+   * split needs to know whose report this is - and must match the profile, or the two documents
+   * disagree about the same wrestler.
+   */
+  const reportGender = report.identity?.gender ?? null
+  const styleOf = (event: string | null, detail?: string | null) => styleOfEventForAthlete(event, detail ?? null, reportGender)
+  const folkResults = report.results.filter((r) => !olympicRow(r.style ?? styleOf(r.event, r.detail)))
+  const olympicResults = report.results.filter((r) => olympicRow(r.style ?? styleOf(r.event, r.detail)))
   // Individual events first, then dual results (Junior National Duals), as on the profile.
   const olympicDuals = olympicResults.filter((r) => /\bduals?\b/i.test(r.event))
   const olympicIndividual = olympicResults.filter((r) => !/\bduals?\b/i.test(r.event))
   const allWins: BoutRow[] = [...report.significantWins, ...(report.reportedWins ?? []).map(reportedRow)]
-  const folkWins = allWins.filter((w) => !olympicRow(styleOfEvent(w.event)))
-  const olympicWins = allWins.filter((w) => olympicRow(styleOfEvent(w.event)))
-  const folkLosses = report.significantLosses.filter((w) => !olympicRow(styleOfEvent(w.event)))
-  const olympicLosses = report.significantLosses.filter((w) => olympicRow(styleOfEvent(w.event)))
+  const folkWins = allWins.filter((w) => !olympicRow(styleOf(w.event)))
+  const olympicWins = allWins.filter((w) => olympicRow(styleOf(w.event)))
+  const folkLosses = report.significantLosses.filter((w) => !olympicRow(styleOf(w.event)))
+  const olympicLosses = report.significantLosses.filter((w) => olympicRow(styleOf(w.event)))
   const snapshot = snapshotFigures(report)
   const facts = keyFacts(report)
 
