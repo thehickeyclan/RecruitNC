@@ -35,7 +35,16 @@ const sb = createClient(
   { auth: { persistSession: false } },
 )
 const WRITE = process.argv.includes("--write")
-const FILE = `${process.env.HOME}/Downloads/girls-state-placers-2026.csv`
+/*
+ * Which season's file to load. It was fixed at 2026 because that was the only girls' file we had;
+ * 2025 arrived on 4 Oct 2026, and the Oregon rows in the first 2026 file turned out to be the
+ * 2024-25 season mislabelled, so re-running one season without disturbing the other now matters.
+ */
+const SEASON = Number(process.argv[process.argv.indexOf("--season") + 1]) || 2026
+const FILE =
+  process.argv.includes("--file")
+    ? process.argv[process.argv.indexOf("--file") + 1]!.replace(/^~/, process.env.HOME ?? "~")
+    : `${process.env.HOME}/Downloads/girls-state-placers-${SEASON}.csv`
 
 /** The table stores two-letter codes; the file spells the state out. */
 const STATE_CODE: Record<string, string> = {
@@ -94,22 +103,55 @@ async function main() {
   const noAssoc = [...new Set(all.map((r) => STATE_CODE[r.state]).filter((c) => c && !assocByState.has(c)))]
   if (noAssoc.length) console.log(`no association on file for: ${noAssoc.join(", ")} — skipped\n`)
 
+  /*
+   * West Virginia's 2025 rows arrive with the grade stuck to the name - "Allegra Keaton-9" - and
+   * only West Virginia's do. Left alone not one of them would ever match: Allegra Keaton wrestled
+   * Brianna Palmer at the Ultimate Club Duals and the two records would never meet.
+   *
+   * The grade is worth keeping rather than deleting. Season 2025 is the 2024-25 year, so a ninth
+   * grader there is the class of 2028 - the field that gates almost everything downstream and
+   * that we hold for barely 1% of this table.
+   */
+  const splitGrade = (raw: string, season: number) => {
+    const m = String(raw ?? "").trim().match(/^(.*?)[-–](\d{1,2})$/)
+    if (!m) return { name: String(raw ?? "").trim(), grade: null as number | null, gradYear: null as number | null }
+    const grade = Number(m[2])
+    const sane = Number.isFinite(grade) && grade >= 7 && grade <= 12
+    return {
+      name: m[1]!.trim(),
+      grade: sane ? grade : null,
+      gradYear: sane ? season + (12 - grade) : null,
+    }
+  }
+
   const rows = all
     .filter((r) => r.state !== "North Carolina")
     .filter((r) => assocByState.has(STATE_CODE[r.state]))
     .filter((r) => STATE_CODE[r.state])
-    .map((r) => ({
-      season: Number(r.year) || 2026,
+    .map((r) => {
+      const season = Number(r.year) || SEASON
+      const { name, grade, gradYear } = splitGrade(r.athlete_name, season)
+      /*
+       * West Virginia's girls' championship is unsanctioned - the "WV Girls State Invitational" -
+       * and the file does not say so, though the note sending it does. Recording it here keeps a
+       * placing there from being read as a state title.
+       */
+      const invitational = r.state === "West Virginia" && season === 2025
+      return {
+      season,
       state: STATE_CODE[r.state],
       association: assocByState.get(STATE_CODE[r.state])!,
       gender: "Girls",
-      classification: r.division || null,
+      classification: invitational ? `${r.division || "Girls"} (invitational)` : r.division || null,
       weight: r.weight_class || null,
       place: Number(r.placement) || null,
-      wrestler_name: r.athlete_name,
+      wrestler_name: name,
+      grade: grade == null ? null : String(grade),
+      grad_year: gradYear,
       school_raw: r.school || null,
       source_url: r.source_url || null,
-    }))
+      }
+    })
 
   const { count: before } = await sb.from("state_tournament_placers").select("id", { count: "exact", head: true }).eq("gender", "Girls")
   console.log(`file: ${all.length} rows · North Carolina skipped: ${all.length - rows.length} · to insert: ${rows.length}`)
@@ -174,7 +216,7 @@ async function main() {
   console.log(`divisions written: ${divisions.size}`)
 
   /* Re-runnable: this season's girls only, never the boys and never another season. */
-  await sb.from("state_tournament_placers").delete().eq("gender", "Girls").eq("season", 2026)
+  await sb.from("state_tournament_placers").delete().eq("gender", "Girls").eq("season", SEASON)
   let inserted = 0
   for (let i = 0; i < placers.length; i += 500) {
     const { error } = await sb.from("state_tournament_placers").insert(placers.slice(i, i + 500) as never)
