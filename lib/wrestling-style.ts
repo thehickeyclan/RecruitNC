@@ -37,6 +37,33 @@ export function styleOfEvent(...parts: Array<string | null | undefined>): Wrestl
   return "folkstyle"
 }
 
+/**
+ * Events whose style depends on who wrestled them.
+ *
+ * The Ultimate Club Duals run folkstyle for the men and freestyle for the women (Matt, 3 Oct
+ * 2026). The event name says neither, so the style cannot be read from the text alone - which
+ * had every girl's UCD matches filed as folkstyle, the opposite of the standard a women's college
+ * coach reads first.
+ */
+const FREESTYLE_FOR_WOMEN = /ultimate club/i
+
+export function isFemale(gender: string | null | undefined): boolean {
+  return String(gender ?? "").trim().toLowerCase() === "female"
+}
+
+/**
+ * The style of an event for one wrestler. Use this wherever a profile or report splits folkstyle
+ * from the Olympic styles; `styleOfEvent` alone cannot know whose record it is looking at.
+ */
+export function styleOfEventForAthlete(
+  event: string | null | undefined,
+  team: string | null | undefined,
+  gender: string | null | undefined,
+): WrestlingStyle {
+  if (isFemale(gender) && FREESTYLE_FOR_WOMEN.test(`${event ?? ""} ${team ?? ""}`)) return "freestyle"
+  return styleOfEvent(event, team)
+}
+
 /** Freestyle and Greco-Roman are reported together, apart from folkstyle. */
 export function isInternationalStyle(style: WrestlingStyle): boolean {
   return style !== "folkstyle"
@@ -108,7 +135,7 @@ export function summarizeCompetition(
   const national = new Set<string>()
   for (const event of events) {
     if (!event) continue
-    styles.add(styleOfEvent(event))
+    styles.add(styleOfEventForAthlete(event, null, gender))
     if (isNationalEvent(event)) {
       const short = SHORT_NAMES.find(([re]) => re.test(event))?.[1] ?? event
       national.add(short)

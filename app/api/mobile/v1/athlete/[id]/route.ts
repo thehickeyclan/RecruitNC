@@ -8,7 +8,7 @@ import { buildProfileReveal } from "@/lib/profile-reveal"
 import { labelOpponents, accoladeKey, type AccoladeBout } from "@/lib/opponent-accolades"
 import { profileCredentials, type Credential } from "@/lib/profile/credentials"
 import { shortOlympicEvent } from "@/lib/profile/olympic-event"
-import { isInternationalStyle, styleOfEvent, summarizeCompetition, type CompetitionSummary } from "@/lib/wrestling-style"
+import { isInternationalStyle, styleOfEventForAthlete, summarizeCompetition, type CompetitionSummary } from "@/lib/wrestling-style"
 import {
   buildNchsaaStateRows,
   buildTournamentRows,
@@ -113,7 +113,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     (loaded.athlete.nchsaa_profile ?? []) as never[],
     (loaded.athlete.nchsaa_state_bouts ?? []) as never[],
   )
-  const isOlympic = (r: TournamentRow) => isInternationalStyle(styleOfEvent(r.event, r.team))
+  // Same rule as the web profile: the Ultimate Club Duals are freestyle for the girls.
+  const athleteGender = (row as { gender?: string | null }).gender ?? null
+  const isOlympic = (r: TournamentRow) => isInternationalStyle(styleOfEventForAthlete(r.event, r.team, athleteGender))
   const tocRows = rows.filter(isTocRow)
   const folkstyleRows = rows.filter((r) => !isTocRow(r) && !isOlympic(r))
   const olympicRows = rows.filter(isOlympic).map((r) => ({ ...r, event: shortOlympicEvent(r.event) }))

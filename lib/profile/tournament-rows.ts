@@ -306,6 +306,15 @@ export function buildTournamentRows(input: {
     if (!team) return []
     return year === 2026 ? attached(NC_UNITED_DUALS_EVENT_KEY, (b) => b.team === team) : []
   }
+  /*
+   * Does a national-team row already claim the 2025 NC United duals? Read from the input rather
+   * than set while building, because the Ultimate Club rows below are assembled first - a flag
+   * flipped later was still false when they were built, and Mac Johnson's 2025 duals appeared
+   * twice, 8-1 and 6-1.
+   */
+  const ncUnitedUcdTaken = (input.nationalTeamResults ?? []).some(
+    (r) => /ultimate club/i.test(String((r as { event?: string }).event ?? "")) && Number((r as { year?: number }).year) === 2025,
+  )
   const usedFargoKeys = new Set<string>()
   const fargoFromResults: TournamentRow[] = (input.fargoResults ?? []).flatMap((result, i) => {
     const parsed = result.division ? parseFargoDivisionString(result.division) : null
@@ -331,6 +340,40 @@ export function buildTournamentRows(input: {
       orphanFargo.set(b.eventKey, [...(orphanFargo.get(b.eventKey) ?? []), b])
     }
   }
+  /*
+   * Ultimate Club Duals rows, built from their own bouts.
+   *
+   * Only `ucd-2025-nc-united` ever reached a profile, and only when a team row existed to hang it
+   * under - so three of the four teams, 649 bouts and every girl's duals record, were imported and
+   * then shown to nobody. Like the orphaned Fargo divisions below, the row is built from the bouts
+   * and its record counted from them.
+   */
+  const ucdBouts = new Map<string, AttachedEventBout[]>()
+  for (const b of input.attachedEventBouts ?? []) {
+    if (!b.eventKey.startsWith("ucd-")) continue
+    // 2025 NC United is already placed under its own results row by ncUnitedBoutsFor.
+    if (b.eventKey === NC_UNITED_UCD_2025_EVENT_KEY && ncUnitedUcdTaken) continue
+    ucdBouts.set(b.eventKey, [...(ucdBouts.get(b.eventKey) ?? []), b])
+  }
+  const ucdRows: TournamentRow[] = [...ucdBouts.entries()].map(([key, bouts]): TournamentRow => {
+    const [, year, ...team] = key.split("-")
+    const wins = bouts.filter((b) => b.win).length
+    return {
+      id: key,
+      event: "Ultimate Club Duals",
+      // "ucd-2026-nc-gold" -> "NC Gold"; the team is what tells two entries of ours apart.
+      team: team.map((w) => (w === "nc" ? "NC" : w.charAt(0).toUpperCase() + w.slice(1))).join(" ") || null,
+      isDuals: true,
+      year: Number(year),
+      sortKey: `${year}-09-19`,
+      weight: bouts[0]?.weight || null,
+      placement: null,
+      record: `${wins}-${bouts.length - wins}`,
+      entrants: null,
+      bouts: bouts.map(({ team: _team, ...bout }) => bout),
+    }
+  })
+
   const fargoRows: TournamentRow[] = [
     ...fargoFromResults,
     ...[...orphanFargo.entries()].map(([key, bouts]): TournamentRow => {
@@ -374,6 +417,7 @@ export function buildTournamentRows(input: {
      * can be an All-American in one and go 0-2 in the other. Labelled "Fargo" alone, a
      * profile printed two rows at the same weight and year with no way to tell which was which.
      */
+    ...ucdRows,
     ...fargoRows,
     /*
      * The event is the duals; NC United is who they wrestled for.

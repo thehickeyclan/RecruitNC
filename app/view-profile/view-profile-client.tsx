@@ -1,6 +1,6 @@
 "use client"
 
-import { isInternationalStyle, styleOfEvent, summarizeCompetition } from "@/lib/wrestling-style"
+import { isInternationalStyle, styleOfEventForAthlete, summarizeCompetition } from "@/lib/wrestling-style"
 import { SignificantWinsSection } from "@/components/significant-wins-section"
 import Link from "next/link"
 import { ArrowLeft, Medal, Trophy } from "lucide-react"
@@ -95,7 +95,11 @@ export function ViewProfileClient({
   )
   const athleteName = String(athlete.name ?? "Athlete")
   // Freestyle and Greco-Roman go in their own section, last on the page; folkstyle keeps the rest.
-  const isOlympicRow = (row: { event: string; team: string | null }) => isInternationalStyle(styleOfEvent(row.event, row.team))
+  // The Ultimate Club Duals are folkstyle for the boys and freestyle for the girls (Matt), so the
+  // split needs to know whose record this is.
+  const athleteGender = (athlete as { gender?: string | null })?.gender ?? null
+  const isOlympicRow = (row: { event: string; team: string | null }) =>
+    isInternationalStyle(styleOfEventForAthlete(row.event, row.team, athleteGender))
   const folkstyleRows = profileTournamentRows.filter((row) => !isOlympicRow(row))
   const olympicRows: TournamentRow[] = profileTournamentRows
     .filter(isOlympicRow)
@@ -141,7 +145,7 @@ export function ViewProfileClient({
                   rows={olympicRows}
                   duelsLabel="Dual results"
                 />
-                <SignificantWinsSection athleteId={String(athlete.id)} styles="olympic" />
+                <SignificantWinsSection athleteId={String(athlete.id)} styles="olympic" gender={athleteGender} />
               </div>
             ) : null
           }

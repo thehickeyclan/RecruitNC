@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useState } from "react"
 import { Trophy } from "lucide-react"
 import type { ProfileQualityWinsTournamentBlock } from "@/lib/profile-quality-wins"
-import { styleOfEvent } from "@/lib/wrestling-style"
+import { styleOfEventForAthlete } from "@/lib/wrestling-style"
 import { SignificantWinSubmissionDialog } from "@/components/significant-win-submission-dialog"
 import { TournamentResultSubmissionDialog } from "@/components/tournament-result-submission-dialog"
 
@@ -37,7 +37,7 @@ type SignificantWin = {
  * When there are no documented wins yet, the section still provides the community submission
  * path so missing results can be sent to NC United for review.
  */
-export function SignificantWinsSection({ athleteId, qualityWinBlocks = [], styles = "folkstyle" }: {
+export function SignificantWinsSection({ athleteId, qualityWinBlocks = [], styles = "folkstyle", gender = null }: {
   athleteId: string
   qualityWinBlocks?: ProfileQualityWinsTournamentBlock[]
   /**
@@ -45,6 +45,8 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [], style
    * Greco-Roman wins get their own list inside the Olympic Styles section, last on the page.
    */
   styles?: "folkstyle" | "olympic"
+  /** The Ultimate Club Duals are folkstyle for the boys and freestyle for the girls (Matt). */
+  gender?: string | null
 }) {
   const [wins, setWins] = useState<SignificantWin[]>([])
   const [loading, setLoading] = useState(true)
@@ -79,7 +81,7 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [], style
       credential: `${win.state} · ${win.credentials}`,
       scope: win.state.trim().toUpperCase() === "NC" ? "in-state" : "national",
       // From the event, like the bout-import wins: a hand-built list can be a freestyle event.
-      style: styleOfEvent(block.eventLabel),
+      style: styleOfEventForAthlete(block.eventLabel, null, gender),
     })),
   )
   /*

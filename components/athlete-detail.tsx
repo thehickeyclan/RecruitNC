@@ -2033,7 +2033,7 @@ export function AthleteDetail({
       {/* Significant wins sit above the full match list: who somebody has beaten is the question
           a profile gets opened with, and the list underneath answers how many. */}
       <div className={cn("min-w-0 max-w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.qualityWins)}>
-        <SignificantWinsSection athleteId={String(athlete.id)} qualityWinBlocks={profileQualityWins} styles="folkstyle" />
+        <SignificantWinsSection athleteId={String(athlete.id)} qualityWinBlocks={profileQualityWins} styles="folkstyle" gender={(athlete as { gender?: string | null }).gender ?? null} />
       </div>
 
       {/* 10. High School Career Match Results */}

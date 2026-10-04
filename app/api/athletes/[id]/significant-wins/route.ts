@@ -11,7 +11,7 @@ import { getSubmittedWins } from "@/lib/athlete-submitted-wins"
 import { highSchoolBouts, isHighSchoolSeason } from "@/lib/high-school-window"
 import { loadStatePlacerIndex } from "@/lib/state-placers"
 import { mergeBoutSources } from "@/lib/bout-source-deduplication"
-import { styleOfEvent } from "@/lib/wrestling-style"
+import { styleOfEventForAthlete } from "@/lib/wrestling-style"
 
 /**
  * The wins on a profile worth a reader's attention: over the TOC field, or over a ranked prospect.
@@ -42,7 +42,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       stateSchools: [],
       fargoAllAmericans: [],
     })),
-    admin.from("athletes").select("graduationyear").eq("id", id).maybeSingle(),
+    admin.from("athletes").select("graduationyear,gender").eq("id", id).maybeSingle(),
   ])
   // No middle school seasons or bouts anywhere (Matt, 1 October 2026).
   const grad = (gradRow as { graduationyear?: number | null } | null)?.graduationyear ?? null
@@ -189,6 +189,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     if (!wins.some((kept) => sameBout(kept, win))) wins.push(win)
   }
 
-  // Folkstyle or freestyle/Greco, so the profile can list them apart.
-  return NextResponse.json({ wins: wins.map((w) => ({ ...w, style: styleOfEvent(w.event) })) })
+  /*
+   * Folkstyle or freestyle/Greco, so the profile can list them apart. The wrestler's own gender
+   * decides the events that are one style for the men and another for the women - the Ultimate
+   * Club Duals are folkstyle for the boys and freestyle for the girls.
+   */
+  const gender = (gradRow as { gender?: string | null } | null)?.gender ?? null
+  return NextResponse.json({ wins: wins.map((w) => ({ ...w, style: styleOfEventForAthlete(w.event, null, gender) })) })
 }
