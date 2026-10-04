@@ -70,8 +70,20 @@ export async function tryAthleteNameFastPath(
     }
   }
 
-  // Alumni / no clear directory id — fall back to the historical stores (Brandon Palmer path).
-  const cross = await toolWrestlingCrossStoreSearch({ query: phrase, limit: 40 })
+  /*
+   * Alumni / no clear directory id — the historical stores (Brandon Palmer path) and the imported
+   * brackets, asked at the same time.
+   *
+   * These were sequential, and the chain reached about two and a half seconds warm and over seven
+   * cold. That is close enough to a function limit to be swallowed, and a swallowed lookup reads
+   * as "I couldn't find any records" — which is how both Landon Lee and Nick Meza came back
+   * unknown while their bouts sat in the table. Neither answer depends on the other, so neither
+   * should wait for it.
+   */
+  const [cross, bouts] = await Promise.all([
+    toolWrestlingCrossStoreSearch({ query: phrase, limit: 40 }),
+    toolTournamentBoutsSearch({ wrestler: phrase }),
+  ])
   if (!crossStoreHasUsefulHits(cross as never)) {
     /*
      * Nobody in the directory and nobody in the historical tables — but the national brackets are
@@ -83,7 +95,6 @@ export async function tryAthleteNameFastPath(
      * to and it did not: the answer stayed "I couldn't find any records" while the record sat in
      * the table. A lookup this reliable should not depend on the model choosing to look.
      */
-    const bouts = await toolTournamentBoutsSearch({ wrestler: phrase })
     /*
      * Nothing of ours anywhere. The public web is the last resort, and only here — never beside
      * our own data, where it could contradict a bout we actually hold. See lib/data-dawg-web-search.
