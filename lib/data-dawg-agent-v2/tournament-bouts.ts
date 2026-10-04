@@ -308,6 +308,30 @@ export type CareerSummary = {
   fargoFreestyle: EventSummary[]
   fargoGreco: EventSummary[]
   other: EventSummary[]
+  /*
+   * Career totals per event, worked out here so the model never adds.
+   *
+   * Asked for Dustin Kohn's NHSCA record it summed 2-2, 6-2, 3-2 and 6-3 and announced "18-11".
+   * It is 17-9. Arithmetic in the prose is arithmetic nobody checks, so the string it should
+   * print is handed to it finished, and null means we hold nothing — not a 0-0.
+   */
+  careerRecords: {
+    nhsca: string | null
+    super32: string | null
+    fargoFreestyle: string | null
+    fargoGreco: string | null
+  }
+}
+
+function totalRecord(events: EventSummary[]): string | null {
+  if (!events.length) return null
+  let wins = 0
+  let losses = 0
+  for (const e of events) {
+    wins += Number(e.wins ?? 0) || 0
+    losses += Number(e.losses ?? 0) || 0
+  }
+  return `${wins}-${losses}`
 }
 
 export function buildCareerSummary(
@@ -345,5 +369,11 @@ export function buildCareerSummary(
     fargoFreestyle: fargo.filter((e) => !/greco/i.test(e.event)).sort(newestFirst),
     fargoGreco: fargo.filter(is(/greco/i)).sort(newestFirst),
     other: events.filter((e) => !claimed.has(e)).sort(newestFirst),
+    careerRecords: {
+      nhsca: totalRecord(nhsca),
+      super32: totalRecord(super32),
+      fargoFreestyle: totalRecord(fargo.filter((e) => !/greco/i.test(e.event))),
+      fargoGreco: totalRecord(fargo.filter(is(/greco/i))),
+    },
   }
 }

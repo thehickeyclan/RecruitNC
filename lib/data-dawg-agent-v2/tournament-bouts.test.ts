@@ -163,3 +163,37 @@ describe("crossStoreNamesWrestler", () => {
     expect(crossStoreNamesWrestler({} as never, "")).toBe(false)
   })
 })
+
+describe("buildCareerSummary career records", () => {
+  const ev = (year: number, event: string, wins: number, losses: number) => ({
+    event, year, weight: "170", wins, losses, record: `${wins}-${losses}`, placement: null,
+  })
+
+  it("adds up the years so the prose does not have to", () => {
+    // Dustin Kohn's four NHSCA years: the model summed these as "18-11". It is 17-9.
+    const c = buildCareerSummary("VA", [], [
+      ev(2026, "2026 NHSCA High School Nationals", 2, 2),
+      ev(2025, "2025 NHSCA High School Nationals", 6, 2),
+      ev(2024, "2024 NHSCA High School Nationals", 3, 2),
+      ev(2023, "2023 NHSCA High School Nationals", 6, 3),
+    ])
+    expect(c.careerRecords.nhsca).toBe("17-9")
+  })
+
+  it("leaves a record null when we hold nothing, rather than 0-0", () => {
+    // "0-0" would read as a tournament he entered and went winless at.
+    const c = buildCareerSummary("AZ", [], [ev(2025, "2025 Super 32", 1, 2)])
+    expect(c.careerRecords.super32).toBe("1-2")
+    expect(c.careerRecords.nhsca).toBeNull()
+    expect(c.careerRecords.fargoFreestyle).toBeNull()
+  })
+
+  it("keeps the two Fargo styles' records apart", () => {
+    const c = buildCareerSummary("AZ", [], [
+      ev(2025, "2025 Fargo Junior Freestyle", 3, 2),
+      ev(2025, "2025 Fargo Junior Greco-Roman", 1, 2),
+    ])
+    expect(c.careerRecords.fargoFreestyle).toBe("3-2")
+    expect(c.careerRecords.fargoGreco).toBe("1-2")
+  })
+})
