@@ -17,6 +17,7 @@ import {
   linkifyKnownEntities,
 } from "@/lib/data-dawg-linkify-entities"
 import { DATA_DAWG_AGENT_V2_SYSTEM } from "./system-prompt"
+import { frameWebAnswer } from "@/lib/data-dawg-web-search"
 import {
   answerNextBluePractice,
   isBluePracticeScheduleQuery,
@@ -265,6 +266,8 @@ export async function runDataDawgAgentV2(params: {
   let groundedQueryType: string | null = null
   /** Kept unserialised so we can guarantee the links the model is only asked to write. */
   let groundedEntities: ReturnType<typeof linkableEntitiesFromFacts> = []
+  /** Set only when the answer came from the public web, so the flag can be applied in code. */
+  let webSources: string[] | null = null
   try {
     const schoolFast = await trySchoolNameFastPath(params.message)
     if (schoolFast) {
@@ -289,7 +292,11 @@ export async function runDataDawgAgentV2(params: {
           ? "athlete_facts_directory"
           : athleteFast.kind === "unprofiled"
             ? "athlete_facts_unprofiled"
-            : "athlete_facts_historical"
+            : athleteFast.kind === "web"
+              ? "athlete_facts_web"
+              : "athlete_facts_historical"
+      // Kept out of the model's hands: the label and the sources are applied to its answer below.
+      if (athleteFast.kind === "web") webSources = athleteFast.sources ?? []
     }
   } catch (e) {
     console.warn("[RecruitNC] athlete name fast-path failed:", e instanceof Error ? e.message : e)
@@ -332,8 +339,14 @@ export async function runDataDawgAgentV2(params: {
     if (!linkable.some((kept) => kept.name.toLowerCase() === e.name.toLowerCase())) linkable.push(e)
   }
 
+  /*
+   * The flag is not the model's to decide. It wrote the middle; the heading that says this is not
+   * our data, and the sources under it, are added here — every rule left to the model today was
+   * at some point not followed.
+   */
+  const framed = webSources ? frameWebAnswer(raw, webSources) : raw
   const answer = applyRecruitNcDataDawgAnswerPostProcess(
-    linkifyKnownEntities(raw, linkable),
+    linkifyKnownEntities(framed, linkable),
   )
 
   return {

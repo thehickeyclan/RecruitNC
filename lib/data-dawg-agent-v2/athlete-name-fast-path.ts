@@ -22,6 +22,7 @@ import {
   toolWrestlingCrossStoreSearch,
 } from "./execute-data-tools"
 import { crossStoreHasUsefulHits } from "./format-cross-store-athlete-markdown"
+import { searchWebForWrestler } from "@/lib/data-dawg-web-search"
 
 export { isLikelyAthleteNameLookup } from "./athlete-name-fast-path-detect"
 
@@ -30,7 +31,9 @@ export type AthleteFastPathHit = {
   facts: unknown
   athleteId: string | null
   /** Where the facts came from — alumni rows read differently from a directory profile. */
-  kind: "directory" | "historical" | "unprofiled"
+  kind: "directory" | "historical" | "unprofiled" | "web"
+  /** Pages a web answer drew on. Present only for kind "web", and shown with the answer. */
+  sources?: string[]
 }
 
 export async function tryAthleteNameFastPath(
@@ -81,8 +84,30 @@ export async function tryAthleteNameFastPath(
      * the table. A lookup this reliable should not depend on the model choosing to look.
      */
     const bouts = await toolTournamentBoutsSearch({ wrestler: phrase })
-    if ("error" in bouts) return null
-    if (!bouts.bouts?.length) return null
+    /*
+     * Nothing of ours anywhere. The public web is the last resort, and only here — never beside
+     * our own data, where it could contradict a bout we actually hold. See lib/data-dawg-web-search.
+     */
+    if ("error" in bouts || !bouts.bouts?.length) {
+      const web = await searchWebForWrestler(phrase)
+      if (!web) return "error" in bouts ? null : null
+      return {
+        facts: {
+          profile_url: null,
+          not_in_our_data: true,
+          writing_notes: [
+            "This wrestler is NOT in RecruitNC data. Everything below came from a public web search and is shown with its sources; it is not ours and is not used in rankings or scouting reports.",
+            "Write the name as plain text — no profile link, and never invent one.",
+            "Report only what the summary states. Do not add a placement, a record or a school the search did not give you, and do not present any of it as our data.",
+          ],
+          web_summary: web.summary,
+          sources: web.sources,
+        },
+        athleteId: null,
+        kind: "web",
+        sources: web.sources,
+      }
+    }
 
     /*
      * His own state's tournament, fetched here rather than left to a follow-up.
