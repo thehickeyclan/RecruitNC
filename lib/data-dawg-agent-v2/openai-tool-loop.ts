@@ -6,6 +6,7 @@
 import { formatOpenAiHttpError } from "@/lib/openai-user-facing-error"
 import { DATA_DAWG_AGENT_TOOLS } from "./tool-definitions"
 import { executeDataTool } from "./execute-data-tools"
+import { linkableEntitiesFromToolResult, type LinkableEntity } from "@/lib/data-dawg-linkify-entities"
 import { extractVerbatimToolMarkdown } from "./verbatim-tool-markdown"
 
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions"
@@ -35,7 +36,7 @@ export async function runOpenAiDataDawgToolLoop(options: {
    * trip and — more importantly — keeps it answering from verified rows rather than memory.
    */
   groundingFacts?: string | null
-}): Promise<{ answer: string; toolRounds: number; finishReason: string }> {
+}): Promise<{ answer: string; toolRounds: number; finishReason: string; entities: LinkableEntity[] }> {
   const apiKey = process.env.OPENAI_API_KEY
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is required for Data Dawg Agent v2 (tool calling).")
@@ -62,6 +63,14 @@ export async function runOpenAiDataDawgToolLoop(options: {
   ]
 
   let toolRounds = 0
+  /*
+   * Things the tools found that have a page of their own.
+   *
+   * Only the deterministic fast paths used to feed the linkifier, and they fire on a phrase - a
+   * bare "lumberton" misses the school one - so an answer written from a tool result carried no
+   * link at all. The facts already hold `page_url` / `profile_url`; this keeps them.
+   */
+  const entities: LinkableEntity[] = []
   let lastFinishReason = "unknown"
   /** Verbatim tool markdown (athlete/school dossier) — skip rewrite rounds. */
   let forcedDossierMarkdown: string | null = null
@@ -143,6 +152,9 @@ export async function runOpenAiDataDawgToolLoop(options: {
       )
 
       for (const { tc, name, result } of toolResults) {
+        for (const found of linkableEntitiesFromToolResult(result)) {
+          if (!entities.some((e) => e.name.toLowerCase() === found.name.toLowerCase())) entities.push(found)
+        }
         const verbatim = extractVerbatimToolMarkdown(name, result)
         if (verbatim) {
           forcedDossierMarkdown = verbatim
@@ -160,6 +172,7 @@ export async function runOpenAiDataDawgToolLoop(options: {
           answer: forcedDossierMarkdown,
           toolRounds,
           finishReason: "dossier_ready",
+          entities,
         }
       }
       continue
@@ -167,10 +180,10 @@ export async function runOpenAiDataDawgToolLoop(options: {
 
     const text = (msg.content || "").trim()
     if (forcedDossierMarkdown) {
-      return { answer: forcedDossierMarkdown, toolRounds, finishReason: finish }
+      return { answer: forcedDossierMarkdown, toolRounds, finishReason: finish, entities }
     }
     if (text.length > 0) {
-      return { answer: text, toolRounds, finishReason: finish }
+      return { answer: text, toolRounds, finishReason: finish, entities }
     }
 
     if (finish === "length") {
@@ -179,6 +192,7 @@ export async function runOpenAiDataDawgToolLoop(options: {
           "The response was cut off (token limit). Please ask a narrower question or try again.",
         toolRounds,
         finishReason: finish,
+        entities,
       }
     }
 
@@ -190,5 +204,6 @@ export async function runOpenAiDataDawgToolLoop(options: {
       "I could not complete that request after several tool attempts. Try a shorter or more specific question.",
     toolRounds,
     finishReason: lastFinishReason,
+    entities,
   }
 }

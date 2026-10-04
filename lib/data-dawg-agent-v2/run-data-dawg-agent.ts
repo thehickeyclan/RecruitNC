@@ -155,15 +155,19 @@ export async function runDataDawgAgentV2(params: {
       try {
         const schoolFast = await trySchoolNameFastPath(schoolHint)
         if (schoolFast) {
-          const { answer: followUpRaw, toolRounds: followUpRounds } = await runOpenAiDataDawgToolLoop({
-            systemPrompt: DATA_DAWG_AGENT_V2_SYSTEM,
-            priorMessages,
-            userMessage: params.message,
-            groundingFacts: JSON.stringify(schoolFast.facts),
-          })
+          const { answer: followUpRaw, toolRounds: followUpRounds, entities: followUpEntities } =
+            await runOpenAiDataDawgToolLoop({
+              systemPrompt: DATA_DAWG_AGENT_V2_SYSTEM,
+              priorMessages,
+              userMessage: params.message,
+              groundingFacts: JSON.stringify(schoolFast.facts),
+            })
           return {
             answer: applyRecruitNcDataDawgAnswerPostProcess(
-              linkifyKnownEntities(followUpRaw, linkableEntitiesFromFacts(schoolFast.facts)),
+              linkifyKnownEntities(followUpRaw, [
+                ...linkableEntitiesFromFacts(schoolFast.facts),
+                ...(followUpEntities ?? []),
+              ]),
             ),
             messageId,
             queryType: "school_facts",
@@ -306,15 +310,25 @@ export async function runDataDawgAgentV2(params: {
     console.warn("[RecruitNC] query planner failed:", e instanceof Error ? e.message : e)
   }
 
-  const { answer: raw, toolRounds } = await runOpenAiDataDawgToolLoop({
+  const { answer: raw, toolRounds, entities: toolEntities } = await runOpenAiDataDawgToolLoop({
     systemPrompt: DATA_DAWG_AGENT_V2_SYSTEM,
     priorMessages,
     userMessage: params.message,
     groundingFacts,
   })
 
+  /*
+   * What the fast path found, plus what the tools found. The fast paths fire on a phrase — a bare
+   * "lumberton" misses the school one — so an answer written from a tool result carried no link,
+   * and the school page it was describing was one click away the whole time.
+   */
+  const linkable = [...groundedEntities]
+  for (const e of toolEntities ?? []) {
+    if (!linkable.some((kept) => kept.name.toLowerCase() === e.name.toLowerCase())) linkable.push(e)
+  }
+
   const answer = applyRecruitNcDataDawgAnswerPostProcess(
-    linkifyKnownEntities(raw, groundedEntities),
+    linkifyKnownEntities(raw, linkable),
   )
 
   return {

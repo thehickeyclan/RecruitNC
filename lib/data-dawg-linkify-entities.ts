@@ -82,3 +82,31 @@ export function linkableEntitiesFromFacts(facts: unknown): LinkableEntity[] {
 
   return out
 }
+
+/**
+ * Linkable things inside a raw tool result.
+ *
+ * Tool results are JSON strings the model never has to understand; we do. A school dossier carries
+ * `name` + `page_url` and an athlete dossier `name` + `profile_url`, sometimes nested under
+ * `facts`. Reading them here means an answer written from a tool is linked exactly as one written
+ * from a fast path — "lumberton" missed the school fast path, so the answer named Lumberton six
+ * times and linked it none.
+ */
+export function linkableEntitiesFromToolResult(result: string): LinkableEntity[] {
+  if (!result || result.length > 2_000_000) return []
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(result)
+  } catch {
+    return []
+  }
+  if (!parsed || typeof parsed !== "object") return []
+  const root = parsed as Record<string, unknown>
+  const direct = linkableEntitiesFromFacts(root)
+  const nested = linkableEntitiesFromFacts(root.facts)
+  const out: LinkableEntity[] = []
+  for (const e of [...direct, ...nested]) {
+    if (!out.some((kept) => kept.name.toLowerCase() === e.name.toLowerCase())) out.push(e)
+  }
+  return out
+}
