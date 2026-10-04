@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
+import { ADMIN_EMAIL_TEMPLATES } from "@/lib/admin-email-templates"
 import { AdminHeader } from "@/components/admin-header"
 import { HardLink } from "@/components/hard-link"
 import { Loader2, ArrowLeft, Send, Inbox, FolderOpen, Trash2, Eye, Mail, Users, ChevronDown, ChevronUp, Copy, Check, X } from "lucide-react"
@@ -24,6 +25,12 @@ import type { RecipientRow } from "@/app/api/admin/messaging/recipients/route"
 import type { SentBlastRow } from "@/app/api/admin/messaging/sent/route"
 import type { AdminBlastSenderId } from "@/lib/admin-blast-senders"
 import { ADMIN_BLAST_SENDERS } from "@/lib/admin-blast-senders"
+
+/** Plain-text copy of a designed email, for the in-app and SMS channels. */
+function htmlToPlainText(html: string): string {
+  const doc = new DOMParser().parseFromString(html, "text/html")
+  return (doc.body.textContent ?? "").replace(/[ \t]+/g, " ").replace(/\s*\n\s*/g, "\n").trim()
+}
 
 export default function AdminMessagingPage() {
   const [profiles, setProfiles] = useState<ProfileOption[]>([])
@@ -54,6 +61,12 @@ export default function AdminMessagingPage() {
     testOnly?: boolean
   } | null>(null)
   const [bodyHtml, setBodyHtml] = useState("")
+  /*
+   * A designed email (Matt's Journeymen recap): pasted HTML goes out as-is inside the blast
+   * template. The rich editor would strip its tables, images and buttons. `body` gets a
+   * plain-text copy for the in-app and SMS channels.
+   */
+  const [htmlMode, setHtmlMode] = useState(false)
   const [showRecipients, setShowRecipients] = useState(false)
 
   /*
@@ -637,6 +650,29 @@ export default function AdminMessagingPage() {
             {((count !== null && count > 0) || testEmail.trim() !== "") && (
               <div className="rounded-xl bg-[#0A1628] border border-white/10 p-4 space-y-4">
                 {/* Subject */}
+                <div className="rounded-lg border border-[#D3B574]/40 bg-[#D3B574]/10 p-3">
+                  <Label className="text-[#D3B574] text-sm font-semibold">Start from a ready-made email</Label>
+                  <select
+                    defaultValue=""
+                    onChange={(e) => {
+                      const t = ADMIN_EMAIL_TEMPLATES.find((x) => x.id === e.target.value)
+                      if (!t) return
+                      setHtmlMode(true)
+                      setSubject(t.subject)
+                      setBodyHtml(t.html)
+                      setBody(htmlToPlainText(t.html))
+                      setChannels((c) => ({ ...c, email: true }))
+                    }}
+                    className="mt-1 w-full rounded-md border border-white/20 bg-[#0A1628] px-3 py-2 text-sm text-white"
+                  >
+                    <option value="">Choose a template…</option>
+                    {ADMIN_EMAIL_TEMPLATES.map((t) => (
+                      <option key={t.id} value={t.id}>{t.label}</option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-white/50">Fills the subject and message. Then pick who gets it, Preview, send yourself a test, and Send.</p>
+                </div>
+
                 <div>
                   <Label className="text-white/70 text-sm">Subject</Label>
                   <Input
@@ -649,16 +685,49 @@ export default function AdminMessagingPage() {
 
                 {/* Message Editor */}
                 <div>
-                  <Label className="text-white/70 text-sm">Message</Label>
+                  <div className="flex items-center justify-between gap-3">
+                    <Label className="text-white/70 text-sm">Message</Label>
+                    <label className="flex cursor-pointer items-center gap-2 text-xs text-white/60">
+                      <Checkbox
+                        checked={htmlMode}
+                        onCheckedChange={(v) => {
+                          setHtmlMode(!!v)
+                          setBodyHtml("")
+                          setBody("")
+                        }}
+                      />
+                      Paste designed email (HTML)
+                    </label>
+                  </div>
                   <div className="mt-1">
-                    <RichTextEditor
-                      value={bodyHtml}
-                      onChange={(html, markdown) => {
-                        setBodyHtml(html)
-                        setBody(markdown)
-                      }}
-                      placeholder="Write your message..."
-                    />
+                    {htmlMode ? (
+                      <>
+                        <textarea
+                          value={bodyHtml}
+                          onChange={(e) => {
+                            const html = e.target.value
+                            setBodyHtml(html)
+                            setBody(htmlToPlainText(html))
+                          }}
+                          placeholder="Paste the email's HTML here, then use Preview to check it."
+                          rows={12}
+                          spellCheck={false}
+                          className="w-full rounded-md border border-white/20 bg-white/5 p-3 font-mono text-xs text-white placeholder:text-white/40"
+                        />
+                        <p className="mt-1 text-xs text-white/50">
+                          Sent as designed, inside the NC United header and unsubscribe footer. Always Preview and send a test first.
+                        </p>
+                      </>
+                    ) : (
+                      <RichTextEditor
+                        value={bodyHtml}
+                        onChange={(html, markdown) => {
+                          setBodyHtml(html)
+                          setBody(markdown)
+                        }}
+                        placeholder="Write your message..."
+                      />
+                    )}
                   </div>
                 </div>
 
