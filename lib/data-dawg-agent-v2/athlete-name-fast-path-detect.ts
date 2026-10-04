@@ -103,3 +103,36 @@ export function pickClearAthleteId(
 export function extractAthleteLookupPhrase(message: string): string {
   return (extractSearchablePhrase(message) || stripConversationalNoise(message)).trim()
 }
+
+
+/**
+ * A follow-up about whoever the last turn was about.
+ *
+ * "What was his record at Super32?" carries no name, so the fast path did not fire and the model
+ * was left to search by name — which found a different Elijah Brown. There are four: the one from
+ * New York the conversation had just established, one in North Carolina whose Super 32 records sit
+ * in our NC-collected table, one in Pennsylvania and one in Indiana. The answer quietly switched
+ * wrestler between one message and the next.
+ *
+ * Only a pronoun or an obvious continuation counts. A new question that happens to omit a name
+ * ("who won the TOC") must not inherit the last subject.
+ */
+const FOLLOW_UP_RE =
+  /\b(he|him|his|she|her|hers|they|them|their)\b|^\s*(and|what about|how about|also|any)\b/i
+
+export function carriedAthletePhrase(
+  message: string,
+  history: Array<{ role?: string; content?: string }> | undefined,
+): string | null {
+  const text = String(message ?? "")
+  // A message naming someone resolves on its own; nothing to carry.
+  if (isLikelyAthleteNameLookup(text)) return null
+  if (!FOLLOW_UP_RE.test(text)) return null
+  const userTurns = (history ?? []).filter((h) => h.role === "user" && typeof h.content === "string")
+  // Most recent first, and only a few back: the subject goes stale quickly.
+  for (const turn of userTurns.slice(-4).reverse()) {
+    const prior = String(turn.content)
+    if (isLikelyAthleteNameLookup(prior)) return extractAthleteLookupPhrase(prior)
+  }
+  return null
+}

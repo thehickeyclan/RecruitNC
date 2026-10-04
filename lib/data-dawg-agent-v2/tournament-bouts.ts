@@ -149,6 +149,49 @@ export function summarizeBoutsByEvent(bouts: BoutRow[]): EventSummary[] {
  * people, and merging them would invent a record neither of them has. Where the name appears under
  * more than one team the caller is told, rather than one being picked.
  */
+const US_STATES: Record<string, string> = {
+  alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA", colorado: "CO",
+  connecticut: "CT", delaware: "DE", florida: "FL", georgia: "GA", hawaii: "HI", idaho: "ID",
+  illinois: "IL", indiana: "IN", iowa: "IA", kansas: "KS", kentucky: "KY", louisiana: "LA",
+  maine: "ME", maryland: "MD", massachusetts: "MA", michigan: "MI", minnesota: "MN",
+  mississippi: "MS", missouri: "MO", montana: "MT", nebraska: "NE", nevada: "NV",
+  "new hampshire": "NH", "new jersey": "NJ", "new mexico": "NM", "new york": "NY",
+  "north carolina": "NC", "north dakota": "ND", ohio: "OH", oklahoma: "OK", oregon: "OR",
+  pennsylvania: "PA", "rhode island": "RI", "south carolina": "SC", "south dakota": "SD",
+  tennessee: "TN", texas: "TX", utah: "UT", vermont: "VT", virginia: "VA", washington: "WA",
+  "west virginia": "WV", wisconsin: "WI", wyoming: "WY",
+}
+
+/**
+ * A state named in the question, pulled out of the name.
+ *
+ * "elijah brown from new york" is a name the table does not hold and a state that decides which
+ * Elijah Brown is meant — there is one in New York and another in Indiana, besides the North
+ * Carolinian in our own tables. Separating them makes the question answerable and the answer right.
+ */
+export function splitNameAndState(phrase: string): { name: string; state: string | null } {
+  let text = ` ${String(phrase ?? "").toLowerCase().replace(/\s+/g, " ").trim()} `
+  let state: string | null = null
+  for (const [full, code] of Object.entries(US_STATES)) {
+    const re = new RegExp(`\\b(from |in )?${full}\\b`, "i")
+    if (re.test(text)) {
+      state = code
+      text = text.replace(re, " ")
+      break
+    }
+  }
+  if (!state) {
+    // Lower-cased above, so match the code case-insensitively: "micah engelman pa".
+    const code = text.match(/\b(?:from |in )?([a-z]{2})\b\s*$/i)
+    const upper = code?.[1]?.toUpperCase()
+    if (upper && Object.values(US_STATES).includes(upper)) {
+      state = upper
+      text = text.replace(code![0], " ")
+    }
+  }
+  return { name: text.replace(/\s+/g, " ").trim(), state }
+}
+
 export type UnprofiledWrestler = { name: string; teams: Array<{ team: string; bouts: number }> }
 
 export async function findUnprofiledWrestler(

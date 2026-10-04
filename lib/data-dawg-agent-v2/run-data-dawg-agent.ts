@@ -279,7 +279,8 @@ export async function runDataDawgAgentV2(params: {
   // Athlete lookups resolve their facts here, then the model writes the reply from them.
   // The lookup is still deterministic; only the wording is the model's.
   try {
-    const athleteFast = groundingFacts ? null : await tryAthleteNameFastPath(params.message)
+    // History too, so a follow-up stays on the wrestler the last turn established.
+    const athleteFast = groundingFacts ? null : await tryAthleteNameFastPath(params.message, params.conversationHistory)
     if (athleteFast) {
       groundingFacts = JSON.stringify(athleteFast.facts)
       groundedEntities = linkableEntitiesFromFacts(athleteFast.facts)

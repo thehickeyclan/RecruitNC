@@ -10,6 +10,7 @@ import {
   findUnprofiledWrestler,
   loadBoutsForAthlete,
   loadBoutsForUnprofiled,
+  splitNameAndState,
   summarizeBoutsByEvent,
   loadMeetings,
 } from "@/lib/data-dawg-agent-v2/tournament-bouts"
@@ -2268,8 +2269,17 @@ export async function toolTournamentBoutsSearch(args: {
    * tool said "no athlete found" while holding the answer.
    */
   if ("error" in found) {
-    const unprofiled = await findUnprofiledWrestler(admin, args.wrestler)
+    /*
+     * A state named in the question decides which wrestler is meant: there is an Elijah Brown in
+     * New York and another in Indiana, besides the North Carolinian whose Super 32 records sit in
+     * our own tables.
+     */
+    const asked = splitNameAndState(args.wrestler)
+    const unprofiled = await findUnprofiledWrestler(admin, asked.name)
     if (!unprofiled) return found
+    if (asked.state && unprofiled.teams.some((t) => t.team.toUpperCase() === asked.state)) {
+      unprofiled.teams = unprofiled.teams.filter((t) => t.team.toUpperCase() === asked.state)
+    }
     // Two wrestlers of a name in different states are two people; say so rather than merge them.
     if (unprofiled.teams.length > 1) {
       return {

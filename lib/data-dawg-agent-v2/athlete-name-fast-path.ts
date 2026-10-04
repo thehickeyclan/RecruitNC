@@ -8,6 +8,7 @@
  */
 
 import {
+  carriedAthletePhrase,
   extractAthleteLookupPhrase,
   isLikelyAthleteNameLookup,
   pickClearAthleteId,
@@ -31,10 +32,20 @@ export type AthleteFastPathHit = {
   kind: "directory" | "historical" | "unprofiled"
 }
 
-export async function tryAthleteNameFastPath(message: string): Promise<AthleteFastPathHit | null> {
-  if (!isLikelyAthleteNameLookup(message)) return null
+export async function tryAthleteNameFastPath(
+  message: string,
+  history?: Array<{ role?: string; content?: string }>,
+): Promise<AthleteFastPathHit | null> {
+  /*
+   * A follow-up inherits the last turn's wrestler. Without this "what was his record at Super 32"
+   * reached the model with no facts, it searched by name, and answered about a different Elijah
+   * Brown — the North Carolina one, whose records are in our NC-collected table, rather than the
+   * New Yorker the conversation had just established.
+   */
+  const carried = isLikelyAthleteNameLookup(message) ? null : carriedAthletePhrase(message, history)
+  if (!carried && !isLikelyAthleteNameLookup(message)) return null
 
-  const phrase = extractAthleteLookupPhrase(message)
+  const phrase = carried ?? extractAthleteLookupPhrase(message)
   if (phrase.length < 3) return null
 
   const search = await toolSearchAthletes({
