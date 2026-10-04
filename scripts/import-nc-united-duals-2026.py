@@ -54,7 +54,9 @@ EVENTS = {
     # Ultimate Club Fall Duals, 20 Sept 2025: the boys' and the girls' teams.
     "ucd": {
         "key": "ucd-2025-nc-united",
-        "name": "Ultimate Club Fall Duals",
+        # One name for the event across both years; scripts/import-ultimate-club-duals.ts writes
+        # "<year> Ultimate Club Duals" and a profile showing both read as two different events.
+        "name": "2025 Ultimate Club Duals",
         "teams": {"NC United - BHS": "national", "NC United - W": "national"},
     },
 }

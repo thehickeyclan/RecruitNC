@@ -560,7 +560,7 @@ export const NC_UNITED_DUALS_EVENT_KEY = "nhsca-duals-2026-nc-united"
 /** NC United's AAU Scholastic Duals bouts (the same script, --event aau). */
 export const NC_UNITED_AAU_DUALS_EVENT_KEY = "aau-scholastic-duals-2026-nc-united"
 
-/** NC United's 2025 Ultimate Club Fall Duals bouts, boys and girls (the same script, --event ucd). */
+/** NC United's 2025 Ultimate Club Duals bouts, boys and girls (the same script, --event ucd). */
 export const NC_UNITED_UCD_2025_EVENT_KEY = "ucd-2025-nc-united"
 
 /** Fargo bouts (scripts/import-fargo-bouts.py): fargo-2026-16u-fs, fargo-2026-junior-gr. */
