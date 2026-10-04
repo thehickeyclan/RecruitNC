@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { buildHeadToHead, describeBout, toBoutRow, type BoutRow, summarizeBoutsByEvent } from "./tournament-bouts"
+import { buildHeadToHead, describeBout, toBoutRow, type BoutRow, summarizeBoutsByEvent, buildCareerSummary } from "./tournament-bouts"
 
 const bout = (over: Partial<BoutRow> = {}): BoutRow => ({
   event: "2026 NHSCA High School Nationals",
@@ -94,5 +94,51 @@ describe("summarizeBoutsByEvent", () => {
       bout(2026, "NHSCA", "Round of 64", "L"),
     ])
     expect(out.map((e) => e.year)).toEqual([2026, 2025])
+  })
+})
+
+describe("buildCareerSummary", () => {
+  const ev = (year: number, event: string, record = "3-2", placement: number | null = null) => ({
+    event, year, weight: "144", wins: 3, losses: 2, record, placement,
+  })
+
+  it("separates the four things people ask about, newest year first", () => {
+    const c = buildCareerSummary(
+      "AZ",
+      [{ state: "AZ", season: 2026, classification: "D1", weight: "144", place: 1 }],
+      [
+        ev(2024, "2024 Super 32", "0-2"),
+        ev(2025, "2025 Super 32", "1-2"),
+        ev(2025, "2025 Fargo Junior Freestyle"),
+        ev(2025, "2025 Fargo Junior Greco-Roman", "1-2"),
+        ev(2026, "2026 NHSCA High School Nationals", "5-2", 5),
+      ],
+    )
+    expect(c.state).toBe("AZ")
+    expect(c.stateTournament[0]).toMatchObject({ year: 2026, place: 1 })
+    expect(c.nhsca.map((e) => e.year)).toEqual([2026])
+    expect(c.super32.map((e) => e.year)).toEqual([2025, 2024])
+    expect(c.fargoFreestyle).toHaveLength(1)
+    expect(c.fargoGreco).toHaveLength(1)
+  })
+
+  it("keeps Fargo Greco out of the freestyle line", () => {
+    const c = buildCareerSummary("NC", [], [ev(2026, "2026 Fargo 16U Greco-Roman")])
+    expect(c.fargoFreestyle).toHaveLength(0)
+    expect(c.fargoGreco).toHaveLength(1)
+  })
+
+  it("leaves a section empty rather than borrowing from another", () => {
+    // Empty must stay empty: the caller says "none on file", which is not "he never went".
+    const c = buildCareerSummary("NY", [], [ev(2025, "2025 NHSCA High School Nationals")])
+    expect(c.super32).toEqual([])
+    expect(c.fargoFreestyle).toEqual([])
+    expect(c.stateTournament).toEqual([])
+  })
+
+  it("does not file the NHSCA duals as NHSCA Nationals", () => {
+    const c = buildCareerSummary("NC", [], [ev(2026, "2026 NHSCA National Duals")])
+    expect(c.nhsca).toEqual([])
+    expect(c.other).toHaveLength(1)
   })
 })

@@ -23,6 +23,8 @@ import {
 } from "./execute-data-tools"
 import { crossStoreHasUsefulHits } from "./format-cross-store-athlete-markdown"
 import { searchWebForWrestler } from "@/lib/data-dawg-web-search"
+import { buildCareerSummary } from "./tournament-bouts"
+import { namesLikelySamePerson } from "@/lib/athlete-name-match"
 
 export { isLikelyAthleteNameLookup } from "./athlete-name-fast-path-detect"
 
@@ -139,8 +141,29 @@ export async function tryAthleteNameFastPath(
      * Narrowed by state: there is a Dustin Kohn in Virginia and another in Oregon.
      */
     const state = typeof bouts.team === "string" && /^[A-Z]{2}$/.test(bouts.team) ? bouts.team : null
-    const placers = state ? await toolStatePlacersSearch({ wrestler: bouts.name ?? phrase, state }) : null
-    const placements = placers && !("error" in placers) ? placers.placers : []
+    /*
+     * The two sources spell him differently: the brackets say "Nick Meza", Arizona's placer list
+     * says "nicholas meza", and a full-name lookup finds neither from the other — so the 2026
+     * Arizona D1 champion read as having never placed at his own state tournament.
+     *
+     * Failing the full name, ask by surname within the state and let the product's own matcher
+     * decide, which already knows Nick is Nicholas and that Adrian Meza is somebody else.
+     */
+    const wanted = bouts.name ?? phrase
+    let placements: Array<Record<string, unknown>> = []
+    if (state) {
+      const exact = await toolStatePlacersSearch({ wrestler: wanted, state })
+      placements = !("error" in exact) ? exact.placers : []
+      if (!placements.length) {
+        const surname = wanted.trim().split(/\s+/).slice(-1)[0] ?? ""
+        if (surname.length > 2) {
+          const loose = await toolStatePlacersSearch({ wrestler: surname, state })
+          placements = !("error" in loose)
+            ? loose.placers.filter((p) => namesLikelySamePerson(String(p.wrestler ?? ""), wanted))
+            : []
+        }
+      }
+    }
 
     return {
       facts: {
@@ -155,12 +178,19 @@ export async function tryAthleteNameFastPath(
           placements.length
             ? "state_placements below is his own state's finish. Lead with it — it outranks any national result."
             : "We hold no state placement for him, and outside North Carolina we hold the 2026 season only. Say we do not have it rather than that he did not place.",
-          "results.events gives each event's record and finish. Lead with those, newest first, and never make the reader count a list of bouts to learn a record.",
+          "ANSWER IN THIS ORDER, from career_summary: (1) which state he wrestles for, in the first sentence; (2) his own state tournament — the finish and year, every year on file; (3) NHSCA with record and placement, every year; (4) Super 32 with record; (5) Fargo freestyle with record. Greco and anything else come after, briefly.",
+          "Where a section of career_summary is empty, SAY it is empty — \"no Super 32 on file\" — and never leave it out. Silence reads as \"he never went\", which is a claim we cannot make: we may simply not have imported it.",
           "NEVER nest a bullet. The chat flattens an indented bullet into the same list, so bouts tucked under an event come out level with it and the whole answer reads as one jumbled run.",
           "One event on file: give its record and finish in the prose, then its bouts as one flat list — that reads well. Several events: one bullet per event and nothing beneath it (`**2026 NHSCA Nationals** — 132 lbs · 5-2 · 5th`), then offer the matches: \"ask about any of those and I will give you the bouts\".",
           "A null placement means he did not reach a placement match, not that we are missing it.",
           "These are the bouts we hold, not necessarily the whole career: we may not have imported every event.",
         ],
+        /*
+         * The answer's running order, decided here: state, his own state tournament, then NHSCA,
+         * Super 32 and Fargo freestyle with records, every year we hold. An order described to a
+         * model is an order it follows most of the time.
+         */
+        career_summary: buildCareerSummary(state, placements, bouts.events ?? []),
         state_placements: placements,
         results: bouts,
       },

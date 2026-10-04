@@ -286,3 +286,64 @@ export async function loadMeetings(
   if (error || !data) return []
   return data.map((row) => toBoutRow(row as Record<string, unknown>))
 }
+
+
+/**
+ * The four things people actually ask about one wrestler, in the order they ask them.
+ *
+ * Matt, 4 Oct 2026: say which state he is from first, then whether he placed at his own state
+ * tournament, then NHSCA, Super 32 and Fargo freestyle with records, for every year we hold.
+ * Built here rather than described to the model: an order left to a model is an order it follows
+ * most of the time, and "most of the time" is what produced a different Elijah Brown between one
+ * message and the next.
+ *
+ * An event with no entry is reported as such by the caller. Silence about Super 32 reads as "he
+ * never went", which is a claim we cannot make.
+ */
+export type CareerSummary = {
+  state: string | null
+  stateTournament: Array<{ year: number | null; state: string; classification: string | null; weight: string | null; place: number | null }>
+  nhsca: EventSummary[]
+  super32: EventSummary[]
+  fargoFreestyle: EventSummary[]
+  fargoGreco: EventSummary[]
+  other: EventSummary[]
+}
+
+export function buildCareerSummary(
+  state: string | null,
+  statePlacements: Array<{ state?: string; season?: number | null; classification?: string | null; weight?: string | null; place?: number | null }>,
+  events: EventSummary[],
+): CareerSummary {
+  const newestFirst = (a: EventSummary, b: EventSummary) => (b.year ?? 0) - (a.year ?? 0)
+  const is = (re: RegExp) => (e: EventSummary) => re.test(e.event)
+  // Greco is named in the event; everything else at Fargo is freestyle.
+  const fargo = events.filter(is(/fargo/i))
+  /*
+   * The NHSCA National Duals is not the NHSCA Nationals, so it is kept out of the nhsca bucket.
+   * `other` used to re-list the same regexes to exclude, which meant the duals matched /nhsca/
+   * there too and fell through every bucket — a wrestler whose only event was the duals got a
+   * summary with nothing in it at all. So `other` is whatever the named buckets did not take,
+   * by identity, and adding a bucket can no longer silently drop an event.
+   */
+  const nhsca = events.filter(is(/nhsca/i)).filter((e) => !/duals/i.test(e.event)).sort(newestFirst)
+  const super32 = events.filter(is(/super 32|super32/i)).sort(newestFirst)
+  const claimed = new Set<EventSummary>([...nhsca, ...super32, ...fargo])
+  return {
+    state,
+    stateTournament: statePlacements
+      .map((p) => ({
+        year: p.season ?? null,
+        state: String(p.state ?? state ?? ""),
+        classification: p.classification ?? null,
+        weight: p.weight ?? null,
+        place: p.place ?? null,
+      }))
+      .sort((a, b) => (b.year ?? 0) - (a.year ?? 0)),
+    nhsca,
+    super32,
+    fargoFreestyle: fargo.filter((e) => !/greco/i.test(e.event)).sort(newestFirst),
+    fargoGreco: fargo.filter(is(/greco/i)).sort(newestFirst),
+    other: events.filter((e) => !claimed.has(e)).sort(newestFirst),
+  }
+}
