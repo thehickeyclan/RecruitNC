@@ -97,7 +97,9 @@ export async function tryAthleteNameFastPath(message: string): Promise<AthleteFa
           placements.length
             ? "state_placements below is his own state's finish. Lead with it — it outranks any national result."
             : "We hold no state placement for him, and outside North Carolina we hold the 2026 season only. Say we do not have it rather than that he did not place.",
-          "results.events gives each event's record and finish. Summarise the event FIRST — \"5th at NHSCA 2025 at 170, 7-3\" — and only then list bouts, if the reader asked for them. A list of ten matches with no record above it makes them count.",
+          "results.events gives each event's record and finish. Lead with those, newest first, and never make the reader count a list of bouts to learn a record.",
+          "NEVER nest a bullet. The chat flattens an indented bullet into the same list, so bouts tucked under an event come out level with it and the whole answer reads as one jumbled run.",
+          "One event on file: give its record and finish in the prose, then its bouts as one flat list — that reads well. Several events: one bullet per event and nothing beneath it (`**2026 NHSCA Nationals** — 132 lbs · 5-2 · 5th`), then offer the matches: \"ask about any of those and I will give you the bouts\".",
           "A null placement means he did not reach a placement match, not that we are missing it.",
           "These are the bouts we hold, not necessarily the whole career: we may not have imported every event.",
         ],
