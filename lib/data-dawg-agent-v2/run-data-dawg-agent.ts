@@ -299,7 +299,25 @@ export async function runDataDawgAgentV2(params: {
       if (athleteFast.kind === "web") webSources = athleteFast.sources ?? []
     }
   } catch (e) {
+    /*
+     * A failed lookup must not become "we hold no records".
+     *
+     * This catch logged and continued, so a timeout or a transient database error fell through to
+     * the model with no facts and came back as "I couldn't find any records" — the same sentence
+     * as a genuine miss, and unfalsifiable. Landon Lee, a 2025 NHSCA All-American whose seven
+     * bouts are in the table, was told to a reader as absent.
+     *
+     * The failure is now a fact of its own, so the answer says we could not check.
+     */
     console.warn("[RecruitNC] athlete name fast-path failed:", e instanceof Error ? e.message : e)
+    groundingFacts = JSON.stringify({
+      lookup_failed: true,
+      writing_notes: [
+        "Our own lookup failed for this question — a timeout or a database error, not an empty result.",
+        "Say plainly that you could not check our records just now and ask them to try again. Do NOT say the wrestler has no records, is not in the database, or did not compete: we do not know.",
+      ],
+    })
+    groundedQueryType = "athlete_facts_lookup_failed"
   }
 
   // Data Dawg 2.0 planner: deterministic intents → SQL tools (no LLM tool pick).

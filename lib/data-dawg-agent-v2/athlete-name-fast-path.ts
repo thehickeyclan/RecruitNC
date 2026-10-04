@@ -88,9 +88,17 @@ export async function tryAthleteNameFastPath(
      * Nothing of ours anywhere. The public web is the last resort, and only here — never beside
      * our own data, where it could contradict a bout we actually hold. See lib/data-dawg-web-search.
      */
+    /*
+     * `error` here is the tool's ordinary "no athlete found", not a failure — a real database
+     * error is swallowed a layer below and also arrives as nothing, which is a weakness worth
+     * knowing: we cannot yet tell "we hold none" from "we could not look".
+     */
     if ("error" in bouts || !bouts.bouts?.length) {
-      const web = await searchWebForWrestler(phrase)
-      if (!web) return "error" in bouts ? null : null
+      // Bounded, because this runs inside the request: a search that outlives the function turns
+      // a slow answer into a swallowed timeout, which reads as "no records". Six seconds was too
+      // tight — the search itself takes seven — so ten, and a miss is a miss rather than a lie.
+      const web = await searchWebForWrestler(phrase, null, { timeoutMs: 10_000 })
+      if (!web) return null
       return {
         facts: {
           profile_url: null,
