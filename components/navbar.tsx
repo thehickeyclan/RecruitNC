@@ -132,12 +132,9 @@ export function Navbar() {
     if (profile?.is_admin) {
       return "/admin/schools"
     }
-    // Coaches with school assignment go to their branded portal
-    if (profile?.school_id) {
-      return `/schools/${profile.school_id}/portal`
-    }
-    // No generic coach portal - coaches need to be assigned to a school
-    return "/contact"
+    // Every coach: the simple table of who they starred (the full program portal is linked from it).
+    // Coaches with no school used to be sent to /contact.
+    return "/my-recruits"
   }
 
   const handleSignOut = async () => {

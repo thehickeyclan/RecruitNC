@@ -1,0 +1,286 @@
+"use client"
+
+/**
+ * My Recruits - every wrestler a coach (or their staff) starred with "Add to Watch List", in one
+ * table. Matt: "super simple". No tabs, no pipeline: who they are, how good, what they have done,
+ * committed or not, and a way to the profile and the scouting report.
+ *
+ * Replaces the "Access Unavailable" page a coach with no school attached used to get, and is where
+ * the "My Recruits" link now goes for every coach. The full program portal is a link at the top.
+ */
+
+import { useEffect, useMemo, useState } from "react"
+import Link from "next/link"
+import { FileText, Search, Star, Trash2 } from "lucide-react"
+import { cn } from "@/lib/utils"
+import type { MyRecruitRow } from "@/lib/my-recruits"
+
+type Payload = { recruits: MyRecruitRow[]; hasSchool: boolean; schoolId: string | null }
+
+const dayLabel = (iso: string) =>
+  new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+
+/** The board itself; `initialData` lets it render without a fetch (previews, tests). */
+export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload | null }) {
+  const [data, setData] = useState<Payload | null>(initialData)
+  const [error, setError] = useState<string | null>(null)
+  const [query, setQuery] = useState("")
+  const [classYear, setClassYear] = useState<number | "all">("all")
+  const [removing, setRemoving] = useState<string | null>(null)
+
+  const load = () =>
+    fetch("/api/coaches/my-recruits", { credentials: "include" })
+      .then(async (r) => {
+        const body = await r.json().catch(() => ({}))
+        if (!r.ok) throw new Error(body.error ?? "Could not load your recruits.")
+        setData(body as Payload)
+      })
+      .catch((e: unknown) => setError(e instanceof Error ? e.message : "Could not load your recruits."))
+
+  useEffect(() => {
+    if (!initialData) void load()
+  }, [initialData])
+
+  const classes = useMemo(
+    () => [...new Set((data?.recruits ?? []).map((r) => r.classYear).filter((y): y is number => y != null))].sort(),
+    [data],
+  )
+  const rows = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return (data?.recruits ?? []).filter(
+      (r) =>
+        (classYear === "all" || r.classYear === classYear) &&
+        (!q || [r.name, r.highSchool, r.club, r.weight].some((v) => (v ?? "").toLowerCase().includes(q))),
+    )
+  }, [data, query, classYear])
+
+  const remove = async (athleteId: string) => {
+    setRemoving(athleteId)
+    try {
+      // The star endpoint toggles; on a wrestler you starred it removes your star.
+      await fetch("/api/coach-portal/star", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ athleteId }),
+      })
+      await load()
+    } finally {
+      setRemoving(null)
+    }
+  }
+
+  return (
+      <main className="min-h-screen bg-[#0A1628] text-white">
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D3B574]">RecruitNC</p>
+              <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">My Recruits</h1>
+              <p className="mt-1 text-sm text-white/60">
+                Every wrestler you{data?.hasSchool ? " and your staff" : ""} added to the watch list.
+              </p>
+            </div>
+            {data?.schoolId ? (
+              <Link href={`/schools/${data.schoolId}/portal`} className="text-sm font-semibold text-[#D3B574] hover:underline">
+                Full program portal →
+              </Link>
+            ) : null}
+          </div>
+
+          {error ? (
+            <p className="mt-8 rounded-lg border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-200">{error}</p>
+          ) : !data ? (
+            <p className="mt-8 text-sm text-white/50">Loading your recruits…</p>
+          ) : data.recruits.length === 0 ? (
+            <div className="mt-8 rounded-xl border border-white/10 bg-white/[0.03] p-8 text-center">
+              <Star className="mx-auto h-8 w-8 text-[#D3B574]" aria-hidden />
+              <p className="mt-3 text-lg font-bold">No recruits yet</p>
+              <p className="mt-1 text-sm text-white/60">
+                Open any wrestler&apos;s profile and tap <span className="font-semibold text-white">Add to Watch List</span>. They
+                will show up here.
+              </p>
+              <Link
+                href="/public-rankings"
+                className="mt-5 inline-block rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]"
+              >
+                Browse the rankings
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div className="mt-6 flex flex-wrap items-center gap-2">
+                <label className="relative w-full sm:w-auto sm:min-w-[220px] sm:flex-1">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" aria-hidden />
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search name, school, club or weight"
+                    className="w-full rounded-lg border border-white/15 bg-white/5 py-2 pl-9 pr-3 text-sm text-white placeholder:text-white/40 focus:border-[#D3B574] focus:outline-none"
+                  />
+                </label>
+                {(["all", ...classes] as const).map((y) => (
+                  <button
+                    key={String(y)}
+                    type="button"
+                    onClick={() => setClassYear(y)}
+                    className={cn(
+                      "rounded-full border px-3 py-1.5 text-xs font-semibold",
+                      classYear === y ? "border-[#D3B574] bg-[#D3B574] text-[#0A1628]" : "border-white/20 text-white/70 hover:bg-white/10",
+                    )}
+                  >
+                    {y === "all" ? `All (${data.recruits.length})` : `Class of ${y}`}
+                  </button>
+                ))}
+              </div>
+
+              {/* Desktop: one table. */}
+              <div className="mt-4 hidden overflow-hidden rounded-xl border border-white/10 md:block">
+                <table className="w-full text-left text-sm">
+                  <thead className="bg-white/[0.04] text-[11px] uppercase tracking-wider text-white/50">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold">Wrestler</th>
+                      <th className="px-3 py-3 font-semibold">Class</th>
+                      <th className="px-3 py-3 font-semibold">Wt</th>
+                      <th className="px-3 py-3 font-semibold">Rank</th>
+                      <th className="px-3 py-3 font-semibold">Best results</th>
+                      <th className="px-3 py-3 font-semibold">Status</th>
+                      <th className="px-3 py-3 font-semibold">Added</th>
+                      <th className="px-3 py-3" />
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/10">
+                    {rows.map((r) => (
+                      <tr key={r.athleteId} className="align-top hover:bg-white/[0.03]">
+                        <td className="px-4 py-3">
+                          <Link href={`/view-profile?id=${r.athleteId}`} className="flex items-center gap-3">
+                            <Avatar row={r} />
+                            <span className="min-w-0">
+                              <span className="block font-bold text-white hover:text-[#D3B574]">{r.name}</span>
+                              <span className="block truncate text-xs text-white/55">
+                                {[r.highSchool, r.club].filter(Boolean).join(" · ") || "—"}
+                              </span>
+                            </span>
+                          </Link>
+                        </td>
+                        <td className="px-3 py-3 text-white/80">{r.classYear ?? "—"}</td>
+                        <td className="px-3 py-3 text-white/80">{r.weight ?? "—"}</td>
+                        <td className="px-3 py-3 font-bold text-[#D3B574]">{r.rank ? `#${r.rank}` : "—"}</td>
+                        <td className="px-3 py-3 text-xs leading-relaxed text-white/80">
+                          {r.stateFinish || r.nationalFinish ? (
+                            <>
+                              {r.stateFinish ? <div>{r.stateFinish}</div> : null}
+                              {r.nationalFinish ? <div className="text-[#E9D6A6]">{r.nationalFinish}</div> : null}
+                            </>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-xs">
+                          {r.committedTo ? (
+                            <span className="font-semibold text-emerald-300">Committed · {r.committedTo}</span>
+                          ) : (
+                            <span className="text-white/70">Uncommitted</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-xs text-white/55">
+                          {dayLabel(r.starredAt)}
+                          {r.starredBy !== "You" ? <div>by {r.starredBy}</div> : null}
+                        </td>
+                        <td className="px-3 py-3">
+                          <Actions row={r} removing={removing === r.athleteId} onRemove={remove} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {!rows.length ? <p className="p-6 text-center text-sm text-white/50">No recruits match.</p> : null}
+              </div>
+
+              {/* Phones: a card per wrestler. */}
+              <ul className="mt-4 space-y-2 md:hidden">
+                {rows.map((r) => (
+                  <li key={r.athleteId} className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                    <div className="flex items-start gap-3">
+                      <Link href={`/view-profile?id=${r.athleteId}`}>
+                        <Avatar row={r} />
+                      </Link>
+                      <div className="min-w-0 flex-1">
+                        <Link href={`/view-profile?id=${r.athleteId}`} className="font-bold text-white">
+                          {r.name}
+                        </Link>
+                        {r.rank ? <span className="ml-2 text-xs font-bold text-[#D3B574]">#{r.rank}</span> : null}
+                        <p className="text-xs text-white/60">
+                          {[r.classYear ? `Class of ${r.classYear}` : null, r.weight ? `${r.weight} lbs` : null].filter(Boolean).join(" · ")}
+                        </p>
+                        <p className="truncate text-xs text-white/50">{[r.highSchool, r.club].filter(Boolean).join(" · ")}</p>
+                        {r.stateFinish ? <p className="mt-1 text-xs text-white/80">{r.stateFinish}</p> : null}
+                        {r.nationalFinish ? <p className="text-xs text-[#E9D6A6]">{r.nationalFinish}</p> : null}
+                        <p className="mt-1 text-xs">
+                          {r.committedTo ? (
+                            <span className="font-semibold text-emerald-300">Committed · {r.committedTo}</span>
+                          ) : (
+                            <span className="text-white/60">Uncommitted</span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-2">
+                      <span className="text-[11px] text-white/45">
+                        Added {dayLabel(r.starredAt)}
+                        {r.starredBy !== "You" ? ` by ${r.starredBy}` : ""}
+                      </span>
+                      <Actions row={r} removing={removing === r.athleteId} onRemove={remove} />
+                    </div>
+                  </li>
+                ))}
+                {!rows.length ? <p className="p-6 text-center text-sm text-white/50">No recruits match.</p> : null}
+              </ul>
+            </>
+          )}
+        </div>
+      </main>
+  )
+}
+
+function Avatar({ row }: { row: MyRecruitRow }) {
+  return row.photoUrl ? (
+    // eslint-disable-next-line @next/next/no-img-element -- athlete photos come from mixed hosts
+    <img src={row.photoUrl} alt="" className="h-11 w-11 shrink-0 rounded-full object-cover object-top" />
+  ) : (
+    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-bold text-white/60">
+      {row.name
+        .split(/\s+/)
+        .map((w) => w[0])
+        .slice(0, 2)
+        .join("")}
+    </span>
+  )
+}
+
+function Actions({ row, removing, onRemove }: { row: MyRecruitRow; removing: boolean; onRemove: (id: string) => void }) {
+  return (
+    <div className="flex items-center gap-1.5">
+      <Link
+        href={`/athletes/${row.athleteId}/scouting-report`}
+        title="Scouting report"
+        className="inline-flex items-center gap-1 rounded-md border border-[#D3B574]/50 px-2 py-1 text-xs font-semibold text-[#D3B574] hover:bg-[#D3B574]/10"
+      >
+        <FileText className="h-3.5 w-3.5" aria-hidden />
+        Report
+      </Link>
+      {row.mine ? (
+        <button
+          type="button"
+          title="Remove from my recruits"
+          aria-label={`Remove ${row.name}`}
+          disabled={removing}
+          onClick={() => onRemove(row.athleteId)}
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md text-white/40 hover:bg-white/10 hover:text-red-300 disabled:opacity-40"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      ) : null}
+    </div>
+  )
+}
