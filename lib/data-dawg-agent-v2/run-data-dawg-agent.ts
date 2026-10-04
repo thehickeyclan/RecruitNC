@@ -284,7 +284,11 @@ export async function runDataDawgAgentV2(params: {
       groundingFacts = JSON.stringify(athleteFast.facts)
       groundedEntities = linkableEntitiesFromFacts(athleteFast.facts)
       groundedQueryType =
-        athleteFast.kind === "directory" ? "athlete_facts_directory" : "athlete_facts_historical"
+        athleteFast.kind === "directory"
+          ? "athlete_facts_directory"
+          : athleteFast.kind === "unprofiled"
+            ? "athlete_facts_unprofiled"
+            : "athlete_facts_historical"
     }
   } catch (e) {
     console.warn("[RecruitNC] athlete name fast-path failed:", e instanceof Error ? e.message : e)

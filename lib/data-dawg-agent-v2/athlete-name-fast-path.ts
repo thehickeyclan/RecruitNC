@@ -15,6 +15,7 @@ import {
 import {
   toolGetAthleteFullDossier,
   toolSearchAthletes,
+  toolTournamentBoutsSearch,
   toolWrestlingCrossStoreSearch,
 } from "./execute-data-tools"
 import { crossStoreHasUsefulHits } from "./format-cross-store-athlete-markdown"
@@ -26,7 +27,7 @@ export type AthleteFastPathHit = {
   facts: unknown
   athleteId: string | null
   /** Where the facts came from — alumni rows read differently from a directory profile. */
-  kind: "directory" | "historical"
+  kind: "directory" | "historical" | "unprofiled"
 }
 
 export async function tryAthleteNameFastPath(message: string): Promise<AthleteFastPathHit | null> {
@@ -53,7 +54,34 @@ export async function tryAthleteNameFastPath(message: string): Promise<AthleteFa
 
   // Alumni / no clear directory id — fall back to the historical stores (Brandon Palmer path).
   const cross = await toolWrestlingCrossStoreSearch({ query: phrase, limit: 40 })
-  if (!crossStoreHasUsefulHits(cross as never)) return null
+  if (!crossStoreHasUsefulHits(cross as never)) {
+    /*
+     * Nobody in the directory and nobody in the historical tables — but the national brackets are
+     * imported in full, so we hold complete records for thousands of wrestlers who are a name and
+     * a team and nothing else. Micah Engelman of Pennsylvania is a two-time NHSCA All-American
+     * with 16 bouts here.
+     *
+     * Done deterministically rather than by asking the model to pick the tool. The prompt told it
+     * to and it did not: the answer stayed "I couldn't find any records" while the record sat in
+     * the table. A lookup this reliable should not depend on the model choosing to look.
+     */
+    const bouts = await toolTournamentBoutsSearch({ wrestler: phrase })
+    if ("error" in bouts) return null
+    if (!bouts.bouts?.length) return null
+    return {
+      facts: {
+        profile_url: null,
+        writing_notes: [
+          `${bouts.wrestler} has no RecruitNC profile. Write the name as plain text — do NOT link it, and never invent a profile URL.`,
+          "Say plainly that this wrestler has no RecruitNC profile and that the record is matched on name and team from imported brackets.",
+          "These are the bouts we hold, not necessarily the whole career: we may not have imported every event.",
+        ],
+        results: bouts,
+      },
+      athleteId: null,
+      kind: "unprofiled",
+    }
+  }
 
   // These wrestlers predate the athlete directory, so there is no profile page to link to.
   // Say so explicitly — told only to link the name, the model will otherwise invent a URL.
