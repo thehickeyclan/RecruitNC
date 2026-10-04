@@ -1,0 +1,114 @@
+section,year,name,bout_rows,linked_to_our_profiles,unlinked,distinct_teams,scope,placement_store,placement_filled,boys_2025,girls_2025,boys_2026,girls_2026,placement_bouts,grad_year_pct
+tournament,2023,2023 NHSCA High School Nationals,19438,274,19164,52,national,nhsca_placements,24/313 (NC only),,,,,,
+tournament,2023,2023 Super 32,6072,193,5879,46,national,super32_results,6/104 (NC only),,,,,,
+tournament,2023,2023 USAW Women's Nationals — U17 Women's Freestyle,5,5,0,1,NC only,other_tournament_results,0/1,,,,,,
+tournament,2024,2024 NHSCA High School Nationals,19294,456,18838,52,national,nhsca_placements,18/277 (NC only),,,,,,
+tournament,2024,2024 Super 32,5930,247,5683,48,national,super32_results,3/113 (NC only),,,,,,
+tournament,2024,2024 USAW Women's Nationals — U15 Women's Freestyle,3,3,0,1,NC only,other_tournament_results,1/1,,,,,,
+tournament,2024,2024 USAW Women's Nationals — U17 Women's Freestyle,15,15,0,1,NC only,other_tournament_results,0/4,,,,,,
+tournament,2024,2024 USAW Women's Nationals — U20 Women's Freestyle,18,18,0,1,NC only,other_tournament_results,0/7,,,,,,
+tournament,2025,2025 Fargo 16U Freestyle,11109,86,11023,50,national,fargo_results,3/73,,,,,,
+tournament,2025,2025 Fargo 16U Greco-Roman,5018,52,4966,49,national,fargo_results,3/73,,,,,,
+tournament,2025,2025 Fargo 16U Women's Freestyle,17,17,0,1,NC only,fargo_results,3/73,,,,,,
+tournament,2025,2025 Fargo Junior Freestyle,12256,98,12158,50,national,fargo_results,3/73,,,,,,
+tournament,2025,2025 Fargo Junior Greco-Roman,5288,65,5223,48,national,fargo_results,3/73,,,,,,
+tournament,2025,2025 Fargo Junior Women's Freestyle,32,32,0,1,NC only,fargo_results,3/73,,,,,,
+tournament,2025,2025 Journeymen Women's World Classic - Freestyle,715,49,666,78,national,other_tournament_results,99/157,,,,,,
+tournament,2025,2025 NHSCA High School Nationals,20520,796,19724,51,national,nhsca_placements,31/335 (NC only),,,,,,
+tournament,2025,2025 Super 32,6346,379,5967,47,national,super32_results,5/97 (NC only),,,,,,
+tournament,2025,2025 USAW Women's Nationals — U15 Women's Freestyle,10,10,0,1,NC only,other_tournament_results,1/3,,,,,,
+tournament,2025,2025 USAW Women's Nationals — U17 Women's Freestyle,15,15,0,1,NC only,other_tournament_results,1/5,,,,,,
+tournament,2025,2025 USAW Women's Nationals — U20 Women's Freestyle,14,14,0,1,NC only,other_tournament_results,0/5,,,,,,
+tournament,2025,2025 Ultimate Club Duals,384,297,87,3,regional,,none,,,,,,
+tournament,2025,Journeymen Fall Classic (OF),126,66,60,52,national,other_tournament_results,4/67,,,,,,
+tournament,2025,Journeymen Fall Classic,123,64,59,45,national,other_tournament_results,3/67,,,,,,
+tournament,2026,2026 16U National Duals - 16U Boys Freestyle,55,55,0,1,NC only,other_tournament_results,0/10,,,,,,
+tournament,2026,2026 16U National Duals - 16U Boys Greco-Roman,67,67,0,1,NC only,other_tournament_results,0/10,,,,,,
+tournament,2026,2026 AAU Scholastic Duals Boys,163,163,0,1,NC only,,none,,,,,,
+tournament,2026,2026 Fargo 16U Freestyle,10904,83,10821,49,national,fargo_results,7/69,,,,,,
+tournament,2026,2026 Fargo 16U Greco-Roman,4964,30,4934,46,national,fargo_results,7/69,,,,,,
+tournament,2026,2026 Fargo 16U Women's Freestyle,20,20,0,1,NC only,fargo_results,7/69,,,,,,
+tournament,2026,2026 Fargo Junior Freestyle,12167,95,12072,49,national,fargo_results,7/69,,,,,,
+tournament,2026,2026 Fargo Junior Greco-Roman,5104,53,5051,49,national,fargo_results,7/69,,,,,,
+tournament,2026,2026 Fargo Junior Women's Freestyle,53,53,0,1,NC only,fargo_results,7/69,,,,,,
+tournament,2026,2026 Journeymen Fall Classic (OF),1222,24,1198,102,national,other_tournament_results,52/289,,,,,,
+tournament,2026,2026 Journeymen Women's World Classic - Freestyle,852,26,826,84,national,other_tournament_results,99/167,,,,,,
+tournament,2026,2026 Junior National Duals - Junior Freestyle Duals,33,33,0,1,NC only,other_tournament_results,0/7,,,,,,
+tournament,2026,2026 Junior National Duals - Junior Greco-Roman Duals,48,48,0,1,NC only,other_tournament_results,0/9,,,,,,
+tournament,2026,2026 NC Freestyle & Greco State Championships - 16U Boys Freestyle,94,94,0,20,national,other_tournament_results,16/29,,,,,,
+tournament,2026,2026 NC Freestyle & Greco State Championships - 16U Boys Greco,24,24,0,6,regional,other_tournament_results,0/9,,,,,,
+tournament,2026,2026 NC Freestyle & Greco State Championships - 16U Girls Freestyle,11,11,0,3,regional,other_tournament_results,0/4,,,,,,
+tournament,2026,2026 NC Freestyle & Greco State Championships - Junior Boys Freestyle,156,156,0,19,regional,other_tournament_results,24/43,,,,,,
+tournament,2026,2026 NC Freestyle & Greco State Championships - Junior Boys Greco,21,21,0,7,regional,other_tournament_results,0/7,,,,,,
+tournament,2026,2026 NC Freestyle & Greco State Championships - Junior Girls Freestyle,14,14,0,4,regional,other_tournament_results,0/4,,,,,,
+tournament,2026,2026 NC Freestyle & Greco State Championships - Junior Girls Greco,4,4,0,2,regional,other_tournament_results,0/2,,,,,,
+tournament,2026,2026 NHSCA High School Nationals,22600,1037,21563,52,national,nhsca_placements,28/436 (NC only),,,,,,
+tournament,2026,2026 NHSCA National Duals,542,512,30,29,national,other_tournament_results,0/47,,,,,,
+tournament,2026,2026 Tar Heel State Classic - 16U Boys Freestyle,112,112,0,21,national,other_tournament_results,20/33,,,,,,
+tournament,2026,2026 Tar Heel State Classic - 16U Boys Greco,27,27,0,10,regional,other_tournament_results,0/13,,,,,,
+tournament,2026,2026 Tar Heel State Classic - 16U Girls Freestyle,10,10,0,2,regional,other_tournament_results,0/5,,,,,,
+tournament,2026,2026 Tar Heel State Classic - 16U Girls Greco,2,2,0,1,NC only,other_tournament_results,0/1,,,,,,
+tournament,2026,2026 Tar Heel State Classic - Junior Boys Freestyle,123,123,0,19,regional,other_tournament_results,21/34,,,,,,
+tournament,2026,2026 Tar Heel State Classic - Junior Boys Greco,35,35,0,9,regional,other_tournament_results,2/13,,,,,,
+tournament,2026,2026 Tar Heel State Classic - Junior Girls Freestyle,4,4,0,1,NC only,other_tournament_results,0/1,,,,,,
+tournament,2026,2026 Tar Heel State Classic - Junior Girls Greco,3,3,0,1,NC only,other_tournament_results,0/1,,,,,,
+tournament,2026,2026 USAW Women's Nationals — U15 Women's Freestyle,996,0,996,178,national,other_tournament_results,1/1,,,,,,
+tournament,2026,2026 USAW Women's Nationals — U17 Women's Freestyle,1815,18,1797,251,national,other_tournament_results,1/4,,,,,,
+tournament,2026,2026 USAW Women's Nationals — U20 Women's Freestyle,27,27,0,1,NC only,other_tournament_results,0/10,,,,,,
+tournament,2026,2026 Ultimate Club Duals,265,265,0,2,regional,,none,,,,,,
+tournament,2026,Georgia Super 32 Early Entry,70,37,33,31,national,other_tournament_results,14/39,,,,,,
+tournament,2026,Interstate 64 Spring Duals,360,218,142,14,regional,other_tournament_results,0/151,,,,,,
+tournament,2026,NC Super 32 Early Entry,426,245,181,76,national,other_tournament_results,44/179,,,,,,
+tournament,2026,NC United Tournament of Champions,236,236,0,30,national,other_tournament_results,40/79,,,,,,
+tournament,2026,NCHSAA State Championships,768,768,0,132,national,,none,,,,,,
+tournament,2026,Virginia Super 32 Early Entry,41,24,17,22,national,other_tournament_results,1/22,,,,,,
+state,2025+2026,AK,,,,,,,,0,72,112,48,yes,0%
+state,2025+2026,AL,,,,,,,,0,96,224,48,yes,0%
+state,2025+2026,AR,,,,,,,,0,112,168,112,yes,0%
+state,2025+2026,AZ,,,,,,,,0,144,336,144,yes,0%
+state,2025+2026,CA,,,,,,,,0,112,112,112,yes,0%
+state,2025+2026,CO,,,,,,,,0,168,336,168,yes,0%
+state,2025+2026,CT,,,,,,,,0,72,84,78,yes,0%
+state,2025+2026,DE,,,,,,,,0,0,112,0,yes,0%
+state,2025+2026,FL,,,,,,,,0,112,336,112,yes,0%
+state,2025+2026,GA,,,,,,,,0,84,504,84,yes,0%
+state,2025+2026,HI,,,,,,,,0,84,83,84,yes,0%
+state,2025+2026,IA,,,,,,,,0,224,336,224,yes,0%
+state,2025+2026,ID,,,,,,,,0,72,360,84,yes,0%
+state,2025+2026,IL,,,,,,,,0,84,252,84,yes,0%
+state,2025+2026,IN,,,,,,,,0,35,112,33,yes,0%
+state,2025+2026,KS,,,,,,,,0,0,336,0,yes,0%
+state,2025+2026,KY,,,,,,,,0,96,112,12,yes,0%
+state,2025+2026,LA,,,,,,,,0,72,252,72,yes,0%
+state,2025+2026,MA,,,,,,,,0,126,112,188,yes,0%
+state,2025+2026,MD,,,,,,,,0,84,168,84,yes,0%
+state,2025+2026,ME,,,,,,,,0,40,168,48,yes,0%
+state,2025+2026,MI,,,,,,,,0,112,448,112,yes,0%
+state,2025+2026,MN,,,,,,,,0,78,234,59,yes,0%
+state,2025+2026,MO,,,,,,,,0,168,336,168,yes,0%
+state,2025+2026,MS,,,,,,,,0,94,112,24,yes,0%
+state,2025+2026,MT,,,,,,,,0,84,251,112,yes,0%
+state,2025+2026,ND,,,,,,,,0,104,208,103,yes,0%
+state,2025+2026,NE,,,,,,,,0,168,336,166,yes,0%
+state,2025+2026,NH,,,,,,,,0,44,84,42,yes,0%
+state,2025+2026,NJ,,,,,,,,0,96,112,96,yes,0%
+state,2025+2026,NM,,,,,,,,0,72,168,84,yes,0%
+state,2025+2026,NV,,,,,,,,0,0,224,56,yes,0%
+state,2025+2026,NY,,,,,,,,0,78,224,78,yes,0%
+state,2025+2026,OH,,,,,,,,0,88,336,112,yes,0%
+state,2025+2026,OK,,,,,,,,0,112,224,112,yes,0%
+state,2025+2026,OR,,,,,,,,0,168,392,84,yes,0%
+state,2025+2026,PA,,,,,,,,0,104,208,104,yes,0%
+state,2025+2026,RI,,,,,,,,0,41,84,62,yes,0%
+state,2025+2026,SC,,,,,,,,0,56,224,56,yes,66%
+state,2025+2026,SD,,,,,,,,0,96,224,112,yes,0%
+state,2025+2026,TN,,,,,,,,0,72,252,72,yes,25%
+state,2025+2026,TX,,,,,,,,0,143,167,168,yes,0%
+state,2025+2026,UT,,,,,,,,0,392,392,420,yes,0%
+state,2025+2026,VA,,,,,,,,444,72,504,72,yes,0%
+state,2025+2026,VT,,,,,,,,0,0,84,0,yes,0%
+state,2025+2026,WA,,,,,,,,0,392,532,392,yes,0%
+state,2025+2026,WI,,,,,,,,0,24,210,24,yes,0%
+state,2025+2026,WV,,,,,,,,0,72,165,72,yes,47%
+state,2025+2026,WY,,,,,,,,0,84,252,84,yes,0%
+nc,1988-2026,NCHSAA state championships (wrestling_nchsaa_results),0,,,,NC only,,10310/10785,,,,,,
