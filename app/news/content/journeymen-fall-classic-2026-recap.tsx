@@ -112,8 +112,16 @@ export function JourneymenFallClassic2026RecapContent() {
         Green Hope senior <P href={LOPEZ}>Gavin Lopez</P> was North Carolina&apos;s best finisher, placing <strong>2nd at
         215</strong>. He swept his pool 3–0 — two pins and a 7–1 decision over Wyoming Seminary — to reach the
         final, where he fell 8–2 to unbeaten <strong>NHSCA All-American and Pennsylvania state placer Sawyer
-        Ermigiotti</strong>. In the same bracket, Croatan senior <P href={PADGETT}>Luke Padgett</P> placed <strong>5th</strong>,
-        closing his weekend with a 13–4 major decision in the 5th-place match.
+        Ermigiotti</strong>.
+      </p>
+
+      <h2>Padgett places 5th at 215</h2>
+      <p>
+        Croatan senior <P href={PADGETT}>Luke Padgett</P> joined Lopez on the podium at 215, placing <strong>5th</strong>
+        out of the same pool-play bracket. He pinned Greens Farms Academy&apos;s Lincoln Snell and beat Wyoming
+        Seminary&apos;s Konrad Kutt 4–1, then closed his weekend with a 13–4 major decision in the 5th-place match over
+        New York&apos;s <strong>Landon Lee, a two-time NHSCA All-American</strong>. His only losses were a 4–2 decision to
+        Blair Academy&apos;s Thomas Kellas and a 6–1 decision to the unbeaten champion, Sawyer Ermigiotti.
       </p>
 
       <h2>Raper takes down two state champions</h2>
