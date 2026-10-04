@@ -8,6 +8,8 @@ const RAPER = profile("68696afb-0b22-465c-b22e-82e84913144e")
 const AMIOTT = profile("7bb99ea9-a0ff-4cd0-91f8-217327959105")
 const MCNAIR = profile("63ea613d-0886-4af0-b64b-1c3d80fe0332")
 const RICHARDS = profile("1a2d638e-5978-45d4-b6c8-bc95ba754367")
+const LOPEZ = profile("da7e32d2-bbdc-4b0e-ac70-ecb6ac67ed10")
+const PADGETT = profile("c30deea8-6e11-4bbd-b95c-6a5bc4d72692")
 
 function P({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -75,7 +77,7 @@ export function JourneymenFallClassic2026RecapContent() {
         The Journeymen Fall Classic has become one of the toughest fall tournaments in the country, and this
         weekend North Carolina made noise in it. Eighteen NC wrestlers took on a main-event field packed with
         the best of the Northeast — New York, Pennsylvania, New Jersey and Connecticut — and came home with
-        <strong> three championship-bracket placers</strong>, an <strong>Overflow title</strong>, wins over
+        <strong> five main-event placers</strong> led by a runner-up finish, an <strong>Overflow title</strong>, wins over
         <strong> state champions from Virginia, Massachusetts, Connecticut and Arizona</strong>, and
         <strong> eight wins over All-Americans</strong>.
       </p>
@@ -104,6 +106,15 @@ export function JourneymenFallClassic2026RecapContent() {
           className="mx-auto h-auto w-full max-w-md rounded-lg"
         />
       </div>
+
+      <h2>Lopez reaches the final at 215</h2>
+      <p>
+        Green Hope senior <P href={LOPEZ}>Gavin Lopez</P> was North Carolina&apos;s best finisher, placing <strong>2nd at
+        215</strong>. He swept his pool 3–0 — two pins and a 7–1 decision over Wyoming Seminary — to reach the
+        final, where he fell 8–2 to unbeaten <strong>NHSCA All-American and Pennsylvania state placer Sawyer
+        Ermigiotti</strong>. In the same bracket, Croatan senior <P href={PADGETT}>Luke Padgett</P> placed <strong>5th</strong>,
+        closing his weekend with a 13–4 major decision in the 5th-place match.
+      </p>
 
       <h2>Raper takes down two state champions</h2>
       <p>
@@ -144,11 +155,6 @@ export function JourneymenFallClassic2026RecapContent() {
 
       <h2>Around the brackets</h2>
       <ul>
-        <li>
-          Green Hope senior <strong>Gavin Lopez</strong> went 3–1 at 215 with two pins; his only loss came against the
-          unbeaten NHSCA All-American Sawyer Ermigiotti. Croatan senior <strong>Luke Padgett</strong> went 3–2 in the
-          same bracket.
-        </li>
         <li>
           Davie senior <strong>Carson Worrick</strong> major-decisioned <strong>Rhode Island state runner-up Anthony
           Lombardi</strong> 13–2.

@@ -103,9 +103,9 @@ const ALL_NEWS: NewsItem[] = [
     id: "journeymen-fall-classic-2026-recap",
     slug: "journeymen-fall-classic-2026-recap",
     title: "NC Made Noise at the Journeymen Fall Classic",
-    subtitle: "Three placers, an Overflow title and wins over state champions from four states.",
+    subtitle: "Five placers, an Overflow title and wins over state champions from four states.",
     summary:
-      "Carson Raper, Jake Amiott and Tobin McNair placed, Luke Richards won the Overflow, and North Carolina beat state champions from Virginia, Massachusetts, Connecticut and Arizona against an elite Northeast field.",
+      "Gavin Lopez finished runner-up, Carson Raper, Luke Padgett, Jake Amiott and Tobin McNair placed, Luke Richards won the Overflow, and North Carolina beat state champions from Virginia, Massachusetts, Connecticut and Arizona against an elite Northeast field.",
     href: "/news/journeymen-fall-classic-2026-recap",
     date: "2026-10-04",
     image: "/images/news/journeymen-fall-classic-2026/nc-made-noise.png",
