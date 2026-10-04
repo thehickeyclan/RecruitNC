@@ -47,10 +47,60 @@ export function parseTrackwrestlingCells(line: string): string[] {
   return out.map((cell) => cell.replace(/^=/, "").replace(/^"|"$/g, "").trim())
 }
 
+/**
+ * Two shapes reach this parser.
+ *
+ * The Trackwrestling export is positional — date, weight, round, winner, team, result, type,
+ * loser, team — with every cell written ="value". The collected files are an ordinary CSV with a
+ * named header: `tournament,weight,round,bout_number,winner_name,winner_team,loser_name,
+ * loser_team,result_type,score,time`, which is what the girls' brackets and the Southeast
+ * regionals already use. Reading the header when there is one means a new file loads without a
+ * new importer, and a column order that changes cannot silently shift everybody's team into the
+ * score.
+ */
 export function parseSuper32Csv(text: string): Super32Row[] {
-  return text
-    .split(/\r?\n/)
-    .filter(Boolean)
+  const lines = text.split(/\r?\n/).filter(Boolean)
+  if (!lines.length) return []
+  const header = parseTrackwrestlingCells(lines[0]!).map((h) => h.toLowerCase().trim())
+  const at = (...names: string[]) => {
+    for (const n of names) {
+      const i = header.indexOf(n)
+      if (i >= 0) return i
+    }
+    return -1
+  }
+  const iWinner = at("winner_name", "winning wrestler")
+  const iLoser = at("loser_name", "losing wrestler")
+
+  // Named header: map by name. Otherwise the positional Trackwrestling layout.
+  if (iWinner >= 0 && iLoser >= 0) {
+    const iWeight = at("weight", "weight_class")
+    const iRound = at("round")
+    const iWinTeam = at("winner_team", "winner_state", "winning team")
+    const iLoseTeam = at("loser_team", "loser_state", "losing team")
+    const iType = at("result_type", "win type", "win_type")
+    const iScore = at("score", "result")
+    const iTime = at("time")
+    const iDate = at("date", "event_date")
+    return lines.slice(1).map(parseTrackwrestlingCells).flatMap((c) => {
+      const winner = (c[iWinner] ?? "").trim()
+      if (!winner) return []
+      return [{
+        date: iDate >= 0 ? (c[iDate] ?? "") : "",
+        weight: iWeight >= 0 ? (c[iWeight] ?? "") : "",
+        round: iRound >= 0 ? (c[iRound] ?? "") : "",
+        winner,
+        winnerTeam: iWinTeam >= 0 ? (c[iWinTeam] ?? "") : "",
+        // The score and the clock are one field downstream, as they are on a profile line.
+        result: [iScore >= 0 ? c[iScore] : "", iTime >= 0 ? c[iTime] : ""].map((x) => (x ?? "").trim()).filter(Boolean).join(" "),
+        winType: iType >= 0 ? (c[iType] ?? "") : "",
+        loser: (c[iLoser] ?? "").trim(),
+        loserTeam: iLoseTeam >= 0 ? (c[iLoseTeam] ?? "") : "",
+      }]
+    })
+  }
+
+  return lines
     .slice(1)
     .map(parseTrackwrestlingCells)
     .filter((cells) => cells.length >= 9)

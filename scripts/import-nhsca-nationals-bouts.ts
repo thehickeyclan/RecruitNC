@@ -66,8 +66,55 @@ async function main() {
   const apply = process.argv.includes("--apply")
   const eventKey = `nhsca-nationals-${year}`
 
+  /*
+   * Two shapes reach this importer, so the header decides rather than the column order.
+   *
+   * The Trackwrestling export is positional, every cell written ="value". The collected files are
+   * an ordinary CSV with names — `tournament,weight,round,bout_number,winner_name,winner_team,
+   * loser_name,loser_team,result_type,score,time` — which is what the 2023 brackets, Super 32's
+   * and the girls' files all use. Read positionally, a named file puts the bout number where the
+   * winner's name belongs and imports nothing recognisable.
+   */
   const lines = fs.readFileSync(file, "utf8").split(/\r?\n/).filter(Boolean)
-  const rows = lines.slice(1).map(parseCells).filter((r) => r.length >= 9)
+  const header = parseCells(lines[0] ?? "").map((h) => h.toLowerCase().trim())
+  const at = (...names: string[]) => {
+    for (const n of names) {
+      const i = header.indexOf(n)
+      if (i >= 0) return i
+    }
+    return -1
+  }
+  const iWinner = at("winner_name", "winning wrestler")
+  const iLoser = at("loser_name", "losing wrestler")
+  const named = iWinner >= 0 && iLoser >= 0
+  const cols = named
+    ? {
+        date: at("date", "event_date"),
+        weight: at("weight", "weight_class"),
+        round: at("round"),
+        winner: iWinner,
+        winnerTeam: at("winner_team", "winner_state", "winning team"),
+        result: at("score", "result"),
+        winType: at("result_type", "win type", "win_type"),
+        loser: iLoser,
+        loserTeam: at("loser_team", "loser_state", "losing team"),
+        time: at("time"),
+      }
+    : null
+  const rows = lines
+    .slice(1)
+    .map(parseCells)
+    .filter((r) => r.length >= (named ? 6 : 9))
+    .map((r) => {
+      if (!cols) return r
+      const pick = (i: number) => (i >= 0 ? (r[i] ?? "") : "")
+      // The score and the clock read as one field on a profile line, as they do elsewhere.
+      const score = [pick(cols.result), pick(cols.time)].map((x) => x.trim()).filter(Boolean).join(" ")
+      return [
+        pick(cols.date), pick(cols.weight), pick(cols.round), pick(cols.winner), pick(cols.winnerTeam),
+        score, pick(cols.winType), pick(cols.loser), pick(cols.loserTeam),
+      ]
+    })
 
   const client = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? process.env.SUPABASE_URL!,

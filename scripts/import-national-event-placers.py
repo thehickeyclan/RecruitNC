@@ -118,10 +118,18 @@ def main():
     placers, seen = [], set()
     if rows and "place" in rows[0] and "wrestler_name" in rows[0]:
         # A placer list: one row per finish, the team a school or club (Ironman, Beast of the East).
+        # The same placer can arrive twice: the Super 32 2023 list repeats eleven of its fourteen
+        # weights in full, so every slot is filled by the same wrestler twice and the whole insert
+        # dies on the table's unique key. An exact repeat is a duplicated row, not two people.
+        seen_slot = set()
         for r in rows:
             who, team = r["wrestler_name"].strip(), (r.get("team") or "").strip() or None
             if not who or not r["place"].strip().isdigit():
                 continue
+            slot = (r["weight"].strip(), int(r["place"]), who.lower())
+            if slot in seen_slot:
+                continue
+            seen_slot.add(slot)
             placers.append({
                 "event_key": event_key, "event_name": name, "year": int(year), "weight": r["weight"].strip(),
                 "place": int(r["place"]), "wrestler_name": who, "team": team,
