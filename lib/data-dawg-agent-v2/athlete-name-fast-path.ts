@@ -11,6 +11,7 @@ import {
   carriedAthletePhrase,
   extractAthleteLookupPhrase,
   isLikelyAthleteNameLookup,
+  nameFromPastedRow,
   pickClearAthleteId,
 } from "./athlete-name-fast-path-detect"
 import {
@@ -43,9 +44,11 @@ export async function tryAthleteNameFastPath(
    * New Yorker the conversation had just established.
    */
   const carried = isLikelyAthleteNameLookup(message) ? null : carriedAthletePhrase(message, history)
-  if (!carried && !isLikelyAthleteNameLookup(message)) return null
+  // A row pasted from a roster or bracket is a name lookup too, under its other columns.
+  const pasted = carried || isLikelyAthleteNameLookup(message) ? null : nameFromPastedRow(message)
+  if (!carried && !pasted && !isLikelyAthleteNameLookup(message)) return null
 
-  const phrase = carried ?? extractAthleteLookupPhrase(message)
+  const phrase = carried ?? pasted ?? extractAthleteLookupPhrase(message)
   if (phrase.length < 3) return null
 
   const search = await toolSearchAthletes({

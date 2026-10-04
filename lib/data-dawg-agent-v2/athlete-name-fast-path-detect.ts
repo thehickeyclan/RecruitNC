@@ -136,3 +136,30 @@ export function carriedAthletePhrase(
   }
   return null
 }
+
+
+/**
+ * A name pasted out of a roster or bracket table.
+ *
+ * "Colten Jones Capital Wrestling Club Main   •   170   •   HS Junior" is a row someone copied,
+ * and it failed every check: it did not look like a name lookup, and the phrase it produced —
+ * "colten jones capital club main 170 junior" — matched nobody. He is in the data: third at 165
+ * in Virginia 4A, with 37 bouts.
+ *
+ * The name is the leading run of capitalised words; everything after the first club word, bullet,
+ * weight or grade is the row's other columns.
+ */
+const ROSTER_NOISE_RE =
+  /[•|]|\b(\d{2,3})\b|\b(hs|high school|jr|sr|so|fr|junior|senior|sophomore|freshman|main|club|wrestling|academy|wc|rtc|team)\b/i
+
+export function nameFromPastedRow(message: string): string | null {
+  const text = String(message ?? "").replace(/\s+/g, " ").trim()
+  if (!text || !ROSTER_NOISE_RE.test(text)) return null
+  /*
+   * The first two capitalised words and no more. Three would swallow the club: the row reads
+   * "Colten Jones Capital Wrestling Club", and "Colten Jones Capital" matches nobody.
+   */
+  const m = text.match(/^([A-Z][A-Za-z'’`-]+)\s+([A-Z][A-Za-z'’`-]+)\b/)
+  if (!m) return null
+  return `${m[1]} ${m[2]}`
+}

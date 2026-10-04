@@ -217,9 +217,19 @@ export async function findUnprofiledWrestler(
     const team = String(r.athlete_club ?? "").trim()
     if (team) counts.set(team, (counts.get(team) ?? 0) + 1)
   }
-  const teams = [...counts.entries()]
+  let teams = [...counts.entries()]
     .map(([team, bouts]) => ({ team, bouts }))
     .sort((a, b) => b.bouts - a.bouts)
+  /*
+   * One state code among clubs is one wrestler recorded two ways, not two wrestlers.
+   *
+   * NHSCA, Super 32 and Fargo store the state; the duals and USAW store the club. Colten Jones
+   * appears as "VA" and as "Integrity" and is a single person with 37 bouts, so asking which was
+   * a question with no right answer. Two different state codes stay ambiguous — those really are
+   * two people.
+   */
+  const stateCodes = teams.filter((t) => /^[A-Z]{2}$/.test(t.team.toUpperCase()))
+  if (stateCodes.length === 1 && teams.length > 1) teams = stateCodes
   return { name: String(data[0]!.athlete_name ?? q).trim() || q, teams }
 }
 
@@ -230,8 +240,10 @@ export async function loadBoutsForUnprofiled(
   team: string | null,
   options: { event?: string | null; year?: number | null; limit?: number } = {},
 ): Promise<BoutRow[]> {
-  let query = supabase.from("other_tournament_bouts").select(SELECT).is("athlete_id", null).ilike("athlete_name", name)
-  if (team) query = query.eq("athlete_club", team)
+  // Not filtered to the team: where a wrestler is recorded as a state at one event and a club at
+  // another, filtering would drop half his record. The team identifies him; it does not limit him.
+  const query0 = supabase.from("other_tournament_bouts").select(SELECT).is("athlete_id", null).ilike("athlete_name", name)
+  let query = query0
   if (options.event) query = query.ilike("event_name", `%${options.event}%`)
   if (options.year) query = query.eq("year", options.year)
   const { data, error } = await query

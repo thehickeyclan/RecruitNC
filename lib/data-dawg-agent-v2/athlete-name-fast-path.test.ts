@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import {
   isLikelyAthleteNameLookup,
+  nameFromPastedRow,
   pickClearAthleteId,
 } from "./athlete-name-fast-path-detect"
 
@@ -65,5 +66,24 @@ describe("pickClearAthleteId", () => {
 describe("isLikelyAthleteNameLookup follow-ups", () => {
   it("still treats bare names as athlete lookups", () => {
     expect(isLikelyAthleteNameLookup("Kevin O'Brien")).toBe(true)
+  })
+})
+
+describe("nameFromPastedRow", () => {
+  it("takes the name out of a row pasted from a roster", () => {
+    // "Colten Jones Capital Wrestling Club Main • 170 • HS Junior" looked like nothing at all:
+    // not a name lookup, and the phrase it produced matched nobody. He has 37 bouts.
+    expect(nameFromPastedRow("Colten Jones Capital Wrestling Club Main   •   170   •   HS Junior")).toBe("Colten Jones")
+    expect(nameFromPastedRow("Braylen Yates Prestige Worldwide 185 HS Sophomore")).toBe("Braylen Yates")
+  })
+
+  it("stops at two words, or the club becomes part of the name", () => {
+    // Three words would give "Colten Jones Capital", which matches nobody.
+    expect(nameFromPastedRow("Colten Jones Capital Wrestling Club 170")).not.toContain("Capital")
+  })
+
+  it("ignores an ordinary question", () => {
+    expect(nameFromPastedRow("Who won the TOC in 2026?")).toBeNull()
+    expect(nameFromPastedRow("what about his Fargo record")).toBeNull()
   })
 })
