@@ -9,6 +9,7 @@ import { NcUnitedRecruitingAwards2026Content } from "../content/nc-united-recrui
 import { FirstFlight2026Content } from "../content/first-flight-2026-nc-united-shoe"
 import { NhscaMostOutstandingWrestlerAward2026Content } from "../content/nhsca-most-outstanding-wrestler-award-2026"
 import { NhscaNationalsRecap2026Content } from "../content/nhsca-nationals-recap-2026"
+import { JourneymenFallClassic2026RecapContent } from "../content/journeymen-fall-classic-2026-recap"
 import { ClassOf2026SeniorSendoffContent } from "../content/class-of-2026-senior-sendoff"
 import { LynchburgBuildingAProgramWithIntentionContent } from "../content/lynchburg-building-a-program-with-intention"
 import { RealCostEliteWrestlingNcSmarterBuildContent } from "../content/real-cost-elite-wrestling-nc-smarter-build"
@@ -138,6 +139,7 @@ const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
   "first-flight-2026-nc-united-shoe": () => <FirstFlight2026Content />,
   "nhsca-most-outstanding-wrestler-award-2026": () => <NhscaMostOutstandingWrestlerAward2026Content />,
   "nhsca-nationals-recap-2026": () => <NhscaNationalsRecap2026Content />,
+  "journeymen-fall-classic-2026-recap": () => <JourneymenFallClassic2026RecapContent />,
   "class-of-2026-senior-sendoff": () => <ClassOf2026SeniorSendoffContent />,
 }
 

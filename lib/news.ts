@@ -100,6 +100,29 @@ export function newsShareUsesHeroCropOnly(
  */
 const ALL_NEWS: NewsItem[] = [
   {
+    id: "journeymen-fall-classic-2026-recap",
+    slug: "journeymen-fall-classic-2026-recap",
+    title: "NC Made Noise at the Journeymen Fall Classic",
+    subtitle: "Three placers, an Overflow title and wins over state champions from four states.",
+    summary:
+      "Carson Raper, Jake Amiott and Tobin McNair placed, Luke Richards won the Overflow, and North Carolina beat state champions from Virginia, Massachusetts, Connecticut and Arizona against an elite Northeast field.",
+    href: "/news/journeymen-fall-classic-2026-recap",
+    date: "2026-10-04",
+    image: "/images/news/journeymen-fall-classic-2026/nc-made-noise.png",
+    homeImage: "/images/news/journeymen-fall-classic-2026/nc-made-noise.png",
+    imagePosition: "center",
+    imageFit: "contain",
+    imageBannerBgClass: "bg-[#0b0b0b]",
+    newsListBanner: true,
+    category: "JOURNEYMEN RECAP",
+    categoryBadgeClass: "bg-[#003366]",
+    readTime: "5 min read",
+    author: "NC United Wrestling",
+    shareHeroCropOnly: true,
+    isAnnouncement: true,
+    pinToTop: true,
+  },
+  {
     id: "united-ascent-2026-08-24",
     slug: "united-ascent-2026-08-24",
     title: "United Ascent: TOC Field Reveals, Tickets on Sale & 44 College Coaches",
