@@ -38,30 +38,43 @@ export function styleOfEvent(...parts: Array<string | null | undefined>): Wrestl
 }
 
 /**
- * Events whose style depends on who wrestled them.
+ * Events that stay folkstyle for the women: the in-season high-school program.
  *
- * The Ultimate Club Duals run folkstyle for the men and freestyle for the women (Matt, 3 Oct
- * 2026). The event name says neither, so the style cannot be read from the text alone - which
- * had every girl's UCD matches filed as folkstyle, the opposite of the standard a women's college
- * coach reads first.
+ * NCHSAA and NCISA are the sanctioned season, and NHSCA - Nationals and its Duals - is wrestled
+ * folkstyle too.
  */
-const FREESTYLE_FOR_WOMEN = /ultimate club/i
+const FOLKSTYLE_FOR_WOMEN = /nchsaa|ncisa|nhsca/i
 
 export function isFemale(gender: string | null | undefined): boolean {
   return String(gender ?? "").trim().toLowerCase() === "female"
 }
 
 /**
- * The style of an event for one wrestler. Use this wherever a profile or report splits folkstyle
- * from the Olympic styles; `styleOfEvent` alone cannot know whose record it is looking at.
+ * The style of an event for one wrestler.
+ *
+ * Matt, 3 Oct 2026: for the women everything is freestyle **except the state series and NHSCA**.
+ * The men's defaults are the other way round, and several events name no style at all - the
+ * Ultimate Club Duals are folkstyle for the boys and freestyle for the girls, and the name says
+ * neither - so the style cannot be read from the text alone.
+ *
+ * An event that names its own style keeps it, so Fargo Greco stays Greco for everybody. Beyond
+ * that a women's event is freestyle only where it is a national or off-season one: an in-season
+ * high-school meet - a county invitational, a conference dual, an NCHSAA regional - is folkstyle
+ * like the rest of her season, and turning those freestyle would be the same error in reverse.
+ *
+ * Use this wherever a profile or report splits folkstyle from the Olympic styles; `styleOfEvent`
+ * alone cannot know whose record it is looking at.
  */
 export function styleOfEventForAthlete(
   event: string | null | undefined,
   team: string | null | undefined,
   gender: string | null | undefined,
 ): WrestlingStyle {
-  if (isFemale(gender) && FREESTYLE_FOR_WOMEN.test(`${event ?? ""} ${team ?? ""}`)) return "freestyle"
-  return styleOfEvent(event, team)
+  const named = styleOfEvent(event, team)
+  if (!isFemale(gender) || named !== "folkstyle") return named
+  const text = `${event ?? ""} ${team ?? ""}`
+  if (FOLKSTYLE_FOR_WOMEN.test(text)) return "folkstyle"
+  return isNationalEvent(event) ? "freestyle" : "folkstyle"
 }
 
 /** Freestyle and Greco-Roman are reported together, apart from folkstyle. */

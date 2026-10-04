@@ -65,20 +65,32 @@ describe("style order follows the wrestler", () => {
 })
 
 describe("styleOfEventForAthlete", () => {
-  it("reads the Ultimate Club Duals as freestyle for a girl and folkstyle for a boy", () => {
-    // Matt, 3 Oct 2026. The event name says neither style, so it cannot be read from the text.
-    expect(styleOfEventForAthlete("Ultimate Club Duals", "NC Gold", "Female")).toBe("freestyle")
-    expect(styleOfEventForAthlete("Ultimate Club Duals", "NC United", "Male")).toBe("folkstyle")
+  it("is freestyle for a woman everywhere except the state series and NHSCA (Matt)", () => {
+    expect(styleOfEventForAthlete("NCHSAA State Championships", null, "Female")).toBe("folkstyle")
+    expect(styleOfEventForAthlete("NCHSAA Women's 7A East Regional", null, "Female")).toBe("folkstyle")
+    expect(styleOfEventForAthlete("2026 NHSCA High School Nationals", null, "Female")).toBe("folkstyle")
+    expect(styleOfEventForAthlete("2026 NHSCA National Duals", null, "Female")).toBe("folkstyle")
+    expect(styleOfEventForAthlete("2025 Super 32", null, "Female")).toBe("freestyle")
+    expect(styleOfEventForAthlete("2026 Ultimate Club Duals", "NC Gold", "Female")).toBe("freestyle")
   })
 
-  it("leaves every other event to the name, whoever wrestled it", () => {
-    expect(styleOfEventForAthlete("NHSCA Nationals", null, "Female")).toBe("folkstyle")
-    expect(styleOfEventForAthlete("Fargo \u00b7 Freestyle", "16U", "Male")).toBe("freestyle")
-    expect(styleOfEventForAthlete("2026 Fargo 16U Greco", null, "Female")).toBe("greco")
+  it("leaves the men's defaults alone", () => {
+    expect(styleOfEventForAthlete("2025 Super 32", null, "Male")).toBe("folkstyle")
+    expect(styleOfEventForAthlete("2026 Ultimate Club Duals", "NC United", "Male")).toBe("folkstyle")
   })
 
-  it("falls back to folkstyle when no gender is on file", () => {
-    // A guess either way would be wrong for half the field; the event's own default stands.
-    expect(styleOfEventForAthlete("Ultimate Club Duals", "NC Gold", null)).toBe("folkstyle")
+  it("keeps an in-season high-school meet folkstyle for a woman", () => {
+    // Her season is folkstyle, so turning a county invitational freestyle is the same error in
+    // reverse. Only a national or off-season event is freestyle by default.
+    expect(styleOfEventForAthlete("Jolly Roger Invitational", null, "Female")).toBe("folkstyle")
+  })
+
+  it("never overrides a style the event names", () => {
+    expect(styleOfEventForAthlete("2026 Fargo 16U Greco-Roman", null, "Female")).toBe("greco")
+    expect(styleOfEventForAthlete("2026 Fargo 16U Women's Freestyle", null, "Female")).toBe("freestyle")
+  })
+
+  it("falls back to the event's own default with no gender on file", () => {
+    expect(styleOfEventForAthlete("2026 Ultimate Club Duals", "NC Gold", null)).toBe("folkstyle")
   })
 })
