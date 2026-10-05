@@ -68,6 +68,53 @@ function csv(file: string): Array<Record<string, string>> {
     .map((r) => Object.fromEntries(cols.map((c, i) => [c, (r[i] ?? "").trim()])))
 }
 
+/*
+ * Result codes the table accepts, and the long forms the workbooks sometimes use instead.
+ *
+ * Maryland writes "Major Decision" and "Tech Fall" where every other state writes "MD" and "TF",
+ * and the check constraint on state_tournament_bouts rejects the words — so a single state's
+ * spelling failed its whole insert after its divisions had already been written, leaving it
+ * half-imported. The codes are the ones the Virginia workbook's own dictionary lists.
+ */
+const RESULT_CODES = new Set(["F", "TF", "MD", "DEC", "SV", "TB", "UTB", "INJ", "DQ", "FF"])
+const RESULT_WORDS: Record<string, string> = {
+  fall: "F",
+  pin: "F",
+  "tech fall": "TF",
+  technicalfall: "TF",
+  "technical fall": "TF",
+  "major decision": "MD",
+  major: "MD",
+  decision: "DEC",
+  dec: "DEC",
+  "sudden victory": "SV",
+  "tie breaker": "TB",
+  tiebreaker: "TB",
+  "ultimate tie breaker": "UTB",
+  /* A default is an injury default: the opponent could not continue. */
+  default: "INJ",
+  "injury default": "INJ",
+  injury: "INJ",
+  disqualification: "DQ",
+  dq: "DQ",
+  forfeit: "FF",
+  ff: "FF",
+}
+function resultCode(raw: string): { code: string | null; unknown: string | null } {
+  const v = String(raw ?? "").trim()
+  if (!v) return { code: null, unknown: null }
+  const upper = v.toUpperCase()
+  if (RESULT_CODES.has(upper)) return { code: upper, unknown: null }
+  const mapped = RESULT_WORDS[v.toLowerCase()]
+  if (mapped) return { code: mapped, unknown: null }
+  /*
+   * Keep the bout and drop the code. The winner, loser and score are what a credential and a
+   * significant win are built from; how the match ended is a detail, and losing a whole state's
+   * brackets over one unrecognised word is the worse trade. It is reported, not swallowed.
+   */
+  return { code: null, unknown: v }
+}
+
 /* "1st" decides places 1 and 2, "3rd" decides 3 and 4, and so on. */
 const PLACES_FOR_BOUT: Record<string, [number, number]> = {
   "1st": [1, 2],
@@ -85,23 +132,42 @@ const PLACES_FOR_BOUT: Record<string, [number, number]> = {
  * So the existing spelling wins, per state, read from the table rather than hardcoded here. If a
  * state has no rows yet, the workbook's own spelling is kept.
  */
-async function existingClassificationSpellings(state: string) {
-  const spellings = new Map<string, string>()
+async function existingClassificationSpellings(state: string, gender: string) {
+  const rows: string[] = []
   for (let from = 0; ; from += 1000) {
     const { data } = await sb
       .from("state_tournament_placers")
       .select("classification")
       .eq("state", state)
+      /*
+       * Gender-scoped, because a classification name is not unique without it. Washington's table
+       * holds "Boys 1A", "Boys 1B/2B" and "Girls 1B/2B/1A"; keyed on the first digit across both
+       * genders, every boys' division whose name starts with a 1 resolved to the GIRLS' name and
+       * two separate divisions collapsed into one. The collision check caught it — 84 places with
+       * two wrestlers in them — but only because it exists.
+       */
+      .eq("gender", gender)
       .range(from, from + 999)
     for (const r of (data ?? []) as Array<{ classification: string | null }>) {
       const raw = String(r.classification ?? "").trim()
-      if (!raw) continue
-      const digits = raw.match(/\d+/)?.[0]
-      if (digits) spellings.set(digits, raw)
+      if (raw) rows.push(raw)
     }
     if (!data || data.length < 1000) break
   }
-  return spellings
+  const exact = new Set(rows.map((r) => r.toLowerCase()))
+  /*
+   * Keyed on every digit in the name, in order — "1B/2B/1A" is "1-2-1", not "1" — so two
+   * divisions that merely begin with the same number stay apart. A key claimed by more than one
+   * spelling is ambiguous and gets no mapping at all.
+   */
+  const bySignature = new Map<string, Set<string>>()
+  for (const raw of rows) {
+    const sig = (raw.match(/\d+/g) ?? []).join("-")
+    if (!sig) continue
+    if (!bySignature.has(sig)) bySignature.set(sig, new Set())
+    bySignature.get(sig)!.add(raw)
+  }
+  return { exact, bySignature }
 }
 
 async function main() {
@@ -115,10 +181,16 @@ async function main() {
   const gender = bouts[0].Gender
   if (!state || !Number.isFinite(season)) { console.error("bout rows carry no state/season"); return }
 
-  const spellings = await existingClassificationSpellings(state)
+  const { exact, bySignature } = await existingClassificationSpellings(state, gender)
+  const ambiguous = new Set<string>()
   const classOf = (raw: string) => {
-    const digits = raw.match(/\d+/)?.[0]
-    return (digits && spellings.get(digits)) || raw
+    /* Already spelled the way the table spells it — the common case, and nothing to do. */
+    if (exact.has(raw.trim().toLowerCase())) return raw.trim()
+    const sig = (raw.match(/\d+/g) ?? []).join("-")
+    const candidates = sig ? [...(bySignature.get(sig) ?? [])] : []
+    if (candidates.length === 1) return candidates[0]
+    if (candidates.length > 1) ambiguous.add(`${raw} -> ${candidates.join(" | ")}`)
+    return raw.trim()
   }
   const renamed = [...new Set(bouts.map((b) => b.Classification))]
     .map((raw) => [raw, classOf(raw)] as const)
@@ -126,6 +198,11 @@ async function main() {
   if (renamed.length) {
     console.log("classification spelling taken from the rows already in the table:")
     for (const [raw, to] of renamed) console.log(`   "${raw}" -> "${to}"`)
+    console.log()
+  }
+  if (ambiguous.size) {
+    console.log("classification left as the workbook spells it — more than one match in the table:")
+    for (const a of ambiguous) console.log(`   ${a}`)
     console.log()
   }
 
@@ -141,11 +218,22 @@ async function main() {
     winner_school: b["Winner School"] || null,
     loser_name: b.Loser,
     loser_school: b["Loser School"] || null,
-    result_type: b["Result Type"] || null,
+    result_type: resultCode(b["Result Type"]).code,
     score: b.Score || null,
     fall_time: b["Fall Time"] || null,
     source_url: b["Source URL"] || null,
   }))
+
+  const unknownResults = new Map<string, number>()
+  for (const b of bouts) {
+    const u = resultCode(b["Result Type"]).unknown
+    if (u) unknownResults.set(u, (unknownResults.get(u) ?? 0) + 1)
+  }
+  if (unknownResults.size) {
+    console.log("result types not recognised — the bout is kept, the code dropped:")
+    for (const [u, n] of unknownResults) console.log(`   "${u}" x${n}`)
+    console.log()
+  }
 
   const bad = boutRows.filter((b) => !b.winner_name || !b.loser_name || !PLACES_FOR_BOUT[b.bout])
   if (bad.length) {
