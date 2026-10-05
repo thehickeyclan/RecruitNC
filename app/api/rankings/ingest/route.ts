@@ -25,7 +25,8 @@ export const maxDuration = 120
 function authorized(request: NextRequest): boolean {
   const secret = process.env.RANKINGS_INGEST_SECRET?.trim()
   if (!secret) return false
-  const given = (request.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "").trim()
+  // "Authorization: Bearer <key>" or "x-api-key: <key>" - whichever the sending tool supports.
+  const given = (request.headers.get("x-api-key") ?? request.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "").trim()
   const a = Buffer.from(given)
   const b = Buffer.from(secret)
   return a.length === b.length && timingSafeEqual(a, b)
