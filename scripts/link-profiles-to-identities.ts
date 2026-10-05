@@ -152,6 +152,7 @@ async function main() {
   const create: Athlete[] = []
   const review: Array<{ athlete: Athlete; candidates: Identity[] }> = []
   let unusable = 0
+  let alreadyLinked = 0
 
   for (const a of athletes) {
     const name = nn(a.name)
@@ -163,6 +164,14 @@ async function main() {
       const nationwide = byNameGender.get(`${name}|${gender}`) ?? []
       if (nationwide.length === 1) {
         const only = nationwide[0]
+        /*
+         * Already this profile's own identity. Re-running used to send these to review: the
+         * identity was created by an earlier run with no state (nobody of that name has placed
+         * anywhere), so corroborating a school against a null state could never succeed and seven
+         * profiles looked ambiguous against themselves. An identity already carrying this
+         * athlete_id needs no corroboration — it IS the answer.
+         */
+        if (only.athlete_id === a.id) { alreadyLinked++; continue }
         const why = schoolCorroborates(a.highschool, String(only.state), only.primary_school)
         /* One national match with nothing to corroborate it is a guess, so it goes to review. */
         if (why) stateless.push({ identity: only, athlete: a, why })
@@ -196,6 +205,7 @@ async function main() {
 
   console.log(`profiles: ${athletes.length}`)
   console.log(`   unusable (no name, state or gender): ${unusable}`)
+  console.log(`   already their own identity         : ${alreadyLinked}`)
   console.log(`   matched an existing identity       : ${attach.length}`)
   console.log(`      exact : ${attach.filter((x) => x.method === "exact_name_state_gender").length}`)
   console.log(`      fuzzy : ${attach.filter((x) => x.method === "fuzzy_surname_state_gender").length}`)
@@ -207,7 +217,7 @@ async function main() {
   }
   console.log(`   ambiguous, left for review         : ${review.length}`)
   for (const r of review.slice(0, 8)) {
-    console.log(`      ${r.athlete.name} (${r.athlete.state ?? "NC"}) -> ${r.candidates.map((c) => `${c.normalized_name} ${c.graduation_year ?? "?"}`).join(" | ")}`)
+    console.log(`      ${r.athlete.name} (${r.athlete.state ?? (r.athlete.is_nc_athlete ? "NC" : "no state on file")}) -> ${r.candidates.map((c) => `${c.normalized_name} ${c.graduation_year ?? "?"}`).join(" | ")}`)
   }
   if (attach.length) {
     console.log(`\nexamples of a profile meeting its own placer record:`)
