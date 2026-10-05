@@ -54,6 +54,15 @@ export async function POST(request: NextRequest) {
 
   const admin = createAdminClient()
 
+  /*
+   * SI is read straight from si.com by our own cron (/api/cron/si-rankings). Two writers for one
+   * source flip-flopped: Muse's and the cron's parses differed by a few rows, so each replaced the
+   * other twice a day. Accepted and ignored, so Muse's run does not fail.
+   */
+  if (source === "sports_illustrated") {
+    return NextResponse.json({ status: "skipped", reason: "SI is loaded directly from si.com by the site; no need to send it." })
+  }
+
   if (body.unchanged === true) {
     await markRankingChecked(admin, source, gender, "muse")
     return NextResponse.json({ status: "checked", source, gender })
@@ -61,7 +70,7 @@ export async function POST(request: NextRequest) {
 
   const published = String(body.published ?? "")
   if (!/^\d{4}-\d{2}-\d{2}$/.test(published)) return NextResponse.json({ error: "published must be YYYY-MM-DD" }, { status: 400 })
-  const scope = body.scope === "p4p" ? "p4p" : "weight"
+  const scope = body.scope === "p4p" ? "p4p" : body.scope === "big_board" ? "big_board" : "weight"
   const rows = Array.isArray(body.rows) ? (body.rows as IncomingRankingRow[]) : []
   if (rows.length < MIN_ROWS || rows.length > MAX_ROWS) {
     return NextResponse.json({ error: `rows must hold ${MIN_ROWS}-${MAX_ROWS} entries (got ${rows.length})` }, { status: 400 })

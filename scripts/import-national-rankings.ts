@@ -24,6 +24,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { buildAthleteIndex, matchAthlete, tidy, type MatchableAthlete } from "../lib/other-tournament-import"
 import { NATIONAL_RANKING_SOURCES, type NationalRankingSource } from "../lib/national-rankings"
+import { pruneEditions } from "../lib/rankings/national-import"
 
 function loadEnv() {
   for (const file of [".env.local", ".env"]) {
@@ -162,7 +163,8 @@ async function main() {
   }
 
   // Keep three editions. Enforced here so it never depends on somebody remembering.
-  const { data: pruned } = await supabase.rpc("prune_national_rankings")
+  await pruneEditions(supabase, source, gender)
+  const pruned = 0
   console.log(`\nWrote ${payload.length} rows for ${NATIONAL_RANKING_SOURCES[source]} ${month}.`)
   console.log(`Granting a 5-star rating to ${matched} NC athletes.`)
   if (typeof pruned === "number" && pruned > 0) {

@@ -146,7 +146,7 @@ export async function loadNationallyRanked(supabase: SupabaseClient): Promise<Na
     const key = `${name.toLowerCase()}|${r.state ?? ""}`
     // Sorted by rank, so the first row per wrestler is his best across outlets and lists.
     if (best.has(key)) continue
-    const where = r.scope === "p4p" ? " P4P" : r.weight_class ? ` (${r.weight_class})` : ""
+    const where = r.scope === "p4p" ? " P4P" : r.scope === "big_board" ? " Big Board" : r.weight_class ? ` (${r.weight_class})` : ""
     best.set(key, {
       name,
       rank: Number(r.rank),

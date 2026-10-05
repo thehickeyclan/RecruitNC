@@ -75,7 +75,7 @@ export function parseSiEdition(articleHtml: string, seasonEnd: number): SiRankin
   const html = articleHtml.replace(/<!--[\s\S]*?-->/g, "")
   type Token = { at: number; kind: "weight" | "hm" | "row"; value: string }
   const tokens: Token[] = []
-  for (const m of html.matchAll(/>\s*(\d{3})-Pounds\s*</g)) tokens.push({ at: m.index!, kind: "weight", value: m[1]! })
+  for (const m of html.matchAll(/>\s*(\d{2,3})-Pounds\s*</g)) tokens.push({ at: m.index!, kind: "weight", value: m[1]! })
   for (const m of html.matchAll(/>\s*HM:?\s*</g)) tokens.push({ at: m.index!, kind: "hm", value: "" })
   for (const m of html.matchAll(/<p[^>]*>([^<]*)<\/p>/g)) {
     const text = decode(m[1]!).trim()

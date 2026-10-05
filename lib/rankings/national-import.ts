@@ -32,7 +32,8 @@ export type ImportEditionInput = {
   /** The day the outlet published this edition (YYYY-MM-DD). */
   published: string
   url?: string | null
-  scope?: "weight" | "p4p"
+  /** "weight" lists, a pound-for-pound list, or a recruiting-class board (MatScouts Big Board). */
+  scope?: "weight" | "p4p" | "big_board"
   rows: IncomingRankingRow[]
   /** Who reported it: "si-cron", "muse", "csv". */
   checkedBy: string
@@ -103,13 +104,12 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
   const print = fingerprint(rows)
   const now = new Date().toISOString()
 
-  const { data: status } = await admin
-    .from("ranking_source_status")
-    .select("fingerprint")
-    .eq("source", input.source)
-    .eq("gender", input.gender)
-    .maybeSingle()
-  if (status?.fingerprint === print) {
+  // The freshness record tracks each source's weight lists; P4P and boards ride along with them.
+  const tracked = scope === "weight"
+  const { data: status } = tracked
+    ? await admin.from("ranking_source_status").select("fingerprint").eq("source", input.source).eq("gender", input.gender).maybeSingle()
+    : { data: null }
+  if (tracked && status?.fingerprint === print) {
     await admin
       .from("ranking_source_status")
       .update({ last_checked_at: now, checked_by: input.checkedBy })
@@ -154,7 +154,9 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
     const { error } = await admin.from("national_rankings").insert(payload.slice(i, i + 500))
     if (error) throw new Error(`Inserting: ${error.message}`)
   }
-  await admin.rpc("prune_national_rankings")
+  await pruneEditions(admin, input.source, input.gender)
+
+  if (!tracked) return { status: "imported", source: input.source, gender: input.gender, month, rows: payload.length, ncMatched }
 
   const { error: statusError } = await admin.from("ranking_source_status").upsert(
     {
@@ -174,6 +176,35 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
   if (statusError) console.error("[rankings] status stamp failed:", statusError.message)
 
   return { status: "imported", source: input.source, gender: input.gender, month, rows: payload.length, ncMatched }
+}
+
+/**
+ * Keep the three newest months of one source and gender, drop the rest. The old SQL prune kept the
+ * three newest months across every source at once - fine when one person loaded one outlet a
+ * month, fatal once outlets publish on their own clocks: Flo girls (dated July) was deleted
+ * seconds after Muse first posted it, by the next import's prune.
+ */
+export async function pruneEditions(admin: SupabaseClient, source: string, gender: RankingGender) {
+  const months = new Set<string>()
+  for (let from = 0; months.size < 4; from += 1000) {
+    const { data } = await admin
+      .from("national_rankings")
+      .select("ranking_month")
+      .eq("source", source)
+      .eq("gender", gender)
+      .order("ranking_month", { ascending: false })
+      .range(from, from + 999)
+    for (const r of data ?? []) months.add(String(r.ranking_month))
+    if (!data || data.length < 1000) break
+  }
+  const keep = [...months].sort().reverse().slice(0, 3)
+  if (months.size <= 3 || !keep.length) return
+  await admin
+    .from("national_rankings")
+    .delete()
+    .eq("source", source)
+    .eq("gender", gender)
+    .lt("ranking_month", keep[keep.length - 1]!)
 }
 
 /** Stamp a check that found nothing new (Muse's daily "no change" report). */
