@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Eye, Lock, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { groupCoachVisits } from "@/lib/coach-view-visits"
 
 /**
  * "Which college programs looked at you" — on the athlete's own profile.
@@ -104,26 +105,32 @@ export function CoachViewsPanel({ athleteId }: { athleteId: string }) {
             {total === 1 ? "" : "s"} · all time
           </p>
           {/*
-            * Every view, newest first, rather than one row per programme.
+            * One row per visit, newest first - not one per programme, and not one per page load.
             *
-            * The grouped version answered "who is interested" and hid "when" - a programme that
-            * looked three times in March and once last night read the same as one that looked
-            * four times in March. Families re-open this page to see whether anything happened
-            * since last time, which only a dated list answers.
+            * Grouping by programme hid "when": a programme that looked three times in March and
+            * once last night read the same as one that looked four times in March. Listing every
+            * view kept "when" but turned one coach reloading a page into four rows. A visit is a
+            * programme's views inside 24 hours (lib/coach-view-visits.ts), so the list still
+            * answers "has anything happened since I last checked" without the noise.
             */}
           <ul className="mt-2 space-y-1.5">
-            {data.visits.map((v, i) => (
+            {groupCoachVisits(data.visits).map((v, i) => (
               <li
-                key={`${v.at}-${i}`}
+                key={`${v.last}-${i}`}
                 className="flex flex-wrap items-baseline gap-x-2 rounded-sm bg-white/5 px-3 py-2 text-sm"
               >
                 <span className={v.school ? "font-semibold text-white" : "font-semibold text-white/50"}>
                   {v.school ?? "A college program"}
                 </span>
+                {v.views > 1 ? (
+                  <span className="rounded-sm bg-[#D3B574]/15 px-1.5 py-0.5 text-[11px] font-semibold text-[#D3B574]">
+                    {v.views} views
+                  </span>
+                ) : null}
                 <span className="ml-auto font-mono text-xs text-white/50">
-                  {new Date(v.at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                  {new Date(v.last).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
                   {" · "}
-                  {new Date(v.at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+                  {new Date(v.last).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
                 </span>
               </li>
             ))}
