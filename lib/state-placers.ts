@@ -97,22 +97,27 @@ export async function loadNationallyRanked(supabase: SupabaseClient): Promise<Na
    */
   // Newest month per outlet and gender (boys and girls lists publish on their own schedules).
   // Falls back to per-outlet only on a database that has no gender column yet.
-  const editions: Array<{ source: string; month: string; gender: string | null }> = []
+  const editions: Array<{ source: string; month: string; gender: string | null; scope: string | null }> = []
   for (const source of ["sports_illustrated", "flowrestling", "matscouts"]) {
     let genderAware = true
+    // Per list type too: MatScouts' October Big Board must not hide its September weight lists.
     for (const gender of ["M", "F"]) {
-      const { data, error } = await supabase
-        .from("national_rankings")
-        .select("ranking_month")
-        .eq("source", source)
-        .eq("gender", gender)
-        .order("ranking_month", { ascending: false })
-        .limit(1)
-      if (error) {
-        genderAware = false
-        break
+      for (const scope of ["weight", "p4p", "big_board"]) {
+        const { data, error } = await supabase
+          .from("national_rankings")
+          .select("ranking_month")
+          .eq("source", source)
+          .eq("gender", gender)
+          .eq("scope", scope)
+          .order("ranking_month", { ascending: false })
+          .limit(1)
+        if (error) {
+          genderAware = false
+          break
+        }
+        if (data?.[0]?.ranking_month) editions.push({ source, month: String(data[0].ranking_month), gender, scope })
       }
-      if (data?.[0]?.ranking_month) editions.push({ source, month: String(data[0].ranking_month), gender })
+      if (!genderAware) break
     }
     if (genderAware) continue
     const { data: head } = await supabase
@@ -121,7 +126,7 @@ export async function loadNationallyRanked(supabase: SupabaseClient): Promise<Na
       .eq("source", source)
       .order("ranking_month", { ascending: false })
       .limit(1)
-    if (head?.[0]?.ranking_month) editions.push({ source, month: String(head[0].ranking_month), gender: null })
+    if (head?.[0]?.ranking_month) editions.push({ source, month: String(head[0].ranking_month), gender: null, scope: null })
   }
   const rows: Row[] = []
   for (const edition of editions) {
@@ -132,6 +137,7 @@ export async function loadNationallyRanked(supabase: SupabaseClient): Promise<Na
         .eq("source", edition.source)
         .eq("ranking_month", edition.month)
       if (edition.gender) query = query.eq("gender", edition.gender)
+      if (edition.scope) query = query.eq("scope", edition.scope)
       const { data, error } = await query.order("rank", { ascending: true }).range(from, from + 999)
       if (error || !data?.length) break
       rows.push(...(data as Row[]))
