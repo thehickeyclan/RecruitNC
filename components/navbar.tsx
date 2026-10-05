@@ -132,8 +132,13 @@ export function Navbar() {
     if (profile?.is_admin) {
       return "/admin/schools"
     }
-    // Every coach: the simple table of who they starred (the full program portal is linked from it).
-    // Coaches with no school used to be sent to /contact.
+    // A coach with a program goes to its portal - the funnel by stage, notes, activity and the
+    // staff's shared board, which is what coaches have always used. Sending everyone to the plain
+    // /my-recruits table (4 Oct 2026) took that away from the 58 coaches who have one.
+    if (profile?.school_id) {
+      return `/schools/${profile.school_id}/portal`
+    }
+    // No program yet: the simple starred list, rather than the dead end at /contact it replaced.
     return "/my-recruits"
   }
 
