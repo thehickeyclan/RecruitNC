@@ -53,3 +53,4 @@ app/api/ai/chat/route.ts.bak2
 
 # Claude Code machine-local permissions (not shareable)
 .claude/settings.local.json
+rankings-ingest-token.txt

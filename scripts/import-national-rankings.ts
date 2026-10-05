@@ -5,7 +5,7 @@
  *     --file scripts/data/flo-2026-09.csv \
  *     --source flowrestling \
  *     --month 2026-09 \
- *     [--scope weight] [--dry-run]
+ *     [--scope weight] [--gender M|F] [--dry-run]
  *
  * CSV columns (header row, order does not matter):
  *   rank, athlete_name, weight_class, class_year, high_school, state, source_url
@@ -87,6 +87,7 @@ async function main() {
   if (!/^\d{4}-\d{2}$/.test(month)) throw new Error("--month must look like 2026-09")
   const rankingMonth = `${month}-01`
   const scope = arg("scope", "weight")
+  const gender = arg("gender", "M") === "F" ? "F" : "M"
 
   const rows = parseCsv(fs.readFileSync(file, "utf8"))
   console.log(`Parsed ${rows.length} ranking rows from ${path.basename(file)}`)
@@ -122,6 +123,7 @@ async function main() {
     if (athleteId) matched += 1
     return {
       source,
+      gender,
       ranking_month: rankingMonth,
       athlete_id: athleteId,
       athlete_name: name,
@@ -149,6 +151,7 @@ async function main() {
     .from("national_rankings")
     .delete()
     .eq("source", source)
+    .eq("gender", gender)
     .eq("ranking_month", rankingMonth)
     .eq("scope", scope)
   if (clearError) throw new Error(`Clearing edition: ${clearError.message}`)

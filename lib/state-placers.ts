@@ -95,26 +95,44 @@ export async function loadNationallyRanked(supabase: SupabaseClient): Promise<Na
    * editions were on file the low ranks of the newest one were cut off - #29 Matthew McDermott
    * vanished the night SI's October list was loaded.
    */
-  const newest = new Map<string, string>()
+  // Newest month per outlet and gender (boys and girls lists publish on their own schedules).
+  // Falls back to per-outlet only on a database that has no gender column yet.
+  const editions: Array<{ source: string; month: string; gender: string | null }> = []
   for (const source of ["sports_illustrated", "flowrestling", "matscouts"]) {
+    let genderAware = true
+    for (const gender of ["M", "F"]) {
+      const { data, error } = await supabase
+        .from("national_rankings")
+        .select("ranking_month")
+        .eq("source", source)
+        .eq("gender", gender)
+        .order("ranking_month", { ascending: false })
+        .limit(1)
+      if (error) {
+        genderAware = false
+        break
+      }
+      if (data?.[0]?.ranking_month) editions.push({ source, month: String(data[0].ranking_month), gender })
+    }
+    if (genderAware) continue
     const { data: head } = await supabase
       .from("national_rankings")
       .select("ranking_month")
       .eq("source", source)
       .order("ranking_month", { ascending: false })
       .limit(1)
-    if (head?.[0]?.ranking_month) newest.set(source, String(head[0].ranking_month))
+    if (head?.[0]?.ranking_month) editions.push({ source, month: String(head[0].ranking_month), gender: null })
   }
   const rows: Row[] = []
-  for (const [source, month] of newest) {
+  for (const edition of editions) {
     for (let from = 0; ; from += 1000) {
-      const { data, error } = await supabase
+      let query = supabase
         .from("national_rankings")
         .select("athlete_name, rank, source, state, high_school, scope, weight_class, ranking_month")
-        .eq("source", source)
-        .eq("ranking_month", month)
-        .order("rank", { ascending: true })
-        .range(from, from + 999)
+        .eq("source", edition.source)
+        .eq("ranking_month", edition.month)
+      if (edition.gender) query = query.eq("gender", edition.gender)
+      const { data, error } = await query.order("rank", { ascending: true }).range(from, from + 999)
       if (error || !data?.length) break
       rows.push(...(data as Row[]))
       if (data.length < 1000) break
@@ -123,7 +141,6 @@ export async function loadNationallyRanked(supabase: SupabaseClient): Promise<Na
   rows.sort((a, b) => a.rank - b.rank)
   const best = new Map<string, NationallyRankedOpponent>()
   for (const r of rows) {
-    if (r.ranking_month !== newest.get(r.source)) continue
     const name = String(r.athlete_name ?? "").trim()
     if (!name) continue
     const key = `${name.toLowerCase()}|${r.state ?? ""}`

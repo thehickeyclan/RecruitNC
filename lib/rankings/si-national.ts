@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 
-import { buildAthleteIndex, matchAthlete, type MatchableAthlete } from "@/lib/other-tournament-import"
+import { importNationalEdition, markRankingChecked, type ImportEditionResult } from "@/lib/rankings/national-import"
 
 /**
  * Sports Illustrated's national boys rankings, kept current without anyone remembering to.
@@ -46,12 +46,14 @@ function decode(s: string): string {
     .replace(/[‘’]/g, "'")
 }
 
-/** Boys national-ranking article links on SI's wrestling page (girls and P4P lists excluded). */
-export function boysEditionLinks(listingHtml: string): string[] {
+/** National-ranking article links on SI's wrestling page for one gender (P4P lists excluded). */
+export function editionLinks(listingHtml: string, gender: "M" | "F"): string[] {
   const links = new Set<string>()
   for (const m of listingHtml.matchAll(/href="(https:\/\/www\.si\.com\/high-school\/wrestling\/[^"]+)"/g)) {
     const url = m[1]!
-    if (/boys/.test(url) && /wrestling-rankings/.test(url) && !/pound-for-pound|girls/.test(url)) links.add(url)
+    if (!/wrestling-rankings/.test(url) || /pound-for-pound/.test(url)) continue
+    const girls = /girls/.test(url)
+    if (gender === "F" ? girls : /boys/.test(url) && !girls) links.add(url)
   }
   return [...links]
 }
@@ -124,97 +126,64 @@ async function fetchText(url: string): Promise<string> {
   return res.text()
 }
 
-/** All NC athletes for the strict name matcher, paged past PostgREST's 1,000-row cap. */
-async function loadRoster(admin: SupabaseClient): Promise<MatchableAthlete[]> {
-  const out: MatchableAthlete[] = []
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await admin
-      .from("athletes")
-      .select('id, name, wrestling_name, highschool, "wrestlingClub", graduationyear')
-      .range(from, from + 999)
-    if (error) throw new Error(`Loading athletes: ${error.message}`)
-    out.push(...((data ?? []) as MatchableAthlete[]))
-    if (!data || data.length < 1000) break
-  }
-  return out
-}
+/** A full boys edition is 14 x 30; girls lists are shorter. Far short means the page changed shape. */
+const MIN_ROWS = { M: MIN_EDITION_ROWS, F: 150 } as const
 
-export type SiSyncResult =
-  | { status: "current"; url: string }
-  | { status: "imported"; url: string; month: string; rows: number; ncMatched: string[] }
+export type SiSyncResult = { gender: "M" | "F"; url: string } & (
+  | { status: "current" }
+  | ImportEditionResult
+)
 
 /**
- * Finds SI's newest boys edition and loads it if we do not already hold it. Same rules as
- * scripts/import-national-rankings.ts: only NC rows are matched to profiles (they earn the
- * five-star rating), every row is stored for opponent accolades, the month's edition is
- * replaced, and editions beyond the retained three are pruned.
+ * Finds SI's newest boys and girls editions and loads any we do not already hold, through the
+ * shared import (lib/rankings/national-import.ts).
  */
-export async function syncSiNationalRankings(admin: SupabaseClient, options?: { force?: boolean }): Promise<SiSyncResult> {
-  const links = boysEditionLinks(await fetchText(LISTING_URL))
-  if (!links.length) throw new Error("No boys national-ranking articles found on SI's wrestling page")
-
-  const editions = await Promise.all(
-    links.map(async (url) => {
-      const html = await fetchText(url)
-      return { url, html, published: publishedAt(html) ?? "" }
-    }),
-  )
-  editions.sort((a, b) => b.published.localeCompare(a.published))
-  const newest = editions[0]!
-
-  const { data: held } = await admin
-    .from("national_rankings")
-    .select("source_url")
-    .eq("source", "sports_illustrated")
-    .eq("source_url", newest.url)
-    .limit(1)
-  if (held?.length && !options?.force) return { status: "current", url: newest.url }
-
-  const published = newest.published ? new Date(newest.published) : new Date()
-  // A season runs August-July: an October 2026 edition ranks the class of 2027 as seniors.
-  const seasonEnd = published.getMonth() >= 6 ? published.getFullYear() + 1 : published.getFullYear()
-  const rows = parseSiEdition(newest.html, seasonEnd)
-  const weights = new Set(rows.map((r) => r.weight_class))
-  if (rows.length < MIN_EDITION_ROWS || weights.size < 14) {
-    throw new Error(`SI edition parsed to ${rows.length} rows over ${weights.size} weights (${newest.url}); refusing a partial import`)
-  }
-
-  const index = buildAthleteIndex(await loadRoster(admin))
-  const month = `${published.getFullYear()}-${String(published.getMonth() + 1).padStart(2, "0")}`
-  const rankingMonth = `${month}-01`
-  const ncMatched: string[] = []
-  const payload = rows.map((row) => {
-    const isNc = row.state === "NC" || !row.state
-    const outcome = isNc ? matchAthlete(row.athlete_name, row.high_school ?? "", index) : ({ status: "unmatched" } as const)
-    const athleteId = outcome.status === "matched" ? outcome.athlete.id : null
-    if (athleteId) ncMatched.push(`#${row.rank} ${row.athlete_name} (${row.weight_class})`)
-    return {
-      source: "sports_illustrated",
-      ranking_month: rankingMonth,
-      athlete_id: athleteId,
-      athlete_name: row.athlete_name,
-      rank: row.rank,
-      scope: "weight",
-      weight_class: row.weight_class,
-      class_year: row.class_year,
-      high_school: row.high_school,
-      state: row.state,
-      source_url: newest.url,
+export async function syncSiNationalRankings(admin: SupabaseClient, options?: { force?: boolean }): Promise<SiSyncResult[]> {
+  const listing = await fetchText(LISTING_URL)
+  const results: SiSyncResult[] = []
+  for (const gender of ["M", "F"] as const) {
+    const links = editionLinks(listing, gender)
+    if (!links.length) {
+      if (gender === "M") throw new Error("No boys national-ranking articles found on SI's wrestling page")
+      continue
     }
-  })
+    const editions = await Promise.all(
+      links.map(async (url) => {
+        const html = await fetchText(url)
+        return { url, html, published: publishedAt(html) ?? "" }
+      }),
+    )
+    editions.sort((a, b) => b.published.localeCompare(a.published))
+    const newest = editions[0]!
 
-  const { error: clearError } = await admin
-    .from("national_rankings")
-    .delete()
-    .eq("source", "sports_illustrated")
-    .eq("ranking_month", rankingMonth)
-    .eq("scope", "weight")
-  if (clearError) throw new Error(`Clearing edition: ${clearError.message}`)
-  for (let i = 0; i < payload.length; i += 500) {
-    const { error } = await admin.from("national_rankings").insert(payload.slice(i, i + 500))
-    if (error) throw new Error(`Inserting: ${error.message}`)
+    const { data: held } = await admin
+      .from("national_rankings")
+      .select("source_url")
+      .eq("source", "sports_illustrated")
+      .eq("source_url", newest.url)
+      .limit(1)
+    if (held?.length && !options?.force) {
+      await markRankingChecked(admin, "sports_illustrated", gender, "si-cron")
+      results.push({ gender, url: newest.url, status: "current" })
+      continue
+    }
+
+    const published = newest.published ? new Date(newest.published) : new Date()
+    const season = published.getMonth() >= 6 ? published.getFullYear() + 1 : published.getFullYear()
+    const rows = parseSiEdition(newest.html, season)
+    const weights = new Set(rows.map((r) => r.weight_class))
+    if (rows.length < MIN_ROWS[gender] || weights.size < 10) {
+      throw new Error(`SI ${gender} edition parsed to ${rows.length} rows over ${weights.size} weights (${newest.url}); refusing a partial import`)
+    }
+    const result = await importNationalEdition(admin, {
+      source: "sports_illustrated",
+      gender,
+      published: published.toISOString().slice(0, 10),
+      url: newest.url,
+      rows: rows.map((r) => ({ rank: r.rank, name: r.athlete_name, weight: r.weight_class, school: r.high_school, state: r.state, grade: r.class_year })),
+      checkedBy: "si-cron",
+    })
+    results.push({ ...result, gender, url: newest.url })
   }
-  await admin.rpc("prune_national_rankings")
-
-  return { status: "imported", url: newest.url, month, rows: payload.length, ncMatched }
+  return results
 }
