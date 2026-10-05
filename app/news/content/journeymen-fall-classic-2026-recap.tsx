@@ -31,7 +31,7 @@ function ProfileAd() {
       </p>
       <div className="mt-5 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <Link
-          href="/athletes"
+          href="/prospects/all"
           className="inline-flex min-h-[44px] w-full items-center justify-center rounded-lg bg-[#D3B574] px-5 text-sm font-extrabold uppercase tracking-[0.12em] text-[#0A1628] no-underline hover:bg-[#e2c98d] sm:w-auto"
         >
           Find your wrestler
@@ -191,7 +191,7 @@ export function JourneymenFallClassic2026RecapContent() {
       <hr />
       <p>
         Every match from the weekend, with opponent accolades, is on each wrestler&apos;s{" "}
-        <Link href="/athletes" className="font-semibold text-[#003366] underline decoration-[#D3B574] underline-offset-2">
+        <Link href="/prospects/all" className="font-semibold text-[#003366] underline decoration-[#D3B574] underline-offset-2">
           RecruitNC profile
         </Link>
         . Next stop: Super 32.

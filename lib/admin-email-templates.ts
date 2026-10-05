@@ -40,7 +40,7 @@ ${wrestler("1a2d638e-5978-45d4-b6c8-bc95ba754367", "Luke Richards", "(Cardinal G
 <div style="font-size:11px;letter-spacing:3px;color:#D3B574;font-weight:bold;">RECRUITNC PROFILES</div>
 <div style="font-size:18px;font-weight:bold;margin:8px 0 6px;color:#ffffff;">Every NC wrestler has a free RecruitNC profile.</div>
 <div style="font-size:14px;line-height:1.5;color:#cbd5e1;margin-bottom:14px;">Every match, opponent accolades, rankings and a scouting report.</div>
-<a href="${SITE}/athletes" target="_blank" style="display:inline-block;background:#D3B574;color:#0A1628;font-size:13px;font-weight:bold;text-decoration:none;padding:11px 18px;border-radius:6px;margin:4px;">FIND YOUR WRESTLER</a>
+<a href="${SITE}/prospects/all" target="_blank" style="display:inline-block;background:#D3B574;color:#0A1628;font-size:13px;font-weight:bold;text-decoration:none;padding:11px 18px;border-radius:6px;margin:4px;">FIND YOUR WRESTLER</a>
 <a href="${SITE}/auth/signup" target="_blank" style="display:inline-block;border:1px solid #ffffff;color:#ffffff;font-size:13px;font-weight:bold;text-decoration:none;padding:10px 18px;border-radius:6px;margin:4px;">CLAIM A PROFILE, FREE</a>
 <div style="font-size:12px;color:#cbd5e1;margin-top:12px;">College coach? <a href="${SITE}/auth/coach-signup" target="_blank" style="color:#D3B574;">Get free access to every profile</a></div>
 </td></tr></table>
