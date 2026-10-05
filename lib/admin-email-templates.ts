@@ -30,7 +30,7 @@ ${statCell("5", "MAIN EVENT<br>PLACERS")}${statCell("1", "OVERFLOW<br>CHAMPION")
 ${wrestler("da7e32d2-bbdc-4b0e-ac70-ecb6ac67ed10", "Gavin Lopez", "(Green Hope senior) finished 2nd at 215, sweeping his pool 3–0 before falling in the final to an unbeaten NHSCA All-American.")}
 ${wrestler("68696afb-0b22-465c-b22e-82e84913144e", "Carson Raper", "(South Rowan sophomore) placed 5th at 113, beating the Virginia 5A state champion and a Massachusetts state champion who is also an NHSCA All-American.")}
 ${wrestler("7bb99ea9-a0ff-4cd0-91f8-217327959105", "Jake Amiott", "(Topsail junior) placed 6th at 152, with wins over the Arizona D1 state champion, an NHSCA All-American and a New Jersey state placer.")}
-${wrestler("63ea613d-0886-4af0-b64b-1c3d80fe0332", "Tobin McNair", "(Wakefield senior) placed 6th at 170, including a tech fall over the Connecticut state champion.")}
+${wrestler("63ea613d-0886-4af0-b64b-1c3d80fe0332", "Tobin McNair", "(Wakefield senior) placed 6th at 170, beating Devon Weber, ranked #16 nationally by MatScouts and #20 by SI, and tech-falling the Connecticut state champion.")}
 ${wrestler("c30deea8-6e11-4bbd-b95c-6a5bc4d72692", "Luke Padgett", "(Croatan senior) placed 5th at 215, winning the 5th-place match by major decision.")}
 ${wrestler("1a2d638e-5978-45d4-b6c8-bc95ba754367", "Luke Richards", "(Cardinal Gibbons junior) won the Overflow 4–0, beating a New Hampshire state champion and NHSCA All-American, to earn his way into the main event.")}
 </ul>

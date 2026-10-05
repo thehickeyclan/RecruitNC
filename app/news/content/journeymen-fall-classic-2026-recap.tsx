@@ -142,11 +142,12 @@ export function JourneymenFallClassic2026RecapContent() {
         state runner-up.
       </p>
 
-      <h2>McNair tech-falls a state champ</h2>
+      <h2>McNair beats a nationally ranked wrestler and a state champ</h2>
       <p>
         Wakefield senior <P href={MCNAIR}>Tobin McNair</P> placed <strong>6th at 170</strong>. He tech-falled
-        <strong> Connecticut state champion Vincent Rivera</strong> 19–4 and beat <strong>New York Division I state
-        placer Devon Weber</strong> 4–1. His 5th-place match was a one-point loss to an NHSCA All-American.
+        <strong> Connecticut state champion Vincent Rivera</strong> 19–4, then beat <strong>Devon Weber of Greece, N.Y.,
+        ranked No. 16 nationally by MatScouts and No. 20 by Sports Illustrated</strong>, 4–1. Weber placed third in New
+        York Division I last season. McNair&apos;s 5th-place match was a one-point loss to an NHSCA All-American.
       </p>
 
       <ProfileAd />
