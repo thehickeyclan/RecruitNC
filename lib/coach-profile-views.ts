@@ -15,6 +15,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { groupCoachVisits } from "@/lib/coach-view-visits"
 import { collegeForCoach } from "@/lib/college-domain-schools"
 import { countsAsCoachView } from "@/lib/coach-view-rule"
 
@@ -143,18 +144,24 @@ export async function getCoachViewsForAthlete(
 /**
  * What a free viewer is told.
  *
- * The count without the names — enough to be worth something, not enough to remove the
- * reason to subscribe. Zero stays zero: teasing "someone looked" when nobody did would be a
- * lie, and it is the exact lie that makes people distrust recruiting sites.
+ * When and how often, never who. Each visit comes through with its time and view count and no
+ * program at all - the page draws a blurred placeholder where the name would be. The name is
+ * withheld here rather than blurred on the page because a CSS blur over a real name is one
+ * inspector click from being read, and the name is the thing being sold.
+ *
+ * Zero stays zero: teasing "someone looked" when nobody did would be a lie, and it is the exact
+ * lie that makes people distrust recruiting sites.
  */
 export function teaseCoachViews(summary: CoachViewSummary): {
   hasViews: boolean
   programCount: number
   totalViews: number
+  visits: Array<{ first: string; last: string; views: number }>
 } {
   return {
     hasViews: summary.totalViews > 0,
     programCount: summary.schools.length,
     totalViews: summary.totalViews,
+    visits: groupCoachVisits(summary.visits).map(({ first, last, views }) => ({ first, last, views })),
   }
 }
