@@ -74,7 +74,7 @@ export async function GET() {
 
   const athleteIds = [...new Set((links ?? []).flatMap((l) => (l.candidates ?? []).map((c: any) => c.athleteId)))]
   const { data: athletes } = athleteIds.length
-    ? await admin.from("athletes").select("id,name,highschool,graduationyear,photourl,wrestlingClub").in("id", athleteIds)
+    ? await admin.from("athletes").select("id,name,gender,highschool,graduationyear,photourl,wrestlingClub").in("id", athleteIds)
     : { data: [] as any[] }
   const athleteById = new Map((athletes ?? []).map((a: any) => [a.id, a]))
 
@@ -100,6 +100,7 @@ export async function GET() {
           school: a.highschool ?? c.highSchool,
           club: a.wrestlingClub ?? null,
           graduationYear: a.graduationyear ?? c.graduationYear,
+          gender: a.gender ?? null,
           photoUrl: a.photourl ?? null,
           signals: c.signals ?? [],
         }

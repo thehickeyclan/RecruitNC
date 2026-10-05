@@ -14,6 +14,7 @@ type Candidate = {
   school: string | null
   club: string | null
   graduationYear: number | null
+  gender: string | null
   photoUrl: string | null
   signals: string[]
 }
@@ -159,7 +160,7 @@ export default function IdentityReviewPage() {
                 <div className="flex gap-2 pt-1">
                   <Button size="sm" variant="outline" onClick={() => void decide(row, "reject")} disabled={busy !== null}>
                     {busy === row.id + "reject" ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <X className="mr-1 h-4 w-4" />}
-                    {row.candidates.length > 1 ? "None of these" : "Not him"}
+                    {row.candidates.length > 1 ? "None of these" : row.candidates[0]?.gender === "Female" ? "Not her" : "Not him"}
                   </Button>
                   <Button size="sm" variant="ghost" onClick={() => setSkipped((s) => new Set(s).add(row.id))} disabled={busy !== null}>
                     Skip
