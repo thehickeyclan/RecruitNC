@@ -109,7 +109,19 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
   const { data: status } = tracked
     ? await admin.from("ranking_source_status").select("fingerprint").eq("source", input.source).eq("gender", input.gender).maybeSingle()
     : { data: null }
-  if (tracked && status?.fingerprint === print) {
+  // Same list as last time, and still on file: just record the check. (The fingerprint alone was
+  // trusted once, and a re-sent Flo girls list was skipped after its rows had been pruned away.)
+  const { count: held } =
+    tracked && status?.fingerprint === print
+      ? await admin
+          .from("national_rankings")
+          .select("id", { count: "exact", head: true })
+          .eq("source", input.source)
+          .eq("gender", input.gender)
+          .eq("ranking_month", rankingMonth)
+          .eq("scope", scope)
+      : { count: 0 }
+  if (tracked && status?.fingerprint === print && (held ?? 0) > 0) {
     await admin
       .from("ranking_source_status")
       .update({ last_checked_at: now, checked_by: input.checkedBy })
