@@ -154,7 +154,17 @@ export async function tryAthleteNameFastPath(
      *
      * Narrowed by state: there is a Dustin Kohn in Virginia and another in Oregon.
      */
-    const state = typeof bouts.team === "string" && /^[A-Z]{2}$/.test(bouts.team) ? bouts.team : null
+    /*
+     * The identity registry decides who this is, and the team on a bout row is the fallback.
+     *
+     * A registry state is better evidence than a club column that holds a state code at NHSCA and
+     * a club name at the duals, and it is the same state whichever event the question came from.
+     */
+    const identity = (bouts as { identity?: Record<string, unknown> | null }).identity ?? null
+    const identityState = typeof identity?.state === "string" ? identity.state : null
+    const state =
+      identityState ??
+      (typeof bouts.team === "string" && /^[A-Z]{2}$/.test(bouts.team) ? bouts.team : null)
     /*
      * The two sources spell him differently: the brackets say "Nick Meza", Arizona's placer list
      * says "nicholas meza", and a full-name lookup finds neither from the other — so the 2026
@@ -163,12 +173,29 @@ export async function tryAthleteNameFastPath(
      * Failing the full name, ask by surname within the state and let the product's own matcher
      * decide, which already knows Nick is Nicholas and that Adrian Meza is somebody else.
      */
+    /*
+     * His own state's placement, looked up under the name the placer store actually uses.
+     *
+     * The two stores spell him differently — Arizona's list says "nicholas meza" where the
+     * brackets say "Nick Meza" — and a full-name lookup found neither from the other, so the 2026
+     * Arizona champion read as having never placed at his own state tournament. This used to be
+     * patched by searching the surname and re-judging every hit with the name matcher. The
+     * registry already did that work and holds the placer spelling, so ask by it.
+     */
     const wanted = bouts.name ?? phrase
+    const placerName = typeof identity?.placer_name === "string" ? identity.placer_name : null
     let placements: Array<Record<string, unknown>> = []
     if (state) {
-      const exact = await toolStatePlacersSearch({ wrestler: wanted, state })
-      placements = !("error" in exact) ? exact.placers : []
-      if (!placements.length) {
+      for (const candidate of [placerName, wanted].filter(Boolean) as string[]) {
+        const found = await toolStatePlacersSearch({ wrestler: candidate, state })
+        if (!("error" in found) && found.placers.length) { placements = found.placers; break }
+      }
+      /*
+       * No identity, so no placer spelling to ask by: fall back to the surname within the state
+       * and let the product's own matcher judge the hits. Kept for the wrestlers the registry has
+       * never heard of — 18,043 aliases reach no identity, because they never placed anywhere.
+       */
+      if (!placements.length && !placerName) {
         const surname = wanted.trim().split(/\s+/).slice(-1)[0] ?? ""
         if (surname.length > 2) {
           const loose = await toolStatePlacersSearch({ wrestler: surname, state })

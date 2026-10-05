@@ -238,11 +238,20 @@ export async function loadBoutsForUnprofiled(
   supabase: SupabaseClient,
   name: string,
   team: string | null,
-  options: { event?: string | null; year?: number | null; limit?: number } = {},
+  options: { event?: string | null; year?: number | null; limit?: number; names?: string[] } = {},
 ): Promise<BoutRow[]> {
   // Not filtered to the team: where a wrestler is recorded as a state at one event and a club at
   // another, filtering would drop half his record. The team identifies him; it does not limit him.
-  const query0 = supabase.from("other_tournament_bouts").select(SELECT).is("athlete_id", null).ilike("athlete_name", name)
+  /*
+   * Searched under every spelling the identity registry knows, not just the one asked for. Will
+   * Clanton of New York is also recorded as William Clanton, and a single-name query returned
+   * half his record as though the other half did not exist. 257 wrestlers were split this way.
+   */
+  const spellings = (options.names ?? []).filter((n) => String(n ?? "").trim())
+  const query0 =
+    spellings.length > 1
+      ? supabase.from("other_tournament_bouts").select(SELECT).is("athlete_id", null).in("athlete_name", spellings)
+      : supabase.from("other_tournament_bouts").select(SELECT).is("athlete_id", null).ilike("athlete_name", name)
   let query = query0
   if (options.event) query = query.ilike("event_name", `%${options.event}%`)
   if (options.year) query = query.eq("year", options.year)

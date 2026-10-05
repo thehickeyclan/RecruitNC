@@ -71,6 +71,7 @@ import {
   PUBLIC_RANKINGS_MAX_BY_YEAR,
   PUBLISHED_PUBLIC_RANKINGS_YEARS,
 } from "@/lib/public-rankings-cap"
+import { aliasNamesFor, resolveWrestlerIdentity } from "@/lib/wrestler-identity"
 
 /**
  * Data Dawg does not hand out rankings.
@@ -2291,10 +2292,21 @@ export async function toolTournamentBoutsSearch(args: {
       }
     }
     const team = unprofiled.teams[0]?.team ?? null
+    /*
+     * Who this is, from the identity registry — so the record comes back whole.
+     *
+     * The bout store holds one wrestler under every spelling a bracket used, and asking for one of
+     * them returned only that share: Will Clanton of New York is also William Clanton, and 257
+     * wrestlers were split the same way. The registry knows they are one person, so every spelling
+     * it carries is searched, and the state it holds is better evidence than the team on a row.
+     */
+    const identity = await resolveWrestlerIdentity(admin, unprofiled.name, team)
+    const spellings = aliasNamesFor(identity, unprofiled.name)
     const theirBouts = await loadBoutsForUnprofiled(admin, unprofiled.name, team, {
       event: args.event ?? null,
       year: args.year ?? null,
       limit: args.limit,
+      names: spellings,
     })
     const only =
       args.outcome === "wins" ? theirBouts.filter((b) => b.outcome === "W")
@@ -2316,6 +2328,25 @@ export async function toolTournamentBoutsSearch(args: {
         `matched on name and team, and are every one we hold (${wins}-${theirBouts.length - wins}). ` +
         `There may be results at events we have not imported.`,
       bouts: only.map((b) => ({ ...b, narrative: describeBout(b, unprofiled.name) })),
+      /*
+       * The person, where the registry knows them. `state` is the state tournament a question
+       * about "states" is asking after, and `placer_name` is how the placer store spells them —
+       * Arizona writes "nicholas meza" where the brackets write "Nick Meza", and looking the
+       * placement up under the bracket spelling found nothing.
+       */
+      identity: identity
+        ? {
+            id: identity.id,
+            display_name: identity.canonicalName,
+            placer_name: identity.placerName,
+            state: identity.state,
+            gender: identity.gender,
+            grad_year: identity.gradYear,
+            confirmed: identity.confirmed,
+            spellings,
+            our_profile_id: identity.athleteId,
+          }
+        : null,
     }
   }
   const bouts = await loadBoutsForAthlete(admin, found.id, {
