@@ -30,6 +30,13 @@ const sb = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
   { auth: { persistSession: false } },
 )
+/*
+ * --focus keeps only the wrestlers whose identity does work today: the ones our athletes actually
+ * wrestled, and the ones who placed top eight at a national event. 1,890 against 17,745, and the
+ * 16,000 dropped are wrestlers we hold a bout or two for who never met us and never placed.
+ * Identifying them costs the same as identifying the useful ones and buys nothing yet.
+ */
+const FOCUS = process.argv.includes("--focus")
 const OUT = process.argv.includes("--out")
   ? process.argv[process.argv.indexOf("--out") + 1]
   : "ranking-snapshots/wrestlers-needing-class-year.csv"
@@ -55,7 +62,7 @@ async function main() {
 
   const bouts = await page<{ athlete_name: string; athlete_club: string | null; event_name: string; source_file: string | null; year: number | null; weight_class: string | null }>(
     "other_tournament_bouts",
-    "athlete_name, athlete_club, event_name, source_file, year, weight_class",
+    "athlete_name, athlete_club, event_name, source_file, year, weight_class, round, athlete_id, opponent_name, opponent_club, win",
   )
 
   type Target = {
@@ -67,7 +74,12 @@ async function main() {
     weights: Set<string>
     events: Set<string>
     bouts: number
+    facedUs: boolean
+    weBeatThem: boolean
+    nationalPlacer: boolean
   }
+  /* "1st Place Match" and the rest: reaching one means a top-eight finish. */
+  const PLACEMENT_ROUND = /1st Place|3rd Place|5th Place|7th Place/i
   const targets = new Map<string, Target>()
   for (const b of bouts) {
     const state = String(b.athlete_club ?? "").trim().toUpperCase()
@@ -76,7 +88,7 @@ async function main() {
     if (!name || known.has(`${name}|${state}`)) continue
     const key = `${name}|${state}`
     if (!targets.has(key)) {
-      targets.set(key, { name, display: String(b.athlete_name).trim(), state, female: false, years: new Set(), weights: new Set(), events: new Set(), bouts: 0 })
+      targets.set(key, { name, display: String(b.athlete_name).trim(), state, female: false, years: new Set(), weights: new Set(), events: new Set(), bouts: 0, facedUs: false, weBeatThem: false, nationalPlacer: false })
     }
     const t = targets.get(key)!
     t.bouts++
@@ -85,14 +97,35 @@ async function main() {
     t.events.add(String(b.event_name).replace(/^\d{4}\s+/, ""))
     /* Stated, never inferred: the event names at NHSCA and Super 32 cover both fields. */
     if (/women|girls/i.test(String(b.event_name)) || /girls|women/i.test(String(b.source_file ?? ""))) t.female = true
+    if (PLACEMENT_ROUND.test(String((b as { round?: string }).round ?? ""))) t.nationalPlacer = true
   }
 
-  const rows = [...targets.values()].sort((a, b) => a.state.localeCompare(b.state) || b.bouts - a.bouts)
+  /*
+   * Seen from our own athletes' rows: these wrestlers are their opponents, which is the whole
+   * reason an out-of-state identity is worth anything to us.
+   */
+  for (const b of bouts as Array<Record<string, unknown>>) {
+    if (!b.athlete_id) continue
+    const oc = String(b.opponent_club ?? "").trim().toUpperCase()
+    const on = nn(b.opponent_name)
+    if (!/^[A-Z]{2}$/.test(oc) || !on) continue
+    const t = targets.get(`${on}|${oc}`)
+    if (!t) continue
+    t.facedUs = true
+    if (b.win) t.weBeatThem = true
+  }
+
+  let rows = [...targets.values()].sort((a, b) => a.state.localeCompare(b.state) || b.bouts - a.bouts)
+  if (FOCUS) {
+    const before = rows.length
+    rows = rows.filter((t) => Math.max(...t.years) >= 2025 && (t.facedUs || t.nationalPlacer))
+    console.log(`--focus: ${before} -> ${rows.length} (still in school, and either faced one of our athletes or placed top eight nationally)`)
+  }
   const esc = (v: unknown) => {
     const t = String(v ?? "")
     return /[",\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t
   }
-  const header = "name,state,gender,last_season_seen,seasons_seen,weights,bouts_we_hold,likely_still_in_school,example_event"
+  const header = "name,state,gender,last_season_seen,seasons_seen,weights,bouts_we_hold,likely_still_in_school,faced_our_athlete,we_beat_them,national_placer,example_event"
   const out = rows.map((t) => {
     const last = Math.max(...t.years)
     return [
@@ -104,6 +137,9 @@ async function main() {
       [...t.weights].sort((x, y) => Number(x) - Number(y)).join(" "),
       t.bouts,
       last >= 2025 ? "yes" : "no",
+      t.facedUs ? "yes" : "no",
+      t.weBeatThem ? "yes" : "no",
+      t.nationalPlacer ? "yes" : "no",
       [...t.events][0] ?? "",
     ].map(esc).join(",")
   })
