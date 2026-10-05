@@ -10,6 +10,7 @@
  * from these same facts and never introduces one of its own.
  */
 
+import { loadNationallyRanked } from "@/lib/state-placers"
 import { competitionLine, stylesLine, styleOfEvent, STYLE_LABEL, summarizeCompetition, type CompetitionSummary, styleOfEventForAthlete } from "@/lib/wrestling-style"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { applyStarOverride, isRatedAthlete, rateAthlete, type StarRating } from "@/lib/athlete-star-rating"
@@ -39,7 +40,6 @@ import {
   type SignificantWin,
 } from "@/lib/significant-wins"
 import { isBlueTeam } from "@/lib/blue-team"
-import { sourceLabel } from "@/lib/national-rankings"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { releasesPersonalData, type ScoutingAccessTier } from "@/lib/scouting-report-access"
 import { reportSignificantBouts } from "@/lib/report-significant-wins"
@@ -285,25 +285,15 @@ export async function loadOpponentIndex(supabase: SupabaseClient): Promise<Oppon
 
   // Nationally ranked wrestlers, including out-of-state ones — most opponents worth naming
   // will never appear in our own athlete table.
-  const nationallyRanked: NationallyRankedOpponent[] = []
-  const { data: nationalRows } = await supabase
-    .from("national_rankings")
-    .select("athlete_name, rank, source, state")
-    .order("rank", { ascending: true })
+  // Newest edition per outlet, paged (see loadNationallyRanked). School is dropped so the
+  // report keeps its name-only match.
   const seenNational = new Set<string>()
-  for (const row of nationalRows ?? []) {
-    const name = String(row.athlete_name ?? "").trim()
-    if (!name) continue
-    // Best rank across outlets wins; rows arrive sorted so the first is the best.
-    const key = name.toLowerCase()
+  const nationallyRanked: NationallyRankedOpponent[] = []
+  for (const r of await loadNationallyRanked(supabase)) {
+    const key = r.name.toLowerCase()
     if (seenNational.has(key)) continue
     seenNational.add(key)
-    nationallyRanked.push({
-      name,
-      rank: Number(row.rank ?? 0),
-      source: sourceLabel(String(row.source ?? "")),
-      state: (row.state as string) ?? null,
-    })
+    nationallyRanked.push({ name: r.name, rank: r.rank, source: r.source, state: r.state })
   }
 
   return { tocField, ranked, nationallyRanked }

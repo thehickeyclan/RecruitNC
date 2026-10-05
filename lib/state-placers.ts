@@ -72,6 +72,7 @@ async function buildStatePlacerIndex(
   const ncNames = otherPlacers.length ? [...ncPlacers.map((p) => p.name), ...(await loadNcAthleteNames(supabase).catch(() => []))] : []
   if (otherPlacers.length) markDistinctive(otherPlacers, ncNames)
   const eventPlacers = options?.outOfState ? await loadEventPlacers(supabase, otherPlacers, ncNames).catch(() => []) : undefined
+  if (nationallyRanked?.length) markRankedDistinctive(nationallyRanked, ncNames, otherPlacers)
   return {
     statePlacers: [...ncPlacers, ...otherPlacers],
     stateSchools,
@@ -87,16 +88,39 @@ async function buildStatePlacerIndex(
  * only with evidence it was him (nationalRankFits in lib/significant-wins.ts).
  */
 export async function loadNationallyRanked(supabase: SupabaseClient): Promise<NationallyRankedOpponent[]> {
-  const { data, error } = await supabase
-    .from("national_rankings")
-    .select("athlete_name, rank, source, state, high_school, scope, weight_class, ranking_month")
-    .order("rank", { ascending: true })
-    .limit(5000)
-  if (error || !data) return []
   type Row = { athlete_name: string; rank: number; source: string; state: string | null; high_school: string | null; scope: string; weight_class: string | null; ranking_month: string }
-  const rows = data as Row[]
+  /*
+   * Newest edition per outlet first, then only those rows, paged. This used to read every held
+   * edition in one query ordered by rank; PostgREST caps a response at 1,000 rows, so once three
+   * editions were on file the low ranks of the newest one were cut off - #29 Matthew McDermott
+   * vanished the night SI's October list was loaded.
+   */
   const newest = new Map<string, string>()
-  for (const r of rows) if ((newest.get(r.source) ?? "") < r.ranking_month) newest.set(r.source, r.ranking_month)
+  for (const source of ["sports_illustrated", "flowrestling", "matscouts"]) {
+    const { data: head } = await supabase
+      .from("national_rankings")
+      .select("ranking_month")
+      .eq("source", source)
+      .order("ranking_month", { ascending: false })
+      .limit(1)
+    if (head?.[0]?.ranking_month) newest.set(source, String(head[0].ranking_month))
+  }
+  const rows: Row[] = []
+  for (const [source, month] of newest) {
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase
+        .from("national_rankings")
+        .select("athlete_name, rank, source, state, high_school, scope, weight_class, ranking_month")
+        .eq("source", source)
+        .eq("ranking_month", month)
+        .order("rank", { ascending: true })
+        .range(from, from + 999)
+      if (error || !data?.length) break
+      rows.push(...(data as Row[]))
+      if (data.length < 1000) break
+    }
+  }
+  rows.sort((a, b) => a.rank - b.rank)
   const best = new Map<string, NationallyRankedOpponent>()
   for (const r of rows) {
     if (r.ranking_month !== newest.get(r.source)) continue
@@ -112,6 +136,7 @@ export async function loadNationallyRanked(supabase: SupabaseClient): Promise<Na
       source: `${sourceLabel(r.source)}${where}`,
       state: r.state ?? null,
       school: r.high_school ?? null,
+      weight: Number.parseInt(String(r.weight_class ?? ""), 10) || null,
     })
   }
   return [...best.values()]
@@ -224,6 +249,37 @@ async function loadNcAthleteNames(supabase: SupabaseClient): Promise<string[]> {
  * same person (nicknames included). Compared only within a shared surname word, the way
  * `placerCandidates` narrows, so eleven thousand names take milliseconds.
  */
+/** A ranked name is distinctive when no NC wrestler and no differently-stated placer shares it. */
+function markRankedDistinctive(ranked: NationallyRankedOpponent[], ncNames: string[], placers: StatePlacer[]) {
+  const byWord = new Map<string, Array<{ name: string; state: string | null }>>()
+  const add = (name: string, state: string | null) => {
+    for (const word of new Set(nameWords(name))) {
+      const list = byWord.get(word)
+      if (list) list.push({ name, state })
+      else byWord.set(word, [{ name, state }])
+    }
+  }
+  for (const n of ncNames) add(n, "NC")
+  for (const p of placers) add(p.name, p.state ?? null)
+  for (const r of ranked) add(r.name, `ranked:${r.state ?? ""}`)
+  for (const r of ranked) {
+    const seen = new Set<string>()
+    let others = 0
+    for (const word of nameWords(r.name)) {
+      for (const c of byWord.get(word) ?? []) {
+        const key = `${c.name}|${c.state}`
+        if (seen.has(key)) continue
+        seen.add(key)
+        if (!namesLikelySamePerson(c.name, r.name)) continue
+        // Himself: his own ranked row(s), and a placer of his name in his own state.
+        if (c.state === `ranked:${r.state ?? ""}` || (c.state && c.state === r.state)) continue
+        others += 1
+      }
+    }
+    r.distinctive = others === 0
+  }
+}
+
 function markDistinctive(placers: StatePlacer[], ncNames: string[]) {
   const others = [...placers.map((p) => p.name), ...ncNames]
   const byWord = new Map<string, string[]>()

@@ -243,6 +243,10 @@ export type NationallyRankedOpponent = {
    * loader), the older name-only match stands.
    */
   school?: string | null
+  /** The weight he is ranked at, for the distinctive-name fallback in `nationalRankFits`. */
+  weight?: number | null
+  /** No NC wrestler or other ranked/placed wrestler shares the name (set by the index loader). */
+  distinctive?: boolean
 }
 
 export type SignificantWin = {
@@ -422,12 +426,28 @@ function weightFits(boutWeight: number | string | null | undefined, finishes: re
  * that state - never the name alone, since the national lists name boys from every state and NC
  * has namesakes of most of them. A North Carolinian ranked nationally gets the in-state check.
  */
-function nationalRankFits(boutSchool: string | null | undefined, ranked: NationallyRankedOpponent, index: OpponentIndex): boolean {
+function nationalRankFits(
+  boutSchool: string | null | undefined,
+  ranked: NationallyRankedOpponent,
+  index: OpponentIndex,
+  boutWeight?: number | string | null,
+): boolean {
   const schools = ranked.school ? [ranked.school] : []
   const state = String(ranked.state ?? "").toUpperCase()
   if (!state || state === "NC") return schoolConsistent(boutSchool, schools, index.stateSchools)
   const confirmed = statePlacersNamed(index, ranked.name).some((p) => p.state === state && p.identityConfirmed)
-  return outOfStatePlacerFits(boutSchool, { name: ranked.name, schools, finishes: [], state, identityConfirmed: confirmed }, index.stateSchools)
+  /*
+   * Club events (Journeymen, Super 32) print a club, never the school, so #3 Nelson Villafane
+   * (West Scranton) wrestling for Mat Assassins carried no ranking. The fallback state placers
+   * already use: a name nobody in NC or on the other lists shares, at a weight he could be.
+   */
+  const finishes = ranked.weight ? [{ year: 0, place: 0, classification: null, state, weight: ranked.weight }] : []
+  return outOfStatePlacerFits(
+    boutSchool,
+    { name: ranked.name, schools, finishes, state, identityConfirmed: confirmed, distinctive: ranked.distinctive ?? false },
+    index.stateSchools,
+    boutWeight,
+  )
 }
 
 /** Placers sharing this opponent's name, resolved once per name per index like the rest. */
@@ -586,7 +606,7 @@ function findSignificantBouts(
     const resolved = options?.stateOnly ? { national: null, inField: false, ranked: null } : resolveOpponent(index, name)
     const { inField, ranked } = resolved
     const national =
-      resolved.national && resolved.national.school !== undefined && !nationalRankFits(bout.opponent_school, resolved.national, index)
+      resolved.national && resolved.national.school !== undefined && !nationalRankFits(bout.opponent_school, resolved.national, index, bout.weight)
         ? null
         : resolved.national
     // Finishes of same-named placers whose school fits this bout and who could have been this
