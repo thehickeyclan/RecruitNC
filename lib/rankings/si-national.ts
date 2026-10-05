@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 
-import { importNationalEdition, markRankingChecked, type ImportEditionResult } from "@/lib/rankings/national-import"
+import { importNationalEdition, markRankingChecked, seasonEnd, type ImportEditionResult } from "@/lib/rankings/national-import"
 
 /**
  * Sports Illustrated's national boys rankings, kept current without anyone remembering to.
@@ -169,7 +169,7 @@ export async function syncSiNationalRankings(admin: SupabaseClient, options?: { 
     }
 
     const published = newest.published ? new Date(newest.published) : new Date()
-    const season = published.getMonth() >= 6 ? published.getFullYear() + 1 : published.getFullYear()
+    const season = seasonEnd(published)
     const rows = parseSiEdition(newest.html, season)
     const weights = new Set(rows.map((r) => r.weight_class))
     if (rows.length < MIN_ROWS[gender] || weights.size < 10) {

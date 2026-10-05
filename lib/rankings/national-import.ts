@@ -16,6 +16,9 @@ import { NATIONAL_RANKING_SOURCES, type NationalRankingSource } from "@/lib/nati
 
 export type RankingGender = "M" | "F"
 
+/** An edition from a season that has ended: rejected rather than shown as current. */
+export class PriorSeasonError extends Error {}
+
 export type IncomingRankingRow = {
   rank: number
   name: string
@@ -50,9 +53,28 @@ export type ImportEditionResult = {
 
 const GRADE_OFFSET: Record<string, number> = { SR: 0, JR: 1, SO: 2, FR: 3, "8TH": 4, "7TH": 5 }
 
-/** A season runs August-July: an October 2026 list ranks the class of 2027 as seniors. */
-function seasonEnd(published: Date): number {
-  return published.getMonth() >= 6 ? published.getFullYear() + 1 : published.getFullYear()
+/**
+ * A season runs August-July: an October 2026 list ranks the class of 2027 as seniors, and a July
+ * 2026 list is the final word on 2025-26 (it was treated as next season once, and Flo's final
+ * 2025-26 girls list labelled three graduated seniors as the class of 2027).
+ */
+export function seasonEnd(date: Date): number {
+  return date.getUTCMonth() >= 7 ? date.getUTCFullYear() + 1 : date.getUTCFullYear()
+}
+
+/**
+ * Whether a list can be this season's. Outlets leave last season's final list up through
+ * August (MatScouts' girls list of 4 Aug 2026 still ranked a 2026 graduate), so a list is
+ * current only from 1 September, and never when its own link names an earlier season
+ * ("...rankings-for-the-2025-26-season").
+ */
+function isCurrentSeasonList(published: Date, url: string | null | undefined, now = new Date()): boolean {
+  const season = seasonEnd(now)
+  const startsCounting = Date.UTC(season - 1, 8, 1) // 1 September
+  if (published.getTime() < startsCounting) return false
+  const named = String(url ?? "").match(/(20\d{2})[-_](?:20)?(\d{2})(?!\d)/)
+  if (named && Number(named[1]) + 1 < season) return false
+  return true
 }
 
 function classYear(grade: IncomingRankingRow["grade"], published: Date): number | null {
@@ -130,7 +152,23 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
     return { status: "unchanged", source: input.source, gender: input.gender, month, rows: rows.length, ncMatched: [] }
   }
 
-  const index = buildAthleteIndex(await loadRoster(admin, input.gender))
+  // Only this season's lists count as current rankings. Until an outlet publishes its 2026-27
+  // list, the newest one it has is last season's final - Flo's girls list in October 2026 - and
+  // that ranks seniors who have since graduated.
+  const currentSeason = seasonEnd(new Date())
+  if (!isCurrentSeasonList(published, input.url)) {
+    throw new PriorSeasonError(
+      `This looks like a ${currentSeason - 2}-${String(currentSeason - 1).slice(2)} list (published ${input.published}); ` +
+        `send it once the ${currentSeason - 1}-${String(currentSeason).slice(2)} list is out`,
+    )
+  }
+
+  // A graduate is never linked to a current ranking, whatever the list says.
+  const roster = (await loadRoster(admin, input.gender)).filter((a) => {
+    const year = Number((a as { graduationyear?: unknown }).graduationyear)
+    return !Number.isFinite(year) || year === 0 || year >= currentSeason
+  })
+  const index = buildAthleteIndex(roster)
   const ncMatched: string[] = []
   const payload = rows.map((row) => {
     const state = String(row.state ?? "").trim().toUpperCase() || null

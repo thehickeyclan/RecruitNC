@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { timingSafeEqual } from "node:crypto"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NATIONAL_RANKING_SOURCES, type NationalRankingSource } from "@/lib/national-rankings"
-import { importNationalEdition, markRankingChecked, type IncomingRankingRow } from "@/lib/rankings/national-import"
+import { importNationalEdition, markRankingChecked, PriorSeasonError, type IncomingRankingRow } from "@/lib/rankings/national-import"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 120
@@ -95,6 +95,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
+    if (error instanceof PriorSeasonError) {
+      // Still a successful check: the outlet simply has no current list yet.
+      await markRankingChecked(admin, source, gender, "muse").catch(() => undefined)
+      return NextResponse.json({ status: "rejected_prior_season", error: message }, { status: 422 })
+    }
     console.error("[rankings-ingest] failed:", message)
     return NextResponse.json({ error: message }, { status: 500 })
   }
