@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   filterRowsByAthleteMatchContext,
   getAthleteNameSearchVariants,
+  nameWords,
   namesLikelySamePerson,
   namesReferToSamePerson,
   pickBestAthleteCandidate,
@@ -118,5 +119,24 @@ describe("athlete-name-match", () => {
       }),
     )
     expect(picked?.id).toBe("a")
+  })
+})
+
+describe("apostrophes across sources", () => {
+  it("reads a backtick as the apostrophe it stands in for", () => {
+    // A state file wrote "Kevin O`Brien"; ours holds "Kevin O'Brien". They are one wrestler, and
+    // treating them as two would have inserted a second copy of a 3A state champion.
+    expect(nameWords("Kevin O`Brien").join(" ")).toBe(nameWords("Kevin O'Brien").join(" "))
+    expect(namesLikelySamePerson("Kevin O`Brien", "Kevin O'Brien")).toBe(true)
+    expect(namesLikelySamePerson("Jackson D`Ettore", "Jackson D'Ettore")).toBe(true)
+  })
+
+  it("folds the curly quote and the acute accent the same way", () => {
+    expect(nameWords("Shea O’Malley").join(" ")).toBe(nameWords("Shea O'Malley").join(" "))
+    expect(nameWords("Shea O´Malley").join(" ")).toBe(nameWords("Shea O'Malley").join(" "))
+  })
+
+  it("still tells two different wrestlers apart", () => {
+    expect(namesLikelySamePerson("Kevin O'Brien", "Kevin O'Brian")).toBe(false)
   })
 })

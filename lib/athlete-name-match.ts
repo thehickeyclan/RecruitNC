@@ -98,6 +98,14 @@ export function normalizeApostrophes(s: string): string {
   return (s ?? "")
     .replace(/\u2019/g, "'")
     .replace(/\u2018/g, "'")
+    /*
+     * A backtick in a name is always a typo for an apostrophe, and sources differ on which they
+     * use: a state file wrote "Kevin O`Brien" where ours holds "Kevin O'Brien", and they compared
+     * as two different wrestlers — which would have inserted a second copy of a state champion.
+     * normalizeForAlias already folded it; every other comparison did not.
+     */
+    .replace(/`/g, "'")
+    .replace(/\u00B4/g, "'")
 }
 
 function normalizeForAlias(name: string): string {
