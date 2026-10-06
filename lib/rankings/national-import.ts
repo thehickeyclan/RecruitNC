@@ -39,6 +39,12 @@ export type ImportEditionInput = {
   url?: string | null
   /** "weight" lists, a pound-for-pound list, or a recruiting-class board (MatScouts Big Board). */
   scope?: RankingScope
+  /**
+   * Which recruiting class a board covers. MatScouts publishes a Senior and a Junior Big Board on
+   * the same day; an edition used to be identified by (source, gender, month, scope) alone, so
+   * loading the junior board would have deleted the senior board it shares those four with.
+   */
+  classYear?: number | null
   rows: IncomingRankingRow[]
   /** Who reported it: "si-cron", "muse", "csv". */
   checkedBy: string
@@ -49,9 +55,15 @@ export type ImportEditionResult = {
   source: NationalRankingSource
   gender: RankingGender
   month: string
+  /** The class a board covers; 0 for a list that ranks every class at once. */
+  classYear: number
+  /** Whether its ranks count within a weight group or across the whole list. */
+  rankBasis: RankBasis
   rows: number
   ncMatched: string[]
 }
+
+export type RankBasis = "weight" | "overall"
 
 const GRADE_OFFSET: Record<string, number> = { SR: 0, JR: 1, SO: 2, FR: 3, "8TH": 4, "7TH": 5 }
 
@@ -85,6 +97,46 @@ function classYear(grade: IncomingRankingRow["grade"], published: Date): number 
   if (Number.isInteger(n) && n >= 2025 && n <= 2035) return n
   const offset = GRADE_OFFSET[String(grade).trim().toUpperCase()]
   return offset == null ? null : seasonEnd(published) + offset
+}
+
+/**
+ * A class-scoped list's own class year, or 0 for one that is not class-scoped.
+ *
+ * Only boards are class-scoped, and an outlet publishes one per class on the same day, so this
+ * belongs to the edition's identity rather than to its rows. Weight and P4P lists rank every class
+ * at once and carry 0.
+ */
+export function resolveEditionClassYear(
+  scope: RankingScope,
+  stated: number | null | undefined,
+  rows: IncomingRankingRow[],
+  published: Date,
+): number {
+  if (scope !== "big_board") return 0
+  const named = Number(stated)
+  if (Number.isInteger(named) && named >= 2025 && named <= 2035) return named
+  // Unstated: every wrestler on a board is in the class it covers, so the rows can name it.
+  const years = new Set(rows.map((r) => classYear(r.grade, published)).filter((y): y is number => y != null))
+  if (years.size === 1) return [...years][0]!
+  throw new Error(
+    "A board must say which class it covers (classYear): an outlet publishes one per class on the same day" +
+      (years.size > 1 ? `, and its rows name ${years.size} classes (${[...years].sort().join(", ")})` : ", and its rows name none"),
+  )
+}
+
+/**
+ * Whether a rank counts within a weight group or across the whole list.
+ *
+ * MatScouts' senior girls board carries each wrestler's rank inside her weight class - the 155 lb
+ * seniors are 1,2,3,4,5,6,8,15,18, and the gaps are the juniors ranked above them - so "#8" on its
+ * own is meaningless. Their junior board is a single list of 90. Computed rather than declared: a
+ * rank that repeats inside an edition can only be a within-weight rank.
+ */
+export function resolveRankBasis(scope: RankingScope, rows: IncomingRankingRow[]): RankBasis {
+  if (scope === "weight") return "weight"
+  if (scope === "p4p") return "overall"
+  const ranks = rows.map((r) => Number(r.rank))
+  return new Set(ranks).size === ranks.length ? "overall" : "weight"
 }
 
 async function loadRoster(admin: SupabaseClient, gender: RankingGender): Promise<MatchableAthlete[]> {
@@ -125,6 +177,8 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
   const rankingMonth = `${month}-01`
   const scope = input.scope ?? "weight"
   const rows = input.rows.filter((r) => r && r.name?.trim() && Number(r.rank) > 0)
+  const editionClassYear = resolveEditionClassYear(scope, input.classYear, rows, published)
+  const rankBasis = resolveRankBasis(scope, rows)
   const print = fingerprint(rows)
   const now = new Date().toISOString()
 
@@ -142,6 +196,7 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
     .eq("source", input.source)
     .eq("gender", input.gender)
     .eq("scope", scope)
+    .eq("edition_class_year", editionClassYear)
     .maybeSingle()
   // Same list as last time, and still on file: just record the check. (The fingerprint alone was
   // trusted once, and a re-sent Flo girls list was skipped after its rows had been pruned away.)
@@ -154,6 +209,7 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
           .eq("gender", input.gender)
           .eq("ranking_month", rankingMonth)
           .eq("scope", scope)
+          .eq("edition_class_year", editionClassYear)
       : { count: 0 }
   if (status?.fingerprint === print && (held ?? 0) > 0) {
     await admin
@@ -162,7 +218,17 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
       .eq("source", input.source)
       .eq("gender", input.gender)
       .eq("scope", scope)
-    return { status: "unchanged", source: input.source, gender: input.gender, month, rows: rows.length, ncMatched: [] }
+      .eq("edition_class_year", editionClassYear)
+    return {
+      status: "unchanged",
+      source: input.source,
+      gender: input.gender,
+      month,
+      classYear: editionClassYear,
+      rankBasis,
+      rows: rows.length,
+      ncMatched: [],
+    }
   }
 
   // Only this season's lists count as current rankings. Until an outlet publishes its 2026-27
@@ -197,6 +263,8 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
       athlete_name: row.name.trim(),
       rank: Number(row.rank),
       scope,
+      edition_class_year: editionClassYear,
+      rank_basis: rankBasis,
       weight_class: row.weight ? String(row.weight).trim() : null,
       class_year: classYear(row.grade, published),
       high_school: row.school?.trim() || null,
@@ -212,6 +280,7 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
     .eq("gender", input.gender)
     .eq("ranking_month", rankingMonth)
     .eq("scope", scope)
+    .eq("edition_class_year", editionClassYear)
   if (clearError) throw new Error(`Clearing edition: ${clearError.message}`)
   for (let i = 0; i < payload.length; i += 500) {
     const { error } = await admin.from("national_rankings").insert(payload.slice(i, i + 500))
@@ -224,6 +293,7 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
       source: input.source,
       gender: input.gender,
       scope,
+      edition_class_year: editionClassYear,
       last_checked_at: now,
       last_changed_at: now,
       published: input.published,
@@ -233,11 +303,20 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
       fingerprint: print,
       checked_by: input.checkedBy,
     },
-    { onConflict: "source,gender,scope" },
+    { onConflict: "source,gender,scope,edition_class_year" },
   )
   if (statusError) console.error("[rankings] status stamp failed:", statusError.message)
 
-  return { status: "imported", source: input.source, gender: input.gender, month, rows: payload.length, ncMatched }
+  return {
+    status: "imported",
+    source: input.source,
+    gender: input.gender,
+    month,
+    classYear: editionClassYear,
+    rankBasis,
+    rows: payload.length,
+    ncMatched,
+  }
 }
 
 /**
@@ -277,10 +356,15 @@ export async function markRankingChecked(
   checkedBy: string,
   /* Which list was checked. An outlet can publish several, and each goes stale on its own. */
   scope: RankingScope = "weight",
+  /* Which class, for a board: 0 for a list that ranks every class at once. */
+  editionClassYear = 0,
 ) {
   const now = new Date().toISOString()
   const { error } = await admin
     .from("ranking_source_status")
-    .upsert({ source, gender, scope, last_checked_at: now, checked_by: checkedBy }, { onConflict: "source,gender,scope", ignoreDuplicates: false })
+    .upsert(
+      { source, gender, scope, edition_class_year: editionClassYear, last_checked_at: now, checked_by: checkedBy },
+      { onConflict: "source,gender,scope,edition_class_year", ignoreDuplicates: false },
+    )
   if (error) throw new Error(error.message)
 }

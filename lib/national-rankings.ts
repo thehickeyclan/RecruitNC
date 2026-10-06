@@ -33,6 +33,10 @@ export type NationalRanking = {
   scope: string
   weightClass: string | null
   classYear: number | null
+  /** The class a board covers; 0 for a list that ranks every class at once. */
+  editionClassYear: number
+  /** Whether the rank counts within a weight group ("weight") or across the list ("overall"). */
+  rankBasis: string
   sourceUrl: string | null
 }
 
@@ -41,21 +45,30 @@ export function sourceLabel(source: string): string {
 }
 
 /**
- * What a rank is a rank OF — and for a big board, that has to include the weight.
+ * What a rank is a rank OF: which list, which class it covers, and - when its ranks restart in
+ * each weight group - which group.
  *
- * A big board's ranks restart inside each weight group: MatScouts' 2027 girls board holds fifteen
- * wrestlers ranked #1, one per group. "National #1 · MatScouts" is then not a strong claim about a
- * recruit, it is no claim at all, so the weight travels with the number everywhere it is shown.
+ * MatScouts' 2027 girls board holds fifteen wrestlers ranked #1, one per weight group, so
+ * "National #1 · MatScouts" is not a strong claim about a recruit, it is no claim at all. Their
+ * junior board is one list of 90, where a weight in brackets would instead invent a claim: "#55
+ * (170)" reads as 55th at 170 when she is 55th of every junior in the country. The number travels
+ * with whatever makes it true and with nothing that does not, which is why rankBasis is computed
+ * from the edition at import rather than assumed per scope.
  *
  * Pound-for-pound ranks ARE one list, so they need the label but no weight. A weight list already
  * names its weight elsewhere on the row.
  */
-export function rankingScopeLabel(ranking: { scope: string; weightClass: string | null }): string {
+export function rankingScopeLabel(ranking: {
+  scope: string
+  weightClass: string | null
+  editionClassYear?: number | null
+  rankBasis?: string | null
+}): string {
   if (ranking.scope === "p4p") return " P4P"
-  if (ranking.scope === "big_board") {
-    return ranking.weightClass ? ` Big Board (${ranking.weightClass})` : " Big Board"
-  }
-  return ""
+  if (ranking.scope !== "big_board") return ""
+  const covers = Number(ranking.editionClassYear) > 0 ? `Class of ${Number(ranking.editionClassYear)} ` : ""
+  const within = ranking.rankBasis !== "overall" && ranking.weightClass ? ` (${ranking.weightClass})` : ""
+  return ` ${covers}Big Board${within}`
 }
 
 function toRanking(row: Record<string, unknown>): NationalRanking {
@@ -67,6 +80,8 @@ function toRanking(row: Record<string, unknown>): NationalRanking {
     scope: String(row.scope ?? "weight"),
     weightClass: (row.weight_class as string) ?? null,
     classYear: row.class_year == null ? null : Number(row.class_year),
+    editionClassYear: Number(row.edition_class_year ?? 0),
+    rankBasis: String(row.rank_basis ?? "weight"),
     sourceUrl: (row.source_url as string) ?? null,
   }
 }
@@ -85,7 +100,7 @@ export async function getNationalRankingsForAthlete(
   if (!athleteId?.trim()) return []
   const { data, error } = await supabase
     .from("national_rankings")
-    .select("source, ranking_month, rank, scope, weight_class, class_year, source_url")
+    .select("source, ranking_month, rank, scope, weight_class, class_year, edition_class_year, rank_basis, source_url")
     .eq("athlete_id", athleteId)
     .order("rank", { ascending: true })
   if (error || !data) return []
@@ -164,13 +179,15 @@ export function nationalRankingHistory(
   rankings: ReadonlyArray<NationalRanking>,
 ): NationalRankingSeries[] {
   /*
-   * Grouped by source AND list type. A weight ranking and a big-board ranking from one outlet are
-   * two different rankings — merging them made a #1 at 125 on the board and a #40 on the weight
-   * list look like one wrestler climbing 39 places.
+   * Grouped by source, list type AND the class a board covers. A weight ranking and a big-board
+   * ranking from one outlet are two different rankings — merging them made a #1 at 125 on the
+   * board and a #40 on the weight list look like one wrestler climbing 39 places. Two boards are
+   * two rankings for the same reason: MatScouts ranks a wrestler on her own class's board and,
+   * once she is old enough, nowhere else.
    */
   const bySource = new Map<string, NationalRanking[]>()
   for (const ranking of rankings) {
-    const key = `${ranking.source}|${ranking.scope}`
+    const key = `${ranking.source}|${ranking.scope}|${ranking.editionClassYear}`
     const existing = bySource.get(key)
     if (existing) existing.push(ranking)
     else bySource.set(key, [ranking])

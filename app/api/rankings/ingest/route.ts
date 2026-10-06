@@ -17,9 +17,14 @@ export const maxDuration = 120
  *   POST /api/rankings/ingest
  *   Authorization: Bearer <RANKINGS_INGEST_SECRET>
  *   { source: "flowrestling" | "sports_illustrated" | "matscouts", gender: "M" | "F",
- *     published: "2026-10-01", url?, scope?: "weight" | "p4p",
- *     rows: [{ rank, name, weight, school, state, grade }] }
- *   or, for a check that found nothing new: { source, gender, unchanged: true }
+ *     published: "2026-10-01", url?, scope?: "weight" | "p4p" | "big_board",
+ *     classYear?: 2028, rows: [{ rank, name, weight, school, state, grade }] }
+ *   or, for a check that found nothing new: { source, gender, unchanged: true, scope?, classYear? }
+ *
+ * A board needs classYear, because an outlet publishes one per recruiting class on the same day
+ * and they would otherwise be the same edition - loading the junior board would delete the senior
+ * board. It is inferred when every row's grade names the same class, so "grade": "JR" throughout
+ * is enough; send it explicitly when the rows are mixed or ungraded.
  */
 
 function authorized(request: NextRequest): boolean {
@@ -66,8 +71,10 @@ export async function POST(request: NextRequest) {
   if (body.unchanged === true) {
     /* Which list was checked: an outlet's board and its weight list go stale separately. */
     const checkedScope = body.scope === "p4p" ? "p4p" : body.scope === "big_board" ? "big_board" : "weight"
-    await markRankingChecked(admin, source, gender, "muse", checkedScope)
-    return NextResponse.json({ status: "checked", source, gender })
+    /* And which board: a Senior and a Junior board go stale on separate clocks. */
+    const checkedClass = checkedScope === "big_board" ? Number(body.classYear) || 0 : 0
+    await markRankingChecked(admin, source, gender, "muse", checkedScope, checkedClass)
+    return NextResponse.json({ status: "checked", source, gender, scope: checkedScope, classYear: checkedClass })
   }
 
   const published = String(body.published ?? "")
@@ -90,6 +97,7 @@ export async function POST(request: NextRequest) {
       published,
       url: typeof body.url === "string" ? body.url : null,
       scope,
+      classYear: body.classYear == null ? null : Number(body.classYear),
       rows,
       checkedBy: "muse",
     })
@@ -99,7 +107,8 @@ export async function POST(request: NextRequest) {
     const message = error instanceof Error ? error.message : String(error)
     if (error instanceof PriorSeasonError) {
       // Still a successful check: the outlet simply has no current list yet.
-      await markRankingChecked(admin, source, gender, "muse", scope).catch(() => undefined)
+      const priorClass = scope === "big_board" ? Number(body.classYear) || 0 : 0
+      await markRankingChecked(admin, source, gender, "muse", scope, priorClass).catch(() => undefined)
       return NextResponse.json({ status: "rejected_prior_season", error: message }, { status: 422 })
     }
     console.error("[rankings-ingest] failed:", message)

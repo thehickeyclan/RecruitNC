@@ -37,31 +37,52 @@ export async function GET(request: NextRequest) {
   const problems: string[] = []
   const report: Array<Record<string, unknown>> = []
   /*
-   * Every list an outlet actually publishes, not every (source, gender) we can imagine. A source
-   * that has never sent a girls list should not be reported stale forever, while a source that
-   * sends two lists needs both watched — MatScouts' girls board is their only girls list.
+   * Watch the lists an outlet actually publishes, not every (source, gender) we can imagine. A
+   * source that has never sent a girls list should not be reported stale forever, while a source
+   * that publishes several needs each one watched: MatScouts' girls board is their only girls
+   * list, and they publish a separate board per recruiting class, each on its own clock.
+   *
+   * The status rows ARE that set, one per list, so they drive the loop. A source with no row at
+   * all is the one case they cannot speak for - nobody has ever checked it - so it is seeded.
    */
-  const published = new Map<string, Set<string>>()
-  for (const r of (data ?? []) as Array<{ source: string; gender: string; scope?: string }>) {
-    const k = `${r.source}|${r.gender}`
-    if (!published.has(k)) published.set(k, new Set())
-    published.get(k)!.add(String(r.scope ?? "weight"))
+  type StatusRow = {
+    source: string
+    gender: string
+    scope?: string | null
+    edition_class_year?: number | null
+    last_checked_at?: string | null
+    last_changed_at?: string | null
+    published?: string | null
   }
+  const watched = new Map<string, StatusRow>()
+  for (const r of (data ?? []) as StatusRow[]) {
+    watched.set(`${r.source}|${r.gender}|${r.scope ?? "weight"}|${r.edition_class_year ?? 0}`, r)
+  }
+  for (const source of Object.keys(NATIONAL_RANKING_SOURCES)) {
+    if ((data ?? []).some((r) => (r as StatusRow).source === source)) continue
+    for (const gender of ["M", "F"]) watched.set(`${source}|${gender}|weight|0`, { source, gender })
+  }
+
   const SCOPE_LABEL: Record<string, string> = { weight: "", p4p: " P4P", big_board: " Big Board" }
-  for (const source of Object.keys(NATIONAL_RANKING_SOURCES) as NationalRankingSource[]) {
-    for (const gender of ["M", "F"] as const) {
-      for (const scope of published.get(`${source}|${gender}`) ?? ["weight"]) {
-      const row = (data ?? []).find((r) => r.source === source && r.gender === gender && String(r.scope ?? "weight") === scope)
-      const label = `${NATIONAL_RANKING_SOURCES[source]} ${GENDER[gender]}${SCOPE_LABEL[scope] ?? ""}`
-      const checked = days(row?.last_checked_at)
-      const changed = days(row?.last_changed_at)
-      report.push({ source, gender, scope, checkedDaysAgo: Math.round(checked * 10) / 10, changedDaysAgo: Math.round(changed * 10) / 10 })
-      if (checked > CHECK_STALE_DAYS) {
-        problems.push(`${label}: not checked ${Number.isFinite(checked) ? `in ${Math.floor(checked)} days` : "ever"}`)
-      } else if (changed > EDITION_STALE_DAYS) {
-        problems.push(`${label}: checked daily, but no new edition in ${Math.floor(changed)} days (last published ${row?.published ?? "unknown"})`)
-      }
-      }
+  for (const [key, row] of [...watched].sort(([a], [b]) => a.localeCompare(b))) {
+    const [source, gender, scope, classYear] = key.split("|") as [NationalRankingSource, "M" | "F", string, string]
+    // The class a board covers is part of its name: two MatScouts girls boards publish the same day.
+    const covers = Number(classYear) > 0 ? ` class of ${classYear}` : ""
+    const label = `${NATIONAL_RANKING_SOURCES[source] ?? source} ${GENDER[gender] ?? gender}${SCOPE_LABEL[scope] ?? ""}${covers}`
+    const checked = days(row.last_checked_at)
+    const changed = days(row.last_changed_at)
+    report.push({
+      source,
+      gender,
+      scope,
+      classYear: Number(classYear),
+      checkedDaysAgo: Math.round(checked * 10) / 10,
+      changedDaysAgo: Math.round(changed * 10) / 10,
+    })
+    if (checked > CHECK_STALE_DAYS) {
+      problems.push(`${label}: not checked ${Number.isFinite(checked) ? `in ${Math.floor(checked)} days` : "ever"}`)
+    } else if (changed > EDITION_STALE_DAYS) {
+      problems.push(`${label}: checked daily, but no new edition in ${Math.floor(changed)} days (last published ${row.published ?? "unknown"})`)
     }
   }
 
