@@ -11,8 +11,12 @@
  * Rules, all of them learned the hard way:
  *  - A row must resolve to exactly ONE person. Several of the name in that state is a judgement,
  *    not a match, and is skipped rather than guessed.
- *  - A grad year already on file is never overwritten. Where the file disagrees it is reported, so
- *    a real conflict is a decision someone makes, not a silent replacement.
+ *  - A disagreement is settled on source quality, not import order — see lib/identity/
+ *    grad-year-source.ts. A state tournament's grade column corrects a ranking service; a national
+ *    outlet's grade corrects nothing, because outlets carry graduated seniors on current lists. A
+ *    value a person adjudicated is never overwritten, and neither is one whose origin was never
+ *    recorded, since most of what we hold predates the provenance field and may be the better
+ *    source itself. Anything unresolved is reported rather than guessed.
  *  - The file states a grade; the grad year is derived from the season that grade belongs to, which
  *    is why the same "SR" yields 2026 in one file and 2027 in another.
  *
@@ -22,6 +26,7 @@ import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
 import { nameWords } from "@/lib/athlete-name-match"
+import { decideGradYear, gradYearTier } from "@/lib/identity/grad-year-source"
 
 for (const f of [".env.local", ".env"]) {
   const p = path.join(process.cwd(), f)
@@ -69,6 +74,9 @@ function parseCsv(text: string): Record<string, string>[] {
 
 type Identity = { id: string; normalized_name: string | null; state: string | null; gender: string | null; graduation_year: number | null; evidence: Record<string, unknown> | null }
 
+const heldSourceOf = (e: Record<string, unknown> | null) =>
+  (e?.grad_year_confirmed_by as string) || (e?.grad_year_source as string) || (e?.grad_year_basis as string) || null
+
 async function main() {
   if (!FILE) { console.error("Give a CSV: name, state (or team), grad_year [, grade, school]"); process.exit(1) }
   console.log(WRITE ? "WRITING\n" : "DRY RUN — nothing is written\n")
@@ -92,9 +100,10 @@ async function main() {
     }
   }
 
-  const updates: Array<{ id: string; grad: number; evidence: Record<string, unknown> }> = []
-  const tally = { malformed: 0, unmatched: 0, ambiguous: 0, agree: 0, conflict: 0, fill: 0 }
+  const updates: Array<{ id: string; grad: number; evidence: Record<string, unknown>; replacing: number | null }> = []
+  const tally = { malformed: 0, unmatched: 0, ambiguous: 0, agree: 0, conflict: 0, fill: 0, replace: 0, keep: 0 }
   const conflicts: string[] = []
+  const replacements: string[] = []
   for (const r of rows) {
     const name = nn(r.name)
     const state = String(r.state || r.team || "").toUpperCase()
@@ -108,17 +117,44 @@ async function main() {
     if (!cands.length) { tally.unmatched++; continue }
     if (cands.length > 1) { tally.ambiguous++; continue }
     const held = Number(cands[0].graduation_year)
-    if (held === grad) { tally.agree++; continue }
-    if (held) {
-      tally.conflict++
-      if (conflicts.length < 12) conflicts.push(`${r.name} (${state}): on file ${held}, file says ${grad} — left as ${held}`)
+    const evidence = cands[0].evidence ?? {}
+    const heldSource = heldSourceOf(evidence)
+    const incomingSource = r.source || path.basename(FILE)
+    const { verdict, reason } = decideGradYear({
+      held,
+      heldSource,
+      incoming: grad,
+      incomingSource,
+      heldConfirmed: Boolean(evidence.grad_year_confirmed),
+    })
+    if (verdict === "keep") {
+      if (held === grad) tally.agree++
+      else {
+        tally.keep++
+        if (conflicts.length < 12) conflicts.push(`${r.name} (${state}): kept ${held}, file says ${grad} — ${reason}`)
+      }
       continue
     }
-    tally.fill++
+    if (verdict === "conflict") {
+      tally.conflict++
+      if (conflicts.length < 12) conflicts.push(`${r.name} (${state}): on file ${held}, file says ${grad} — ${reason}`)
+      continue
+    }
+    if (verdict === "replace") {
+      tally.replace++
+      if (replacements.length < 12) replacements.push(`${r.name} (${state}): ${held} -> ${grad} — ${reason}`)
+    } else tally.fill++
     updates.push({
       id: cands[0].id,
       grad,
-      evidence: { ...(cands[0].evidence ?? {}), grad_year_source: r.source || path.basename(FILE), grad_year_grade: r.grade || null },
+      replacing: verdict === "replace" ? held : null,
+      evidence: {
+        ...evidence,
+        grad_year_source: incomingSource,
+        grad_year_tier: gradYearTier(incomingSource),
+        grad_year_grade: r.grade || null,
+        ...(verdict === "replace" ? { grad_year_replaced: [...((evidence.grad_year_replaced as unknown[]) ?? []), { value: held, source: heldSource }] } : {}),
+      },
     })
   }
 
@@ -126,20 +162,26 @@ async function main() {
   console.log(`   nobody of that name in that state           : ${tally.unmatched}`)
   console.log(`   several of the name in that state           : ${tally.ambiguous}`)
   console.log(`   already on file and agreeing                : ${tally.agree}`)
-  console.log(`   conflicts, left alone                       : ${tally.conflict}`)
+  console.log(`   kept, this file is the weaker source        : ${tally.keep}`)
+  console.log(`   unresolved, reported for a human            : ${tally.conflict}`)
   for (const c of conflicts) console.log(`      ${c}`)
+  console.log(`   corrected by a stronger source              : ${tally.replace}`)
+  for (const c of replacements) console.log(`      ${c}`)
   console.log(`   blank grad years this would fill            : ${tally.fill}`)
-  const confirmed = tally.agree + tally.conflict
-  if (confirmed) console.log(`   agreement where both have a value           : ${((tally.agree / confirmed) * 100).toFixed(1)}%`)
+  const both = tally.agree + tally.conflict + tally.keep + tally.replace
+  if (both) console.log(`   agreement where both have a value           : ${((tally.agree / both) * 100).toFixed(1)}%`)
 
   if (!WRITE) { console.log("\nRe-run with --write."); return }
   let done = 0
   for (const u of updates) {
-    const { error } = await sb
+    let q = sb
       .from("athlete_identities")
       .update({ graduation_year: u.grad, evidence: u.evidence, updated_at: new Date().toISOString() })
       .eq("id", u.id)
-      .is("graduation_year", null)
+    // A fill must still lose a race against anything that filled it meanwhile; a correction is
+    // deliberate and names the value it replaces.
+    q = u.replacing == null ? q.is("graduation_year", null) : q.eq("graduation_year", u.replacing)
+    const { error } = await q
     if (error) { console.error(`  ${u.id} FAILED: ${error.message}`); continue }
     done++
     if (done % 200 === 0) console.log(`   written ${done}/${updates.length}`)
