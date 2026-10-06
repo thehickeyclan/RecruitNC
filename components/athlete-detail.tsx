@@ -298,6 +298,16 @@ export function AthleteDetail({
   // The same rule /api/athletes/[id]/self-edit enforces: owner, linked parent, or admin. Everyone
   // else gets "Request Profile Edit", which queues the change for review.
   const canEdit = isViewingOwnProfile || isParentLinkedEditor || isAdmin
+
+  // ?edit=photo opens the photo editor straight away - the iPhone app sends families here to add
+  // a photo, since the app itself cannot pick one until a native build ships. canEdit settles
+  // after auth loads, so this waits for it rather than reading it on first render.
+  useEffect(() => {
+    if (!canEdit) return
+    if (new URLSearchParams(window.location.search).get("edit") !== "photo") return
+    setEditingSection("photo")
+    setTimeout(() => document.querySelector("[data-owner-editor]")?.scrollIntoView({ block: "start" }), 300)
+  }, [canEdit])
   // Private info (contact, GPA, ACT, SAT) visible only to self, coaches, and admins
   const canSeePrivateInfo = isViewingOwnProfile || isAdmin || isVerifiedCoach
 

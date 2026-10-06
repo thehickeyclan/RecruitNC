@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from "next/server"
+import { after, type NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
 import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
@@ -6,6 +6,10 @@ import { normalizePhoneForStorage } from "@/lib/phone-format"
 import { auditIpFrom, recordAthleteEvent } from "@/lib/athlete-audit"
 import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
 import { claimProfile, recordClaimConsent } from "@/lib/profile-claim"
+import { linkResults } from "@/lib/identity/link-results"
+
+// The response returns at once; linking the new profile's results runs after it (see below).
+export const maxDuration = 120
 
 /** Stored as a bare handle. Athletes type "@name", a full URL, or just the name. */
 function socialHandle(value: unknown): string | null {
@@ -217,6 +221,15 @@ export async function POST(request: NextRequest) {
         .update({ athlete_id: athlete.id })
         .eq("user_id", user.id)
     }
+
+    // Their results are usually on file already - most wrestlers compete before anyone makes them
+    // a profile. The hourly link-results cron would attach them within the hour; run the same
+    // routine now, after the response, so the family sees their record on first look.
+    after(() =>
+      linkResults(createAdminClient(), { since: new Date(Date.now() - 10 * 60 * 1000).toISOString() }).catch((e) =>
+        console.error("[Create Profile] linking results:", e instanceof Error ? e.message : e),
+      ),
+    )
 
     return NextResponse.json({
       success: true,

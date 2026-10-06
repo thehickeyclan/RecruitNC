@@ -37,9 +37,13 @@ export async function findExistingAthlete(
 
   const { data: rows, error } = await supabase
     .from("athletes")
-    .select("id, name, firstname, lastname, firstName, lastName, highschool, graduationyear, graduationYear")
-    .in("graduationyear", [graduationYear, String(graduationYear)])
+    // Only columns that exist. Naming one that doesn't (firstname, graduationYear) makes PostgREST
+    // refuse the whole query, and this check then answered "no match" for every athlete - every
+    // create, Blue signup and profile submission made a fresh duplicate.
+    .select("id, name, firstName, lastName, highschool, graduationyear")
+    .eq("graduationyear", graduationYear)
 
+  if (error) console.error("findExistingAthlete:", error.message)
   if (error || !rows?.length) return null
 
   const candidates = (rows as Record<string, unknown>[])
@@ -99,9 +103,10 @@ export async function findAthleteByEmail(
   if (!raw || !raw.includes("@")) return null
   const { data: rows, error } = await supabase
     .from("athletes")
-    .select("id, name, firstname, lastname, firstName, lastName")
-    .ilike("contact_email", raw)
+    .select("id, name, firstName, lastName")
+    .ilike("contactEmail", raw)
     .limit(1)
+  if (error) console.error("findAthleteByEmail:", error.message)
   if (error || !rows?.length) return null
   const row = rows[0] as Record<string, unknown>
   const name = getFullName(row)
