@@ -188,16 +188,24 @@ async function main() {
 
   if (!WRITE) { console.log("\nRe-run with --write."); return }
 
+  /*
+   * Replaced wholesale for this source. The unique index is on a COALESCE expression, which an
+   * upsert cannot name, so a re-run collides with every alias it wrote last time. These rows are
+   * derived from the bout store and the registry, so rebuilding them loses nothing.
+   *
+   * The delete runs only after every replacement row is in hand — the same rule that stopped a
+   * failed insert destroying a season of Pennsylvania earlier today.
+   */
+  if (!rows.length) { console.log("nothing to write"); return }
+  const { error: delErr } = await sb.from("identity_aliases").delete().eq("source", SOURCE)
+  if (delErr) { console.error("clearing the old aliases FAILED:", delErr.message); return }
   let done = 0
   for (let i = 0; i < rows.length; i += 500) {
     const batch = rows.slice(i, i + 500)
-    const { error } = await sb.from("identity_aliases").upsert(batch as never, { onConflict: "source,alias_name_raw,alias_team" })
-    if (error) {
-      const { error: e2 } = await sb.from("identity_aliases").insert(batch as never)
-      if (e2) { console.error(`batch at ${i} FAILED:`, e2.message); return }
-    }
+    const { error } = await sb.from("identity_aliases").insert(batch as never)
+    if (error) { console.error(`batch at ${i} FAILED:`, error.message); return }
     done += batch.length
-    if (done % 2500 === 0 || done === rows.length) console.log(`   written ${done}/${rows.length}`)
+    if (done % 5000 === 0 || done === rows.length) console.log(`   written ${done}/${rows.length}`)
   }
   const { count } = await sb.from("identity_aliases").select("id", { count: "exact", head: true })
   console.log(`\nidentity_aliases now holds ${count} rows`)
