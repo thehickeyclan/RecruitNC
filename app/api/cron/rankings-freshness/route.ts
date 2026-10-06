@@ -36,17 +36,31 @@ export async function GET(request: NextRequest) {
   const days = (iso: string | null | undefined) => (iso ? (now - new Date(iso).getTime()) / 86_400_000 : Infinity)
   const problems: string[] = []
   const report: Array<Record<string, unknown>> = []
+  /*
+   * Every list an outlet actually publishes, not every (source, gender) we can imagine. A source
+   * that has never sent a girls list should not be reported stale forever, while a source that
+   * sends two lists needs both watched — MatScouts' girls board is their only girls list.
+   */
+  const published = new Map<string, Set<string>>()
+  for (const r of (data ?? []) as Array<{ source: string; gender: string; scope?: string }>) {
+    const k = `${r.source}|${r.gender}`
+    if (!published.has(k)) published.set(k, new Set())
+    published.get(k)!.add(String(r.scope ?? "weight"))
+  }
+  const SCOPE_LABEL: Record<string, string> = { weight: "", p4p: " P4P", big_board: " Big Board" }
   for (const source of Object.keys(NATIONAL_RANKING_SOURCES) as NationalRankingSource[]) {
     for (const gender of ["M", "F"] as const) {
-      const row = (data ?? []).find((r) => r.source === source && r.gender === gender)
-      const label = `${NATIONAL_RANKING_SOURCES[source]} ${GENDER[gender]}`
+      for (const scope of published.get(`${source}|${gender}`) ?? ["weight"]) {
+      const row = (data ?? []).find((r) => r.source === source && r.gender === gender && String(r.scope ?? "weight") === scope)
+      const label = `${NATIONAL_RANKING_SOURCES[source]} ${GENDER[gender]}${SCOPE_LABEL[scope] ?? ""}`
       const checked = days(row?.last_checked_at)
       const changed = days(row?.last_changed_at)
-      report.push({ source, gender, checkedDaysAgo: Math.round(checked * 10) / 10, changedDaysAgo: Math.round(changed * 10) / 10 })
+      report.push({ source, gender, scope, checkedDaysAgo: Math.round(checked * 10) / 10, changedDaysAgo: Math.round(changed * 10) / 10 })
       if (checked > CHECK_STALE_DAYS) {
         problems.push(`${label}: not checked ${Number.isFinite(checked) ? `in ${Math.floor(checked)} days` : "ever"}`)
       } else if (changed > EDITION_STALE_DAYS) {
         problems.push(`${label}: checked daily, but no new edition in ${Math.floor(changed)} days (last published ${row?.published ?? "unknown"})`)
+      }
       }
     }
   }

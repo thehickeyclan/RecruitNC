@@ -64,7 +64,9 @@ export async function POST(request: NextRequest) {
   }
 
   if (body.unchanged === true) {
-    await markRankingChecked(admin, source, gender, "muse")
+    /* Which list was checked: an outlet's board and its weight list go stale separately. */
+    const checkedScope = body.scope === "p4p" ? "p4p" : body.scope === "big_board" ? "big_board" : "weight"
+    await markRankingChecked(admin, source, gender, "muse", checkedScope)
     return NextResponse.json({ status: "checked", source, gender })
   }
 
@@ -97,7 +99,7 @@ export async function POST(request: NextRequest) {
     const message = error instanceof Error ? error.message : String(error)
     if (error instanceof PriorSeasonError) {
       // Still a successful check: the outlet simply has no current list yet.
-      await markRankingChecked(admin, source, gender, "muse").catch(() => undefined)
+      await markRankingChecked(admin, source, gender, "muse", scope).catch(() => undefined)
       return NextResponse.json({ status: "rejected_prior_season", error: message }, { status: 422 })
     }
     console.error("[rankings-ingest] failed:", message)

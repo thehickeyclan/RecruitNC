@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 
 import { nameWords, namesLikelySamePerson } from "@/lib/athlete-name-match"
-import { sourceLabel } from "@/lib/national-rankings"
+import { rankingScopeLabel, sourceLabel } from "@/lib/national-rankings"
 import type { EventPlacer, FargoAllAmerican, NationallyRankedOpponent, StatePlacer } from "@/lib/significant-wins"
 
 /**
@@ -152,7 +152,14 @@ export async function loadNationallyRanked(supabase: SupabaseClient): Promise<Na
     const key = `${name.toLowerCase()}|${r.state ?? ""}`
     // Sorted by rank, so the first row per wrestler is his best across outlets and lists.
     if (best.has(key)) continue
-    const where = r.scope === "p4p" ? " P4P" : r.scope === "big_board" ? " Big Board" : r.weight_class ? ` (${r.weight_class})` : ""
+    /* One rule for every surface — see rankingScopeLabel: a big-board rank means nothing without
+     * its weight, because the ranks restart in each group. */
+    const where =
+      r.scope === "weight"
+        ? r.weight_class
+          ? ` (${r.weight_class})`
+          : ""
+        : rankingScopeLabel({ scope: String(r.scope ?? ""), weightClass: r.weight_class ?? null })
     best.set(key, {
       name,
       rank: Number(r.rank),

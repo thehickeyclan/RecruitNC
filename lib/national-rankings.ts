@@ -40,6 +40,24 @@ export function sourceLabel(source: string): string {
   return NATIONAL_RANKING_SOURCES[source as NationalRankingSource] ?? source
 }
 
+/**
+ * What a rank is a rank OF — and for a big board, that has to include the weight.
+ *
+ * A big board's ranks restart inside each weight group: MatScouts' 2027 girls board holds fifteen
+ * wrestlers ranked #1, one per group. "National #1 · MatScouts" is then not a strong claim about a
+ * recruit, it is no claim at all, so the weight travels with the number everywhere it is shown.
+ *
+ * Pound-for-pound ranks ARE one list, so they need the label but no weight. A weight list already
+ * names its weight elsewhere on the row.
+ */
+export function rankingScopeLabel(ranking: { scope: string; weightClass: string | null }): string {
+  if (ranking.scope === "p4p") return " P4P"
+  if (ranking.scope === "big_board") {
+    return ranking.weightClass ? ` Big Board (${ranking.weightClass})` : " Big Board"
+  }
+  return ""
+}
+
 function toRanking(row: Record<string, unknown>): NationalRanking {
   return {
     source: String(row.source ?? ""),
@@ -145,21 +163,28 @@ function byRecency(a: NationalRanking, b: NationalRanking): number {
 export function nationalRankingHistory(
   rankings: ReadonlyArray<NationalRanking>,
 ): NationalRankingSeries[] {
+  /*
+   * Grouped by source AND list type. A weight ranking and a big-board ranking from one outlet are
+   * two different rankings — merging them made a #1 at 125 on the board and a #40 on the weight
+   * list look like one wrestler climbing 39 places.
+   */
   const bySource = new Map<string, NationalRanking[]>()
   for (const ranking of rankings) {
-    const existing = bySource.get(ranking.source)
+    const key = `${ranking.source}|${ranking.scope}`
+    const existing = bySource.get(key)
     if (existing) existing.push(ranking)
-    else bySource.set(ranking.source, [ranking])
+    else bySource.set(key, [ranking])
   }
 
   const series: NationalRankingSeries[] = []
-  for (const [source, rows] of bySource) {
+  for (const [key, rows] of bySource) {
+    const source = key.split("|")[0]!
     const editions = [...rows].sort(byRecency)
     const current = editions[0]!
     const oldest = editions[editions.length - 1]!
     series.push({
       source,
-      sourceLabel: current.sourceLabel,
+      sourceLabel: `${current.sourceLabel}${rankingScopeLabel(current)}`,
       editions,
       current: current.rank,
       // Ranks count downward, so an improvement is the old number minus the new one.

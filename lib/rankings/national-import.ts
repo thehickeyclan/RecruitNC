@@ -19,6 +19,8 @@ export type RankingGender = "M" | "F"
 /** An edition from a season that has ended: rejected rather than shown as current. */
 export class PriorSeasonError extends Error {}
 
+export type RankingScope = "weight" | "p4p" | "big_board"
+
 export type IncomingRankingRow = {
   rank: number
   name: string
@@ -36,7 +38,7 @@ export type ImportEditionInput = {
   published: string
   url?: string | null
   /** "weight" lists, a pound-for-pound list, or a recruiting-class board (MatScouts Big Board). */
-  scope?: "weight" | "p4p" | "big_board"
+  scope?: RankingScope
   rows: IncomingRankingRow[]
   /** Who reported it: "si-cron", "muse", "csv". */
   checkedBy: string
@@ -126,15 +128,25 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
   const print = fingerprint(rows)
   const now = new Date().toISOString()
 
-  // The freshness record tracks each source's weight lists; P4P and boards ride along with them.
-  const tracked = scope === "weight"
-  const { data: status } = tracked
-    ? await admin.from("ranking_source_status").select("fingerprint").eq("source", input.source).eq("gender", input.gender).maybeSingle()
-    : { data: null }
+  /*
+   * Freshness is recorded per list type, not per source.
+   *
+   * It used to track weight lists only, on the reasoning that boards and P4P ride along with them.
+   * MatScouts' girls board is the only girls list they publish, so it rode along with nothing: its
+   * published date was never stamped and a board posted that morning reported as "no new edition
+   * in ∞ days". One row per (source, gender, scope) lets each list answer for itself.
+   */
+  const { data: status } = await admin
+    .from("ranking_source_status")
+    .select("fingerprint")
+    .eq("source", input.source)
+    .eq("gender", input.gender)
+    .eq("scope", scope)
+    .maybeSingle()
   // Same list as last time, and still on file: just record the check. (The fingerprint alone was
   // trusted once, and a re-sent Flo girls list was skipped after its rows had been pruned away.)
   const { count: held } =
-    tracked && status?.fingerprint === print
+    status?.fingerprint === print
       ? await admin
           .from("national_rankings")
           .select("id", { count: "exact", head: true })
@@ -143,12 +155,13 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
           .eq("ranking_month", rankingMonth)
           .eq("scope", scope)
       : { count: 0 }
-  if (tracked && status?.fingerprint === print && (held ?? 0) > 0) {
+  if (status?.fingerprint === print && (held ?? 0) > 0) {
     await admin
       .from("ranking_source_status")
       .update({ last_checked_at: now, checked_by: input.checkedBy })
       .eq("source", input.source)
       .eq("gender", input.gender)
+      .eq("scope", scope)
     return { status: "unchanged", source: input.source, gender: input.gender, month, rows: rows.length, ncMatched: [] }
   }
 
@@ -206,12 +219,11 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
   }
   await pruneEditions(admin, input.source, input.gender)
 
-  if (!tracked) return { status: "imported", source: input.source, gender: input.gender, month, rows: payload.length, ncMatched }
-
   const { error: statusError } = await admin.from("ranking_source_status").upsert(
     {
       source: input.source,
       gender: input.gender,
+      scope,
       last_checked_at: now,
       last_changed_at: now,
       published: input.published,
@@ -221,7 +233,7 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
       fingerprint: print,
       checked_by: input.checkedBy,
     },
-    { onConflict: "source,gender" },
+    { onConflict: "source,gender,scope" },
   )
   if (statusError) console.error("[rankings] status stamp failed:", statusError.message)
 
@@ -258,10 +270,17 @@ export async function pruneEditions(admin: SupabaseClient, source: string, gende
 }
 
 /** Stamp a check that found nothing new (Muse's daily "no change" report). */
-export async function markRankingChecked(admin: SupabaseClient, source: NationalRankingSource, gender: RankingGender, checkedBy: string) {
+export async function markRankingChecked(
+  admin: SupabaseClient,
+  source: NationalRankingSource,
+  gender: RankingGender,
+  checkedBy: string,
+  /* Which list was checked. An outlet can publish several, and each goes stale on its own. */
+  scope: RankingScope = "weight",
+) {
   const now = new Date().toISOString()
   const { error } = await admin
     .from("ranking_source_status")
-    .upsert({ source, gender, last_checked_at: now, checked_by: checkedBy }, { onConflict: "source,gender", ignoreDuplicates: false })
+    .upsert({ source, gender, scope, last_checked_at: now, checked_by: checkedBy }, { onConflict: "source,gender,scope", ignoreDuplicates: false })
   if (error) throw new Error(error.message)
 }
