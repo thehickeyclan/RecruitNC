@@ -143,7 +143,12 @@ async function main() {
        * must not become identities.
        */
       if (!name || !r.weight || /^(forfeit|bye|no ?contest|vacant|tbd)$/i.test(name)) { noName++; continue }
-      const classification = classOf(r.division)
+      /*
+       * Some states crown one champion per weight with no classifications at all — Hawaii and
+       * Delaware among them — so a blank division is the truth, not a missing field. Requiring one
+       * rejected three Hawaii seasons and Delaware 2026 outright.
+       */
+      const classification = classOf(r.division) || "Open"
       const place = Number(r.place) || null
       const wins = r.state_wins === "" ? null : Number(r.state_wins)
       const losses = r.state_losses === "" ? null : Number(r.state_losses)
@@ -156,7 +161,14 @@ async function main() {
       }
       entries.push({
         season: Number(season), state, gender, classification, weight: r.weight,
-        association: null, /* filled below, once read from the table */
+        /*
+         * Taken from this row, not looked up afterwards. An earlier version matched each entry
+         * back to its source by NAME to find the association — and stripResultMarkers can change
+         * a name, so the lookup missed and fell back to whichever association the state returned
+         * first. In Maryland, where MPSSAA and MIAA run separate championships, that handed an
+         * MPSSAA wrestler the MIAA association and the foreign key refused him.
+         */
+        association: String(r.association ?? "").trim() || "PENDING",
         place,
         wrestler_name: name,
         school_raw: r.school || null,
@@ -178,10 +190,7 @@ async function main() {
      */
     const fromFile = [...new Set(group.map((r) => String(r.association ?? "").trim()).filter(Boolean))]
     const fallback = (await associationFor(state)) ?? String(group[0].source ?? "unknown")
-    for (const e of entries) {
-      const row = group.find((r) => `${r.first_name} ${r.last_name}`.trim() === e.wrestler_name)
-      e.association = String(row?.association ?? "").trim() || "PENDING"
-    }
+
     if (fromFile.length > 1) console.log(`   associations in this file: ${fromFile.join(", ")}`)
     /* Resolved before any check reads it — the clash check keys on it, and a null read as one
      * association made Georgia's two championships look like two wrestlers in one place. */
