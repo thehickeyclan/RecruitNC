@@ -1,10 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getAthletesColumnNames, filterPayloadToSchema } from "@/lib/athletes-schema"
 import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
 import { normalizePhoneForStorage } from "@/lib/phone-format"
 import { auditIpFrom, recordAthleteEvent } from "@/lib/athlete-audit"
+import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
+import { claimProfile, recordClaimConsent } from "@/lib/profile-claim"
 
 /** Stored as a bare handle. Athletes type "@name", a full URL, or just the name. */
 function socialHandle(value: unknown): string | null {
@@ -41,23 +42,26 @@ async function ensureCreateProfileColumns(supabase: ReturnType<typeof createAdmi
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
-
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser()
-
-    if (authError || !user) {
+    // Website cookie or the app's bearer token: the iPhone wizard creates profiles too.
+    const user = await getUserFromRequest(request)
+    if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
     const formData = await request.json()
 
+    /*
+     * Who is creating it. The athlete owns their profile; a parent is linked to it, signed, the
+     * same way a parent claims an existing one - not made its owner, which left the wrestler
+     * unable to claim their own page later. The website form sends neither, and stays "self".
+     */
+    const relationship: "self" | "parent" = formData.relationship === "parent" ? "parent" : "self"
+    if (!formData.email && relationship === "self" && user.email) formData.email = user.email
+
     const requiredFields = [
       "firstName",
       "lastName",
-      "email",
+      ...(relationship === "self" ? ["email"] : []),
       "gender",
       "graduationYear",
       "weightClass",
@@ -132,8 +136,8 @@ export async function POST(request: NextRequest) {
       highlight_video_url: String(formData.highlightVideoUrl ?? "").trim() || null,
       contactEmail: formData.email || null,
       phone: formData.phone ? normalizePhoneForStorage(formData.phone) : null,
-      claimed_by_user_id: user.id,
-      claimed_at: now,
+      claimed_by_user_id: relationship === "self" ? user.id : null,
+      claimed_at: relationship === "self" ? now : null,
       profile_verified: true,
       recruiting_status: "Uncommitted",
       is_prospect: true,
@@ -184,11 +188,35 @@ export async function POST(request: NextRequest) {
       ipAddress: auditIpFrom(request),
     })
 
-    // Link athlete to user's profile (admin client avoids RLS blocking)
-    await adminSupabase
-      .from("user_profiles")
-      .update({ athlete_id: athlete.id })
-      .eq("user_id", user.id)
+    if (relationship === "parent") {
+      // Linked and signed through the one claim path (consent record, review flags).
+      const claim = await claimProfile(adminSupabase, {
+        userId: user.id,
+        athleteId: athlete.id,
+        relationship: "parent",
+        signedName: String(formData.signedName ?? "").trim() || null,
+        viewerName: String(formData.signedName ?? "").trim() || null,
+        ip: auditIpFrom(request),
+        userAgent: request.headers.get("user-agent"),
+      })
+      if (!claim.ok) {
+        return NextResponse.json({ error: claim.error }, { status: claim.status })
+      }
+    } else {
+      await recordClaimConsent(adminSupabase, {
+        userId: user.id,
+        athleteId: athlete.id,
+        relationship: "self",
+        athleteName: athlete.name,
+        ip: auditIpFrom(request),
+        userAgent: request.headers.get("user-agent"),
+      })
+      // Link athlete to user's profile (admin client avoids RLS blocking)
+      await adminSupabase
+        .from("user_profiles")
+        .update({ athlete_id: athlete.id })
+        .eq("user_id", user.id)
+    }
 
     return NextResponse.json({
       success: true,
