@@ -135,7 +135,7 @@ async function main() {
       const place = Number(r.place) || null
       const wins = r.state_wins === "" ? null : Number(r.state_wins)
       const losses = r.state_losses === "" ? null : Number(r.state_losses)
-      const divKey = `${season}|${state}|${gender}|${classification}`
+      const divKey = `${season}|${state}|${gender}|${classification}|${String(r.association ?? "").trim()}`
       if (!divisions.has(divKey)) {
         divisions.set(divKey, {
           season: Number(season), state, association: null,
@@ -174,8 +174,18 @@ async function main() {
     if (clash.length) { console.log(`   TWO WRESTLERS IN ONE PLACE — not written: ${clash.slice(0, 5).map(([k]) => k).join(" ")}`); continue }
 
     if (!WRITE) continue
-    const association = (await associationFor(state)) ?? String(group[0].source ?? "unknown")
-    for (const e of entries) e.association = association
+    /*
+     * The association now comes from the file — 52 of them across the 50 states, because several
+     * run separate public and independent championships (NCHSAA and NCISAA, UIL and TAPPS). The
+     * table lookup stays as the fallback for the pilot files, which predate the column.
+     */
+    const fromFile = [...new Set(group.map((r) => String(r.association ?? "").trim()).filter(Boolean))]
+    const fallback = (await associationFor(state)) ?? String(group[0].source ?? "unknown")
+    for (const e of entries) {
+      const row = group.find((r) => `${r.first_name} ${r.last_name}`.trim() === e.wrestler_name)
+      e.association = String(row?.association ?? "").trim() || fallback
+    }
+    if (fromFile.length > 1) console.log(`   associations in this file: ${fromFile.join(", ")}`)
 
     /*
      * Validate every row BEFORE deleting anything.
@@ -198,8 +208,8 @@ async function main() {
      * deepest place present IS the depth. It would be a lie on a partial collection.
      */
     for (const [k, d] of divisions) {
-      const mine = entries.filter((e) => `${season}|${state}|${gender}|${e.classification}` === k && e.place != null)
-      d.association = association
+      const mine = entries.filter((e) => `${season}|${state}|${gender}|${e.classification}|${e.association === fallback ? "" : e.association}` === k && e.place != null)
+      d.association = String(k.split("|")[4] || fallback)
       d.places_awarded = mine.length ? Math.max(...mine.map((e) => Number(e.place))) : null
     }
     const missingDepth = [...divisions.values()].filter((d) => !d.places_awarded)
