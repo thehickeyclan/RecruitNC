@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Eye, Lock, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { groupCoachVisits } from "@/lib/coach-view-visits"
 
 /**
  * "Which college programs looked at you" — on the athlete's own profile.
@@ -18,7 +19,14 @@ import Link from "next/link"
  * wrestlers have none, so it says so plainly and turns the gap into the nudge that fills in
  * the profile, rather than an empty panel somebody feels cheated by.
  */
-type Locked = { locked: true; hasViews: boolean; programCount: number; totalViews: number }
+type Locked = {
+  locked: true
+  hasViews: boolean
+  programCount: number
+  totalViews: number
+  /** Times and counts only - the server never sends a free viewer the program. */
+  visits?: Array<{ first: string; last: string; views: number }>
+}
 type Unlocked = {
   locked: false
   schools: Array<{ school: string; lastViewedAt: string; views: number }>
@@ -82,14 +90,37 @@ export function CoachViewsPanel({ athleteId }: { athleteId: string }) {
             college program{data.programCount === 1 ? " has" : "s have"} viewed this profile
             {total > data.programCount ? ` — ${total} views in total` : ""}.
           </p>
-          <div className="mt-3 space-y-1.5" aria-hidden>
-            {Array.from({ length: Math.min(data.programCount, 3) }).map((_, i) => (
-              <div key={i} className="flex items-center gap-2 rounded-sm bg-white/5 px-3 py-2">
-                <Lock className="h-3 w-3 shrink-0 text-white/30" />
-                <span className="h-3 w-32 rounded-sm bg-white/10" />
-              </div>
+          {/*
+            * Every visit, with its time and how many views - the program blurred out.
+            *
+            * The count alone ("2 programs") was easy to shrug at. Seeing that somebody came back
+            * three times last Tuesday evening is what makes a parent want the name. The bar is a
+            * placeholder, not a blurred name: the server never sends the name to a free account.
+            */}
+          <ul className="mt-3 space-y-1.5">
+            {(data.visits ?? []).map((v, i) => (
+              <li
+                key={`${v.last}-${i}`}
+                className="flex flex-wrap items-center gap-x-2 rounded-sm bg-white/5 px-3 py-2 text-sm"
+              >
+                <Lock className="h-3 w-3 shrink-0 text-white/40" aria-hidden />
+                <span
+                  className="h-3.5 w-36 rounded-sm bg-white/25 blur-[3px]"
+                  aria-label="College program hidden"
+                />
+                {v.views > 1 ? (
+                  <span className="rounded-sm bg-[#D3B574]/15 px-1.5 py-0.5 text-[11px] font-semibold text-[#D3B574]">
+                    {v.views} views
+                  </span>
+                ) : null}
+                <span className="ml-auto font-mono text-xs text-white/50">
+                  {new Date(v.last).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                  {" · "}
+                  {new Date(v.last).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+                </span>
+              </li>
             ))}
-          </div>
+          </ul>
           <Link
             href="/subscribe"
             className="mt-3 inline-flex min-h-[44px] items-center rounded-sm bg-[#B31B1B] px-4 text-sm font-bold text-white hover:bg-[#8f1616]"
@@ -104,26 +135,32 @@ export function CoachViewsPanel({ athleteId }: { athleteId: string }) {
             {total === 1 ? "" : "s"} · all time
           </p>
           {/*
-            * Every view, newest first, rather than one row per programme.
+            * One row per visit, newest first - not one per programme, and not one per page load.
             *
-            * The grouped version answered "who is interested" and hid "when" - a programme that
-            * looked three times in March and once last night read the same as one that looked
-            * four times in March. Families re-open this page to see whether anything happened
-            * since last time, which only a dated list answers.
+            * Grouping by programme hid "when": a programme that looked three times in March and
+            * once last night read the same as one that looked four times in March. Listing every
+            * view kept "when" but turned one coach reloading a page into four rows. A visit is a
+            * programme's views inside 24 hours (lib/coach-view-visits.ts), so the list still
+            * answers "has anything happened since I last checked" without the noise.
             */}
           <ul className="mt-2 space-y-1.5">
-            {data.visits.map((v, i) => (
+            {groupCoachVisits(data.visits).map((v, i) => (
               <li
-                key={`${v.at}-${i}`}
+                key={`${v.last}-${i}`}
                 className="flex flex-wrap items-baseline gap-x-2 rounded-sm bg-white/5 px-3 py-2 text-sm"
               >
                 <span className={v.school ? "font-semibold text-white" : "font-semibold text-white/50"}>
                   {v.school ?? "A college program"}
                 </span>
+                {v.views > 1 ? (
+                  <span className="rounded-sm bg-[#D3B574]/15 px-1.5 py-0.5 text-[11px] font-semibold text-[#D3B574]">
+                    {v.views} views
+                  </span>
+                ) : null}
                 <span className="ml-auto font-mono text-xs text-white/50">
-                  {new Date(v.at).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
+                  {new Date(v.last).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
                   {" · "}
-                  {new Date(v.at).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+                  {new Date(v.last).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
                 </span>
               </li>
             ))}

@@ -1,5 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { loadCoachViewer } from "@/lib/coach-viewer"
+import { stripPrivateAthleteFields } from "@/lib/athlete-private-fields"
 import { mergeNhscaForPublicRankings } from "@/lib/public-profile-data"
 import { getNHSCAFromTables, getSuper32FromTable } from "@/lib/tournament-tables"
 import { getNhscaResults } from "@/lib/tournament-utils"
@@ -17,9 +20,17 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "Authentication required" }, { status: 401 })
     }
 
+    // Coaches and admins only, and private fields only for a verified coach or admin.
+    const admin = createAdminClient()
+    const coachViewer = await loadCoachViewer(admin, user.id)
+    if (!coachViewer.allowed) {
+      return NextResponse.json({ error: "Coach access required" }, { status: 403 })
+    }
+
     const athleteId = params.id
     const { searchParams } = new URL(request.url)
-    const viewAsCoachId = searchParams.get("viewAsCoachId")
+    // Looking through another coach's eyes is an admin tool; anyone else sees their own board.
+    const viewAsCoachId = coachViewer.isAdmin ? searchParams.get("viewAsCoachId") : null
 
     // Determine which coach's data to fetch
     const targetCoachId = viewAsCoachId || user.id
@@ -29,11 +40,12 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     console.log("[v0] Athlete details - View as coach ID:", viewAsCoachId)
 
     // Get athlete data
-    const { data: athlete, error: athleteError } = await supabase
+    const { data: athleteRow, error: athleteError } = await admin
       .from("athletes")
       .select("*")
       .eq("id", athleteId)
       .single()
+    const athlete = athleteRow && !coachViewer.maySeePrivate ? stripPrivateAthleteFields(athleteRow) : athleteRow
 
     if (athleteError || !athlete) {
       console.error("[v0] Athlete query error:", athleteError)

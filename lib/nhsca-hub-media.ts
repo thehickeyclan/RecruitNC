@@ -125,6 +125,6 @@ export function nhscaHubMediaDbErrorMessage(message: string, code?: string | nul
 }
 
 const MEDIA_SELECT =
-  "id, event_slug, user_id, uploader_email, uploader_name, media_type, url, filename, caption, content_type, created_at"
+  "id, event_slug, user_id, uploader_name, media_type, url, filename, caption, content_type, created_at"
 
 export { MEDIA_SELECT as NHSCA_HUB_MEDIA_SELECT }

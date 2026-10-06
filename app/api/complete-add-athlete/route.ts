@@ -3,6 +3,7 @@ import { adminGate } from "@/lib/admin-gate"
 import { createClient } from "@/lib/supabase/server"
 import { autoFetchNHSCAForProfile } from "@/lib/nhsca-auto-fetch"
 import { normalizeCollegeToCanonical } from "@/lib/canonical-college"
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 
 export async function POST(request: Request) {
   const denied = await adminGate()
@@ -94,7 +95,7 @@ export async function POST(request: Request) {
       nhsca_2025_placement: athleteData.nhsca_2025_placement,
     })
 
-    const { data, error } = await supabase.from("athletes").insert([athleteData]).select().single()
+    const { data, error } = await supabase.from("athletes").insert([athleteData]).select(ATHLETE_PUBLIC_COLUMNS).single()
 
     if (error) {
       console.error("[v0] Database error:", error)

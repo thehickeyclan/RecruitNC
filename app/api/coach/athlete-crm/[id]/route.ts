@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { loadCoachViewer } from "@/lib/coach-viewer"
+import { stripPrivateAthleteFields } from "@/lib/athlete-private-fields"
 import { getNameVariants, getNHSCAFromTables } from "@/lib/tournament-tables"
 import { mergeNhscaForPublicRankings } from "@/lib/public-profile-data"
 import { getNhscaResults } from "@/lib/tournament-utils"
@@ -21,11 +23,17 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
+    // Coaches and admins only, and academics only for a verified coach or admin.
+    const coachViewer = await loadCoachViewer(createAdminClient(), user.id)
+    if (!coachViewer.allowed) {
+      return NextResponse.json({ error: "Coach access required" }, { status: 403 })
+    }
+
     const athleteId = params.id
     console.log("[v0] Fetching athlete with ID:", athleteId)
 
     // Get athlete data with all CRM fields
-    const { data: athlete, error: athleteError } = await supabase
+    const { data: athleteRow, error: athleteError } = await createAdminClient()
       .from("athletes")
       .select(`
         id,
@@ -55,12 +63,13 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       .eq("id", athleteId)
       .single()
 
-    console.log("[v0] Athlete query result:", { athlete, athleteError })
+    console.log("[v0] Athlete query result:", { found: Boolean(athleteRow), athleteError })
 
     if (athleteError) {
       console.log("[v0] Athlete not found, returning 404")
       return NextResponse.json({ error: "Athlete not found" }, { status: 404 })
     }
+    const athlete = athleteRow && !coachViewer.maySeePrivate ? stripPrivateAthleteFields(athleteRow) : athleteRow
 
     // Get CRM data from college_coach_stars
     const { data: crmData } = await supabase

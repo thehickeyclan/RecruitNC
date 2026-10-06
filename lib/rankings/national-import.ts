@@ -19,6 +19,8 @@ export type RankingGender = "M" | "F"
 /** An edition from a season that has ended: rejected rather than shown as current. */
 export class PriorSeasonError extends Error {}
 
+export type RankingScope = "weight" | "p4p" | "big_board"
+
 export type IncomingRankingRow = {
   rank: number
   name: string
@@ -36,7 +38,13 @@ export type ImportEditionInput = {
   published: string
   url?: string | null
   /** "weight" lists, a pound-for-pound list, or a recruiting-class board (MatScouts Big Board). */
-  scope?: "weight" | "p4p" | "big_board"
+  scope?: RankingScope
+  /**
+   * Which recruiting class a board covers. MatScouts publishes a Senior and a Junior Big Board on
+   * the same day; an edition used to be identified by (source, gender, month, scope) alone, so
+   * loading the junior board would have deleted the senior board it shares those four with.
+   */
+  classYear?: number | null
   rows: IncomingRankingRow[]
   /** Who reported it: "si-cron", "muse", "csv". */
   checkedBy: string
@@ -47,9 +55,21 @@ export type ImportEditionResult = {
   source: NationalRankingSource
   gender: RankingGender
   month: string
+  /** The class a board covers; 0 for a list that ranks every class at once. */
+  classYear: number
+  /** Whether its ranks count within a weight group or across the whole list. */
+  rankBasis: RankBasis
   rows: number
   ncMatched: string[]
+  /**
+   * Set when the rows landed but the freshness stamp did not. Reported rather than only logged:
+   * a status write that failed in silence once left the table describing a 95-row board that the
+   * same import had just deleted, and nothing downstream could tell.
+   */
+  statusError?: string
 }
+
+export type RankBasis = "weight" | "overall"
 
 const GRADE_OFFSET: Record<string, number> = { SR: 0, JR: 1, SO: 2, FR: 3, "8TH": 4, "7TH": 5 }
 
@@ -83,6 +103,46 @@ function classYear(grade: IncomingRankingRow["grade"], published: Date): number 
   if (Number.isInteger(n) && n >= 2025 && n <= 2035) return n
   const offset = GRADE_OFFSET[String(grade).trim().toUpperCase()]
   return offset == null ? null : seasonEnd(published) + offset
+}
+
+/**
+ * A class-scoped list's own class year, or 0 for one that is not class-scoped.
+ *
+ * Only boards are class-scoped, and an outlet publishes one per class on the same day, so this
+ * belongs to the edition's identity rather than to its rows. Weight and P4P lists rank every class
+ * at once and carry 0.
+ */
+export function resolveEditionClassYear(
+  scope: RankingScope,
+  stated: number | null | undefined,
+  rows: IncomingRankingRow[],
+  published: Date,
+): number {
+  if (scope !== "big_board") return 0
+  const named = Number(stated)
+  if (Number.isInteger(named) && named >= 2025 && named <= 2035) return named
+  // Unstated: every wrestler on a board is in the class it covers, so the rows can name it.
+  const years = new Set(rows.map((r) => classYear(r.grade, published)).filter((y): y is number => y != null))
+  if (years.size === 1) return [...years][0]!
+  throw new Error(
+    "A board must say which class it covers (classYear): an outlet publishes one per class on the same day" +
+      (years.size > 1 ? `, and its rows name ${years.size} classes (${[...years].sort().join(", ")})` : ", and its rows name none"),
+  )
+}
+
+/**
+ * Whether a rank counts within a weight group or across the whole list.
+ *
+ * MatScouts' senior girls board carries each wrestler's rank inside her weight class - the 155 lb
+ * seniors are 1,2,3,4,5,6,8,15,18, and the gaps are the juniors ranked above them - so "#8" on its
+ * own is meaningless. Their junior board is a single list of 90. Computed rather than declared: a
+ * rank that repeats inside an edition can only be a within-weight rank.
+ */
+export function resolveRankBasis(scope: RankingScope, rows: IncomingRankingRow[]): RankBasis {
+  if (scope === "weight") return "weight"
+  if (scope === "p4p") return "overall"
+  const ranks = rows.map((r) => Number(r.rank))
+  return new Set(ranks).size === ranks.length ? "overall" : "weight"
 }
 
 async function loadRoster(admin: SupabaseClient, gender: RankingGender): Promise<MatchableAthlete[]> {
@@ -123,18 +183,31 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
   const rankingMonth = `${month}-01`
   const scope = input.scope ?? "weight"
   const rows = input.rows.filter((r) => r && r.name?.trim() && Number(r.rank) > 0)
+  const editionClassYear = resolveEditionClassYear(scope, input.classYear, rows, published)
+  const rankBasis = resolveRankBasis(scope, rows)
   const print = fingerprint(rows)
   const now = new Date().toISOString()
 
-  // The freshness record tracks each source's weight lists; P4P and boards ride along with them.
-  const tracked = scope === "weight"
-  const { data: status } = tracked
-    ? await admin.from("ranking_source_status").select("fingerprint").eq("source", input.source).eq("gender", input.gender).maybeSingle()
-    : { data: null }
+  /*
+   * Freshness is recorded per list type, not per source.
+   *
+   * It used to track weight lists only, on the reasoning that boards and P4P ride along with them.
+   * MatScouts' girls board is the only girls list they publish, so it rode along with nothing: its
+   * published date was never stamped and a board posted that morning reported as "no new edition
+   * in ∞ days". One row per (source, gender, scope) lets each list answer for itself.
+   */
+  const { data: status } = await admin
+    .from("ranking_source_status")
+    .select("fingerprint")
+    .eq("source", input.source)
+    .eq("gender", input.gender)
+    .eq("scope", scope)
+    .eq("edition_class_year", editionClassYear)
+    .maybeSingle()
   // Same list as last time, and still on file: just record the check. (The fingerprint alone was
   // trusted once, and a re-sent Flo girls list was skipped after its rows had been pruned away.)
   const { count: held } =
-    tracked && status?.fingerprint === print
+    status?.fingerprint === print
       ? await admin
           .from("national_rankings")
           .select("id", { count: "exact", head: true })
@@ -142,14 +215,26 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
           .eq("gender", input.gender)
           .eq("ranking_month", rankingMonth)
           .eq("scope", scope)
+          .eq("edition_class_year", editionClassYear)
       : { count: 0 }
-  if (tracked && status?.fingerprint === print && (held ?? 0) > 0) {
+  if (status?.fingerprint === print && (held ?? 0) > 0) {
     await admin
       .from("ranking_source_status")
       .update({ last_checked_at: now, checked_by: input.checkedBy })
       .eq("source", input.source)
       .eq("gender", input.gender)
-    return { status: "unchanged", source: input.source, gender: input.gender, month, rows: rows.length, ncMatched: [] }
+      .eq("scope", scope)
+      .eq("edition_class_year", editionClassYear)
+    return {
+      status: "unchanged",
+      source: input.source,
+      gender: input.gender,
+      month,
+      classYear: editionClassYear,
+      rankBasis,
+      rows: rows.length,
+      ncMatched: [],
+    }
   }
 
   // Only this season's lists count as current rankings. Until an outlet publishes its 2026-27
@@ -184,6 +269,8 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
       athlete_name: row.name.trim(),
       rank: Number(row.rank),
       scope,
+      edition_class_year: editionClassYear,
+      rank_basis: rankBasis,
       weight_class: row.weight ? String(row.weight).trim() : null,
       class_year: classYear(row.grade, published),
       high_school: row.school?.trim() || null,
@@ -199,6 +286,7 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
     .eq("gender", input.gender)
     .eq("ranking_month", rankingMonth)
     .eq("scope", scope)
+    .eq("edition_class_year", editionClassYear)
   if (clearError) throw new Error(`Clearing edition: ${clearError.message}`)
   for (let i = 0; i < payload.length; i += 500) {
     const { error } = await admin.from("national_rankings").insert(payload.slice(i, i + 500))
@@ -206,12 +294,12 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
   }
   await pruneEditions(admin, input.source, input.gender)
 
-  if (!tracked) return { status: "imported", source: input.source, gender: input.gender, month, rows: payload.length, ncMatched }
-
   const { error: statusError } = await admin.from("ranking_source_status").upsert(
     {
       source: input.source,
       gender: input.gender,
+      scope,
+      edition_class_year: editionClassYear,
       last_checked_at: now,
       last_changed_at: now,
       published: input.published,
@@ -221,11 +309,21 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
       fingerprint: print,
       checked_by: input.checkedBy,
     },
-    { onConflict: "source,gender" },
+    { onConflict: "source,gender,scope,edition_class_year" },
   )
   if (statusError) console.error("[rankings] status stamp failed:", statusError.message)
 
-  return { status: "imported", source: input.source, gender: input.gender, month, rows: payload.length, ncMatched }
+  return {
+    statusError: statusError?.message,
+    status: "imported",
+    source: input.source,
+    gender: input.gender,
+    month,
+    classYear: editionClassYear,
+    rankBasis,
+    rows: payload.length,
+    ncMatched,
+  }
 }
 
 /**
@@ -258,10 +356,58 @@ export async function pruneEditions(admin: SupabaseClient, source: string, gende
 }
 
 /** Stamp a check that found nothing new (Muse's daily "no change" report). */
-export async function markRankingChecked(admin: SupabaseClient, source: NationalRankingSource, gender: RankingGender, checkedBy: string) {
+export async function markRankingChecked(
+  admin: SupabaseClient,
+  source: NationalRankingSource,
+  gender: RankingGender,
+  checkedBy: string,
+  /* Which list was checked. An outlet can publish several, and each goes stale on its own. */
+  scope: RankingScope = "weight",
+  /* Which class, for a board: 0 for a list that ranks every class at once. */
+  editionClassYear = 0,
+) {
   const now = new Date().toISOString()
   const { error } = await admin
     .from("ranking_source_status")
-    .upsert({ source, gender, last_checked_at: now, checked_by: checkedBy }, { onConflict: "source,gender", ignoreDuplicates: false })
+    .upsert(
+      { source, gender, scope, edition_class_year: editionClassYear, last_checked_at: now, checked_by: checkedBy },
+      { onConflict: "source,gender,scope,edition_class_year", ignoreDuplicates: false },
+    )
+  if (error) throw new Error(error.message)
+}
+
+/**
+ * Record that an outlet's newest list is last season's, without storing it.
+ *
+ * The rows are deliberately not kept: a ranking is a statement about a wrestler now, five stars
+ * are gated on simply holding a matched row, and last season's final ranks seniors who have since
+ * graduated - storing it would hand them a current five-star. What is worth keeping is the one
+ * fact, that they have published nothing for this season yet and when their last list went up.
+ * Without it, an outlet sitting on last season's final and an outlet that publishes nothing at all
+ * are the same empty row.
+ */
+export async function markPriorSeasonSeen(
+  admin: SupabaseClient,
+  source: NationalRankingSource,
+  gender: RankingGender,
+  checkedBy: string,
+  published: string,
+  url: string | null,
+  scope: RankingScope = "weight",
+  editionClassYear = 0,
+) {
+  const { error } = await admin.from("ranking_source_status").upsert(
+    {
+      source,
+      gender,
+      scope,
+      edition_class_year: editionClassYear,
+      last_checked_at: new Date().toISOString(),
+      prior_season_published: published,
+      prior_season_url: url,
+      checked_by: checkedBy,
+    },
+    { onConflict: "source,gender,scope,edition_class_year", ignoreDuplicates: false },
+  )
   if (error) throw new Error(error.message)
 }

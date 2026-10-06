@@ -15,7 +15,7 @@ import { DropInForm } from "./drop-in-form"
 import { formatPhoneForDisplay } from "@/lib/phone-format"
 import { formatTime } from "@/lib/nc-united-calendar/time-utils"
 import type { DropInRequest } from "@/lib/nc-united-calendar/drop-in-types"
-import { supabase } from "@/lib/supabase"
+import { useAuth } from "@/contexts/auth-context"
 
 interface EventDetailModalProps {
   event: CalendarEvent | null
@@ -27,21 +27,28 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
   const [showDropInForm, setShowDropInForm] = useState(false)
   const [dropInRequests, setDropInRequests] = useState<DropInRequest[]>([])
   const [dropInLoading, setDropInLoading] = useState(false)
+  // Public: how many places are taken. Admins: who took them (parent contact, wrestler details).
+  const [dropInCounts, setDropInCounts] = useState<{ active: number; paid: number }>({ active: 0, paid: 0 })
+  const { isAdmin } = useAuth()
 
   useEffect(() => {
     if (event?.id && (event.category === "blue-practice" || event.category === "gold-practice")) {
       loadDropInRequests()
     }
-  }, [event?.id])
+  }, [event?.id, isAdmin])
 
   const loadDropInRequests = async () => {
+    if (!event?.id) return
     setDropInLoading(true)
     try {
-      const { data } = await supabase
-        .from("drop_in_requests")
-        .select("*")
-        .eq("event_id", event.id)
-        .order("created_at", { ascending: false })
+      const countRes = await fetch(`/api/calendar/drop-in/count?eventId=${encodeURIComponent(event.id)}`, { cache: "no-store" })
+      if (countRes.ok) setDropInCounts(await countRes.json())
+      // The list carries minors' contact details and dates of birth - admins only, server-checked.
+      const data = isAdmin
+        ? await fetch(`/api/admin/calendar/events/${encodeURIComponent(event.id)}/drop-ins`, { credentials: "include", cache: "no-store" })
+            .then((r) => (r.ok ? r.json() : { requests: [] }))
+            .then((j: { requests?: DropInRequest[] }) => j.requests ?? [])
+        : []
 
       setDropInRequests((data as DropInRequest[]) || [])
     } catch (error) {
@@ -92,11 +99,7 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
   }
 
   const capacity = event.maxDropIns ?? 10
-  const activeDropIns = dropInRequests.filter((request) =>
-    ["paid", "pending"].includes(request.payment_status ?? "unpaid"),
-  )
-  const paidDropIns = dropInRequests.filter((request) => request.payment_status === "paid")
-  const remainingSlots = Math.max(capacity - activeDropIns.length, 0)
+  const remainingSlots = Math.max(capacity - dropInCounts.active, 0)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -230,11 +233,11 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                       <Users className="h-5 w-5 text-blue-600" />
-                      <h3 className="text-lg font-semibold">Drop-in Requests ({dropInRequests.length})</h3>
+                      <h3 className="text-lg font-semibold">Drop-in Requests ({dropInCounts.active})</h3>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge className="bg-emerald-100 text-emerald-800">
-                        {paidDropIns.length} paid • {capacity} capacity
+                        {dropInCounts.paid} paid • {capacity} capacity
                       </Badge>
                       <Badge
                         className={
@@ -259,7 +262,9 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
                     </div>
                   </div>
 
-                  {dropInRequests.length > 0 ? (
+                  {/* Who signed up is for admins; everyone else sees the count above. */}
+                  {isAdmin ? (
+                  dropInRequests.length > 0 ? (
                     <div className="space-y-3">
                       {dropInRequests.map((request) => (
                         <Card key={request.id}>
@@ -297,7 +302,8 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
                     </div>
                   ) : (
                     <p className="text-gray-600 text-center py-4">No drop-in requests yet.</p>
-                  )}
+                  )
+                  ) : null}
                 </div>
               </>
             )}

@@ -3,6 +3,7 @@ import { createClient as createSupabaseAdmin } from "@supabase/supabase-js"
 import { createClient as createSSRClient } from "@/lib/supabase/server"
 import { publishSubmittedResult } from "@/lib/publish-submitted-result"
 import { publishSubmittedWin } from "@/lib/athlete-submitted-wins"
+import { checkReportedWin, reviewNote } from "@/lib/reported-win-check"
 import type { SubmittedResultForm } from "@/lib/tournament-result-submission"
 
 type AchievementItem = {
@@ -161,6 +162,17 @@ export async function POST(request: NextRequest) {
         credential: win.accolade ?? "",
       })
       if (!published.ok) console.error("[edit-requests] win not published:", published.error)
+      /*
+       * No approval queue. The win is already live as athlete-reported; the request closes itself
+       * unless our own brackets contradict it, which is the one case that reaches Matt.
+       */
+      if (published.ok && data?.id) {
+        const { status, note } = reviewNote(await checkReportedWin(admin, athleteId, win.opponent ?? ""))
+        await admin
+          .from("edit_requests")
+          .update({ status, admin_notes: note, reviewed_at: status === "approved" ? new Date().toISOString() : null })
+          .eq("id", data.id)
+      }
     }
     if (editType === "tournament_result") {
       published = await publishSubmittedResult(admin, {
@@ -169,6 +181,17 @@ export async function POST(request: NextRequest) {
         form: (currentData?.proposedTournamentResult ?? {}) as SubmittedResultForm,
       })
       if (!published.ok) console.error("[edit-requests] result not published:", published.error)
+      // Published as family-submitted, visibly not the same as an imported result - nothing to approve.
+      if (published.ok && data?.id) {
+        await admin
+          .from("edit_requests")
+          .update({
+            status: "approved",
+            admin_notes: "Auto-reviewed: published on submission as family-submitted.",
+            reviewed_at: new Date().toISOString(),
+          })
+          .eq("id", data.id)
+      }
     }
 
     return NextResponse.json({

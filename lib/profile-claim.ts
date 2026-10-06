@@ -34,6 +34,8 @@ export type ClaimInput = {
   viewerName?: string | null
   ip?: string | null
   userAgent?: string | null
+  /** Why this claim should be looked at regardless of the checks below - e.g. no typed signature. */
+  reviewNote?: string | null
 }
 
 export type ClaimResult =
@@ -41,8 +43,10 @@ export type ClaimResult =
   | { ok: false; status: 400 | 403 | 404 | 409; error: string }
 
 /** A surname in common is weak evidence, but the absence of one is worth a look. */
-function surname(full: string): string {
-  const parts = String(full ?? "").trim().split(/\s+/)
+export function surname(full: string): string {
+  // Curly and straight apostrophes are the same name: a phone keyboard typed "D’Ettore" for a
+  // parent whose son's profile reads "D'Ettore", and the claim was flagged as a stranger's.
+  const parts = String(full ?? "").replace(/[\u2018\u2019\u02bc`´]/g, "'").trim().split(/\s+/)
   return parts.length > 1 ? parts[parts.length - 1]!.toLowerCase() : ""
 }
 
@@ -136,6 +140,7 @@ export async function claimProfile(admin: SupabaseClient, input: ClaimInput): Pr
    * a queue where somebody can look at it.
    */
   const reasons: string[] = []
+  if (input.reviewNote) reasons.push(input.reviewNote)
   if (input.viewerName && surname(input.viewerName) && surname(athleteName)) {
     if (surname(input.viewerName) !== surname(athleteName)) reasons.push("different surname")
   }

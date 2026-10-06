@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
         nhsca_results: nhscaResults.length > 0 ? nhscaResults : null,
         created_at: new Date().toISOString(),
       })
-      .select()
+      .select("id, name, location, highschool, graduationyear, weightclass, gender, photourl")
       .single()
 
     if (athleteError) {

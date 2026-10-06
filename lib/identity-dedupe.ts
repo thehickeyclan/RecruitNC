@@ -123,3 +123,19 @@ export function conflict(a: Identity, b: Identity): string | null {
   return null
 }
 
+
+/**
+ * Strip a forfeit or disqualification marker that a bracket source wrote into a name.
+ *
+ * "Ian (FF) Shepherd (FF)" and "DQ- Jayden DQ- Gittrich" are wrestlers, not people called FF.
+ * Left alone they mint an identity under a mangled name, which then never matches the same
+ * wrestler recorded properly anywhere else.
+ */
+export function stripResultMarkers(raw: string): string {
+  return String(raw ?? "")
+    .replace(/\((?:FF|DQ|DQ['`]?d|NC|BYE)\)/gi, " ")
+    .replace(/\b(?:FF|DQ)\s*[-–]\s*/gi, " ")
+    .replace(/\s*[-–]\s*(?:FF|DQ)\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+}

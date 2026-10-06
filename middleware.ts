@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { FUNDRAISING_AUTH_RETURN_COOKIE } from "@/lib/fundraising/fundraising-auth-return-cookie"
+import { adminGateApplies, adminGateRefusal } from "@/lib/admin-api-gate"
 
 function isFundraisingHubPublicPath(p: string): boolean {
   if (p === "/fundraising" || p === "/fundraising/") return true
@@ -18,6 +19,22 @@ function isFundraisingHubPublicPath(p: string): boolean {
  */
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
+
+  /*
+   * The admin API, closed at the door. 61 admin routes had no guard of their own - one returned
+   * every athlete's contact details and GPA to a signed-out request. This verifies the session
+   * token locally (no Supabase Auth call, so the rule above still holds) and checks admin once.
+   * See lib/admin-api-gate.ts for the paths that stay open and why.
+   */
+  if (adminGateApplies(pathname, request.method)) {
+    const refusal = await adminGateRefusal(request.headers, request.cookies.getAll())
+    if (refusal) {
+      return NextResponse.json(
+        { error: refusal === 401 ? "Sign in as an admin." : "Admin access required." },
+        { status: refusal, headers: { "Cache-Control": "no-store" } },
+      )
+    }
+  }
 
   // The printed QR code. Redirecting here rather than in the page gives an iPhone a real 307
   // before anything renders — the page-level redirect streamed the fallback first, so a scan

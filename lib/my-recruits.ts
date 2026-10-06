@@ -2,6 +2,7 @@ import type { createAdminClient } from "@/lib/supabase/admin"
 import { resolveRankingViewerForUser } from "@/lib/ranking-access"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
+import { scoutingReportAvailable } from "@/lib/scouting-report-access"
 
 export type MyRecruitRow = {
   athleteId: string
@@ -23,6 +24,8 @@ export type MyRecruitRow = {
   starredBy: string
   /** Only the viewer's own stars can be removed from here. */
   mine: boolean
+  /** Whether a scouting report exists for this wrestler — the profile button's rule, so a coach never clicks into "unavailable". */
+  hasReport: boolean
 }
 
 const ordinal = (n: number) => (n === 1 ? "Champion" : `${n}${n === 2 ? "nd" : n === 3 ? "rd" : "th"}`)
@@ -89,7 +92,7 @@ export async function loadMyRecruits(admin: ReturnType<typeof createAdminClient>
     ]
   }
   const [{ data: athletes }, state, nhsca, s32, { viewer }] = await Promise.all([
-    admin.from("athletes").select("id, name, wrestling_name, photourl, graduationyear, weightclass, highschool, wrestlingClub, college, recruiting_status, prospect_ranking").in("id", ids),
+    admin.from("athletes").select("id, name, wrestling_name, photourl, gender, graduationyear, weightclass, highschool, wrestlingClub, college, recruiting_status, prospect_ranking").in("id", ids),
     linked("wrestling_nchsaa_results", "year, place, classification"),
     linked("nhsca_placements", "year, placement"),
     linked("super32_results", "year, placement"),
@@ -134,6 +137,7 @@ export async function loadMyRecruits(admin: ReturnType<typeof createAdminClient>
       starredAt: star.starredAt,
       starredBy: star.starredBy,
       mine: star.mine,
+      hasReport: scoutingReportAvailable(a),
     })
   }
   return { recruits, hasSchool: Boolean(me?.school_id), schoolId: (me?.school_id as string | null) ?? null }

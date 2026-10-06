@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 
 import { nameWords, namesLikelySamePerson } from "@/lib/athlete-name-match"
-import { sourceLabel } from "@/lib/national-rankings"
+import { rankingScopeLabel, sourceLabel } from "@/lib/national-rankings"
 import type { EventPlacer, FargoAllAmerican, NationallyRankedOpponent, StatePlacer } from "@/lib/significant-wins"
 
 /**
@@ -88,7 +88,7 @@ async function buildStatePlacerIndex(
  * only with evidence it was him (nationalRankFits in lib/significant-wins.ts).
  */
 export async function loadNationallyRanked(supabase: SupabaseClient): Promise<NationallyRankedOpponent[]> {
-  type Row = { athlete_name: string; rank: number; source: string; state: string | null; high_school: string | null; scope: string; weight_class: string | null; ranking_month: string }
+  type Row = { athlete_name: string; rank: number; source: string; state: string | null; high_school: string | null; scope: string; weight_class: string | null; ranking_month: string; edition_class_year: number | null; rank_basis: string | null }
   /*
    * Newest edition per outlet first, then only those rows, paged. This used to read every held
    * edition in one query ordered by rank; PostgREST caps a response at 1,000 rows, so once three
@@ -133,7 +133,7 @@ export async function loadNationallyRanked(supabase: SupabaseClient): Promise<Na
     for (let from = 0; ; from += 1000) {
       let query = supabase
         .from("national_rankings")
-        .select("athlete_name, rank, source, state, high_school, scope, weight_class, ranking_month")
+        .select("athlete_name, rank, source, state, high_school, scope, weight_class, ranking_month, edition_class_year, rank_basis")
         .eq("source", edition.source)
         .eq("ranking_month", edition.month)
       if (edition.gender) query = query.eq("gender", edition.gender)
@@ -152,7 +152,19 @@ export async function loadNationallyRanked(supabase: SupabaseClient): Promise<Na
     const key = `${name.toLowerCase()}|${r.state ?? ""}`
     // Sorted by rank, so the first row per wrestler is his best across outlets and lists.
     if (best.has(key)) continue
-    const where = r.scope === "p4p" ? " P4P" : r.scope === "big_board" ? " Big Board" : r.weight_class ? ` (${r.weight_class})` : ""
+    /* One rule for every surface — see rankingScopeLabel: a big-board rank means nothing without
+     * its weight, because the ranks restart in each group. */
+    const where =
+      r.scope === "weight"
+        ? r.weight_class
+          ? ` (${r.weight_class})`
+          : ""
+        : rankingScopeLabel({
+            scope: String(r.scope ?? ""),
+            weightClass: r.weight_class ?? null,
+            editionClassYear: r.edition_class_year ?? 0,
+            rankBasis: r.rank_basis ?? "weight",
+          })
     best.set(key, {
       name,
       rank: Number(r.rank),

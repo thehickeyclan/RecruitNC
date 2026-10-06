@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
+import { stripPrivateAthleteFields, viewerIdMaySeeAthletePrivateInfo } from "@/lib/athlete-private-fields"
 
 export async function DELETE(
   request: NextRequest,
@@ -74,7 +76,13 @@ export async function GET(
       return NextResponse.json({ error: "Athlete not found" }, { status: 404 })
     }
 
-    return NextResponse.json(athlete)
+    // This answered every request with the whole row - cell, email, GPA, birthdate - including
+    // signed-out ones. Same rule as the profile page now: the athlete, an admin or a verified coach.
+    const viewer = await getUserFromRequest(request)
+    const maySee = await viewerIdMaySeeAthletePrivateInfo(adminSupabase, viewer?.id ?? null, athlete)
+    return NextResponse.json(maySee ? athlete : stripPrivateAthleteFields(athlete), {
+      headers: { "Cache-Control": "private, no-store" },
+    })
   } catch (error) {
     console.error("Error fetching athlete:", error)
     return NextResponse.json(

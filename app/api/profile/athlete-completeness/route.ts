@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export const dynamic = "force-dynamic"
 
@@ -100,8 +101,25 @@ export async function GET(request: NextRequest) {
     .filter(Boolean)
   if (ids.length === 0) return NextResponse.json({ athletes: [] })
 
-  // Full row — avoids 42703 when prod schema differs (missing cell, photo_url, etc.).
-  const { data: rows, error } = await supabase.from("athletes").select("*").in("id", ids)
+  /*
+   * Only this account's own wrestlers: the ones it claimed or is linked to as a parent. The ids
+   * come from the query string, so without this any account could ask whether any wrestler has
+   * a GPA or a phone on file. Admins may check anyone.
+   */
+  const admin = createAdminClient()
+  const [{ data: me }, { data: claimed }, { data: linked }] = await Promise.all([
+    admin.from("user_profiles").select("is_admin, role").eq("user_id", user.id).maybeSingle(),
+    admin.from("athletes").select("id").eq("claimed_by_user_id", user.id).in("id", ids),
+    admin.from("parent_athlete_links").select("athlete_id").eq("user_id", user.id).in("athlete_id", ids),
+  ])
+  const isAdmin = me?.is_admin === true || String(me?.role ?? "").toLowerCase() === "admin"
+  const mine = new Set([...(claimed ?? []).map((r) => String(r.id)), ...(linked ?? []).map((r) => String(r.athlete_id))])
+  const allowed = isAdmin ? ids : ids.filter((id) => mine.has(id))
+  if (allowed.length === 0) return NextResponse.json({ athletes: [] })
+
+  // Full row — avoids 42703 when prod schema differs (missing cell, photo_url, etc.). Server key,
+  // because completeness reads the private fields the signed-in role cannot select.
+  const { data: rows, error } = await admin.from("athletes").select("*").in("id", allowed)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 

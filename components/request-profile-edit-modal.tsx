@@ -96,9 +96,13 @@ export function RequestProfileEditModal({
         take("sat", "academic_sat", score(sat, 400, 1600))
         take("act", "academic_act", score(act, 1, 36))
         take("highSchool", "highschool", shortText(highSchool))
-        take("club", "wrestlingclub", shortText(club))
+        // "wrestlingClub": the lowercase spelling is not a column, so self-edit dropped it while
+        // this form told the family the change was live.
+        take("club", "wrestlingClub", shortText(club))
         take("cellNumber", "cell", /^[\d\s().+-]{7,20}$/.test(cellNumber.trim()) ? cellNumber.trim() : null)
         take("highlightVideo", "highlight_video_url", /^https?:\/\/\S+$/i.test(highlightVideo.trim()) ? highlightVideo.trim() : null)
+        // Their own bio is theirs to write - Coy Deel's sat in an approval queue for a day.
+        take("bio", "bio", bioOther.trim() && bioOther.trim().length <= 3000 ? bioOther.trim() : null)
       }
 
       let savedDirectly = false
@@ -124,7 +128,7 @@ export function RequestProfileEditModal({
       if (weight && !weightSavedDirectly) descriptionParts.push(`Weight Class: ${weight}`)
       if (cellNumber && !isLive("cellNumber")) descriptionParts.push(`Cell Number: ${cellNumber}`)
       if (highlightVideo && !isLive("highlightVideo")) descriptionParts.push(`Highlight Video: ${highlightVideo}`)
-      if (bioOther) descriptionParts.push(`Bio Info: ${bioOther}`)
+      if (bioOther && !isLive("bio")) descriptionParts.push(`Bio Info: ${bioOther}`)
       if (achievements) descriptionParts.push(`Achievements: ${achievements}`)
       if (gpa && !isLive("gpa")) descriptionParts.push(`GPA: ${gpa}`)
       if (sat && !isLive("sat")) descriptionParts.push(`SAT: ${sat}`)

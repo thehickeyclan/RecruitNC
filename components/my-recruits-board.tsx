@@ -145,6 +145,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                       <th className="px-3 py-3 font-semibold">Rank</th>
                       <th className="px-3 py-3 font-semibold">Best results</th>
                       <th className="px-3 py-3 font-semibold">Status</th>
+                      <th className="px-3 py-3 font-semibold">Scouting report</th>
                       <th className="px-3 py-3 font-semibold">Added</th>
                       <th className="px-3 py-3" />
                     </tr>
@@ -182,6 +183,9 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                           ) : (
                             <span className="text-white/70">Uncommitted</span>
                           )}
+                        </td>
+                        <td className="px-3 py-3">
+                          <ReportLink row={r} />
                         </td>
                         <td className="px-3 py-3 text-xs text-white/55">
                           {dayLabel(r.starredAt)}
@@ -225,6 +229,11 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                         </p>
                       </div>
                     </div>
+                    {r.hasReport ? (
+                      <div className="mt-3">
+                        <ReportLink row={r} />
+                      </div>
+                    ) : null}
                     <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-2">
                       <span className="text-[11px] text-white/45">
                         Added {dayLabel(r.starredAt)}
@@ -258,17 +267,27 @@ function Avatar({ row }: { row: MyRecruitRow }) {
   )
 }
 
+/**
+ * The report gets its own labelled column. It used to sit unlabelled beside the trash button,
+ * which is where a coach looks to remove someone, not to read about them. Shown only where a
+ * report exists, so it never leads to "not available for this athlete".
+ */
+function ReportLink({ row }: { row: MyRecruitRow }) {
+  if (!row.hasReport) return <span className="text-xs text-white/35">—</span>
+  return (
+    <Link
+      href={`/athletes/${row.athleteId}/scouting-report`}
+      className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-[#D3B574]/60 bg-[#D3B574]/10 px-2.5 py-1.5 text-xs font-semibold text-[#D3B574] hover:bg-[#D3B574]/20"
+    >
+      <FileText className="h-3.5 w-3.5" aria-hidden />
+      View report
+    </Link>
+  )
+}
+
 function Actions({ row, removing, onRemove }: { row: MyRecruitRow; removing: boolean; onRemove: (id: string) => void }) {
   return (
     <div className="flex items-center gap-1.5">
-      <Link
-        href={`/athletes/${row.athleteId}/scouting-report`}
-        title="Scouting report"
-        className="inline-flex items-center gap-1 rounded-md border border-[#D3B574]/50 px-2 py-1 text-xs font-semibold text-[#D3B574] hover:bg-[#D3B574]/10"
-      >
-        <FileText className="h-3.5 w-3.5" aria-hidden />
-        Report
-      </Link>
       {row.mine ? (
         <button
           type="button"

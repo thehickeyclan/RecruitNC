@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { Resend } from "resend"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { NATIONAL_RANKING_SOURCES, type NationalRankingSource } from "@/lib/national-rankings"
+import { NATIONAL_RANKING_SOURCES } from "@/lib/national-rankings"
+import { freshnessProblem, listLabel, type WatchedList } from "@/lib/rankings/freshness"
 
 export const dynamic = "force-dynamic"
 
@@ -13,13 +14,7 @@ function authorizeCron(request: NextRequest): boolean {
   return request.headers.get("x-cron-secret") === secret
 }
 
-/** Nobody has looked at this source in two days: the daily check has stopped. */
-const CHECK_STALE_DAYS = 2
-/** No new edition in three weeks: worth a human look, since in season they publish weekly. */
-const EDITION_STALE_DAYS = 21
-
 const FROM = "NC Wrestling United <info@ncwrestlingunited.com>"
-const GENDER = { M: "boys", F: "girls" } as const
 
 /**
  * Daily: are the national rankings current? Rankings went a month stale in October 2026 and a
@@ -32,23 +27,52 @@ export async function GET(request: NextRequest) {
   const { data, error } = await admin.from("ranking_source_status").select("*")
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const now = Date.now()
-  const days = (iso: string | null | undefined) => (iso ? (now - new Date(iso).getTime()) / 86_400_000 : Infinity)
+  const now = new Date()
   const problems: string[] = []
   const report: Array<Record<string, unknown>> = []
-  for (const source of Object.keys(NATIONAL_RANKING_SOURCES) as NationalRankingSource[]) {
-    for (const gender of ["M", "F"] as const) {
-      const row = (data ?? []).find((r) => r.source === source && r.gender === gender)
-      const label = `${NATIONAL_RANKING_SOURCES[source]} ${GENDER[gender]}`
-      const checked = days(row?.last_checked_at)
-      const changed = days(row?.last_changed_at)
-      report.push({ source, gender, checkedDaysAgo: Math.round(checked * 10) / 10, changedDaysAgo: Math.round(changed * 10) / 10 })
-      if (checked > CHECK_STALE_DAYS) {
-        problems.push(`${label}: not checked ${Number.isFinite(checked) ? `in ${Math.floor(checked)} days` : "ever"}`)
-      } else if (changed > EDITION_STALE_DAYS) {
-        problems.push(`${label}: checked daily, but no new edition in ${Math.floor(changed)} days (last published ${row?.published ?? "unknown"})`)
-      }
+  /*
+   * Watch the lists an outlet actually publishes, not every (source, gender) we can imagine. A
+   * source that has never sent a girls list should not be reported stale forever, while a source
+   * that publishes several needs each one watched: MatScouts' girls board is their only girls
+   * list, and they publish a separate board per recruiting class, each on its own clock.
+   *
+   * The status rows ARE that set, one per list, so they drive the loop. A source with no row at
+   * all is the one case they cannot speak for - nobody has ever checked it - so it is seeded.
+   */
+  const watched = new Map<string, WatchedList>()
+  for (const r of (data ?? []) as Array<Record<string, unknown>>) {
+    const list: WatchedList = {
+      source: String(r.source ?? ""),
+      gender: String(r.gender ?? ""),
+      scope: String(r.scope ?? "weight"),
+      editionClassYear: Number(r.edition_class_year ?? 0),
+      lastCheckedAt: (r.last_checked_at as string) ?? null,
+      lastChangedAt: (r.last_changed_at as string) ?? null,
+      published: (r.published as string) ?? null,
+      priorSeasonPublished: (r.prior_season_published as string) ?? null,
     }
+    watched.set(`${list.source}|${list.gender}|${list.scope}|${list.editionClassYear}`, list)
+  }
+  for (const source of Object.keys(NATIONAL_RANKING_SOURCES)) {
+    if ((data ?? []).some((r) => String((r as Record<string, unknown>).source) === source)) continue
+    for (const gender of ["M", "F"]) {
+      watched.set(`${source}|${gender}|weight|0`, { source, gender, scope: "weight", editionClassYear: 0 })
+    }
+  }
+
+  for (const [, list] of [...watched].sort(([a], [b]) => a.localeCompare(b))) {
+    const problem = freshnessProblem(list, now)
+    report.push({
+      list: listLabel(list),
+      source: list.source,
+      gender: list.gender,
+      scope: list.scope,
+      classYear: list.editionClassYear,
+      published: list.published ?? null,
+      priorSeasonPublished: list.priorSeasonPublished ?? null,
+      problem,
+    })
+    if (problem) problems.push(problem)
   }
 
   const to = (process.env.RANKINGS_ALERT_TO ?? "").split(",").map((s) => s.trim()).filter(Boolean)

@@ -50,6 +50,7 @@ import { RecruitingFunnelChart } from "@/components/recruiting-funnel-chart"
 import { SchoolBrandedHeader } from "@/components/school-branded-header"
 import { useSchoolBranding } from "@/hooks/use-school-branding"
 import { AuthGuard } from "@/components/auth-guard"
+import { scoutingReportAvailable } from "@/lib/scouting-report-access"
 import { createClient } from "@/lib/supabase/client"
 import { RecruitingActionsDashboard, RecruitingActionsDashboardRef } from "@/components/recruiting-actions-dashboard"
 import { CreateProspectModal } from "@/components/create-prospect-modal"
@@ -2973,12 +2974,15 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                         )}
                       </div>
                     </th>
+                    <th className="h-12 px-4 text-left align-middle font-semibold text-foreground whitespace-nowrap">
+                      Scouting report
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="[&_tr:last-child]:border-0">
                   {sortedProspects.length === 0 ? (
                     <tr>
-                      <td colSpan={12} className="p-8 text-center text-muted-foreground">
+                      <td colSpan={13} className="p-8 text-center text-muted-foreground">
                         No prospects found
                       </td>
                     </tr>
@@ -3241,6 +3245,20 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
+                          </td>
+                          {/* Only where a report exists, so a coach never clicks into "not available". */}
+                          <td className="p-4 align-middle" onClick={(e) => e.stopPropagation()}>
+                            {scoutingReportAvailable(prospect) ? (
+                              <a
+                                href={`/athletes/${encodeURIComponent(prospect.id)}/scouting-report`}
+                                className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-border px-2.5 py-1.5 text-xs font-semibold text-foreground hover:bg-muted"
+                              >
+                                <FileText className="h-3.5 w-3.5" aria-hidden />
+                                View report
+                              </a>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
                           </td>
                         </tr>
                       )

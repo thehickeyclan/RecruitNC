@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
   const { data, error } = await admin
     .from(NHSCA_HUB_MEDIA_TABLE)
     .select(
-      "id, event_slug, user_id, uploader_email, uploader_name, media_type, url, filename, caption, content_type, created_at"
+      "id, event_slug, user_id, uploader_name, media_type, url, filename, caption, content_type, created_at"
     )
     .eq("event_slug", eventSlug)
     .order("created_at", { ascending: false })

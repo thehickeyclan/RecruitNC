@@ -8,6 +8,7 @@ import { normalizeCollegeToCanonical } from "@/lib/canonical-college"
 import { fetchCommitmentAthletes, fetchCommitmentStats, type CommitmentAthleteFilters } from "@/lib/athletes-commitments-fetch"
 import { jsonSafeClone } from "@/lib/json-safe-clone"
 import { adminGate } from "@/lib/admin-gate"
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 
 export const revalidate = 120
 
@@ -163,7 +164,7 @@ export async function POST(request: Request) {
       nationally_ranked_wins: body.nationally_ranked_wins || null,
     }
 
-    const { data, error } = await supabase.from("athletes").insert([athleteData]).select()
+    const { data, error } = await supabase.from("athletes").insert([athleteData]).select(ATHLETE_PUBLIC_COLUMNS)
 
     if (error) {
       return NextResponse.json({ success: false, error: error.message }, { status: 400 })
