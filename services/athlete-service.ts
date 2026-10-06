@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase"
 import { mockAthletes } from "@/lib/mock-data"
 import type { Athlete } from "@/types/athlete"
 import { mapDbToAthlete } from "@/lib/athlete-utils"
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 
 export async function getRecentCommitments(count: number): Promise<Athlete[]> {
   try {
@@ -84,7 +85,7 @@ export async function getAthleteById(id: string): Promise<Athlete | null> {
 }
 
 export async function createAthlete(athlete: Omit<Athlete, "id">): Promise<Athlete | null> {
-  const { data, error } = await supabase.from("athletes").insert([athlete]).select().single()
+  const { data, error } = await supabase.from("athletes").insert([athlete]).select(ATHLETE_PUBLIC_COLUMNS).single()
 
   if (error) {
     console.error("Error creating athlete:", error)

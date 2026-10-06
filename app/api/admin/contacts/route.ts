@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { getCachedAdminCheck } from "@/lib/cached-auth-check"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export async function GET(request: Request) {
   try {
@@ -20,7 +21,7 @@ export async function GET(request: Request) {
 
     // Fetch athletes if type is all or athlete
     if (type === "all" || type === "athlete") {
-      let athleteQuery = supabase
+      let athleteQuery = createAdminClient()
         .from("athletes")
         .select("id, name, photourl, weightclass, graduationyear, highschool, contactEmail, phone, recruiting_status, claimed_at")
         .order("name", { ascending: true })

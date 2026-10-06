@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,7 +50,7 @@ export async function POST(request: NextRequest) {
         recruiting_status: "Uncommitted",
         is_prospect: true,
       })
-      .select()
+      .select(ATHLETE_PUBLIC_COLUMNS)
       .single()
 
     if (createError) {

@@ -5,11 +5,12 @@ import { supabase } from "@/lib/supabase"
 export async function fixAthleteData(athleteId: string) {
   try {
     // First, get the current athlete data
-    const { data: athlete, error: fetchError } = await supabase
+    // Named columns: the signed-in role cannot select the private ones, so "*" would fail.
+    const { data: athlete, error: fetchError } = (await supabase
       .from("athletes")
-      .select("*")
+      .select("id, name, firstName, lastName, college, gender, photourl, highschool, wrestlingClub, achievements")
       .eq("id", athleteId)
-      .single()
+      .single()) as { data: any; error: any }
 
     if (fetchError) {
       console.error("Error fetching athlete:", fetchError)
@@ -81,7 +82,7 @@ export async function fixAthleteData(athleteId: string) {
       .from("athletes")
       .update(updateData)
       .eq("id", athleteId)
-      .select()
+      .select("id, name, firstName, lastName, college, gender, photourl, highschool, wrestlingClub, achievements")
       .single()
 
     if (updateError) {

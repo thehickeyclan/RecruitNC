@@ -20,6 +20,13 @@ describe("adminGateApplies", () => {
     expect(adminGateApplies("/api/admin/impersonate", "POST")).toBe(true)
     expect(adminGateApplies("/api/admin/colleges/abc", "PATCH")).toBe(true)
   })
+  it("guards debug, test and one-off fix routes too", () => {
+    expect(adminGateApplies("/api/debug/find-colt-campbell", "GET")).toBe(true)
+    expect(adminGateApplies("/api/debug-stats", "GET")).toBe(true)
+    expect(adminGateApplies("/api/test-supabase", "GET")).toBe(true)
+    expect(adminGateApplies("/api/fix-montreat", "GET")).toBe(true)
+    expect(adminGateApplies("/api/athletes/x", "GET")).toBe(false)
+  })
   it("leaves the read-only lists ordinary pages use, and TOC's own guards, alone", () => {
     expect(adminGateApplies("/api/admin/colleges", "GET")).toBe(false)
     expect(adminGateApplies("/api/admin/colleges", "POST")).toBe(true)

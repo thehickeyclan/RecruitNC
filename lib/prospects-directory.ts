@@ -23,7 +23,6 @@ export const PROSPECT_LIST_COLUMNS = `
   prospect_ranking,
   rankings,
   recruiting_status,
-  academic_gpa,
   nationally_ranked_wins,
   nhsca_results,
   nhsca_2026_record,

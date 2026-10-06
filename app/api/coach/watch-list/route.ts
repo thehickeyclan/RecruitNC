@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export async function GET() {
   try {
@@ -27,7 +28,7 @@ export async function GET() {
     }
 
     // Get watch list with athlete details
-    const { data: watchList, error } = await supabase
+    const { data: watchList, error } = await createAdminClient()
       .from("college_coach_stars")
       .select(
         `

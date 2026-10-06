@@ -23,7 +23,7 @@ export async function GET() {
     }
 
     // Get total athlete count
-    const { count, error: countError } = await supabase.from("athletes").select("*", { count: "exact", head: true })
+    const { count, error: countError } = await supabase.from("athletes").select("id", { count: "exact", head: true })
 
     if (countError) {
       console.error("Error counting athletes:", countError)

@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { cookies } from "next/headers"
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -56,8 +57,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // Get update data from request
     const updates = await request.json()
 
-    // Update athlete profile
-    const { data: updatedAthlete, error: updateError } = await supabase
+    // Update athlete profile. With the server key: the claimer/linked-parent check above is the
+    // authority, and the owner may read back their own contact fields, which the signed-in role
+    // can no longer select directly.
+    const { data: updatedAthlete, error: updateError } = await createAdminClient()
       .from("athletes")
       .update({
         socialMedia:

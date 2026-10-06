@@ -15,7 +15,7 @@ export default async function EditRequestPage({ params }: EditRequestPageProps) 
   // Fetch the athlete; if not found, go back to athletes list.
   const { data: athlete, error } = await supabase
     .from("athletes")
-    .select("*")
+    .select("id, name, first_name, last_name")
     .eq("id", params.id)
     .single()
 

@@ -187,7 +187,8 @@ export async function GET(request: Request) {
           high_school_division: divisionMap[(athlete.highschool || "").trim()] ?? null,
           weight_display: athlete.weightclass ? `${athlete.weightclass} lbs` : "TBD",
           prospect_ranking: athlete.prospect_ranking,
-          academic_gpa: athlete.academic_gpa,
+          // Academics are for college coaches and the athlete, not every rankings subscriber.
+          academic_gpa: viewer?.isAdmin || viewer?.isVerifiedCoach ? athlete.academic_gpa : null,
           photourl: athlete.photourl || athlete.headshot_url,
           has_ranked_win: hasRankedWin,
           nationally_ranked_wins: athlete.nationally_ranked_wins,

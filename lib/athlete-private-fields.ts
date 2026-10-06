@@ -72,7 +72,18 @@ export async function viewerMaySeeAthletePrivateInfo(
   athlete: { claimed_by_user_id?: unknown } | null | undefined,
 ): Promise<boolean> {
   const { data } = await supabase.auth.getUser()
-  const viewerId = data.user?.id
+  return viewerIdMaySeeAthletePrivateInfo(supabase, data.user?.id ?? null, athlete)
+}
+
+/**
+ * The same rule for a viewer already identified - a route that resolved the user from a bearer
+ * token or a cookie (lib/supabase/auth-from-request.ts) and holds a server-key client.
+ */
+export async function viewerIdMaySeeAthletePrivateInfo(
+  supabase: SupabaseClient,
+  viewerId: string | null,
+  athlete: { claimed_by_user_id?: unknown } | null | undefined,
+): Promise<boolean> {
   if (!viewerId) return false
 
   if (athlete?.claimed_by_user_id && String(athlete.claimed_by_user_id) === viewerId) return true

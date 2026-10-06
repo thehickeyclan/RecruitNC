@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase"
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 
 export interface Athlete {
   id: number
@@ -19,7 +20,7 @@ export interface Athlete {
 
 export async function getAllAthletes(): Promise<Athlete[]> {
   try {
-    const { data, error } = await supabase.from("athletes").select("*").order("created_at", { ascending: false })
+    const { data, error } = (await supabase.from("athletes").select(ATHLETE_PUBLIC_COLUMNS).order("created_at", { ascending: false })) as { data: Athlete[] | null; error: { message: string } | null }
 
     if (error) {
       console.error("Error fetching athletes:", error)

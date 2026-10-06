@@ -24,8 +24,15 @@ const OPEN_GET = new Set([
 /** TOC routes have their own staff guards (requireTocFieldViewer etc.), and TOC staff are not all admins. */
 const OWN_GUARD_PREFIXES = ["/api/admin/toc/"]
 
+/**
+ * Maintenance routes that live outside /api/admin but are just as much admin tools: debug
+ * readers (/api/debug/find-colt-campbell returned phones, emails, GPAs and a birthdate to anyone),
+ * test endpoints and one-off data fixes, several of which change data on a GET.
+ */
+const ADMIN_ONLY_PREFIXES = ["/api/admin/", "/api/debug/", "/api/debug-", "/api/test-", "/api/fix-", "/api/run-script/"]
+
 export function adminGateApplies(pathname: string, method: string): boolean {
-  if (!pathname.startsWith("/api/admin/") && pathname !== "/api/admin") return false
+  if (pathname !== "/api/admin" && !ADMIN_ONLY_PREFIXES.some((p) => pathname.startsWith(p))) return false
   if (OWN_GUARD_PREFIXES.some((p) => pathname.startsWith(p))) return false
   if (method === "GET" && OPEN_GET.has(pathname.replace(/\/$/, ""))) return false
   return true

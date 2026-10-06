@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -29,7 +30,7 @@ export async function GET() {
 
     const { data, error } = await supabase
       .from("athletes")
-      .select("*")
+      .select(ATHLETE_PUBLIC_COLUMNS)
       .not("college", "is", null)
       .not("commitmentdate", "is", null)
       .gte("commitmentdate", dateString)
