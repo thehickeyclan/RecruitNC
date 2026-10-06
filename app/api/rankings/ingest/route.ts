@@ -102,6 +102,7 @@ export async function POST(request: NextRequest) {
       checkedBy: "muse",
     })
     console.info("[rankings-ingest]", JSON.stringify({ ...result, ncMatched: result.ncMatched.length }))
+    if (result.statusError) console.error("[rankings-ingest] rows landed but freshness did not:", result.statusError)
     return NextResponse.json(result)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)

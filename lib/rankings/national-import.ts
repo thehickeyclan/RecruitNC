@@ -61,6 +61,12 @@ export type ImportEditionResult = {
   rankBasis: RankBasis
   rows: number
   ncMatched: string[]
+  /**
+   * Set when the rows landed but the freshness stamp did not. Reported rather than only logged:
+   * a status write that failed in silence once left the table describing a 95-row board that the
+   * same import had just deleted, and nothing downstream could tell.
+   */
+  statusError?: string
 }
 
 export type RankBasis = "weight" | "overall"
@@ -308,6 +314,7 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
   if (statusError) console.error("[rankings] status stamp failed:", statusError.message)
 
   return {
+    statusError: statusError?.message,
     status: "imported",
     source: input.source,
     gender: input.gender,
