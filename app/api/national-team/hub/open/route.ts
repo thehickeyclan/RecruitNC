@@ -33,7 +33,7 @@ export async function GET() {
 
     const { data: paidRows, error: paidError } = await admin
       .from("national_team_event_registrations")
-      .select("id, event_slug, athlete_first_name, athlete_last_name, athlete_email, parent_email, high_school, graduation_year, primary_weight, created_at, shirt_size, singlet_size, shorts_size, updated_at")
+      .select("id, event_slug, athlete_first_name, athlete_last_name, high_school, graduation_year, primary_weight, created_at, shirt_size, singlet_size, shorts_size, updated_at")
       .ilike("status", "paid")
       .order("event_slug")
       .order("athlete_last_name")
@@ -50,8 +50,10 @@ export async function GET() {
         event_slug: row.event_slug,
         athlete_first_name: row.athlete_first_name,
         athlete_last_name: row.athlete_last_name,
-        athlete_email: row.athlete_email,
-        parent_email: (row.parent_email as string) ?? "",
+        // This route answers anyone, signed out included; it returned 72 parents' and athletes'
+        // emails. The roster needs names, not contact details.
+        athlete_email: "",
+        parent_email: "",
         high_school: (row.high_school as string) ?? "",
         graduation_year: (row.graduation_year as string) ?? "",
         primary_weight: (row.primary_weight as string) ?? "",
