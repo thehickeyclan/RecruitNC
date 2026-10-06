@@ -375,3 +375,39 @@ export async function markRankingChecked(
     )
   if (error) throw new Error(error.message)
 }
+
+/**
+ * Record that an outlet's newest list is last season's, without storing it.
+ *
+ * The rows are deliberately not kept: a ranking is a statement about a wrestler now, five stars
+ * are gated on simply holding a matched row, and last season's final ranks seniors who have since
+ * graduated - storing it would hand them a current five-star. What is worth keeping is the one
+ * fact, that they have published nothing for this season yet and when their last list went up.
+ * Without it, an outlet sitting on last season's final and an outlet that publishes nothing at all
+ * are the same empty row.
+ */
+export async function markPriorSeasonSeen(
+  admin: SupabaseClient,
+  source: NationalRankingSource,
+  gender: RankingGender,
+  checkedBy: string,
+  published: string,
+  url: string | null,
+  scope: RankingScope = "weight",
+  editionClassYear = 0,
+) {
+  const { error } = await admin.from("ranking_source_status").upsert(
+    {
+      source,
+      gender,
+      scope,
+      edition_class_year: editionClassYear,
+      last_checked_at: new Date().toISOString(),
+      prior_season_published: published,
+      prior_season_url: url,
+      checked_by: checkedBy,
+    },
+    { onConflict: "source,gender,scope,edition_class_year", ignoreDuplicates: false },
+  )
+  if (error) throw new Error(error.message)
+}

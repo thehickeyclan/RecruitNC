@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from "next/server"
 import { timingSafeEqual } from "node:crypto"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NATIONAL_RANKING_SOURCES, type NationalRankingSource } from "@/lib/national-rankings"
-import { importNationalEdition, markRankingChecked, PriorSeasonError, type IncomingRankingRow } from "@/lib/rankings/national-import"
+import {
+  importNationalEdition,
+  markPriorSeasonSeen,
+  markRankingChecked,
+  PriorSeasonError,
+  type IncomingRankingRow,
+} from "@/lib/rankings/national-import"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 120
@@ -107,9 +113,22 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     if (error instanceof PriorSeasonError) {
-      // Still a successful check: the outlet simply has no current list yet.
+      /*
+       * Still a successful check: the outlet simply has no current list yet. The rejected list is
+       * not stored - it would grant a current five star off last season - but the fact that it is
+       * the newest they have is, so the daily report can name it instead of reading as silence.
+       */
       const priorClass = scope === "big_board" ? Number(body.classYear) || 0 : 0
-      await markRankingChecked(admin, source, gender, "muse", scope, priorClass).catch(() => undefined)
+      await markPriorSeasonSeen(
+        admin,
+        source,
+        gender,
+        "muse",
+        published,
+        typeof body.url === "string" ? body.url : null,
+        scope,
+        priorClass,
+      ).catch(() => markRankingChecked(admin, source, gender, "muse", scope, priorClass).catch(() => undefined))
       return NextResponse.json({ status: "rejected_prior_season", error: message }, { status: 422 })
     }
     console.error("[rankings-ingest] failed:", message)
