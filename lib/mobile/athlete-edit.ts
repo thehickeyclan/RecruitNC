@@ -1,4 +1,5 @@
 import { normalizeWeightClassLabel } from "@/lib/last-competed-weight"
+import { normalizePhoneForStorage } from "@/lib/phone-format"
 
 /**
  * What an athlete may change about their own profile, from the phone.
@@ -104,6 +105,19 @@ export function buildAthleteEditPatch(input: AthleteEditInput): AthleteEditResul
     }
   }
 
+  // The number college coaches call. Private: only verified coaches and admins see it
+  // (PRIVATE_ATHLETE_FIELDS). Stored as (919) 555-0100, the same as the website writes it.
+  if (has("phone")) {
+    const text = str(input.phone)
+    if (!text) patch.phone = null
+    else {
+      const digits = text.replace(/\D/g, "")
+      const ten = digits.length === 11 && digits[0] === "1" ? digits.slice(1) : digits
+      if (ten.length !== 10) return { ok: false, field: "phone", error: "Enter a 10-digit cell number." }
+      patch.phone = normalizePhoneForStorage(ten)
+    }
+  }
+
   if (has("intendedMajor")) {
     const text = str(input.intendedMajor)
     if (text.length > 80) return { ok: false, field: "intendedMajor", error: "Keep the major under 80 characters." }
@@ -182,6 +196,7 @@ export const EDITABLE_FIELDS = [
   "sat",
   "act",
   "intendedMajor",
+  "phone",
   "collegeWeightClass",
   "weightClass",
   "highlightVideoUrl",

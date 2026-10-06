@@ -90,3 +90,21 @@ describe("instagram", () => {
     expect(mergeInstagram(null, "ncunited")).toEqual({ instagram: "ncunited" })
   })
 })
+
+describe("phone", () => {
+  it("stores a 10-digit number the way the website does", () => {
+    expect(buildAthleteEditPatch({ phone: "919.555.0100" })).toEqual({ ok: true, patch: { phone: "(919) 555-0100" } })
+  })
+
+  it("drops a leading country code", () => {
+    expect(buildAthleteEditPatch({ phone: "+1 919 555 0100" })).toEqual({ ok: true, patch: { phone: "(919) 555-0100" } })
+  })
+
+  it("refuses a number that is not 10 digits", () => {
+    expect(buildAthleteEditPatch({ phone: "555-0100" })).toMatchObject({ ok: false, field: "phone" })
+  })
+
+  it("clears when sent empty", () => {
+    expect(buildAthleteEditPatch({ phone: "" })).toEqual({ ok: true, patch: { phone: null } })
+  })
+})
