@@ -103,6 +103,12 @@ async function main() {
 
   const groups = new Map<string, Entrant[]>()
   for (const r of rows) {
+    /*
+     * The state code is upper-cased here rather than trusted. Arizona's rebuild wrote "az" where
+     * every other file wrote "AL", and the column's check constraint rejected the whole state —
+     * a collector's casing is not something an import should depend on.
+     */
+    r.state = String(r.state ?? "").trim().toUpperCase()
     const k = `${r.state}|${r.season}|${r.gender === "girls" ? "Girls" : "Boys"}`
     if (!groups.has(k)) groups.set(k, [])
     groups.get(k)!.push(r)
