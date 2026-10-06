@@ -32,8 +32,25 @@ END $$;
 UPDATE national_rankings SET edition_class_year = class_year
  WHERE scope = 'big_board' AND edition_class_year = 0 AND class_year IS NOT NULL;
 
+-- rank_basis must agree with what the importer computes, or the next import changes it. The
+-- column default assumed every board ranked within weight; MatScouts' boys board is one list of
+-- 200 with no weights at all, so the rule is applied per edition rather than per scope.
 UPDATE national_rankings SET rank_basis = 'overall'
  WHERE scope = 'p4p' AND rank_basis <> 'overall';
+
+WITH e AS (
+  SELECT source, gender, ranking_month, scope, edition_class_year,
+         CASE WHEN count(*) = count(DISTINCT rank) THEN 'overall' ELSE 'weight' END AS basis
+    FROM national_rankings
+   WHERE scope = 'big_board'
+   GROUP BY 1, 2, 3, 4, 5
+)
+UPDATE national_rankings r SET rank_basis = e.basis
+  FROM e
+ WHERE r.scope = 'big_board'
+   AND r.source = e.source AND r.gender = e.gender AND r.ranking_month = e.ranking_month
+   AND r.scope = e.scope AND r.edition_class_year = e.edition_class_year
+   AND r.rank_basis <> e.basis;
 
 UPDATE ranking_source_status s SET edition_class_year = b.cy
   FROM (SELECT source, gender, scope, max(edition_class_year) AS cy
