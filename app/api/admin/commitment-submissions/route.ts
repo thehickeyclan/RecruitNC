@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server"
-import { supabase } from "@/lib/supabase"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export async function GET() {
   try {
-    const { data: submissions, error } = await supabase
+    // Server key: submissions (names, notes, Instagram, pending ones too) are not readable from a
+    // browser, and this route sits behind the admin gate.
+    const { data: submissions, error } = await createAdminClient()
       .from("commitment_submissions")
       .select("*")
       .order("submitted_at", { ascending: false })

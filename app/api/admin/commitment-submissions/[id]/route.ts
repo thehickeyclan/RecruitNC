@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { adminGate } from "@/lib/admin-gate"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   const denied = await adminGate()
@@ -10,7 +11,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
     const { status } = await request.json()
     const supabase = await createClient()
 
-    const { data, error } = await supabase
+    const { data, error } = await createAdminClient()
       .from("commitment_submissions")
       .update({
         status,
