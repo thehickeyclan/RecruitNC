@@ -20,6 +20,7 @@
 import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
+import { stripResultMarkers } from "@/lib/identity-dedupe"
 
 for (const f of [".env.local", ".env"]) {
   const p = path.join(process.cwd(), f)
@@ -129,13 +130,18 @@ async function main() {
     const entries: Array<Record<string, unknown>> = []
     let noName = 0
     for (const r of group) {
-      const name = `${r.first_name} ${r.last_name}`.trim()
-      if (!name || !r.weight) { noName++; continue }
+      const name = stripResultMarkers(`${r.first_name} ${r.last_name}`)
+      /*
+       * "Forfeit" is not a wrestler. Arizona's files carry rows whose whole name is a result,
+       * alongside weights of "1" to "4" — that state needs recollecting, and until it does these
+       * must not become identities.
+       */
+      if (!name || !r.weight || /^(forfeit|bye|no ?contest|vacant|tbd)$/i.test(name)) { noName++; continue }
       const classification = classOf(r.division)
       const place = Number(r.place) || null
       const wins = r.state_wins === "" ? null : Number(r.state_wins)
       const losses = r.state_losses === "" ? null : Number(r.state_losses)
-      const divKey = `${season}|${state}|${gender}|${classification}|${String(r.association ?? "").trim()}`
+      const divKey = `${season}|${state}|${gender}|${classification}|${String(r.association ?? "").trim() || "PENDING"}`
       if (!divisions.has(divKey)) {
         divisions.set(divKey, {
           season: Number(season), state, association: null,
@@ -158,21 +164,6 @@ async function main() {
       })
     }
 
-    const placed = entries.filter((e) => e.place != null)
-    const withId = entries.filter((e) => e.source_athlete_id)
-    const byBracket = new Map<string, number>()
-    for (const e of entries) byBracket.set(`${e.classification}|${e.weight}`, (byBracket.get(`${e.classification}|${e.weight}`) ?? 0) + 1)
-    console.log(`\n${key}`)
-    if (renamed.length) console.log(`   division spelling taken from the table: ${renamed.map(([a, b]) => `"${a}"->"${b}"`).join(", ")}`)
-    console.log(`   entrants ${entries.length}   placed ${placed.length}   qualifiers who did not place ${entries.length - placed.length}`)
-    console.log(`   brackets ${byBracket.size}   with a stable wrestler id ${withId.length}/${entries.length}`)
-    if (noName) console.log(`   rows with no usable name or weight, skipped: ${noName}`)
-    /* Two wrestlers in one place is two people or a bad parse; refuse rather than write it. */
-    const seen = new Map<string, number>()
-    for (const e of placed) { const k = `${e.classification}|${e.weight}|${e.place}`; seen.set(k, (seen.get(k) ?? 0) + 1) }
-    const clash = [...seen.entries()].filter(([, n]) => n > 1)
-    if (clash.length) { console.log(`   TWO WRESTLERS IN ONE PLACE — not written: ${clash.slice(0, 5).map(([k]) => k).join(" ")}`); continue }
-
     if (!WRITE) continue
     /*
      * The association now comes from the file — 52 of them across the 50 states, because several
@@ -183,9 +174,33 @@ async function main() {
     const fallback = (await associationFor(state)) ?? String(group[0].source ?? "unknown")
     for (const e of entries) {
       const row = group.find((r) => `${r.first_name} ${r.last_name}`.trim() === e.wrestler_name)
-      e.association = String(row?.association ?? "").trim() || fallback
+      e.association = String(row?.association ?? "").trim() || "PENDING"
     }
     if (fromFile.length > 1) console.log(`   associations in this file: ${fromFile.join(", ")}`)
+    /* Resolved before any check reads it — the clash check keys on it, and a null read as one
+     * association made Georgia's two championships look like two wrestlers in one place. */
+    for (const e of entries) if (e.association === "PENDING") e.association = fallback
+
+    const placed = entries.filter((e) => e.place != null)
+    const withId = entries.filter((e) => e.source_athlete_id)
+    const byBracket = new Map<string, number>()
+    for (const e of entries) byBracket.set(`${e.classification}|${e.weight}`, (byBracket.get(`${e.classification}|${e.weight}`) ?? 0) + 1)
+    console.log(`\n${key}`)
+    if (renamed.length) console.log(`   division spelling taken from the table: ${renamed.map(([a, b]) => `"${a}"->"${b}"`).join(", ")}`)
+    console.log(`   entrants ${entries.length}   placed ${placed.length}   qualifiers who did not place ${entries.length - placed.length}`)
+    console.log(`   brackets ${byBracket.size}   with a stable wrestler id ${withId.length}/${entries.length}`)
+    if (noName) console.log(`   rows with no usable name or weight, skipped: ${noName}`)
+    /* Two wrestlers in one place is two people or a bad parse; refuse rather than write it. */
+    /*
+     * Keyed by association as well. Georgia runs GHSA and GIAA, and both crown a 1st place at
+     * Girls 100 — two champions of two championships, not two wrestlers in one place. Without the
+     * association the check rejected a whole state for doing nothing wrong.
+     */
+    const seen = new Map<string, number>()
+    for (const e of placed) { const k = `${e.association}|${e.classification}|${e.weight}|${e.place}`; seen.set(k, (seen.get(k) ?? 0) + 1) }
+    const clash = [...seen.entries()].filter(([, n]) => n > 1)
+    if (clash.length) { console.log(`   TWO WRESTLERS IN ONE PLACE — not written: ${clash.slice(0, 5).map(([k]) => k).join(" ")}`); continue }
+
 
     /*
      * Validate every row BEFORE deleting anything.
@@ -208,10 +223,18 @@ async function main() {
      * deepest place present IS the depth. It would be a lie on a partial collection.
      */
     for (const [k, d] of divisions) {
-      const mine = entries.filter((e) => `${season}|${state}|${gender}|${e.classification}|${e.association === fallback ? "" : e.association}` === k && e.place != null)
+      /*
+       * Keyed exactly as the division was keyed when it was built. An earlier version blanked the
+       * association here whenever it equalled the table's, which is the ordinary case — so no
+       * entry ever matched its own division, places_awarded came out null, and the guard rejected
+       * 250 of 251 groups. The guard was right to; the key was wrong.
+       */
+      const mine = entries.filter((e) => `${season}|${state}|${gender}|${e.classification}|${e.association}` === k && e.place != null)
       d.association = String(k.split("|")[4] || fallback)
       d.places_awarded = mine.length ? Math.max(...mine.map((e) => Number(e.place))) : null
     }
+    for (const d of divisions.values()) if (d.association === "PENDING" || !d.association) d.association = fallback
+    for (const d of divisions.values()) if (d.association === "PENDING" || !d.association) d.association = fallback
     const missingDepth = [...divisions.values()].filter((d) => !d.places_awarded)
     if (missingDepth.length) { console.log(`   no placement anywhere in ${missingDepth.length} division(s) — not written`); continue }
     const { error: dErr } = await sb.from("state_tournament_divisions").upsert([...divisions.values()] as never, { onConflict: "season,state,association,gender,classification" })

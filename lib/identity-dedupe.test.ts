@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { conflict, corroborates, sameNameDifferentSpelling, type Identity } from "./identity-dedupe"
+import { conflict, corroborates, sameNameDifferentSpelling, stripResultMarkers, type Identity } from "./identity-dedupe"
 
 const id = (over: Partial<Identity> = {}): Identity => ({
   id: "x",
@@ -94,5 +94,24 @@ describe("conflict", () => {
     const a = id({ evidence: { seasons: [2026], weights: ["126"] } })
     const b = id({ evidence: { seasons: [2026], weights: ["126"] } })
     expect(conflict(a, b)).toBeNull()
+  })
+})
+
+describe("stripResultMarkers", () => {
+  it("removes a bracketed forfeit or disqualification", () => {
+    expect(stripResultMarkers("Ian (FF) Shepherd (FF)")).toBe("Ian Shepherd")
+    expect(stripResultMarkers("Deavon (DQ) McWashington")).toBe("Deavon McWashington")
+    expect(stripResultMarkers("Zachary (DQ`d) Long")).toBe("Zachary Long")
+  })
+
+  it("removes a prefixed marker, however many times it repeats", () => {
+    expect(stripResultMarkers("DQ- Jayden DQ- Gittrich")).toBe("Jayden Gittrich")
+    expect(stripResultMarkers("DQ- Christy DQ- Ortega")).toBe("Christy Ortega")
+  })
+
+  it("leaves a real name alone, including one that merely starts with those letters", () => {
+    expect(stripResultMarkers("Ffion Davies")).toBe("Ffion Davies")
+    expect(stripResultMarkers("Kevin O'Brien")).toBe("Kevin O'Brien")
+    expect(stripResultMarkers("Zoe-Shalom Ahue Bolosan")).toBe("Zoe-Shalom Ahue Bolosan")
   })
 })

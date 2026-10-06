@@ -19,6 +19,7 @@ import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
 import { nameWords, namesLikelySamePerson } from "@/lib/athlete-name-match"
+import { stripResultMarkers } from "@/lib/identity-dedupe"
 
 for (const f of [".env.local", ".env"]) {
   const p = path.join(process.cwd(), f)
@@ -59,9 +60,24 @@ function csv(file: string): Array<Record<string, string>> {
   return rows.filter((r) => r.some((c) => c.trim())).map((r) => Object.fromEntries(cols.map((c, i) => [c, (r[i] ?? "").trim()])))
 }
 
-/* Their girls' bracket is "Open"; ours has always called it "Girls". One division, one name. */
-const DIVISION: Record<string, string> = { open: "Girls" }
-const divisionOf = (raw: string) => DIVISION[raw.trim().toLowerCase()] ?? raw.trim()
+/**
+ * The classification as our table spells it.
+ *
+ * Three different things arrive as the division "Open": the girls' championship before NCHSAA
+ * split it by class, and the NCISA private-school championship, which is boys. Mapping "Open"
+ * straight to "Girls" would have filed 376 NCISA boys as girls.
+ *
+ * And NCHSAA realigned for 2026: the girls now wrestle 1-4A through 8A, which our table holds as
+ * "Girls 5A" and so on, while the file says only "5A".
+ */
+function classificationFor(division: string, gender: string, association: string): string {
+  const d = String(division ?? "").trim()
+  if (/ncisa/i.test(association)) return "NCISA"
+  if (String(gender).toLowerCase().startsWith("girl")) {
+    return d.toLowerCase() === "open" ? "Girls" : `Girls ${d}`
+  }
+  return d
+}
 
 type Ours = {
   id: string
@@ -108,8 +124,8 @@ async function main() {
   let ambiguous = 0
 
   for (const r of theirs) {
-    const name = `${r.first_name} ${r.last_name}`.trim()
-    const classification = divisionOf(r.division)
+    const name = stripResultMarkers(`${r.first_name} ${r.last_name}`)
+    const classification = classificationFor(r.division, r.gender, r.association)
     const bracket = index.get(`${classification}|${r.weight}`) ?? []
     const wins = r.state_wins === "" ? null : Number(r.state_wins)
     const losses = r.state_losses === "" ? null : Number(r.state_losses)
@@ -118,7 +134,7 @@ async function main() {
       record: wins != null && losses != null ? `${wins}-${losses}` : null,
       source_athlete_id: r.source_wrestler_id || null,
       source_athlete_id_source: r.source_wrestler_id ? String(r.source).toLowerCase() : null,
-      association: "NCHSAA",
+      association: String(r.association ?? "NCHSAA").trim() || "NCHSAA",
       updated_at: new Date().toISOString(),
     }
     let hits = bracket.filter((o) => nn(o.wrestler_name) === nn(name))
