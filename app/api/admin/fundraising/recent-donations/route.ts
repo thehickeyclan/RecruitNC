@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/admin-auth"
 
 export async function GET(request: Request) {
@@ -11,6 +12,8 @@ export async function GET(request: Request) {
   const type = searchParams.get("type") // "spartan" | "campaign" | null (all)
 
   const supabase = await createClient()
+  // Reads with the server key: the route is behind the admin gate (middleware), and donor rows are not readable by the signed-in role.
+  const db = createAdminClient()
 
   try {
     let query = supabase
