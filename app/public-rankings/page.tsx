@@ -2,6 +2,7 @@ import { ArrowRight, GraduationCap, ListOrdered, Users } from "lucide-react"
 import { redirect } from "next/navigation"
 
 import { HardLink } from "@/components/hard-link"
+import { CoachMessagingIntro } from "@/components/coach-messages/coach-messaging-intro"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
@@ -128,6 +129,8 @@ export default async function PublicRankingsHomepage({
       </section>
 
       <section className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
+        {/* College coaches who have not messaged anyone yet: renders nothing for everyone else. */}
+        <CoachMessagingIntro className="mx-auto mb-8 max-w-2xl" />
         {alreadyIncluded ? (
           <div className="mx-auto mb-8 max-w-2xl rounded-xl border border-[#D3B574]/50 bg-[#D3B574]/10 px-6 py-4 text-center">
             <p className="text-sm font-semibold text-[#D3B574]">

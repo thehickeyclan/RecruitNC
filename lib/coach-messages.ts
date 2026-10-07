@@ -471,3 +471,22 @@ export async function unreadCount(admin: SupabaseClient, userId: string): Promis
   const threads = await listThreads(admin, userId)
   return threads.filter((t) => t.unread).length
 }
+
+/**
+ * Whether to show messaging at all, and the badge. Coaches and admins always see it; everyone
+ * else only once a coach has written to them - a family with no messages never meets an empty
+ * inbox. `canStart` is the reviewed-coach test, for the "you can message recruits" prompts.
+ */
+export async function messagingSummary(
+  admin: SupabaseClient,
+  userId: string,
+): Promise<{ unread: number; total: number; show: boolean; canStart: boolean }> {
+  const [threads, profile] = await Promise.all([listThreads(admin, userId), loadProfile(admin, userId)])
+  const coach = isCollegeCoachRole(profile?.role)
+  return {
+    unread: threads.filter((t) => t.unread).length,
+    total: threads.length,
+    show: coach || profile?.is_admin === true || threads.length > 0,
+    canStart: isApprovedCoach(profile),
+  }
+}

@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2, Mail, Send } from "lucide-react"
+import { Loader2, Mail, MessageSquare, Send } from "lucide-react"
+import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/auth-context"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -22,12 +23,18 @@ export function CoachMessageButton({
   className,
   iconClassName = "h-4 w-4",
   showLabel = false,
+  variant = "icon",
 }: {
   athleteId: string
   athleteName?: string
   className?: string
   iconClassName?: string
   showLabel?: boolean
+  /**
+   * "action": the labelled gold-outline button beside "View scouting report" - the way coaches find
+   * messaging. "icon": a bare mail icon (kept for tight spots).
+   */
+  variant?: "icon" | "action"
 }) {
   const { user } = useAuth()
   const router = useRouter()
@@ -40,8 +47,7 @@ export function CoachMessageButton({
       return
     }
     let cancelled = false
-    fetch(`/api/coach-messages/eligibility?athleteId=${encodeURIComponent(athleteId)}`, { credentials: "include" })
-      .then((r) => r.json())
+    eligibility(athleteId)
       .then((g) => {
         if (!cancelled) setGate(g)
       })
@@ -67,10 +73,24 @@ export function CoachMessageButton({
 
   return (
     <>
-      <button type="button" onClick={onClick} className={className} aria-label={label} title={label}>
-        <Mail className={iconClassName} />
-        {showLabel ? <span className="ml-1.5">Message</span> : null}
-      </button>
+      {variant === "action" ? (
+        <button
+          type="button"
+          onClick={onClick}
+          className={cn(
+            "inline-flex min-h-[40px] items-center justify-center gap-2 rounded-lg border border-[#D3B574] bg-[#D3B574]/10 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.14em] text-[#D3B574] transition-colors hover:bg-[#D3B574]/20",
+            className,
+          )}
+        >
+          {gate.threadId ? <MessageSquare className="h-4 w-4" aria-hidden /> : <Mail className="h-4 w-4" aria-hidden />}
+          {gate.threadId ? "Open conversation" : athleteName ? `Message ${athleteName.trim().split(/\s+/)[0]}` : "Message"}
+        </button>
+      ) : (
+        <button type="button" onClick={onClick} className={className} aria-label={label} title={label}>
+          <Mail className={iconClassName} />
+          {showLabel ? <span className="ml-1.5">Message</span> : null}
+        </button>
+      )}
       <CoachComposeDialog
         athleteId={athleteId}
         athleteName={athleteName}
@@ -80,6 +100,21 @@ export function CoachMessageButton({
       />
     </>
   )
+}
+
+type Gate = { show: boolean; canSend?: boolean; threadId?: string | null; message?: string }
+/**
+ * One eligibility request per wrestler per page: the profile renders this button in its phone,
+ * desktop and older layouts at once. Kept for a minute, then asked again (a send changes it).
+ */
+const gateCache = new Map<string, { at: number; p: Promise<Gate> }>()
+function eligibility(athleteId: string): Promise<Gate> {
+  const hit = gateCache.get(athleteId)
+  if (hit && Date.now() - hit.at < 60_000) return hit.p
+  const p = fetch(`/api/coach-messages/eligibility?athleteId=${encodeURIComponent(athleteId)}`, { credentials: "include" }).then((r) => r.json() as Promise<Gate>)
+  gateCache.set(athleteId, { at: Date.now(), p })
+  p.catch(() => gateCache.delete(athleteId))
+  return p
 }
 
 /**
@@ -124,6 +159,7 @@ export function CoachComposeDialog({
       if (!res.ok) throw new Error(data.error ?? "Could not send.")
       onOpenChange(false)
       setDraft("")
+      gateCache.delete(athleteId)
       if (onSent) onSent(data.threadId)
       else router.push(`/inbox/${data.threadId}`)
     } catch (e) {
