@@ -18,17 +18,27 @@ export function accoladeKey(name: string, club: string | null, year: number | nu
   return `${name.trim().toLowerCase()}|${(club ?? "").trim().toLowerCase()}|${year ?? ""}`
 }
 
+/** How long a profile request will wait for the placer index before sending bouts unlabelled. */
+const INDEX_BUDGET_MS = 4000
+
 export async function labelOpponents(admin: SupabaseClient, bouts: AccoladeBout[]): Promise<Record<string, string>> {
   if (!bouts.length) return {}
+  // The index is cached for ten minutes, but building it cold reads every state's placers. A
+  // profile must never wait on that: past the budget the bouts go out without accolades, and the
+  // build carries on so the next request finds it ready.
+  const loaded = await Promise.race([
+    // NC placers only, for now (0.6s). The all-states index takes ~60s to build, most of it
+    // synchronous name matching that blocks this very timeout from firing - phone profiles hung
+    // on it on 7 Oct 2026. Out-of-state and national-rank accolades come back once that index is
+    // precomputed rather than built inside a request.
+    loadStatePlacerIndex(admin, new Date()).catch(() => null),
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), INDEX_BUDGET_MS)),
+  ])
+  if (!loaded) return {}
   const index = {
     tocField: [],
     ranked: [],
-    // National rankings ride along with outOfState, each checked against the bout's evidence.
-    ...(await loadStatePlacerIndex(admin, new Date(), { outOfState: true }).catch(() => ({
-      statePlacers: [],
-      stateSchools: [],
-      fargoAllAmericans: [],
-    }))),
+    ...loaded,
   }
   const labels: Record<string, string> = {}
   for (const bout of bouts) {
