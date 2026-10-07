@@ -19,10 +19,46 @@ type MatchHistoryRow = {
   matches?: unknown
 }
 
-/** State individual championships only — never regionals or the state dual series. */
+/**
+ * State individual championships only — never regionals or the state dual series.
+ *
+ * The girls' tournament is "NCHSAA Women`s State Championship" (backtick and all), and the
+ * Trackwrestling import labels some rows "2026 NCHSAA (NC) State Championships". Neither matched,
+ * so no girl's state bouts reached her profile: Rylynn Keziah had seven on file and showed none.
+ */
 export function isNchsaaIndividualStateEvent(value: unknown): boolean {
   const venue = String(value ?? "").trim()
-  return /NCHSAA\s+State\s+Championships?/i.test(venue) && !/regional|dual/i.test(venue)
+  return (
+    /NCHSAA\s+(?:\(NC\)\s+)?(?:(?:Women|Girls)[`'’]?s?\s+)?State\s+Championships?/i.test(venue) &&
+    !/regional|dual/i.test(venue)
+  )
+}
+
+/** Milliseconds for "2/21/2026" or "2026-02-21"; null when the date carries no year. */
+function dateValue(value: unknown): number | null {
+  const text = String(value ?? "").trim()
+  const us = text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if (us) return Date.UTC(Number(us[3]), Number(us[1]) - 1, Number(us[2]))
+  const iso = text.match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (iso) return Date.UTC(Number(iso[1]), Number(iso[2]) - 1, Number(iso[3]))
+  return null
+}
+
+/**
+ * The season's matches, oldest first.
+ *
+ * RankWrestler lists a season newest first, and a one-day state tournament puts every bout on the
+ * same date, so sorting by date alone left the final at the top. Round labels are assigned from
+ * the last bout backwards, which then called a first-round pin the Finals. A season whose dates
+ * run downhill is read in reverse; one that already runs uphill, or carries no full dates, is
+ * left as written.
+ */
+function chronological(matches: unknown[]): unknown[] {
+  const dates = matches
+    .map((m) => (m && typeof m === "object" ? dateValue((m as Record<string, unknown>).date) : null))
+    .filter((d): d is number => d !== null)
+  if (dates.length < 2) return matches
+  return dates[0]! > dates[dates.length - 1]! ? [...matches].reverse() : matches
 }
 
 function eventYear(date: unknown, season: unknown): number | null {
@@ -38,7 +74,7 @@ export function extractNchsaaStateBouts(rows: MatchHistoryRow[]): NchsaaStateBou
   const found = new Map<string, NchsaaStateBout>()
   for (const row of rows) {
     if (!Array.isArray(row.matches)) continue
-    for (const raw of row.matches) {
+    for (const raw of chronological(row.matches)) {
       if (!raw || typeof raw !== "object") continue
       const bout = raw as Record<string, unknown>
       if (!isNchsaaIndividualStateEvent(bout.venue ?? bout.tournament)) continue
