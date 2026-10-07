@@ -147,6 +147,10 @@ export type ScoutingReportResultRow = {
    * names ("Tar Heel State Classic") do not say, and the report files rows by it.
    */
   style?: "folkstyle" | "freestyle" | "greco"
+  /** Finishing place as a number, for comparing two wrestlers. Null when he did not place. */
+  place?: number | null
+  /** Win-loss at the event, "5-2", when the source records one. */
+  record?: string | null
 }
 
 export type ReportedWin = {
@@ -452,6 +456,20 @@ export function isNationalEvent(event: string): boolean {
   return NATIONAL_EVENTS.some((e) => name.includes(e.toLowerCase()))
 }
 
+/**
+ * "Champion", "3rd All-American", "5th Place", "7" — the place as a number, or null.
+ *
+ * The national tables store placement as display text, which reads well and cannot be compared.
+ */
+export function placeNumber(raw: unknown): number | null {
+  const s = String(raw ?? "").trim().toLowerCase()
+  if (!s || s === "did not place") return null
+  if (s.startsWith("champion")) return 1
+  if (s.startsWith("finalist")) return 2
+  const n = s.match(/^(\d+)/)
+  return n ? Number(n[1]) || null : null
+}
+
 /** Tournament results flattened into printable lines, newest first. */
 /**
  * `gender` decides the events that are one style for the men and another for the women - the
@@ -473,7 +491,7 @@ export function buildResultRows(bundle: {
     // The state tournament publishes a year, not a day: `when` is a sort key, never a date.
     // Named in full: "NCHSAA State Championships" is the folkstyle title, never to be confused with
     // the NC Freestyle & Greco State Championships.
-    rows.push({ event: "NCHSAA State Championships", style: "folkstyle", year: r.year, when: when("NCHSAA States", r.year), date: null, weight: String(r.weight_class ?? "") || null, detail: `${r.classification} · ${r.weight_class} · ${place}` })
+    rows.push({ event: "NCHSAA State Championships", style: "folkstyle", place: r.place && r.place > 0 ? r.place : null, record: null, year: r.year, when: when("NCHSAA States", r.year), date: null, weight: String(r.weight_class ?? "") || null, detail: `${r.classification} · ${r.weight_class} · ${place}` })
   }
   const national: Array<[string, typeof bundle.fargo]> = [
     ["NHSCA Nationals", bundle.nhsca ?? []],
@@ -495,7 +513,7 @@ export function buildResultRows(bundle: {
       const detail = [division, r.weight, placement, r.record ? `${r.record} record` : ""]
         .filter(Boolean)
         .join(" · ")
-      if (detail) rows.push({ event: label, style: styleOfEventForAthlete(label, division, gender), year: r.year, when: when(label, r.year), date: null, weight: String(r.weight ?? "") || null, detail })
+      if (detail) rows.push({ event: label, style: styleOfEventForAthlete(label, division, gender), place: placeNumber(r.placement), record: String(r.record ?? "").trim() || null, year: r.year, when: when(label, r.year), date: null, weight: String(r.weight ?? "") || null, detail })
     }
   }
   for (const r of bundle.other ?? []) {
@@ -509,6 +527,8 @@ export function buildResultRows(bundle: {
       .join(" · ")
     rows.push({
       style,
+      place: r.placement && r.placement > 0 ? r.placement : null,
+      record: String(r.record ?? "").trim() || null,
       event: r.eventShortName,
       year: r.year,
       weight: String(r.weight ?? "") || null,

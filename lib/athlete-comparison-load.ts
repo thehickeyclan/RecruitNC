@@ -9,43 +9,24 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { ComparisonBout, ComparisonSide } from "@/lib/athlete-comparison"
 
-export type ComparisonProfile = ComparisonSide & {
-  record: string | null
-  statePlacements: string[]
-  nationalResults: string[]
-  matchCount: number
-}
-
-function ordinal(place: number): string {
-  if (place === 1) return "Champion"
-  const mod = place % 100
-  if (mod >= 11 && mod <= 13) return `${place}th`
-  const last = place % 10
-  return `${place}${last === 1 ? "st" : last === 2 ? "nd" : last === 3 ? "rd" : "th"}`
-}
-
-export async function loadComparisonProfile(
+/**
+ * Every bout on file for one wrestler, for head-to-head and common opponents.
+ *
+ * The résumé — placements, rankings, strength of opponents — comes from the scouting report
+ * builder, so the comparison and the report can never disagree about the same wrestler.
+ */
+export async function loadComparisonBouts(
   supabase: SupabaseClient,
-  athleteId: string,
-): Promise<ComparisonProfile | null> {
-  const { data: athlete } = await supabase
-    .from("athletes")
-    .select("id,name,highschool,graduationyear,weightclass,prospect_ranking")
-    .eq("id", athleteId)
-    .maybeSingle()
-  if (!athlete) return null
-
-  const [tournamentBouts, seasons, state, other] = await Promise.all([
+  athlete: { id: string; name: string },
+): Promise<ComparisonSide> {
+  const athleteId = athlete.id
+  const [tournamentBouts, seasons] = await Promise.all([
     supabase
       .from("other_tournament_bouts")
       .select("opponent_name,opponent_id,win,win_type,score,event_name,event_date")
-      .eq("athlete_id", athleteId),
-    supabase.from("matches").select("season,matches,wins,losses").eq("athlete_id", athleteId),
-    supabase.from("wrestling_nchsaa_results").select("year,classification,weight_class,place").eq("athlete_id", athleteId),
-    supabase
-      .from("other_tournament_results")
-      .select("event_short_name,year,weight_class,record,placement")
-      .eq("athlete_id", athleteId),
+      .eq("athlete_id", athleteId)
+      .limit(3000),
+    supabase.from("matches").select("season,matches").eq("athlete_id", athleteId),
   ])
 
   const bouts: ComparisonBout[] = []
@@ -67,51 +48,20 @@ export async function loadComparisonProfile(
    * most common opponents are found — a wrestler both faced at a mid-season invitational will
    * never have a profile here.
    */
-  let wins = 0
-  let losses = 0
   for (const row of seasons.data ?? []) {
-    wins += Number(row.wins ?? 0)
-    losses += Number(row.losses ?? 0)
     for (const raw of (Array.isArray(row.matches) ? row.matches : []) as Array<Record<string, unknown>>) {
-      const opponent = String(raw.opponent ?? "").trim()
-      if (!opponent) continue
+      const opponent = String(raw.opponent ?? raw.opponent_name ?? "").trim()
+      const result = String(raw.win_loss ?? "").trim().toUpperCase()
+      if (!opponent || (result !== "W" && result !== "L")) continue
       bouts.push({
         opponent,
-        won: String(raw.win_loss ?? "").toUpperCase() === "W",
-        event: (raw.venue as string) ?? null,
+        won: result === "W",
+        event: (raw.venue as string) ?? (raw.tournament as string) ?? null,
         date: (raw.date as string) ?? null,
         method: (raw.result as string) ?? null,
       })
     }
   }
 
-  const statePlacements = (state.data ?? [])
-    .filter((r) => Number(r.place) >= 1)
-    .sort((a, b) => Number(b.year) - Number(a.year))
-    .map((r) => `${r.year} ${r.classification} ${r.weight_class} — ${ordinal(Number(r.place))}`)
-
-  const nationalResults = (other.data ?? [])
-    .sort((a, b) => Number(b.year) - Number(a.year))
-    .map((r) => {
-      const place = Number(r.placement)
-      const bits = [
-        Number.isFinite(place) && place >= 1 ? ordinal(place) : null,
-        String(r.record ?? "").trim() || null,
-      ].filter(Boolean)
-      return `${r.year} ${r.event_short_name}${r.weight_class ? ` (${r.weight_class})` : ""}${bits.length ? ` — ${bits.join(", ")}` : ""}`
-    })
-
-  return {
-    id: String(athlete.id),
-    name: String(athlete.name),
-    school: (athlete.highschool as string) ?? null,
-    graduationYear: athlete.graduationyear == null ? null : Number(athlete.graduationyear),
-    weight: (athlete.weightclass as string) ?? null,
-    rank: athlete.prospect_ranking == null ? null : Number(athlete.prospect_ranking),
-    record: wins + losses > 0 ? `${wins}-${losses}` : null,
-    statePlacements,
-    nationalResults,
-    matchCount: bouts.length,
-    bouts,
-  }
+  return { id: athleteId, name: athlete.name, bouts }
 }

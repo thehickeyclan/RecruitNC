@@ -102,8 +102,12 @@ export function ConditionalAuthGuard({
    * It is the link in the college-coach outreach, and its whole job is to be read by somebody who
    * has no account yet — a login wall in front of it would waste every send. The page itself is
    * pinned to one consenting athlete, so "public" cannot mean a report on anybody else.
+   *
+   * `/compare` opens on a pitch for the tool, and the people it is pitching to are the ones not yet
+   * signed in. Only the page is public: the comparison itself comes from /api/compare, which still
+   * refuses anyone without access, and the wrestler list is the one /prospects already shows.
    */
-  const publicExactRoutes = new Set(["/blue", "/create-profile", "/sample-scouting-report"])
+  const publicExactRoutes = new Set(["/blue", "/create-profile", "/sample-scouting-report", "/compare"])
   const isAuthRoute = path.startsWith("/auth/")
   const isPublicPrefix = publicRoutePrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
   const isPublicExact = publicExactRoutes.has(path)

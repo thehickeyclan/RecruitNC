@@ -7,9 +7,10 @@ export const revalidate = 300
 export default async function ComparePage({
   searchParams,
 }: {
-  searchParams: Promise<{ left?: string; right?: string }>
+  searchParams: Promise<{ left?: string; right?: string; rows?: string }>
 }) {
-  const { left = "", right = "" } = await searchParams
+  const { left = "", right = "", rows = "" } = await searchParams
+  let boutsOnFile: number | null = null
   let athletes: Array<{ id: string; name: string; highschool: string | null; graduationyear: number | null; weightclass: string | null }> = []
   try {
     const supabase = createAdminClient()
@@ -23,8 +24,11 @@ export default async function ComparePage({
       .order("name")
       .limit(2000)
     athletes = (data ?? []) as typeof athletes
+    // The pitch quotes a real number, never a rounded-up one.
+    const { count } = await supabase.from("other_tournament_bouts").select("id", { count: "exact", head: true })
+    boutsOnFile = count ?? null
   } catch (error) {
     console.error("[compare] roster load failed:", error)
   }
-  return <CompareClient athletes={athletes} initialLeft={left} initialRight={right} />
+  return <CompareClient athletes={athletes} initialLeft={left} initialRight={right} initialRows={rows} boutsOnFile={boutsOnFile} />
 }

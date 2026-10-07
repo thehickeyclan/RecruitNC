@@ -1,19 +1,34 @@
 /**
  * Two wrestlers compared, for a coach.
  *
- * Behind the same gate as the rankings: NC United Blue members, verified college coaches and
- * admins. The comparison is built from the rankings' own evidence, so giving it away would give
- * the rankings away sideways.
+ * Behind the same gate as the rankings: Blue members, RecruitNC subscribers, verified college
+ * coaches and admins. The comparison is built from the rankings' own evidence, so giving it away
+ * would give the rankings away sideways. Academics and the star rating go only to verified
+ * coaches and admins - the same line the scouting report draws.
+ *
+ * North Carolina wrestlers only for now. Out-of-state results are held, but opponent strength and
+ * identity links are only validated for NC; other states open up as their data is checked.
  */
 import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { createClient } from "@/lib/supabase/server"
+import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
 import { compareAthletes } from "@/lib/athlete-comparison"
-import { loadComparisonProfile } from "@/lib/athlete-comparison-load"
+import { loadComparisonBouts } from "@/lib/athlete-comparison-load"
+import { buildComparisonRows } from "@/lib/athlete-comparison-rows"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
+import { resolveRankingViewerForUser } from "@/lib/ranking-access"
+import { classifyViewer } from "@/lib/viewer-role"
+import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
+import { buildScoutingReport, loadOpponentIndex } from "@/lib/scouting-report"
+import { loadStatePlacerIndex } from "@/lib/state-placers"
+import { releasesPersonalData, scoutingAccessTier } from "@/lib/scouting-report-access"
 
 export const dynamic = "force-dynamic"
-export const maxDuration = 30
+/*
+ * The out-of-state opponent index takes most of a minute to build on a cold server (it is cached
+ * for ten minutes after). The scouting report pays the same cost; this must not time out first.
+ */
+export const maxDuration = 300
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -26,45 +41,82 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Pick two different wrestlers." }, { status: 400 })
   }
 
-  const supabase = await createClient()
-  const { data: auth } = await supabase.auth.getUser()
-  if (!auth.user) {
+  const user = await getUserFromRequest(request)
+  if (!user) {
     return NextResponse.json({ error: "Sign in to compare wrestlers." }, { status: 401 })
   }
-  const { data: profile } = await supabase
-    .from("user_profiles")
-    .select("role, is_admin, verified_coach")
-    .eq("user_id", auth.user.id)
-    .maybeSingle()
 
   const admin = createAdminClient()
-  /** A Blue membership on any athlete this account pays for. */
-  const { data: memberships } = await admin
-    .from("blue_memberships")
-    .select("status")
-    .eq("payer_user_id", auth.user.id)
-    .in("status", ["active", "trialing", "past_due"])
-
-  const allowed = canSeeProspectRanking({
-    isAdmin: profile?.is_admin === true,
-    isVerifiedCoach: profile?.verified_coach === true,
-    role: profile?.role,
-    isBlueMember: (memberships ?? []).length > 0,
-  })
-  if (!allowed) {
+  const [{ viewer }, { data: profile }] = await Promise.all([
+    resolveRankingViewerForUser({ admin, userId: user.id }),
+    admin
+      .from("user_profiles")
+      .select("role, profile_type, verified_coach, is_admin, verified_method")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+  ])
+  if (!canSeeProspectRanking(viewer)) {
     return NextResponse.json(
-      { error: "Comparisons are for NC United Blue members and verified college coaches." },
+      { error: "Comparisons are for NC United Blue members, RecruitNC subscribers and verified college coaches." },
       { status: 403 },
     )
   }
+  const classified = classifyViewer(profile ?? null)
+  const isAdmin = classified.kind === "admin" || profile?.is_admin === true
+  const tier = scoutingAccessTier({
+    isCollegeCoach: classified.isCollegeCoach,
+    isAdmin,
+    verifiedCoach: classified.verifiedCoach || isAdmin,
+    verifiedMethod: (profile?.verified_method as string) ?? null,
+  })
+  const personal = releasesPersonalData(tier)
 
-  const [left, right] = await Promise.all([
-    loadComparisonProfile(admin, leftId),
-    loadComparisonProfile(admin, rightId),
+  const [leftLoaded, rightLoaded] = await Promise.all([
+    loadPublicAthleteProfile(leftId, admin),
+    loadPublicAthleteProfile(rightId, admin),
   ])
-  if (!left || !right) {
+  if (!leftLoaded.ok || !rightLoaded.ok) {
     return NextResponse.json({ error: "Could not find one of those wrestlers." }, { status: 404 })
   }
+  const leftAthlete = leftLoaded.athlete as Record<string, unknown>
+  const rightAthlete = rightLoaded.athlete as Record<string, unknown>
+  if (leftAthlete.is_nc_athlete !== true || rightAthlete.is_nc_athlete !== true) {
+    return NextResponse.json(
+      { error: "Comparisons cover North Carolina wrestlers for now. Other states open as their results are checked." },
+      { status: 400 },
+    )
+  }
 
-  return NextResponse.json({ comparison: compareAthletes(left, right) })
+  // One opponent index for both reports - the same one the scouting report and profile use.
+  const [baseIndex, stateIndex] = await Promise.all([
+    loadOpponentIndex(admin),
+    loadStatePlacerIndex(admin, new Date(), { outOfState: true }).catch(() => ({
+      statePlacers: [],
+      stateSchools: [],
+      fargoAllAmericans: [],
+    })),
+  ])
+  const opponentIndex = { ...baseIndex, ...stateIndex }
+
+  const side = (athlete: Record<string, unknown>) => ({ id: String(athlete.id), name: String(athlete.name ?? "") })
+  const [leftReport, rightReport, leftBouts, rightBouts] = await Promise.all([
+    buildScoutingReport(admin, leftAthlete, opponentIndex, tier, null),
+    buildScoutingReport(admin, rightAthlete, opponentIndex, tier, null),
+    loadComparisonBouts(admin, side(leftAthlete)),
+    loadComparisonBouts(admin, side(rightAthlete)),
+  ])
+
+  const onTheMat = compareAthletes(leftBouts, rightBouts)
+  return NextResponse.json({
+    comparison: {
+      left: { id: leftReport.athleteId, name: leftReport.identity.name, photoUrl: leftReport.identity.photoUrl, school: leftReport.identity.highSchool, graduationYear: leftReport.identity.graduationYear, weight: leftReport.identity.weightClass },
+      right: { id: rightReport.athleteId, name: rightReport.identity.name, photoUrl: rightReport.identity.photoUrl, school: rightReport.identity.highSchool, graduationYear: rightReport.identity.graduationYear, weight: rightReport.identity.weightClass },
+      headToHead: onTheMat.headToHead,
+      commonOpponents: onTheMat.commonOpponents,
+      commonOpponentEdge: onTheMat.commonOpponentEdge,
+      verdict: onTheMat.verdict,
+      rows: buildComparisonRows(leftReport, rightReport, { personal }),
+      personal,
+    },
+  })
 }
