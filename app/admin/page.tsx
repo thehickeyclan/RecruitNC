@@ -12,6 +12,7 @@ import {
   TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList, Database, BookOpen, CreditCard,
   ShoppingBag, Smile, Coins, LayoutDashboard, CircleDollarSign, Link2, Receipt, GraduationCap, Package,
   LayoutGrid, Handshake, Mail, Bot, Scale, Newspaper, Import, MapPinned, BellRing,
+  MessageSquare,
 } from "lucide-react"
 
 interface AdminStats {
@@ -379,6 +380,13 @@ export default function AdminDashboard() {
                 <UserCheck className="h-6 w-6 shrink-0" />
                 <span className="text-sm font-semibold">Users</span>
                 <span className="text-[10px] font-normal leading-tight opacity-90">Marketing email copy</span>
+              </Button>
+            </Link>
+            <Link href="/admin/coach-messages">
+              <Button className="w-full min-h-20 h-auto py-3 bg-gradient-to-br from-[#0A1628] to-[#13294B] hover:from-[#13294B] hover:to-[#0A1628] text-white shadow-lg flex flex-col items-center justify-center gap-1 px-2">
+                <MessageSquare className="h-6 w-6 shrink-0" />
+                <span className="text-sm font-semibold">Coach Messages</span>
+                <span className="text-[10px] font-normal leading-tight opacity-90">Conversations, reply rates, reports</span>
               </Button>
             </Link>
             <Link href="/admin/commitment-stats">
