@@ -11,7 +11,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { FileText, Search, Star, Trash2 } from "lucide-react"
+import { ArrowLeftRight, Check, FileText, Search, Star, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { MyRecruitRow } from "@/lib/my-recruits"
 
@@ -27,6 +27,11 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
   const [query, setQuery] = useState("")
   const [classYear, setClassYear] = useState<number | "all">("all")
   const [removing, setRemoving] = useState<string | null>(null)
+  /** Up to two wrestlers picked for the comparison; a third replaces the earliest. */
+  const [picked, setPicked] = useState<string[]>([])
+  const pick = (id: string) =>
+    setPicked((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id].slice(-2)))
+  const pickedRows = picked.map((id) => data?.recruits.find((r) => r.athleteId === id)).filter((r): r is MyRecruitRow => Boolean(r))
 
   const load = () =>
     fetch("/api/coaches/my-recruits", { credentials: "include" })
@@ -72,7 +77,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
 
   return (
       <main className="min-h-screen bg-[#0A1628] text-white">
-        <div className="mx-auto max-w-6xl px-4 py-8 sm:py-10">
+        <div className={cn("mx-auto max-w-6xl px-4 py-8 sm:py-10", pickedRows.length ? "pb-28 sm:pb-28" : "")}>
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D3B574]">RecruitNC</p>
@@ -192,7 +197,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                           {r.starredBy !== "You" ? <div>by {r.starredBy}</div> : null}
                         </td>
                         <td className="px-3 py-3">
-                          <Actions row={r} removing={removing === r.athleteId} onRemove={remove} />
+                          <Actions row={r} removing={removing === r.athleteId} onRemove={remove} picked={picked.includes(r.athleteId)} onPick={pick} />
                         </td>
                       </tr>
                     ))}
@@ -239,7 +244,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                         Added {dayLabel(r.starredAt)}
                         {r.starredBy !== "You" ? ` by ${r.starredBy}` : ""}
                       </span>
-                      <Actions row={r} removing={removing === r.athleteId} onRemove={remove} />
+                      <Actions row={r} removing={removing === r.athleteId} onRemove={remove} picked={picked.includes(r.athleteId)} onPick={pick} />
                     </div>
                   </li>
                 ))}
@@ -248,6 +253,40 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
             </>
           )}
         </div>
+
+        {/* Two picked: straight to the comparison. */}
+        {pickedRows.length ? (
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#D3B574]/30 bg-[#0f1c2e]/95 backdrop-blur">
+            <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
+              <p className="min-w-0 text-sm text-white/80">
+                <ArrowLeftRight className="mr-2 inline h-4 w-4 text-[#D3B574]" aria-hidden />
+                {pickedRows.length === 1 ? (
+                  <>
+                    <span className="font-bold text-white">{pickedRows[0]!.name}</span> — pick one more to compare
+                  </>
+                ) : (
+                  <>
+                    <span className="font-bold text-white">{pickedRows[0]!.name}</span> vs{" "}
+                    <span className="font-bold text-white">{pickedRows[1]!.name}</span>
+                  </>
+                )}
+              </p>
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={() => setPicked([])} className="text-xs font-semibold text-white/50 hover:text-white">
+                  Clear
+                </button>
+                {pickedRows.length === 2 ? (
+                  <Link
+                    href={`/compare?left=${pickedRows[0]!.athleteId}&right=${pickedRows[1]!.athleteId}`}
+                    className="rounded-lg bg-[#D3B574] px-4 py-2 text-sm font-bold text-[#0A1628] hover:bg-[#c4a665]"
+                  >
+                    Compare →
+                  </Link>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        ) : null}
       </main>
   )
 }
@@ -285,9 +324,36 @@ function ReportLink({ row }: { row: MyRecruitRow }) {
   )
 }
 
-function Actions({ row, removing, onRemove }: { row: MyRecruitRow; removing: boolean; onRemove: (id: string) => void }) {
+function Actions({
+  row,
+  removing,
+  onRemove,
+  picked,
+  onPick,
+}: {
+  row: MyRecruitRow
+  removing: boolean
+  onRemove: (id: string) => void
+  picked: boolean
+  onPick: (id: string) => void
+}) {
   return (
     <div className="flex items-center gap-1.5">
+      <button
+        type="button"
+        aria-pressed={picked}
+        onClick={() => onPick(row.athleteId)}
+        title={picked ? "Remove from comparison" : "Add to comparison"}
+        className={cn(
+          "inline-flex items-center gap-1 whitespace-nowrap rounded-md border px-2 py-1 text-xs font-semibold",
+          picked
+            ? "border-[#D3B574] bg-[#D3B574] text-[#0A1628]"
+            : "border-white/20 text-white/70 hover:border-[#D3B574]/60 hover:text-white",
+        )}
+      >
+        {picked ? <Check className="h-3 w-3" aria-hidden /> : <ArrowLeftRight className="h-3 w-3" aria-hidden />}
+        Compare
+      </button>
       {row.mine ? (
         <button
           type="button"

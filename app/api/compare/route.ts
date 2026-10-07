@@ -14,7 +14,9 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
 import { compareAthletes } from "@/lib/athlete-comparison"
 import { loadComparisonBouts } from "@/lib/athlete-comparison-load"
-import { buildComparisonRows } from "@/lib/athlete-comparison-rows"
+import { buildComparisonRows, individualNationalEvents, type ComparisonReport } from "@/lib/athlete-comparison-rows"
+import { hasAnyCriteria } from "@/lib/program-fit"
+import { loadProgramFit, resolveProgramScope } from "@/lib/program-fit-store"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { resolveRankingViewerForUser } from "@/lib/ranking-access"
 import { classifyViewer } from "@/lib/viewer-role"
@@ -107,6 +109,30 @@ export async function GET(request: NextRequest) {
   ])
 
   const onTheMat = compareAthletes(leftBouts, rightBouts)
+
+  /*
+   * Program fit, for the viewers who may set it: the staff's saved needs, checked against both.
+   * GPA and test scores are in it, so it rides on the same line as the rest of the personal data.
+   */
+  const fitSubject = (report: ComparisonReport) => ({
+    graduationYear: report.identity.graduationYear,
+    collegeWeightClass: report.identity.collegeWeightClass,
+    currentWeight: report.identity.lastCompetedWeight ?? report.identity.weightClass,
+    gpa: report.academics.gpa,
+    sat: report.academics.sat,
+    act: report.academics.act,
+    academicInterest: report.academics.academicInterest,
+    nationalEvents: individualNationalEvents(report).length,
+  })
+  // The page re-checks these itself as the coach edits the needs, so it gets the facts, not a verdict.
+  const savedFit = personal ? await loadProgramFit(admin, await resolveProgramScope(admin, user.id)) : null
+  const programFit = personal
+    ? {
+        saved: savedFit && hasAnyCriteria(savedFit.criteria) ? savedFit : null,
+        left: fitSubject(leftReport),
+        right: fitSubject(rightReport),
+      }
+    : null
   return NextResponse.json({
     comparison: {
       left: { id: leftReport.athleteId, name: leftReport.identity.name, photoUrl: leftReport.identity.photoUrl, school: leftReport.identity.highSchool, graduationYear: leftReport.identity.graduationYear, weight: leftReport.identity.weightClass },
@@ -117,6 +143,7 @@ export async function GET(request: NextRequest) {
       verdict: onTheMat.verdict,
       rows: buildComparisonRows(leftReport, rightReport, { personal }),
       personal,
+      programFit,
     },
   })
 }

@@ -40,6 +40,7 @@ import {
 import { useAuth } from "@/contexts/auth-context"
 import type { ComparisonBout, CommonOpponent, HeadToHead } from "@/lib/athlete-comparison"
 import type { ComparisonRow, RowEdge, RowGroup } from "@/lib/athlete-comparison-rows"
+import { ProgramFitPanel, type ProgramFitPayload } from "./program-fit-panel"
 
 type Athlete = {
   id: string
@@ -67,6 +68,8 @@ type ComparisonResponse = {
   verdict: string
   rows: ComparisonRow[]
   personal: boolean
+  /** Verified coaches and admins only; null for everyone else. */
+  programFit: ProgramFitPayload | null
 }
 
 /** A refusal the coach can do something about, kept apart from a plain error. */
@@ -666,6 +669,10 @@ export default function CompareClient({
   }
 
   const visible = data ? data.rows.filter(isOn) : []
+  const classYearOptions = useMemo(
+    () => [...new Set(athletes.map((a) => a.graduationyear).filter((y): y is number => y != null))].sort((a, b) => a - b),
+    [athletes],
+  )
 
   /** Categories each wrestler holds, counting only rows switched on, plus the mat evidence. */
   const tally = useMemo(() => {
@@ -750,7 +757,23 @@ export default function CompareClient({
                   )
                 })}
               </div>
+              <p className="mt-4 border-t border-white/10 pt-3 text-center text-xs text-white/50">
+                An edge is a category one wrestler leads: one per row, among the rows you&apos;ve switched on, plus head
+                to head and common opponents. Ties and missing data give neither an edge. It&apos;s a count, not a score.
+              </p>
             </section>
+
+            {data.programFit ? (
+              <ProgramFitPanel
+                fit={data.programFit}
+                leftName={data.left.name}
+                rightName={data.right.name}
+                classYearOptions={classYearOptions}
+                onSaved={(saved) =>
+                  setData((prev) => (prev && prev.programFit ? { ...prev, programFit: { ...prev.programFit, saved } } : prev))
+                }
+              />
+            ) : null}
 
             <HeadToHeadCard data={data} />
 

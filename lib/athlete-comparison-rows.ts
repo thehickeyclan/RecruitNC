@@ -87,11 +87,18 @@ function addRecords(records: Array<string | null | undefined>): { wins: number; 
 
 /* ------------------------------------------------------------------ competition */
 
+/**
+ * Individual national events entered. Team duals are ingested for NC United squads and nobody
+ * else, so counting them would rank our own wrestlers above identical ones from another club.
+ */
+export function individualNationalEvents(report: ComparisonReport): string[] {
+  return report.competition.nationalEvents.filter((e) => isTeamBlindEvent(e) && !/tournament of champions/i.test(e))
+}
+
 function footprintRow(l: ComparisonReport, r: ComparisonReport): ComparisonRow {
+  const individual = individualNationalEvents
   // Individual events only: team duals are ingested for NC United squads and nobody else, so
   // counting them would rank our own wrestlers above identical ones from another club.
-  const individual = (report: ComparisonReport) =>
-    report.competition.nationalEvents.filter((e) => isTeamBlindEvent(e) && !/tournament of champions/i.test(e))
   const ln = individual(l).length
   const rn = individual(r).length
   const edge = higher(ln, rn)
