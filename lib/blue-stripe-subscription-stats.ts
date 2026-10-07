@@ -37,7 +37,7 @@ export function classifyBlueStripeSubscription(sub: Stripe.Subscription): {
   bucket: BlueStripeSubscriptionBucket
   countsTowardMrr: boolean
 } {
-  const mapped = mapStripeSubscriptionToMembershipStatus(sub)
+  const mapped = mapStripeSubscriptionToMembershipStatus(sub, { cancelRequestEndsAccess: false })
   if (mapped.status === "cancelled") {
     return { bucket: "cancelled", countsTowardMrr: false }
   }

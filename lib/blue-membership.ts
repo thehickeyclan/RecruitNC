@@ -70,17 +70,15 @@ export function isPayingWiqMembership(row: WiqMembershipRow): boolean {
 }
 
 /**
- * Still inside the window they are owed.
+ * A current WrestlingIQ membership: active, or behind on a payment but not cancelled.
  *
- * `grace` is a cancelled subscription whose paid period has not run out. They paid for those
- * days; taking access on the cancellation date would be taking something already bought.
+ * `grace` (cancelled, paid period not yet run out) used to count until `active_until`. Matt,
+ * 7 Oct 2026: access ends the day a family cancels, on WIQ as on Stripe - no grace window.
+ * `now` stays in the signature for the callers that pass it.
  */
-export function isWiqCurrent(row: WiqMembershipRow, now: Date = new Date()): boolean {
+export function isWiqCurrent(row: WiqMembershipRow, _now: Date = new Date()): boolean {
   const status = String(row.status ?? "").trim().toLowerCase()
-  if (status === "active" || status === "past_due") return true
-  if (status !== "grace") return false
-  const until = row.active_until ? new Date(row.active_until) : null
-  return Boolean(until && !Number.isNaN(until.getTime()) && until >= now)
+  return status === "active" || status === "past_due"
 }
 
 /**

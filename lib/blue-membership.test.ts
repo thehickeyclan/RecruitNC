@@ -48,11 +48,15 @@ describe("paying, on the WrestlingIQ side", () => {
   })
 })
 
-describe("the days they already paid for", () => {
+describe("cancelling ends access that day (Matt, 7 Oct 2026)", () => {
   const now = new Date("2026-09-24T12:00:00Z")
 
-  it("keeps a cancelled member through their paid window", () => {
-    expect(isWiqCurrent({ status: "grace", active_until: "2026-10-16T00:00:00Z" }, now)).toBe(true)
+  it("does not keep a cancelled member through their paid window", () => {
+    expect(isWiqCurrent({ status: "grace", active_until: "2026-10-16T00:00:00Z" }, now)).toBe(false)
+  })
+
+  it("keeps a member who is behind on a payment but has not cancelled", () => {
+    expect(isWiqCurrent({ status: "past_due", active_until: null }, now)).toBe(true)
   })
 
   it("ends access when the window closes", () => {
@@ -92,8 +96,8 @@ describe("isEntitled", () => {
     ).toBe(false)
   })
 
-  it("a legacy member still inside their paid window keeps access", () => {
-    expect(isEntitled({ wiq: [{ status: "grace", amount_cents: 5100, active_until: "2026-10-16T00:00:00Z" }], now })).toBe(true)
+  it("a legacy member who cancelled loses access that day, paid window or not (Matt, 7 Oct 2026)", () => {
+    expect(isEntitled({ wiq: [{ status: "grace", amount_cents: 5100, active_until: "2026-10-16T00:00:00Z" }], now })).toBe(false)
   })
 })
 
@@ -117,10 +121,10 @@ describe("graduation ends membership, whatever the billing says", () => {
     expect(hasGraduated(2026, new Date("2026-07-01T12:00:00Z"))).toBe(true)
   })
 
-  it("shuts entitlement off for a graduate riding out a grace window", () => {
-    const grace = { status: "grace", amount_cents: 0, active_until: "2026-09-29T00:00:00Z" }
-    expect(isEntitled({ wiq: [grace], now })).toBe(true)
-    expect(isEntitled({ wiq: [grace], graduationYear: 2026, now })).toBe(false)
+  it("shuts entitlement off for a graduate, even on an active membership", () => {
+    const active = { status: "active", amount_cents: 0 }
+    expect(isEntitled({ wiq: [active], now })).toBe(true)
+    expect(isEntitled({ wiq: [active], graduationYear: 2026, now })).toBe(false)
   })
 
   it("says nothing when the class is unknown", () => {

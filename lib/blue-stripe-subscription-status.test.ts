@@ -13,6 +13,13 @@ describe("mapStripeSubscriptionToMembershipStatus", () => {
     expect(mapped.resume_at).toMatch(/2026-08-01/)
   })
 
+  it("a cancel-at-period-end request ends access now", () => {
+    const sub = { id: "sub_1", status: "active", cancel_at_period_end: true } as import("stripe").Stripe.Subscription
+    expect(mapStripeSubscriptionToMembershipStatus(sub).status).toBe("cancelled")
+    // The dashboard stats still see a subscription being billed through its period.
+    expect(mapStripeSubscriptionToMembershipStatus(sub, { cancelRequestEndsAccess: false }).status).toBe("active")
+  })
+
   it("maps deleted subscription to cancelled", () => {
     const mapped = mapStripeSubscriptionToMembershipStatus(
       { id: "sub_1", status: "canceled" } as import("stripe").Stripe.Subscription,
