@@ -350,18 +350,36 @@ type OutOfStateRow = {
 
 /** Other states' placers over the same window, one entry per name per state. */
 export async function loadOutOfStatePlacers(supabase: SupabaseClient, now = new Date()): Promise<StatePlacer[]> {
-  const rows: OutOfStateRow[] = []
-  for (let from = 0; ; from += 1000) {
+  /*
+   * ~120,000 rows once all 49 states were in. Read one page after another that took over a
+   * minute, and every phone profile waited on it (labelOpponents) until the app gave up - no
+   * profile loaded at all on 7 Oct 2026. Count first, then fetch the pages a few at a time.
+   * Ordered by id so parallel pages neither overlap nor skip.
+   */
+  const since = now.getFullYear() - YEARS_BACK
+  const { count } = await supabase
+    .from("state_tournament_placers")
+    .select("id", { count: "exact", head: true })
+    .gte("season", since)
+  const pages = Math.ceil((count ?? 0) / 1000)
+  const pageAt = async (page: number): Promise<OutOfStateRow[]> => {
     const { data, error } = await supabase
       .from("state_tournament_placers")
       // `*` rather than naming identity_confirmed, so a database without that column still loads.
       .select("*")
-      .gte("season", now.getFullYear() - YEARS_BACK)
-      .order("season", { ascending: false })
-      .range(from, from + 999)
-    if (error || !data?.length) break
-    rows.push(...(data as OutOfStateRow[]))
-    if (data.length < 1000) break
+      .gte("season", since)
+      .order("id", { ascending: true })
+      .range(page * 1000, page * 1000 + 999)
+    if (error) throw new Error(`state_tournament_placers page ${page}: ${error.message}`)
+    return (data ?? []) as OutOfStateRow[]
+  }
+  const rows: OutOfStateRow[] = []
+  const CONCURRENCY = 8
+  for (let start = 0; start < pages; start += CONCURRENCY) {
+    const batch = await Promise.all(
+      Array.from({ length: Math.min(CONCURRENCY, pages - start) }, (_, i) => pageAt(start + i)),
+    )
+    for (const page of batch) rows.push(...page)
   }
 
   const byName = new Map<string, { name: string; state: string; schools: Set<string>; confirmed: boolean; ncNamesake: boolean; rows: OutOfStateRow[] }>()
