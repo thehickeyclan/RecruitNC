@@ -21,6 +21,17 @@ describe("normalizeWeightClassLabel", () => {
 })
 
 describe("resolveLastCompetedWeight", () => {
+  it("lets a dated dual later in the year beat an annual event (Brianna Palmer, UCD after Fargo)", () => {
+    const last = resolveLastCompetedWeight([
+      { year: 2026, weight: "105", event: "Fargo", priority: 35, month: 7 },
+      { year: 2026, weight: "105", event: "Ultimate Club Duals", date: "2026-09-19", priority: 60 },
+      { year: 2026, weight: "100", event: "NCHSAA States", priority: 10, month: 2 },
+    ])
+    expect(last?.event).toBe("Ultimate Club Duals")
+    expect(last?.date).toBe("2026-09-19")
+  })
+
+
   it("prefers newer year over older", () => {
     const last = resolveLastCompetedWeight([
       { year: 2025, weight: "106", event: "NCHSAA States", priority: 10 },

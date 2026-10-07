@@ -1,3 +1,4 @@
+import { loadDatedBoutCandidates } from "@/lib/last-competed-bouts"
 import { getNhscaNationalBoutsForAthlete, getSuper32BoutsForAthlete, type NhscaNationalBout } from "@/lib/nhsca-national-bouts"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -126,7 +127,7 @@ export async function loadPublicAthleteProfile(
   if (wrestlingName && wrestlingName.toLowerCase() !== name.toLowerCase()) nameBases.push(wrestlingName)
 
   const athleteRow = athlete as Record<string, unknown>
-  const [bundle, nationalTeamData, otherTournamentBlocks, nchsaaStateBouts, nhscaBouts, super32Bouts, attachedEventBouts] = await Promise.all([
+  const [bundle, nationalTeamData, otherTournamentBlocks, nchsaaStateBouts, nhscaBouts, super32Bouts, attachedEventBouts, datedBouts] = await Promise.all([
     loadAthleteTournamentBundle(client, athleteRow),
     loadPublicAthleteNationalTeamData(client, athleteRow),
     getOtherTournamentProfileBlocks(client, athleteRow),
@@ -134,6 +135,8 @@ export async function loadPublicAthleteProfile(
     getNhscaNationalBoutsForAthlete(client, trimmed),
     getSuper32BoutsForAthlete(client, trimmed),
     getAttachedEventBouts(client, trimmed).catch(() => []),
+    // Duals and in-season bouts, so "last competed" is the last time the athlete actually wrestled.
+    loadDatedBoutCandidates(client, { id: trimmed, graduationyear: athleteRow.graduationyear }).catch(() => []),
   ])
 
   const { nchsaa: nchsaaMergedRows, nhsca: nhscaMerged, super32: super32Merged, fargo: fargoMerged } = bundle
@@ -159,7 +162,7 @@ export async function loadPublicAthleteProfile(
     }>,
     other_tournament_results: otherTournamentBlocks.map((block) => block.result),
   }
-  const lastCompeted = resolveLastCompetedWeight(candidatesFromPublicProfilePayload(profilePayload))
+  const lastCompeted = resolveLastCompetedWeight([...candidatesFromPublicProfilePayload(profilePayload), ...datedBouts])
   const listedWeight = (athlete as Record<string, unknown>).weightclass ?? (athlete as Record<string, unknown>).weight_class
   const profile_weight_display = buildProfileWeightDisplay(listedWeight as string | number | null, lastCompeted)
 
