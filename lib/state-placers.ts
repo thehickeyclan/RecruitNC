@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { nameWords, namesLikelySamePerson } from "@/lib/athlete-name-match"
 import { rankingScopeLabel, sourceLabel } from "@/lib/national-rankings"
 import type { EventPlacer, FargoAllAmerican, NationallyRankedOpponent, StatePlacer } from "@/lib/significant-wins"
+import { readStatePlacerSnapshot } from "@/lib/state-placer-snapshot"
 
 /**
  * North Carolina state champions and placers (top 8, NCHSAA and NCISA), for recognising a win
@@ -24,7 +25,7 @@ type Row = { year: number; place: number; classification: string | null; wrestle
  * they should. `stateSchools` stays North Carolina's either way: it is the list that marks a bout
  * as against an NC kid, which is what rules a Virginia namesake out.
  */
-type StatePlacerIndex = {
+export type StatePlacerIndex = {
   statePlacers: StatePlacer[]
   stateSchools: string[]
   fargoAllAmericans: FargoAllAmerican[]
@@ -50,14 +51,34 @@ export async function loadStatePlacerIndex(
   const key = `${now.getFullYear()}|${options?.outOfState ? "all" : "nc"}`
   const hit = indexCache.get(key)
   if (hit && Date.now() - hit.at < INDEX_TTL_MS) return hit.value
-  const value = buildStatePlacerIndex(supabase, now, options)
+  // The all-states index is never built inside a request - it takes about a minute. Read the
+  // copy the cron saved; without one (or a stale one), fall back to North Carolina only.
+  const value = options?.outOfState
+    ? readSavedIndex(now).then((saved) => saved ?? buildStatePlacerIndex(supabase, now))
+    : buildStatePlacerIndex(supabase, now, options)
   indexCache.set(key, { at: Date.now(), value })
   // A failed load must not be served for ten minutes.
   value.catch(() => indexCache.delete(key))
   return value
 }
 
-async function buildStatePlacerIndex(
+/** Older than this, the saved index is ignored: an import since then would be missing. */
+const SNAPSHOT_MAX_AGE_MS = 36 * 60 * 60_000
+
+async function readSavedIndex(now: Date): Promise<StatePlacerIndex | null> {
+  try {
+    const saved = await readStatePlacerSnapshot<StatePlacerIndex>()
+    if (!saved || saved.year !== now.getFullYear()) return null
+    if (Date.now() - Date.parse(saved.builtAt) > SNAPSHOT_MAX_AGE_MS) return null
+    return saved.index
+  } catch (e) {
+    console.error("[state-placers] saved index unreadable:", e instanceof Error ? e.message : e)
+    return null
+  }
+}
+
+/** The full build. Only the cron calls this with `outOfState`; it takes about a minute. */
+export async function buildStatePlacerIndex(
   supabase: SupabaseClient,
   now: Date,
   options?: { outOfState?: boolean },

@@ -30,6 +30,48 @@ function parseGradYear(row: Record<string, unknown>): number | null {
  */
 export async function findExistingAthlete(
   supabase: SupabaseClient,
+  options: {
+    name: string
+    graduationYear: number
+    school?: string
+    /**
+     * Also offer a same-name profile with no class year on file. Only for callers that ask the
+     * person "Is this you?" before linking (create-athlete) - an automatic caller would attach a
+     * family to a namesake. 113 NC girls imported in October 2026 had no class year, so a check on
+     * year alone let each of them make a second profile.
+     */
+    includeUnknownYear?: boolean
+  },
+): Promise<{ id: string; name: string } | null> {
+  const found = await matchWithYear(supabase, options)
+  if (found || !options.includeUnknownYear) return found
+  return matchUnknownYear(supabase, options)
+}
+
+/** Same name, no class year on file, and - when a school was given - the same school or none. */
+async function matchUnknownYear(
+  supabase: SupabaseClient,
+  options: { name: string; school?: string },
+): Promise<{ id: string; name: string } | null> {
+  const { data: rows, error } = await supabase
+    .from("athletes")
+    .select("id, name, firstName, lastName, highschool, graduationyear")
+    .is("graduationyear", null)
+  if (error) console.error("findExistingAthlete (unknown year):", error.message)
+  if (error || !rows?.length) return null
+  const wantSchool = options.school ? normalize(options.school) : ""
+  const matches = (rows as Record<string, unknown>[]).filter((row) => {
+    if (!namesLikelySamePerson(getFullName(row), options.name)) return false
+    const hs = normalize((row.highschool as string) || "")
+    return !wantSchool || !hs || schoolsLikelySame(wantSchool, hs)
+  })
+  // Two namesakes with no year: no way to tell which, so offer neither.
+  if (matches.length !== 1) return null
+  return { id: matches[0].id as string, name: getFullName(matches[0]) || (matches[0].name as string) }
+}
+
+async function matchWithYear(
+  supabase: SupabaseClient,
   options: { name: string; graduationYear: number; school?: string },
 ): Promise<{ id: string; name: string } | null> {
   const { name, graduationYear, school } = options

@@ -31,7 +31,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { data, error } = await admin
     .from("athletes")
     .select(
-      "academic_gpa, academic_sat, academic_act, academic_interest, college_weight_class, weightclass, highlight_video_url, bio, socialMedia",
+      "academic_gpa, academic_sat, academic_act, academic_interest, college_weight_class, weightclass, highlight_video_url, bio, socialMedia, phone",
     )
     .eq("id", athleteId)
     .maybeSingle()
@@ -47,6 +47,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       ok: true,
       relationship: ownership.relationship,
       fields: {
+        // The number college coaches call; only the owner, a linked parent or an admin gets here.
+        phone: text(data.phone),
         gpa: text(data.academic_gpa),
         sat: text(data.academic_sat),
         act: text(data.academic_act),

@@ -27,11 +27,8 @@ export async function labelOpponents(admin: SupabaseClient, bouts: AccoladeBout[
   // profile must never wait on that: past the budget the bouts go out without accolades, and the
   // build carries on so the next request finds it ready.
   const loaded = await Promise.race([
-    // NC placers only, for now (0.6s). The all-states index takes ~60s to build, most of it
-    // synchronous name matching that blocks this very timeout from firing - phone profiles hung
-    // on it on 7 Oct 2026. Out-of-state and national-rank accolades come back once that index is
-    // precomputed rather than built inside a request.
-    loadStatePlacerIndex(admin, new Date()).catch(() => null),
+    // All states: read from the saved index (lib/state-placer-snapshot.ts), never built here.
+    loadStatePlacerIndex(admin, new Date(), { outOfState: true }).catch(() => null),
     new Promise<null>((resolve) => setTimeout(() => resolve(null), INDEX_BUDGET_MS)),
   ])
   if (!loaded) return {}
