@@ -14,6 +14,11 @@
  *
  * Re-running is safe: rows for the event key are replaced, so a corrected CSV can just be
  * re-imported.
+ *
+ * One guard on the way in: an event whose own name says "High School" must not carry elementary
+ * and middle school brackets. NHSCA runs all three at the same venue and Flo exports them under
+ * the one event name with no division marker, so 3,024 rows at 75-95 lb were loaded as high
+ * school results and 62 of them reached an NC profile. Weight is the only signal in the file.
  */
 
 import { createClient } from "@supabase/supabase-js"
@@ -160,7 +165,32 @@ async function main() {
     }
   })
 
-  const boutRows = parsed.bouts.map((bout) => {
+  /*
+   * Deliberately narrow. A blanket floor would discard real results: USAW's women's brackets are
+   * scored in kilograms (33-73) and Fargo's 16U boys genuinely start at 88 lb. This applies only
+   * where the event name itself claims high school, which is where the mixing happens.
+   */
+  const claimsHighSchool = /high school/i.test(eventName)
+  const poundsOf = (weight: unknown) => {
+    const m = String(weight ?? "").match(/\d{2,3}/)
+    return m ? Number(m[0]) : null
+  }
+  const YOUTH_CEILING = 95
+  const youthBouts = claimsHighSchool
+    ? parsed.bouts.filter((b) => {
+        const lb = poundsOf(b.weightClass)
+        return lb !== null && lb <= YOUTH_CEILING
+      })
+    : []
+  if (youthBouts.length) {
+    const weights = [...new Set(youthBouts.map((b) => b.weightClass))].sort()
+    console.log(
+      `skipping ${youthBouts.length} bouts at ${weights.join(", ")} — "${eventName}" is a high school event, so these are its elementary and middle school brackets`,
+    )
+  }
+  const highSchoolBouts = parsed.bouts.filter((b) => !youthBouts.includes(b))
+
+  const boutRows = highSchoolBouts.map((bout) => {
     const self = lookup(bout.athleteName, bout.athleteClub)
     const opponent = bout.opponentName ? lookup(bout.opponentName, bout.opponentClub ?? "") : undefined
     return {
