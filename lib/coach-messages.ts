@@ -290,6 +290,11 @@ export type ThreadSummary = {
   stopped: boolean
   /** How this account sees the thread. */
   viewerRole: Exclude<ThreadRole, "admin">
+  /** The other side wrote last: the coach owes the family a reply, or the family owes the coach. */
+  yourTurn: boolean
+  classYear: number | null
+  weight: string | null
+  school: string | null
 }
 
 /** Every conversation this account is in, newest first: as the coach, or as family. */
@@ -307,7 +312,7 @@ export async function listThreads(admin: SupabaseClient, userId: string, opts: {
 
   const ids = threads.map((t) => t.id)
   const [{ data: athletes }, { data: coaches }, { data: reads }, { data: messages }] = await Promise.all([
-    admin.from("athletes").select("id, name, claimed_by_user_id").in("id", [...new Set(threads.map((t) => t.athlete_id))]),
+    admin.from("athletes").select("id, name, claimed_by_user_id, graduationyear, weightclass, highschool").in("id", [...new Set(threads.map((t) => t.athlete_id))]),
     admin.from("user_profiles").select("user_id, full_name, first_name, last_name").in("user_id", [...new Set(threads.map((t) => t.coach_user_id))]),
     admin.from("coach_thread_reads").select("thread_id, last_read_at").eq("user_id", userId).in("thread_id", ids),
     // Latest message per thread. Threads are short; this reads the recent tail and keeps the first per thread.
@@ -315,6 +320,7 @@ export async function listThreads(admin: SupabaseClient, userId: string, opts: {
   ])
 
   const athleteName = new Map((athletes ?? []).map((a) => [String(a.id), String(a.name ?? "")]))
+  const athleteRow = new Map((athletes ?? []).map((a) => [String(a.id), a]))
   const claimedBy = new Map((athletes ?? []).map((a) => [String(a.id), (a.claimed_by_user_id as string | null) ?? null]))
   const coachName = new Map((coaches ?? []).map((c) => [String(c.user_id), displayName(c)]))
   const readAt = new Map((reads ?? []).map((r) => [String(r.thread_id), String(r.last_read_at)]))
@@ -328,6 +334,8 @@ export async function listThreads(admin: SupabaseClient, userId: string, opts: {
     const viewerRole: ThreadSummary["viewerRole"] =
       t.coach_user_id === userId ? "coach" : claimedBy.get(t.athlete_id) === userId ? "athlete" : "parent"
     const read = readAt.get(t.id)
+    const a = athleteRow.get(t.athlete_id)
+    const lastRole = last?.sender_role ?? null
     return {
       id: t.id,
       athleteId: t.athlete_id,
@@ -340,6 +348,10 @@ export async function listThreads(admin: SupabaseClient, userId: string, opts: {
       unread: !read || read < t.last_message_at,
       stopped: Boolean(t.stopped_at),
       viewerRole,
+      yourTurn: lastRole != null && (viewerRole === "coach" ? lastRole !== "coach" : lastRole === "coach") && !(viewerRole === "coach" && t.stopped_at),
+      classYear: a?.graduationyear == null ? null : Number(a.graduationyear),
+      weight: a?.weightclass ? String(a.weightclass) : null,
+      school: (a?.highschool as string | null) ?? null,
     }
   })
 }

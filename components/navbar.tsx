@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Users,
   Users2,
+  MessageSquare,
   Trophy,
   Medal,
   ShoppingCart,
@@ -57,6 +58,22 @@ export function Navbar() {
   const cartItems = useCartStore((s) => s.items)
   const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0)
   const unreadNotifications = notifications.filter((n) => !n.read_at).length
+
+  /**
+   * Coach conversations with something unread (lib/coach-messages.ts). Re-read on every page
+   * change, so opening a conversation clears the badge by the time you navigate away.
+   */
+  const [unreadMessages, setUnreadMessages] = useState(0)
+  useEffect(() => {
+    if (!user) {
+      setUnreadMessages(0)
+      return
+    }
+    fetch("/api/coach-messages/unread", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setUnreadMessages(Number(d?.unread) || 0))
+      .catch(() => {})
+  }, [user, pathname])
 
   useEffect(() => {
     if (!user) {
@@ -607,6 +624,16 @@ export function Navbar() {
 
           {/* Icons: Community (hide when already on forum), Notifications, Cart + Auth. */}
           <div className="hidden md:flex items-center gap-1 sm:gap-2">
+            {user && (
+              <a href="/inbox" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label={unreadMessages > 0 ? `Messages (${unreadMessages} unread)` : "Messages"}>
+                <MessageSquare className="h-5 w-5" />
+                {unreadMessages > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#D3B574] px-1 text-[11px] font-bold text-[#0A1628]">
+                    {unreadMessages > 9 ? "9+" : unreadMessages}
+                  </span>
+                )}
+              </a>
+            )}
             {user && !pathname.startsWith("/forum") && (
               <a href="/forum" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label="Community — messaging, groups, and DMs">
                 <Users2 className="h-5 w-5" />
@@ -753,6 +780,16 @@ export function Navbar() {
                 {/* "Account", not "Profile": a profile here is a wrestler's page, and one in five
                     people who followed this link left immediately looking for one. */}
                 <span className="max-[380px]:sr-only">Account</span>
+              </a>
+            )}
+            {user && (
+              <a href="/inbox" className="relative flex items-center justify-center rounded-md p-2 text-white hover:bg-white/10 min-h-[44px] min-w-[44px] shrink-0" aria-label={unreadMessages > 0 ? `Messages (${unreadMessages} unread)` : "Messages"}>
+                <MessageSquare className="h-5 w-5" />
+                {unreadMessages > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#D3B574] px-1 text-[11px] font-bold text-[#0A1628]">
+                    {unreadMessages > 9 ? "9+" : unreadMessages}
+                  </span>
+                )}
               </a>
             )}
             {user && !pathname.startsWith("/forum") && (

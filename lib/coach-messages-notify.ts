@@ -2,7 +2,7 @@ import "server-only"
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 
-import { coachLabel, displayName, familyOf, firstName } from "@/lib/coach-messages"
+import { coachLabel, displayName, familyOf, firstName, unreadCount } from "@/lib/coach-messages"
 import { getAppBaseUrl } from "@/lib/news-share-formats"
 import { sendToTokens } from "@/lib/push-send"
 import { notifyStaffMessageReport } from "@/lib/staff-alerts-sms"
@@ -15,6 +15,8 @@ import { notifyStaffMessageReport } from "@/lib/staff-alerts-sms"
  *   in an email (it makes the person sign in, which is where Report and Stop live).
  * - **The coach is named, with their program.** The program-view alert names only the school;
  *   here the family is about to talk to this person and needs to know who.
+ * - **The app icon shows the unread count.** Each push carries the recipient's own count as its
+ *   badge, so the number is right even when the app is closed; the app resets it on open.
  * - **Push waits for the app.** A tap opens /messages/<id> in the app, and that route must be in
  *   the bundle phones already run before the first alert goes out (a tap on a route the bundle
  *   lacks lands on "Unmatched Route"). Until COACH_MESSAGES_PUSH=1, everyone gets email.
@@ -41,14 +43,19 @@ async function pushTo(
     .in("user_id", userIds)
     .eq("alert_messages", true)
   const rows = (devices ?? []) as Array<{ expo_push_token: string; user_id: string }>
-  const tokens = [...new Set(rows.map((d) => d.expo_push_token).filter(Boolean))]
-  if (tokens.length === 0) return reached
-  const result = await sendToTokens("alert_messages", tokens, {
-    title: message.title,
-    body: message.body,
-    data: { kind: "coach_message", threadId: message.threadId, path: `/messages/${message.threadId}` },
-  })
-  if (result.sent > 0) for (const r of rows) reached.add(r.user_id)
+  // One send per account: each carries that account's own unread count for the app icon badge.
+  const byUser = new Map<string, string[]>()
+  for (const r of rows) if (r.expo_push_token) byUser.set(r.user_id, [...new Set([...(byUser.get(r.user_id) ?? []), r.expo_push_token])])
+  for (const [userId, tokens] of byUser) {
+    const badge = await unreadCount(admin, userId).catch(() => undefined)
+    const result = await sendToTokens("alert_messages", tokens, {
+      title: message.title,
+      body: message.body,
+      data: { kind: "coach_message", threadId: message.threadId, path: `/messages/${message.threadId}` },
+      badge,
+    })
+    if (result.sent > 0) reached.add(userId)
+  }
   return reached
 }
 
@@ -104,6 +111,8 @@ export async function notifyNewMessage(
     const wrestler = firstName(athlete?.name as string | null)
     const coachName = coachLabel(displayName(coach))
     const from = thread.program ? `${coachName} from ${thread.program}` : coachName
+    // Families read and reply on their wrestler's profile; coaches work from the inbox.
+    const familyUrl = `${getAppBaseUrl()}/view-profile?id=${thread.athlete_id}&thread=${thread.id}`
     const url = `${getAppBaseUrl()}/inbox/${thread.id}`
 
     if (input.senderRole === "coach") {
@@ -119,7 +128,7 @@ export async function notifyNewMessage(
         await sendEmail(r.email, `${from} sent ${wrestler} a message`, {
           headline: `${from} sent ${wrestler} a message`,
           detail: `Sign in to read it and reply. ${wrestler} and every parent linked to the profile see the same conversation.`,
-          url,
+          url: familyUrl,
           cta: "Read the message",
           footer: "Get these on your phone: download the NC United app and sign in with this email.",
         })

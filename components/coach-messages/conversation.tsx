@@ -25,7 +25,7 @@ const when = (iso: string) =>
  * One coach ↔ family conversation. The same screen for the coach, the wrestler, a parent and an
  * admin reviewing a report; what each can do comes from the server (`canReply`, `viewerRole`).
  */
-export function Conversation({ threadId }: { threadId: string }) {
+export function Conversation({ threadId, compact = false }: { threadId: string; compact?: boolean }) {
   const [thread, setThread] = useState<Thread | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState("")
@@ -50,8 +50,9 @@ export function Conversation({ threadId }: { threadId: string }) {
   }, [load])
 
   useEffect(() => {
-    endRef.current?.scrollIntoView({ block: "end" })
-  }, [thread?.messages.length])
+    // On the profile the conversation is one card among many; jumping the page would lose the reader.
+    if (!compact) endRef.current?.scrollIntoView({ block: "end" })
+  }, [thread?.messages.length, compact])
 
   const send = async () => {
     if (!draft.trim() || busy) return
@@ -129,8 +130,8 @@ export function Conversation({ threadId }: { threadId: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
+      <div className={cn("flex flex-wrap items-start justify-between gap-3", compact && "justify-end")}>
+        <div className={cn("min-w-0", compact && "hidden")}>
           <h1 className="text-2xl font-black tracking-tight">
             {thread.viewerRole === "coach" ? (
               <Link href={`/athletes/${thread.athleteId}`} className="hover:underline">
@@ -151,7 +152,7 @@ export function Conversation({ threadId }: { threadId: string }) {
               type="button"
               onClick={toggleStop}
               disabled={busy}
-              className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-white/20 px-3 text-sm font-semibold text-white/80 hover:bg-white/10"
+              className={cn("inline-flex items-center gap-1.5 rounded-lg border border-white/20 px-3 font-semibold text-white/80 hover:bg-white/10", compact ? "min-h-[34px] text-xs" : "min-h-[40px] text-sm")}
             >
               {thread.stopped ? <ShieldCheck className="h-4 w-4" /> : <ShieldOff className="h-4 w-4" />}
               {thread.stopped ? "Allow this coach again" : "Stop messages from this coach"}
@@ -159,7 +160,7 @@ export function Conversation({ threadId }: { threadId: string }) {
             <button
               type="button"
               onClick={() => setReporting((v) => !v)}
-              className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-white/20 px-3 text-sm font-semibold text-white/80 hover:bg-white/10"
+              className={cn("inline-flex items-center gap-1.5 rounded-lg border border-white/20 px-3 font-semibold text-white/80 hover:bg-white/10", compact ? "min-h-[34px] text-xs" : "min-h-[40px] text-sm")}
             >
               <Flag className="h-4 w-4" />
               Report
@@ -216,7 +217,7 @@ export function Conversation({ threadId }: { threadId: string }) {
           This family has turned off messages from you.
         </p>
       ) : thread.canReply ? (
-        <div className="sticky bottom-0 -mx-4 border-t border-white/10 bg-[#0A1628]/95 px-4 py-3 backdrop-blur">
+        <div className={compact ? "border-t border-white/10 pt-3" : "sticky bottom-0 -mx-4 border-t border-white/10 bg-[#0A1628]/95 px-4 py-3 backdrop-blur"}>
           <div className="flex items-end gap-2">
             <textarea
               value={draft}

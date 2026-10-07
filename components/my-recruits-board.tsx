@@ -11,9 +11,12 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { ArrowLeftRight, Check, FileText, MessageSquare, Search, Star, Trash2 } from "lucide-react"
+import { ArrowLeftRight, Check, FileText, Mail, MessageSquare, Search, Star, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { MyRecruitRow } from "@/lib/my-recruits"
+import { CoachComposeDialog } from "@/components/coach-messages/coach-message-button"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/contexts/auth-context"
 
 type Payload = { recruits: MyRecruitRow[]; hasSchool: boolean; schoolId: string | null }
 
@@ -46,15 +49,33 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
     if (!initialData) void load()
   }, [initialData])
 
-  /** Conversations with an unread reply, for the badge on Messages. */
-  const [unread, setUnread] = useState(0)
+  /**
+   * This coach's conversations, by wrestler: a row with one opens it, a row without one offers
+   * Message. Also feeds the unread count on the Messages link.
+   */
+  const router = useRouter()
+  const { profile } = useAuth()
+  /** Only coaches write to wrestlers; staff and admins browsing the board get no Message button. */
+  const isCoach = String((profile as { role?: string | null } | null)?.role ?? "").toLowerCase().replace(/[\s-]+/g, "_") === "college_coach"
+  const [threads, setThreads] = useState<Map<string, ThreadState>>(new Map())
+  const [composeFor, setComposeFor] = useState<MyRecruitRow | null>(null)
   useEffect(() => {
     if (initialData) return
-    fetch("/api/coach-messages/unread", { credentials: "include" })
+    fetch("/api/coach-messages", { credentials: "include" })
       .then((r) => r.json())
-      .then((d) => setUnread(Number(d.unread) || 0))
+      .then((d: { threads?: Array<{ id: string; athleteId: string; viewerRole: string; unread: boolean; yourTurn?: boolean }> }) => {
+        const m = new Map<string, ThreadState>()
+        for (const t of d.threads ?? []) if (t.viewerRole === "coach") m.set(t.athleteId, { id: t.id, unread: t.unread, yourTurn: Boolean(t.yourTurn) })
+        setThreads(m)
+      })
       .catch(() => {})
   }, [initialData])
+  const unread = [...threads.values()].filter((t) => t.unread).length
+  const onMessage = (row: MyRecruitRow) => {
+    const t = threads.get(row.athleteId)
+    if (t) router.push(`/inbox/${t.id}`)
+    else setComposeFor(row)
+  }
 
   const classes = useMemo(
     () => [...new Set((data?.recruits ?? []).map((r) => r.classYear).filter((y): y is number => y != null))].sort(),
@@ -219,7 +240,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                           {r.starredBy !== "You" ? <div>by {r.starredBy}</div> : null}
                         </td>
                         <td className="px-3 py-3">
-                          <Actions row={r} removing={removing === r.athleteId} onRemove={remove} picked={picked.includes(r.athleteId)} onPick={pick} />
+                          <Actions row={r} removing={removing === r.athleteId} onRemove={remove} picked={picked.includes(r.athleteId)} onPick={pick} thread={threads.get(r.athleteId)} onMessage={isCoach ? onMessage : undefined} />
                         </td>
                       </tr>
                     ))}
@@ -266,7 +287,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                         Added {dayLabel(r.starredAt)}
                         {r.starredBy !== "You" ? ` by ${r.starredBy}` : ""}
                       </span>
-                      <Actions row={r} removing={removing === r.athleteId} onRemove={remove} picked={picked.includes(r.athleteId)} onPick={pick} />
+                      <Actions row={r} removing={removing === r.athleteId} onRemove={remove} picked={picked.includes(r.athleteId)} onPick={pick} thread={threads.get(r.athleteId)} onMessage={isCoach ? onMessage : undefined} />
                     </div>
                   </li>
                 ))}
@@ -275,6 +296,17 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
             </>
           )}
         </div>
+
+        {composeFor ? (
+          <CoachComposeDialog
+            athleteId={composeFor.athleteId}
+            athleteName={composeFor.name}
+            open
+            onOpenChange={(o) => {
+              if (!o) setComposeFor(null)
+            }}
+          />
+        ) : null}
 
         {/* Two picked: straight to the comparison. */}
         {pickedRows.length ? (
@@ -346,21 +378,44 @@ function ReportLink({ row }: { row: MyRecruitRow }) {
   )
 }
 
+type ThreadState = { id: string; unread: boolean; yourTurn: boolean }
+
 function Actions({
   row,
   removing,
   onRemove,
   picked,
   onPick,
+  thread,
+  onMessage,
 }: {
   row: MyRecruitRow
   removing: boolean
   onRemove: (id: string) => void
   picked: boolean
   onPick: (id: string) => void
+  thread?: ThreadState
+  onMessage?: (row: MyRecruitRow) => void
 }) {
   return (
     <div className="flex items-center gap-1.5">
+      {onMessage ? (
+      <button
+        type="button"
+        onClick={() => onMessage(row)}
+        title={thread ? "Open your conversation" : `Message ${row.name}`}
+        className={cn(
+          "relative inline-flex items-center gap-1 whitespace-nowrap rounded-md border px-2 py-1 text-xs font-semibold",
+          thread?.unread || thread?.yourTurn
+            ? "border-[#D3B574] text-[#D3B574] hover:bg-[#D3B574]/10"
+            : "border-white/20 text-white/70 hover:border-[#D3B574]/60 hover:text-white",
+        )}
+      >
+        {thread ? <MessageSquare className="h-3 w-3" aria-hidden /> : <Mail className="h-3 w-3" aria-hidden />}
+        {thread ? (thread.yourTurn ? "Reply" : "Thread") : "Message"}
+        {thread?.unread ? <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-[#D3B574]" aria-label="New reply" /> : null}
+      </button>
+      ) : null}
       <button
         type="button"
         aria-pressed={picked}

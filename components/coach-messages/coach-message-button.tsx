@@ -33,9 +33,6 @@ export function CoachMessageButton({
   const router = useRouter()
   const [gate, setGate] = useState<{ show: boolean; canSend?: boolean; threadId?: string | null; message?: string } | null>(null)
   const [open, setOpen] = useState(false)
-  const [draft, setDraft] = useState("")
-  const [sending, setSending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user || !athleteId) {
@@ -65,9 +62,52 @@ export function CoachMessageButton({
       router.push(`/inbox/${gate.threadId}`)
       return
     }
-    setError(null)
     setOpen(true)
   }
+
+  return (
+    <>
+      <button type="button" onClick={onClick} className={className} aria-label={label} title={label}>
+        <Mail className={iconClassName} />
+        {showLabel ? <span className="ml-1.5">Message</span> : null}
+      </button>
+      <CoachComposeDialog
+        athleteId={athleteId}
+        athleteName={athleteName}
+        open={open}
+        onOpenChange={setOpen}
+        blockedMessage={gate.canSend ? null : gate.message ?? null}
+      />
+    </>
+  )
+}
+
+/**
+ * The coach's first message to a wrestler. Opens the conversation on send. Used by the profile's
+ * Message button and by each row of My Recruits.
+ */
+export function CoachComposeDialog({
+  athleteId,
+  athleteName,
+  open,
+  onOpenChange,
+  blockedMessage = null,
+  onSent,
+}: {
+  athleteId: string
+  athleteName?: string
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  /** Why this coach cannot send (e.g. not yet confirmed); shown instead of the compose box. */
+  blockedMessage?: string | null
+  /** Called with the new thread id; defaults to opening the conversation. */
+  onSent?: (threadId: string) => void
+}) {
+  const router = useRouter()
+  const [draft, setDraft] = useState("")
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const label = athleteName ? `Message ${athleteName}` : "Message"
 
   const send = async () => {
     if (!draft.trim() || sending) return
@@ -82,9 +122,10 @@ export function CoachMessageButton({
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error ?? "Could not send.")
-      setOpen(false)
+      onOpenChange(false)
       setDraft("")
-      router.push(`/inbox/${data.threadId}`)
+      if (onSent) onSent(data.threadId)
+      else router.push(`/inbox/${data.threadId}`)
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not send.")
     } finally {
@@ -93,45 +134,38 @@ export function CoachMessageButton({
   }
 
   return (
-    <>
-      <button type="button" onClick={onClick} className={className} aria-label={label} title={label}>
-        <Mail className={iconClassName} />
-        {showLabel ? <span className="ml-1.5">Message</span> : null}
-      </button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{label}</DialogTitle>
-            <DialogDescription>
-              {gate.canSend
-                ? "The wrestler and every parent linked to the profile see this conversation, and they can reply. NC United staff can review conversations."
-                : gate.message}
-            </DialogDescription>
-          </DialogHeader>
-          {gate.canSend ? (
-            <div className="space-y-3">
-              <Textarea
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                rows={6}
-                maxLength={4000}
-                placeholder="Introduce yourself and your program…"
-                autoFocus
-              />
-              {error ? <p className="text-sm text-red-600">{error}</p> : null}
-              <div className="flex justify-end gap-2">
-                <Button variant="ghost" onClick={() => setOpen(false)} disabled={sending}>
-                  Cancel
-                </Button>
-                <Button onClick={send} disabled={!draft.trim() || sending} className="bg-[#0A1628] text-white hover:bg-[#13294B]">
-                  {sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                  Send
-                </Button>
-              </div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>{label}</DialogTitle>
+          <DialogDescription>
+            {blockedMessage ??
+              "The wrestler and every parent linked to the profile see this conversation, and they can reply. NC United staff can review conversations."}
+          </DialogDescription>
+        </DialogHeader>
+        {blockedMessage ? null : (
+          <div className="space-y-3">
+            <Textarea
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              rows={6}
+              maxLength={4000}
+              placeholder="Introduce yourself and your program…"
+              autoFocus
+            />
+            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={sending}>
+                Cancel
+              </Button>
+              <Button onClick={send} disabled={!draft.trim() || sending} className="bg-[#0A1628] text-white hover:bg-[#13294B]">
+                {sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                Send
+              </Button>
             </div>
-          ) : null}
-        </DialogContent>
-      </Dialog>
-    </>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   )
 }

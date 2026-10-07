@@ -22,6 +22,8 @@ export type PushMessage = {
   title: string
   body: string
   data?: Record<string, unknown>
+  /** The number on the app icon. Omitted, the icon is left as it is. */
+  badge?: number
 }
 
 type ExpoTicket = {
@@ -123,6 +125,7 @@ export async function sendToTokens(
       title: message.title,
       body: message.body,
       data: message.data ?? {},
+      ...(message.badge != null ? { badge: message.badge } : {}),
     }))
 
     const response = await fetch(EXPO_PUSH_ENDPOINT, {
