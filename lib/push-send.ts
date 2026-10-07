@@ -59,6 +59,8 @@ export type PushCategory =
   | "alert_program_views"
   /** An event's results landed - one digest per event, to accounts following somebody who was there. */
   | "alert_results"
+  /** A coach messaged a wrestler, or the family replied - only to the people in that conversation. */
+  | "alert_messages"
 
 /** Everyone who has this category switched on. */
 export async function sendToSubscribers(

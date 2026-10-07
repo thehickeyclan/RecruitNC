@@ -11,7 +11,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { ArrowLeftRight, Check, FileText, Search, Star, Trash2 } from "lucide-react"
+import { ArrowLeftRight, Check, FileText, MessageSquare, Search, Star, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { MyRecruitRow } from "@/lib/my-recruits"
 
@@ -44,6 +44,16 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
 
   useEffect(() => {
     if (!initialData) void load()
+  }, [initialData])
+
+  /** Conversations with an unread reply, for the badge on Messages. */
+  const [unread, setUnread] = useState(0)
+  useEffect(() => {
+    if (initialData) return
+    fetch("/api/coach-messages/unread", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setUnread(Number(d.unread) || 0))
+      .catch(() => {})
   }, [initialData])
 
   const classes = useMemo(
@@ -86,11 +96,23 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                 Every wrestler you{data?.hasSchool ? " and your staff" : ""} added to the watch list.
               </p>
             </div>
-            {data?.schoolId ? (
-              <Link href={`/schools/${data.schoolId}/portal`} className="text-sm font-semibold text-[#D3B574] hover:underline">
-                Full program portal →
+            <div className="flex items-center gap-4">
+              <Link
+                href="/inbox"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-1.5 text-sm font-semibold text-white hover:bg-white/10"
+              >
+                <MessageSquare className="h-4 w-4 text-[#D3B574]" aria-hidden />
+                Messages
+                {unread > 0 ? (
+                  <span className="rounded-full bg-[#D3B574] px-1.5 text-xs font-bold text-[#0A1628]">{unread}</span>
+                ) : null}
               </Link>
-            ) : null}
+              {data?.schoolId ? (
+                <Link href={`/schools/${data.schoolId}/portal`} className="text-sm font-semibold text-[#D3B574] hover:underline">
+                  Full program portal →
+                </Link>
+              ) : null}
+            </div>
           </div>
 
           {error ? (

@@ -6,7 +6,7 @@ import { getMessagingUser } from "@/lib/messaging-auth"
 export const dynamic = "force-dynamic"
 
 /**
- * POST: Get or create a direct message thread between the current user and another user.
+ * POST: Get or create a direct message thread between the current user and another user. Staff only.
  * Body: { other_user_id: string }
  * Returns: { threadId, name }
  */
@@ -25,6 +25,21 @@ export async function POST(request: Request) {
   if (otherUserId === user.id) return NextResponse.json({ error: "Cannot start a DM with yourself" }, { status: 400 })
 
   const admin = createAdminClient()
+
+  /*
+   * Closed to everyone but staff (7 Oct 2026). This let any signed-in account open a private
+   * 1:1 thread with any other account - including a minor, with no parent able to see it.
+   * Recruiting contact now goes through /api/coach-messages: reviewed coaches only, and the
+   * wrestler's parents see every conversation. Existing DM threads stay readable.
+   */
+  const { data: me } = await admin.from("user_profiles").select("is_admin").eq("user_id", user.id).maybeSingle()
+  if (me?.is_admin !== true) {
+    return NextResponse.json(
+      { error: "Direct messages are closed. College coaches can message a wrestler from their profile." },
+      { status: 403 },
+    )
+  }
+
   const now = new Date().toISOString()
 
   // Find existing DM: threads where type='dm', I'm a member, and the only other member is otherUserId

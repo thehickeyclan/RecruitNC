@@ -121,3 +121,12 @@ export async function notifyStaffCoachSignup(input: {
     "coach-signup",
   )
 }
+
+/**
+ * A family (or coach) reported a recruiting conversation. App Store guideline 1.2 gives us 24
+ * hours to act, so this is a text, not a dashboard badge somebody may not open.
+ */
+export async function notifyStaffMessageReport(input: { program: string | null; athleteName: string | null }): Promise<number> {
+  const about = [input.program, input.athleteName ? `re ${input.athleteName}` : null].filter(Boolean).join(" ")
+  return send(`Message reported${about ? ` (${about})` : ""}. Act within 24h: /admin/coach-messages`, "message-report")
+}

@@ -28,7 +28,8 @@ import {
 } from "@/lib/unified-profile-section-styles"
 import { cn } from "@/lib/utils"
 import { WatchListButton } from "./watch-list-button"
-import { MessageAthleteButton } from "@/components/messaging/message-athlete-button"
+import { CoachMessageButton } from "@/components/coach-messages/coach-message-button"
+import { FamilyMessagesPanel } from "@/components/coach-messages/family-messages-panel"
 import { RequestProfileEditModal } from "./request-profile-edit-modal"
 import { MatchDataSectionImproved } from "./match-data-section-improved"
 import { SignificantWinsSection } from "./significant-wins-section"
@@ -1197,14 +1198,12 @@ export function AthleteDetail({
                         <Share2 className="h-4 w-4" />
                       </button>
                       {athlete.id && !isViewingOwnProfile && (
-                        <MessageAthleteButton
-                          athleteId={athlete.id}
-                          claimedByUserId={athlete.claimed_by_user_id}
-                          athleteName={athleteName}
-                          className={PHOTO_ACTION}
-                          size="md"
-                          iconClassName="h-4 w-4"
-                        />
+                        <CoachMessageButton
+                    athleteId={String(athlete.id)}
+                    athleteName={athleteName}
+                    className={PHOTO_ACTION}
+                    iconClassName="h-4 w-4"
+                  />
                       )}
                       <WatchListButton
                         athleteId={athlete.id}
@@ -1273,12 +1272,10 @@ export function AthleteDetail({
                   Share
                 </Button>
                 {athlete.id && !isViewingOwnProfile && (
-                  <MessageAthleteButton
-                    athleteId={athlete.id}
-                    claimedByUserId={athlete.claimed_by_user_id}
+                  <CoachMessageButton
+                    athleteId={String(athlete.id)}
                     athleteName={athleteName}
                     className="h-9 px-2 text-white/90 hover:text-white hover:bg-white/20 border-0"
-                    size="md"
                     iconClassName="w-4 h-4 mr-1"
                   />
                 )}
@@ -1411,14 +1408,12 @@ export function AthleteDetail({
                     Share
                   </Button>
                   {athlete.id && !isViewingOwnProfile && (
-                    <MessageAthleteButton
-                      athleteId={athlete.id}
-                      claimedByUserId={athlete.claimed_by_user_id}
-                      athleteName={athleteName}
-                      className="h-9 border-0 px-2 text-white/80 hover:bg-white/10 hover:text-white"
-                      size="md"
-                      iconClassName="w-4 h-4 mr-1"
-                    />
+                    <CoachMessageButton
+                    athleteId={String(athlete.id)}
+                    athleteName={athleteName}
+                    className="h-9 border-0 px-2 text-white/80 hover:bg-white/10 hover:text-white"
+                    iconClassName="w-4 h-4 mr-1"
+                  />
                   )}
                   <WatchListButton athleteId={athlete.id} />
                 </div>
@@ -1464,12 +1459,10 @@ export function AthleteDetail({
                   Share profile
                 </Button>
                 {athlete.id && !isViewingOwnProfile && (
-                  <MessageAthleteButton
-                    athleteId={athlete.id}
-                    claimedByUserId={athlete.claimed_by_user_id}
+                  <CoachMessageButton
+                    athleteId={String(athlete.id)}
                     athleteName={athleteName}
                     className="h-9 px-2 text-white/90 hover:text-white hover:bg-white/20 border-0"
-                    size="md"
                     iconClassName="w-4 h-4 mr-1"
                   />
                 )}
@@ -1592,6 +1585,12 @@ export function AthleteDetail({
           takes a gap, which left the space under the banner looking unfinished. */}
       <div className={cn("px-1 empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels)}>
         <CoachViewsPanel athleteId={String(athlete.id)} />
+      </div>
+
+      {/* Coaches who messaged this wrestler. Renders only for the wrestler and linked parents
+          (the list endpoint returns nothing to anyone else) and only once a coach has written. */}
+      <div className={cn("px-1 empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels)}>
+        <FamilyMessagesPanel athleteId={String(athlete.id)} />
       </div>
 
       {/* Recruiters want one page they can take into a staff meeting. Coaches only — the

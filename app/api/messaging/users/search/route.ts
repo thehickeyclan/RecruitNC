@@ -5,7 +5,7 @@ import { getMessagingUser } from "@/lib/messaging-auth"
 const MIN_QUERY_LENGTH = 2
 const MAX_RESULTS = 20
 
-/** GET: Search RecruitNC users by name or email (for starting a new DM). */
+/** GET: Search RecruitNC users by name or email (for starting a new DM). Staff only. */
 export async function GET(request: Request) {
   const user = await getMessagingUser()
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
@@ -17,6 +17,12 @@ export async function GET(request: Request) {
   }
 
   const admin = createAdminClient()
+
+  // Staff only, like /api/messaging/dm (7 Oct 2026): this returned any account's name and email,
+  // minors' included, to anyone signed in. Its one purpose was starting a DM, now staff-only too.
+  const { data: me } = await admin.from("user_profiles").select("is_admin").eq("user_id", user.id).maybeSingle()
+  if (me?.is_admin !== true) return NextResponse.json({ users: [] })
+
   const pattern = `%${q}%`
   const { data: profiles } = await admin
     .from("user_profiles")

@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 
 import { isEntitled } from "@/lib/blue-membership"
 import { collegeForCoach } from "@/lib/college-domain-schools"
+import { isApprovedCoach } from "@/lib/coach-messages"
 import { sendToTokens } from "@/lib/push-send"
 
 /**
@@ -14,8 +15,9 @@ import { sendToTokens } from "@/lib/push-send"
  *
  * - **The program is named, never the coach.** A school showing interest reads very differently
  *   from a named adult watching a minor.
- * - **Verified college coaches only.** Anyone can pick "College coach" at sign-up; until staff
- *   review them, a parent or fan could otherwise trigger alerts to other people's children.
+ * - **Reviewed college coaches only.** Anyone can pick "College coach" at sign-up, and sign-up
+ *   sets verified_coach before staff look; until Matt confirms them (verification_status
+ *   'approved'), a parent or fan could otherwise trigger alerts to other people's children.
  * - **Blue members only.** It is a benefit of NC United Blue, which belongs to the wrestler: the
  *   alert goes out only when the wrestler holds a current membership (Stripe or WrestlingIQ,
  *   paid or scholarship, not graduated) - the same `isEntitled` every other Blue feature uses.
@@ -44,11 +46,11 @@ export async function alertFamilyOfProgramView(
   try {
     const { data: viewer } = await admin
       .from("user_profiles")
-      .select("role, verified_coach, institution, email")
+      .select("role, verified_coach, verification_status, institution, email")
       .eq("user_id", input.viewerUserId)
       .maybeSingle()
-    const role = String(viewer?.role ?? "").toLowerCase().replace(/-/g, "_")
-    if (role !== "college_coach" || viewer?.verified_coach !== true) return { sent: 0, skipped: "not a verified college coach" }
+    // Reviewed by staff, not just let in: access-first sign-up sets verified_coach before review.
+    if (!viewer || !isApprovedCoach(viewer)) return { sent: 0, skipped: "not a reviewed college coach" }
 
     const program = collegeForCoach({ institution: viewer.institution as string | null, email: viewer.email as string | null })
     if (!program) return { sent: 0, skipped: "no program" }
