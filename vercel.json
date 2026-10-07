@@ -48,6 +48,10 @@
     {
       "path": "/api/cron/rankings-freshness",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/state-placer-index",
+      "schedule": "40 */6 * * *"
     }
   ]
 }
