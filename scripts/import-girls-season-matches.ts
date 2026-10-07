@@ -83,8 +83,14 @@ function classFromGrade(season: string, grade: string): number | null {
 }
 
 async function main() {
-  const targets = JSON.parse(fs.readFileSync(path.join(DIR!, "targets.json"), "utf8")) as Target[]
-  const index = JSON.parse(fs.readFileSync(path.join(DIR!, "index.json"), "utf8")) as IndexRow[]
+  // Later bundles prefix their files ("batch2-targets.json"); take whichever one is there.
+  const bundleFile = (suffix: string) => {
+    const name = fs.readdirSync(DIR!).find((f) => f === suffix || f.endsWith(`-${suffix}`))
+    if (!name) throw new Error(`No ${suffix} in ${DIR}`)
+    return path.join(DIR!, name)
+  }
+  const targets = JSON.parse(fs.readFileSync(bundleFile("targets.json"), "utf8")) as Target[]
+  const index = JSON.parse(fs.readFileSync(bundleFile("index.json"), "utf8")) as IndexRow[]
 
   const { data: girls, error } = await sb
     .from("athletes")
