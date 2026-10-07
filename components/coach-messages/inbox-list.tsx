@@ -33,6 +33,7 @@ export function InboxList({
   limit,
   empty,
   header,
+  listClassName,
 }: {
   athleteId?: string
   familyOnly?: boolean
@@ -40,6 +41,8 @@ export function InboxList({
   empty?: React.ReactNode
   /** Rendered above the list only when there is at least one conversation. */
   header?: React.ReactNode
+  /** Replaces the list's own border and background, e.g. when it sits inside a card. */
+  listClassName?: string
 }) {
   const [threads, setThreads] = useState<ThreadSummary[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -66,7 +69,7 @@ export function InboxList({
   return (
     <>
     {header}
-    <ul className="divide-y divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
+    <ul className={listClassName ?? "divide-y divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]"}>
       {rows.map((t) => {
         const who = t.viewerRole === "coach" ? t.athleteName || "Wrestler" : t.coachName
         const sub = t.viewerRole === "coach" ? null : [t.program, t.viewerRole === "parent" ? `about ${t.athleteName}` : null].filter(Boolean).join(" · ")

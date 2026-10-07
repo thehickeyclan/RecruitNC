@@ -15,14 +15,17 @@ import { InboxList } from "./inbox-list"
 export function FamilyMessagesPanel({ athleteId }: { athleteId: string }) {
   const { user } = useAuth()
   if (!user) return null
+  // One card like "College coach views" above it: the heading lives inside the list's frame,
+  // and the whole thing renders nothing until a coach has written.
   return (
     <InboxList
       athleteId={athleteId}
       familyOnly
       limit={5}
       empty={null}
+      listClassName="divide-y divide-white/10 overflow-hidden rounded-b-sm border border-t-0 border-white/10 bg-[#0f1c2e] px-1"
       header={
-        <div className="mb-3 flex items-center gap-2 rounded-sm border border-white/10 bg-[#0f1c2e] px-5 py-4">
+        <div className="flex items-center gap-2 rounded-t-sm border border-b-0 border-white/10 bg-[#0f1c2e] px-5 pb-1 pt-5">
           <MessageSquare className="h-4 w-4 text-[#D3B574]" />
           <h3 className="text-sm font-black uppercase tracking-[0.14em] text-white">Coaches who&apos;ve reached out</h3>
           <Link href="/inbox" className="ml-auto text-xs font-semibold text-[#D3B574] hover:underline">
