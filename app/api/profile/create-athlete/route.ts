@@ -92,6 +92,8 @@ export async function POST(request: NextRequest) {
         name: athleteName,
         graduationYear: graduationyear,
         school: formData.highSchool || undefined,
+        // This route asks "Is this you?" before linking, so a profile with no year can be offered.
+        includeUnknownYear: true,
       })
       if (existing) {
         const { data: existingRow } = await adminSupabase

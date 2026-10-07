@@ -32,7 +32,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const viewerId = await resolveRequestUserId(request)
   if (!viewerId) return NextResponse.json({ ok: false, error: "Sign in to claim a profile." }, { status: 401 })
 
-  const body = (await request.json().catch(() => null)) as { as?: unknown } | null
+  const body = (await request.json().catch(() => null)) as
+    | { as?: unknown; graduationYear?: unknown; highSchool?: unknown }
+    | null
   const relationship = body?.as === "parent" ? "parent" : body?.as === "self" ? "self" : null
   if (!relationship) {
     return NextResponse.json({ ok: false, error: 'Say whether this is "self" or "parent".' }, { status: 400 })
@@ -56,6 +58,23 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
 
   if (loadError || !athlete) {
     return NextResponse.json({ ok: false, error: "That profile does not exist." }, { status: 404 })
+  }
+
+  /*
+   * The create-profile wizard ends here when the wrestler was already on file. What it asked
+   * (class, high school) fills the profile's blanks - only blanks: an import or an earlier edit
+   * that set them is not overwritten by a claim. Imports of girls' results left 113 NC profiles
+   * with no class year, invisible to every class filter.
+   */
+  const fillBlanks = async () => {
+    const year = Number(body?.graduationYear)
+    if (Number.isInteger(year) && year >= 2020 && year <= 2040) {
+      await admin.from("athletes").update({ graduationyear: year }).eq("id", athleteId).is("graduationyear", null)
+    }
+    const school = typeof body?.highSchool === "string" ? body.highSchool.trim() : ""
+    if (school.length >= 2 && school.length <= 80) {
+      await admin.from("athletes").update({ highschool: school }).eq("id", athleteId).or("highschool.is.null,highschool.eq.")
+    }
   }
 
   if (relationship === "parent") {
@@ -95,6 +114,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         userAgent: request.headers.get("user-agent"),
       })
     }
+    await fillBlanks()
     return NextResponse.json({
       ok: true,
       relationship,
@@ -124,6 +144,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     console.error("[mobile] claim failed:", error.message)
     return NextResponse.json({ ok: false, error: "Could not claim that profile." }, { status: 500 })
   }
+
+  await fillBlanks()
 
   /* The website has told somebody about every claim for months; the app told nobody. */
   await notifyProfileClaim({
