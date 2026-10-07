@@ -1,10 +1,8 @@
 /**
  * Two wrestlers compared, for a coach.
  *
- * Behind the same gate as the rankings: Blue members, RecruitNC subscribers, verified college
- * coaches and admins. The comparison is built from the rankings' own evidence, so giving it away
- * would give the rankings away sideways. Academics and the star rating go only to verified
- * coaches and admins - the same line the scouting report draws.
+ * Verified college coaches and admins only (lib/compare-access.ts, Matt 7 October 2026). It was
+ * open to Blue members and subscribers on the rankings' rule; it is a recruiting tool.
  *
  * North Carolina wrestlers only for now. Out-of-state results are held, but opponent strength and
  * identity links are only validated for NC; other states open up as their data is checked.
@@ -17,8 +15,7 @@ import { loadComparisonBouts } from "@/lib/athlete-comparison-load"
 import { buildComparisonRows, individualNationalEvents, type ComparisonReport } from "@/lib/athlete-comparison-rows"
 import { hasPerfectRecruit } from "@/lib/program-fit"
 import { loadProgramFit, resolveProgramScope } from "@/lib/program-fit-store"
-import { canSeeProspectRanking } from "@/lib/ranking-visibility"
-import { resolveRankingViewerForUser } from "@/lib/ranking-access"
+import { mayUseComparison } from "@/lib/compare-access"
 import { classifyViewer } from "@/lib/viewer-role"
 import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
 import { buildScoutingReport, loadOpponentIndex } from "@/lib/scouting-report"
@@ -70,19 +67,13 @@ export async function GET(request: NextRequest) {
   }
 
   const admin = createAdminClient()
-  const [{ viewer }, { data: profile }] = await Promise.all([
-    resolveRankingViewerForUser({ admin, userId: user.id }),
-    admin
-      .from("user_profiles")
-      .select("role, profile_type, verified_coach, is_admin, verified_method")
-      .eq("user_id", user.id)
-      .maybeSingle(),
-  ])
-  if (!canSeeProspectRanking(viewer)) {
-    return NextResponse.json(
-      { error: "Comparisons are for NC United Blue members, RecruitNC subscribers and verified college coaches." },
-      { status: 403 },
-    )
+  const { data: profile } = await admin
+    .from("user_profiles")
+    .select("role, profile_type, verified_coach, is_admin, verified_method")
+    .eq("user_id", user.id)
+    .maybeSingle()
+  if (!mayUseComparison({ profile })) {
+    return NextResponse.json({ error: "The comparison is for verified college coaches." }, { status: 403 })
   }
   const classified = classifyViewer(profile ?? null)
   const isAdmin = classified.kind === "admin" || profile?.is_admin === true
