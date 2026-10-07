@@ -42,7 +42,10 @@ function divisionAndWeight(raw: string): { classification: string; weight: strin
 type Placer = { place: number; name: string; school: string }
 type PlacementIndex = Map<string, Placer[]>
 const placementKey = (classification: string, weight: string, name: string) =>
-  `${classification}|${weight}|${normalizeName(name)}`
+  `${classification.toUpperCase()}|${weight}|${normalizeName(name)}`
+
+/** "NCHSAA Women`s State Championship" is the girls' tournament; the boys' has no qualifier. */
+const isWomensEvent = (event: string) => /women|girls/i.test(event)
 
 function findPlace(index: PlacementIndex, classification: string, weight: string, name: string, team: string) {
   const candidates = index.get(placementKey(classification, weight, name)) ?? []
@@ -104,7 +107,7 @@ async function main() {
   const supabase = createClient(url, key)
 
   const [roster, placements] = await Promise.all([
-    pageAll(supabase, "athletes", 'id,name,wrestling_name,highschool,"wrestlingClub",graduationyear'),
+    pageAll(supabase, "athletes", 'id,name,wrestling_name,highschool,"wrestlingClub",graduationyear,gender'),
     pageAll(
       supabase,
       "wrestling_nchsaa_results",
@@ -117,8 +120,17 @@ async function main() {
   const currentRoster = roster.filter((athlete) => {
     const year = Number(athlete.graduationyear)
     return Number.isFinite(year) && year >= 2026 && year <= 2029
-  }) as MatchableAthlete[]
-  const athleteIndex = buildAthleteIndex(currentRoster)
+  }) as Array<MatchableAthlete & { gender?: string | null }>
+  /*
+   * The export carries both tournaments, and a name is matched only against wrestlers who could
+   * have been in that bracket. Without this a girls' bout could link to a boy of the same name at
+   * the same school, and the reverse.
+   */
+  const isFemale = (athlete: { gender?: string | null }) => String(athlete.gender ?? "").toLowerCase() === "female"
+  const athleteIndexes = {
+    women: buildAthleteIndex(currentRoster.filter(isFemale)),
+    men: buildAthleteIndex(currentRoster.filter((athlete) => !isFemale(athlete))),
+  }
   const placementIndex: PlacementIndex = new Map()
   for (const row of placements) {
     const place = Number(row.place)
@@ -131,10 +143,10 @@ async function main() {
 
   const resolved = new Map<string, MatchableAthlete | null>()
   const ambiguous = new Set<string>()
-  const resolve = (name: string, team: string) => {
-    const key = `${normalizeName(name)}|${normalizeName(team)}`
+  const resolve = (name: string, team: string, women: boolean) => {
+    const key = `${women ? "w" : "m"}|${normalizeName(name)}|${normalizeName(team)}`
     if (resolved.has(key)) return resolved.get(key) ?? null
-    const match = matchAthlete(name, team, athleteIndex)
+    const match = matchAthlete(name, team, women ? athleteIndexes.women : athleteIndexes.men)
     if (match.status === "matched") resolved.set(key, match.athlete)
     else {
       resolved.set(key, null)
@@ -146,7 +158,11 @@ async function main() {
   type BoutInsert = Record<string, unknown> & { athlete_id: string; athlete_name: string; round: string; win: boolean }
   const inserts: BoutInsert[] = []
   for (const row of relevant) {
-    const { classification, weight } = divisionAndWeight(row.weight)
+    const women = isWomensEvent(row.event)
+    const parsed = divisionAndWeight(row.weight)
+    const weight = parsed.weight
+    // Girls' placements are stored as "Girls 5A"; the export says "5A - 100".
+    const classification = women ? `GIRLS ${parsed.classification}` : parsed.classification
     const winnerPlace = findPlace(placementIndex, classification, weight, row.winningWrestler, row.winningTeam)
     const loserPlace = findPlace(placementIndex, classification, weight, row.losingWrestler, row.losingTeam)
     const round = provenRound(winnerPlace, loserPlace)
@@ -163,8 +179,8 @@ async function main() {
       score: row.result || null,
       source_file: path.basename(sourceFile),
     }
-    const winner = resolve(row.winningWrestler, row.winningTeam)
-    const loser = resolve(row.losingWrestler, row.losingTeam)
+    const winner = resolve(row.winningWrestler, row.winningTeam, women)
+    const loser = resolve(row.losingWrestler, row.losingTeam, women)
     if (winner) inserts.push({
       ...common,
       athlete_id: winner.id,
@@ -212,6 +228,10 @@ async function main() {
   const proven = inserts.filter((row) => !row.round.startsWith("State Championships · Bout ")).length
   console.log(`Parsed ${rows.length} CSV bouts; ${relevant.length} are NCHSAA States.`)
   console.log(`Linked ${grouped.size} profiles to ${inserts.length} bout-side rows; ${proven} have proven round labels.`)
+  const womenIds = new Set(currentRoster.filter(isFemale).map((athlete) => athlete.id))
+  const womenRows = inserts.filter((row) => womenIds.has(row.athlete_id)).length
+  console.log(`  girls: ${womenRows} rows; boys: ${inserts.length - womenRows} rows`)
+  if (process.env.DUMP_PAIRS) fs.writeFileSync(process.env.DUMP_PAIRS, inserts.map((row) => `${row.athlete_id}|${normalizeName(String(row.opponent_name))}|${row.win}`).join("\n"))
   console.log(`Ambiguous names left unlinked: ${ambiguous.size}`)
   for (const name of [...ambiguous].sort()) console.log(`  ? ${name}`)
   if (!apply) {

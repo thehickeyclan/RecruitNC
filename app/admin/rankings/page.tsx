@@ -92,6 +92,36 @@ export default function RankingsIndexPage() {
           </CardContent>
         </Card>
 
+        {/*
+          * The girls' boards are the same engine and the same board, filtered on gender. They were
+          * only reachable by flipping the gender select on a boys' board, so nobody went there.
+          */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-xl">Women&apos;s rankings — open a graduation class</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="mb-4 text-sm text-gray-600">
+              Same scoring, evidence and head-to-head as the boys&apos; boards. Girls are web-only: the
+              app does not carry girls&apos; rankings yet.
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {graduationYears.map((year) => (
+                <Button
+                  key={year}
+                  asChild
+                  variant="outline"
+                  className="h-20 text-lg font-semibold hover:bg-[#13294B] hover:text-white transition-colors"
+                >
+                  <Link href={`/admin/rankings/board?year=${year}&gender=Female`}>
+                    Class of {year}
+                  </Link>
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Info Card */}
         <Card>
           <CardHeader>
