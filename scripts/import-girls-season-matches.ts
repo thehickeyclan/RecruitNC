@@ -95,6 +95,7 @@ async function main() {
 
   const report = { matchedGirls: 0, unmatched: [] as string[], written: 0, skipped: [] as string[], mismatched: [] as string[] }
   const athleteFor = new Map<string, { id: string; name: string }>()
+  const classOf = new Map<string, number>()
 
   const seasonFiles = (name: string) =>
     index
@@ -103,12 +104,23 @@ async function main() {
 
   for (const t of targets) {
     const files = seasonFiles(t.name)
-    const implied = [...new Set(files.map((f) => classFromGrade(f.wrestler_info.season, f.wrestler_info.grade)).filter((c): c is number => c !== null))]
-    if (implied.length > 1) {
-      report.unmatched.push(`${t.name}: season files disagree on class (${implied.join(", ")})`)
+    /*
+     * The class most of her season files agree on. FloArena's 2023-24 seasons call 8th graders
+     * "Freshman" (MacKenzie Shaver's includes the Jr High State Championship), so one season can
+     * disagree with the rest; that season is skipped below, not the girl.
+     */
+    const votes = new Map<number, number>()
+    for (const f of files) {
+      const c = classFromGrade(f.wrestler_info.season, f.wrestler_info.grade)
+      if (c !== null) votes.set(c, (votes.get(c) ?? 0) + 1)
+    }
+    const ranked = [...votes.entries()].sort((a, b) => b[1] - a[1])
+    if (ranked.length > 1 && ranked[0]![1] === ranked[1]![1]) {
+      report.unmatched.push(`${t.name}: season files split evenly on class (${ranked.map(([c]) => c).join(", ")})`)
       continue
     }
-    const klass = implied[0] ?? t.class
+    const klass = ranked[0]?.[0] ?? t.class
+    classOf.set(norm(t.name), klass)
     const schools = [t.school, ...files.map((f) => f.wrestler_info.high_school)]
     const sameName = (girls ?? []).filter((g) => norm(g.name) === norm(t.name))
     const sameClass = sameName.filter((g) => Number(g.graduationyear) === klass)
@@ -133,6 +145,13 @@ async function main() {
     if (!athlete) continue
     const file = JSON.parse(fs.readFileSync(path.join(DIR!, "seasons", row.file), "utf8")) as SeasonFile
     const info = file.wrestler_info
+    const impliedClass = classFromGrade(info.season, info.grade)
+    if (impliedClass !== null && impliedClass !== classOf.get(norm(row.name))) {
+      report.skipped.push(
+        `${row.name} ${info.season}: file says ${info.grade} (class ${impliedClass}), she is ${classOf.get(norm(row.name))} - middle school or misgraded`,
+      )
+      continue
+    }
 
     const { data: existing } = await sb
       .from("matches")
