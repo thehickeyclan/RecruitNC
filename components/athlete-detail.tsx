@@ -1198,14 +1198,6 @@ export function AthleteDetail({
                       <button type="button" className={PHOTO_ACTION} onClick={handleShareProfile} aria-label="Share profile">
                         <Share2 className="h-4 w-4" />
                       </button>
-                      {athlete.id && !isViewingOwnProfile && (
-                        <CoachMessageButton
-                    athleteId={String(athlete.id)}
-                    athleteName={athleteName}
-                    className={PHOTO_ACTION}
-                    iconClassName="h-4 w-4"
-                  />
-                      )}
                       <WatchListButton
                         athleteId={athlete.id}
                         compact
@@ -1224,6 +1216,15 @@ export function AthleteDetail({
                     <ScoutingReportAction
                       href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`}
                       className="mt-4 flex w-full"
+                    />
+                  ) : null}
+                  {/* College coaches only: renders nothing for anyone else. */}
+                  {!isViewingOwnProfile ? (
+                    <CoachMessageButton
+                      athleteId={String(athlete.id)}
+                      athleteName={athleteName}
+                      variant="action"
+                      className={cn("flex w-full", canSeeScoutingReport ? "mt-2" : "mt-4")}
                     />
                   ) : null}
                   {bannerCommitted ? <div className="mt-4">{bannerCommitted}</div> : null}
@@ -1272,14 +1273,6 @@ export function AthleteDetail({
                   <Share2 className="w-4 h-4 mr-1.5" />
                   Share
                 </Button>
-                {athlete.id && !isViewingOwnProfile && (
-                  <CoachMessageButton
-                    athleteId={String(athlete.id)}
-                    athleteName={athleteName}
-                    className="h-9 px-2 text-white/90 hover:text-white hover:bg-white/20 border-0"
-                    iconClassName="w-4 h-4 mr-1"
-                  />
-                )}
                 <WatchListButton athleteId={athlete.id} />
               </div>
 
@@ -1408,14 +1401,6 @@ export function AthleteDetail({
                     <Share2 className="mr-2 h-4 w-4" />
                     Share
                   </Button>
-                  {athlete.id && !isViewingOwnProfile && (
-                    <CoachMessageButton
-                    athleteId={String(athlete.id)}
-                    athleteName={athleteName}
-                    className="h-9 border-0 px-2 text-white/80 hover:bg-white/10 hover:text-white"
-                    iconClassName="w-4 h-4 mr-1"
-                  />
-                  )}
                   <WatchListButton athleteId={athlete.id} />
                 </div>
 
@@ -1425,14 +1410,17 @@ export function AthleteDetail({
                     <BannerName name={athleteName} className="mt-3" />
                     {/* The scouting report beside the ribbon: in the content, where it cannot collide
                         with the name or the eyebrow at narrower desktop widths. */}
-                    {bannerRibbon || canSeeScoutingReport ? (
-                      <div className="mt-5 flex flex-wrap items-center gap-3">
-                        {bannerRibbon ? <BannerRibbon>{bannerRibbon}</BannerRibbon> : null}
-                        {canSeeScoutingReport ? (
-                          <ScoutingReportAction href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`} />
-                        ) : null}
-                      </div>
-                    ) : null}
+                    {/* The ribbon, the scouting report and - for college coaches - Message, side by side.
+                        empty:hidden: for most viewers none of the three renders. */}
+                    <div className="mt-5 flex flex-wrap items-center gap-3 empty:hidden">
+                      {bannerRibbon ? <BannerRibbon>{bannerRibbon}</BannerRibbon> : null}
+                      {canSeeScoutingReport ? (
+                        <ScoutingReportAction href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`} />
+                      ) : null}
+                      {!isViewingOwnProfile ? (
+                        <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="action" />
+                      ) : null}
+                    </div>
                   </div>
                   {bannerCommitted}
                   <BannerStats stats={bannerStats} />
@@ -1459,14 +1447,6 @@ export function AthleteDetail({
                   <Share2 className="w-4 h-4 mr-2" />
                   Share profile
                 </Button>
-                {athlete.id && !isViewingOwnProfile && (
-                  <CoachMessageButton
-                    athleteId={String(athlete.id)}
-                    athleteName={athleteName}
-                    className="h-9 px-2 text-white/90 hover:text-white hover:bg-white/20 border-0"
-                    iconClassName="w-4 h-4 mr-1"
-                  />
-                )}
                 <WatchListButton athleteId={athlete.id} />
               </div>
 
@@ -1596,8 +1576,10 @@ export function AthleteDetail({
 
       {/* Recruiters want one page they can take into a staff meeting. Coaches only — the
           report pulls academics and results together in a way the public profile does not. */}
-      {canSeeScoutingReport && !mobileRecruiterLayout && (
-        <div className="px-1">
+      {/* Recruiters' two actions: the one-page report and, for college coaches, a message. */}
+      {!mobileRecruiterLayout && (canSeeScoutingReport || !isViewingOwnProfile) && (
+        <div className="flex flex-wrap items-center gap-2 px-1 empty:hidden">
+          {canSeeScoutingReport ? (
           <a
             href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`}
             className="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-[#D3B574] bg-[#D3B574]/10 px-4 py-2 text-sm font-semibold text-[#D3B574] transition-colors hover:bg-[#D3B574]/20"
@@ -1605,6 +1587,10 @@ export function AthleteDetail({
             <FileText className="h-4 w-4" />
             Scouting report (PDF)
           </a>
+          ) : null}
+          {!isViewingOwnProfile ? (
+            <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="action" className="min-h-[44px]" />
+          ) : null}
         </div>
       )}
 

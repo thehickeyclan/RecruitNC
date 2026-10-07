@@ -15,6 +15,7 @@ import { ArrowLeftRight, Check, FileText, Mail, MessageSquare, Search, Star, Tra
 import { cn } from "@/lib/utils"
 import type { MyRecruitRow } from "@/lib/my-recruits"
 import { CoachComposeDialog } from "@/components/coach-messages/coach-message-button"
+import { CoachMessagingIntro } from "@/components/coach-messages/coach-messaging-intro"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 
@@ -135,6 +136,8 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
               ) : null}
             </div>
           </div>
+
+          <CoachMessagingIntro className="mt-6" />
 
           {error ? (
             <p className="mt-8 rounded-lg border border-red-400/30 bg-red-500/10 p-4 text-sm text-red-200">{error}</p>
