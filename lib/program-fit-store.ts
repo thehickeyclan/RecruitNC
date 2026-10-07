@@ -24,15 +24,18 @@ export async function resolveProgramScope(admin: SupabaseClient, userId: string)
   return { schoolId: (data?.school_id as string | null) ?? null, userId }
 }
 
-function scoped<T extends { eq: (column: string, value: string) => T }>(query: T, scope: ProgramScope): T {
-  return scope.schoolId ? query.eq("school_id", scope.schoolId) : query.eq("owner_user_id", scope.userId)
+/** The column and value that pick this program's row. */
+function scopeFilter(scope: ProgramScope): [string, string] {
+  return scope.schoolId ? ["school_id", scope.schoolId] : ["owner_user_id", scope.userId]
 }
 
 export async function loadProgramFit(admin: SupabaseClient, scope: ProgramScope): Promise<SavedProgramFit | null> {
-  const { data, error } = await scoped(
-    admin.from("program_fit_criteria").select("criteria, updated_by_name, updated_at"),
-    scope,
-  ).maybeSingle()
+  const [column, value] = scopeFilter(scope)
+  const { data, error } = await admin
+    .from("program_fit_criteria")
+    .select("criteria, updated_by_name, updated_at")
+    .eq(column, value)
+    .maybeSingle()
   // A missing table reads as "not set", so the comparison never fails because of this panel.
   if (error || !data) return null
   return {
@@ -61,7 +64,8 @@ export async function saveProgramFit(
     updated_at: updatedAt,
   }
 
-  const { data: existing } = await scoped(admin.from("program_fit_criteria").select("id"), scope).maybeSingle()
+  const [column, value] = scopeFilter(scope)
+  const { data: existing } = await admin.from("program_fit_criteria").select("id").eq(column, value).maybeSingle()
   const { error } = existing
     ? await admin.from("program_fit_criteria").update(row).eq("id", existing.id as string)
     : await admin

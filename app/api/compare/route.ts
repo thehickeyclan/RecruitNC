@@ -15,7 +15,7 @@ import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
 import { compareAthletes } from "@/lib/athlete-comparison"
 import { loadComparisonBouts } from "@/lib/athlete-comparison-load"
 import { buildComparisonRows, individualNationalEvents, type ComparisonReport } from "@/lib/athlete-comparison-rows"
-import { hasAnyCriteria } from "@/lib/program-fit"
+import { hasPerfectRecruit } from "@/lib/program-fit"
 import { loadProgramFit, resolveProgramScope } from "@/lib/program-fit-store"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { resolveRankingViewerForUser } from "@/lib/ranking-access"
@@ -26,6 +26,27 @@ import { loadStatePlacerIndex } from "@/lib/state-placers"
 import { releasesPersonalData, scoutingAccessTier } from "@/lib/scouting-report-access"
 
 export const dynamic = "force-dynamic"
+
+/** Best NCHSAA finish, as a place and as a coach would say it: "2nd, 2026 6A 113". */
+function bestStateFinish(report: ComparisonReport): { stateBestPlace: number | null; stateBestLabel: string | null } {
+  const best = report.results
+    .filter((r) => r.event === "NCHSAA State Championships" && r.place != null)
+    .sort((a, b) => a.place! - b.place! || b.year - a.year)[0]
+  if (!best) return { stateBestPlace: null, stateBestLabel: null }
+  const [cls, weight] = best.detail.split(" · ")
+  const place = best.place === 1 ? "Champion" : `${best.place}${best.place === 2 ? "nd" : best.place === 3 ? "rd" : "th"}`
+  return { stateBestPlace: best.place!, stateBestLabel: `${place}, ${best.year} ${[cls, weight].filter(Boolean).join(" ")}` }
+}
+
+/** A published RecruitNC rank (the top 30 only) or a national ranking, said plainly; null when neither. */
+function rankedLabel(report: ComparisonReport): string | null {
+  const national = [...report.nationalRankings].sort((a, b) => a.current - b.current)[0]
+  if (national) return `#${national.current} ${national.sourceLabel}`
+  if (report.rankingPublished && report.prospectRanking != null) {
+    return `#${report.prospectRanking} RecruitNC, Class of ${report.identity.graduationYear}`
+  }
+  return null
+}
 /*
  * The out-of-state opponent index takes most of a minute to build on a cold server (it is cached
  * for ten minutes after). The scouting report pays the same cost; this must not time out first.
@@ -123,12 +144,14 @@ export async function GET(request: NextRequest) {
     act: report.academics.act,
     academicInterest: report.academics.academicInterest,
     nationalEvents: individualNationalEvents(report).length,
+    ...bestStateFinish(report),
+    rankedLabel: rankedLabel(report),
   })
   // The page re-checks these itself as the coach edits the needs, so it gets the facts, not a verdict.
   const savedFit = personal ? await loadProgramFit(admin, await resolveProgramScope(admin, user.id)) : null
   const programFit = personal
     ? {
-        saved: savedFit && hasAnyCriteria(savedFit.criteria) ? savedFit : null,
+        saved: savedFit && hasPerfectRecruit(savedFit.criteria) ? savedFit : null,
         left: fitSubject(leftReport),
         right: fitSubject(rightReport),
       }
