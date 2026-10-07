@@ -95,3 +95,21 @@ export function decideGradYear(input: {
   }
   return { verdict: "keep", reason: `${incomingTier} is weaker than ${heldTier}` }
 }
+
+/**
+ * Whether a class year can be true of a wrestler we have already seen compete.
+ *
+ * Nobody graduates before a season they wrestled in, and nobody is more than four years short of
+ * graduating in their most recent season — an eighth grader sits at the ceiling. This catches what
+ * no agreement rate can: a 2,213-row sweep came back 99.8% consistent and still carried a
+ * wrestler who graduated in 2024 and competed in 2026, and one listed six years out.
+ *
+ * Returns null when it is satisfied, or the reason it cannot be.
+ */
+export function gradYearImpossible(gradYear: number, lastSeenSeason: number | null | undefined): string | null {
+  const last = Number(lastSeenSeason)
+  if (!Number.isFinite(last) || !last) return null
+  if (gradYear < last) return `graduates ${gradYear} but wrestled in the ${last} season`
+  if (gradYear > last + 4) return `graduates ${gradYear}, ${gradYear - last} years after the ${last} season`
+  return null
+}
