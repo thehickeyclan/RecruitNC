@@ -13,7 +13,31 @@ export const dynamic = "force-dynamic"
  * "I'm the parent"; what it lacked was a way to find your wrestler without scrolling the commits
  * or rankings. GET returns the links; GET ?q= also returns up to 15 matches, each marked if linked.
  */
-type Linked = { id: string; name: string; classYear: number | null; school: string | null; relationship: "self" | "parent" }
+type Missing = "phone" | "gpa" | "photo" | "film"
+type Linked = {
+  id: string
+  name: string
+  classYear: number | null
+  school: string | null
+  relationship: "self" | "parent"
+  /**
+   * What a college coach looks for that this profile lacks, most important first. The app's Home
+   * card asks for one at a time ("Add Jaxon's cell number"). Only ever sent to the family.
+   */
+  missing: Missing[]
+}
+
+const LINKED_COLUMNS = "id, name, graduationyear, highschool, phone, academic_gpa, photourl, highlight_video_url"
+
+function missingFrom(row: Record<string, unknown>): Missing[] {
+  const blank = (v: unknown) => v == null || String(v).trim() === ""
+  const out: Missing[] = []
+  if (blank(row.phone)) out.push("phone")
+  if (blank(row.academic_gpa)) out.push("gpa")
+  if (blank(row.photourl)) out.push("photo")
+  if (blank(row.highlight_video_url)) out.push("film")
+  return out
+}
 
 export async function GET(request: NextRequest) {
   const userId = await resolveRequestUserId(request)
@@ -21,13 +45,13 @@ export async function GET(request: NextRequest) {
 
   const admin = createAdminClient()
   const [{ data: claimed }, { data: links }] = await Promise.all([
-    admin.from("athletes").select("id, name, graduationyear, highschool").eq("claimed_by_user_id", userId),
+    admin.from("athletes").select(LINKED_COLUMNS).eq("claimed_by_user_id", userId),
     admin.from("parent_athlete_links").select("athlete_id").eq("user_id", userId),
   ])
 
   const parentIds = (links ?? []).map((l) => String((l as { athlete_id: string }).athlete_id))
   const { data: parentRows } = parentIds.length
-    ? await admin.from("athletes").select("id, name, graduationyear, highschool").in("id", parentIds)
+    ? await admin.from("athletes").select(LINKED_COLUMNS).in("id", parentIds)
     : { data: [] as Array<Record<string, unknown>> }
 
   const byId = new Map<string, Linked>()
@@ -40,6 +64,7 @@ export async function GET(request: NextRequest) {
       classYear: row.graduationyear == null ? null : Number(row.graduationyear),
       school: (row.highschool as string | null) ?? null,
       relationship,
+      missing: missingFrom(row),
     })
   }
   for (const row of claimed ?? []) add(row as Record<string, unknown>, "self")
