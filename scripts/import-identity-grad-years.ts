@@ -26,7 +26,7 @@ import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
 import { nameWords } from "@/lib/athlete-name-match"
-import { decideGradYear, gradYearTier } from "@/lib/identity/grad-year-source"
+import { decideGradYear, gradYearImpossible, gradYearTier } from "@/lib/identity/grad-year-source"
 
 for (const f of [".env.local", ".env"]) {
   const p = path.join(process.cwd(), f)
@@ -72,7 +72,7 @@ function parseCsv(text: string): Record<string, string>[] {
   return rows.filter((r) => r.some((c) => c.trim())).map((r) => Object.fromEntries(head.map((h, i) => [h, (r[i] ?? "").trim()])))
 }
 
-type Identity = { id: string; normalized_name: string | null; state: string | null; gender: string | null; graduation_year: number | null; evidence: Record<string, unknown> | null }
+type Identity = { id: string; normalized_name: string | null; state: string | null; gender: string | null; graduation_year: number | null; evidence: Record<string, unknown> | null; last_seen_season: number | null }
 
 const heldSourceOf = (e: Record<string, unknown> | null) =>
   (e?.grad_year_confirmed_by as string) || (e?.grad_year_source as string) || (e?.grad_year_basis as string) || null
@@ -87,7 +87,7 @@ async function main() {
   for (let from = 0; ; from += 1000) {
     const { data, error } = await sb
       .from("athlete_identities")
-      .select("id, normalized_name, state, gender, graduation_year, evidence")
+      .select("id, normalized_name, state, gender, graduation_year, evidence, last_seen_season")
       .range(from, from + 999)
     if (error) throw new Error(error.message)
     identities.push(...((data ?? []) as Identity[]))
@@ -101,9 +101,10 @@ async function main() {
   }
 
   const updates: Array<{ id: string; grad: number; evidence: Record<string, unknown>; replacing: number | null }> = []
-  const tally = { malformed: 0, unmatched: 0, ambiguous: 0, agree: 0, conflict: 0, fill: 0, replace: 0, keep: 0 }
+  const tally = { malformed: 0, unmatched: 0, ambiguous: 0, agree: 0, conflict: 0, fill: 0, replace: 0, keep: 0, impossible: 0 }
   const conflicts: string[] = []
   const replacements: string[] = []
+  const impossible: string[] = []
   for (const r of rows) {
     const name = nn(r.name)
     const state = String(r.state || r.team || "").toUpperCase()
@@ -116,6 +117,13 @@ async function main() {
     const cands = byKey.get(GENDER ? `${name}|${state}|${GENDER}` : `${name}|${state}`) ?? []
     if (!cands.length) { tally.unmatched++; continue }
     if (cands.length > 1) { tally.ambiguous++; continue }
+    /* Checked against the seasons we have seen them wrestle, before any precedence question. */
+    const why = gradYearImpossible(grad, cands[0].last_seen_season)
+    if (why) {
+      tally.impossible++
+      if (impossible.length < 12) impossible.push(`${r.name} (${state}): ${why}`)
+      continue
+    }
     const held = Number(cands[0].graduation_year)
     const evidence = cands[0].evidence ?? {}
     const heldSource = heldSourceOf(evidence)
@@ -162,6 +170,8 @@ async function main() {
   console.log(`   unusable row (no name, seed marker, no year) : ${tally.malformed}`)
   console.log(`   nobody of that name in that state           : ${tally.unmatched}`)
   console.log(`   several of the name in that state           : ${tally.ambiguous}`)
+  console.log(`   impossible for a wrestler we have seen      : ${tally.impossible}`)
+  for (const i of impossible) console.log(`      ${i}`)
   console.log(`   already on file and agreeing                : ${tally.agree}`)
   console.log(`   kept, this file is the weaker source        : ${tally.keep}`)
   console.log(`   unresolved, reported for a human            : ${tally.conflict}`)

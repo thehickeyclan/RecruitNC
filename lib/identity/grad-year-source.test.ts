@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { decideGradYear, gradYearTier } from "@/lib/identity/grad-year-source"
+import { decideGradYear, gradYearImpossible, gradYearTier } from "@/lib/identity/grad-year-source"
 
 describe("gradYearTier", () => {
   it("ranks a state tournament's grade column above an outlet's", () => {
@@ -98,5 +98,27 @@ describe("decideGradYear", () => {
 
   it("says nothing when the sources agree", () => {
     expect(decideGradYear({ ...base, held: 2028, incoming: 2028 }).verdict).toBe("keep")
+  })
+})
+
+describe("gradYearImpossible", () => {
+  it("refuses a class year that precedes a season the wrestler competed in", () => {
+    // From the podium sweep: Landon Williams (GA) came back as 2024 having wrestled in 2026.
+    expect(gradYearImpossible(2024, 2026)).toMatch(/wrestled in the 2026 season/)
+    expect(gradYearImpossible(2025, 2026)).toBeTruthy()
+  })
+
+  it("refuses one too far out to be a high school career", () => {
+    // Caio Sainz (FL) came back as 2032 off the 2026 season — six years, so sixth grade.
+    expect(gradYearImpossible(2032, 2026)).toMatch(/6 years after/)
+  })
+
+  it("accepts every grade a wrestler could actually be in", () => {
+    for (const gy of [2026, 2027, 2028, 2029, 2030]) expect(gradYearImpossible(gy, 2026)).toBeNull()
+  })
+
+  it("says nothing when we have no season to check against", () => {
+    expect(gradYearImpossible(2027, null)).toBeNull()
+    expect(gradYearImpossible(2027, 0)).toBeNull()
   })
 })
