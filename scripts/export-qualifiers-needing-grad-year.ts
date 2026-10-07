@@ -36,6 +36,11 @@ const arg = (name: string) => {
 }
 const OUT = arg("out") ?? "ranking-snapshots/qualifiers-needing-grad-year.csv"
 const ONLY = arg("gender")?.toUpperCase()
+/* Default 2025: a wrestler last seen earlier has almost certainly graduated. --since 2026 narrows
+ * to those still wrestling in the most recent completed season, which is the recruitable set. */
+const SINCE = Number(arg("since") ?? 2025)
+/* --placement 1 keeps state champions only; 3 keeps the podium; 8 keeps every placer. */
+const MAX_PLACE = Number(arg("placement") ?? 0)
 const g1 = (v: unknown) => (/^[fgw]/i.test(String(v ?? "").trim()) ? "F" : "M")
 const csv = (v: unknown) => {
   const s = String(v ?? "")
@@ -57,8 +62,13 @@ async function main() {
   const places = (e: unknown) => (((e as { placements?: unknown[] })?.placements ?? []) as unknown[]).map(Number).filter((n) => n > 0)
   const rows = ids
     .filter((i) => !(Number(i.graduation_year) > 0))
-    .filter((i) => Number(i.last_seen_season) >= 2025)
+    .filter((i) => Number(i.last_seen_season) >= SINCE)
     .filter((i) => !ONLY || g1(i.gender) === ONLY)
+    .filter((i) => {
+      if (!MAX_PLACE) return true
+      const p = places(i.evidence)
+      return p.length > 0 && Math.min(...p) <= MAX_PLACE
+    })
     .map((i) => {
       const p = places(i.evidence)
       const best = p.length ? Math.min(...p) : null
