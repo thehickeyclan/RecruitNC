@@ -5,7 +5,15 @@ export type BlueMembershipStripeStatus = "active" | "paused" | "cancelled" | "pe
 
 export function mapStripeSubscriptionToMembershipStatus(
   subscription: Stripe.Subscription,
-  options?: { isDeleted?: boolean },
+  options?: {
+    isDeleted?: boolean
+    /**
+     * A "cancel at end of period" request ends access now (Matt, 7 Oct 2026: no grace). Default
+     * on, for every write to blue_memberships. The Stripe-dashboard stats pass false, so a family
+     * that is still billed through the period shows as "canceling" there rather than gone.
+     */
+    cancelRequestEndsAccess?: boolean
+  },
 ): {
   status: BlueMembershipStripeStatus
   ended_at: string | null
@@ -18,8 +26,10 @@ export function mapStripeSubscriptionToMembershipStatus(
     ? new Date(subscription.current_period_end * 1000).toISOString()
     : null
 
+  const cancelRequested = (options?.cancelRequestEndsAccess ?? true) && subscription.cancel_at_period_end === true
   const isCanceled =
     isDeleted ||
+    cancelRequested ||
     stripeStatus === "canceled" ||
     stripeStatus === "unpaid" ||
     stripeStatus === "incomplete_expired"
