@@ -9,6 +9,25 @@ describe("gradYearTier", () => {
     expect(gradYearTier("SI preseason list")).toBe("national_outlet_grade")
   })
 
+  it("ranks an evidenced web lookup above a ranking service and below a grade division", () => {
+    expect(gradYearTier("web-lookup: class-of listing, school matched")).toBe("verified_web_lookup")
+    expect(gradYearTier("school roster")).toBe("verified_web_lookup")
+    const beatsRanking = decideGradYear({
+      held: 2028,
+      heldSource: "rankwrestlers-2026-27-preseason",
+      incoming: 2027,
+      incomingSource: "web-lookup class-of listing",
+    })
+    expect(beatsRanking.verdict).toBe("replace")
+    const losesToDivision = decideGradYear({
+      held: 2027,
+      heldSource: "NHSCA grade division",
+      incoming: 2028,
+      incomingSource: "web-lookup class-of listing",
+    })
+    expect(losesToDivision.verdict).toBe("keep")
+  })
+
   it("treats an unlabelled source as the weakest, so it can only fill blanks", () => {
     expect(gradYearTier(null)).toBe("national_outlet_grade")
     expect(gradYearTier("some file nobody labelled")).toBe("national_outlet_grade")

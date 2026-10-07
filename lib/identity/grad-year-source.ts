@@ -26,6 +26,13 @@ export const GRAD_YEAR_TIERS = {
   state_tournament_grade: 90,
   /** The wrestler entered a grade-restricted division, so the event states the grade. */
   nhsca_grade_division: 80,
+  /**
+   * A looked-up page that states the class outright — a "Class of 2028" listing or a grade tied to
+   * a named season — matched to the wrestler by school. Ranked above a ranking service because it
+   * is a direct statement about that athlete rather than a field on a list that may go unmaintained,
+   * and below a grade division because the wrestler's own entry is not what asserts it.
+   */
+  verified_web_lookup: 70,
   /** A ranking service that publishes a grade per wrestler, by state. */
   state_rankings_grade: 60,
   /** A national outlet's grade on a current list. Carries graduates forward; trust last. */
@@ -47,6 +54,7 @@ export function gradYearTier(source: string | null | undefined): GradYearTier {
   if (/human|confirmed by|matt/.test(s)) return "human_confirmed"
   if (/state tournament|state_tournament|placer|qualifier|state grade/.test(s)) return "state_tournament_grade"
   if (/nhsca/.test(s)) return "nhsca_grade_division"
+  if (/web.?lookup|class.?of.?listing|verified.?web|school roster/.test(s)) return "verified_web_lookup"
   if (/rankwrestler|rankings-grade|rankings grade|state ranking/.test(s)) return "state_rankings_grade"
   return "national_outlet_grade"
 }

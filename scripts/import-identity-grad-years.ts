@@ -153,6 +153,7 @@ async function main() {
         grad_year_source: incomingSource,
         grad_year_tier: gradYearTier(incomingSource),
         grad_year_grade: r.grade || null,
+        ...(r.evidence_url || r.source_url ? { grad_year_evidence_url: r.evidence_url || r.source_url } : {}),
         ...(verdict === "replace" ? { grad_year_replaced: [...((evidence.grad_year_replaced as unknown[]) ?? []), { value: held, source: heldSource }] } : {}),
       },
     })
