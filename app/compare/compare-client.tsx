@@ -572,9 +572,9 @@ function AccessPanel({ problem }: { problem: AccessProblem }) {
       <div className="mx-auto mb-4 inline-flex rounded-full bg-[#D3B574]/10 p-3">
         <Lock className={`h-6 w-6 ${GOLD}`} />
       </div>
-      <h3 className="text-xl font-black text-white">{signedOut ? "Sign in to see the comparison" : "Comparisons are a premium tool"}</h3>
+      <h3 className="text-xl font-black text-white">{signedOut ? "Sign in to see the comparison" : "The comparison is for college coaches"}</h3>
       <p className="mx-auto mt-2 max-w-lg text-sm text-white/60">
-        Free for verified college coaches, and included with NC United Blue.
+        Free for verified college coaching staff. Sign up with your school email and you&apos;re in.
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-3">
         {signedOut ? (
@@ -584,9 +584,6 @@ function AccessPanel({ problem }: { problem: AccessProblem }) {
         ) : null}
         <Link href="/auth/signup?returnTo=%2Fcompare" className="rounded-lg border border-white/20 px-5 py-2.5 text-sm font-bold text-white hover:border-[#D3B574] hover:text-[#D3B574]">
           College coach sign-up
-        </Link>
-        <Link href="/blue" className="rounded-lg border border-white/20 px-5 py-2.5 text-sm font-bold text-white hover:border-[#D3B574] hover:text-[#D3B574]">
-          NC United Blue
         </Link>
       </div>
     </div>

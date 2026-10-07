@@ -1,6 +1,7 @@
 "use client"
 
 import { STYLE_LABEL, type CompetitionSummary } from "@/lib/wrestling-style"
+import { mayUseComparison } from "@/lib/compare-access"
 import type { Credential } from "@/lib/profile/credentials"
 import {
   BannerEyebrow,
@@ -2407,6 +2408,37 @@ export function AthleteDetail({
         </div>
       )}
 
+      {/*
+        The comparison, for verified college coaches and admins only (lib/compare-access.ts - the
+        API refuses everyone else too). Its own card rather than inside "request an edit", which
+        is hidden from anyone who can edit - every admin. Arriving from here pre-selects this
+        wrestler, so only the other side has to be chosen.
+      */}
+      {mayUseComparison({ isAdmin, profile: viewerProfile }) && !isViewingOwnProfile && (
+        <div
+          className={cn(
+            "container mx-auto px-4 pt-8",
+            mobileRecruiterLayout && PROFILE_SECTION_ORDER.requestEdit,
+          )}
+        >
+          <Card className={"profile-card border-2 border-border bg-muted"}>
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div>
+                  <h3 className={"text-lg font-semibold mb-1 text-foreground"}>Compare this wrestler</h3>
+                  <p className={"text-sm text-muted-foreground"}>
+                    Head to head, common opponents, strength of opponents and your perfect recruit, side by side.
+                  </p>
+                </div>
+                <Button asChild variant="outline" size="lg" className="px-6 py-2">
+                  <a href={`/compare?left=${athlete.id}`}>Compare with another wrestler</a>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Request Edit - only for non-owners (owners use inline edit) */}
       {!canEdit && (
         <div
@@ -2427,20 +2459,6 @@ export function AthleteDetail({
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  {/*
-                    Shown to everyone, gated where it matters. The comparison itself is behind
-                    the same door as the rankings; the link is not, because a coach who cannot
-                    find the tool never learns it exists. Arriving from here pre-selects this
-                    wrestler, so only the other side has to be chosen.
-                  */}
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="lg"
-                    className="px-6 py-2"
-                  >
-                    <a href={`/compare?left=${athlete.id}`}>Compare with another wrestler</a>
-                  </Button>
                   <Button
                     onClick={() => setShowEditModal(true)}
                     className="bg-red-600 hover:bg-red-700 text-white px-6 py-2"
