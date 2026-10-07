@@ -23,6 +23,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
+  AlertTriangle,
   ArrowLeftRight,
   ArrowRight,
   Globe,
@@ -34,13 +35,21 @@ import {
   Share2,
   SlidersHorizontal,
   Swords,
+  Target,
   TrendingUp,
   Users,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import type { ComparisonBout, CommonOpponent, HeadToHead } from "@/lib/athlete-comparison"
 import type { ComparisonRow, RowEdge, RowGroup } from "@/lib/athlete-comparison-rows"
-import { ProgramFitPanel, type ProgramFitPayload } from "./program-fit-panel"
+import {
+  PerfectRecruitInvite,
+  PerfectRecruitPanel,
+  PerfectRecruitWizard,
+  StatusIcon,
+  type ProgramFitPayload,
+} from "./program-fit-panel"
+import { EMPTY_CRITERIA, evaluateProgramFit, summarizeFit, type FitCheck, type FitStatus } from "@/lib/program-fit"
 
 type Athlete = {
   id: string
@@ -427,7 +436,31 @@ function EdgeMark({ edge, side }: { edge: RowEdge; side: "left" | "right" }) {
   )
 }
 
-function Row({ row, open, onToggle }: { row: ComparisonRow; open: boolean; onToggle: () => void }) {
+/** A row's mark against the perfect recruit, per side, when a need covers that row. */
+type RowMarks = { left: FitStatus; right: FitStatus }
+
+/** Which comparison rows each perfect-recruit need speaks to. */
+const NEED_ROWS: Record<FitCheck["key"], string[]> = {
+  weight: ["weight"],
+  class: ["class"],
+  gpa: ["gpa"],
+  tests: ["sat", "act"],
+  major: ["interest"],
+  national: ["footprint"],
+  state: ["state"],
+  ranked: ["state-rank", "national-rank"],
+}
+
+function Mark({ status }: { status: FitStatus | undefined }) {
+  if (!status) return null
+  return (
+    <span className="mx-1 inline-flex align-middle" title="Against your perfect recruit">
+      <StatusIcon status={status} className="h-3.5 w-3.5" />
+    </span>
+  )
+}
+
+function Row({ row, open, onToggle, marks }: { row: ComparisonRow; open: boolean; onToggle: () => void; marks?: RowMarks }) {
   const expandable = Boolean(row.left.lines?.length || row.right.lines?.length)
   const cellClass = (side: "left" | "right") =>
     `min-w-0 px-3 py-3.5 text-sm ${row.edge === side ? "bg-[#D3B574]/10 font-bold text-white" : "text-white/70"}`
@@ -438,6 +471,7 @@ function Row({ row, open, onToggle }: { row: ComparisonRow; open: boolean; onTog
         onClick={expandable ? onToggle : undefined}
       >
         <td className={`${cellClass("left")} text-right`}>
+          <Mark status={marks?.left} />
           {row.left.value}
           <EdgeMark edge={row.edge} side="left" />
         </td>
@@ -453,6 +487,7 @@ function Row({ row, open, onToggle }: { row: ComparisonRow; open: boolean; onTog
         <td className={cellClass("right")}>
           <EdgeMark edge={row.edge} side="right" />
           {row.right.value}
+          <Mark status={marks?.right} />
         </td>
       </tr>
       {open && expandable ? (
@@ -645,9 +680,19 @@ export default function CompareClient({
     syncUrl(rightId, leftId, enabled)
   }
 
+  /*
+   * Which rows show: the coach's own choice on this page, else the categories the program saved in
+   * its perfect recruit (plus the profile facts and weight, which never carry an edge), else the
+   * tool's defaults.
+   */
+  const savedPriorities = data?.programFit?.saved?.criteria.priorities ?? []
   const isOn = useCallback(
-    (row: ComparisonRow) => (enabled ? enabled.has(row.key) : row.defaultOn),
-    [enabled],
+    (row: ComparisonRow) => {
+      if (enabled) return enabled.has(row.key)
+      if (savedPriorities.length) return savedPriorities.includes(row.key) || row.group === "profile" || row.key === "weight"
+      return row.defaultOn
+    },
+    [enabled, savedPriorities],
   )
   const toggle = (row: ComparisonRow) => {
     if (!data) return
@@ -684,6 +729,29 @@ export default function CompareClient({
     for (const row of visible) if (row.edge) out[row.edge].push(row.label)
     return out
   }, [data, visible])
+
+  // The comparison read against the program's perfect recruit, when it has one.
+  const [wizardOpen, setWizardOpen] = useState(false)
+  const fitCriteria = data?.programFit?.saved?.criteria ?? null
+  const fitChecks = useMemo(() => {
+    if (!data?.programFit || !fitCriteria) return null
+    return { left: evaluateProgramFit(data.programFit.left, fitCriteria), right: evaluateProgramFit(data.programFit.right, fitCriteria) }
+  }, [data, fitCriteria])
+  const fitSummary = useMemo(() => {
+    if (!data || !fitChecks || !tally) return null
+    const edgeLeader = tally.left.length > tally.right.length ? "left" : tally.right.length > tally.left.length ? "right" : null
+    return summarizeFit({ leftName: data.left.name, rightName: data.right.name, left: fitChecks.left, right: fitChecks.right, edgeLeader })
+  }, [data, fitChecks, tally])
+  const rowMarks = useMemo(() => {
+    const out = new Map<string, RowMarks>()
+    if (!fitChecks) return out
+    fitChecks.left.forEach((lc, i) => {
+      const rc = fitChecks.right[i]
+      if (!rc) return
+      for (const key of NEED_ROWS[lc.key]) out.set(key, { left: lc.status, right: rc.status })
+    })
+    return out
+  }, [fitChecks])
 
   return (
     <main className="min-h-screen bg-[#0A1628] text-white">
@@ -729,6 +797,31 @@ export default function CompareClient({
 
         {data && !loading ? (
           <div className="mt-6 space-y-6">
+            {data.programFit && !data.programFit.saved ? <PerfectRecruitInvite onStart={() => setWizardOpen(true)} /> : null}
+
+            {/* Read against the program's perfect recruit first: who fits, and any must-have missed. */}
+            {fitSummary && fitSummary.lines.length ? (
+              <section className="rounded-xl border border-[#D3B574]/40 bg-[#D3B574]/[0.06] p-5 sm:p-6">
+                <h2 className={`${PANEL_TITLE} flex items-center gap-2`}>
+                  <Target className={`h-3.5 w-3.5 ${GOLD}`} /> For your program
+                </h2>
+                <div className="mt-2 space-y-1">
+                  {fitSummary.lines.map((line) => (
+                    <p key={line} className="text-base font-semibold text-white">{line}</p>
+                  ))}
+                </div>
+                {fitSummary.cautions.length ? (
+                  <div className="mt-3 space-y-1.5">
+                    {fitSummary.cautions.map((c) => (
+                      <p key={c} className="flex items-start gap-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-sm font-semibold text-amber-100">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" /> {c}
+                      </p>
+                    ))}
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
+
             {/* Who's who, and the edges they hold on what this coach has switched on. */}
             <section className="relative overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-[#13294B] to-[#0f1c2e] p-5 sm:p-6">
               <div className="grid grid-cols-2 gap-4">
@@ -764,14 +857,11 @@ export default function CompareClient({
             </section>
 
             {data.programFit ? (
-              <ProgramFitPanel
+              <PerfectRecruitPanel
                 fit={data.programFit}
                 leftName={data.left.name}
                 rightName={data.right.name}
-                classYearOptions={classYearOptions}
-                onSaved={(saved) =>
-                  setData((prev) => (prev && prev.programFit ? { ...prev, programFit: { ...prev.programFit, saved } } : prev))
-                }
+                onEdit={() => setWizardOpen(true)}
               />
             ) : null}
 
@@ -784,7 +874,7 @@ export default function CompareClient({
                   <SlidersHorizontal className={`h-3.5 w-3.5 ${GOLD}`} /> What matters to your program
                 </h2>
                 <div className="flex gap-4 text-xs font-bold">
-                  <button type="button" onClick={resetRows} className="text-white/50 hover:text-[#D3B574]">Defaults</button>
+                  <button type="button" onClick={resetRows} className="text-white/50 hover:text-[#D3B574]">{savedPriorities.length ? "Your priorities" : "Defaults"}</button>
                   <button type="button" onClick={allRows} className="text-white/50 hover:text-[#D3B574]">Everything</button>
                   <button type="button" onClick={copyLink} className="inline-flex items-center gap-1 text-white/50 hover:text-[#D3B574]">
                     <Share2 className="h-3 w-3" /> Copy link
@@ -850,6 +940,7 @@ export default function CompareClient({
                           <Row
                             key={row.key}
                             row={row}
+                            marks={rowMarks.get(row.key)}
                             open={openRows.has(row.key)}
                             onToggle={() =>
                               setOpenRows((prev) => {
@@ -874,6 +965,21 @@ export default function CompareClient({
           </div>
         ) : null}
       </section>
+
+      {wizardOpen && data?.programFit ? (
+        <PerfectRecruitWizard
+          initial={data.programFit.saved?.criteria ?? EMPTY_CRITERIA}
+          classYearOptions={classYearOptions}
+          onClose={() => setWizardOpen(false)}
+          onSaved={(saved) => {
+            setWizardOpen(false)
+            // The saved categories become the rows; a choice made on this page gives way to them.
+            setEnabled(null)
+            syncUrl(leftId, rightId, null)
+            setData((prev) => (prev && prev.programFit ? { ...prev, programFit: { ...prev.programFit, saved } } : prev))
+          }}
+        />
+      ) : null}
     </main>
   )
 }
