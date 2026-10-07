@@ -156,7 +156,8 @@ export function evaluateProgramFit(subject: FitSubject, c: ProgramFitCriteria): 
       key: "gpa",
       label: "GPA",
       status: gpa == null ? "unknown" : gpa >= c.minGpa ? "fit" : "miss",
-      detail: gpa == null ? "Not on file" : `${subject.gpa} against a ${c.minGpa} floor`,
+      // "3.0", not "3": a GPA floor reads with its decimal.
+      detail: gpa == null ? "Not on file" : `${subject.gpa} against a ${Number.isInteger(c.minGpa) ? c.minGpa.toFixed(1) : c.minGpa} floor`,
     })
   }
 

@@ -41,6 +41,8 @@ describe("program fit", () => {
   it("never marks a missing GPA as a miss", () => {
     const [gpa] = evaluateProgramFit(subject({ gpa: null }), { ...EMPTY_CRITERIA, minGpa: 3.0 })
     expect(gpa!.status).toBe("unknown")
+    const [held] = evaluateProgramFit(subject({ gpa: "3.4" }), { ...EMPTY_CRITERIA, minGpa: 3 })
+    expect(held!.detail).toBe("3.4 against a 3.0 floor")
   })
 
   it("passes either test floor", () => {

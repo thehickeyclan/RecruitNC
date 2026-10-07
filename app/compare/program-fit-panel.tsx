@@ -69,6 +69,7 @@ function Editor({
   onSaved: (saved: NonNullable<ProgramFitPayload["saved"]>) => void
 }) {
   const [c, setC] = useState<ProgramFitCriteria>(initial)
+  // Every change builds on the latest state: two quick taps on weight chips must both stick.
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const toggle = <T,>(list: T[], value: T) => (list.includes(value) ? list.filter((x) => x !== value) : [...list, value])
@@ -103,7 +104,7 @@ function Editor({
         <span className={label}>Weights you&apos;re recruiting</span>
         <div className="flex flex-wrap gap-1.5">
           {COLLEGE_WEIGHTS.map((w) => (
-            <Chip key={w} on={c.targetWeights.includes(w)} onClick={() => setC({ ...c, targetWeights: toggle(c.targetWeights, w) })}>
+            <Chip key={w} on={c.targetWeights.includes(w)} onClick={() => setC((prev) => ({ ...prev, targetWeights: toggle(prev.targetWeights, w) }))}>
               {w}
             </Chip>
           ))}
@@ -113,7 +114,7 @@ function Editor({
         <span className={label}>Classes</span>
         <div className="flex flex-wrap gap-1.5">
           {classYearOptions.map((y) => (
-            <Chip key={y} on={c.classYears.includes(y)} onClick={() => setC({ ...c, classYears: toggle(c.classYears, y) })}>
+            <Chip key={y} on={c.classYears.includes(y)} onClick={() => setC((prev) => ({ ...prev, classYears: toggle(prev.classYears, y) }))}>
               {y}
             </Chip>
           ))}
@@ -122,22 +123,22 @@ function Editor({
       <div className="grid gap-3 sm:grid-cols-3">
         <label>
           <span className={label}>Minimum GPA</span>
-          <input className={input} inputMode="decimal" placeholder="e.g. 3.0" defaultValue={c.minGpa ?? ""} onChange={(e) => setC({ ...c, minGpa: numberOrNull(e.target.value) })} />
+          <input className={input} inputMode="decimal" placeholder="e.g. 3.0" defaultValue={c.minGpa ?? ""} onChange={(e) => { const v = e.target.value; setC((prev) => ({ ...prev, minGpa: numberOrNull(v) })) }} />
         </label>
         <label>
           <span className={label}>Minimum SAT</span>
-          <input className={input} inputMode="numeric" placeholder="e.g. 1100" defaultValue={c.minSat ?? ""} onChange={(e) => setC({ ...c, minSat: numberOrNull(e.target.value) })} />
+          <input className={input} inputMode="numeric" placeholder="e.g. 1100" defaultValue={c.minSat ?? ""} onChange={(e) => { const v = e.target.value; setC((prev) => ({ ...prev, minSat: numberOrNull(v) })) }} />
         </label>
         <label>
           <span className={label}>Or minimum ACT</span>
-          <input className={input} inputMode="numeric" placeholder="e.g. 22" defaultValue={c.minAct ?? ""} onChange={(e) => setC({ ...c, minAct: numberOrNull(e.target.value) })} />
+          <input className={input} inputMode="numeric" placeholder="e.g. 22" defaultValue={c.minAct ?? ""} onChange={(e) => { const v = e.target.value; setC((prev) => ({ ...prev, minAct: numberOrNull(v) })) }} />
         </label>
       </div>
       <div>
         <span className={label}>Majors you offer</span>
         <div className="flex flex-wrap gap-1.5">
           {MAJORS.map((m) => (
-            <Chip key={m} on={c.majors.includes(m)} onClick={() => setC({ ...c, majors: toggle(c.majors, m) })}>
+            <Chip key={m} on={c.majors.includes(m)} onClick={() => setC((prev) => ({ ...prev, majors: toggle(prev.majors, m) }))}>
               {m}
             </Chip>
           ))}
@@ -147,7 +148,7 @@ function Editor({
         <input
           type="checkbox"
           checked={c.requireNational}
-          onChange={(e) => setC({ ...c, requireNational: e.target.checked })}
+          onChange={(e) => { const checked = e.target.checked; setC((prev) => ({ ...prev, requireNational: checked })) }}
           className="h-4 w-4 accent-[#D3B574]"
         />
         <span className="text-sm text-white/80">Wants national experience (an individual national event on file)</span>
