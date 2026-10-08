@@ -97,7 +97,7 @@ function isCurrentSeasonList(published: Date, url: string | null | undefined, no
   return true
 }
 
-function classYear(grade: IncomingRankingRow["grade"], published: Date): number | null {
+export function classYear(grade: IncomingRankingRow["grade"], published: Date): number | null {
   if (grade == null || grade === "") return null
   const n = Number(grade)
   if (Number.isInteger(n) && n >= 2025 && n <= 2035) return n

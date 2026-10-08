@@ -12,6 +12,14 @@
  *   grade or class (optional)
  * For a list that is not by weight, pass --scope p4p, or --scope big_board --class 2027.
  *
+ * Or Muse's JSON, the live feed's shape - one edition, an array of them, or a folder of files:
+ *   { source, gender, published: "YYYY-MM-DD", url?, scope?, classYear?, rows: [{ rank, name,
+ *     weight?, school?, state?, grade? }] }
+ *   npx tsx scripts/import-national-rankings-archive.ts --bundle ~/Downloads/rankings-2025-26 [--write]
+ *
+ * Never post past editions to /api/rankings/ingest: that is "ranked now", rejects prior seasons,
+ * and must not be overwritten by them.
+ *
  *   npx tsx scripts/import-national-rankings-archive.ts --file si-girls-2026-03-01.csv \
  *     --source sports_illustrated --gender F --published 2026-03-01            # dry run
  *   ... --write
@@ -19,7 +27,13 @@
 import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
-import { archiveEdition } from "@/lib/rankings/national-import"
+import {
+  archiveEdition,
+  classYear,
+  resolveEditionClassYear,
+  resolveRankBasis,
+  type IncomingRankingRow,
+} from "@/lib/rankings/national-import"
 
 for (const f of [".env.local", ".env"]) {
   const p = path.join(process.cwd(), f)
@@ -41,6 +55,67 @@ const PUBLISHED = arg("published")
 const SCOPE = arg("scope") ?? "weight"
 const CLASS = Number(arg("class") ?? 0)
 const WRITE = process.argv.includes("--write")
+
+const BUNDLE = arg("bundle")
+if (BUNDLE) {
+  const files = fs.statSync(BUNDLE).isDirectory()
+    ? fs.readdirSync(BUNDLE).filter((f) => f.endsWith(".json")).sort().map((f) => path.join(BUNDLE, f))
+    : [BUNDLE]
+  type Edition = { source: string; gender: string; published: string; url?: string | null; scope?: string; classYear?: number | null; rows: IncomingRankingRow[] }
+  const editions: Array<Edition & { file: string }> = files.flatMap((f) => {
+    const parsed = JSON.parse(fs.readFileSync(f, "utf8"))
+    const list = Array.isArray(parsed) ? parsed : Array.isArray(parsed?.editions) ? parsed.editions : [parsed]
+    return list.map((e: Edition) => ({ ...e, file: path.basename(f) }))
+  })
+  const sb = WRITE
+    ? createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } })
+    : null
+  ;(async () => {
+    let total = 0
+    for (const e of editions) {
+      const problems: string[] = []
+      if (!["sports_illustrated", "matscouts", "flowrestling"].includes(e.source)) problems.push(`source ${e.source}`)
+      if (!["M", "F"].includes(e.gender)) problems.push(`gender ${e.gender}`)
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(String(e.published))) problems.push(`published ${e.published}`)
+      if (!Array.isArray(e.rows) || !e.rows.length) problems.push("no rows")
+      const label = `${e.file}: ${e.source} ${e.gender} ${e.scope ?? "weight"}${e.classYear ? ` ${e.classYear}` : ""} ${e.published}`
+      if (problems.length) {
+        console.log(`SKIP ${label} - ${problems.join(", ")}`)
+        continue
+      }
+      const scope = (e.scope === "p4p" || e.scope === "big_board" ? e.scope : "weight") as "weight" | "p4p" | "big_board"
+      const published = new Date(`${e.published}T12:00:00Z`)
+      const editionClass = resolveEditionClassYear(scope, e.classYear ?? null, e.rows, published)
+      const basis = resolveRankBasis(scope, e.rows)
+      const rows = e.rows.filter((r) => Number.isFinite(Number(r.rank)) && String(r.name ?? "").trim()).map((r) => ({
+        source: e.source,
+        gender: e.gender,
+        ranking_month: `${e.published.slice(0, 7)}-01`,
+        scope,
+        edition_class_year: editionClass,
+        rank_basis: basis,
+        rank: Number(r.rank),
+        athlete_name: String(r.name).trim(),
+        athlete_id: null,
+        weight_class: r.weight ? String(r.weight).trim() : null,
+        class_year: classYear(r.grade, published),
+        high_school: r.school?.trim() || null,
+        state: String(r.state ?? "").trim().toUpperCase() || null,
+        source_url: e.url ?? null,
+      }))
+      const nc = rows.filter((r) => r.state === "NC").length
+      if (!sb) {
+        console.log(`${label}: ${rows.length} rows, ${nc} NC`)
+        total += rows.length
+        continue
+      }
+      const n = await archiveEdition(sb, rows, e.published, e.file)
+      console.log(`${label}: archived ${n} of ${rows.length}${n < rows.length ? " - is the archive table created?" : ""}`)
+      total += n
+    }
+    console.log(`\n${editions.length} editions, ${total} rows${WRITE ? " archived" : ". Dry run; --write stores them in the archive only."}`)
+  })()
+} else {
 
 if (!FILE || !SOURCE || !GENDER || !PUBLISHED) {
   console.error("usage: --file <csv> --source sports_illustrated|matscouts|flowrestling --gender M|F --published YYYY-MM-DD [--scope weight|p4p|big_board] [--class 2027] [--write]")
@@ -115,3 +190,4 @@ const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPA
 archiveEdition(sb, rows, PUBLISHED, path.basename(FILE)).then((n) => {
   console.log(n === rows.length ? `Archived ${n}.` : `Archived ${n} of ${rows.length} - is the archive table created? (scripts/create-national-rankings-archive.sql)`)
 })
+}
