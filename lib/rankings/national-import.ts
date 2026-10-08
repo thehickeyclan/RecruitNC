@@ -293,6 +293,7 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
     if (error) throw new Error(`Inserting: ${error.message}`)
   }
   await pruneEditions(admin, input.source, input.gender)
+  await archiveEdition(admin, payload, input.published, null)
 
   const { error: statusError } = await admin.from("ranking_source_status").upsert(
     {
@@ -324,6 +325,52 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
     rows: payload.length,
     ncMatched,
   }
+}
+
+/**
+ * Copy an edition into national_rankings_archive, which is never pruned (Matt, 8 October 2026).
+ *
+ * The live table keeps three months because it answers "ranked now". The archive answers "was the
+ * opponent ranked when they wrestled". A failure here never fails the import: until the archive
+ * table is created (scripts/create-national-rankings-archive.sql) this logs and carries on.
+ */
+export async function archiveEdition(
+  admin: SupabaseClient,
+  rows: ReadonlyArray<Record<string, unknown>>,
+  publishedOn: string,
+  sourceFile: string | null,
+): Promise<number> {
+  if (!rows.length) return 0
+  const archived = rows.map((r) => ({
+    source: r.source,
+    gender: r.gender,
+    published_on: publishedOn,
+    ranking_month: r.ranking_month,
+    scope: r.scope ?? "weight",
+    edition_class_year: r.edition_class_year ?? 0,
+    rank_basis: r.rank_basis ?? "weight",
+    rank: r.rank,
+    athlete_name: r.athlete_name,
+    athlete_id: r.athlete_id ?? null,
+    weight_class: r.weight_class ?? null,
+    class_year: r.class_year ?? null,
+    high_school: r.high_school ?? null,
+    state: r.state ?? null,
+    source_url: r.source_url ?? null,
+    source_file: sourceFile,
+  }))
+  let written = 0
+  for (let i = 0; i < archived.length; i += 500) {
+    const { error } = await admin.from("national_rankings_archive").upsert(archived.slice(i, i + 500), {
+      onConflict: "source,gender,published_on,scope,edition_class_year,athlete_name,weight_class",
+    })
+    if (error) {
+      console.warn(`[national-rankings] archive skipped: ${error.message}`)
+      return written
+    }
+    written += Math.min(500, archived.length - i)
+  }
+  return written
 }
 
 /**
