@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { adminGate } from "@/lib/admin-gate"
+import { requireRankingBoardAccess } from "@/lib/rankings/ranking-board-access"
 import { unstable_cache } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
@@ -39,13 +40,15 @@ const cachedBoard = unstable_cache(
 )
 
 export async function GET(request: Request) {
-  const denied = await adminGate()
-  if (denied) return denied
+  const { searchParams } = new URL(request.url)
+  const year = searchParams.get("year") || "2027"
+  const gender = searchParams.get("gender") || "Male"
+  // Admins, and people granted this board (see ranking-board-access). Middleware lets this path
+  // through to here for that reason.
+  const auth = await requireRankingBoardAccess(gender, Number(year), "read")
+  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
 
   try {
-    const { searchParams } = new URL(request.url)
-    const year = searchParams.get("year") || "2027"
-    const gender = searchParams.get("gender") || "Male"
     const fresh = searchParams.get("refresh") === "1"
     const [athletes, edition, excluded, draftRanks] = await Promise.all([
       fresh
@@ -136,6 +139,9 @@ export async function GET(request: Request) {
         draft_saved_at: edition?.draft_saved_at ?? null,
         published_at: edition?.published_at ?? null,
         formula: "recruitnc-toc-resume-v2",
+        /** What this viewer may do here: reorder and save, or only read. Publishing is admin-only. */
+        access: auth.access,
+        can_publish: auth.isAdmin,
       },
     })
   } catch (error) {

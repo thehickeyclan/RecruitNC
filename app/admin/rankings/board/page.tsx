@@ -143,7 +143,10 @@ function StarCell({
   onChange,
   onCancel,
   onSave,
+  canOverride = true,
 }: {
+  /** Star overrides are for full admins; a scoped ranker sees the rating only. */
+  canOverride?: boolean
   rating?: StarRating
   editing: { stars: string; reason: string } | null
   error: string | null
@@ -203,9 +206,11 @@ function StarCell({
           </div>
         </div>
       ) : (
-        <button onClick={onEdit} className="mt-1 text-[10px] text-blue-300 underline hover:text-white">
-          {rating?.override ? "Change" : "Override"}
-        </button>
+        canOverride ? (
+          <button onClick={onEdit} className="mt-1 text-[10px] text-blue-300 underline hover:text-white">
+            {rating?.override ? "Change" : "Override"}
+          </button>
+        ) : null
       )}
     </div>
   )
@@ -336,6 +341,14 @@ export default function RankingBoardPage() {
    */
   const latestLoad = useRef(0)
   const [loadedFor, setLoadedFor] = useState<string | null>(null)
+  /*
+   * What this viewer may do on this board. A scoped ranker (Brandon Palmer: women's 2027 and 2028)
+   * can reorder and save; on a board granted read-only every control is hidden. Publishing and
+   * star overrides are for full admins only.
+   */
+  const [access, setAccess] = useState<"edit" | "read">("read")
+  const [canPublish, setCanPublish] = useState(false)
+  const canEdit = access === "edit"
   const showing = `${year}|${gender}`
   const boardIsCurrent = loadedFor === showing
 
@@ -367,6 +380,8 @@ export default function RankingBoardPage() {
       setDraftSavedAt(data.meta?.draft_saved_at ?? null)
       setExcluded(Array.isArray(data.meta?.excluded_no_gender) ? data.meta.excluded_no_gender : [])
       setPublishedAt(data.meta?.published_at ?? null)
+      setAccess(data.meta?.access === "edit" ? "edit" : "read")
+      setCanPublish(data.meta?.can_publish === true)
       /*
        * A saved draft is the working order and outranks everything else on screen.
        *
@@ -712,9 +727,12 @@ export default function RankingBoardPage() {
                     className="w-full border-blue-800 bg-slate-950 pl-9 text-white placeholder:text-slate-500 sm:w-72"
                   />
                 </div>
+                {canEdit ? (
                 <Button onClick={applyRecommendationOrder} className="bg-purple-600 hover:bg-purple-700">
                   Preview formula order
                 </Button>
+                ) : null}
+                {canEdit ? (
                 <Button
                   onClick={saveDraft}
                   disabled={saving || loading || !boardIsCurrent}
@@ -724,6 +742,8 @@ export default function RankingBoardPage() {
                   <Save className="mr-2 h-4 w-4" />
                   {saving ? "Saving..." : "Save order"}
                 </Button>
+                ) : null}
+                {canPublish ? (
                 <Button
                   onClick={publishDraft}
                   disabled={publishing || loading || !boardIsCurrent || !draftSavedAt}
@@ -733,6 +753,10 @@ export default function RankingBoardPage() {
                   <Save className="mr-2 h-4 w-4" />
                   {publishing ? "Publishing..." : `Publish top ${publicCap}`}
                 </Button>
+                ) : null}
+                {!canEdit && boardIsCurrent ? (
+                  <Badge className="border border-blue-700 bg-slate-900 text-blue-100">Read-only board</Badge>
+                ) : null}
                 {/*
                   Both times, always. Whether the order on screen has been saved, and whether what
                   was saved has been published, are two different questions and a reviewer needs
@@ -843,6 +867,7 @@ export default function RankingBoardPage() {
                             <span className="text-3xl font-black">#{finalRank}</span>
                           </div>
                           <StarCell
+                            canOverride={canPublish}
                             rating={stars[athlete.id]}
                             editing={starEdit?.id === athlete.id ? starEdit : null}
                             error={starEdit?.id === athlete.id ? starError : null}
@@ -983,6 +1008,7 @@ export default function RankingBoardPage() {
                             <ReviewFlags flags={reviewFlags.get(athlete.id) ?? []} />
                           </div>
                         </div>
+                        {canEdit ? (
                         <div className="flex flex-wrap gap-2">
                           <Button size="sm" variant="outline" className={darkOutlineButton} onClick={() => reorderAthlete(athlete.id, "up")}>
                             <ArrowUp className="h-4 w-4" />
@@ -1017,7 +1043,7 @@ export default function RankingBoardPage() {
                           >
                             Use recommendation
                           </Button>
-                          {athlete.match_count < 20 ? (
+                          {canPublish && athlete.match_count < 20 ? (
                             <Button size="sm" asChild className="bg-[#d6b75d] text-slate-950 hover:bg-[#e6c86b]">
                               <Link href={`/admin/match-manager?athleteId=${athlete.id}`}>
                                 <UploadCloud className="mr-2 h-4 w-4" />
@@ -1026,6 +1052,7 @@ export default function RankingBoardPage() {
                             </Button>
                           ) : null}
                         </div>
+                        ) : null}
                       </div>
                     </CardHeader>
                     {expandedEvidenceId === athlete.id ? (

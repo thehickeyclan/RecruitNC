@@ -65,3 +65,17 @@ describe("accessTokenFrom", () => {
     expect(accessTokenFrom(new Headers(), [])).toBeNull()
   })
 })
+
+describe("ranking board routes check their own access", () => {
+  it("lets the board read and the draft save through to their own guard", () => {
+    expect(adminGateApplies("/api/admin/rankings/board", "GET")).toBe(false)
+    expect(adminGateApplies("/api/admin/rankings/save", "POST")).toBe(false)
+  })
+
+  it("keeps every other rankings route behind the admin gate", () => {
+    expect(adminGateApplies("/api/admin/rankings/stars", "POST")).toBe(true)
+    expect(adminGateApplies("/api/admin/rankings/publish", "POST")).toBe(true)
+    expect(adminGateApplies("/api/admin/rankings/top-100", "GET")).toBe(true)
+    expect(adminGateApplies("/api/admin/rankings/board-export", "GET")).toBe(true)
+  })
+})

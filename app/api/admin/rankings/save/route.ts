@@ -10,6 +10,7 @@ import { revalidateTag } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { requireAdmin } from "@/lib/admin-auth"
+import { requireRankingBoardAccess } from "@/lib/rankings/ranking-board-access"
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
 import { syncPublicRankingsTable } from "@/lib/rankings/publish-public-rankings"
 import { notifyRankingsPublished } from "@/lib/rankings-notification"
@@ -27,15 +28,23 @@ type Body = {
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await requireAdmin()
-  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
-
   const body = (await request.json().catch(() => null)) as Body | null
   const year = Number(body?.year)
   const gender = String(body?.gender ?? "Male")
   const action = body?.action === "publish" ? "publish" : "save"
   if (!Number.isFinite(year)) {
     return NextResponse.json({ error: "A valid graduation year is required." }, { status: 400 })
+  }
+  /*
+   * Saving a draft needs edit access to this board, which a scoped ranker can hold. Publishing
+   * stays with full admins: it makes the order public and sends a push to the app.
+   */
+  if (action === "publish") {
+    const auth = await requireAdmin()
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
+  } else {
+    const auth = await requireRankingBoardAccess(gender, year, "edit")
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
   }
 
   const admin = createAdminClient()

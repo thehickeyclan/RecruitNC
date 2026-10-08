@@ -20,7 +20,10 @@ export default function AdminLayout({
     pathname === "/admin/toc/weigh-ins" ||
     // Results are entered at the mat by people holding the scoped toc_results flag. The page only
     // needs a signed-in user; the result API is what refuses anyone without the flag.
-    pathname === "/admin/toc/pool/results"
+    pathname === "/admin/toc/pool/results" ||
+    // Scoped rankers (lib/rankings/ranking-board-access.ts) open the board without being admins.
+    // The page only needs a signed-in user; the board API is what refuses anyone without a grant.
+    pathname === "/admin/rankings/board"
 
   return (
     <AuthGuard requireAdmin={!isScopedTocManagerPage}>
