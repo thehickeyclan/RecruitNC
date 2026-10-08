@@ -255,6 +255,27 @@ export function isThirdPlaceRound(round: string): boolean {
 }
 
 /**
+ * Every bout that decides a place, and the pair of places it decides.
+ *
+ * Only the finals and the 3rd place match were read, so a wrestler who won the 5th place match was
+ * stored with no placement at all - at the 2026 Frank E. Rader Southeast Regional that silently
+ * dropped the finishes the brackets state outright, and a 5th at a regional is a credential a
+ * ranking should see. Brackets at these events run placement matches down to 8th.
+ */
+const PLACEMENT_ROUNDS: Array<{ canonical: string; winner: number }> = [
+  { canonical: "Finals", winner: 1 },
+  { canonical: "3rd Place", winner: 3 },
+  { canonical: "5th Place", winner: 5 },
+  { canonical: "7th Place", winner: 7 },
+]
+
+export function placesDecidedBy(round: string): { winner: number; loser: number } | null {
+  const canonical = canonicalRound(round)
+  const hit = PLACEMENT_ROUNDS.find((p) => p.canonical === canonical)
+  return hit ? { winner: hit.winner, loser: hit.winner + 1 } : null
+}
+
+/**
  * Team-name fixes for a specific entry in a specific event.
  *
  * Bracket operators mistype club names, and the team is not cosmetic here: it is half the
@@ -470,12 +491,10 @@ export function parseTournament(rows: SourceBoutRow[]): ParsedTournament {
       athlete.placement = place
       athlete.qualified = place <= 4
     }
-    if (isFinalsRound(round)) {
-      setPlace(winnerKey, 1)
-      if (tidy(row.losingWrestler)) setPlace(loserKey, 2)
-    } else if (isThirdPlaceRound(round)) {
-      setPlace(winnerKey, 3)
-      if (tidy(row.losingWrestler)) setPlace(loserKey, 4)
+    const places = placesDecidedBy(round)
+    if (places) {
+      setPlace(winnerKey, places.winner)
+      if (tidy(row.losingWrestler)) setPlace(loserKey, places.loser)
     }
   }
 
