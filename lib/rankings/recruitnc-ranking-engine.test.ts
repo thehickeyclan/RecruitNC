@@ -170,6 +170,18 @@ describe("RecruitNC TOC-style ranking engine", () => {
     expect(ordered.map((row) => row.id)).toEqual(["b", "a"])
   })
 
+  it("does not let a win by somebody with no résumé sink the loser below every empty profile", () => {
+    // Yzabella Weihe, a 7A runner-up at 32.7, lost once to a wrestler with nothing on file and
+    // sat 91st, behind every zero in the class.
+    const ordered = orderProspectsByHeadToHead([
+      { id: "y", name: "Yzabella", ai_score: 32.7, head_to_head: [{ opponentId: "t", opponent: "Taylor", wins: 0, losses: 1 }] },
+      { id: "z1", name: "Empty One", ai_score: 0, head_to_head: [] },
+      { id: "t", name: "Taylor", ai_score: 0, head_to_head: [{ opponentId: "y", opponent: "Yzabella", wins: 1, losses: 0 }] },
+      { id: "z2", name: "Empty Two", ai_score: 0, head_to_head: [] },
+    ])
+    expect(ordered[0]!.id).toBe("y")
+  })
+
   it("does not let one win from far below invert the board", () => {
     // 130 apart is more than two state titles. Beating somebody once does not make you their
     // equal, and letting it through put a two-time state champion last at 117 in TOC seeding.
