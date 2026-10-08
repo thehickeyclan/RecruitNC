@@ -478,6 +478,8 @@ export function buildCandidateHeadToHead(
   currentSeasonBoutsByAthleteId: Map<string, MatchBout[]>,
   /** Qualifier meetings keyed athleteId -> opponentId, when the caller has them. */
   qualifierHeadToHead?: QualifierHeadToHeadIndex,
+  /** The women's board leaves forfeits out of head-to-head (Matt, 8 October 2026). */
+  options?: { skipForfeits?: boolean },
 ): RankingHeadToHead[] {
   const records: RankingHeadToHead[] = []
   const athleteBouts = currentSeasonBoutsByAthleteId.get(athlete.id) ?? []
@@ -489,8 +491,8 @@ export function buildCandidateHeadToHead(
     // recent meeting decides. Two tools ranking the same wrestlers on the same evidence
     // must not disagree about who beat whom.
     const meetings: DatedMeeting[] = [
-      ...datedMeetingsAgainst(athleteBouts, opponent.name),
-      ...datedMeetingsAgainst(currentSeasonBoutsByAthleteId.get(opponent.id) ?? [], athlete.name, true),
+      ...datedMeetingsAgainst(athleteBouts, opponent.name, false, options),
+      ...datedMeetingsAgainst(currentSeasonBoutsByAthleteId.get(opponent.id) ?? [], athlete.name, true, options),
       ...(qualifierSide?.get(opponent.id)?.meetings ?? []).map((m) => ({
         at: m.at,
         won: m.won,
@@ -529,7 +531,7 @@ export function orderProspectsByHeadToHead<T extends {
   name: string
   ai_score: number
   head_to_head: RankingHeadToHead[]
-}>(rows: T[]): T[] {
+}>(rows: T[], options?: { winnerNeedsScore?: boolean }): T[] {
   const remaining = [...rows]
   const ordered: T[] = []
 
@@ -542,11 +544,11 @@ export function orderProspectsByHeadToHead<T extends {
           record &&
             holdsHeadToHeadEdge(record) &&
             /*
-             * A win only lifts somebody who has a résumé of her own. One loss to a wrestler with
-             * nothing on file dropped Yzabella Weihe, a 7A runner-up, below every empty profile
-             * in the class: the winner sorts last among the eligible, and the loser waits for her.
+             * On the women's board a win only lifts somebody who has a résumé of her own. One loss
+             * to a wrestler with nothing on file dropped Yzabella Weihe, a 7A runner-up, below
+             * every empty profile in the class. The boys' board is left as it was (Matt).
              */
-            other.ai_score > 0 &&
+            (!options?.winnerNeedsScore || other.ai_score > 0) &&
             other.ai_score >= candidate.ai_score - HEAD_TO_HEAD_MAX_GAP,
         )
       }),
@@ -815,6 +817,15 @@ export function isWomensTopTierEvent(eventName: string): boolean {
   return SPOKANE_EVENT.test(eventName) || US_OPEN_EVENT.test(eventName)
 }
 
+/**
+ * A Greco-Roman event. The women's board leaves Greco out entirely - results, bouts and
+ * head-to-head (Matt, 8 October 2026): women's wrestling is freestyle. Keys end "-gr"; names end
+ * "Girls Greco" or "Greco-Roman". "NC Freestyle & Greco State Championships" alone is not one.
+ */
+export function isGrecoEvent(eventKey: string, eventName: string): boolean {
+  return /-gr$/i.test(eventKey.trim()) || /\bgreco(-roman)?( duals)?\s*$/i.test(eventName.trim())
+}
+
 export function isWomensBoard(gender: string | null | undefined): boolean {
   return String(gender ?? "").trim().toLowerCase() === "female"
 }
@@ -890,7 +901,9 @@ export async function buildRecruitNcRankingBoard({
       return byAthlete
     }),
     loadRankingDualsByAthlete(supabase, athleteRows),
-    loadQualifierHeadToHead(supabase, athleteIds).catch(() => new Map() as QualifierHeadToHeadIndex),
+    loadQualifierHeadToHead(supabase, athleteIds, womens ? { excludeEvent: isGrecoEvent, skipForfeits: true } : undefined).catch(
+      () => new Map() as QualifierHeadToHeadIndex,
+    ),
     /*
      * The duals roster now carries `athlete_id`, so a wrestler's own record can be read by the
      * link instead of inferred from their name. Both matter: the name match above is what put
@@ -952,11 +965,12 @@ export async function buildRecruitNcRankingBoard({
   {
     const { data: qualifierBouts } = await supabase
       .from("other_tournament_bouts")
-      .select("athlete_id, opponent_name, opponent_club, win, is_bye, win_type, score, weight_class, event_name, event_date")
+      .select("athlete_id, opponent_name, opponent_club, win, is_bye, win_type, score, weight_class, event_key, event_name, event_date")
       .in("athlete_id", athleteIds)
     for (const row of qualifierBouts ?? []) {
       const raw = row as Record<string, unknown>
       if (raw.is_bye || !raw.opponent_name) continue
+      if (womens && isGrecoEvent(String(raw.event_key ?? ""), String(raw.event_name ?? ""))) continue
       const athleteId = String(raw.athlete_id ?? "")
       if (!athleteId) continue
       qualifierBoutsByAthleteId.set(athleteId, [
@@ -1057,9 +1071,12 @@ export async function buildRecruitNcRankingBoard({
        * open she entered used to add points, so a girl with six local freestyle events out-scored
        * one with a single deep national finish (Peyton Smith, 36th to 4th). The rest still show.
        */
+      const otherResults = (bundle.other || []).filter(
+        (r) => !womens || !isGrecoEvent(String(r.eventKey ?? ""), String(r.eventName ?? "")),
+      )
       const womensQualifierPoints = new Map<(typeof bundle.other)[number], number>()
       if (womens) {
-        const scoredQualifiers = (bundle.other || [])
+        const scoredQualifiers = otherResults
           .filter((r) => {
             const label = String(r.eventShortName ?? r.eventName ?? "")
             return !TOC_EVENT.test(label) && !/nhsca\s+national\s+duals/i.test(label) && !isWomensTopTierEvent(label)
@@ -1074,7 +1091,7 @@ export async function buildRecruitNcRankingBoard({
         )
       }
 
-      for (const result of bundle.other || []) {
+      for (const result of otherResults) {
         const isToc = TOC_EVENT.test(String(result.eventShortName ?? result.eventName ?? ""))
         const isNationalDuals = /nhsca\s+national\s+duals/i.test(String(result.eventShortName ?? result.eventName ?? ""))
         const eventLabel = String(result.eventShortName ?? result.eventName ?? "")
@@ -1128,6 +1145,7 @@ export async function buildRecruitNcRankingBoard({
         candidates,
         currentSeasonBoutsByAthleteId,
         qualifierHeadToHead,
+        { skipForfeits: womens },
       )
       const headToHeadWins = headToHead.reduce((sum, record) => sum + record.wins, 0)
       const headToHeadLosses = headToHead.reduce((sum, record) => sum + record.losses, 0)
@@ -1610,5 +1628,5 @@ export async function buildRecruitNcRankingBoard({
     }
   })
 
-  return orderProspectsByHeadToHead(adjusted).map((athlete, index) => ({ ...athlete, ai_rank: index + 1 }))
+  return orderProspectsByHeadToHead(adjusted, { winnerNeedsScore: womens }).map((athlete, index) => ({ ...athlete, ai_rank: index + 1 }))
 }

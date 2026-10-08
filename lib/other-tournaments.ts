@@ -13,7 +13,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
-import { HEAD_TO_HEAD_WINDOW_DAYS } from "@/lib/head-to-head"
+import { HEAD_TO_HEAD_WINDOW_DAYS, isForfeitResult } from "@/lib/head-to-head"
 import type { Bout } from "@/lib/significant-wins"
 
 export type OtherTournamentResult = {
@@ -665,6 +665,8 @@ function meetingSummary(bout: {
 export async function loadQualifierHeadToHead(
   supabase: SupabaseClient,
   athleteIds: string[],
+  /** The women's board only: leave Greco out, and forfeits. TOC seeding and the boys pass nothing. */
+  options?: { excludeEvent?: (eventKey: string, eventName: string) => boolean; skipForfeits?: boolean },
 ): Promise<QualifierHeadToHeadIndex> {
   const index: QualifierHeadToHeadIndex = new Map()
   const ids = [...new Set(athleteIds.filter(Boolean))]
@@ -672,7 +674,7 @@ export async function loadQualifierHeadToHead(
 
   const { data, error } = await supabase
     .from("other_tournament_bouts")
-    .select("athlete_id, opponent_id, win, is_bye, round, bout_order, win_type, score, event_name, event_date, year")
+    .select("athlete_id, opponent_id, win, is_bye, round, bout_order, win_type, score, event_key, event_name, event_date, year")
     .in("athlete_id", ids)
   if (error || !data) return index
 
@@ -688,6 +690,8 @@ export async function loadQualifierHeadToHead(
     const opponentId = row.opponent_id ? String(row.opponent_id) : ""
     if (!athleteId || !opponentId || row.is_bye) continue
     if (!inField.has(athleteId) || !inField.has(opponentId)) continue
+    if (options?.skipForfeits && isForfeitResult(row.win_type)) continue
+    if (options?.excludeEvent?.(String(row.event_key ?? ""), String(row.event_name ?? ""))) continue
 
     let byOpponent = index.get(athleteId)
     if (!byOpponent) {

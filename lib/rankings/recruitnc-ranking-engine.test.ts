@@ -170,7 +170,7 @@ describe("RecruitNC TOC-style ranking engine", () => {
     expect(ordered.map((row) => row.id)).toEqual(["b", "a"])
   })
 
-  it("does not let a win by somebody with no résumé sink the loser below every empty profile", () => {
+  it("on the women's board, does not let a win by somebody with no résumé sink the loser", () => {
     // Yzabella Weihe, a 7A runner-up at 32.7, lost once to a wrestler with nothing on file and
     // sat 91st, behind every zero in the class.
     const ordered = orderProspectsByHeadToHead([
@@ -178,7 +178,7 @@ describe("RecruitNC TOC-style ranking engine", () => {
       { id: "z1", name: "Empty One", ai_score: 0, head_to_head: [] },
       { id: "t", name: "Taylor", ai_score: 0, head_to_head: [{ opponentId: "y", opponent: "Yzabella", wins: 1, losses: 0 }] },
       { id: "z2", name: "Empty Two", ai_score: 0, head_to_head: [] },
-    ])
+    ], { winnerNeedsScore: true })
     expect(ordered[0]!.id).toBe("y")
   })
 

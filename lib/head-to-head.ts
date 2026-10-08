@@ -27,6 +27,8 @@ export type HeadToHeadBout = {
   opponent?: unknown
   win_loss?: unknown
   result?: unknown
+  /** How it was won, when the source keeps it apart from W/L. */
+  method?: unknown
   tournament?: unknown
   date?: unknown
 }
@@ -45,6 +47,16 @@ export function boutDateMs(raw: unknown): number | null {
   if (!value) return null
   const parsed = Date.parse(value)
   return Number.isFinite(parsed) ? parsed : null
+}
+
+/**
+ * Whether a result is a forfeit: nobody wrestled, so on the women's board it says nothing about
+ * who is better (Matt, 8 October 2026). Only callers that ask leave forfeits out. Every spelling in the data - "For.", "FF", "M FOR", "MFF", "MFFL",
+ * UWW's "VFO". Defaults, injury defaults and DQs stay: the match started.
+ */
+export function isForfeitResult(value: unknown): boolean {
+  const code = String(value ?? "").trim().toLowerCase().replace(/\s+/g, " ")
+  return /^(m\.? ?)?(for\.?|forfeit|ff|ffl|mff|mffl|mfl|vfo|fmc)$/.test(code) || /^medical forfeit$/.test(code)
 }
 
 function didWin(bout: HeadToHeadBout): boolean {
@@ -67,11 +79,14 @@ export function datedMeetingsAgainst(
   bouts: HeadToHeadBout[],
   opponentName: string,
   flip = false,
+  /** The women's board leaves forfeits out; the boys' board and TOC seeding do not. */
+  options?: { skipForfeits?: boolean },
 ): DatedMeeting[] {
   const out: DatedMeeting[] = []
   for (const bout of bouts) {
     const opponent = String(bout.opponent_name ?? bout.opponent ?? "").trim()
     if (!opponent || !namesLikelySamePerson(opponent, opponentName)) continue
+    if (options?.skipForfeits && isForfeitResult(bout.method ?? bout.result)) continue
     const won = didWin(bout)
     const lost = didLose(bout)
     if (!won && !lost) continue
