@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { useEffect, useMemo, useRef, useState } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { AdminHeader } from "@/components/admin-header"
 import { Button } from "@/components/ui/button"
@@ -325,8 +325,31 @@ export default function RankingBoardPage() {
   const [view, setView] = useState<"final" | "recommendation" | "review" | "gaps">("final")
   const [status, setStatus] = useState("")
   const publicCap = getPublicRankingsMax(Number(year))
+  const router = useRouter()
+  const pathname = usePathname()
+  /*
+   * Which class and gender the rows on screen belong to, and which load is the latest.
+   *
+   * Switching to Female started the girls' load while the boys' load from opening the page was
+   * still running. Whichever answered last won, and the boys' class is bigger and slower, so the
+   * select said Female over a list of boys - and Save would have written them as the girls' draft.
+   */
+  const latestLoad = useRef(0)
+  const [loadedFor, setLoadedFor] = useState<string | null>(null)
+  const showing = `${year}|${gender}`
+  const boardIsCurrent = loadedFor === showing
+
+  // Keep the class and gender in the URL, so a refresh or a shared link opens the same board.
+  useEffect(() => {
+    if (searchParams.get("year") === year && searchParams.get("gender") === gender) return
+    router.replace(`${pathname}?year=${year}&gender=${gender}`, { scroll: false })
+  }, [year, gender, pathname, router, searchParams])
 
   const loadBoard = async (forceRefresh = false) => {
+    const loadId = ++latestLoad.current
+    const requested = `${year}|${gender}`
+    // Never leave one class or gender's rows on screen under the other's filter.
+    if (requested !== loadedFor) setAthletes([])
     setLoading(true)
     setStatus("")
     try {
@@ -335,6 +358,7 @@ export default function RankingBoardPage() {
         { cache: "no-store" },
       )
       const data = await res.json()
+      if (loadId !== latestLoad.current) return
       if (!res.ok) throw new Error(data.error || "Failed to load board")
       const rows = ((data.athletes || []) as BoardAthlete[]).map(normalizeBoardAthlete)
       // The rating comes back on the board itself now. Fetching it separately meant a second
@@ -373,10 +397,12 @@ export default function RankingBoardPage() {
         .map((athlete) => ({ ...athlete, locked: false, reviewer_note: "" }))
         .map((athlete, index) => ({ ...athlete, final_rank: index + 1 }))
       setAthletes(withFinal)
+      setLoadedFor(requested)
     } catch (error) {
+      if (loadId !== latestLoad.current) return
       setStatus(error instanceof Error ? error.message : "Failed to load board")
     } finally {
-      setLoading(false)
+      if (loadId === latestLoad.current) setLoading(false)
     }
   }
 
@@ -487,6 +513,10 @@ export default function RankingBoardPage() {
    * saved draft rather than the screen, which means it can never ship an order nobody reviewed.
    */
   const saveDraft = async () => {
+    if (!boardIsCurrent) {
+      setStatus("The board is still loading this class. Wait for it to finish before saving.")
+      return
+    }
     setSaving(true)
     setStatus("")
     try {
@@ -512,6 +542,10 @@ export default function RankingBoardPage() {
   }
 
   const publishDraft = async () => {
+    if (!boardIsCurrent) {
+      setStatus("The board is still loading this class. Wait for it to finish before publishing.")
+      return
+    }
     setPublishing(true)
     setStatus("")
     try {
@@ -683,7 +717,7 @@ export default function RankingBoardPage() {
                 </Button>
                 <Button
                   onClick={saveDraft}
-                  disabled={saving || loading}
+                  disabled={saving || loading || !boardIsCurrent}
                   variant="outline"
                   className={darkOutlineButton}
                 >
@@ -692,7 +726,7 @@ export default function RankingBoardPage() {
                 </Button>
                 <Button
                   onClick={publishDraft}
-                  disabled={publishing || loading || !draftSavedAt}
+                  disabled={publishing || loading || !boardIsCurrent || !draftSavedAt}
                   title={draftSavedAt ? undefined : "Save the order before publishing it"}
                   className="bg-[#d6b75d] text-slate-950 hover:bg-[#e6c86b]"
                 >

@@ -50,6 +50,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No order to save." }, { status: 400 })
     }
 
+    /*
+     * Every wrestler in the order must belong to this class and gender. The board once showed the
+     * boys' class under a Female filter, and a save from that screen would have replaced the girls'
+     * draft with boys. Refuse the whole save rather than write half of it.
+     */
+    const ids = rows.map((row) => row.athlete_id)
+    const strays: string[] = []
+    for (let i = 0; i < ids.length; i += 200) {
+      const { data, error } = await admin
+        .from("athletes")
+        .select("id, name, gender, graduationyear")
+        .in("id", ids.slice(i, i + 200))
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+      for (const athlete of data ?? []) {
+        const sameGender = String(athlete.gender ?? "").toLowerCase() === gender.toLowerCase()
+        if (!sameGender || Number(athlete.graduationyear) !== year) strays.push(String(athlete.name))
+      }
+    }
+    if (strays.length) {
+      return NextResponse.json(
+        {
+          error: `Not saved: ${strays.length} wrestler(s) in this order are not ${gender} Class of ${year} (${strays
+            .slice(0, 3)
+            .join(", ")}${strays.length > 3 ? ", ..." : ""}). Reload the board and try again.`,
+        },
+        { status: 400 },
+      )
+    }
+
     // Replace the draft wholesale: an athlete dropped from the order should not linger in it.
     const { error: clearError } = await admin
       .from("ranking_drafts")
