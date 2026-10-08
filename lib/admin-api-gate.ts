@@ -21,8 +21,13 @@ const OPEN_GET = new Set([
   "/api/admin/clubs-from-logos", // club picker
   "/api/admin/check-impersonation", // the site-wide banner asks this on every page
 ])
-/** TOC routes have their own staff guards (requireTocFieldViewer etc.), and TOC staff are not all admins. */
+/**
+ * TOC routes have their own staff guards (requireTocFieldViewer etc.), and TOC staff are not all
+ * admins. The ranking board and its draft save check requireRankingBoardAccess themselves, for
+ * scoped rankers who are not admins (lib/rankings/ranking-board-access.ts).
+ */
 const OWN_GUARD_PREFIXES = ["/api/admin/toc/"]
+const OWN_GUARD_PATHS = new Set(["/api/admin/rankings/board", "/api/admin/rankings/save"])
 
 /**
  * Maintenance routes that live outside /api/admin but are just as much admin tools: debug
@@ -34,6 +39,7 @@ const ADMIN_ONLY_PREFIXES = ["/api/admin/", "/api/debug/", "/api/debug-", "/api/
 export function adminGateApplies(pathname: string, method: string): boolean {
   if (pathname !== "/api/admin" && !ADMIN_ONLY_PREFIXES.some((p) => pathname.startsWith(p))) return false
   if (OWN_GUARD_PREFIXES.some((p) => pathname.startsWith(p))) return false
+  if (OWN_GUARD_PATHS.has(pathname.replace(/\/$/, ""))) return false
   if (method === "GET" && OPEN_GET.has(pathname.replace(/\/$/, ""))) return false
   return true
 }
