@@ -52,6 +52,8 @@ type BoardAthlete = {
   all_american: string[]
   /** Women's board: SI / MatScouts / Flo positions she holds now. */
   national_rankings?: string[]
+  /** Women's board: "Folkstyle only", "Freestyle only" or "Folkstyle + Freestyle". */
+  competes_styles?: string | null
   last_competed: string | null
   nhsca_by_year: string[]
   super32_by_year: string[]
@@ -951,6 +953,18 @@ export default function RankingBoardPage() {
                                     .join(" · ")}
                                 >
                                   ⚑ Lost to lower-ranked · {upsetCount(athlete)}
+                                </Badge>
+                              ) : null}
+                              {athlete.competes_styles ? (
+                                <Badge
+                                  className={
+                                    athlete.competes_styles === "Folkstyle + Freestyle"
+                                      ? "border border-emerald-400 bg-transparent text-emerald-200"
+                                      : "border border-amber-400 bg-transparent text-amber-200"
+                                  }
+                                  title="Styles on file: NCHSAA, NHSCA and in-season matches are folkstyle; Fargo, Spokane, the US Open, Super 32, the regionals, Journeymen and the club duals are freestyle."
+                                >
+                                  {athlete.competes_styles}
                                 </Badge>
                               ) : null}
                               {athlete.national_rankings?.map((ranking) => (

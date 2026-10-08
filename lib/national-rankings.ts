@@ -215,3 +215,81 @@ export function nationalRankingHistory(
 export function editionsSpanned(rankings: ReadonlyArray<NationalRanking>): number {
   return new Set(rankings.map((r) => r.rankingMonth)).size
 }
+
+/**
+ * The national rankings an athlete holds right now: the newest edition of each list only.
+ *
+ * `getNationalRankingsForAthlete` returns every retained edition, so a wrestler who fell off the
+ * October list would still show September's number. This keeps a row only when its month is the
+ * newest that list (outlet, list type, class, gender) has published, and finds the athlete through
+ * a stored identity link as well as `athlete_id` - Nevaeh Williamson's SI #11 carries only the
+ * link, because SI printed her state as SC.
+ */
+export async function getCurrentNationalRankingsForAthlete(
+  supabase: SupabaseClient,
+  athleteId: string,
+): Promise<NationalRanking[]> {
+  if (!athleteId?.trim()) return []
+  const select =
+    "id, source, ranking_month, rank, scope, weight_class, class_year, edition_class_year, rank_basis, source_url, gender"
+  const [direct, links] = await Promise.all([
+    supabase.from("national_rankings").select(select).eq("athlete_id", athleteId),
+    supabase
+      .from("result_athlete_links")
+      .select("source_id, status")
+      .eq("source_table", "national_rankings")
+      .eq("athlete_id", athleteId),
+  ])
+  const linkedIds = (links.data ?? []).filter((l) => l.status !== "rejected").map((l) => String(l.source_id))
+  const viaLink = linkedIds.length
+    ? ((await supabase.from("national_rankings").select(select).in("id", linkedIds)).data ?? [])
+    : []
+  const rows = new Map<string, Record<string, unknown>>()
+  for (const row of [...(direct.data ?? []), ...viaLink] as Array<Record<string, unknown>>) rows.set(String(row.id), row)
+  if (!rows.size) return []
+
+  // Newest month of each list these rows belong to.
+  const listKey = (r: Record<string, unknown>) =>
+    `${r.source}|${r.scope}|${Number(r.edition_class_year ?? 0)}|${r.gender ?? ""}`
+  const newest = new Map<string, string>()
+  await Promise.all(
+    [...new Map([...rows.values()].map((r) => [listKey(r), r])).values()].map(async (r) => {
+      let query = supabase
+        .from("national_rankings")
+        .select("ranking_month")
+        .eq("source", String(r.source))
+        .eq("scope", String(r.scope))
+        .eq("edition_class_year", Number(r.edition_class_year ?? 0))
+      if (r.gender) query = query.eq("gender", String(r.gender))
+      const { data } = await query.order("ranking_month", { ascending: false }).limit(1)
+      if (data?.[0]?.ranking_month) newest.set(listKey(r), String(data[0].ranking_month))
+    }),
+  )
+  return [...rows.values()]
+    .filter((r) => newest.get(listKey(r)) === String(r.ranking_month))
+    .map(toRanking)
+    .sort((a, b) => a.rank - b.rank)
+}
+
+const SHORT_SOURCE: Record<string, string> = {
+  sports_illustrated: "SI",
+  matscouts: "MatScouts",
+  flowrestling: "Flo",
+}
+
+/**
+ * The profile banner's national line, beside "RecruitNC #N": "#6 SI (170) · #12 MatScouts (170)".
+ * Weight and pound-for-pound lists first, best rank first, at most two; a big board only when it is
+ * all she holds, because "#55 Class of 2028 Big Board" says less than a weight rank does.
+ */
+export function bannerNationalRankingLabel(rankings: ReadonlyArray<NationalRanking>): string | null {
+  if (!rankings.length) return null
+  const one = (r: NationalRanking) => {
+    const outlet = SHORT_SOURCE[r.source] ?? r.sourceLabel
+    if (r.scope === "weight") return `#${r.rank} ${outlet}${r.weightClass ? ` (${r.weightClass})` : ""}`
+    return `#${r.rank} ${outlet}${rankingScopeLabel(r)}`
+  }
+  const lists = rankings.filter((r) => r.scope !== "big_board")
+  const shown = (lists.length ? lists : rankings).slice(0, 2)
+  return shown.map(one).join(" · ")
+}

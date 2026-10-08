@@ -53,6 +53,28 @@ export function BannerRibbon({ children, className }: { children: ReactNode; cla
   )
 }
 
+/**
+ * Nationally ranked, beside the gold RecruitNC ribbon: the same shape, inverted - navy with a gold
+ * edge - so the two read as a pair and the outlet's number is never mistaken for ours.
+ */
+export function NationalRankingRibbon({ label, className }: { label: string; className?: string }) {
+  return (
+    <div
+      className={cn(
+        "inline-flex items-center gap-2 rounded-md border border-[#D3B574] bg-[#0A1628] px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.2em] text-white shadow-lg shadow-black/30 lg:px-5 lg:py-2 lg:text-sm",
+        className,
+      )}
+      title="National ranking"
+    >
+      <span className="text-[#D3B574]" aria-hidden>
+        ★
+      </span>
+      <span className="text-[#D3B574]">National</span>
+      <span>{label}</span>
+    </div>
+  )
+}
+
 export type BannerStat = { label: string; value: ReactNode; sub?: ReactNode; action?: ReactNode }
 
 export function BannerStats({ stats, className }: { stats: BannerStat[]; className?: string }) {

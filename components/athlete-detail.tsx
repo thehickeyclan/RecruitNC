@@ -3,11 +3,13 @@
 import { STYLE_LABEL, type CompetitionSummary } from "@/lib/wrestling-style"
 import { mayUseComparison } from "@/lib/compare-access"
 import type { Credential } from "@/lib/profile/credentials"
+import { bannerNationalRankingLabel, type NationalRanking } from "@/lib/national-rankings"
 import {
   BannerEyebrow,
   BannerName,
   BannerRibbon,
   BannerStats,
+  NationalRankingRibbon,
   CompetesBar,
   CredentialCards,
   ScoutingReportAction,
@@ -1122,6 +1124,13 @@ export function AthleteDetail({
     : graduationYear
       ? `Class of ${graduationYear}`
       : null
+  /*
+   * Nationally ranked, beside the RecruitNC rank (Matt, 8 October 2026). Boys and girls alike: it is
+   * the outlet's ranking, not ours, so it belongs on every profile that holds one.
+   */
+  const bannerNationalRanking = bannerNationalRankingLabel(
+    ((athleteData as { national_rankings_current?: NationalRanking[] })?.national_rankings_current ?? []) as NationalRanking[],
+  )
   const bannerCommitted =
     isCommittedStatus && college && college !== "Not specified" ? (
       <div className="flex items-center gap-3">
@@ -1211,7 +1220,12 @@ export function AthleteDetail({
                 <div className="relative bg-[#0A1628] px-4 pb-6 pt-5 text-white">
                   <BannerEyebrow />
                   <BannerName name={athleteName} className="mt-2" />
-                  {bannerRibbon ? <BannerRibbon className="mt-4">{bannerRibbon}</BannerRibbon> : null}
+                  {bannerRibbon || bannerNationalRanking ? (
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      {bannerRibbon ? <BannerRibbon>{bannerRibbon}</BannerRibbon> : null}
+                      {bannerNationalRanking ? <NationalRankingRibbon label={bannerNationalRanking} /> : null}
+                    </div>
+                  ) : null}
                   {canSeeScoutingReport ? (
                     <ScoutingReportAction
                       href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`}
@@ -1414,6 +1428,7 @@ export function AthleteDetail({
                         empty:hidden: for most viewers none of the three renders. */}
                     <div className="mt-5 flex flex-wrap items-center gap-3 empty:hidden">
                       {bannerRibbon ? <BannerRibbon>{bannerRibbon}</BannerRibbon> : null}
+                      {bannerNationalRanking ? <NationalRankingRibbon label={bannerNationalRanking} /> : null}
                       {canSeeScoutingReport ? (
                         <ScoutingReportAction href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`} />
                       ) : null}
