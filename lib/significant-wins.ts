@@ -1,4 +1,5 @@
 import { hasNameAlias, nameWords, namesLikelySamePerson } from "@/lib/athlete-name-match"
+import { isNationalEvent } from "@/lib/wrestling-style"
 
 /**
  * Wins worth showing on a profile: the ones over somebody the reader has heard of.
@@ -47,6 +48,14 @@ export type OpponentIndex = {
    * result can carry, and most of them will never be in our own athlete table.
    */
   nationallyRanked?: readonly NationallyRankedOpponent[]
+  /**
+   * Who was nationally ranked on a given day, by name (lib/rankings/ranking-archive.ts). When
+   * present it replaces `nationallyRanked` for a dated bout: an opponent counts as ranked if a list
+   * in effect on the bout date ranked him, so a December win over a senior ranked that December
+   * still counts after he graduates and drops off (Matt, 8 October 2026). Undated bouts fall back
+   * to `nationallyRanked`. Candidates still have to pass `nationalRankFits`.
+   */
+  nationalRankedOn?: (name: string, date: string) => readonly NationallyRankedOpponent[]
   /**
    * North Carolina state champions and placers (lib/state-placers.ts). Optional, and loaded only
    * by the profile and the scouting report: the ranking engine shares this index and scores wins
@@ -604,11 +613,28 @@ function findSignificantBouts(
     if (!name) continue
 
     const resolved = options?.stateOnly ? { national: null, inField: false, ranked: null } : resolveOpponent(index, name)
-    const { inField, ranked } = resolved
-    const national =
+    let { inField, ranked } = resolved
+    let national =
       resolved.national && resolved.national.school !== undefined && !nationalRankFits(bout.opponent_school, resolved.national, index, bout.weight)
         ? null
         : resolved.national
+    if (!options?.stateOnly && index.nationalRankedOn && bout.date) {
+      // Ranked on the day, by the lists then in effect - not by today's lists.
+      // At a national event the field is national, so a ranked name at a weight he could wrestle is
+      // him (Tobin McNair's Devon Weber at Journeymen, where the bracket prints a club, not a
+      // school). At a North Carolina event it takes his school or state on the bout: four NC boys
+      // were credited with MatScouts' #8 Jake Hoke, who wrestles for Graham, Ohio.
+      const atNationalEvent =
+        isNationalEvent(bout.venue) || /women'?s nationals|u\.?\s?s\.? open|southeast regional|rader/i.test(String(bout.venue ?? ""))
+      national =
+        [...index.nationalRankedOn(name, bout.date)]
+          .map((r) => (atNationalEvent ? { ...r, distinctive: true } : r))
+          .filter((r) => r.school === undefined || nationalRankFits(bout.opponent_school, r, index, bout.weight))
+          .sort((a, b) => a.rank - b.rank)[0] ?? null
+      // resolveOpponent drops the field and the ranking when today's lists rank him; restore them.
+      inField = national ? false : index.tocField.some((fieldName) => namesLikelySamePerson(fieldName, name))
+      ranked = national ? null : index.ranked.find((r) => namesLikelySamePerson(r.name, name)) ?? null
+    }
     // Finishes of same-named placers whose school fits this bout and who could have been this
     // opponent at the time.
     const fitting = statePlacersNamed(index, name).filter((p) =>

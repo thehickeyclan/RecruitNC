@@ -16,6 +16,7 @@ import { loadOpponentIndex } from "@/lib/scouting-report"
 import { reportSignificantBouts } from "@/lib/report-significant-wins"
 import { isHighSchoolSeason } from "@/lib/high-school-window"
 import { loadNationallyRanked, loadStatePlacerIndex } from "@/lib/state-placers"
+import { loadRankedOnLookup } from "@/lib/rankings/ranking-archive"
 import {
   buildNhscaDuals2026LiveProfileResults,
   mergeNationalTeamResultsForProfile,
@@ -903,10 +904,17 @@ export async function buildRecruitNcRankingBoard({
   supabase,
   year,
   gender,
+  rankedAsOfBoutDate = true,
 }: {
   supabase: SupabaseClient
   year: string
   gender: string
+  /**
+   * Judge "nationally ranked" opponents by the lists in effect on each bout's date
+   * (lib/rankings/ranking-archive.ts) instead of today's. On for both boards; pass false to compare
+   * with today's lists.
+   */
+  rankedAsOfBoutDate?: boolean
 }): Promise<RankingBoardAthlete[]> {
   const { data: athletes, error } = await supabase
     .from("athletes")
@@ -1057,13 +1065,25 @@ export async function buildRecruitNcRankingBoard({
    * state and weight, so nationalRankFits applies: her school or state on the bout, or a weight
    * she could be. The boys' board keeps its index unchanged (Matt: leave the men alone).
    */
-  const winsIndex: OpponentIndex = womens
+  const baseWinsIndex: OpponentIndex = womens
     ? {
         ...opponentIndex,
         nationallyRanked: await loadNationallyRanked(supabase).catch(() => []),
         stateSchools: stateIndex.stateSchools,
       }
     : opponentIndex
+  /*
+   * Both boards judge a "nationally ranked" opponent by the lists in effect on the bout date
+   * (Matt, 8 October 2026). The board is the formula's recommendation, not the published order,
+   * so it should be as right as it can be: this drops four NC boys' credits for beating Ohio's
+   * Jake Hoke and counts wins over seniors who were ranked at the time.
+   */
+  const rankedOn = rankedAsOfBoutDate !== false
+    ? await loadRankedOnLookup(supabase, womens ? "F" : "M").catch(() => null)
+    : null
+  const winsIndex: OpponentIndex = rankedOn
+    ? { ...baseWinsIndex, stateSchools: baseWinsIndex.stateSchools ?? stateIndex.stateSchools, nationalRankedOn: rankedOn }
+    : baseWinsIndex
 
   /**
    * Qualifier wins, for the whole class in one query.
