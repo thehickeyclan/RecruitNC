@@ -65,6 +65,8 @@ export type RankingScoreBreakdown = {
   national: number
   duals: number
   rankWrestler: number
+  /** Her own SI / MatScouts / Flo national ranking. Women's board only; the boys weigh it 0. */
+  nationalRanking: number
   collegeOpen: number
   profile: number
 }
@@ -111,6 +113,8 @@ export type RankingBoardAthlete = {
    */
   /** One entry per All-American finish, newest first: "NHSCA 2026 4th". */
   all_american: string[]
+  /** National rankings held now, newest edition per list: "SI #6 at 170". Women's board only. */
+  national_rankings: string[]
   /**
    * The last time this wrestler competed, from any source on file.
    *
@@ -762,6 +766,8 @@ export const RANKING_COMPONENT_WEIGHTS: Record<keyof RankingScoreBreakdown, numb
   state: 0.35,
   duals: 1.2,
   rankWrestler: 1,
+  /** The boys' board does not score a wrestler's own national ranking (Matt: leave the men alone). */
+  nationalRanking: 0,
   /** Scored a form field, not a result. */
   collegeOpen: 0,
   /** Scored a regex over free text. */
@@ -787,8 +793,37 @@ export const WOMENS_RANKING_COMPONENT_WEIGHTS: Record<keyof RankingScoreBreakdow
   state: 0.2,
   duals: 0.8,
   rankWrestler: 1,
+  /** Being nationally ranked by SI, MatScouts or Flo (Matt, 8 October 2026). */
+  nationalRanking: 1,
   collegeOpen: 0,
   profile: 0,
+}
+
+/**
+ * A girl's own national ranking, scored from her best current position on any list.
+ *
+ * A weight-class ranking is the common case (SI and MatScouts both publish them); a pound-for-pound
+ * place is worth more, a class big board less, because it ranks a whole class in one list. Each
+ * further outlet that ranks her adds a little: two outlets agreeing is stronger than one.
+ */
+export type WomensNationalRank = { source: string; scope: string; rank: number }
+
+export function womensNationalRankingPoints(ranks: ReadonlyArray<WomensNationalRank>): number {
+  if (!ranks.length) return 0
+  const one = ({ scope, rank }: WomensNationalRank): number => {
+    if (scope === "p4p") return rank <= 5 ? 80 : rank <= 10 ? 72 : 64
+    if (scope === "big_board") return rank <= 10 ? 50 : rank <= 25 ? 40 : rank <= 50 ? 30 : rank <= 100 ? 20 : 12
+    return rank <= 3 ? 60 : rank <= 8 ? 48 : rank <= 15 ? 36 : rank <= 25 ? 26 : 16
+  }
+  const best = Math.max(...ranks.map(one))
+  const outlets = new Set(ranks.map((r) => r.source)).size
+  return best + 5 * (outlets - 1)
+}
+
+const NATIONAL_SOURCE_SHORT: Record<string, string> = {
+  sports_illustrated: "SI",
+  matscouts: "MatScouts",
+  flowrestling: "Flo",
 }
 
 /**
@@ -938,6 +973,62 @@ export async function buildRecruitNcRankingBoard({
       if (athleteId && !rankWrestlerByAthleteId.has(athleteId)) {
         rankWrestlerByAthleteId.set(athleteId, Number((row as { rank?: unknown }).rank))
       }
+    }
+  }
+
+  /*
+   * Her own national rankings, newest edition of each list, for the women's board. A row reaches
+   * a girl by its own athlete_id or by a stored identity link: Nevaeh Williamson's SI #11 carries
+   * only the link (SI printed her state as SC).
+   */
+  const womensNationalRanks = new Map<string, Array<WomensNationalRank & { label: string }>>()
+  if (womens) {
+    const rows: Array<Record<string, unknown>> = []
+    for (let from = 0; ; from += 1000) {
+      const { data, error: nrError } = await supabase
+        .from("national_rankings")
+        .select("id, source, scope, rank, weight_class, ranking_month, edition_class_year, athlete_id")
+        .eq("gender", "F")
+        .range(from, from + 999)
+      if (nrError || !data) break
+      rows.push(...(data as Array<Record<string, unknown>>))
+      if (data.length < 1000) break
+    }
+    const editionKey = (r: Record<string, unknown>) => `${r.source}|${r.scope}|${r.edition_class_year ?? 0}`
+    const newest = new Map<string, string>()
+    for (const r of rows) {
+      const k = editionKey(r)
+      if (!newest.has(k) || String(r.ranking_month) > newest.get(k)!) newest.set(k, String(r.ranking_month))
+    }
+    const current = rows.filter((r) => newest.get(editionKey(r)) === String(r.ranking_month))
+    const linked = new Map<string, string>()
+    const unlinkedIds = current.filter((r) => !r.athlete_id).map((r) => String(r.id))
+    for (let i = 0; i < unlinkedIds.length; i += 200) {
+      const { data } = await supabase
+        .from("result_athlete_links")
+        .select("source_id, athlete_id, status")
+        .eq("source_table", "national_rankings")
+        .in("source_id", unlinkedIds.slice(i, i + 200))
+      for (const l of data ?? []) {
+        if (l.athlete_id && l.status !== "rejected") linked.set(String(l.source_id), String(l.athlete_id))
+      }
+    }
+    const inClass = new Set(athleteIds)
+    for (const r of current) {
+      const athleteId = r.athlete_id ? String(r.athlete_id) : linked.get(String(r.id))
+      if (!athleteId || !inClass.has(athleteId)) continue
+      const source = String(r.source)
+      const scope = String(r.scope)
+      const rank = Number(r.rank)
+      if (!Number.isFinite(rank)) continue
+      const outlet = NATIONAL_SOURCE_SHORT[source] ?? source
+      const label =
+        scope === "p4p"
+          ? `${outlet} #${rank} pound-for-pound`
+          : scope === "big_board"
+            ? `${outlet} #${rank} Class of ${r.edition_class_year} board`
+            : `${outlet} #${rank} at ${r.weight_class}`
+      womensNationalRanks.set(athleteId, [...(womensNationalRanks.get(athleteId) ?? []), { source, scope, rank, label }])
     }
   }
 
@@ -1210,6 +1301,12 @@ export async function buildRecruitNcRankingBoard({
           points: rankWrestler,
           tone: "slate",
         })
+      }
+
+      const ownNationalRanks = womensNationalRanks.get(id) ?? []
+      const nationalRanking = womensNationalRankingPoints(ownNationalRanks)
+      for (const r of [...ownNationalRanks].sort((a, b) => a.rank - b.rank)) {
+        evidence.push({ kind: "national", label: `Nationally ranked: ${r.label}`, tone: "gold" })
       }
 
       const profileText = achievementText(athlete)
@@ -1488,6 +1585,7 @@ export async function buildRecruitNcRankingBoard({
         national,
         duals: dualsScore,
         rankWrestler,
+        nationalRanking,
         collegeOpen,
         profile,
         },
@@ -1536,6 +1634,7 @@ export async function buildRecruitNcRankingBoard({
         achievements: athlete.achievements,
         additional_achievements: (athlete.additional_achievements as string) || null,
         all_american: allAmerican,
+        national_rankings: [...ownNationalRanks].sort((a, b) => a.rank - b.rank).map((r) => r.label),
         last_competed: lastCompeted,
         state_placements: statePlacements,
         nhsca_record: latestRecord(bundle.nhsca || []),

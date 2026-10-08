@@ -23,6 +23,7 @@ import {
   WOMENS_QUALIFIERS_COUNTED,
   WOMENS_RANKING_COMPONENT_WEIGHTS,
   isWomensTopTierEvent,
+  womensNationalRankingPoints,
 } from "./recruitnc-ranking-engine"
 import { MAX_WINDOW_PENALTY, WINDOW_PARTICIPATION_FLOOR } from "./missed-window"
 import { NATIONAL_RANKED_WIN, RANKED_WIN_CAP, TOC_FIELD_WIN, UNGRADED_RANKED_WIN, rankedOpponentValue } from "./ranked-win-value"
@@ -38,6 +39,7 @@ describe("women's weights (Matt, 8 October 2026: freestyle nationals, then frees
       state: 0.2,
       duals: 0.8,
       rankWrestler: 1,
+      nationalRanking: 1,
       collegeOpen: 0,
       profile: 0,
     })
@@ -55,6 +57,22 @@ describe("women's weights (Matt, 8 October 2026: freestyle nationals, then frees
   })
 })
 
+describe("a girl's own national ranking", () => {
+  it("scores her best current position, plus a little for each further outlet", () => {
+    expect(womensNationalRankingPoints([])).toBe(0)
+    // Rylynn Keziah: SI #6 at 170, MatScouts #12 at 170, MatScouts 2028 board #55.
+    expect(
+      womensNationalRankingPoints([
+        { source: "sports_illustrated", scope: "weight", rank: 6 },
+        { source: "matscouts", scope: "weight", rank: 12 },
+        { source: "matscouts", scope: "big_board", rank: 55 },
+      ]),
+    ).toBe(53)
+    // Khiry Reese: SI #17 at 125.
+    expect(womensNationalRankingPoints([{ source: "sports_illustrated", scope: "weight", rank: 17 }])).toBe(26)
+  })
+})
+
 describe("component weights", () => {
   it("are exactly these", () => {
     expect(RANKING_COMPONENT_WEIGHTS).toEqual({
@@ -65,6 +83,7 @@ describe("component weights", () => {
       state: 0.35,
       duals: 1.2,
       rankWrestler: 1,
+      nationalRanking: 0,
       collegeOpen: 0,
       profile: 0,
     })
