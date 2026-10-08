@@ -86,11 +86,52 @@ async function main() {
   // Later bundles prefix their files ("batch2-targets.json"); take whichever one is there.
   const bundleFile = (suffix: string) => {
     const name = fs.readdirSync(DIR!).find((f) => f === suffix || f.endsWith(`-${suffix}`))
-    if (!name) throw new Error(`No ${suffix} in ${DIR}`)
-    return path.join(DIR!, name)
+    return name ? path.join(DIR!, name) : null
   }
-  const targets = JSON.parse(fs.readFileSync(bundleFile("targets.json"), "utf8")) as Target[]
-  const index = JSON.parse(fs.readFileSync(bundleFile("index.json"), "utf8")) as IndexRow[]
+  // Season files live in seasons/, or - in a bundle of loose files (batch 3 and 4) - beside the rest.
+  const seasonsDir = fs.existsSync(path.join(DIR!, "seasons")) ? path.join(DIR!, "seasons") : DIR!
+  const targetsFile = bundleFile("targets.json")
+  const indexFile = bundleFile("index.json")
+  let targets: Target[]
+  let index: IndexRow[]
+  if (targetsFile && indexFile) {
+    targets = JSON.parse(fs.readFileSync(targetsFile, "utf8")) as Target[]
+    index = JSON.parse(fs.readFileSync(indexFile, "utf8")) as IndexRow[]
+  } else {
+    /*
+     * No girl list or index: read them off the season files themselves. Her name and school come
+     * from wrestler_info; her class is the one the files' grades agree on (below), so the target's
+     * own class only matters when no file states a grade.
+     */
+    const loose = fs
+      .readdirSync(seasonsDir)
+      .filter((f) => f.endsWith(".json"))
+      .flatMap((file) => {
+        try {
+          const j = JSON.parse(fs.readFileSync(path.join(seasonsDir, file), "utf8")) as SeasonFile
+          if (!j?.wrestler_info) return []
+          return [{ file, info: j.wrestler_info, matches: Array.isArray(j.matches) ? j.matches.length : 0 }]
+        } catch {
+          return []
+        }
+      })
+    index = loose.map((l) => ({
+      name: `${l.info.first_name} ${l.info.last_name}`.trim(),
+      season: l.info.season,
+      file: l.file,
+      status: l.matches > 0 ? "ok" : "ok-empty",
+      matches: l.matches,
+    }))
+    const byName = new Map<string, Target>()
+    for (const l of loose) {
+      const name = `${l.info.first_name} ${l.info.last_name}`.trim()
+      if (!byName.has(norm(name))) {
+        byName.set(norm(name), { name, school: l.info.high_school, class: classFromGrade(l.info.season, l.info.grade) ?? 0 })
+      }
+    }
+    targets = [...byName.values()]
+    console.log(`No girl list or index here: read ${index.length} season files for ${targets.length} girls.`)
+  }
 
   const { data: girls, error } = await sb
     .from("athletes")
@@ -106,7 +147,7 @@ async function main() {
   const seasonFiles = (name: string) =>
     index
       .filter((r) => norm(r.name) === norm(name) && r.status === "ok" && r.file)
-      .map((r) => JSON.parse(fs.readFileSync(path.join(DIR!, "seasons", r.file!), "utf8")) as SeasonFile)
+      .map((r) => JSON.parse(fs.readFileSync(path.join(seasonsDir, r.file!), "utf8")) as SeasonFile)
 
   for (const t of targets) {
     const files = seasonFiles(t.name)
@@ -149,7 +190,7 @@ async function main() {
     if (row.status !== "ok" || !row.file || row.matches <= 0) continue
     const athlete = athleteFor.get(norm(row.name))
     if (!athlete) continue
-    const file = JSON.parse(fs.readFileSync(path.join(DIR!, "seasons", row.file), "utf8")) as SeasonFile
+    const file = JSON.parse(fs.readFileSync(path.join(seasonsDir, row.file), "utf8")) as SeasonFile
     const info = file.wrestler_info
     const impliedClass = classFromGrade(info.season, info.grade)
     if (impliedClass !== null && impliedClass !== classOf.get(norm(row.name))) {
