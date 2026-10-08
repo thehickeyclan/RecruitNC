@@ -120,6 +120,32 @@ describe("nationally ranked opponents", () => {
   })
 })
 
+describe("a namesake of a nationally ranked girl is not her", () => {
+  // Aliyah Perez (145, West Rowan) was credited with a pin of SI's #14 Ella Thomas, who wrestles
+  // at 100 for Poland Seminary, Ohio. The girl she pinned was Hendersonville's Ella Thomas, at 152.
+  const withSchools: OpponentIndex = {
+    ...index,
+    stateSchools: ["Hendersonville", "West Rowan"],
+    nationallyRanked: [{ name: "Ella Thomas", rank: 14, source: "Sports Illustrated (100)", state: "OH", school: "Poland Seminary", weight: 100 }],
+  }
+
+  it("is not credited when the bout puts her at a North Carolina school", () => {
+    const wins = findSignificantWins(
+      [bout({ opponent: "Ella Thomas", opponent_school: "Hendersonville High School", weight: 152 } as never)],
+      withSchools,
+    )
+    expect(wins).toHaveLength(0)
+  })
+
+  it("is credited when the bout carries her school", () => {
+    const wins = findSignificantWins(
+      [bout({ opponent: "Ella Thomas", opponent_school: "Poland Seminary", weight: 100 } as never)],
+      withSchools,
+    )
+    expect(wins[0]).toMatchObject({ reason: "national-ranked" })
+  })
+})
+
 describe("opponentRanking", () => {
   it("carries the opponent's North Carolina ranking for a state-ranked opponent", () => {
     const wins = findSignificantWins([bout({ opponent: "Jack Gilson" })], index)

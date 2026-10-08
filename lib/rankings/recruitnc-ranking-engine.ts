@@ -9,11 +9,12 @@ import {
 } from "@/lib/athlete-star-rating"
 import { nationalEventRows, starOverrideOf, statePlaces as statePlacesOf } from "@/lib/athlete-star-rating-load"
 import { loadNationallyRankedIds } from "@/lib/national-rankings"
-import { findSignificantLosses, findSignificantWins, type SignificantWin } from "@/lib/significant-wins"
+import { findSignificantLosses, findSignificantWins, type OpponentIndex, type SignificantWin } from "@/lib/significant-wins"
+import { isForfeitResult } from "@/lib/head-to-head"
 import { loadOpponentIndex } from "@/lib/scouting-report"
 import { reportSignificantBouts } from "@/lib/report-significant-wins"
 import { isHighSchoolSeason } from "@/lib/high-school-window"
-import { loadStatePlacerIndex } from "@/lib/state-placers"
+import { loadNationallyRanked, loadStatePlacerIndex } from "@/lib/state-placers"
 import {
   buildNhscaDuals2026LiveProfileResults,
   mergeNationalTeamResultsForProfile,
@@ -1044,6 +1045,23 @@ export async function buildRecruitNcRankingBoard({
    */
   const starOpponentIndex = { ...opponentIndex, ...stateIndex }
 
+  /*
+   * On the women's board a win over a nationally ranked girl needs evidence it was her.
+   *
+   * The opponent index matches national rankings by name alone, so Aliyah Perez (145, West Rowan)
+   * was credited with a pin of SI's #14 Ella Thomas - who wrestles at 100 for Poland Seminary in
+   * Ohio. The girl she pinned was Hendersonville's Ella Thomas, at 152. This list carries school,
+   * state and weight, so nationalRankFits applies: her school or state on the bout, or a weight
+   * she could be. The boys' board keeps its index unchanged (Matt: leave the men alone).
+   */
+  const winsIndex: OpponentIndex = womens
+    ? {
+        ...opponentIndex,
+        nationallyRanked: await loadNationallyRanked(supabase).catch(() => []),
+        stateSchools: stateIndex.stateSchools,
+      }
+    : opponentIndex
+
   /**
    * Qualifier wins, for the whole class in one query.
    *
@@ -1452,10 +1470,14 @@ export async function buildRecruitNcRankingBoard({
         mergeBoutSources(
           qualifierBoutsByAthleteId.get(id) ?? [],
           currentSeasonBoutsByAthleteId.get(id) ?? [],
+        ).filter(
+          // A forfeit is not a win over anybody: Khiry Reese was credited with SI's #6 Riley
+          // Karwowski for a medical forfeit. Women's board only, like the head-to-head rule.
+          (bout) => !womens || !isForfeitResult(String((bout as MatchBout).result ?? "").replace(/\s+[\d(].*$/, "")),
         ),
       ) as never
 
-      const topSignificantWins = findSignificantWins(boutsForSignificance, opponentIndex).slice(0, 8)
+      const topSignificantWins = findSignificantWins(boutsForSignificance, winsIndex).slice(0, 8)
       const significantWins = topSignificantWins.map(significantBoutRow)
 
       /**
@@ -1471,7 +1493,7 @@ export async function buildRecruitNcRankingBoard({
        * whether a reviewer can see it.
        */
       const ownRanking = toNumber(athlete.prospect_ranking)
-      const significantLosses = findSignificantLosses(boutsForSignificance, opponentIndex)
+      const significantLosses = findSignificantLosses(boutsForSignificance, winsIndex)
         .slice(0, 8)
         .map((loss) => ({
           ...significantBoutRow(loss),

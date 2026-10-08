@@ -181,7 +181,9 @@ async function main() {
        * has. The row is evidence waiting for an identity, which is what the matcher is for; the
        * alternative is what we did until now, which was to delete her.
        */
-      const athleteId = resolve(me)
+      // Only a North Carolina entrant can be one of our profiles. Under --all-states this resolved
+      // every state's wrestlers by name, and Ohio's Riley White (106) landed on Uwharrie's (132).
+      const athleteId = myTeam === "NC" ? resolve(me) : null
       if (!athleteId && !ALL_STATES) continue
       const opponent = won ? loser! : winner!
       // Identity for ordering and de-duplication: the profile where we have one, else name+state.

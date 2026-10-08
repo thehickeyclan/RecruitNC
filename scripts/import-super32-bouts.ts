@@ -112,7 +112,9 @@ async function main() {
       const me = won ? row.winner : row.loser
       if (!me) continue
       // Unresolved under --all-states is kept: null athlete_id, state in athlete_club.
-      const athleteId = resolve(me)
+      // Only a North Carolina entrant can be one of our profiles. Under --all-states this resolved
+      // every state's wrestlers by name: Nebraska's 190-pound Riley Johnson landed on Parkwood's girl.
+      const athleteId = myTeam === "NC" ? resolve(me) : null
       if (!athleteId) { unlinked.add(`${me} (${row.weight})`); if (!ALL_STATES) continue }
       const opponent = won ? row.loser : row.winner
       const opponentTeam = won ? row.loserTeam : row.winnerTeam

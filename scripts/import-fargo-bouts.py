@@ -207,7 +207,10 @@ def main():
             me = r[f"{side}_name"].strip()
             if not me:
                 continue
-            ids = profile_ids(me)
+            # Only a North Carolina entrant can be one of our profiles. Under --all-states this matched
+            # every state's wrestlers by name: Nebraska's Riley Johnson (160-190) landed on Parkwood's
+            # 145-pound girl, and Pennsylvania's Daniel Dennis on Danielle Dennis.
+            ids = profile_ids(me) if my_state == "NC" else set()
             athlete_id = next(iter(ids)) if len(ids) == 1 else None
             if not athlete_id:
                 unlinked[f"{me} ({'none' if not ids else 'ambiguous'})"] += 1
