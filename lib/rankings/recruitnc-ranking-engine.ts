@@ -11,6 +11,7 @@ import { nationalEventRows, starOverrideOf, statePlaces as statePlacesOf } from 
 import { loadNationallyRankedIds } from "@/lib/national-rankings"
 import { findSignificantLosses, findSignificantWins, type OpponentIndex, type SignificantWin } from "@/lib/significant-wins"
 import { isForfeitResult } from "@/lib/head-to-head"
+import { styleOfEventForAthlete } from "@/lib/wrestling-style"
 import { loadOpponentIndex } from "@/lib/scouting-report"
 import { reportSignificantBouts } from "@/lib/report-significant-wins"
 import { isHighSchoolSeason } from "@/lib/high-school-window"
@@ -114,6 +115,8 @@ export type RankingBoardAthlete = {
    */
   /** One entry per All-American finish, newest first: "NHSCA 2026 4th". */
   all_american: string[]
+  /** Women's board: which styles she competes in, "Folkstyle only" / "Freestyle only" / both. */
+  competes_styles: string | null
   /** National rankings held now, newest edition per list: "SI #6 at 170". Women's board only. */
   national_rankings: string[]
   /**
@@ -1135,7 +1138,8 @@ export async function buildRecruitNcRankingBoard({
       const state = scoreNchsaaRowsForSeed(bundle.nchsaa || [])
       if (state > 0) {
         evidence.push({ kind: "state", label: "NCHSAA state résumé", points: state, tone: "gold" })
-        for (const result of [...(bundle.nchsaa || [])].sort((a, b) => b.year - a.year).slice(0, 3)) {
+        // Every state result on the women's board (Matt: evidence holds all of her tournaments).
+        for (const result of [...(bundle.nchsaa || [])].sort((a, b) => b.year - a.year).slice(0, womens ? undefined : 3)) {
           const place = Number(result.place)
           if (!Number.isFinite(place) || place < 1) continue
           evidence.push({
@@ -1233,6 +1237,27 @@ export async function buildRecruitNcRankingBoard({
       }
 
       const matchScore = scoreProspectMatchResume(matchRowsByAthlete.get(id) || [])
+
+      /*
+       * Which styles she competes in, by the women's rule (lib/wrestling-style.ts, Matt 3 October
+       * 2026): the state series, NHSCA and her in-season matches are folkstyle; Fargo, Spokane, the
+       * US Open, Super 32, the regionals, Journeymen and the club duals are freestyle. Greco is
+       * already off this board.
+       */
+      const womensStyleProfile = (() => {
+        if (!womens) return null
+        const folk = (bundle.nchsaa || []).length > 0 || (bundle.nhsca || []).length > 0 || matchScore.totalMatches > 0
+        const freeEvents = [
+          ...(bundle.super32 || []).map(() => "Super 32"),
+          ...freestyleFargo.map(() => "Fargo"),
+          ...otherResults.map((r) => String(r.eventName ?? r.eventShortName ?? "")),
+          ...duals.map((d) => String(d.event ?? "")),
+          // The club duals reach her as bouts, not result rows: Izabella Johnson's UCD is only here.
+          ...(qualifierBoutsByAthleteId.get(id) ?? []).map((bout) => String(bout.venue ?? "")),
+        ]
+        const free = freeEvents.some((e) => styleOfEventForAthlete(e, null, "Female") === "freestyle")
+        return folk && free ? "Folkstyle + Freestyle" : folk ? "Folkstyle only" : free ? "Freestyle only" : null
+      })()
       if (matchScore.totalMatches > 0) {
         evidence.push({
           kind: "match_resume",
@@ -1301,7 +1326,7 @@ export async function buildRecruitNcRankingBoard({
           tone: "blue",
         })
       }
-      for (const result of nameMatchedDuals.slice(0, 3)) {
+      for (const result of nameMatchedDuals.slice(0, womens ? undefined : 3)) {
         evidence.push({
           kind: "duals",
           label: `${result.year} ${result.event}: ${result.record || "record unavailable"}`,
@@ -1642,9 +1667,16 @@ export async function buildRecruitNcRankingBoard({
               ? "Some verified results, but the résumé is incomplete"
               : "Limited structured data; manual review required before publishing",
         score_breakdown: scoreBreakdown,
-        evidence: evidence
-          .sort((a, b) => evidencePriority(b) - evidencePriority(a))
-          .slice(0, 12),
+        /*
+         * The boys' drawer keeps its twelve strongest lines. The women's shows every tournament she
+         * entered - Spokane, the US Open, Fargo, Super 32, the regionals, Journeymen, the duals -
+         * because twelve cut a long résumé's smaller trips, and a ranker needs all of them (Matt,
+         * 8 October 2026).
+         */
+        evidence: womens
+          ? evidence.sort((a, b) => evidencePriority(b) - evidencePriority(a))
+          : evidence.sort((a, b) => evidencePriority(b) - evidencePriority(a)).slice(0, 12),
+        competes_styles: womens ? womensStyleProfile : null,
         data_gaps: dataGaps,
         head_to_head: headToHead,
         nchsaa_count: (bundle.nchsaa || []).length,
