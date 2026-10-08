@@ -50,6 +50,8 @@ type BoardAthlete = {
   locked?: boolean
   reviewer_note?: string
   all_american: string[]
+  /** Women's board: SI / MatScouts / Flo positions she holds now. */
+  national_rankings?: string[]
   last_competed: string | null
   nhsca_by_year: string[]
   super32_by_year: string[]
@@ -242,6 +244,7 @@ const SCORE_SEGMENTS: Array<{ key: string; label: string; className: string }> =
   { key: "state", label: "State", className: "bg-sky-500" },
   { key: "duals", label: "Duals", className: "bg-purple-500" },
   { key: "rankWrestler", label: "RankWrestler", className: "bg-slate-400" },
+  { key: "nationalRanking", label: "National rank", className: "bg-[#CC0000]" },
   { key: "collegeOpen", label: "College open", className: "bg-slate-500" },
   { key: "profile", label: "Profile", className: "bg-slate-600" },
 ]
@@ -950,6 +953,11 @@ export default function RankingBoardPage() {
                                   ⚑ Lost to lower-ranked · {upsetCount(athlete)}
                                 </Badge>
                               ) : null}
+                              {athlete.national_rankings?.map((ranking) => (
+                                <Badge key={ranking} className="bg-slate-100 text-slate-950" title={`Nationally ranked — ${ranking}`}>
+                                  ★ {ranking}
+                                </Badge>
+                              ))}
                               {athlete.all_american?.map((finish) => (
                                 <Badge key={finish} className="bg-[#CC0000] text-white" title={`${finish} — All-American`}>
                                   {finish}
