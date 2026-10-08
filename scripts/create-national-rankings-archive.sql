@@ -25,10 +25,11 @@ CREATE TABLE IF NOT EXISTS national_rankings_archive (
   high_school        text,
   state              text,
   source_url         text,
-  source_file        text,                          -- where a backfilled edition came from
-  created_at         timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (source, gender, published_on, scope, edition_class_year, athlete_name, weight_class)
+  source_file        text NOT NULL DEFAULT 'live',  -- the backfill file an edition came from; 'live' for the monthly feed
+  created_at         timestamptz NOT NULL DEFAULT now()
 );
+-- No unique key: an edition (source, gender, published_on, scope, edition_class_year, source_file)
+-- is replaced whole on re-import. Flo published two different girls' lists on 27 July 2026.
 
 CREATE INDEX IF NOT EXISTS national_rankings_archive_name_idx ON national_rankings_archive (lower(athlete_name), published_on DESC);
 CREATE INDEX IF NOT EXISTS national_rankings_archive_edition_idx ON national_rankings_archive (source, gender, scope, published_on DESC);

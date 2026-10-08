@@ -87,7 +87,8 @@ if (BUNDLE) {
       const published = new Date(`${e.published}T12:00:00Z`)
       const editionClass = resolveEditionClassYear(scope, e.classYear ?? null, e.rows, published)
       const basis = resolveRankBasis(scope, e.rows)
-      const rows = e.rows.filter((r) => Number.isFinite(Number(r.rank)) && String(r.name ?? "").trim()).map((r) => ({
+      // SI's honorable mentions carry no rank; only ranked wrestlers make a "ranked" opponent.
+      const rows = e.rows.filter((r) => r.rank != null && Number.isFinite(Number(r.rank)) && Number(r.rank) > 0 && String(r.name ?? "").trim()).map((r) => ({
         source: e.source,
         gender: e.gender,
         ranking_month: `${e.published.slice(0, 7)}-01`,

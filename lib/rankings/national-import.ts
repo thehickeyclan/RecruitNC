@@ -357,18 +357,43 @@ export async function archiveEdition(
     high_school: r.high_school ?? null,
     state: r.state ?? null,
     source_url: r.source_url ?? null,
-    source_file: sourceFile,
+    source_file: sourceFile ?? "live",
   }))
+  /*
+   * An edition is (source, gender, date, list, class, file): replace it whole, so a re-run never
+   * doubles it. The file is part of it because Flo published two different girls' lists on
+   * 27 July 2026. Rows the outlet printed twice (an SI weight with a duplicate) are kept once.
+   */
+  const seen = new Set<string>()
+  const unique = archived.filter((r) => {
+    const k = `${String(r.athlete_name).toLowerCase()}|${r.weight_class ?? ""}|${r.rank}`
+    if (seen.has(k)) return false
+    seen.add(k)
+    return true
+  })
+  const first = unique[0]
+  if (!first) return 0
+  const { error: clearError } = await admin
+    .from("national_rankings_archive")
+    .delete()
+    .eq("source", String(first.source))
+    .eq("gender", String(first.gender))
+    .eq("published_on", publishedOn)
+    .eq("scope", String(first.scope))
+    .eq("edition_class_year", Number(first.edition_class_year))
+    .eq("source_file", String(first.source_file))
+  if (clearError) {
+    console.warn(`[national-rankings] archive skipped: ${clearError.message}`)
+    return 0
+  }
   let written = 0
-  for (let i = 0; i < archived.length; i += 500) {
-    const { error } = await admin.from("national_rankings_archive").upsert(archived.slice(i, i + 500), {
-      onConflict: "source,gender,published_on,scope,edition_class_year,athlete_name,weight_class",
-    })
+  for (let i = 0; i < unique.length; i += 500) {
+    const { error } = await admin.from("national_rankings_archive").insert(unique.slice(i, i + 500))
     if (error) {
       console.warn(`[national-rankings] archive skipped: ${error.message}`)
       return written
     }
-    written += Math.min(500, archived.length - i)
+    written += Math.min(500, unique.length - i)
   }
   return written
 }
