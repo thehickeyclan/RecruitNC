@@ -8,6 +8,7 @@ import {
   canonicalRound,
   isFinalsRound,
   isThirdPlaceRound,
+  placesDecidedBy,
   parseTournament,
   roundOrder,
   type MatchableAthlete,
@@ -147,6 +148,11 @@ describe("round vocabularies", () => {
     expect(isFinalsRound("1st Place Match")).toBe(true)
     expect(isThirdPlaceRound("3rd Place")).toBe(true)
     expect(isThirdPlaceRound("3rd Place Match")).toBe(true)
+    // Brackets at these events run placement matches down to 8th, and only 1-4 were being read.
+    expect(placesDecidedBy("5th Place Match")).toEqual({ winner: 5, loser: 6 })
+    expect(placesDecidedBy("7th Place Match")).toEqual({ winner: 7, loser: 8 })
+    expect(placesDecidedBy("1st Place Match")).toEqual({ winner: 1, loser: 2 })
+    expect(placesDecidedBy("Cons. Semis")).toBeNull()
     expect(isFinalsRound("Semi-Finals")).toBe(false)
   })
 
