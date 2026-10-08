@@ -15,6 +15,8 @@ export default function RankingsIndexPage() {
   // Match the classes the board itself offers. Sending somebody to a year it cannot load is
   // worse than not offering the button.
   const graduationYears = [currentYear, currentYear + 1, currentYear + 2, currentYear + 3, currentYear + 4]
+  // The girls are ranked for two classes only; the other boards exist but are not worked.
+  const womensRankedClasses = [2027, 2028]
 
   return (
     <>
@@ -102,11 +104,12 @@ export default function RankingsIndexPage() {
           </CardHeader>
           <CardContent>
             <p className="mb-4 text-sm text-gray-600">
-              Same scoring, evidence and head-to-head as the boys&apos; boards. Girls are web-only: the
-              app does not carry girls&apos; rankings yet.
+              The girls&apos; formula: freestyle nationals first, states last. Only the Classes of 2027
+              and 2028 are ranked (Matt, 8 October 2026). Girls are web-only: the app does not carry
+              girls&apos; rankings yet.
             </p>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              {graduationYears.map((year) => (
+            <div className="grid grid-cols-2 gap-4 md:max-w-md">
+              {womensRankedClasses.map((year) => (
                 <Button
                   key={year}
                   asChild
