@@ -539,7 +539,15 @@ export function orderProspectsByHeadToHead<T extends {
         if (other.id === candidate.id) return false
         const record = other.head_to_head.find((meeting) => meeting.opponentId === candidate.id)
         return Boolean(
-          record && holdsHeadToHeadEdge(record) && other.ai_score >= candidate.ai_score - HEAD_TO_HEAD_MAX_GAP,
+          record &&
+            holdsHeadToHeadEdge(record) &&
+            /*
+             * A win only lifts somebody who has a résumé of her own. One loss to a wrestler with
+             * nothing on file dropped Yzabella Weihe, a 7A runner-up, below every empty profile
+             * in the class: the winner sorts last among the eligible, and the loser waits for her.
+             */
+            other.ai_score > 0 &&
+            other.ai_score >= candidate.ai_score - HEAD_TO_HEAD_MAX_GAP,
         )
       }),
     )
@@ -758,10 +766,66 @@ export const RANKING_COMPONENT_WEIGHTS: Record<keyof RankingScoreBreakdown, numb
   profile: 0,
 }
 
-function weighted(raw: RankingScoreBreakdown): RankingScoreBreakdown {
+/**
+ * The women's board, which is a different sport's résumé (Matt, 8 October 2026).
+ *
+ * Women's college wrestling is freestyle, so the freestyle nationals - Fargo, USAW Women's
+ * Nationals in Spokane and the US Open in Las Vegas - carry the most weight, with Super 32 beside
+ * them. The freestyle qualifiers and regionals come next, then NHSCA, and the state tournament last: five classifications of girls' brackets
+ * that are often four or eight deep. Direct results matter as much as on the boys' side, so wins
+ * over ranked girls are worth more than the boys' weight, and head-to-head ordering is unchanged.
+ *
+ * The event weights live in `WOMENS_EVENT_WEIGHTS`; these weigh the components after it.
+ */
+export const WOMENS_RANKING_COMPONENT_WEIGHTS: Record<keyof RankingScoreBreakdown, number> = {
+  allAmerican: 1.2,
+  rankedWins: 1.3,
+  matchResume: 1,
+  national: 1.3,
+  state: 0.2,
+  duals: 0.8,
+  rankWrestler: 1,
+  collegeOpen: 0,
+  profile: 0,
+}
+
+/**
+ * What a result at each event is worth on the women's board, against NHSCA at 1.
+ *
+ * Fargo, Spokane, the US Open and Super 32 sit at 1.6. The freestyle qualifiers, regionals and
+ * opens (Journeymen Women's World Classic, Southeast Regionals, the state freestyle
+ * championships, Tar Heel) come next at 1.2 - ahead of NHSCA, which is folkstyle (Matt, 8 October
+ * 2026). An All-American finish at NHSCA is worth 0.7 of one at the top tier.
+ */
+/** How many qualifier and regional results count on the women's board; her best ones. */
+export const WOMENS_QUALIFIERS_COUNTED = 3
+
+export const WOMENS_EVENT_WEIGHTS = {
+  topTier: 1.6,
+  nhsca: 1,
+  qualifier: 1.2,
+  nhscaAllAmerican: 0.7,
+} as const
+
+const SPOKANE_EVENT = /usaw women'?s nationals|women'?s nationals|spokane/i
+const US_OPEN_EVENT = /\bu\.?\s?s\.?\s+open\b|las vegas|vegas/i
+
+/** Whether an "other" result is one of the women's top-tier freestyle nationals. */
+export function isWomensTopTierEvent(eventName: string): boolean {
+  return SPOKANE_EVENT.test(eventName) || US_OPEN_EVENT.test(eventName)
+}
+
+export function isWomensBoard(gender: string | null | undefined): boolean {
+  return String(gender ?? "").trim().toLowerCase() === "female"
+}
+
+function weighted(
+  raw: RankingScoreBreakdown,
+  weights: Record<keyof RankingScoreBreakdown, number> = RANKING_COMPONENT_WEIGHTS,
+): RankingScoreBreakdown {
   const out = {} as RankingScoreBreakdown
   for (const key of Object.keys(raw) as Array<keyof RankingScoreBreakdown>) {
-    out[key] = Math.round(raw[key] * RANKING_COMPONENT_WEIGHTS[key] * 10) / 10
+    out[key] = Math.round(raw[key] * weights[key] * 10) / 10
   }
   return out
 }
@@ -814,6 +878,7 @@ export async function buildRecruitNcRankingBoard({
   if (error) throw new Error(error.message)
 
   const athleteRows = (athletes || []) as Array<Record<string, unknown>>
+  const womens = isWomensBoard(gender)
   const athleteIds = athleteRows.map((athlete) => String(athlete.id)).filter(Boolean)
   const gradByAthlete = new Map(athleteRows.map((a) => [String(a.id), toNumber(a.graduationyear)]))
   const [matchRowsByAthlete, dualsByAthlete, qualifierHeadToHead, dualsResumeByAthlete] = await Promise.all([
@@ -967,7 +1032,8 @@ export async function buildRecruitNcRankingBoard({
       let national = 0
       for (const { event, result } of nationalRows) {
         const place = placementNumber(result.placement)
-        const points = placementPoints(place) + recordWinPctPoints(result.record)
+        const eventWeight = !womens ? 1 : event === "NHSCA" ? WOMENS_EVENT_WEIGHTS.nhsca : WOMENS_EVENT_WEIGHTS.topTier
+        const points = Math.round((placementPoints(place) + recordWinPctPoints(result.record)) * eventWeight)
         national += points
         const details = [
           place ? (place === 1 ? "Champion" : ordinal(place)) : "",
@@ -986,13 +1052,44 @@ export async function buildRecruitNcRankingBoard({
       // Qualifiers and open events (Super 32 Early Entry, and the GA/VA legs of the same
       // series). Real out-of-state fields, so they count toward the national résumé — but
       // discounted against Super 32 / NHSCA / Fargo themselves, which are the deeper brackets.
+      /*
+       * On the women's board only her best three qualifier and regional results count. Every
+       * open she entered used to add points, so a girl with six local freestyle events out-scored
+       * one with a single deep national finish (Peyton Smith, 36th to 4th). The rest still show.
+       */
+      const womensQualifierPoints = new Map<(typeof bundle.other)[number], number>()
+      if (womens) {
+        const scoredQualifiers = (bundle.other || [])
+          .filter((r) => {
+            const label = String(r.eventShortName ?? r.eventName ?? "")
+            return !TOC_EVENT.test(label) && !/nhsca\s+national\s+duals/i.test(label) && !isWomensTopTierEvent(label)
+          })
+          .map((r) => ({
+            r,
+            points: Math.round((placementPoints(r.placement) + recordWinPctPoints(r.record)) * WOMENS_EVENT_WEIGHTS.qualifier),
+          }))
+          .sort((a, b) => b.points - a.points)
+        scoredQualifiers.forEach(({ r, points }, i) =>
+          womensQualifierPoints.set(r, i < WOMENS_QUALIFIERS_COUNTED ? points : 0),
+        )
+      }
+
       for (const result of bundle.other || []) {
         const isToc = TOC_EVENT.test(String(result.eventShortName ?? result.eventName ?? ""))
         const isNationalDuals = /nhsca\s+national\s+duals/i.test(String(result.eventShortName ?? result.eventName ?? ""))
-        const weight = isToc ? TOC_WEIGHT : isNationalDuals ? NATIONAL_DUALS_WEIGHT : QUALIFIER_WEIGHT
-        const points = Math.round(
-          (placementPoints(result.placement) + recordWinPctPoints(result.record)) * weight,
-        )
+        const eventLabel = String(result.eventShortName ?? result.eventName ?? "")
+        const weight = isToc
+          ? TOC_WEIGHT
+          : isNationalDuals
+            ? NATIONAL_DUALS_WEIGHT
+            : womens
+              ? isWomensTopTierEvent(eventLabel)
+                ? WOMENS_EVENT_WEIGHTS.topTier
+                : WOMENS_EVENT_WEIGHTS.qualifier
+              : QUALIFIER_WEIGHT
+        const points = womensQualifierPoints.has(result)
+          ? womensQualifierPoints.get(result)!
+          : Math.round((placementPoints(result.placement) + recordWinPctPoints(result.record)) * weight)
         national += points
         const details = [
           result.placement ? (result.placement === 1 ? "Champion" : ordinal(result.placement)) : "",
@@ -1149,6 +1246,22 @@ export async function buildRecruitNcRankingBoard({
       const allAmericanRows = [
         ...(bundle.nhsca || []).map((r) => ({ event: "NHSCA", year: Number(r.year), place: placementNumberOf(r.placement) })),
         ...(bundle.fargo || []).map((r) => ({ event: "Fargo", year: Number(r.year), place: placementNumberOf(r.placement) })),
+        /*
+         * On the women's board a top-eight finish at Spokane, the US Open or Super 32 is an
+         * All-American finish too - they are the events the board weighs highest.
+         */
+        ...(womens
+          ? [
+              ...(bundle.super32 || []).map((r) => ({ event: "Super 32", year: Number(r.year), place: placementNumberOf(r.placement) })),
+              ...(bundle.other || [])
+                .filter((r) => isWomensTopTierEvent(String(r.eventShortName ?? r.eventName ?? "")))
+                .map((r) => ({
+                  event: US_OPEN_EVENT.test(String(r.eventShortName ?? r.eventName ?? "")) ? "US Open" : "Spokane",
+                  year: Number(r.year),
+                  place: r.placement,
+                })),
+            ]
+          : []),
       ]
         .filter((r) => r.place != null && r.place >= 1 && r.place <= 8 && plausibleSeason(r.year))
         .sort((a, b) => b.year - a.year)
@@ -1262,7 +1375,8 @@ export async function buildRecruitNcRankingBoard({
         const depth = place === 1 ? 40 : place === 2 ? 32 : place <= 4 ? 26 : place <= 6 ? 20 : 15
         const seasonsAgo = gradYear == null ? 0 : Math.max(0, gradYear - row.year)
         const recency = seasonsAgo === 0 ? 1 : seasonsAgo === 1 ? 0.85 : 0.7
-        return sum + depth * recency
+        const eventWeight = womens && row.event === "NHSCA" ? WOMENS_EVENT_WEIGHTS.nhscaAllAmerican : 1
+        return sum + depth * recency * eventWeight
       }, 0)
 
       /**
@@ -1347,7 +1461,8 @@ export async function buildRecruitNcRankingBoard({
         return latest.label ? `${latest.label} · ${when}` : when
       })()
 
-      const scoreBreakdown: RankingScoreBreakdown = weighted({
+      const scoreBreakdown: RankingScoreBreakdown = weighted(
+        {
         allAmerican: Math.round(allAmericanScore * 10) / 10,
         rankedWins: rankedWinScore,
         matchResume: matchScore.score,
@@ -1357,7 +1472,9 @@ export async function buildRecruitNcRankingBoard({
         rankWrestler,
         collegeOpen,
         profile,
-      })
+        },
+        womens ? WOMENS_RANKING_COMPONENT_WEIGHTS : RANKING_COMPONENT_WEIGHTS,
+      )
       const aiScore = Object.values(scoreBreakdown).reduce((sum, points) => sum + points, 0)
       const hasVerifiedResume = state > 0 || national > 0 || dualsScore > 0 || rankWrestler > 0 || headToHead.length > 0
       const confidence: RankingBoardAthlete["confidence"] =

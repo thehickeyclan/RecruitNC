@@ -17,10 +17,43 @@
  * this says the numbers may not change quietly.
  */
 import { describe, expect, it } from "vitest"
-import { RANKING_COMPONENT_WEIGHTS } from "./recruitnc-ranking-engine"
+import {
+  RANKING_COMPONENT_WEIGHTS,
+  WOMENS_EVENT_WEIGHTS,
+  WOMENS_QUALIFIERS_COUNTED,
+  WOMENS_RANKING_COMPONENT_WEIGHTS,
+  isWomensTopTierEvent,
+} from "./recruitnc-ranking-engine"
 import { MAX_WINDOW_PENALTY, WINDOW_PARTICIPATION_FLOOR } from "./missed-window"
 import { NATIONAL_RANKED_WIN, RANKED_WIN_CAP, TOC_FIELD_WIN, UNGRADED_RANKED_WIN, rankedOpponentValue } from "./ranked-win-value"
 import { dualsRecordPoints, teamRoundBonus } from "./nhsca-duals-resume"
+
+describe("women's weights (Matt, 8 October 2026: freestyle nationals, then freestyle qualifiers, then NHSCA, states last)", () => {
+  it("are exactly these", () => {
+    expect(WOMENS_RANKING_COMPONENT_WEIGHTS).toEqual({
+      allAmerican: 1.2,
+      rankedWins: 1.3,
+      matchResume: 1,
+      national: 1.3,
+      state: 0.2,
+      duals: 0.8,
+      rankWrestler: 1,
+      collegeOpen: 0,
+      profile: 0,
+    })
+    expect(WOMENS_EVENT_WEIGHTS).toEqual({ topTier: 1.6, nhsca: 1, qualifier: 1.2, nhscaAllAmerican: 0.7 })
+    expect(WOMENS_QUALIFIERS_COUNTED).toBe(3)
+  })
+
+  it("treats Spokane and the US Open as top tier, and nothing else from the open events", () => {
+    expect(isWomensTopTierEvent("USAW Women's Nationals")).toBe(true)
+    expect(isWomensTopTierEvent("US Open")).toBe(true)
+    expect(isWomensTopTierEvent("U.S. Open Wrestling Championships")).toBe(true)
+    expect(isWomensTopTierEvent("Journeymen Women's World Classic")).toBe(false)
+    expect(isWomensTopTierEvent("Southeast Regional Championships")).toBe(false)
+    expect(isWomensTopTierEvent("NC Freestyle & Greco State Championships")).toBe(false)
+  })
+})
 
 describe("component weights", () => {
   it("are exactly these", () => {
