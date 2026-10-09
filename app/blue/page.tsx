@@ -111,7 +111,10 @@ export default function BluePage() {
                 <CardContent className="pt-6">
                   <h3 className="mb-2 font-semibold text-[#003366]">Development</h3>
                   <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-[#003366]/90">
-                    <li>Blue practices throughout the year, with opportunities to train in college wrestling rooms alongside college coaches and NCAA wrestlers.</li>
+                    <li>Blue practices throughout the year, run by college coaches we bring in from across North Carolina and Virginia, with opportunities to train in college wrestling rooms alongside NCAA wrestlers.</li>
+                    <li>
+                      <strong className="text-[#003366]">Meet the programs:</strong> visiting coaches talk with athletes about their programs, so you hear firsthand what each school is looking for.
+                    </li>
                     <li>
                       <strong className="text-[#003366]">Club drop-ins:</strong> drop in free at a partner club once every month. Partner clubs today are RAW and Darkhorse, with more added every week.
                     </li>
@@ -211,9 +214,9 @@ export default function BluePage() {
                 who have been where you want to go.
               </li>
               <li>
-                <strong className="text-[#003366]">College coaches in the room</strong> — Regularly, college coaches from
-                UNC, NC State, Mount Olive, Roanoke, Greensboro, Lynchburg, Belmont Abbey, and more lead or support
-                practices so kids see a college-style cadence and environment.
+                <strong className="text-[#003366]">College coaches in the room</strong> — Throughout the year we bring in college coaches
+                from across North Carolina and Virginia, including UNC, NC State, Mount Olive, Roanoke, Greensboro, Lynchburg,
+                Belmont Abbey, and more, to run Blue practices and talk with athletes about their programs.
               </li>
               <li>
                 <strong className="text-[#003366]">A Room Built on Commitment</strong> — Fewer, more concentrated sessions only work when the best partners commit to being there. We build the opportunity; athletes build the room.

@@ -317,7 +317,7 @@ export function RankingsSalesClient({
               <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Blue families</p>
               <p className="mt-3 text-4xl font-semibold">Included</p>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                Blue athletes and parents receive full rankings access with their Blue membership.
+                Blue athletes and parents get full rankings access, profile views, and the recruiting portal (coming soon) with their Blue membership.
               </p>
               <Button asChild variant="outline" className="mt-6 w-full border-border bg-transparent text-foreground hover:bg-accent">
                 <Link href="/blue">Learn about Blue</Link>
@@ -338,8 +338,8 @@ export function RankingsSalesClient({
               <p className="mt-1 text-sm text-muted-foreground">per month</p>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
                 All class rankings and the Top 75 College Prospects board. Full profile
-                management, and see which college programs are viewing your profile. Cancel
-                anytime.
+                management, see which college programs are viewing your profile, and our
+                recruiting portal (coming soon). Cancel anytime.
               </p>
               <Button
                 disabled={checkingOut !== null}
