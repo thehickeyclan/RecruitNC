@@ -206,17 +206,14 @@ export default async function HomePage() {
             <div className="rounded-xl border border-white/15 bg-rnc-ink/80 p-5 backdrop-blur-sm">
               <p className="text-[11px] font-bold uppercase tracking-widest text-white/60">Athletes &amp; families</p>
               <p className="mt-1.5 text-sm text-white/75">Your results are probably already here. Claim your profile and get seen.</p>
-              <div className="mt-4 flex flex-wrap items-center gap-3">
-                <Link
-                  href="/prospects/all"
-                  className="inline-flex items-center gap-2 rounded-lg border-2 border-rnc-gold px-5 py-2 text-sm font-bold text-rnc-gold transition-colors hover:bg-rnc-gold/10"
-                >
-                  Find your profile <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link href="/create-profile" className="text-sm font-semibold text-white/70 hover:text-white">
-                  Not listed? Create one
-                </Link>
-              </div>
+              {/* /create-profile is the claim flow: it searches for the existing profile first and
+                  only creates one when there is no match - most NC wrestlers already have one. */}
+              <Link
+                href="/create-profile"
+                className="mt-4 inline-flex items-center gap-2 rounded-lg border-2 border-rnc-gold px-5 py-2 text-sm font-bold text-rnc-gold transition-colors hover:bg-rnc-gold/10"
+              >
+                Claim your profile <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
           </div>
           <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold">
