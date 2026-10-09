@@ -24,6 +24,8 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import {
   AlertTriangle,
+  ChevronDown,
+  Lightbulb,
   ArrowLeftRight,
   ArrowRight,
   Globe,
@@ -43,6 +45,7 @@ import { useAuth } from "@/contexts/auth-context"
 import type { ComparisonBout, CommonOpponent, HeadToHead } from "@/lib/athlete-comparison"
 import type { ComparisonRow, ComparisonSections, RowEdge, RowGroup } from "@/lib/athlete-comparison-rows"
 import { ComparisonSectionsView } from "./comparison-sections"
+import { recommend } from "@/lib/comparison-recommendation"
 import {
   PerfectRecruitInvite,
   PerfectRecruitPanel,
@@ -732,6 +735,8 @@ export default function CompareClient({
 
   // The comparison read against the program's perfect recruit, when it has one.
   const [wizardOpen, setWizardOpen] = useState(false)
+  // The category switches stay out of the way until a coach wants them.
+  const [prioritiesOpen, setPrioritiesOpen] = useState(false)
   const fitCriteria = data?.programFit?.saved?.criteria ?? null
   const fitChecks = useMemo(() => {
     if (!data?.programFit || !fitCriteria) return null
@@ -742,6 +747,22 @@ export default function CompareClient({
     const edgeLeader = tally.left.length > tally.right.length ? "left" : tally.right.length > tally.left.length ? "right" : null
     return summarizeFit({ leftName: data.left.name, rightName: data.right.name, left: fitChecks.left, right: fitChecks.right, edgeLeader })
   }, [data, fitChecks, tally])
+  /** The bottom line, decided in lib/comparison-recommendation.ts from what is on screen. */
+  const recommendation = useMemo(() => {
+    if (!data || !tally) return null
+    return recommend({
+      leftName: data.left.name,
+      rightName: data.right.name,
+      edges: tally,
+      headToHead: data.headToHead
+        ? { edge: data.headToHead.edge, lastEvent: data.headToHead.lastMeeting?.event ?? null, lastDate: data.headToHead.lastMeeting?.date ?? null }
+        : null,
+      fit: fitChecks,
+      bestWins: data.sections ? { edge: data.sections.bestWins.edge, summary: data.sections.bestWins.summary } : null,
+      national: data.sections ? { leftPlacings: data.sections.national.left.placings, rightPlacings: data.sections.national.right.placings } : null,
+    })
+  }, [data, tally, fitChecks])
+
   const rowMarks = useMemo(() => {
     const out = new Map<string, RowMarks>()
     if (!fitChecks) return out
@@ -798,6 +819,28 @@ export default function CompareClient({
         {data && !loading ? (
           <div className="mt-6 space-y-6">
             {data.programFit && !data.programFit.saved ? <PerfectRecruitInvite onStart={() => setWizardOpen(true)} /> : null}
+
+            {/* The bottom line first; every sentence in it traces to a section below. */}
+            {recommendation ? (
+              <section className="rounded-xl border-2 border-[#D3B574]/60 bg-gradient-to-br from-[#13294B] to-[#0f1c2e] p-5 sm:p-6">
+                <h2 className={`${PANEL_TITLE} flex items-center gap-2`}>
+                  <Lightbulb className={`h-3.5 w-3.5 ${GOLD}`} /> Our read
+                </h2>
+                <p className={`mt-2 text-2xl font-black ${recommendation.pick ? GOLD : "text-white"}`}>{recommendation.headline}</p>
+                <ul className="mt-2 space-y-1">
+                  {recommendation.reasons.map((r) => (
+                    <li key={r} className="flex gap-2 text-sm text-white/85">
+                      <span className={GOLD}>•</span> {r}
+                    </li>
+                  ))}
+                </ul>
+                {recommendation.counterpoint ? <p className="mt-2 text-sm text-white/55">{recommendation.counterpoint}</p> : null}
+                <p className="mt-3 text-[11px] text-white/35">
+                  Built from the results we hold and the categories you count. A starting point for your evaluation, not a
+                  substitute for it.
+                </p>
+              </section>
+            ) : null}
 
             {/* Read against the program's perfect recruit first: who fits, and any must-have missed. */}
             {fitSummary && fitSummary.lines.length ? (
@@ -873,10 +916,19 @@ export default function CompareClient({
 
             {/* What counts. */}
             <section className={`${PANEL} p-5 sm:p-6`}>
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h2 className={`${PANEL_TITLE} flex items-center gap-2`}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPrioritiesOpen((v) => !v)}
+                  aria-expanded={prioritiesOpen}
+                  className={`${PANEL_TITLE} flex items-center gap-2 hover:text-white/70`}
+                >
                   <SlidersHorizontal className={`h-3.5 w-3.5 ${GOLD}`} /> What matters to your program
-                </h2>
+                  <span className="normal-case tracking-normal text-white/50">
+                    · {visible.filter((r) => r.group !== "profile").length} categories counted
+                  </span>
+                  <ChevronDown className={`h-3.5 w-3.5 transition ${prioritiesOpen ? "rotate-180" : ""}`} />
+                </button>
                 <div className="flex gap-4 text-xs font-bold">
                   <button type="button" onClick={resetRows} className="text-white/50 hover:text-[#D3B574]">{savedPriorities.length ? "Your priorities" : "Defaults"}</button>
                   <button type="button" onClick={allRows} className="text-white/50 hover:text-[#D3B574]">Everything</button>
@@ -885,6 +937,7 @@ export default function CompareClient({
                   </button>
                 </div>
               </div>
+              {prioritiesOpen ? (
               <div className="mt-4 space-y-2.5">
                 {GROUP_ORDER.map((group) => {
                   const rows = data.rows.filter((r) => r.group === group)
@@ -914,6 +967,7 @@ export default function CompareClient({
                   )
                 })}
               </div>
+              ) : null}
               {!data.personal ? (
                 <p className="mt-4 text-xs text-white/40">GPA, test scores and star ratings show for verified college coaches only.</p>
               ) : null}
