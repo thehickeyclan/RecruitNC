@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
     .select("role, profile_type, verified_coach, is_admin, verified_method")
     .eq("user_id", user.id)
     .maybeSingle()
-  if (!mayUseComparison({ profile })) {
+  if (!mayUseComparison({ profile, userId: user.id })) {
     return NextResponse.json({ error: "The comparison is for verified college coaches." }, { status: 403 })
   }
   const classified = classifyViewer(profile ?? null)

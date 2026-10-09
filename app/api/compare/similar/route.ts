@@ -18,6 +18,6 @@ export async function GET(request: NextRequest) {
     .select("role, profile_type, verified_coach, is_admin")
     .eq("user_id", user.id)
     .maybeSingle()
-  if (!mayUseComparison({ profile })) return NextResponse.json({ error: "For verified college coaches." }, { status: 403 })
+  if (!mayUseComparison({ profile, userId: user.id })) return NextResponse.json({ error: "For verified college coaches." }, { status: 403 })
   return NextResponse.json({ similar: await loadSimilarWrestlers(admin, id) })
 }

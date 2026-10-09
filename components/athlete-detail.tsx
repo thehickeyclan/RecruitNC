@@ -318,7 +318,7 @@ export function AthleteDetail({
   // Private info (contact, GPA, ACT, SAT) visible only to self, coaches, and admins
   const canSeePrivateInfo = isViewingOwnProfile || isAdmin || isVerifiedCoach
   /** The comparison: verified college coaches and admins, never on your own profile. */
-  const mayCompare = mayUseComparison({ isAdmin, profile: viewerProfile }) && !isViewingOwnProfile
+  const mayCompare = mayUseComparison({ isAdmin, profile: viewerProfile, userId: currentUserId }) && !isViewingOwnProfile
 
   // Academic fields: support both gpa/sat/act and academic_gpa/academic_sat/academic_act (DB column variants)
   const effectiveGpa = athleteData?.academic_gpa ?? athleteData?.gpa
