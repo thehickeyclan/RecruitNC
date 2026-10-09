@@ -50,6 +50,7 @@ import { InlineAchievementsEditor } from "./inline-achievements-editor"
 import { ParentLinkButton } from "./parent-link-button"
 import { ClaimProfileButton } from "./claim-profile-button"
 import { CoachViewsPanel } from "./coach-views-panel"
+import { CollegeViewsLanding } from "@/components/profile/college-views-landing"
 import { InlineCollegeOpensEditor } from "./inline-college-opens-editor"
 import { InlineSchoolClubEditor } from "./inline-school-club-editor"
 import { InlineWeightEditor } from "./inline-weight-editor"
@@ -1588,6 +1589,9 @@ export function AthleteDetail({
       {/* empty:hidden - the panel renders nothing for most viewers, and an empty wrapper still
           takes a gap, which left the space under the banner looking unfinished. */}
       <div className={cn("px-1 empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels)}>
+        <CollegeViewsLanding athleteName={athleteName} signedIn={Boolean(currentUserId)} canSeePanel={canViewProfileStats} />
+      </div>
+      <div id="college-views" className={cn("scroll-mt-24 px-1 empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels)}>
         <CoachViewsPanel athleteId={String(athlete.id)} />
       </div>
 
