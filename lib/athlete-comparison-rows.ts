@@ -287,8 +287,18 @@ export const TOURNAMENT_FAMILIES: Array<{ key: string; label: string; match: Reg
   { key: "toc", label: "Tournament of Champions", match: /tournament of champions|\btoc\b/i },
 ]
 
-function familyRows(report: ComparisonReport, match: RegExp): ScoutingReportResultRow[] {
-  return report.results.filter((row) => match.test(row.event))
+/** Overflow brackets ("Journeymen Fall Classic (OF)"): the bouts count, the place does not (Matt). */
+const OVERFLOW = /\(OF\)|\boverflow\b/i
+
+/**
+ * One event's results, with an overflow bracket's place taken away - finishing 3rd in an overflow
+ * bracket is not 3rd at the tournament. Journeymen's women's freestyle event is a different
+ * tournament from the Fall Classic, so a folkstyle-only family leaves it out.
+ */
+function familyRows(report: ComparisonReport, match: RegExp, folkstyleOnly = false): ScoutingReportResultRow[] {
+  return report.results
+    .filter((row) => match.test(row.event) && (!folkstyleOnly || (row.style ?? "folkstyle") === "folkstyle"))
+    .map((row) => (OVERFLOW.test(row.event) ? { ...row, place: null } : row))
 }
 
 function tournamentRow(
@@ -296,8 +306,8 @@ function tournamentRow(
   l: ComparisonReport,
   r: ComparisonReport,
 ): ComparisonRow | null {
-  const lr = familyRows(l, family.match)
-  const rr = familyRows(r, family.match)
+  const lr = familyRows(l, family.match, family.key === "journeymen")
+  const rr = familyRows(r, family.match, family.key === "journeymen")
   if (!lr.length && !rr.length) return null
   const cell = (rows: ScoutingReportResultRow[]): ComparisonCell => {
     if (!rows.length) return { value: "Did not enter" }
@@ -542,4 +552,248 @@ export function buildComparisonRows(
     academicRow("act", "ACT", left, right, personal),
     academicRow("interest", "Academic interest", left, right, personal),
   ]
+}
+
+/* ------------------------------------------------------------------ sections */
+
+/*
+ * Three side-by-side sections a coach reads as a whole rather than row by row: the national
+ * tournaments year by year, who wrestles freestyle and Greco (with every result as evidence), and
+ * each wrestler's best wins. Built here, from the same report rows as everything else, so a
+ * section and a row can never disagree. Each says who is ahead and why, or that nothing separates
+ * them - and says plainly when nothing is on file.
+ */
+
+export type EventLine = {
+  year: number
+  event: string
+  weight: string | null
+  /** "Champion", "5th", "Did not place", "Overflow bracket". */
+  finish: string
+  place: number | null
+  record: string | null
+  /** Division and style for freestyle/Greco: "16U Boys Freestyle". */
+  division: string | null
+}
+
+export type NationalEventBlock = {
+  key: string
+  label: string
+  left: EventLine[]
+  right: EventLine[]
+  edge: RowEdge
+  basis: string
+}
+
+export type NationalSide = {
+  events: number
+  placings: number
+  record: string | null
+  bestFinish: string | null
+}
+
+export type NationalSection = {
+  blocks: NationalEventBlock[]
+  left: NationalSide
+  right: NationalSide
+  summary: string
+}
+
+export type StyleSide = {
+  freestyle: EventLine[]
+  greco: EventLine[]
+  freestyleRecord: string | null
+  grecoRecord: string | null
+}
+
+export type FreestyleSection = {
+  left: StyleSide
+  right: StyleSide
+  summary: string
+}
+
+export type BestWin = {
+  opponent: string
+  credential: string | null
+  result: string | null
+  event: string | null
+  date: string | null
+  tier: "Nationally ranked" | "TOC field" | "State ranked" | "State champion" | "National placer" | "State placer"
+}
+
+export type BestWinsSection = {
+  left: BestWin[]
+  right: BestWin[]
+  leftCounts: { total: number; national: number }
+  rightCounts: { total: number; national: number }
+  edge: RowEdge
+  summary: string
+}
+
+export type ComparisonSections = {
+  national: NationalSection
+  freestyle: FreestyleSection
+  bestWins: BestWinsSection
+}
+
+/** The three national folkstyle tournaments a coach asked for, in the order they are read. */
+const NATIONAL_EVENTS: Array<{ key: string; label: string; match: RegExp }> = [
+  { key: "nhsca", label: "NHSCA Nationals", match: /nhsca(?!.*duals)/i },
+  { key: "super32", label: "Super 32", match: /^super 32$/i },
+  { key: "journeymen", label: "Journeymen Fall Classic", match: /journeymen/i },
+]
+
+function eventLine(row: ScoutingReportResultRow): EventLine {
+  const overflow = OVERFLOW.test(row.event)
+  const place = overflow ? null : row.place ?? null
+  const style = row.style ?? "folkstyle"
+  // A freestyle/Greco detail leads with its division: "16U Boys Freestyle · 126 · 5th · 6-2 record".
+  const division = style === "folkstyle" ? null : (row.detail.split(" · ")[0] ?? "").trim() || null
+  return {
+    year: row.year,
+    event: row.event,
+    weight: row.weight,
+    // A dual meet has no placings; its record is the result.
+    finish: overflow ? "Overflow bracket" : place != null ? ordinal(place) : /duals?\b/i.test(row.event) ? "Duals" : "Did not place",
+    place,
+    record: row.record ?? null,
+    division: division && /freestyle|greco|\d+u|junior|cadet|women|girls|boys/i.test(division) ? division : null,
+  }
+}
+
+function recordOf(lines: EventLine[]): string | null {
+  const total = addRecords(lines.map((l) => l.record))
+  return total ? `${total.wins}-${total.losses}` : null
+}
+
+function nationalSide(blocks: NationalEventBlock[], side: "left" | "right"): NationalSide {
+  const lines = blocks.flatMap((b) => b[side])
+  const placed = lines.filter((l) => l.place != null).sort((a, b) => a.place! - b.place! || b.year - a.year)
+  const best = placed[0]
+  return {
+    events: lines.length,
+    placings: placed.length,
+    record: recordOf(lines),
+    bestFinish: best ? `${best.finish}, ${best.year} ${best.event}` : null,
+  }
+}
+
+export function buildNationalSection(l: ComparisonReport, r: ComparisonReport): NationalSection {
+  const blocks: NationalEventBlock[] = NATIONAL_EVENTS.map((event) => {
+    const family = TOURNAMENT_FAMILIES.find((f) => f.key === event.key)
+    // The same edge rule as the event's row, so the section and the row agree.
+    const row = family ? tournamentRow(family, l, r) : null
+    const lines = (report: ComparisonReport) =>
+      familyRows(report, event.match, event.key === "journeymen")
+        .map((row) => eventLine(row))
+        .sort((a, b) => b.year - a.year)
+    return {
+      key: event.key,
+      label: event.label,
+      left: lines(l),
+      right: lines(r),
+      edge: row?.edge ?? null,
+      basis: row?.basis ?? "Neither has wrestled it",
+    }
+  })
+  const left = nationalSide(blocks, "left")
+  const right = nationalSide(blocks, "right")
+
+  let summary: string
+  if (!left.events && !right.events) {
+    summary = "Neither has a result at NHSCA, Super 32 or Journeymen on file."
+  } else if (!left.events || !right.events) {
+    const who = left.events ? l : r
+    summary = `Only ${surname(who)} has wrestled at NHSCA, Super 32 or Journeymen.`
+  } else {
+    const parts = [
+      left.placings !== right.placings
+        ? `${surname(left.placings > right.placings ? l : r)} has more national placings (${Math.max(left.placings, right.placings)} to ${Math.min(left.placings, right.placings)})`
+        : `Both have ${left.placings} national ${left.placings === 1 ? "placing" : "placings"}`,
+      `national records ${left.record ?? "—"} and ${right.record ?? "—"}`,
+    ]
+    summary = `${parts.join("; ")}.`
+  }
+  return { blocks, left, right, summary }
+}
+
+function styleSide(report: ComparisonReport): StyleSide {
+  const of = (style: "freestyle" | "greco") =>
+    report.results
+      .filter((row) => row.style === style)
+      .map(eventLine)
+      .sort((a, b) => b.year - a.year)
+  const freestyle = of("freestyle")
+  const greco = of("greco")
+  return { freestyle, greco, freestyleRecord: recordOf(freestyle), grecoRecord: recordOf(greco) }
+}
+
+export function buildFreestyleSection(l: ComparisonReport, r: ComparisonReport): FreestyleSection {
+  const left = styleSide(l)
+  const right = styleSide(r)
+  const wrestles = (s: StyleSide) => s.freestyle.length + s.greco.length > 0
+  const describe = (report: ComparisonReport, s: StyleSide) => {
+    const parts = [
+      s.freestyle.length ? `${s.freestyle.length} freestyle ${s.freestyle.length === 1 ? "event" : "events"}${s.freestyleRecord ? ` (${s.freestyleRecord})` : ""}` : null,
+      s.greco.length ? `${s.greco.length} Greco ${s.greco.length === 1 ? "event" : "events"}${s.grecoRecord ? ` (${s.grecoRecord})` : ""}` : null,
+    ].filter(Boolean)
+    return `${surname(report)}: ${parts.join(", ")}`
+  }
+  let summary: string
+  if (!wrestles(left) && !wrestles(right)) summary = "Neither has a freestyle or Greco result on file."
+  else if (wrestles(left) && wrestles(right)) summary = `Both wrestle the Olympic styles. ${describe(l, left)}. ${describe(r, right)}.`
+  else {
+    const [report, side, other] = wrestles(left) ? [l, left, r] : [r, right, l]
+    summary = `Only ${surname(report)} has freestyle or Greco results on file - ${describe(report, side).split(": ")[1]}. Nothing on file for ${surname(other)}.`
+  }
+  return { left, right, summary }
+}
+
+const TIER: Record<string, BestWin["tier"]> = {
+  "national-ranked": "Nationally ranked",
+  "toc-field": "TOC field",
+  ranked: "State ranked",
+  "state-champion": "State champion",
+  "national-placer": "National placer",
+  "state-placer": "State placer",
+}
+const TIER_ORDER = ["national-ranked", "toc-field", "ranked", "state-champion", "national-placer", "state-placer"]
+
+function bestWinsOf(report: ComparisonReport, limit: number): BestWin[] {
+  return [...report.significantWins]
+    .sort((a, b) => TIER_ORDER.indexOf(a.reason) - TIER_ORDER.indexOf(b.reason) || String(b.date ?? "").localeCompare(String(a.date ?? "")))
+    .slice(0, limit)
+    .map((w) => ({
+      opponent: w.opponent,
+      credential: accoladeLineWithRank(w),
+      result: w.result,
+      event: w.event,
+      date: w.date,
+      tier: TIER[w.reason] ?? "State placer",
+    }))
+}
+
+export function buildBestWinsSection(l: ComparisonReport, r: ComparisonReport, limit = 6): BestWinsSection {
+  // The edge and its reason are the strength-of-opponents row's, so the two never disagree.
+  const row = strengthRow(l, r)
+  const lc = l.strengthOfCompetition.rankedWins
+  const rc = r.strengthOfCompetition.rankedWins
+  return {
+    left: bestWinsOf(l, limit),
+    right: bestWinsOf(r, limit),
+    leftCounts: { total: lc.total, national: lc.national },
+    rightCounts: { total: rc.total, national: rc.national },
+    edge: row.edge,
+    summary: row.edge
+      ? `${surname(row.edge === "left" ? l : r)} has the better wins: ${row.basis!.charAt(0).toLowerCase()}${row.basis!.slice(1)}.`
+      : `${row.basis}.`,
+  }
+}
+
+export function buildComparisonSections(l: ComparisonReport, r: ComparisonReport): ComparisonSections {
+  return {
+    national: buildNationalSection(l, r),
+    freestyle: buildFreestyleSection(l, r),
+    bestWins: buildBestWinsSection(l, r),
+  }
 }

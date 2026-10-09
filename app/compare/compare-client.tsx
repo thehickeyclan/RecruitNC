@@ -41,7 +41,8 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import type { ComparisonBout, CommonOpponent, HeadToHead } from "@/lib/athlete-comparison"
-import type { ComparisonRow, RowEdge, RowGroup } from "@/lib/athlete-comparison-rows"
+import type { ComparisonRow, ComparisonSections, RowEdge, RowGroup } from "@/lib/athlete-comparison-rows"
+import { ComparisonSectionsView } from "./comparison-sections"
 import {
   PerfectRecruitInvite,
   PerfectRecruitPanel,
@@ -79,6 +80,8 @@ type ComparisonResponse = {
   personal: boolean
   /** Verified coaches and admins only; null for everyone else. */
   programFit: ProgramFitPayload | null
+  /** Best wins, national tournaments, freestyle and Greco - side by side. */
+  sections?: ComparisonSections
 }
 
 /** A refusal the coach can do something about, kept apart from a plain error. */
@@ -863,6 +866,10 @@ export default function CompareClient({
             ) : null}
 
             <HeadToHeadCard data={data} />
+
+            {data.sections ? (
+              <ComparisonSectionsView sections={data.sections} leftName={data.left.name} rightName={data.right.name} />
+            ) : null}
 
             {/* What counts. */}
             <section className={`${PANEL} p-5 sm:p-6`}>
