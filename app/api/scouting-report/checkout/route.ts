@@ -115,9 +115,12 @@ export async function POST(request: Request) {
   // A rankings subscriber should land back on the rankings, not a prospect list they never asked for.
   const returnTo = athleteId
     ? `/athletes/${encodeURIComponent(athleteId)}/scouting-report`
-    : String((body as { returnTo?: string }).returnTo ?? "").startsWith("/")
+    : String((body as { returnTo?: string }).returnTo ?? "").startsWith("/") &&
+        !String((body as { returnTo?: string }).returnTo).startsWith("//")
       ? String((body as { returnTo?: string }).returnTo)
       : "/prospects/all"
+  // A return page may carry its own query (/view-profile?id=...): add to it, never a second "?".
+  const back = (flag: string) => `${BASE}${returnTo}${returnTo.includes("?") ? "&" : "?"}${flag}`
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -152,8 +155,8 @@ export async function POST(request: Request) {
       ...(plan
         ? { subscription_data: { metadata: { source: "scouting_report", kind, user_id: user.id } } }
         : {}),
-      success_url: `${BASE}${returnTo}?purchased=1`,
-      cancel_url: `${BASE}${returnTo}?canceled=1`,
+      success_url: back("purchased=1"),
+      cancel_url: back("canceled=1"),
     })
 
     return NextResponse.json({ url: session.url })

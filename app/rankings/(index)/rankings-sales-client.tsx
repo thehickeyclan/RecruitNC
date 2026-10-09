@@ -80,6 +80,17 @@ export function RankingsSalesClient({
   const [managingSubscription, setManagingSubscription] = useState(false)
   const autoCheckoutStarted = useRef(false)
 
+  /*
+   * Where checkout comes back to. A family paying from the college-views panel came to see which
+   * programs viewed their wrestler, so they go back to that profile (?return=/view-profile?id=...),
+   * not to the rankings. Anything that is not a plain relative path falls back to the rankings.
+   */
+  const checkoutReturnTo = () => {
+    if (typeof window === "undefined") return "/public-rankings"
+    const ret = new URLSearchParams(window.location.search).get("return") ?? ""
+    return ret.startsWith("/") && !ret.startsWith("//") ? ret : "/public-rankings"
+  }
+
   const startCheckout = async (kind: "subscription" | "subscription_annual") => {
     // Stripe needs an account to attach the subscription to, so signing in comes first —
     // but only once they have chosen, and the plan rides along so the choice is not lost.
@@ -95,7 +106,7 @@ export function RankingsSalesClient({
         headers: { "Content-Type": "application/json" },
         // Straight to the boards. Landing back on the sales page after paying reads as a
         // failed purchase, and the index is what they just bought.
-        body: JSON.stringify({ kind, returnTo: "/public-rankings" }),
+        body: JSON.stringify({ kind, returnTo: checkoutReturnTo() }),
       })
       const payload = await response.json()
 

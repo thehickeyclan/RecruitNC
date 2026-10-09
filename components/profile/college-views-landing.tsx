@@ -31,7 +31,8 @@ export function CollegeViewsLanding({
   const [here, setHere] = useState("/")
   useEffect(() => {
     const q = new URLSearchParams(window.location.search)
-    setFromEmail(q.get("src") === "email-views" || q.get("views") === "1")
+    // Back from checkout counts too: they paid to see this panel, so take them to it.
+    setFromEmail(q.get("src") === "email-views" || q.get("views") === "1" || q.get("purchased") === "1")
     setHere(window.location.pathname + window.location.search)
   }, [])
 
