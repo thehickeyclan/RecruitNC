@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { createClient } from "@/lib/supabase/client"
+import { isEduEmail } from "@/lib/coach-auto-approve"
 
 /**
  * The one question the Google button cannot ask on the way in.
@@ -27,6 +29,27 @@ function CompleteProfileForm() {
    */
   const presetType = PROFILE_TYPES.has(params.get("type") ?? "") ? (params.get("type") as string) : ""
   const [profileType, setProfileType] = useState(presetType)
+  /*
+   * A school address is almost always a college coach. Two coaches in a week (Alexander Reeves,
+   * su.edu, 9 October 2026) signed in with Google, met this question with "Athlete" listed first,
+   * picked it, and landed with no coach access until Matt switched them by hand. With a .edu
+   * address, College Coach is listed first and chosen already; anyone else changes it in a tap.
+   */
+  const [eduEmail, setEduEmail] = useState(false)
+  useEffect(() => {
+    if (presetType) return
+    let cancelled = false
+    void createClient()
+      .auth.getUser()
+      .then(({ data }) => {
+        if (cancelled || !isEduEmail(data.user?.email)) return
+        setEduEmail(true)
+        setProfileType((current) => current || "college-coach")
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [presetType])
   const [cellPhone, setCellPhone] = useState("")
   const [institution, setInstitution] = useState("")
   const [saving, setSaving] = useState(false)
@@ -103,14 +126,20 @@ function CompleteProfileForm() {
                   <SelectValue placeholder="Select one" />
                 </SelectTrigger>
                 <SelectContent>
+                  {eduEmail ? <SelectItem value="college-coach">College Coach</SelectItem> : null}
                   <SelectItem value="athlete">Athlete</SelectItem>
                   <SelectItem value="parent">Parent</SelectItem>
-                  <SelectItem value="college-coach">College Coach</SelectItem>
+                  {eduEmail ? null : <SelectItem value="college-coach">College Coach</SelectItem>}
                   <SelectItem value="hs-club-coach">High School/Club Coach</SelectItem>
                   <SelectItem value="referee">Referee</SelectItem>
                   <SelectItem value="fan">Fan</SelectItem>
                 </SelectContent>
               </Select>
+              {eduEmail && profileType === "college-coach" ? (
+                <p className="text-xs text-muted-foreground">
+                  Your school email suggests you coach college wrestling. Change this if not.
+                </p>
+              ) : null}
             </div>
             )}
 
