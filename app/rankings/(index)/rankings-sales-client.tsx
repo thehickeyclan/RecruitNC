@@ -351,8 +351,8 @@ export function RankingsSalesClient({
               <p className="mt-1 text-sm text-muted-foreground">per month</p>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
                 All class rankings and the Top 75 College Ready Prospects board. Full profile
-                management, see which college programs are viewing your profile, and our
-                recruiting portal (coming soon). Cancel anytime.
+                management, and see which college programs are viewing your profile. Cancel
+                anytime.
               </p>
               <Button
                 disabled={checkingOut !== null}

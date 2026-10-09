@@ -154,7 +154,7 @@ export default function BluePage() {
               <div className="rounded-xl border-2 border-[#D3B574]/60 bg-white p-5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-[#003366]/70">Recruiting only</p>
                 <p className="mt-1 text-2xl font-bold text-[#003366]">$9.99<span className="text-base font-medium">/month</span></p>
-                <p className="mt-2 text-sm text-[#003366]/85">NC prospect rankings, which college programs are viewing your profile, and the recruiting portal (coming soon). No practices or team events.</p>
+                <p className="mt-2 text-sm text-[#003366]/85">NC prospect rankings and which college programs are viewing your profile. No practices, team events, or recruiting portal.</p>
                 <Link href="/rankings?plan=subscription" className="mt-4 inline-flex rounded-md bg-[#003366] px-4 py-2 text-sm font-semibold text-white hover:bg-[#B31B1B]">
                   Subscribe →
                 </Link>
