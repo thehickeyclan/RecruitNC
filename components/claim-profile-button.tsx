@@ -113,6 +113,15 @@ export function ClaimProfileButton({
        * nothing saying what to do next - so families arrived at a profile and left it exactly as
        * they found it. Claiming is the start of filling it in, not the end of anything.
        */
+      // Except when they came from the college-views email: they claimed to see who is looking, so
+      // back to this profile at the panel. The setup form is one tap away from there.
+      const here = new URLSearchParams(window.location.search)
+      if (here.get("src") === "email-views" || here.get("views") === "1") {
+        const url = new URL(window.location.href)
+        url.searchParams.set("views", "1")
+        window.location.replace(url.toString())
+        return
+      }
       window.location.href = `/profile-setup?id=${encodeURIComponent(athleteId)}`
     } catch (error: any) {
       setState("idle")
