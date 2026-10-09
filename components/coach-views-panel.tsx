@@ -37,7 +37,7 @@ type Unlocked = {
   recentViews: number
 }
 
-export function CoachViewsPanel({ athleteId }: { athleteId: string }) {
+export function CoachViewsPanel({ athleteId, embedded = false }: { athleteId: string; embedded?: boolean }) {
   const [data, setData] = useState<Locked | Unlocked | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -59,11 +59,11 @@ export function CoachViewsPanel({ athleteId }: { athleteId: string }) {
   const total = data.totalViews
 
   return (
-    <div className="rounded-sm border border-white/10 bg-[#0f1c2e] p-5">
+    <div className={embedded ? "border-t border-white/10 pt-4" : "rounded-sm border border-white/10 bg-[#0f1c2e] p-5"}>
       <div className="flex items-center gap-2">
         <Eye className="h-4 w-4 text-[#D3B574]" />
         <h3 className="text-sm font-black uppercase tracking-[0.14em] text-white">
-          College coach views
+          {embedded ? "College programs" : "College coach views"}
         </h3>
       </div>
 

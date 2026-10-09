@@ -53,10 +53,16 @@ export function ProfileViewStatsPanel({
   athleteId,
   className,
   adminView = false,
+  children,
 }: {
   athleteId: string
   className?: string
   adminView?: boolean
+  /**
+   * The college programs that viewed - the list and the subscription that names them
+   * (CoachViewsPanel). One panel for "who's viewing you": the counts, then who.
+   */
+  children?: React.ReactNode
 }) {
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -164,10 +170,12 @@ export function ProfileViewStatsPanel({
           </p>
         )}
 
+        {children}
+
         <p className="text-xs text-white/35">
           {adminView
-            ? "Athletes see counts, not names — so coaches keep browsing freely."
-            : "Coaches are shown as counts, not names — so they keep browsing freely."}
+            ? "Families see college programs with a subscription; individual coaches are never named."
+            : "Individual coaches are never named — so they keep browsing freely."}
         </p>
       </div>
     </Card>

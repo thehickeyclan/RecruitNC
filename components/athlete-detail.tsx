@@ -1591,8 +1591,14 @@ export function AthleteDetail({
       <div className={cn("px-1 empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels)}>
         <CollegeViewsLanding athleteName={athleteName} signedIn={Boolean(currentUserId)} canSeePanel={canViewProfileStats} />
       </div>
+      {/* One "who's viewing you" panel: the counts, then the college programs and the subscription
+          that names them. It was two - the programs up here, the counts far down the page. */}
       <div id="college-views" className={cn("scroll-mt-24 px-1 empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels)}>
-        <CoachViewsPanel athleteId={String(athlete.id)} />
+        {canViewProfileStats && athlete.id ? (
+          <ProfileViewStatsPanel athleteId={athlete.id} adminView={isAdmin && !isViewingOwnProfile}>
+            <CoachViewsPanel athleteId={String(athlete.id)} embedded />
+          </ProfileViewStatsPanel>
+        ) : null}
       </div>
 
       {/* Coaches who messaged this wrestler. Renders only for the wrestler and linked parents
@@ -1805,13 +1811,6 @@ export function AthleteDetail({
 
       {/* Profile owner or admin — the API enforces the same rule server-side, and the
           panel renders nothing until there are views worth reporting. */}
-      {canViewProfileStats && athlete.id && (
-        <ProfileViewStatsPanel
-          athleteId={athlete.id}
-          adminView={isAdmin && !isViewingOwnProfile}
-          className={PROFILE_SECTION_ORDER.profileViews}
-        />
-      )}
 
       {/* Athlete Profile (Bio) — after the jump links, as a three-line preview with "Read full
           profile". Every sibling now carries an order class, so this one can too. */}
