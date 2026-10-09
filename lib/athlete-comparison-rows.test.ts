@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest"
-import { buildComparisonRows, type ComparisonReport, type ComparisonRow } from "./athlete-comparison-rows"
+import {
+  buildBestWinsSection,
+  buildComparisonRows,
+  buildFreestyleSection,
+  buildNationalSection,
+  type ComparisonReport,
+  type ComparisonRow,
+} from "./athlete-comparison-rows"
 import { placeNumber, type ScoutingReportResultRow } from "./scouting-report"
 
 function report(over: {
@@ -149,5 +156,74 @@ describe("comparison rows", () => {
       expect(r.left.value.trim()).not.toBe("")
       expect(r.right.value.trim()).not.toBe("")
     }
+  })
+})
+
+const journeymen = (year: number, place: number | null, record: string, overflow = false): ScoutingReportResultRow => ({
+  event: overflow ? "Journeymen Fall Classic (OF)" : "Journeymen Fall Classic", year, date: `${year}-10-04`, weight: "150", place, record,
+  detail: `150 · ${place ?? "did not place"} · ${record} record`, style: "folkstyle",
+})
+const fargo = (year: number, place: number | null, record: string, style: "freestyle" | "greco" = "freestyle"): ScoutingReportResultRow => ({
+  event: "Fargo", year, date: null, weight: "150", place, record, style,
+  detail: `16U ${style === "greco" ? "Greco-Roman" : "Freestyle"} · 150 · ${place ? `${place}th` : "did not place"} · ${record} record`,
+})
+
+describe("national tournaments section", () => {
+  it("lines the three events up and counts placings and records", () => {
+    const s = buildNationalSection(
+      report({ name: "Al Left", results: [nhsca(2026, 5, "5-2"), journeymen(2026, 3, "4-1")] }),
+      report({ name: "Bo Right", results: [nhsca(2026, null, "3-2")] }),
+    )
+    expect(s.blocks.map((b) => b.key)).toEqual(["nhsca", "super32", "journeymen"])
+    expect(s.left).toMatchObject({ events: 2, placings: 2, record: "9-3" })
+    expect(s.right).toMatchObject({ events: 1, placings: 0, record: "3-2" })
+    expect(s.summary).toContain("Left has more national placings (2 to 0)")
+  })
+
+  it("never counts an overflow bracket's place", () => {
+    const s = buildNationalSection(report({ name: "Al Left", results: [journeymen(2026, 1, "5-0", true)] }), report({ name: "Bo Right" }))
+    const line = s.blocks.find((b) => b.key === "journeymen")!.left[0]!
+    expect(line.finish).toBe("Overflow bracket")
+    expect(s.left.placings).toBe(0)
+    expect(s.left.record).toBe("5-0")
+  })
+
+  it("says so when neither has been", () => {
+    expect(buildNationalSection(report({ name: "Al Left" }), report({ name: "Bo Right" })).summary).toBe(
+      "Neither has a result at NHSCA, Super 32 or Journeymen on file.",
+    )
+  })
+})
+
+describe("freestyle section", () => {
+  it("shows who wrestles the Olympic styles, with every result as evidence", () => {
+    const s = buildFreestyleSection(
+      report({ name: "Al Left", results: [fargo(2026, 6, "6-2"), fargo(2026, null, "1-2", "greco"), nhsca(2026, 5, "5-2")] }),
+      report({ name: "Bo Right", results: [nhsca(2026, null, "3-2")] }),
+    )
+    expect(s.left.freestyle).toHaveLength(1)
+    expect(s.left.greco).toHaveLength(1)
+    expect(s.left.freestyle[0]!.division).toBe("16U Freestyle")
+    expect(s.right.freestyle).toHaveLength(0)
+    expect(s.summary).toContain("Only Left has freestyle or Greco results on file")
+    expect(s.summary).toContain("Nothing on file for Right")
+  })
+
+  it("does not call a dual meet a missed placing", () => {
+    const duals: ScoutingReportResultRow = {
+      event: "16U National Duals", year: 2026, date: null, weight: "126", place: null, record: "6-1", style: "greco",
+      detail: "16U Boys Greco-Roman · 126 · did not place · 6-1 record",
+    }
+    expect(buildFreestyleSection(report({ name: "Al Left", results: [duals] }), report({ name: "Bo Right" })).left.greco[0]!.finish).toBe("Duals")
+  })
+})
+
+describe("best wins section", () => {
+  it("agrees with the strength-of-opponents row", () => {
+    const l = report({ name: "Al Left", rankedWins: { national: 2, tocField: 0, stateRanked: 1, total: 3 } })
+    const r = report({ name: "Bo Right", rankedWins: { national: 0, tocField: 2, stateRanked: 6, total: 8 } })
+    const s = buildBestWinsSection(l, r)
+    expect(s.edge).toBe(row(buildComparisonRows(l, r, { personal: true }), "strength").edge)
+    expect(s.summary).toMatch(/^Left has the better wins: more wins over nationally ranked opponents \(2 to 0\)\.$/)
   })
 })

@@ -12,7 +12,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
 import { compareAthletes } from "@/lib/athlete-comparison"
 import { loadComparisonBouts } from "@/lib/athlete-comparison-load"
-import { buildComparisonRows, individualNationalEvents, type ComparisonReport } from "@/lib/athlete-comparison-rows"
+import { buildComparisonRows, buildComparisonSections, individualNationalEvents, type ComparisonReport } from "@/lib/athlete-comparison-rows"
 import { hasPerfectRecruit } from "@/lib/program-fit"
 import { loadProgramFit, resolveProgramScope } from "@/lib/program-fit-store"
 import { mayUseComparison } from "@/lib/compare-access"
@@ -156,6 +156,7 @@ export async function GET(request: NextRequest) {
       commonOpponentEdge: onTheMat.commonOpponentEdge,
       verdict: onTheMat.verdict,
       rows: buildComparisonRows(leftReport, rightReport, { personal }),
+      sections: buildComparisonSections(leftReport, rightReport),
       personal,
       programFit,
     },
