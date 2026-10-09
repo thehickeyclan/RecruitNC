@@ -46,6 +46,10 @@ export async function schoolForCollege(
     .insert({
       name: college.name,
       canonical_name: college.name,
+      // Unknown, not North Carolina. `schools` was built for NC high schools and defaults state to
+      // NC, so every out-of-state college a coach brought in - Schreiner (TX), Shenandoah (VA),
+      // W&J (PA) - was filed as NC. `colleges` holds no state to copy; staff can set it.
+      state: null,
       logo_url: college.logo_url || null,
       is_test: false,
       is_active: true,
