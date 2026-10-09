@@ -351,24 +351,6 @@ export default async function HomePage() {
       </section>
 
       <div className="container mx-auto space-y-16 px-4 py-12">
-        {/* The scholarship moved out of the hero, which now says one thing - recruiting - but it
-            stays on the front page. */}
-        <div className="rounded-xl border border-rnc-gold/35 bg-rnc-surface p-4 sm:flex sm:items-center sm:justify-between sm:gap-5">
-          <div>
-            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-rnc-gold">Caden Perry Warrior Scholarship</p>
-            <p className="mt-1.5 text-sm leading-relaxed text-white/75">
-              A $1,300 wrestling-support award, presented to {TOC_2026_AWARDS.cadenPerryScholarship.name} at the 2026
-              Tournament of Champions.
-            </p>
-          </div>
-          <Link
-            href="/fundraising/scholarships/caden-perry"
-            className="mt-4 inline-flex min-h-11 shrink-0 items-center justify-center rounded-md bg-rnc-red px-5 text-sm font-bold text-white transition-colors hover:bg-rnc-red-hover sm:mt-0"
-          >
-            Learn More
-          </Link>
-        </div>
-
         {/* Latest Commits — the reason people come, so it leads */}
         <section>
           <SectionHeader title="Latest Commits" href="/athletes" linkLabel="All commits" />
