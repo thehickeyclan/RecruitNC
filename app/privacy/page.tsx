@@ -13,7 +13,7 @@ export default function PrivacyPolicyPage() {
       <div className="mx-auto max-w-3xl">
         <p className="text-xs font-bold tracking-[0.2em] text-rnc-gold">NC UNITED WRESTLING</p>
         <h1 className="mt-2 text-4xl font-extrabold tracking-tight">Privacy Policy</h1>
-        <p className="mt-3 text-sm text-[#A8BBD1]">Last updated 7 September 2026</p>
+        <p className="mt-3 text-sm text-[#A8BBD1]">Last updated 8 October 2026</p>
 
         <div className="mt-10 space-y-10 text-[15px] leading-relaxed text-[#D6E1EE]">
           <section>
@@ -31,6 +31,15 @@ export default function PrivacyPolicyPage() {
 
           <section>
             <h2 className="text-xl font-bold text-white">What we collect</h2>
+
+            <h3 className="mt-5 font-semibold text-rnc-gold">Accounts</h3>
+            <p className="mt-2">
+              When you create an account we collect your name, email address and a password, or the
+              name and email Google shares with us if you sign in with Google. Passwords are handled
+              by our sign-in provider and stored only as a one-way hash; we never see them. College
+              coaches also give us a cell number and the program they coach, so we can confirm who
+              they are.
+            </p>
 
             <h3 className="mt-5 font-semibold text-rnc-gold">Practice and drop-in registration</h3>
             <p className="mt-2">
@@ -75,17 +84,45 @@ export default function PrivacyPolicyPage() {
             <h3 className="mt-5 font-semibold text-rnc-gold">Scouting reports for college coaches</h3>
             <p className="mt-2">
               A college coach can open a scouting report on an athlete. Most of what it contains is
-              competition record — results, notable wins and losses, rankings. A report also includes
-              the athlete&apos;s cell number, contact email, GPA and test scores, but only for a coach
-              we have checked by hand against their program&apos;s published staff directory. A college
-              email address on its own is not enough. Every copy carries the name of the coach it was
-              prepared for.
+              competition record — results, notable wins and losses, rankings. For a college coach
+              account, a report and the athlete&apos;s profile also show the athlete&apos;s cell
+              number, contact email, GPA and test scores. Coaches get this access when they sign up;
+              we then check every coach by hand against their program&apos;s published staff
+              directory, and a coach we cannot confirm loses access. Every copy of a report carries
+              the name of the coach it was prepared for.
             </p>
             <p className="mt-2">
               Anyone else who can reach a report — including a paying subscriber — sees the competition
               record with no contact details and no academics. Leaving a field blank on the profile
               keeps it out of the report entirely, and families can ask us to remove any of it at any
               time.
+            </p>
+
+            <h3 className="mt-5 font-semibold text-rnc-gold">Messages from college coaches</h3>
+            <p className="mt-2">
+              A college coach we have reviewed can send a message to an athlete. Coaches start every
+              conversation; athletes and families can reply but cannot start one. Each conversation
+              is visible to the athlete and to every parent or guardian linked to the profile, always.
+              We store the messages, and NC United staff can read them to keep the service safe and
+              to deal with anything reported to us. Alerts on a lock screen name the coach and their
+              program, never the text of the message; families not signed in to the app are told by
+              email. Any message can be reported, and a family can stop messages from a coach at any
+              time.
+            </p>
+
+            <h3 className="mt-5 font-semibold text-rnc-gold">Website usage</h3>
+            <p className="mt-2">
+              The website uses Vercel Web Analytics to count page views, which pages are visited and
+              roughly where visitors come from (country, browser, device type). It does not use
+              cookies, does not follow you to other sites, and does not identify you. Our servers
+              also keep routine logs, including IP addresses, for security and troubleshooting.
+            </p>
+
+            <h3 className="mt-5 font-semibold text-rnc-gold">Cookies</h3>
+            <p className="mt-2">
+              The website sets cookies only to keep you signed in and to make the site work. We do
+              not use advertising or cross-site tracking cookies. You can clear or block cookies in
+              your browser, but you will need to sign in again.
             </p>
 
             <h3 className="mt-5 font-semibold text-rnc-gold">Athlete profiles and results</h3>
@@ -100,7 +137,7 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-xl font-bold text-white">What we do not collect</h2>
             <p className="mt-2">
               The app contains no advertising, no analytics or tracking software, and no third-party
-              trackers. We do not collect your location, contacts, photos or browsing activity, and we
+              trackers. The website has no advertising and no third-party trackers either. We do not collect your location, contacts, photos or browsing activity, and we
               never see or store card numbers.
             </p>
           </section>
@@ -129,10 +166,33 @@ export default function PrivacyPolicyPage() {
           <section>
             <h2 className="text-xl font-bold text-white">Who we share it with</h2>
             <p className="mt-2">
-              Only the services needed to operate: Supabase (database and hosting), Stripe (payments),
-              Expo and Apple (notification delivery), and our AI provider for Data Dawg answers. They
+              Only the services needed to operate: Supabase (database and sign-in), Vercel (website
+              hosting and page-view counts), Stripe (payments), Expo and Apple (notification
+              delivery), our email and text-message providers (alerts and account messages), and our
+              AI provider for Data Dawg answers. They
               process data on our behalf. We do not sell personal information, and we do not share it
               for advertising.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-white">How we protect it</h2>
+            <p className="mt-2">
+              Everything travels over encrypted connections (HTTPS). Our database enforces access
+              rules row by row, so a signed-in user can reach only what their role allows, and fields
+              like contact details and academics are never public. Only the NC United staff who need
+              it can reach the full data. No system is perfectly secure, but we take reasonable steps
+              to protect what we hold.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-white">If something goes wrong</h2>
+            <p className="mt-2">
+              If we learn that personal information has been accessed without permission, we will
+              investigate straight away, secure our systems, and notify the families and coaches
+              affected as quickly as we can and in line with North Carolina law, telling them what
+              happened and what we are doing about it.
             </p>
           </section>
 
@@ -150,8 +210,17 @@ export default function PrivacyPolicyPage() {
             <h2 className="text-xl font-bold text-white">Your choices</h2>
             <p className="mt-2">
               You can turn alerts off in iOS Settings, browse commitments, rankings and the calendar
-              without an account, and ask us to access, correct or delete what we hold. Email us and we
+              without an account, stop messages from any coach, and ask us to access, correct or
+              delete what we hold. You can also delete your account from inside the app. Email us and we
               will handle it.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-white">Changes to this policy</h2>
+            <p className="mt-2">
+              When we change this policy we will post the new version here and update the date at
+              the top.
             </p>
           </section>
 
