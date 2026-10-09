@@ -5,6 +5,7 @@ import { resolveRankingViewer } from "@/lib/ranking-access"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { recentCollegeViewStats } from "@/lib/college-view-signal"
 
 // Per viewer: which of the two things this route does depends entirely on who is asking.
 export const dynamic = "force-dynamic"
@@ -46,5 +47,7 @@ export default async function RankingsIndexPage({
     redirect(query ? `/public-rankings?${query}` : "/public-rankings")
   }
 
-  return <RankingsSalesClient />
+  // The reason a parent pays: college coaches are looking. Counted, cached for an hour.
+  const collegeViews = await recentCollegeViewStats(createAdminClient()).catch(() => null)
+  return <RankingsSalesClient collegeViews={collegeViews} />
 }

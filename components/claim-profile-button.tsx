@@ -70,6 +70,21 @@ export function ClaimProfileButton({
     }
   }, [athleteId, claimedByUserId])
 
+  /*
+   * College coaches have looked at this profile. The strongest reason a family has to claim it -
+   * and the claim is what leads to the subscription that shows which programs. Yes or no only.
+   */
+  const [collegeViewed, setCollegeViewed] = useState(false)
+  useEffect(() => {
+    if (state !== "idle") return
+    let cancelled = false
+    fetch(`/api/athletes/${encodeURIComponent(athleteId)}/college-interest`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : { viewed: false }))
+      .then((d) => { if (!cancelled) setCollegeViewed(d.viewed === true) })
+      .catch(() => undefined)
+    return () => { cancelled = true }
+  }, [state, athleteId])
+
   const [signing, setSigning] = useState(false)
   const [signedName, setSignedName] = useState("")
 
@@ -157,10 +172,16 @@ export function ClaimProfileButton({
 
   return (
     <div className="rounded-sm border border-[#D3B574]/40 bg-[#D3B574]/5 p-4">
+      {collegeViewed ? (
+        <p className="mb-2 inline-flex items-center gap-2 rounded-sm bg-[#D3B574] px-2.5 py-1 text-xs font-extrabold uppercase tracking-wider text-[#0A1628]">
+          College programs have viewed this profile
+        </p>
+      ) : null}
       <p className="text-sm font-bold text-white">Is this your profile?</p>
       <p className="mt-1 text-sm text-white/60">
-        Nobody has claimed {firstName} yet. Claiming lets you add film, a GPA and everything
-        college coaches ask for.
+        {collegeViewed
+          ? `Claim ${firstName}'s profile to see which programs are looking, and add the film, GPA and contact details they'll want next.`
+          : `Nobody has claimed ${firstName} yet. Claiming lets you add film, a GPA and everything college coaches ask for.`}
       </p>
       <div className="mt-3 flex flex-wrap gap-2">
         <Button

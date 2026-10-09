@@ -41,7 +41,12 @@ type RankingsSubscription = {
   canManage: boolean
 }
 
-export function RankingsSalesClient() {
+export function RankingsSalesClient({
+  collegeViews = null,
+}: {
+  /** NC wrestler profiles college coaches viewed in the last 30 days, and by how many coaches. */
+  collegeViews?: { profilesViewed: number; coaches: number } | null
+} = {}) {
   const [viewMode, setViewMode] = useState<"table" | "cards">("table")
   const [athletes, setAthletes] = useState<Athlete[]>([])
   const [loadingAthletes, setLoadingAthletes] = useState(true)
@@ -222,6 +227,21 @@ export function RankingsSalesClient() {
             </p>
           </div>
 
+          {/* The headline a parent buys on: real, counted, recent. Hidden if there is nothing to say. */}
+          {collegeViews && collegeViews.profilesViewed > 0 ? (
+            <div className="mx-auto mt-8 max-w-2xl rounded-xl border-2 border-primary/50 bg-primary/10 p-5 text-center">
+              <p className="text-2xl font-bold text-foreground sm:text-3xl">
+                College coaches viewed{" "}
+                <span className="text-primary">{collegeViews.profilesViewed.toLocaleString()}</span> NC wrestler
+                profiles in the last 30 days.
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                {collegeViews.coaches > 1 ? `${collegeViews.coaches} college coaches, all looking at North Carolina. ` : ""}
+                Subscribe and see which programs are viewing yours.
+              </p>
+            </div>
+          ) : null}
+
           {checkoutReturned === "canceled" && (
             <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-border bg-card p-4 text-center text-sm text-muted-foreground">
               Checkout was canceled. You were not charged and can choose a plan whenever you are ready.
@@ -235,10 +255,10 @@ export function RankingsSalesClient() {
 
           <div className="mx-auto mt-10 grid max-w-4xl gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
+              ["Profile activity", "Which college programs are viewing you"],
               ["2027–2029", "Frequently updated class rankings"],
               ["Top 75", "Ranked prospects, every class"],
               ["Head-to-head", "Who beat whom, and when"],
-              ["Profile activity", "Which college programs are viewing you"],
             ].map((claim) => (
               <div key={claim[0]} className="rounded-xl border border-border bg-card p-4 text-left">
                 <p className="text-xl font-semibold text-primary">{claim[0]}</p>
