@@ -186,11 +186,14 @@ function Pitch({
   boutsOnFile,
   signedIn,
   onStart,
+  returnTo,
 }: {
   athleteCount: number
   boutsOnFile: number | null
   signedIn: boolean
   onStart: () => void
+  /** This exact comparison, so signing in lands back on it rather than an empty page. */
+  returnTo: string
 }) {
   const stats = [
     { value: athleteCount.toLocaleString(), label: "NC wrestlers ready to compare" },
@@ -231,13 +234,13 @@ function Pitch({
               ) : (
                 <>
                   <Link
-                    href="/auth/signin?returnTo=%2Fcompare"
+                    href={`/auth/signin?returnTo=${encodeURIComponent(returnTo)}`}
                     className="inline-flex items-center gap-2 rounded-lg bg-[#D3B574] px-6 py-3 font-bold text-[#0A1628] transition hover:bg-[#c4a665]"
                   >
                     Sign in to compare <ArrowRight className="h-4 w-4" />
                   </Link>
                   <Link
-                    href="/auth/signup?returnTo=%2Fcompare"
+                    href={`/auth/signup?type=college-coach&returnTo=${encodeURIComponent(returnTo)}`}
                     className="inline-flex items-center rounded-lg border border-white/20 px-6 py-3 font-bold text-white transition hover:border-[#D3B574] hover:text-[#D3B574]"
                   >
                     College coach? Get free access
@@ -572,7 +575,7 @@ function CommonOpponents({ data }: { data: ComparisonResponse }) {
   )
 }
 
-function AccessPanel({ problem }: { problem: AccessProblem }) {
+function AccessPanel({ problem, returnTo }: { problem: AccessProblem; returnTo: string }) {
   const signedOut = problem.status === 401
   return (
     <div className={`${PANEL} mt-8 border-[#D3B574]/30 p-6 text-center sm:p-8`}>
@@ -585,11 +588,11 @@ function AccessPanel({ problem }: { problem: AccessProblem }) {
       </p>
       <div className="mt-6 flex flex-wrap justify-center gap-3">
         {signedOut ? (
-          <Link href="/auth/signin?returnTo=%2Fcompare" className="rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#c4a665]">
+          <Link href={`/auth/signin?returnTo=${encodeURIComponent(returnTo)}`} className="rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#c4a665]">
             Sign in
           </Link>
         ) : null}
-        <Link href="/auth/signup?returnTo=%2Fcompare" className="rounded-lg border border-white/20 px-5 py-2.5 text-sm font-bold text-white hover:border-[#D3B574] hover:text-[#D3B574]">
+        <Link href={`/auth/signup?type=college-coach&returnTo=${encodeURIComponent(returnTo)}`} className="rounded-lg border border-white/20 px-5 py-2.5 text-sm font-bold text-white hover:border-[#D3B574] hover:text-[#D3B574]">
           College coach sign-up
         </Link>
       </div>
@@ -723,6 +726,15 @@ export default function CompareClient({
   }
 
   const visible = data ? data.rows.filter(isOn) : []
+  // Where sign-in and sign-up come back to: this comparison, with its wrestlers, rows and source.
+  const returnTo = (() => {
+    const params = new URLSearchParams()
+    if (leftId) params.set("left", leftId)
+    if (rightId) params.set("right", rightId)
+    if (enabled) params.set("rows", [...enabled].join(","))
+    if (initialSource) params.set("src", initialSource)
+    return `/compare${params.toString() ? `?${params}` : ""}`
+  })()
   const classYearOptions = useMemo(
     () => [...new Set(athletes.map((a) => a.graduationyear).filter((y): y is number => y != null))].sort((a, b) => a - b),
     [athletes],
@@ -782,7 +794,7 @@ export default function CompareClient({
 
   return (
     <main className="min-h-screen bg-[#0A1628] text-white">
-      <Pitch athleteCount={athletes.length} boutsOnFile={boutsOnFile} signedIn={Boolean(user)} onStart={scrollToTool} />
+      <Pitch athleteCount={athletes.length} boutsOnFile={boutsOnFile} signedIn={Boolean(user)} onStart={scrollToTool} returnTo={returnTo} />
 
       <section ref={toolRef} id="compare" className="container mx-auto scroll-mt-20 px-4 pb-20">
         <div className={`${PANEL} p-5 sm:p-6`}>
@@ -827,7 +839,7 @@ export default function CompareClient({
             </div>
           </div>
         ) : null}
-        {access && !loading ? <AccessPanel problem={access} /> : null}
+        {access && !loading ? <AccessPanel problem={access} returnTo={returnTo} /> : null}
         {error && !loading ? (
           <p className="mt-6 rounded-lg border border-[#BC0B03]/40 bg-[#BC0B03]/10 p-4 text-sm text-red-200">{error}</p>
         ) : null}
