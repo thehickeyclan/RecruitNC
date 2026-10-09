@@ -8,7 +8,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, MapPin, TrendingUp } from "lucide-react"
+import { ArrowLeftRight, ArrowRight, FileText, MapPin, Star, Target, TrendingUp, UserRound } from "lucide-react"
 import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
 import { normalizeAthleteList } from "@/lib/professional-athlete"
 import { getCurrentSigningClass } from "@/lib/commit-class-year"
@@ -111,42 +111,21 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-rnc-ink">
-      {/* Tickets are the one thing a visitor might have come to do today, so they lead — above
-          the hero, before anything asks them to browse. Behind the same clock every other ticket
-          link uses, and it falls back to the field announcement when sales are shut.
-
-          Once the tournament is wrestled the same slot is the strongest thing we have to show:
-          ten champions and every bracket. Selling a ticket to it the morning after was the loudest
-          way the site could say nobody is home. */}
+      {/* The Tournament of Champions. On sale it leads - a ticket is on a clock. Once wrestled, it
+          is one line: the results are worth a link, not the top of a recruiting homepage weeks
+          later (Matt, 9 October 2026). Before sales open, the field announcement strip. */}
       {tocEventIsOver() ? (
-        <section className="border-b-2 border-[#D3B574] bg-gradient-to-r from-[#0B1D3A] via-[#13294B] to-[#0B1D3A]">
-          <div className="container mx-auto px-4 py-5 sm:py-6">
-            <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-left">
-              <div className="min-w-0">
-                <p className="inline-flex items-center gap-2 rounded-full bg-[#D3B574] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#0A1628]">
-                  Final
-                </p>
-                <h2 className="mt-2 text-2xl font-extrabold leading-tight text-white sm:text-3xl">
-                  Tournament of Champions
-                </h2>
-                <p className="mt-1 text-sm text-white/75 sm:text-base">
-                  Ten champions crowned in Apex · {TOC_2026_AWARDS.mostOutstandingWrestler.name} named Most
-                  Outstanding Wrestler
-                </p>
-              </div>
-              <div className="flex shrink-0 flex-col items-center gap-2 sm:items-end">
-                <Link
-                  href="/tournament-of-champions/results"
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#D3B574] px-7 py-4 text-base font-extrabold text-[#0A1628] transition-colors hover:bg-[#c4a665] sm:text-lg"
-                >
-                  Results &amp; Brackets
-                  <ArrowRight className="h-5 w-5" />
-                </Link>
-                <Link href="/tournament-of-champions" className="text-xs font-semibold text-white/70 hover:text-white">
-                  About the tournament
-                </Link>
-              </div>
-            </div>
+        <section className="border-b border-rnc-gold/25 bg-[#0B1D3A]">
+          <div className="container mx-auto px-4">
+            <Link href="/tournament-of-champions/results" className="group flex items-center justify-between gap-3 py-2.5">
+              <p className="min-w-0 truncate text-sm text-white/80">
+                <span className="font-bold text-rnc-gold">Tournament of Champions 2026</span>
+                <span className="hidden sm:inline"> · ten champions crowned · {TOC_2026_AWARDS.mostOutstandingWrestler.name}, Most Outstanding Wrestler</span>
+              </p>
+              <span className="flex shrink-0 items-center gap-1 text-sm font-semibold text-white/70 transition-colors group-hover:text-rnc-gold">
+                Results <ArrowRight className="h-4 w-4" />
+              </span>
+            </Link>
           </div>
         </section>
       ) : tocTicketsOnSale() ? (
@@ -155,43 +134,21 @@ export default async function HomePage() {
             <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-left">
               <div className="min-w-0">
                 <p className="inline-flex items-center gap-2 rounded-full bg-[#CC0000] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">
-                  <span className="relative flex h-2 w-2">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
-                  </span>
                   Tickets on sale now
                 </p>
-                <h2 className="mt-2 text-2xl font-extrabold leading-tight text-white sm:text-3xl">
-                  Tournament of Champions
-                </h2>
-                <p className="mt-1 text-sm text-white/75 sm:text-base">
-                  September 18–19 · Hope Community Church, Apex · limited seating
-                </p>
-                <a
-                  href={TOC_FLO_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-[#D3B574]"
-                >
+                <h2 className="mt-2 text-2xl font-extrabold leading-tight text-white sm:text-3xl">Tournament of Champions</h2>
+                <p className="mt-1 text-sm text-white/75 sm:text-base">September 18–19 · Hope Community Church, Apex · limited seating</p>
+                <a href={TOC_FLO_URL} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-[#D3B574]">
                   <Image src="/images/flo-logo.png" alt="FloWrestling" width={20} height={20} className="h-5 w-5 rounded" />
-                  <span>
-                    Streaming live on FloWrestling · commentary by Ryan Mitchell, The NC Mat
-                  </span>
+                  <span>Streaming live on FloWrestling · commentary by Ryan Mitchell, The NC Mat</span>
                 </a>
               </div>
               <div className="flex shrink-0 flex-col items-center gap-2 sm:items-end">
-                <a
-                  href={TOC_GOFAN_TICKETS_URL}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#D3B574] px-7 py-4 text-base font-extrabold text-[#0A1628] transition-colors hover:bg-[#c4a665] sm:text-lg"
-                >
+                <a href={TOC_GOFAN_TICKETS_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-[#D3B574] px-7 py-4 text-base font-extrabold text-[#0A1628] transition-colors hover:bg-[#c4a665] sm:text-lg">
                   Buy tickets
                   <ArrowRight className="h-5 w-5" />
                 </a>
-                <Link href="/tournament-of-champions" className="text-xs font-semibold text-white/70 hover:text-white">
-                  About the tournament
-                </Link>
+                <Link href="/tournament-of-champions" className="text-xs font-semibold text-white/70 hover:text-white">About the tournament</Link>
               </div>
             </div>
           </div>
@@ -199,14 +156,9 @@ export default async function HomePage() {
       ) : (
         <section className="border-b border-[#CC0000]/60 bg-[#0B1D3A]">
           <div className="container mx-auto px-4">
-            <Link
-              href="/tournament-of-champions/field"
-              className="group flex items-center justify-between gap-3 py-3"
-            >
+            <Link href="/tournament-of-champions/field" className="group flex items-center justify-between gap-3 py-3">
               <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-                <span className="inline-flex shrink-0 items-center rounded-full bg-[#CC0000] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white sm:px-2.5 sm:py-1 sm:text-[11px]">
-                  Live
-                </span>
+                <span className="inline-flex shrink-0 items-center rounded-full bg-[#CC0000] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white sm:px-2.5 sm:py-1 sm:text-[11px]">Live</span>
                 <p className="min-w-0 text-sm text-white sm:text-base">
                   <span className="hidden font-bold sm:inline">Tournament of Champions · </span>
                   <span className="font-bold">Athlete announcements</span>
@@ -221,40 +173,103 @@ export default async function HomePage() {
         </section>
       )}
 
-      {/* Scouting reports and rankings, free for college coaches. The coach is the reader the
-          whole database exists for, and neither product is findable from the page otherwise:
-          reports sit one click inside a profile, rankings behind a sales page. The button goes
-          straight to the coach sign-up, which grants access on submit. */}
-      <section className="border-b border-rnc-gold/25 bg-gradient-to-b from-rnc-ink to-[#0B1D3A]">
-        <div className="container mx-auto px-4 py-10 sm:py-14">
-          <div className="flex flex-col items-center gap-8 lg:flex-row lg:gap-12">
-            <div className="max-w-xl text-center lg:text-left">
+      {/* Hero - a recruiting site, said in the first line, with a door for each of the two people
+          it serves: the college coach looking for talent and the family who wants to be found. */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0">
+          <Image src={HERO_BACKGROUND_IMAGE} alt="" fill sizes="100vw" className="object-cover" priority />
+          <div className="absolute inset-0 bg-gradient-to-r from-rnc-ink via-rnc-ink/90 to-rnc-ink/55" />
+          <div className="absolute inset-0 bg-gradient-to-t from-rnc-ink via-transparent to-transparent" />
+        </div>
+        <div className="container relative mx-auto px-4 py-14 md:py-20">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-rnc-gold">
+            Recruit<span className="text-white">NC</span> · North Carolina wrestling
+          </p>
+          <h1 className="mt-3 max-w-3xl text-4xl font-black leading-[1.05] tracking-tight text-white sm:text-5xl md:text-6xl">
+            Where North Carolina wrestling gets <span className="text-rnc-gold">recruited.</span>
+          </h1>
+          <p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/80">
+            Every NC wrestler&apos;s results, rankings and commitments in one place, built for the college coaches looking
+            and the families who want to be found.
+          </p>
+          <div className="mt-8 grid max-w-3xl gap-4 sm:grid-cols-2">
+            <div className="rounded-xl border border-rnc-gold/50 bg-rnc-ink/80 p-5 backdrop-blur-sm">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-rnc-gold">College coaches</p>
+              <p className="mt-1.5 text-sm text-white/75">Scouting reports, rankings and side-by-side comparisons. Free.</p>
+              <Link
+                href="/auth/signup?type=college-coach"
+                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-rnc-gold px-5 py-2.5 text-sm font-extrabold text-rnc-ink transition-colors hover:bg-[#c4a665]"
+              >
+                Get free access <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+            <div className="rounded-xl border border-white/15 bg-rnc-ink/80 p-5 backdrop-blur-sm">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-white/60">Athletes &amp; families</p>
+              <p className="mt-1.5 text-sm text-white/75">Your results are probably already here. Claim your profile and get seen.</p>
+              <div className="mt-4 flex flex-wrap items-center gap-3">
+                <Link
+                  href="/prospects/all"
+                  className="inline-flex items-center gap-2 rounded-lg border-2 border-rnc-gold px-5 py-2 text-sm font-bold text-rnc-gold transition-colors hover:bg-rnc-gold/10"
+                >
+                  Find your profile <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link href="/create-profile" className="text-sm font-semibold text-white/70 hover:text-white">
+                  Not listed? Create one
+                </Link>
+              </div>
+            </div>
+          </div>
+          <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold">
+            <Link href="/athletes" className="text-white/70 hover:text-rnc-gold">Commitments <ArrowRight className="inline h-3.5 w-3.5" /></Link>
+            <Link href="/public-rankings" className="text-white/70 hover:text-rnc-gold">Prospect rankings <ArrowRight className="inline h-3.5 w-3.5" /></Link>
+            <Link href="/clubs" className="inline-flex items-center gap-1 text-white/70 hover:text-rnc-gold">
+              <MapPin className="h-3.5 w-3.5" aria-hidden="true" /> Find a club
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Built for college coaches: every tool a coach gets, in one place. The coach is the reader
+          the database exists for, and none of these is findable by browsing - reports sit inside a
+          profile, the comparison and rankings behind a sign-in. One button: the coach sign-up,
+          which grants access on submit. */}
+      <section className="border-y border-rnc-gold/25 bg-gradient-to-b from-[#0B1D3A] to-rnc-ink">
+        <div className="container mx-auto px-4 py-12 sm:py-16">
+          <div className="flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-14">
+            <div className="lg:w-[55%]">
               <p className="inline-flex items-center gap-2 rounded-full border border-rnc-gold/50 bg-rnc-gold/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-rnc-gold">
-                New · Free for college coaches
+                Free for college coaches
               </p>
-              <h2 className="mt-3 text-3xl font-extrabold leading-tight text-white sm:text-4xl lg:text-5xl">
-                Scouting reports &amp; prospect rankings
-              </h2>
-              <p className="mt-3 text-base leading-relaxed text-white/75 sm:text-lg">
-                A complete, objective look at North Carolina talent. Every athlete profile now has a
-                one-page scouting report, and every published class is ranked on results.
+              <h2 className="mt-3 text-3xl font-extrabold leading-tight text-white sm:text-4xl">Built for college coaches</h2>
+              <p className="mt-3 text-base leading-relaxed text-white/70 sm:text-lg">
+                A complete, objective look at North Carolina talent, from first look to the staff meeting.
               </p>
-              <ul className="mt-5 grid gap-x-6 gap-y-2 text-left text-sm text-white/80 sm:grid-cols-2">
+              <div className="mt-7 grid gap-3 sm:grid-cols-2">
                 {[
-                  "Evaluation and star rating",
-                  "Academics — GPA and test scores",
-                  "Competition record",
-                  "Significant wins and losses",
-                  "Strength of competition",
-                  "Class rankings, ranked on results",
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-2">
-                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-rnc-gold" aria-hidden="true" />
-                    {item}
-                  </li>
+                  { icon: FileText, title: "Scouting reports", body: "One page per athlete: evaluation, academics, best wins. PDF-ready." },
+                  { icon: ArrowLeftRight, title: "Compare wrestlers", body: "Head to head, common opponents, best wins, national results, and our read.", isNew: true },
+                  { icon: TrendingUp, title: "Prospect rankings", body: "Every published class, ranked on results." },
+                  { icon: UserRound, title: "Full athlete profiles", body: "Results, academics, contact details and film." },
+                  { icon: Star, title: "My Recruits", body: "A watch list your whole staff shares, with who's gone quiet." },
+                  { icon: Target, title: "Your perfect recruit", body: "Set your needs once; every comparison reads against them." },
+                ].map(({ icon: Icon, title, body, isNew }) => (
+                  <div key={title} className="flex gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                    <Icon className="mt-0.5 h-5 w-5 shrink-0 text-rnc-gold" aria-hidden="true" />
+                    <div>
+                      <p className="font-bold text-white">
+                        {title}
+                        {isNew ? (
+                          <span className="ml-2 rounded-full bg-rnc-gold px-1.5 py-px align-middle text-[9px] font-black uppercase tracking-wider text-rnc-ink">
+                            New
+                          </span>
+                        ) : null}
+                      </p>
+                      <p className="mt-0.5 text-sm leading-snug text-white/60">{body}</p>
+                    </div>
+                  </div>
                 ))}
-              </ul>
-              <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row lg:items-center">
+              </div>
+              <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row">
                 <Link
                   href="/auth/signup?type=college-coach"
                   className="inline-flex items-center gap-2 rounded-xl bg-rnc-gold px-8 py-4 text-base font-extrabold text-rnc-ink transition-colors hover:bg-[#c4a665] sm:text-lg"
@@ -262,22 +277,21 @@ export default async function HomePage() {
                   College coaches: get free access
                   <ArrowRight className="h-5 w-5" />
                 </Link>
-                <Link href="/rankings" className="text-sm font-semibold text-white/70 hover:text-white">
-                  Everyone else: see what&apos;s included
+                <Link href="/compare?src=home" className="text-sm font-semibold text-white/70 hover:text-white">
+                  See the comparison tool
                 </Link>
               </div>
-              <p className="mt-3 text-xs text-white/50">
-                Coaches: name, email, cell and college — access is immediate. Included for NC United Blue members.
+              <p className="mt-3 text-center text-xs text-white/45 sm:text-left">
+                Name, email, cell and college. Access is immediate.
               </p>
             </div>
-
-            <div className="w-full max-w-xl shrink-0 lg:max-w-[560px]">
+            <div className="w-full lg:w-[45%]">
               <Image
                 src="/scouting-report-sample.jpg"
                 alt="A sample NC United prospect scouting report: evaluation, academics, star rating, competition record, significant wins, strength of competition and notable losses"
                 width={1222}
                 height={885}
-                sizes="(min-width: 1024px) 560px, 100vw"
+                sizes="(min-width: 1024px) 45vw, 100vw"
                 className="h-auto w-full rounded-xl border border-white/10 shadow-2xl"
               />
             </div>
@@ -285,134 +299,22 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* The app is the newest thing here and the one a visitor cannot discover by browsing, so
-          it gets a full-width block of its own rather than a strip. It sits under the tickets bar
-          because that sale is on a clock and this is not.
-
-          It links to /download rather than the App Store: an iPhone gets a 307 straight to the
-          listing from middleware, and everybody else gets told it is iPhone-only instead of
-          landing somewhere they cannot act on. The printed QR codes point at the same place. */}
-      <section className="border-b border-rnc-gold/25 bg-gradient-to-b from-[#0B1D3A] to-rnc-ink">
-        <div className="container mx-auto px-4 py-10 sm:py-14">
-          <div className="flex flex-col items-center gap-8 md:flex-row md:items-center md:justify-center md:gap-14">
-            <div className="max-w-xl text-center md:text-left">
-              <p className="inline-flex items-center gap-2 rounded-full border border-rnc-gold/50 bg-rnc-gold/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-rnc-gold">
-                New · Free
-              </p>
-              <h2 className="mt-3 text-3xl font-extrabold leading-tight text-white sm:text-4xl lg:text-5xl">
-                The NC United app is here
-              </h2>
-              <p className="mt-3 text-base leading-relaxed text-white/75 sm:text-lg">
-                Every North Carolina commitment, the prospect rankings, the club map and every
-                Tournament of Champions bracket — bout by bout, as it was wrestled — on your phone.
-              </p>
-              {/* Chips rather than middot separators: the list wraps, and a separator stranded at
-                  the end of a line reads as a missing item. */}
-              <ul className="mt-5 flex flex-wrap justify-center gap-2 md:justify-start">
-                {["Commitments as they happen", "Alerts you choose", "Rankings and results"].map(
-                  (item) => (
-                    <li
-                      key={item}
-                      className="rounded-full border border-white/15 bg-white/5 px-3 py-1 text-sm font-semibold text-white/70"
-                    >
-                      {item}
-                    </li>
-                  ),
-                )}
-              </ul>
-              <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row md:items-start">
-                <Link
-                  href="/download"
-                  className="inline-flex items-center gap-2 rounded-xl bg-rnc-gold px-8 py-4 text-base font-extrabold text-rnc-ink transition-colors hover:bg-[#c4a665] sm:text-lg"
-                >
-                  Download for iPhone
-                  <ArrowRight className="h-5 w-5" />
-                </Link>
-                <p className="text-xs text-white/55">
-                  Free on the App Store. Android is not out yet.
-                </p>
-              </div>
-            </div>
-
-            <div className="shrink-0">
-              <Image
-                src="/nc-united-app-home.png"
-                alt="The NC United app showing Tournament of Champions, upcoming events and the latest commitments"
-                width={349}
-                height={760}
-                className="h-auto w-[210px] rounded-[1.75rem] border border-white/15 shadow-2xl sm:w-[240px]"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0">
-          <Image
-            src={HERO_BACKGROUND_IMAGE}
-            alt=""
-            fill
-            sizes="100vw"
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-rnc-ink via-rnc-ink/85 to-rnc-ink/50" />
-          <div className="absolute inset-0 bg-gradient-to-t from-rnc-ink via-transparent to-transparent" />
-        </div>
-
-        <div className="container relative mx-auto px-4 py-16 md:py-28">
-          <div className="max-w-2xl">
-            <h1 className="mb-5 text-5xl font-black tracking-tight text-white md:text-6xl lg:text-7xl">
-              Recruit<span className="text-rnc-gold">NC</span>
-            </h1>
-            <p className="mb-8 max-w-xl text-lg leading-relaxed text-white/80">
-              Every North Carolina wrestling commitment, prospect ranking, and result — in one place.
-            </p>
-            {/* Two doors, not three. /prospects/all and /colleges live in the navbar. */}
-            <div className="flex flex-wrap gap-3">
-              <Link href="/athletes">
-                <Button className="h-12 bg-rnc-red px-6 text-base font-semibold text-white hover:bg-rnc-red-hover">
-                  View Commitments
-                </Button>
-              </Link>
-              <Link href="/public-rankings">
-                <Button
-                  variant="outline"
-                  className="h-12 border-2 border-rnc-gold bg-transparent px-6 text-base font-semibold text-rnc-gold hover:bg-rnc-gold/10 hover:text-rnc-gold"
-                >
-                  Prospect Rankings
-                </Button>
-              </Link>
-            </div>
-            <Link
-              href="/clubs"
-              className="mt-4 inline-flex min-h-9 items-center gap-2 rounded-full border border-rnc-gold/55 bg-rnc-ink/65 px-4 py-2 text-sm font-semibold text-white/85 shadow-lg backdrop-blur-sm transition-colors hover:border-rnc-gold hover:bg-rnc-gold/10 hover:text-rnc-gold"
-            >
-              <MapPin className="h-4 w-4 text-rnc-gold" aria-hidden="true" />
-              Find a Wrestling Club
-              <ArrowRight className="h-3.5 w-3.5 text-rnc-gold" aria-hidden="true" />
-            </Link>
-
-            <div className="mt-7 max-w-xl rounded-xl border border-rnc-gold/35 bg-rnc-ink/80 p-4 shadow-xl backdrop-blur-sm sm:flex sm:items-center sm:justify-between sm:gap-5">
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-rnc-gold">
-                  Caden Perry Warrior Scholarship
-                </p>
-                <p className="mt-1.5 text-sm leading-relaxed text-white/75">
-                  A $1,300 wrestling-support award, presented to {TOC_2026_AWARDS.cadenPerryScholarship.name} at
-                  the 2026 Tournament of Champions.
-                </p>
-              </div>
-              <Link
-                href="/fundraising/scholarships/caden-perry"
-                className="mt-4 inline-flex min-h-11 shrink-0 items-center justify-center rounded-md bg-rnc-red px-5 text-sm font-bold text-white transition-colors hover:bg-rnc-red-hover sm:mt-0"
-              >
-                Learn More
-              </Link>
-            </div>
-          </div>
+      {/* The app, as a strip. It had a block as large as the coaches' one; on a recruiting homepage
+          it is a supporting line. /download sends an iPhone straight to the App Store listing. */}
+      <section className="border-b border-rnc-line bg-rnc-surface">
+        <div className="container mx-auto px-4">
+          <Link href="/download" className="group flex items-center justify-between gap-3 py-3">
+            <span className="flex min-w-0 items-center gap-3">
+              <Image src="/icon-192.png" alt="" width={32} height={32} className="h-8 w-8 shrink-0 rounded-lg" />
+              <span className="min-w-0 text-sm text-white/80">
+                <span className="font-bold text-white">NC United app for iPhone</span>
+                <span className="hidden sm:inline"> · commitments as they happen, alerts you choose, rankings and results</span>
+              </span>
+            </span>
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-lg border border-rnc-gold/60 px-3 py-1.5 text-xs font-bold text-rnc-gold transition-colors group-hover:bg-rnc-gold/10">
+              Download <ArrowRight className="h-3.5 w-3.5" />
+            </span>
+          </Link>
         </div>
       </section>
 
@@ -449,6 +351,24 @@ export default async function HomePage() {
       </section>
 
       <div className="container mx-auto space-y-16 px-4 py-12">
+        {/* The scholarship moved out of the hero, which now says one thing - recruiting - but it
+            stays on the front page. */}
+        <div className="rounded-xl border border-rnc-gold/35 bg-rnc-surface p-4 sm:flex sm:items-center sm:justify-between sm:gap-5">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-rnc-gold">Caden Perry Warrior Scholarship</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-white/75">
+              A $1,300 wrestling-support award, presented to {TOC_2026_AWARDS.cadenPerryScholarship.name} at the 2026
+              Tournament of Champions.
+            </p>
+          </div>
+          <Link
+            href="/fundraising/scholarships/caden-perry"
+            className="mt-4 inline-flex min-h-11 shrink-0 items-center justify-center rounded-md bg-rnc-red px-5 text-sm font-bold text-white transition-colors hover:bg-rnc-red-hover sm:mt-0"
+          >
+            Learn More
+          </Link>
+        </div>
+
         {/* Latest Commits — the reason people come, so it leads */}
         <section>
           <SectionHeader title="Latest Commits" href="/athletes" linkLabel="All commits" />
