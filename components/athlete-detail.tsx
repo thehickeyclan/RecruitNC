@@ -2,6 +2,7 @@
 
 import { STYLE_LABEL, type CompetitionSummary } from "@/lib/wrestling-style"
 import { mayUseComparison } from "@/lib/compare-access"
+import { SimilarComparisons } from "@/components/profile/similar-comparisons"
 import type { Credential } from "@/lib/profile/credentials"
 import { bannerNationalRankingLabel, type NationalRanking } from "@/lib/national-rankings"
 import {
@@ -13,6 +14,7 @@ import {
   CompetesBar,
   CredentialCards,
   ScoutingReportAction,
+  CompareAction,
   type BannerStat,
 } from "@/components/profile/profile-banner-parts"
 import { useState, useEffect } from "react"
@@ -314,6 +316,8 @@ export function AthleteDetail({
   }, [canEdit])
   // Private info (contact, GPA, ACT, SAT) visible only to self, coaches, and admins
   const canSeePrivateInfo = isViewingOwnProfile || isAdmin || isVerifiedCoach
+  /** The comparison: verified college coaches and admins, never on your own profile. */
+  const mayCompare = mayUseComparison({ isAdmin, profile: viewerProfile }) && !isViewingOwnProfile
 
   // Academic fields: support both gpa/sat/act and academic_gpa/academic_sat/academic_act (DB column variants)
   const effectiveGpa = athleteData?.academic_gpa ?? athleteData?.gpa
@@ -1232,6 +1236,9 @@ export function AthleteDetail({
                       className="mt-4 flex w-full"
                     />
                   ) : null}
+                  {mayCompare ? (
+                    <CompareAction athleteId={String(athlete.id)} className={cn("flex w-full", canSeeScoutingReport ? "mt-2" : "mt-4")} />
+                  ) : null}
                   {/* College coaches only: renders nothing for anyone else. */}
                   {!isViewingOwnProfile ? (
                     <CoachMessageButton
@@ -1432,6 +1439,7 @@ export function AthleteDetail({
                       {canSeeScoutingReport ? (
                         <ScoutingReportAction href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`} />
                       ) : null}
+                      {mayCompare ? <CompareAction athleteId={String(athlete.id)} /> : null}
                       {!isViewingOwnProfile ? (
                         <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="action" />
                       ) : null}
@@ -1603,6 +1611,7 @@ export function AthleteDetail({
             Scouting report (PDF)
           </a>
           ) : null}
+          {mayCompare ? <CompareAction athleteId={String(athlete.id)} className="min-h-[44px]" /> : null}
           {!isViewingOwnProfile ? (
             <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="action" className="min-h-[44px]" />
           ) : null}
@@ -2429,7 +2438,7 @@ export function AthleteDetail({
         is hidden from anyone who can edit - every admin. Arriving from here pre-selects this
         wrestler, so only the other side has to be chosen.
       */}
-      {mayUseComparison({ isAdmin, profile: viewerProfile }) && !isViewingOwnProfile && (
+      {mayCompare && (
         <div
           className={cn(
             "container mx-auto px-4 pt-8",
@@ -2446,9 +2455,10 @@ export function AthleteDetail({
                   </p>
                 </div>
                 <Button asChild variant="outline" size="lg" className="px-6 py-2">
-                  <a href={`/compare?left=${athlete.id}`}>Compare with another wrestler</a>
+                  <a href={`/compare?left=${athlete.id}&src=profile-card`}>Compare with another wrestler</a>
                 </Button>
               </div>
+              <SimilarComparisons athleteId={String(athlete.id)} source="profile-similar" label="Or one tap: similar wrestlers" className="mt-5" />
             </CardContent>
           </Card>
         </div>

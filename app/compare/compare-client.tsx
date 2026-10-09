@@ -45,6 +45,7 @@ import { useAuth } from "@/contexts/auth-context"
 import type { ComparisonBout, CommonOpponent, HeadToHead } from "@/lib/athlete-comparison"
 import type { ComparisonRow, ComparisonSections, RowEdge, RowGroup } from "@/lib/athlete-comparison-rows"
 import { ComparisonSectionsView } from "./comparison-sections"
+import { SimilarComparisons } from "@/components/profile/similar-comparisons"
 import { recommend } from "@/lib/comparison-recommendation"
 import {
   PerfectRecruitInvite,
@@ -602,6 +603,7 @@ export default function CompareClient({
   initialRight = "",
   initialRows = "",
   boutsOnFile = null,
+  initialSource = "",
 }: {
   athletes: Athlete[]
   /** Arriving from a wrestler's profile pre-selects them, so the coach only picks the other. */
@@ -611,12 +613,16 @@ export default function CompareClient({
   initialRows?: string
   /** Counted on the server for the pitch; null hides the figure rather than guessing one. */
   boutsOnFile?: number | null
+  /** Which way in the coach came ("profile", "my-recruits", "profile-similar"), for the usage log. */
+  initialSource?: string
 }) {
   const router = useRouter()
   const pathname = usePathname()
   const { user } = useAuth()
   const toolRef = useRef<HTMLElement>(null)
   const [leftId, setLeftId] = useState(initialLeft)
+  // The entry point counts once; a pick made on this page is the page's own.
+  const [source, setSource] = useState(initialSource || "compare")
   const [rightId, setRightId] = useState(initialRight)
   const [data, setData] = useState<ComparisonResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -660,7 +666,7 @@ export default function CompareClient({
     setAccess(null)
     const slowTimer = setTimeout(() => setSlow(true), 4000)
     setError(null)
-    fetch(`/api/compare?left=${encodeURIComponent(leftId)}&right=${encodeURIComponent(rightId)}`)
+    fetch(`/api/compare?left=${encodeURIComponent(leftId)}&right=${encodeURIComponent(rightId)}&src=${encodeURIComponent(source)}`)
       .then(async (res) => {
         const body = await res.json().catch(() => ({}))
         if (res.status === 401 || res.status === 403) {
@@ -673,10 +679,10 @@ export default function CompareClient({
       .catch((e) => { if (!cancelled) { setData(null); setError(e instanceof Error ? e.message : "Could not compare those two.") } })
       .finally(() => { clearTimeout(slowTimer); if (!cancelled) setLoading(false) })
     return () => { cancelled = true; clearTimeout(slowTimer) }
-  }, [leftId, rightId])
+  }, [leftId, rightId, source])
 
-  const pickLeft = (id: string) => { setLeftId(id); syncUrl(id, rightId, enabled) }
-  const pickRight = (id: string) => { setRightId(id); syncUrl(leftId, id, enabled) }
+  const pickLeft = (id: string) => { setSource("picker"); setLeftId(id); syncUrl(id, rightId, enabled) }
+  const pickRight = (id: string) => { setSource("picker"); setRightId(id); syncUrl(leftId, id, enabled) }
   const swap = () => {
     setLeftId(rightId)
     setRightId(leftId)
@@ -796,6 +802,16 @@ export default function CompareClient({
             </button>
             <Picker label="Compared with" athletes={athletes} value={rightId} exclude={leftId} onChange={pickRight} />
           </div>
+          {/* One wrestler picked: the likeliest second one is a tap away. */}
+          {leftId && !rightId && user ? (
+            <SimilarComparisons
+              athleteId={leftId}
+              source="compare-similar"
+              label="Suggested: same class and weight"
+              tone="navy"
+              className="mt-4"
+            />
+          ) : null}
         </div>
 
         {loading ? (

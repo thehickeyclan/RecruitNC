@@ -121,6 +121,13 @@ export async function GET(request: NextRequest) {
     loadComparisonBouts(admin, side(rightAthlete)),
   ])
 
+  // Who compared whom, and which way they came in - so we can see what coaches use. Never blocks.
+  const source = String(searchParams.get("src") ?? "").toLowerCase().replace(/[^a-z-]/g, "").slice(0, 40) || null
+  void admin
+    .from("compare_views")
+    .insert({ viewer_user_id: user.id, left_athlete_id: leftId, right_athlete_id: rightId, source })
+    .then(undefined, () => undefined)
+
   const onTheMat = compareAthletes(leftBouts, rightBouts)
   // Days since each last competed - the same reading as the directory and My Recruits.
   const activity = await loadActivity(admin, [leftAthlete as { id: string; graduationyear?: unknown }, rightAthlete as { id: string; graduationyear?: unknown }]).catch(
