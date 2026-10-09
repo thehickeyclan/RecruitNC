@@ -129,7 +129,11 @@ export function Navbar() {
     })
   }, [])
 
-  const isActive = (href: string) => pathname === href || (href !== "/" && pathname.startsWith(href))
+  // A link may carry a query (?src=nav, for usage counts); the page it points at is the path.
+  const isActive = (link: string) => {
+    const href = link.split("?")[0]!
+    return pathname === href || (href !== "/" && pathname.startsWith(href))
+  }
   const isDropdownActive = (items: { href: string }[]) => items.some((item) => isActive(item.href))
   const navLinkClass = (href: string) =>
     `text-white hover:bg-white/10 px-3 py-2 rounded-md text-sm font-medium transition-colors mobile-optimized ${isActive(href) ? "font-bold" : ""}`
@@ -185,7 +189,7 @@ export function Navbar() {
    */
   const profilesItem = { href: "/prospects/all", label: "Browse Athlete Profiles" }
   /** Sits with the profiles, because comparing two wrestlers is what you do after finding one. */
-  const compareItem = { href: "/compare", label: "Compare Wrestlers" }
+  const compareItem = { href: "/compare?src=nav", label: "Compare Wrestlers" }
   const commitmentItems = [
     { href: "/athletes", label: "College Commitments" },
     { href: "/high-schools", label: "Commitments by High School" },

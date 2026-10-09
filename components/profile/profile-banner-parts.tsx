@@ -7,7 +7,7 @@
  */
 
 import type { ReactNode } from "react"
-import { Crown, FileText, Medal, Trophy } from "lucide-react"
+import { ArrowLeftRight, Crown, FileText, Medal, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { Credential } from "@/lib/profile/credentials"
 import { STYLE_LABEL, type CompetitionSummary } from "@/lib/wrestling-style"
@@ -159,6 +159,26 @@ export function ScoutingReportAction({ href, className }: { href: string; classN
     >
       <FileText className="h-4 w-4" aria-hidden />
       View scouting report
+    </a>
+  )
+}
+
+/**
+ * Compare this wrestler with another - beside the scouting report, where a coach's eye already is.
+ * The bottom-of-page card was the only way in, below every result. Callers gate it to verified
+ * college coaches and admins (lib/compare-access.ts); the page arrives with this wrestler picked.
+ */
+export function CompareAction({ athleteId, className }: { athleteId: string; className?: string }) {
+  return (
+    <a
+      href={`/compare?left=${encodeURIComponent(athleteId)}&src=profile`}
+      className={cn(
+        "inline-flex min-h-[40px] items-center justify-center gap-2 rounded-lg border border-[#D3B574] bg-[#D3B574]/10 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.14em] text-[#D3B574] transition-colors hover:bg-[#D3B574]/20",
+        className,
+      )}
+    >
+      <ArrowLeftRight className="h-4 w-4" aria-hidden />
+      Compare
     </a>
   )
 }

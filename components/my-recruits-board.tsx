@@ -341,7 +341,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                 </button>
                 {pickedRows.length === 2 ? (
                   <Link
-                    href={`/compare?left=${pickedRows[0]!.athleteId}&right=${pickedRows[1]!.athleteId}`}
+                    href={`/compare?left=${pickedRows[0]!.athleteId}&right=${pickedRows[1]!.athleteId}&src=my-recruits`}
                     className="rounded-lg bg-[#D3B574] px-4 py-2 text-sm font-bold text-[#0A1628] hover:bg-[#c4a665]"
                   >
                     Compare →
