@@ -15,7 +15,7 @@ import { loadComparisonBouts } from "@/lib/athlete-comparison-load"
 import { buildComparisonRows, buildComparisonSections, individualNationalEvents, type ComparisonReport } from "@/lib/athlete-comparison-rows"
 import { hasPerfectRecruit } from "@/lib/program-fit"
 import { loadProgramFit, resolveProgramScope } from "@/lib/program-fit-store"
-import { mayUseComparison } from "@/lib/compare-access"
+import { isComparisonTester, mayUseComparison } from "@/lib/compare-access"
 import { loadActivity } from "@/lib/activity-load"
 import { classifyViewer } from "@/lib/viewer-role"
 import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
@@ -84,7 +84,8 @@ export async function GET(request: NextRequest) {
     verifiedCoach: classified.verifiedCoach || isAdmin,
     verifiedMethod: (profile?.verified_method as string) ?? null,
   })
-  const personal = releasesPersonalData(tier)
+  // A listed tester sees the comparison as a coach does (lib/compare-access.ts).
+  const personal = releasesPersonalData(tier) || isComparisonTester(user.id)
 
   const [leftLoaded, rightLoaded] = await Promise.all([
     loadPublicAthleteProfile(leftId, admin),
@@ -115,8 +116,8 @@ export async function GET(request: NextRequest) {
 
   const side = (athlete: Record<string, unknown>) => ({ id: String(athlete.id), name: String(athlete.name ?? "") })
   const [leftReport, rightReport, leftBouts, rightBouts] = await Promise.all([
-    buildScoutingReport(admin, leftAthlete, opponentIndex, tier, null),
-    buildScoutingReport(admin, rightAthlete, opponentIndex, tier, null),
+    buildScoutingReport(admin, leftAthlete, opponentIndex, personal ? "full" : tier, null),
+    buildScoutingReport(admin, rightAthlete, opponentIndex, personal ? "full" : tier, null),
     loadComparisonBouts(admin, side(leftAthlete)),
     loadComparisonBouts(admin, side(rightAthlete)),
   ])

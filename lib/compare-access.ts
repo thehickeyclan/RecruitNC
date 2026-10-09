@@ -11,13 +11,19 @@
 import { classifyViewer, type ViewerProfileInput } from "@/lib/viewer-role"
 
 /**
- * People testing the comparison who are not college coaches. The tool only - they get no coach
- * data: GPA, test scores and stars stay behind verified coach (the API's `personal` tier).
+ * People testing the comparison who are not college coaches. They see it exactly as a verified
+ * coach does - GPA, test scores, stars, the perfect recruit - but only inside the comparison;
+ * the rest of the site still treats them as their own role (Matt, 9 October 2026).
  * Add or remove a user id here.
  */
 export const COMPARISON_TESTER_USER_IDS = new Set<string>([
   "8d4ed89c-1a52-48cc-9429-ab5c24875a25", // Brandon Palmer - testing, Matt 9 October 2026
 ])
+
+/** A listed tester sees the comparison as a verified coach does - inside the comparison only. */
+export function isComparisonTester(userId: string | null | undefined): boolean {
+  return Boolean(userId && COMPARISON_TESTER_USER_IDS.has(userId))
+}
 
 export function mayUseComparison(viewer: {
   isAdmin?: boolean | null
