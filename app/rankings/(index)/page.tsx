@@ -6,6 +6,7 @@ import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { recentCollegeViewStats } from "@/lib/college-view-signal"
+import { loadTopHundred } from "@/lib/rankings/top-100-view"
 
 // Per viewer: which of the two things this route does depends entirely on who is asking.
 export const dynamic = "force-dynamic"
@@ -48,6 +49,10 @@ export default async function RankingsIndexPage({
   }
 
   // The reason a parent pays: college coaches are looking. Counted, cached for an hour.
-  const collegeViews = await recentCollegeViewStats(createAdminClient()).catch(() => null)
-  return <RankingsSalesClient collegeViews={collegeViews} />
+  // Which classes the Top 75 holds is read off the published board, so the copy can't drift from it.
+  const [collegeViews, topBoard] = await Promise.all([
+    recentCollegeViewStats(createAdminClient()).catch(() => null),
+    loadTopHundred("Male").catch(() => null),
+  ])
+  return <RankingsSalesClient collegeViews={collegeViews} topClasses={topBoard?.classes ?? []} />
 }

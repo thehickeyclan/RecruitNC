@@ -14,6 +14,7 @@ import { Award, Check, ExternalLink, Instagram, Mail, Medal, Target, TrendingUp,
 import { RankingsTableView } from "@/components/rankings-table-view"
 import { useAuth } from "@/contexts/auth-context"
 import { RankingsCardView } from "@/components/rankings-card-view"
+import { PUBLISHED_PUBLIC_RANKINGS_YEARS } from "@/lib/public-rankings-cap"
 
 interface Athlete {
   id: string
@@ -33,6 +34,12 @@ interface Athlete {
   nationally_ranked_wins?: string | number
 }
 
+/** The published class boards, read from the release list so the copy moves when a class is released. */
+const CLASS_RANGE =
+  PUBLISHED_PUBLIC_RANKINGS_YEARS.length > 1
+    ? `${PUBLISHED_PUBLIC_RANKINGS_YEARS[0]}–${PUBLISHED_PUBLIC_RANKINGS_YEARS[PUBLISHED_PUBLIC_RANKINGS_YEARS.length - 1]}`
+    : String(PUBLISHED_PUBLIC_RANKINGS_YEARS[0] ?? "")
+
 type RankingsSubscription = {
   status: string
   nextBillingAt: string | null
@@ -43,10 +50,16 @@ type RankingsSubscription = {
 
 export function RankingsSalesClient({
   collegeViews = null,
+  topClasses = [],
 }: {
   /** NC wrestler profiles college coaches viewed in the last 30 days, and by how many coaches. */
   collegeViews?: { profilesViewed: number; coaches: number } | null
+  /** The classes on the published Top 75 College Ready Prospects board. */
+  topClasses?: number[]
 } = {}) {
+  const topFrom = topClasses.length
+    ? `the Class${topClasses.length > 1 ? "es" : ""} of ${topClasses.length > 1 ? `${topClasses.slice(0, -1).join(", ")} and ${topClasses[topClasses.length - 1]}` : topClasses[0]}`
+    : null
   const [viewMode, setViewMode] = useState<"table" | "cards">("table")
   const [athletes, setAthletes] = useState<Athlete[]>([])
   const [loadingAthletes, setLoadingAthletes] = useState(true)
@@ -233,8 +246,8 @@ export function RankingsSalesClient({
               College Prospect Rankings
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              Classes of 2027–2029, and the Top 75 College Prospects across the classes a
-              college programme can contact now.
+              Classes of {CLASS_RANGE}, and the Top 75 College Ready Prospects
+              {topFrom ? ` from ${topFrom}` : ""}.
             </p>
           </div>
 
@@ -267,8 +280,8 @@ export function RankingsSalesClient({
           <div className="mx-auto mt-10 grid max-w-4xl gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
               ["Profile activity", "Which college programs are viewing you"],
-              ["2027–2029", "Frequently updated class rankings"],
-              ["Top 75", "Ranked prospects, every class"],
+              [CLASS_RANGE, "Frequently updated class rankings"],
+              ["Top 75", topFrom ? `College Ready Prospects from ${topFrom}` : "College Ready Prospects"],
               ["Head-to-head", "Who beat whom, and when"],
             ].map((claim) => (
               <div key={claim[0]} className="rounded-xl border border-border bg-card p-4 text-left">
@@ -337,7 +350,7 @@ export function RankingsSalesClient({
               <p className="mt-3 text-4xl font-semibold">{formatPrice(SCOUTING_REPORT_PRICES.subscription)}</p>
               <p className="mt-1 text-sm text-muted-foreground">per month</p>
               <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                All class rankings and the Top 75 College Prospects board. Full profile
+                All class rankings and the Top 75 College Ready Prospects board. Full profile
                 management, see which college programs are viewing your profile, and our
                 recruiting portal (coming soon). Cancel anytime.
               </p>
