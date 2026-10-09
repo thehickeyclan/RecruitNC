@@ -81,6 +81,14 @@ export default async function SampleScoutingReportPage() {
             </a>
             .
           </p>
+          <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold">
+            <a href="/prospects/all" className="text-white/80 hover:text-[#D3B574]">
+              Browse all prospects →
+            </a>
+            <a href="/public-rankings" className="text-white/80 hover:text-[#D3B574]">
+              See the rankings →
+            </a>
+          </p>
         </div>
       </div>
 

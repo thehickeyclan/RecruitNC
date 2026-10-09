@@ -275,6 +275,16 @@ export function ScoutingReportDocument({
             <span className="sm:hidden">Back</span>
             <span className="hidden sm:inline">Back to profile</span>
           </Link>
+          {/* Onward from the report: the whole field and the boards. Screen only, never printed. */}
+          <nav className="flex items-center gap-3 text-sm font-semibold sm:gap-4" aria-label="More prospects">
+            <Link href="/prospects/all" className="text-[#03154C] hover:underline">
+              <span className="sm:hidden">Prospects</span>
+              <span className="hidden sm:inline">All prospects</span>
+            </Link>
+            <Link href="/public-rankings" className="text-[#03154C] hover:underline">
+              Rankings
+            </Link>
+          </nav>
           <div className="flex items-center gap-2">
             <button
               onClick={share}
