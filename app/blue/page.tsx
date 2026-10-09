@@ -101,6 +101,64 @@ export default function BluePage() {
             </p>
           </section>
 
+          <section id="includes">
+            <h2 className="mb-4 text-2xl font-bold text-[#003366]">What Blue Membership Includes</h2>
+            <p className="mb-6 leading-relaxed text-[#003366]/90">
+              Our goal is to get athletes to their goals. For most Blue athletes, that goal is wrestling at the college level. We support them in two ways: development, and help on the recruiting journey.
+            </p>
+            <div className="grid gap-4 md:grid-cols-2">
+              <Card>
+                <CardContent className="pt-6">
+                  <h3 className="mb-2 font-semibold text-[#003366]">Development</h3>
+                  <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-[#003366]/90">
+                    <li>Blue practices throughout the year, with opportunities to train in college wrestling rooms alongside college coaches and NCAA wrestlers.</li>
+                    <li>
+                      <strong className="text-[#003366]">Club drop-ins:</strong> drop in free at a partner club once every month. Partner clubs today are RAW and Darkhorse, with more added every week.
+                    </li>
+                    <li>
+                      <strong className="text-[#003366]">Family education:</strong> virtual meetings for athletes and families throughout the year on strength training, nutrition, recruiting, and more.
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+              <Card className="border-t-4 border-t-[#D3B574]" style={{ borderTopColor: GOLD }}>
+                <CardContent className="pt-6">
+                  <h3 className="mb-2 font-semibold text-[#003366]">Your Recruiting Journey</h3>
+                  <ul className="list-disc space-y-2 pl-5 text-sm leading-relaxed text-[#003366]/90">
+                    <li>A strong network of college coaches, and help matching each athlete with the right college opportunity.</li>
+                    <li>Full access to the NC prospect rankings.</li>
+                    <li>Visibility into which college programs are viewing your profile.</li>
+                    <li>Our recruiting portal (coming soon).</li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="mt-4 rounded-xl border border-[#D3B574]/60 bg-[#F8F5EC] p-5">
+              <h3 className="mb-1 font-semibold text-[#003366]">National Events</h3>
+              <p className="text-sm leading-relaxed text-[#003366]/90">
+                Blue is the path to competing with NC United at events like NHSCA and Scholastic Duals. Spots are not guaranteed: we commit to bringing the best wrestler at each weight, plus an alternate who will also compete.
+              </p>
+            </div>
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="rounded-xl border-2 border-[#003366] bg-[#003366] p-5 text-white">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#D3B574]">NC United Blue</p>
+                <p className="mt-1 text-2xl font-bold">$55<span className="text-base font-medium">/month</span></p>
+                <p className="mt-2 text-sm text-white/85">Everything above: practices, club drop-ins, family meetings, recruiting support, the national-event pathway, plus rankings, profile views, and the recruiting portal.</p>
+                <Link href="#state-qualifier" className="mt-4 inline-flex rounded-md bg-[#D3B574] px-4 py-2 text-sm font-semibold text-[#003366] hover:bg-white">
+                  Express interest →
+                </Link>
+              </div>
+              <div className="rounded-xl border-2 border-[#D3B574]/60 bg-white p-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#003366]/70">Recruiting only</p>
+                <p className="mt-1 text-2xl font-bold text-[#003366]">$9.99<span className="text-base font-medium">/month</span></p>
+                <p className="mt-2 text-sm text-[#003366]/85">NC prospect rankings, which college programs are viewing your profile, and the recruiting portal (coming soon). No practices or team events.</p>
+                <Link href="/rankings?plan=subscription" className="mt-4 inline-flex rounded-md bg-[#003366] px-4 py-2 text-sm font-semibold text-white hover:bg-[#B31B1B]">
+                  Subscribe →
+                </Link>
+              </div>
+            </div>
+          </section>
+
           <section id="next-steps" className="my-10">
             <NextStepsCTA />
           </section>
@@ -243,6 +301,9 @@ export default function BluePage() {
             <h2 className="mb-4 text-2xl font-bold text-[#003366]">National Team Pipeline & Competition</h2>
             <p className="mb-4 leading-relaxed text-[#003366]/90">
               The NC United National Team competes in <strong className="text-[#003366]">dual</strong> format and is among the most successful NC-based teams in state history.
+            </p>
+            <p className="mb-4 leading-relaxed text-[#003366]/90">
+              Blue members are on the path to compete at events like NHSCA and Scholastic Duals. Selection is not guaranteed: we bring the best wrestler at each weight, plus an alternate who will also compete.
             </p>
             <div className="my-6 overflow-hidden rounded-xl border-2 border-[#D3B574]/50 bg-white shadow-md">
               <Image
