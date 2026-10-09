@@ -7,6 +7,7 @@ import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
 import { buildProfileReveal } from "@/lib/profile-reveal"
 import { labelOpponents, accoladeKey, type AccoladeBout } from "@/lib/opponent-accolades"
 import { profileCredentials, type Credential } from "@/lib/profile/credentials"
+import { bannerNationalRankingLabel, type NationalRanking } from "@/lib/national-rankings"
 import { shortOlympicEvent } from "@/lib/profile/olympic-event"
 import { isInternationalStyle, styleOfEventForAthlete, summarizeCompetition, type CompetitionSummary } from "@/lib/wrestling-style"
 import {
@@ -52,6 +53,9 @@ export type MobileAthleteProfile = {
   graduationYear: number | null
   /** Published classes only — an unpublished class number is not ours to show. */
   prospectRanking: number | null
+  /** "#6 SI (170) · #12 MatScouts (170)": the national ranks held now, for the ribbon. */
+  nationalRanking: string | null
+  gender: string | null
   /** What they actually last wrestled at, which is not always the listed weight. */
   weight: {
     display: string | null
@@ -149,6 +153,10 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     club: reveal.club,
     graduationYear: reveal.graduationYear,
     prospectRanking: reveal.prospectRanking,
+    nationalRanking: bannerNationalRankingLabel(
+      ((loaded.athlete as { national_rankings_current?: NationalRanking[] }).national_rankings_current ?? []) as NationalRanking[],
+    ),
+    gender: asText((row as { gender?: unknown }).gender),
     weight: {
       display: asText(weightDisplay?.displayWeight),
       lastCompeted: weightDisplay?.lastCompeted

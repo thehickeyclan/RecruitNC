@@ -199,7 +199,10 @@ function ordinalSuffix(n: number): string {
 }
 
 /** "2026 7A State Champion", "2x State Champion (2026 7A)", "2025 4A State 4th". */
-export function statePlacerLabel(finishes: readonly StateFinish[]): string | null {
+export function statePlacerLabel(all: readonly StateFinish[]): string | null {
+  // A row with no place is not a finish to name: Leo Foreman's 2024 Maryland row printed "State
+  // nullth" (8 October 2026).
+  const finishes = all.filter((f) => Number.isFinite(f.place) && f.place >= 1)
   if (!finishes.length) return null
   const best = [...finishes].sort((a, b) => a.place - b.place || b.year - a.year)[0]
   const titles = finishes.filter((f) => f.place === 1).length
