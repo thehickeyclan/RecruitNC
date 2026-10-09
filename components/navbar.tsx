@@ -129,6 +129,21 @@ export function Navbar() {
     })
   }, [])
 
+  /*
+   * Sign in and come back here - the page and its query, because a comparison keeps its wrestlers
+   * in the query and changes it without changing the path. Without this a coach signing in on a
+   * comparison or a profile was sent to the rankings.
+   *
+   * Set on pointer-down and focus, not on click: app/layout.tsx installs a capture-phase click
+   * listener that navigates to the link's href before any React click handler runs, so the href
+   * has to be right before the click arrives.
+   */
+  const signInHere = (e: React.SyntheticEvent<HTMLAnchorElement>) => {
+    const here = window.location.pathname + window.location.search
+    if (here === "/" || here.startsWith("/auth/")) return
+    e.currentTarget.href = `/auth/signin?returnTo=${encodeURIComponent(here)}`
+  }
+
   // A link may carry a query (?src=nav, for usage counts); the page it points at is the path.
   const isActive = (link: string) => {
     const href = link.split("?")[0]!
@@ -766,7 +781,7 @@ export function Navbar() {
                   size="sm"
                   className="h-10 border-white text-white hover:bg-white hover:text-[#003366] bg-transparent mobile-optimized rounded-lg"
                 >
-                  <Link href="/auth/signin" target="_top" rel="noopener">Sign In</Link>
+                  <Link href="/auth/signin" target="_top" rel="noopener" onPointerDown={signInHere} onFocus={signInHere}>Sign In</Link>
                 </Button>
                 <Button asChild size="sm" className="h-10 bg-red-600 text-white hover:bg-red-700 mobile-optimized rounded-lg">
                   <Link href="/auth/signup" target="_top" rel="noopener">Sign Up</Link>
@@ -884,7 +899,7 @@ export function Navbar() {
                   size="sm"
                   className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white bg-transparent mobile-optimized min-h-[44px] px-3"
                 >
-                  <Link href="/auth/signin" target="_top" rel="noopener">Sign In</Link>
+                  <Link href="/auth/signin" target="_top" rel="noopener" onPointerDown={signInHere} onFocus={signInHere}>Sign In</Link>
                 </Button>
                 <Button
                   asChild
@@ -1118,6 +1133,8 @@ export function Navbar() {
                       <div className="space-y-2">
                         <a
                           href="/auth/signin"
+                          onPointerDown={signInHere}
+                          onFocus={signInHere}
                           onClick={() => setIsOpen(false)}
                           className="flex items-center justify-center w-full min-h-[44px] rounded-md border border-red-600 text-red-600 hover:bg-red-600 hover:text-white bg-transparent px-4 py-2 text-sm font-medium"
                         >
