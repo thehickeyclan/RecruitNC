@@ -58,6 +58,13 @@ export function ParentLinkButton({ athleteId, athleteName }: { athleteId: string
       if (!res.ok) throw new Error(data.error || "Could not link this profile")
       setState("linked")
       toast({ title: "Linked", description: `${athleteName} is now on your account.` })
+      // The parent's panels (college views, messages) render on load - show them now, at the
+      // college-views panel, rather than after a refresh nobody knows to do.
+      setTimeout(() => {
+        const url = new URL(window.location.href)
+        url.searchParams.set("views", "1")
+        window.location.replace(url.toString())
+      }, 900)
     } catch (error: any) {
       setState("idle")
       toast({
