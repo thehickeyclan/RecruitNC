@@ -18,6 +18,7 @@ import { classifyViewer, type ViewerProfileInput } from "@/lib/viewer-role"
  */
 export const COMPARISON_TESTER_USER_IDS = new Set<string>([
   "8d4ed89c-1a52-48cc-9429-ab5c24875a25", // Brandon Palmer - testing, Matt 9 October 2026
+  "37bc8399-b877-4390-a73b-7afedc8a0853", // Luke Richards (annerichards3@icloud.com) - testing, Matt 9 October 2026
 ])
 
 /** A listed tester sees the comparison as a verified coach does - inside the comparison only. */
