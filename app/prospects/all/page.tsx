@@ -24,7 +24,11 @@ export default async function ProspectsAllPage() {
         supabase,
         (initialProspects as Array<{ id: string; name?: string | null }>).map((p) => ({ id: p.id, name: p.name })),
       ),
-      loadLastCompeted(supabase, ids),
+      loadLastCompeted(
+        supabase,
+        ids,
+        new Map((initialProspects as Array<{ id: string; graduationyear?: unknown }>).map((p) => [String(p.id), Number(p.graduationyear) || null])),
+      ),
     ])
     initialProspects = (initialProspects as Array<Record<string, unknown>>).map((p) => ({
       ...p,

@@ -3,6 +3,8 @@ import { resolveRankingViewerForUser } from "@/lib/ranking-access"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { scoutingReportAvailable } from "@/lib/scouting-report-access"
+import { loadActivity } from "@/lib/activity-load"
+import type { ActivityStatus } from "@/lib/activity-status"
 
 export type MyRecruitRow = {
   athleteId: string
@@ -26,6 +28,8 @@ export type MyRecruitRow = {
   mine: boolean
   /** Whether a scouting report exists for this wrestler — the profile button's rule, so a coach never clicks into "unavailable". */
   hasReport: boolean
+  /** Days since the last result on file, and a flag when the gap means something (lib/activity-status.ts). */
+  activity: ActivityStatus | null
 }
 
 const ordinal = (n: number) => (n === 1 ? "Champion" : `${n}${n === 2 ? "nd" : n === 3 ? "rd" : "th"}`)
@@ -99,6 +103,10 @@ export async function loadMyRecruits(admin: ReturnType<typeof createAdminClient>
     resolveRankingViewerForUser({ admin, userId: user.id }),
   ])
   const seeRank = canSeeProspectRanking(viewer)
+  // Who has gone quiet - an injury, a missed season - on the board a staff scans every day.
+  const activity = await loadActivity(admin as never, (athletes ?? []) as Array<{ id: string; graduationyear?: unknown }>).catch(
+    () => new Map<string, ActivityStatus>(),
+  )
 
   const recruits: MyRecruitRow[] = []
   for (const id of ids) {
@@ -138,6 +146,7 @@ export async function loadMyRecruits(admin: ReturnType<typeof createAdminClient>
       starredBy: star.starredBy,
       mine: star.mine,
       hasReport: scoutingReportAvailable(a),
+      activity: activity.get(id) ?? null,
     })
   }
   return { recruits, hasSchool: Boolean(me?.school_id), schoolId: (me?.school_id as string | null) ?? null }

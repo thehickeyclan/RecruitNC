@@ -11,7 +11,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { ArrowLeftRight, Check, FileText, Mail, MessageSquare, Search, Star, Trash2 } from "lucide-react"
+import { AlertTriangle, ArrowLeftRight, Check, FileText, Mail, MessageSquare, Search, Star, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { MyRecruitRow } from "@/lib/my-recruits"
 import { CoachComposeDialog } from "@/components/coach-messages/coach-message-button"
@@ -196,6 +196,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                       <th className="px-3 py-3 font-semibold">Rank</th>
                       <th className="px-3 py-3 font-semibold">Best results</th>
                       <th className="px-3 py-3 font-semibold">Status</th>
+                      <th className="px-3 py-3 font-semibold">Last competed</th>
                       <th className="px-3 py-3 font-semibold">Scouting report</th>
                       <th className="px-3 py-3 font-semibold">Added</th>
                       <th className="px-3 py-3" />
@@ -236,6 +237,9 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                           )}
                         </td>
                         <td className="px-3 py-3">
+                          <Activity row={r} />
+                        </td>
+                        <td className="px-3 py-3">
                           <ReportLink row={r} />
                         </td>
                         <td className="px-3 py-3 text-xs text-white/55">
@@ -271,6 +275,9 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                         <p className="truncate text-xs text-white/50">{[r.highSchool, r.club].filter(Boolean).join(" · ")}</p>
                         {r.stateFinish ? <p className="mt-1 text-xs text-white/80">{r.stateFinish}</p> : null}
                         {r.nationalFinish ? <p className="text-xs text-[#E9D6A6]">{r.nationalFinish}</p> : null}
+                        <div className="mt-1">
+                          <Activity row={r} compact />
+                        </div>
                         <p className="mt-1 text-xs">
                           {r.committedTo ? (
                             <span className="font-semibold text-emerald-300">Committed · {r.committedTo}</span>
@@ -345,6 +352,33 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
           </div>
         ) : null}
       </main>
+  )
+}
+
+/**
+ * Days since the last result on file, the event, and a flag only when the gap means something -
+ * nothing in 12 months, or a missed NC season (lib/activity-status.ts). The off-season alone is
+ * never flagged.
+ */
+function Activity({ row, compact = false }: { row: MyRecruitRow; compact?: boolean }) {
+  const a = row.activity
+  if (!a) return <span className="text-xs text-white/35">—</span>
+  const flagged = a.flags.length > 0
+  return (
+    <div className="text-xs leading-snug">
+      <span className={flagged ? "font-semibold text-amber-200" : "text-white/80"}>
+        {compact ? "Last competed " : ""}
+        {a.label.toLowerCase() === "no results on file" ? "No results on file" : a.label}
+      </span>
+      {a.lastEvent && !compact ? <div className="text-white/45">{a.lastEvent}</div> : null}
+      {a.flags
+        .filter((f) => f !== "No results on file")
+        .map((f) => (
+          <div key={f} className="mt-0.5 flex items-start gap-1 text-amber-300">
+            <AlertTriangle className="mt-px h-3 w-3 shrink-0" aria-hidden /> {f}
+          </div>
+        ))}
+    </div>
   )
 }
 

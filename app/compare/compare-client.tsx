@@ -692,7 +692,7 @@ export default function CompareClient({
   const isOn = useCallback(
     (row: ComparisonRow) => {
       if (enabled) return enabled.has(row.key)
-      if (savedPriorities.length) return savedPriorities.includes(row.key) || row.group === "profile" || row.key === "weight"
+      if (savedPriorities.length) return savedPriorities.includes(row.key) || row.group === "profile" || row.key === "weight" || row.key === "activity"
       return row.defaultOn
     },
     [enabled, savedPriorities],
