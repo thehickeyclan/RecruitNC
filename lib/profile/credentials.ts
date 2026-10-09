@@ -50,6 +50,9 @@ function nationalName(row: TournamentRow): string {
   return event
 }
 
+/** Fargo, NHSCA and the Super 32 itself place eight deep as All-Americans; Early Entry does not count. */
+const isAllAmericanEvent = (title: string) => /fargo|nhsca|^super 32$/i.test(title)
+
 export function profileCredentials(input: {
   stateRows: readonly TournamentRow[]
   tocRows: readonly TournamentRow[]
@@ -84,9 +87,21 @@ export function profileCredentials(input: {
     add(`NCHSAA${cls ? ` ${cls}` : ""} State`, `${placeWord(place)} · ${shortYear(row.year)}`, "state", place, row.year)
   }
 
-  const tierRank = { national: 0, toc: 1, state: 2, "olympic-state": 3 } as const
+  /*
+   * Best finishes, not latest, in the order a college coach weighs them (Matt, 8 October 2026):
+   * All-American finishes (top 8 at NHSCA, Fargo or Super 32), then the TOC, then state titles,
+   * then other national placings (Early Entry, Journeymen...), then state placings. A Journeymen
+   * 6th must not push a TOC title or a state championship off the strip.
+   */
+  const weight = (c: (typeof out)[number]) => {
+    if (c.tier === "national") return isAllAmericanEvent(c.title) ? 0 : 3
+    if (c.tier === "toc") return 1
+    // NCHSAA titles ahead of USA Wrestling's state titles.
+    if (c.place === 1) return c.tier === "state" ? 2 : 2.5
+    return 4
+  }
   return out
-    .sort((a, b) => tierRank[a.tier] - tierRank[b.tier] || a.place - b.place || b.year - a.year)
+    .sort((a, b) => weight(a) - weight(b) || a.place - b.place || b.year - a.year)
     .slice(0, input.max ?? 5)
     .map(({ title, detail, label, tier }) => ({ title, detail, label, tier }))
 }

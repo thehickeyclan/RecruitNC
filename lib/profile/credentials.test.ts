@@ -22,8 +22,28 @@ describe("profileCredentials", () => {
     expect(labels).toEqual([
       ["Fargo Freestyle", "8th · All-American · ’26"],
       ["TOC", "2nd · ’26"],
-      ["NCHSAA 7A State", "4th · ’26"],
       ["NC Freestyle State", "Champion · ’26"],
+      ["NCHSAA 7A State", "4th · ’26"],
+    ])
+  })
+
+  it("puts best finishes first: All-Americans, TOC, state titles, then other national placings", () => {
+    const labels = profileCredentials({
+      stateRows: [row("NCHSAA 8A State Championships", "Champion"), row("NCHSAA 4A State Championships", "Champion", 2025)],
+      tocRows: [row("NC United Tournament of Champions", "Champion")],
+      tournamentRows: [
+        row("Super 32 Early Entry", "2nd"),
+        row("Journeymen Fall Classic", "6th"),
+        row("2026 NHSCA National Championships", "5th"),
+        row("2025 NHSCA National Championships", "6th", 2025),
+      ],
+      max: 4,
+    }).map((c) => c.label)
+    expect(labels).toEqual([
+      "NHSCA Nationals 5th · All-American · ’26",
+      "NHSCA Nationals 6th · All-American · ’25",
+      "TOC Champion · ’26",
+      "NCHSAA 8A State Champion · ’26",
     ])
   })
 })

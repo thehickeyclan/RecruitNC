@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server"
-import { createClient } from "@/lib/supabase/server"
+import { NextResponse, type NextRequest } from "next/server"
+import { resolveRequestUserId } from "@/lib/request-user"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { classifyViewer } from "@/lib/viewer-role"
 import { hasPremiumAccess } from "@/lib/ranking-visibility"
-import { resolveRankingViewer } from "@/lib/ranking-access"
+import { resolveRankingViewerForUser } from "@/lib/ranking-access"
 import { getCoachViewsForAthlete, teaseCoachViews } from "@/lib/coach-profile-views"
 import { isOwnAthlete } from "@/lib/scouting-report-entitlement-db"
 
@@ -15,18 +15,19 @@ import { isOwnAthlete } from "@/lib/scouting-report-entitlement-db"
  * because who is recruiting a particular minor is not public information.
  *
  * Coaches are never named, only their program. See lib/college-domain-schools.ts.
+ *
+ * Cookie (website) or bearer (iPhone app) - the app's College Interest row asks here too, so a
+ * family sees the same thing on both (Matt, 8 October 2026).
  */
 
 export const dynamic = "force-dynamic"
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
 
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return NextResponse.json({ error: "Sign in to see this." }, { status: 401 })
+  const userId = await resolveRequestUserId(request)
+  if (!userId) return NextResponse.json({ error: "Sign in to see this." }, { status: 401 })
+  const user = { id: userId }
 
   const admin = createAdminClient()
   const { data: profile } = await admin
@@ -52,7 +53,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
    * could not see which colleges had viewed their own child while a $9.99 subscriber could —
    * exactly backwards, since this is one of the things Blue is sold on.
    */
-  const { viewer: entitlement } = await resolveRankingViewer({ supabase, admin, athleteId: id })
+  const { viewer: entitlement } = await resolveRankingViewerForUser({ admin, userId: user.id, athleteId: id })
   const subscribed = isAdmin || hasPremiumAccess(entitlement)
 
   if (!subscribed) {

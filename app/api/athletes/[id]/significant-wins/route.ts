@@ -3,7 +3,7 @@ import { namesLikelySamePerson } from "@/lib/athlete-name-match"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { buildTocFieldBoard } from "@/lib/toc/field-board"
 import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
-import { accoladeLine, findSignificantWins, withAccoladesOnly, type Bout, type RankedOpponent } from "@/lib/significant-wins"
+import { accoladeLine, findSignificantLosses, findSignificantWins, withAccoladesOnly, type Bout, type RankedOpponent } from "@/lib/significant-wins"
 import { getQualifierSignificantWinBouts } from "@/lib/other-tournaments"
 import { HEAD_TO_HEAD_WINDOW_DAYS } from "@/lib/head-to-head"
 import { getCuratedSignificantWins } from "@/lib/curated-significant-wins"
@@ -31,7 +31,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const { id } = await params
   const admin = createAdminClient()
 
-  const [{ data: rawRows }, { data: invitations }, rawTournamentBouts, stateIndex, { data: gradRow }] = await Promise.all([
+  const [{ data: rawRows }, { data: invitations }, rawTournamentBouts, stateIndex, { data: gradRow }, rawEventBouts] = await Promise.all([
     admin.from("matches").select("season,matches,grade").eq("athlete_id", id),
     admin.from("toc_invitations").select("*, athletes(id,name)"),
     // Qualifier and national-event wins live in their own table, not in the match import.
@@ -43,6 +43,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       fargoAllAmericans: [],
     })),
     admin.from("athletes").select("graduationyear,gender").eq("id", id).maybeSingle(),
+    // Wins and losses, last 12 months: the notable losses, as the scouting report lists them.
+    getQualifierSignificantWinBouts(admin, id, "all").catch(() => [] as Bout[]),
   ])
   // No middle school seasons or bouts anywhere (Matt, 1 October 2026).
   const grad = (gradRow as { graduationyear?: number | null } | null)?.graduationyear ?? null
@@ -111,7 +113,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     scope: "national" as const,
   }))
   if (bouts.length === 0 && earlierBouts.length === 0 && curatedWins.length === 0 && submittedWins.length === 0) {
-    return NextResponse.json({ wins: submittedWins })
+    return NextResponse.json({ wins: submittedWins, losses: [] })
   }
 
   const tocField = buildTocFieldBoard(invitations ?? []).weights
@@ -195,5 +197,30 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
    * Club Duals are folkstyle for the boys and freestyle for the girls.
    */
   const gender = (gradRow as { gender?: string | null } | null)?.gender ?? null
-  return NextResponse.json({ wins: wins.map((w) => ({ ...w, style: styleOfEventForAthlete(w.event, null, gender) })) })
+
+  /*
+   * Notable losses (Matt, 8 October 2026: colleges want them under the wins, as the scouting
+   * report has them). The report's rule exactly: this season's bouts, a loss to a ranked, nationally
+   * ranked, state champion or state-placing opponent.
+   */
+  const lossBouts = mergeBoutSources(highSchoolBouts(rawEventBouts as never[], grad) as Bout[], matchBouts)
+  const losses = withAccoladesOnly(findSignificantLosses(lossBouts, index)).map((loss) => ({
+    opponent: loss.opponent,
+    opponentSchool: loss.opponentSchool,
+    event: loss.event,
+    date: loss.date,
+    result: loss.result,
+    weight: loss.weight,
+    reason: loss.reason,
+    credential:
+      accoladeLine(loss) ??
+      (loss.reason === "national-ranked" ? (loss.nationalRankLabel ?? "Nationally ranked") : loss.reason === "ranked" ? "NC ranked" : null),
+    scope: loss.opponentState && loss.opponentState !== "NC" ? ("national" as const) : ("in-state" as const),
+    style: styleOfEventForAthlete(loss.event, null, gender),
+  }))
+
+  return NextResponse.json({
+    wins: wins.map((w) => ({ ...w, style: styleOfEventForAthlete(w.event, null, gender) })),
+    losses,
+  })
 }

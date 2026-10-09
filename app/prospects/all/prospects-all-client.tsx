@@ -612,10 +612,23 @@ export default function ProspectsAllClient({
           <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628] via-transparent to-transparent" />
         </div>
         <div className="container relative mx-auto px-4 py-12 md:py-16">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-[#D3B574] transition-colors mb-6">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Home
-          </Link>
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <Link href="/" className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-[#D3B574] transition-colors">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Home
+            </Link>
+            {/* Most NC wrestlers are already here from their results (Matt, 8 Oct 2026). Same flow as
+                Create: /create-profile finds the existing profile and offers to claim it. */}
+            <Link href="/create-profile">
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-[#D3B574] bg-transparent font-bold text-[#D3B574] hover:bg-[#D3B574] hover:text-[#0A1628]"
+              >
+                Claim your profile
+              </Button>
+            </Link>
+          </div>
           <div className="flex items-center gap-4 mb-4">
             <div className="rounded-xl bg-[#D3B574]/10 p-3 backdrop-blur-sm">
               <Users className="h-8 w-8 text-[#D3B574]" />
