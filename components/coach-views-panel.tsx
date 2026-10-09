@@ -122,7 +122,9 @@ export function CoachViewsPanel({ athleteId }: { athleteId: string }) {
             ))}
           </ul>
           <Link
-            href="/subscribe"
+            /* /subscribe never existed (404). The rankings page is the checkout: with ?plan= it signs
+               the family in if needed and starts Stripe; the same subscription unlocks this panel. */
+            href="/rankings?plan=subscription"
             className="mt-3 inline-flex min-h-[44px] items-center rounded-sm bg-[#B31B1B] px-4 text-sm font-bold text-white hover:bg-[#8f1616]"
           >
             See which programs — $9.99/mo
