@@ -13,6 +13,7 @@ import type { ScoutingReport, ScoutingReportResultRow } from "@/lib/scouting-rep
 import { competitionLine, stylesLine } from "@/lib/wrestling-style"
 import { accoladeLineWithRank } from "@/lib/significant-wins"
 import { isTeamBlindEvent } from "@/lib/strength-of-competition"
+import type { ActivityStatus } from "@/lib/activity-status"
 
 export type ComparisonReport = Omit<ScoutingReport, "summary">
 
@@ -523,10 +524,32 @@ function profileRow(key: string, label: string, pick: (report: ComparisonReport)
   }
 }
 
+/** Days since each last competed, and any gap that means something. Information only. */
+function activityRow(left: ActivityStatus | null, right: ActivityStatus | null): ComparisonRow {
+  const cell = (a: ActivityStatus | null): ComparisonCell => {
+    if (!a) return { value: "No results on file" }
+    const flagged = a.flags.filter((f) => f !== "No results on file")
+    return {
+      value: `${flagged.length ? "⚠ " : ""}${a.label}`,
+      lines: [a.lastEvent, ...flagged].filter((x): x is string => Boolean(x)),
+    }
+  }
+  return {
+    key: "activity",
+    group: "competition",
+    label: "Last competed",
+    left: cell(left),
+    right: cell(right),
+    edge: null,
+    basis: "Information only — a gap can mean an injury; the off-season alone is not flagged",
+    defaultOn: true,
+  }
+}
+
 export function buildComparisonRows(
   left: ComparisonReport,
   right: ComparisonReport,
-  options: { personal: boolean },
+  options: { personal: boolean; activity?: { left: ActivityStatus | null; right: ActivityStatus | null } },
 ): ComparisonRow[] {
   const { personal } = options
   return [
@@ -539,6 +562,7 @@ export function buildComparisonRows(
     strengthRow(left, right),
     stateRow(left, right),
     weightRow(left, right),
+    ...(options.activity ? [activityRow(options.activity.left, options.activity.right)] : []),
     recordRow(left, right),
 
     ...TOURNAMENT_FAMILIES.map((family) => tournamentRow(family, left, right)).filter((row): row is ComparisonRow => row != null),

@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { highSchoolStart } from "@/lib/high-school-window"
 
 /**
  * The last event each wrestler actually competed at, in bulk, for the directory.
@@ -123,6 +124,12 @@ type Candidate = { athleteId: string; entry: LastCompeted }
 export async function loadLastCompeted(
   supabase: SupabaseClient,
   athleteIds: string[],
+  /**
+   * Class year per athlete. A result dated before a wrestler could be in high school is somebody
+   * else's - Alex Johnson, Class of 2027, read "last competed: 2021 NCHSAA States", an older
+   * namesake's result - so it is skipped, as the profile skips it (lib/high-school-window.ts).
+   */
+  graduationYears?: Map<string, number | null>,
 ): Promise<Map<string, LastCompeted>> {
   const best = new Map<string, LastCompeted>()
   const ids = [...new Set(athleteIds.filter(Boolean))]
@@ -226,6 +233,8 @@ export async function loadLastCompeted(
   const sources = await Promise.all([results(), bouts(), season(), yearly()])
   for (const candidates of sources) {
     for (const { athleteId, entry } of candidates) {
+      const grad = graduationYears?.get(athleteId) ?? null
+      if (grad && entry.date < highSchoolStart(grad)) continue
       const current = best.get(athleteId)
       if (!current || entry.date > current.date) {
         best.set(athleteId, { ...entry, event: canonicalEventLabel(entry.event) })

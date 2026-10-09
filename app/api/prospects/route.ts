@@ -39,6 +39,7 @@ export async function GET(request: NextRequest) {
     const lastCompeted = await loadLastCompeted(
       supabase,
       (prospects as Array<{ id: string }>).map((p) => String(p.id)),
+      new Map((prospects as Array<{ id: string; graduationyear?: unknown }>).map((p) => [String(p.id), Number(p.graduationyear) || null])),
     )
     const withLastCompeted = (prospects as Array<Record<string, unknown>>).map((p) => ({
       ...p,

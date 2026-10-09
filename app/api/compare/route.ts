@@ -16,6 +16,7 @@ import { buildComparisonRows, buildComparisonSections, individualNationalEvents,
 import { hasPerfectRecruit } from "@/lib/program-fit"
 import { loadProgramFit, resolveProgramScope } from "@/lib/program-fit-store"
 import { mayUseComparison } from "@/lib/compare-access"
+import { loadActivity } from "@/lib/activity-load"
 import { classifyViewer } from "@/lib/viewer-role"
 import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
 import { buildScoutingReport, loadOpponentIndex } from "@/lib/scouting-report"
@@ -121,6 +122,10 @@ export async function GET(request: NextRequest) {
   ])
 
   const onTheMat = compareAthletes(leftBouts, rightBouts)
+  // Days since each last competed - the same reading as the directory and My Recruits.
+  const activity = await loadActivity(admin, [leftAthlete as { id: string; graduationyear?: unknown }, rightAthlete as { id: string; graduationyear?: unknown }]).catch(
+    () => new Map(),
+  )
 
   /*
    * Program fit, for the viewers who may set it: the staff's saved needs, checked against both.
@@ -155,7 +160,10 @@ export async function GET(request: NextRequest) {
       commonOpponents: onTheMat.commonOpponents,
       commonOpponentEdge: onTheMat.commonOpponentEdge,
       verdict: onTheMat.verdict,
-      rows: buildComparisonRows(leftReport, rightReport, { personal }),
+      rows: buildComparisonRows(leftReport, rightReport, {
+        personal,
+        activity: { left: activity.get(leftReport.athleteId) ?? null, right: activity.get(rightReport.athleteId) ?? null },
+      }),
       sections: buildComparisonSections(leftReport, rightReport),
       personal,
       programFit,
