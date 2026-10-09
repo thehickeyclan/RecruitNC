@@ -105,8 +105,29 @@ export function ProfileViewStatsPanel({
     )
   }
 
-  // Nothing to show, or not authorized.
-  if (!stats || stats.totalViews === 0) return null
+  // Not authorized, or the request failed: nothing.
+  if (!stats) return null
+
+  /*
+   * No views yet: say so, with the one thing that changes it. The merged panel used to vanish
+   * here, and with it the advice the college-programs panel gave a family with nothing to show.
+   */
+  if (stats.totalViews === 0) {
+    return (
+      <Card className={cn("profile-card border-t-4 border-t-[#D3B574] shadow-md", className)} data-section="profile-views">
+        <div className="profile-card-body p-6">
+          <div className="flex items-center gap-3">
+            <Eye className="h-5 w-5 text-[#D3B574]" />
+            <h2 className="text-lg font-bold text-white">{adminView ? "Profile Views" : "Who's Viewing You"}</h2>
+          </div>
+          <p className="mt-3 text-sm text-white/70">No college coach has viewed this profile yet.</p>
+          <p className="mt-1 text-sm text-white/50">
+            Profiles with film, a GPA and an intended major are the ones coaches open.
+          </p>
+        </div>
+      </Card>
+    )
+  }
 
   const { last30 } = stats
   const hsClubCoachViews = Math.max(0, stats.coachViews - stats.collegeCoachViews)
@@ -137,21 +158,12 @@ export function ProfileViewStatsPanel({
       </div>
 
       <div className="profile-card-body space-y-4 p-6 sm:p-8">
-        <p className="text-sm text-white/70">{coachLine}</p>
+        {stats.distinctCollegeCoaches === 0 ? <p className="text-sm text-white/70">{coachLine}</p> : null}
 
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        {/* The two numbers a family acts on. Unique viewers and every coach view, high school and
+            club included, sat beside them as equals and buried the one that matters. */}
+        <div className="grid grid-cols-2 gap-3">
           <Stat value={stats.totalViews} label="Total views" sub={sinceLabel ? `Since ${sinceLabel}` : undefined} />
-          <Stat value={stats.uniqueViewers} label="Unique viewers" sub="Signed-in" />
-          <Stat
-            value={stats.coachViews}
-            label={stats.distinctCollegeCoaches > 0 ? "All coach views" : "HS/club coach views"}
-            sub={
-              stats.distinctCollegeCoaches > 0
-                ? `${stats.distinctCoaches} total ${stats.distinctCoaches === 1 ? "coach" : "coaches"}`
-                : `${distinctHsClubCoaches} HS/club ${distinctHsClubCoaches === 1 ? "coach" : "coaches"}`
-            }
-            tone="gold"
-          />
           <Stat
             value={stats.distinctCollegeCoaches}
             label="College coaches"
@@ -159,6 +171,15 @@ export function ProfileViewStatsPanel({
             tone="gold"
           />
         </div>
+        {stats.uniqueViewers > 0 || hsClubCoachViews > 0 ? (
+          <p className="text-xs text-white/45">
+            {stats.uniqueViewers.toLocaleString()} signed-in {stats.uniqueViewers === 1 ? "viewer" : "viewers"}
+            {distinctHsClubCoaches > 0
+              ? ` · ${distinctHsClubCoaches} high school or club ${distinctHsClubCoaches === 1 ? "coach" : "coaches"}`
+              : ""}
+            .
+          </p>
+        ) : null}
 
         {last30.totalViews > 0 && (
           <p className="text-xs text-white/45">
