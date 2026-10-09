@@ -302,6 +302,18 @@ function familyRows(report: ComparisonReport, match: RegExp, folkstyleOnly = fal
     .map((row) => (OVERFLOW.test(row.event) ? { ...row, place: null } : row))
 }
 
+/** A wrestler's best single trip to an event by record: win rate, then wins. */
+function bestTrip(rows: ScoutingReportResultRow[]): { wins: number; losses: number; pct: number; label: string } | null {
+  let best: { wins: number; losses: number; pct: number; label: string } | null = null
+  for (const row of rows) {
+    const t = addRecords([row.record])
+    if (!t || t.wins + t.losses === 0) continue
+    const pct = t.wins / (t.wins + t.losses)
+    if (!best || pct > best.pct || (pct === best.pct && t.wins > best.wins)) best = { ...t, pct, label: `${t.wins}-${t.losses}` }
+  }
+  return best
+}
+
 function tournamentRow(
   family: (typeof TOURNAMENT_FAMILIES)[number],
   l: ComparisonReport,
@@ -359,15 +371,23 @@ function tournamentRow(
     } else if ((edge = lower(lb, rb))) {
       basis = `Best finish: ${ordinal(Math.min(lb!, rb!))} against ${ordinal(Math.max(lb!, rb!))}`
     } else {
-      const lt = addRecords(lr.map((row) => row.record))
-      const rt = addRecords(rr.map((row) => row.record))
-      const pct = (t: { wins: number; losses: number } | null) => (t && t.wins + t.losses ? t.wins / (t.wins + t.losses) : null)
-      edge = higher(pct(lt), pct(rt))
-      basis = edge
-        ? `${lb != null ? `Same best finish (${ordinal(lb)}); ` : "Neither placed; "}better win rate there`
-        : lb != null
-          ? `Same best finish (${ordinal(lb)})`
-          : "Neither placed"
+      /*
+       * Same best finish (or neither placed): compare each wrestler's best single trip, not every
+       * trip added up. Summed, an extra trip as a younger wrestler counted against him - Richards
+       * (4-2 in 2026, 1-2 in 2025) lost the NHSCA edge to McDermott (4-2 in 2026) on 5-4 against
+       * 4-2, though their best trips were identical. The numbers are always in the reason.
+       */
+      const lt = bestTrip(lr)
+      const rt = bestTrip(rr)
+      edge = lt && rt ? (lt.pct !== rt.pct ? higher(lt.pct, rt.pct) : higher(lt.wins, rt.wins)) : null
+      const prefix = lb != null ? `Same best finish (${ordinal(lb)})` : "Neither placed"
+      basis = !lt || !rt
+        ? prefix
+        : edge
+          ? `${prefix}; best trip ${(edge === "left" ? lt : rt).label} against ${(edge === "left" ? rt : lt).label}`
+          : lt.label === rt.label
+            ? `${prefix}; best trip ${lt.label} each`
+            : `${prefix}; best trips ${lt.label} and ${rt.label}`
     }
   }
   return { key: family.key, group: "tournaments", label: family.label, left: cell(lr), right: cell(rr), edge, basis, defaultOn: false }

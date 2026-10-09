@@ -168,6 +168,28 @@ const fargo = (year: number, place: number | null, record: string, style: "frees
   detail: `16U ${style === "greco" ? "Greco-Roman" : "Freestyle"} · 150 · ${place ? `${place}th` : "did not place"} · ${record} record`,
 })
 
+describe("national tournament edges", () => {
+  it("compares best trips, so an extra younger trip never counts against a wrestler", () => {
+    const rows = buildComparisonRows(
+      report({ name: "Luke Richards", results: [nhsca(2026, null, "4-2"), nhsca(2025, null, "1-2")] }),
+      report({ name: "Daniel McDermott", results: [nhsca(2026, null, "4-2")] }),
+      { personal: true },
+    )
+    expect(row(rows, "nhsca").edge).toBeNull()
+    expect(row(rows, "nhsca").basis).toBe("Neither placed; best trip 4-2 each")
+  })
+
+  it("still gives the edge to the better best trip, with the numbers", () => {
+    const rows = buildComparisonRows(
+      report({ name: "Luke Richards", results: [nhsca(2026, null, "5-2")] }),
+      report({ name: "Daniel McDermott", results: [nhsca(2026, null, "4-2")] }),
+      { personal: true },
+    )
+    expect(row(rows, "nhsca").edge).toBe("left")
+    expect(row(rows, "nhsca").basis).toBe("Neither placed; best trip 5-2 against 4-2")
+  })
+})
+
 describe("national tournaments section", () => {
   it("lines the three events up and counts placings and records", () => {
     const s = buildNationalSection(
