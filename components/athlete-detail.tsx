@@ -450,6 +450,19 @@ export function AthleteDetail({
   const highSchool = athlete?.highschool || athlete?.high_school || "Not specified"
   const wrestlingClub = athlete?.wrestlingClub || "Not specified"
   const ncUnitedTeam = athlete?.ncUnitedTeam || ""
+  /*
+   * School, club and NC United team, in the hero.
+   *
+   * The banner named the class, the weight and the credentials but never the school — "High
+   * School and Programs" is the better part of a thousand lines below it, under panels that
+   * render nothing for most viewers. A coach opening a profile had to scroll to learn where
+   * the kid wrestles, which is the second thing anybody wants after the name (Matt, 10 Oct 2026).
+   */
+  const heroAffiliations = [
+    highSchool && highSchool !== "Not specified" ? highSchool : null,
+    wrestlingClub && wrestlingClub !== "Not specified" ? wrestlingClub : null,
+    ncUnitedTeam ? `NC United ${ncUnitedTeam}` : null,
+  ].filter(Boolean) as string[]
   const recruitingStatus = athlete?.recruiting_status || "Uncommitted"
   const rawRank = (() => {
     const p = (athlete as any)?.prospect_ranking
@@ -1341,6 +1354,12 @@ export function AthleteDetail({
                 </div>
               )}
 
+              {heroAffiliations.length > 0 && (
+                <p className="mb-3 text-sm font-medium leading-snug text-white/80">
+                  {heroAffiliations.join(" · ")}
+                </p>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                   <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
                   <p className="text-white/70 text-xs font-medium uppercase tracking-wide">Year</p>
@@ -1538,6 +1557,12 @@ export function AthleteDetail({
                     <Badge className="bg-[#D3B574] text-[#13294B] px-4 py-2 text-base font-bold shadow-lg mb-4">
                       RecruitNC #{prospectRanking} - Class of {graduationYear}
                     </Badge>
+                  )}
+
+                  {heroAffiliations.length > 0 && (
+                    <p className="mb-4 max-w-md text-base font-medium leading-snug text-white/80">
+                      {heroAffiliations.join(" · ")}
+                    </p>
                   )}
 
                   <div className="grid grid-cols-2 gap-4 max-w-md">

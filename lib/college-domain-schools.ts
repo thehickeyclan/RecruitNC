@@ -24,13 +24,15 @@ const DOMAIN_SCHOOL_NAMES: Record<string, string> = {
   "andrewcollege.edu": "Andrew College",
   "appstate.edu": "Appalachian State",
   "averett.edu": "Averett University",
-  "bac.edu": "Bluefield College",
+  /* bac.edu is Belmont Abbey College, not Bluefield — the same label as belmontabbeycollege.edu. */
+  "bac.edu": "Belmont Abbey",
   "belmontabbeycollege.edu": "Belmont Abbey",
   "brevard.edu": "Brevard College",
   "campbell.edu": "Campbell University",
   "catawba.edu": "Catawba College",
   "coker.edu": "Coker University",
   "concord.edu": "Concord University",
+  "cornellcollege.edu": "Cornell College",
   "ecu.edu": "East Carolina",
   "emoryhenry.edu": "Emory & Henry",
   "erskine.edu": "Erskine College",
@@ -62,6 +64,7 @@ const DOMAIN_SCHOOL_NAMES: Record<string, string> = {
   "uncg.edu": "UNC Greensboro",
   "uncp.edu": "UNC Pembroke",
   "wcu.edu": "Western Carolina",
+  "wesleyan.edu": "Wesleyan University (CT)",
   "wlu.edu": "Washington & Lee",
 }
 
@@ -87,20 +90,32 @@ function schoolFromDomain(domain: string): string {
 /**
  * The school to show an athlete.
  *
- * A stored `institution` wins — somebody typed it deliberately. Otherwise the `.edu` domain
- * is used, via the lookup for the ones that are abbreviations. A non-`.edu` address returns
- * null rather than a guess: "Gmail" is not a college, and a wrong school name on a
- * recruiting notification is worse than a vague one.
+ * **One school, one label.** A mapped `.edu` domain wins over a stored `institution`, because
+ * the views panel groups by this string: two coaches at the same school who disagree about its
+ * name become two rows, and the athlete is told two programs looked when one did. Brieon
+ * Mayfield's profile listed "Washington and Lee University" and "Washington & Lee" separately
+ * and claimed 11 programs instead of 10 — one coach there had typed the institution and the
+ * other had left it blank.
+ *
+ * A stored `institution` is still the only thing we have for a coach on a personal address or
+ * at a school not yet mapped, so it is used there. Add a domain to the table rather than
+ * relying on every coach at that school typing its name the same way.
+ *
+ * A non-`.edu` address with nothing stated returns null rather than a guess: "Gmail" is not a
+ * college, and a wrong school name on a recruiting notification is worse than a vague one.
  */
 export function collegeForCoach(params: {
   institution?: string | null
   email?: string | null
 }): string | null {
   const stated = String(params.institution ?? "").trim()
-  if (stated) return stated
-
   const domain = emailDomain(params.email)
-  if (!domain || !domain.endsWith(".edu")) return null
 
-  return DOMAIN_SCHOOL_NAMES[domain] ?? schoolFromDomain(domain)
+  if (domain?.endsWith(".edu")) {
+    const mapped = DOMAIN_SCHOOL_NAMES[domain]
+    if (mapped) return mapped
+    return stated || schoolFromDomain(domain)
+  }
+
+  return stated || null
 }
