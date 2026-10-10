@@ -351,14 +351,13 @@ export function Navbar() {
 
   const fundraisingNavActiveRefs = [{ href: "/fundraising" }]
 
-  const highlightNavItems = showMyRecruits
-    ? [
-        {
-          href: getRecruitingPortalUrl(),
-          label: "My Recruits",
-        },
-      ]
-    : []
+  /** College coaches and admins: the one page with everything a coach uses (app/coach-home). */
+  const showCoachHome =
+    profile?.role === "admin" || profile?.role === "college_coach" || profile?.is_admin === true
+  const highlightNavItems = [
+    ...(showCoachHome ? [{ href: "/coach-home", label: "Coach Home" }] : []),
+    ...(showMyRecruits ? [{ href: getRecruitingPortalUrl(), label: "My Recruits" }] : []),
+  ]
 
   return (
     <nav className="bg-[#003366] shadow-md touch-scroll sticky top-0 z-50 print:hidden" aria-label="Main navigation">
@@ -759,6 +758,14 @@ export function Navbar() {
                   {showMyRecruits && (
                     <>
                       <DropdownMenuSeparator />
+                      {showCoachHome && (
+                        <DropdownMenuItem asChild>
+                          <a href="/coach-home" className="flex items-center">
+                            <Users className="h-4 w-4 mr-2" />
+                            Coach Home
+                          </a>
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem asChild>
                         <a href={getRecruitingPortalUrl()} className="flex items-center">
                           <Star className="h-4 w-4 mr-2" />
