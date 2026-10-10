@@ -32,9 +32,8 @@ export async function loadActivity(
       .filter((r) => r.athlete_id === id)
       .map((r) => Number(r.year))
     const l = last.get(id)
-    out.set(
-      id,
-      activityStatus(
+    out.set(id, {
+      ...activityStatus(
         {
           last: l ? { event: l.event, date: l.date } : null,
           graduationYear: Number(a.graduationyear) || null,
@@ -43,7 +42,8 @@ export async function loadActivity(
         },
         now,
       ),
-    )
+      lastWeight: l?.weight ?? null,
+    })
   }
   return out
 }

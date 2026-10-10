@@ -9,6 +9,7 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { currentClassYears } from "@/lib/class-years"
+import { loadCoachRoster } from "@/lib/coach-roster"
 import { loadFitFlags } from "@/lib/program-fit-bulk"
 import { resolveFitViewer } from "@/lib/program-fit-viewer"
 import PerfectRecruitClient, { type PerfectRecruitMatch } from "./perfect-recruit-client"
@@ -35,15 +36,7 @@ export default async function PerfectRecruitPage() {
   let failed = false
   if (viewer.hasStandard) {
     try {
-      const { data: roster } = await admin
-        .from("athletes")
-        .select("id,name,highschool,graduationyear,weightclass")
-        .eq("is_nc_athlete", true)
-        .gte("graduationyear", classYears[0]!)
-        .lte("graduationyear", classYears[classYears.length - 1]!)
-        .order("name")
-        .limit(2000)
-      const athletes = (roster ?? []) as Array<{ id: string; name: string; highschool: string | null; graduationyear: number | null; weightclass: string | null }>
+      const athletes = await loadCoachRoster()
       checked = athletes.length
       const flags = await loadFitFlags(admin, athletes.map((a) => a.id), viewer.saved!.criteria, { personal: viewer.personal })
       matches = athletes

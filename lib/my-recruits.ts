@@ -11,6 +11,7 @@ export type MyRecruitRow = {
   name: string
   photoUrl: string | null
   classYear: number | null
+  /** Last competed weight (lib/prospect-last-competed.ts); the listed weight only as a fallback. */
   weight: string | null
   highSchool: string | null
   club: string | null
@@ -135,7 +136,8 @@ export async function loadMyRecruits(admin: ReturnType<typeof createAdminClient>
       name: (a.wrestling_name || a.name || "").trim(),
       photoUrl: a.photourl ?? null,
       classYear,
-      weight: a.weightclass ? String(a.weightclass) : null,
+      // The weight he last competed at; the listed one only when nothing is on file.
+      weight: activity.get(id)?.lastWeight ?? (a.weightclass ? String(a.weightclass) : null),
       highSchool: a.highschool ?? null,
       club: a.wrestlingClub ?? null,
       rank,

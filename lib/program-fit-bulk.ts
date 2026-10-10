@@ -16,6 +16,7 @@
 import "server-only"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { evaluateProgramFit, hasAnyCriteria, type FitCheck, type FitSubject, type ProgramFitCriteria } from "@/lib/program-fit"
+import { loadLastCompeted } from "@/lib/prospect-last-competed"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
 export type FitVerdict = "meets" | "possible" | "misses"
@@ -140,6 +141,11 @@ export async function loadFitSubjects(
     }
   }
 
+  // Only when the program asks about weight: the sweep reads every result table.
+  const lastCompeted = criteria.targetWeights.length
+    ? await loadLastCompeted(admin, ids, new Map(athletes.map((a) => [a.id, Number(a.graduationyear) || null]))).catch(() => new Map<string, { weight?: string | null }>())
+    : new Map<string, { weight?: string | null }>()
+
   const text = (v: unknown) => {
     const s = String(v ?? "").trim()
     return s ? s : null
@@ -152,9 +158,8 @@ export async function loadFitSubjects(
     out.set(a.id, {
       graduationYear: classYear,
       collegeWeightClass: text(a.college_weight_class),
-      // The listed weight. The comparison uses the last weight competed, which is worked out per
-      // profile and too slow for a whole class; the two differ only when the listing is stale.
-      currentWeight: text(a.weightclass),
+      // The weight he last competed at, as the comparison uses; the listed one only as a fallback.
+      currentWeight: lastCompeted.get(a.id)?.weight ?? text(a.weightclass),
       gpa: options.personal ? text(a.academic_gpa) : null,
       sat: options.personal ? text(a.academic_sat) : null,
       act: options.personal ? text(a.academic_act) : null,

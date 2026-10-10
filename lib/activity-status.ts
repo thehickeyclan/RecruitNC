@@ -33,6 +33,8 @@ export type ActivityStatus = {
   /** "Ultimate Club Duals, Sep 19, 2026". */
   lastEvent: string | null
   flags: string[]
+  /** The weight he last competed at, set by the bulk loader (lib/activity-load.ts). */
+  lastWeight?: string | null
 }
 
 const DAY_MS = 86_400_000

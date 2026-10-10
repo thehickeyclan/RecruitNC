@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { normalizeWeightClassLabel } from "@/lib/last-competed-weight"
 import { highSchoolStart } from "@/lib/high-school-window"
 
 /**
@@ -32,6 +33,13 @@ export type LastCompeted = {
   /** Sortable, and the year is what gets shown beside the name. */
   date: string
   year: number
+  /**
+   * The weight he last competed at: the most recent result that records one, which is usually
+   * this event and otherwise the one before it. This, not the weight a family typed on the
+   * profile, is the weight to show beside "last competed" and to reason from - the listed one
+   * goes stale and nobody corrects it (Matt, 10 October 2026).
+   */
+  weight?: string | null
 }
 
 /** Month each yearly event is held, so a year can be ordered against a dated result. */
@@ -142,7 +150,7 @@ export async function loadLastCompeted(
       const rows = await allRows((from, to) =>
         supabase
           .from("other_tournament_results")
-          .select("athlete_id, event_short_name, event_name, event_date, year")
+          .select("athlete_id, event_short_name, event_name, event_date, year, weight_class")
           .in("athlete_id", part)
           .not("event_date", "is", null)
           .order("id")
@@ -152,7 +160,7 @@ export async function loadLastCompeted(
         const athleteId = String(r.athlete_id ?? "")
         const date = isoDay(r.event_date)
         if (!athleteId || !date) continue
-        out.push({ athleteId, entry: { event: String(r.event_short_name ?? r.event_name ?? "Tournament"), date, year: Number(r.year) || Number(date.slice(0, 4)) } })
+        out.push({ athleteId, entry: { event: String(r.event_short_name ?? r.event_name ?? "Tournament"), date, year: Number(r.year) || Number(date.slice(0, 4)), weight: normalizeWeightClassLabel(r.weight_class as string | null) } })
       }
     }
     return out
@@ -164,13 +172,13 @@ export async function loadLastCompeted(
     for (const source of SOURCES) {
       for (const part of chunk(ids)) {
         const rows = await allRows((from, to) =>
-          supabase.from(source.table).select(`athlete_id, ${source.yearColumn}`).in("athlete_id", part).range(from, to),
+          supabase.from(source.table).select(`athlete_id, ${source.yearColumn}, weight_class`).in("athlete_id", part).range(from, to),
         )
         for (const r of rows) {
           const athleteId = String(r.athlete_id ?? "")
           const year = Number(r[source.yearColumn])
           if (!athleteId || !Number.isFinite(year)) continue
-          out.push({ athleteId, entry: { event: source.label, date: `${year}-${source.month}`, year } })
+          out.push({ athleteId, entry: { event: source.label, date: `${year}-${source.month}`, year, weight: normalizeWeightClassLabel(r.weight_class as string | null) } })
         }
       }
     }
@@ -185,7 +193,7 @@ export async function loadLastCompeted(
         const rows = await allRows((from, to) =>
           supabase
             .from("other_tournament_bouts")
-            .select("athlete_id, event_name, event_date")
+            .select("athlete_id, event_name, event_date, weight_class")
             .in("athlete_id", part)
             .not("event_date", "is", null)
             .order("id")
@@ -195,7 +203,7 @@ export async function loadLastCompeted(
           const athleteId = String(r.athlete_id ?? "")
           const date = isoDay(r.event_date)
           if (!athleteId || !date) continue
-          out.push({ athleteId, entry: { event: boutEventLabel(r.event_name), date, year: Number(date.slice(0, 4)) } })
+          out.push({ athleteId, entry: { event: boutEventLabel(r.event_name), date, year: Number(date.slice(0, 4)), weight: normalizeWeightClassLabel(r.weight_class as string | null) } })
         }
       }),
     )
@@ -217,7 +225,7 @@ export async function loadLastCompeted(
             const date = isoDay(bout.date)
             if (!date) continue
             const venue = String(bout.venue ?? bout.tournament ?? "").trim()
-            out.push({ athleteId, entry: { event: venue || "Dual", date, year: Number(date.slice(0, 4)) } })
+            out.push({ athleteId, entry: { event: venue || "Dual", date, year: Number(date.slice(0, 4)), weight: normalizeWeightClassLabel(bout.weight as string | null) } })
           }
         }
       }),
@@ -231,6 +239,8 @@ export async function loadLastCompeted(
    * however the queries finish.
    */
   const sources = await Promise.all([results(), bouts(), season(), yearly()])
+  /** The newest result that records a weight; not always the newest result. */
+  const weighed = new Map<string, { date: string; weight: string }>()
   for (const candidates of sources) {
     for (const { athleteId, entry } of candidates) {
       const grad = graduationYears?.get(athleteId) ?? null
@@ -239,8 +249,13 @@ export async function loadLastCompeted(
       if (!current || entry.date > current.date) {
         best.set(athleteId, { ...entry, event: canonicalEventLabel(entry.event) })
       }
+      if (entry.weight) {
+        const w = weighed.get(athleteId)
+        if (!w || entry.date > w.date) weighed.set(athleteId, { date: entry.date, weight: entry.weight })
+      }
     }
   }
+  for (const [athleteId, entry] of best) entry.weight = weighed.get(athleteId)?.weight ?? null
   return best
 }
 

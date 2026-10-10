@@ -12,7 +12,7 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { classifyViewer } from "@/lib/viewer-role"
-import { currentClassYears } from "@/lib/class-years"
+import { loadCoachRoster } from "@/lib/coach-roster"
 import { loadMyRecruits } from "@/lib/my-recruits"
 import { isApprovedCoach, listThreads } from "@/lib/coach-messages"
 import { loadFitFlags } from "@/lib/program-fit-bulk"
@@ -44,20 +44,11 @@ export default async function CoachHomePage() {
     return <CoachHomeClient access="not-coach" data={null} />
   }
 
-  const active = currentClassYears()
   // Each part fails on its own: a slow inbox must not take the search and the links down with it.
   const [board, threads, roster, school] = await Promise.all([
     loadMyRecruits(admin, user.id).catch(() => null),
     listThreads(admin, user.id).catch(() => null),
-    admin
-      .from("athletes")
-      .select("id,name,highschool,graduationyear,weightclass")
-      .eq("is_nc_athlete", true)
-      .gte("graduationyear", active[0]!)
-      .lte("graduationyear", active[active.length - 1]!)
-      .order("name")
-      .limit(2000)
-      .then((r) => r.data ?? [], () => []),
+    loadCoachRoster().catch(() => []),
     profile?.school_id
       ? admin
           .from("schools")
