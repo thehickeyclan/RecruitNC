@@ -233,6 +233,9 @@ describe("buildCareerSummary.lines", () => {
       [],
     )
     expect(c.lines[0]).toBe("Wrestles for Great Bridge in VA. Class of 2027.")
+    // The registry's class year stands in when no placer row carries one.
+    const fromRegistry = buildCareerSummary("VA", [{ state: "VA", season: 2026, weight: "106", place: 1, school: "Great Bridge" }], [], { classYear: 2029 })
+    expect(fromRegistry.lines[0]).toBe("Wrestles for Great Bridge in VA. Class of 2029.")
   })
 
 

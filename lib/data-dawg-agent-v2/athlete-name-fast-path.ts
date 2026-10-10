@@ -258,7 +258,9 @@ export async function tryAthleteNameFastPath(
          * Super 32 and Fargo freestyle with records, every year we hold. An order described to a
          * model is an order it follows most of the time.
          */
-        career_summary: buildCareerSummary(state, placements, bouts.events ?? []),
+        career_summary: buildCareerSummary(state, placements, bouts.events ?? [], {
+          classYear: Number(identity?.grad_year) || null,
+        }),
         state_placements: placements,
         results: bouts,
       },

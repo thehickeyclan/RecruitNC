@@ -372,6 +372,8 @@ export function buildCareerSummary(
     classYear?: number | null
   }>,
   events: EventSummary[],
+  /** The identity registry's class year, which holds far more of them than the placer rows do. */
+  known: { classYear?: number | null } = {},
 ): CareerSummary {
   const newestFirst = (a: EventSummary, b: EventSummary) => (b.year ?? 0) - (a.year ?? 0)
   const is = (re: RegExp) => (e: EventSummary) => re.test(e.event)
@@ -391,7 +393,7 @@ export function buildCareerSummary(
   const summary: CareerSummary = {
     state,
     school: newestPlacements.find((p) => p.school)?.school ?? null,
-    classYear: newestPlacements.find((p) => p.classYear)?.classYear ?? null,
+    classYear: known.classYear ?? newestPlacements.find((p) => p.classYear)?.classYear ?? null,
     stateTournament: statePlacements
       .map((p) => ({
         year: p.season ?? null,
