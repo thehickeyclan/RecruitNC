@@ -311,6 +311,13 @@ export async function loadMeetings(
  */
 export type CareerSummary = {
   state: string | null
+  /**
+   * His school and class, from the newest state placement that carries them. We hold a school for
+   * nearly every out-of-state placer and the answer never said it: "wrestles for Virginia" where
+   * the row read Great Bridge (Xavier Kovacs and Cayden Clark, 9 October 2026).
+   */
+  school: string | null
+  classYear: number | null
   stateTournament: Array<{ year: number | null; state: string; classification: string | null; weight: string | null; place: number | null }>
   nhsca: EventSummary[]
   super32: EventSummary[]
@@ -355,7 +362,15 @@ function totalRecord(events: EventSummary[]): string | null {
 
 export function buildCareerSummary(
   state: string | null,
-  statePlacements: Array<{ state?: string; season?: number | null; classification?: string | null; weight?: string | null; place?: number | null }>,
+  statePlacements: Array<{
+    state?: string
+    season?: number | null
+    classification?: string | null
+    weight?: string | null
+    place?: number | null
+    school?: string | null
+    classYear?: number | null
+  }>,
   events: EventSummary[],
 ): CareerSummary {
   const newestFirst = (a: EventSummary, b: EventSummary) => (b.year ?? 0) - (a.year ?? 0)
@@ -372,8 +387,11 @@ export function buildCareerSummary(
   const nhsca = events.filter(is(/nhsca/i)).filter((e) => !/duals/i.test(e.event)).sort(newestFirst)
   const super32 = events.filter(is(/super 32|super32/i)).sort(newestFirst)
   const claimed = new Set<EventSummary>([...nhsca, ...super32, ...fargo])
+  const newestPlacements = [...statePlacements].sort((a, b) => (b.season ?? 0) - (a.season ?? 0))
   const summary: CareerSummary = {
     state,
+    school: newestPlacements.find((p) => p.school)?.school ?? null,
+    classYear: newestPlacements.find((p) => p.classYear)?.classYear ?? null,
     stateTournament: statePlacements
       .map((p) => ({
         year: p.season ?? null,
@@ -426,7 +444,14 @@ function careerSummaryLines(c: CareerSummary): string[] {
       : `${label}: none on file — we hold no ${label} results for this wrestler.`
 
   const lines: string[] = []
-  lines.push(c.state ? `Wrestles for ${c.state}.` : "No state on file for this wrestler.")
+  const classOf = c.classYear ? ` Class of ${c.classYear}.` : ""
+  lines.push(
+    c.school && c.state
+      ? `Wrestles for ${c.school} in ${c.state}.${classOf}`
+      : c.state
+        ? `Wrestles for ${c.state}.${classOf}`
+        : "No state on file for this wrestler.",
+  )
   if (c.stateTournament.length) {
     lines.push(
       `State tournament: ${c.stateTournament

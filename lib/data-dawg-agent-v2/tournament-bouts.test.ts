@@ -223,6 +223,18 @@ describe("buildCareerSummary.lines", () => {
     expect(c.lines[0]).toBe("Wrestles for AZ.")
     expect(c.lines[1]).toContain("2026 AZ D1 at 144 — 1st (champion)")
   })
+  it("names the school and class when a state placement carries them", () => {
+    const c = buildCareerSummary(
+      "VA",
+      [
+        { state: "VA", season: 2025, classification: "5A", weight: "113", place: 2, school: "Great Bridge", classYear: null },
+        { state: "VA", season: 2026, classification: "5A", weight: "126", place: 2, school: "Great Bridge", classYear: 2027 },
+      ],
+      [],
+    )
+    expect(c.lines[0]).toBe("Wrestles for Great Bridge in VA. Class of 2027.")
+  })
+
 
   it("gives the career total it was told, never a sum of its own", () => {
     const c = buildCareerSummary("VA", [], [
