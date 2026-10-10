@@ -498,9 +498,25 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
           )
         })}
         {full ? (
-          <span className="inline-flex items-center gap-2 px-2 text-sm text-white/60">
-            <span className="h-3 w-3 rounded-full border-2 border-white bg-transparent" /> On RecruitNC
-          </span>
+          // A button like the levels, not a checkbox off to the side: one tap shows every program
+          // with a coach on RecruitNC, at every level. Levels can then narrow it.
+          <button
+            type="button"
+            onClick={() =>
+              setFilters((f) =>
+                f.onRecruitNCOnly
+                  ? { ...f, onRecruitNCOnly: false }
+                  : { ...f, onRecruitNCOnly: true, divisions: new Set(COLLEGE_DIVISIONS) },
+              )
+            }
+            aria-pressed={filters.onRecruitNCOnly}
+            className={`inline-flex items-center gap-2 rounded-sm border px-3 py-1.5 text-sm font-semibold transition hover:bg-white/10 ${
+              filters.onRecruitNCOnly ? "border-[#D7B968] bg-[#D7B968]/15 text-white" : "border-white/20 text-white"
+            }`}
+          >
+            <span className="h-3 w-3 rounded-full border-2 border-white bg-transparent" />
+            On RecruitNC ({recruitNCCount})
+          </button>
         ) : null}
         {full && filtersActive ? (
           <button
@@ -514,7 +530,7 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
       </div>
 
       {full ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-3">
           <label className="relative block">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
             <input
@@ -547,15 +563,6 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
               </option>
             ))}
           </select>
-          <label className="flex h-10 cursor-pointer items-center gap-2 rounded-sm border border-white/15 bg-white/5 px-3 text-sm text-white">
-            <input
-              type="checkbox"
-              checked={filters.onRecruitNCOnly}
-              onChange={(e) => setFilters((f) => ({ ...f, onRecruitNCOnly: e.target.checked }))}
-              className="h-4 w-4 accent-[#D7B968]"
-            />
-            On RecruitNC only ({recruitNCCount})
-          </label>
         </div>
       ) : (
         <div className="flex flex-col gap-3 rounded-sm border border-[#D7B968]/30 bg-[#D7B968]/10 p-4 sm:flex-row sm:items-center sm:justify-between">
