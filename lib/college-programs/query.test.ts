@@ -58,11 +58,17 @@ describe("queryCollegePrograms", () => {
     expect(queryCollegePrograms({ query: "Kean" }).totals.schools).toBe(1)
   })
 
-  it("attaches staff, head coach first, to a small result and never an email", () => {
+  it("gives head coaches only on a small result - no assistants, no emails", () => {
     const [school] = queryCollegePrograms({ query: "Arizona State" }).schools
-    expect(school.staff?.[0]).toMatchObject({ name: "Zeke Jones", head_coach: true })
-    expect(JSON.stringify(school.staff)).not.toContain("@")
-    expect(queryCollegePrograms({ division: "D1" }).schools[0].staff).toBeUndefined()
+    expect(school.head_coaches).toEqual([expect.objectContaining({ name: "Zeke Jones", title: "Head Coach" })])
+    expect(school.other_staff_count).toBeGreaterThan(0)
+    expect(JSON.stringify(school)).not.toContain("Eric Thompson")
+    expect(JSON.stringify(school)).not.toContain("@")
+    expect(queryCollegePrograms({ division: "D1" }).schools[0].head_coaches).toBeUndefined()
+  })
+
+  it("does not say where an assistant coaches", () => {
+    expect(queryCollegePrograms({ coach: "Eric Thompson" }).coach?.found).toBe(false)
   })
 
   it("finds where a coach works", () => {

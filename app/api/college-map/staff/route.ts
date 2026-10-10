@@ -9,8 +9,11 @@ export const dynamic = "force-dynamic"
 
 /**
  * One school's coaching staff, fetched when its card opens - 2,000 coaches would otherwise ride
- * along with every map load. Names and titles are public; the published emails are part of the
- * Recruiting Portal, so only Blue members, admins and verified coaches get them.
+ * along with every map load.
+ *
+ * The staff list is the Recruiting Portal (Matt, 10 Oct 2026): where the programs are is public,
+ * who to contact is Blue. Anyone else gets `locked` and no names - not merely no emails - so the
+ * collected list cannot be read out one school at a time.
  */
 export async function GET(request: NextRequest) {
   const schoolId = request.nextUrl.searchParams.get("school")?.trim()
@@ -19,10 +22,8 @@ export async function GET(request: NextRequest) {
   const { viewer } = await resolveRankingViewer({ supabase: await createClient(), admin: createAdminClient() })
   const full = Boolean(viewer.isBlueMember || viewer.isAdmin || viewer.isVerifiedCoach)
 
-  const staff = staffForSchool(schoolId).map((member) => ({
-    ...member,
-    head: isHeadCoach(member),
-    email: full ? member.email : null,
-  }))
-  return NextResponse.json({ staff, emails: full })
+  if (!full) return NextResponse.json({ staff: [], locked: true })
+
+  const staff = staffForSchool(schoolId).map((member) => ({ ...member, head: isHeadCoach(member) }))
+  return NextResponse.json({ staff, locked: false })
 }

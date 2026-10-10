@@ -175,19 +175,23 @@ type StaffRow = {
  */
 function StaffList({ school }: { school: CollegeMapSchool }) {
   const [staff, setStaff] = useState<StaffRow[] | null>(null)
+  const [locked, setLocked] = useState(false)
   const [failed, setFailed] = useState(false)
   const [showAll, setShowAll] = useState(false)
 
   useEffect(() => {
     let cancelled = false
     setStaff(null)
+    setLocked(false)
     setFailed(false)
     setShowAll(false)
     fetch(`/api/college-map/staff?school=${encodeURIComponent(school.id)}`, { cache: "no-store" })
       .then(async (res) => {
         if (!res.ok) throw new Error()
-        const body = (await res.json()) as { staff: StaffRow[] }
-        if (!cancelled) setStaff(body.staff)
+        const body = (await res.json()) as { staff: StaffRow[]; locked?: boolean }
+        if (cancelled) return
+        setLocked(body.locked === true)
+        setStaff(body.staff)
       })
       .catch(() => {
         if (!cancelled) setFailed(true)
@@ -199,6 +203,20 @@ function StaffList({ school }: { school: CollegeMapSchool }) {
 
   if (failed) return <p className="mt-3 text-xs text-white/50">Could not load the coaching staff.</p>
   if (!staff) return <p className="mt-3 text-xs text-white/50">Loading staff…</p>
+  if (locked) {
+    return (
+      <p className="mt-3 flex items-start gap-2 border-t border-white/10 pt-3 text-xs leading-5 text-white/70">
+        <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#F5D985]" />
+        <span>
+          Coaching staff and contacts are part of{" "}
+          <Link href="/blue" className="font-semibold text-[#F5D985] hover:underline">
+            NC United Blue
+          </Link>
+          .
+        </span>
+      </p>
+    )
+  }
   if (staff.length === 0) {
     // 25 programs' sites could not be read; absence here is ours, not the school's.
     return <p className="mt-3 text-xs text-white/50">Coaching staff not confirmed yet — check the athletics website.</p>

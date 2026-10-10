@@ -60,7 +60,8 @@ export function queryCollegePrograms(args: CollegeProgramsQuery) {
   const state = stateCode(args.state)
   const q = String(args.query ?? "").trim().toLowerCase()
   const limit = Math.min(Math.max(Number(args.limit) || 25, 1), 500)
-  const coachHits = args.coach ? schoolsForCoach(args.coach) : null
+  // "Where does X coach" answers for head coaches only, for the same reason as head_coaches below.
+  const coachHits = args.coach ? schoolsForCoach(args.coach).filter((h) => isHeadCoach(h.member)) : null
   // "Who coaches at Campbell, and where does Zeke Jones coach?" arrives as one call with both. The
   // coach answer stands on its own (the `coach` block); it narrows the school list only when it is
   // the whole question, otherwise Campbell AND Zeke Jones matched nothing and both were "unknown".
@@ -167,7 +168,7 @@ export function queryCollegePrograms(args: CollegeProgramsQuery) {
         }
       : null,
     staff_note:
-      "Coaching staff is from each school's athletics site, 9-10 Oct 2026. An empty staff list means we could not confirm it, not that the school has no coaches. Emails are not given here.",
+      "Head coaches are from each school's athletics site, 9-10 Oct 2026. An empty head_coaches list means we could not confirm it, not that the school has no coach. Assistants and coach emails are not given here: the full staff is on the college program map for NC United Blue members.",
     schools: sortedSchools.slice(0, limit).map(({ school, programs }) => ({
       name: school.name,
       city: school.city,
@@ -180,13 +181,12 @@ export function queryCollegePrograms(args: CollegeProgramsQuery) {
       website: school.website,
       ...(sortedSchools.length <= STAFF_DETAIL_MAX_SCHOOLS
         ? {
-            staff: staffForSchool(school.id).map((m) => ({
-              name: m.name,
-              title: m.title,
-              head_coach: isHeadCoach(m),
-              teams: m.teams,
-              division: DIVISION_SHORT[m.division],
-            })),
+            // Head coaches only. The full staff is a Blue benefit on the map, and Data Dawg
+            // answers everyone without knowing who is asking.
+            head_coaches: staffForSchool(school.id)
+              .filter(isHeadCoach)
+              .map((m) => ({ name: m.name, title: m.title, teams: m.teams, division: DIVISION_SHORT[m.division] })),
+            other_staff_count: staffForSchool(school.id).filter((m) => !isHeadCoach(m)).length,
           }
         : {}),
     })),

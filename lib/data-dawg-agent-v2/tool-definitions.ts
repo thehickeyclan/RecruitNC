@@ -440,7 +440,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
     function: {
       name: "college_programs_search",
       description:
-        "College wrestling PROGRAMS across the country for the 2026-27 season — every NCAA D1, D2, D3, NAIA and NJCAA team, men's and women's. Use for 'how many D1 programs are there', 'women's programs in Pennsylvania', 'which colleges in NC have wrestling', 'is there wrestling at Lander', 'what conference is Mount Olive in', 'who is the head coach at Campbell', 'who coaches women's wrestling at Lindenwood', 'where does [coach] coach'. When the result has 5 or fewer schools each one carries its coaching staff. Returns counts already computed (totals, by_division, by_state, men's vs women's) — quote those numbers, never add up the school list yourself. NOT for who committed where: that is college_commits_search.",
+        "College wrestling PROGRAMS across the country for the 2026-27 season — every NCAA D1, D2, D3, NAIA and NJCAA team, men's and women's. Use for 'how many D1 programs are there', 'women's programs in Pennsylvania', 'which colleges in NC have wrestling', 'is there wrestling at Lander', 'what conference is Mount Olive in', 'who is the head coach at Campbell', 'who coaches women's wrestling at Lindenwood', 'where does [coach] coach'. When the result has 5 or fewer schools each one carries its head coach(es) only. Returns counts already computed (totals, by_division, by_state, men's vs women's) — quote those numbers, never add up the school list yourself. NOT for who committed where: that is college_commits_search.",
       parameters: {
         type: "object",
         additionalProperties: false,
@@ -454,7 +454,7 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
           query: { type: "string", description: "Optional: school or city name fragment, e.g. 'Lander', 'Mount Olive'." },
           coach: {
             type: "string",
-            description: "Optional: a college coach's full name, for 'where does Cary Kolat coach'. Returns the schools they are on staff at.",
+            description: "Optional: a college HEAD coach's full name, for 'where does Zeke Jones coach'. Returns the schools they are head coach at.",
           },
           limit: { type: "integer", description: "Max schools listed (default 25, up to 500). Counts are unaffected." },
         },
