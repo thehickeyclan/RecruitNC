@@ -1,0 +1,955 @@
+{
+ "source": "college-wrestling-programs-2026 (2).xlsx, 10 Oct 2026",
+ "questionnaires": {
+  "stanford-university": [
+   {
+    "division": "NCAA Division I",
+    "mens": "http://my.armssoftware.com/arms/public/questionnaire/eb44b9d56fc9",
+    "womens": null
+   }
+  ],
+  "sacred-heart-university": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://sacredheartpioneers.com/sb_output.aspx?form=19",
+    "womens": null
+   }
+  ],
+  "american-university": [
+   {
+    "division": "NCAA Division I",
+    "mens": "http://my.armssoftware.com/arms/public/questionnaire/e9137447cb88",
+    "womens": null
+   }
+  ],
+  "university-of-iowa": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://hawkeyesports.com/wrestling-recruit-questionnaire",
+    "womens": "https://questionnaires.armssoftware.com/ff1ee70f0f8d"
+   }
+  ],
+  "purdue-university": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://purduesports.com/purdue-university-wrestling-official-athletic-site-19",
+    "womens": null
+   }
+  ],
+  "bellarmine-university": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://athletics.bellarmine.edu/sb_output.aspx?form=26&path=wre",
+    "womens": null
+   }
+  ],
+  "university-of-maryland-college-park-maryland": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://umterps.com/sports/2013/12/19/209345256",
+    "womens": null
+   }
+  ],
+  "campbell-university": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://questionnaires.armssoftware.com/3cce8161a1fe",
+    "womens": null
+   }
+  ],
+  "gardner-webb-university": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://questionnaires.armssoftware.com/5785607a93cc",
+    "womens": null
+   }
+  ],
+  "university-of-nebraska-lincoln-nebraska": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://questionnaires.armssoftware.com/83d3e8e68d04?path=wrestling",
+    "womens": null
+   }
+  ],
+  "princeton-university": [
+   {
+    "division": "NCAA Division I",
+    "mens": "http://my.armssoftware.com/arms/public/questionnaire/1cfb2d2dc7b1?DB_OEM_ID=10600",
+    "womens": null
+   }
+  ],
+  "rutgers-university-new-brunswick-rutgers": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://college.jumpforward.com/questionnaire.aspx?iid=426&sportid=25",
+    "womens": null
+   }
+  ],
+  "binghamton-university": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://questionnaires.armssoftware.com/7381f5570dd",
+    "womens": null
+   }
+  ],
+  "columbia-university": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://questionnaires.armssoftware.com/fb670c2ec152?DB_OEM_ID=9600",
+    "womens": null
+   }
+  ],
+  "hofstra-university": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://questionnaires.armssoftware.com/a16b99a83979",
+    "womens": null
+   }
+  ],
+  "united-states-military-academy-army": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://questionnaires.armssoftware.com/903ec2f666d5",
+    "womens": null
+   }
+  ],
+  "university-at-buffalo": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://my.armssoftware.com/arms/public/questionnaire/f12c8ed9d3f5",
+    "womens": null
+   }
+  ],
+  "oregon-state-university": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://osubeavers.com/sports/2012/7/9/208343613.aspx",
+    "womens": null
+   }
+  ],
+  "bucknell-university": [
+   {
+    "division": "NCAA Division I",
+    "mens": "http://my.armssoftware.com/arms/public/questionnaire/e995c19852bc?",
+    "womens": null
+   }
+  ],
+  "commonwealth-university-lock-haven-lock-haven": [
+   {
+    "division": "NCAA Division I",
+    "mens": "http://my.armssoftware.com/arms/public/questionnaire/651915847bca",
+    "womens": null
+   }
+  ],
+  "franklin-marshall-college": [
+   {
+    "division": "NCAA Division I",
+    "mens": "http://godiplomats.com/sports/m-wrestl/recruit",
+    "womens": null
+   }
+  ],
+  "lehigh-university": [
+   {
+    "division": "NCAA Division I",
+    "mens": "http://my.armssoftware.com/arms/public/questionnaire/c991d1775c3a",
+    "womens": "https://questionnaires.armssoftware.com/d8940d0df6e3"
+   }
+  ],
+  "mercyhurst-university": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://questionnaires.armssoftware.com/500b96823b07",
+    "womens": "https://questionnaires.armssoftware.com/312b0b820c80"
+   }
+  ],
+  "pennsylvania-state-university-penn-state": [
+   {
+    "division": "NCAA Division I",
+    "mens": "http://my.armssoftware.com/arms/public/questionnaire/e8ef8c6e02ac",
+    "womens": null
+   }
+  ],
+  "pennsylvania-western-university-clarion-clarion": [
+   {
+    "division": "NCAA Division I",
+    "mens": "http://my.armssoftware.com/arms/public/questionnaire/e6f73316ec9e",
+    "womens": null
+   }
+  ],
+  "pennsylvania-western-university-edinboro-edinboro": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://my.armssoftware.com/arms/public/questionnaire/68aa63bea043",
+    "womens": null
+   },
+   {
+    "division": "NCAA Division II",
+    "mens": null,
+    "womens": "https://my.armssoftware.com/arms/public/questionnaire/68aa63bea043"
+   }
+  ],
+  "university-of-pennsylvania-penn": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://my.armssoftware.com/arms/public/questionnaire/7d918fc736fc",
+    "womens": null
+   }
+  ],
+  "university-of-pittsburgh": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://questionnaires.armssoftware.com/c9e19412e143",
+    "womens": null
+   }
+  ],
+  "brown-university": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://my.armssoftware.com/arms/public/questionnaire/a84ca6c5059a",
+    "womens": null
+   }
+  ],
+  "presbyterian-college": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://my.armssoftware.com/arms/public/questionnaire/367bcba9a68f?",
+    "womens": "https://questionnaires.armssoftware.com/0c33dbb330ed"
+   }
+  ],
+  "the-citadel": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://citadelsports.com/form/31",
+    "womens": null
+   }
+  ],
+  "university-of-virginia": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://questionnaires.armssoftware.com/7557b6d21281",
+    "womens": null
+   }
+  ],
+  "university-of-wyoming": [
+   {
+    "division": "NCAA Division I",
+    "mens": "https://college.jumpforward.com/questionnaire.aspx?iid=556&sportid=25",
+    "womens": null
+   }
+  ],
+  "simon-fraser-university": [
+   {
+    "division": "NCAA Division II",
+    "mens": "https://athletics.sfu.ca/sb_output.aspx?form=7",
+    "womens": "https://athletics.sfu.ca/sb_output.aspx?form=47"
+   }
+  ],
+  "colorado-school-of-mines": [
+   {
+    "division": "NCAA Division II",
+    "mens": "https://questionnaire.frontrush.com/Questionnaire/Questionnaire.aspx?q=2508&s=40385&o=605",
+    "womens": null
+   }
+  ],
+  "colorado-state-university-pueblo": [
+   {
+    "division": "NCAA Division II",
+    "mens": "https://questionnaires.armssoftware.com/cbf009a81dd3",
+    "womens": null
+   }
+  ],
+  "university-of-bridgeport": [
+   {
+    "division": "NCAA Division II",
+    "mens": null,
+    "womens": "https://www.ubknights.com/information/Prospective_Athlete_Form_Women-s_Wrestling"
+   }
+  ],
+  "university-of-indianapolis": [
+   {
+    "division": "NCAA Division II",
+    "mens": "https://my.armssoftware.com/arms/public/questionnaire/37981381c1d7",
+    "womens": null
+   }
+  ],
+  "kentucky-wesleyan-college": [
+   {
+    "division": "NCAA Division II",
+    "mens": "https://my.armssoftware.com/arms/public/questionnaire/b8cd7eab2695",
+    "womens": null
+   }
+  ],
+  "st-cloud-state-university": [
+   {
+    "division": "NCAA Division II",
+    "mens": "https://scsuhuskies.com/sb_output.aspx?form=3",
+    "womens": null
+   }
+  ],
+  "university-of-jamestown": [
+   {
+    "division": "NCAA Division II",
+    "mens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=MjM0Mzk=-Ra/XfChS1Rs=&ptype=Recruit",
+    "womens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=MjE4MTY=-ZDga5HgPp+U=&ptype=Recruit"
+   }
+  ],
+  "chadron-state-college": [
+   {
+    "division": "NCAA Division II",
+    "mens": null,
+    "womens": "https://chadroneagles.com/sb_output.aspx?form=32"
+   }
+  ],
+  "felician-university": [
+   {
+    "division": "NCAA Division II",
+    "mens": "https://questionnaires.armssoftware.com/d782b18320ff",
+    "womens": "https://questionnaires.armssoftware.com/c228d2206973"
+   }
+  ],
+  "lake-erie-college": [
+   {
+    "division": "NCAA Division II",
+    "mens": "https://questionnaires.armssoftware.com/c4042a7b0c61",
+    "womens": null
+   }
+  ],
+  "university-of-findlay": [
+   {
+    "division": "NCAA Division II",
+    "mens": "https://questionnaires.armssoftware.com/23d1d430c254",
+    "womens": null
+   }
+  ],
+  "gannon-university": [
+   {
+    "division": "NCAA Division II",
+    "mens": "https://questionnaires.armssoftware.com/b603a577b1fe",
+    "womens": "https://questionnaires.armssoftware.com/6d1a0d26c3a4?path=wwrest"
+   }
+  ],
+  "king-university": [
+   {
+    "division": "NCAA Division II",
+    "mens": "http://my.armssoftware.com/arms/public/questionnaire/f847c6dab28e",
+    "womens": "http://my.armssoftware.com/arms/public/questionnaire/c1b481e55047"
+   }
+  ],
+  "texas-woman-s-university": [
+   {
+    "division": "NCAA Division II",
+    "mens": null,
+    "womens": "https://twuathletics.com/sb_output.aspx?form=90"
+   }
+  ],
+  "emory-and-henry-university": [
+   {
+    "division": "NCAA Division II",
+    "mens": "https://my.armssoftware.com/arms/public/questionnaire/ccd5fd851ea2",
+    "womens": "https://questionnaires.armssoftware.com/487e8b524f7e"
+   }
+  ],
+  "ferrum-college": [
+   {
+    "division": "NCAA Division II",
+    "mens": "https://ferrumpanthers.com/sb_output.aspx?form=3&path=wrestling",
+    "womens": null
+   }
+  ],
+  "university-of-wisconsin-parkside": [
+   {
+    "division": "NCAA Division II",
+    "mens": "http://my.armssoftware.com/arms/public/questionnaire/3113c8d0e1cd",
+    "womens": null
+   }
+  ],
+  "concord-university": [
+   {
+    "division": "NCAA Division II",
+    "mens": null,
+    "womens": "https://cumountainlions.com/sb_output.aspx?form=35"
+   }
+  ],
+  "davis-elkins-college": [
+   {
+    "division": "NCAA Division II",
+    "mens": "https://senatornation.com/sports/2024/5/29/recruiting-questionnaire-wrestling.aspx?brid=fiPwxSfbUvUs6KJqAc3ikw",
+    "womens": null
+   }
+  ],
+  "university-of-the-ozarks": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://ozarks.edu/athletics/recruitme/?tfa_7742=1",
+    "womens": null
+   }
+  ],
+  "wesleyan-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://questionnaires.armssoftware.com/be5623aae662",
+    "womens": null
+   }
+  ],
+  "buena-vista-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://bvu.tfaforms.net/f/bvu-athletic-recruiting-form",
+    "womens": null
+   }
+  ],
+  "cornell-college": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://cornellrams.com/sports/2021/6/21/9879_132687562304008705.aspx?id=151",
+    "womens": "https://cornellrams.com/sports/2021/11/22/womens-wrestling-recruiting.aspx"
+   }
+  ],
+  "wartburg-college": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://go-knights.net/sb_output.aspx?frform=15&path=wrestling",
+    "womens": null
+   }
+  ],
+  "augustana-college-illinois": [
+   {
+    "division": "NCAA Division III",
+    "mens": "http://athletics.augustana.edu/sb_output.aspx?frform=19&path=wrestling",
+    "womens": null
+   }
+  ],
+  "aurora-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://athletics.aurora.edu/sports/2020/5/27/GEN_1001145919_Mwrestling.aspx?path=whkyachad3",
+    "womens": "https://athletics.aurora.edu/sports/2020/5/27/GEN_1001145919.aspx"
+   }
+  ],
+  "elmhurst-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://questionnaires.armssoftware.com/ed123cd30450",
+    "womens": "https://questionnaires.armssoftware.com/47c54cda9f6e"
+   }
+  ],
+  "illinois-wesleyan-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://www.iwusports.com/sb_output.aspx?form=23",
+    "womens": null
+   }
+  ],
+  "trine-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=MTA3OTI=-wm9jxTp7fMs=&ptype=recruit",
+    "womens": null
+   }
+  ],
+  "bridgewater-state-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://questionnaires.armssoftware.com/8017f75fc9da",
+    "womens": null
+   }
+  ],
+  "mcdaniel-college": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://www.frontrush.com/login.aspx?URL=Recruit&SportId=478&Iframe=1",
+    "womens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=MjMxMjc=-/uVxNZF9cGE=&ptype=recruit"
+   }
+  ],
+  "adrian-college": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=MTAxMTQ=-TTJCBPrn9ys=&ptype=Recruit",
+    "womens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=MTk4NjY=-7r5ttQQrPDo=&ptype=Recruit"
+   }
+  ],
+  "augsburg-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://athletics.augsburg.edu/sb_output.aspx?frform=6&path=wrestling",
+    "womens": "https://admissions.augsburg.edu/register/Womenswrestling?path=wwrestling"
+   }
+  ],
+  "st-john-s-university-minnesota": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://gojohnnies.com/sports/2013/10/3/WRESTLING_1003135025.aspx?id=237",
+    "womens": null
+   }
+  ],
+  "nebraska-wesleyan-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://forms.arirecruiting.com/nwu_m.wrestling/recruitquestionnaire",
+    "womens": null
+   }
+  ],
+  "new-england-college": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=MTMxNjE=-mv7+WPPPNjY=&ptype=recruit",
+    "womens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=MjA4OTE=-r9ru5To5NyY=&ptype=Recruit"
+   }
+  ],
+  "new-york-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "http://www.gonyuathletics.com/sb_output.aspx?form=59&path=wrestling",
+    "womens": null
+   }
+  ],
+  "suny-brockport": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=MjA5MjY=-bjM7AMzB70c=&ptype=recruit",
+    "womens": null
+   }
+  ],
+  "suny-cortland": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://www.cortlandreddragons.com/sb_output.aspx?frform=27&path=wrestling",
+    "womens": null
+   }
+  ],
+  "suny-oneonta": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://college.jumpforward.com/questionnaire.aspx?iid=1733&sportid=25",
+    "womens": null
+   }
+  ],
+  "baldwin-wallace-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://admission.bw.edu/register/athletic_inquiry?cmd=submit&",
+    "womens": "https://admission.bw.edu/register/athletic_inquiry?cmd=submit&"
+   }
+  ],
+  "heidelberg-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://admission.heidelberg.edu/register/wrestling-recruit",
+    "womens": "https://admission.heidelberg.edu/register/w-wrestling-recruit?cmd=submit&"
+   }
+  ],
+  "muskingum-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=4508&ptype=recruit",
+    "womens": null
+   }
+  ],
+  "university-of-mount-union": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=MjM2MDA=-sSyvnAfGNcc=&ptype=recruit",
+    "womens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=MjM1OTk=-3REGEF0L5XM=&ptype=recruit"
+   }
+  ],
+  "albright-college": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=MjM3Mzg=-tUxdUVCuO+w=&ptype=recruit",
+    "womens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=MjM5Njk=-e4H28sZL2L0=&ptype=recruit"
+   }
+  ],
+  "alvernia-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=MTY4MjQ=-Z2ep+p1crg0=&ptype=recruit",
+    "womens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=MjAzNjY=-Jf1j8+XmX9I=&ptype=recruit"
+   }
+  ],
+  "chatham-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://questionnaires.armssoftware.com/a3279b5e7530",
+    "womens": "https://questionnaires.armssoftware.com/84f519796f37"
+   }
+  ],
+  "gettysburg-college": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://questionnaires.armssoftware.com/8941c79c7f04",
+    "womens": "https://questionnaires.armssoftware.com/016dac0c98d0"
+   }
+  ],
+  "lycoming-college": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://gowarriors.lycoming.edu/register/wrestling",
+    "womens": null
+   }
+  ],
+  "messiah-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "http://gomessiah.com/sb_output.aspx?frform=17&path=wrestling",
+    "womens": null
+   }
+  ],
+  "muhlenberg-college": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://questionnaires.armssoftware.com/0fd73b903979",
+    "womens": "https://questionnaires.armssoftware.com/09607a4db403"
+   }
+  ],
+  "penn-state-altoona": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://www.psaltoonalions.com/sports/wrest/recruit",
+    "womens": "https://www.psaltoonalions.com/sports/wwrest/recruit"
+   }
+  ],
+  "university-of-scranton": [
+   {
+    "division": "NCAA Division III",
+    "mens": "http://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=5272&ptype=recruit",
+    "womens": null
+   }
+  ],
+  "york-college-of-pennsylvania": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=MzY0MA==-0Dm1HaPzJT8=&ptype=recruit",
+    "womens": null
+   }
+  ],
+  "mcmurry-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://apply.mcm.edu/register/athleteinquiry",
+    "womens": "https://apply.mcm.edu/register/athleteinquiry"
+   }
+  ],
+  "averett-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://www.frontrush.com/FR_Web_App/Player/PlayerSubmit.aspx?sid=MTIzMTQ=-71/1Q/m3TzY=&ptype=recruit",
+    "womens": null
+   }
+  ],
+  "marymount-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://my.armssoftware.com/arms/public/questionnaire/6b5ad5e41c44",
+    "womens": "https://my.armssoftware.com/arms/public/questionnaire/b71dd0e4d58b"
+   }
+  ],
+  "randolph-college": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://admission.randolphcollege.edu/register/athleticinquiry/",
+    "womens": "https://admission.randolphcollege.edu/register/athleticinquiry/"
+   }
+  ],
+  "university-of-lynchburg": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://forms.arirecruiting.com/lynchburg_mens.wrestling/RecruitQuestionaire",
+    "womens": null
+   }
+  ],
+  "washington-and-lee-university": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://my.armssoftware.com/arms/public/questionnaire/6021eb114e1d",
+    "womens": null
+   }
+  ],
+  "carthage-college": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://forms.arirecruiting.com/forms/Carthage.College_M.Wrestling/form",
+    "womens": "https://forms.arirecruiting.com/forms/Carthage.College_W.Wrestling/form"
+   }
+  ],
+  "concordia-university-wisconsin": [
+   {
+    "division": "NCAA Division III",
+    "mens": "http://cuwfalcons.com/sports/2025/7/3/wrestling-recruit-me.aspx",
+    "womens": null
+   }
+  ],
+  "university-of-wisconsin-la-crosse": [
+   {
+    "division": "NCAA Division III",
+    "mens": "http://www.uwlathletics.com/sb_output.aspx?frform=3&path=wrestling",
+    "womens": null
+   }
+  ],
+  "university-of-wisconsin-oshkosh": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://uwoshkoshtitans.com/sports/2024/4/18/recruits-questionnaire.aspx",
+    "womens": "https://uwoshkoshtitans.com/sports/2024/4/18/recruits-questionnaire.aspx"
+   }
+  ],
+  "university-of-wisconsin-stevens-point": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://questionnaires.armssoftware.com/ec1eae0bd041",
+    "womens": "https://questionnaires.armssoftware.com/e3573f995b46"
+   }
+  ],
+  "bethany-college": [
+   {
+    "division": "NCAA Division III",
+    "mens": "https://bethanybison.com/sb_output.aspx?form=4",
+    "womens": "https://bethanybison.com/sb_output.aspx?form=4"
+   }
+  ],
+  "williams-baptist-university": [
+   {
+    "division": "NAIA",
+    "mens": "https://wbueagles.com/information/Recruit_Forms/Wrestling_Recruit_Form",
+    "womens": null
+   }
+  ],
+  "arizona-christian-university": [
+   {
+    "division": "NAIA",
+    "mens": "https://acufirestorm.com/sb_output.aspx?form=12&path=wrestling",
+    "womens": "https://acufirestorm.com/sb_output.aspx?form=41"
+   }
+  ],
+  "westcliff-university": [
+   {
+    "division": "NAIA",
+    "mens": "https://westcliffathletics.com/future-warriors/recruits",
+    "womens": "https://westcliffathletics.com/future-warriors/recruits"
+   }
+  ],
+  "southeastern-university": [
+   {
+    "division": "NAIA",
+    "mens": "https://fire.seu.edu/sb_output.aspx?form=3",
+    "womens": null
+   }
+  ],
+  "brewton-parker-college": [
+   {
+    "division": "NAIA",
+    "mens": "https://bpcathletics.com/sports/2022/5/10/59_132966797982392909",
+    "womens": "https://bpcathletics.com/sports/2022/5/10/59_132966797982392909"
+   }
+  ],
+  "indiana-institute-of-technology": [
+   {
+    "division": "NAIA",
+    "mens": "https://indianatechwarriors.com/sports/2014/4/22/GEN_BeaWarrior.aspx?id=21",
+    "womens": "https://indianatechwarriors.com/sports/2014/4/22/GEN_BeaWarrior.aspx?id=21"
+   }
+  ],
+  "university-of-saint-mary": [
+   {
+    "division": "NAIA",
+    "mens": "http://gospires.com/sports/2025/5/5/recruit-me.aspx",
+    "womens": "http://gospires.com/sports/2025/5/5/recruit-me.aspx"
+   }
+  ],
+  "georgetown-college": [
+   {
+    "division": "NAIA",
+    "mens": "https://questionnaires.armssoftware.com/8f02e2b5b899",
+    "womens": "https://questionnaires.armssoftware.com/b8e3c27376f2"
+   }
+  ],
+  "midway-university": [
+   {
+    "division": "NAIA",
+    "mens": "https://gomidwayeagles.com/forms/mens_wrestling_recruitment_form",
+    "womens": null
+   }
+  ],
+  "cleary-university": [
+   {
+    "division": "NAIA",
+    "mens": "https://clearycougars.com/Recruitment_Form",
+    "womens": null
+   }
+  ],
+  "rochester-christian-university": [
+   {
+    "division": "NAIA",
+    "mens": "https://www.rcuwarriors.com/recruiting/forms/wrestling",
+    "womens": "https://www.rcuwarriors.com/recruiting/forms/wrestling"
+   }
+  ],
+  "siena-heights-university": [
+   {
+    "division": "NAIA",
+    "mens": "https://sienaheights.prestosports.com:443/recruiting/recruiting_central/Men-s_Wrestling_Recruiting",
+    "womens": null
+   }
+  ],
+  "avila-university": [
+   {
+    "division": "NAIA",
+    "mens": "https://www.avilaathletics.com/recruiting",
+    "womens": "https://www.avilaathletics.com/recruiting"
+   }
+  ],
+  "central-methodist-university": [
+   {
+    "division": "NAIA",
+    "mens": "https://www.cmueagles.com/sports/mwrest/MWrest_Recruiting_Questionnaire",
+    "womens": "https://www.cmueagles.com/sports/wwrest/WWrest_Recruiting_Questionnaire"
+   }
+  ],
+  "concordia-university-nebraska": [
+   {
+    "division": "NAIA",
+    "mens": "https://www.cune.edu/athletics/teams/recruit-me",
+    "womens": null
+   }
+  ],
+  "doane-university": [
+   {
+    "division": "NAIA",
+    "mens": "https://doaneathletics.com/Sports_Interest_Forms",
+    "womens": "https://doaneathletics.com/Sports_Interest_Forms"
+   }
+  ],
+  "hastings-college": [
+   {
+    "division": "NAIA",
+    "mens": "https://www.hastingsbroncos.com/assets/Recruiting",
+    "womens": "https://www.hastingsbroncos.com/assets/Recruiting"
+   }
+  ],
+  "midland-university": [
+   {
+    "division": "NAIA",
+    "mens": "https://connect.midlandu.edu/register/?id=229ba8c2-0755-4d16-a090-dc329a054f96&sys:sport:sport=c7134bf8-63fb-4ab7-8682-3f1705d927c3&sys:field:primary_activity=c7134bf8-63fb-4ab7-8682-3f1705d927c3",
+    "womens": "https://connect.midlandu.edu/register/?id=229ba8c2-0755-4d16-a090-dc329a054f96&sys:sport:sport=c7134bf8-63fb-4ab7-8682-3f1705d927c3&sys:field:primary_activity=c7134bf8-63fb-4ab7-8682-3f1705d927c3"
+   }
+  ],
+  "defiance-college": [
+   {
+    "division": "NAIA",
+    "mens": "https://www.defianceathletics.com/information/Recruits/form",
+    "womens": null
+   }
+  ],
+  "university-of-rio-grande": [
+   {
+    "division": "NAIA",
+    "mens": "https://www.rioredstorm.com/information/Recruit_Me",
+    "womens": "https://www.rioredstorm.com/information/Recruit_Me"
+   }
+  ],
+  "dakota-wesleyan-university": [
+   {
+    "division": "NAIA",
+    "mens": "https://dwuathletics.com/recruit_me/Questonnaire",
+    "womens": "https://dwuathletics.com/recruit_me/Questonnaire"
+   }
+  ],
+  "otero-college": [
+   {
+    "division": "NJCAA",
+    "mens": "https://www.oterorattlers.com/sports/wrest/prospective_athlete",
+    "womens": null
+   }
+  ],
+  "trinidad-state-college": [
+   {
+    "division": "NJCAA",
+    "mens": "https://tsctrojans.com/information/Prospective_Athlete_Form",
+    "womens": "https://tsctrojans.com/information/Prospective_Athlete_Form"
+   }
+  ],
+  "ellsworth-community-college": [
+   {
+    "division": "NJCAA",
+    "mens": "http://ellsworth.prestosports.com/recruits/wrestling_questionnaire",
+    "womens": "https://ellsworth.prestosports.com/recruits/womens_wrestling_questionnaire"
+   }
+  ],
+  "indian-hills-community-college": [
+   {
+    "division": "NJCAA",
+    "mens": "https://indianhillsathletics.com/sports/wrest/recruiting_questionaire",
+    "womens": null
+   }
+  ],
+  "vincennes-university": [
+   {
+    "division": "NJCAA",
+    "mens": "https://govutrailblazers.com/sports/wrest/recruit-wrestling",
+    "womens": "https://govutrailblazers.com/sports/wwrest/recruit"
+   }
+  ],
+  "muskegon-community-college": [
+   {
+    "division": "NJCAA",
+    "mens": "https://muskegonjayhawks.com/recruiting/jayhawk_athletic_recruiting_form",
+    "womens": null
+   }
+  ],
+  "southwestern-michigan-college": [
+   {
+    "division": "NJCAA",
+    "mens": "https://smcroadrunners.com/landing/index",
+    "womens": "https://smcroadrunners.com/landing/index"
+   }
+  ],
+  "minnesota-west-community-technical-college": [
+   {
+    "division": "NJCAA",
+    "mens": "https://www.mnwestathletics.com/information/recruit_me",
+    "womens": null
+   }
+  ],
+  "rowan-college-of-south-jersey-gloucester": [
+   {
+    "division": "NJCAA",
+    "mens": "https://www.rcroadrunners.com/Information/wrestling_prospect",
+    "womens": null
+   }
+  ],
+  "jamestown-community-college": [
+   {
+    "division": "NJCAA",
+    "mens": "https://www.jccjayhawks.com/recruits/prospective-jayhawk",
+    "womens": null
+   }
+  ],
+  "murray-state-college": [
+   {
+    "division": "NJCAA",
+    "mens": "https://mscaggies.com/sb_output.aspx?form=3",
+    "womens": "https://mscaggies.com/sb_output.aspx?form=3"
+   }
+  ],
+  "northern-oklahoma-college": [
+   {
+    "division": "NJCAA",
+    "mens": "https://www.nocmavs.com/sports/wrest/Wrestling_Recruit_Form",
+    "womens": "https://www.nocmavs.com/sports/wrest/Wrestling_Recruit_Form"
+   }
+  ],
+  "rose-state-college": [
+   {
+    "division": "NJCAA",
+    "mens": "https://rscraiders.com/sb_output.aspx?form=4",
+    "womens": null
+   }
+  ],
+  "snow-college": [
+   {
+    "division": "NJCAA",
+    "mens": null,
+    "womens": "https://snowbadgers.com/sb_output.aspx?form=3"
+   }
+  ]
+ }
+}
