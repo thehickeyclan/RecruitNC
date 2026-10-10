@@ -82,6 +82,7 @@ const PATH_LABELS: Array<[RegExp, (m: RegExpMatchArray) => string]> = [
   [/^\/nhsca\/?$/, () => "NHSCA results"],
   [/^\/(?:public-)?rankings\b/, () => "RecruitNC rankings"],
   [/^\/college-commits\b/, () => "College commits"],
+  [/^\/recruiting\/college-map\b/, () => "College program map"],
   [/^\/tournament-of-champions\b/, () => "Tournament of Champions"],
   [/^\/national-team\b/, () => "NC United National Team"],
   [/^\/dave-schultz-award\b/, () => "Dave Schultz Award"],
@@ -141,7 +142,7 @@ function nameBareUrls(answer: string): string {
   })
 
   const BARE_URL =
-    /(?:https?:\/\/[^\s<>"')\]]+|(?<![\w/])\/(?:view-profile|nchsaa|nhsca|fargo|public-rankings|rankings|college-commits|tournament-of-champions|national-team|dave-schultz-award|calendar)(?:[/?][^\s<>"')\]]*)?)/g
+    /(?:https?:\/\/[^\s<>"')\]]+|(?<![\w/])\/(?:view-profile|nchsaa|nhsca|fargo|public-rankings|rankings|college-commits|recruiting\/college-map|tournament-of-champions|national-team|dave-schultz-award|calendar)(?:[/?][^\s<>"')\]]*)?)/g
 
   const named = withoutLinks.replace(BARE_URL, (url) => {
     const trimmed = url.replace(/[.,;:]+$/, "")

@@ -1,0 +1,7430 @@
+{
+ "source": "college-wrestling-programs-2026.xlsx (9 Oct 2026), less New Jersey City University per college-wrestling-staff-2026.xlsx (10 Oct 2026)",
+ "season": "2026-27",
+ "schools": [
+  {
+   "id": "huntingdon-college",
+   "name": "Huntingdon College",
+   "city": "Montgomery",
+   "state": "AL",
+   "latitude": 32.351998,
+   "longitude": -86.285251,
+   "website": "https://www.huntingdonhawks.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "St. Louis Intercollegiate Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "university-of-montevallo",
+   "name": "University of Montevallo",
+   "city": "Montevallo",
+   "state": "AL",
+   "latitude": 33.106077,
+   "longitude": -86.865238,
+   "website": "https://montevallofalcons.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Conference Carolinas"
+    }
+   ]
+  },
+  {
+   "id": "central-baptist-college",
+   "name": "Central Baptist College",
+   "city": "Conway",
+   "state": "AR",
+   "latitude": 35.084535,
+   "longitude": -92.444396,
+   "website": "https://cbcmustangs.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "lyon-college",
+   "name": "Lyon College",
+   "city": "Batesville",
+   "state": "AR",
+   "latitude": 35.776426,
+   "longitude": -91.624239,
+   "website": "https://lyonscots.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "St. Louis Intercollegiate Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "ouachita-baptist-university",
+   "name": "Ouachita Baptist University",
+   "city": "Arkadelphia",
+   "state": "AR",
+   "latitude": 34.124608,
+   "longitude": -93.052429,
+   "website": "https://obutigers.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Mid-America Intercollegiate Athletics Association"
+    }
+   ]
+  },
+  {
+   "id": "university-of-arkansas-at-little-rock-little-rock",
+   "name": "University of Arkansas at Little Rock (Little Rock)",
+   "city": "Little Rock",
+   "state": "AR",
+   "latitude": 34.726671,
+   "longitude": -92.341802,
+   "website": "https://lrtrojans.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Pac-12"
+    }
+   ]
+  },
+  {
+   "id": "university-of-the-ozarks",
+   "name": "University of the Ozarks",
+   "city": "Clarksville",
+   "state": "AR",
+   "latitude": 35.474978,
+   "longitude": -93.466335,
+   "website": "https://uofoathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "williams-baptist-university",
+   "name": "Williams Baptist University",
+   "city": "Walnut Ridge",
+   "state": "AR",
+   "latitude": 36.125019,
+   "longitude": -90.936227,
+   "website": "https://wbueagles.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "arizona-christian-university",
+   "name": "Arizona Christian University",
+   "city": "Glendale",
+   "state": "AZ",
+   "latitude": 33.622613,
+   "longitude": -112.182606,
+   "website": "https://acufirestorm.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Great Southwest Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "arizona-state-university",
+   "name": "Arizona State University",
+   "city": "Tempe",
+   "state": "AZ",
+   "latitude": 33.421947,
+   "longitude": -111.939988,
+   "website": "https://thesundevils.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big 12"
+    }
+   ]
+  },
+  {
+   "id": "embry-riddle-aeronautical-university-prescott",
+   "name": "Embry-Riddle Aeronautical University - Prescott",
+   "city": "Prescott",
+   "state": "AZ",
+   "latitude": 34.610729,
+   "longitude": -112.448414,
+   "website": "https://eraueagles.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "simon-fraser-university",
+   "name": "Simon Fraser University",
+   "city": "Burnaby",
+   "state": "BC",
+   "latitude": 49.277662,
+   "longitude": -122.909535,
+   "website": "https://athletics.sfu.ca",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Rocky Mountain Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "california-polytechnic-state-university-cal-poly",
+   "name": "California Polytechnic State University (Cal Poly)",
+   "city": "San Luis Obispo",
+   "state": "CA",
+   "latitude": 35.298657,
+   "longitude": -120.655669,
+   "website": "https://gopoly.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Pac-12"
+    }
+   ]
+  },
+  {
+   "id": "california-state-polytechnic-university-humboldt",
+   "name": "California State Polytechnic University, Humboldt",
+   "city": "Arcata",
+   "state": "CA",
+   "latitude": 40.874068,
+   "longitude": -124.081527,
+   "website": "https://humboldtathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Mountain Pacific Sports Federation"
+    }
+   ]
+  },
+  {
+   "id": "california-state-university-bakersfield",
+   "name": "California State University, Bakersfield",
+   "city": "Bakersfield",
+   "state": "CA",
+   "latitude": 35.354364,
+   "longitude": -119.104154,
+   "website": "https://gorunners.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Pac-12"
+    }
+   ]
+  },
+  {
+   "id": "hope-international-university",
+   "name": "Hope International University",
+   "city": "Fullerton",
+   "state": "CA",
+   "latitude": 33.878016,
+   "longitude": -117.886379,
+   "website": "https://hiuroyals.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "menlo-college",
+   "name": "Menlo College",
+   "city": "Atherton",
+   "state": "CA",
+   "latitude": 37.456722,
+   "longitude": -122.192648,
+   "website": "https://menloathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Mountain Pacific Sports Federation"
+    }
+   ]
+  },
+  {
+   "id": "san-francisco-state-university",
+   "name": "San Francisco State University",
+   "city": "San Francisco",
+   "state": "CA",
+   "latitude": 37.720883,
+   "longitude": -122.476137,
+   "website": "https://sfstategators.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Mountain Pacific Sports Federation"
+    }
+   ]
+  },
+  {
+   "id": "simpson-university",
+   "name": "Simpson University",
+   "city": "Redding",
+   "state": "CA",
+   "latitude": 40.617585,
+   "longitude": -122.331573,
+   "website": "https://simpsonredhawks.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "stanford-university",
+   "name": "Stanford University",
+   "city": "Stanford",
+   "state": "CA",
+   "latitude": 37.431314,
+   "longitude": -122.169365,
+   "website": "https://gostanford.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "ACC"
+    }
+   ]
+  },
+  {
+   "id": "vanguard-university",
+   "name": "Vanguard University",
+   "city": "Costa Mesa",
+   "state": "CA",
+   "latitude": 33.663817,
+   "longitude": -117.904368,
+   "website": "https://vanguardlions.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Mountain Pacific Sports Federation"
+    }
+   ]
+  },
+  {
+   "id": "westcliff-university",
+   "name": "Westcliff University",
+   "city": "Irvine",
+   "state": "CA",
+   "latitude": 33.684473,
+   "longitude": -117.8474,
+   "website": "https://westcliff.prestosports.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "California Pacific Conference"
+    }
+   ]
+  },
+  {
+   "id": "adams-state-university",
+   "name": "Adams State University",
+   "city": "Alamosa",
+   "state": "CO",
+   "latitude": 37.472144,
+   "longitude": -105.880692,
+   "website": "https://asugrizzlies.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Rocky Mountain Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "colorado-mesa-university",
+   "name": "Colorado Mesa University",
+   "city": "Grand Junction",
+   "state": "CO",
+   "latitude": 39.077454,
+   "longitude": -108.554162,
+   "website": "https://cmumavericks.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Rocky Mountain Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "colorado-northwestern-community-college",
+   "name": "Colorado Northwestern Community College",
+   "city": "Rangely",
+   "state": "CO",
+   "latitude": 40.087514,
+   "longitude": -108.786444,
+   "website": "https://athletics.cncc.edu",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "colorado-school-of-mines",
+   "name": "Colorado School of Mines",
+   "city": "Golden",
+   "state": "CO",
+   "latitude": 39.751138,
+   "longitude": -105.222282,
+   "website": "https://minesathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Rocky Mountain Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "colorado-state-university-pueblo",
+   "name": "Colorado State University\u2013Pueblo",
+   "city": "Pueblo",
+   "state": "CO",
+   "latitude": 38.304669,
+   "longitude": -104.58049,
+   "website": "https://gothunderwolves.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Rocky Mountain Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "northeastern-junior-college",
+   "name": "Northeastern Junior College",
+   "city": "Sterling",
+   "state": "CO",
+   "latitude": 40.63685,
+   "longitude": -103.197466,
+   "website": "https://www.njc.edu",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "otero-college",
+   "name": "Otero College",
+   "city": "La Junta",
+   "state": "CO",
+   "latitude": 37.971609,
+   "longitude": -103.543181,
+   "website": "https://www.oterorattlers.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "trinidad-state-college",
+   "name": "Trinidad State College",
+   "city": "Trinidad",
+   "state": "CO",
+   "latitude": 37.173527,
+   "longitude": -104.513657,
+   "website": "https://www.tsctrojans.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "united-states-air-force-academy-air-force",
+   "name": "United States Air Force Academy (Air Force)",
+   "city": "Colorado Springs",
+   "state": "CO",
+   "latitude": 39.010459,
+   "longitude": -104.892271,
+   "website": "https://goairforcefalcons.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Pac-12"
+    }
+   ]
+  },
+  {
+   "id": "university-of-northern-colorado",
+   "name": "University of Northern Colorado",
+   "city": "Greeley",
+   "state": "CO",
+   "latitude": 40.40285,
+   "longitude": -104.701724,
+   "website": "https://uncbears.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Pac-12"
+    }
+   ]
+  },
+  {
+   "id": "western-colorado-university",
+   "name": "Western Colorado University",
+   "city": "Gunnison",
+   "state": "CO",
+   "latitude": 38.55033,
+   "longitude": -106.919166,
+   "website": "https://gomountaineers.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Rocky Mountain Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "sacred-heart-university",
+   "name": "Sacred Heart University",
+   "city": "Fairfield",
+   "state": "CT",
+   "latitude": 41.227851,
+   "longitude": -73.245399,
+   "website": "https://sacredheartpioneers.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": true,
+     "conference": "EIWA"
+    }
+   ]
+  },
+  {
+   "id": "trinity-college-connecticut",
+   "name": "Trinity College (Connecticut)",
+   "city": "Hartford",
+   "state": "CT",
+   "latitude": 41.749914,
+   "longitude": -72.693025,
+   "website": "https://bantamsports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "u-s-coast-guard-academy",
+   "name": "U.S. Coast Guard Academy",
+   "city": "New London",
+   "state": "CT",
+   "latitude": 41.376046,
+   "longitude": -72.102591,
+   "website": "https://coastguardathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-bridgeport",
+   "name": "University of Bridgeport",
+   "city": "Bridgeport",
+   "state": "CT",
+   "latitude": 41.164602,
+   "longitude": -73.190693,
+   "website": "https://www.ubknights.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Independent"
+    }
+   ]
+  },
+  {
+   "id": "wesleyan-university",
+   "name": "Wesleyan University",
+   "city": "Middletown",
+   "state": "CT",
+   "latitude": 41.557037,
+   "longitude": -72.656896,
+   "website": "https://athletics.wesleyan.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "american-university",
+   "name": "American University",
+   "city": "Washington",
+   "state": "DC",
+   "latitude": 38.93905,
+   "longitude": -77.087564,
+   "website": "https://aueagles.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "EIWA"
+    }
+   ]
+  },
+  {
+   "id": "delaware-state-university",
+   "name": "Delaware State University",
+   "city": "Dover",
+   "state": "DE",
+   "latitude": 39.156471,
+   "longitude": -75.491384,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": false,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "keiser-university",
+   "name": "Keiser University",
+   "city": "West Palm Beach",
+   "state": "FL",
+   "latitude": 26.714619,
+   "longitude": -80.106559,
+   "website": "https://kuseahawks.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "new-college-of-florida",
+   "name": "New College of Florida",
+   "city": "Sarasota",
+   "state": "FL",
+   "latitude": 27.386416,
+   "longitude": -82.559059,
+   "website": null,
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "southeastern-university",
+   "name": "Southeastern University",
+   "city": "Lakeland",
+   "state": "FL",
+   "latitude": 28.032749,
+   "longitude": -81.920102,
+   "website": "https://fire.seu.edu",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "st-thomas-university",
+   "name": "St. Thomas University",
+   "city": "Miami Gardens",
+   "state": "FL",
+   "latitude": 25.919403,
+   "longitude": -80.260332,
+   "website": "https://stubobcats.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "andrew-college",
+   "name": "Andrew College",
+   "city": "Cuthbert",
+   "state": "GA",
+   "latitude": 31.772196,
+   "longitude": -84.795709,
+   "website": "https://andrewfightingtigers.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Southern States Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "brewton-parker-college",
+   "name": "Brewton-Parker College",
+   "city": "Mount Vernon",
+   "state": "GA",
+   "latitude": 32.185389,
+   "longitude": -82.583473,
+   "website": "https://bpcuathletics.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Mid-South Conference"
+    }
+   ]
+  },
+  {
+   "id": "emmanuel-university",
+   "name": "Emmanuel University",
+   "city": "Franklin Springs",
+   "state": "GA",
+   "latitude": 34.28347,
+   "longitude": -83.14747,
+   "website": "https://goeulions.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Conference Carolinas"
+    }
+   ]
+  },
+  {
+   "id": "life-university",
+   "name": "Life University",
+   "city": "Marietta",
+   "state": "GA",
+   "latitude": 33.931369,
+   "longitude": -84.523177,
+   "website": "https://liferunningeagles.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Mid-South Conference"
+    }
+   ]
+  },
+  {
+   "id": "reinhardt-university",
+   "name": "Reinhardt University",
+   "city": "Waleska",
+   "state": "GA",
+   "latitude": 34.318466,
+   "longitude": -84.554559,
+   "website": "https://reinhardteagles.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "shorter-university",
+   "name": "Shorter University",
+   "city": "Rome",
+   "state": "GA",
+   "latitude": 34.263497,
+   "longitude": -85.189681,
+   "website": "https://goshorterhawks.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Conference Carolinas"
+    }
+   ]
+  },
+  {
+   "id": "truett-mcconnell-university",
+   "name": "Truett McConnell University",
+   "city": "Cleveland",
+   "state": "GA",
+   "latitude": 34.596306,
+   "longitude": -83.748911,
+   "website": "https://tmbears.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "briar-cliff-university",
+   "name": "Briar Cliff University",
+   "city": "Sioux City",
+   "state": "IA",
+   "latitude": 42.524155,
+   "longitude": -96.425713,
+   "website": "https://bcuchargers.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "buena-vista-university",
+   "name": "Buena Vista University",
+   "city": "Storm Lake",
+   "state": "IA",
+   "latitude": 42.642471,
+   "longitude": -95.207987,
+   "website": "https://bvuathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "American Rivers Conference"
+    }
+   ]
+  },
+  {
+   "id": "central-college",
+   "name": "Central College",
+   "city": "Pella",
+   "state": "IA",
+   "latitude": 41.400243,
+   "longitude": -92.918598,
+   "website": "https://athletics.central.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "American Rivers Conference"
+    }
+   ]
+  },
+  {
+   "id": "coe-college",
+   "name": "Coe College",
+   "city": "Cedar Rapids",
+   "state": "IA",
+   "latitude": 41.985329,
+   "longitude": -91.657403,
+   "website": "https://kohawkathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "American Rivers Conference"
+    }
+   ]
+  },
+  {
+   "id": "cornell-college",
+   "name": "Cornell College",
+   "city": "Mount Vernon",
+   "state": "IA",
+   "latitude": 41.922252,
+   "longitude": -91.42457,
+   "website": "https://cornellrams.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "ellsworth-community-college",
+   "name": "Ellsworth Community College",
+   "city": "Iowa Falls",
+   "state": "IA",
+   "latitude": 42.528019,
+   "longitude": -93.266546,
+   "website": "https://www.eccathletics.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": "Iowa Community College Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "graceland-university",
+   "name": "Graceland University",
+   "city": "Lamoni",
+   "state": "IA",
+   "latitude": 40.616447,
+   "longitude": -93.925339,
+   "website": "https://www.gujackets.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Heart of America Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "grand-view-university",
+   "name": "Grand View University",
+   "city": "Des Moines",
+   "state": "IA",
+   "latitude": 41.620494,
+   "longitude": -93.606097,
+   "website": "https://gvvikings.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Heart of America Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "hawkeye-community-college",
+   "name": "Hawkeye Community College",
+   "city": "Waterloo",
+   "state": "IA",
+   "latitude": 42.428567,
+   "longitude": -92.325769,
+   "website": "https://hawkeyecc.prestosports.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": "Iowa Community College Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "indian-hills-community-college",
+   "name": "Indian Hills Community College",
+   "city": "Ottumwa",
+   "state": "IA",
+   "latitude": 41.044136,
+   "longitude": -92.396396,
+   "website": "https://indianhillsathletics.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": "Iowa Community College Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "iowa-central-community-college",
+   "name": "Iowa Central Community College",
+   "city": "Fort Dodge",
+   "state": "IA",
+   "latitude": 42.489531,
+   "longitude": -94.203265,
+   "website": "https://www.ictritons.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": "Iowa Community College Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "iowa-lakes-community-college",
+   "name": "Iowa Lakes Community College",
+   "city": "Estherville",
+   "state": "IA",
+   "latitude": 43.401783,
+   "longitude": -94.835414,
+   "website": "https://www.iowalakesathletics.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": "Iowa Community College Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "iowa-state-university",
+   "name": "Iowa State University",
+   "city": "Ames",
+   "state": "IA",
+   "latitude": 42.027961,
+   "longitude": -93.644738,
+   "website": "https://cyclones.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big 12"
+    }
+   ]
+  },
+  {
+   "id": "iowa-western-community-college",
+   "name": "Iowa Western Community College",
+   "city": "Council Bluffs",
+   "state": "IA",
+   "latitude": 41.277432,
+   "longitude": -95.794219,
+   "website": "https://www.goreivers.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": "Iowa Community College Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "loras-college",
+   "name": "Loras College",
+   "city": "Dubuque",
+   "state": "IA",
+   "latitude": 42.502993,
+   "longitude": -90.681521,
+   "website": "https://duhawks.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "American Rivers Conference"
+    }
+   ]
+  },
+  {
+   "id": "luther-college",
+   "name": "Luther College",
+   "city": "Decorah",
+   "state": "IA",
+   "latitude": 43.314594,
+   "longitude": -91.800937,
+   "website": "https://luthernorse.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "American Rivers Conference"
+    }
+   ]
+  },
+  {
+   "id": "morningside-university",
+   "name": "Morningside University",
+   "city": "Sioux City",
+   "state": "IA",
+   "latitude": 42.475548,
+   "longitude": -96.358844,
+   "website": "https://www.msidemustangs.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Great Plains Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "north-iowa-area-community-college",
+   "name": "North Iowa Area Community College",
+   "city": "Mason City",
+   "state": "IA",
+   "latitude": 43.16265,
+   "longitude": -93.130147,
+   "website": "https://niacctrojans.prestosports.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": "Iowa Community College Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "northwestern-college",
+   "name": "Northwestern College",
+   "city": "Orange City",
+   "state": "IA",
+   "latitude": 42.998891,
+   "longitude": -96.059821,
+   "website": "https://nwcraiders.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "simpson-college",
+   "name": "Simpson College",
+   "city": "Indianola",
+   "state": "IA",
+   "latitude": 41.366213,
+   "longitude": -93.566054,
+   "website": "https://simpson.prestosports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "American Rivers Conference"
+    }
+   ]
+  },
+  {
+   "id": "southeastern-community-college",
+   "name": "Southeastern Community College",
+   "city": "West Burlington",
+   "state": "IA",
+   "latitude": 40.811723,
+   "longitude": -91.174181,
+   "website": "https://www.sccblackhawks.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": "Iowa Community College Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "st-ambrose-university",
+   "name": "St. Ambrose University",
+   "city": "Davenport",
+   "state": "IA",
+   "latitude": 41.538343,
+   "longitude": -90.580172,
+   "website": "https://stambrose.prestosports.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-dubuque",
+   "name": "University of Dubuque",
+   "city": "Dubuque",
+   "state": "IA",
+   "latitude": 42.498546,
+   "longitude": -90.692155,
+   "website": "https://udspartans.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "American Rivers Conference"
+    }
+   ]
+  },
+  {
+   "id": "university-of-iowa",
+   "name": "University of Iowa",
+   "city": "Iowa City",
+   "state": "IA",
+   "latitude": 41.631102,
+   "longitude": -91.540752,
+   "website": "https://hawkeyesports.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": true,
+     "conference": "Big Ten"
+    }
+   ]
+  },
+  {
+   "id": "university-of-northern-iowa",
+   "name": "University of Northern Iowa",
+   "city": "Cedar Falls",
+   "state": "IA",
+   "latitude": 42.513193,
+   "longitude": -92.463333,
+   "website": "https://unipanthers.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big 12"
+    }
+   ]
+  },
+  {
+   "id": "upper-iowa-university",
+   "name": "Upper Iowa University",
+   "city": "Fayette",
+   "state": "IA",
+   "latitude": 42.838649,
+   "longitude": -91.800726,
+   "website": "https://uiupeacocks.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Great Lakes Valley Conference"
+    }
+   ]
+  },
+  {
+   "id": "waldorf-university",
+   "name": "Waldorf University",
+   "city": "Forest City",
+   "state": "IA",
+   "latitude": 43.262511,
+   "longitude": -93.639733,
+   "website": "https://waldorf.prestosports.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Great Plains Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "wartburg-college",
+   "name": "Wartburg College",
+   "city": "Waverly",
+   "state": "IA",
+   "latitude": 42.726766,
+   "longitude": -92.480632,
+   "website": "https://go-knights.net",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "American Rivers Conference"
+    }
+   ]
+  },
+  {
+   "id": "william-penn-university",
+   "name": "William Penn University",
+   "city": "Oskaloosa",
+   "state": "IA",
+   "latitude": 41.307819,
+   "longitude": -92.646195,
+   "website": "https://www.statesmenathletics.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Heart of America Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "north-idaho-college",
+   "name": "North Idaho College",
+   "city": "Coeur d'Alene",
+   "state": "ID",
+   "latitude": 47.676965,
+   "longitude": -116.797227,
+   "website": "https://northidaho.prestosports.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "augustana-college-illinois",
+   "name": "Augustana College (Illinois)",
+   "city": "Rock Island",
+   "state": "IL",
+   "latitude": 41.505622,
+   "longitude": -90.547563,
+   "website": "https://athletics.augustana.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "College Conference of Illinois and Wisconsin"
+    }
+   ]
+  },
+  {
+   "id": "aurora-university",
+   "name": "Aurora University",
+   "city": "Aurora",
+   "state": "IL",
+   "latitude": 41.754944,
+   "longitude": -88.346936,
+   "website": "https://athletics.aurora.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "College Conference of Illinois and Wisconsin"
+    }
+   ]
+  },
+  {
+   "id": "blackburn-college",
+   "name": "Blackburn College",
+   "city": "Carlinville",
+   "state": "IL",
+   "latitude": 39.285952,
+   "longitude": -89.873013,
+   "website": "https://blackburn.prestosports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "elmhurst-university",
+   "name": "Elmhurst University",
+   "city": "Elmhurst",
+   "state": "IL",
+   "latitude": 41.895209,
+   "longitude": -87.944953,
+   "website": "https://elmhurstbluejays.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "College Conference of Illinois and Wisconsin"
+    }
+   ]
+  },
+  {
+   "id": "eureka-college",
+   "name": "Eureka College",
+   "city": "Eureka",
+   "state": "IL",
+   "latitude": 40.714393,
+   "longitude": -89.268492,
+   "website": "https://www.eurekareddevils.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "St. Louis Intercollegiate Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "harper-college",
+   "name": "Harper College",
+   "city": "Palatine",
+   "state": "IL",
+   "latitude": 42.082474,
+   "longitude": -88.068627,
+   "website": "https://www.harperhawks.net",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "illinois-wesleyan-university",
+   "name": "Illinois Wesleyan University",
+   "city": "Bloomington",
+   "state": "IL",
+   "latitude": 40.491173,
+   "longitude": -88.989955,
+   "website": "https://www.iwusports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "College Conference of Illinois and Wisconsin"
+    }
+   ]
+  },
+  {
+   "id": "joliet-junior-college",
+   "name": "Joliet Junior College",
+   "city": "Joliet",
+   "state": "IL",
+   "latitude": 41.515221,
+   "longitude": -88.169492,
+   "website": "https://jjcwolves.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "mckendree-university",
+   "name": "McKendree University",
+   "city": "Lebanon",
+   "state": "IL",
+   "latitude": 38.605255,
+   "longitude": -89.816739,
+   "website": "https://mckbearcats.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Great Lakes Valley Conference"
+    }
+   ]
+  },
+  {
+   "id": "millikin-university",
+   "name": "Millikin University",
+   "city": "Decatur",
+   "state": "IL",
+   "latitude": 39.841149,
+   "longitude": -88.975639,
+   "website": "https://athletics.millikin.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "College Conference of Illinois and Wisconsin"
+    }
+   ]
+  },
+  {
+   "id": "north-central-college",
+   "name": "North Central College",
+   "city": "Naperville",
+   "state": "IL",
+   "latitude": 41.776267,
+   "longitude": -88.143545,
+   "website": "https://northcentralcardinals.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "College Conference of Illinois and Wisconsin"
+    }
+   ]
+  },
+  {
+   "id": "northern-illinois-university",
+   "name": "Northern Illinois University",
+   "city": "DeKalb",
+   "state": "IL",
+   "latitude": 41.930779,
+   "longitude": -88.778901,
+   "website": "https://niuhuskies.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Pac-12"
+    }
+   ]
+  },
+  {
+   "id": "northwestern-university",
+   "name": "Northwestern University",
+   "city": "Evanston",
+   "state": "IL",
+   "latitude": 42.049839,
+   "longitude": -87.679318,
+   "website": "https://nusports.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big Ten"
+    }
+   ]
+  },
+  {
+   "id": "quincy-university",
+   "name": "Quincy University",
+   "city": "Quincy",
+   "state": "IL",
+   "latitude": 39.939195,
+   "longitude": -91.387046,
+   "website": "https://quhawks.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Great Lakes Valley Conference"
+    }
+   ]
+  },
+  {
+   "id": "southern-illinois-university-edwardsville-siu-edwardsville-or-siue",
+   "name": "Southern Illinois University Edwardsville (SIU Edwardsville or SIUE)",
+   "city": "Edwardsville",
+   "state": "IL",
+   "latitude": 38.794162,
+   "longitude": -90.000279,
+   "website": "https://siuecougars.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Mid-American Conference"
+    }
+   ]
+  },
+  {
+   "id": "triton-college",
+   "name": "Triton College",
+   "city": "River Grove",
+   "state": "IL",
+   "latitude": 41.914448,
+   "longitude": -87.840242,
+   "website": "https://tritonathletics.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-chicago",
+   "name": "University of Chicago",
+   "city": "Chicago",
+   "state": "IL",
+   "latitude": 41.789554,
+   "longitude": -87.601185,
+   "website": "https://athletics.uchicago.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-illinois-urbana-champaign-illinois",
+   "name": "University of Illinois Urbana-Champaign (Illinois)",
+   "city": "Champaign",
+   "state": "IL",
+   "latitude": 40.109022,
+   "longitude": -88.230291,
+   "website": "https://fightingillini.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big Ten"
+    }
+   ]
+  },
+  {
+   "id": "wheaton-college-illinois",
+   "name": "Wheaton College (Illinois)",
+   "city": "Wheaton",
+   "state": "IL",
+   "latitude": 41.867284,
+   "longitude": -88.099369,
+   "website": "https://athletics.wheaton.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "ancilla-college",
+   "name": "Ancilla College",
+   "city": "Donaldson",
+   "state": "IN",
+   "latitude": 41.338657,
+   "longitude": -86.445405,
+   "website": "https://ancilla.prestosports.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "indiana-institute-of-technology",
+   "name": "Indiana Institute of Technology",
+   "city": "Fort Wayne",
+   "state": "IN",
+   "latitude": 41.079042,
+   "longitude": -85.117003,
+   "website": "https://indianatechwarriors.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Wolverine-Hoosier Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "indiana-university-bloomington-indiana",
+   "name": "Indiana University Bloomington (Indiana)",
+   "city": "Bloomington",
+   "state": "IN",
+   "latitude": 39.166432,
+   "longitude": -86.526849,
+   "website": "https://iuhoosiers.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big Ten"
+    }
+   ]
+  },
+  {
+   "id": "manchester-university",
+   "name": "Manchester University",
+   "city": "North Manchester",
+   "state": "IN",
+   "latitude": 41.010212,
+   "longitude": -85.764034,
+   "website": "https://muspartans.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "marian-university",
+   "name": "Marian University",
+   "city": "Indianapolis",
+   "state": "IN",
+   "latitude": 39.814832,
+   "longitude": -86.200921,
+   "website": "https://muknights.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "purdue-university",
+   "name": "Purdue University",
+   "city": "West Lafayette",
+   "state": "IN",
+   "latitude": 40.430028,
+   "longitude": -86.926421,
+   "website": "https://purduesports.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big Ten"
+    }
+   ]
+  },
+  {
+   "id": "trine-university",
+   "name": "Trine University",
+   "city": "Angola",
+   "state": "IN",
+   "latitude": 41.634433,
+   "longitude": -85.005206,
+   "website": "https://trinethunder.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-indianapolis",
+   "name": "University of Indianapolis",
+   "city": "Indianapolis",
+   "state": "IN",
+   "latitude": 39.708379,
+   "longitude": -86.132382,
+   "website": "https://athletics.uindy.edu",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Great Lakes Valley Conference"
+    }
+   ]
+  },
+  {
+   "id": "vincennes-university",
+   "name": "Vincennes University",
+   "city": "Vincennes",
+   "state": "IN",
+   "latitude": 38.686676,
+   "longitude": -87.520861,
+   "website": "https://govutrailblazers.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "wabash-college",
+   "name": "Wabash College",
+   "city": "Crawfordsville",
+   "state": "IN",
+   "latitude": 40.039392,
+   "longitude": -86.904414,
+   "website": "https://sports.wabash.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "baker-university",
+   "name": "Baker University",
+   "city": "Baldwin City",
+   "state": "KS",
+   "latitude": 38.778982,
+   "longitude": -95.186368,
+   "website": "https://www.bakerwildcats.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Heart of America Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "barton-community-college",
+   "name": "Barton Community College",
+   "city": "Great Bend",
+   "state": "KS",
+   "latitude": 38.401635,
+   "longitude": -98.733182,
+   "website": "https://www.bartonsports.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "benedictine-college",
+   "name": "Benedictine College",
+   "city": "Atchison",
+   "state": "KS",
+   "latitude": 39.572269,
+   "longitude": -95.115036,
+   "website": "https://ravenathletics.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "central-christian-college-of-kansas",
+   "name": "Central Christian College of Kansas",
+   "city": "McPherson",
+   "state": "KS",
+   "latitude": 38.358138,
+   "longitude": -97.666933,
+   "website": "https://ccctigers.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "cloud-county-community-college",
+   "name": "Cloud County Community College",
+   "city": "Concordia",
+   "state": "KS",
+   "latitude": 39.554226,
+   "longitude": -97.665955,
+   "website": "https://cloudtbirds.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "colby-community-college",
+   "name": "Colby Community College",
+   "city": "Colby",
+   "state": "KS",
+   "latitude": 39.379668,
+   "longitude": -101.054786,
+   "website": "https://www.colbytrojans.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": "Kansas Jayhawk Community College Conference"
+    }
+   ]
+  },
+  {
+   "id": "cowley-county-community-college",
+   "name": "Cowley County Community College",
+   "city": "Arkansas City",
+   "state": "KS",
+   "latitude": 37.062002,
+   "longitude": -97.041571,
+   "website": "https://cowleytigers.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "fort-hays-state-university",
+   "name": "Fort Hays State University",
+   "city": "Hays",
+   "state": "KS",
+   "latitude": 38.872059,
+   "longitude": -99.339809,
+   "website": "https://fhsuathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Mid-America Intercollegiate Athletics Association"
+    }
+   ]
+  },
+  {
+   "id": "fort-hays-tech-northwest",
+   "name": "Fort Hays Tech Northwest",
+   "city": "Goodland",
+   "state": "KS",
+   "latitude": 39.344997,
+   "longitude": -101.698308,
+   "website": "http://nwktc.prestosports.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": "Kansas Jayhawk Community College Conference"
+    }
+   ]
+  },
+  {
+   "id": "friends-university",
+   "name": "Friends University",
+   "city": "Wichita",
+   "state": "KS",
+   "latitude": 37.676977,
+   "longitude": -97.366088,
+   "website": "https://friendsathletics.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Kansas Collegiate Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "labette-community-college",
+   "name": "Labette Community College",
+   "city": "Parsons",
+   "state": "KS",
+   "latitude": 37.339504,
+   "longitude": -95.255899,
+   "website": "http://www.labette.edu/athletics",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "neosho-county-community-college",
+   "name": "Neosho County Community College",
+   "city": "Chanute",
+   "state": "KS",
+   "latitude": 37.667413,
+   "longitude": -95.463005,
+   "website": "https://goneosho.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "newman-university-kansas",
+   "name": "Newman University (Kansas)",
+   "city": "Wichita",
+   "state": "KS",
+   "latitude": 37.673248,
+   "longitude": -97.38049,
+   "website": "https://newmanjets.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Mid-America Intercollegiate Athletics Association"
+    }
+   ]
+  },
+  {
+   "id": "ottawa-university",
+   "name": "Ottawa University",
+   "city": "Ottawa",
+   "state": "KS",
+   "latitude": 38.601561,
+   "longitude": -95.265839,
+   "website": "https://ottawabraves.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Kansas Collegiate Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "pratt-community-college",
+   "name": "Pratt Community College",
+   "city": "Pratt",
+   "state": "KS",
+   "latitude": 37.656026,
+   "longitude": -98.716245,
+   "website": "https://www.gobeaversports.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-saint-mary",
+   "name": "University of Saint Mary",
+   "city": "Leavenworth",
+   "state": "KS",
+   "latitude": 39.282191,
+   "longitude": -94.902625,
+   "website": "https://gospires.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Kansas Collegiate Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "bellarmine-university",
+   "name": "Bellarmine University",
+   "city": "Louisville",
+   "state": "KY",
+   "latitude": 38.216374,
+   "longitude": -85.706144,
+   "website": "https://athletics.bellarmine.edu",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Southern Conference"
+    }
+   ]
+  },
+  {
+   "id": "campbellsville-university",
+   "name": "Campbellsville University",
+   "city": "Campbellsville",
+   "state": "KY",
+   "latitude": 37.343166,
+   "longitude": -85.350586,
+   "website": "https://campbellsvilletigers.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Mid-South Conference"
+    }
+   ]
+  },
+  {
+   "id": "georgetown-college",
+   "name": "Georgetown College",
+   "city": "Georgetown",
+   "state": "KY",
+   "latitude": 38.20792,
+   "longitude": -84.554868,
+   "website": "https://georgetowncollegeathletics.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Mid-South Conference"
+    }
+   ]
+  },
+  {
+   "id": "kentucky-wesleyan-college",
+   "name": "Kentucky Wesleyan College",
+   "city": "Owensboro",
+   "state": "KY",
+   "latitude": 37.744992,
+   "longitude": -87.115512,
+   "website": "https://kwcpanthers.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Great Midwest Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "lindsey-wilson-university",
+   "name": "Lindsey Wilson University",
+   "city": "Columbia",
+   "state": "KY",
+   "latitude": 37.103649,
+   "longitude": -85.299967,
+   "website": "https://lindseyathletics.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Mid-South Conference"
+    }
+   ]
+  },
+  {
+   "id": "midway-university",
+   "name": "Midway University",
+   "city": "Midway",
+   "state": "KY",
+   "latitude": 38.145726,
+   "longitude": -84.681543,
+   "website": "https://gomidwayeagles.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "thomas-more-university",
+   "name": "Thomas More University",
+   "city": "Crestview Hills",
+   "state": "KY",
+   "latitude": 39.023839,
+   "longitude": -84.565593,
+   "website": "https://thomasmoresaints.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Great Midwest Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "university-of-pikeville",
+   "name": "University of Pikeville",
+   "city": "Pikeville",
+   "state": "KY",
+   "latitude": 37.478501,
+   "longitude": -82.521434,
+   "website": "https://upikebears.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-the-cumberlands",
+   "name": "University of the Cumberlands",
+   "city": "Williamsburg",
+   "state": "KY",
+   "latitude": 36.736743,
+   "longitude": -84.162862,
+   "website": "https://cumberlandspatriots.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Mid-South Conference"
+    }
+   ]
+  },
+  {
+   "id": "bridgewater-state-university",
+   "name": "Bridgewater State University",
+   "city": "Bridgewater",
+   "state": "MA",
+   "latitude": 41.987794,
+   "longitude": -70.972947,
+   "website": "https://www.bsubears.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "emmanuel-college",
+   "name": "Emmanuel College",
+   "city": "Boston",
+   "state": "MA",
+   "latitude": 42.340685,
+   "longitude": -71.102906,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "harvard-university",
+   "name": "Harvard University",
+   "city": "Cambridge",
+   "state": "MA",
+   "latitude": 42.365743,
+   "longitude": -71.122214,
+   "website": "https://gocrimson.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Ivy League"
+    }
+   ]
+  },
+  {
+   "id": "springfield-college",
+   "name": "Springfield College",
+   "city": "Springfield",
+   "state": "MA",
+   "latitude": 42.094088,
+   "longitude": -72.554029,
+   "website": "https://springfieldcollegepride.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "western-new-england-university",
+   "name": "Western New England University",
+   "city": "Springfield",
+   "state": "MA",
+   "latitude": 42.117597,
+   "longitude": -72.517173,
+   "website": "https://wnegoldenbears.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "williams-college",
+   "name": "Williams College",
+   "city": "Williamstown",
+   "state": "MA",
+   "latitude": 42.712166,
+   "longitude": -73.202893,
+   "website": "https://ephsports.williams.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "worcester-polytechnic-institute",
+   "name": "Worcester Polytechnic Institute",
+   "city": "Worcester",
+   "state": "MA",
+   "latitude": 42.273133,
+   "longitude": -71.811257,
+   "website": "https://athletics.wpi.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "frostburg-state-university",
+   "name": "Frostburg State University",
+   "city": "Frostburg",
+   "state": "MD",
+   "latitude": 39.648411,
+   "longitude": -78.932279,
+   "website": "https://frostburgsports.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Mountain East Conference"
+    }
+   ]
+  },
+  {
+   "id": "garrett-college",
+   "name": "Garrett College",
+   "city": "McHenry",
+   "state": "MD",
+   "latitude": 39.560301,
+   "longitude": -79.341125,
+   "website": "https://www.garrettlakers.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "johns-hopkins-university",
+   "name": "Johns Hopkins University",
+   "city": "Baltimore",
+   "state": "MD",
+   "latitude": 39.329016,
+   "longitude": -76.618029,
+   "website": "https://hopkinssports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "mcdaniel-college",
+   "name": "McDaniel College",
+   "city": "Westminster",
+   "state": "MD",
+   "latitude": 39.584229,
+   "longitude": -77.002564,
+   "website": "https://mcdanielathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "morgan-state-university",
+   "name": "Morgan State University",
+   "city": "Baltimore",
+   "state": "MD",
+   "latitude": 39.344666,
+   "longitude": -76.583609,
+   "website": "https://morganstatebears.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "EIWA"
+    }
+   ]
+  },
+  {
+   "id": "united-states-naval-academy-navy",
+   "name": "United States Naval Academy (Navy)",
+   "city": "Annapolis",
+   "state": "MD",
+   "latitude": 38.981598,
+   "longitude": -76.483216,
+   "website": "https://navysports.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "EIWA"
+    }
+   ]
+  },
+  {
+   "id": "university-of-maryland-college-park-maryland",
+   "name": "University of Maryland, College Park (Maryland)",
+   "city": "College Park",
+   "state": "MD",
+   "latitude": 38.990412,
+   "longitude": -76.943859,
+   "website": "https://umterps.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big Ten"
+    }
+   ]
+  },
+  {
+   "id": "maine-maritime-academy",
+   "name": "Maine Maritime Academy",
+   "city": "Castine",
+   "state": "ME",
+   "latitude": 44.388305,
+   "longitude": -68.803021,
+   "website": "https://marinersports.org",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-southern-maine",
+   "name": "University of Southern Maine",
+   "city": "Portland",
+   "state": "ME",
+   "latitude": 43.661777,
+   "longitude": -70.278751,
+   "website": "https://southernmainehuskies.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "adrian-college",
+   "name": "Adrian College",
+   "city": "Adrian",
+   "state": "MI",
+   "latitude": 41.897147,
+   "longitude": -84.058491,
+   "website": "https://adrianbulldogs.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "albion-college",
+   "name": "Albion College",
+   "city": "Albion",
+   "state": "MI",
+   "latitude": 42.243836,
+   "longitude": -84.745778,
+   "website": "https://gobrits.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "alma-college",
+   "name": "Alma College",
+   "city": "Alma",
+   "state": "MI",
+   "latitude": 43.379063,
+   "longitude": -84.672778,
+   "website": "https://almascots.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "central-michigan-university",
+   "name": "Central Michigan University",
+   "city": "Mount Pleasant",
+   "state": "MI",
+   "latitude": 43.58355,
+   "longitude": -84.774631,
+   "website": "https://cmuchippewas.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Mid-American Conference"
+    }
+   ]
+  },
+  {
+   "id": "cleary-university",
+   "name": "Cleary University",
+   "city": "Howell",
+   "state": "MI",
+   "latitude": 42.587391,
+   "longitude": -83.879644,
+   "website": "https://clearycougars.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "cornerstone-university",
+   "name": "Cornerstone University",
+   "city": "Grand Rapids",
+   "state": "MI",
+   "latitude": 42.980374,
+   "longitude": -85.590844,
+   "website": "https://cugoldeneagles.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "davenport-university",
+   "name": "Davenport University",
+   "city": "Grand Rapids",
+   "state": "MI",
+   "latitude": 42.851303,
+   "longitude": -85.527823,
+   "website": "https://dupanthers.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Great Midwest Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "grand-valley-state-university",
+   "name": "Grand Valley State University",
+   "city": "Allendale",
+   "state": "MI",
+   "latitude": 42.963168,
+   "longitude": -85.890577,
+   "website": "https://gvsulakers.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Great Lakes Valley Conference"
+    }
+   ]
+  },
+  {
+   "id": "henry-ford-college",
+   "name": "Henry Ford College",
+   "city": "Dearborn",
+   "state": "MI",
+   "latitude": 42.325117,
+   "longitude": -83.234131,
+   "website": "https://www.hfcc.edu",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "michigan-state-university",
+   "name": "Michigan State University",
+   "city": "East Lansing",
+   "state": "MI",
+   "latitude": 42.702379,
+   "longitude": -84.480387,
+   "website": "https://msuspartans.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big Ten"
+    }
+   ]
+  },
+  {
+   "id": "mott-community-college",
+   "name": "Mott Community College",
+   "city": "Flint",
+   "state": "MI",
+   "latitude": 43.018237,
+   "longitude": -83.672857,
+   "website": "https://mottbears.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "muskegon-community-college",
+   "name": "Muskegon Community College",
+   "city": "Muskegon",
+   "state": "MI",
+   "latitude": 43.248355,
+   "longitude": -86.193955,
+   "website": "https://muskegonjayhawks.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "northern-michigan-university",
+   "name": "Northern Michigan University",
+   "city": "Marquette",
+   "state": "MI",
+   "latitude": 46.556628,
+   "longitude": -87.396387,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": false,
+     "womens": true,
+     "conference": "Great Lakes Valley Conference"
+    }
+   ]
+  },
+  {
+   "id": "rochester-christian-university",
+   "name": "Rochester Christian University",
+   "city": "Rochester Hills",
+   "state": "MI",
+   "latitude": 42.666067,
+   "longitude": -83.145674,
+   "website": "https://rcuwarriors.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Wolverine-Hoosier Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "siena-heights-university",
+   "name": "Siena Heights University",
+   "city": "Adrian",
+   "state": "MI",
+   "latitude": 41.905272,
+   "longitude": -84.018807,
+   "website": "https://shusaints.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Wolverine-Hoosier Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "southwestern-michigan-college",
+   "name": "Southwestern Michigan College",
+   "city": "Dowagiac",
+   "state": "MI",
+   "latitude": 41.947829,
+   "longitude": -86.078118,
+   "website": "https://www.smcroadrunners.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-michigan",
+   "name": "University of Michigan",
+   "city": "Ann Arbor",
+   "state": "MI",
+   "latitude": 42.277515,
+   "longitude": -83.734231,
+   "website": "https://mgoblue.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big Ten"
+    }
+   ]
+  },
+  {
+   "id": "university-of-olivet",
+   "name": "University of Olivet",
+   "city": "Olivet",
+   "state": "MI",
+   "latitude": 42.443507,
+   "longitude": -84.924331,
+   "website": "https://www.olivetcomets.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "augsburg-university",
+   "name": "Augsburg University",
+   "city": "Minneapolis",
+   "state": "MN",
+   "latitude": 44.967424,
+   "longitude": -93.240805,
+   "website": "https://athletics.augsburg.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "concordia-college-moorhead",
+   "name": "Concordia College (Moorhead)",
+   "city": "Moorhead",
+   "state": "MN",
+   "latitude": 46.862419,
+   "longitude": -96.769426,
+   "website": "https://gocobbers.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "minnesota-north-college-itasca",
+   "name": "Minnesota North College - Itasca",
+   "city": "Grand Rapids",
+   "state": "MN",
+   "latitude": 47.242541,
+   "longitude": -93.494691,
+   "website": "https://www.itascaathletics.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "minnesota-state-university-moorhead",
+   "name": "Minnesota State University Moorhead",
+   "city": "Moorhead",
+   "state": "MN",
+   "latitude": 46.867211,
+   "longitude": -96.756432,
+   "website": "https://www.msumdragons.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Northern Sun Intercollegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "minnesota-state-university-mankato",
+   "name": "Minnesota State University, Mankato",
+   "city": "Mankato",
+   "state": "MN",
+   "latitude": 44.144892,
+   "longitude": -93.992736,
+   "website": "https://msumavericks.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Northern Sun Intercollegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "minnesota-west-community-technical-college",
+   "name": "Minnesota West Community & Technical College",
+   "city": "Worthington",
+   "state": "MN",
+   "latitude": 44.808031,
+   "longitude": -95.564319,
+   "website": "https://www.mnwestathletics.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "northland-community-technical-college",
+   "name": "Northland Community & Technical College",
+   "city": "Thief River Falls",
+   "state": "MN",
+   "latitude": 48.116657,
+   "longitude": -96.166584,
+   "website": "https://northlandpioneers.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "ridgewater-college",
+   "name": "Ridgewater College",
+   "city": "Willmar",
+   "state": "MN",
+   "latitude": 45.139437,
+   "longitude": -95.072191,
+   "website": "https://ridgewaterathletics.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "rochester-community-technical-college",
+   "name": "Rochester Community & Technical College",
+   "city": "Rochester",
+   "state": "MN",
+   "latitude": 44.012416,
+   "longitude": -92.419483,
+   "website": "https://rctc.prestosports.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "southwest-minnesota-state-university",
+   "name": "Southwest Minnesota State University",
+   "city": "Marshall",
+   "state": "MN",
+   "latitude": 44.453796,
+   "longitude": -95.756822,
+   "website": "https://smsumustangs.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Northern Sun Intercollegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "st-cloud-state-university",
+   "name": "St. Cloud State University",
+   "city": "St. Cloud",
+   "state": "MN",
+   "latitude": 45.552537,
+   "longitude": -94.152602,
+   "website": "https://scsuhuskies.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Northern Sun Intercollegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "st-john-s-university-minnesota",
+   "name": "St. John's University (Minnesota)",
+   "city": "Collegeville",
+   "state": "MN",
+   "latitude": 45.582902,
+   "longitude": -94.393345,
+   "website": "https://gojohnnies.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-minnesota",
+   "name": "University of Minnesota",
+   "city": "Minneapolis",
+   "state": "MN",
+   "latitude": 44.97602,
+   "longitude": -93.233945,
+   "website": "https://gophersports.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big Ten"
+    }
+   ]
+  },
+  {
+   "id": "avila-university",
+   "name": "Avila University",
+   "city": "Kansas City",
+   "state": "MO",
+   "latitude": 38.913253,
+   "longitude": -94.593452,
+   "website": "https://www.avilaathletics.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Kansas Collegiate Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "central-methodist-university",
+   "name": "Central Methodist University",
+   "city": "Fayette",
+   "state": "MO",
+   "latitude": 39.148534,
+   "longitude": -92.684099,
+   "website": "https://www.cmueagles.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Heart of America Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "drury-university",
+   "name": "Drury University",
+   "city": "Springfield",
+   "state": "MO",
+   "latitude": 37.220884,
+   "longitude": -93.287444,
+   "website": "https://drurypanthers.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Great Lakes Valley Conference"
+    }
+   ]
+  },
+  {
+   "id": "lindenwood-university",
+   "name": "Lindenwood University",
+   "city": "St. Charles",
+   "state": "MO",
+   "latitude": 38.785338,
+   "longitude": -90.497094,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": false,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "maryville-university",
+   "name": "Maryville University",
+   "city": "St. Louis",
+   "state": "MO",
+   "latitude": 38.646741,
+   "longitude": -90.504041,
+   "website": "https://maryvillesaints.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Great Lakes Valley Conference"
+    }
+   ]
+  },
+  {
+   "id": "missouri-baptist-university",
+   "name": "Missouri Baptist University",
+   "city": "St. Louis",
+   "state": "MO",
+   "latitude": 38.643073,
+   "longitude": -90.462118,
+   "website": "https://mbuspartans.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Heart of America Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "missouri-valley-college",
+   "name": "Missouri Valley College",
+   "city": "Marshall",
+   "state": "MO",
+   "latitude": 39.108853,
+   "longitude": -93.191144,
+   "website": "https://www.valleywillroll.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Heart of America Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "university-of-central-missouri",
+   "name": "University of Central Missouri",
+   "city": "Warrensburg",
+   "state": "MO",
+   "latitude": 38.760199,
+   "longitude": -93.740798,
+   "website": "https://ucmathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Mid-America Intercollegiate Athletics Association"
+    }
+   ]
+  },
+  {
+   "id": "university-of-missouri",
+   "name": "University of Missouri",
+   "city": "Columbia",
+   "state": "MO",
+   "latitude": 38.936415,
+   "longitude": -92.329703,
+   "website": "https://mutigers.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big 12"
+    }
+   ]
+  },
+  {
+   "id": "westminster-college-missouri",
+   "name": "Westminster College (Missouri)",
+   "city": "Fulton",
+   "state": "MO",
+   "latitude": 38.849748,
+   "longitude": -91.95421,
+   "website": "https://wcbluejays.wcmo.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "St. Louis Intercollegiate Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "william-jewell-college",
+   "name": "William Jewell College",
+   "city": "Liberty",
+   "state": "MO",
+   "latitude": 39.251919,
+   "longitude": -94.41177,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": false,
+     "womens": true,
+     "conference": "Great Lakes Valley Conference"
+    }
+   ]
+  },
+  {
+   "id": "william-woods-university",
+   "name": "William Woods University",
+   "city": "Fulton",
+   "state": "MO",
+   "latitude": 38.862921,
+   "longitude": -91.948809,
+   "website": "https://wwuowls.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Heart of America Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "montana-state-university-northern",
+   "name": "Montana State University-Northern",
+   "city": "Havre",
+   "state": "MT",
+   "latitude": 48.543514,
+   "longitude": -109.685914,
+   "website": "https://golightsgo.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-providence",
+   "name": "University of Providence",
+   "city": "Great Falls",
+   "state": "MT",
+   "latitude": 47.489731,
+   "longitude": -111.272985,
+   "website": "https://upargos.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Frontier Conference"
+    }
+   ]
+  },
+  {
+   "id": "appalachian-state-university",
+   "name": "Appalachian State University",
+   "city": "Boone",
+   "state": "NC",
+   "latitude": 36.211352,
+   "longitude": -81.686091,
+   "website": "https://appstatesports.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Southern Conference"
+    }
+   ]
+  },
+  {
+   "id": "belmont-abbey-college",
+   "name": "Belmont Abbey College",
+   "city": "Belmont",
+   "state": "NC",
+   "latitude": 35.263592,
+   "longitude": -81.04253,
+   "website": "https://abbeyathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Conference Carolinas"
+    }
+   ]
+  },
+  {
+   "id": "campbell-university",
+   "name": "Campbell University",
+   "city": "Buies Creek",
+   "state": "NC",
+   "latitude": 35.408071,
+   "longitude": -78.739247,
+   "website": "https://gocamels.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Southern Conference"
+    }
+   ]
+  },
+  {
+   "id": "davidson-college",
+   "name": "Davidson College",
+   "city": "Davidson",
+   "state": "NC",
+   "latitude": 35.502036,
+   "longitude": -80.847363,
+   "website": "https://davidsonwildcats.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Southern Conference"
+    }
+   ]
+  },
+  {
+   "id": "duke-university",
+   "name": "Duke University",
+   "city": "Durham",
+   "state": "NC",
+   "latitude": 36.000156,
+   "longitude": -78.94423,
+   "website": "https://goduke.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "ACC"
+    }
+   ]
+  },
+  {
+   "id": "gardner-webb-university",
+   "name": "Gardner-Webb University",
+   "city": "Boiling Springs",
+   "state": "NC",
+   "latitude": 35.24783,
+   "longitude": -81.670238,
+   "website": "https://gwusports.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Southern Conference"
+    }
+   ]
+  },
+  {
+   "id": "greensboro-college",
+   "name": "Greensboro College",
+   "city": "Greensboro",
+   "state": "NC",
+   "latitude": 36.072914,
+   "longitude": -79.79999,
+   "website": "https://greensborocollegesports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "montreat-college",
+   "name": "Montreat College",
+   "city": "Montreat",
+   "state": "NC",
+   "latitude": 35.645943,
+   "longitude": -82.297036,
+   "website": "https://montreatcavaliers.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Mid-South Conference"
+    }
+   ]
+  },
+  {
+   "id": "north-carolina-state-university-nc-state",
+   "name": "North Carolina State University (NC State)",
+   "city": "Raleigh",
+   "state": "NC",
+   "latitude": 35.786315,
+   "longitude": -78.663228,
+   "website": "https://gopack.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "ACC"
+    }
+   ]
+  },
+  {
+   "id": "university-of-mount-olive",
+   "name": "University of Mount Olive",
+   "city": "Mount Olive",
+   "state": "NC",
+   "latitude": 35.208283,
+   "longitude": -78.071157,
+   "website": "https://umotrojans.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Conference Carolinas"
+    }
+   ]
+  },
+  {
+   "id": "university-of-north-carolina-at-chapel-hill-north-carolina",
+   "name": "University of North Carolina at Chapel Hill (North Carolina)",
+   "city": "Chapel Hill",
+   "state": "NC",
+   "latitude": 35.905035,
+   "longitude": -79.047753,
+   "website": "https://goheels.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "ACC"
+    }
+   ]
+  },
+  {
+   "id": "university-of-north-carolina-at-pembroke",
+   "name": "University of North Carolina at Pembroke",
+   "city": "Pembroke",
+   "state": "NC",
+   "latitude": 34.694111,
+   "longitude": -79.198169,
+   "website": "https://uncpbraves.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Conference Carolinas"
+    }
+   ]
+  },
+  {
+   "id": "bismarck-state-college",
+   "name": "Bismarck State College",
+   "city": "Bismarck",
+   "state": "ND",
+   "latitude": 46.820772,
+   "longitude": -100.815519,
+   "website": "https://bscmystics.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Heart of America Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "dickinson-state-university",
+   "name": "Dickinson State University",
+   "city": "Dickinson",
+   "state": "ND",
+   "latitude": 46.882387,
+   "longitude": -102.799326,
+   "website": "https://dsubluehawks.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Frontier Conference"
+    }
+   ]
+  },
+  {
+   "id": "minot-state-university",
+   "name": "Minot State University",
+   "city": "Minot",
+   "state": "ND",
+   "latitude": 48.24513,
+   "longitude": -101.30173,
+   "website": "https://msubeavers.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Northern Sun Intercollegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "north-dakota-state-university",
+   "name": "North Dakota State University",
+   "city": "Fargo",
+   "state": "ND",
+   "latitude": 46.890415,
+   "longitude": -96.799848,
+   "website": "https://gobison.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Pac-12"
+    }
+   ]
+  },
+  {
+   "id": "university-of-jamestown",
+   "name": "University of Jamestown",
+   "city": "Jamestown",
+   "state": "ND",
+   "latitude": 46.913887,
+   "longitude": -98.697034,
+   "website": "https://jimmiepride.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Northern Sun Intercollegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "university-of-mary",
+   "name": "University of Mary",
+   "city": "Bismarck",
+   "state": "ND",
+   "latitude": 46.728212,
+   "longitude": -100.74823,
+   "website": "https://goumary.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Northern Sun Intercollegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "bellevue-university",
+   "name": "Bellevue University",
+   "city": "Bellevue",
+   "state": "NE",
+   "latitude": 41.151369,
+   "longitude": -95.917781,
+   "website": null,
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": false,
+     "womens": true,
+     "conference": "Heart of America Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "chadron-state-college",
+   "name": "Chadron State College",
+   "city": "Chadron",
+   "state": "NE",
+   "latitude": 42.821231,
+   "longitude": -103.001835,
+   "website": "https://chadroneagles.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Rocky Mountain Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "concordia-university-nebraska",
+   "name": "Concordia University Nebraska",
+   "city": "Seward",
+   "state": "NE",
+   "latitude": 40.91337,
+   "longitude": -97.091838,
+   "website": "https://www.cune.edu",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "doane-university",
+   "name": "Doane University",
+   "city": "Crete",
+   "state": "NE",
+   "latitude": 40.624402,
+   "longitude": -96.951826,
+   "website": "https://doaneathletics.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Great Plains Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "hastings-college",
+   "name": "Hastings College",
+   "city": "Hastings",
+   "state": "NE",
+   "latitude": 40.589956,
+   "longitude": -98.374919,
+   "website": "https://www.hastingsbroncos.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Great Plains Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "midland-university",
+   "name": "Midland University",
+   "city": "Fremont",
+   "state": "NE",
+   "latitude": 41.437449,
+   "longitude": -96.490638,
+   "website": "https://midlandathletics.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Great Plains Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "nebraska-wesleyan-university",
+   "name": "Nebraska Wesleyan University",
+   "city": "Lincoln",
+   "state": "NE",
+   "latitude": 40.84008,
+   "longitude": -96.789116,
+   "website": "https://nwusports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "southeast-community-college",
+   "name": "Southeast Community College",
+   "city": "Beatrice",
+   "state": "NE",
+   "latitude": 42.047417,
+   "longitude": -97.394011,
+   "website": "https://sccbobcats.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-nebraska-at-kearney",
+   "name": "University of Nebraska at Kearney",
+   "city": "Kearney",
+   "state": "NE",
+   "latitude": 40.700542,
+   "longitude": -99.094042,
+   "website": "https://lopers.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Mid-America Intercollegiate Athletics Association"
+    }
+   ]
+  },
+  {
+   "id": "university-of-nebraska-lincoln-nebraska",
+   "name": "University of Nebraska\u2013Lincoln (Nebraska)",
+   "city": "Lincoln",
+   "state": "NE",
+   "latitude": 40.816988,
+   "longitude": -96.701059,
+   "website": "https://huskers.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big Ten"
+    }
+   ]
+  },
+  {
+   "id": "york-university",
+   "name": "York University",
+   "city": "York",
+   "state": "NE",
+   "latitude": 40.868768,
+   "longitude": -97.579817,
+   "website": "https://yorkpanthers.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Kansas Collegiate Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "new-england-college",
+   "name": "New England College",
+   "city": "Henniker",
+   "state": "NH",
+   "latitude": 43.179493,
+   "longitude": -71.822341,
+   "website": "https://athletics.nec.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "New England Wrestling Association"
+    }
+   ]
+  },
+  {
+   "id": "plymouth-state-university",
+   "name": "Plymouth State University",
+   "city": "Plymouth",
+   "state": "NH",
+   "latitude": 43.760684,
+   "longitude": -71.691151,
+   "website": "https://athletics.plymouth.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "bergen-community-college",
+   "name": "Bergen Community College",
+   "city": "Paramus",
+   "state": "NJ",
+   "latitude": 40.953075,
+   "longitude": -74.094025,
+   "website": "https://www.bergenccbulldogs.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "camden-county-college",
+   "name": "Camden County College",
+   "city": "Blackwood",
+   "state": "NJ",
+   "latitude": 39.784026,
+   "longitude": -75.048524,
+   "website": "https://www.camdenccathletics.org",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "centenary-university",
+   "name": "Centenary University",
+   "city": "Hackettstown",
+   "state": "NJ",
+   "latitude": 40.850086,
+   "longitude": -74.832699,
+   "website": "https://centenarycyclones.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "felician-university",
+   "name": "Felician University",
+   "city": "Rutherford",
+   "state": "NJ",
+   "latitude": 40.830509,
+   "longitude": -74.112277,
+   "website": "https://felicianuathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Independent"
+    }
+   ]
+  },
+  {
+   "id": "kean-university",
+   "name": "Kean University",
+   "city": "Union",
+   "state": "NJ",
+   "latitude": 40.680569,
+   "longitude": -74.233038,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "princeton-university",
+   "name": "Princeton University",
+   "city": "Princeton",
+   "state": "NJ",
+   "latitude": 40.338675,
+   "longitude": -74.658366,
+   "website": "https://goprincetontigers.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Ivy League"
+    }
+   ]
+  },
+  {
+   "id": "rider-university",
+   "name": "Rider University",
+   "city": "Lawrenceville",
+   "state": "NJ",
+   "latitude": 40.279797,
+   "longitude": -74.73203,
+   "website": "https://gobroncs.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Mid-American Conference"
+    }
+   ]
+  },
+  {
+   "id": "rowan-college-of-south-jersey-gloucester",
+   "name": "Rowan College of South Jersey - Gloucester",
+   "city": "Sewell",
+   "state": "NJ",
+   "latitude": 39.788001,
+   "longitude": -75.126209,
+   "website": "https://www.rcroadrunners.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "rutgers-university-new-brunswick-rutgers",
+   "name": "Rutgers University\u2013New Brunswick (Rutgers)",
+   "city": "New Brunswick",
+   "state": "NJ",
+   "latitude": 40.497842,
+   "longitude": -74.446619,
+   "website": "https://scarletknights.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "stevens-institute-of-technology",
+   "name": "Stevens Institute of Technology",
+   "city": "Hoboken",
+   "state": "NJ",
+   "latitude": 40.74481,
+   "longitude": -74.025239,
+   "website": "https://stevensducks.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "sussex-county-community-college",
+   "name": "Sussex County Community College",
+   "city": "Newton",
+   "state": "NJ",
+   "latitude": 41.069367,
+   "longitude": -74.757879,
+   "website": "https://www.sussexskylanders.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "the-college-of-new-jersey",
+   "name": "The College of New Jersey",
+   "city": "Ewing",
+   "state": "NJ",
+   "latitude": 40.268552,
+   "longitude": -74.777977,
+   "website": "https://tcnjathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "union-college",
+   "name": "Union College",
+   "city": "Cranford",
+   "state": "NJ",
+   "latitude": 40.668288,
+   "longitude": -74.318447,
+   "website": "https://www.unionowls.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "new-mexico-highlands-university",
+   "name": "New Mexico Highlands University",
+   "city": "Las Vegas",
+   "state": "NM",
+   "latitude": 35.598225,
+   "longitude": -105.222784,
+   "website": "https://nmhuathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Rocky Mountain Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "alfred-state-college",
+   "name": "Alfred State College",
+   "city": "Alfred",
+   "state": "NY",
+   "latitude": 42.256126,
+   "longitude": -77.797914,
+   "website": "https://alfredstateathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "Allegheny Mountain Collegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "binghamton-university",
+   "name": "Binghamton University",
+   "city": "Vestal",
+   "state": "NY",
+   "latitude": 42.095208,
+   "longitude": -75.963757,
+   "website": "https://binghamtonbearcats.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "EIWA"
+    }
+   ]
+  },
+  {
+   "id": "buffalo-state-university",
+   "name": "Buffalo State University",
+   "city": "Buffalo",
+   "state": "NY",
+   "latitude": 42.933408,
+   "longitude": -78.877086,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": false,
+     "womens": true,
+     "conference": "Allegheny Mountain Collegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "columbia-university",
+   "name": "Columbia University",
+   "city": "New York",
+   "state": "NY",
+   "latitude": 40.808004,
+   "longitude": -73.963903,
+   "website": "https://gocolumbialions.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Ivy League"
+    }
+   ]
+  },
+  {
+   "id": "cornell-university",
+   "name": "Cornell University",
+   "city": "Ithaca",
+   "state": "NY",
+   "latitude": 42.452916,
+   "longitude": -76.480063,
+   "website": "https://cornellbigred.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Ivy League"
+    }
+   ]
+  },
+  {
+   "id": "d-youville-university",
+   "name": "D'Youville University",
+   "city": "Buffalo",
+   "state": "NY",
+   "latitude": 42.902439,
+   "longitude": -78.890056,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": false,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "elmira-college",
+   "name": "Elmira College",
+   "city": "Elmira",
+   "state": "NY",
+   "latitude": 42.096333,
+   "longitude": -76.811316,
+   "website": "https://athletics.elmira.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "Allegheny Mountain Collegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "hofstra-university",
+   "name": "Hofstra University",
+   "city": "Hempstead",
+   "state": "NY",
+   "latitude": 40.716908,
+   "longitude": -73.600022,
+   "website": "https://gohofstra.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "EIWA"
+    }
+   ]
+  },
+  {
+   "id": "hunter-college",
+   "name": "Hunter College",
+   "city": "New York",
+   "state": "NY",
+   "latitude": 40.768975,
+   "longitude": -73.965293,
+   "website": "https://www.huntercollegeathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "ithaca-college",
+   "name": "Ithaca College",
+   "city": "Ithaca",
+   "state": "NY",
+   "latitude": 42.421868,
+   "longitude": -76.500921,
+   "website": "https://athletics.ithaca.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "jamestown-community-college",
+   "name": "Jamestown Community College",
+   "city": "Jamestown",
+   "state": "NY",
+   "latitude": 42.11386,
+   "longitude": -79.21725,
+   "website": "https://www.jccjayhawks.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "long-island-university-liu",
+   "name": "Long Island University (LIU)",
+   "city": "Brookville",
+   "state": "NY",
+   "latitude": 40.819781,
+   "longitude": -73.591302,
+   "website": "https://www.liuathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "EIWA"
+    }
+   ]
+  },
+  {
+   "id": "nassau-community-college",
+   "name": "Nassau Community College",
+   "city": "Garden City",
+   "state": "NY",
+   "latitude": 40.729998,
+   "longitude": -73.593009,
+   "website": "https://nassaulions.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "new-york-university",
+   "name": "New York University",
+   "city": "New York",
+   "state": "NY",
+   "latitude": 40.730114,
+   "longitude": -73.997854,
+   "website": "https://gonyuathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "onondaga-community-college",
+   "name": "Onondaga Community College",
+   "city": "Syracuse",
+   "state": "NY",
+   "latitude": 43.000742,
+   "longitude": -76.195794,
+   "website": "https://onondagalazers.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "rochester-institute-of-technology",
+   "name": "Rochester Institute of Technology",
+   "city": "Rochester",
+   "state": "NY",
+   "latitude": 43.087638,
+   "longitude": -77.674407,
+   "website": "https://ritathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "suny-brockport",
+   "name": "SUNY Brockport",
+   "city": "Brockport",
+   "state": "NY",
+   "latitude": 43.209571,
+   "longitude": -77.96122,
+   "website": "https://gobrockport.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "suny-cortland",
+   "name": "SUNY Cortland",
+   "city": "Cortland",
+   "state": "NY",
+   "latitude": 42.592711,
+   "longitude": -76.196173,
+   "website": "https://www.cortlandreddragons.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "suny-niagara",
+   "name": "SUNY Niagara",
+   "city": "Sanborn",
+   "state": "NY",
+   "latitude": 43.143235,
+   "longitude": -78.875618,
+   "website": "https://ncccathletics.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "suny-oneonta",
+   "name": "SUNY Oneonta",
+   "city": "Oneonta",
+   "state": "NY",
+   "latitude": 42.468556,
+   "longitude": -75.059138,
+   "website": "https://oneontaathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "suny-oswego",
+   "name": "SUNY Oswego",
+   "city": "Oswego",
+   "state": "NY",
+   "latitude": 43.446397,
+   "longitude": -76.542287,
+   "website": "https://oswegolakers.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "st-john-fisher-university",
+   "name": "St. John Fisher University",
+   "city": "Rochester",
+   "state": "NY",
+   "latitude": 43.116992,
+   "longitude": -77.516844,
+   "website": "https://sjfathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "u-s-merchant-marine-academy",
+   "name": "U.S. Merchant Marine Academy",
+   "city": "Kings Point",
+   "state": "NY",
+   "latitude": 40.812128,
+   "longitude": -73.758465,
+   "website": "https://usmmasports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "united-states-military-academy-army",
+   "name": "United States Military Academy (Army)",
+   "city": "West Point",
+   "state": "NY",
+   "latitude": 41.391269,
+   "longitude": -73.96588,
+   "website": "https://goarmywestpoint.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "EIWA"
+    }
+   ]
+  },
+  {
+   "id": "university-at-buffalo",
+   "name": "University at Buffalo",
+   "city": "Buffalo",
+   "state": "NY",
+   "latitude": 42.900215,
+   "longitude": -78.869362,
+   "website": "https://ubbulls.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Mid-American Conference"
+    }
+   ]
+  },
+  {
+   "id": "utica-university",
+   "name": "Utica University",
+   "city": "Utica",
+   "state": "NY",
+   "latitude": 43.093405,
+   "longitude": -75.272549,
+   "website": "https://uticapioneers.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "ashland-university",
+   "name": "Ashland University",
+   "city": "Ashland",
+   "state": "OH",
+   "latitude": 40.862341,
+   "longitude": -82.319255,
+   "website": "https://goashlandeagles.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Great Midwest Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "baldwin-wallace-university",
+   "name": "Baldwin Wallace University",
+   "city": "Berea",
+   "state": "OH",
+   "latitude": 41.368443,
+   "longitude": -81.843986,
+   "website": "https://bwyellowjackets.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "case-western-reserve-university",
+   "name": "Case Western Reserve University",
+   "city": "Cleveland",
+   "state": "OH",
+   "latitude": 41.505217,
+   "longitude": -81.609706,
+   "website": "https://athletics.case.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "defiance-college",
+   "name": "Defiance College",
+   "city": "Defiance",
+   "state": "OH",
+   "latitude": 41.295838,
+   "longitude": -84.36065,
+   "website": "https://defiance.prestosports.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "heidelberg-university",
+   "name": "Heidelberg University",
+   "city": "Tiffin",
+   "state": "OH",
+   "latitude": 41.117489,
+   "longitude": -83.167308,
+   "website": "https://bergathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "hiram-college",
+   "name": "Hiram College",
+   "city": "Hiram",
+   "state": "OH",
+   "latitude": 41.313539,
+   "longitude": -81.138586,
+   "website": "https://hiramterriers.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "Allegheny Mountain Collegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "john-carroll-university",
+   "name": "John Carroll University",
+   "city": "University Heights",
+   "state": "OH",
+   "latitude": 41.490381,
+   "longitude": -81.528759,
+   "website": "https://jcusports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "Allegheny Mountain Collegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "kent-state-university",
+   "name": "Kent State University",
+   "city": "Kent",
+   "state": "OH",
+   "latitude": 41.144181,
+   "longitude": -81.339833,
+   "website": "https://kentstatesports.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Mid-American Conference"
+    }
+   ]
+  },
+  {
+   "id": "lake-erie-college",
+   "name": "Lake Erie College",
+   "city": "Painesville",
+   "state": "OH",
+   "latitude": 41.719195,
+   "longitude": -81.250953,
+   "website": "https://lakeeriestorm.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Great Midwest Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "lourdes-university",
+   "name": "Lourdes University",
+   "city": "Sylvania",
+   "state": "OH",
+   "latitude": 41.70831,
+   "longitude": -83.707052,
+   "website": "https://lourdesathletics.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Wolverine-Hoosier Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "mount-st-joseph-university",
+   "name": "Mount St. Joseph University",
+   "city": "Cincinnati",
+   "state": "OH",
+   "latitude": 39.09625,
+   "longitude": -84.637446,
+   "website": "https://msjlions.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "muskingum-university",
+   "name": "Muskingum University",
+   "city": "New Concord",
+   "state": "OH",
+   "latitude": 39.994384,
+   "longitude": -81.735278,
+   "website": "https://www.fightingmuskies.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "ohio-northern-university",
+   "name": "Ohio Northern University",
+   "city": "Ada",
+   "state": "OH",
+   "latitude": 40.765908,
+   "longitude": -83.82328,
+   "website": "https://www.onusports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "ohio-state-university",
+   "name": "Ohio State University",
+   "city": "Columbus",
+   "state": "OH",
+   "latitude": 39.999958,
+   "longitude": -83.007297,
+   "website": "https://ohiostatebuckeyes.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big Ten"
+    }
+   ]
+  },
+  {
+   "id": "ohio-university",
+   "name": "Ohio University",
+   "city": "Athens",
+   "state": "OH",
+   "latitude": 39.324178,
+   "longitude": -82.101565,
+   "website": "https://ohiobobcats.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Mid-American Conference"
+    }
+   ]
+  },
+  {
+   "id": "ohio-wesleyan-university",
+   "name": "Ohio Wesleyan University",
+   "city": "Delaware",
+   "state": "OH",
+   "latitude": 40.297078,
+   "longitude": -83.06784,
+   "website": "https://battlingbishops.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "otterbein-university",
+   "name": "Otterbein University",
+   "city": "Westerville",
+   "state": "OH",
+   "latitude": 40.125357,
+   "longitude": -82.935624,
+   "website": "https://otterbeincardinals.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "tiffin-university",
+   "name": "Tiffin University",
+   "city": "Tiffin",
+   "state": "OH",
+   "latitude": 41.119112,
+   "longitude": -83.185584,
+   "website": "https://gotiffindragons.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Great Midwest Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "university-of-findlay",
+   "name": "University of Findlay",
+   "city": "Findlay",
+   "state": "OH",
+   "latitude": 41.053032,
+   "longitude": -83.650153,
+   "website": "https://findlayoilers.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Great Midwest Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "university-of-mount-union",
+   "name": "University of Mount Union",
+   "city": "Alliance",
+   "state": "OH",
+   "latitude": 40.901986,
+   "longitude": -81.109233,
+   "website": "https://athletics.mountunion.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-rio-grande",
+   "name": "University of Rio Grande",
+   "city": "Rio Grande",
+   "state": "OH",
+   "latitude": 38.882555,
+   "longitude": -82.37723,
+   "website": "https://rioredstorm.prestosports.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "River States Conference"
+    }
+   ]
+  },
+  {
+   "id": "wilberforce-university",
+   "name": "Wilberforce University",
+   "city": "Wilberforce",
+   "state": "OH",
+   "latitude": 39.706145,
+   "longitude": -83.878996,
+   "website": null,
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "wilmington-college-ohio",
+   "name": "Wilmington College (Ohio)",
+   "city": "Wilmington",
+   "state": "OH",
+   "latitude": 39.441677,
+   "longitude": -83.817316,
+   "website": "https://wilmingtonquakers.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "wittenberg-university",
+   "name": "Wittenberg University",
+   "city": "Springfield",
+   "state": "OH",
+   "latitude": 39.932988,
+   "longitude": -83.813762,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "carl-albert-state-college",
+   "name": "Carl Albert State College",
+   "city": "Poteau",
+   "state": "OK",
+   "latitude": 35.041263,
+   "longitude": -94.635319,
+   "website": "https://carlalbert.edu",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "murray-state-college",
+   "name": "Murray State College",
+   "city": "Tishomingo",
+   "state": "OK",
+   "latitude": 34.223236,
+   "longitude": -96.678608,
+   "website": "https://mscaggies.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "northeastern-oklahoma-a-m-college",
+   "name": "Northeastern Oklahoma A&M College",
+   "city": "Miami",
+   "state": "OK",
+   "latitude": 36.875033,
+   "longitude": -94.86774,
+   "website": "https://neoathletics.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "northeastern-state-university",
+   "name": "Northeastern State University",
+   "city": "Tahlequah",
+   "state": "OK",
+   "latitude": 35.919364,
+   "longitude": -94.96713,
+   "website": "https://goriverhawksgo.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Mid-America Intercollegiate Athletics Association"
+    }
+   ]
+  },
+  {
+   "id": "northern-oklahoma-college",
+   "name": "Northern Oklahoma College",
+   "city": "Tonkawa",
+   "state": "OK",
+   "latitude": 36.678427,
+   "longitude": -97.298431,
+   "website": "https://www.nocmavs.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "oklahoma-city-university",
+   "name": "Oklahoma City University",
+   "city": "Oklahoma City",
+   "state": "OK",
+   "latitude": 35.494351,
+   "longitude": -97.538904,
+   "website": "https://www.ocusports.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Sooner Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "oklahoma-state-university-stillwater-oklahoma-state",
+   "name": "Oklahoma State University\u2013Stillwater (Oklahoma State)",
+   "city": "Stillwater",
+   "state": "OK",
+   "latitude": 36.131352,
+   "longitude": -97.089065,
+   "website": "https://okstate.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "oklahoma-wesleyan-university",
+   "name": "Oklahoma Wesleyan University",
+   "city": "Bartlesville",
+   "state": "OK",
+   "latitude": 36.718355,
+   "longitude": -95.9533,
+   "website": "https://okwueagles.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "rose-state-college",
+   "name": "Rose State College",
+   "city": "Midwest City",
+   "state": "OK",
+   "latitude": 35.44959,
+   "longitude": -97.413481,
+   "website": "https://rscraiders.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-central-oklahoma",
+   "name": "University of Central Oklahoma",
+   "city": "Edmond",
+   "state": "OK",
+   "latitude": 35.659963,
+   "longitude": -97.474955,
+   "website": "https://bronchosports.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Mid-America Intercollegiate Athletics Association"
+    }
+   ]
+  },
+  {
+   "id": "university-of-oklahoma",
+   "name": "University of Oklahoma",
+   "city": "Norman",
+   "state": "OK",
+   "latitude": 35.210212,
+   "longitude": -97.445422,
+   "website": "https://soonersports.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big 12"
+    }
+   ]
+  },
+  {
+   "id": "clackamas-community-college",
+   "name": "Clackamas Community College",
+   "city": "Oregon City",
+   "state": "OR",
+   "latitude": 45.323705,
+   "longitude": -122.579139,
+   "website": "https://www.clackamascougars.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "corban-university",
+   "name": "Corban University",
+   "city": "Salem",
+   "state": "OR",
+   "latitude": 44.887982,
+   "longitude": -122.955756,
+   "website": "https://corbanwarriors.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "eastern-oregon-university",
+   "name": "Eastern Oregon University",
+   "city": "La Grande",
+   "state": "OR",
+   "latitude": 45.317186,
+   "longitude": -118.091643,
+   "website": "https://eousports.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Cascade Collegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "linfield-university",
+   "name": "Linfield University",
+   "city": "McMinnville",
+   "state": "OR",
+   "latitude": 45.203639,
+   "longitude": -123.199856,
+   "website": "https://golinfieldwildcats.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "oregon-state-university",
+   "name": "Oregon State University",
+   "city": "Corvallis",
+   "state": "OR",
+   "latitude": 44.564537,
+   "longitude": -123.273136,
+   "website": "https://osubeavers.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Pac-12"
+    }
+   ]
+  },
+  {
+   "id": "pacific-university-oregon",
+   "name": "Pacific University (Oregon)",
+   "city": "Forest Grove",
+   "state": "OR",
+   "latitude": 45.521875,
+   "longitude": -123.110916,
+   "website": "https://goboxers.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "southern-oregon-university",
+   "name": "Southern Oregon University",
+   "city": "Ashland",
+   "state": "OR",
+   "latitude": 42.187805,
+   "longitude": -122.69664,
+   "website": "https://souraiders.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Cascade Collegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "southwestern-oregon-community-college",
+   "name": "Southwestern Oregon Community College",
+   "city": "Coos Bay",
+   "state": "OR",
+   "latitude": 43.391725,
+   "longitude": -124.252001,
+   "website": "https://swoccathletics.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "umpqua-community-college",
+   "name": "Umpqua Community College",
+   "city": "Roseburg",
+   "state": "OR",
+   "latitude": 43.288553,
+   "longitude": -123.332896,
+   "website": "https://www.uccriverhawks.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "albright-college",
+   "name": "Albright College",
+   "city": "Reading",
+   "state": "PA",
+   "latitude": 40.362767,
+   "longitude": -75.911763,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "Middle Atlantic Conference"
+    }
+   ]
+  },
+  {
+   "id": "alvernia-university",
+   "name": "Alvernia University",
+   "city": "Reading",
+   "state": "PA",
+   "latitude": 40.311347,
+   "longitude": -75.931595,
+   "website": "https://auwolves.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "Middle Atlantic Conference"
+    }
+   ]
+  },
+  {
+   "id": "arcadia-university",
+   "name": "Arcadia University",
+   "city": "Glenside",
+   "state": "PA",
+   "latitude": 40.0905,
+   "longitude": -75.163298,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "Middle Atlantic Conference"
+    }
+   ]
+  },
+  {
+   "id": "bucknell-university",
+   "name": "Bucknell University",
+   "city": "Lewisburg",
+   "state": "PA",
+   "latitude": 40.958885,
+   "longitude": -76.881913,
+   "website": "https://bucknellbison.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "EIWA"
+    }
+   ]
+  },
+  {
+   "id": "cedar-crest-college",
+   "name": "Cedar Crest College",
+   "city": "Allentown",
+   "state": "PA",
+   "latitude": 40.602559,
+   "longitude": -75.465625,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": false,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "chatham-university",
+   "name": "Chatham University",
+   "city": "Pittsburgh",
+   "state": "PA",
+   "latitude": 40.447621,
+   "longitude": -79.923995,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "commonwealth-university-bloomsburg-bloomsburg",
+   "name": "Commonwealth University-Bloomsburg (Bloomsburg)",
+   "city": "Bloomsburg",
+   "state": "PA",
+   "latitude": 41.008993,
+   "longitude": -76.447036,
+   "website": "https://bloomsburgathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Mid-American Conference"
+    }
+   ]
+  },
+  {
+   "id": "commonwealth-university-lock-haven-lock-haven",
+   "name": "Commonwealth University-Lock Haven (Lock Haven)",
+   "city": "Lock Haven",
+   "state": "PA",
+   "latitude": 41.140913,
+   "longitude": -77.462485,
+   "website": "https://www.lockhavenathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Mid-American Conference"
+    },
+    {
+     "division": "NCAA Division II",
+     "mens": false,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "delaware-valley-university",
+   "name": "Delaware Valley University",
+   "city": "Doylestown",
+   "state": "PA",
+   "latitude": 40.29931,
+   "longitude": -75.157629,
+   "website": "https://athletics.delval.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "Middle Atlantic Conference"
+    }
+   ]
+  },
+  {
+   "id": "drexel-university",
+   "name": "Drexel University",
+   "city": "Philadelphia",
+   "state": "PA",
+   "latitude": 39.953771,
+   "longitude": -75.186815,
+   "website": "https://drexeldragons.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "EIWA"
+    }
+   ]
+  },
+  {
+   "id": "east-stroudsburg-university",
+   "name": "East Stroudsburg University",
+   "city": "East Stroudsburg",
+   "state": "PA",
+   "latitude": 40.996817,
+   "longitude": -75.177446,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Pennsylvania State Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "eastern-university",
+   "name": "Eastern University",
+   "city": "St. Davids",
+   "state": "PA",
+   "latitude": 40.054253,
+   "longitude": -75.36788,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "Middle Atlantic Conference"
+    }
+   ]
+  },
+  {
+   "id": "elizabethtown-college",
+   "name": "Elizabethtown College",
+   "city": "Elizabethtown",
+   "state": "PA",
+   "latitude": 40.151416,
+   "longitude": -76.592703,
+   "website": "https://etownbluejays.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "franklin-marshall-college",
+   "name": "Franklin & Marshall College",
+   "city": "Lancaster",
+   "state": "PA",
+   "latitude": 40.049676,
+   "longitude": -76.319466,
+   "website": "https://godiplomats.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "EIWA"
+    }
+   ]
+  },
+  {
+   "id": "gannon-university",
+   "name": "Gannon University",
+   "city": "Erie",
+   "state": "PA",
+   "latitude": 42.128585,
+   "longitude": -80.087386,
+   "website": "https://gannonsports.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Pennsylvania State Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "gettysburg-college",
+   "name": "Gettysburg College",
+   "city": "Gettysburg",
+   "state": "PA",
+   "latitude": 39.826772,
+   "longitude": -77.233241,
+   "website": "https://gettysburgsports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "keystone-college",
+   "name": "Keystone College",
+   "city": "La Plume",
+   "state": "PA",
+   "latitude": 41.559246,
+   "longitude": -75.774108,
+   "website": "https://www.gokcgiants.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "king-s-college-pa",
+   "name": "King's College (PA)",
+   "city": "Wilkes-Barre",
+   "state": "PA",
+   "latitude": 41.249543,
+   "longitude": -75.878227,
+   "website": "https://kingscollegeathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "kutztown-university",
+   "name": "Kutztown University",
+   "city": "Kutztown",
+   "state": "PA",
+   "latitude": 40.509732,
+   "longitude": -75.781219,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Pennsylvania State Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "lackawanna-college",
+   "name": "Lackawanna College",
+   "city": "Scranton",
+   "state": "PA",
+   "latitude": 41.411496,
+   "longitude": -75.659625,
+   "website": "https://lackawannafalcons.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "lehigh-university",
+   "name": "Lehigh University",
+   "city": "Bethlehem",
+   "state": "PA",
+   "latitude": 40.607128,
+   "longitude": -75.379249,
+   "website": "https://lehighsports.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": true,
+     "conference": "EIWA"
+    }
+   ]
+  },
+  {
+   "id": "lycoming-college",
+   "name": "Lycoming College",
+   "city": "Williamsport",
+   "state": "PA",
+   "latitude": 41.24544,
+   "longitude": -76.999901,
+   "website": "https://lycomingathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "mercyhurst-university",
+   "name": "Mercyhurst University",
+   "city": "Erie",
+   "state": "PA",
+   "latitude": 42.106952,
+   "longitude": -80.053845,
+   "website": "https://hurstathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": true,
+     "conference": "Independent"
+    }
+   ]
+  },
+  {
+   "id": "messiah-university",
+   "name": "Messiah University",
+   "city": "Mechanicsburg",
+   "state": "PA",
+   "latitude": 40.193691,
+   "longitude": -76.976053,
+   "website": "https://gomessiah.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "millersville-university",
+   "name": "Millersville University",
+   "city": "Millersville",
+   "state": "PA",
+   "latitude": 39.997774,
+   "longitude": -76.354309,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Pennsylvania State Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "misericordia-university",
+   "name": "Misericordia University",
+   "city": "Dallas",
+   "state": "PA",
+   "latitude": 41.34731,
+   "longitude": -75.976821,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "Middle Atlantic Conference"
+    }
+   ]
+  },
+  {
+   "id": "muhlenberg-college",
+   "name": "Muhlenberg College",
+   "city": "Allentown",
+   "state": "PA",
+   "latitude": 40.596673,
+   "longitude": -75.50892,
+   "website": "https://muhlenbergsports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "northampton-community-college",
+   "name": "Northampton Community College",
+   "city": "Bethlehem",
+   "state": "PA",
+   "latitude": 40.674707,
+   "longitude": -75.326499,
+   "website": "https://www.nccspartans.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "penn-highlands-community-college",
+   "name": "Penn Highlands Community College",
+   "city": "Johnstown",
+   "state": "PA",
+   "latitude": 40.265329,
+   "longitude": -78.836563,
+   "website": "https://www.pennhighlands.edu",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "penn-state-altoona",
+   "name": "Penn State Altoona",
+   "city": "Altoona",
+   "state": "PA",
+   "latitude": 40.539828,
+   "longitude": -78.409824,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "Allegheny Mountain Collegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "penn-state-behrend",
+   "name": "Penn State Behrend",
+   "city": "Erie",
+   "state": "PA",
+   "latitude": 42.121257,
+   "longitude": -79.982035,
+   "website": "https://behrend.prestosports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "pennsylvania-college-of-technology",
+   "name": "Pennsylvania College of Technology",
+   "city": "Williamsport",
+   "state": "PA",
+   "latitude": 41.236061,
+   "longitude": -77.027514,
+   "website": "https://pctwildcats.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "pennsylvania-state-university-penn-state",
+   "name": "Pennsylvania State University (Penn State)",
+   "city": "University Park",
+   "state": "PA",
+   "latitude": 40.812897,
+   "longitude": -77.871057,
+   "website": "https://gopsusports.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big Ten"
+    }
+   ]
+  },
+  {
+   "id": "pennsylvania-western-university-clarion-clarion",
+   "name": "Pennsylvania Western University, Clarion (Clarion)",
+   "city": "Clarion",
+   "state": "PA",
+   "latitude": 41.210423,
+   "longitude": -79.377841,
+   "website": "https://clariongoldeneagles.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Mid-American Conference"
+    }
+   ]
+  },
+  {
+   "id": "pennsylvania-western-university-edinboro-edinboro",
+   "name": "Pennsylvania Western University, Edinboro (Edinboro)",
+   "city": "Edinboro",
+   "state": "PA",
+   "latitude": 41.872747,
+   "longitude": -80.119011,
+   "website": "https://gofightingscots.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Mid-American Conference"
+    },
+    {
+     "division": "NCAA Division II",
+     "mens": false,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "point-park-university",
+   "name": "Point Park University",
+   "city": "Pittsburgh",
+   "state": "PA",
+   "latitude": 40.502809,
+   "longitude": -80.05838,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Mountain East Conference"
+    }
+   ]
+  },
+  {
+   "id": "saint-vincent-college",
+   "name": "Saint Vincent College",
+   "city": "Latrobe",
+   "state": "PA",
+   "latitude": 40.293337,
+   "longitude": -79.399687,
+   "website": "https://athletics.stvincent.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "seton-hill-university",
+   "name": "Seton Hill University",
+   "city": "Greensburg",
+   "state": "PA",
+   "latitude": 40.308727,
+   "longitude": -79.556781,
+   "website": "https://athletics.setonhill.edu",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Pennsylvania State Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "shippensburg-university",
+   "name": "Shippensburg University",
+   "city": "Shippensburg",
+   "state": "PA",
+   "latitude": 40.056955,
+   "longitude": -77.522291,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Pennsylvania State Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "thaddeus-stevens-college-of-technology",
+   "name": "Thaddeus Stevens College of Technology",
+   "city": "Lancaster",
+   "state": "PA",
+   "latitude": 40.039929,
+   "longitude": -76.289201,
+   "website": "https://stevenscollege.edu",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "thiel-college",
+   "name": "Thiel College",
+   "city": "Greenville",
+   "state": "PA",
+   "latitude": 41.408269,
+   "longitude": -80.38408,
+   "website": "https://thielathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-pennsylvania-penn",
+   "name": "University of Pennsylvania (Penn)",
+   "city": "Philadelphia",
+   "state": "PA",
+   "latitude": 39.950446,
+   "longitude": -75.192587,
+   "website": "https://pennathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Ivy League"
+    }
+   ]
+  },
+  {
+   "id": "university-of-pittsburgh",
+   "name": "University of Pittsburgh",
+   "city": "Pittsburgh",
+   "state": "PA",
+   "latitude": 40.445009,
+   "longitude": -79.953834,
+   "website": "https://pittsburghpanthers.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "ACC"
+    }
+   ]
+  },
+  {
+   "id": "university-of-pittsburgh-at-bradford",
+   "name": "University of Pittsburgh at Bradford",
+   "city": "Bradford",
+   "state": "PA",
+   "latitude": 41.945902,
+   "longitude": -78.671273,
+   "website": "https://pittbradford.prestosports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-pittsburgh-at-johnstown",
+   "name": "University of Pittsburgh at Johnstown",
+   "city": "Johnstown",
+   "state": "PA",
+   "latitude": 40.267457,
+   "longitude": -78.834708,
+   "website": "https://pittjohnstownathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Pennsylvania State Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "university-of-scranton",
+   "name": "University of Scranton",
+   "city": "Scranton",
+   "state": "PA",
+   "latitude": 41.414958,
+   "longitude": -75.672714,
+   "website": "https://athletics.scranton.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "ursinus-college",
+   "name": "Ursinus College",
+   "city": "Collegeville",
+   "state": "PA",
+   "latitude": 40.191452,
+   "longitude": -75.458279,
+   "website": "https://ursinusathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "washington-and-jefferson-college",
+   "name": "Washington and Jefferson College",
+   "city": "Washington",
+   "state": "PA",
+   "latitude": 40.170627,
+   "longitude": -80.240911,
+   "website": "https://gopresidents.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "waynesburg-university",
+   "name": "Waynesburg University",
+   "city": "Waynesburg",
+   "state": "PA",
+   "latitude": 39.899104,
+   "longitude": -80.185953,
+   "website": "https://waynesburgsports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "wilkes-university",
+   "name": "Wilkes University",
+   "city": "Wilkes-Barre",
+   "state": "PA",
+   "latitude": 41.244351,
+   "longitude": -75.889918,
+   "website": "https://gowilkesu.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "york-college-of-pennsylvania",
+   "name": "York College of Pennsylvania",
+   "city": "York",
+   "state": "PA",
+   "latitude": 39.94561,
+   "longitude": -76.728871,
+   "website": "https://ycpspartans.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "Middle Atlantic Conference"
+    }
+   ]
+  },
+  {
+   "id": "university-of-puerto-rico-at-mayag-ez",
+   "name": "University of Puerto Rico at Mayag\u00fcez",
+   "city": "Mayag\u00fcez",
+   "state": "PR",
+   "latitude": 18.213478,
+   "longitude": -67.149536,
+   "website": "https://www.uprm.edu/actividadesatleticas",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Independent"
+    }
+   ]
+  },
+  {
+   "id": "brown-university",
+   "name": "Brown University",
+   "city": "Providence",
+   "state": "RI",
+   "latitude": 41.826171,
+   "longitude": -71.404528,
+   "website": "https://brownbears.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Ivy League"
+    }
+   ]
+  },
+  {
+   "id": "johnson-wales-university-ri",
+   "name": "Johnson & Wales University (RI)",
+   "city": "Providence",
+   "state": "RI",
+   "latitude": 41.788236,
+   "longitude": -71.390387,
+   "website": "https://providence.jwuathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "rhode-island-college",
+   "name": "Rhode Island College",
+   "city": "Providence",
+   "state": "RI",
+   "latitude": 41.842634,
+   "longitude": -71.453007,
+   "website": "https://goanchormen.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "roger-williams-university",
+   "name": "Roger Williams University",
+   "city": "Bristol",
+   "state": "RI",
+   "latitude": 41.643088,
+   "longitude": -71.260009,
+   "website": "https://rwuhawks.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "allen-university",
+   "name": "Allen University",
+   "city": "Columbia",
+   "state": "SC",
+   "latitude": 34.010234,
+   "longitude": -81.020937,
+   "website": "https://auyellowjackets.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Conference Carolinas"
+    }
+   ]
+  },
+  {
+   "id": "coker-university",
+   "name": "Coker University",
+   "city": "Hartsville",
+   "state": "SC",
+   "latitude": 34.376272,
+   "longitude": -80.07138,
+   "website": "https://cokercobras.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Conference Carolinas"
+    }
+   ]
+  },
+  {
+   "id": "lander-university",
+   "name": "Lander University",
+   "city": "Greenwood",
+   "state": "SC",
+   "latitude": 34.197314,
+   "longitude": -82.165033,
+   "website": "https://landerbearcats.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Conference Carolinas"
+    }
+   ]
+  },
+  {
+   "id": "newberry-college",
+   "name": "Newberry College",
+   "city": "Newberry",
+   "state": "SC",
+   "latitude": 34.283758,
+   "longitude": -81.622783,
+   "website": "https://newberrywolves.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Conference Carolinas"
+    }
+   ]
+  },
+  {
+   "id": "presbyterian-college",
+   "name": "Presbyterian College",
+   "city": "Clinton",
+   "state": "SC",
+   "latitude": 34.466314,
+   "longitude": -81.879376,
+   "website": "https://gobluehose.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": true,
+     "conference": "Southern Conference"
+    }
+   ]
+  },
+  {
+   "id": "the-citadel",
+   "name": "The Citadel",
+   "city": "Charleston",
+   "state": "SC",
+   "latitude": 32.923857,
+   "longitude": -80.087866,
+   "website": "https://citadelsports.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Southern Conference"
+    }
+   ]
+  },
+  {
+   "id": "augustana-university",
+   "name": "Augustana University",
+   "city": "Sioux Falls",
+   "state": "SD",
+   "latitude": 43.527199,
+   "longitude": -96.736333,
+   "website": "https://goaugie.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Northern Sun Intercollegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "dakota-wesleyan-university",
+   "name": "Dakota Wesleyan University",
+   "city": "Mitchell",
+   "state": "SD",
+   "latitude": 43.697936,
+   "longitude": -98.032614,
+   "website": "https://dwuathletics.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Great Plains Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "northern-state-university",
+   "name": "Northern State University",
+   "city": "Aberdeen",
+   "state": "SD",
+   "latitude": 45.477896,
+   "longitude": -98.483517,
+   "website": "https://nsuwolves.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Northern Sun Intercollegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "south-dakota-state-university",
+   "name": "South Dakota State University",
+   "city": "Brookings",
+   "state": "SD",
+   "latitude": 44.315332,
+   "longitude": -96.784589,
+   "website": "https://gojacks.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Pac-12"
+    }
+   ]
+  },
+  {
+   "id": "university-of-sioux-falls",
+   "name": "University of Sioux Falls",
+   "city": "Sioux Falls",
+   "state": "SD",
+   "latitude": 43.53298,
+   "longitude": -96.738822,
+   "website": "https://usfcougars.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Northern Sun Intercollegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "cumberland-university",
+   "name": "Cumberland University",
+   "city": "Lebanon",
+   "state": "TN",
+   "latitude": 36.201789,
+   "longitude": -86.294212,
+   "website": "https://gocumberlandathletics.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "king-university",
+   "name": "King University",
+   "city": "Bristol",
+   "state": "TN",
+   "latitude": 36.587546,
+   "longitude": -82.154337,
+   "website": "https://kingtornado.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Conference Carolinas"
+    }
+   ]
+  },
+  {
+   "id": "lincoln-memorial-university",
+   "name": "Lincoln Memorial University",
+   "city": "Harrogate",
+   "state": "TN",
+   "latitude": 36.576811,
+   "longitude": -83.655107,
+   "website": "https://lmurailsplitters.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Conference Carolinas"
+    }
+   ]
+  },
+  {
+   "id": "university-of-tennessee-at-chattanooga-chattanooga",
+   "name": "University of Tennessee at Chattanooga (Chattanooga)",
+   "city": "Chattanooga",
+   "state": "TN",
+   "latitude": 35.045435,
+   "longitude": -85.300065,
+   "website": "https://gomocs.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Southern Conference"
+    }
+   ]
+  },
+  {
+   "id": "jarvis-christian-university",
+   "name": "Jarvis Christian University",
+   "city": "Hawkins",
+   "state": "TX",
+   "latitude": 32.591574,
+   "longitude": -95.22495,
+   "website": "https://jcubulldogs.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "mcmurry-university",
+   "name": "McMurry University",
+   "city": "Abilene",
+   "state": "TX",
+   "latitude": 32.429943,
+   "longitude": -99.74904,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "St. Louis Intercollegiate Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "schreiner-university",
+   "name": "Schreiner University",
+   "city": "Kerrville",
+   "state": "TX",
+   "latitude": 30.03127,
+   "longitude": -99.130246,
+   "website": "https://schreiner.prestosports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "St. Louis Intercollegiate Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "texas-wesleyan-university",
+   "name": "Texas Wesleyan University",
+   "city": "Fort Worth",
+   "state": "TX",
+   "latitude": 32.732955,
+   "longitude": -97.280985,
+   "website": "https://ramsports.net",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Sooner Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "texas-woman-s-university",
+   "name": "Texas Woman's University",
+   "city": "Denton",
+   "state": "TX",
+   "latitude": 33.226333,
+   "longitude": -97.129789,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": false,
+     "womens": true,
+     "conference": "Rocky Mountain Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "wayland-baptist-university",
+   "name": "Wayland Baptist University",
+   "city": "Plainview",
+   "state": "TX",
+   "latitude": 34.186553,
+   "longitude": -101.729919,
+   "website": "https://wbuathletics.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Sooner Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "snow-college",
+   "name": "Snow College",
+   "city": "Ephraim",
+   "state": "UT",
+   "latitude": 39.360545,
+   "longitude": -111.580673,
+   "website": "https://snowbadgers.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": "Scenic West Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "utah-valley-university",
+   "name": "Utah Valley University",
+   "city": "Orem",
+   "state": "UT",
+   "latitude": 40.277354,
+   "longitude": -111.680256,
+   "website": "https://gouvu.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big 12"
+    }
+   ]
+  },
+  {
+   "id": "averett-university",
+   "name": "Averett University",
+   "city": "Danville",
+   "state": "VA",
+   "latitude": 36.576873,
+   "longitude": -79.413102,
+   "website": "https://averettcougars.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "bluefield-university",
+   "name": "Bluefield University",
+   "city": "Bluefield",
+   "state": "VA",
+   "latitude": 37.245954,
+   "longitude": -81.242885,
+   "website": "https://burams.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "emory-and-henry-university",
+   "name": "Emory and Henry University",
+   "city": "Emory",
+   "state": "VA",
+   "latitude": 36.771693,
+   "longitude": -81.831469,
+   "website": "https://www.gowasps.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Conference Carolinas"
+    }
+   ]
+  },
+  {
+   "id": "ferrum-college",
+   "name": "Ferrum College",
+   "city": "Ferrum",
+   "state": "VA",
+   "latitude": 36.926868,
+   "longitude": -80.019384,
+   "website": "https://ferrumpanthers.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Conference Carolinas"
+    }
+   ]
+  },
+  {
+   "id": "george-mason-university",
+   "name": "George Mason University",
+   "city": "Fairfax",
+   "state": "VA",
+   "latitude": 38.834399,
+   "longitude": -77.304408,
+   "website": "https://gomason.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Mid-American Conference"
+    }
+   ]
+  },
+  {
+   "id": "marymount-university",
+   "name": "Marymount University",
+   "city": "Arlington",
+   "state": "VA",
+   "latitude": 38.904498,
+   "longitude": -77.128851,
+   "website": "https://marymountsaints.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "randolph-college",
+   "name": "Randolph College",
+   "city": "Lynchburg",
+   "state": "VA",
+   "latitude": 37.436753,
+   "longitude": -79.173488,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "Old Dominion Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "roanoke-college",
+   "name": "Roanoke College",
+   "city": "Salem",
+   "state": "VA",
+   "latitude": 37.294741,
+   "longitude": -80.056885,
+   "website": "https://roanokemaroons.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "shenandoah-university",
+   "name": "Shenandoah University",
+   "city": "Winchester",
+   "state": "VA",
+   "latitude": 39.166103,
+   "longitude": -78.159534,
+   "website": "https://suhornets.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "southern-virginia-university",
+   "name": "Southern Virginia University",
+   "city": "Buena Vista",
+   "state": "VA",
+   "latitude": 37.740461,
+   "longitude": -79.351632,
+   "website": "https://knightathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-lynchburg",
+   "name": "University of Lynchburg",
+   "city": "Lynchburg",
+   "state": "VA",
+   "latitude": 37.401692,
+   "longitude": -79.18253,
+   "website": "https://lynchburgsports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": "Old Dominion Athletic Conference"
+    }
+   ]
+  },
+  {
+   "id": "university-of-virginia",
+   "name": "University of Virginia",
+   "city": "Charlottesville",
+   "state": "VA",
+   "latitude": 38.03655,
+   "longitude": -78.502685,
+   "website": "https://virginiasports.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "ACC"
+    }
+   ]
+  },
+  {
+   "id": "virginia-military-institute-vmi",
+   "name": "Virginia Military Institute (VMI)",
+   "city": "Lexington",
+   "state": "VA",
+   "latitude": 37.791334,
+   "longitude": -79.435515,
+   "website": "https://vmikeydets.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Southern Conference"
+    }
+   ]
+  },
+  {
+   "id": "virginia-tech",
+   "name": "Virginia Tech",
+   "city": "Blacksburg",
+   "state": "VA",
+   "latitude": 37.228306,
+   "longitude": -80.423206,
+   "website": "https://hokiesports.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "ACC"
+    }
+   ]
+  },
+  {
+   "id": "washington-and-lee-university",
+   "name": "Washington and Lee University",
+   "city": "Lexington",
+   "state": "VA",
+   "latitude": 37.783871,
+   "longitude": -79.43991,
+   "website": "https://generalssports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "norwich-university",
+   "name": "Norwich University",
+   "city": "Northfield",
+   "state": "VT",
+   "latitude": 44.137409,
+   "longitude": -72.659005,
+   "website": "https://norwichathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "New England Wrestling Association"
+    }
+   ]
+  },
+  {
+   "id": "vtsu-castleton",
+   "name": "VTSU Castleton",
+   "city": "Castleton",
+   "state": "VT",
+   "latitude": 43.606474,
+   "longitude": -73.180468,
+   "website": "https://castletonsports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "big-bend-community-college",
+   "name": "Big Bend Community College",
+   "city": "Moses Lake",
+   "state": "WA",
+   "latitude": 47.184156,
+   "longitude": -119.324778,
+   "website": "https://bbccvikings.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "the-evergreen-state-college",
+   "name": "The Evergreen State College",
+   "city": "Olympia",
+   "state": "WA",
+   "latitude": 47.070103,
+   "longitude": -122.970834,
+   "website": "https://gogeoducks.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": true,
+     "conference": "Cascade Collegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "bryant-stratton-college-wisconsin",
+   "name": "Bryant & Stratton College - Wisconsin",
+   "city": "Wauwatosa",
+   "state": "WI",
+   "latitude": 43.040941,
+   "longitude": -88.051192,
+   "website": "https://bryantstrattonwisconsin.prestosports.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "carthage-college",
+   "name": "Carthage College",
+   "city": "Kenosha",
+   "state": "WI",
+   "latitude": 42.618523,
+   "longitude": -87.823238,
+   "website": "https://athletics.carthage.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "College Conference of Illinois and Wisconsin"
+    }
+   ]
+  },
+  {
+   "id": "concordia-university-wisconsin",
+   "name": "Concordia University Wisconsin",
+   "city": "Mequon",
+   "state": "WI",
+   "latitude": 43.250505,
+   "longitude": -87.917669,
+   "website": "https://cuwfalcons.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "College Conference of Illinois and Wisconsin"
+    }
+   ]
+  },
+  {
+   "id": "lakeland-university",
+   "name": "Lakeland University",
+   "city": "Plymouth",
+   "state": "WI",
+   "latitude": 43.840935,
+   "longitude": -87.881952,
+   "website": "https://lakelandmuskies.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "milwaukee-school-of-engineering",
+   "name": "Milwaukee School of Engineering",
+   "city": "Milwaukee",
+   "state": "WI",
+   "latitude": 43.043842,
+   "longitude": -87.908451,
+   "website": "https://msoeraiders.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": "College Conference of Illinois and Wisconsin"
+    }
+   ]
+  },
+  {
+   "id": "university-of-wisconsin-eau-claire",
+   "name": "University of Wisconsin-Eau Claire",
+   "city": "Eau Claire",
+   "state": "WI",
+   "latitude": 44.798949,
+   "longitude": -91.502733,
+   "website": "https://blugolds.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-wisconsin-la-crosse",
+   "name": "University of Wisconsin-La Crosse",
+   "city": "La Crosse",
+   "state": "WI",
+   "latitude": 43.812858,
+   "longitude": -91.230445,
+   "website": "https://uwlathletics.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-wisconsin-oshkosh",
+   "name": "University of Wisconsin-Oshkosh",
+   "city": "Oshkosh",
+   "state": "WI",
+   "latitude": 44.025054,
+   "longitude": -88.550131,
+   "website": "https://uwoshkoshtitans.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-wisconsin-platteville",
+   "name": "University of Wisconsin-Platteville",
+   "city": "Platteville",
+   "state": "WI",
+   "latitude": 42.733845,
+   "longitude": -90.493031,
+   "website": "https://letsgopioneers.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-wisconsin-stevens-point",
+   "name": "University of Wisconsin-Stevens Point",
+   "city": "Stevens Point",
+   "state": "WI",
+   "latitude": 44.523539,
+   "longitude": -89.569574,
+   "website": "https://athletics.uwsp.edu",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-wisconsin-whitewater",
+   "name": "University of Wisconsin-Whitewater",
+   "city": "Whitewater",
+   "state": "WI",
+   "latitude": 42.835009,
+   "longitude": -88.742265,
+   "website": "https://uwwsports.com",
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-wisconsin-madison-wisconsin",
+   "name": "University of Wisconsin\u2013Madison (Wisconsin)",
+   "city": "Madison",
+   "state": "WI",
+   "latitude": 43.073987,
+   "longitude": -89.403307,
+   "website": "https://uwbadgers.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big Ten"
+    }
+   ]
+  },
+  {
+   "id": "university-of-wisconsin-parkside",
+   "name": "University of Wisconsin\u2013Parkside",
+   "city": "Kenosha",
+   "state": "WI",
+   "latitude": 42.6476,
+   "longitude": -87.849191,
+   "website": "https://parksiderangers.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Northern Sun Intercollegiate Conference"
+    }
+   ]
+  },
+  {
+   "id": "bethany-college",
+   "name": "Bethany College",
+   "city": "Bethany",
+   "state": "WV",
+   "latitude": 40.20591,
+   "longitude": -80.563607,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division III",
+     "mens": true,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "bluefield-state-university",
+   "name": "Bluefield State University",
+   "city": "Bluefield",
+   "state": "WV",
+   "latitude": 37.266667,
+   "longitude": -81.237235,
+   "website": "https://gobstate.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Conference Carolinas"
+    }
+   ]
+  },
+  {
+   "id": "concord-university",
+   "name": "Concord University",
+   "city": "Athens",
+   "state": "WV",
+   "latitude": 37.422742,
+   "longitude": -81.008749,
+   "website": null,
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": false,
+     "womens": true,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "davis-elkins-college",
+   "name": "Davis & Elkins College",
+   "city": "Elkins",
+   "state": "WV",
+   "latitude": 38.931961,
+   "longitude": -79.846646,
+   "website": "https://senatornation.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Mountain East Conference"
+    }
+   ]
+  },
+  {
+   "id": "fairmont-state-university",
+   "name": "Fairmont State University",
+   "city": "Fairmont",
+   "state": "WV",
+   "latitude": 39.481963,
+   "longitude": -80.158959,
+   "website": "https://fightingfalcons.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Mountain East Conference"
+    }
+   ]
+  },
+  {
+   "id": "glenville-state-university",
+   "name": "Glenville State University",
+   "city": "Glenville",
+   "state": "WV",
+   "latitude": 38.93471,
+   "longitude": -80.833718,
+   "website": "https://gstatepioneers.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Mountain East Conference"
+    }
+   ]
+  },
+  {
+   "id": "salem-university",
+   "name": "Salem University",
+   "city": "Salem",
+   "state": "WV",
+   "latitude": 39.28321,
+   "longitude": -80.567325,
+   "website": "https://salemtigers.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": false,
+     "conference": "Mountain East Conference"
+    }
+   ]
+  },
+  {
+   "id": "west-liberty-university",
+   "name": "West Liberty University",
+   "city": "West Liberty",
+   "state": "WV",
+   "latitude": 40.162797,
+   "longitude": -80.603636,
+   "website": "https://hilltoppersports.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Mountain East Conference"
+    }
+   ]
+  },
+  {
+   "id": "west-virginia-university",
+   "name": "West Virginia University",
+   "city": "Morgantown",
+   "state": "WV",
+   "latitude": 39.63484,
+   "longitude": -79.95421,
+   "website": "https://wvusports.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big 12"
+    }
+   ]
+  },
+  {
+   "id": "west-virginia-university-institute-of-technology",
+   "name": "West Virginia University Institute of Technology",
+   "city": "Beckley",
+   "state": "WV",
+   "latitude": 37.776418,
+   "longitude": -81.184755,
+   "website": "https://goldenbearathletics.com",
+   "programs": [
+    {
+     "division": "NAIA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "wheeling-university",
+   "name": "Wheeling University",
+   "city": "Wheeling",
+   "state": "WV",
+   "latitude": 40.067682,
+   "longitude": -80.690701,
+   "website": "https://wucardinals.com",
+   "programs": [
+    {
+     "division": "NCAA Division II",
+     "mens": true,
+     "womens": true,
+     "conference": "Mountain East Conference"
+    }
+   ]
+  },
+  {
+   "id": "northwest-college",
+   "name": "Northwest College",
+   "city": "Powell",
+   "state": "WY",
+   "latitude": 44.763147,
+   "longitude": -108.764929,
+   "website": "https://nwctrappers.com",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  },
+  {
+   "id": "university-of-wyoming",
+   "name": "University of Wyoming",
+   "city": "Laramie",
+   "state": "WY",
+   "latitude": 41.311497,
+   "longitude": -105.585641,
+   "website": "https://gowyo.com",
+   "programs": [
+    {
+     "division": "NCAA Division I",
+     "mens": true,
+     "womens": false,
+     "conference": "Big 12"
+    }
+   ]
+  },
+  {
+   "id": "western-wyoming-community-college",
+   "name": "Western Wyoming Community College",
+   "city": "Rock Springs",
+   "state": "WY",
+   "latitude": 41.59464,
+   "longitude": -109.235858,
+   "website": "https://www.westernwyoming.edu",
+   "programs": [
+    {
+     "division": "NJCAA",
+     "mens": true,
+     "womens": false,
+     "conference": null
+    }
+   ]
+  }
+ ]
+}

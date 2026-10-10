@@ -2041,6 +2041,7 @@ export type DataToolName =
   | "nchsaa_state_tournament_by_year"
   | "fargo_results_by_year"
   | "college_commits_search"
+  | "college_programs_search"
   | "get_athlete_full_dossier"
   | "public_rankings_search"
   | "record_books_search"
@@ -2172,6 +2173,14 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
             },
           ),
         )
+      case "college_programs_search": {
+        const { queryCollegePrograms } = await import("@/lib/college-programs/query")
+        return JSON.stringify(
+          queryCollegePrograms(
+            args as { division?: string; gender?: string; state?: string; query?: string; limit?: number },
+          ),
+        )
+      }
       case "get_athlete_full_dossier":
         return JSON.stringify(await toolGetAthleteFullDossier(args as { athlete_id: string }))
       case "public_rankings_search":

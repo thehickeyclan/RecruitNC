@@ -438,6 +438,33 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
   {
     type: "function",
     function: {
+      name: "college_programs_search",
+      description:
+        "College wrestling PROGRAMS across the country for the 2026-27 season — every NCAA D1, D2, D3, NAIA and NJCAA team, men's and women's. Use for 'how many D1 programs are there', 'women's programs in Pennsylvania', 'which colleges in NC have wrestling', 'is there wrestling at Lander', 'what conference is Mount Olive in', 'who is the head coach at Campbell', 'who coaches women's wrestling at Lindenwood', 'where does [coach] coach'. When the result has 5 or fewer schools each one carries its coaching staff. Returns counts already computed (totals, by_division, by_state, men's vs women's) — quote those numbers, never add up the school list yourself. NOT for who committed where: that is college_commits_search.",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          division: {
+            type: "string",
+            description: "Optional: 'NCAA Division I', 'NCAA Division II', 'NCAA Division III', 'NAIA', 'NJCAA', or D1/D2/D3/juco.",
+          },
+          gender: { type: "string", enum: ["mens", "womens"], description: "Optional: men's or women's teams only." },
+          state: { type: "string", description: "Optional: state code or name, e.g. 'PA' or 'Pennsylvania'." },
+          query: { type: "string", description: "Optional: school or city name fragment, e.g. 'Lander', 'Mount Olive'." },
+          coach: {
+            type: "string",
+            description: "Optional: a college coach's full name, for 'where does Cary Kolat coach'. Returns the schools they are on staff at.",
+          },
+          limit: { type: "integer", description: "Max schools listed (default 25, up to 500). Counts are unaffected." },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "public_rankings_search",
       description:
         "Access-routing tool for RecruitNC rankings questions. It never returns rankings, names, positions, or availability. Always call it for any rankings request so the user is directed to /rankings to sign in or subscribe.",
