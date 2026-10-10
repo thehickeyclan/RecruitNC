@@ -612,21 +612,10 @@ export default function ProspectsAllClient({
           <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628] via-transparent to-transparent" />
         </div>
         <div className="container relative mx-auto px-4 py-12 md:py-16">
-          <div className="mb-6 flex items-center justify-between gap-4">
+          <div className="mb-6">
             <Link href="/" className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-[#D3B574] transition-colors">
               <ArrowLeft className="h-4 w-4" />
               Back to Home
-            </Link>
-            {/* Most NC wrestlers are already here from their results (Matt, 8 Oct 2026). Same flow as
-                Create: /create-profile finds the existing profile and offers to claim it. */}
-            <Link href="/create-profile">
-              <Button
-                size="sm"
-                variant="outline"
-                className="border-[#D3B574] bg-transparent font-bold text-[#D3B574] hover:bg-[#D3B574] hover:text-[#0A1628]"
-              >
-                Claim your profile
-              </Button>
             </Link>
           </div>
           <div className="flex items-center gap-4 mb-4">
@@ -638,14 +627,26 @@ export default function ProspectsAllClient({
           <p className="text-white/70 text-lg max-w-2xl leading-relaxed mb-8">
             All NC wrestlers — browse by name, school, class year, and commitment status. Create your profile and we pull in NCHSAA, NHSCA, and Super 32 results.
           </p>
-          <Link href="/create-profile">
-            <Button
-              size="lg"
-              className="bg-[#D3B574] hover:bg-[#c4a665] text-[#0A1628] font-bold"
-            >
-              Create your profile
-            </Button>
-          </Link>
+          {/* Side by side, and the same page: most NC wrestlers are already here from their results
+              (Matt, 8 Oct 2026), so /create-profile looks for the existing profile first and offers
+              to claim it, whichever button brought the family there. */}
+          <div className="flex flex-wrap items-center gap-3">
+            <Link href="/create-profile">
+              <Button size="lg" className="bg-[#D3B574] hover:bg-[#c4a665] text-[#0A1628] font-bold">
+                Claim your profile
+              </Button>
+            </Link>
+            <Link href="/create-profile">
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-[#D3B574] bg-transparent font-bold text-[#D3B574] hover:bg-[#D3B574] hover:text-[#0A1628]"
+              >
+                Create your profile
+              </Button>
+            </Link>
+          </div>
+          <p className="mt-3 text-sm text-white/50">We may already have yours. Either way, we look it up first.</p>
         </div>
       </section>
 
