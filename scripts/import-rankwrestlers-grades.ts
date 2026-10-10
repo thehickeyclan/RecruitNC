@@ -18,6 +18,7 @@
  *
  *   npx tsx scripts/import-rankwrestlers-grades.ts            # dry run
  *   npx tsx scripts/import-rankwrestlers-grades.ts --write
+ *   npx tsx scripts/import-rankwrestlers-grades.ts --write --fill-only   # no new identities
  */
 import fs from "fs"
 import path from "path"
@@ -38,6 +39,12 @@ const sb = createClient(
   { auth: { persistSession: false } },
 )
 const WRITE = process.argv.includes("--write")
+/*
+ * Class years onto identities that already exist, and nothing else. The registry is scoped to
+ * state qualifiers; a board sweep lists every wrestler in the state, and minting an identity for
+ * each of them is a separate decision from knowing what year a placer graduates.
+ */
+const FILL_ONLY = process.argv.includes("--fill-only")
 const DIR = process.argv.includes("--dir")
   ? process.argv[process.argv.indexOf("--dir") + 1]
   : `${process.env.HOME}/Downloads`
@@ -195,6 +202,7 @@ async function main() {
     filled++
   }
   console.log(`class years written: ${filled}`)
+  if (FILL_ONLY) { console.log("--fill-only: no identities created."); return }
 
   const rows = create.map((p) => {
     const words = p.name.split(" ")
