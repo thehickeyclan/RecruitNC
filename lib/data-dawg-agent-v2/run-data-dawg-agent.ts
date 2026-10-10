@@ -17,7 +17,7 @@ import {
   linkifyKnownEntities,
 } from "@/lib/data-dawg-linkify-entities"
 import { DATA_DAWG_AGENT_V2_SYSTEM } from "./system-prompt"
-import { frameWebAnswer } from "@/lib/data-dawg-web-search"
+import { appendWebBackground, frameWebAnswer, type WebWrestlerFindings } from "@/lib/data-dawg-web-search"
 import {
   answerNextBluePractice,
   isBluePracticeScheduleQuery,
@@ -268,6 +268,8 @@ export async function runDataDawgAgentV2(params: {
   let groundedEntities: ReturnType<typeof linkableEntitiesFromFacts> = []
   /** Set only when the answer came from the public web, so the flag can be applied in code. */
   let webSources: string[] | null = null
+  /** Web background for an out-of-state wrestler we hold results on; appended under the answer. */
+  let webBackground: Promise<WebWrestlerFindings | null> | null = null
   try {
     const schoolFast = await trySchoolNameFastPath(params.message)
     if (schoolFast) {
@@ -297,6 +299,7 @@ export async function runDataDawgAgentV2(params: {
               : "athlete_facts_historical"
       // Kept out of the model's hands: the label and the sources are applied to its answer below.
       if (athleteFast.kind === "web") webSources = athleteFast.sources ?? []
+      webBackground = athleteFast.webBackground ?? null
     }
   } catch (e) {
     /*
@@ -363,9 +366,11 @@ export async function runDataDawgAgentV2(params: {
    * at some point not followed.
    */
   const framed = webSources ? frameWebAnswer(raw, webSources) : raw
-  const answer = applyRecruitNcDataDawgAnswerPostProcess(
+  const ours = applyRecruitNcDataDawgAnswerPostProcess(
     linkifyKnownEntities(framed, linkable),
   )
+  // After everything else, so no post-processing treats web text as ours.
+  const answer = webBackground ? appendWebBackground(ours, await webBackground.catch(() => null)) : ours
 
   return {
     answer,

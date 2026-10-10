@@ -25,7 +25,7 @@ import {
   crossStoreHasUsefulHits,
   crossStoreNamesWrestler,
 } from "./format-cross-store-athlete-markdown"
-import { searchWebForWrestler } from "@/lib/data-dawg-web-search"
+import { searchWebForWrestler, type WebWrestlerFindings } from "@/lib/data-dawg-web-search"
 import { buildCareerSummary } from "./tournament-bouts"
 import { namesLikelySamePerson } from "@/lib/athlete-name-match"
 
@@ -39,6 +39,12 @@ export type AthleteFastPathHit = {
   kind: "directory" | "historical" | "unprofiled" | "web"
   /** Pages a web answer drew on. Present only for kind "web", and shown with the answer. */
   sources?: string[]
+  /**
+   * School, class and honors from the web, for an out-of-state wrestler we hold results on.
+   * Already running; the caller appends it under the finished answer and never shows it to the
+   * model (lib/data-dawg-web-search.ts, appendWebBackground).
+   */
+  webBackground?: Promise<WebWrestlerFindings | null>
 }
 
 export async function tryAthleteNameFastPath(
@@ -206,7 +212,25 @@ export async function tryAthleteNameFastPath(
       }
     }
 
+    /*
+     * Started now and not awaited, so it runs while the model writes. Only on the first question
+     * about him (a follow-up does not need his school again), and never for a North Carolina
+     * wrestler: there our own data is the better source and a second voice only muddies it.
+     */
+    const top = placements[0]
+    const hint = [
+      state ? `wrestles in ${state}` : null,
+      top?.place && top?.season ? `placed ${top.place} at the ${top.season} ${state} state tournament${top.weight ? ` at ${top.weight}` : ""}` : null,
+    ]
+      .filter(Boolean)
+      .join("; ")
+    const webBackground =
+      !carried && state && state !== "NC"
+        ? searchWebForWrestler(String(wanted), hint, { timeoutMs: 12_000, focus: "background" }).catch(() => null)
+        : undefined
+
     return {
+      webBackground,
       facts: {
         profile_url: null,
         wrestles_for: state,
