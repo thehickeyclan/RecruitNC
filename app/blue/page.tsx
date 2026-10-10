@@ -131,7 +131,13 @@ export default function BluePage() {
                     <li>A strong network of college coaches, and help matching each athlete with the right college opportunity.</li>
                     <li>Full access to the NC prospect rankings.</li>
                     <li>Visibility into which college programs are viewing your profile.</li>
-                    <li>Our recruiting portal (coming soon).</li>
+                    <li>
+                      Our recruiting portal, starting with the{" "}
+                      <Link href="/recruiting/college-map" className="font-semibold underline">
+                        college program map
+                      </Link>
+                      : every college wrestling program in the country, its coaches, and which ones are on RecruitNC.
+                    </li>
                   </ul>
                 </CardContent>
               </Card>

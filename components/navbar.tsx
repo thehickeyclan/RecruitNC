@@ -217,6 +217,7 @@ export function Navbar() {
   const programsItems = [
     { href: "/blue", label: "NC United Blue", description: "Training, apparel, and member benefits" },
     { href: "/national-team", label: "National Team", description: "NC United national competition teams" },
+    { href: "/recruiting/college-map", label: "College Program Map", description: "Every college wrestling program, coast to coast" },
   ]
 
   type EventsMegaLink = {

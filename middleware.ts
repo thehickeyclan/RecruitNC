@@ -141,6 +141,10 @@ export async function middleware(request: NextRequest) {
     // auth itself on the page and the submissions API returns 401.
     '/clubs',
     '/api/clubs',
+    // Public college program map. The page and /api/college-map give signed-out visitors the dots
+    // only; filters, staff emails and the On RecruitNC flag are decided per viewer in the API.
+    '/recruiting/college-map',
+    '/api/college-map',
     '/news',
     '/blue',
     '/go',

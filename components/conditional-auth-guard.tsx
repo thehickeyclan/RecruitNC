@@ -69,6 +69,9 @@ export function ConditionalAuthGuard({
     // /clubs/submit stays safe: it resolves the session itself and prompts signed-out
     // visitors to sign in, and the submissions API returns 401 regardless.
     "/clubs",
+    // Public college program map, for the same reason as /clubs: it is a shareable, searchable
+    // page. What Blue adds (filters, staff emails, On RecruitNC) is withheld by /api/college-map.
+    "/recruiting/college-map",
     "/news",
     "/nchsaa",
     "/nhsca",
