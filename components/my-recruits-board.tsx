@@ -16,10 +16,19 @@ import { cn } from "@/lib/utils"
 import type { MyRecruitRow } from "@/lib/my-recruits"
 import { CoachComposeDialog } from "@/components/coach-messages/coach-message-button"
 import { CoachMessagingIntro } from "@/components/coach-messages/coach-messaging-intro"
+import { CoachTabs } from "@/components/coach-tabs"
+import { FitBadge, type FitBadgeFlag } from "@/components/fit-badge"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 
-type Payload = { recruits: MyRecruitRow[]; hasSchool: boolean; schoolId: string | null }
+type Payload = {
+  recruits: MyRecruitRow[]
+  hasSchool: boolean
+  schoolId: string | null
+  /** Each wrestler against the program's perfect recruit, when one is set (lib/program-fit-bulk.ts). */
+  fit?: Record<string, FitBadgeFlag>
+  hasStandard?: boolean
+}
 
 const dayLabel = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
@@ -110,6 +119,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
   return (
       <main className="min-h-screen bg-[#0A1628] text-white">
         <div className={cn("mx-auto max-w-6xl px-4 py-8 sm:py-10", pickedRows.length ? "pb-28 sm:pb-28" : "")}>
+          <CoachTabs active="recruits" className="mb-6" />
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D3B574]">RecruitNC</p>
@@ -118,7 +128,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                 Every wrestler you{data?.hasSchool ? " and your staff" : ""} added to the watch list.
               </p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4">
               <Link
                 href="/inbox"
                 className="inline-flex items-center gap-1.5 rounded-lg border border-white/15 px-3 py-1.5 text-sm font-semibold text-white hover:bg-white/10"
@@ -128,6 +138,9 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                 {unread > 0 ? (
                   <span className="rounded-full bg-[#D3B574] px-1.5 text-xs font-bold text-[#0A1628]">{unread}</span>
                 ) : null}
+              </Link>
+              <Link href="/perfect-recruit" className="text-sm font-semibold text-[#D3B574] hover:underline">
+                {data?.hasStandard ? "Your perfect recruit" : "Set your perfect recruit"} →
               </Link>
               {data?.schoolId ? (
                 <Link href={`/schools/${data.schoolId}/portal`} className="text-sm font-semibold text-[#D3B574] hover:underline">
@@ -213,6 +226,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                               <span className="block truncate text-xs text-white/55">
                                 {[r.highSchool, r.club].filter(Boolean).join(" · ") || "—"}
                               </span>
+                              {data?.fit?.[r.athleteId] ? <FitBadge flag={data.fit[r.athleteId]} className="mt-1" /> : null}
                             </span>
                           </Link>
                         </td>
@@ -273,6 +287,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                           {[r.classYear ? `Class of ${r.classYear}` : null, r.weight ? `${r.weight} lbs` : null].filter(Boolean).join(" · ")}
                         </p>
                         <p className="truncate text-xs text-white/50">{[r.highSchool, r.club].filter(Boolean).join(" · ")}</p>
+                        {data?.fit?.[r.athleteId] ? <FitBadge flag={data.fit[r.athleteId]} className="mt-1" /> : null}
                         {r.stateFinish ? <p className="mt-1 text-xs text-white/80">{r.stateFinish}</p> : null}
                         {r.nationalFinish ? <p className="text-xs text-[#E9D6A6]">{r.nationalFinish}</p> : null}
                         <div className="mt-1">

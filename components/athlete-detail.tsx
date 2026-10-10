@@ -17,6 +17,7 @@ import {
   CompareAction,
   type BannerStat,
 } from "@/components/profile/profile-banner-parts"
+import { ProfileFitFlag } from "@/components/profile/profile-fit-flag"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -1441,6 +1442,7 @@ export function AthleteDetail({
                         <ScoutingReportAction href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`} />
                       ) : null}
                       {mayCompare ? <CompareAction athleteId={String(athlete.id)} /> : null}
+                      {mayCompare ? <ProfileFitFlag athleteId={String(athlete.id)} className="inline-flex items-center" /> : null}
                       {!isViewingOwnProfile ? (
                         <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="action" />
                       ) : null}
@@ -1622,6 +1624,7 @@ export function AthleteDetail({
           </a>
           ) : null}
           {mayCompare ? <CompareAction athleteId={String(athlete.id)} className="min-h-[44px]" /> : null}
+          {mayCompare ? <ProfileFitFlag athleteId={String(athlete.id)} className="inline-flex items-center" /> : null}
           {!isViewingOwnProfile ? (
             <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="action" className="min-h-[44px]" />
           ) : null}

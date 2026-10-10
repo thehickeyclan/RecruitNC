@@ -15,6 +15,8 @@ import { classifyViewer } from "@/lib/viewer-role"
 import { currentClassYears } from "@/lib/class-years"
 import { loadMyRecruits } from "@/lib/my-recruits"
 import { isApprovedCoach, listThreads } from "@/lib/coach-messages"
+import { loadFitFlags } from "@/lib/program-fit-bulk"
+import { resolveFitViewer } from "@/lib/program-fit-viewer"
 import { resolveEntityLogoUrl } from "@/lib/entity-logo-resolve"
 import { PUBLIC_TOP_75_COLLEGE_RELEASED, PUBLISHED_PUBLIC_RANKINGS_YEARS } from "@/lib/public-rankings-cap"
 import CoachHomeClient, { type CoachHomeData } from "./coach-home-client"
@@ -74,6 +76,12 @@ export default async function CoachHomePage() {
   const programLogo =
     school?.logo || (school?.name ? await resolveEntityLogoUrl("college", school.name).catch(() => null) : null) || null
 
+  // The board's five against the program's perfect recruit; an extra, so a failure shows nothing.
+  const recruitIds = (board?.recruits ?? []).slice(0, 5).map((r) => r.athleteId)
+  const fitFlags = await resolveFitViewer(admin, user.id)
+    .then((v) => (v.allowed && v.hasStandard ? loadFitFlags(admin, recruitIds, v.saved!.criteria, { personal: v.personal }) : null))
+    .catch(() => null)
+
   const coachThreads = (threads ?? []).filter((t) => t.viewerRole === "coach")
   const recruits = board?.recruits ?? []
   const data: CoachHomeData = {
@@ -94,6 +102,7 @@ export default async function CoachHomePage() {
         weight: r.weight,
         highSchool: r.highSchool,
         lastCompeted: r.activity?.label ?? null,
+        fit: fitFlags?.get(r.athleteId) ? { verdict: fitFlags.get(r.athleteId)!.verdict, summary: fitFlags.get(r.athleteId)!.summary } : null,
       })),
       // Who has been on the mat lately: the reason to look at the board again.
       competedRecently: recruits

@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react"
 import Link from "next/link"
+import { CoachTabs } from "@/components/coach-tabs"
+import { FitBadge, type FitBadgeFlag } from "@/components/fit-badge"
 import { ArrowRight, BarChart3, FileText, GitCompareArrows, Lock, MessageSquare, Search, Star, Target, Users } from "lucide-react"
 
 export type CoachHomeData = {
@@ -16,7 +18,7 @@ export type CoachHomeData = {
     /** False when the board could not be read - shown as "could not load", never as an empty board. */
     loaded: boolean
     total: number
-    latest: Array<{ id: string; name: string; classYear: number | null; weight: string | null; highSchool: string | null; lastCompeted: string | null }>
+    latest: Array<{ id: string; name: string; classYear: number | null; weight: string | null; highSchool: string | null; lastCompeted: string | null; fit: FitBadgeFlag | null }>
     competedRecently: Array<{ id: string; name: string; label: string; event: string | null }>
   }
   messages: {
@@ -144,7 +146,8 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
   const { recruits, messages } = data
   return (
     <main className="min-h-screen bg-[#0A1628] text-white">
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
+      <div className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
+        <CoachTabs active="home" className="mb-6" />
         <header className="flex items-center gap-4">
           {data.programLogo ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -197,6 +200,7 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
                           <span className="block truncate text-xs text-white/45">
                             {[r.classYear ? `’${String(r.classYear).slice(-2)}` : null, r.weight ? `${r.weight} lbs` : null, r.highSchool].filter(Boolean).join(" · ")}
                           </span>
+                          {r.fit ? <FitBadge flag={r.fit} className="mt-1" /> : null}
                         </span>
                         {r.lastCompeted ? <span className="shrink-0 text-xs text-white/40">{r.lastCompeted}</span> : null}
                       </Link>
@@ -278,7 +282,7 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
         <h2 className={`${TITLE} mt-8`}>Tools</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <Tool href="/compare?src=coach-home" icon={GitCompareArrows} title="Compare two wrestlers" body="Head to head, common opponents, national results and our read on who fits." />
-          <Tool href="/compare?src=coach-home-fit#compare" icon={Target} title="Your perfect recruit" body="Tell us the weights, classes and grades you need; comparisons are checked against it." />
+          <Tool href="/perfect-recruit" icon={Target} title="Your perfect recruit" body="Set the weights, classes and grades you need once; every wrestler is flagged against it." />
           <Tool href="/prospects/all" icon={FileText} title="Scouting reports" body="Open any profile and choose Scouting Report. Free for college coaches." />
         </div>
 
