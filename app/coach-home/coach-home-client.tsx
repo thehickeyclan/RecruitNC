@@ -9,6 +9,7 @@ export type CoachHomeData = {
   /** Staff looking at the page: they read conversations but do not start them. */
   isAdmin: boolean
   program: string | null
+  programLogo: string | null
   schoolId: string | null
   athletes: Array<{ id: string; name: string; highschool: string | null; graduationyear: number | null; weightclass: string | null }>
   recruits: {
@@ -144,12 +145,22 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
   return (
     <main className="min-h-screen bg-[#0A1628] text-white">
       <div className="mx-auto max-w-5xl px-4 py-8 sm:py-10">
-        <header>
-          <p className={`text-[11px] font-black uppercase tracking-widest ${GOLD}`}>RecruitNC · Coach Home</p>
-          <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">{data.coachName ? `Welcome, Coach ${data.coachName}` : "Welcome, Coach"}</h1>
-          <p className="mt-1 text-sm text-white/55">
-            {data.program ? `${data.program} · ` : ""}Everything you use to recruit North Carolina, in one place.
-          </p>
+        <header className="flex items-center gap-4">
+          {data.programLogo ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={data.programLogo}
+              alt={data.program ? `${data.program} logo` : "Program logo"}
+              className="h-16 w-16 shrink-0 rounded-xl bg-white object-contain p-1.5 sm:h-20 sm:w-20"
+            />
+          ) : null}
+          <div className="min-w-0">
+            <p className={`text-[11px] font-black uppercase tracking-widest ${GOLD}`}>RecruitNC · Coach Home</p>
+            <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">{data.coachName ? `Welcome, Coach ${data.coachName}` : "Welcome, Coach"}</h1>
+            <p className="mt-1 text-sm text-white/55">
+              {data.program ? `${data.program} · ` : ""}Everything you use to recruit North Carolina, in one place.
+            </p>
+          </div>
         </header>
 
         <div className="mt-6">

@@ -15,6 +15,7 @@ import { classifyViewer } from "@/lib/viewer-role"
 import { currentClassYears } from "@/lib/class-years"
 import { loadMyRecruits } from "@/lib/my-recruits"
 import { isApprovedCoach, listThreads } from "@/lib/coach-messages"
+import { resolveEntityLogoUrl } from "@/lib/entity-logo-resolve"
 import { PUBLIC_TOP_75_COLLEGE_RELEASED, PUBLISHED_PUBLIC_RANKINGS_YEARS } from "@/lib/public-rankings-cap"
 import CoachHomeClient, { type CoachHomeData } from "./coach-home-client"
 
@@ -56,9 +57,22 @@ export default async function CoachHomePage() {
       .limit(2000)
       .then((r) => r.data ?? [], () => []),
     profile?.school_id
-      ? admin.from("schools").select("name").eq("id", profile.school_id).maybeSingle().then((r) => (r.data?.name as string | null) ?? null, () => null)
+      ? admin
+          .from("schools")
+          .select("name, logo_url")
+          .eq("id", profile.school_id)
+          .maybeSingle()
+          .then((r) => ({ name: (r.data?.name as string | null) ?? null, logo: (r.data?.logo_url as string | null) ?? null }), () => null)
       : Promise.resolve(null),
   ])
+
+  /*
+   * The program's own logo, then the site's college logo for that name. Only 18 of the 53 schools
+   * coaches belong to carry one of their own, and the commitments pages already hold most of the
+   * rest. Nothing found means no logo, never a placeholder crest.
+   */
+  const programLogo =
+    school?.logo || (school?.name ? await resolveEntityLogoUrl("college", school.name).catch(() => null) : null) || null
 
   const coachThreads = (threads ?? []).filter((t) => t.viewerRole === "coach")
   const recruits = board?.recruits ?? []
@@ -66,7 +80,8 @@ export default async function CoachHomePage() {
     // "Coach Hickey", the way a coach is addressed; the full name's last word.
     coachName: String(profile?.full_name ?? "").trim().split(/\s+/).slice(-1)[0] || String(profile?.first_name ?? "").trim() || null,
     isAdmin,
-    program: school,
+    program: school?.name ?? null,
+    programLogo,
     schoolId: (profile?.school_id as string | null) ?? null,
     athletes: roster as CoachHomeData["athletes"],
     recruits: {
