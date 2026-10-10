@@ -15,9 +15,25 @@ describe("emailDomain", () => {
 })
 
 describe("collegeForCoach", () => {
-  it("prefers a stated institution — somebody typed that deliberately", () => {
-    expect(collegeForCoach({ institution: "Roanoke College", email: "x@campbell.edu" })).toBe(
-      "Roanoke College",
+  it("gives one school one label, so the views panel cannot count it twice", () => {
+    // Two coaches at the same school who disagree about its name used to become two rows on
+    // the athlete's panel. A mapped domain wins over whatever either of them typed.
+    expect(collegeForCoach({ institution: "Washington and Lee University", email: "a@wlu.edu" })).toBe(
+      "Washington & Lee",
+    )
+    expect(collegeForCoach({ institution: "", email: "b@wlu.edu" })).toBe("Washington & Lee")
+    expect(collegeForCoach({ institution: "Wesleyan University", email: "a@wesleyan.edu" })).toBe(
+      "Wesleyan University (CT)",
+    )
+  })
+
+  it("still uses a stated institution where the domain tells us nothing", () => {
+    // A coach on a personal address, or at a school not yet in the table.
+    expect(collegeForCoach({ institution: "Hunter College", email: "coach@gmail.com" })).toBe(
+      "Hunter College",
+    )
+    expect(collegeForCoach({ institution: "Pacific University", email: "coach@pacificu.edu" })).toBe(
+      "Pacific University",
     )
   })
 
@@ -35,7 +51,12 @@ describe("collegeForCoach", () => {
   it("spells out the abbreviations that do not read as a school", () => {
     // "Umo" would mean nothing to a family; the point is to name a program they recognise.
     expect(collegeForCoach({ email: "coach@umo.edu" })).toBe("University of Mount Olive")
-    expect(collegeForCoach({ email: "coach@bac.edu" })).toBe("Bluefield College")
+    // bac.edu is Belmont Abbey College. It was mapped to Bluefield, and three Belmont Abbey
+    // coaches had typed their school in, which hid the wrong name until the domain started winning.
+    expect(collegeForCoach({ email: "coach@bac.edu" })).toBe("Belmont Abbey")
+    expect(collegeForCoach({ institution: "Belmont Abbey College", email: "coach@bac.edu" })).toBe(
+      "Belmont Abbey",
+    )
   })
 
   it("handles a subdomain", () => {
