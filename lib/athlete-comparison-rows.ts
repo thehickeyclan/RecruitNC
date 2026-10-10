@@ -12,7 +12,7 @@
 import type { ScoutingReport, ScoutingReportResultRow } from "@/lib/scouting-report"
 import { competitionLine, stylesLine } from "@/lib/wrestling-style"
 import { accoladeLineWithRank } from "@/lib/significant-wins"
-import { isTeamBlindEvent } from "@/lib/strength-of-competition"
+import { countRankedWins, isTeamBlindEvent } from "@/lib/strength-of-competition"
 import type { ActivityStatus } from "@/lib/activity-status"
 
 export type ComparisonReport = Omit<ScoutingReport, "summary">
@@ -86,6 +86,67 @@ function addRecords(records: Array<string | null | undefined>): { wins: number; 
   return any ? { wins, losses } : null
 }
 
+/* ------------------------------------------------------------------ the 12-month window */
+
+/*
+ * Rows that count things compare the last 12 months, not careers.
+ *
+ * Career totals handed every cross-class comparison to the older wrestler: a senior has two more
+ * seasons on file than a sophomore, so "42 ranked wins to 18" measured age, not ability. Adam
+ * Walker (2029) beat Jekai Sedgwick (2027) in their latest meeting and still trailed on every
+ * count (Matt, 9 October 2026). The same 12 months decide the head to head
+ * (lib/athlete-comparison.ts), so the whole page now reads one window. Career figures stay on
+ * the page as context.
+ */
+const WINDOW_MS = 365 * 86_400_000
+
+function dayMs(raw: string | null | undefined): number | null {
+  const value = String(raw ?? "").trim()
+  if (!value) return null
+  const us = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  const iso = us ? `${us[3]}-${us[1]!.padStart(2, "0")}-${us[2]!.padStart(2, "0")}` : value.slice(0, 10)
+  const ms = Date.parse(`${iso}T12:00:00Z`)
+  return Number.isFinite(ms) ? ms : null
+}
+
+/** Annual events that publish only a year: roughly when each is held, so the row can be placed. */
+const USUAL_DAY: Array<[RegExp, string]> = [
+  [/state championships/i, "02-21"],
+  [/nhsca/i, "03-28"],
+  [/early entry/i, "09-05"],
+  [/super 32/i, "10-20"],
+  [/journeymen/i, "10-04"],
+  [/fargo/i, "07-15"],
+]
+
+function resultDayMs(row: ScoutingReportResultRow): number | null {
+  const exact = dayMs(row.date)
+  if (exact != null) return exact
+  if (!Number.isFinite(row.year)) return null
+  const usual = USUAL_DAY.find(([re]) => re.test(row.event))?.[1] ?? "06-30"
+  return dayMs(`${row.year}-${usual}`)
+}
+
+function inWindow(ms: number | null, now: Date): boolean {
+  return ms != null && ms <= now.getTime() + 86_400_000 && now.getTime() - ms <= WINDOW_MS
+}
+
+/** Ranked wins in the last 12 months, counted the way the career figure is. */
+export function recentRankedWins(report: ComparisonReport, now: Date) {
+  return countRankedWins(report.significantWins.filter((w) => inWindow(dayMs(w.date), now)))
+}
+
+/** Individual national events entered in the last 12 months. */
+function recentNationalEvents(report: ComparisonReport, now: Date): string[] {
+  const seen = new Set<string>()
+  for (const row of report.results) {
+    if (!isTeamBlindEvent(row.event) || /tournament of champions/i.test(row.event)) continue
+    if (!inWindow(resultDayMs(row), now)) continue
+    seen.add(`${row.event.replace(/\s*\(OF\)\s*$/i, "")} ${row.year}`)
+  }
+  return [...seen]
+}
+
 /* ------------------------------------------------------------------ competition */
 
 /**
@@ -96,25 +157,34 @@ export function individualNationalEvents(report: ComparisonReport): string[] {
   return report.competition.nationalEvents.filter((e) => isTeamBlindEvent(e) && !/tournament of champions/i.test(e))
 }
 
-function footprintRow(l: ComparisonReport, r: ComparisonReport): ComparisonRow {
-  const individual = individualNationalEvents
+function footprintRow(l: ComparisonReport, r: ComparisonReport, now: Date): ComparisonRow {
   // Individual events only: team duals are ingested for NC United squads and nobody else, so
   // counting them would rank our own wrestlers above identical ones from another club.
-  const ln = individual(l).length
-  const rn = individual(r).length
+  const lr = recentNationalEvents(l, now)
+  const rr = recentNationalEvents(r, now)
+  const ln = lr.length
+  const rn = rr.length
   const edge = higher(ln, rn)
+  const cell = (report: ComparisonReport, recent: string[]): ComparisonCell => ({
+    value: competitionLine(report.competition),
+    lines: [
+      `Last 12 months: ${recent.length ? recent.join(", ") : "no individual national event"}`,
+      `Career: ${individualNationalEvents(report).length} individual national events`,
+      `Styles: ${stylesLine(report.competition)}`,
+    ],
+  })
   return {
     key: "footprint",
     group: "competition",
     label: "National or NC only",
-    left: { value: competitionLine(l.competition), lines: [`Styles: ${stylesLine(l.competition)}`] },
-    right: { value: competitionLine(r.competition), lines: [`Styles: ${stylesLine(r.competition)}`] },
+    left: cell(l, lr),
+    right: cell(r, rr),
     edge,
     basis: edge
-      ? `More individual national events (${Math.max(ln, rn)} to ${Math.min(ln, rn)}); team duals not counted`
+      ? `More individual national events in the last 12 months (${Math.max(ln, rn)} to ${Math.min(ln, rn)}); team duals not counted`
       : ln === 0
-        ? "Neither has an individual national event on file"
-        : `Same number of individual national events (${ln})`,
+        ? "Neither entered an individual national event in the last 12 months"
+        : `Same number of individual national events in the last 12 months (${ln})`,
     defaultOn: true,
   }
 }
@@ -166,45 +236,49 @@ function stateRows(report: ComparisonReport): ScoutingReportResultRow[] {
   return report.results.filter((row) => row.event === "NCHSAA State Championships")
 }
 
+/*
+ * The most recent state tournament, not each wrestler's best ever: a senior's title two years
+ * ago against a sophomore's freshman-year finish is not a comparison. Both are read in the same
+ * year - the latest either of them wrestled at states - and the full history stays in the detail.
+ */
 function stateRow(l: ComparisonReport, r: ComparisonReport): ComparisonRow {
-  const cell = (report: ComparisonReport): ComparisonCell => {
+  const year = Math.max(0, ...stateRows(l).map((row) => row.year), ...stateRows(r).map((row) => row.year))
+  const entryIn = (report: ComparisonReport) => {
+    const rows = stateRows(report).filter((row) => row.year === year)
+    return rows.length ? [...rows].sort((a, b) => (a.place ?? 99) - (b.place ?? 99))[0]! : null
+  }
+  const le = year ? entryIn(l) : null
+  const re = year ? entryIn(r) : null
+  const cell = (report: ComparisonReport, entry: ScoutingReportResultRow | null): ComparisonCell => {
     const rows = stateRows(report)
     if (!rows.length) return { value: "No state tournament on file" }
-    const placed = rows.filter((row) => row.place != null)
-    const best = [...placed].sort((a, b) => a.place! - b.place! || b.year - a.year)[0]
     return {
-      value: best ? `${best.year} ${best.detail}` : `Qualified ${rows.length}×, did not place`,
+      value: entry ? `${entry.year} ${entry.detail}` : `Not at the ${year} state tournament`,
       lines: rows.map((row) => `${row.year} · ${row.detail}`),
     }
   }
-  const bestOf = (report: ComparisonReport) => {
-    const places = stateRows(report).map((row) => row.place).filter((p): p is number => p != null)
-    return places.length ? Math.min(...places) : null
-  }
-  const lb = bestOf(l)
-  const rb = bestOf(r)
-  let edge: RowEdge = lower(lb, rb)
+  const lp = le?.place ?? null
+  const rp = re?.place ?? null
+  let edge: RowEdge = lower(lp, rp)
   let basis: string
-  if (lb != null && rb == null) {
+  if (!year) {
+    basis = "Neither has a state tournament on file"
+  } else if (lp != null && rp == null) {
     edge = "left"
-    basis = `Only ${surname(l)} has placed at states`
-  } else if (rb != null && lb == null) {
+    basis = re ? `Only ${surname(l)} placed at the ${year} state tournament` : `Only ${surname(l)} wrestled at the ${year} state tournament`
+  } else if (rp != null && lp == null) {
     edge = "right"
-    basis = `Only ${surname(r)} has placed at states`
+    basis = le ? `Only ${surname(r)} placed at the ${year} state tournament` : `Only ${surname(r)} wrestled at the ${year} state tournament`
   } else if (edge) {
-    basis = `Best finish: ${ordinal(Math.min(lb!, rb!))} against ${ordinal(Math.max(lb!, rb!))}`
+    basis = `${year} state tournament: ${ordinal(Math.min(lp!, rp!))} against ${ordinal(Math.max(lp!, rp!))}`
   } else {
-    basis = lb == null ? "Neither has placed at states" : `Same best finish (${ordinal(lb)})`
+    basis = lp == null ? `Neither placed at the ${year} state tournament` : `Same ${year} finish (${ordinal(lp)})`
   }
   // A 1A title and a 4A title are different things; the coach should see that next to the edge.
-  const classOf = (report: ComparisonReport) => {
-    const best = stateRows(report).filter((row) => row.place != null).sort((a, b) => a.place! - b.place!)[0]
-    return best ? best.detail.split(" · ")[0] : null
-  }
-  const lc = classOf(l)
-  const rc = classOf(r)
+  const lc = le?.place != null ? le.detail.split(" · ")[0] : null
+  const rc = re?.place != null ? re.detail.split(" · ")[0] : null
   if (lc && rc && lc !== rc) basis += ` (different classifications: ${lc} and ${rc})`
-  return { key: "state", group: "competition", label: "NC state placement", left: cell(l), right: cell(r), edge, basis, defaultOn: true }
+  return { key: "state", group: "competition", label: "NC state placement", left: cell(l, le), right: cell(r, re), edge, basis, defaultOn: true }
 }
 
 function winLine(win: ComparisonReport["significantWins"][number]): string {
@@ -218,14 +292,15 @@ function winLine(win: ComparisonReport["significantWins"][number]): string {
     .join(" — ")
 }
 
-function strengthRow(l: ComparisonReport, r: ComparisonReport): ComparisonRow {
+function strengthRow(l: ComparisonReport, r: ComparisonReport, now: Date): ComparisonRow {
   const cell = (report: ComparisonReport): ComparisonCell => {
     const s = report.strengthOfCompetition
-    const w = s.rankedWins
+    const w = recentRankedWins(report, now)
     const value = w.total
-      ? `${w.total} ranked ${w.total === 1 ? "win" : "wins"}${w.national ? ` · ${w.national} over nationally ranked` : ""}`
-      : "No wins over ranked opponents on file"
+      ? `${w.total} ranked ${w.total === 1 ? "win" : "wins"} in 12 months${w.national ? ` · ${w.national} over nationally ranked` : ""}`
+      : "No ranked wins in the last 12 months"
     const lines = [
+      `Career: ${s.rankedWins.total} ranked ${s.rankedWins.total === 1 ? "win" : "wins"}${s.rankedWins.national ? `, ${s.rankedWins.national} over nationally ranked` : ""}`,
       `Grade: ${s.grade.label}`,
       ...report.significantWins.slice(0, 10).map((win) => `Beat ${winLine(win)}`),
       ...report.significantLosses.slice(0, 5).map((loss) => `Lost to ${winLine(loss)}`),
@@ -239,18 +314,17 @@ function strengthRow(l: ComparisonReport, r: ComparisonReport): ComparisonRow {
     if (s.recordsBeginYear) lines.push(`Records on file from ${s.recordsBeginYear}`)
     return { value, lines }
   }
-  const lw = l.strengthOfCompetition.rankedWins
-  const rw = r.strengthOfCompetition.rankedWins
+  const lw = recentRankedWins(l, now)
+  const rw = recentRankedWins(r, now)
   let edge = higher(lw.national, rw.national)
   let basis: string
   if (edge) {
-    basis = `More wins over nationally ranked opponents (${Math.max(lw.national, rw.national)} to ${Math.min(lw.national, rw.national)})`
+    basis = `More wins over nationally ranked opponents in the last 12 months (${Math.max(lw.national, rw.national)} to ${Math.min(lw.national, rw.national)})`
   } else if ((edge = higher(lw.total, rw.total))) {
-    basis = `More wins over ranked opponents (${Math.max(lw.total, rw.total)} to ${Math.min(lw.total, rw.total)})`
-  } else if ((edge = higher(l.strengthOfCompetition.grade.score, r.strengthOfCompetition.grade.score))) {
-    basis = "Same ranked wins; tougher competitive footprint (grade)"
+    basis = `More wins over ranked opponents in the last 12 months (${Math.max(lw.total, rw.total)} to ${Math.min(lw.total, rw.total)})`
   } else {
-    basis = lw.total ? `Same ranked wins (${lw.total})` : "Neither has a win over a ranked opponent on file"
+    // The grade is a career reading, so it no longer breaks a tie on a 12-month row.
+    basis = lw.total ? `Same ranked wins in the last 12 months (${lw.total})` : "Neither has a ranked win in the last 12 months"
   }
   return { key: "strength", group: "competition", label: "Strength of opponents", left: cell(l), right: cell(r), edge, basis, defaultOn: true }
 }
@@ -531,6 +605,20 @@ function academicRow(
 
 /* ------------------------------------------------------------------ profile */
 
+/** Class, with a warning when the two are in different classes: the older one has more on file. */
+function classRow(l: ComparisonReport, r: ComparisonReport): ComparisonRow {
+  const base = profileRow("class", "Class", (x) => (x.identity.graduationYear ? String(x.identity.graduationYear) : null), l, r)
+  const ly = l.identity.graduationYear
+  const ry = r.identity.graduationYear
+  if (!ly || !ry || ly === ry) return base
+  const gap = Math.abs(ly - ry)
+  const younger = ly > ry ? l : r
+  return {
+    ...base,
+    basis: `${surname(younger)} is ${gap === 1 ? "a year" : `${gap === 2 ? "two" : gap === 3 ? "three" : gap} years`} younger. Counted rows use the last 12 months so a longer career is not read as a better one.`,
+  }
+}
+
 function profileRow(key: string, label: string, pick: (report: ComparisonReport) => string | null, l: ComparisonReport, r: ComparisonReport): ComparisonRow {
   return {
     key,
@@ -569,17 +657,18 @@ function activityRow(left: ActivityStatus | null, right: ActivityStatus | null):
 export function buildComparisonRows(
   left: ComparisonReport,
   right: ComparisonReport,
-  options: { personal: boolean; activity?: { left: ActivityStatus | null; right: ActivityStatus | null } },
+  options: { personal: boolean; activity?: { left: ActivityStatus | null; right: ActivityStatus | null }; now?: Date },
 ): ComparisonRow[] {
   const { personal } = options
+  const now = options.now ?? new Date()
   return [
-    profileRow("class", "Class", (x) => (x.identity.graduationYear ? String(x.identity.graduationYear) : null), left, right),
+    classRow(left, right),
     profileRow("school", "School", (x) => x.identity.highSchool, left, right),
     profileRow("club", "Club", (x) => x.identity.club, left, right),
     profileRow("status", "Recruiting status", (x) => (x.commitment ? `Committed: ${x.commitment}` : x.recruitingStatus), left, right),
 
-    footprintRow(left, right),
-    strengthRow(left, right),
+    footprintRow(left, right, now),
+    strengthRow(left, right, now),
     stateRow(left, right),
     weightRow(left, right),
     ...(options.activity ? [activityRow(options.activity.left, options.activity.right)] : []),
@@ -668,8 +757,9 @@ export type BestWin = {
 export type BestWinsSection = {
   left: BestWin[]
   right: BestWin[]
-  leftCounts: { total: number; national: number }
-  rightCounts: { total: number; national: number }
+  /** Ranked wins in the last 12 months, with the career total beside them for context. */
+  leftCounts: { total: number; national: number; careerTotal: number }
+  rightCounts: { total: number; national: number; careerTotal: number }
   edge: RowEdge
   summary: string
 }
@@ -817,16 +907,19 @@ function bestWinsOf(report: ComparisonReport, limit: number): BestWin[] {
     }))
 }
 
-export function buildBestWinsSection(l: ComparisonReport, r: ComparisonReport, limit = 6): BestWinsSection {
+export function buildBestWinsSection(l: ComparisonReport, r: ComparisonReport, limit = 6, now: Date = new Date()): BestWinsSection {
   // The edge and its reason are the strength-of-opponents row's, so the two never disagree.
-  const row = strengthRow(l, r)
-  const lc = l.strengthOfCompetition.rankedWins
-  const rc = r.strengthOfCompetition.rankedWins
+  const row = strengthRow(l, r, now)
+  const counts = (report: ComparisonReport) => {
+    const recent = recentRankedWins(report, now)
+    const career = report.strengthOfCompetition.rankedWins
+    return { total: recent.total, national: recent.national, careerTotal: career.total }
+  }
   return {
     left: bestWinsOf(l, limit),
     right: bestWinsOf(r, limit),
-    leftCounts: { total: lc.total, national: lc.national },
-    rightCounts: { total: rc.total, national: rc.national },
+    leftCounts: counts(l),
+    rightCounts: counts(r),
     edge: row.edge,
     summary: row.edge
       ? `${surname(row.edge === "left" ? l : r)} has the better wins: ${row.basis!.charAt(0).toLowerCase()}${row.basis!.slice(1)}.`
@@ -834,10 +927,10 @@ export function buildBestWinsSection(l: ComparisonReport, r: ComparisonReport, l
   }
 }
 
-export function buildComparisonSections(l: ComparisonReport, r: ComparisonReport): ComparisonSections {
+export function buildComparisonSections(l: ComparisonReport, r: ComparisonReport, now: Date = new Date()): ComparisonSections {
   return {
     national: buildNationalSection(l, r),
     freestyle: buildFreestyleSection(l, r),
-    bestWins: buildBestWinsSection(l, r),
+    bestWins: buildBestWinsSection(l, r, 6, now),
   }
 }

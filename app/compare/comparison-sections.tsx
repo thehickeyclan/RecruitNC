@@ -89,8 +89,9 @@ function BestWins({ s, leftName, rightName }: { s: BestWinsSection; leftName: st
         ] as const).map(([side, name, wins, counts]) => (
           <Column key={side} name={name} edge={s.edge} side={side}>
             <p className="mb-2 text-[11px] text-white/50">
-              {counts.total} ranked {counts.total === 1 ? "win" : "wins"}
+              {counts.total} ranked {counts.total === 1 ? "win" : "wins"} in the last 12 months
               {counts.national ? ` · ${counts.national} over nationally ranked` : ""}
+              {` · ${counts.careerTotal} career`}
             </p>
             {wins.length ? <ul className="space-y-2">{wins.map((w, i) => <WinItem key={i} win={w} />)}</ul> : <Empty>No win over a ranked or placing opponent on file.</Empty>}
           </Column>

@@ -18,6 +18,7 @@ function report(over: {
   sat?: string | null
   rank?: number | null
   nationalEvents?: string[]
+  wins?: Array<{ reason: string; date: string }>
 }): ComparisonReport {
   return {
     athleteId: over.name,
@@ -33,7 +34,7 @@ function report(over: {
     careerRecord: null,
     competition: { scope: over.nationalEvents?.length ? "national" : "in-state", nationalEvents: over.nationalEvents ?? [], styles: ["folkstyle"] },
     results: over.results ?? [],
-    significantWins: [],
+    significantWins: (over.wins ?? []).map((w, i) => ({ opponent: `Opp ${i}`, opponentSchool: null, event: "Event", result: "Dec 3-1", weight: 150, ...w })),
     significantLosses: [],
     reportedWins: [],
     seasonStrength: null,
@@ -58,7 +59,7 @@ function report(over: {
     starRating: null,
     accessTier: "full",
     watermark: null,
-  } as ComparisonReport
+  } as unknown as ComparisonReport
 }
 
 const state = (year: number, place: number | null, cls = "4A"): ScoutingReportResultRow => ({
@@ -69,6 +70,8 @@ const nhsca = (year: number, place: number | null, record: string): ScoutingRepo
   event: "NHSCA Nationals", year, date: null, weight: "150", place, record, detail: "",
 })
 const row = (rows: ComparisonRow[], key: string) => rows.find((r) => r.key === key)!
+const NOW = new Date("2026-10-09T12:00:00Z")
+const wins = (n: number, reason: string, date: string) => Array.from({ length: n }, () => ({ reason, date }))
 
 describe("placeNumber", () => {
   it("reads the national tables' display text", () => {
@@ -102,11 +105,47 @@ describe("comparison rows", () => {
 
   it("leads strength of opponents with nationally ranked wins", () => {
     const rows = buildComparisonRows(
-      report({ name: "Al Left", rankedWins: { national: 2, tocField: 0, stateRanked: 1, total: 3 } }),
-      report({ name: "Bo Right", rankedWins: { national: 0, tocField: 2, stateRanked: 6, total: 8 } }),
-      { personal: true },
+      report({ name: "Al Left", wins: [...wins(2, "national-ranked", "2026-03-28"), ...wins(1, "ranked", "2026-01-10")] }),
+      report({ name: "Bo Right", wins: [...wins(2, "toc-field", "2026-09-18"), ...wins(6, "ranked", "2026-02-01")] }),
+      { personal: true, now: NOW },
     )
     expect(row(rows, "strength").edge).toBe("left")
+  })
+
+  it("counts ranked wins over the last 12 months, not a career", () => {
+    // The senior has more career wins; the sophomore has more this year.
+    const senior = report({ name: "Jay Senior", grad: 2027, wins: [...wins(30, "ranked", "12/15/2024"), ...wins(5, "ranked", "1/20/2026")] })
+    const soph = report({ name: "Al Soph", grad: 2029, wins: wins(9, "ranked", "11/22/2025") })
+    const strength = row(buildComparisonRows(soph, senior, { personal: true, now: NOW }), "strength")
+    expect(strength.edge).toBe("left")
+    expect(strength.basis).toBe("More wins over ranked opponents in the last 12 months (9 to 5)")
+    expect(strength.right.lines?.[0]).toBe("Career: 0 ranked wins")
+  })
+
+  it("compares the latest state tournament, not each wrestler's best ever", () => {
+    const rows = buildComparisonRows(
+      report({ name: "Al Left", results: [state(2024, 1), state(2026, 4)] }),
+      report({ name: "Bo Right", results: [state(2026, 2)] }),
+      { personal: true, now: NOW },
+    )
+    expect(row(rows, "state").edge).toBe("right")
+    expect(row(rows, "state").basis).toBe("2026 state tournament: 2nd against 4th")
+  })
+
+  it("counts national events entered in the last 12 months", () => {
+    const rows = buildComparisonRows(
+      report({ name: "Al Left", results: [nhsca(2026, null, "3-2")] }),
+      report({ name: "Bo Right", results: [nhsca(2024, null, "2-2"), nhsca(2025, null, "1-2")] }),
+      { personal: true, now: NOW },
+    )
+    expect(row(rows, "footprint").edge).toBe("left")
+  })
+
+  it("says which wrestler is younger when the classes differ", () => {
+    const rows = buildComparisonRows(report({ name: "Al Soph", grad: 2029 }), report({ name: "Jay Senior", grad: 2027 }), { personal: true, now: NOW })
+    expect(row(rows, "class").basis).toMatch(/^Soph is two years younger\./)
+    const same = buildComparisonRows(report({ name: "A B", grad: 2027 }), report({ name: "C D", grad: 2027 }), { personal: true })
+    expect(row(same, "class").basis).toBeNull()
   })
 
   it("offers a tournament row only when somebody entered, and gives no edge for not entering", () => {
@@ -242,10 +281,10 @@ describe("freestyle section", () => {
 
 describe("best wins section", () => {
   it("agrees with the strength-of-opponents row", () => {
-    const l = report({ name: "Al Left", rankedWins: { national: 2, tocField: 0, stateRanked: 1, total: 3 } })
-    const r = report({ name: "Bo Right", rankedWins: { national: 0, tocField: 2, stateRanked: 6, total: 8 } })
-    const s = buildBestWinsSection(l, r)
-    expect(s.edge).toBe(row(buildComparisonRows(l, r, { personal: true }), "strength").edge)
-    expect(s.summary).toMatch(/^Left has the better wins: more wins over nationally ranked opponents \(2 to 0\)\.$/)
+    const l = report({ name: "Al Left", wins: [...wins(2, "national-ranked", "2026-03-28"), ...wins(1, "ranked", "2026-01-10")] })
+    const r = report({ name: "Bo Right", wins: [...wins(2, "toc-field", "2026-09-18"), ...wins(6, "ranked", "2026-02-01")] })
+    const s = buildBestWinsSection(l, r, 6, NOW)
+    expect(s.edge).toBe(row(buildComparisonRows(l, r, { personal: true, now: NOW }), "strength").edge)
+    expect(s.summary).toMatch(/^Left has the better wins: more wins over nationally ranked opponents in the last 12 months \(2 to 0\)\.$/)
   })
 })
