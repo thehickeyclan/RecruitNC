@@ -7,6 +7,7 @@ import { yearFilterToApiParams } from "@/lib/prospects-directory"
 import { currentClassYears } from "@/lib/class-years"
 import { highestAchievement, type AchievementFacts } from "@/lib/prospect-achievements"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
+import { useCoachMode } from "@/hooks/use-coach-mode"
 import { useAuth } from "@/contexts/auth-context"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
@@ -111,6 +112,7 @@ export default function ProspectsAllClient({
    * directory without the numbers, which is still a useful page.
    */
   const { isAdmin, isVerifiedCoach, profile: viewerProfile } = useAuth()
+  const { actsAsCoach } = useCoachMode()
   const [isBlueMember, setIsBlueMember] = useState(false)
   useEffect(() => {
     let cancelled = false
@@ -1187,12 +1189,15 @@ export default function ProspectsAllClient({
               <div className="overflow-x-auto px-2 pb-6">
                 {/* The page is bg-[#0A1628]; the table defaults to light and was rendering a
                     white body under a navy header. */}
+                {/* A coach reads this for the ranked wrestlers, and only 75 of ~575 carry a rank; A-Z
+                    opened on a screen of dashes. The key re-seats the table once the role is known. */}
                 <RankingsTableView
+                  key={actsAsCoach ? "by-rank" : "by-name"}
                   athletes={tableAthletes}
                   theme="dark"
                   hideRankColumn={false}
                   showRankColumn={true}
-                  defaultSortField="name"
+                  defaultSortField={actsAsCoach ? "rank" : "name"}
                   defaultSortDirection="asc"
                   additionalDividerLabel=""
                   dividerAfterRank={0}

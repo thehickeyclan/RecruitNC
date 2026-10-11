@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { ACTIVITY_TYPE_LABELS, applyActivityEffects, getDefaultActivityDescription } from "./activity-helpers"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { normalizeStage } from "@/lib/recruiting/pipeline"
+import { setProgramStage } from "@/lib/recruiting/program-stage"
 
 export async function GET(request: Request) {
   try {
@@ -299,6 +302,12 @@ export async function POST(request: Request) {
     console.log("[v0] Activity created successfully:", data)
 
     const effects = await applyActivityEffects(supabase, targetCoachId, athleteId, actionType, timestamp)
+    // A first call or a visit moves the wrestler along the funnel; the stage is the program's, so the whole staff moves with it.
+    if (effects?.pipeline_stage) {
+      await setProgramStage(createAdminClient(), targetCoachId, athleteId, normalizeStage(effects.pipeline_stage)).catch((e) =>
+        console.error("[activities] program stage sync failed:", e),
+      )
+    }
 
     const activityWithCoach = {
       ...data,

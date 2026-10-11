@@ -11,16 +11,17 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { AlertTriangle, ArrowLeftRight, Check, FileText, Mail, MessageSquare, Search, Star, Trash2 } from "lucide-react"
+import { AlertTriangle, ArrowLeftRight, Check, FileText, Mail, MessageSquare, NotebookPen, Search, Star, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useCoachMode } from "@/hooks/use-coach-mode"
 import { PIPELINE_STAGES, type PipelineStage } from "@/lib/recruiting/pipeline"
 import type { MyRecruitRow } from "@/lib/my-recruits"
 import { CoachComposeDialog } from "@/components/coach-messages/coach-message-button"
 import { CoachMessagingIntro } from "@/components/coach-messages/coach-messaging-intro"
 import { CoachTabs } from "@/components/coach-tabs"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { FitBadge, type FitBadgeFlag } from "@/components/fit-badge"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/contexts/auth-context"
 
 type Payload = {
   recruits: MyRecruitRow[]
@@ -67,11 +68,11 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
    * Message. Also feeds the unread count on the Messages link.
    */
   const router = useRouter()
-  const { profile } = useAuth()
-  /** Only coaches write to wrestlers; staff and admins browsing the board get no Message button. */
-  const isCoach = String((profile as { role?: string | null } | null)?.role ?? "").toLowerCase().replace(/[\s-]+/g, "_") === "college_coach"
+  /** Coaches write to wrestlers. An admin viewing as a coach sees the button and is told why it will not send. */
+  const { actsAsCoach: isCoach, previewNotice } = useCoachMode()
   const [threads, setThreads] = useState<Map<string, ThreadState>>(new Map())
   const [composeFor, setComposeFor] = useState<MyRecruitRow | null>(null)
+  const [logFor, setLogFor] = useState<MyRecruitRow | null>(null)
   useEffect(() => {
     if (initialData) return
     fetch("/api/coach-messages", { credentials: "include" })
@@ -177,11 +178,6 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
               <Link href="/perfect-recruit" className="text-sm font-semibold text-[#D3B574] hover:underline">
                 {data?.hasStandard ? "Your perfect recruit" : "Set your perfect recruit"} →
               </Link>
-              {data?.schoolId ? (
-                <Link href={`/schools/${data.schoolId}/portal`} className="text-sm font-semibold text-[#D3B574] hover:underline">
-                  Calendar, notes and activity →
-                </Link>
-              ) : null}
             </div>
           </div>
 
@@ -289,6 +285,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                         </td>
                         <td className="px-2 py-3">
                           <StageSelect row={r} onChange={moveStage} />
+                          <LastContact row={r} className="mt-1.5" />
                         </td>
                         <td className="px-2 py-3 text-xs">
                           {r.committedTo ? (
@@ -304,7 +301,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                           <ReportLink row={r} />
                         </td>
                         <td className="px-2 py-3">
-                          <Actions row={r} removing={removing === r.athleteId} onRemove={remove} picked={picked.includes(r.athleteId)} onPick={pick} thread={threads.get(r.athleteId)} onMessage={isCoach ? onMessage : undefined} />
+                          <Actions row={r} removing={removing === r.athleteId} onRemove={remove} picked={picked.includes(r.athleteId)} onPick={pick} thread={threads.get(r.athleteId)} onMessage={isCoach ? onMessage : undefined} onLog={setLogFor} />
                         </td>
                       </tr>
                     ))}
@@ -349,12 +346,13 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                       <StageSelect row={r} onChange={moveStage} />
                       <ReportLink row={r} />
                     </div>
+                    <LastContact row={r} className="mt-2" />
                     <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-2">
                       <span className="text-[11px] text-white/45">
                         Added {dayLabel(r.starredAt)}
                         {r.starredBy !== "You" ? ` by ${r.starredBy}` : ""}
                       </span>
-                      <Actions row={r} removing={removing === r.athleteId} onRemove={remove} picked={picked.includes(r.athleteId)} onPick={pick} thread={threads.get(r.athleteId)} onMessage={isCoach ? onMessage : undefined} />
+                      <Actions row={r} removing={removing === r.athleteId} onRemove={remove} picked={picked.includes(r.athleteId)} onPick={pick} thread={threads.get(r.athleteId)} onMessage={isCoach ? onMessage : undefined} onLog={setLogFor} />
                     </div>
                   </li>
                 ))}
@@ -364,10 +362,21 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
           )}
         </div>
 
+        {logFor ? (
+          <LogActivityDialog
+            row={logFor}
+            onClose={() => setLogFor(null)}
+            onSaved={() => {
+              setLogFor(null)
+              void load()
+            }}
+          />
+        ) : null}
         {composeFor ? (
           <CoachComposeDialog
             athleteId={composeFor.athleteId}
             athleteName={composeFor.name}
+            blockedMessage={previewNotice}
             open
             onOpenChange={(o) => {
               if (!o) setComposeFor(null)
@@ -539,6 +548,121 @@ function StageSelect({ row, onChange }: { row: MyRecruitRow; onChange: (athleteI
   )
 }
 
+/** What a coach logs. The values are the ones recruiting_actions already holds (app/api/coach-portal/activities). */
+const ACTIVITY_TYPES = [
+  { value: "call", label: "Call" },
+  { value: "text", label: "Text" },
+  { value: "email", label: "Email" },
+  { value: "visit", label: "Campus visit" },
+  { value: "watched_live", label: "Watched live" },
+  { value: "prospect_camp", label: "Prospect camp" },
+  { value: "social_media", label: "Social media" },
+  { value: "letter", label: "Letter" },
+  { value: "other", label: "Other" },
+] as const
+const activityLabel = (type: string) => ACTIVITY_TYPES.find((t) => t.value === type)?.label ?? "Contact"
+const shortDay = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
+
+/** "Text · Oct 9 · follow up Oct 16", so the board says who has gone untouched without opening anyone. */
+function LastContact({ row, className }: { row: MyRecruitRow; className?: string }) {
+  const c = row.lastContact
+  if (!c) return <p className={cn("text-[11px] text-white/35", className)}>No contact logged</p>
+  const due = c.followUp ? c.followUp.slice(0, 10) <= new Date().toISOString().slice(0, 10) : false
+  return (
+    <p className={cn("text-[11px] leading-snug text-white/60", className)}>
+      {activityLabel(c.type)} · {shortDay(c.date)}
+      {c.by !== "You" ? ` · ${c.by}` : ""}
+      {c.followUp ? <span className={cn("block", due ? "font-semibold text-[#D3B574]" : "text-white/40")}>Follow up {shortDay(c.followUp)}</span> : null}
+    </p>
+  )
+}
+
+/**
+ * Log a contact from the board: what it was, when, a note, and an optional follow-up date. Saved
+ * to the program's activity log; a first contact or a visit also moves the wrestler along the
+ * funnel (activity-helpers.ts).
+ */
+function LogActivityDialog({ row, onClose, onSaved }: { row: MyRecruitRow; onClose: () => void; onSaved: () => void }) {
+  const today = new Date().toISOString().slice(0, 10)
+  const [type, setType] = useState<string>("call")
+  const [date, setDate] = useState(today)
+  const [note, setNote] = useState("")
+  const [followUp, setFollowUp] = useState("")
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const save = async () => {
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch("/api/coach-portal/activities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ athleteId: row.athleteId, actionType: type, actionDate: date, followUpDate: followUp || null, description: note }),
+      })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(body.error ?? "Could not save.")
+      onSaved()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const field = "mt-1 w-full rounded-lg border px-3 py-2 text-sm"
+  return (
+    <Dialog open onOpenChange={(o) => (!o ? onClose() : null)}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Log contact with {row.name}</DialogTitle>
+          <DialogDescription>Your whole staff sees this on the board.</DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-wrap gap-1.5">
+          {ACTIVITY_TYPES.map((t) => (
+            <button
+              key={t.value}
+              type="button"
+              onClick={() => setType(t.value)}
+              aria-pressed={type === t.value}
+              className={cn(
+                "min-h-[36px] rounded-full border px-3 text-xs font-semibold",
+                type === t.value ? "border-[#0A1628] bg-[#0A1628] text-white" : "text-muted-foreground hover:bg-muted",
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="text-xs font-semibold">
+            When
+            <input type="date" value={date} max={today} onChange={(e) => setDate(e.target.value)} className={field} />
+          </label>
+          <label className="text-xs font-semibold">
+            Follow up (optional)
+            <input type="date" value={followUp} min={today} onChange={(e) => setFollowUp(e.target.value)} className={field} />
+          </label>
+        </div>
+        <label className="text-xs font-semibold">
+          Note (optional)
+          <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} maxLength={2000} placeholder="What was said, what comes next" className={field} />
+        </label>
+        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={onClose} className="min-h-[40px] rounded-lg px-4 text-sm font-semibold text-muted-foreground">
+            Cancel
+          </button>
+          <button type="button" onClick={save} disabled={saving || !date} className="min-h-[40px] rounded-lg bg-[#0A1628] px-4 text-sm font-bold text-white disabled:opacity-50">
+            {saving ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 type ThreadState = { id: string; unread: boolean; yourTurn: boolean }
 
 function Actions({
@@ -549,6 +673,7 @@ function Actions({
   onPick,
   thread,
   onMessage,
+  onLog,
 }: {
   row: MyRecruitRow
   removing: boolean
@@ -557,9 +682,19 @@ function Actions({
   onPick: (id: string) => void
   thread?: ThreadState
   onMessage?: (row: MyRecruitRow) => void
+  onLog: (row: MyRecruitRow) => void
 }) {
   return (
     <div className="flex items-center gap-1.5">
+      <button
+        type="button"
+        onClick={() => onLog(row)}
+        title={`Log a call, text, email or visit with ${row.name}`}
+        className="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-white/20 px-2 py-1 text-xs font-semibold text-white/70 hover:border-[#D3B574]/60 hover:text-white"
+      >
+        <NotebookPen className="h-3 w-3" aria-hidden />
+        Log
+      </button>
       {onMessage ? (
       <button
         type="button"
@@ -572,8 +707,9 @@ function Actions({
             : "border-white/20 text-white/70 hover:border-[#D3B574]/60 hover:text-white",
         )}
       >
-        {thread ? <MessageSquare className="h-3 w-3" aria-hidden /> : <Mail className="h-3 w-3" aria-hidden />}
-        {thread ? (thread.yourTurn ? "Reply" : "Thread") : "Message"}
+        {thread ? <MessageSquare className="h-3.5 w-3.5" aria-hidden /> : <Mail className="h-3.5 w-3.5" aria-hidden />}
+        {/* An icon beside every wrestler; words only when there is a conversation to act on. */}
+        {thread ? (thread.yourTurn ? "Reply" : "Thread") : <span className="sr-only">Message</span>}
         {thread?.unread ? <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-[#D3B574]" aria-label="New reply" /> : null}
       </button>
       ) : null}
@@ -589,8 +725,9 @@ function Actions({
             : "border-white/20 text-white/70 hover:border-[#D3B574]/60 hover:text-white",
         )}
       >
-        {picked ? <Check className="h-3 w-3" aria-hidden /> : <ArrowLeftRight className="h-3 w-3" aria-hidden />}
-        Compare
+        {picked ? <Check className="h-3.5 w-3.5" aria-hidden /> : <ArrowLeftRight className="h-3.5 w-3.5" aria-hidden />}
+        <span className="sr-only md:hidden">Compare</span>
+        <span className="md:sr-only">Compare</span>
       </button>
       {row.mine ? (
         <button

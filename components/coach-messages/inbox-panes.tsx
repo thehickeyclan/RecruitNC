@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { ArrowLeft, MessageSquare, PenSquare, Search } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useAuth } from "@/contexts/auth-context"
+import { useCoachMode } from "@/hooks/use-coach-mode"
 import { RECRUITING_BRAND } from "@/lib/recruiting/brand"
 import { Conversation } from "@/components/coach-messages/conversation"
 import { CoachComposeDialog } from "@/components/coach-messages/coach-message-button"
@@ -20,11 +20,10 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
  * /inbox and /inbox/<id> both render this; the address follows the open conversation, so a
  * refresh or an email link lands on the same one.
  */
-type BoardWrestler = { id: string; name: string; highschool?: string | null; graduationyear?: number | string | null }
+type BoardWrestler = { athleteId: string }
 
 export function InboxPanes({ initialThreadId = null }: { initialThreadId?: string | null }) {
-  const { profile } = useAuth()
-  const coach = String((profile as { role?: string | null } | null)?.role ?? "").toLowerCase().replace(/[\s-]+/g, "_") === "college_coach"
+  const { actsAsCoach: coach, previewNotice } = useCoachMode()
   const [selectedId, setSelectedId] = useState<string | null>(initialThreadId)
   const [filter, setFilter] = useState<InboxFilter>("all")
   const [query, setQuery] = useState("")
@@ -144,6 +143,7 @@ export function InboxPanes({ initialThreadId = null }: { initialThreadId?: strin
         <NewMessage
           open={picking}
           onOpenChange={setPicking}
+          blockedMessage={previewNotice}
           onSent={(threadId) => {
             setPicking(false)
             setReloadKey((k) => k + 1)
@@ -156,33 +156,55 @@ export function InboxPanes({ initialThreadId = null }: { initialThreadId?: strin
 }
 
 /**
- * Start a conversation without leaving the inbox: pick a wrestler from your board, then write.
- * The board is the list because those are the wrestlers a coach is working; anyone else is one
- * tap from their profile.
+ * Start a conversation without leaving the inbox: search any wrestler, then write. The coach's
+ * own board is listed first, because those are the wrestlers a coach is working.
  */
-function NewMessage({ open, onOpenChange, onSent }: { open: boolean; onOpenChange: (open: boolean) => void; onSent: (threadId: string) => void }) {
-  const [board, setBoard] = useState<BoardWrestler[] | null>(null)
+type Recipient = { id: string; name: string; highschool: string | null; graduationyear: number | string | null; weightclass: string | null }
+
+function NewMessage({
+  open,
+  onOpenChange,
+  onSent,
+  blockedMessage = null,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSent: (threadId: string) => void
+  blockedMessage?: string | null
+}) {
+  const [all, setAll] = useState<Recipient[] | null>(null)
+  const [board, setBoard] = useState<Set<string>>(new Set())
   const [query, setQuery] = useState("")
-  const [target, setTarget] = useState<BoardWrestler | null>(null)
+  const [target, setTarget] = useState<Recipient | null>(null)
 
   useEffect(() => {
-    if (!open || board) return
-    fetch("/api/coaches/starred-athletes", { credentials: "include" })
+    if (!open || all) return
+    fetch("/api/coach-messages/recipients", { credentials: "include" })
       .then((r) => r.json())
-      .then((d) => setBoard(Array.isArray(d?.athletes) ? d.athletes : []))
-      .catch(() => setBoard([]))
-  }, [open, board])
+      .then((d) => setAll(Array.isArray(d?.athletes) ? d.athletes : []))
+      .catch(() => setAll([]))
+    fetch("/api/coaches/my-recruits", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setBoard(new Set(((d?.recruits ?? []) as BoardWrestler[]).map((r) => r.athleteId))))
+      .catch(() => {})
+  }, [open, all])
 
   const matches = useMemo(() => {
     const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
-    return (board ?? []).filter((a) => words.every((w) => `${a.name} ${a.highschool ?? ""}`.toLowerCase().includes(w)))
-  }, [board, query])
+    const hit = (a: Recipient) => words.every((w) => `${a.name} ${a.highschool ?? ""}`.toLowerCase().includes(w))
+    const rows = (all ?? []).filter(hit)
+    // The board first; with nothing typed, only the board, so the list opens short and useful.
+    const onBoard = rows.filter((a) => board.has(a.id))
+    const rest = words.length ? rows.filter((a) => !board.has(a.id)) : []
+    return [...onBoard, ...rest].slice(0, 40)
+  }, [all, board, query])
 
   if (target) {
     return (
       <CoachComposeDialog
         athleteId={target.id}
         athleteName={target.name}
+        blockedMessage={blockedMessage}
         open
         onOpenChange={(o) => {
           if (!o) setTarget(null)
@@ -200,32 +222,36 @@ function NewMessage({ open, onOpenChange, onSent }: { open: boolean; onOpenChang
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>New message</DialogTitle>
-          <DialogDescription>Pick a wrestler from your board. For anyone else, use the message button on their profile.</DialogDescription>
+          <DialogDescription>Search any wrestler by name or high school. Your board is listed first.</DialogDescription>
         </DialogHeader>
         <input
           type="search"
+          autoFocus
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Name or high school"
-          aria-label="Search your board"
+          aria-label="Search wrestlers"
           className="w-full rounded-lg border px-3 py-2 text-sm"
         />
         <div className="max-h-[50vh] overflow-y-auto">
-          {board === null ? (
-            <p className="py-4 text-sm text-muted-foreground">Loading your board…</p>
+          {all === null ? (
+            <p className="py-4 text-sm text-muted-foreground">Loading wrestlers…</p>
           ) : matches.length === 0 ? (
             <p className="py-4 text-sm text-muted-foreground">
-              {board.length ? "No one on your board matches." : "Your board is empty. Star a wrestler from Athletes or Rankings first."}
+              {query.trim() ? "No wrestler in the current classes matches that." : "Type a name or high school to find a wrestler."}
             </p>
           ) : (
             <ul className="divide-y">
               {matches.map((a) => (
                 <li key={a.id}>
-                  <button type="button" onClick={() => setTarget(a)} className="flex min-h-[48px] w-full flex-col justify-center px-1 py-2 text-left hover:bg-muted/60">
-                    <span className="text-sm font-semibold">{a.name}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {[a.graduationyear ? `Class of ${a.graduationyear}` : null, a.highschool].filter(Boolean).join(" · ")}
+                  <button type="button" onClick={() => setTarget(a)} className="flex min-h-[48px] w-full items-center justify-between gap-3 px-1 py-2 text-left hover:bg-muted/60">
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold">{a.name}</span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {[a.graduationyear ? `Class of ${a.graduationyear}` : null, a.weightclass ? `${a.weightclass} lbs` : null, a.highschool].filter(Boolean).join(" · ")}
+                      </span>
                     </span>
+                    {board.has(a.id) ? <span className="shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">On your board</span> : null}
                   </button>
                 </li>
               ))}

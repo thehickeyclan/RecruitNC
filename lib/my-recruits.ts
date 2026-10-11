@@ -29,6 +29,8 @@ export type MyRecruitRow = {
   starredBy: string
   /** Only the viewer's own stars can be removed from here. */
   mine: boolean
+  /** The staff's most recent logged contact with him (recruiting_actions), and any follow-up set on it. */
+  lastContact: { type: string; date: string; by: string; followUp: string | null } | null
   /** Where the program has him in the funnel - one stage for the whole staff (lib/recruiting/program-stage.ts). */
   stage: PipelineStage
   /** Whether a scouting report exists for this wrestler — the profile button's rule, so a coach never clicks into "unavailable". */
@@ -103,6 +105,23 @@ export async function loadMyRecruits(admin: ReturnType<typeof createAdminClient>
       ...((extra ?? []) as unknown as Res[]).map((r) => ({ ...r, athlete_id: owner.get(r.id) ?? r.athlete_id })),
     ]
   }
+  const { data: actions } = await admin
+    .from("recruiting_actions")
+    .select("athlete_id, coach_user_id, action_type, action_date, follow_up_date")
+    .in("coach_user_id", staff.map((s) => s.user_id))
+    .in("athlete_id", ids)
+    .order("action_date", { ascending: false })
+  const lastContact = new Map<string, NonNullable<MyRecruitRow["lastContact"]>>()
+  for (const a of actions ?? []) {
+    if (lastContact.has(a.athlete_id)) continue
+    lastContact.set(a.athlete_id, {
+      type: String(a.action_type ?? "other"),
+      date: String(a.action_date),
+      by: staffName.get(a.coach_user_id) ?? "Staff",
+      followUp: (a.follow_up_date as string | null) ?? null,
+    })
+  }
+
   const [{ data: athletes }, state, nhsca, s32, { viewer }] = await Promise.all([
     admin.from("athletes").select("id, name, wrestling_name, photourl, gender, graduationyear, weightclass, highschool, wrestlingClub, college, recruiting_status, prospect_ranking").in("id", ids),
     linked("wrestling_nchsaa_results", "year, place, classification"),
@@ -155,6 +174,7 @@ export async function loadMyRecruits(admin: ReturnType<typeof createAdminClient>
       starredBy: star.starredBy,
       mine: star.mine,
       stage: stages.get(id) ?? "Prospect",
+      lastContact: lastContact.get(id) ?? null,
       hasReport: scoutingReportAvailable(a),
       reportUnavailable: scoutingReportAvailable(a) ? null : String(a.gender ?? "").trim().toLowerCase() === "female" ? "girls" : "graduated",
       activity: activity.get(id) ?? null,
