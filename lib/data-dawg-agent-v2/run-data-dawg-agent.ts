@@ -18,6 +18,8 @@ import {
 } from "@/lib/data-dawg-linkify-entities"
 import { DATA_DAWG_AGENT_V2_SYSTEM } from "./system-prompt"
 import { appendWebBackground, frameWebAnswer, type WebWrestlerFindings } from "@/lib/data-dawg-web-search"
+import { bestWinsWritingNotes, isBestWinsQuestion, loadBestWins } from "@/lib/data-dawg-best-wins"
+import { getSupabaseAdmin } from "@/lib/server-supabase"
 import { answerCoachViewsQuestion, isCoachViewsQuestion } from "@/lib/data-dawg-coach-views-answer"
 import {
   answerNextBluePractice,
@@ -299,16 +301,33 @@ export async function runDataDawgAgentV2(params: {
     // History too, so a follow-up stays on the wrestler the last turn established.
     const athleteFast = groundingFacts ? null : await tryAthleteNameFastPath(params.message, params.conversationHistory)
     if (athleteFast) {
+      // Who he beat is not in the dossier; asked for his best wins, fetch the profile's own list.
+      if (athleteFast.kind === "directory" && athleteFast.athleteId && isBestWinsQuestion(params.message)) {
+        const facts = athleteFast.facts as { class_of?: number | null; writing_notes?: string[]; [k: string]: unknown }
+        try {
+          const best = await loadBestWins(getSupabaseAdmin(), athleteFast.athleteId, facts.class_of ?? null)
+          facts.significant_wins = best.wins
+          facts.writing_notes = [...bestWinsWritingNotes(best.total, best.wins.length), ...(facts.writing_notes ?? [])]
+          groundedQueryType = "athlete_facts_best_wins"
+        } catch (e) {
+          // An unloaded list must not read as an empty one.
+          console.warn("[RecruitNC] best wins lookup failed:", e instanceof Error ? e.message : e)
+          facts.writing_notes = [
+            "The question is about his best wins and our list of them could not be loaded just now. Say you could not check his wins right now and to try again; do NOT say he has none.",
+            ...(facts.writing_notes ?? []),
+          ]
+        }
+      }
       groundingFacts = JSON.stringify(athleteFast.facts)
       groundedEntities = linkableEntitiesFromFacts(athleteFast.facts)
-      groundedQueryType =
-        athleteFast.kind === "directory"
+      groundedQueryType = groundedQueryType ??
+        (athleteFast.kind === "directory"
           ? "athlete_facts_directory"
           : athleteFast.kind === "unprofiled"
             ? "athlete_facts_unprofiled"
             : athleteFast.kind === "web"
               ? "athlete_facts_web"
-              : "athlete_facts_historical"
+              : "athlete_facts_historical")
       // Kept out of the model's hands: the label and the sources are applied to its answer below.
       if (athleteFast.kind === "web") webSources = athleteFast.sources ?? []
       webBackground = athleteFast.webBackground ?? null

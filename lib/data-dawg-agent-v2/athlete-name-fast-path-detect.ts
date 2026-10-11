@@ -27,9 +27,14 @@ export function foldAthleteLookupNameLoose(s: string): string {
   return foldAthleteLookupName(s).replace(/'/g, "")
 }
 
+const THIRD_PERSON_RE = /\b(he|him|his|she|her|hers|they|them|their)\b/i
+
 export function isLikelyAthleteNameLookup(message: string): boolean {
   const raw = (message ?? "").trim()
   if (raw.length < 3 || raw.length > 80) return false
+  // "What major wins does he have" is a question about the last wrestler, not a wrestler called
+  // "major wins he" - which is what it was searched as, found nobody, and went to the web.
+  if (THIRD_PERSON_RE.test(raw)) return false
   if (isLikelySchoolWrestlingLookup(raw)) return false
   if (LOOKUP_TOPIC_BLOCK.test(raw)) return false
   const phrase = extractSearchablePhrase(raw) || stripConversationalNoise(raw)
