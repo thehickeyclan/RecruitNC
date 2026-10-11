@@ -34,6 +34,18 @@ describe("best wins of the last 12 months", () => {
     expect(out.map((w) => w.opponent)).toEqual(["Kept"])
   })
 
+  it("puts a national champion above a state champion, and other national placers below", () => {
+    const out = bestWinsLast12Months(
+      [
+        win("State Champ", "state-champion", "2026-09-01", "2x State Champion (2026 NCHSAA 6A)"),
+        win("National Champ", "national-placer", "2026-03-01", "2025 NHSCA Champion (113)"),
+        win("All American", "national-placer", "2026-09-10", "2026 NHSCA 5th (120)"),
+      ],
+      NOW,
+    )
+    expect(out.map((w) => w.opponent)).toEqual(["National Champ", "State Champ", "All American"])
+  })
+
   it("lists an opponent once", () => {
     const out = bestWinsLast12Months([win("Same Kid", "state-champion", "2026-09-01"), win("same kid", "state-champion", "2026-03-01")], NOW)
     expect(out).toHaveLength(1)

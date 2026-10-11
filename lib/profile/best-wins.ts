@@ -8,8 +8,9 @@
  * lib/significant-wins.ts checks against the opponent's school, state or weight. A win credited
  * on a North Carolina ranking alone is matched by name only, and stays in the full list below.
  *
- * Ordered by what the opponent is, then by date: nationally ranked, state champions,
- * All-Americans and national placers, state placers.
+ * Ordered by what the opponent is, then by date: nationally ranked, national champions, state
+ * champions, other national placers, state placers. A national title outranks a state title
+ * (Matt, 11 October 2026: an NHSCA champion had been listed under a two-time NC champion).
  */
 
 export type BestWinInput = {
@@ -26,7 +27,9 @@ export type BestWinInput = {
 
 export type BestWin = { opponent: string; accolade: string; detail: string }
 
-const TIER: Record<string, number> = { "national-ranked": 0, "state-champion": 1, "national-placer": 2, "state-placer": 3 }
+const TIER: Record<string, number> = { "national-ranked": 0, "state-champion": 2, "national-placer": 3, "state-placer": 4 }
+/** A national placing that is a title: "2025 NHSCA Champion (113)". */
+const tierOf = (win: BestWinInput, accolade: string) => (win.reason === "national-placer" && /champion/i.test(accolade) ? 1 : TIER[win.reason]!)
 
 function dayMs(raw: string | null | undefined): number | null {
   const v = String(raw ?? "").trim()
@@ -48,7 +51,7 @@ export function bestWinsLast12Months(wins: readonly BestWinInput[], now: Date = 
   }
   const seen = new Set<string>()
   return eligible
-    .sort((a, b) => TIER[a.win.reason]! - TIER[b.win.reason]! || b.ms - a.ms)
+    .sort((a, b) => tierOf(a.win, a.accolade) - tierOf(b.win, b.accolade) || b.ms - a.ms)
     // One line per opponent: beating the same wrestler twice is one name on a list of three.
     .filter(({ win }) => {
       const key = win.opponent.trim().toLowerCase()
