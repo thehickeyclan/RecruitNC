@@ -18,13 +18,16 @@ import {
   type BannerStat,
 } from "@/components/profile/profile-banner-parts"
 import { ProfileRow } from "@/components/profile/profile-row"
+import { AppNotableLosses, AppRow, AppSignificantWins, AppTournamentResults, useAppProfile } from "@/components/profile/app-profile-rows"
+import { SignificantWinSubmissionDialog } from "@/components/significant-win-submission-dialog"
+import { TournamentResultSubmissionDialog } from "@/components/tournament-result-submission-dialog"
 import { ProfileFitFlag } from "@/components/profile/profile-fit-flag"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowLeftRight, Award, BarChart3, Camera, ChevronDown, Edit, ExternalLink, Eye, FileText, GraduationCap, ListOrdered, Mail, Pencil, Phone, Scale, School, Share2, TrendingUp, Trophy, UserRound, Video } from "lucide-react"
+import { ArrowLeftRight, Award, BarChart3, Camera, Check, ChevronDown, MessageSquare, Edit, ExternalLink, Eye, FileText, GraduationCap, ListOrdered, Mail, Pencil, Phone, Scale, School, Share2, TrendingUp, Trophy, UserRound, Video } from "lucide-react"
 import { UnifiedProfileMobileNav } from "./unified-profile-mobile-nav"
 import type { ProfileQualityWinsTournamentBlock } from "@/lib/profile-quality-wins"
 import {
@@ -81,17 +84,20 @@ const SHOW_ATHLETE_BIO_SECTION = true
  * header and the sections it opens share one `order`, so the sections sit directly under it
  * wherever they are written in this file.
  */
-type RowKey = "views" | "results" | "wins" | "season" | "academics" | "contact" | "film" | "about" | "compare"
+type RowKey = "views" | "results" | "wins" | "losses" | "scouting" | "season" | "academics" | "contact" | "film" | "about" | "compare"
 const ROW_ORDER: Record<RowKey, string> = {
-  views: "order-[3]",
+  // The app's order first; the website's extra rows after it.
   results: "order-[5]",
   wins: "order-[6]",
-  season: "order-[7]",
+  losses: "order-[7]",
   academics: "order-[9]",
   contact: "order-[10]",
-  film: "order-[11]",
-  about: "order-[12]",
-  compare: "order-[13]",
+  views: "order-[11]",
+  scouting: "order-[12]",
+  season: "order-[13]",
+  film: "order-[14]",
+  about: "order-[15]",
+  compare: "order-[16]",
 }
 /** Which row holds the section an edit button opens. */
 const EDIT_SECTION_ROW: Record<string, RowKey> = {
@@ -297,8 +303,10 @@ export function AthleteDetail({
    */
   const inRow = (key: RowKey) =>
     cn("-mt-2.5 rounded-none border-x border-b border-t-0 border-[#1a3a5f] bg-[#0f1c2e] p-3 shadow-none last:rounded-b-xl", ROW_ORDER[key], !openRows.has(key) && "hidden")
-  /** What the wins list found, for the row's line (components/significant-wins-section.tsx). */
-  const [winsInfo, setWinsInfo] = useState<{ total: number; top: string | null; losses: number } | null>(null)
+  /** Tournaments, wins and losses as the iPhone app reads them (components/profile/app-profile-rows). */
+  const appData = useAppProfile(String(athlete.id))
+  /** The owner's editor buttons, behind "Edit Profile" on the completeness card. */
+  const [showEditors, setShowEditors] = useState(false)
   /*
    * The college-views email, the claim flow and the checkout all land on the views panel
    * (components/profile/college-views-landing.tsx); open its row so the panel is there.
@@ -1273,6 +1281,21 @@ export function AthleteDetail({
     ncUnitedTeam && ncUnitedTeam !== "none"
       ? ncUnitedTeam === "blue" ? "NC United Blue" : ncUnitedTeam === "gold" ? "NC United Gold" : ncUnitedTeam === "both" ? "NC United Blue & Gold" : `NC United ${ncUnitedTeam}`
       : null
+  /*
+   * Four things a coach looks for, in five equal parts: the photo and the school each count, so a
+   * profile with both and a phone number reads 60% - enough to see there is more to add.
+   */
+  const completenessParts = [Boolean(athletePhoto), hasSchool, hasAcademicData, hasHighlightContent, Boolean(cellPhone || contactEmail)]
+  const completeness = {
+    percent: Math.round((completenessParts.filter(Boolean).length / completenessParts.length) * 100),
+    items: [
+      { label: "Photo and wrestling information", todo: "Add a photo and your school", done: Boolean(athletePhoto) && hasSchool, edit: athletePhoto ? "school-club" : "photo" },
+      { label: "Academic information", todo: "Add academic information", done: hasAcademicData, edit: "academics" },
+      { label: "Highlight reel", todo: "Add highlight reel", done: hasHighlightContent, edit: "highlight-video" },
+      { label: "Contact information", todo: "Verify contact information", done: Boolean(cellPhone || contactEmail), edit: "contact" },
+    ],
+  }
+  const isGirl = /^(f|female|girl)/i.test(String((athlete as { gender?: string | null }).gender ?? ""))
   const compactHero = (
     <div className="bg-[#0A1628] px-4 pb-4 pt-3 text-white lg:px-5 lg:pb-5">
       <div className="mb-2 flex items-center justify-end gap-2">
@@ -1659,28 +1682,31 @@ export function AthleteDetail({
           className={ROW_ORDER.views}
         />
       ) : null}
-      <ProfileRow
-        icon={Trophy}
-        title="Tournament Results"
-        summary={credentials.length ? credentials.slice(0, 3).map((c) => c.label).join(" · ") : "State, national, freestyle and Greco-Roman results"}
-        open={openRows.has("results")}
-        onToggle={() => toggleRow("results")}
+      <AppTournamentResults
+        profile={appData.profile}
+        loaded={appData.loaded}
+        isGirl={isGirl}
+        fallbackLine={credentials.length ? credentials.slice(0, 2).map((c) => c.label).join(" · ") : null}
+        // The website's own: a family can send in a tournament we do not carry.
+        footer={<TournamentResultSubmissionDialog athleteId={String(athlete.id)} />}
         className={ROW_ORDER.results}
       />
-      <ProfileRow
-        icon={BarChart3}
-        title="Significant Wins"
-        summary={
-          winsInfo == null
-            ? "Wins over ranked, All-American and state-placing opponents"
-            : winsInfo.total
-              ? [winsInfo.top, `${winsInfo.total} total`].filter(Boolean).join(" · ")
-              : "None on file yet"
-        }
-        open={openRows.has("wins")}
-        onToggle={() => toggleRow("wins")}
+      <AppSignificantWins
+        wins={appData.wins}
+        loaded={appData.winsLoaded}
+        footer={<SignificantWinSubmissionDialog athleteId={String(athlete.id)} />}
         className={ROW_ORDER.wins}
       />
+      <AppNotableLosses losses={appData.losses} loaded={appData.winsLoaded} className={ROW_ORDER.losses} />
+      {canSeeScoutingReport ? (
+        <AppRow
+          icon={FileText}
+          title="Scouting Report"
+          subtitle="Evaluation, record and competition, in full"
+          href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`}
+          className={ROW_ORDER.scouting}
+        />
+      ) : null}
       <ProfileRow
         icon={ListOrdered}
         title="In-Season Match Log"
@@ -1704,6 +1730,21 @@ export function AthleteDetail({
           open={openRows.has("academics")}
           onToggle={() => toggleRow("academics")}
           className={ROW_ORDER.academics}
+        />
+      ) : null}
+      {/* Messaging, as a row of its own (Matt, 10 October 2026). College coaches get the row that
+          writes to the family; it renders nothing for anyone else. An admin sees it locked, so
+          it is clear the row exists and who it is for. */}
+      {!isViewingOwnProfile ? (
+        <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="row" className={ROW_ORDER.contact} />
+      ) : null}
+      {isAdmin && !isViewingOwnProfile ? (
+        <AppRow
+          icon={MessageSquare}
+          title="Messages"
+          subtitle="College coaches message the family from here. Admins do not start conversations."
+          locked
+          className={ROW_ORDER.contact}
         />
       ) : null}
       {/* Contact, and messaging with it: a coach looking for how to reach a wrestler looks here. */}
@@ -1789,7 +1830,7 @@ export function AthleteDetail({
 
       {/* Coaches who messaged this wrestler. Renders only for the wrestler and linked parents
           (the list endpoint returns nothing to anyone else) and only once a coach has written. */}
-      <div className={cn("px-1 empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels)}>
+      <div className={cn("empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels, ROW_ORDER.contact)}>
         <FamilyMessagesPanel athleteId={String(athlete.id)} />
       </div>
 
@@ -1856,20 +1897,59 @@ export function AthleteDetail({
             PROFILE_SECTION_ORDER.panels,
           )}
         >
-          <div className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#D3B574] text-[#0A1628]">
-              <Pencil className="h-4 w-4" aria-hidden />
-            </span>
-            <div className="min-w-0">
-              <p className="text-base font-bold text-white">
-                {isViewingOwnProfile ? "This is your profile" : isAdmin && !isParentLinkedEditor ? "You can edit this profile (admin)" : "You can edit this profile"}
-              </p>
-              <p className="text-sm text-white/70">
-                College coaches read this page. Keep the photo, weight, bio and video current.
+          {/* Profile completeness (Matt's mock, 10 October 2026): what is done, what is left, and
+              one button to the editors. Each open item is a tap to its own form. */}
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="text-base font-bold text-white">Profile Completeness</p>
+                <p className="text-base font-black text-white">{completeness.percent}%</p>
+              </div>
+              <div className="mt-2 h-2.5 overflow-hidden rounded-full border border-white/15 bg-[#0A1628]">
+                <div className="h-full rounded-full bg-[#D3B574]" style={{ width: `${completeness.percent}%` }} />
+              </div>
+              <p className="mt-2 text-sm text-white/70">
+                {completeness.percent === 100
+                  ? "Your profile is complete. Keep it current: college coaches read this page."
+                  : "Complete your profile to get more views from college coaches."}
               </p>
             </div>
+            <ul className="space-y-1.5 lg:w-64">
+              {completeness.items.map((item) => (
+                <li key={item.label}>
+                  <button
+                    type="button"
+                    disabled={item.done}
+                    onClick={() => {
+                      setEditingSection(item.edit)
+                      window.setTimeout(() => document.querySelector<HTMLElement>("[data-owner-editor], [data-section=academics], #highlights")?.scrollIntoView({ behavior: "smooth", block: "center" }), 80)
+                    }}
+                    className={cn("flex items-center gap-2 text-left text-sm", item.done ? "text-white" : "text-white/80 hover:text-[#D3B574]")}
+                  >
+                    <span
+                      className={cn(
+                        "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
+                        item.done ? "border-[#D3B574] bg-[#D3B574] text-[#0A1628]" : "border-white/50",
+                      )}
+                      aria-hidden
+                    >
+                      {item.done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : null}
+                    </span>
+                    {item.done ? item.label : item.todo}
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              onClick={() => setShowEditors((v) => !v)}
+              aria-expanded={showEditors}
+              className="shrink-0 rounded-lg bg-[#D3B574] px-5 py-3 text-sm font-bold text-[#0A1628] hover:bg-[#c4a665]"
+            >
+              Edit Profile
+            </button>
           </div>
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className={cn("mt-4 flex flex-wrap gap-2", !showEditors && "hidden")}>
             {(
               [
                 { key: "photo", label: "Photo", icon: Camera, target: null },
@@ -2228,27 +2308,8 @@ export function AthleteDetail({
         </Card>
       ) : null}
 
-      {/* 4. Tournament Results - NC United National Team, NCHSAA, NHSCA, Super 32 */}
-      <div
-        className={cn(
-          "min-w-0 max-w-full",
-          mobileRecruiterLayout && PROFILE_SECTION_ORDER.nationalResults,
-          inRow("results"),
-        )}
-      >
-        {tournamentResultsComponent}
-      </div>
-
-      {/*
-        The folkstyle record reads as one run: tournaments, then who he beat, then the season's
-        match log - before the highlight reel and honours, and before the Olympic-styles section,
-        which is always last (Matt).
-      */}
-      {/* Significant wins sit above the full match list: who somebody has beaten is the question
-          a profile gets opened with, and the list underneath answers how many. */}
-      <div className={cn("min-w-0 max-w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.qualityWins, inRow("wins"))}>
-        <SignificantWinsSection athleteId={String(athlete.id)} qualityWinBlocks={profileQualityWins} styles="folkstyle" gender={(athlete as { gender?: string | null }).gender ?? null} onLoaded={setWinsInfo} />
-      </div>
+      {/* Tournament results, significant wins and notable losses are the app's rows above
+          (components/profile/app-profile-rows.tsx); the old full-width cards are gone. */}
 
       {/* 10. High School Career Match Results */}
       <div
@@ -2600,11 +2661,6 @@ export function AthleteDetail({
           </Card>
       ) : null}
 
-      {olympicStylesSection ? (
-        <div className={cn("min-w-0 max-w-full w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.olympicStyles, inRow("results"))}>
-          {olympicStylesSection}
-        </div>
-      ) : null}
 
       {/* Last Edited By - Footer */}
       {(athlete.last_edited_by || athlete.last_edited_at) && (
