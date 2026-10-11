@@ -75,6 +75,16 @@ import { scoutingReportAvailable } from "@/lib/scouting-report-access"
  */
 const SHOW_ATHLETE_BIO_SECTION = true
 
+type ProfileTab = "results" | "wins" | "academics" | "about" | "views"
+/** Which category holds the section an edit button opens. */
+const EDIT_SECTION_TAB: Record<string, ProfileTab> = {
+  bio: "about",
+  "highlight-video": "about",
+  "college-opens": "about",
+  achievements: "about",
+  academics: "academics",
+}
+
 interface AthleteDetailProps {
   athlete: {
     id: string
@@ -247,6 +257,30 @@ export function AthleteDetail({
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
   const [athleteData, setAthleteData] = useState(athlete)
   const [editingSection, setEditingSection] = useState<string | null>(null)
+  /*
+   * Desktop shows one category at a time (Matt, 10 October 2026). The page had grown to fourteen
+   * full-width cards stacked 6,000 pixels deep; the iPhone app answers the same questions with a
+   * header and a short list, and this is that idea at desktop width - the banner, then Results,
+   * Wins & matches, Academics or About, each a screen or two. Phones keep the single column and
+   * its jump links; every section still renders, a tab only hides the others from `lg` up.
+   */
+  const [desktopTab, setDesktopTab] = useState<ProfileTab>("results")
+  const inTab = (tab: ProfileTab) => (desktopTab === tab ? "" : "lg:hidden")
+  /*
+   * The college-views email, the claim flow and the checkout all land on the views panel
+   * (components/profile/college-views-landing.tsx); open its category so the panel is there.
+   */
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search)
+    if (window.location.hash === "#college-views" || q.get("src") === "email-views" || q.get("views") === "1" || q.get("purchased") === "1") {
+      setDesktopTab("views")
+    }
+  }, [])
+  // Editing a section from anywhere brings its category forward, so the form is never hidden.
+  useEffect(() => {
+    const tab = editingSection ? EDIT_SECTION_TAB[editingSection] : undefined
+    if (tab) setDesktopTab(tab)
+  }, [editingSection])
   // Open by default. It is the athlete introducing themselves, directly under the banner —
   // the one section a reader wants before they have decided to look for anything.
   // A preview until asked: the full bio ran four phone screens before the first result.
@@ -1118,10 +1152,29 @@ export function AthleteDetail({
       <Edit className="h-3.5 w-3.5" />
     </button>
   ) : undefined
+  // School, club and NC United team are edited together; the form opens under the banner.
+  const editSchoolClub = canEdit ? (
+    <button
+      type="button"
+      className="inline-flex items-center rounded p-0.5 text-white/60 hover:bg-white/10 hover:text-white"
+      onClick={() => setEditingSection("school-club")}
+      aria-label="Edit school and club"
+    >
+      <Edit className="h-3.5 w-3.5" />
+    </button>
+  ) : undefined
   const bannerStats: BannerStat[] = [
     { label: "Year", value: graduationYear || "—" },
-    ...(hasSchool ? [{ label: "School", value: bannerText(highSchool) }] : []),
+    ...(hasSchool || canEdit ? [{ label: "School", value: bannerText(hasSchool ? highSchool : "—"), action: editSchoolClub }] : []),
     ...(hasClub ? [{ label: "Club", value: bannerText(wrestlingClub) }] : []),
+    ...(ncUnitedTeam && ncUnitedTeam !== "none"
+      ? [
+          {
+            label: "NC United",
+            value: bannerText(ncUnitedTeam === "blue" ? "Blue Team" : ncUnitedTeam === "gold" ? "Gold Team" : ncUnitedTeam === "both" ? "Both Teams" : ncUnitedTeam),
+          },
+        ]
+      : []),
     lastCompeted
       ? {
           label: "Last competed",
@@ -1595,8 +1648,43 @@ export function AthleteDetail({
       {mobileRecruiterLayout ? (
         // No wrapper: a sticky element only sticks within its parent, and a wrapper its own height
         // left the links scrolling away with the page.
-        <UnifiedProfileMobileNav className={PROFILE_SECTION_ORDER.nav} />
+        <UnifiedProfileMobileNav className={cn(PROFILE_SECTION_ORDER.nav, "lg:hidden")} />
       ) : null}
+
+      {/* Desktop: the categories. Only the ones with something in them, or that the owner can fill. */}
+      <nav
+        aria-label="Profile categories"
+        className={cn("sticky top-[72px] z-30 border-b border-border bg-background/95 backdrop-blur max-lg:!hidden", PROFILE_SECTION_ORDER.nav)}
+      >
+        <ul className="flex gap-1 px-1">
+          {(
+            [
+              ["results", "Results", true],
+              ["wins", "Wins & Matches", true],
+              ["academics", "Academics", hasAcademicData || canEdit],
+              ["about", "About & Film", hasBioContent || hasHighlightContent || hasCollegeOpensContent || hasOtherHonoursContent || canEdit],
+              // The family's own panel (and an admin's): who has been looking.
+              ["views", "Profile Views", Boolean(canViewProfileStats && athlete.id)],
+            ] as Array<[ProfileTab, string, boolean]>
+          )
+            .filter(([, , show]) => show)
+            .map(([key, label]) => (
+              <li key={key}>
+                <button
+                  type="button"
+                  onClick={() => setDesktopTab(key)}
+                  aria-current={desktopTab === key ? "page" : undefined}
+                  className={cn(
+                    "border-b-2 px-5 py-3.5 text-sm font-extrabold uppercase tracking-[0.12em] transition-colors",
+                    desktopTab === key ? "border-[#D3B574] text-[#D3B574]" : "border-transparent text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {label}
+                </button>
+              </li>
+            ))}
+        </ul>
+      </nav>
 
       {/* Who is recruiting this wrestler. Renders nothing unless the viewer is the athlete,
           a linked parent, or an admin — the endpoint refuses everybody else. */}
@@ -1607,7 +1695,7 @@ export function AthleteDetail({
       </div>
       {/* One "who's viewing you" panel: the counts, then the college programs and the subscription
           that names them. It was two - the programs up here, the counts far down the page. */}
-      <div id="college-views" className={cn("scroll-mt-24 px-1 empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels)}>
+      <div id="college-views" className={cn("scroll-mt-24 px-1 empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels, inTab("views"))}>
         {canViewProfileStats && athlete.id ? (
           <ProfileViewStatsPanel athleteId={athlete.id} adminView={isAdmin && !isViewingOwnProfile}>
             <CoachViewsPanel athleteId={String(athlete.id)} embedded />
@@ -1832,7 +1920,7 @@ export function AthleteDetail({
       {SHOW_ATHLETE_BIO_SECTION && (hasBioContent || canEdit) ? (
       <Card
         id="bio"
-        className={cn("profile-card border-t-4 border-t-[#D3B574] shadow-md", mobileRecruiterLayout && PROFILE_SECTION_ORDER.bio)}
+        className={cn("profile-card border-t-4 border-t-[#D3B574] shadow-md", mobileRecruiterLayout && PROFILE_SECTION_ORDER.bio, inTab("about"))}
         data-section="bio"
       >
         <div className={cn(mobileRecruiterLayout ? PROFILE_SECTION_HEADER : "bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6")}>
@@ -1932,12 +2020,14 @@ export function AthleteDetail({
         </Card>
       ) : null}
 
-      {/* 3. High School and Programs - always show for consistent structure */}
+      {/* School and club live in the banner now (Matt, 10 October 2026). This card is only the
+          form for changing them, shown while the owner is editing and up with the other edit forms. */}
+      {editingSection === "school-club" ? (
       <Card
         id="programs"
         className={cn(
           "profile-card border-t-4 border-t-[#D3B574] shadow-md",
-          mobileRecruiterLayout && PROFILE_SECTION_ORDER.programs,
+          mobileRecruiterLayout && PROFILE_SECTION_ORDER.weightEdit,
         )}
         data-section="programs"
       >
@@ -2052,12 +2142,14 @@ export function AthleteDetail({
             )}
           </div>
         </Card>
+      ) : null}
 
       {/* 4. Tournament Results - NC United National Team, NCHSAA, NHSCA, Super 32 */}
       <div
         className={cn(
           "min-w-0 max-w-full",
           mobileRecruiterLayout && PROFILE_SECTION_ORDER.nationalResults,
+          inTab("results"),
         )}
       >
         {tournamentResultsComponent}
@@ -2070,14 +2162,14 @@ export function AthleteDetail({
       */}
       {/* Significant wins sit above the full match list: who somebody has beaten is the question
           a profile gets opened with, and the list underneath answers how many. */}
-      <div className={cn("min-w-0 max-w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.qualityWins)}>
+      <div className={cn("min-w-0 max-w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.qualityWins, inTab("wins"))}>
         <SignificantWinsSection athleteId={String(athlete.id)} qualityWinBlocks={profileQualityWins} styles="folkstyle" gender={(athlete as { gender?: string | null }).gender ?? null} />
       </div>
 
       {/* 10. High School Career Match Results */}
       <div
         /** MatchDataSectionImproved takes its own theme prop; it needs no override hook. */
-        className={cn("min-w-0 max-w-full w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.inSeason)}
+        className={cn("min-w-0 max-w-full w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.inSeason, inTab("wins"))}
       >
         <MatchDataSectionImproved
           athleteId={athlete.id}
@@ -2095,6 +2187,7 @@ export function AthleteDetail({
         className={cn(
           "profile-card border-t-4 border-t-[#D3B574] shadow-md",
           mobileRecruiterLayout && PROFILE_SECTION_ORDER.academics,
+          inTab("academics"),
         )}
         data-section="academics"
       >
@@ -2189,6 +2282,7 @@ export function AthleteDetail({
         className={cn(
           "profile-card border-t-4 border-t-[#D3B574] shadow-md",
           mobileRecruiterLayout && PROFILE_SECTION_ORDER.highlights,
+          inTab("about"),
         )}
         data-section="highlights"
       >
@@ -2301,6 +2395,7 @@ export function AthleteDetail({
         className={cn(
           "profile-card border-t-4 border-t-[#D3B574] shadow-md",
           mobileRecruiterLayout && PROFILE_SECTION_ORDER.collegeOpens,
+          inTab("about"),
         )}
         data-section="college-opens"
       >
@@ -2346,6 +2441,7 @@ export function AthleteDetail({
         className={cn(
           "profile-card border-t-4 border-t-[#D3B574] shadow-md",
           mobileRecruiterLayout && PROFILE_SECTION_ORDER.achievements,
+          inTab("about"),
         )}
         data-section="achievements"
       >
@@ -2420,7 +2516,7 @@ export function AthleteDetail({
       ) : null}
 
       {olympicStylesSection ? (
-        <div className={cn("min-w-0 max-w-full w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.olympicStyles)}>
+        <div className={cn("min-w-0 max-w-full w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.olympicStyles, inTab("results"))}>
           {olympicStylesSection}
         </div>
       ) : null}
