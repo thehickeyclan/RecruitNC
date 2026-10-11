@@ -19,6 +19,7 @@ import {
 } from "@/components/profile/profile-banner-parts"
 import { ProfileRow } from "@/components/profile/profile-row"
 import { AppNotableLosses, AppRow, AppSignificantWins, AppTournamentResults, rankedWinsLast12Months, useAppProfile } from "@/components/profile/app-profile-rows"
+import { bestWinsLast12Months } from "@/lib/profile/best-wins"
 import { ProfileViewsBlock } from "@/components/profile/profile-views-block"
 import { summarySentences, type Accolades } from "@/lib/profile/profile-summary"
 import { buildCompetitionGrade } from "@/lib/competition-grade"
@@ -1304,6 +1305,7 @@ export function AthleteDetail({
     ],
   }
   const isGirl = /^(f|female|girl)/i.test(String((athlete as { gender?: string | null }).gender ?? ""))
+  const bestWins = bestWinsLast12Months(appData.wins)
   /* Wins over ranked opponents, last twelve months, national and North Carolina apart. */
   const ranked12 = rankedWinsLast12Months(appData.wins)
   const sentences = summarySentences({
@@ -1469,23 +1471,10 @@ export function AthleteDetail({
         </div>
       ) : null}
 
-      <dl className="mt-3 grid grid-cols-3 overflow-hidden rounded-xl border border-[#1a3a5f] bg-[#0f1c2e]">
+      <dl className="mt-3 grid grid-cols-2 overflow-hidden rounded-xl border border-[#1a3a5f] bg-[#0f1c2e]">
         <div className={FACT}>
           <dt className={FACT_LABEL}>Class of</dt>
           <dd className={FACT_VALUE}>{graduationYear || "—"}</dd>
-        </div>
-        <div className={cn(FACT, "border-l")}>
-          <dt className={FACT_LABEL}>Wins over ranked</dt>
-          <dd className={FACT_VALUE}>
-            {appData.winsLoaded ? (
-              <>
-                {ranked12.national} <span className="text-xs font-bold text-[#A8BBD1]">national</span>
-              </>
-            ) : (
-              "…"
-            )}
-          </dd>
-          <dd className="mt-0.5 text-[11px] text-[#A8BBD1]">{appData.winsLoaded ? `${ranked12.nc} NC-ranked · last 12 months` : "Loading"}</dd>
         </div>
         <div className={cn(FACT, "border-l")}>
           <dt className={FACT_LABEL}>GPA</dt>
@@ -1502,6 +1491,23 @@ export function AthleteDetail({
           )}
         </div>
       </dl>
+
+      {/* Who he has beaten lately: three names, each with what the opponent has done
+          (lib/profile/best-wins.ts). Replaces the ranked-wins count, which said less. */}
+      {bestWins.length ? (
+        <div className="mt-3 rounded-xl border border-[#1a3a5f] bg-[#0f1c2e] p-3.5">
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-[#D3B574]">Best wins · last 12 months</p>
+          <ol className="mt-1">
+            {bestWins.map((w) => (
+              <li key={`${w.opponent}-${w.detail}`} className="border-b border-[#1a3a5f] py-2 last:border-b-0 last:pb-0">
+                <p className="text-sm font-extrabold text-white">{w.opponent}</p>
+                <p className="text-xs font-bold text-[#D3B574]">{w.accolade}</p>
+                <p className="text-xs text-[#A8BBD1]">{w.detail}</p>
+              </li>
+            ))}
+          </ol>
+        </div>
+      ) : null}
 
       {/* A recruiter's actions: the report, the comparison, a message. Nothing renders for most viewers. */}
       <div className="mt-3 flex flex-wrap items-center gap-2 empty:hidden">
