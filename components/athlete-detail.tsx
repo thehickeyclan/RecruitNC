@@ -1737,18 +1737,37 @@ export function AthleteDetail({
           className={ROW_ORDER.academics}
         />
       ) : null}
-      {contactButtons ? (
+      {/* Contact, and messaging with it: a coach looking for how to reach a wrestler looks here. */}
+      {contactButtons || ((isVerifiedCoach || isAdmin) && !isViewingOwnProfile) ? (
         <>
           <ProfileRow
             icon={Phone}
             title="Contact Information"
-            summary={canSeePrivateInfo && (cellPhone || contactEmail) ? "Call, text or email the athlete" : "Instagram and wrestling profile links"}
+            summary={
+              // Admins hold the coach flag too but do not message, so they get the plain line.
+              isVerifiedCoach && !isAdmin && !isViewingOwnProfile
+                ? canSeePrivateInfo && (cellPhone || contactEmail)
+                  ? "Message, call or text the athlete"
+                  : "Message the athlete"
+                : canSeePrivateInfo && (cellPhone || contactEmail)
+                  ? "Call, text or email the athlete"
+                  : "Instagram and wrestling profile links"
+            }
             open={openRows.has("contact")}
             onToggle={() => toggleRow("contact")}
             className={ROW_ORDER.contact}
           />
           {/* On the banner's navy whatever the theme: the buttons are drawn for a dark ground. */}
-          <div className={cn("rounded-xl border border-white/10 bg-[#0A1628] p-4 lg:p-6", inRow("contact"))}>{contactButtons}</div>
+          <div className={cn("flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-[#0A1628] p-4 lg:p-6", inRow("contact"))}>
+            {/* College coaches only; the button renders nothing for anyone else. */}
+            {!isViewingOwnProfile ? (
+              <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="action" className="min-h-[44px]" />
+            ) : null}
+            {contactButtons}
+            {isAdmin && !isViewingOwnProfile ? (
+              <p className="w-full text-xs text-white/50">College coaches see a Message button here. Admins do not start conversations.</p>
+            ) : null}
+          </div>
         </>
       ) : null}
       {hasHighlightContent || canEdit ? (
