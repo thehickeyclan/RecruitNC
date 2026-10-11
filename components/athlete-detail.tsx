@@ -1366,6 +1366,8 @@ export function AthleteDetail({
       : null
   /** May see what only recruiters and the family see: contact, notable losses. */
   const recruiterOrFamily = mayCompare || canViewProfileStats || canEdit
+  const REACH =
+    "inline-flex min-h-[36px] items-center gap-1.5 rounded-lg border border-[#D3B574]/60 px-2.5 text-xs font-bold text-[#D3B574] hover:bg-[#D3B574]/10"
   const FACT = "min-w-0 border-[#1a3a5f] p-3"
   const FACT_LABEL = "text-[9px] font-bold uppercase tracking-[0.16em] text-[#6B829D]"
   const FACT_VALUE = "mt-1 text-[19px] font-black leading-tight text-white"
@@ -1412,6 +1414,24 @@ export function AthleteDetail({
             {graduationYear ? `Class of ${graduationYear}` : "Class year not set"}
             {ncUnitedLabel ? ` · ${ncUnitedLabel}` : ""}
           </p>
+          {/* One tap to reach him, for the people allowed to: call, text, message (Matt, 11 October
+              2026). College coaches and admins only - the same rule as the Contact row - and the
+              Message button draws itself for coaches alone. */}
+          {mayCompare && canSeePrivateInfo && !isViewingOwnProfile ? (
+            <div className="mt-2 flex flex-wrap items-center gap-1.5 empty:hidden">
+              {cellPhone ? (
+                <>
+                  <a href={`tel:${cellPhone.replace(/[^\d+]/g, "")}`} className={REACH} aria-label={`Call ${athleteName}`}>
+                    <Phone className="h-4 w-4" aria-hidden /> Call
+                  </a>
+                  <a href={`sms:${cellPhone.replace(/[^\d+]/g, "")}`} className={REACH} aria-label={`Text ${athleteName}`}>
+                    <MessageSquare className="h-4 w-4" aria-hidden /> Text
+                  </a>
+                </>
+              ) : null}
+              <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="icon" showLabel className={REACH} iconClassName="h-4 w-4" />
+            </div>
+          ) : null}
           {isCommittedStatus && college && college !== "Not specified" ? (
             <p className="mt-1.5 flex items-center gap-2 text-sm text-white">
               {collegeLogo ? (
@@ -1513,7 +1533,6 @@ export function AthleteDetail({
       <div className="mt-3 flex flex-wrap items-center gap-2 empty:hidden">
         {canSeeScoutingReport ? <ScoutingReportAction href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`} /> : null}
         {mayCompare ? <CompareAction athleteId={String(athlete.id)} /> : null}
-        {!isViewingOwnProfile ? <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="action" /> : null}
         {mayCompare ? <ProfileFitFlag athleteId={String(athlete.id)} className="inline-flex items-center" /> : null}
       </div>
     </div>
