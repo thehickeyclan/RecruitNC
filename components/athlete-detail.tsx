@@ -17,13 +17,14 @@ import {
   CompareAction,
   type BannerStat,
 } from "@/components/profile/profile-banner-parts"
+import { ProfileRow } from "@/components/profile/profile-row"
 import { ProfileFitFlag } from "@/components/profile/profile-fit-flag"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Award, Camera, ChevronDown, Edit, ExternalLink, FileText, GraduationCap, Mail, Pencil, Phone, Scale, School, Share2, TrendingUp, Trophy, Video } from "lucide-react"
+import { ArrowLeftRight, Award, BarChart3, Camera, ChevronDown, Edit, ExternalLink, Eye, FileText, GraduationCap, ListOrdered, Mail, Pencil, Phone, Scale, School, Share2, TrendingUp, Trophy, UserRound, Video } from "lucide-react"
 import { UnifiedProfileMobileNav } from "./unified-profile-mobile-nav"
 import type { ProfileQualityWinsTournamentBlock } from "@/lib/profile-quality-wins"
 import {
@@ -75,13 +76,29 @@ import { scoutingReportAvailable } from "@/lib/scouting-report-access"
  */
 const SHOW_ATHLETE_BIO_SECTION = true
 
-type ProfileTab = "results" | "wins" | "academics" | "about" | "views"
-/** Which category holds the section an edit button opens. */
-const EDIT_SECTION_TAB: Record<string, ProfileTab> = {
+/*
+ * The profile's rows, in the order they are listed (components/profile/profile-row.tsx). A row's
+ * header and the sections it opens share one `order`, so the sections sit directly under it
+ * wherever they are written in this file.
+ */
+type RowKey = "views" | "results" | "wins" | "season" | "academics" | "contact" | "film" | "about" | "compare"
+const ROW_ORDER: Record<RowKey, string> = {
+  views: "order-[3]",
+  results: "order-[5]",
+  wins: "order-[6]",
+  season: "order-[7]",
+  academics: "order-[9]",
+  contact: "order-[10]",
+  film: "order-[11]",
+  about: "order-[12]",
+  compare: "order-[13]",
+}
+/** Which row holds the section an edit button opens. */
+const EDIT_SECTION_ROW: Record<string, RowKey> = {
   bio: "about",
-  "highlight-video": "about",
   "college-opens": "about",
   achievements: "about",
+  "highlight-video": "film",
   academics: "academics",
 }
 
@@ -258,28 +275,39 @@ export function AthleteDetail({
   const [athleteData, setAthleteData] = useState(athlete)
   const [editingSection, setEditingSection] = useState<string | null>(null)
   /*
-   * Desktop shows one category at a time (Matt, 10 October 2026). The page had grown to fourteen
-   * full-width cards stacked 6,000 pixels deep; the iPhone app answers the same questions with a
-   * header and a short list, and this is that idea at desktop width - the banner, then Results,
-   * Wins & matches, Academics or About, each a screen or two. Phones keep the single column and
-   * its jump links; every section still renders, a tab only hides the others from `lg` up.
+   * The body is a list of rows that open in place, on a phone and on a desktop alike (Matt's
+   * mock, 10 October 2026: the iPhone profile - a header, then Tournament Results, Significant
+   * Wins, Academic Information, each with one line of real data). The page had been fourteen
+   * full-width cards stacked 6,000 pixels deep. Everything is still on the page and still
+   * mounted, so each section loads its data and can report its line; a closed row hides it.
    */
-  const [desktopTab, setDesktopTab] = useState<ProfileTab>("results")
-  const inTab = (tab: ProfileTab) => (desktopTab === tab ? "" : "lg:hidden")
+  const [openRows, setOpenRows] = useState<ReadonlySet<RowKey>>(new Set())
+  const toggleRow = (key: RowKey) =>
+    setOpenRows((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  const openRow = (key: RowKey) => setOpenRows((prev) => (prev.has(key) ? prev : new Set([...prev, key])))
+  /** The order a row's sections take, and whether they show. Last in `cn`, so it wins the order. */
+  const inRow = (key: RowKey) => cn(ROW_ORDER[key], !openRows.has(key) && "hidden")
+  /** What the wins list found, for the row's line (components/significant-wins-section.tsx). */
+  const [winsInfo, setWinsInfo] = useState<{ total: number; top: string | null; losses: number } | null>(null)
   /*
    * The college-views email, the claim flow and the checkout all land on the views panel
-   * (components/profile/college-views-landing.tsx); open its category so the panel is there.
+   * (components/profile/college-views-landing.tsx); open its row so the panel is there.
    */
   useEffect(() => {
     const q = new URLSearchParams(window.location.search)
     if (window.location.hash === "#college-views" || q.get("src") === "email-views" || q.get("views") === "1" || q.get("purchased") === "1") {
-      setDesktopTab("views")
+      openRow("views")
     }
   }, [])
-  // Editing a section from anywhere brings its category forward, so the form is never hidden.
+  // Editing a section from anywhere opens its row, so the form is never hidden.
   useEffect(() => {
-    const tab = editingSection ? EDIT_SECTION_TAB[editingSection] : undefined
-    if (tab) setDesktopTab(tab)
+    const row = editingSection ? EDIT_SECTION_ROW[editingSection] : undefined
+    if (row) openRow(row)
   }, [editingSection])
   // Open by default. It is the athlete introducing themselves, directly under the banner —
   // the one section a reader wants before they have decided to look for anything.
@@ -1215,7 +1243,12 @@ export function AthleteDetail({
         </div>
       </div>
     ) : null
-  const bannerContact = showHeroContactRow ? (
+  /*
+   * Contact is its own row, not part of the banner (Matt, 10 October 2026: "we need a cleaner
+   * banner up top"). The banner says who he is; how to reach him is one tap down, where the app
+   * puts it too.
+   */
+  const contactButtons = showHeroContactRow ? (
     <div className="[&>div]:mt-0">{renderHeroContactRow("buttons")}</div>
   ) : null
 
@@ -1318,7 +1351,7 @@ export function AthleteDetail({
                   {bannerCommitted ? <div className="mt-4">{bannerCommitted}</div> : null}
                   <BannerStats stats={bannerStats} className="mt-5" />
                   <CredentialCards credentials={credentials} className="mt-5" />
-                  <CompetesBar competition={competition} contact={bannerContact} className="mt-4" />
+                  <CompetesBar competition={competition} className="mt-4" />
                   {/* Owner and admins only; the endpoint refuses anybody else. */}
                   {canViewProfileStats && athlete.id ? (
                     <BannerViewStats athleteId={String(athlete.id)} className="mt-3" />
@@ -1516,7 +1549,7 @@ export function AthleteDetail({
                   {bannerCommitted}
                   <BannerStats stats={bannerStats} />
                   <CredentialCards credentials={credentials} />
-                  <CompetesBar competition={competition} contact={bannerContact} />
+                  <CompetesBar competition={competition} />
                   {canViewProfileStats && athlete.id ? (
                     <BannerViewStats athleteId={String(athlete.id)} className="mt-3" />
                   ) : null}
@@ -1645,46 +1678,109 @@ export function AthleteDetail({
         </div>
       </Card>
 
-      {mobileRecruiterLayout ? (
-        // No wrapper: a sticky element only sticks within its parent, and a wrapper its own height
-        // left the links scrolling away with the page.
-        <UnifiedProfileMobileNav className={cn(PROFILE_SECTION_ORDER.nav, "lg:hidden")} />
+      {/* The rows. Written here, ahead of every section, so each header comes before the sections
+          that share its order. */}
+      {canViewProfileStats && athlete.id ? (
+        <ProfileRow
+          icon={Eye}
+          title="Profile Views"
+          summary="Who is looking at this profile, and which college programs"
+          open={openRows.has("views")}
+          onToggle={() => toggleRow("views")}
+          className={ROW_ORDER.views}
+        />
       ) : null}
-
-      {/* Desktop: the categories. Only the ones with something in them, or that the owner can fill. */}
-      <nav
-        aria-label="Profile categories"
-        className={cn("sticky top-[72px] z-30 border-b border-border bg-background/95 backdrop-blur max-lg:!hidden", PROFILE_SECTION_ORDER.nav)}
-      >
-        <ul className="flex gap-1 px-1">
-          {(
-            [
-              ["results", "Results", true],
-              ["wins", "Wins & Matches", true],
-              ["academics", "Academics", hasAcademicData || canEdit],
-              ["about", "About & Film", hasBioContent || hasHighlightContent || hasCollegeOpensContent || hasOtherHonoursContent || canEdit],
-              // The family's own panel (and an admin's): who has been looking.
-              ["views", "Profile Views", Boolean(canViewProfileStats && athlete.id)],
-            ] as Array<[ProfileTab, string, boolean]>
-          )
-            .filter(([, , show]) => show)
-            .map(([key, label]) => (
-              <li key={key}>
-                <button
-                  type="button"
-                  onClick={() => setDesktopTab(key)}
-                  aria-current={desktopTab === key ? "page" : undefined}
-                  className={cn(
-                    "border-b-2 px-5 py-3.5 text-sm font-extrabold uppercase tracking-[0.12em] transition-colors",
-                    desktopTab === key ? "border-[#D3B574] text-[#D3B574]" : "border-transparent text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {label}
-                </button>
-              </li>
-            ))}
-        </ul>
-      </nav>
+      <ProfileRow
+        icon={Trophy}
+        title="Tournament Results"
+        summary={credentials.length ? credentials.slice(0, 3).map((c) => c.label).join(" · ") : "State, national, freestyle and Greco-Roman results"}
+        open={openRows.has("results")}
+        onToggle={() => toggleRow("results")}
+        className={ROW_ORDER.results}
+      />
+      <ProfileRow
+        icon={BarChart3}
+        title="Significant Wins"
+        summary={
+          winsInfo == null
+            ? "Wins over ranked, All-American and state-placing opponents"
+            : winsInfo.total
+              ? [winsInfo.top, `${winsInfo.total} total`].filter(Boolean).join(" · ")
+              : "None on file yet"
+        }
+        open={openRows.has("wins")}
+        onToggle={() => toggleRow("wins")}
+        className={ROW_ORDER.wins}
+      />
+      <ProfileRow
+        icon={ListOrdered}
+        title="In-Season Match Log"
+        summary="Every high school bout on file, season by season"
+        open={openRows.has("season")}
+        onToggle={() => toggleRow("season")}
+        className={ROW_ORDER.season}
+      />
+      {hasAcademicData || canEdit ? (
+        <ProfileRow
+          icon={GraduationCap}
+          title="Academic Information"
+          summary={
+            !hasAcademicData
+              ? "Not on file yet"
+              : canSeePrivateInfo
+                ? [effectiveGpa ? `GPA ${effectiveGpa}` : null, effectiveSat ? `SAT ${effectiveSat}` : null, effectiveAct ? `ACT ${effectiveAct}` : null].filter(Boolean).join(" · ")
+                : "Visible to approved college coaches"
+          }
+          locked={hasAcademicData && !canSeePrivateInfo}
+          open={openRows.has("academics")}
+          onToggle={() => toggleRow("academics")}
+          className={ROW_ORDER.academics}
+        />
+      ) : null}
+      {contactButtons ? (
+        <>
+          <ProfileRow
+            icon={Phone}
+            title="Contact Information"
+            summary={canSeePrivateInfo && (cellPhone || contactEmail) ? "Call, text or email the athlete" : "Instagram and wrestling profile links"}
+            open={openRows.has("contact")}
+            onToggle={() => toggleRow("contact")}
+            className={ROW_ORDER.contact}
+          />
+          {/* On the banner's navy whatever the theme: the buttons are drawn for a dark ground. */}
+          <div className={cn("rounded-xl border border-white/10 bg-[#0A1628] p-4 lg:p-6", inRow("contact"))}>{contactButtons}</div>
+        </>
+      ) : null}
+      {hasHighlightContent || canEdit ? (
+        <ProfileRow
+          icon={Video}
+          title="Highlight Reel"
+          summary={hasHighlightContent ? "Watch the film" : "No video yet"}
+          open={openRows.has("film")}
+          onToggle={() => toggleRow("film")}
+          className={ROW_ORDER.film}
+        />
+      ) : null}
+      {hasBioContent || hasCollegeOpensContent || hasOtherHonoursContent || canEdit ? (
+        <ProfileRow
+          icon={UserRound}
+          title="About"
+          summary={[hasBioContent ? "Bio" : null, hasCollegeOpensContent ? "College open experience" : null, hasOtherHonoursContent ? "Other honours" : null].filter(Boolean).join(" · ") || "Nothing added yet"}
+          open={openRows.has("about")}
+          onToggle={() => toggleRow("about")}
+          className={ROW_ORDER.about}
+        />
+      ) : null}
+      {mayCompare ? (
+        <ProfileRow
+          icon={ArrowLeftRight}
+          title="Compare"
+          summary="Head to head, common opponents and similar wrestlers"
+          open={openRows.has("compare")}
+          onToggle={() => toggleRow("compare")}
+          className={ROW_ORDER.compare}
+        />
+      ) : null}
 
       {/* Who is recruiting this wrestler. Renders nothing unless the viewer is the athlete,
           a linked parent, or an admin — the endpoint refuses everybody else. */}
@@ -1695,7 +1791,7 @@ export function AthleteDetail({
       </div>
       {/* One "who's viewing you" panel: the counts, then the college programs and the subscription
           that names them. It was two - the programs up here, the counts far down the page. */}
-      <div id="college-views" className={cn("scroll-mt-24 px-1 empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels, inTab("views"))}>
+      <div id="college-views" className={cn("scroll-mt-24 px-1 empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels, inRow("views"))}>
         {canViewProfileStats && athlete.id ? (
           <ProfileViewStatsPanel athleteId={athlete.id} adminView={isAdmin && !isViewingOwnProfile}>
             <CoachViewsPanel athleteId={String(athlete.id)} embedded />
@@ -1920,7 +2016,7 @@ export function AthleteDetail({
       {SHOW_ATHLETE_BIO_SECTION && (hasBioContent || canEdit) ? (
       <Card
         id="bio"
-        className={cn("profile-card border-t-4 border-t-[#D3B574] shadow-md", mobileRecruiterLayout && PROFILE_SECTION_ORDER.bio, inTab("about"))}
+        className={cn("profile-card border-t-4 border-t-[#D3B574] shadow-md", mobileRecruiterLayout && PROFILE_SECTION_ORDER.bio, inRow("about"))}
         data-section="bio"
       >
         <div className={cn(mobileRecruiterLayout ? PROFILE_SECTION_HEADER : "bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6")}>
@@ -2149,7 +2245,7 @@ export function AthleteDetail({
         className={cn(
           "min-w-0 max-w-full",
           mobileRecruiterLayout && PROFILE_SECTION_ORDER.nationalResults,
-          inTab("results"),
+          inRow("results"),
         )}
       >
         {tournamentResultsComponent}
@@ -2162,21 +2258,22 @@ export function AthleteDetail({
       */}
       {/* Significant wins sit above the full match list: who somebody has beaten is the question
           a profile gets opened with, and the list underneath answers how many. */}
-      <div className={cn("min-w-0 max-w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.qualityWins, inTab("wins"))}>
-        <SignificantWinsSection athleteId={String(athlete.id)} qualityWinBlocks={profileQualityWins} styles="folkstyle" gender={(athlete as { gender?: string | null }).gender ?? null} />
+      <div className={cn("min-w-0 max-w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.qualityWins, inRow("wins"))}>
+        <SignificantWinsSection athleteId={String(athlete.id)} qualityWinBlocks={profileQualityWins} styles="folkstyle" gender={(athlete as { gender?: string | null }).gender ?? null} onLoaded={setWinsInfo} />
       </div>
 
       {/* 10. High School Career Match Results */}
       <div
         /** MatchDataSectionImproved takes its own theme prop; it needs no override hook. */
-        className={cn("min-w-0 max-w-full w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.inSeason, inTab("wins"))}
+        className={cn("min-w-0 max-w-full w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.inSeason, inRow("season"))}
       >
         <MatchDataSectionImproved
           athleteId={athlete.id}
           athleteName={athleteName}
           graduationYear={graduationYear}
           theme={isDark ? "dark" : "light"}
-          collapseOnMobile={mobileRecruiterLayout}
+          // The row above is the collapse now; a second one inside it was a tap for nothing.
+          collapseOnMobile={false}
         />
       </div>
 
@@ -2187,7 +2284,7 @@ export function AthleteDetail({
         className={cn(
           "profile-card border-t-4 border-t-[#D3B574] shadow-md",
           mobileRecruiterLayout && PROFILE_SECTION_ORDER.academics,
-          inTab("academics"),
+          inRow("academics"),
         )}
         data-section="academics"
       >
@@ -2282,7 +2379,7 @@ export function AthleteDetail({
         className={cn(
           "profile-card border-t-4 border-t-[#D3B574] shadow-md",
           mobileRecruiterLayout && PROFILE_SECTION_ORDER.highlights,
-          inTab("about"),
+          inRow("film"),
         )}
         data-section="highlights"
       >
@@ -2395,7 +2492,7 @@ export function AthleteDetail({
         className={cn(
           "profile-card border-t-4 border-t-[#D3B574] shadow-md",
           mobileRecruiterLayout && PROFILE_SECTION_ORDER.collegeOpens,
-          inTab("about"),
+          inRow("about"),
         )}
         data-section="college-opens"
       >
@@ -2441,7 +2538,7 @@ export function AthleteDetail({
         className={cn(
           "profile-card border-t-4 border-t-[#D3B574] shadow-md",
           mobileRecruiterLayout && PROFILE_SECTION_ORDER.achievements,
-          inTab("about"),
+          inRow("about"),
         )}
         data-section="achievements"
       >
@@ -2516,7 +2613,7 @@ export function AthleteDetail({
       ) : null}
 
       {olympicStylesSection ? (
-        <div className={cn("min-w-0 max-w-full w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.olympicStyles, inTab("results"))}>
+        <div className={cn("min-w-0 max-w-full w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.olympicStyles, inRow("results"))}>
           {olympicStylesSection}
         </div>
       ) : null}
@@ -2555,8 +2652,8 @@ export function AthleteDetail({
       {mayCompare && (
         <div
           className={cn(
-            "container mx-auto px-4 pt-8",
-            mobileRecruiterLayout && PROFILE_SECTION_ORDER.requestEdit,
+            "min-w-0",
+            inRow("compare"),
           )}
         >
           <Card className={"profile-card border-2 border-border bg-muted"}>
