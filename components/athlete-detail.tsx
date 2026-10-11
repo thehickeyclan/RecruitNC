@@ -1351,6 +1351,17 @@ export function AthleteDetail({
       ? ([["Teams", [hasSchool ? highSchool : null, hasClub ? wrestlingClub : null, ncUnitedLabel].filter(Boolean).join(" · ")]] as Array<[string, string]>)
       : []),
   ]
+  /*
+   * When the GPA was last changed (Matt, 11 October 2026): a 3.8 entered two years ago and a 3.8
+   * entered last month are different facts to a coach. Set by a database trigger whenever the
+   * GPA changes (scripts/sql/add-academic-gpa-updated-at.sql), so every way of saving it is
+   * covered. A GPA entered before the trigger existed has no date, and none is invented.
+   */
+  const gpaUpdatedRaw = (athleteData as { academic_gpa_updated_at?: string | null })?.academic_gpa_updated_at ?? null
+  const gpaUpdatedLabel =
+    gpaUpdatedRaw && !Number.isNaN(Date.parse(gpaUpdatedRaw))
+      ? new Date(gpaUpdatedRaw).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+      : null
   /** May see what only recruiters and the family see: contact, notable losses. */
   const recruiterOrFamily = mayCompare || canViewProfileStats || canEdit
   const FACT = "min-w-0 border-[#1a3a5f] p-3"
@@ -1479,7 +1490,10 @@ export function AthleteDetail({
         <div className={cn(FACT, "border-l")}>
           <dt className={FACT_LABEL}>GPA</dt>
           {canSeePrivateInfo ? (
-            <dd className={FACT_VALUE}>{effectiveGpa ? String(effectiveGpa) : "—"}</dd>
+            <>
+              <dd className={FACT_VALUE}>{effectiveGpa ? String(effectiveGpa) : "—"}</dd>
+              {effectiveGpa && gpaUpdatedLabel ? <dd className="mt-0.5 text-[11px] text-[#A8BBD1]">Updated {gpaUpdatedLabel}</dd> : null}
+            </>
           ) : (
             <>
               <dd className={cn(FACT_VALUE, "text-[15px]")}>Locked</dd>
@@ -1839,7 +1853,7 @@ export function AthleteDetail({
             !hasAcademicData
               ? "Not on file yet"
               : canSeePrivateInfo
-                ? [effectiveGpa ? `GPA ${effectiveGpa}` : null, effectiveSat ? `SAT ${effectiveSat}` : null, effectiveAct ? `ACT ${effectiveAct}` : null].filter(Boolean).join(" · ")
+                ? [effectiveGpa ? `GPA ${effectiveGpa}${gpaUpdatedLabel ? ` (updated ${gpaUpdatedLabel})` : ""}` : null, effectiveSat ? `SAT ${effectiveSat}` : null, effectiveAct ? `ACT ${effectiveAct}` : null].filter(Boolean).join(" · ")
                 : "Visible to approved college coaches"
           }
           locked={hasAcademicData && !canSeePrivateInfo}
@@ -2481,7 +2495,7 @@ export function AthleteDetail({
                         <p className="text-4xl font-bold text-foreground">
                           {Number(effectiveGpa).toFixed(2)}
                         </p>
-                        <p className="text-xs text-muted-foreground mt-2">Grade Point Average</p>
+                        <p className="text-xs text-muted-foreground mt-2">{gpaUpdatedLabel ? `Last updated ${gpaUpdatedLabel}` : "Grade Point Average"}</p>
                       </div>
                     )}
                     {effectiveSat != null && (

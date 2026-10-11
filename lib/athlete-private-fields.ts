@@ -29,6 +29,8 @@ export const PRIVATE_ATHLETE_FIELDS = [
   "location",
   // Academics — the profile page says out loud that these are for coaches and admins only
   "academic_gpa",
+  // When the GPA last changed says a GPA exists; it travels with it.
+  "academic_gpa_updated_at",
   "academic_sat",
   "academic_act",
   "gpa",
