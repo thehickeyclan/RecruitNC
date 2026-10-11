@@ -14,6 +14,7 @@ import Link from "next/link"
 import type { LucideIcon } from "lucide-react"
 import { BarChart3, ChevronDown, ChevronRight, ChevronUp, Lock, TrendingDown, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { weightLabel } from "@/lib/profile/weight-label"
 
 /* ------------------------------------------------------------------ data, as the app reads it */
 
@@ -160,6 +161,8 @@ export function useAppProfile(athleteId: string): {
   const [profile, setProfile] = useState<AppProfile | null>(null)
   const [wins, setWins] = useState<AppWin[]>([])
   const [losses, setLosses] = useState<AppWin[]>([])
+  /** The server's word on whether this viewer gets the losses at all: coaches, the family, admins. */
+  const [lossesVisible, setLossesVisible] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [winsLoaded, setWinsLoaded] = useState(false)
   useEffect(() => {
@@ -175,13 +178,14 @@ export function useAppProfile(athleteId: string): {
       if (cancelled) return
       setWins(Array.isArray(w?.wins) ? w.wins : [])
       setLosses(Array.isArray(w?.losses) ? w.losses : [])
+      setLossesVisible(w?.lossesVisible === true)
       setWinsLoaded(true)
     })
     return () => {
       cancelled = true
     }
   }, [athleteId])
-  return { profile, wins, losses, loaded, winsLoaded }
+  return { profile, wins, losses, lossesVisible, loaded, winsLoaded }
 }
 
 /* ------------------------------------------------------------------ the row */
@@ -306,9 +310,9 @@ function groupByEvent(rows: AppTournamentRow[], style: EventGroup["style"]): Eve
     .sort((a, b) => rank(a.name) - rank(b.name))
 }
 
-const rowSummary = (row: AppTournamentRow) => [row.placement, row.record, row.weight ? `${row.weight} lbs` : null].filter(Boolean).join(" · ") || null
+const rowSummary = (row: AppTournamentRow) => [row.placement, row.record, weightLabel(row.weight)].filter(Boolean).join(" · ") || null
 const divisionOf = (event: string) => {
-  const parts = event.split(/\s+[-·]\s+/)
+  const parts = event.split(/\s+[-–—·]\s+/)
   return parts.length > 1 ? parts[parts.length - 1]!.trim() : ""
 }
 

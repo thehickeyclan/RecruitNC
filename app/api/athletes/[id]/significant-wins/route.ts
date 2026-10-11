@@ -1,5 +1,4 @@
-import { NextResponse } from "next/server"
-import { namesLikelySamePerson } from "@/lib/athlete-name-match"
+import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { buildTocFieldBoard } from "@/lib/toc/field-board"
 import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
@@ -12,6 +11,10 @@ import { highSchoolBouts, isHighSchoolSeason } from "@/lib/high-school-window"
 import { loadStatePlacerIndex } from "@/lib/state-placers"
 import { mergeBoutSources } from "@/lib/bout-source-deduplication"
 import { styleOfEventForAthlete } from "@/lib/wrestling-style"
+import { resolveRequestUserId } from "@/lib/request-user"
+import { resolveAthleteOwnership } from "@/lib/mobile/athlete-ownership"
+import { classifyViewer } from "@/lib/viewer-role"
+import { sameReportedBout } from "@/lib/same-reported-bout"
 
 /**
  * The wins on a profile worth a reader's attention: over the TOC field, or over a ranked prospect.
@@ -27,9 +30,32 @@ import { styleOfEventForAthlete } from "@/lib/wrestling-style"
 
 export const dynamic = "force-dynamic"
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+/**
+ * Notable losses are for the people recruiting a wrestler and for the wrestler's own family, and
+ * nobody else (Matt, 11 October 2026: "families will look at other families' notable losses all
+ * the time"). Decided here, not on the page: the website hid the row while this endpoint went on
+ * handing the list to anyone who asked, and the iPhone app showed it. Cookie or bearer.
+ */
+async function maySeeLosses(request: NextRequest, admin: ReturnType<typeof createAdminClient>, athleteId: string): Promise<boolean> {
+  const userId = await resolveRequestUserId(request).catch(() => null)
+  if (!userId) return false
+  const { data: profile } = await admin
+    .from("user_profiles")
+    .select("role, profile_type, verified_coach, is_admin")
+    .eq("user_id", userId)
+    .maybeSingle()
+  // A college coach has access from sign-up, before review (the same reading as the perfect-recruit flag).
+  const who = classifyViewer(profile ?? null)
+  if (who.kind === "admin" || profile?.is_admin === true || (who.isCollegeCoach && who.verifiedCoach)) return true
+  return (await resolveAthleteOwnership(admin, athleteId, userId)).ok
+}
+
+const PRIVATE = { headers: { "Cache-Control": "private, no-store" } }
+
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const admin = createAdminClient()
+  const lossesVisible = await maySeeLosses(request, admin, id)
 
   const [{ data: rawRows }, { data: invitations }, rawTournamentBouts, stateIndex, { data: gradRow }, rawEventBouts] = await Promise.all([
     admin.from("matches").select("season,matches,grade").eq("athlete_id", id),
@@ -113,7 +139,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     scope: "national" as const,
   }))
   if (bouts.length === 0 && earlierBouts.length === 0 && curatedWins.length === 0 && submittedWins.length === 0) {
-    return NextResponse.json({ wins: submittedWins, losses: [] })
+    return NextResponse.json({ wins: submittedWins, losses: [], lossesVisible }, PRIVATE)
   }
 
   const tocField = buildTocFieldBoard(invitations ?? []).weights
@@ -175,20 +201,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
    * to the letter - JT Hill's TOC win arrived as "Jay Mills", 19 September, from the family and as
    * "Jeshurun Mills", 18 September, from the bracket - so two entries are one bout when the names
    * could be the same person and the dates are within two days. The earlier list wins.
+   * (lib/same-reported-bout.ts)
    */
-  const dayOf = (date: string | null) => {
-    const t = date ? Date.parse(date) : Number.NaN
-    return Number.isNaN(t) ? null : t / 86_400_000
-  }
-  const sameBout = (a: { opponent: string; date: string | null }, b: { opponent: string; date: string | null }) => {
-    if (!namesLikelySamePerson(a.opponent, b.opponent)) return false
-    const da = dayOf(a.date)
-    const db = dayOf(b.date)
-    return da == null || db == null ? a.date === b.date : Math.abs(da - db) <= 2
-  }
   const wins: Array<(typeof submittedWins)[number] | (typeof curatedWins)[number] | (typeof calculatedWins)[number]> = []
   for (const win of [...submittedWins, ...curatedWins, ...calculatedWins]) {
-    if (!wins.some((kept) => sameBout(kept, win))) wins.push(win)
+    if (!wins.some((kept) => sameReportedBout(kept, win))) wins.push(win)
   }
 
   /*
@@ -204,7 +221,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
    * ranked, state champion or state-placing opponent.
    */
   const lossBouts = mergeBoutSources(highSchoolBouts(rawEventBouts as never[], grad) as Bout[], matchBouts)
-  const losses = withAccoladesOnly(findSignificantLosses(lossBouts, index)).map((loss) => ({
+  const losses = !lossesVisible ? [] : withAccoladesOnly(findSignificantLosses(lossBouts, index)).map((loss) => ({
     opponent: loss.opponent,
     opponentSchool: loss.opponentSchool,
     event: loss.event,
@@ -219,8 +236,13 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     style: styleOfEventForAthlete(loss.event, null, gender),
   }))
 
-  return NextResponse.json({
-    wins: wins.map((w) => ({ ...w, style: styleOfEventForAthlete(w.event, null, gender) })),
-    losses,
-  })
+  return NextResponse.json(
+    {
+      wins: wins.map((w) => ({ ...w, style: styleOfEventForAthlete(w.event, null, gender) })),
+      losses,
+      // False means withheld, not "none on file": the row should not be drawn at all.
+      lossesVisible,
+    },
+    PRIVATE,
+  )
 }

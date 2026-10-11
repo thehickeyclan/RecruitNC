@@ -1813,7 +1813,7 @@ export function AthleteDetail({
       />
       {/* Losses are for the people weighing him and for his own family - not for the family down
           the road (Matt, 11 October 2026). The bout-by-bout record in Tournament Results stays public. */}
-      {recruiterOrFamily ? <AppNotableLosses losses={appData.losses} loaded={appData.winsLoaded} className={ROW_ORDER.losses} /> : null}
+      {recruiterOrFamily && appData.lossesVisible ? <AppNotableLosses losses={appData.losses} loaded={appData.winsLoaded} className={ROW_ORDER.losses} /> : null}
       <AppRow
         icon={ShieldCheck}
         title="Strength of Competition"
