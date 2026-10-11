@@ -14,7 +14,6 @@ import {
   MessageSquare,
   Star,
   Target,
-  Trophy,
   User,
   Users,
 } from "lucide-react"
@@ -46,14 +45,6 @@ import {
  * React click handlers run.
  */
 type Item = { href: string; label: string; icon: LucideIcon; badge?: number }
-
-const RESULTS_LINKS = [
-  { href: "/nchsaa/2026", label: "NCHSAA State Tournament" },
-  { href: "/nhsca", label: "NHSCA Nationals" },
-  { href: "/super32", label: "Super32" },
-  { href: "/fargo", label: "Fargo" },
-  { href: "/athletes", label: "College Commitments" },
-]
 
 const COMMUNITY_LINKS = [
   { href: "/?community=1", label: "Home" },
@@ -95,18 +86,6 @@ function SideMenu({ items, isActive, onNavigate }: { items: Item[]; isActive: (h
           </a>
         )
       })}
-      <details className="group/results" open={RESULTS_LINKS.some((l) => isActive(l.href))}>
-        <summary className={`${group} border-l-2 border-transparent`}>
-          <Trophy className="h-[18px] w-[18px] shrink-0" aria-hidden />
-          <span className="flex-1">Results</span>
-          <ChevronDown className="h-4 w-4 transition-transform group-open/results:rotate-180" aria-hidden />
-        </summary>
-        {RESULTS_LINKS.map((l) => (
-          <a key={l.href} href={l.href} onClick={onNavigate} className={`${sub} ${isActive(l.href) ? "text-[#D3B574]" : ""}`}>
-            {l.label}
-          </a>
-        ))}
-      </details>
       <details className="group/community mt-auto border-t border-white/10 pt-2">
         <summary className={`${group} text-white/45`}>
           <span className="flex-1 text-[11px] font-black uppercase tracking-widest">NC United</span>
