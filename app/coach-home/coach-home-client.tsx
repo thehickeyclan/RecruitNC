@@ -184,9 +184,21 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
             {!recruits.loaded ? (
               <p className="mt-4 text-sm text-white/55">Your board could not be loaded just now. Open it directly to try again.</p>
             ) : recruits.total === 0 ? (
-              <p className="mt-4 text-sm text-white/55">
-                No one on your board yet. Open any wrestler&apos;s profile and choose <span className="font-bold text-white">Add to Watch List</span>; your staff shares one board.
-              </p>
+              <div className="mt-4 rounded-lg border border-dashed border-white/15 p-4">
+                <p className="text-base font-bold text-white">Start your recruiting board</p>
+                <p className="mt-1 text-sm text-white/60">
+                  Tap the <Star className={`mx-0.5 inline h-3.5 w-3.5 ${GOLD}`} aria-label="star" /> on any wrestler&apos;s profile to add him to My Recruits. From
+                  there you track his stage, log calls and texts, and message him. Your staff shares one board.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Link href="/prospects/all" className="rounded-lg bg-[#D3B574] px-4 py-2 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
+                    Browse athletes
+                  </Link>
+                  <Link href="/public-rankings" className="rounded-lg border border-white/20 px-4 py-2 text-sm font-bold text-white hover:border-[#D3B574] hover:text-[#D3B574]">
+                    Open rankings
+                  </Link>
+                </div>
+              </div>
             ) : (
               <>
                 <p className="mt-3 text-3xl font-black">
@@ -210,11 +222,6 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
                 </ul>
               </>
             )}
-            {data.schoolId ? (
-              <Link href={`/schools/${data.schoolId}/portal`} className={`${MORE} mt-3`}>
-                {data.program ? `${data.program} recruiting portal` : "Program recruiting portal"} <ArrowRight className="h-3 w-3" />
-              </Link>
-            ) : null}
           </section>
 
           <section className={`${PANEL} p-4 sm:p-5`} aria-labelledby="ch-messages">

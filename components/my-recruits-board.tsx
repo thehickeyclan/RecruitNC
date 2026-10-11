@@ -192,8 +192,8 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
               <Star className="mx-auto h-8 w-8 text-[#D3B574]" aria-hidden />
               <p className="mt-3 text-lg font-bold">No recruits yet</p>
               <p className="mt-1 text-sm text-white/60">
-                Open any wrestler&apos;s profile and tap <span className="font-semibold text-white">Add to Watch List</span>. They
-                will show up here.
+                Tap the star on any wrestler&apos;s profile to add him here. Then track his stage, log calls and texts, and
+                message him from this board.
               </p>
               <Link
                 href="/public-rankings"
