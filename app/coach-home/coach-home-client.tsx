@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import Link from "next/link"
 import { CoachTabs } from "@/components/coach-tabs"
+import { RECRUITING_BRAND, recruitingCoverage } from "@/lib/recruiting/brand"
 import { FitBadge, type FitBadgeFlag } from "@/components/fit-badge"
 import { ArrowRight, BarChart3, FileText, GitCompareArrows, Lock, MessageSquare, Search, Star, Target, Users } from "lucide-react"
 
@@ -112,14 +113,14 @@ function WrestlerSearch({ athletes }: { athletes: CoachHomeData["athletes"] }) {
           </ul>
         ) : (
           <p className="mt-3 text-sm text-white/50">
-            No North Carolina wrestler in the current classes matches that.{" "}
+            No {recruitingCoverage()} wrestler in the current classes matches that.{" "}
             <Link href="/prospects/all" className={`${GOLD} hover:underline`}>
               Browse all profiles
             </Link>
           </p>
         )
       ) : (
-        <p className="mt-2 text-xs text-white/40">{athletes.length.toLocaleString()} North Carolina wrestlers in the current classes.</p>
+        <p className="mt-2 text-xs text-white/40">{athletes.length.toLocaleString()} {recruitingCoverage()} wrestlers in the current classes.</p>
       )}
     </div>
   )
@@ -158,10 +159,10 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
             />
           ) : null}
           <div className="min-w-0">
-            <p className={`text-[11px] font-black uppercase tracking-widest ${GOLD}`}>RecruitNC · Coach Home</p>
+            <p className={`text-[11px] font-black uppercase tracking-widest ${GOLD}`}>{RECRUITING_BRAND.name} · Coach Home</p>
             <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">{data.coachName ? `Welcome, Coach ${data.coachName}` : "Welcome, Coach"}</h1>
             <p className="mt-1 text-sm text-white/55">
-              {data.program ? `${data.program} · ` : ""}Everything you use to recruit North Carolina, in one place.
+              {data.program ? `${data.program} · ` : ""}Everything you use to recruit {recruitingCoverage()}, in one place.
             </p>
           </div>
         </header>
@@ -294,7 +295,7 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
           {data.rankingYears.map((year) => (
             <Tool key={year} href={`/public-rankings/${year}`} icon={BarChart3} title={`Class of ${year} rankings`} body="The published class board, updated through the season." />
           ))}
-          <Tool href="/prospects/all" icon={Users} title="All athlete profiles" body="Every North Carolina profile, with filters for class, weight and last competed." />
+          <Tool href="/prospects/all" icon={Users} title="All athlete profiles" body={`Every ${recruitingCoverage()} profile, with filters for class, weight and last competed.`} />
           <Tool href="/athletes" icon={Users} title="College commitments" body="Who has committed where, this class and last." />
         </div>
 

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { Flag, Loader2, Send, ShieldOff, ShieldCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { StageChip, wrestlerLine } from "@/components/coach-messages/inbox-list"
 
 type Message = { id: string; body: string; senderRole: string; senderName: string; createdAt: string; mine: boolean }
 type Thread = {
@@ -15,6 +16,7 @@ type Thread = {
   stopped: boolean
   viewerRole: "coach" | "athlete" | "parent" | "admin"
   canReply: boolean
+  wrestler?: { classYear: number | null; weight: string | null; school: string | null; state: string | null; stage: string | null } | null
   messages: Message[]
 }
 
@@ -25,7 +27,16 @@ const when = (iso: string) =>
  * One coach ↔ family conversation. The same screen for the coach, the wrestler, a parent and an
  * admin reviewing a report; what each can do comes from the server (`canReply`, `viewerRole`).
  */
-export function Conversation({ threadId, compact = false }: { threadId: string; compact?: boolean }) {
+export function Conversation({
+  threadId,
+  compact = false,
+  pane = false,
+}: {
+  threadId: string
+  compact?: boolean
+  /** Fills the right-hand pane of the inbox: the messages scroll, the reply box stays put. */
+  pane?: boolean
+}) {
   const [thread, setThread] = useState<Thread | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState("")
@@ -33,7 +44,7 @@ export function Conversation({ threadId, compact = false }: { threadId: string; 
   const [notice, setNotice] = useState<string | null>(null)
   const [reporting, setReporting] = useState(false)
   const [reason, setReason] = useState("")
-  const endRef = useRef<HTMLDivElement>(null)
+  const endRef = useRef<HTMLLIElement>(null)
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/coach-messages/${threadId}`, { credentials: "include" })
@@ -51,7 +62,7 @@ export function Conversation({ threadId, compact = false }: { threadId: string; 
 
   useEffect(() => {
     // On the profile the conversation is one card among many; jumping the page would lose the reader.
-    if (!compact) endRef.current?.scrollIntoView({ block: "end" })
+    if (!compact) endRef.current?.scrollIntoView({ block: pane ? "nearest" : "end" })
   }, [thread?.messages.length, compact])
 
   const send = async () => {
@@ -125,12 +136,15 @@ export function Conversation({ threadId, compact = false }: { threadId: string; 
   const title = thread.viewerRole === "coach" ? thread.athleteName || "Wrestler" : thread.coachName
   const subtitle =
     thread.viewerRole === "coach"
-      ? "The wrestler and their linked parents see this conversation."
+      ? wrestlerLine(thread.wrestler ?? {}) ?? "The wrestler and their linked parents see this conversation."
       : `${thread.program ? `${thread.program} · ` : ""}About ${thread.athleteName || "your wrestler"}. Everyone linked to the profile sees this conversation.`
 
+  const coachSide = thread.viewerRole === "coach" || thread.viewerRole === "admin"
+  const action = "inline-flex min-h-[36px] items-center rounded-lg border border-white/20 px-3 text-xs font-bold text-white/80 hover:border-[#D3B574] hover:text-[#D3B574]"
+
   return (
-    <div className="flex flex-col gap-4">
-      <div className={cn("flex flex-wrap items-start justify-between gap-3", compact && "justify-end")}>
+    <div className={cn("flex flex-col gap-4", pane && "h-full min-h-0")}>
+      <div className={cn("flex flex-wrap items-start justify-between gap-3", compact && "justify-end", pane && "border-b border-white/10 pb-4")}>
         <div className={cn("min-w-0", compact && "hidden")}>
           <h1 className="text-2xl font-black tracking-tight">
             {thread.viewerRole === "coach" ? (
@@ -141,11 +155,24 @@ export function Conversation({ threadId, compact = false }: { threadId: string; 
               title
             )}
           </h1>
-          <p className="mt-1 text-sm text-white/60">{subtitle}</p>
+          <p className={cn("mt-1 text-sm", coachSide && thread.wrestler ? "font-semibold text-[#D3B574]" : "text-white/60")}>{subtitle}</p>
+          {coachSide && thread.wrestler ? (
+            <p className="mt-2 flex flex-wrap items-center gap-2 text-xs text-white/50">
+              <StageChip stage={thread.wrestler.stage} />
+              {thread.wrestler.stage ? null : <span>Not on your board yet.</span>}
+              <span>The wrestler and their linked parents see this conversation.</span>
+            </p>
+          ) : null}
           {thread.viewerRole === "admin" ? (
             <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-[#D3B574]">Staff review · read-only</p>
           ) : null}
         </div>
+        {thread.viewerRole === "coach" && !compact ? (
+          <div className="flex flex-wrap gap-2">
+            <a href={`/athletes/${thread.athleteId}`} className={action}>Profile</a>
+            <a href={`/compare?left=${thread.athleteId}&src=inbox`} className={action}>Compare</a>
+          </div>
+        ) : null}
         {family ? (
           <div className="flex flex-wrap gap-2">
             <button
@@ -193,7 +220,7 @@ export function Conversation({ threadId, compact = false }: { threadId: string; 
 
       {notice ? <p className="rounded-lg border border-[#D3B574]/30 bg-[#D3B574]/10 p-3 text-sm text-[#f0dcae]">{notice}</p> : null}
 
-      <ol className="flex flex-col gap-3">
+      <ol className={cn("flex flex-col gap-3", pane && "min-h-0 flex-1 overflow-y-auto pr-1")}>
         {thread.messages.map((m) => (
           <li key={m.id} className={cn("flex flex-col", m.mine ? "items-end" : "items-start")}>
             <div
@@ -209,15 +236,15 @@ export function Conversation({ threadId, compact = false }: { threadId: string; 
             </span>
           </li>
         ))}
+        <li ref={endRef} aria-hidden />
       </ol>
-      <div ref={endRef} />
 
       {thread.stopped && thread.viewerRole === "coach" ? (
         <p className="rounded-lg border border-white/10 bg-white/[0.04] p-4 text-sm text-white/60">
           This family has turned off messages from you.
         </p>
       ) : thread.canReply ? (
-        <div className={compact ? "border-t border-white/10 pt-3" : "sticky bottom-0 -mx-4 border-t border-white/10 bg-[#0A1628]/95 px-4 py-3 backdrop-blur"}>
+        <div className={compact || pane ? "border-t border-white/10 pt-3" : "sticky bottom-0 -mx-4 border-t border-white/10 bg-[#0A1628]/95 px-4 py-3 backdrop-blur"}>
           <div className="flex items-end gap-2">
             <textarea
               value={draft}

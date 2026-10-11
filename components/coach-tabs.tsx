@@ -4,6 +4,9 @@ import Link from "next/link"
  * One row of tabs across a coach's pages, so Coach Home, the board and the perfect recruit read as
  * one place rather than three (Matt, 10 October 2026). The board stays its own page - it is a
  * working table that needs the width - and the tabs are what join them.
+ *
+ * A college coach's side menu (components/recruiting/recruiting-shell.tsx) carries the same
+ * links, so the row is hidden under it; admins, on the community bar, still get the tabs.
  */
 const TABS = [
   { key: "home", href: "/coach-home", label: "Coach Home" },
@@ -17,7 +20,7 @@ export type CoachTab = (typeof TABS)[number]["key"]
 
 export function CoachTabs({ active, className = "" }: { active: CoachTab; className?: string }) {
   return (
-    <nav aria-label="Coach pages" className={`-mx-4 overflow-x-auto px-4 ${className}`}>
+    <nav aria-label="Coach pages" className={`-mx-4 overflow-x-auto px-4 group-data-[shell=recruiting]/shell:hidden ${className}`}>
       <ul className="flex min-w-max gap-1 border-b border-white/10">
         {TABS.map((t) => (
           <li key={t.key}>

@@ -4,6 +4,8 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 
 import { isCollegeCoachRole } from "@/lib/coach-auto-approve"
 import { collegeForCoach } from "@/lib/college-domain-schools"
+import { loadLastCompeted } from "@/lib/prospect-last-competed"
+import { programStaffIds, programStages } from "@/lib/recruiting/program-stage"
 
 /**
  * Coach → prospect messaging (decided 7 Oct 2026). Not a chat product — a recruiting inbox:
@@ -277,6 +279,60 @@ async function insertMessage(
   return { ok: true, threadId, messageId: message.id as string, isNewThread, senderRole: role }
 }
 
+/**
+ * Who a coach is talking to, as the inbox and the conversation header print it: class, weight,
+ * school, state, and where this coach has the wrestler in the recruiting funnel.
+ *
+ * The weight is the one he last competed at; the listed profile weight goes stale and is only the
+ * fallback when no result records one (lib/prospect-last-competed.ts).
+ */
+export type WrestlerIdentity = {
+  classYear: number | null
+  weight: string | null
+  school: string | null
+  state: string | null
+  /** The program's funnel stage for the wrestler (lib/recruiting/program-stage.ts), null when not on the board. */
+  stage: string | null
+}
+
+async function loadWrestlerIdentities(
+  admin: SupabaseClient,
+  athleteIds: string[],
+  coachUserId: string | null,
+): Promise<Map<string, WrestlerIdentity & { name: string; claimedBy: string | null }>> {
+  const ids = [...new Set(athleteIds.filter(Boolean))]
+  const out = new Map<string, WrestlerIdentity & { name: string; claimedBy: string | null }>()
+  if (!ids.length) return out
+  const staff = coachUserId ? await programStaffIds(admin, coachUserId) : []
+  const [{ data: athletes }, { data: stars }] = await Promise.all([
+    admin.from("athletes").select("id, name, claimed_by_user_id, graduationyear, weightclass, highschool, state, is_nc_athlete").in("id", ids),
+    staff.length
+      ? admin.from("college_coach_stars").select("athlete_id, pipeline_stage, updated_at, starred_at").in("coach_user_id", staff).in("athlete_id", ids)
+      : Promise.resolve({ data: [] as Array<{ athlete_id: string; pipeline_stage: string | null; updated_at: string | null; starred_at: string }> }),
+  ])
+  const rows = athletes ?? []
+  const last = await loadLastCompeted(
+    admin,
+    rows.map((a) => String(a.id)),
+    new Map(rows.map((a) => [String(a.id), Number(a.graduationyear) || null])),
+  ).catch(() => new Map<string, { weight?: string | null }>())
+  const stage = programStages((stars ?? []) as Array<{ athlete_id: string; pipeline_stage: string | null; updated_at: string | null; starred_at: string }>)
+  for (const a of rows) {
+    const id = String(a.id)
+    out.set(id, {
+      name: String(a.name ?? ""),
+      claimedBy: (a.claimed_by_user_id as string | null) ?? null,
+      classYear: a.graduationyear == null ? null : Number(a.graduationyear),
+      weight: last.get(id)?.weight ?? (a.weightclass ? String(a.weightclass) : null),
+      school: (a.highschool as string | null) ?? null,
+      // `state` is filled for about one NC wrestler in ten (11 October 2026); the NC flag covers the rest.
+      state: (a.state as string | null)?.trim() || (a.is_nc_athlete ? "NC" : null),
+      stage: stage.get(id) ?? null,
+    })
+  }
+  return out
+}
+
 export type ThreadSummary = {
   id: string
   athleteId: string
@@ -293,8 +349,12 @@ export type ThreadSummary = {
   /** The other side wrote last: the coach owes the family a reply, or the family owes the coach. */
   yourTurn: boolean
   classYear: number | null
+  /** Last competed weight; see WrestlerIdentity. */
   weight: string | null
   school: string | null
+  state: string | null
+  /** Only for the coach's own threads. */
+  stage: string | null
 }
 
 /** Every conversation this account is in, newest first: as the coach, or as family. */
@@ -311,17 +371,14 @@ export async function listThreads(admin: SupabaseClient, userId: string, opts: {
   if (!threads.length) return []
 
   const ids = threads.map((t) => t.id)
-  const [{ data: athletes }, { data: coaches }, { data: reads }, { data: messages }] = await Promise.all([
-    admin.from("athletes").select("id, name, claimed_by_user_id, graduationyear, weightclass, highschool").in("id", [...new Set(threads.map((t) => t.athlete_id))]),
+  const [identities, { data: coaches }, { data: reads }, { data: messages }] = await Promise.all([
+    loadWrestlerIdentities(admin, threads.map((t) => t.athlete_id), userId),
     admin.from("user_profiles").select("user_id, full_name, first_name, last_name").in("user_id", [...new Set(threads.map((t) => t.coach_user_id))]),
     admin.from("coach_thread_reads").select("thread_id, last_read_at").eq("user_id", userId).in("thread_id", ids),
     // Latest message per thread. Threads are short; this reads the recent tail and keeps the first per thread.
     admin.from("coach_messages").select("thread_id, body, sender_role, created_at").in("thread_id", ids).order("created_at", { ascending: false }).limit(Math.max(50, ids.length * 5)),
   ])
 
-  const athleteName = new Map((athletes ?? []).map((a) => [String(a.id), String(a.name ?? "")]))
-  const athleteRow = new Map((athletes ?? []).map((a) => [String(a.id), a]))
-  const claimedBy = new Map((athletes ?? []).map((a) => [String(a.id), (a.claimed_by_user_id as string | null) ?? null]))
   const coachName = new Map((coaches ?? []).map((c) => [String(c.user_id), displayName(c)]))
   const readAt = new Map((reads ?? []).map((r) => [String(r.thread_id), String(r.last_read_at)]))
   const latest = new Map<string, { body: string; sender_role: string; created_at: string }>()
@@ -332,14 +389,14 @@ export async function listThreads(admin: SupabaseClient, userId: string, opts: {
   return threads.map((t) => {
     const last = latest.get(t.id)
     const viewerRole: ThreadSummary["viewerRole"] =
-      t.coach_user_id === userId ? "coach" : claimedBy.get(t.athlete_id) === userId ? "athlete" : "parent"
+      t.coach_user_id === userId ? "coach" : identities.get(t.athlete_id)?.claimedBy === userId ? "athlete" : "parent"
     const read = readAt.get(t.id)
-    const a = athleteRow.get(t.athlete_id)
+    const a = identities.get(t.athlete_id)
     const lastRole = last?.sender_role ?? null
     return {
       id: t.id,
       athleteId: t.athlete_id,
-      athleteName: athleteName.get(t.athlete_id) ?? "",
+      athleteName: a?.name ?? "",
       coachName: coachName.get(t.coach_user_id) || "College coach",
       program: t.program,
       lastMessageAt: t.last_message_at,
@@ -349,9 +406,11 @@ export async function listThreads(admin: SupabaseClient, userId: string, opts: {
       stopped: Boolean(t.stopped_at),
       viewerRole,
       yourTurn: lastRole != null && (viewerRole === "coach" ? lastRole !== "coach" : lastRole === "coach") && !(viewerRole === "coach" && t.stopped_at),
-      classYear: a?.graduationyear == null ? null : Number(a.graduationyear),
-      weight: a?.weightclass ? String(a.weightclass) : null,
-      school: (a?.highschool as string | null) ?? null,
+      classYear: a?.classYear ?? null,
+      weight: a?.weight ?? null,
+      school: a?.school ?? null,
+      state: a?.state ?? null,
+      stage: viewerRole === "coach" ? a?.stage ?? null : null,
     }
   })
 }
@@ -365,6 +424,8 @@ export type ThreadDetail = {
   stopped: boolean
   viewerRole: ThreadRole
   canReply: boolean
+  /** Who the coach is writing to. Null for the family, who know their own wrestler. */
+  wrestler: WrestlerIdentity | null
   messages: Array<{ id: string; body: string; senderRole: string; senderName: string; createdAt: string; mine: boolean }>
 }
 
@@ -383,12 +444,13 @@ export async function getThread(admin: SupabaseClient, threadId: string, userId:
     .order("created_at", { ascending: true })
 
   const senderIds = [...new Set([t.coach_user_id, ...(messages ?? []).map((m) => m.sender_user_id as string).filter(Boolean)])]
-  const [{ data: profiles }, { data: athlete }] = await Promise.all([
+  const [{ data: profiles }, identities] = await Promise.all([
     admin.from("user_profiles").select("user_id, full_name, first_name, last_name").in("user_id", senderIds),
-    admin.from("athletes").select("name").eq("id", t.athlete_id).maybeSingle(),
+    loadWrestlerIdentities(admin, [t.athlete_id], t.coach_user_id),
   ])
   const names = new Map((profiles ?? []).map((p) => [String(p.user_id), displayName(p)]))
-  const wrestler = String(athlete?.name ?? "")
+  const identity = identities.get(t.athlete_id) ?? null
+  const wrestler = identity?.name ?? ""
 
   // An admin reading for a report does not mark it read for the people in it.
   if (role !== "admin") {
@@ -406,6 +468,10 @@ export async function getThread(admin: SupabaseClient, threadId: string, userId:
     stopped: Boolean(t.stopped_at),
     viewerRole: role,
     canReply: role === "athlete" || role === "parent" || (role === "coach" && !t.stopped_at),
+    wrestler:
+      identity && (role === "coach" || role === "admin")
+        ? { classYear: identity.classYear, weight: identity.weight, school: identity.school, state: identity.state, stage: identity.stage }
+        : null,
     messages: (messages ?? []).map((m) => {
       const senderRole = String(m.sender_role)
       const name = names.get(String(m.sender_user_id)) || ""

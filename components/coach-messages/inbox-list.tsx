@@ -19,8 +19,28 @@ export type ThreadSummary = {
   viewerRole: "coach" | "athlete" | "parent"
   yourTurn?: boolean
   classYear?: number | null
+  /** Last competed weight (lib/coach-messages.ts), never the listed one. */
   weight?: string | null
   school?: string | null
+  state?: string | null
+  /** The coach's funnel stage for this wrestler, when he is on their board. */
+  stage?: string | null
+}
+
+export type InboxFilter = "all" | "unread" | "reply"
+
+/** "Class of 2027 · 174 lbs · Lincolnton · NC": who a coach is talking to, the same on every surface. */
+export function wrestlerLine(w: { classYear?: number | null; weight?: string | null; school?: string | null; state?: string | null }): string | null {
+  return [w.classYear ? `Class of ${w.classYear}` : null, w.weight ? `${w.weight} lbs` : null, w.school, w.state].filter(Boolean).join(" · ") || null
+}
+
+export function StageChip({ stage, className }: { stage?: string | null; className?: string }) {
+  if (!stage) return null
+  return (
+    <span className={cn("shrink-0 rounded-full border border-white/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white/70", className)}>
+      {stage}
+    </span>
+  )
 }
 
 const day = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" })
@@ -40,6 +60,12 @@ export function InboxList({
   listClassName,
   renderOpen,
   initialOpenId = null,
+  selectedId = null,
+  onSelect,
+  filter = "all",
+  query = "",
+  reloadKey = 0,
+  onCounts,
 }: {
   athleteId?: string
   familyOnly?: boolean
@@ -56,6 +82,19 @@ export function InboxList({
   renderOpen?: (threadId: string) => React.ReactNode
   /** Conversation to start open, e.g. from an email link (?thread=). */
   initialOpenId?: string | null
+  /**
+   * The two-pane inbox: a row is a button that hands its conversation to the pane beside it
+   * rather than a link. (A link cannot do this - app/layout.tsx navigates every same-site <a> on
+   * capture, before a React handler runs.)
+   */
+  selectedId?: string | null
+  onSelect?: (thread: ThreadSummary) => void
+  filter?: InboxFilter
+  /** Narrows by wrestler, coach, school or program. */
+  query?: string
+  /** Bump to re-read the list, e.g. after a new conversation is started. */
+  reloadKey?: number
+  onCounts?: (counts: { all: number; unread: number; reply: number }) => void
 }) {
   const [threads, setThreads] = useState<ThreadSummary[] | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -76,12 +115,29 @@ export function InboxList({
         setThreads([])
         setError(e instanceof Error ? e.message : "Could not load messages.")
       })
-  }, [athleteId])
+  }, [athleteId, reloadKey])
+
+  useEffect(() => {
+    if (!threads || !onCounts) return
+    onCounts({ all: threads.length, unread: threads.filter((t) => t.unread).length, reply: threads.filter((t) => t.yourTurn).length })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [threads])
 
   if (threads === null) return <p className="text-sm text-white/50">Loading…</p>
-  const rows = (familyOnly ? threads.filter((t) => t.viewerRole !== "coach") : threads).slice(0, limit ?? Infinity)
+  const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
+  const rows = (familyOnly ? threads.filter((t) => t.viewerRole !== "coach") : threads)
+    .filter((t) => (filter === "unread" ? t.unread : filter === "reply" ? t.yourTurn : true))
+    .filter((t) => {
+      if (!words.length) return true
+      const hay = `${t.athleteName} ${t.coachName} ${t.school ?? ""} ${t.program ?? ""}`.toLowerCase()
+      return words.every((w) => hay.includes(w))
+    })
+    .slice(0, limit ?? Infinity)
   if (error && !rows.length) return <p className="text-sm text-red-200">{error}</p>
-  if (!rows.length) return <>{empty ?? null}</>
+  if (!rows.length) {
+    if (threads.length && (filter !== "all" || words.length)) return <p className="px-4 py-6 text-sm text-white/50">No conversations match.</p>
+    return <>{empty ?? null}</>
+  }
 
   return (
     <>
@@ -91,7 +147,7 @@ export function InboxList({
         const who = t.viewerRole === "coach" ? t.athleteName || "Wrestler" : t.coachName
         const sub =
           t.viewerRole === "coach"
-            ? [t.classYear ? `Class of ${t.classYear}` : null, t.weight ? `${t.weight} lbs` : null, t.school].filter(Boolean).join(" · ") || null
+            ? wrestlerLine(t)
             : [t.program, t.viewerRole === "parent" ? `about ${t.athleteName}` : null].filter(Boolean).join(" · ")
         const lastBy =
           t.lastSenderRole === "coach"
@@ -102,7 +158,12 @@ export function InboxList({
             <RowShell
               href={`/inbox/${t.id}`}
               onToggle={
-                renderOpen
+                onSelect
+                  ? () => {
+                      onSelect(t)
+                      setThreads((all) => all?.map((x) => (x.id === t.id ? { ...x, unread: false } : x)) ?? all)
+                    }
+                  : renderOpen
                   ? () => {
                       setOpenId((cur) => (cur === t.id ? null : t.id))
                       // Opening it marks it read on the server; mirror that here.
@@ -110,7 +171,7 @@ export function InboxList({
                     }
                   : undefined
               }
-              expanded={openId === t.id}
+              expanded={onSelect ? selectedId === t.id : openId === t.id}
             >
               <span
                 className={cn("mt-2 h-2 w-2 shrink-0 rounded-full", t.unread ? "bg-[#D3B574]" : "bg-transparent")}
@@ -119,16 +180,21 @@ export function InboxList({
               <span className="min-w-0 flex-1">
                 <span className="flex items-baseline gap-2">
                   <span className={cn("truncate text-[15px]", t.unread ? "font-bold text-white" : "font-semibold text-white/85")}>{who}</span>
-                  {t.unread ? (
-                    <span className="shrink-0 rounded-full bg-[#D3B574] px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-[#0A1628]">New</span>
-                  ) : t.yourTurn ? (
-                    <span className="shrink-0 rounded-full border border-[#D3B574]/50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#D3B574]">
-                      Needs your reply
-                    </span>
-                  ) : null}
                   <span className="ml-auto shrink-0 text-xs text-white/45">{day(t.lastMessageAt)}</span>
                 </span>
-                {sub ? <span className="block truncate text-xs text-[#D3B574]/90">{sub}</span> : null}
+                {sub ? <span className="block text-xs text-[#D3B574]/90">{sub}</span> : null}
+                {t.unread || t.yourTurn || (t.viewerRole === "coach" && t.stage) ? (
+                  <span className="mt-1 flex flex-wrap items-center gap-1.5">
+                    {t.unread ? (
+                      <span className="shrink-0 rounded-full bg-[#D3B574] px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-[#0A1628]">New</span>
+                    ) : t.yourTurn ? (
+                      <span className="shrink-0 rounded-full border border-[#D3B574]/50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#D3B574]">
+                        Needs your reply
+                      </span>
+                    ) : null}
+                    <StageChip stage={t.viewerRole === "coach" ? t.stage : null} />
+                  </span>
+                ) : null}
                 <span className="mt-0.5 block truncate text-sm text-white/55">
                   {t.stopped ? "Messages stopped · " : ""}
                   {lastBy}
@@ -166,7 +232,7 @@ function RowShell({
     )
   }
   return (
-    <button type="button" onClick={onToggle} aria-expanded={expanded} className={cn(cls, expanded && "bg-white/[0.04]")}>
+    <button type="button" onClick={onToggle} aria-expanded={expanded} className={cn(cls, expanded && "bg-white/[0.07] shadow-[inset_2px_0_0_#D3B574]")}>
       {children}
     </button>
   )
