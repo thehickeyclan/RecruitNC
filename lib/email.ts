@@ -3,6 +3,8 @@
  * Uses Resend for email delivery (from: info@ncwrestlingunited.com)
  */
 
+import { appDownloadEmailHtml } from "@/lib/app-download-email-block"
+
 const FROM_BLUE = "NC Wrestling United <info@ncwrestlingunited.com>"
 const SITE_URL = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXT_PUBLIC_SITE_URL || "https://app.ncwrestlingunited.com"
 
@@ -500,6 +502,7 @@ export async function sendOrderConfirmationEmail(
         ? `<p style="margin: 16px 0;">Shipping to: ${escapeHtmlReceipt(addressBlock)}</p>`
         : `<p style="margin: 16px 0; color: #6b7280; font-size: 14px;">No shipping address was stored on this receipt (common for digital-only orders or when only billing details were collected). If you expected a ship-to address, reply to this email and we&apos;ll help.</p>`
     }
+    ${appDownloadEmailHtml()}
     <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
     <p style="color: #6b7280; font-size: 14px;">Questions? Contact <a href="mailto:info@ncwrestlingunited.com" style="color: #003366;">info@ncwrestlingunited.com</a></p>
   </div>
