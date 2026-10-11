@@ -455,14 +455,14 @@ export default function ProspectsAllClient({
       if (rankFilter === "ranked" || rankFilter === "unranked") {
         const gradYear = prospect.graduationyear
         const rawRank = getRawRank(prospect)
-        const maxRank =
-          gradYear === 2028
-            ? 25
-            : gradYear === 2029
-              ? 20
-              : gradYear === 2026 || gradYear === 2027
-                ? 30
-                : 0
+        /*
+         * The published depth of each class, from the one place that knows it - the same rule the
+         * rank column prints from. This used to carry its own typed cut-offs (25 for 2028, 20 for
+         * 2029), so "Ranked" hid #26-30 of a class the column showed thirty of, and would have
+         * counted five 2029s the column leaves blank.
+         */
+        const classYear = gradYear == null ? null : Number(gradYear)
+        const maxRank = isPublicRankingsYearPublished(classYear) ? getPublicRankingsMax(classYear) : 0
         const hasOfficialRank =
           Number.isFinite(rawRank) && rawRank >= 1 && rawRank <= maxRank
         if (rankFilter === "ranked" && !hasOfficialRank) return false
