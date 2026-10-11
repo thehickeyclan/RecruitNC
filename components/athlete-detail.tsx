@@ -1099,31 +1099,43 @@ export function AthleteDetail({
   }
 
   const lastCompeted = profileWeightDisplay?.lastCompeted ?? null
+  /*
+   * The banner's facts: class, school, club, and the weight he last competed at (Matt, 10 October
+   * 2026). The listed weight is gone from here - it sat beside "last competed" saying something
+   * different a third of the time, and the one a coach wants is the one he actually made. It
+   * shows only as a fallback, labelled as listed, when no result with a weight is on file.
+   */
+  const hasSchool = Boolean(highSchool && highSchool !== "Not specified")
+  const hasClub = Boolean(wrestlingClub && wrestlingClub !== "Not specified")
+  const bannerText = (text: string) => <span className="block text-base font-bold leading-tight lg:text-xl">{text}</span>
+  const editWeight = canEdit ? (
+    <button
+      type="button"
+      className="inline-flex items-center rounded p-0.5 text-white/60 hover:bg-white/10 hover:text-white"
+      onClick={() => setEditingSection("weight")}
+      aria-label="Edit weight"
+    >
+      <Edit className="h-3.5 w-3.5" />
+    </button>
+  ) : undefined
   const bannerStats: BannerStat[] = [
     { label: "Year", value: graduationYear || "—" },
-    {
-      label: "Weight",
-      value: weightClassLabel === "Not specified" ? "—" : `${weightClassLabel} lbs`,
-      action: canEdit ? (
-        <button
-          type="button"
-          className="inline-flex items-center rounded p-0.5 text-white/60 hover:bg-white/10 hover:text-white"
-          onClick={() => setEditingSection("weight")}
-          aria-label="Edit weight"
-        >
-          <Edit className="h-3.5 w-3.5" />
-        </button>
-      ) : undefined,
-    },
-    ...(lastCompeted
-      ? [
-          {
-            label: "Last competed",
-            value: <span className="text-lg font-bold lg:text-2xl">{lastCompeted.weight} lbs</span>,
-            sub: `${lastCompeted.event} ${lastCompeted.year}`,
-          },
-        ]
-      : []),
+    ...(hasSchool ? [{ label: "School", value: bannerText(highSchool) }] : []),
+    ...(hasClub ? [{ label: "Club", value: bannerText(wrestlingClub) }] : []),
+    lastCompeted
+      ? {
+          label: "Last competed",
+          value: <span className="text-lg font-bold lg:text-2xl">{lastCompeted.weight} lbs</span>,
+          sub: `${lastCompeted.event} ${lastCompeted.year}`,
+          // The owner still corrects the listed weight from here; it no longer shows.
+          action: editWeight,
+        }
+      : {
+          label: "Listed weight",
+          value: weightClassLabel === "Not specified" ? "—" : `${weightClassLabel} lbs`,
+          sub: "No competed weight on file",
+          action: editWeight,
+        },
   ]
   const bannerRibbon = prospectRanking
     ? `RecruitNC #${prospectRanking}  ·  Class of ${graduationYear || "—"}`
