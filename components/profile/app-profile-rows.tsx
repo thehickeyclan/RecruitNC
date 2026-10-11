@@ -62,6 +62,7 @@ export type AppWin = {
   style?: "folkstyle" | "freestyle" | "greco" | null
   nationalRankLabel?: string | null
   stateLabel?: string | null
+  opponentState?: string | null
 }
 
 const accoladeOf = (w: AppWin) => w.credential ?? w.nationalRankLabel ?? w.stateLabel ?? null

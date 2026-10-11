@@ -46,6 +46,12 @@ describe("best wins of the last 12 months", () => {
     expect(out.map((w) => w.opponent)).toEqual(["National Champ", "State Champ", "All American"])
   })
 
+  it("drops a win whose team names one state and whose accolade belongs to another", () => {
+    const wells = { ...win("Jackson Wells", "national-placer", "2026-10-10", "2025 NHSCA Champion (113)"), opponentSchool: "VA TEAM PREDATOR", opponentState: "KY" }
+    const same = { ...win("Brooks Ryan", "state-placer", "2026-03-27", "2026 TN State 3rd"), opponentSchool: "TN", opponentState: "TN" }
+    expect(bestWinsLast12Months([wells, same], NOW).map((w) => w.opponent)).toEqual(["Brooks Ryan"])
+  })
+
   it("lists an opponent once", () => {
     const out = bestWinsLast12Months([win("Same Kid", "state-champion", "2026-09-01"), win("same kid", "state-champion", "2026-03-01")], NOW)
     expect(out).toHaveLength(1)

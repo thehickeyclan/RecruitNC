@@ -168,6 +168,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
         : `${win.reason === "toc-field" ? "TOC field" : win.reason === "national-ranked" ? win.nationalRankLabel ?? "Nationally ranked" : "NC ranked"} · ${accoladeLine(win)}`,
     // A win over another state's placer is a national result, and the filter should say so.
     scope: win.opponentState && win.opponentState !== "NC" ? ("national" as const) : ("in-state" as const),
+    // The state the accolade belongs to, so the profile's best-wins block can check it against
+    // the team on the bout (lib/profile/best-wins.ts).
+    opponentState: win.opponentState ?? null,
   }))
 
   /*

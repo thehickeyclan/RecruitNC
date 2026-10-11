@@ -23,6 +23,8 @@ export type BestWinInput = {
   credential?: string | null
   nationalRankLabel?: string | null
   stateLabel?: string | null
+  /** The state the opponent's accolade was earned in, when it is not North Carolina's. */
+  opponentState?: string | null
 }
 
 export type BestWin = { opponent: string; accolade: string; detail: string }
@@ -38,10 +40,34 @@ function dayMs(raw: string | null | undefined): number | null {
   return Number.isFinite(ms) ? ms : null
 }
 
+const STATES = new Set("AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY DC".split(" "))
+
+/** A state named on the bout's team: "VA TEAM PREDATOR", "Tallwood (VA)", "PA". Null when none. */
+function stateOnTeam(team: string | null | undefined): string | null {
+  const text = String(team ?? "").trim().toUpperCase()
+  const m = text.match(/^([A-Z]{2})(?:\s|$)/) ?? text.match(/\(([A-Z]{2})\)/)
+  return m && STATES.has(m[1]!) ? m[1]! : null
+}
+
+/**
+ * The bout puts him on one state's team and the accolade belongs to another's.
+ *
+ * Adam Walker's 10-1 win at the I-64 Fall Duals was over a Jackson Wells wrestling for "VA Team
+ * Predator"; the accolade attached was Kentucky's Jackson Wells, the 2025 NHSCA champion and a
+ * nationally ranked junior. It may be the same wrestler - travel teams carry out-of-state kids -
+ * but nothing on file says so, and the top of a profile is no place for a maybe. The full list
+ * keeps the win; this block does not.
+ */
+function stateConflicts(win: BestWinInput): boolean {
+  const onTeam = stateOnTeam(win.opponentSchool)
+  const earned = String(win.opponentState ?? "").trim().toUpperCase()
+  return Boolean(onTeam && earned && onTeam !== earned)
+}
+
 export function bestWinsLast12Months(wins: readonly BestWinInput[], now: Date = new Date(), limit = 3): BestWin[] {
   const eligible: Array<{ win: BestWinInput; ms: number; accolade: string }> = []
   for (const win of wins) {
-    if (!(win.reason in TIER)) continue
+    if (!(win.reason in TIER) || stateConflicts(win)) continue
     const accolade = win.credential ?? win.nationalRankLabel ?? win.stateLabel ?? null
     // No accolade to print means nothing to stand behind.
     if (!accolade) continue
