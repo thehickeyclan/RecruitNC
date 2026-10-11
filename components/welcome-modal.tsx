@@ -3,8 +3,11 @@
 import { useEffect, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import Link from "next/link"
+import { recruitingCoverage, usesRecruitingShell } from "@/lib/recruiting/brand"
 import {
   BarChart3,
+  GitCompareArrows,
+  Star,
   ClipboardList,
   FileText,
   GraduationCap,
@@ -73,13 +76,43 @@ const PROFILES: Destination = {
  * subscription page to read what it includes, not told that colleges are watching them.
  */
 const WELCOMES: Record<string, Welcome> = {
+  /*
+   * Where a coach starts (Matt, 11 October 2026): the four things worth doing first, in the order
+   * a coach does them - see who is ranked, find a wrestler, keep the ones you want, compare two.
+   * The links are the coach portal's own pages; /rankings is the sales page a coach never needs.
+   */
   college_coach: {
     heading: "You're in, Coach",
-    intro: "Full access, no charge. Here is where North Carolina's wrestlers actually live.",
-    destinations: [RANKINGS, PROFILES, COMMITS],
+    intro: `Full access, no charge. Four places to start with ${recruitingCoverage()}'s wrestlers:`,
+    destinations: [
+      {
+        href: "/public-rankings",
+        icon: BarChart3,
+        title: "See the rankings",
+        body: "Every class ranked, and the Top 75 College Prospects across the classes.",
+      },
+      {
+        href: "/prospects/all",
+        icon: Users,
+        title: "Search all athletes",
+        body: "Every wrestler in the current classes. Filter by men or women, class and weight, then open a profile for results, wins and academics.",
+      },
+      {
+        href: "/my-recruits",
+        icon: Star,
+        title: "Build your board",
+        body: "Tap the star on a profile to add a wrestler to My Recruits. Track his stage, log calls and texts, and message him and his parents.",
+      },
+      {
+        href: "/compare?src=welcome",
+        icon: GitCompareArrows,
+        title: "Compare two wrestlers",
+        body: "Head to head, common opponents, strength of schedule and academics, side by side.",
+      },
+    ],
     footnote: {
       title: "Scouting reports are included.",
-      body: "Open any wrestler and export a one-page dossier — results, significant wins and losses, strength of competition. Free to college staff.",
+      body: "Open any wrestler's profile and choose View scouting report: results, significant wins and losses, and strength of competition on one page. Free to college staff.",
     },
   },
 
@@ -189,6 +222,8 @@ function headingFor(
   return surname ? `Welcome, Coach ${surname}` : "Welcome, Coach"
 }
 
+const COACH_WELCOME_SEEN = "coach-welcome-seen"
+
 export function WelcomeModal() {
   const [welcome, setWelcome] = useState<Welcome | null>(null)
   const [asked, setAsked] = useState<string | null>(null)
@@ -207,9 +242,31 @@ export function WelcomeModal() {
     }
   }, [])
 
+  /*
+   * A coach who signed up before the portal existed has never been shown where things are. The
+   * first time one opens Coach Home in a browser, show the same welcome; dismissing it is
+   * remembered there, so it does not come back.
+   */
+  const isCoach = usesRecruitingShell(profile)
+  useEffect(() => {
+    if (!isCoach || welcome) return
+    if (window.location.pathname !== "/coach-home") return
+    try {
+      if (localStorage.getItem(COACH_WELCOME_SEEN) === "1") return
+    } catch {
+      return
+    }
+    setAsked("college_coach")
+    setWelcome(WELCOMES.college_coach)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isCoach])
+
   const dismiss = () => {
     setWelcome(null)
     if (typeof window === "undefined") return
+    try {
+      if ((asked ?? "").toLowerCase().replace(/-/g, "_").includes("coach")) localStorage.setItem(COACH_WELCOME_SEEN, "1")
+    } catch {}
     const url = new URL(window.location.href)
     url.searchParams.delete("welcome")
     window.history.replaceState({}, "", url.toString())
