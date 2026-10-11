@@ -400,6 +400,11 @@ describe("distinctive out-of-state names", () => {
     expect(findSignificantWins([bout("CT", 190)], index)).toEqual([])
   })
 
+  it("refuses a distinctive name on a team that calls itself another state's", () => {
+    // Adam Walker's I-64 win over a Jackson Wells of "VA Team Predator" is not a win over Kentucky's.
+    expect(findSignificantWins([bout("VA TEAM PREDATOR", 190)], index)).toEqual([])
+  })
+
   it("never treats a shared name as distinctive", () => {
     const shared = { ...index, statePlacers: [{ ...wilder, distinctive: false }] }
     expect(findSignificantWins([bout("Spec Ops (FL)", 190)], shared)).toEqual([])
