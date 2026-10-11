@@ -10,6 +10,7 @@ import Link from "next/link"
 import { Loader2, Eye, Users, TrendingUp, User, RefreshCw, Calendar } from "lucide-react"
 import { ProfileViewersDialog } from "@/components/admin/profile-viewers-dialog"
 import { CollegeProgramLeaderboard } from "@/components/admin/college-program-leaderboard"
+import { ProfileClaimsAndEdits } from "@/components/admin/profile-claims-and-edits"
 import { NewCoachSignups } from "@/components/admin/new-coach-signups"
 import { ScoutingReportActivity } from "@/components/admin/scouting-report-activity"
 
@@ -266,6 +267,9 @@ export default function CardAnalyticsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Families taking up their profiles: claims and edits by week. */}
+      <ProfileClaimsAndEdits />
 
       {/* Which college programs are using RecruitNC, and on whom. */}
       {/* Newest first: who arrived during a send and what they did. Above the leaderboard,
