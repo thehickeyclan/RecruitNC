@@ -11,15 +11,17 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { AlertTriangle, ArrowLeftRight, Check, FileText, Mail, MessageSquare, Search, Star, Trash2 } from "lucide-react"
+import { AlertTriangle, ArrowLeftRight, Check, FileText, Mail, MessageSquare, NotebookPen, Search, Star, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useCoachMode } from "@/hooks/use-coach-mode"
+import { PIPELINE_STAGES, type PipelineStage } from "@/lib/recruiting/pipeline"
 import type { MyRecruitRow } from "@/lib/my-recruits"
 import { CoachComposeDialog } from "@/components/coach-messages/coach-message-button"
 import { CoachMessagingIntro } from "@/components/coach-messages/coach-messaging-intro"
 import { CoachTabs } from "@/components/coach-tabs"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { FitBadge, type FitBadgeFlag } from "@/components/fit-badge"
 import { useRouter } from "next/navigation"
-import { useAuth } from "@/contexts/auth-context"
 
 type Payload = {
   recruits: MyRecruitRow[]
@@ -39,6 +41,8 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState("")
   const [classYear, setClassYear] = useState<number | "all">("all")
+  const [stage, setStage] = useState<PipelineStage | "all">("all")
+  const [stageError, setStageError] = useState<string | null>(null)
   const [removing, setRemoving] = useState<string | null>(null)
   /** Up to two wrestlers picked for the comparison; a third replaces the earliest. */
   const [picked, setPicked] = useState<string[]>([])
@@ -64,11 +68,11 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
    * Message. Also feeds the unread count on the Messages link.
    */
   const router = useRouter()
-  const { profile } = useAuth()
-  /** Only coaches write to wrestlers; staff and admins browsing the board get no Message button. */
-  const isCoach = String((profile as { role?: string | null } | null)?.role ?? "").toLowerCase().replace(/[\s-]+/g, "_") === "college_coach"
+  /** Coaches write to wrestlers. An admin viewing as a coach sees the button and is told why it will not send. */
+  const { actsAsCoach: isCoach, previewNotice } = useCoachMode()
   const [threads, setThreads] = useState<Map<string, ThreadState>>(new Map())
   const [composeFor, setComposeFor] = useState<MyRecruitRow | null>(null)
+  const [logFor, setLogFor] = useState<MyRecruitRow | null>(null)
   useEffect(() => {
     if (initialData) return
     fetch("/api/coach-messages", { credentials: "include" })
@@ -96,9 +100,41 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
     return (data?.recruits ?? []).filter(
       (r) =>
         (classYear === "all" || r.classYear === classYear) &&
+        (stage === "all" || r.stage === stage) &&
         (!q || [r.name, r.highSchool, r.club, r.weight].some((v) => (v ?? "").toLowerCase().includes(q))),
     )
-  }, [data, query, classYear])
+  }, [data, query, classYear, stage])
+
+  const stageCounts = useMemo(() => {
+    const counts = Object.fromEntries(PIPELINE_STAGES.map((st) => [st, 0])) as Record<PipelineStage, number>
+    for (const r of data?.recruits ?? []) counts[r.stage] = (counts[r.stage] ?? 0) + 1
+    return counts
+  }, [data])
+
+  /**
+   * Move a wrestler through the funnel. Shown at once and put back if the save fails. The stage is
+   * the program's, so the whole staff sees the change (lib/recruiting/program-stage.ts).
+   */
+  const moveStage = async (athleteId: string, next: PipelineStage) => {
+    const before = data?.recruits.find((r) => r.athleteId === athleteId)?.stage
+    if (!before || before === next) return
+    const put = (value: PipelineStage) =>
+      setData((d) => (d ? { ...d, recruits: d.recruits.map((r) => (r.athleteId === athleteId ? { ...r, stage: value } : r)) } : d))
+    put(next)
+    setStageError(null)
+    try {
+      const res = await fetch("/api/coach-portal/update-stage", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ athleteId, stage: next, schoolId: data?.schoolId ?? null }),
+      })
+      if (!res.ok) throw new Error()
+    } catch {
+      put(before)
+      setStageError("That stage change did not save. Try again.")
+    }
+  }
 
   const remove = async (athleteId: string) => {
     setRemoving(athleteId)
@@ -118,7 +154,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
 
   return (
       <main className="min-h-screen bg-[#0A1628] text-white">
-        <div className={cn("mx-auto max-w-6xl px-4 py-8 sm:py-10", pickedRows.length ? "pb-28 sm:pb-28" : "")}>
+        <div className={cn("mx-auto max-w-7xl px-4 py-8 sm:py-10", pickedRows.length ? "pb-28 sm:pb-28" : "")}>
           <CoachTabs active="recruits" className="mb-6" />
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -142,11 +178,6 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
               <Link href="/perfect-recruit" className="text-sm font-semibold text-[#D3B574] hover:underline">
                 {data?.hasStandard ? "Your perfect recruit" : "Set your perfect recruit"} →
               </Link>
-              {data?.schoolId ? (
-                <Link href={`/schools/${data.schoolId}/portal`} className="text-sm font-semibold text-[#D3B574] hover:underline">
-                  Full program portal →
-                </Link>
-              ) : null}
             </div>
           </div>
 
@@ -161,8 +192,8 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
               <Star className="mx-auto h-8 w-8 text-[#D3B574]" aria-hidden />
               <p className="mt-3 text-lg font-bold">No recruits yet</p>
               <p className="mt-1 text-sm text-white/60">
-                Open any wrestler&apos;s profile and tap <span className="font-semibold text-white">Add to Watch List</span>. They
-                will show up here.
+                Tap the star on any wrestler&apos;s profile to add him here. Then track his stage, log calls and texts, and
+                message him from this board.
               </p>
               <Link
                 href="/public-rankings"
@@ -173,7 +204,10 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
             </div>
           ) : (
             <>
-              <div className="mt-6 flex flex-wrap items-center gap-2">
+              <Funnel counts={stageCounts} total={data.recruits.length} active={stage} onPick={setStage} />
+              {stageError ? <p className="mt-3 rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{stageError}</p> : null}
+
+              <div className="mt-4 flex flex-wrap items-center gap-2">
                 <label className="relative w-full sm:w-auto sm:min-w-[220px] sm:flex-1">
                   <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" aria-hidden />
                   <input
@@ -199,20 +233,19 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
               </div>
 
               {/* Desktop: one table. */}
-              <div className="mt-4 hidden overflow-hidden rounded-xl border border-white/10 md:block">
+              <div className="mt-4 hidden overflow-x-auto rounded-xl border border-white/10 md:block">
                 <table className="w-full text-left text-sm">
                   <thead className="bg-white/[0.04] text-[11px] uppercase tracking-wider text-white/50">
                     <tr>
                       <th className="px-4 py-3 font-semibold">Wrestler</th>
-                      <th className="px-3 py-3 font-semibold">Class</th>
-                      <th className="px-3 py-3 font-semibold">Wt</th>
-                      <th className="px-3 py-3 font-semibold">Rank</th>
-                      <th className="px-3 py-3 font-semibold">Best results</th>
-                      <th className="px-3 py-3 font-semibold">Status</th>
-                      <th className="px-3 py-3 font-semibold">Last competed</th>
-                      <th className="px-3 py-3 font-semibold">Scouting report</th>
-                      <th className="px-3 py-3 font-semibold">Added</th>
-                      <th className="px-3 py-3" />
+                      <th className="px-2 py-3 font-semibold">Class · Wt</th>
+                      <th className="px-2 py-3 font-semibold">Rank</th>
+                      <th className="px-2 py-3 font-semibold">Best results</th>
+                      <th className="px-2 py-3 font-semibold">Stage</th>
+                      <th className="px-2 py-3 font-semibold">Status</th>
+                      <th className="px-2 py-3 font-semibold">Last competed</th>
+                      <th className="px-2 py-3 font-semibold">Scouting report</th>
+                      <th className="px-2 py-3" />
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/10">
@@ -226,14 +259,21 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                               <span className="block truncate text-xs text-white/55">
                                 {[r.highSchool, r.club].filter(Boolean).join(" · ") || "—"}
                               </span>
+                              <span className="block text-[11px] text-white/35" title={`Added ${dayLabel(r.starredAt)}`}>
+                                Added {dayLabel(r.starredAt)}
+                                {r.starredBy !== "You" ? ` by ${r.starredBy}` : ""}
+                              </span>
                               {data?.fit?.[r.athleteId] ? <FitBadge flag={data.fit[r.athleteId]} className="mt-1" /> : null}
                             </span>
                           </Link>
                         </td>
-                        <td className="px-3 py-3 text-white/80">{r.classYear ?? "—"}</td>
-                        <td className="px-3 py-3 text-white/80">{r.weight ?? "—"}</td>
-                        <td className="px-3 py-3 font-bold text-[#D3B574]">{r.rank ? `#${r.rank}` : "—"}</td>
-                        <td className="px-3 py-3 text-xs leading-relaxed text-white/80">
+                        <td className="whitespace-nowrap px-2 py-3 text-white/80">
+                          {r.classYear ?? "—"}
+                          <span className="text-white/35"> · </span>
+                          {r.weight ? `${r.weight} lbs` : "—"}
+                        </td>
+                        <td className="px-2 py-3 font-bold text-[#D3B574]">{r.rank ? `#${r.rank}` : "—"}</td>
+                        <td className="px-2 py-3 text-xs leading-relaxed text-white/80">
                           {r.stateFinish || r.nationalFinish ? (
                             <>
                               {r.stateFinish ? <div>{r.stateFinish}</div> : null}
@@ -243,25 +283,25 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                             "—"
                           )}
                         </td>
-                        <td className="px-3 py-3 text-xs">
+                        <td className="px-2 py-3">
+                          <StageSelect row={r} onChange={moveStage} />
+                          <LastContact row={r} className="mt-1.5" />
+                        </td>
+                        <td className="px-2 py-3 text-xs">
                           {r.committedTo ? (
                             <span className="font-semibold text-emerald-300">Committed · {r.committedTo}</span>
                           ) : (
                             <span className="text-white/70">Uncommitted</span>
                           )}
                         </td>
-                        <td className="px-3 py-3">
+                        <td className="px-2 py-3">
                           <Activity row={r} />
                         </td>
-                        <td className="px-3 py-3">
+                        <td className="px-2 py-3">
                           <ReportLink row={r} />
                         </td>
-                        <td className="px-3 py-3 text-xs text-white/55">
-                          {dayLabel(r.starredAt)}
-                          {r.starredBy !== "You" ? <div>by {r.starredBy}</div> : null}
-                        </td>
-                        <td className="px-3 py-3">
-                          <Actions row={r} removing={removing === r.athleteId} onRemove={remove} picked={picked.includes(r.athleteId)} onPick={pick} thread={threads.get(r.athleteId)} onMessage={isCoach ? onMessage : undefined} />
+                        <td className="px-2 py-3">
+                          <Actions row={r} removing={removing === r.athleteId} onRemove={remove} picked={picked.includes(r.athleteId)} onPick={pick} thread={threads.get(r.athleteId)} onMessage={isCoach ? onMessage : undefined} onLog={setLogFor} />
                         </td>
                       </tr>
                     ))}
@@ -302,17 +342,17 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                         </p>
                       </div>
                     </div>
-                    {r.hasReport ? (
-                      <div className="mt-3">
-                        <ReportLink row={r} />
-                      </div>
-                    ) : null}
+                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                      <StageSelect row={r} onChange={moveStage} />
+                      <ReportLink row={r} />
+                    </div>
+                    <LastContact row={r} className="mt-2" />
                     <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-2">
                       <span className="text-[11px] text-white/45">
                         Added {dayLabel(r.starredAt)}
                         {r.starredBy !== "You" ? ` by ${r.starredBy}` : ""}
                       </span>
-                      <Actions row={r} removing={removing === r.athleteId} onRemove={remove} picked={picked.includes(r.athleteId)} onPick={pick} thread={threads.get(r.athleteId)} onMessage={isCoach ? onMessage : undefined} />
+                      <Actions row={r} removing={removing === r.athleteId} onRemove={remove} picked={picked.includes(r.athleteId)} onPick={pick} thread={threads.get(r.athleteId)} onMessage={isCoach ? onMessage : undefined} onLog={setLogFor} />
                     </div>
                   </li>
                 ))}
@@ -322,10 +362,21 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
           )}
         </div>
 
+        {logFor ? (
+          <LogActivityDialog
+            row={logFor}
+            onClose={() => setLogFor(null)}
+            onSaved={() => {
+              setLogFor(null)
+              void load()
+            }}
+          />
+        ) : null}
         {composeFor ? (
           <CoachComposeDialog
             athleteId={composeFor.athleteId}
             athleteName={composeFor.name}
+            blockedMessage={previewNotice}
             open
             onOpenChange={(o) => {
               if (!o) setComposeFor(null)
@@ -335,13 +386,16 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
 
         {/* Two picked: straight to the comparison. */}
         {pickedRows.length ? (
-          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#D3B574]/30 bg-[#0f1c2e]/95 backdrop-blur">
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#D3B574]/30 bg-[#0f1c2e]/95 backdrop-blur group-data-[shell=recruiting]/shell:bottom-16 lg:group-data-[shell=recruiting]/shell:bottom-0 lg:group-data-[shell=recruiting]/shell:left-56">
             <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
               <p className="min-w-0 text-sm text-white/80">
                 <ArrowLeftRight className="mr-2 inline h-4 w-4 text-[#D3B574]" aria-hidden />
                 {pickedRows.length === 1 ? (
                   <>
-                    <span className="font-bold text-white">{pickedRows[0]!.name}</span> — pick one more to compare
+                    <span className="font-bold text-white">{pickedRows[0]!.name}</span> — pick one more from your board, or{" "}
+                    <Link href={`/compare?left=${pickedRows[0]!.athleteId}&src=my-recruits`} className="font-semibold text-[#D3B574] hover:underline">
+                      compare with anyone →
+                    </Link>
                   </>
                 ) : (
                   <>
@@ -418,7 +472,13 @@ function Avatar({ row }: { row: MyRecruitRow }) {
  * report exists, so it never leads to "not available for this athlete".
  */
 function ReportLink({ row }: { row: MyRecruitRow }) {
-  if (!row.hasReport) return <span className="text-xs text-white/35">—</span>
+  if (!row.hasReport) {
+    return (
+      <span className="whitespace-nowrap text-xs text-white/45">
+        {row.reportUnavailable === "girls" ? "None yet for girls" : "None: graduated"}
+      </span>
+    )
+  }
   return (
     <Link
       href={`/athletes/${row.athleteId}/scouting-report`}
@@ -427,6 +487,179 @@ function ReportLink({ row }: { row: MyRecruitRow }) {
       <FileText className="h-3.5 w-3.5" aria-hidden />
       View report
     </Link>
+  )
+}
+
+/**
+ * The funnel, as the row of stages a staff reads left to right: how many wrestlers sit at each,
+ * and a tap to see only those. It is the board's filter, not a chart beside it.
+ */
+function Funnel({
+  counts,
+  total,
+  active,
+  onPick,
+}: {
+  counts: Record<PipelineStage, number>
+  total: number
+  active: PipelineStage | "all"
+  onPick: (stage: PipelineStage | "all") => void
+}) {
+  const cell = (key: PipelineStage | "all", label: string, count: number) => (
+    <button
+      key={key}
+      type="button"
+      onClick={() => onPick(active === key ? "all" : key)}
+      aria-pressed={active === key}
+      className={cn(
+        "flex min-w-[92px] flex-1 flex-col items-start rounded-lg border px-3 py-2 text-left transition-colors",
+        active === key ? "border-[#D3B574] bg-[#D3B574]/15" : "border-white/10 bg-white/[0.03] hover:border-white/30",
+        key === "Lost" && "opacity-70",
+      )}
+    >
+      <span className={cn("text-xl font-black leading-none", count ? "text-white" : "text-white/30")}>{count}</span>
+      <span className={cn("mt-1 text-[11px] font-bold uppercase tracking-wider", active === key ? "text-[#D3B574]" : "text-white/55")}>{label}</span>
+    </button>
+  )
+  return (
+    <div className="-mx-4 mt-6 overflow-x-auto px-4" aria-label="Recruiting funnel">
+      <div className="flex min-w-max gap-2 sm:min-w-0">
+        {cell("all", "All", total)}
+        {PIPELINE_STAGES.map((st) => cell(st, st, counts[st] ?? 0))}
+      </div>
+    </div>
+  )
+}
+
+function StageSelect({ row, onChange }: { row: MyRecruitRow; onChange: (athleteId: string, stage: PipelineStage) => void }) {
+  return (
+    <select
+      value={row.stage}
+      onChange={(e) => onChange(row.athleteId, e.target.value as PipelineStage)}
+      aria-label={`Stage for ${row.name}`}
+      className="rounded-md border border-white/20 bg-[#0A1628] px-2 py-1.5 text-xs font-semibold text-white focus:border-[#D3B574] focus:outline-none"
+    >
+      {PIPELINE_STAGES.map((st) => (
+        <option key={st} value={st}>
+          {st}
+        </option>
+      ))}
+    </select>
+  )
+}
+
+/** What a coach logs. The values are the ones recruiting_actions already holds (app/api/coach-portal/activities). */
+const ACTIVITY_TYPES = [
+  { value: "call", label: "Call" },
+  { value: "text", label: "Text" },
+  { value: "email", label: "Email" },
+  { value: "visit", label: "Campus visit" },
+  { value: "watched_live", label: "Watched live" },
+  { value: "prospect_camp", label: "Prospect camp" },
+  { value: "social_media", label: "Social media" },
+  { value: "letter", label: "Letter" },
+  { value: "other", label: "Other" },
+] as const
+const activityLabel = (type: string) => ACTIVITY_TYPES.find((t) => t.value === type)?.label ?? "Contact"
+const shortDay = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
+
+/** "Text · Oct 9 · follow up Oct 16", so the board says who has gone untouched without opening anyone. */
+function LastContact({ row, className }: { row: MyRecruitRow; className?: string }) {
+  const c = row.lastContact
+  if (!c) return <p className={cn("text-[11px] text-white/35", className)}>No contact logged</p>
+  const due = c.followUp ? c.followUp.slice(0, 10) <= new Date().toISOString().slice(0, 10) : false
+  return (
+    <p className={cn("text-[11px] leading-snug text-white/60", className)}>
+      {activityLabel(c.type)} · {shortDay(c.date)}
+      {c.by !== "You" ? ` · ${c.by}` : ""}
+      {c.followUp ? <span className={cn("block", due ? "font-semibold text-[#D3B574]" : "text-white/40")}>Follow up {shortDay(c.followUp)}</span> : null}
+    </p>
+  )
+}
+
+/**
+ * Log a contact from the board: what it was, when, a note, and an optional follow-up date. Saved
+ * to the program's activity log; a first contact or a visit also moves the wrestler along the
+ * funnel (activity-helpers.ts).
+ */
+function LogActivityDialog({ row, onClose, onSaved }: { row: MyRecruitRow; onClose: () => void; onSaved: () => void }) {
+  const today = new Date().toISOString().slice(0, 10)
+  const [type, setType] = useState<string>("call")
+  const [date, setDate] = useState(today)
+  const [note, setNote] = useState("")
+  const [followUp, setFollowUp] = useState("")
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const save = async () => {
+    setSaving(true)
+    setError(null)
+    try {
+      const res = await fetch("/api/coach-portal/activities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ athleteId: row.athleteId, actionType: type, actionDate: date, followUpDate: followUp || null, description: note }),
+      })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(body.error ?? "Could not save.")
+      onSaved()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Could not save.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const field = "mt-1 w-full rounded-lg border px-3 py-2 text-sm"
+  return (
+    <Dialog open onOpenChange={(o) => (!o ? onClose() : null)}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Log contact with {row.name}</DialogTitle>
+          <DialogDescription>Your whole staff sees this on the board.</DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-wrap gap-1.5">
+          {ACTIVITY_TYPES.map((t) => (
+            <button
+              key={t.value}
+              type="button"
+              onClick={() => setType(t.value)}
+              aria-pressed={type === t.value}
+              className={cn(
+                "min-h-[36px] rounded-full border px-3 text-xs font-semibold",
+                type === t.value ? "border-[#0A1628] bg-[#0A1628] text-white" : "text-muted-foreground hover:bg-muted",
+              )}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="text-xs font-semibold">
+            When
+            <input type="date" value={date} max={today} onChange={(e) => setDate(e.target.value)} className={field} />
+          </label>
+          <label className="text-xs font-semibold">
+            Follow up (optional)
+            <input type="date" value={followUp} min={today} onChange={(e) => setFollowUp(e.target.value)} className={field} />
+          </label>
+        </div>
+        <label className="text-xs font-semibold">
+          Note (optional)
+          <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} maxLength={2000} placeholder="What was said, what comes next" className={field} />
+        </label>
+        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        <div className="flex justify-end gap-2">
+          <button type="button" onClick={onClose} className="min-h-[40px] rounded-lg px-4 text-sm font-semibold text-muted-foreground">
+            Cancel
+          </button>
+          <button type="button" onClick={save} disabled={saving || !date} className="min-h-[40px] rounded-lg bg-[#0A1628] px-4 text-sm font-bold text-white disabled:opacity-50">
+            {saving ? "Saving…" : "Save"}
+          </button>
+        </div>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -440,6 +673,7 @@ function Actions({
   onPick,
   thread,
   onMessage,
+  onLog,
 }: {
   row: MyRecruitRow
   removing: boolean
@@ -448,9 +682,19 @@ function Actions({
   onPick: (id: string) => void
   thread?: ThreadState
   onMessage?: (row: MyRecruitRow) => void
+  onLog: (row: MyRecruitRow) => void
 }) {
   return (
     <div className="flex items-center gap-1.5">
+      <button
+        type="button"
+        onClick={() => onLog(row)}
+        title={`Log a call, text, email or visit with ${row.name}`}
+        className="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-white/20 px-2 py-1 text-xs font-semibold text-white/70 hover:border-[#D3B574]/60 hover:text-white"
+      >
+        <NotebookPen className="h-3 w-3" aria-hidden />
+        Log
+      </button>
       {onMessage ? (
       <button
         type="button"
@@ -463,8 +707,9 @@ function Actions({
             : "border-white/20 text-white/70 hover:border-[#D3B574]/60 hover:text-white",
         )}
       >
-        {thread ? <MessageSquare className="h-3 w-3" aria-hidden /> : <Mail className="h-3 w-3" aria-hidden />}
-        {thread ? (thread.yourTurn ? "Reply" : "Thread") : "Message"}
+        {thread ? <MessageSquare className="h-3.5 w-3.5" aria-hidden /> : <Mail className="h-3.5 w-3.5" aria-hidden />}
+        {/* An icon beside every wrestler; words only when there is a conversation to act on. */}
+        {thread ? (thread.yourTurn ? "Reply" : "Thread") : <span className="sr-only">Message</span>}
         {thread?.unread ? <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-[#D3B574]" aria-label="New reply" /> : null}
       </button>
       ) : null}
@@ -480,8 +725,9 @@ function Actions({
             : "border-white/20 text-white/70 hover:border-[#D3B574]/60 hover:text-white",
         )}
       >
-        {picked ? <Check className="h-3 w-3" aria-hidden /> : <ArrowLeftRight className="h-3 w-3" aria-hidden />}
-        Compare
+        {picked ? <Check className="h-3.5 w-3.5" aria-hidden /> : <ArrowLeftRight className="h-3.5 w-3.5" aria-hidden />}
+        <span className="sr-only md:hidden">Compare</span>
+        <span className="md:sr-only">Compare</span>
       </button>
       {row.mine ? (
         <button

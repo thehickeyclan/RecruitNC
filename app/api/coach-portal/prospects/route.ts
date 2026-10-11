@@ -1,3 +1,4 @@
+import { programStages } from "@/lib/recruiting/program-stage"
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -132,7 +133,7 @@ export async function GET(request: NextRequest) {
     const { data: coachStarredData, error: starError } = await adminSupabase
       .from("college_coach_stars")
       .select(
-        "athlete_id, pipeline_stage, interest_level, starred_at, coach_user_id, has_applied, applied_date, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, gi_bill_eligible, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year, override_birthdate, override_career_record, override_college_opens, override_fargo, override_ranked_wins, override_state_championships, override_nhsca_results, override_super32_results, star_rating, lead_source, lead_subsource, lead_source_detail",
+        "athlete_id, pipeline_stage, updated_at, interest_level, starred_at, coach_user_id, has_applied, applied_date, financial_efc, financial_aid_needs, scholarship_requirements, ability_to_pay, financial_notes, merit_scholarship_eligible, need_based_aid_eligible, aid_application_status, financial_concerns, gi_bill_eligible, override_phone, override_email, override_location, override_gpa, override_sat, override_act, override_weight, override_highschool, override_graduation_year, override_birthdate, override_career_record, override_college_opens, override_fargo, override_ranked_wins, override_state_championships, override_nhsca_results, override_super32_results, star_rating, lead_source, lead_subsource, lead_source_detail",
       )
       .in("coach_user_id", coachUserIds)
 
@@ -226,12 +227,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Failed to fetch prospects" }, { status: 500 })
     }
 
+    // One stage per wrestler for the whole staff, the same answer My Recruits gives.
+    const stages = programStages(starredData as Array<{ athlete_id: string; pipeline_stage: string | null; updated_at: string | null; starred_at: string }>)
     const prospectsWithStarInfo = (prospects || []).map((prospect) => {
       const starInfo = starredData.find((s) => s.athlete_id === prospect.id)
       return {
         ...prospect,
         is_starred: true,
-        pipeline_stage: starInfo?.pipeline_stage || "prospect",
+        pipeline_stage: stages.get(prospect.id) ?? "Prospect",
         interest_level: starInfo?.interest_level,
         starred_at: starInfo?.starred_at,
         star_rating: starInfo?.star_rating || null,

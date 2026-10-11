@@ -7,6 +7,7 @@ import { Lock, Pencil, Target } from "lucide-react"
 import { PerfectRecruitWizard, StatusIcon, type SavedPerfectRecruit } from "@/app/compare/program-fit-panel"
 import { FitBadge } from "@/components/fit-badge"
 import { CoachTabs } from "@/components/coach-tabs"
+import { RECRUITING_BRAND, recruitingCoverage } from "@/lib/recruiting/brand"
 import { EMPTY_CRITERIA, describePerfectRecruit, type FitKey, type FitStatus } from "@/lib/program-fit"
 
 export type PerfectRecruitMatch = {
@@ -35,7 +36,7 @@ function AccessPanel({ signedOut }: { signedOut: boolean }) {
         </div>
         <h1 className="text-xl font-black">{signedOut ? "Sign in to set your perfect recruit" : "The perfect recruit is for college coaches"}</h1>
         <p className="mx-auto mt-2 max-w-md text-sm text-white/60">
-          Tell us what your program needs and every North Carolina wrestler is flagged against it. Free for verified college coaching staff.
+          Tell us what your program needs and every {recruitingCoverage()} wrestler is flagged against it. Free for verified college coaching staff.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           {signedOut ? (
@@ -123,7 +124,7 @@ export default function PerfectRecruitClient({
       <div className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
         <CoachTabs active="standard" className="mb-6" />
         <header>
-          <p className={`text-[11px] font-black uppercase tracking-widest ${GOLD}`}>RecruitNC · For your program</p>
+          <p className={`text-[11px] font-black uppercase tracking-widest ${GOLD}`}>{RECRUITING_BRAND.name} · For your program</p>
           <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">Your perfect recruit</h1>
           <p className="mt-2 max-w-2xl text-sm text-white/60">
             Set what your program needs once. Wrestlers are then flagged against it on this page, on your recruits board, on their
@@ -171,7 +172,7 @@ export default function PerfectRecruitClient({
             ) : (
               <>
                 <p className="mt-2 text-sm text-white/60">
-                  Checked {checked.toLocaleString()} North Carolina wrestlers in the current classes.
+                  Checked {checked.toLocaleString()} {recruitingCoverage()} wrestlers in the current classes.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {(

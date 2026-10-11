@@ -42,6 +42,7 @@ import {
   Users,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
+import { recruitingCoverage } from "@/lib/recruiting/brand"
 import type { ComparisonBout, CommonOpponent, HeadToHead } from "@/lib/athlete-comparison"
 import type { ComparisonRow, ComparisonSections, RowEdge, RowGroup } from "@/lib/athlete-comparison-rows"
 import { ComparisonSectionsView } from "./comparison-sections"
@@ -139,7 +140,7 @@ const CAPABILITIES = [
 ]
 
 const STEPS = [
-  { title: "Pick two wrestlers", body: "Search any North Carolina high schooler by name or school." },
+  { title: "Pick two wrestlers", body: `Search any ${recruitingCoverage()} high schooler by name or school.` },
   { title: "Choose what matters", body: "Strength of opponents and academics are on by default. Add the national events you care about." },
   { title: "Read the edges", body: "Each row shows who has the edge and why. Share the link with your staff." },
 ]
@@ -219,7 +220,7 @@ function Pitch({
               <span className={GOLD}>Every match that matters.</span>
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/70">
-              Who&apos;s better for your program? Put any two North Carolina wrestlers side by side: head to head,
+              Who&apos;s better for your program? Put any two {recruitingCoverage()} wrestlers side by side: head to head,
               common opponents, strength of schedule, national results and academics, with every edge explained.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
@@ -799,7 +800,7 @@ export default function CompareClient({
       <section ref={toolRef} id="compare" className="container mx-auto scroll-mt-20 px-4 pb-20">
         <div className={`${PANEL} p-5 sm:p-6`}>
           <h2 className="text-xl font-black text-white">Compare wrestlers</h2>
-          <p className="mt-1 text-sm text-white/50">North Carolina wrestlers for now. Other states open as we check their results.</p>
+          <p className="mt-1 text-sm text-white/50">{recruitingCoverage()} wrestlers for now. Other states open as we check their results.</p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
             <Picker label="Wrestler" athletes={athletes} value={leftId} exclude={rightId} onChange={pickLeft} />
             <button

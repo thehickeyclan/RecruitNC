@@ -7,6 +7,7 @@ import { yearFilterToApiParams } from "@/lib/prospects-directory"
 import { currentClassYears } from "@/lib/class-years"
 import { highestAchievement, type AchievementFacts } from "@/lib/prospect-achievements"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
+import { useCoachMode } from "@/hooks/use-coach-mode"
 import { useAuth } from "@/contexts/auth-context"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
@@ -97,6 +98,32 @@ const CURRENT_CLASS_YEARS = currentClassYears()
 const ACTIVE_YEARS_LABEL = `Active (${CURRENT_CLASS_YEARS[0]}–${CURRENT_CLASS_YEARS[CURRENT_CLASS_YEARS.length - 1]})`
 const GRADUATES_LABEL = `Graduates (${CURRENT_CLASS_YEARS[0]! - 1} and earlier)`
 
+type SortChoice = "rank" | "name" | "weight" | "year" | "school"
+
+function QuickGroup({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <span className="text-[11px] font-bold uppercase tracking-wider text-white/45">{label}</span>
+      <div className="flex flex-wrap gap-1.5">{children}</div>
+    </div>
+  )
+}
+
+function QuickChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`min-h-[36px] rounded-full border px-3.5 text-sm font-semibold transition-colors ${
+        active ? "border-[#D3B574] bg-[#D3B574] text-[#0A1628]" : "border-white/20 text-white/75 hover:border-white/40 hover:text-white"
+      }`}
+    >
+      {children}
+    </button>
+  )
+}
+
 export default function ProspectsAllClient({
   initialProspects = [],
 }: {
@@ -111,6 +138,7 @@ export default function ProspectsAllClient({
    * directory without the numbers, which is still a useful page.
    */
   const { isAdmin, isVerifiedCoach, profile: viewerProfile } = useAuth()
+  const { actsAsCoach } = useCoachMode()
   const [isBlueMember, setIsBlueMember] = useState(false)
   useEffect(() => {
     let cancelled = false
@@ -152,6 +180,12 @@ export default function ProspectsAllClient({
   const [genderFilter, setGenderFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [rankFilter, setRankFilter] = useState<"all" | "ranked" | "unranked">("all")
+  /**
+   * How the list is ordered. Unset until someone chooses: a coach then gets ranked-first (only 75
+   * of ~575 carry a rank, and A-Z opened on a screen of dashes), everyone else A-Z.
+   */
+  const [sortChoice, setSortChoice] = useState<SortChoice | null>(null)
+  const sortBy: SortChoice = sortChoice ?? (actsAsCoach ? "rank" : "name")
   const [weightFilters, setWeightFilters] = useState<string[]>([])
   const [achievementFilters, setAchievementFilters] = useState<AchievementLevel[]>([])
 
@@ -421,14 +455,14 @@ export default function ProspectsAllClient({
       if (rankFilter === "ranked" || rankFilter === "unranked") {
         const gradYear = prospect.graduationyear
         const rawRank = getRawRank(prospect)
-        const maxRank =
-          gradYear === 2028
-            ? 25
-            : gradYear === 2029
-              ? 20
-              : gradYear === 2026 || gradYear === 2027
-                ? 30
-                : 0
+        /*
+         * The published depth of each class, from the one place that knows it - the same rule the
+         * rank column prints from. This used to carry its own typed cut-offs (25 for 2028, 20 for
+         * 2029), so "Ranked" hid #26-30 of a class the column showed thirty of, and would have
+         * counted five 2029s the column leaves blank.
+         */
+        const classYear = gradYear == null ? null : Number(gradYear)
+        const maxRank = isPublicRankingsYearPublished(classYear) ? getPublicRankingsMax(classYear) : 0
         const hasOfficialRank =
           Number.isFinite(rawRank) && rawRank >= 1 && rawRank <= maxRank
         if (rankFilter === "ranked" && !hasOfficialRank) return false
@@ -547,6 +581,29 @@ export default function ProspectsAllClient({
     return mapped
   }, [sortedProspects])
 
+  /** The same order for the table and the cards; the table's own header clicks still re-sort it. */
+  const orderedAthletes = useMemo(() => {
+    const value = (a: (typeof tableAthletes)[number]): string | number => {
+      switch (sortBy) {
+        case "rank":
+          return a.prospect_ranking ?? Number.POSITIVE_INFINITY
+        case "weight":
+          return Number.parseInt(String(a.weight_display)) || 999
+        case "year":
+          return a.graduation_year ?? 9999
+        case "school":
+          return (a.highschool || "~").toLowerCase()
+        default:
+          return a.name.toLowerCase()
+      }
+    }
+    return [...tableAthletes].sort((a, b) => {
+      const x = value(a)
+      const y = value(b)
+      return x < y ? -1 : x > y ? 1 : a.name.localeCompare(b.name)
+    })
+  }, [tableAthletes, sortBy])
+
   const resetFilters = () => {
     setSearchTerm("")
     setYearFilter("active")
@@ -599,6 +656,13 @@ export default function ProspectsAllClient({
 
   return (
     <main className="min-h-screen bg-[#0A1628]">
+      {actsAsCoach ? (
+        /* A coach is here to find wrestlers; "claim your profile" is the family's page. */
+        <section className="container mx-auto px-4 pt-8">
+          <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">Athletes</h1>
+          <p className="mt-1 text-sm text-white/60">Every wrestler in the current classes. Filter by men or women and class, and sort by rank or weight.</p>
+        </section>
+      ) : (
       <section className="relative overflow-hidden border-b border-white/10">
         <div className="absolute inset-0">
           <Image
@@ -649,6 +713,7 @@ export default function ProspectsAllClient({
           <p className="mt-3 text-sm text-white/50">We may already have yours. Either way, we look it up first.</p>
         </div>
       </section>
+      )}
 
       <section className="container mx-auto px-4 py-10 space-y-10">
 
@@ -867,7 +932,7 @@ export default function ProspectsAllClient({
                 className="hidden md:flex gap-2"
               >
                 <Filter className="h-4 w-4" />
-                {showFilters ? "Hide Filters" : "Show Filters"}
+                {showFilters ? "Hide weights and achievements" : "Weights and achievements"}
                 {hasActiveFilters && (
                   <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 text-xs">
                     {[yearFilter !== "all" && yearFilter !== "active", genderFilter !== "all", statusFilter !== "all", rankFilter !== "all", weightFilters.length > 0, achievementFilters.length > 0].filter(Boolean).length}
@@ -899,6 +964,53 @@ export default function ProspectsAllClient({
                 </Button>
               </div>
             </div>
+          </div>
+
+          {/* The filters people reach for most, always on the page; weights and achievements stay under Filters. */}
+          <div className="flex flex-wrap items-end gap-x-6 gap-y-3 rounded-xl border border-white/10 bg-[#0f1c2e] p-4">
+            <QuickGroup label="Wrestling">
+              {([
+                ["all", "All"],
+                ["male", "Men"],
+                ["female", "Women"],
+              ] as const).map(([value, label]) => (
+                <QuickChip key={value} active={genderFilter === value} onClick={() => setGenderFilter(value)}>
+                  {label}
+                </QuickChip>
+              ))}
+            </QuickGroup>
+            <QuickGroup label="Class">
+              <QuickChip active={yearFilter === "active"} onClick={() => setYearFilter("active")}>
+                All current
+              </QuickChip>
+              {currentClassYears().map((year) => (
+                <QuickChip key={year} active={yearFilter === String(year)} onClick={() => setYearFilter(String(year))}>
+                  {year}
+                </QuickChip>
+              ))}
+            </QuickGroup>
+            <QuickGroup label="Show">
+              <QuickChip active={rankFilter === "ranked"} onClick={() => setRankFilter(rankFilter === "ranked" ? "all" : "ranked")}>
+                Ranked only
+              </QuickChip>
+              <QuickChip active={statusFilter === "uncommitted"} onClick={() => setStatusFilter(statusFilter === "uncommitted" ? "all" : "uncommitted")}>
+                Uncommitted only
+              </QuickChip>
+            </QuickGroup>
+            <label className="ml-auto flex flex-col gap-1.5 text-[11px] font-bold uppercase tracking-wider text-white/45">
+              Sort by
+              <select
+                value={sortBy}
+                onChange={(e) => setSortChoice(e.target.value as SortChoice)}
+                className="min-h-[36px] rounded-lg border border-white/20 bg-[#0A1628] px-3 text-sm font-semibold normal-case tracking-normal text-white focus:border-[#D3B574] focus:outline-none"
+              >
+                <option value="rank">Rank</option>
+                <option value="name">Name (A to Z)</option>
+                <option value="weight">Weight (light to heavy)</option>
+                <option value="year">Class (seniors first)</option>
+                <option value="school">High school</option>
+              </select>
+            </label>
           </div>
 
           {/* Active Filters Badges */}
@@ -1154,7 +1266,7 @@ export default function ProspectsAllClient({
               <div>
                 <h3 className="text-xl font-semibold text-white">Athlete Profiles</h3>
                 <p className="text-sm text-white/40">
-                  All prospects A–Z. Sort by name, rank, weight, school, or commitment status.
+                  Use the filters above to narrow the list; click a column heading to re-sort.
                 </p>
               </div>
               <Badge variant="outline" className="gap-2 text-sm border-white/20 text-white/70">
@@ -1187,12 +1299,14 @@ export default function ProspectsAllClient({
               <div className="overflow-x-auto px-2 pb-6">
                 {/* The page is bg-[#0A1628]; the table defaults to light and was rendering a
                     white body under a navy header. */}
+                {/* The key re-seats the table when the order is chosen above; its header clicks still sort. */}
                 <RankingsTableView
-                  athletes={tableAthletes}
+                  key={sortBy}
+                  athletes={orderedAthletes}
                   theme="dark"
                   hideRankColumn={false}
                   showRankColumn={true}
-                  defaultSortField="name"
+                  defaultSortField={sortBy}
                   defaultSortDirection="asc"
                   additionalDividerLabel=""
                   dividerAfterRank={0}
@@ -1201,7 +1315,7 @@ export default function ProspectsAllClient({
             ) : (
               <div className="px-2 pb-6">
                 <RankingsCardView
-                  athletes={tableAthletes}
+                  athletes={orderedAthletes}
                   theme="dark"
                   loading={false}
                   showRankBadges={false}

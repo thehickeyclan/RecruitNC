@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import Link from "next/link"
 import { CoachTabs } from "@/components/coach-tabs"
+import { RECRUITING_BRAND, recruitingCoverage } from "@/lib/recruiting/brand"
 import { FitBadge, type FitBadgeFlag } from "@/components/fit-badge"
 import { ArrowRight, BarChart3, FileText, GitCompareArrows, Lock, MessageSquare, Search, Star, Target, Users } from "lucide-react"
 
@@ -112,14 +113,14 @@ function WrestlerSearch({ athletes }: { athletes: CoachHomeData["athletes"] }) {
           </ul>
         ) : (
           <p className="mt-3 text-sm text-white/50">
-            No North Carolina wrestler in the current classes matches that.{" "}
+            No {recruitingCoverage()} wrestler in the current classes matches that.{" "}
             <Link href="/prospects/all" className={`${GOLD} hover:underline`}>
               Browse all profiles
             </Link>
           </p>
         )
       ) : (
-        <p className="mt-2 text-xs text-white/40">{athletes.length.toLocaleString()} North Carolina wrestlers in the current classes.</p>
+        <p className="mt-2 text-xs text-white/40">{athletes.length.toLocaleString()} {recruitingCoverage()} wrestlers in the current classes.</p>
       )}
     </div>
   )
@@ -158,10 +159,10 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
             />
           ) : null}
           <div className="min-w-0">
-            <p className={`text-[11px] font-black uppercase tracking-widest ${GOLD}`}>RecruitNC · Coach Home</p>
+            <p className={`text-[11px] font-black uppercase tracking-widest ${GOLD}`}>{RECRUITING_BRAND.name} · Coach Home</p>
             <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">{data.coachName ? `Welcome, Coach ${data.coachName}` : "Welcome, Coach"}</h1>
             <p className="mt-1 text-sm text-white/55">
-              {data.program ? `${data.program} · ` : ""}Everything you use to recruit North Carolina, in one place.
+              {data.program ? `${data.program} · ` : ""}Everything you use to recruit {recruitingCoverage()}, in one place.
             </p>
           </div>
         </header>
@@ -183,9 +184,21 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
             {!recruits.loaded ? (
               <p className="mt-4 text-sm text-white/55">Your board could not be loaded just now. Open it directly to try again.</p>
             ) : recruits.total === 0 ? (
-              <p className="mt-4 text-sm text-white/55">
-                No one on your board yet. Open any wrestler&apos;s profile and choose <span className="font-bold text-white">Add to Watch List</span>; your staff shares one board.
-              </p>
+              <div className="mt-4 rounded-lg border border-dashed border-white/15 p-4">
+                <p className="text-base font-bold text-white">Start your recruiting board</p>
+                <p className="mt-1 text-sm text-white/60">
+                  Tap the <Star className={`mx-0.5 inline h-3.5 w-3.5 ${GOLD}`} aria-label="star" /> on any wrestler&apos;s profile to add him to My Recruits. From
+                  there you track his stage, log calls and texts, and message him. Your staff shares one board.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Link href="/prospects/all" className="rounded-lg bg-[#D3B574] px-4 py-2 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
+                    Browse athletes
+                  </Link>
+                  <Link href="/public-rankings" className="rounded-lg border border-white/20 px-4 py-2 text-sm font-bold text-white hover:border-[#D3B574] hover:text-[#D3B574]">
+                    Open rankings
+                  </Link>
+                </div>
+              </div>
             ) : (
               <>
                 <p className="mt-3 text-3xl font-black">
@@ -209,11 +222,6 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
                 </ul>
               </>
             )}
-            {data.schoolId ? (
-              <Link href={`/schools/${data.schoolId}/portal`} className={`${MORE} mt-3`}>
-                {data.program ? `${data.program} recruiting portal` : "Program recruiting portal"} <ArrowRight className="h-3 w-3" />
-              </Link>
-            ) : null}
           </section>
 
           <section className={`${PANEL} p-4 sm:p-5`} aria-labelledby="ch-messages">
@@ -294,7 +302,7 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
           {data.rankingYears.map((year) => (
             <Tool key={year} href={`/public-rankings/${year}`} icon={BarChart3} title={`Class of ${year} rankings`} body="The published class board, updated through the season." />
           ))}
-          <Tool href="/prospects/all" icon={Users} title="All athlete profiles" body="Every North Carolina profile, with filters for class, weight and last competed." />
+          <Tool href="/prospects/all" icon={Users} title="All athlete profiles" body={`Every ${recruitingCoverage()} profile, with filters for class, weight and last competed.`} />
           <Tool href="/athletes" icon={Users} title="College commitments" body="Who has committed where, this class and last." />
         </div>
 

@@ -1,6 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createClient as createBrowserClient } from "@supabase/supabase-js"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { PIPELINE_STAGES } from "@/lib/recruiting/pipeline"
+import { setProgramStage } from "@/lib/recruiting/program-stage"
 
 export async function POST(request: NextRequest) {
   try {
@@ -67,39 +70,19 @@ export async function POST(request: NextRequest) {
 
     console.log("[v0] Update stage API called:", { athleteId, stage, schoolId, userId: user.id })
 
-    const { data: existing } = await supabase
-      .from("college_coach_stars")
-      .select("*")
-      .eq("coach_user_id", user.id)
-      .eq("athlete_id", athleteId)
-      .single()
-
-    console.log("[v0] Existing record:", existing)
-
-    const { data, error } = await supabase
-      .from("college_coach_stars")
-      .upsert(
-        {
-          coach_user_id: user.id,
-          athlete_id: athleteId,
-          pipeline_stage: stage,
-          starred_at: existing?.starred_at || new Date().toISOString(),
-        },
-        {
-          onConflict: "coach_user_id,athlete_id",
-        },
-      )
-      .select()
-      .single()
-
-    if (error) {
-      console.error("[v0] Update stage: Database error:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (!athleteId || !PIPELINE_STAGES.includes(stage)) {
+      return NextResponse.json({ error: "A wrestler and a valid stage are required" }, { status: 400 })
     }
 
-    console.log("[v0] Update stage: Success:", data)
+    // The stage is the program's: every staff row for this wrestler moves together.
+    try {
+      await setProgramStage(createAdminClient(), user.id, athleteId, stage)
+    } catch (error) {
+      console.error("[v0] Update stage: Database error:", error)
+      return NextResponse.json({ error: error instanceof Error ? error.message : "Could not save" }, { status: 500 })
+    }
 
-    return NextResponse.json({ success: true, data, stage })
+    return NextResponse.json({ success: true, stage })
   } catch (error) {
     console.error("[v0] Update stage: Critical error:", error)
     console.error("[v0] Update stage: Error stack:", error instanceof Error ? error.stack : "No stack trace")

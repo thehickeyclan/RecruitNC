@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
@@ -45,41 +45,19 @@ import {
 import { StoreButton } from "@/components/store-button"
 import { StoreNavLink } from "@/components/store-nav-link"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-
-type NavNotification = { id: string; type: string; title: string; body: string | null; link: string | null; read_at: string | null; created_at: string }
+import { useCoachMessageBadge, useNavNotifications } from "@/hooks/use-nav-badges"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [hubAccess, setHubAccess] = useState(false)
-  const [notifications, setNotifications] = useState<NavNotification[]>([])
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const pathname = usePathname() ?? ""
   const { user, signOut, isLoading, profile } = useAuth()
   const cartItems = useCartStore((s) => s.items)
   const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0)
-  const unreadNotifications = notifications.filter((n) => !n.read_at).length
-
-  /**
-   * Coach conversations with something unread (lib/coach-messages.ts). Re-read on every page
-   * change, so opening a conversation clears the badge by the time you navigate away.
-   */
-  const [unreadMessages, setUnreadMessages] = useState(0)
-  /** Coaches and admins always; anyone else only once a coach has written to them. */
-  const [showMessages, setShowMessages] = useState(false)
-  useEffect(() => {
-    if (!user) {
-      setUnreadMessages(0)
-      setShowMessages(false)
-      return
-    }
-    fetch("/api/coach-messages/unread", { credentials: "include" })
-      .then((r) => r.json())
-      .then((d) => {
-        setUnreadMessages(Number(d?.unread) || 0)
-        setShowMessages(Boolean(d?.show))
-      })
-      .catch(() => {})
-  }, [user, pathname])
+  const { notifications, unread: unreadNotifications, markRead: markNotificationRead, markAllRead: markAllNotificationsRead } =
+    useNavNotifications(!!user, notificationsOpen)
+  const { unread: unreadMessages, show: showMessages } = useCoachMessageBadge(!!user, pathname)
 
   useEffect(() => {
     if (!user) {
@@ -91,43 +69,6 @@ export function Navbar() {
       .then((data) => setHubAccess(!!data?.allowed))
       .catch(() => setHubAccess(false))
   }, [user])
-
-  const fetchNotifications = useCallback(() => {
-    if (!user) return
-    fetch("/api/notifications", { credentials: "include" })
-      .then((r) => r.json())
-      .then((data) => setNotifications(Array.isArray(data?.notifications) ? data.notifications : []))
-      .catch(() => setNotifications([]))
-  }, [user])
-
-  useEffect(() => {
-    if (!user) {
-      setNotifications([])
-      return
-    }
-    fetchNotifications()
-  }, [user, fetchNotifications])
-
-  useEffect(() => {
-    if (user && notificationsOpen) fetchNotifications()
-  }, [user, notificationsOpen, fetchNotifications])
-
-  const markNotificationRead = useCallback((id: string) => {
-    fetch(`/api/notifications/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ read: true }),
-    }).then(() => {
-      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)))
-    })
-  }, [])
-
-  const markAllNotificationsRead = useCallback(() => {
-    fetch("/api/notifications/read-all", { method: "PATCH", credentials: "include" }).then(() => {
-      setNotifications((prev) => prev.map((n) => ({ ...n, read_at: n.read_at ?? new Date().toISOString() })))
-    })
-  }, [])
 
   /*
    * Sign in and come back here - the page and its query, because a comparison keeps its wrestlers
@@ -772,6 +713,14 @@ export function Navbar() {
                           My Recruits
                         </a>
                       </DropdownMenuItem>
+                      {(profile?.is_admin === true || profile?.role === "admin") && (
+                        <DropdownMenuItem asChild>
+                          <a href="/coach-home?view=coach" className="flex items-center">
+                            <Users className="h-4 w-4 mr-2" />
+                            View as coach
+                          </a>
+                        </DropdownMenuItem>
+                      )}
                     </>
                   )}
                   <DropdownMenuSeparator />
