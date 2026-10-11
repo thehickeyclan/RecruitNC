@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronRight, Loader2, Mail, MessageSquare, Send } from "lucide-react"
+import { Loader2, Mail, MessageSquare, Send } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/auth-context"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -33,10 +33,8 @@ export function CoachMessageButton({
   /**
    * "action": the labelled gold-outline button beside "View scouting report" - the way coaches find
    * messaging. "icon": a bare mail icon (kept for tight spots).
-   * "row": a row in the profile's list (components/profile/app-profile-rows.tsx), where a coach
-   * scanning Tournament Results, Wins, Contact finds it without being told it exists.
    */
-  variant?: "icon" | "action" | "row"
+  variant?: "icon" | "action"
 }) {
   const { user } = useAuth()
   const router = useRouter()
@@ -75,31 +73,7 @@ export function CoachMessageButton({
 
   return (
     <>
-      {variant === "row" ? (
-        <button
-          type="button"
-          onClick={onClick}
-          className={cn(
-            "flex min-h-[60px] w-full items-center gap-3 rounded-xl border border-[#1a3a5f] bg-[#0f1c2e] px-3 py-2 text-left hover:border-[#D3B574]/60",
-            className,
-          )}
-        >
-          <MessageSquare className="h-5 w-5 shrink-0 text-[#D3B574]" aria-hidden />
-          <span className="min-w-0 flex-1">
-            <span className="block text-[15px] font-extrabold leading-tight text-white">
-              {gate.threadId ? "Messages" : athleteName ? `Message ${athleteName.trim().split(/\s+/)[0]}` : "Message"}
-            </span>
-            <span className="mt-0.5 block text-xs leading-snug text-[#A8BBD1]">
-              {gate.threadId
-                ? "Open your conversation with this family"
-                : gate.canSend
-                  ? "Write to the wrestler; parents see every message"
-                  : "Opens once your coaching account has been reviewed"}
-            </span>
-          </span>
-          <ChevronRight className="h-4 w-4 shrink-0 text-[#6B829D]" aria-hidden />
-        </button>
-      ) : variant === "action" ? (
+      {variant === "action" ? (
         <button
           type="button"
           onClick={onClick}

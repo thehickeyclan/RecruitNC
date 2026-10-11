@@ -37,12 +37,7 @@ type SignificantWin = {
  * When there are no documented wins yet, the section still provides the community submission
  * path so missing results can be sent to NC United for review.
  */
-export function SignificantWinsSection({ athleteId, qualityWinBlocks = [], styles = "folkstyle", gender = null, onLoaded }: {
-  /**
-   * What the list found, for the profile row that opens it: how many, the best one in a few
-   * words, and how many notable losses the same endpoint returned.
-   */
-  onLoaded?: (info: { total: number; top: string | null; losses: number }) => void
+export function SignificantWinsSection({ athleteId, qualityWinBlocks = [], styles = "folkstyle", gender = null }: {
   athleteId: string
   qualityWinBlocks?: ProfileQualityWinsTournamentBlock[]
   /**
@@ -63,23 +58,7 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [], style
     fetch(`/api/athletes/${athleteId}/significant-wins`, { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : { wins: [] }))
       .then((data) => {
-        if (cancelled) return
-        const list = (data.wins ?? []) as SignificantWin[]
-        setWins(list)
-        const best = list[0]
-        const why: Record<string, string> = {
-          "national-ranked": "nationally ranked",
-          "toc-field": "TOC field",
-          ranked: "ranked",
-          "state-champion": "state champion",
-          "national-placer": "All-American",
-          "state-placer": "state placer",
-        }
-        onLoaded?.({
-          total: list.length,
-          top: best ? `Beat ${best.opponent}${why[best.reason] ? ` (${why[best.reason]})` : ""}` : null,
-          losses: Array.isArray(data.losses) ? data.losses.length : 0,
-        })
+        if (!cancelled) setWins(data.wins ?? [])
       })
       .catch(() => {})
       .finally(() => {

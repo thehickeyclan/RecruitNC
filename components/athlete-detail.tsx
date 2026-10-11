@@ -17,17 +17,13 @@ import {
   CompareAction,
   type BannerStat,
 } from "@/components/profile/profile-banner-parts"
-import { ProfileRow } from "@/components/profile/profile-row"
-import { AppNotableLosses, AppRow, AppSignificantWins, AppTournamentResults, useAppProfile } from "@/components/profile/app-profile-rows"
-import { SignificantWinSubmissionDialog } from "@/components/significant-win-submission-dialog"
-import { TournamentResultSubmissionDialog } from "@/components/tournament-result-submission-dialog"
 import { ProfileFitFlag } from "@/components/profile/profile-fit-flag"
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { ArrowLeftRight, Award, BarChart3, Camera, Check, ChevronDown, MessageSquare, Edit, ExternalLink, Eye, FileText, GraduationCap, ListOrdered, Mail, Pencil, Phone, Scale, School, Share2, TrendingUp, Trophy, UserRound, Video } from "lucide-react"
+import { Award, Camera, ChevronDown, Edit, ExternalLink, FileText, GraduationCap, Mail, Pencil, Phone, Scale, School, Share2, TrendingUp, Trophy, Video } from "lucide-react"
 import { UnifiedProfileMobileNav } from "./unified-profile-mobile-nav"
 import type { ProfileQualityWinsTournamentBlock } from "@/lib/profile-quality-wins"
 import {
@@ -78,35 +74,6 @@ import { scoutingReportAvailable } from "@/lib/scouting-report-access"
  * any of them, and the section already hides itself when an athlete has no bio.
  */
 const SHOW_ATHLETE_BIO_SECTION = true
-
-/*
- * The profile's rows, in the order they are listed (components/profile/profile-row.tsx). A row's
- * header and the sections it opens share one `order`, so the sections sit directly under it
- * wherever they are written in this file.
- */
-type RowKey = "views" | "results" | "wins" | "losses" | "scouting" | "season" | "academics" | "contact" | "film" | "about" | "compare"
-const ROW_ORDER: Record<RowKey, string> = {
-  // The app's order first; the website's extra rows after it.
-  results: "order-[5]",
-  wins: "order-[6]",
-  losses: "order-[7]",
-  academics: "order-[9]",
-  contact: "order-[10]",
-  views: "order-[11]",
-  scouting: "order-[12]",
-  season: "order-[13]",
-  film: "order-[14]",
-  about: "order-[15]",
-  compare: "order-[16]",
-}
-/** Which row holds the section an edit button opens. */
-const EDIT_SECTION_ROW: Record<string, RowKey> = {
-  bio: "about",
-  "college-opens": "about",
-  achievements: "about",
-  "highlight-video": "film",
-  academics: "academics",
-}
 
 interface AthleteDetailProps {
   athlete: {
@@ -280,48 +247,6 @@ export function AthleteDetail({
   const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
   const [athleteData, setAthleteData] = useState(athlete)
   const [editingSection, setEditingSection] = useState<string | null>(null)
-  /*
-   * The body is a list of rows that open in place, on a phone and on a desktop alike (Matt's
-   * mock, 10 October 2026: the iPhone profile - a header, then Tournament Results, Significant
-   * Wins, Academic Information, each with one line of real data). The page had been fourteen
-   * full-width cards stacked 6,000 pixels deep. Everything is still on the page and still
-   * mounted, so each section loads its data and can report its line; a closed row hides it.
-   */
-  const [openRows, setOpenRows] = useState<ReadonlySet<RowKey>>(new Set())
-  const toggleRow = (key: RowKey) =>
-    setOpenRows((prev) => {
-      const next = new Set(prev)
-      if (next.has(key)) next.delete(key)
-      else next.add(key)
-      return next
-    })
-  const openRow = (key: RowKey) => setOpenRows((prev) => (prev.has(key) ? prev : new Set([...prev, key])))
-  /** The order a row's sections take, and whether they show. Last in `cn`, so it wins the order. */
-  /*
-   * A row's sections sit flush under it, inside the same outline, as the app's rows open: the
-   * negative margin closes the column's gap and the header drops its bottom corners when open.
-   */
-  const inRow = (key: RowKey) =>
-    cn("-mt-2.5 rounded-none border-x border-b border-t-0 border-[#1a3a5f] bg-[#0f1c2e] p-3 shadow-none last:rounded-b-xl", ROW_ORDER[key], !openRows.has(key) && "hidden")
-  /** Tournaments, wins and losses as the iPhone app reads them (components/profile/app-profile-rows). */
-  const appData = useAppProfile(String(athlete.id))
-  /** The owner's editor buttons, behind "Edit Profile" on the completeness card. */
-  const [showEditors, setShowEditors] = useState(false)
-  /*
-   * The college-views email, the claim flow and the checkout all land on the views panel
-   * (components/profile/college-views-landing.tsx); open its row so the panel is there.
-   */
-  useEffect(() => {
-    const q = new URLSearchParams(window.location.search)
-    if (window.location.hash === "#college-views" || q.get("src") === "email-views" || q.get("views") === "1" || q.get("purchased") === "1") {
-      openRow("views")
-    }
-  }, [])
-  // Editing a section from anywhere opens its row, so the form is never hidden.
-  useEffect(() => {
-    const row = editingSection ? EDIT_SECTION_ROW[editingSection] : undefined
-    if (row) openRow(row)
-  }, [editingSection])
   // Open by default. It is the athlete introducing themselves, directly under the banner —
   // the one section a reader wants before they have decided to look for anything.
   // A preview until asked: the full bio ran four phone screens before the first result.
@@ -1174,62 +1099,31 @@ export function AthleteDetail({
   }
 
   const lastCompeted = profileWeightDisplay?.lastCompeted ?? null
-  /*
-   * The banner's facts: class, school, club, and the weight he last competed at (Matt, 10 October
-   * 2026). The listed weight is gone from here - it sat beside "last competed" saying something
-   * different a third of the time, and the one a coach wants is the one he actually made. It
-   * shows only as a fallback, labelled as listed, when no result with a weight is on file.
-   */
-  const hasSchool = Boolean(highSchool && highSchool !== "Not specified")
-  const hasClub = Boolean(wrestlingClub && wrestlingClub !== "Not specified")
-  const bannerText = (text: string) => <span className="block text-base font-bold leading-tight lg:text-xl">{text}</span>
-  const editWeight = canEdit ? (
-    <button
-      type="button"
-      className="inline-flex items-center rounded p-0.5 text-white/60 hover:bg-white/10 hover:text-white"
-      onClick={() => setEditingSection("weight")}
-      aria-label="Edit weight"
-    >
-      <Edit className="h-3.5 w-3.5" />
-    </button>
-  ) : undefined
-  // School, club and NC United team are edited together; the form opens under the banner.
-  const editSchoolClub = canEdit ? (
-    <button
-      type="button"
-      className="inline-flex items-center rounded p-0.5 text-white/60 hover:bg-white/10 hover:text-white"
-      onClick={() => setEditingSection("school-club")}
-      aria-label="Edit school and club"
-    >
-      <Edit className="h-3.5 w-3.5" />
-    </button>
-  ) : undefined
   const bannerStats: BannerStat[] = [
     { label: "Year", value: graduationYear || "—" },
-    ...(hasSchool || canEdit ? [{ label: "School", value: bannerText(hasSchool ? highSchool : "—"), action: editSchoolClub }] : []),
-    ...(hasClub ? [{ label: "Club", value: bannerText(wrestlingClub) }] : []),
-    ...(ncUnitedTeam && ncUnitedTeam !== "none"
+    {
+      label: "Weight",
+      value: weightClassLabel === "Not specified" ? "—" : `${weightClassLabel} lbs`,
+      action: canEdit ? (
+        <button
+          type="button"
+          className="inline-flex items-center rounded p-0.5 text-white/60 hover:bg-white/10 hover:text-white"
+          onClick={() => setEditingSection("weight")}
+          aria-label="Edit weight"
+        >
+          <Edit className="h-3.5 w-3.5" />
+        </button>
+      ) : undefined,
+    },
+    ...(lastCompeted
       ? [
           {
-            label: "NC United",
-            value: bannerText(ncUnitedTeam === "blue" ? "Blue Team" : ncUnitedTeam === "gold" ? "Gold Team" : ncUnitedTeam === "both" ? "Both Teams" : ncUnitedTeam),
+            label: "Last competed",
+            value: <span className="text-lg font-bold lg:text-2xl">{lastCompeted.weight} lbs</span>,
+            sub: `${lastCompeted.event} ${lastCompeted.year}`,
           },
         ]
       : []),
-    lastCompeted
-      ? {
-          label: "Last competed",
-          value: <span className="text-lg font-bold lg:text-2xl">{lastCompeted.weight} lbs</span>,
-          sub: `${lastCompeted.event} ${lastCompeted.year}`,
-          // The owner still corrects the listed weight from here; it no longer shows.
-          action: editWeight,
-        }
-      : {
-          label: "Listed weight",
-          value: weightClassLabel === "Not specified" ? "—" : `${weightClassLabel} lbs`,
-          sub: "No competed weight on file",
-          action: editWeight,
-        },
   ]
   const bannerRibbon = prospectRanking
     ? `RecruitNC #${prospectRanking}  ·  Class of ${graduationYear || "—"}`
@@ -1256,160 +1150,15 @@ export function AthleteDetail({
         </div>
       </div>
     ) : null
-  /*
-   * Contact is its own row, not part of the banner (Matt, 10 October 2026: "we need a cleaner
-   * banner up top"). The banner says who he is; how to reach him is one tap down, where the app
-   * puts it too.
-   */
-  const contactButtons = showHeroContactRow ? (
+  const bannerContact = showHeroContactRow ? (
     <div className="[&>div]:mt-0">{renderHeroContactRow("buttons")}</div>
   ) : null
-
-  /*
-   * The header, as the iPhone app draws it (Matt's mock, 10 October 2026): a small photo beside
-   * the name, the ranking ribbons, then Class of and Last competed in one card. It replaces the
-   * full-bleed banner at every width - that banner was most of a screen before a single result,
-   * and the app says the same things in a fifth of the space. Sizes and colours are the app's
-   * (recruitnc-mobile, src/app/(tabs)/athlete/[id].tsx) so the two read as one product.
-   */
-  const nameWords = athleteName.trim().split(/\s+/)
-  const suffixWords = nameWords.length > 2 && /^(jr\.?|sr\.?|ii|iii|iv)$/i.test(nameWords[nameWords.length - 1]!) ? 2 : 1
-  const firstNames = nameWords.slice(0, -suffixWords).join(" ")
-  const lastNames = nameWords.slice(-suffixWords).join(" ")
-  const schoolLine = [hasSchool ? highSchool : null, hasClub ? wrestlingClub : null].filter(Boolean).join(" · ")
-  const ncUnitedLabel =
-    ncUnitedTeam && ncUnitedTeam !== "none"
-      ? ncUnitedTeam === "blue" ? "NC United Blue" : ncUnitedTeam === "gold" ? "NC United Gold" : ncUnitedTeam === "both" ? "NC United Blue & Gold" : `NC United ${ncUnitedTeam}`
-      : null
-  /*
-   * Four things a coach looks for, in five equal parts: the photo and the school each count, so a
-   * profile with both and a phone number reads 60% - enough to see there is more to add.
-   */
-  const completenessParts = [Boolean(athletePhoto), hasSchool, hasAcademicData, hasHighlightContent, Boolean(cellPhone || contactEmail)]
-  const completeness = {
-    percent: Math.round((completenessParts.filter(Boolean).length / completenessParts.length) * 100),
-    items: [
-      { label: "Photo and wrestling information", todo: "Add a photo and your school", done: Boolean(athletePhoto) && hasSchool, edit: athletePhoto ? "school-club" : "photo" },
-      { label: "Academic information", todo: "Add academic information", done: hasAcademicData, edit: "academics" },
-      { label: "Highlight reel", todo: "Add highlight reel", done: hasHighlightContent, edit: "highlight-video" },
-      { label: "Contact information", todo: "Verify contact information", done: Boolean(cellPhone || contactEmail), edit: "contact" },
-    ],
-  }
-  const isGirl = /^(f|female|girl)/i.test(String((athlete as { gender?: string | null }).gender ?? ""))
-  const compactHero = (
-    <div className="bg-[#0A1628] px-4 pb-4 pt-3 text-white lg:px-5 lg:pb-5">
-      <div className="mb-2 flex items-center justify-end gap-2">
-        {currentUserId && !canEdit ? (
-          <button type="button" className={PHOTO_ACTION} onClick={() => setShowEditModal(true)} aria-label="Request edit">
-            <Edit className="h-4 w-4" />
-          </button>
-        ) : null}
-        <button type="button" className={PHOTO_ACTION} onClick={handleShareProfile} aria-label="Share profile">
-          <Share2 className="h-4 w-4" />
-        </button>
-        <WatchListButton
-          athleteId={athlete.id}
-          compact
-          className={cn(PHOTO_ACTION, "border-0 shadow-none data-[starred=false]:bg-black/40 data-[starred=false]:text-white")}
-        />
-      </div>
-      <div className="flex items-center gap-3 lg:gap-5">
-        <div className="relative h-[156px] w-[124px] shrink-0 overflow-hidden rounded-xl bg-[#0f1c2e] lg:h-[200px] lg:w-[160px]">
-          {canEdit ? (
-            <ImageUploadEditor athleteId={athlete.id} currentImageUrl={athletePhoto || undefined} onUpload={handleImageUpload} canEdit={canEdit} className="h-full w-full" />
-          ) : (
-            <Image
-              src={athletePhoto || "/wrestler-silhouette.png"}
-              alt={athleteName}
-              fill
-              className="object-cover object-top"
-              sizes="160px"
-              onError={() => setImageError(true)}
-              priority
-            />
-          )}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#D3B574]">NC Wrestling</p>
-          <h1 className="mt-1 uppercase text-white">
-            {firstNames ? <span className="block text-[22px] font-medium leading-6 tracking-tight text-white/90 lg:text-3xl">{firstNames}</span> : null}
-            <span className="block break-words text-[32px] font-black leading-[34px] tracking-tight lg:text-5xl">{lastNames}</span>
-          </h1>
-          {schoolLine || canEdit ? (
-            <p className="mt-1 flex items-center gap-1.5 text-sm text-[#A8BBD1]">
-              <span className="min-w-0">{schoolLine || "Add school and club"}</span>
-              {editSchoolClub}
-            </p>
-          ) : null}
-          {ncUnitedLabel ? <p className="text-xs font-semibold text-[#A8BBD1]">{ncUnitedLabel}</p> : null}
-          {isCommittedStatus && college && college !== "Not specified" ? (
-            <p className="mt-1.5 flex items-center gap-2 text-sm text-white">
-              {collegeLogo ? (
-                <span className="relative h-7 w-7 shrink-0 overflow-hidden rounded-full bg-white">
-                  <Image src={collegeLogo} alt="" fill className="object-contain p-0.5" />
-                </span>
-              ) : null}
-              <span className="min-w-0">
-                <span className="text-[#A8BBD1]">Committed to </span>
-                <span className="font-bold">{college}</span>
-                {collegeTransferLabel ? <span className="block text-xs text-white/55">{collegeTransferLabel}</span> : null}
-              </span>
-            </p>
-          ) : null}
-          {prospectRanking ? (
-            <p className="mt-2 inline-block rounded-md bg-[#D3B574] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.22em] text-[#0A1628]">
-              RecruitNC #{prospectRanking}
-            </p>
-          ) : null}
-        </div>
-      </div>
-
-      {bannerNationalRanking ? (
-        <div className="mt-3 flex flex-wrap gap-2">
-          <NationalRankingRibbon label={bannerNationalRanking} />
-        </div>
-      ) : null}
-
-      <div className="mt-3 flex rounded-xl border border-[#1a3a5f] bg-[#0f1c2e]">
-        <div className="p-3">
-          <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-[#6B829D]">Class of</p>
-          <p className="mt-1 text-[22px] font-black leading-none text-white">{graduationYear || "—"}</p>
-        </div>
-        <div className="min-w-0 flex-1 border-l border-[#1a3a5f] p-3">
-          <p className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-[#6B829D]">
-            {lastCompeted ? "Last competed" : "Listed weight"}
-            {editWeight}
-          </p>
-          {lastCompeted ? (
-            <>
-              <p className="mt-1 text-[22px] font-black leading-none text-white">{lastCompeted.weight} lbs</p>
-              <p className="mt-1 text-[11px] text-[#A8BBD1]">{[lastCompeted.event, lastCompeted.year].filter(Boolean).join(" · ")}</p>
-            </>
-          ) : (
-            <>
-              <p className="mt-1 text-[22px] font-black leading-none text-white">{weightClassLabel === "Not specified" ? "—" : `${weightClassLabel} lbs`}</p>
-              <p className="mt-1 text-[11px] text-[#A8BBD1]">No results on file yet</p>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* A recruiter's actions: the report, the comparison, a message. Nothing renders for most viewers. */}
-      <div className="mt-3 flex flex-wrap items-center gap-2 empty:hidden">
-        {canSeeScoutingReport ? <ScoutingReportAction href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`} /> : null}
-        {mayCompare ? <CompareAction athleteId={String(athlete.id)} /> : null}
-        {!isViewingOwnProfile ? <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="action" /> : null}
-        {mayCompare ? <ProfileFitFlag athleteId={String(athlete.id)} className="inline-flex items-center" /> : null}
-      </div>
-    </div>
-  )
 
   return (
     <div
       className={cn(
         mobileRecruiterLayout
-          // One narrow column at every width, as on the phone: a profile is read, not scanned across.
-          ? "mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-2.5"
+          ? "flex flex-col gap-7 lg:gap-10 min-w-0 max-w-full"
           : "space-y-8 min-w-0 max-w-full",
         isDark && "profile-surface",
       )}
@@ -1426,9 +1175,91 @@ export function AthleteDetail({
       >
         <div className="relative">
           {/* Mobile view */}
-          <div className={mobileRecruiterLayout ? "block" : "block lg:hidden"}>
+          <div className="block lg:hidden">
             {mobileRecruiterLayout ? (
-              compactHero
+              <div className="w-full">
+                {/* Full graphic, never cropped — shrink to width (and max height) via object-contain. */}
+                <div className="relative w-full bg-[#0A1628]">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- intrinsic size so commit graphics are never cropped */}
+                  <img
+                    src={athletePhoto || "/wrestler-silhouette.png"}
+                    alt={athleteName}
+                    /*
+                      Capped so the first screen is not only a photograph. At 85vh on a phone the
+                      image filled 590 of 812 pixels and the name sat at the fold, which put every
+                      credential below it — the opposite of what a coach opening a profile at a
+                      tournament needs. Desktop keeps the tall crop.
+                    */
+                    className="mx-auto block h-auto w-auto max-h-[min(46vh,420px)] max-w-full sm:max-h-[min(85vh,720px)]"
+                    onError={() => setImageError(true)}
+                  />
+
+                  {/* Photo actions: matching frosted circles, centred icons (the old pill ran off the
+                      photo's edge and the mail icon sat off-centre). */}
+                  <div className="absolute inset-x-3 top-3 z-20 flex items-center justify-between">
+                    {currentUserId ? (
+                      <button
+                        type="button"
+                        className={PHOTO_ACTION}
+                        onClick={() => setShowEditModal(true)}
+                        aria-label="Request edit"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </button>
+                    ) : (
+                      <span />
+                    )}
+                    <div className="flex items-center gap-2">
+                      <button type="button" className={PHOTO_ACTION} onClick={handleShareProfile} aria-label="Share profile">
+                        <Share2 className="h-4 w-4" />
+                      </button>
+                      <WatchListButton
+                        athleteId={athlete.id}
+                        compact
+                        className={cn(PHOTO_ACTION, "border-0 shadow-none data-[starred=false]:bg-black/40 data-[starred=false]:text-white")}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Identity panel below the photo: the banner's pieces, stacked. */}
+                <div className="relative bg-[#0A1628] px-4 pb-6 pt-5 text-white">
+                  <BannerEyebrow />
+                  <BannerName name={athleteName} className="mt-2" />
+                  {bannerRibbon || bannerNationalRanking ? (
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      {bannerRibbon ? <BannerRibbon>{bannerRibbon}</BannerRibbon> : null}
+                      {bannerNationalRanking ? <NationalRankingRibbon label={bannerNationalRanking} /> : null}
+                    </div>
+                  ) : null}
+                  {canSeeScoutingReport ? (
+                    <ScoutingReportAction
+                      href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`}
+                      className="mt-4 flex w-full"
+                    />
+                  ) : null}
+                  {mayCompare ? (
+                    <CompareAction athleteId={String(athlete.id)} className={cn("flex w-full", canSeeScoutingReport ? "mt-2" : "mt-4")} />
+                  ) : null}
+                  {/* College coaches only: renders nothing for anyone else. */}
+                  {!isViewingOwnProfile ? (
+                    <CoachMessageButton
+                      athleteId={String(athlete.id)}
+                      athleteName={athleteName}
+                      variant="action"
+                      className={cn("flex w-full", canSeeScoutingReport ? "mt-2" : "mt-4")}
+                    />
+                  ) : null}
+                  {bannerCommitted ? <div className="mt-4">{bannerCommitted}</div> : null}
+                  <BannerStats stats={bannerStats} className="mt-5" />
+                  <CredentialCards credentials={credentials} className="mt-5" />
+                  <CompetesBar competition={competition} contact={bannerContact} className="mt-4" />
+                  {/* Owner and admins only; the endpoint refuses anybody else. */}
+                  {canViewProfileStats && athlete.id ? (
+                    <BannerViewStats athleteId={String(athlete.id)} className="mt-3" />
+                  ) : null}
+                </div>
+              </div>
             ) : (
               <>
             <div className="relative w-full bg-[#13294B]">
@@ -1544,9 +1375,88 @@ export function AthleteDetail({
           </div>
 
           {/* Desktop view */}
-          <div className={mobileRecruiterLayout ? "hidden" : "hidden lg:block"}>
+          <div className="hidden lg:block">
             {mobileRecruiterLayout ? (
-              null
+              <div className="relative min-h-[540px] overflow-hidden bg-[#0A1628]">
+                <Image src="/hero-banner-nchsaa-2026-arena.png" alt="" fill className="object-cover opacity-[0.14]" sizes="100vw" />
+                <div className="absolute inset-0 bg-gradient-to-br from-[#13294B]/85 via-[#0A1628]/75 to-[#0A1628]" />
+
+                {/* The photo bleeds off the left edge and fades into the banner: masked, not overlaid,
+                    so it dissolves into whatever the background is behind it. */}
+                <div
+                  className="absolute inset-y-0 left-0 w-[40%]"
+                  style={{
+                    maskImage: "linear-gradient(to right, #000 55%, transparent 100%), linear-gradient(to top, transparent 0%, #000 28%)",
+                    WebkitMaskImage: "linear-gradient(to right, #000 55%, transparent 100%), linear-gradient(to top, transparent 0%, #000 28%)",
+                    maskComposite: "intersect",
+                    WebkitMaskComposite: "source-in",
+                  }}
+                >
+                  {canEdit ? (
+                    <ImageUploadEditor
+                      athleteId={athlete.id}
+                      currentImageUrl={athletePhoto || undefined}
+                      onUpload={handleImageUpload}
+                      canEdit={canEdit}
+                      className="h-full w-full"
+                    />
+                  ) : (
+                    <Image
+                      src={athletePhoto || "/wrestler-silhouette.png"}
+                      alt={athleteName}
+                      fill
+                      className="object-cover object-top"
+                      sizes="40vw"
+                      onError={() => setImageError(true)}
+                      priority
+                    />
+                  )}
+                </div>
+
+                <div className="absolute right-6 top-6 z-20 flex items-center gap-2">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-white/80 hover:bg-white/10 hover:text-white"
+                    onClick={handleShareProfile}
+                    aria-label="Share profile"
+                  >
+                    <Share2 className="mr-2 h-4 w-4" />
+                    Share
+                  </Button>
+                  <WatchListButton athleteId={athlete.id} />
+                </div>
+
+                <div className="relative z-10 ml-[34%] flex flex-col gap-6 px-10 pb-10 pt-16 xl:pr-14">
+                  <div>
+                    <BannerEyebrow />
+                    <BannerName name={athleteName} className="mt-3" />
+                    {/* The scouting report beside the ribbon: in the content, where it cannot collide
+                        with the name or the eyebrow at narrower desktop widths. */}
+                    {/* The ribbon, the scouting report and - for college coaches - Message, side by side.
+                        empty:hidden: for most viewers none of the three renders. */}
+                    <div className="mt-5 flex flex-wrap items-center gap-3 empty:hidden">
+                      {bannerRibbon ? <BannerRibbon>{bannerRibbon}</BannerRibbon> : null}
+                      {bannerNationalRanking ? <NationalRankingRibbon label={bannerNationalRanking} /> : null}
+                      {canSeeScoutingReport ? (
+                        <ScoutingReportAction href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`} />
+                      ) : null}
+                      {mayCompare ? <CompareAction athleteId={String(athlete.id)} /> : null}
+                      {mayCompare ? <ProfileFitFlag athleteId={String(athlete.id)} className="inline-flex items-center" /> : null}
+                      {!isViewingOwnProfile ? (
+                        <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="action" />
+                      ) : null}
+                    </div>
+                  </div>
+                  {bannerCommitted}
+                  <BannerStats stats={bannerStats} />
+                  <CredentialCards credentials={credentials} />
+                  <CompetesBar competition={competition} contact={bannerContact} />
+                  {canViewProfileStats && athlete.id ? (
+                    <BannerViewStats athleteId={String(athlete.id)} className="mt-3" />
+                  ) : null}
+                </div>
+              </div>
             ) : (
             <div className="relative min-h-[360px] bg-gradient-to-r from-[#13294B] to-[#1e3a5f]">
               <div className="absolute inset-0 bg-black/10" />
@@ -1670,145 +1580,10 @@ export function AthleteDetail({
         </div>
       </Card>
 
-      {/* The rows. Written here, ahead of every section, so each header comes before the sections
-          that share its order. */}
-      {canViewProfileStats && athlete.id ? (
-        <ProfileRow
-          icon={Eye}
-          title="Profile Views"
-          summary="Who is looking at this profile, and which college programs"
-          open={openRows.has("views")}
-          onToggle={() => toggleRow("views")}
-          className={ROW_ORDER.views}
-        />
-      ) : null}
-      <AppTournamentResults
-        profile={appData.profile}
-        loaded={appData.loaded}
-        isGirl={isGirl}
-        fallbackLine={credentials.length ? credentials.slice(0, 2).map((c) => c.label).join(" · ") : null}
-        // The website's own: a family can send in a tournament we do not carry.
-        footer={<TournamentResultSubmissionDialog athleteId={String(athlete.id)} />}
-        className={ROW_ORDER.results}
-      />
-      <AppSignificantWins
-        wins={appData.wins}
-        loaded={appData.winsLoaded}
-        footer={<SignificantWinSubmissionDialog athleteId={String(athlete.id)} />}
-        className={ROW_ORDER.wins}
-      />
-      <AppNotableLosses losses={appData.losses} loaded={appData.winsLoaded} className={ROW_ORDER.losses} />
-      {canSeeScoutingReport ? (
-        <AppRow
-          icon={FileText}
-          title="Scouting Report"
-          subtitle="Evaluation, record and competition, in full"
-          href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`}
-          className={ROW_ORDER.scouting}
-        />
-      ) : null}
-      <ProfileRow
-        icon={ListOrdered}
-        title="In-Season Match Log"
-        summary="Every high school bout on file, season by season"
-        open={openRows.has("season")}
-        onToggle={() => toggleRow("season")}
-        className={ROW_ORDER.season}
-      />
-      {hasAcademicData || canEdit ? (
-        <ProfileRow
-          icon={GraduationCap}
-          title="Academic Information"
-          summary={
-            !hasAcademicData
-              ? "Not on file yet"
-              : canSeePrivateInfo
-                ? [effectiveGpa ? `GPA ${effectiveGpa}` : null, effectiveSat ? `SAT ${effectiveSat}` : null, effectiveAct ? `ACT ${effectiveAct}` : null].filter(Boolean).join(" · ")
-                : "Visible to approved college coaches"
-          }
-          locked={hasAcademicData && !canSeePrivateInfo}
-          open={openRows.has("academics")}
-          onToggle={() => toggleRow("academics")}
-          className={ROW_ORDER.academics}
-        />
-      ) : null}
-      {/* Messaging, as a row of its own (Matt, 10 October 2026). College coaches get the row that
-          writes to the family; it renders nothing for anyone else. An admin sees it locked, so
-          it is clear the row exists and who it is for. */}
-      {!isViewingOwnProfile ? (
-        <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="row" className={ROW_ORDER.contact} />
-      ) : null}
-      {isAdmin && !isViewingOwnProfile ? (
-        <AppRow
-          icon={MessageSquare}
-          title="Messages"
-          subtitle="College coaches message the family from here. Admins do not start conversations."
-          locked
-          className={ROW_ORDER.contact}
-        />
-      ) : null}
-      {/* Contact, and messaging with it: a coach looking for how to reach a wrestler looks here. */}
-      {contactButtons || ((isVerifiedCoach || isAdmin) && !isViewingOwnProfile) ? (
-        <>
-          <ProfileRow
-            icon={Phone}
-            title="Contact Information"
-            summary={
-              // Admins hold the coach flag too but do not message, so they get the plain line.
-              isVerifiedCoach && !isAdmin && !isViewingOwnProfile
-                ? canSeePrivateInfo && (cellPhone || contactEmail)
-                  ? "Message, call or text the athlete"
-                  : "Message the athlete"
-                : canSeePrivateInfo && (cellPhone || contactEmail)
-                  ? "Call, text or email the athlete"
-                  : "Instagram and wrestling profile links"
-            }
-            open={openRows.has("contact")}
-            onToggle={() => toggleRow("contact")}
-            className={ROW_ORDER.contact}
-          />
-          {/* On the banner's navy whatever the theme: the buttons are drawn for a dark ground. */}
-          <div className={cn("flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-[#0A1628] p-4 lg:p-6", inRow("contact"))}>
-            {/* College coaches only; the button renders nothing for anyone else. */}
-            {!isViewingOwnProfile ? (
-              <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="action" className="min-h-[44px]" />
-            ) : null}
-            {contactButtons}
-            {isAdmin && !isViewingOwnProfile ? (
-              <p className="w-full text-xs text-white/50">College coaches see a Message button here. Admins do not start conversations.</p>
-            ) : null}
-          </div>
-        </>
-      ) : null}
-      {hasHighlightContent || canEdit ? (
-        <ProfileRow
-          icon={Video}
-          title="Highlight Reel"
-          summary={hasHighlightContent ? "Watch the film" : "No video yet"}
-          open={openRows.has("film")}
-          onToggle={() => toggleRow("film")}
-          className={ROW_ORDER.film}
-        />
-      ) : null}
-      {hasBioContent || hasCollegeOpensContent || hasOtherHonoursContent || canEdit ? (
-        <ProfileRow
-          icon={UserRound}
-          title="About"
-          summary={[hasBioContent ? "Bio" : null, hasCollegeOpensContent ? "College open experience" : null, hasOtherHonoursContent ? "Other honours" : null].filter(Boolean).join(" · ") || "Nothing added yet"}
-          open={openRows.has("about")}
-          onToggle={() => toggleRow("about")}
-          className={ROW_ORDER.about}
-        />
-      ) : null}
-      {mayCompare ? (
-        <ProfileRow
-          icon={ArrowLeftRight}
-          title="Compare"
-          summary="Head to head, common opponents and similar wrestlers"
-          open={openRows.has("compare")}
-          onToggle={() => toggleRow("compare")}
-          className={ROW_ORDER.compare}
-        />
+      {mobileRecruiterLayout ? (
+        // No wrapper: a sticky element only sticks within its parent, and a wrapper its own height
+        // left the links scrolling away with the page.
+        <UnifiedProfileMobileNav className={PROFILE_SECTION_ORDER.nav} />
       ) : null}
 
       {/* Who is recruiting this wrestler. Renders nothing unless the viewer is the athlete,
@@ -1820,7 +1595,7 @@ export function AthleteDetail({
       </div>
       {/* One "who's viewing you" panel: the counts, then the college programs and the subscription
           that names them. It was two - the programs up here, the counts far down the page. */}
-      <div id="college-views" className={cn("scroll-mt-24 px-1 empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels, inRow("views"))}>
+      <div id="college-views" className={cn("scroll-mt-24 px-1 empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels)}>
         {canViewProfileStats && athlete.id ? (
           <ProfileViewStatsPanel athleteId={athlete.id} adminView={isAdmin && !isViewingOwnProfile}>
             <CoachViewsPanel athleteId={String(athlete.id)} embedded />
@@ -1830,7 +1605,7 @@ export function AthleteDetail({
 
       {/* Coaches who messaged this wrestler. Renders only for the wrestler and linked parents
           (the list endpoint returns nothing to anyone else) and only once a coach has written. */}
-      <div className={cn("empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels, ROW_ORDER.contact)}>
+      <div className={cn("px-1 empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.panels)}>
         <FamilyMessagesPanel athleteId={String(athlete.id)} />
       </div>
 
@@ -1897,59 +1672,20 @@ export function AthleteDetail({
             PROFILE_SECTION_ORDER.panels,
           )}
         >
-          {/* Profile completeness (Matt's mock, 10 October 2026): what is done, what is left, and
-              one button to the editors. Each open item is a tap to its own form. */}
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-baseline justify-between gap-3">
-                <p className="text-base font-bold text-white">Profile Completeness</p>
-                <p className="text-base font-black text-white">{completeness.percent}%</p>
-              </div>
-              <div className="mt-2 h-2.5 overflow-hidden rounded-full border border-white/15 bg-[#0A1628]">
-                <div className="h-full rounded-full bg-[#D3B574]" style={{ width: `${completeness.percent}%` }} />
-              </div>
-              <p className="mt-2 text-sm text-white/70">
-                {completeness.percent === 100
-                  ? "Your profile is complete. Keep it current: college coaches read this page."
-                  : "Complete your profile to get more views from college coaches."}
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#D3B574] text-[#0A1628]">
+              <Pencil className="h-4 w-4" aria-hidden />
+            </span>
+            <div className="min-w-0">
+              <p className="text-base font-bold text-white">
+                {isViewingOwnProfile ? "This is your profile" : isAdmin && !isParentLinkedEditor ? "You can edit this profile (admin)" : "You can edit this profile"}
+              </p>
+              <p className="text-sm text-white/70">
+                College coaches read this page. Keep the photo, weight, bio and video current.
               </p>
             </div>
-            <ul className="space-y-1.5 lg:w-64">
-              {completeness.items.map((item) => (
-                <li key={item.label}>
-                  <button
-                    type="button"
-                    disabled={item.done}
-                    onClick={() => {
-                      setEditingSection(item.edit)
-                      window.setTimeout(() => document.querySelector<HTMLElement>("[data-owner-editor], [data-section=academics], #highlights")?.scrollIntoView({ behavior: "smooth", block: "center" }), 80)
-                    }}
-                    className={cn("flex items-center gap-2 text-left text-sm", item.done ? "text-white" : "text-white/80 hover:text-[#D3B574]")}
-                  >
-                    <span
-                      className={cn(
-                        "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border",
-                        item.done ? "border-[#D3B574] bg-[#D3B574] text-[#0A1628]" : "border-white/50",
-                      )}
-                      aria-hidden
-                    >
-                      {item.done ? <Check className="h-3.5 w-3.5" strokeWidth={3} /> : null}
-                    </span>
-                    {item.done ? item.label : item.todo}
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <button
-              type="button"
-              onClick={() => setShowEditors((v) => !v)}
-              aria-expanded={showEditors}
-              className="shrink-0 rounded-lg bg-[#D3B574] px-5 py-3 text-sm font-bold text-[#0A1628] hover:bg-[#c4a665]"
-            >
-              Edit Profile
-            </button>
           </div>
-          <div className={cn("mt-4 flex flex-wrap gap-2", !showEditors && "hidden")}>
+          <div className="mt-3 flex flex-wrap gap-2">
             {(
               [
                 { key: "photo", label: "Photo", icon: Camera, target: null },
@@ -2084,7 +1820,7 @@ export function AthleteDetail({
       {SHOW_ATHLETE_BIO_SECTION && (hasBioContent || canEdit) ? (
       <Card
         id="bio"
-        className={cn("profile-card border-t-4 border-t-[#D3B574] shadow-md", mobileRecruiterLayout && PROFILE_SECTION_ORDER.bio, inRow("about"))}
+        className={cn("profile-card border-t-4 border-t-[#D3B574] shadow-md", mobileRecruiterLayout && PROFILE_SECTION_ORDER.bio)}
         data-section="bio"
       >
         <div className={cn(mobileRecruiterLayout ? PROFILE_SECTION_HEADER : "bg-gradient-to-r from-[#13294B] to-[#1e3a5f] p-6")}>
@@ -2184,14 +1920,12 @@ export function AthleteDetail({
         </Card>
       ) : null}
 
-      {/* School and club live in the banner now (Matt, 10 October 2026). This card is only the
-          form for changing them, shown while the owner is editing and up with the other edit forms. */}
-      {editingSection === "school-club" ? (
+      {/* 3. High School and Programs - always show for consistent structure */}
       <Card
         id="programs"
         className={cn(
           "profile-card border-t-4 border-t-[#D3B574] shadow-md",
-          mobileRecruiterLayout && PROFILE_SECTION_ORDER.weightEdit,
+          mobileRecruiterLayout && PROFILE_SECTION_ORDER.programs,
         )}
         data-section="programs"
       >
@@ -2306,23 +2040,39 @@ export function AthleteDetail({
             )}
           </div>
         </Card>
-      ) : null}
 
-      {/* Tournament results, significant wins and notable losses are the app's rows above
-          (components/profile/app-profile-rows.tsx); the old full-width cards are gone. */}
+      {/* 4. Tournament Results - NC United National Team, NCHSAA, NHSCA, Super 32 */}
+      <div
+        className={cn(
+          "min-w-0 max-w-full",
+          mobileRecruiterLayout && PROFILE_SECTION_ORDER.nationalResults,
+        )}
+      >
+        {tournamentResultsComponent}
+      </div>
+
+      {/*
+        The folkstyle record reads as one run: tournaments, then who he beat, then the season's
+        match log - before the highlight reel and honours, and before the Olympic-styles section,
+        which is always last (Matt).
+      */}
+      {/* Significant wins sit above the full match list: who somebody has beaten is the question
+          a profile gets opened with, and the list underneath answers how many. */}
+      <div className={cn("min-w-0 max-w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.qualityWins)}>
+        <SignificantWinsSection athleteId={String(athlete.id)} qualityWinBlocks={profileQualityWins} styles="folkstyle" gender={(athlete as { gender?: string | null }).gender ?? null} />
+      </div>
 
       {/* 10. High School Career Match Results */}
       <div
         /** MatchDataSectionImproved takes its own theme prop; it needs no override hook. */
-        className={cn("min-w-0 max-w-full w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.inSeason, inRow("season"))}
+        className={cn("min-w-0 max-w-full w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.inSeason)}
       >
         <MatchDataSectionImproved
           athleteId={athlete.id}
           athleteName={athleteName}
           graduationYear={graduationYear}
           theme={isDark ? "dark" : "light"}
-          // The row above is the collapse now; a second one inside it was a tap for nothing.
-          collapseOnMobile={false}
+          collapseOnMobile={mobileRecruiterLayout}
         />
       </div>
 
@@ -2333,7 +2083,6 @@ export function AthleteDetail({
         className={cn(
           "profile-card border-t-4 border-t-[#D3B574] shadow-md",
           mobileRecruiterLayout && PROFILE_SECTION_ORDER.academics,
-          inRow("academics"),
         )}
         data-section="academics"
       >
@@ -2428,7 +2177,6 @@ export function AthleteDetail({
         className={cn(
           "profile-card border-t-4 border-t-[#D3B574] shadow-md",
           mobileRecruiterLayout && PROFILE_SECTION_ORDER.highlights,
-          inRow("film"),
         )}
         data-section="highlights"
       >
@@ -2541,7 +2289,6 @@ export function AthleteDetail({
         className={cn(
           "profile-card border-t-4 border-t-[#D3B574] shadow-md",
           mobileRecruiterLayout && PROFILE_SECTION_ORDER.collegeOpens,
-          inRow("about"),
         )}
         data-section="college-opens"
       >
@@ -2587,7 +2334,6 @@ export function AthleteDetail({
         className={cn(
           "profile-card border-t-4 border-t-[#D3B574] shadow-md",
           mobileRecruiterLayout && PROFILE_SECTION_ORDER.achievements,
-          inRow("about"),
         )}
         data-section="achievements"
       >
@@ -2661,6 +2407,11 @@ export function AthleteDetail({
           </Card>
       ) : null}
 
+      {olympicStylesSection ? (
+        <div className={cn("min-w-0 max-w-full w-full", mobileRecruiterLayout && PROFILE_SECTION_ORDER.olympicStyles)}>
+          {olympicStylesSection}
+        </div>
+      ) : null}
 
       {/* Last Edited By - Footer */}
       {(athlete.last_edited_by || athlete.last_edited_at) && (
@@ -2696,8 +2447,8 @@ export function AthleteDetail({
       {mayCompare && (
         <div
           className={cn(
-            "min-w-0",
-            inRow("compare"),
+            "container mx-auto px-4 pt-8",
+            mobileRecruiterLayout && PROFILE_SECTION_ORDER.requestEdit,
           )}
         >
           <Card className={"profile-card border-2 border-border bg-muted"}>

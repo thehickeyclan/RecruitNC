@@ -18,6 +18,7 @@ const NAV_LINKS = [
   { sectionId: "tournaments", label: "National" },
   { sectionId: "quality-wins", label: "Wins" },
   { sectionId: "in-season", label: "Season" },
+  { sectionId: "programs", label: "School" },
   { sectionId: "olympic-styles", label: "Freestyle/Greco" },
 ] as const
 

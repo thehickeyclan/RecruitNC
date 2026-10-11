@@ -79,21 +79,13 @@ export type BannerStat = { label: string; value: ReactNode; sub?: ReactNode; act
 
 export function BannerStats({ stats, className }: { stats: BannerStat[]; className?: string }) {
   return (
-    // Two to a row on a phone - school and club are words, not numbers, and need the width -
-    // and a divided row from desktop up.
-    <dl className={cn("grid grid-cols-2 gap-y-4 lg:flex lg:flex-wrap lg:items-stretch", className)}>
+    // A fixed grid on a phone (a wrapping row left "Last competed" alone with a stray divider),
+    // a divided row from desktop up.
+    <dl className={cn("grid grid-cols-[auto_auto_minmax(0,1fr)] lg:flex lg:items-stretch", className)}>
       {stats.map((s, i) => (
-        <div
-          key={s.label}
-          className={cn(
-            // Never squeezed: a label cut to "YE..." says nothing. A long club wraps inside its cap.
-            "min-w-0 pr-4 lg:max-w-[15rem] lg:shrink-0 lg:pr-8",
-            i % 2 === 1 && "border-l border-white/15 pl-4",
-            i > 0 && "lg:border-l lg:border-white/15 lg:pl-8",
-          )}
-        >
+        <div key={s.label} className={cn("min-w-0 pr-4 lg:pr-8", i > 0 && "border-l border-white/15 pl-4 lg:pl-8")}>
           <dt className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.1em] text-white/60 lg:gap-2 lg:text-xs lg:tracking-[0.3em]">
-            <span className="whitespace-nowrap">{s.label}</span>
+            <span className="truncate">{s.label}</span>
             {s.action}
           </dt>
           <dd className="mt-1 text-xl font-black leading-none text-white lg:text-[2rem]">{s.value}</dd>
