@@ -291,7 +291,12 @@ export function AthleteDetail({
     })
   const openRow = (key: RowKey) => setOpenRows((prev) => (prev.has(key) ? prev : new Set([...prev, key])))
   /** The order a row's sections take, and whether they show. Last in `cn`, so it wins the order. */
-  const inRow = (key: RowKey) => cn(ROW_ORDER[key], !openRows.has(key) && "hidden")
+  /*
+   * A row's sections sit flush under it, inside the same outline, as the app's rows open: the
+   * negative margin closes the column's gap and the header drops its bottom corners when open.
+   */
+  const inRow = (key: RowKey) =>
+    cn("-mt-2.5 rounded-none border-x border-b border-t-0 border-[#1a3a5f] bg-[#0f1c2e] p-3 shadow-none last:rounded-b-xl", ROW_ORDER[key], !openRows.has(key) && "hidden")
   /** What the wins list found, for the row's line (components/significant-wins-section.tsx). */
   const [winsInfo, setWinsInfo] = useState<{ total: number; top: string | null; losses: number } | null>(null)
   /*
@@ -1252,11 +1257,136 @@ export function AthleteDetail({
     <div className="[&>div]:mt-0">{renderHeroContactRow("buttons")}</div>
   ) : null
 
+  /*
+   * The header, as the iPhone app draws it (Matt's mock, 10 October 2026): a small photo beside
+   * the name, the ranking ribbons, then Class of and Last competed in one card. It replaces the
+   * full-bleed banner at every width - that banner was most of a screen before a single result,
+   * and the app says the same things in a fifth of the space. Sizes and colours are the app's
+   * (recruitnc-mobile, src/app/(tabs)/athlete/[id].tsx) so the two read as one product.
+   */
+  const nameWords = athleteName.trim().split(/\s+/)
+  const suffixWords = nameWords.length > 2 && /^(jr\.?|sr\.?|ii|iii|iv)$/i.test(nameWords[nameWords.length - 1]!) ? 2 : 1
+  const firstNames = nameWords.slice(0, -suffixWords).join(" ")
+  const lastNames = nameWords.slice(-suffixWords).join(" ")
+  const schoolLine = [hasSchool ? highSchool : null, hasClub ? wrestlingClub : null].filter(Boolean).join(" · ")
+  const ncUnitedLabel =
+    ncUnitedTeam && ncUnitedTeam !== "none"
+      ? ncUnitedTeam === "blue" ? "NC United Blue" : ncUnitedTeam === "gold" ? "NC United Gold" : ncUnitedTeam === "both" ? "NC United Blue & Gold" : `NC United ${ncUnitedTeam}`
+      : null
+  const compactHero = (
+    <div className="bg-[#0A1628] px-4 pb-4 pt-3 text-white lg:px-5 lg:pb-5">
+      <div className="mb-2 flex items-center justify-end gap-2">
+        {currentUserId && !canEdit ? (
+          <button type="button" className={PHOTO_ACTION} onClick={() => setShowEditModal(true)} aria-label="Request edit">
+            <Edit className="h-4 w-4" />
+          </button>
+        ) : null}
+        <button type="button" className={PHOTO_ACTION} onClick={handleShareProfile} aria-label="Share profile">
+          <Share2 className="h-4 w-4" />
+        </button>
+        <WatchListButton
+          athleteId={athlete.id}
+          compact
+          className={cn(PHOTO_ACTION, "border-0 shadow-none data-[starred=false]:bg-black/40 data-[starred=false]:text-white")}
+        />
+      </div>
+      <div className="flex items-center gap-3 lg:gap-5">
+        <div className="relative h-[156px] w-[124px] shrink-0 overflow-hidden rounded-xl bg-[#0f1c2e] lg:h-[200px] lg:w-[160px]">
+          {canEdit ? (
+            <ImageUploadEditor athleteId={athlete.id} currentImageUrl={athletePhoto || undefined} onUpload={handleImageUpload} canEdit={canEdit} className="h-full w-full" />
+          ) : (
+            <Image
+              src={athletePhoto || "/wrestler-silhouette.png"}
+              alt={athleteName}
+              fill
+              className="object-cover object-top"
+              sizes="160px"
+              onError={() => setImageError(true)}
+              priority
+            />
+          )}
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#D3B574]">NC Wrestling</p>
+          <h1 className="mt-1 uppercase text-white">
+            {firstNames ? <span className="block text-[22px] font-medium leading-6 tracking-tight text-white/90 lg:text-3xl">{firstNames}</span> : null}
+            <span className="block break-words text-[32px] font-black leading-[34px] tracking-tight lg:text-5xl">{lastNames}</span>
+          </h1>
+          {schoolLine || canEdit ? (
+            <p className="mt-1 flex items-center gap-1.5 text-sm text-[#A8BBD1]">
+              <span className="min-w-0">{schoolLine || "Add school and club"}</span>
+              {editSchoolClub}
+            </p>
+          ) : null}
+          {ncUnitedLabel ? <p className="text-xs font-semibold text-[#A8BBD1]">{ncUnitedLabel}</p> : null}
+          {isCommittedStatus && college && college !== "Not specified" ? (
+            <p className="mt-1.5 flex items-center gap-2 text-sm text-white">
+              {collegeLogo ? (
+                <span className="relative h-7 w-7 shrink-0 overflow-hidden rounded-full bg-white">
+                  <Image src={collegeLogo} alt="" fill className="object-contain p-0.5" />
+                </span>
+              ) : null}
+              <span className="min-w-0">
+                <span className="text-[#A8BBD1]">Committed to </span>
+                <span className="font-bold">{college}</span>
+                {collegeTransferLabel ? <span className="block text-xs text-white/55">{collegeTransferLabel}</span> : null}
+              </span>
+            </p>
+          ) : null}
+          {prospectRanking ? (
+            <p className="mt-2 inline-block rounded-md bg-[#D3B574] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.22em] text-[#0A1628]">
+              RecruitNC #{prospectRanking}
+            </p>
+          ) : null}
+        </div>
+      </div>
+
+      {bannerNationalRanking ? (
+        <div className="mt-3 flex flex-wrap gap-2">
+          <NationalRankingRibbon label={bannerNationalRanking} />
+        </div>
+      ) : null}
+
+      <div className="mt-3 flex rounded-xl border border-[#1a3a5f] bg-[#0f1c2e]">
+        <div className="p-3">
+          <p className="text-[9px] font-bold uppercase tracking-[0.16em] text-[#6B829D]">Class of</p>
+          <p className="mt-1 text-[22px] font-black leading-none text-white">{graduationYear || "—"}</p>
+        </div>
+        <div className="min-w-0 flex-1 border-l border-[#1a3a5f] p-3">
+          <p className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-[#6B829D]">
+            {lastCompeted ? "Last competed" : "Listed weight"}
+            {editWeight}
+          </p>
+          {lastCompeted ? (
+            <>
+              <p className="mt-1 text-[22px] font-black leading-none text-white">{lastCompeted.weight} lbs</p>
+              <p className="mt-1 text-[11px] text-[#A8BBD1]">{[lastCompeted.event, lastCompeted.year].filter(Boolean).join(" · ")}</p>
+            </>
+          ) : (
+            <>
+              <p className="mt-1 text-[22px] font-black leading-none text-white">{weightClassLabel === "Not specified" ? "—" : `${weightClassLabel} lbs`}</p>
+              <p className="mt-1 text-[11px] text-[#A8BBD1]">No results on file yet</p>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* A recruiter's actions: the report, the comparison, a message. Nothing renders for most viewers. */}
+      <div className="mt-3 flex flex-wrap items-center gap-2 empty:hidden">
+        {canSeeScoutingReport ? <ScoutingReportAction href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`} /> : null}
+        {mayCompare ? <CompareAction athleteId={String(athlete.id)} /> : null}
+        {!isViewingOwnProfile ? <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="action" /> : null}
+        {mayCompare ? <ProfileFitFlag athleteId={String(athlete.id)} className="inline-flex items-center" /> : null}
+      </div>
+    </div>
+  )
+
   return (
     <div
       className={cn(
         mobileRecruiterLayout
-          ? "flex flex-col gap-7 lg:gap-10 min-w-0 max-w-full"
+          // One narrow column at every width, as on the phone: a profile is read, not scanned across.
+          ? "mx-auto flex w-full min-w-0 max-w-3xl flex-col gap-2.5"
           : "space-y-8 min-w-0 max-w-full",
         isDark && "profile-surface",
       )}
@@ -1273,91 +1403,9 @@ export function AthleteDetail({
       >
         <div className="relative">
           {/* Mobile view */}
-          <div className="block lg:hidden">
+          <div className={mobileRecruiterLayout ? "block" : "block lg:hidden"}>
             {mobileRecruiterLayout ? (
-              <div className="w-full">
-                {/* Full graphic, never cropped — shrink to width (and max height) via object-contain. */}
-                <div className="relative w-full bg-[#0A1628]">
-                  {/* eslint-disable-next-line @next/next/no-img-element -- intrinsic size so commit graphics are never cropped */}
-                  <img
-                    src={athletePhoto || "/wrestler-silhouette.png"}
-                    alt={athleteName}
-                    /*
-                      Capped so the first screen is not only a photograph. At 85vh on a phone the
-                      image filled 590 of 812 pixels and the name sat at the fold, which put every
-                      credential below it — the opposite of what a coach opening a profile at a
-                      tournament needs. Desktop keeps the tall crop.
-                    */
-                    className="mx-auto block h-auto w-auto max-h-[min(46vh,420px)] max-w-full sm:max-h-[min(85vh,720px)]"
-                    onError={() => setImageError(true)}
-                  />
-
-                  {/* Photo actions: matching frosted circles, centred icons (the old pill ran off the
-                      photo's edge and the mail icon sat off-centre). */}
-                  <div className="absolute inset-x-3 top-3 z-20 flex items-center justify-between">
-                    {currentUserId ? (
-                      <button
-                        type="button"
-                        className={PHOTO_ACTION}
-                        onClick={() => setShowEditModal(true)}
-                        aria-label="Request edit"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </button>
-                    ) : (
-                      <span />
-                    )}
-                    <div className="flex items-center gap-2">
-                      <button type="button" className={PHOTO_ACTION} onClick={handleShareProfile} aria-label="Share profile">
-                        <Share2 className="h-4 w-4" />
-                      </button>
-                      <WatchListButton
-                        athleteId={athlete.id}
-                        compact
-                        className={cn(PHOTO_ACTION, "border-0 shadow-none data-[starred=false]:bg-black/40 data-[starred=false]:text-white")}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Identity panel below the photo: the banner's pieces, stacked. */}
-                <div className="relative bg-[#0A1628] px-4 pb-6 pt-5 text-white">
-                  <BannerEyebrow />
-                  <BannerName name={athleteName} className="mt-2" />
-                  {bannerRibbon || bannerNationalRanking ? (
-                    <div className="mt-4 flex flex-wrap items-center gap-2">
-                      {bannerRibbon ? <BannerRibbon>{bannerRibbon}</BannerRibbon> : null}
-                      {bannerNationalRanking ? <NationalRankingRibbon label={bannerNationalRanking} /> : null}
-                    </div>
-                  ) : null}
-                  {canSeeScoutingReport ? (
-                    <ScoutingReportAction
-                      href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`}
-                      className="mt-4 flex w-full"
-                    />
-                  ) : null}
-                  {mayCompare ? (
-                    <CompareAction athleteId={String(athlete.id)} className={cn("flex w-full", canSeeScoutingReport ? "mt-2" : "mt-4")} />
-                  ) : null}
-                  {/* College coaches only: renders nothing for anyone else. */}
-                  {!isViewingOwnProfile ? (
-                    <CoachMessageButton
-                      athleteId={String(athlete.id)}
-                      athleteName={athleteName}
-                      variant="action"
-                      className={cn("flex w-full", canSeeScoutingReport ? "mt-2" : "mt-4")}
-                    />
-                  ) : null}
-                  {bannerCommitted ? <div className="mt-4">{bannerCommitted}</div> : null}
-                  <BannerStats stats={bannerStats} className="mt-5" />
-                  <CredentialCards credentials={credentials} className="mt-5" />
-                  <CompetesBar competition={competition} className="mt-4" />
-                  {/* Owner and admins only; the endpoint refuses anybody else. */}
-                  {canViewProfileStats && athlete.id ? (
-                    <BannerViewStats athleteId={String(athlete.id)} className="mt-3" />
-                  ) : null}
-                </div>
-              </div>
+              compactHero
             ) : (
               <>
             <div className="relative w-full bg-[#13294B]">
@@ -1473,88 +1521,9 @@ export function AthleteDetail({
           </div>
 
           {/* Desktop view */}
-          <div className="hidden lg:block">
+          <div className={mobileRecruiterLayout ? "hidden" : "hidden lg:block"}>
             {mobileRecruiterLayout ? (
-              <div className="relative min-h-[540px] overflow-hidden bg-[#0A1628]">
-                <Image src="/hero-banner-nchsaa-2026-arena.png" alt="" fill className="object-cover opacity-[0.14]" sizes="100vw" />
-                <div className="absolute inset-0 bg-gradient-to-br from-[#13294B]/85 via-[#0A1628]/75 to-[#0A1628]" />
-
-                {/* The photo bleeds off the left edge and fades into the banner: masked, not overlaid,
-                    so it dissolves into whatever the background is behind it. */}
-                <div
-                  className="absolute inset-y-0 left-0 w-[40%]"
-                  style={{
-                    maskImage: "linear-gradient(to right, #000 55%, transparent 100%), linear-gradient(to top, transparent 0%, #000 28%)",
-                    WebkitMaskImage: "linear-gradient(to right, #000 55%, transparent 100%), linear-gradient(to top, transparent 0%, #000 28%)",
-                    maskComposite: "intersect",
-                    WebkitMaskComposite: "source-in",
-                  }}
-                >
-                  {canEdit ? (
-                    <ImageUploadEditor
-                      athleteId={athlete.id}
-                      currentImageUrl={athletePhoto || undefined}
-                      onUpload={handleImageUpload}
-                      canEdit={canEdit}
-                      className="h-full w-full"
-                    />
-                  ) : (
-                    <Image
-                      src={athletePhoto || "/wrestler-silhouette.png"}
-                      alt={athleteName}
-                      fill
-                      className="object-cover object-top"
-                      sizes="40vw"
-                      onError={() => setImageError(true)}
-                      priority
-                    />
-                  )}
-                </div>
-
-                <div className="absolute right-6 top-6 z-20 flex items-center gap-2">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="text-white/80 hover:bg-white/10 hover:text-white"
-                    onClick={handleShareProfile}
-                    aria-label="Share profile"
-                  >
-                    <Share2 className="mr-2 h-4 w-4" />
-                    Share
-                  </Button>
-                  <WatchListButton athleteId={athlete.id} />
-                </div>
-
-                <div className="relative z-10 ml-[34%] flex flex-col gap-6 px-10 pb-10 pt-16 xl:pr-14">
-                  <div>
-                    <BannerEyebrow />
-                    <BannerName name={athleteName} className="mt-3" />
-                    {/* The scouting report beside the ribbon: in the content, where it cannot collide
-                        with the name or the eyebrow at narrower desktop widths. */}
-                    {/* The ribbon, the scouting report and - for college coaches - Message, side by side.
-                        empty:hidden: for most viewers none of the three renders. */}
-                    <div className="mt-5 flex flex-wrap items-center gap-3 empty:hidden">
-                      {bannerRibbon ? <BannerRibbon>{bannerRibbon}</BannerRibbon> : null}
-                      {bannerNationalRanking ? <NationalRankingRibbon label={bannerNationalRanking} /> : null}
-                      {canSeeScoutingReport ? (
-                        <ScoutingReportAction href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`} />
-                      ) : null}
-                      {mayCompare ? <CompareAction athleteId={String(athlete.id)} /> : null}
-                      {mayCompare ? <ProfileFitFlag athleteId={String(athlete.id)} className="inline-flex items-center" /> : null}
-                      {!isViewingOwnProfile ? (
-                        <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="action" />
-                      ) : null}
-                    </div>
-                  </div>
-                  {bannerCommitted}
-                  <BannerStats stats={bannerStats} />
-                  <CredentialCards credentials={credentials} />
-                  <CompetesBar competition={competition} />
-                  {canViewProfileStats && athlete.id ? (
-                    <BannerViewStats athleteId={String(athlete.id)} className="mt-3" />
-                  ) : null}
-                </div>
-              </div>
+              null
             ) : (
             <div className="relative min-h-[360px] bg-gradient-to-r from-[#13294B] to-[#1e3a5f]">
               <div className="absolute inset-0 bg-black/10" />

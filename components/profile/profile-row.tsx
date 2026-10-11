@@ -42,20 +42,21 @@ export function ProfileRow({
       aria-expanded={open}
       aria-controls={controls}
       className={cn(
-        "group flex w-full items-center gap-4 rounded-xl border border-border bg-card px-4 py-3.5 text-left shadow-sm transition-colors hover:border-[#D3B574]/60 lg:px-6 lg:py-4",
-        open && "border-[#D3B574]/60",
+        // The app's row: surface card, hairline border, 60px tall, gold icon.
+        "group flex min-h-[60px] w-full items-center gap-3 rounded-xl border border-[#1a3a5f] bg-[#0f1c2e] px-3 py-2 text-left transition-colors hover:border-[#D3B574]/60",
+        open && "rounded-b-none",
         className,
       )}
     >
-      <Icon className="h-6 w-6 shrink-0 text-[#D3B574]" aria-hidden />
+      <Icon className="h-5 w-5 shrink-0 text-[#D3B574]" aria-hidden />
       <span className="min-w-0 flex-1">
-        <span className="block text-base font-bold text-foreground lg:text-lg">{title}</span>
-        <span className="mt-0.5 block text-sm leading-snug text-muted-foreground">{summary}</span>
+        <span className="block text-[15px] font-extrabold leading-tight text-white">{title}</span>
+        <span className="mt-0.5 block text-xs leading-snug text-[#A8BBD1]">{summary}</span>
       </span>
       {locked ? (
-        <Lock className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+        <Lock className="h-4 w-4 shrink-0 text-[#6B829D]" aria-hidden />
       ) : (
-        <ChevronDown className={cn("h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:text-foreground", open && "rotate-180")} aria-hidden />
+        <ChevronDown className={cn("h-4 w-4 shrink-0 text-[#6B829D] transition-transform group-hover:text-white", open && "rotate-180")} aria-hidden />
       )}
     </button>
   )
