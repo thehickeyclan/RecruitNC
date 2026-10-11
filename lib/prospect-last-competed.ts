@@ -113,6 +113,9 @@ const CANONICAL: Array<[RegExp, string]> = [
   [/fargo/i, "Fargo"],
   [/journeymen women/i, "Journeymen Women's World Classic"],
   [/journeymen/i, "Journeymen Fall Classic"],
+  // The spring and fall duals are two events months apart; "I-64 Duals" alone said neither.
+  [/(i-64|interstate 64).*fall/i, "I-64 Fall Duals"],
+  [/(i-64|interstate 64).*spring/i, "I-64 Spring Duals"],
   [/i-64|interstate 64/i, "I-64 Duals"],
   [/aau scholastic/i, "AAU Scholastic Duals"],
   [/ultimate club/i, "Ultimate Club Duals"],

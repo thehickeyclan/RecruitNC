@@ -23,7 +23,10 @@ describe("event labels", () => {
     expect(canonicalEventLabel("Fargo Junior Women's Freestyle")).toBe("Fargo")
     expect(canonicalEventLabel("Journeymen (OF)")).toBe("Journeymen Fall Classic")
     expect(canonicalEventLabel("2026 Ultimate Club Duals")).toBe("Ultimate Club Duals")
-    expect(canonicalEventLabel("Interstate 64 Spring Duals")).toBe("I-64 Duals")
+    // Spring and fall are two events months apart, so each keeps its season.
+    expect(canonicalEventLabel("Interstate 64 Spring Duals")).toBe("I-64 Spring Duals")
+    expect(canonicalEventLabel("I-64 Fall Duals")).toBe("I-64 Fall Duals")
+    expect(canonicalEventLabel("Interstate 64 Duals")).toBe("I-64 Duals")
     expect(canonicalEventLabel("NC Super 32 Early Entry")).toBe("Super 32 Early Entry")
   })
 

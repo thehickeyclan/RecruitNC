@@ -1,5 +1,7 @@
 "use client"
 
+import { accoladesFrom, offSeasonEvents } from "@/lib/profile/profile-summary"
+import { isNationalEvent } from "@/lib/wrestling-style"
 import { isInternationalStyle, styleOfEventForAthlete, summarizeCompetition } from "@/lib/wrestling-style"
 import { SignificantWinsSection } from "@/components/significant-wins-section"
 import Link from "next/link"
@@ -113,6 +115,18 @@ export function ViewProfileClient({
     max: 6,
   })
 
+  /*
+   * The facts behind the three sentences under the name (lib/profile/profile-summary.ts), from the
+   * same rows the page prints: accolades, and how many events fall outside the NC season.
+   */
+  const summaryRows = [...profileTournamentRows, ...stateTournamentRows]
+  const summaryFacts = {
+    accolades: accoladesFrom({ stateRows: stateTournamentRows, tournamentRows: profileTournamentRows }),
+    offSeasonEvents: offSeasonEvents(summaryRows),
+    // Every national event-year on file, for the competition grade the scouting report also uses.
+    offSeasonCareer: new Set(profileTournamentRows.filter((r) => isNationalEvent(r.event)).map((r) => `${r.event.replace(/^\d{4}\s+/, "")}|${r.year}`)).size,
+  }
+
   return (
     <main className="min-h-screen bg-[#0A1628]">
       <div className="border-b border-white/10 bg-[#0A1628]">
@@ -134,6 +148,7 @@ export function ViewProfileClient({
           mobileRecruiterLayout
           competition={competition}
           credentials={credentials}
+          summaryFacts={summaryFacts}
           olympicStylesSection={
             olympicRows.length ? (
               <div className="w-full min-w-0 max-w-full space-y-6" id="olympic-styles">
