@@ -18,6 +18,7 @@ import {
 } from "@/lib/data-dawg-linkify-entities"
 import { DATA_DAWG_AGENT_V2_SYSTEM } from "./system-prompt"
 import { appendWebBackground, frameWebAnswer, type WebWrestlerFindings } from "@/lib/data-dawg-web-search"
+import { answerCoachViewsQuestion, isCoachViewsQuestion } from "@/lib/data-dawg-coach-views-answer"
 import {
   answerNextBluePractice,
   isBluePracticeScheduleQuery,
@@ -87,6 +88,17 @@ export async function runDataDawgAgentV2(params: {
         source: "data_dawg_agent_v2_toc_page_error",
         toolRounds: 0,
       }
+    }
+  }
+
+  // Where the college-views panel is and what unlocks it: a fact about the site, not a lookup.
+  if (isCoachViewsQuestion(params.message)) {
+    return {
+      answer: answerCoachViewsQuestion(),
+      messageId,
+      queryType: "coach_views_where_to_look",
+      source: "data_dawg_agent_v2_coach_views",
+      toolRounds: 0,
     }
   }
 
