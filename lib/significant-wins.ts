@@ -395,6 +395,20 @@ function schoolConsistent(
  * confirmed elsewhere and a bout that does not put him at a North Carolina school. Otherwise every
  * NC "Gavin Walker" or "John Smith" would collect a Virginia title.
  */
+const US_STATES = new Set("AL AK AZ AR CA CO CT DE FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY DC".split(" "))
+
+/**
+ * A team that calls itself another state's: "VA TEAM PREDATOR" against a Kentucky placer.
+ * Upper-cased input. Only a leading state code counts. A trailing "(FL)" is where an all-star
+ * team is based, not who is on it - Georgia's Ryder Wilder wrestled for Spec Ops (FL) - and that
+ * case is still credited.
+ */
+function teamNamesAnotherState(team: string, placerState: string): boolean {
+  if (!placerState) return false
+  const named = team.match(/^([A-Z]{2})\s/)?.[1]
+  return Boolean(named && US_STATES.has(named) && named !== placerState)
+}
+
 function outOfStatePlacerFits(
   boutSchool: string | null | undefined,
   placer: StatePlacer,
@@ -416,7 +430,16 @@ function outOfStatePlacerFits(
   const atNcSchool = (knownSchools ?? []).some((school) => sameSchool(schoolWords(school), bout))
   if (atNcSchool) return false
   if (placer.identityConfirmed) return true
-  // A name nobody else on file could carry, at a weight he could have wrestled.
+  /*
+   * A name nobody else on file could carry, at a weight he could have wrestled - unless the bout
+   * puts him on another state's team. "Nobody else on file" is only as good as the file: Adam
+   * Walker's win at the 2026 I-64 Fall Duals over a Jackson Wells of "VA Team Predator" was
+   * credited as a win over Kentucky's Jackson Wells, the 2025 NHSCA champion, because the name was
+   * unique in our records and 126 was a weight he could have grown into. He was a Benedictine
+   * eighth grader with no record at all (Matt, 10 October 2026). A unique name is the weakest
+   * evidence there is, and a team naming a different state outweighs it.
+   */
+  if (teamNamesAnotherState(text, state)) return false
   return Boolean(placer.distinctive) && weightFits(boutWeight, placer.finishes)
 }
 
