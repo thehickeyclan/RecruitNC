@@ -2,7 +2,9 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
-import { ExternalLink, Lock, Search, ShieldCheck, Star, X } from "lucide-react"
+import { ExternalLink, Lock, Mail, Search, ShieldCheck, Star, X } from "lucide-react"
+
+import { CoachEmailComposer } from "@/components/colleges/coach-email-composer"
 
 import {
   COLLEGE_LIST_STATUSES,
@@ -111,11 +113,13 @@ function ListControls({
   busy,
   onSave,
   onRemove,
+  onEmail,
 }: {
   item: CollegeListItem | undefined
   busy: boolean
   onSave: (status?: CollegeListStatus) => void
   onRemove: () => void
+  onEmail: () => void
 }) {
   if (!item) {
     return (
@@ -157,6 +161,13 @@ function ListControls({
           </option>
         ))}
       </select>
+      <button
+        type="button"
+        onClick={onEmail}
+        className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-sm bg-[#CC0000] px-3 py-2 text-sm font-bold text-white hover:bg-[#a80000]"
+      >
+        <Mail className="h-4 w-4" /> Email the coach
+      </button>
     </div>
   )
 }
@@ -398,6 +409,8 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
   const [saved, setSaved] = useState<SavedList>(new Map())
   const [listBusy, setListBusy] = useState(false)
   const [listError, setListError] = useState<string | null>(null)
+  /** The school whose email draft is open. Kept apart from the selection so closing the card does not lose a draft. */
+  const [emailSchool, setEmailSchool] = useState<CollegeMapSchool | null>(null)
 
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<MapLike | null>(null)
@@ -838,6 +851,7 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
                       busy={listBusy}
                       onSave={(status) => saveToList(selected.id, status)}
                       onRemove={() => removeFromList(selected.id)}
+                      onEmail={() => setEmailSchool(selected)}
                     />
                     {listError ? <p className="mt-1 text-xs text-red-300">{listError}</p> : null}
                   </>
@@ -847,6 +861,24 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
           </div>
         ) : null}
       </div>
+
+      {emailSchool ? (
+        <CoachEmailComposer
+          schoolId={emailSchool.id}
+          schoolName={emailSchool.name.replace(/\s*\([^)]*\)\s*/g, " ").trim()}
+          open
+          onOpenChange={(open) => {
+            if (!open) setEmailSchool(null)
+          }}
+          onSent={(status) => {
+            // Sending moves the school along My List; it never moves it backwards.
+            const current = saved.get(emailSchool.id)?.status
+            if (status && current && COLLEGE_LIST_STATUSES.indexOf(status) > COLLEGE_LIST_STATUSES.indexOf(current)) {
+              void saveToList(emailSchool.id, status)
+            }
+          }}
+        />
+      ) : null}
 
       <p className="text-sm text-white/55">
         {visible.length} of {schools.length} schools · {response?.season ?? "2026-27"} season
