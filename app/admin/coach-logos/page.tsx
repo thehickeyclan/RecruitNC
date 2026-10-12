@@ -14,6 +14,7 @@ type Row = {
   name: string
   coaches: Array<{ name: string; email: string | null; joined: string }>
   logo: { url: string | null; source: "uploaded" | "matched" | "none" }
+  onMap: boolean
 }
 
 const SOURCE = { uploaded: "Program's own upload", matched: "Site logo for this school", none: "No logo" } as const
@@ -22,7 +23,7 @@ export default function CoachLogosPage() {
   const [rows, setRows] = useState<Row[] | null>(null)
   const [unattached, setUnattached] = useState<Row["coaches"]>([])
   const [error, setError] = useState<string | null>(null)
-  const [show, setShow] = useState<"all" | "logo" | "none">("all")
+  const [show, setShow] = useState<"all" | "logo" | "none" | "offmap">("all")
   const [busy, setBusy] = useState<string | null>(null)
 
   const load = () =>
@@ -54,8 +55,15 @@ export default function CoachLogosPage() {
     }
   }
 
-  const counts = useMemo(() => ({ logo: (rows ?? []).filter((r) => r.logo.url).length, none: (rows ?? []).filter((r) => !r.logo.url).length }), [rows])
-  const shown = (rows ?? []).filter((r) => (show === "all" ? true : show === "logo" ? r.logo.url : !r.logo.url))
+  const counts = useMemo(
+    () => ({
+      logo: (rows ?? []).filter((r) => r.logo.url).length,
+      none: (rows ?? []).filter((r) => !r.logo.url).length,
+      offmap: (rows ?? []).filter((r) => !r.onMap).length,
+    }),
+    [rows],
+  )
+  const shown = (rows ?? []).filter((r) => (show === "all" ? true : show === "logo" ? r.logo.url : show === "none" ? !r.logo.url : !r.onMap))
 
   return (
     <main className="min-h-screen bg-white text-gray-900">
@@ -74,6 +82,7 @@ export default function CoachLogosPage() {
               ["all", `All programs (${rows.length})`],
               ["logo", `Showing a logo (${counts.logo})`],
               ["none", `No logo (${counts.none})`],
+              ["offmap", `Not on the college map (${counts.offmap})`],
             ] as const).map(([key, label]) => (
               <button
                 key={key}
@@ -101,6 +110,7 @@ export default function CoachLogosPage() {
                 <p className={`text-xs font-semibold ${r.logo.source === "none" ? "text-gray-400" : r.logo.source === "uploaded" ? "text-amber-700" : "text-emerald-700"}`}>
                   {SOURCE[r.logo.source]}
                 </p>
+                {!r.onMap ? <p className="mt-1 text-xs font-semibold text-red-700">Not on the college map</p> : null}
                 <ul className="mt-2 flex-1 text-xs text-gray-600">
                   {r.coaches.map((c) => (
                     <li key={`${c.email}-${c.joined}`} className="truncate" title={c.email ?? ""}>

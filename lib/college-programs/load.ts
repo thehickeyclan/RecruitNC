@@ -18,6 +18,13 @@ import type { CollegeMapResponse, CollegeMapSchool } from "@/lib/college-program
  */
 const SCHOOLS = [...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS]
 
+const SCHOOL_INDEX = buildSchoolIndex(SCHOOLS)
+
+/** The map dot a coach's school name lands on, or null when the map has no such school. */
+export function mapSchoolIdFor(coachSchoolName: string): string | null {
+  return matchSchool(SCHOOL_INDEX, coachSchoolName)
+}
+
 /**
  * Schools with at least one coach Matt has confirmed - the same bar as messaging
  * (lib/coach-messages isApprovedCoach), so a dot marked On RecruitNC is a school whose coach
@@ -45,10 +52,9 @@ async function schoolsWithApprovedCoaches(admin: SupabaseClient): Promise<Set<st
   const { data: rows, error: schoolError } = await admin.from("schools").select("id, name").in("id", schoolIds)
   if (schoolError) throw new Error(`college map: school lookup failed: ${schoolError.message}`)
 
-  const index = buildSchoolIndex(SCHOOLS)
   const matched = new Set<string>()
   for (const row of rows ?? []) {
-    const id = matchSchool(index, String(row.name ?? ""))
+    const id = mapSchoolIdFor(String(row.name ?? ""))
     if (id) matched.add(id)
   }
   return matched
