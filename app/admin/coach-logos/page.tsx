@@ -62,8 +62,8 @@ export default function CoachLogosPage() {
       <div className="mx-auto max-w-7xl px-4 py-8">
       <h1 className="text-2xl font-bold">Coach logos</h1>
       <p className="mt-1 max-w-3xl text-sm text-gray-600">
-        Each college coach&apos;s program and the logo they see on Coach Home. Check every picture is that school before emailing coaches. A wrong
-        one that is the program&apos;s own upload can be removed here.
+        Each college coach&apos;s program and the logo they see on Coach Home. Check every picture is that school before emailing coaches. If a
+        picture is wrong, use &quot;Remove this logo&quot; under it.
       </p>
       {error ? <p className="mt-6 rounded border border-red-300 bg-red-50 p-3 text-sm text-red-800">{error}</p> : null}
       {!rows && !error ? <p className="mt-6 text-sm text-gray-500">Loading…</p> : null}
@@ -113,9 +113,9 @@ export default function CoachLogosPage() {
                     type="button"
                     onClick={() => removeUpload(r)}
                     disabled={busy === r.schoolId}
-                    className="mt-3 rounded-lg border border-red-300 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:opacity-50"
+                    className="mt-3 self-start text-xs font-semibold text-gray-500 underline hover:text-red-700 disabled:opacity-50"
                   >
-                    {busy === r.schoolId ? "Removing…" : "Wrong picture: remove upload"}
+                    {busy === r.schoolId ? "Removing…" : "Remove this logo"}
                   </button>
                 ) : null}
               </li>
