@@ -150,7 +150,17 @@ export function distinctiveSchoolWords(name: string): string[] {
 export function sameSchoolName(a: string, b: string): boolean {
   const x = distinctiveSchoolWords(a)
   const y = distinctiveSchoolWords(b)
-  return x.length > 0 && x.length === y.length && x.every((t, i) => t === y[i])
+  if (!(x.length > 0 && x.length === y.length && x.every((t, i) => t === y[i]))) return false
+  /*
+   * "Cornell College" (Iowa) is not "Cornell University" (New York), nor Northwestern College
+   * Northwestern University, nor Columbia College Columbia University. When one name says College
+   * and the other says University they are different schools; a name that says neither ("Cornell")
+   * still matches either, as "Liberty" matches "Liberty University".
+   */
+  const kind = (name: string) => (/\bcollege\b/i.test(name) ? "college" : /\buniversity\b/i.test(name) ? "university" : null)
+  const ka = kind(a)
+  const kb = kind(b)
+  return !(ka && kb && ka !== kb)
 }
 
 /**
