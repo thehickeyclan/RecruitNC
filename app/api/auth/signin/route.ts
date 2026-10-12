@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
-import { createAdminClient } from "@/lib/supabase/admin"
+import { createAdminClientFresh } from "@/lib/supabase/admin"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 
@@ -18,7 +18,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const adminClient = createAdminClient()
+    /*
+     * A client of its own, thrown away after this request - never the shared admin client.
+     *
+     * Signing in stores the user's session on the client that did it, and from then on that
+     * client sends the user's token, not the service key. Done on the shared admin client, every
+     * later "admin" query in the same server instance ran as whoever signed in last: a wrestler's
+     * claim silently failed to save, the admin athletes list was refused, and an admin was told a
+     * profile's college views were "not available" to him.
+     */
+    const adminClient = createAdminClientFresh()
     const { data: authData, error: authError } = await adminClient.auth.signInWithPassword({
       email: String(email).trim(),
       password: String(password),

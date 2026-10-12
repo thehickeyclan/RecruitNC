@@ -49,8 +49,33 @@ export function createAdminClient(): SupabaseClient {
     },
   })
 
+  /*
+   * This client is shared by every request an instance serves, so it must never hold a session.
+   * Sign a user in on it and its later queries go out with that user's token (see
+   * app/api/auth/signin). Refusing here turns that mistake into an error on the day it is written.
+   */
+  const auth = adminClient.auth as unknown as Record<string, unknown>
+  for (const method of SESSION_METHODS) {
+    auth[method] = () => {
+      throw new Error(`createAdminClient().auth.${method} is not allowed: it would attach a user session to the shared service-role client. Use createAdminClientFresh().`)
+    }
+  }
+
   return adminClient
 }
+
+const SESSION_METHODS = [
+  "signInWithPassword",
+  "signInWithOtp",
+  "signInWithIdToken",
+  "signInWithOAuth",
+  "signInAnonymously",
+  "signUp",
+  "verifyOtp",
+  "setSession",
+  "refreshSession",
+  "exchangeCodeForSession",
+] as const
 
 /**
  * New Supabase client per call (no singleton). Use for sensitive writes when you must guarantee the current process env service-role key is used.
