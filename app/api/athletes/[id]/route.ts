@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
-import { stripPrivateAthleteFields, viewerIdMaySeeAthletePrivateInfo } from "@/lib/athlete-private-fields"
+import { stripPrivateAthleteFields, stripRankFields, viewerIdMaySeeAthletePrivateInfo } from "@/lib/athlete-private-fields"
+import { resolveRankingViewerForUser } from "@/lib/ranking-access"
+import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 
 export async function DELETE(
   request: NextRequest,
@@ -80,7 +82,12 @@ export async function GET(
     // signed-out ones. Same rule as the profile page now: the athlete, an admin or a verified coach.
     const viewer = await getUserFromRequest(request)
     const maySee = await viewerIdMaySeeAthletePrivateInfo(adminSupabase, viewer?.id ?? null, athlete)
-    return NextResponse.json(maySee ? athlete : stripPrivateAthleteFields(athlete), {
+    // The rank was in this response for anyone, signed in or not: the board, one id at a time.
+    const mayRank = viewer?.id
+      ? canSeeProspectRanking((await resolveRankingViewerForUser({ admin: adminSupabase, userId: viewer.id })).viewer)
+      : false
+    const visible = maySee ? athlete : stripPrivateAthleteFields(athlete)
+    return NextResponse.json(mayRank ? visible : stripRankFields(visible), {
       headers: { "Cache-Control": "private, no-store" },
     })
   } catch (error) {
