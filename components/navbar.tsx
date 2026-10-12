@@ -295,7 +295,10 @@ export function Navbar() {
   /** College coaches and admins: the one page with everything a coach uses (app/coach-home). */
   const showCoachHome =
     profile?.role === "admin" || profile?.role === "college_coach" || profile?.is_admin === true
+  // Everyone else who is signed in: the family's own recruiting page (app/my-recruiting).
+  const showMyRecruiting = Boolean(user) && !showCoachHome && !showMyRecruits
   const highlightNavItems = [
+    ...(showMyRecruiting ? [{ href: "/my-recruiting", label: "My Recruiting" }] : []),
     ...(showCoachHome ? [{ href: "/coach-home", label: "Coach Home" }] : []),
     ...(showMyRecruits ? [{ href: getRecruitingPortalUrl(), label: "My Recruits" }] : []),
   ]
