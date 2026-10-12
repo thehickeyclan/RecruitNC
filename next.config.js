@@ -22,7 +22,7 @@ const nextConfig = {
          * people clicked it in bursts after each send and met a sign-in wall over a 404. Nothing
          * in this codebase produces it, so the fix is to send those clicks where they were going.
          */
-        source: "/c2FtcGxlLX:rest*",
+        source: "/c2FtcGxlLX",
         destination: "/sample-scouting-report",
         permanent: false,
       },
