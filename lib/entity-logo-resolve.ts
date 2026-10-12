@@ -59,9 +59,7 @@ export const COLLEGE_DIRECT_LOGO_URLS: Record<string, string> = {
   "emory and henry": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/fylhrwhg-1745968815387.png",
   "emory & henry college":
     "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/fylhrwhg-1745968815387.png",
-  "ohio state": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/kcgqvisv-1745968898953.png",
-  "ohio state university":
-    "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/college/kcgqvisv-1745968898953.png",
+  // No entry for Ohio State: the file that was mapped here is Ohio University's Bobcat.
   navy: "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logos/college/Navy-20260810.png",
   "naval academy": "https://w8v0puzioqkz0xzh.public.blob.vercel-storage.com/logos/college/Navy-20260810.png",
   "united states naval academy":
@@ -132,41 +130,58 @@ async function lookupExactLogoInDatabase(entityType: string, entityName: string)
   return exactMatch?.logo_url ?? null
 }
 
-/** Loose ilike match in logo_mappings. Last resort — it can pull a neighbouring school's crest. */
+/** Words in a school's name that do not tell one school from another. */
+const NAME_NOISE = /^(the|of|at|and|&|university|college)$/i
+
+/** The words that identify a school: "The University of Virginia" -> virginia; "Ohio State University" -> ohio state. */
+export function distinctiveSchoolWords(name: string): string[] {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9&\s]/g, " ")
+    .split(/\s+/)
+    .filter((t) => t && !NAME_NOISE.test(t))
+    .sort()
+}
+
+/**
+ * Whether two names are the same school written differently: "Liberty" and "Liberty University",
+ * but not "Ohio State" and "Ohio University", and not "Washington and Jefferson" and "Washington & Lee".
+ */
+export function sameSchoolName(a: string, b: string): boolean {
+  const x = distinctiveSchoolWords(a)
+  const y = distinctiveSchoolWords(b)
+  return x.length > 0 && x.length === y.length && x.every((t, i) => t === y[i])
+}
+
+/**
+ * A logo_mappings row for the same school under a slightly different name.
+ *
+ * This used to take the first word that was not "the/of/at/and", search for any name containing
+ * it, and return the shortest hit. For "The University of Virginia" that word is "University":
+ * every "... University" on file matched and Ohio University's was shortest, so Virginia's head
+ * coach was greeted on Coach Home with a Bobcat. Washington and Jefferson got Washington & Lee's
+ * crest the same way. A row is now accepted only when it names the same school; otherwise there
+ * is no logo, which is what every caller already handles.
+ */
 async function lookupFuzzyLogoInDatabase(entityType: string, entityName: string): Promise<string | null> {
   const normalizedType = normalizeEntityType(entityType)
   const canonicalName = normalizeEntityName(entityName)
   if (!canonicalName) return null
 
-  const admin = createAdminClient()
+  const searchWord = distinctiveSchoolWords(canonicalName).sort((a, b) => b.length - a.length)[0]
+  if (!searchWord) return null
 
-  const firstToken =
-    canonicalName
-      .split(/\s+/)
-      .find((t) => !/^(the|of|at|and)$/i.test(t)) ?? canonicalName
-  const { data: fuzzyMatches } = await admin
+  const { data: candidates } = await createAdminClient()
     .from("logo_mappings")
     .select("logo_url, entity_name")
     .eq("entity_type", normalizedType)
-    .or(
-      `entity_name.ilike.%${canonicalName}%,entity_name.ilike.%${canonicalName.replace(/\s+/g, "%")}%,entity_name.ilike.%${firstToken}%`,
-    )
-    .limit(5)
+    .ilike("entity_name", `%${searchWord}%`)
+    .limit(50)
 
-  if (fuzzyMatches?.length) {
-    const normalizedLower = canonicalName.toLowerCase()
-    const ranked = [...fuzzyMatches].sort((a, b) => {
-      const aName = (a.entity_name ?? "").toLowerCase()
-      const bName = (b.entity_name ?? "").toLowerCase()
-      const aExact = aName === normalizedLower ? 0 : 1
-      const bExact = bName === normalizedLower ? 0 : 1
-      if (aExact !== bExact) return aExact - bExact
-      return aName.length - bName.length
-    })
-    return ranked[0]?.logo_url ?? null
-  }
-
-  return null
+  const match = (candidates ?? [])
+    .filter((row) => sameSchoolName(String(row.entity_name ?? ""), canonicalName))
+    .sort((a, b) => String(a.entity_name ?? "").length - String(b.entity_name ?? "").length)[0]
+  return match?.logo_url ?? null
 }
 
 /**
