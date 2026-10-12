@@ -579,7 +579,13 @@ export default function ProspectsAllClient({
     })
 
     return mapped
-  }, [sortedProspects])
+    /*
+     * `maySeeRanking` belongs here. Who is looking arrives a moment after the rows do, so the
+     * first pass runs with it false and blanks every rank; without it in this list the rows were
+     * never rebuilt when it turned true, and the Rank column stayed empty for a coach until he
+     * happened to touch a filter.
+     */
+  }, [sortedProspects, maySeeRanking])
 
   /** The same order for the table and the cards; the table's own header clicks still re-sort it. */
   const orderedAthletes = useMemo(() => {
