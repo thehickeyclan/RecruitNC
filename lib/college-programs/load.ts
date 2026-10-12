@@ -5,16 +5,18 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { isCollegeCoachRole } from "@/lib/coach-auto-approve"
 import { buildSchoolIndex, matchSchool } from "@/lib/college-programs/match"
 import data from "@/lib/college-programs/programs-2026-27.json"
+import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import type { CollegeMapResponse, CollegeMapSchool } from "@/lib/college-programs/types"
 
 /**
- * The national college map: 437 schools from the 2026-27 program list (compiled 9 Oct 2026,
- * every program confirmed active for the season), plus which of them have a coach on RecruitNC.
+ * The national college map: the schools on the 2026-27 program list (compiled 9 Oct 2026, every
+ * program confirmed active for the season), the few announced for a later season whose coaches
+ * are already recruiting (announced.ts), and which of them all have a coach on RecruitNC.
  *
  * The list is a file, not a table, until staff data and program pages need one. Replacing the
  * season means replacing programs-2026-27.json.
  */
-const SCHOOLS = data.schools as CollegeMapSchool[]
+const SCHOOLS = [...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS]
 
 /**
  * Schools with at least one coach Matt has confirmed - the same bar as messaging

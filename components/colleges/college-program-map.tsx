@@ -109,6 +109,9 @@ function SchoolCard({
           <p className="mt-0.5 text-sm text-white/60">
             {school.city}, {school.state}
           </p>
+          {school.firstSeason ? (
+            <p className="mt-1 text-xs font-semibold text-[#D7B968]">New program · first season {school.firstSeason}, recruiting now</p>
+          ) : null}
         </div>
         <button
           type="button"
@@ -683,6 +686,7 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
                 </span>
                 <span className="mt-0.5 block pl-[18px] text-xs text-white/50">
                   {school.city}, {school.state} · {school.programs.map((p) => DIVISION_SHORT[p.division]).join(" / ")}
+                  {school.firstSeason ? ` · starts ${school.firstSeason}` : ""}
                 </span>
               </button>
             </li>

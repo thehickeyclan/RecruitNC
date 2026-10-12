@@ -39,6 +39,8 @@ export type CollegeMapSchool = {
   programs: CollegeProgram[]
   /** Present only for viewers with full access; a school with an approved coach on RecruitNC. */
   onRecruitNC?: boolean
+  /** Set on a program that has been announced but has not wrestled yet, e.g. "2027-28" (announced.ts). */
+  firstSeason?: string
 }
 
 export type CollegeMapResponse = {

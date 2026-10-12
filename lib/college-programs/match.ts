@@ -47,6 +47,7 @@ export const ALIASES: Record<string, string> = {
   "UNC Pembroke": "university-of-north-carolina-at-pembroke",
   "UW-Stevens Point": "university-of-wisconsin-stevens-point",
   "WVU Tech": "west-virginia-university-institute-of-technology",
+  WPI: "worcester-polytechnic-institute", // wpi.edu; the coach typed the initials
 }
 
 export function buildSchoolIndex(schools: Array<{ id: string; name: string }>): Map<string, string> {
