@@ -1,9 +1,16 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useMemo, useRef, useState } from "react"
-import { ExternalLink, Lock, Search, ShieldCheck, X } from "lucide-react"
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import { ExternalLink, Lock, Search, ShieldCheck, Star, X } from "lucide-react"
 
+import {
+  COLLEGE_LIST_STATUSES,
+  COLLEGE_LIST_STATUS_LABEL,
+  type CollegeListItem,
+  type CollegeListResponse,
+  type CollegeListStatus,
+} from "@/lib/college-programs/list"
 import { STATE_NAMES } from "@/lib/college-programs/states"
 import { loadMapbox, type MapLike } from "@/lib/mapbox/load-mapbox"
 import {
@@ -38,8 +45,12 @@ type Filters = {
   gender: Gender
   state: string
   onRecruitNCOnly: boolean
+  myListOnly: boolean
   query: string
 }
+
+/** Saved schools and where the family stands with each (lib/college-programs/list). */
+type SavedList = Map<string, CollegeListItem>
 
 /** The school's programs that pass the level and men's/women's filters. */
 function matchingPrograms(school: CollegeMapSchool, filters: Filters) {
@@ -69,7 +80,7 @@ function shownDivision(school: CollegeMapSchool, filters: Filters | null): Colle
   return primaryDivision({ programs: kept.length > 0 ? kept : school.programs })
 }
 
-function toGeoJson(schools: CollegeMapSchool[], filters: Filters | null) {
+function toGeoJson(schools: CollegeMapSchool[], filters: Filters | null, saved: SavedList) {
   return {
     type: "FeatureCollection",
     features: schools.map((school) => ({
@@ -80,6 +91,7 @@ function toGeoJson(schools: CollegeMapSchool[], filters: Filters | null) {
         name: school.name,
         color: DIVISION_COLOR[shownDivision(school, filters)],
         onRecruitNC: school.onRecruitNC === true,
+        saved: saved.has(school.id),
       },
     })),
   }
@@ -90,15 +102,77 @@ function programLine(p: CollegeMapSchool["programs"][number]): string {
   return teams
 }
 
+/**
+ * Save a school, then say where things stand. Saving is one tap; the status is a plain dropdown
+ * because the steps are a sequence a parent already knows, not something to learn.
+ */
+function ListControls({
+  item,
+  busy,
+  onSave,
+  onRemove,
+}: {
+  item: CollegeListItem | undefined
+  busy: boolean
+  onSave: (status?: CollegeListStatus) => void
+  onRemove: () => void
+}) {
+  if (!item) {
+    return (
+      <button
+        type="button"
+        disabled={busy}
+        onClick={() => onSave()}
+        className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-sm border border-[#D7B968] px-3 py-2 text-sm font-bold text-[#F5D985] hover:bg-[#D7B968]/15 disabled:opacity-50"
+      >
+        <Star className="h-4 w-4" /> Save to My List
+      </button>
+    )
+  }
+  return (
+    <div className="mt-3 rounded-sm border border-[#D7B968]/40 bg-[#D7B968]/10 p-2.5">
+      <div className="flex items-center justify-between gap-2">
+        <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#F5D985]">
+          <Star className="h-3.5 w-3.5 fill-[#F5D985]" /> On My List
+        </span>
+        <button
+          type="button"
+          disabled={busy}
+          onClick={onRemove}
+          className="text-xs text-white/60 hover:text-white hover:underline"
+        >
+          Remove
+        </button>
+      </div>
+      <select
+        value={item.status}
+        disabled={busy}
+        onChange={(e) => onSave(e.target.value as CollegeListStatus)}
+        aria-label="Where things stand with this school"
+        className="mt-2 h-9 w-full rounded-sm border border-white/15 bg-[#0B1D3A] px-2 text-sm text-white"
+      >
+        {COLLEGE_LIST_STATUSES.map((status) => (
+          <option key={status} value={status}>
+            {COLLEGE_LIST_STATUS_LABEL[status]}
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
 function SchoolCard({
   school,
   filters,
   onClose,
+  list,
 }: {
   school: CollegeMapSchool
   /** Programs the filters hid are shown dimmed, so a D1 + D2 school reads right under a D2 filter. */
   filters: Filters | null
   onClose: () => void
+  /** The My List controls, or null when the list is not available to this viewer. */
+  list: ReactNode
 }) {
   const kept = new Set((filters ? matchingPrograms(school, filters) : school.programs).map((p) => p.division))
   return (
@@ -146,6 +220,8 @@ function SchoolCard({
           Coaches on RecruitNC
         </p>
       ) : null}
+
+      {list}
 
       <StaffList school={school} />
 
@@ -315,8 +391,13 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
     gender: "all",
     state: "",
     onRecruitNCOnly: false,
+    myListOnly: false,
     query: "",
   })
+  const [listAvailable, setListAvailable] = useState(false)
+  const [saved, setSaved] = useState<SavedList>(new Map())
+  const [listBusy, setListBusy] = useState(false)
+  const [listError, setListError] = useState<string | null>(null)
 
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<MapLike | null>(null)
@@ -333,10 +414,64 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
       .catch((error) => setLoadError(error instanceof Error ? error.message : "Could not load the college map."))
   }, [])
 
+  // My List loads beside the map and never blocks it: no list (signed out, not Blue, table not
+  // there yet) just means no Save button.
+  useEffect(() => {
+    fetch("/api/college-list", { cache: "no-store" })
+      .then(async (res) => {
+        if (!res.ok) return
+        const body = (await res.json()) as CollegeListResponse
+        setListAvailable(body.available)
+        setSaved(new Map(body.items.map((item) => [item.schoolId, item])))
+      })
+      .catch(() => {})
+  }, [])
+
+  const saveToList = async (schoolId: string, status?: CollegeListStatus) => {
+    setListBusy(true)
+    setListError(null)
+    try {
+      const res = await fetch("/api/college-list", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ schoolId, ...(status ? { status } : {}) }),
+      })
+      const body = (await res.json()) as { item?: CollegeListItem; error?: string }
+      if (!res.ok || !body.item) throw new Error(body.error || "Could not save. Try again.")
+      const item = body.item
+      setSaved((current) => new Map(current).set(item.schoolId, item))
+    } catch (error) {
+      setListError(error instanceof Error ? error.message : "Could not save. Try again.")
+    } finally {
+      setListBusy(false)
+    }
+  }
+
+  const removeFromList = async (schoolId: string) => {
+    setListBusy(true)
+    setListError(null)
+    try {
+      const res = await fetch(`/api/college-list?school=${encodeURIComponent(schoolId)}`, { method: "DELETE" })
+      if (!res.ok) throw new Error("Could not remove. Try again.")
+      setSaved((current) => {
+        const next = new Map(current)
+        next.delete(schoolId)
+        return next
+      })
+    } catch (error) {
+      setListError(error instanceof Error ? error.message : "Could not remove. Try again.")
+    } finally {
+      setListBusy(false)
+    }
+  }
+
   // Preview viewers see every school; the filters are what Blue unlocks.
   const visible = useMemo(
-    () => (full ? schools.filter((school) => matchesFilters(school, filters)) : schools),
-    [full, schools, filters],
+    () =>
+      full
+        ? schools.filter((school) => matchesFilters(school, filters) && (!filters.myListOnly || saved.has(school.id)))
+        : schools,
+    [full, schools, filters, saved],
   )
 
   const states = useMemo(
@@ -390,7 +525,20 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
 
         map.once("load", () => {
           if (cancelled) return
-          map.addSource("colleges", { type: "geojson", data: toGeoJson([], null) })
+          map.addSource("colleges", { type: "geojson", data: toGeoJson([], null, new Map()) })
+
+          // On My List: a gold halo, outside the RecruitNC ring so a school can show both.
+          map.addLayer({
+            id: "college-saved-ring",
+            type: "circle",
+            source: "colleges",
+            filter: ["==", ["get", "saved"], true],
+            paint: {
+              "circle-color": "#F5D985",
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 3, 9, 8, 14, 12, 18],
+              "circle-opacity": 0.9,
+            },
+          })
 
           // On RecruitNC: a white ring behind the dot.
           map.addLayer({
@@ -470,8 +618,8 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
 
   useEffect(() => {
     if (!mapReady) return
-    mapRef.current?.getSource("colleges")?.setData?.(toGeoJson(visible, full ? filters : null))
-  }, [mapReady, visible, full, filters])
+    mapRef.current?.getSource("colleges")?.setData?.(toGeoJson(visible, full ? filters : null, saved))
+  }, [mapReady, visible, full, filters, saved])
 
   // Picking a state frames that state; clearing it goes back to the whole country.
   useEffect(() => {
@@ -524,10 +672,18 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
     filters.gender !== "all" ||
     filters.state !== "" ||
     filters.onRecruitNCOnly ||
+    filters.myListOnly ||
     filters.query.trim() !== ""
 
   const resetFilters = () =>
-    setFilters({ divisions: new Set(COLLEGE_DIVISIONS), gender: "all", state: "", onRecruitNCOnly: false, query: "" })
+    setFilters({
+      divisions: new Set(COLLEGE_DIVISIONS),
+      gender: "all",
+      state: "",
+      onRecruitNCOnly: false,
+      myListOnly: false,
+      query: "",
+    })
 
   if (loadError) {
     return <p className="rounded-sm border border-white/10 bg-white/5 p-6 text-white/70">{loadError}</p>
@@ -577,6 +733,24 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
           >
             <span className="h-3 w-3 rounded-full border-2 border-white bg-transparent" />
             On RecruitNC ({recruitNCCount})
+          </button>
+        ) : null}
+        {full && listAvailable ? (
+          // Same behaviour as On RecruitNC: one tap is the whole list, at every level.
+          <button
+            type="button"
+            onClick={() =>
+              setFilters((f) =>
+                f.myListOnly ? { ...f, myListOnly: false } : { ...f, myListOnly: true, divisions: new Set(COLLEGE_DIVISIONS) },
+              )
+            }
+            aria-pressed={filters.myListOnly}
+            className={`inline-flex items-center gap-2 rounded-sm border px-3 py-1.5 text-sm font-semibold transition hover:bg-white/10 ${
+              filters.myListOnly ? "border-[#D7B968] bg-[#D7B968]/15 text-white" : "border-white/20 text-white"
+            }`}
+          >
+            <Star className="h-3.5 w-3.5 fill-[#F5D985] text-[#F5D985]" />
+            My List ({saved.size})
           </button>
         ) : null}
         {full && filtersActive ? (
@@ -652,7 +826,24 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
         {selected ? (
           // bottom-10 keeps the Mapbox logo, which their terms require, visible below the card.
           <div className="absolute bottom-10 left-4 right-4 sm:right-auto sm:w-[340px]">
-            <SchoolCard school={selected} filters={full ? filters : null} onClose={() => setSelectedId(null)} />
+            <SchoolCard
+              school={selected}
+              filters={full ? filters : null}
+              onClose={() => setSelectedId(null)}
+              list={
+                listAvailable ? (
+                  <>
+                    <ListControls
+                      item={saved.get(selected.id)}
+                      busy={listBusy}
+                      onSave={(status) => saveToList(selected.id, status)}
+                      onRemove={() => removeFromList(selected.id)}
+                    />
+                    {listError ? <p className="mt-1 text-xs text-red-300">{listError}</p> : null}
+                  </>
+                ) : null
+              }
+            />
           </div>
         ) : null}
       </div>
@@ -660,6 +851,13 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
       <p className="text-sm text-white/55">
         {visible.length} of {schools.length} schools · {response?.season ?? "2026-27"} season
       </p>
+
+      {full && filters.myListOnly && saved.size === 0 ? (
+        <p className="rounded-sm border border-white/10 bg-white/5 p-4 text-sm leading-6 text-white/70">
+          Your list is empty. Tap any school on the map, then <span className="font-semibold text-white">Save to My List</span>
+          . Aim for 20 to 30 schools across more than one level to start.
+        </p>
+      ) : null}
 
       {full ? (
         <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -683,11 +881,17 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
                   />
                   <span className="truncate text-sm font-semibold text-white">{school.name}</span>
                   {school.onRecruitNC ? <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-[#D7B968]" /> : null}
+                  {saved.has(school.id) ? <Star className="h-3.5 w-3.5 shrink-0 fill-[#F5D985] text-[#F5D985]" /> : null}
                 </span>
                 <span className="mt-0.5 block pl-[18px] text-xs text-white/50">
                   {school.city}, {school.state} · {school.programs.map((p) => DIVISION_SHORT[p.division]).join(" / ")}
                   {school.firstSeason ? ` · starts ${school.firstSeason}` : ""}
                 </span>
+                {saved.has(school.id) ? (
+                  <span className="mt-0.5 block pl-[18px] text-xs font-semibold text-[#F5D985]">
+                    {COLLEGE_LIST_STATUS_LABEL[saved.get(school.id)!.status]}
+                  </span>
+                ) : null}
               </button>
             </li>
           ))}
