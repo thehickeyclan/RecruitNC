@@ -33,6 +33,13 @@ export function ConditionalAuthGuard({
   const publicRoutePrefixes = [
     // Local-only "view as this coach" preview; the page itself does not exist in production.
     "/dev/coach-preview",
+    /*
+     * The unsubscribe link in every email. The page was written to need no sign-in - most
+     * recipients have no account - but it was never listed here, so the guard put a sign-in form
+     * over it: 47 people who clicked "unsubscribe" in the week to 12 October 2026 were shown a
+     * login page, and three were recorded as unsubscribed.
+     */
+    "/unsubscribe",
     // Partners send this link to their own people; a login wall would waste it.
     "/supporters",
     // The printed QR code on lanyards and signage points here. A login wall would make every
