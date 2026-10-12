@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export const dynamic = "force-dynamic"
 
@@ -43,7 +44,9 @@ export async function GET() {
     const { data: profile } = await supabase.from("user_profiles").select("is_admin").eq("user_id", user.id).single()
     if (!profile?.is_admin) return NextResponse.json({ error: "Admin required" }, { status: 403 })
 
-    const { data: rawRows, error } = await supabase
+    // The cookie-bound client above runs as the signed-in user, and the column grants on
+    // athletes refuse select("*") for that role. The admin check has passed; read as service role.
+    const { data: rawRows, error } = await createAdminClient()
       .from("athletes")
       .select("*")
       .order("graduationyear", { ascending: false, nullsFirst: false })

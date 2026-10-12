@@ -8,6 +8,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin"
 import { sendNationalTeamFeeReceiptAutoIfEligible } from "@/lib/national-team-auto-fee-receipt"
 import { sendOrderReceiptIfEligible } from "@/lib/order-auto-receipt"
+import { sendPurchaseReceiptForEvent } from "@/lib/purchase-receipt"
 import { findProductByIdOrPrefix } from "@/lib/store/product-utils"
 import { findAndEnrichAthlete, enrichmentFromOrderCustomer, buildEnrichmentPayload } from "@/lib/enrich-athlete-profile"
 import { orderShippingFields } from "@/lib/order-shipping"
@@ -124,6 +125,14 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = createAdminClient()
+
+  // Every purchase gets a receipt. Sent here, ahead of the handlers, because each of them
+  // returns early; a failure to send must never stop the payment being fulfilled.
+  try {
+    await sendPurchaseReceiptForEvent(admin, getStripe(), event)
+  } catch (receiptErr) {
+    console.error("[webhooks/stripe] purchase receipt failed:", receiptErr)
+  }
 
   // Real-time churn and billing sync: Stripe subscription lifecycle → blue_memberships
   if (event.type === "customer.subscription.updated" || event.type === "customer.subscription.deleted") {

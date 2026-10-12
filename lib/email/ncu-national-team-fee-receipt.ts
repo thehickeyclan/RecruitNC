@@ -1,3 +1,4 @@
+import { appDownloadEmailHtml, appDownloadEmailText } from "@/lib/app-download-email-block"
 import { NCU_WRESTLING_EIN, formatDonationDateDisplay } from "@/lib/email/ncu-donation-acknowledgment"
 
 const FROM = "NC United Wrestling <info@ncwrestlingunited.com>"
@@ -51,6 +52,7 @@ Please keep this email for your records. If you have questions, reply to this me
 — NC United Wrestling`
 
   const safeHtml = escapeHtml(textBody).replace(/\n/g, "<br/>\n")
+  const text = `${textBody}\n\n${appDownloadEmailText()}`
 
   const html = `<!DOCTYPE html>
 <html>
@@ -58,13 +60,14 @@ Please keep this email for your records. If you have questions, reply to this me
 <body style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;line-height:1.6;color:#1a1a1a;max-width:600px;margin:0 auto;padding:20px;">
 <div style="background:#f8fafc;border-radius:8px;padding:24px 28px;border:1px solid #e2e8f0;">
 ${safeHtml}
+${appDownloadEmailHtml()}
 </div>
 </body>
 </html>`
 
   return {
     html,
-    text: textBody,
+    text,
     subject: "Your NC United National Team payment receipt" as const,
     from: FROM,
   }

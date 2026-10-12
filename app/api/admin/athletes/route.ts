@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createServerClient } from "@supabase/ssr"
-import { cookies } from "next/headers"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export async function GET(request: NextRequest) {
   console.log("[v0] Admin Athletes API: ===== ROUTE CALLED =====")
@@ -10,17 +9,10 @@ export async function GET(request: NextRequest) {
   try {
     console.log("[v0] Admin Athletes API: Starting request")
 
-    const cookieStore = cookies()
-    console.log("[v0] Admin Athletes API: Got cookie store")
-
-    const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    })
-    console.log("[v0] Admin Athletes API: Created Supabase client")
+    // Not createServerClient: with the session cookies attached the query runs as the signed-in
+    // user, and the column grants on athletes refuse select("*"). Middleware has already
+    // checked the caller is an admin (lib/admin-api-gate.ts).
+    const supabase = createAdminClient()
 
     console.log("[v0] Admin Athletes API: Querying database for all athletes")
 
