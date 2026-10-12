@@ -123,7 +123,7 @@ export function InboxPanes({ initialThreadId = null }: { initialThreadId?: strin
                   All messages
                 </button>
                 <div className="min-h-0 flex-1">
-                  <Conversation key={selectedId} threadId={selectedId} pane />
+                  <Conversation key={selectedId} threadId={selectedId} pane onSent={() => setReloadKey((k) => k + 1)} />
                 </div>
               </div>
             ) : (

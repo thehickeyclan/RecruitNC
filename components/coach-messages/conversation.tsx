@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Flag, Loader2, Send, ShieldOff, ShieldCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { StageChip, wrestlerLine } from "@/components/coach-messages/inbox-list"
+import { COACH_MESSAGES_CHANGED } from "@/hooks/use-nav-badges"
 
 type Message = { id: string; body: string; senderRole: string; senderName: string; createdAt: string; mine: boolean }
 type Thread = {
@@ -31,11 +32,14 @@ export function Conversation({
   threadId,
   compact = false,
   pane = false,
+  onSent,
 }: {
   threadId: string
   compact?: boolean
   /** Fills the right-hand pane of the inbox: the messages scroll, the reply box stays put. */
   pane?: boolean
+  /** Called after a message is sent, so a list beside this one can drop its "needs your reply". */
+  onSent?: () => void
 }) {
   const [thread, setThread] = useState<Thread | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -54,6 +58,8 @@ export function Conversation({
       return
     }
     setThread(data.thread)
+    // Loading it marked it read on the server.
+    window.dispatchEvent(new Event(COACH_MESSAGES_CHANGED))
   }, [threadId])
 
   useEffect(() => {
@@ -80,6 +86,7 @@ export function Conversation({
       if (!res.ok) throw new Error(data.error ?? "Could not send.")
       setDraft("")
       await load()
+      onSent?.()
     } catch (e) {
       setNotice(e instanceof Error ? e.message : "Could not send.")
     } finally {

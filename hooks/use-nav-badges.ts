@@ -2,6 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react"
 
+/** Fired on window when a conversation is read or written in place, so badges elsewhere re-count. */
+export const COACH_MESSAGES_CHANGED = "coach-messages:changed"
+
 export type NavNotification = { id: string; type: string; title: string; body: string | null; link: string | null; read_at: string | null; created_at: string }
 
 /**
@@ -19,13 +22,18 @@ export function useCoachMessageBadge(signedIn: boolean, pathname: string) {
       setShow(false)
       return
     }
-    fetch("/api/coach-messages/unread", { credentials: "include" })
-      .then((r) => r.json())
-      .then((d) => {
-        setUnread(Number(d?.unread) || 0)
-        setShow(Boolean(d?.show))
-      })
-      .catch(() => {})
+    const read = () =>
+      fetch("/api/coach-messages/unread", { credentials: "include" })
+        .then((r) => r.json())
+        .then((d) => {
+          setUnread(Number(d?.unread) || 0)
+          setShow(Boolean(d?.show))
+        })
+        .catch(() => {})
+    void read()
+    // The inbox opens a conversation without leaving the page; it says so, and the count follows.
+    window.addEventListener(COACH_MESSAGES_CHANGED, read)
+    return () => window.removeEventListener(COACH_MESSAGES_CHANGED, read)
   }, [signedIn, pathname])
   return { unread, show }
 }

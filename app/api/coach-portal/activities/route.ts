@@ -249,11 +249,11 @@ export async function POST(request: Request) {
       targetCoachSchoolId = impersonatedProfile.school_id
     }
 
-    if (!targetCoachSchoolId) {
-      console.error("[v0] Coach has no school_id", { targetCoachId })
-      return NextResponse.json({ error: "You must be associated with a school to log activities." }, { status: 400 })
-    }
-
+    /*
+     * A coach with no program attached logs too. This used to refuse them ("You must be associated
+     * with a school"), though nothing below needs the school: an activity is the coach's own row,
+     * and a staff shares it because the board reads every staff member's rows.
+     */
     console.log("[v0] Coach profile:", {
       actingUserId: user.id,
       actingIsAdmin: currentProfile.is_admin,
