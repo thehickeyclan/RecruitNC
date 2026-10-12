@@ -6,7 +6,6 @@ import Image from "next/image"
 import { yearFilterToApiParams } from "@/lib/prospects-directory"
 import { currentClassYears } from "@/lib/class-years"
 import { highestAchievement, type AchievementFacts } from "@/lib/prospect-achievements"
-import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { useCoachMode } from "@/hooks/use-coach-mode"
 import { useAuth } from "@/contexts/auth-context"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
@@ -137,34 +136,36 @@ export default function ProspectsAllClient({
    * NC United Blue members, verified college coaches and admins. Everyone else sees the
    * directory without the numbers, which is still a useful page.
    */
-  const { isAdmin, isVerifiedCoach, profile: viewerProfile } = useAuth()
+  const { profile: viewerProfile } = useAuth()
   const { actsAsCoach } = useCoachMode()
-  const [isBlueMember, setIsBlueMember] = useState(false)
+  /*
+   * The ranks are not in the rows. The rows are public and cached; the server sends the ranks
+   * separately, and only to an admin, a verified college coach, a Blue family or a subscriber
+   * (/api/prospects/ranks). Null means this viewer was not sent any - whether or not the page
+   * could have guessed otherwise.
+   */
+  const [ranks, setRanks] = useState<Record<string, number> | null>(null)
+  const viewerId = viewerProfile?.user_id ?? null
   useEffect(() => {
     let cancelled = false
-    ;(async () => {
-      try {
-        const response = await fetch("/api/blue/my-memberships")
-        if (!response.ok) return
-        const data = await response.json()
-        const holds =
-          (Array.isArray(data?.memberships) && data.memberships.length > 0) ||
-          (Array.isArray(data?.wiqSubscriptions) && data.wiqSubscriptions.length > 0)
-        if (!cancelled) setIsBlueMember(holds)
-      } catch {
+    if (!viewerId) {
+      setRanks(null)
+      return
+    }
+    fetch("/api/prospects/ranks", { credentials: "include", cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { ranks?: Record<string, number> } | null) => {
+        if (!cancelled) setRanks(d?.ranks ?? null)
+      })
+      .catch(() => {
         // A failed lookup leaves the column hidden, which is the safe way to be wrong.
-      }
-    })()
+        if (!cancelled) setRanks(null)
+      })
     return () => {
       cancelled = true
     }
-  }, [])
-  const maySeeRanking = canSeeProspectRanking({
-    isAdmin,
-    isVerifiedCoach,
-    role: viewerProfile?.role,
-    isBlueMember,
-  })
+  }, [viewerId])
+  const maySeeRanking = ranks != null
 
   const [prospects, setProspects] = useState<Prospect[]>(initialProspects)
   const [isLoading, setIsLoading] = useState(initialProspects.length === 0)
@@ -364,15 +365,8 @@ export default function ProspectsAllClient({
   }
 
   function getRawRank(prospect: Prospect): number {
-    const p = prospect.prospect_ranking
-    if (p != null && Number.isFinite(Number(p))) return Number(p)
-    const r = (prospect as any)?.rankings
-    if (r != null && typeof r === "number" && Number.isFinite(r)) return r
-    if (r != null && typeof r === "object") {
-      const n = (r as Record<string, unknown>)[2029] ?? (r as Record<string, unknown>)["2029"] ?? (r as Record<string, unknown>).class_2029 ?? (r as Record<string, unknown>)[2028] ?? (r as Record<string, unknown>)["2028"] ?? (r as Record<string, unknown>).class_2028 ?? (r as Record<string, unknown>).state ?? (r as Record<string, unknown>).national
-      if (typeof n === "number" && Number.isFinite(n)) return n
-    }
-    return NaN
+    const rank = ranks?.[String(prospect.id)]
+    return typeof rank === "number" && Number.isFinite(rank) ? rank : NaN
   }
 
   const filteredProspects = useMemo(() => {
@@ -488,7 +482,7 @@ export default function ProspectsAllClient({
 
       return true
     })
-  }, [prospects, searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilters])
+  }, [prospects, searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilters, ranks])
 
   const sortedProspects = useMemo(() => {
     return [...filteredProspects].sort((a, b) => (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" }))
@@ -585,7 +579,7 @@ export default function ProspectsAllClient({
      * never rebuilt when it turned true, and the Rank column stayed empty for a coach until he
      * happened to touch a filter.
      */
-  }, [sortedProspects, maySeeRanking])
+  }, [sortedProspects, maySeeRanking, ranks])
 
   /** The same order for the table and the cards; the table's own header clicks still re-sort it. */
   const orderedAthletes = useMemo(() => {
@@ -996,9 +990,11 @@ export default function ProspectsAllClient({
               ))}
             </QuickGroup>
             <QuickGroup label="Show">
-              <QuickChip active={rankFilter === "ranked"} onClick={() => setRankFilter(rankFilter === "ranked" ? "all" : "ranked")}>
-                Ranked only
-              </QuickChip>
+              {maySeeRanking ? (
+                <QuickChip active={rankFilter === "ranked"} onClick={() => setRankFilter(rankFilter === "ranked" ? "all" : "ranked")}>
+                  Ranked only
+                </QuickChip>
+              ) : null}
               <QuickChip active={statusFilter === "uncommitted"} onClick={() => setStatusFilter(statusFilter === "uncommitted" ? "all" : "uncommitted")}>
                 Uncommitted only
               </QuickChip>
@@ -1010,7 +1006,7 @@ export default function ProspectsAllClient({
                 onChange={(e) => setSortChoice(e.target.value as SortChoice)}
                 className="min-h-[36px] rounded-lg border border-white/20 bg-[#0A1628] px-3 text-sm font-semibold normal-case tracking-normal text-white focus:border-[#D3B574] focus:outline-none"
               >
-                <option value="rank">Rank</option>
+                {maySeeRanking ? <option value="rank">Rank</option> : null}
                 <option value="name">Name (A to Z)</option>
                 <option value="weight">Weight (light to heavy)</option>
                 <option value="year">Class (seniors first)</option>
