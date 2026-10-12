@@ -7,7 +7,7 @@ import { loadMyRecruits } from "@/lib/my-recruits"
 import { isApprovedCoach, listThreads } from "@/lib/coach-messages"
 import { loadFitFlags } from "@/lib/program-fit-bulk"
 import { resolveFitViewer } from "@/lib/program-fit-viewer"
-import { resolveEntityLogoUrl } from "@/lib/entity-logo-resolve"
+import { programLogo as resolveProgramLogo } from "@/lib/coach-program-logo"
 import { PUBLIC_TOP_75_COLLEGE_RELEASED, PUBLISHED_PUBLIC_RANKINGS_YEARS } from "@/lib/public-rankings-cap"
 import type { CoachHomeData } from "./coach-home-client"
 
@@ -54,8 +54,8 @@ export async function loadCoachHome(
    * coaches belong to carry one of their own, and the commitments pages already hold most of the
    * rest. Nothing found means no logo, never a placeholder crest.
    */
-  const programLogo =
-    school?.logo || (school?.name ? await resolveEntityLogoUrl("college", school.name).catch(() => null) : null) || null
+  // One function decides this, shared with the staff check at /admin/coach-logos, so that page shows what a coach sees.
+  const programLogo = (await resolveProgramLogo({ name: school?.name ?? null, logo_url: school?.logo ?? null })).url
 
   // The board's five against the program's perfect recruit; an extra, so a failure shows nothing.
   const recruitIds = (board?.recruits ?? []).slice(0, 5).map((r) => r.athleteId)
