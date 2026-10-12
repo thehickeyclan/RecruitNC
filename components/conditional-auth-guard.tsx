@@ -31,6 +31,8 @@ export function ConditionalAuthGuard({
 
   const isHomepage = path === "/"
   const publicRoutePrefixes = [
+    // Local-only "view as this coach" preview; the page itself does not exist in production.
+    "/dev/coach-preview",
     // Partners send this link to their own people; a login wall would waste it.
     "/supporters",
     // The printed QR code on lanyards and signage points here. A login wall would make every
