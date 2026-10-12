@@ -1,7 +1,13 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { currentClassYears, mostRecentGraduatedClassYear } from "@/lib/class-years"
 
-/** Directory list columns only — omit bio and other large fields. */
+/**
+ * Directory list columns only — omit bio and other large fields.
+ *
+ * No `prospect_ranking` and no `rankings`: these rows are public and cached. The rank reaches an
+ * entitled viewer through /api/prospects/ranks, and nobody else at all. For the same reason the
+ * rows are ordered by name - ordering by rank publishes the board without printing a number.
+ */
 export const PROSPECT_LIST_COLUMNS = `
   id,
   name,
@@ -20,8 +26,6 @@ export const PROSPECT_LIST_COLUMNS = `
   college_id,
   photourl,
   achievements,
-  prospect_ranking,
-  rankings,
   recruiting_status,
   nationally_ranked_wins,
   nhsca_results,
@@ -200,8 +204,8 @@ export async function fetchProspectDirectoryPage(
   let query = supabase
     .from("athletes")
     .select(PROSPECT_LIST_COLUMNS)
-    .order("prospect_ranking", { ascending: true, nullsFirst: false })
     .order("name", { ascending: true })
+    .order("id", { ascending: true })
     .range(offset, offset + limit - 1)
 
   if (filters.graduationYear && filters.graduationYear !== "all") {
