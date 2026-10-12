@@ -184,6 +184,10 @@ export default function ProspectsAllClient({
    * How the list is ordered. Unset until someone chooses: a coach then gets ranked-first (only 75
    * of ~575 carry a rank, and A-Z opened on a screen of dashes), everyone else A-Z.
    */
+  // Coach Home's "see them all" arrives with ?show=uncommitted, so the list opens on what it promised.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("show") === "uncommitted") setStatusFilter("uncommitted")
+  }, [])
   const [sortChoice, setSortChoice] = useState<SortChoice | null>(null)
   const sortBy: SortChoice = sortChoice ?? (actsAsCoach ? "rank" : "name")
   const [weightFilters, setWeightFilters] = useState<string[]>([])

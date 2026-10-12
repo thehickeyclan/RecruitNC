@@ -78,7 +78,18 @@ function AccessPanel({ signedOut }: { signedOut: boolean }) {
  *
  * A coach with an empty board opens on the suggestions, because that is where the first action is.
  */
-function RecruitsCard({ total, suggested, children }: { total: number; suggested: CoachHomeData["suggested"]; children: React.ReactNode }) {
+function RecruitsCard({
+  total,
+  suggested,
+  poolSize,
+  children,
+}: {
+  total: number
+  suggested: CoachHomeData["suggested"]
+  /** How many wrestlers the Athletes list holds, so eight suggestions are not taken for all of them. */
+  poolSize: number
+  children: React.ReactNode
+}) {
   const [tab, setTab] = useState<"yours" | "suggested">(total === 0 && suggested.length > 0 ? "suggested" : "yours")
   const tabClass = (on: boolean) =>
     `-mb-px whitespace-nowrap border-b-2 px-1 pb-2 text-[11px] font-black uppercase tracking-wider ${on ? "border-[#D3B574] text-[#D3B574]" : "border-transparent text-white/40 hover:text-white/70"}`
@@ -99,13 +110,13 @@ function RecruitsCard({ total, suggested, children }: { total: number; suggested
           {tab === "yours" ? "Open board" : "All athletes"} <ArrowRight className="h-3 w-3" />
         </Link>
       </div>
-      {tab === "yours" ? children : <SuggestedList wrestlers={suggested} />}
+      {tab === "yours" ? children : <SuggestedList wrestlers={suggested} poolSize={poolSize} />}
     </section>
   )
 }
 
 /** Ranked, uncommitted wrestlers who are not on the board. A star adds one; nothing is added otherwise. */
-function SuggestedList({ wrestlers }: { wrestlers: CoachHomeData["suggested"] }) {
+function SuggestedList({ wrestlers, poolSize }: { wrestlers: CoachHomeData["suggested"]; poolSize: number }) {
   const [starred, setStarred] = useState<Set<string>>(new Set())
   const [busy, setBusy] = useState<string | null>(null)
   const star = async (id: string) => {
@@ -158,6 +169,13 @@ function SuggestedList({ wrestlers }: { wrestlers: CoachHomeData["suggested"] })
           )
         })}
       </ul>
+      {/* Eight is a starting point; say so, and make the rest one obvious click away. */}
+      <Link
+        href="/prospects/all"
+        className="mt-3 flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-[#D3B574]/50 px-4 text-sm font-bold text-[#D3B574] hover:bg-[#D3B574]/10"
+      >
+        Only the top {wrestlers.length} are shown. See all {poolSize.toLocaleString()} athletes <ArrowRight className="h-4 w-4" />
+      </Link>
     </>
   )
 }
@@ -266,7 +284,7 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
         </div>
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <RecruitsCard total={recruits.total} suggested={data.suggested ?? []}>
+          <RecruitsCard total={recruits.total} suggested={data.suggested ?? []} poolSize={data.athletes.length}>
             {!recruits.loaded ? (
               <p className="mt-4 text-sm text-white/55">Your board could not be loaded just now. Open it directly to try again.</p>
             ) : recruits.total === 0 ? (
