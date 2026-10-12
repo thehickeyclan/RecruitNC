@@ -7,14 +7,14 @@ import { matchColleges, type College } from "@/lib/college-picker-match"
 
 
 /**
- * The coach's college: pick it from the colleges we already hold, or type one we do not.
+ * The coach's college: pick it from the national program list the college map uses, or type one
+ * that is not on it.
  *
  * It was a bare text box, and a school was spelt however each coach spelt it - three Virginia
  * coaches typed "The University of Virginia", "University of Virginia Wrestling" and "Virginia",
  * which named one program three ways on a family's profile and found its logo under none of them.
- * Choosing from the list writes the name we hold, exactly. Typing stays possible because most
- * programs in the country are not on our list yet, and a coach must never be stopped at the door
- * for that.
+ * Choosing from the list writes the name we hold, exactly. Typing stays possible because a list is never complete,
+ * and a coach must never be stopped at the door for that.
  */
 export function CollegeField({ value, onChange, disabled }: { value: string; onChange: (value: string) => void; disabled?: boolean }) {
   const [colleges, setColleges] = useState<College[]>([])
@@ -22,7 +22,7 @@ export function CollegeField({ value, onChange, disabled }: { value: string; onC
 
   useEffect(() => {
     let cancelled = false
-    fetch("/api/admin/colleges")
+    fetch("/api/college-map/names")
       .then((r) => (r.ok ? r.json() : null))
       .then((d: { colleges?: College[] } | null) => {
         if (!cancelled && Array.isArray(d?.colleges)) setColleges(d.colleges.filter((c) => c?.name))
@@ -35,7 +35,7 @@ export function CollegeField({ value, onChange, disabled }: { value: string; onC
   }, [])
 
   const matches = useMemo(() => matchColleges(colleges, value), [colleges, value])
-  const chosen = colleges.some((c) => c.name === value.trim())
+  const chosen = colleges.some((c) => (c.value ?? c.name) === value.trim())
   const showList = open && !chosen && value.trim().length >= 2
 
   return (
@@ -69,13 +69,16 @@ export function CollegeField({ value, onChange, disabled }: { value: string; onC
                 // mousedown, not click: the input's blur would close the list before a click registered.
                 onMouseDown={(e) => {
                   e.preventDefault()
-                  onChange(c.name)
+                  onChange(c.value ?? c.name)
                   setOpen(false)
                 }}
                 className="flex min-h-[44px] w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm text-slate-900 hover:bg-slate-100"
               >
-                <span className="font-medium">{c.name}</span>
-                {c.division ? <span className="shrink-0 text-xs text-slate-500">{c.division}</span> : null}
+                <span className="min-w-0">
+                  <span className="block font-medium">{c.name}</span>
+                  {c.place ? <span className="block text-xs text-slate-500">{c.place}</span> : null}
+                </span>
+                {c.division ? <span className="shrink-0 text-xs text-slate-500">{c.division.replace("NCAA Division ", "D")}</span> : null}
               </button>
             </li>
           ))}
