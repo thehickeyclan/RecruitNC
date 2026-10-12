@@ -491,8 +491,12 @@ function ReportLink({ row }: { row: MyRecruitRow }) {
 }
 
 /**
- * The funnel, as the row of stages a staff reads left to right: how many wrestlers sit at each,
- * and a tap to see only those. It is the board's filter, not a chart beside it.
+ * The recruiting funnel, drawn as one: seven stages narrowing left to right from Prospect to
+ * Signed, each with its count. It is also the board's filter - tap a stage to see only those
+ * wrestlers, tap it again for everyone. Lost sits outside the funnel, because it is not a step in it.
+ *
+ * It was first a row of plain count boxes, and Matt opened the page and asked where the funnel
+ * was (12 October 2026).
  */
 function Funnel({
   counts,
@@ -505,29 +509,61 @@ function Funnel({
   active: PipelineStage | "all"
   onPick: (stage: PipelineStage | "all") => void
 }) {
-  const cell = (key: PipelineStage | "all", label: string, count: number) => (
-    <button
-      key={key}
-      type="button"
-      onClick={() => onPick(active === key ? "all" : key)}
-      aria-pressed={active === key}
-      className={cn(
-        "flex min-w-[92px] flex-1 flex-col items-start rounded-lg border px-3 py-2 text-left transition-colors",
-        active === key ? "border-[#D3B574] bg-[#D3B574]/15" : "border-white/10 bg-white/[0.03] hover:border-white/30",
-        key === "Lost" && "opacity-70",
-      )}
-    >
-      <span className={cn("text-xl font-black leading-none", count ? "text-white" : "text-white/30")}>{count}</span>
-      <span className={cn("mt-1 text-[11px] font-bold uppercase tracking-wider", active === key ? "text-[#D3B574]" : "text-white/55")}>{label}</span>
-    </button>
-  )
+  const steps = PIPELINE_STAGES.filter((st) => st !== "Lost")
+  const TAPER = 3.5 // percent of height each stage gives up, top and bottom
   return (
-    <div className="-mx-4 mt-6 overflow-x-auto px-4" aria-label="Recruiting funnel">
-      <div className="flex min-w-max gap-2 sm:min-w-0">
-        {cell("all", "All", total)}
-        {PIPELINE_STAGES.map((st) => cell(st, st, counts[st] ?? 0))}
+    <section className="mt-6 rounded-xl border border-white/10 bg-white/[0.03] p-4" aria-label="Recruiting funnel">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-[11px] font-black uppercase tracking-widest text-white/50">
+          Recruiting funnel <span className="ml-1 font-semibold normal-case tracking-normal text-white/40">· {total} on the board</span>
+        </h2>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => onPick(active === "Lost" ? "all" : "Lost")}
+            aria-pressed={active === "Lost"}
+            className={cn(
+              "rounded-full border px-3 py-1 text-xs font-semibold",
+              active === "Lost" ? "border-white bg-white text-[#0A1628]" : "border-white/20 text-white/60 hover:text-white",
+            )}
+          >
+            Lost {counts.Lost ?? 0}
+          </button>
+          {active !== "all" ? (
+            <button type="button" onClick={() => onPick("all")} className="rounded-full border border-[#D3B574] px-3 py-1 text-xs font-bold text-[#D3B574] hover:bg-[#D3B574]/10">
+              Show all {total}
+            </button>
+          ) : null}
+        </div>
       </div>
-    </div>
+      <div className="-mx-4 mt-3 overflow-x-auto px-4">
+        <div className="flex h-24 min-w-[640px] gap-0.5">
+          {steps.map((st, i) => {
+            const count = counts[st] ?? 0
+            const on = active === st
+            const left = i * TAPER
+            const right = (i + 1) * TAPER
+            return (
+              <button
+                key={st}
+                type="button"
+                onClick={() => onPick(on ? "all" : st)}
+                aria-pressed={on}
+                aria-label={`${st}: ${count}`}
+                style={{
+                  clipPath: `polygon(0 ${left}%, 100% ${right}%, 100% ${100 - right}%, 0 ${100 - left}%)`,
+                  backgroundColor: on ? "#D3B574" : `rgba(211, 181, 116, ${0.16 + i * 0.07})`,
+                }}
+                className={cn("flex flex-1 flex-col items-center justify-center transition-colors", on ? "text-[#0A1628]" : "text-white hover:brightness-125")}
+              >
+                <span className={cn("text-2xl font-black leading-none", !on && count === 0 && "text-white/40")}>{count}</span>
+                <span className={cn("mt-1 text-[10px] font-bold uppercase tracking-wider", on ? "text-[#0A1628]" : "text-white/75")}>{st}</span>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+    </section>
   )
 }
 
