@@ -131,12 +131,15 @@ async function lookupExactLogoInDatabase(entityType: string, entityName: string)
 }
 
 /** Words in a school's name that do not tell one school from another. */
-const NAME_NOISE = /^(the|of|at|and|&|university|college)$/i
+// "wrestling" and its kin: coaches type "University of Virginia Wrestling" as their institution.
+const NAME_NOISE = /^(the|of|at|and|&|university|college|wrestling|athletics|team|program)$/i
 
 /** The words that identify a school: "The University of Virginia" -> virginia; "Ohio State University" -> ohio state. */
 export function distinctiveSchoolWords(name: string): string[] {
   return name
     .toLowerCase()
+    // "Wesleyan University (CT)": the state in brackets is a note, not part of the name.
+    .replace(/\([^)]*\)/g, " ")
     .replace(/[^a-z0-9&\s]/g, " ")
     .split(/\s+/)
     .filter((t) => t && !NAME_NOISE.test(t))
