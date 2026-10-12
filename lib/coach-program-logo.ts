@@ -2,6 +2,7 @@ import "server-only"
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { resolveEntityLogoUrlWithSource } from "@/lib/entity-logo-resolve"
+import { mapSchoolIdFor } from "@/lib/college-programs/load"
 
 /**
  * The logo a coach is greeted with on Coach Home, and where it came from.
@@ -32,6 +33,12 @@ export type ProgramLogoRow = {
   name: string
   coaches: Array<{ name: string; email: string | null; joined: string }>
   logo: ProgramLogo
+  /**
+   * Whether the college map has a dot for this school. The map lights a dot up the moment a coach
+   * is approved, but only for a school already on its list; one that is not (a new program, a
+   * club team, a name it cannot read) shows nothing, silently. This is where that gets seen.
+   */
+  onMap: boolean
 }
 
 /** Every program a college coach account belongs to, with the logo its coaches see. */
@@ -54,6 +61,7 @@ export async function loadCoachProgramLogos(admin: SupabaseClient): Promise<{ pr
       name: String(s.name ?? ""),
       coaches: (coaches ?? []).filter((c) => c.school_id === s.id).map(person),
       logo: await programLogo({ name: s.name as string | null, logo_url: s.logo_url as string | null }),
+      onMap: mapSchoolIdFor(String(s.name ?? "")) != null,
     })),
   )
   programs.sort((a, b) => a.name.localeCompare(b.name))
