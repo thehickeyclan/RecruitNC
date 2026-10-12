@@ -22,6 +22,17 @@ type Thread = {
   messages: Message[]
 }
 
+/** "MH" for "Matthew Hickey (parent)"; the bracketed role is not part of the name. */
+const initialsOf = (name: string) =>
+  name
+    .replace(/\(.*?\)/g, " ")
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase() || "?"
+
 const when = (iso: string) =>
   new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
 
@@ -233,10 +244,29 @@ export function Conversation({
 
       <ol className={cn("flex flex-col gap-3", pane && "min-h-0 flex-1 overflow-y-auto pr-1")}>
         {thread.messages.map((m) => (
-          <li key={m.id} className={cn("flex items-end gap-2", m.mine ? "flex-row-reverse" : "flex-row")}>
-            {/* The program's mark beside what its coach wrote, for the family and for staff reading along. */}
-            {m.senderRole === "coach" && !m.mine ? <ProgramMark logo={thread.programLogo} program={thread.program} size={32} className="mb-5" /> : null}
+          <li key={m.id} className={cn("flex items-start gap-2.5", m.mine ? "flex-row-reverse" : "flex-row")}>
+            {/*
+              Who said it, on every message, the way a group chat shows it (Matt, 12 October 2026):
+              the program's logo beside a coach, initials beside the wrestler or a parent, then the
+              name and the time above what they wrote.
+            */}
+            {m.senderRole === "coach" ? (
+              <ProgramMark logo={thread.programLogo} program={thread.program} size={36} className="mt-0.5" />
+            ) : (
+              <span
+                className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15 text-xs font-black text-white"
+                aria-hidden
+              >
+                {initialsOf(m.senderName)}
+              </span>
+            )}
             <div className={cn("flex min-w-0 max-w-[85%] flex-col", m.mine ? "items-end" : "items-start")}>
+              <span className="mb-1 px-1 text-xs text-white/55">
+                <span className="font-bold text-white/85">{m.senderName || (m.senderRole === "coach" ? "Coach" : "Family")}</span>
+                {m.mine ? " (You)" : ""}
+                {m.senderRole === "coach" && thread.program ? ` · ${thread.program}` : ""}
+                <span className="text-white/40"> · {when(m.createdAt)}</span>
+              </span>
               <div
                 className={cn(
                   "whitespace-pre-wrap break-words rounded-2xl px-4 py-3 text-[15px] leading-relaxed",
@@ -245,9 +275,6 @@ export function Conversation({
               >
                 {m.body}
               </div>
-              <span className="mt-1 px-1 text-xs text-white/45">
-                {m.mine ? "You" : m.senderName} · {when(m.createdAt)}
-              </span>
             </div>
           </li>
         ))}
