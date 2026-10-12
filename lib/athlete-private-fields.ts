@@ -56,6 +56,19 @@ export const PRIVATE_ATHLETE_FIELDS = [
   "admin_reviewed",
 ] as const
 
+/**
+ * Where a wrestler sits on the board. Not private in the way a phone number is - it is the
+ * product - but it leaves the server for the same short list: admins, verified college coaches,
+ * NC United Blue families and subscribers (Matt, 12 October 2026: "nobody else").
+ */
+export const RANK_ATHLETE_FIELDS = ["prospect_ranking", "previous_ranking", "rankings"] as const
+
+export function stripRankFields<T extends Record<string, unknown>>(row: T): T {
+  const out = { ...row }
+  for (const field of RANK_ATHLETE_FIELDS) delete out[field]
+  return out
+}
+
 export function stripPrivateAthleteFields<T extends Record<string, unknown>>(row: T): T {
   const out = { ...row }
   for (const field of PRIVATE_ATHLETE_FIELDS) delete out[field]

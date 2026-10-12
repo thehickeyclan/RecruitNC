@@ -1,7 +1,10 @@
 import { Suspense } from "react"
 import type { Metadata } from "next"
 import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
-import { stripPrivateAthleteFields, viewerMaySeeAthletePrivateInfo } from "@/lib/athlete-private-fields"
+import { stripPrivateAthleteFields, stripRankFields, viewerMaySeeAthletePrivateInfo } from "@/lib/athlete-private-fields"
+import { resolveRankingViewerForUser } from "@/lib/ranking-access"
+import { canSeeProspectRanking } from "@/lib/ranking-visibility"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { ViewProfileClient } from "./view-profile-client"
 
@@ -108,10 +111,19 @@ async function ViewProfilePageInner({ searchParams }: ViewProfilePageProps) {
       : (stripPrivateAthleteFields(result.athlete as unknown as Record<string, unknown>) as typeof result.athlete)
     : null
 
+  /*
+   * The rank goes only to the people the boards go to. The page drew the badge for coaches and
+   * admins alone, but the number was in the page source for every reader, signed in or not.
+   */
+  const mayRank = user
+    ? canSeeProspectRanking((await resolveRankingViewerForUser({ admin: createAdminClient(), userId: user.id })).viewer)
+    : false
+  const shown = athlete && !mayRank ? (stripRankFields(athlete as unknown as Record<string, unknown>) as typeof athlete) : athlete
+
   return (
     <ViewProfileClient
       id={id}
-      initialAthlete={athlete}
+      initialAthlete={shown}
       initialError={result.ok ? null : result.error}
       initialUserId={user?.id ?? null}
     />
