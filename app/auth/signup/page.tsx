@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { CollegeField } from "@/components/auth/college-field"
 import { Label } from "@/components/ui/label"
 
 function authIntentForPath(path: string | null) {
@@ -400,10 +401,7 @@ function SignUpWizard() {
                   ) : null}
 
                   {isCollegeCoach ? (
-                    <div className="space-y-2">
-                      <Label htmlFor="college">College</Label>
-                      <Input id="college" autoComplete="organization" placeholder="e.g. NC State" value={college} onChange={(e) => setCollege(e.target.value)} required disabled={loading} />
-                    </div>
+                    <CollegeField value={college} onChange={setCollege} disabled={loading} />
                   ) : null}
 
                   <div className="space-y-2">
