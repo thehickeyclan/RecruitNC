@@ -23,6 +23,7 @@ import { useCoachMessageBadge, useNavNotifications } from "@/hooks/use-nav-badge
 import { COACH_PREVIEW_KEY, RECRUITING_BRAND, recruitingCoverage, usesRecruitingShell } from "@/lib/recruiting/brand"
 import { RecruitingFooter } from "@/components/recruiting/recruiting-footer"
 import { RecruitingWordmark } from "@/components/recruiting/recruiting-wordmark"
+import { RecruitingSearch } from "@/components/recruiting/recruiting-search"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
@@ -161,6 +162,7 @@ export function RecruitingShell({ children }: { children: React.ReactNode }) {
           <RecruitingWordmark className="text-xl" />
           <span className="hidden text-[10px] font-semibold uppercase tracking-[0.25em] text-white/45 sm:inline">{recruitingCoverage()} wrestling</span>
         </a>
+        <RecruitingSearch className="hidden min-w-0 max-w-md flex-1 md:block" />
         <div className="ml-auto flex items-center gap-1">
           {previewing ? (
             <button type="button" onClick={exitPreview} className="mr-1 rounded-full border border-[#D3B574]/50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#D3B574] hover:bg-[#D3B574]/10">
@@ -234,6 +236,10 @@ export function RecruitingShell({ children }: { children: React.ReactNode }) {
           </DropdownMenu>
         </div>
       </header>
+
+      <div className="border-b border-white/10 px-4 py-2 print:hidden md:hidden">
+        <RecruitingSearch />
+      </div>
 
       <div className="flex flex-1">
         <nav aria-label="Recruiting navigation" className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-56 shrink-0 overflow-y-auto border-r border-white/10 p-3 print:hidden lg:block">
