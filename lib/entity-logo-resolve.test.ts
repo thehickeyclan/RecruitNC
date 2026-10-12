@@ -1,8 +1,26 @@
-import { describe, expect, it, vi } from "vitest"
+import { describe, expect, it } from "vitest"
+import { distinctiveSchoolWords, getDirectCollegeLogoUrl, sameSchoolName } from "@/lib/entity-logo-resolve"
 
-vi.mock("@/lib/supabase/admin", () => ({ createAdminClient: () => ({}) }))
+describe("getDirectCollegeLogoUrl", () => {
+  it("resolves Roanoke to the blob mark (not a missing public PNG)", () => {
+    const url = getDirectCollegeLogoUrl("Roanoke")
+    expect(url).toContain("blob.vercel-storage.com")
+    expect(url).not.toContain("roanoke-college-logo.png")
+  })
 
-import { distinctiveSchoolWords, sameSchoolName } from "./entity-logo-resolve"
+  it("does not map short tokens like State/NC onto the wrong crest", () => {
+    expect(getDirectCollegeLogoUrl("State")).toBeNull()
+    expect(getDirectCollegeLogoUrl("NC")).toBeNull()
+  })
+
+  it("resolves NC State to the real block S, not the /wolfpack-logo.png placeholder", () => {
+    for (const name of ["NC State", "North Carolina State", "North Carolina State University"]) {
+      const url = getDirectCollegeLogoUrl(name)
+      expect(url).toContain("blob.vercel-storage.com")
+      expect(url).not.toContain("wolfpack-logo.png")
+    }
+  })
+})
 
 describe("sameSchoolName", () => {
   it.each([
