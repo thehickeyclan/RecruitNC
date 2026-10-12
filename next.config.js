@@ -16,6 +16,17 @@ const nextConfig = {
         permanent: false,
       },
       {
+        /*
+         * A mangled link to the sample scouting report: the path is the first ten characters of
+         * "sample-scouting-report" in base64. It is in mail sent on 2 and 4 October 2026 - 105
+         * people clicked it in bursts after each send and met a sign-in wall over a 404. Nothing
+         * in this codebase produces it, so the fix is to send those clicks where they were going.
+         */
+        source: "/c2FtcGxlLX:rest*",
+        destination: "/sample-scouting-report",
+        permanent: false,
+      },
+      {
         // There is no /dashboard page, but sign-up confirmation emails have sent new accounts
         // there (see app/auth/callback/route.ts), so people have it open, bookmarked, or in their
         // history. Not permanent: a browser caches a 308 for good, which would shadow a real page
