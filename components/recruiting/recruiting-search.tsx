@@ -75,7 +75,7 @@ export function RecruitingSearch({ className = "" }: { className?: string }) {
             setOpen(true)
           }}
           onKeyDown={onKey}
-          placeholder="Search wrestlers or high schools"
+          placeholder="Search wrestlers by name or school"
           aria-label="Search wrestlers"
           autoComplete="off"
           className="w-full min-w-0 bg-transparent text-sm text-white placeholder:text-white/35 focus:outline-none [&::-webkit-search-cancel-button]:hidden"
