@@ -105,3 +105,19 @@ export function coachSurname(fullName: string): string | null {
   const parts = fullName.trim().replace(/,?\s+(Jr\.?|Sr\.?|II|III|IV)$/i, "").split(/\s+/)
   return parts.length > 1 ? parts[parts.length - 1] : null
 }
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+
+/** "Oct 24-25" / "Dec 30 - Jan 1". Civil dates read as strings; `new Date("YYYY-MM-DD")` shifts a day west of UTC. */
+export function eventDates(start: string, end: string | null): string {
+  const parse = (value: string) => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(value)
+    return m ? { month: Number(m[2]), day: Number(m[3]) } : null
+  }
+  const from = parse(start)
+  if (!from) return start
+  const to = end ? parse(end) : null
+  const first = `${MONTHS[from.month - 1]} ${from.day}`
+  if (!to || (to.month === from.month && to.day === from.day)) return first
+  return to.month === from.month ? `${first}-${to.day}` : `${first} - ${MONTHS[to.month - 1]} ${to.day}`
+}
