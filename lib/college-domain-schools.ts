@@ -33,6 +33,8 @@ const DOMAIN_SCHOOL_NAMES: Record<string, string> = {
   "coker.edu": "Coker University",
   "concord.edu": "Concord University",
   "cornellcollege.edu": "Cornell College",
+  /* ec.edu is Emanuel University in Georgia, not East Carolina (ecu.edu) or anything "Eastern". */
+  "ec.edu": "Emanuel University",
   "ecu.edu": "East Carolina",
   "emoryhenry.edu": "Emory & Henry",
   "erskine.edu": "Erskine College",

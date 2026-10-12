@@ -59,6 +59,13 @@ describe("collegeForCoach", () => {
     )
   })
 
+  it("does not confuse two schools whose domains look alike", () => {
+    // ec.edu is Emanuel University; a coach on it showed on wrestlers' panels as a programme
+    // called "Ec" until somebody asked (Matt, 12 Oct 2026).
+    expect(collegeForCoach({ email: "coach@ec.edu" })).toBe("Emanuel University")
+    expect(collegeForCoach({ email: "coach@ecu.edu" })).toBe("East Carolina")
+  })
+
   it("handles a subdomain", () => {
     expect(collegeForCoach({ email: "coach@athletics.stanford.edu" })).toBe("Stanford")
   })
