@@ -32,14 +32,23 @@ export async function schoolForCollege(
   admin: SupabaseClient,
   college: CollegeRow,
 ): Promise<{ id: string; name: string }> {
-  const { data: found, error } = await admin
+  /*
+   * By the name shown, or by the name the college list uses for it. A program can be displayed as
+   * "Shenandoah University" while the list says "Shenandoah"; matching the display name alone made
+   * a second "Shenandoah" for the next coach, and one staff ended up on two boards (four schools,
+   * merged 12 October 2026). Retired duplicates are inactive and never chosen.
+   */
+  const pattern = college.name.replace(/[%_\\]/g, "\\$&")
+  const { data: matches, error } = await admin
     .from("schools")
-    .select("id, name")
-    .ilike("name", college.name)
-    .limit(1)
-    .maybeSingle()
+    .select("id, name, canonical_name, is_active")
+    .or(`name.ilike.${JSON.stringify(pattern)},canonical_name.ilike.${JSON.stringify(pattern)}`)
+    .limit(10)
   if (error) throw new Error(`Failed to resolve college assignment: ${error.message}`)
-  if (found) return found as { id: string; name: string }
+  const live = (matches ?? []).filter((m) => m.is_active !== false)
+  const wanted = college.name.trim().toLowerCase()
+  const found = live.find((m) => String(m.name).trim().toLowerCase() === wanted) ?? live[0]
+  if (found) return { id: String(found.id), name: String(found.name) }
 
   const inserted = await admin
     .from("schools")

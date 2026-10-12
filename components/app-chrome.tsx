@@ -24,7 +24,13 @@ function useRecruitingShell(): boolean {
   useEffect(() => {
     try {
       const view = new URLSearchParams(window.location.search).get("view")
-      if (view === "coach") localStorage.setItem(COACH_PREVIEW_KEY, "1")
+      /*
+       * Coach Home is the door into the coach portal, for staff too. An admin who opened it kept
+       * the community bar and could not find the side menu he had asked for (Matt, 12 October
+       * 2026), so landing there turns coach view on; "Coach view · exit" in the top bar turns it
+       * off. It only takes effect for an admin (see below), and ?view=admin still overrides it.
+       */
+      if (view === "coach" || (view !== "admin" && window.location.pathname === "/coach-home")) localStorage.setItem(COACH_PREVIEW_KEY, "1")
       if (view === "admin") localStorage.removeItem(COACH_PREVIEW_KEY)
       setPreview(localStorage.getItem(COACH_PREVIEW_KEY) === "1")
       setHint(localStorage.getItem(SHELL_HINT_KEY) === "1")
