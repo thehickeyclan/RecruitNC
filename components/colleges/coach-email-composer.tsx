@@ -109,7 +109,22 @@ export function CoachEmailComposer({
   const facts = context?.facts ?? null
   const input = useMemo(() => ({ kind, why, detail, questionnaireDone, events }), [kind, why, detail, questionnaireDone, events])
   const blocker = outreachBlocker(input)
-  const email = useMemo(() => (facts && !blocker ? renderOutreachEmail(facts, input) : null), [facts, blocker, input])
+  const generated = useMemo(() => (facts && !blocker ? renderOutreachEmail(facts, input) : null), [facts, blocker, input])
+
+  /**
+   * The family's own edits to the draft. They hold until the boxes above change what the template
+   * would say - then the draft is rebuilt, because an edit made against an older draft (a
+   * different wrestler, another kind of email) would be wrong to keep.
+   */
+  const [edited, setEdited] = useState<{ from: string; subject: string; body: string } | null>(null)
+  const generatedKey = generated ? `${generated.subject}\n${generated.body}` : ""
+  const email =
+    generated && edited && edited.from === generatedKey ? { subject: edited.subject, body: edited.body } : generated
+  const isEdited = Boolean(generated && email && (email.subject !== generated.subject || email.body !== generated.body))
+  const edit = (patch: { subject?: string; body?: string }) => {
+    if (!generated || !email) return
+    setEdited({ from: generatedKey, subject: patch.subject ?? email.subject, body: patch.body ?? email.body })
+  }
 
   const setSchedule = (next: OutreachEvent[]) => {
     setEvents(next)
@@ -291,8 +306,27 @@ export function CoachEmailComposer({
               </p>
               {email ? (
                 <>
-                  <p className="mt-2 text-sm font-semibold text-slate-900">{email.subject}</p>
-                  <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-6 text-slate-800">{email.body}</pre>
+                  <input
+                    value={email.subject}
+                    onChange={(e) => edit({ subject: e.target.value })}
+                    aria-label="Subject"
+                    className={`${field} mt-2 font-semibold`}
+                  />
+                  <textarea
+                    value={email.body}
+                    onChange={(e) => edit({ body: e.target.value })}
+                    aria-label="Email text"
+                    rows={Math.min(22, Math.max(10, email.body.split("\n").length + 2))}
+                    className={`${field} mt-2 leading-6`}
+                  />
+                  <p className="mt-1.5 flex items-center justify-between gap-2 text-xs text-slate-500">
+                    <span>Change anything you like. You can edit it again in your email before sending.</span>
+                    {isEdited ? (
+                      <button type="button" onClick={() => setEdited(null)} className="shrink-0 font-semibold text-slate-700 hover:underline">
+                        Undo my changes
+                      </button>
+                    ) : null}
+                  </p>
                 </>
               ) : (
                 <p className="mt-2 text-sm text-slate-600">{blocker}</p>
