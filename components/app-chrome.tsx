@@ -53,7 +53,13 @@ function useRecruitingShell(): boolean {
 export function AppChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const path = pathname && pathname.length > 0 ? pathname : "/"
-  const recruitingShell = useRecruitingShell()
+  /*
+   * The local "view as this coach" page (app/dev/coach-preview) has no session, so it was drawn in
+   * the community frame - top menu, chat launcher - around a coach's content. A coach never sees
+   * that combination, and a preview that is wrong about the frame is wrong about the page.
+   */
+  const devCoachPreview = process.env.NODE_ENV !== "production" && path.startsWith("/dev/coach-preview")
+  const recruitingShell = useRecruitingShell() || devCoachPreview
   /*
    * A coach who opens the site at its front door is at work, not shopping for an account: the
    * homepage sells sign-up to people who have not signed in. Send them to Coach Home. The NC
