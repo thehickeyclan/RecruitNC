@@ -71,13 +71,43 @@ function AccessPanel({ signedOut }: { signedOut: boolean }) {
 }
 
 /**
- * The first thing to do, on the first page: a short list of ranked, uncommitted wrestlers with a
- * star on each. Starring puts him on My Recruits; the row then says so and links there.
+ * The My Recruits card on Coach Home, as two tabs (Matt, 12 October 2026): "Your recruits" is the
+ * coach's own board and nothing else; "Top uncommitted" is a list to pick from. They are kept
+ * apart so a suggestion is never mistaken for someone already on the board - nothing reaches a
+ * board until the coach stars him.
+ *
+ * A coach with an empty board opens on the suggestions, because that is where the first action is.
  */
-function SuggestedWrestlers({ wrestlers }: { wrestlers: CoachHomeData["suggested"] }) {
+function RecruitsCard({ total, suggested, children }: { total: number; suggested: CoachHomeData["suggested"]; children: React.ReactNode }) {
+  const [tab, setTab] = useState<"yours" | "suggested">(total === 0 && suggested.length > 0 ? "suggested" : "yours")
+  const tabClass = (on: boolean) =>
+    `-mb-px whitespace-nowrap border-b-2 px-1 pb-2 text-[11px] font-black uppercase tracking-wider ${on ? "border-[#D3B574] text-[#D3B574]" : "border-transparent text-white/40 hover:text-white/70"}`
+  return (
+    <section className={`${PANEL} p-4 sm:p-5`} aria-label="My Recruits">
+      <div className="flex items-end justify-between gap-3 border-b border-white/10">
+        <div className="flex min-w-0 gap-4 overflow-x-auto" role="tablist">
+          <button type="button" role="tab" aria-selected={tab === "yours"} onClick={() => setTab("yours")} className={tabClass(tab === "yours")}>
+            Your recruits{total ? ` (${total})` : ""}
+          </button>
+          {suggested.length ? (
+            <button type="button" role="tab" aria-selected={tab === "suggested"} onClick={() => setTab("suggested")} className={tabClass(tab === "suggested")}>
+              Top uncommitted
+            </button>
+          ) : null}
+        </div>
+        <Link href={tab === "yours" ? "/my-recruits" : "/prospects/all"} className={`${MORE} shrink-0 whitespace-nowrap pb-2`}>
+          {tab === "yours" ? "Open board" : "All athletes"} <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+      {tab === "yours" ? children : <SuggestedList wrestlers={suggested} />}
+    </section>
+  )
+}
+
+/** Ranked, uncommitted wrestlers who are not on the board. A star adds one; nothing is added otherwise. */
+function SuggestedList({ wrestlers }: { wrestlers: CoachHomeData["suggested"] }) {
   const [starred, setStarred] = useState<Set<string>>(new Set())
   const [busy, setBusy] = useState<string | null>(null)
-  if (!wrestlers.length) return null
   const star = async (id: string) => {
     if (busy || starred.has(id)) return
     setBusy(id)
@@ -94,31 +124,22 @@ function SuggestedWrestlers({ wrestlers }: { wrestlers: CoachHomeData["suggested
     }
   }
   return (
-    <section className={`${PANEL} mt-4 p-4 sm:p-5`} aria-labelledby="ch-suggested">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="ch-suggested" className={TITLE}>
-          <Star className={`h-3.5 w-3.5 ${GOLD}`} /> Top uncommitted wrestlers
-        </h2>
-        <Link href="/prospects/all" className={MORE}>
-          All athletes <ArrowRight className="h-3 w-3" />
-        </Link>
-      </div>
-      <p className="mt-2 text-sm text-white/55">
-        Tap <Star className={`mx-0.5 inline h-3.5 w-3.5 ${GOLD}`} aria-label="the star" /> to add a wrestler to My Recruits, where you track his stage, log
-        contact and message him.
+    <>
+      <p className="mt-3 text-sm text-white/55">
+        Suggestions, not your board. Tap <Star className={`mx-0.5 inline h-3.5 w-3.5 ${GOLD}`} aria-label="the star" /> to add a wrestler to your recruits.
       </p>
-      <ul className="mt-3 grid gap-x-6 sm:grid-cols-2">
+      <ul className="mt-2">
         {wrestlers.map((w) => {
           const on = starred.has(w.id)
           return (
-            <li key={w.id} className="flex items-center gap-3 border-b border-white/5 py-2.5">
+            <li key={w.id} className="flex items-center gap-3 border-b border-white/5 py-2 last:border-0">
               <button
                 type="button"
                 onClick={() => star(w.id)}
                 disabled={busy === w.id || on}
                 aria-pressed={on}
-                aria-label={on ? `${w.name} is on My Recruits` : `Add ${w.name} to My Recruits`}
-                title={on ? "On My Recruits" : "Add to My Recruits"}
+                aria-label={on ? `${w.name} is on your recruits` : `Add ${w.name} to your recruits`}
+                title={on ? "On your recruits" : "Add to your recruits"}
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[#D3B574]/40 hover:bg-[#D3B574]/10 disabled:opacity-100"
               >
                 <Star className={`h-5 w-5 ${GOLD} ${on ? "fill-[#D3B574]" : ""}`} />
@@ -132,16 +153,12 @@ function SuggestedWrestlers({ wrestlers }: { wrestlers: CoachHomeData["suggested
                   {[`Class of ${w.classYear}`, w.weight ? `${w.weight} lbs` : null, w.highSchool].filter(Boolean).join(" · ")}
                 </span>
               </Link>
-              {on ? (
-                <Link href="/my-recruits" className={`shrink-0 text-xs font-bold ${GOLD} hover:underline`}>
-                  On your board →
-                </Link>
-              ) : null}
+              {on ? <span className={`shrink-0 text-xs font-bold ${GOLD}`}>Added</span> : null}
             </li>
           )
         })}
       </ul>
-    </section>
+    </>
   )
 }
 
@@ -248,18 +265,8 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
           <WrestlerSearch athletes={data.athletes} />
         </div>
 
-        <SuggestedWrestlers wrestlers={data.suggested ?? []} />
-
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <section className={`${PANEL} p-4 sm:p-5`} aria-labelledby="ch-recruits">
-            <div className="flex items-center justify-between gap-3">
-              <h2 id="ch-recruits" className={TITLE}>
-                <Star className={`h-3.5 w-3.5 ${GOLD}`} /> My Recruits
-              </h2>
-              <Link href="/my-recruits" className={MORE}>
-                Open board <ArrowRight className="h-3 w-3" />
-              </Link>
-            </div>
+          <RecruitsCard total={recruits.total} suggested={data.suggested ?? []}>
             {!recruits.loaded ? (
               <p className="mt-4 text-sm text-white/55">Your board could not be loaded just now. Open it directly to try again.</p>
             ) : recruits.total === 0 ? (
@@ -301,7 +308,7 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
                 </ul>
               </>
             )}
-          </section>
+          </RecruitsCard>
 
           <section className={`${PANEL} p-4 sm:p-5`} aria-labelledby="ch-messages">
             <div className="flex items-center justify-between gap-3">
