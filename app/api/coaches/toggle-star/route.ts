@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { logBoardEvent } from "@/lib/recruiting/board-events"
 import { NextResponse } from "next/server"
 
 export const runtime = "nodejs"
@@ -49,6 +51,7 @@ export async function POST(request: Request) {
       }
 
       console.log("[v0] Successfully unstarred athlete")
+      await logBoardEvent(createAdminClient(), { actor: user.id, athleteId, kind: "removed" })
       return NextResponse.json({ isStarred: false })
     } else {
       // Star
@@ -70,6 +73,7 @@ export async function POST(request: Request) {
       }
 
       console.log("[v0] Successfully starred athlete")
+      await logBoardEvent(createAdminClient(), { actor: user.id, athleteId, kind: "added" })
       return NextResponse.json({ isStarred: true })
     }
   } catch (error) {

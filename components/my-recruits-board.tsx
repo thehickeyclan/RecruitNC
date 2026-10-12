@@ -42,6 +42,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
   const [query, setQuery] = useState("")
   const [classYear, setClassYear] = useState<number | "all">("all")
   const [stage, setStage] = useState<PipelineStage | "all">("all")
+  const [appliedOnly, setAppliedOnly] = useState(false)
   const [stageError, setStageError] = useState<string | null>(null)
   const [removing, setRemoving] = useState<string | null>(null)
   /** Up to two wrestlers picked for the comparison; a third replaces the earliest. */
@@ -101,9 +102,33 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
       (r) =>
         (classYear === "all" || r.classYear === classYear) &&
         (stage === "all" || r.stage === stage) &&
+        (!appliedOnly || r.applied.applied) &&
         (!q || [r.name, r.highSchool, r.club, r.weight].some((v) => (v ?? "").toLowerCase().includes(q))),
     )
-  }, [data, query, classYear, stage])
+  }, [data, query, classYear, stage, appliedOnly])
+  const appliedCount = useMemo(() => (data?.recruits ?? []).filter((r) => r.applied.applied).length, [data])
+
+  /** Applied or not, for the whole staff. Shown at once and put back if the save fails. */
+  const setApplied = async (athleteId: string, applied: boolean) => {
+    const before = data?.recruits.find((r) => r.athleteId === athleteId)?.applied
+    if (!before || before.applied === applied) return
+    const put = (value: MyRecruitRow["applied"]) =>
+      setData((d) => (d ? { ...d, recruits: d.recruits.map((r) => (r.athleteId === athleteId ? { ...r, applied: value } : r)) } : d))
+    put({ applied, date: applied ? new Date().toISOString() : null })
+    setStageError(null)
+    try {
+      const res = await fetch("/api/coach-portal/update-applied", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ athleteId, hasApplied: applied }),
+      })
+      if (!res.ok) throw new Error()
+    } catch {
+      put(before)
+      setStageError("That change did not save. Try again.")
+    }
+  }
 
   const stageCounts = useMemo(() => {
     const counts = Object.fromEntries(PIPELINE_STAGES.map((st) => [st, 0])) as Record<PipelineStage, number>
@@ -161,7 +186,10 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D3B574]">RecruitNC</p>
               <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">My Recruits</h1>
               <p className="mt-1 text-sm text-white/60">
-                Every wrestler you{data?.hasSchool ? " and your staff" : ""} added to the watch list.
+                Every wrestler you{data?.hasSchool ? " and your staff" : ""} added to the watch list.{" "}
+                <Link href="/my-recruits/activity" className="font-semibold text-[#D3B574] hover:underline">
+                  See who changed what
+                </Link>
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-4">
@@ -204,7 +232,13 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
             </div>
           ) : (
             <>
-              <Funnel counts={stageCounts} total={data.recruits.length} active={stage} onPick={setStage} />
+              <Funnel
+                counts={stageCounts}
+                total={data.recruits.length}
+                active={stage}
+                onPick={setStage}
+                applied={{ count: appliedCount, on: appliedOnly, toggle: () => setAppliedOnly((v) => !v) }}
+              />
               {stageError ? <p className="mt-3 rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{stageError}</p> : null}
 
               <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -285,6 +319,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                         </td>
                         <td className="px-2 py-3">
                           <StageSelect row={r} onChange={moveStage} />
+                          <AppliedToggle row={r} onChange={setApplied} className="mt-1.5" />
                           <LastContact row={r} className="mt-1.5" />
                         </td>
                         <td className="px-2 py-3 text-xs">
@@ -346,6 +381,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                       <StageSelect row={r} onChange={moveStage} />
                       <ReportLink row={r} />
                     </div>
+                    <AppliedToggle row={r} onChange={setApplied} className="mt-2" />
                     <LastContact row={r} className="mt-2" />
                     <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-2">
                       <span className="text-[11px] text-white/45">
@@ -503,11 +539,14 @@ function Funnel({
   total,
   active,
   onPick,
+  applied,
 }: {
   counts: Record<PipelineStage, number>
   total: number
   active: PipelineStage | "all"
   onPick: (stage: PipelineStage | "all") => void
+  /** Applied is not a stage; it filters across all of them. */
+  applied: { count: number; on: boolean; toggle: () => void }
 }) {
   const steps = PIPELINE_STAGES.filter((st) => st !== "Lost")
   const TAPER = 3.5 // percent of height each stage gives up, top and bottom
@@ -518,6 +557,17 @@ function Funnel({
           Recruiting funnel <span className="ml-1 font-semibold normal-case tracking-normal text-white/40">· {total} on the board</span>
         </h2>
         <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={applied.toggle}
+            aria-pressed={applied.on}
+            className={cn(
+              "rounded-full border px-3 py-1 text-xs font-semibold",
+              applied.on ? "border-emerald-300 bg-emerald-300 text-[#0A1628]" : "border-emerald-300/40 text-emerald-200 hover:bg-emerald-300/10",
+            )}
+          >
+            Applied {applied.count}
+          </button>
           <button
             type="button"
             onClick={() => onPick(active === "Lost" ? "all" : "Lost")}
@@ -564,6 +614,27 @@ function Funnel({
         </div>
       </div>
     </section>
+  )
+}
+
+/** "Applied Oct 3" or "Not applied": one tap to change, for the whole staff. */
+function AppliedToggle({ row, onChange, className }: { row: MyRecruitRow; onChange: (athleteId: string, applied: boolean) => void; className?: string }) {
+  const on = row.applied.applied
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(row.athleteId, !on)}
+      aria-pressed={on}
+      title={on ? "Click to mark as not applied" : "Click when he has applied to your school"}
+      className={cn(
+        "inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-semibold",
+        on ? "border-emerald-300/60 bg-emerald-300/15 text-emerald-200" : "border-white/15 text-white/45 hover:border-white/40 hover:text-white",
+        className,
+      )}
+    >
+      {on ? <Check className="h-3 w-3" aria-hidden /> : null}
+      {on ? `Applied${row.applied.date ? ` ${new Date(row.applied.date).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" })}` : ""}` : "Not applied"}
+    </button>
   )
 }
 

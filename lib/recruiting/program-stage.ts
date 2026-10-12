@@ -1,6 +1,7 @@
 import "server-only"
 
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { logBoardEvent } from "@/lib/recruiting/board-events"
 import { normalizeStage, type PipelineStage } from "@/lib/recruiting/pipeline"
 
 /**
@@ -58,6 +59,12 @@ export async function noteCoachMessaged(admin: SupabaseClient, coachUserId: stri
 export async function setProgramStage(admin: SupabaseClient, userId: string, athleteId: string, stage: PipelineStage) {
   const staff = await programStaffIds(admin, userId)
   const now = new Date().toISOString()
+  const { data: before } = await admin
+    .from("college_coach_stars")
+    .select("athlete_id, pipeline_stage, updated_at, starred_at")
+    .eq("athlete_id", athleteId)
+    .in("coach_user_id", staff)
+  const from = before?.length ? programStages(before as StageRow[]).get(athleteId) : null
   const { error: syncError } = await admin
     .from("college_coach_stars")
     .update({ pipeline_stage: stage, updated_at: now })
@@ -77,4 +84,43 @@ export async function setProgramStage(admin: SupabaseClient, userId: string, ath
       .insert({ coach_user_id: userId, athlete_id: athleteId, pipeline_stage: stage, starred_at: now, updated_at: now })
     if (error) throw new Error(error.message)
   }
+  if (from !== stage) await logBoardEvent(admin, { actor: userId, athleteId, kind: "stage", detail: from ? `from ${from} to ${stage}` : `to ${stage}` })
+}
+
+/**
+ * Whether a wrestler has applied to the school, and when - the question every coach asks. It is
+ * a fact about the wrestler, not a step in the funnel (he may apply before he visits or after he
+ * is offered), so it sits beside the stage rather than in it. Like the stage it belongs to the
+ * program: a change is written to every staff row, and a read takes the most recently changed one.
+ *
+ * Only applied or not, with the date (Matt, 12 October 2026). Admitted, denied and aid packages
+ * are left out on purpose for now.
+ */
+type AppliedRow = StageRow & { has_applied?: boolean | null; applied_date?: string | null }
+
+export function programApplied(rows: AppliedRow[]): Map<string, { applied: boolean; date: string | null }> {
+  const latest = new Map<string, { at: string; applied: boolean; date: string | null }>()
+  for (const r of rows) {
+    const at = String(r.updated_at ?? r.starred_at ?? "")
+    const cur = latest.get(r.athlete_id)
+    if (!cur || at > cur.at) latest.set(r.athlete_id, { at, applied: r.has_applied === true, date: r.has_applied === true ? (r.applied_date ?? null) : null })
+  }
+  return new Map([...latest].map(([id, v]) => [id, { applied: v.applied, date: v.date }]))
+}
+
+export async function setProgramApplied(admin: SupabaseClient, userId: string, athleteId: string, applied: boolean, date: string | null) {
+  const staff = await programStaffIds(admin, userId)
+  const now = new Date().toISOString()
+  const values = { has_applied: applied, applied_date: applied ? (date ?? now) : null, updated_at: now }
+  const { data: before } = await admin.from("college_coach_stars").select("athlete_id, has_applied, applied_date, updated_at, starred_at").eq("athlete_id", athleteId).in("coach_user_id", staff)
+  const was = programApplied((before ?? []) as AppliedRow[]).get(athleteId)?.applied === true
+  const { error } = await admin.from("college_coach_stars").update(values).eq("athlete_id", athleteId).in("coach_user_id", staff)
+  if (error) throw new Error(error.message)
+  const { data: mine } = await admin.from("college_coach_stars").select("id").eq("coach_user_id", userId).eq("athlete_id", athleteId).maybeSingle()
+  if (!mine) {
+    const inserted = await admin.from("college_coach_stars").insert({ coach_user_id: userId, athlete_id: athleteId, starred_at: now, ...values })
+    if (inserted.error) throw new Error(inserted.error.message)
+  }
+  if (was !== applied) await logBoardEvent(admin, { actor: userId, athleteId, kind: "applied", detail: applied ? "applied" : "cleared" })
+  return { has_applied: values.has_applied, applied_date: values.applied_date }
 }

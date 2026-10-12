@@ -6,7 +6,7 @@ import { scoutingReportAvailable } from "@/lib/scouting-report-access"
 import { loadActivity } from "@/lib/activity-load"
 import type { ActivityStatus } from "@/lib/activity-status"
 import type { PipelineStage } from "@/lib/recruiting/pipeline"
-import { programStages } from "@/lib/recruiting/program-stage"
+import { programApplied, programStages } from "@/lib/recruiting/program-stage"
 
 export type MyRecruitRow = {
   athleteId: string
@@ -36,6 +36,8 @@ export type MyRecruitRow = {
    * log, so every one counts, including those sent before this was built.
    */
   lastContact: { type: string; date: string; by: string; followUp: string | null } | null
+  /** Has he applied to the school, and when. Beside the stage, not part of it (lib/recruiting/program-stage.ts). */
+  applied: { applied: boolean; date: string | null }
   /** Where the program has him in the funnel - one stage for the whole staff (lib/recruiting/program-stage.ts). */
   stage: PipelineStage
   /** Whether a scouting report exists for this wrestler — the profile button's rule, so a coach never clicks into "unavailable". */
@@ -69,12 +71,13 @@ export async function loadMyRecruits(admin: ReturnType<typeof createAdminClient>
 
   const { data: stars, error } = await admin
     .from("college_coach_stars")
-    .select("athlete_id, coach_user_id, starred_at, pipeline_stage, updated_at")
+    .select("athlete_id, coach_user_id, starred_at, pipeline_stage, updated_at, has_applied, applied_date")
     .in("coach_user_id", staff.map((s) => s.user_id))
     .order("starred_at", { ascending: false })
   if (error) throw new Error(error.message)
 
   // One row per wrestler: the earliest star wins the "starred by", the viewer's own star wins "mine".
+  const applications = programApplied((stars ?? []) as never)
   const stages = programStages((stars ?? []) as Array<{ athlete_id: string; pipeline_stage: string | null; updated_at: string | null; starred_at: string }>)
   const byAthlete = new Map<string, { starredAt: string; starredBy: string; mine: boolean }>()
   for (const s of stars ?? []) {
@@ -210,6 +213,7 @@ export async function loadMyRecruits(admin: ReturnType<typeof createAdminClient>
       starredBy: star.starredBy,
       mine: star.mine,
       stage: stages.get(id) ?? "Prospect",
+      applied: applications.get(id) ?? { applied: false, date: null },
       lastContact: lastContact.get(id) ?? null,
       hasReport: scoutingReportAvailable(a),
       reportUnavailable: scoutingReportAvailable(a) ? null : String(a.gender ?? "").trim().toLowerCase() === "female" ? "girls" : "graduated",
