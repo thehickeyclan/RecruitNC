@@ -28,6 +28,8 @@ export type CoachHomeData = {
     unread: number
     latest: Array<{ id: string; athleteName: string; preview: string; unread: boolean; yourTurn: boolean }>
   }
+  /** Top-ranked uncommitted wrestlers not on the board yet, to star from here. */
+  suggested: Array<{ id: string; name: string; classYear: number; rank: number; weight: string | null; highSchool: string | null }>
   rankingYears: number[]
   top75: boolean
 }
@@ -65,6 +67,81 @@ function AccessPanel({ signedOut }: { signedOut: boolean }) {
         </div>
       </div>
     </main>
+  )
+}
+
+/**
+ * The first thing to do, on the first page: a short list of ranked, uncommitted wrestlers with a
+ * star on each. Starring puts him on My Recruits; the row then says so and links there.
+ */
+function SuggestedWrestlers({ wrestlers }: { wrestlers: CoachHomeData["suggested"] }) {
+  const [starred, setStarred] = useState<Set<string>>(new Set())
+  const [busy, setBusy] = useState<string | null>(null)
+  if (!wrestlers.length) return null
+  const star = async (id: string) => {
+    if (busy || starred.has(id)) return
+    setBusy(id)
+    try {
+      const res = await fetch("/api/coach-portal/star", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ athleteId: id, action: "add" }),
+      })
+      if (res.ok) setStarred((prev) => new Set(prev).add(id))
+    } finally {
+      setBusy(null)
+    }
+  }
+  return (
+    <section className={`${PANEL} mt-4 p-4 sm:p-5`} aria-labelledby="ch-suggested">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 id="ch-suggested" className={TITLE}>
+          <Star className={`h-3.5 w-3.5 ${GOLD}`} /> Top uncommitted wrestlers
+        </h2>
+        <Link href="/prospects/all" className={MORE}>
+          All athletes <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+      <p className="mt-2 text-sm text-white/55">
+        Tap <Star className={`mx-0.5 inline h-3.5 w-3.5 ${GOLD}`} aria-label="the star" /> to add a wrestler to My Recruits, where you track his stage, log
+        contact and message him.
+      </p>
+      <ul className="mt-3 grid gap-x-6 sm:grid-cols-2">
+        {wrestlers.map((w) => {
+          const on = starred.has(w.id)
+          return (
+            <li key={w.id} className="flex items-center gap-3 border-b border-white/5 py-2.5">
+              <button
+                type="button"
+                onClick={() => star(w.id)}
+                disabled={busy === w.id || on}
+                aria-pressed={on}
+                aria-label={on ? `${w.name} is on My Recruits` : `Add ${w.name} to My Recruits`}
+                title={on ? "On My Recruits" : "Add to My Recruits"}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[#D3B574]/40 hover:bg-[#D3B574]/10 disabled:opacity-100"
+              >
+                <Star className={`h-5 w-5 ${GOLD} ${on ? "fill-[#D3B574]" : ""}`} />
+              </button>
+              <Link href={`/athletes/${w.id}`} className="min-w-0 flex-1 hover:text-white">
+                <span className="block truncate font-bold text-white">
+                  <span className={`mr-1.5 ${GOLD}`}>#{w.rank}</span>
+                  {w.name}
+                </span>
+                <span className="block truncate text-xs text-white/45">
+                  {[`Class of ${w.classYear}`, w.weight ? `${w.weight} lbs` : null, w.highSchool].filter(Boolean).join(" · ")}
+                </span>
+              </Link>
+              {on ? (
+                <Link href="/my-recruits" className={`shrink-0 text-xs font-bold ${GOLD} hover:underline`}>
+                  On your board →
+                </Link>
+              ) : null}
+            </li>
+          )
+        })}
+      </ul>
+    </section>
   )
 }
 
@@ -170,6 +247,8 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
         <div className="mt-6">
           <WrestlerSearch athletes={data.athletes} />
         </div>
+
+        <SuggestedWrestlers wrestlers={data.suggested ?? []} />
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <section className={`${PANEL} p-4 sm:p-5`} aria-labelledby="ch-recruits">

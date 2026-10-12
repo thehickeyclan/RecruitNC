@@ -8,7 +8,8 @@ import { isApprovedCoach, listThreads } from "@/lib/coach-messages"
 import { loadFitFlags } from "@/lib/program-fit-bulk"
 import { resolveFitViewer } from "@/lib/program-fit-viewer"
 import { programLogo as resolveProgramLogo } from "@/lib/coach-program-logo"
-import { PUBLIC_TOP_75_COLLEGE_RELEASED, PUBLISHED_PUBLIC_RANKINGS_YEARS } from "@/lib/public-rankings-cap"
+import { PUBLIC_TOP_75_COLLEGE_RELEASED, PUBLISHED_PUBLIC_RANKINGS_YEARS, getPublicRankingsMax } from "@/lib/public-rankings-cap"
+import { currentClassYears } from "@/lib/class-years"
 import type { CoachHomeData } from "./coach-home-client"
 
 
@@ -65,6 +66,57 @@ export async function loadCoachHome(
 
   const coachThreads = (threads ?? []).filter((t) => t.viewerRole === "coach")
   const recruits = board?.recruits ?? []
+
+  /*
+   * Somebody to act on, on the page a coach lands on: the highest-ranked wrestlers in the two
+   * oldest published classes who have not committed and are not on this board yet. Nine coaches
+   * signed up on 11 October 2026, eight reached this page, and none starred anyone - the first
+   * wrestler was four clicks away. Never allowed to fail the page.
+   */
+  const onBoard = new Set(recruits.map((r) => r.athleteId))
+  const lastWeight = new Map((roster as Array<{ id: string; weightclass: string | null }>).map((a) => [a.id, a.weightclass]))
+  const suggestYears = currentClassYears().filter((y) => PUBLISHED_PUBLIC_RANKINGS_YEARS.includes(y)).slice(0, 2)
+  const suggested = suggestYears.length
+    ? await admin
+        .from("athletes")
+        .select("id, name, graduationyear, highschool, prospect_ranking, college, recruiting_status")
+        .eq("is_nc_athlete", true)
+        .in("graduationyear", suggestYears)
+        .gte("prospect_ranking", 1)
+        .order("prospect_ranking", { ascending: true })
+        .limit(120)
+        .then(
+          (r) => {
+            const open = (r.data ?? []).filter((a) => {
+              const year = Number(a.graduationyear)
+              const college = String(a.college ?? "").trim()
+              const status = String(a.recruiting_status ?? "").trim().toLowerCase()
+              return (
+                Number(a.prospect_ranking) <= getPublicRankingsMax(year) &&
+                (!college || college === "Not specified") &&
+                status !== "committed" &&
+                status !== "signed" &&
+                !onBoard.has(String(a.id))
+              )
+            })
+            // Four from each class, seniors first: the ones a coach is deciding on now.
+            return suggestYears.flatMap((year) =>
+              open
+                .filter((a) => Number(a.graduationyear) === year)
+                .slice(0, 4)
+                .map((a) => ({
+                  id: String(a.id),
+                  name: String(a.name ?? ""),
+                  classYear: year,
+                  rank: Number(a.prospect_ranking),
+                  weight: lastWeight.get(String(a.id)) ?? null,
+                  highSchool: (a.highschool as string | null) ?? null,
+                })),
+            )
+          },
+          () => [],
+        )
+    : []
   const data: CoachHomeData = {
     // "Coach Hickey", the way a coach is addressed; the full name's last word.
     coachName: String(profile?.full_name ?? "").trim().split(/\s+/).slice(-1)[0] || String(profile?.first_name ?? "").trim() || null,
@@ -105,6 +157,7 @@ export async function loadCoachHome(
         yourTurn: t.yourTurn,
       })),
     },
+    suggested,
     rankingYears: [...PUBLISHED_PUBLIC_RANKINGS_YEARS],
     top75: PUBLIC_TOP_75_COLLEGE_RELEASED,
   }
