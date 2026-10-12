@@ -333,8 +333,9 @@ export function RankingsTableView({
           <TableHeader>
             <TableRow style={{ backgroundColor: "#0D1A4D" }} className="text-white hover:bg-[#0D1A4D]">
               {canSeeWatchList && (
-                <TableHead className="w-16 text-white font-semibold text-center">
+                <TableHead className="w-20 text-white font-semibold text-center" title="Star a wrestler to add him to My Recruits">
                   <Star className="w-4 h-4 inline-block" />
+                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-white/70">Recruit</span>
                 </TableHead>
               )}
               {!hideRankColumn && showRankColumn && (
@@ -454,11 +455,16 @@ export function RankingsTableView({
                             size="sm"
                             onClick={() => handleStarToggle(athlete.id!)}
                             disabled={starringInProgress.has(athlete.id!)}
+                            title={starredAthletes.has(athlete.id!) ? "On My Recruits (click to remove)" : "Add to My Recruits"}
+                            aria-label={starredAthletes.has(athlete.id!) ? `Remove ${athlete.name} from My Recruits` : `Add ${athlete.name} to My Recruits`}
+                            aria-pressed={starredAthletes.has(athlete.id!)}
                             className={`h-8 w-8 p-0 ${isDark ? "hover:bg-white/10" : "hover:bg-gray-100"}`}
                           >
+                            {/* A gold outline until it is filled. It was 30% white on navy - nine coaches signed up
+                                on 11 October 2026 and none of them found it. */}
                             <Star
                               className={`w-5 h-5 ${
-                                starredAthletes.has(athlete.id!) ? "fill-[#D3B574] text-[#D3B574]" : isDark ? "text-white/30" : "text-gray-400"
+                                starredAthletes.has(athlete.id!) ? "fill-[#D3B574] text-[#D3B574]" : isDark ? "text-[#D3B574]" : "text-gray-500"
                               }`}
                             />
                           </Button>
