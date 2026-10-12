@@ -6,6 +6,7 @@ import { isCollegeCoachRole } from "@/lib/coach-auto-approve"
 import { collegeForCoach } from "@/lib/college-domain-schools"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
 import { programStaffIds, programStages } from "@/lib/recruiting/program-stage"
+import { programLogo } from "@/lib/coach-program-logo"
 
 /**
  * Coach → prospect messaging (decided 7 Oct 2026). Not a chat product — a recruiting inbox:
@@ -333,12 +334,42 @@ async function loadWrestlerIdentities(
   return out
 }
 
+/**
+ * The logo of each coach's program, for the family's side of a conversation: a message from
+ * "Coach Smith" reads as a message from UNC when the mark is beside it. The same rule Coach Home
+ * uses (lib/coach-program-logo.ts) - the program's own logo, else the site's for that school, else
+ * none. A coach with no program on the account falls back to the name written on the thread.
+ */
+async function loadProgramLogos(
+  admin: SupabaseClient,
+  coaches: Array<{ coachUserId: string; program: string | null }>,
+): Promise<Map<string, string | null>> {
+  const out = new Map<string, string | null>()
+  const ids = [...new Set(coaches.map((c) => c.coachUserId))]
+  if (!ids.length) return out
+  const { data: profiles } = await admin.from("user_profiles").select("user_id, school_id").in("user_id", ids)
+  const schoolIds = [...new Set((profiles ?? []).map((p) => p.school_id as string | null).filter((id): id is string => Boolean(id)))]
+  const { data: schools } = schoolIds.length ? await admin.from("schools").select("id, name, logo_url").in("id", schoolIds) : { data: [] }
+  const schoolOf = new Map((profiles ?? []).map((p) => [String(p.user_id), (schools ?? []).find((s) => s.id === p.school_id) ?? null]))
+  await Promise.all(
+    ids.map(async (id) => {
+      const school = schoolOf.get(id)
+      const written = coaches.find((c) => c.coachUserId === id && c.program)?.program ?? null
+      const logo = await programLogo(school ? { name: school.name as string, logo_url: school.logo_url as string | null } : { name: written, logo_url: null }).catch(() => null)
+      out.set(id, logo?.url ?? null)
+    }),
+  )
+  return out
+}
+
 export type ThreadSummary = {
   id: string
   athleteId: string
   athleteName: string
   coachName: string
   program: string | null
+  /** The coach's program logo; null when there is none on file. */
+  programLogo: string | null
   lastMessageAt: string
   lastMessagePreview: string
   lastSenderRole: string | null
@@ -380,6 +411,7 @@ export async function listThreads(admin: SupabaseClient, userId: string, opts: {
   ])
 
   const coachName = new Map((coaches ?? []).map((c) => [String(c.user_id), displayName(c)]))
+  const logos = await loadProgramLogos(admin, threads.map((t) => ({ coachUserId: t.coach_user_id, program: t.program })))
   const readAt = new Map((reads ?? []).map((r) => [String(r.thread_id), String(r.last_read_at)]))
   const latest = new Map<string, { body: string; sender_role: string; created_at: string }>()
   for (const m of (messages ?? []) as Array<{ thread_id: string; body: string; sender_role: string; created_at: string }>) {
@@ -399,6 +431,7 @@ export async function listThreads(admin: SupabaseClient, userId: string, opts: {
       athleteName: a?.name ?? "",
       coachName: coachName.get(t.coach_user_id) || "College coach",
       program: t.program,
+      programLogo: logos.get(t.coach_user_id) ?? null,
       lastMessageAt: t.last_message_at,
       lastMessagePreview: (last?.body ?? "").slice(0, 160),
       lastSenderRole: last?.sender_role ?? null,
@@ -421,6 +454,7 @@ export type ThreadDetail = {
   athleteName: string
   coachName: string
   program: string | null
+  programLogo: string | null
   stopped: boolean
   viewerRole: ThreadRole
   canReply: boolean
@@ -465,6 +499,7 @@ export async function getThread(admin: SupabaseClient, threadId: string, userId:
     athleteName: wrestler,
     coachName: names.get(t.coach_user_id) || "College coach",
     program: t.program,
+    programLogo: (await loadProgramLogos(admin, [{ coachUserId: t.coach_user_id, program: t.program }])).get(t.coach_user_id) ?? null,
     stopped: Boolean(t.stopped_at),
     viewerRole: role,
     canReply: role === "athlete" || role === "parent" || (role === "coach" && !t.stopped_at),
