@@ -108,7 +108,7 @@ export async function familyOf(
 }
 
 /** Athlete ids this account is family for: claimed by it, or linked to it as a parent. */
-async function familyAthleteIds(admin: SupabaseClient, userId: string): Promise<string[]> {
+export async function familyAthleteIds(admin: SupabaseClient, userId: string): Promise<string[]> {
   const [{ data: own }, { data: links }] = await Promise.all([
     admin.from("athletes").select("id").eq("claimed_by_user_id", userId),
     admin.from("parent_athlete_links").select("athlete_id").eq("user_id", userId),

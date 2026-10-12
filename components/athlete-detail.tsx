@@ -1,5 +1,6 @@
 "use client"
 
+import { COMPLETENESS_EDITORS, profileCompleteness } from "@/lib/profile-completeness"
 import { STYLE_LABEL, type CompetitionSummary } from "@/lib/wrestling-style"
 import { mayUseComparison } from "@/lib/compare-access"
 import { SimilarComparisons } from "@/components/profile/similar-comparisons"
@@ -395,8 +396,10 @@ export function AthleteDetail({
   // after auth loads, so this waits for it rather than reading it on first render.
   useEffect(() => {
     if (!canEdit) return
-    if (new URLSearchParams(window.location.search).get("edit") !== "photo") return
-    setEditingSection("photo")
+    // The family's recruiting page (app/my-recruiting) sends each open completeness item to its editor the same way.
+    const wanted = new URLSearchParams(window.location.search).get("edit")
+    if (!wanted || !(COMPLETENESS_EDITORS as readonly string[]).includes(wanted)) return
+    setEditingSection(wanted)
     setTimeout(() => document.querySelector("[data-owner-editor]")?.scrollIntoView({ block: "start" }), 300)
   }, [canEdit])
   // Private info (contact, GPA, ACT, SAT) visible only to self, coaches, and admins
@@ -1293,16 +1296,13 @@ export function AthleteDetail({
    * Four things a coach looks for, in five equal parts: the photo and the school each count, so a
    * profile with both and a phone number reads 60% - enough to see there is more to add.
    */
-  const completenessParts = [Boolean(athletePhoto), hasSchool, hasAcademicData, hasHighlightContent, Boolean(cellPhone || contactEmail)]
-  const completeness = {
-    percent: Math.round((completenessParts.filter(Boolean).length / completenessParts.length) * 100),
-    items: [
-      { label: "Photo and wrestling information", todo: "Add a photo and your school", done: Boolean(athletePhoto) && hasSchool, edit: athletePhoto ? "school-club" : "photo" },
-      { label: "Academic information", todo: "Add academic information", done: hasAcademicData, edit: "academics" },
-      { label: "Highlight reel", todo: "Add highlight reel", done: hasHighlightContent, edit: "highlight-video" },
-      { label: "Contact information", todo: "Verify contact information", done: Boolean(cellPhone || contactEmail), edit: "contact" },
-    ],
-  }
+  const completeness = profileCompleteness({
+    photo: Boolean(athletePhoto),
+    school: hasSchool,
+    academics: hasAcademicData,
+    highlight: hasHighlightContent,
+    contact: Boolean(cellPhone || contactEmail),
+  })
   const isGirl = /^(f|female|girl)/i.test(String((athlete as { gender?: string | null }).gender ?? ""))
   /* Wins over ranked opponents, last twelve months, national and North Carolina apart. */
   const ranked12 = rankedWinsLast12Months(appData.wins)
