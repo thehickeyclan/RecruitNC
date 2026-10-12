@@ -17,8 +17,18 @@ import { AIChatWidget } from "@/components/ai-chat-widget-recruitnc"
  */
 const SHELL_HINT_KEY = "recruiting-shell"
 
+/*
+ * Where an admin's coach view applies: the coach portal's own pages. It used to follow an admin
+ * onto every page, so the NC United site looked replaced by the coach portal (Matt, 12 October
+ * 2026: "you changed nc united website our front end"). A real coach still gets the portal frame
+ * everywhere; this is only the staff preview.
+ */
+const COACH_PORTAL_PATHS = ["/coach-home", "/my-recruits", "/prospects", "/athletes", "/view-profile", "/inbox", "/public-rankings", "/compare", "/perfect-recruit", "/scouting-report"]
+const onCoachPortal = (path: string) => COACH_PORTAL_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
+
 function useRecruitingShell(): boolean {
   const { user, profile, isLoading } = useAuth()
+  const portalPage = onCoachPortal(usePathname() ?? "/")
   const [hint, setHint] = useState(false)
   const [preview, setPreview] = useState(false)
   useEffect(() => {
@@ -48,9 +58,9 @@ function useRecruitingShell(): boolean {
     } catch {}
   }, [user, profile, isLoading])
   const isAdmin = profile?.is_admin === true || profile?.role === "admin"
-  if (profile) return usesRecruitingShell(profile) || (isAdmin && preview)
+  if (profile) return usesRecruitingShell(profile) || (isAdmin && preview && portalPage)
   // Nothing is known yet; an admin previewing gets the coach frame from the first paint too.
-  return (hint || preview) && (isLoading || !!user)
+  return (hint || (preview && portalPage)) && (isLoading || !!user)
 }
 
 /**
