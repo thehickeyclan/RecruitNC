@@ -71,3 +71,45 @@ export async function loadCollegeMap(admin: SupabaseClient, full: boolean): Prom
     schools: SCHOOLS.map((school) => ({ ...school, onRecruitNC: onRecruitNC.has(school.id) })),
   }
 }
+
+export type CollegePickerOption = {
+  id: string
+  /** What the coach reads and searches: the map's formal name. */
+  name: string
+  /**
+   * What is saved. The name we already hold for this school when a coach from it has signed up
+   * before, so the new coach lands on the same school record; otherwise the map's own name.
+   */
+  value: string
+  place: string | null
+  division: string | null
+}
+
+/**
+ * The colleges a coach can pick at sign-up: every school on the map, then anything already on
+ * file that the map does not have (a club program such as Liberty).
+ */
+export async function loadCollegePickerOptions(admin: SupabaseClient): Promise<CollegePickerOption[]> {
+  const { data: onFile } = await admin.from("colleges").select("id, name, division")
+  const heldNameByMapId = new Map<string, string>()
+  const offMap: CollegePickerOption[] = []
+  for (const college of onFile ?? []) {
+    const name = String(college.name ?? "").trim()
+    // A leftover test row in `colleges`; it should be deleted, and must not be offered meanwhile.
+    if (!name || /college name here/i.test(name)) continue
+    const mapId = mapSchoolIdFor(name)
+    if (mapId) {
+      if (!heldNameByMapId.has(mapId)) heldNameByMapId.set(mapId, name)
+    } else {
+      offMap.push({ id: `college-${college.id}`, name, value: name, place: null, division: (college.division as string | null) || null })
+    }
+  }
+  const onMap = SCHOOLS.map((school) => ({
+    id: school.id,
+    name: school.name,
+    value: heldNameByMapId.get(school.id) ?? school.name,
+    place: [school.city, school.state].filter(Boolean).join(", ") || null,
+    division: school.programs?.[0]?.division ?? null,
+  }))
+  return [...onMap, ...offMap].sort((a, b) => a.name.localeCompare(b.name))
+}
