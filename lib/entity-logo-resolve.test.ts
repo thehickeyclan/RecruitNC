@@ -38,7 +38,16 @@ describe("sameSchoolName", () => {
     ["Virginia", "Virginia Tech"],
     ["Virginia", "West Virginia University"],
     ["University", "Ohio University"],
+    ["Cornell College", "Cornell University"],
+    ["Northwestern College", "Northwestern University"],
+    ["Columbia College", "Columbia University"],
+    ["Augustana College", "Augustana University"],
   ])("%s is not %s", (a, b) => expect(sameSchoolName(a, b)).toBe(false))
+
+  it("a name with neither word still matches a full name", () => {
+    expect(sameSchoolName("Cornell", "Cornell University")).toBe(true)
+    expect(sameSchoolName("Mount Olive", "Mount Olive University")).toBe(true)
+  })
 })
 
 describe("distinctiveSchoolWords", () => {
