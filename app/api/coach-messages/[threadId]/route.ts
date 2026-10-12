@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveRequestUserId } from "@/lib/request-user"
 import { getThread, replyInThread } from "@/lib/coach-messages"
 import { notifyNewMessage } from "@/lib/coach-messages-notify"
+import { noteCoachMessaged } from "@/lib/recruiting/program-stage"
 
 /**
  * One conversation.
@@ -35,5 +36,12 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
 
   after(() => notifyNewMessage(admin, { threadId, senderUserId: userId, senderRole: result.senderRole }))
+  // A coach writing again is contact too; a family's reply moves nothing.
+  if (result.senderRole === "coach") {
+    after(async () => {
+      const { data: t } = await admin.from("coach_threads").select("athlete_id").eq("id", threadId).maybeSingle()
+      if (t?.athlete_id) await noteCoachMessaged(admin, userId, String(t.athlete_id)).catch((e) => console.error("[coach-messages] stage:", e))
+    })
+  }
   return NextResponse.json({ messageId: result.messageId })
 }

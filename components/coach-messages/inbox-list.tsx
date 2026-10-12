@@ -11,6 +11,7 @@ export type ThreadSummary = {
   athleteName: string
   coachName: string
   program: string | null
+  programLogo?: string | null
   lastMessageAt: string
   lastMessagePreview: string
   lastSenderRole: string | null
@@ -32,6 +33,36 @@ export type InboxFilter = "all" | "unread" | "reply"
 /** "Class of 2027 · 174 lbs · Lincolnton · NC": who a coach is talking to, the same on every surface. */
 export function wrestlerLine(w: { classYear?: number | null; weight?: string | null; school?: string | null; state?: string | null }): string | null {
   return [w.classYear ? `Class of ${w.classYear}` : null, w.weight ? `${w.weight} lbs` : null, w.school, w.state].filter(Boolean).join(" · ") || null
+}
+
+/**
+ * A program's mark beside its coach's name and messages - the logo on a white tile, as Coach Home
+ * shows it, or the program's initials when there is no logo on file.
+ */
+export function ProgramMark({ logo, program, size = 40, className }: { logo?: string | null; program?: string | null; size?: number; className?: string }) {
+  const initials =
+    (program ?? "")
+      .replace(/\b(the|of|at|and|university|college)\b/gi, " ")
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((w) => w[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "?"
+  return (
+    <span
+      className={cn("flex shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white", className)}
+      style={{ width: size, height: size }}
+      aria-hidden
+    >
+      {logo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={logo} alt="" className="h-full w-full object-contain p-1" />
+      ) : (
+        <span className="text-xs font-black text-[#0A1628]">{initials}</span>
+      )}
+    </span>
+  )
 }
 
 export function StageChip({ stage, className }: { stage?: string | null; className?: string }) {
@@ -177,6 +208,7 @@ export function InboxList({
                 className={cn("mt-2 h-2 w-2 shrink-0 rounded-full", t.unread ? "bg-[#D3B574]" : "bg-transparent")}
                 aria-label={t.unread ? "Unread" : undefined}
               />
+              {t.viewerRole !== "coach" ? <ProgramMark logo={t.programLogo} program={t.program} /> : null}
               <span className="min-w-0 flex-1">
                 <span className="flex items-baseline gap-2">
                   <span className={cn("truncate text-[15px]", t.unread ? "font-bold text-white" : "font-semibold text-white/85")}>{who}</span>

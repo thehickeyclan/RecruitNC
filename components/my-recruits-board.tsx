@@ -560,7 +560,9 @@ const ACTIVITY_TYPES = [
   { value: "letter", label: "Letter" },
   { value: "other", label: "Other" },
 ] as const
-const activityLabel = (type: string) => ACTIVITY_TYPES.find((t) => t.value === type)?.label ?? "Contact"
+/** Platform messages count as contact without anyone logging them (lib/my-recruits.ts). */
+const activityLabel = (type: string) =>
+  type === "message" ? "Message sent" : type === "reply" ? "Family replied" : (ACTIVITY_TYPES.find((t) => t.value === type)?.label ?? "Contact")
 const shortDay = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
 
 /** "Text · Oct 9 · follow up Oct 16", so the board says who has gone untouched without opening anyone. */

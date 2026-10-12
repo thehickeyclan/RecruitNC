@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { Flag, Loader2, Send, ShieldOff, ShieldCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { StageChip, wrestlerLine } from "@/components/coach-messages/inbox-list"
+import { ProgramMark, StageChip, wrestlerLine } from "@/components/coach-messages/inbox-list"
 import { COACH_MESSAGES_CHANGED } from "@/hooks/use-nav-badges"
 
 type Message = { id: string; body: string; senderRole: string; senderName: string; createdAt: string; mine: boolean }
@@ -14,6 +14,7 @@ type Thread = {
   athleteName: string
   coachName: string
   program: string | null
+  programLogo?: string | null
   stopped: boolean
   viewerRole: "coach" | "athlete" | "parent" | "admin"
   canReply: boolean
@@ -152,7 +153,9 @@ export function Conversation({
   return (
     <div className={cn("flex flex-col gap-4", pane && "h-full min-h-0")}>
       <div className={cn("flex flex-wrap items-start justify-between gap-3", compact && "justify-end", pane && "border-b border-white/10 pb-4")}>
-        <div className={cn("min-w-0", compact && "hidden")}>
+        <div className={cn("flex min-w-0 items-start gap-3", compact && "hidden")}>
+          {thread.viewerRole !== "coach" ? <ProgramMark logo={thread.programLogo} program={thread.program} size={52} /> : null}
+          <div className="min-w-0">
           <h1 className="text-2xl font-black tracking-tight">
             {thread.viewerRole === "coach" ? (
               <Link href={`/athletes/${thread.athleteId}`} className="hover:underline">
@@ -173,6 +176,7 @@ export function Conversation({
           {thread.viewerRole === "admin" ? (
             <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-[#D3B574]">Staff review · read-only</p>
           ) : null}
+          </div>
         </div>
         {thread.viewerRole === "coach" && !compact ? (
           <div className="flex flex-wrap gap-2">
@@ -229,18 +233,22 @@ export function Conversation({
 
       <ol className={cn("flex flex-col gap-3", pane && "min-h-0 flex-1 overflow-y-auto pr-1")}>
         {thread.messages.map((m) => (
-          <li key={m.id} className={cn("flex flex-col", m.mine ? "items-end" : "items-start")}>
-            <div
-              className={cn(
-                "max-w-[85%] whitespace-pre-wrap break-words rounded-2xl px-4 py-3 text-[15px] leading-relaxed",
-                m.mine ? "bg-[#D3B574] text-[#0A1628]" : "border border-white/10 bg-white/[0.06] text-white",
-              )}
-            >
-              {m.body}
+          <li key={m.id} className={cn("flex items-end gap-2", m.mine ? "flex-row-reverse" : "flex-row")}>
+            {/* The program's mark beside what its coach wrote, for the family and for staff reading along. */}
+            {m.senderRole === "coach" && !m.mine ? <ProgramMark logo={thread.programLogo} program={thread.program} size={32} className="mb-5" /> : null}
+            <div className={cn("flex min-w-0 max-w-[85%] flex-col", m.mine ? "items-end" : "items-start")}>
+              <div
+                className={cn(
+                  "whitespace-pre-wrap break-words rounded-2xl px-4 py-3 text-[15px] leading-relaxed",
+                  m.mine ? "bg-[#D3B574] text-[#0A1628]" : "border border-white/10 bg-white/[0.06] text-white",
+                )}
+              >
+                {m.body}
+              </div>
+              <span className="mt-1 px-1 text-xs text-white/45">
+                {m.mine ? "You" : m.senderName} · {when(m.createdAt)}
+              </span>
             </div>
-            <span className="mt-1 px-1 text-xs text-white/45">
-              {m.mine ? "You" : m.senderName} · {when(m.createdAt)}
-            </span>
           </li>
         ))}
         <li ref={endRef} aria-hidden />

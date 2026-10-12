@@ -29,7 +29,12 @@ export type MyRecruitRow = {
   starredBy: string
   /** Only the viewer's own stars can be removed from here. */
   mine: boolean
-  /** The staff's most recent logged contact with him (recruiting_actions), and any follow-up set on it. */
+  /**
+   * The most recent contact with him: something a coach logged (recruiting_actions, with any
+   * follow-up set on it), or a message on the platform - "message" when the staff wrote last,
+   * "reply" when the family did. Messages are read where they live rather than copied into the
+   * log, so every one counts, including those sent before this was built.
+   */
   lastContact: { type: string; date: string; by: string; followUp: string | null } | null
   /** Where the program has him in the funnel - one stage for the whole staff (lib/recruiting/program-stage.ts). */
   stage: PipelineStage
@@ -120,6 +125,37 @@ export async function loadMyRecruits(admin: ReturnType<typeof createAdminClient>
       by: staffName.get(a.coach_user_id) ?? "Staff",
       followUp: (a.follow_up_date as string | null) ?? null,
     })
+  }
+
+  const { data: threads } = await admin
+    .from("coach_threads")
+    .select("id, athlete_id, coach_user_id")
+    .in("coach_user_id", staff.map((s) => s.user_id))
+    .in("athlete_id", ids)
+  if (threads?.length) {
+    const { data: messages } = await admin
+      .from("coach_messages")
+      .select("thread_id, sender_role, created_at")
+      .in("thread_id", threads.map((t) => t.id))
+      .order("created_at", { ascending: false })
+      .limit(Math.max(200, threads.length * 10))
+    const threadOf = new Map(threads.map((t) => [String(t.id), t]))
+    const seen = new Set<string>()
+    for (const m of messages ?? []) {
+      const t = threadOf.get(String(m.thread_id))
+      if (!t || seen.has(t.athlete_id)) continue
+      seen.add(t.athlete_id)
+      const logged = lastContact.get(t.athlete_id)
+      if (logged && logged.date >= String(m.created_at)) continue
+      const fromCoach = m.sender_role === "coach"
+      lastContact.set(t.athlete_id, {
+        type: fromCoach ? "message" : "reply",
+        date: String(m.created_at),
+        by: fromCoach ? (staffName.get(t.coach_user_id) ?? "Staff") : "You",
+        // A follow-up set on an earlier logged contact still stands.
+        followUp: logged?.followUp ?? null,
+      })
+    }
   }
 
   const [{ data: athletes }, state, nhsca, s32, { viewer }] = await Promise.all([

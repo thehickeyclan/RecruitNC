@@ -34,6 +34,24 @@ export async function programStaffIds(admin: SupabaseClient, userId: string): Pr
 }
 
 /**
+ * A coach wrote to a wrestler through the platform: that is contact. If the program has him on
+ * its board and still at Prospect, he moves to Contacted - the same step logging a first call
+ * takes (activity-helpers.ts). A wrestler who is not on the board is left off it; messaging
+ * someone is not the same as deciding to track him.
+ */
+export async function noteCoachMessaged(admin: SupabaseClient, coachUserId: string, athleteId: string) {
+  const staff = await programStaffIds(admin, coachUserId)
+  const { data: stars } = await admin
+    .from("college_coach_stars")
+    .select("athlete_id, pipeline_stage, updated_at, starred_at")
+    .eq("athlete_id", athleteId)
+    .in("coach_user_id", staff)
+  if (!stars?.length) return
+  if (programStages(stars as StageRow[]).get(athleteId) !== "Prospect") return
+  await setProgramStage(admin, coachUserId, athleteId, "Contacted")
+}
+
+/**
  * Move a wrestler to a stage for the whole program: every staff row that exists is updated, and
  * the coach making the change gets a row if they had none (which also puts him on their board).
  */

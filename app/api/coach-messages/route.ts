@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveRequestUserId } from "@/lib/request-user"
 import { coachSend, listThreads } from "@/lib/coach-messages"
 import { notifyNewMessage } from "@/lib/coach-messages-notify"
+import { noteCoachMessaged } from "@/lib/recruiting/program-stage"
 
 /**
  * Coach → prospect messaging. Web (cookies) and the app (bearer token) both call this.
@@ -37,5 +38,6 @@ export async function POST(request: NextRequest) {
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
 
   after(() => notifyNewMessage(admin, { threadId: result.threadId, senderUserId: userId, senderRole: result.senderRole }))
+  after(() => noteCoachMessaged(admin, userId, athleteId).catch((e) => console.error("[coach-messages] stage:", e)))
   return NextResponse.json({ threadId: result.threadId, messageId: result.messageId, isNewThread: result.isNewThread })
 }
