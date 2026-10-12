@@ -296,9 +296,10 @@ export function Navbar() {
   const showCoachHome =
     profile?.role === "admin" || profile?.role === "college_coach" || profile?.is_admin === true
   // Everyone else who is signed in: the family's own recruiting page (app/my-recruiting).
-  const showMyRecruiting = Boolean(user) && !showCoachHome && !showMyRecruits
+  // Admins see it too: they are the ones who have to check it, and most are wrestling parents.
+  const showMyRecruiting = Boolean(user) && profile?.role !== "college_coach"
   const highlightNavItems = [
-    ...(showMyRecruiting ? [{ href: "/my-recruiting", label: "My Recruiting" }] : []),
+    ...(showMyRecruiting ? [{ href: "/my-recruiting", label: "Recruiting War Room" }] : []),
     ...(showCoachHome ? [{ href: "/coach-home", label: "Coach Home" }] : []),
     ...(showMyRecruits ? [{ href: getRecruitingPortalUrl(), label: "My Recruits" }] : []),
   ]
