@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils"
 
 type Unlocked = {
   locked: false
-  schools: Array<{ school: string; lastViewedAt: string; views: number }>
+  schools: Array<{ school: string; lastViewedAt: string; views: number; logo?: string | null }>
   visits: Array<{ school: string | null; at: string }>
   totalViews: number
 }
@@ -37,9 +37,11 @@ const initials = (name: string) =>
     .map((w) => w[0]!.toUpperCase())
     .join("")
 
-function Logo({ school }: { school: string }) {
-  const [url, setUrl] = useState<string | null>(null)
+function Logo({ school, logo }: { school: string; logo?: string | null }) {
+  const [url, setUrl] = useState<string | null>(logo ?? null)
   useEffect(() => {
+    // The server sends the program's logo with its name; the lookup by name is only a fallback.
+    if (logo) return
     let cancelled = false
     fetch(`/api/logo-mappings/by-entity/college/${encodeURIComponent(school)}`)
       .then((r) => (r.ok ? r.json() : null))
@@ -50,7 +52,7 @@ function Logo({ school }: { school: string }) {
     return () => {
       cancelled = true
     }
-  }, [school])
+  }, [school, logo])
   return (
     <span className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-[#1a3a5f] bg-white text-[11px] font-black text-[#0A1628]">
       {url ? (
@@ -83,8 +85,8 @@ export function ProfileViewsBlock({ athleteId, athleteFirstName, className }: { 
     const now = Date.now()
     // One entry per program for a subscriber; one per visit for everyone else, who has no programs to group by.
     const rows = views.locked
-      ? [...views.visits].sort((a, b) => b.last.localeCompare(a.last)).map((v) => ({ school: null as string | null, last: v.last, views: v.views }))
-      : views.schools.map((s) => ({ school: s.school as string | null, last: s.lastViewedAt, views: s.views }))
+      ? [...views.visits].sort((a, b) => b.last.localeCompare(a.last)).map((v) => ({ school: null as string | null, last: v.last, views: v.views, logo: null as string | null }))
+      : views.schools.map((s) => ({ school: s.school as string | null, last: s.lastViewedAt, views: s.views, logo: s.logo ?? null }))
     const stamps = views.locked ? views.visits.flatMap((v) => Array.from({ length: v.views }, () => v.last)) : views.visits.map((v) => v.at)
     const weeks = Array.from({ length: WEEKS }, () => 0)
     for (const at of stamps) {
@@ -153,7 +155,7 @@ export function ProfileViewsBlock({ athleteId, athleteFirstName, className }: { 
             {shown.map((r, i) => (
               <li key={`${r.school ?? "p"}-${r.last}-${i}`} className="flex items-center gap-3 border-b border-[#1a3a5f] py-2 last:border-b-0">
                 {r.school ? (
-                  <Logo school={r.school} />
+                  <Logo school={r.school} logo={r.logo} />
                 ) : (
                   // Nothing is hidden under this: the server sent no program for it.
                   <span className="h-10 w-10 shrink-0 rounded-full bg-[#13294B] blur-[3px]" aria-hidden />
