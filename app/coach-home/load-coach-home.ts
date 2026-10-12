@@ -1,3 +1,4 @@
+import { loadStaffActivity } from "@/lib/recruiting/staff-activity"
 import "server-only"
 
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -158,6 +159,7 @@ export async function loadCoachHome(
       })),
     },
     suggested,
+    activity: await loadStaffActivity(admin, userId, 6).catch(() => []),
     rankingYears: [...PUBLISHED_PUBLIC_RANKINGS_YEARS],
     top75: PUBLIC_TOP_75_COLLEGE_RELEASED,
   }

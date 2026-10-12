@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createClient as createBrowserClient } from "@supabase/supabase-js"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { setProgramApplied } from "@/lib/recruiting/program-stage"
 
 async function getAuthenticatedUser(request: NextRequest) {
   let supabase = await createClient()
@@ -59,38 +61,9 @@ export async function POST(request: NextRequest) {
       ? appliedDate || new Date().toISOString()
       : null
 
-    const { data: existing } = await supabase
-      .from("college_coach_stars")
-      .select("*")
-      .eq("coach_user_id", user.id)
-      .eq("athlete_id", athleteId)
-      .single()
-
-    const { data, error } = await supabase
-      .from("college_coach_stars")
-      .upsert(
-        {
-          coach_user_id: user.id,
-          athlete_id: athleteId,
-          has_applied: hasApplied,
-          applied_date: appliedTimestamp,
-          starred_at: existing?.starred_at || new Date().toISOString(),
-        },
-        { onConflict: "coach_user_id,athlete_id" },
-      )
-      .select("has_applied, applied_date")
-      .single()
-
-    if (error) {
-      console.error("[v0] Update applied: Database error:", error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json({
-      success: true,
-      has_applied: data?.has_applied ?? hasApplied,
-      applied_date: data?.applied_date ?? appliedTimestamp,
-    })
+    // The whole staff sees it: written to every staff row for this wrestler (lib/recruiting/program-stage.ts).
+    const saved = await setProgramApplied(createAdminClient(), user.id, athleteId, hasApplied, appliedTimestamp)
+    return NextResponse.json({ success: true, has_applied: saved.has_applied, applied_date: saved.applied_date })
   } catch (error) {
     console.error("[v0] Update applied: Critical error:", error)
     return NextResponse.json(

@@ -1,5 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { logBoardEvent } from "@/lib/recruiting/board-events"
 
 export async function POST(request: NextRequest) {
   try {
@@ -84,6 +86,7 @@ export async function POST(request: NextRequest) {
       }
 
       console.log("[v0] Star removed successfully")
+      await logBoardEvent(createAdminClient(), { actor: user.id, athleteId, kind: "removed" })
       return NextResponse.json({ success: true, action: "removed" })
     } else {
       const insertData = {
@@ -108,6 +111,7 @@ export async function POST(request: NextRequest) {
       }
 
       console.log("[v0] Star added successfully")
+      await logBoardEvent(createAdminClient(), { actor: user.id, athleteId, kind: "added" })
       return NextResponse.json({ success: true, action: "added" })
     }
   } catch (error) {

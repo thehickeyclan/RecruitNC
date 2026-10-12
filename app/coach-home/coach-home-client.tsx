@@ -5,7 +5,9 @@ import Link from "next/link"
 import { CoachTabs } from "@/components/coach-tabs"
 import { RECRUITING_BRAND, recruitingCoverage } from "@/lib/recruiting/brand"
 import { FitBadge, type FitBadgeFlag } from "@/components/fit-badge"
-import { ArrowRight, BarChart3, FileText, GitCompareArrows, Lock, MessageSquare, Search, Star, Target, Users } from "lucide-react"
+import { StaffActivityList } from "@/components/recruiting/staff-activity-list"
+import type { StaffActivityItem } from "@/lib/recruiting/staff-activity"
+import { ArrowRight, BarChart3, History, FileText, GitCompareArrows, Lock, MessageSquare, Search, Star, Target, Users } from "lucide-react"
 
 export type CoachHomeData = {
   coachName: string | null
@@ -30,6 +32,8 @@ export type CoachHomeData = {
   }
   /** Top-ranked uncommitted wrestlers not on the board yet, to star from here. */
   suggested: Array<{ id: string; name: string; classYear: number; rank: number; weight: string | null; highSchool: string | null }>
+  /** The latest changes on the staff's shared board, and who made them. */
+  activity: StaffActivityItem[]
   rankingYears: number[]
   top75: boolean
 }
@@ -390,6 +394,26 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
             </ul>
           </section>
         ) : null}
+
+        <section className={`${PANEL} mt-4 p-4 sm:p-5`} aria-labelledby="ch-activity">
+          <div className="flex items-center justify-between gap-3">
+            <h2 id="ch-activity" className={TITLE}>
+              <History className={`h-3.5 w-3.5 ${GOLD}`} /> Staff activity
+            </h2>
+            {(data.activity ?? []).length ? (
+              <Link href="/my-recruits/activity" className={MORE}>
+                See all <ArrowRight className="h-3 w-3" />
+              </Link>
+            ) : null}
+          </div>
+          {(data.activity ?? []).length ? (
+            <StaffActivityList items={data.activity} className="mt-2" />
+          ) : (
+            <p className="mt-3 text-sm text-white/55">
+              Nothing yet. Every wrestler added, stage change, logged call and message by you or your staff is listed here, with who did it.
+            </p>
+          )}
+        </section>
 
         <h2 className={`${TITLE} mt-8`}>Tools</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
