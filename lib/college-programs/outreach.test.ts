@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { coachSurname, gradeLabel, resultClauses, spokenSchoolName } from "./outreach-results"
+import { coachSurname, eventDates, gradeLabel, resultClauses, spokenSchoolName } from "./outreach-results"
 import { outreachBlocker, renderOutreachEmail, type OutreachFacts, type OutreachInput } from "./outreach-templates"
 
 const facts: OutreachFacts = {
@@ -75,6 +75,12 @@ describe("small rules", () => {
     expect(spokenSchoolName("Campbell University")).toBe("Campbell")
     expect(spokenSchoolName("Commonwealth University-Lock Haven (Lock Haven)")).toBe("Commonwealth University-Lock Haven")
     expect(spokenSchoolName("University of Iowa")).toBe("University of Iowa")
+  })
+
+  it("writes event dates the way a person would", () => {
+    expect(eventDates("2026-10-24", "2026-10-25")).toBe("Oct 24-25")
+    expect(eventDates("2026-11-01", null)).toBe("Nov 1")
+    expect(eventDates("2026-12-30", "2027-01-01")).toBe("Dec 30 - Jan 1")
   })
 
   it("greets by surname", () => {

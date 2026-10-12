@@ -5,7 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { seniorClassYear } from "@/lib/class-years"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
-import { coachSurname, gradeLabel, resultClauses, spokenSchoolName } from "@/lib/college-programs/outreach-results"
+import { coachSurname, eventDates, gradeLabel, resultClauses, spokenSchoolName } from "@/lib/college-programs/outreach-results"
 import type { OutreachEvent, OutreachFacts } from "@/lib/college-programs/outreach-templates"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { questionnairesForSchool } from "@/lib/college-programs/questionnaires"
@@ -30,6 +30,9 @@ const SCHOOLS = [...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS]
 const ATHLETE_COLUMNS =
   'id, name, wrestling_name, "firstName", "lastName", highschool, graduationyear, gender, weightclass, location, academic_gpa, academic_interest, "contactEmail", phone, nhsca_results, super32_results'
 
+/** A calendar event with its real dates, so picking it can be saved to the wrestler's schedule. */
+export type SuggestedEvent = OutreachEvent & { startDate: string; endDate: string | null }
+
 export type OutreachContext = {
   /** Every wrestler on this account, for the picker. Empty when the account has none. */
   athletes: Array<{ id: string; name: string }>
@@ -37,7 +40,7 @@ export type OutreachContext = {
   coach: { name: string; title: string; email: string | null } | null
   hasQuestionnaire: boolean
   /** Upcoming events from the RecruitNC calendar, to pick from rather than type. */
-  suggestedEvents: OutreachEvent[]
+  suggestedEvents: SuggestedEvent[]
 }
 
 function athleteName(row: Record<string, unknown>): string {
@@ -45,23 +48,7 @@ function athleteName(row: Record<string, unknown>): string {
   return full || String(row.name ?? "").trim()
 }
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
-/** "Oct 24-25" / "Dec 30 - Jan 1". Civil dates read as strings; `new Date("YYYY-MM-DD")` shifts a day west of UTC. */
-export function eventDates(start: string, end: string | null): string {
-  const parse = (value: string) => {
-    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(value)
-    return m ? { month: Number(m[2]), day: Number(m[3]) } : null
-  }
-  const from = parse(start)
-  if (!from) return start
-  const to = end ? parse(end) : null
-  const first = `${MONTHS[from.month - 1]} ${from.day}`
-  if (!to || (to.month === from.month && to.day === from.day)) return first
-  return to.month === from.month ? `${first}-${to.day}` : `${first} - ${MONTHS[to.month - 1]} ${to.day}`
-}
-
-async function upcomingEvents(admin: SupabaseClient): Promise<OutreachEvent[]> {
+async function upcomingEvents(admin: SupabaseClient): Promise<SuggestedEvent[]> {
   const today = new Date().toISOString().slice(0, 10)
   const { data: rows, error } = await admin
     .from("events")
@@ -76,6 +63,8 @@ async function upcomingEvents(admin: SupabaseClient): Promise<OutreachEvent[]> {
     // Calendar titles carry staff markup ("**ELITE**") that has no business in an email to a coach.
     title: String(row.title ?? "").replace(/\*+[^*]*\*+/g, "").replace(/\s+/g, " ").trim(),
     dates: eventDates(String(row.start_date), row.end_date ? String(row.end_date) : null),
+    startDate: String(row.start_date),
+    endDate: row.end_date ? String(row.end_date) : null,
     location: row.location ? String(row.location) : null,
   }))
 }

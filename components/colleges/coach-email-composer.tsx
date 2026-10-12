@@ -5,7 +5,8 @@ import { Check, Copy, Mail, Plus, X } from "lucide-react"
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import type { CollegeListStatus } from "@/lib/college-programs/list"
-import type { OutreachContext } from "@/lib/college-programs/outreach"
+import type { OutreachContext, SuggestedEvent } from "@/lib/college-programs/outreach"
+import { eventDates } from "@/lib/college-programs/outreach-results"
 import {
   OUTREACH_KINDS,
   OUTREACH_KIND_HINT,
@@ -32,32 +33,16 @@ const DETAIL_LABEL: Partial<Record<OutreachKind, { label: string; placeholder: s
   reply: { label: "Your answer to the coach", placeholder: "Yes, I can send my transcript this week." },
 }
 
-const scheduleKey = (athleteId: string) => `recruitnc:outreach-schedule:${athleteId}`
+/** A schedule entry as the composer holds it: the saved row's id, when it came from the account. */
+type ScheduleEvent = OutreachEvent & { id?: string }
+type SavedEvent = { id: string; title: string; startDate: string; endDate: string | null; location: string | null }
 
-/**
- * The schedule is typed once and remembered on this device, so every email after the first has
- * it. It moves to the profile when the upcoming-schedule section is built; until then a private
- * window or another phone simply starts empty.
- */
-function loadSchedule(athleteId: string): OutreachEvent[] {
-  try {
-    const raw = window.localStorage.getItem(scheduleKey(athleteId))
-    const parsed = raw ? (JSON.parse(raw) as unknown) : []
-    return Array.isArray(parsed)
-      ? parsed.filter((e): e is OutreachEvent => typeof e?.title === "string" && typeof e?.dates === "string")
-      : []
-  } catch {
-    return []
-  }
-}
-
-function saveSchedule(athleteId: string, events: OutreachEvent[]) {
-  try {
-    window.localStorage.setItem(scheduleKey(athleteId), JSON.stringify(events))
-  } catch {
-    /* Remembering the schedule is a convenience; the email still works without it. */
-  }
-}
+const fromSaved = (e: SavedEvent): ScheduleEvent => ({
+  id: e.id,
+  title: e.title,
+  dates: eventDates(e.startDate, e.endDate),
+  location: e.location,
+})
 
 export function CoachEmailComposer({
   schoolId,
@@ -80,8 +65,9 @@ export function CoachEmailComposer({
   const [why, setWhy] = useState("")
   const [detail, setDetail] = useState("")
   const [questionnaireDone, setQuestionnaireDone] = useState(false)
-  const [events, setEvents] = useState<OutreachEvent[]>([])
-  const [custom, setCustom] = useState({ title: "", dates: "", location: "" })
+  const [events, setEvents] = useState<ScheduleEvent[]>([])
+  const [custom, setCustom] = useState({ title: "", startDate: "", endDate: "", location: "" })
+  const [scheduleError, setScheduleError] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
 
   useEffect(() => {
@@ -96,7 +82,13 @@ export function CoachEmailComposer({
         if (!res.ok) throw new Error(body.error || "Could not load the draft.")
         if (cancelled) return
         setContext(body)
-        if (body.facts) setEvents(loadSchedule(body.facts.athleteId))
+        setEvents([])
+        if (!body.facts) return
+        // The schedule lives on the wrestler's account, so it is the same on every device.
+        const res2 = await fetch(`/api/college-list/schedule?athlete=${encodeURIComponent(body.facts.athleteId)}`, { cache: "no-store" })
+        if (!res2.ok || cancelled) return
+        const saved = (await res2.json()) as { events?: SavedEvent[] }
+        if (!cancelled) setEvents((saved.events ?? []).map(fromSaved))
       })
       .catch((e) => {
         if (!cancelled) setError(e instanceof Error ? e.message : "Could not load the draft.")
@@ -126,19 +118,52 @@ export function CoachEmailComposer({
     setEdited({ from: generatedKey, subject: patch.subject ?? email.subject, body: patch.body ?? email.body })
   }
 
-  const setSchedule = (next: OutreachEvent[]) => {
-    setEvents(next)
-    if (facts) saveSchedule(facts.athleteId, next)
-  }
   const hasEvent = (e: OutreachEvent) => events.some((x) => x.title === e.title && x.dates === e.dates)
-  const toggleEvent = (e: OutreachEvent) =>
-    setSchedule(hasEvent(e) ? events.filter((x) => !(x.title === e.title && x.dates === e.dates)) : [...events, e])
-  const addCustom = () => {
+
+  const addEvent = async (event: { title: string; startDate: string; endDate: string | null; location: string | null }) => {
+    if (!facts) return false
+    setScheduleError(null)
+    const res = await fetch("/api/college-list/schedule", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ athleteId: facts.athleteId, ...event }),
+    })
+    const body = (await res.json().catch(() => ({}))) as { event?: SavedEvent; error?: string }
+    if (!res.ok || !body.event) {
+      setScheduleError(body.error || "Could not save the event. Try again.")
+      return false
+    }
+    const added = fromSaved(body.event)
+    setEvents((current) => [...current.filter((x) => x.id !== added.id), added])
+    return true
+  }
+
+  const removeEvent = async (event: ScheduleEvent) => {
+    setEvents((current) => current.filter((x) => x !== event))
+    if (!facts || !event.id) return
+    const res = await fetch(
+      `/api/college-list/schedule?athlete=${encodeURIComponent(facts.athleteId)}&event=${encodeURIComponent(event.id)}`,
+      { method: "DELETE" },
+    )
+    if (!res.ok) setScheduleError("Could not remove the event. Try again.")
+  }
+
+  const addSuggested = (e: SuggestedEvent) =>
+    addEvent({ title: e.title, startDate: e.startDate, endDate: e.endDate, location: e.location ?? null })
+
+  const addCustom = async () => {
     const title = custom.title.trim()
-    const dates = custom.dates.trim()
-    if (!title || !dates) return
-    setSchedule([...events, { title, dates, location: custom.location.trim() || null }])
-    setCustom({ title: "", dates: "", location: "" })
+    if (!title || !custom.startDate) {
+      setScheduleError("Give the event a name and the date it starts.")
+      return
+    }
+    const ok = await addEvent({
+      title,
+      startDate: custom.startDate,
+      endDate: custom.endDate || null,
+      location: custom.location.trim() || null,
+    })
+    if (ok) setCustom({ title: "", startDate: "", endDate: "", location: "" })
   }
 
   const finish = () => onSent(STATUS_AFTER[kind])
@@ -253,7 +278,7 @@ export function CoachEmailComposer({
                           {e.title}, {e.dates}
                           {e.location ? <span className="text-slate-500"> ({e.location})</span> : null}
                         </span>
-                        <button type="button" onClick={() => toggleEvent(e)} aria-label={`Remove ${e.title}`} className="text-slate-500 hover:text-slate-900">
+                        <button type="button" onClick={() => removeEvent(e)} aria-label={`Remove ${e.title}`} className="text-slate-500 hover:text-slate-900">
                           <X className="h-4 w-4" />
                         </button>
                       </li>
@@ -266,7 +291,7 @@ export function CoachEmailComposer({
                       <button
                         key={`${e.title}-${e.dates}`}
                         type="button"
-                        onClick={() => toggleEvent(e)}
+                        onClick={() => addSuggested(e)}
                         className="inline-flex items-center gap-1 rounded-sm border border-slate-300 px-2 py-1 text-xs text-slate-700 hover:bg-slate-100"
                       >
                         <Plus className="h-3 w-3" /> {e.title} · {e.dates}
@@ -274,14 +299,23 @@ export function CoachEmailComposer({
                     ))}
                   </div>
                 ) : null}
-                <div className="mt-2 grid gap-2 sm:grid-cols-[1.4fr_1fr_1fr_auto]">
-                  <input value={custom.title} onChange={(e) => setCustom({ ...custom, title: e.target.value })} placeholder="Event" className={field} aria-label="Event name" />
-                  <input value={custom.dates} onChange={(e) => setCustom({ ...custom, dates: e.target.value })} placeholder="Dates, e.g. Dec 19-20" className={field} aria-label="Event dates" />
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  <input value={custom.title} onChange={(e) => setCustom({ ...custom, title: e.target.value })} placeholder="Event name" className={field} aria-label="Event name" />
                   <input value={custom.location} onChange={(e) => setCustom({ ...custom, location: e.target.value })} placeholder="City (optional)" className={field} aria-label="Event location" />
-                  <button type="button" onClick={addCustom} className="rounded-sm border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100">
-                    Add
-                  </button>
+                  <label className="text-xs text-slate-600">
+                    Starts
+                    <input type="date" value={custom.startDate} onChange={(e) => setCustom({ ...custom, startDate: e.target.value })} className={`${field} mt-0.5`} aria-label="Start date" />
+                  </label>
+                  <label className="text-xs text-slate-600">
+                    Ends (if more than one day)
+                    <input type="date" value={custom.endDate} min={custom.startDate || undefined} onChange={(e) => setCustom({ ...custom, endDate: e.target.value })} className={`${field} mt-0.5`} aria-label="End date" />
+                  </label>
                 </div>
+                <button type="button" onClick={addCustom} className="mt-2 rounded-sm border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100">
+                  Add to my schedule
+                </button>
+                {scheduleError ? <p className="mt-1 text-xs text-red-700">{scheduleError}</p> : null}
+                <p className="mt-1 text-xs text-slate-500">Saved to {facts.firstName}&apos;s schedule, so it&apos;s here for every email. Only your family can see it.</p>
               </div>
             ) : null}
 
