@@ -9,7 +9,9 @@ import { RECRUITING_BRAND, recruitingCoverage } from "@/lib/recruiting/brand"
 import { FitBadge, type FitBadgeFlag } from "@/components/fit-badge"
 import { StaffActivityList } from "@/components/recruiting/staff-activity-list"
 import type { StaffActivityItem } from "@/lib/recruiting/staff-activity"
-import { ArrowRight, BarChart3, History, FileText, GitCompareArrows, Lock, MessageSquare, Search, Star, Target, Users } from "lucide-react"
+import type { EventWithRecruits } from "@/lib/college-programs/competing-next"
+import { eventDates } from "@/lib/college-programs/outreach-results"
+import { ArrowRight, BarChart3, CalendarDays, History, FileText, GitCompareArrows, Lock, MessageSquare, Search, Star, Target, Users } from "lucide-react"
 
 export type CoachHomeData = {
   coachName: string | null
@@ -32,6 +34,11 @@ export type CoachHomeData = {
     unread: number
     latest: Array<{ id: string; athleteName: string; preview: string; unread: boolean; yourTurn: boolean }>
   }
+  /**
+   * Where the board's wrestlers are competing next, grouped by event, as their families entered it.
+   * Empty for a coach staff have not approved yet: a minor's schedule is for reviewed coaches only.
+   */
+  competingNext: EventWithRecruits[]
   /** Top-ranked uncommitted wrestlers not on the board yet, to star from here. */
   suggested: Array<{ id: string; name: string; classYear: number; rank: number; weight: string | null; highSchool: string | null }>
   /** The latest changes on the staff's shared board, and who made them. */
@@ -382,6 +389,44 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
             )}
           </section>
         </div>
+
+        {(data.competingNext ?? []).length ? (
+          <section className={`${PANEL} mt-4 p-4 sm:p-5`} aria-labelledby="ch-next">
+            <h2 id="ch-next" className={TITLE}>
+              <CalendarDays className={`h-3.5 w-3.5 ${GOLD}`} /> Where your recruits are competing next
+            </h2>
+            <ul className="mt-2 space-y-3">
+              {(data.competingNext ?? []).map((event) => (
+                <li key={`${event.title}-${event.startDate}`}>
+                  <p className="px-3 text-sm font-bold text-white">
+                    {event.title}
+                    <span className="font-normal text-white/50">
+                      {" "}
+                      · {eventDates(event.startDate, event.endDate)}
+                      {event.location ? ` · ${event.location}` : ""}
+                    </span>
+                    <span className={`ml-2 text-xs font-bold ${GOLD}`}>
+                      {event.recruits.length} {event.recruits.length === 1 ? "recruit" : "recruits"}
+                    </span>
+                  </p>
+                  <ul className="grid gap-x-4 sm:grid-cols-2">
+                    {event.recruits.map((r) => (
+                      <li key={r.id}>
+                        <Link href={`/athletes/${r.id}`} className={ROW}>
+                          <span className="min-w-0 truncate font-bold text-white">{r.name}</span>
+                          <span className="shrink-0 text-xs text-white/45">
+                            {[r.classYear ? `\u2019${String(r.classYear).slice(-2)}` : null, r.weight ? `${r.weight} lbs` : null, r.highSchool].filter(Boolean).join(" · ")}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 px-3 text-xs text-white/35">Entered by each wrestler&apos;s family.</p>
+          </section>
+        ) : null}
 
         {recruits.competedRecently.length ? (
           <section className={`${PANEL} mt-4 p-4 sm:p-5`} aria-labelledby="ch-new">

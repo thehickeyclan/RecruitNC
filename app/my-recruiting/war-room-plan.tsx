@@ -288,7 +288,7 @@ export function WarRoomPlan({
           <button type="button" onClick={addEvent} className="mt-3 rounded-lg border border-[#D3B574] px-4 py-2 text-sm font-bold text-[#D3B574] hover:bg-[#D3B574]/10">
             Add to the schedule
           </button>
-          <p className="mt-2 text-xs text-white/40">It goes in every coach email. Only your family can see it.</p>
+          <p className="mt-2 text-xs text-white/40">It goes in every coach email and on the profile, where approved college coaches can see it. It is never public.</p>
         </div>
       </div>
 

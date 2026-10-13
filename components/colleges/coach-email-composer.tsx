@@ -318,7 +318,7 @@ export function CoachEmailComposer({
                   Add to my schedule
                 </button>
                 {scheduleError ? <p className="mt-1 text-xs text-red-700">{scheduleError}</p> : null}
-                <p className="mt-1 text-xs text-slate-500">Saved to {facts.firstName}&apos;s schedule, so it&apos;s here for every email. Only your family can see it.</p>
+                <p className="mt-1 text-xs text-slate-500">Saved to {facts.firstName}&apos;s schedule, so it&apos;s here for every email. Approved college coaches see it on the profile; it is never public.</p>
               </div>
             ) : null}
 
