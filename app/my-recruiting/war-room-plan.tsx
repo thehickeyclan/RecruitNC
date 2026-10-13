@@ -319,7 +319,9 @@ export function WarRoomPlan({
               {schools.map((school) => (
                 <li key={school.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center">
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-bold text-white">{school.name}</span>
+                    <a href={`/recruiting/schools/${school.id}`} className="block truncate text-sm font-bold text-white hover:underline">
+                      {school.name}
+                    </a>
                     <span className="block text-xs text-white/50">
                       {school.level} · {school.place}
                       {school.hasQuestionnaire && school.status === "interested" ? " · questionnaire to fill out" : ""}

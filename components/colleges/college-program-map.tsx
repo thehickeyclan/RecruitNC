@@ -2,10 +2,10 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
-import { ExternalLink, Lock, Mail, Search, ShieldCheck, Star, X } from "lucide-react"
+import { ChevronRight, Lock, Search, ShieldCheck, Star, X } from "lucide-react"
 
 import { CoachEmailComposer } from "@/components/colleges/coach-email-composer"
-import { WentHereSection } from "@/components/colleges/went-here-section"
+import { ListControls } from "@/components/colleges/list-controls"
 
 import {
   COLLEGE_LIST_STATUSES,
@@ -18,21 +18,13 @@ import { STATE_NAMES } from "@/lib/college-programs/states"
 import { loadMapbox, type MapLike } from "@/lib/mapbox/load-mapbox"
 import {
   COLLEGE_DIVISIONS,
+  DIVISION_COLOR,
   DIVISION_SHORT,
   primaryDivision,
   type CollegeDivision,
   type CollegeMapResponse,
   type CollegeMapSchool,
 } from "@/lib/college-programs/types"
-
-/** One colour per level, readable on the dark basemap and distinct from each other. */
-export const DIVISION_COLOR: Record<CollegeDivision, string> = {
-  "NCAA Division I": "#EF4444",
-  "NCAA Division II": "#3B82F6",
-  "NCAA Division III": "#22C55E",
-  NAIA: "#F5B942",
-  NJCAA: "#A78BFA",
-}
 
 const RECRUITNC_RING = "#FFFFFF"
 // The lower 48 with room for Simon Fraser (BC) at the top-left.
@@ -105,74 +97,6 @@ function programLine(p: CollegeMapSchool["programs"][number]): string {
   return teams
 }
 
-/**
- * Save a school, then say where things stand. Saving is one tap; the status is a plain dropdown
- * because the steps are a sequence a parent already knows, not something to learn.
- */
-function ListControls({
-  item,
-  busy,
-  onSave,
-  onRemove,
-  onEmail,
-}: {
-  item: CollegeListItem | undefined
-  busy: boolean
-  onSave: (status?: CollegeListStatus) => void
-  onRemove: () => void
-  onEmail: () => void
-}) {
-  if (!item) {
-    return (
-      <button
-        type="button"
-        disabled={busy}
-        onClick={() => onSave()}
-        className="mt-3 inline-flex w-full items-center justify-center gap-2 rounded-sm border border-[#D7B968] px-3 py-2 text-sm font-bold text-[#F5D985] hover:bg-[#D7B968]/15 disabled:opacity-50"
-      >
-        <Star className="h-4 w-4" /> Save to My List
-      </button>
-    )
-  }
-  return (
-    <div className="mt-3 rounded-sm border border-[#D7B968]/40 bg-[#D7B968]/10 p-2.5">
-      <div className="flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#F5D985]">
-          <Star className="h-3.5 w-3.5 fill-[#F5D985]" /> On My List
-        </span>
-        <button
-          type="button"
-          disabled={busy}
-          onClick={onRemove}
-          className="text-xs text-white/60 hover:text-white hover:underline"
-        >
-          Remove
-        </button>
-      </div>
-      <select
-        value={item.status}
-        disabled={busy}
-        onChange={(e) => onSave(e.target.value as CollegeListStatus)}
-        aria-label="Where things stand with this school"
-        className="mt-2 h-9 w-full rounded-sm border border-white/15 bg-[#0B1D3A] px-2 text-sm text-white"
-      >
-        {COLLEGE_LIST_STATUSES.map((status) => (
-          <option key={status} value={status}>
-            {COLLEGE_LIST_STATUS_LABEL[status]}
-          </option>
-        ))}
-      </select>
-      <button
-        type="button"
-        onClick={onEmail}
-        className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-sm bg-[#CC0000] px-3 py-2 text-sm font-bold text-white hover:bg-[#a80000]"
-      >
-        <Mail className="h-4 w-4" /> Email the coach
-      </button>
-    </div>
-  )
-}
-
 function SchoolCard({
   school,
   filters,
@@ -235,162 +159,14 @@ function SchoolCard({
 
       {list}
 
-      <StaffList school={school} />
-
-      <WentHereSection schoolId={school.id} schoolName={school.name.replace(/\s*\([^)]*\)\s*/g, " ").trim()} />
-
-      {school.website ? (
-        <a
-          href={school.website}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-3 flex items-center gap-1.5 text-sm font-semibold text-[#F5D985] hover:underline"
-        >
-          Athletics website <ExternalLink className="h-3.5 w-3.5" />
-        </a>
-      ) : null}
+      {/* Everything else about the school - staff, questionnaire, who went there - is on its page. */}
+      <a
+        href={`/recruiting/schools/${school.id}`}
+        className="mt-3 flex items-center justify-center gap-1.5 rounded-sm bg-white/10 px-3 py-2 text-sm font-bold text-white hover:bg-white/15"
+      >
+        Open school page <ChevronRight className="h-4 w-4" aria-hidden />
+      </a>
     </div>
-  )
-}
-
-type StaffRow = {
-  name: string
-  title: string
-  division: CollegeDivision
-  teams: Array<"mens" | "womens">
-  email: string | null
-  head: boolean
-}
-
-/**
- * Loaded when the card opens (the staff file is ~2,000 coaches). Head coaches always show; the
- * rest of the staff sits behind one tap so the card stays a card.
- */
-function StaffList({ school }: { school: CollegeMapSchool }) {
-  const [staff, setStaff] = useState<StaffRow[] | null>(null)
-  const [locked, setLocked] = useState(false)
-  const [questionnaires, setQuestionnaires] = useState<
-    Array<{ division: CollegeDivision; mens: string | null; womens: string | null }>
-  >([])
-  const [failed, setFailed] = useState(false)
-  const [showAll, setShowAll] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    setStaff(null)
-    setLocked(false)
-    setQuestionnaires([])
-    setFailed(false)
-    setShowAll(false)
-    fetch(`/api/college-map/staff?school=${encodeURIComponent(school.id)}`, { cache: "no-store" })
-      .then(async (res) => {
-        if (!res.ok) throw new Error()
-        const body = (await res.json()) as {
-          staff: StaffRow[]
-          locked?: boolean
-          questionnaires?: Array<{ division: CollegeDivision; mens: string | null; womens: string | null }>
-        }
-        if (cancelled) return
-        setLocked(body.locked === true)
-        setQuestionnaires(body.questionnaires ?? [])
-        setStaff(body.staff)
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true)
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [school.id])
-
-  if (failed) return <p className="mt-3 text-xs text-white/50">Could not load the coaching staff.</p>
-  if (!staff) return <p className="mt-3 text-xs text-white/50">Loading staff…</p>
-  if (locked) {
-    return (
-      <p className="mt-3 flex items-start gap-2 border-t border-white/10 pt-3 text-xs leading-5 text-white/70">
-        <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#F5D985]" />
-        <span>
-          Coaching staff, contacts and recruiting questionnaires are part of{" "}
-          <Link href="/blue" className="font-semibold text-[#F5D985] hover:underline">
-            NC United Blue
-          </Link>
-          .
-        </span>
-      </p>
-    )
-  }
-  // One link per team; a school with one team needs no "men's" / "women's" on the label.
-  const forms = questionnaires.flatMap((q) => [
-    q.mens ? { key: `${q.division}-m`, team: "Men's", url: q.mens } : null,
-    q.womens && q.womens !== q.mens ? { key: `${q.division}-w`, team: "Women's", url: q.womens } : null,
-  ]).filter((f): f is { key: string; team: string; url: string } => f !== null)
-  const questionnaireLinks =
-    forms.length > 0 ? (
-      <div className="mt-3 flex flex-wrap gap-2 border-t border-white/10 pt-3">
-        {forms.map((f) => (
-          <a
-            key={f.key}
-            href={f.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-sm bg-[#D7B968] px-2.5 py-1.5 text-xs font-bold text-[#071427] hover:bg-[#F5D985]"
-          >
-            {forms.length > 1 ? `${f.team} recruiting questionnaire` : "Recruiting questionnaire"}
-            <ExternalLink className="h-3 w-3" />
-          </a>
-        ))}
-      </div>
-    ) : null
-
-  if (staff.length === 0) {
-    // 25 programs' sites could not be read; absence here is ours, not the school's.
-    return (
-      <>
-        {questionnaireLinks}
-        <p className="mt-3 text-xs text-white/50">Coaching staff not confirmed yet — check the athletics website.</p>
-      </>
-    )
-  }
-
-  const twoTeams = school.programs.some((p) => p.mens && p.womens) || school.programs.length > 1
-  const shown = showAll ? staff : staff.filter((m) => m.head)
-  const hidden = staff.length - shown.length
-
-  return (
-    <>
-    {questionnaireLinks}
-    <div className="mt-3 border-t border-white/10 pt-3">
-      <p className="text-xs font-bold uppercase tracking-wider text-white/45">Coaching staff</p>
-      <ul className="mt-2 space-y-1.5">
-        {(shown.length > 0 ? shown : staff.slice(0, 1)).map((m) => (
-          <li key={`${m.name}-${m.title}-${m.division}`} className="text-sm leading-5">
-            <span className={m.head ? "font-semibold text-white" : "text-white/85"}>{m.name}</span>
-            <span className="text-white/50">
-              {" "}
-              · {m.title}
-              {twoTeams && !/men|women/i.test(m.title)
-                ? ` (${m.teams.map((t) => (t === "mens" ? "men's" : "women's")).join(" & ")})`
-                : ""}
-            </span>
-            {m.email ? (
-              <a href={`mailto:${m.email}`} className="block truncate text-xs text-[#F5D985] hover:underline">
-                {m.email}
-              </a>
-            ) : null}
-          </li>
-        ))}
-      </ul>
-      {!showAll && hidden > 0 ? (
-        <button
-          type="button"
-          onClick={() => setShowAll(true)}
-          className="mt-2 text-xs font-semibold text-[#F5D985] hover:underline"
-        >
-          Show all {staff.length} staff
-        </button>
-      ) : null}
-    </div>
-    </>
   )
 }
 
@@ -430,11 +206,13 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
       .catch((error) => setLoadError(error instanceof Error ? error.message : "Could not load the college map."))
   }, [])
 
-  // /recruiting/college-map?list=1 opens straight onto My List (the War Room links here).
+  // /recruiting/college-map?list=1 opens straight onto My List (the War Room links here), and
+  // ?school=<id> opens on that school (its page links back with "See it on the map").
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("list") === "1") {
-      setFilters((f) => ({ ...f, myListOnly: true }))
-    }
+    const params = new URLSearchParams(window.location.search)
+    if (params.get("list") === "1") setFilters((f) => ({ ...f, myListOnly: true }))
+    const school = params.get("school")
+    if (school) setSelectedId(school)
   }, [])
 
   // My List loads beside the map and never blocks it: no list (signed out, not Blue, table not
@@ -666,8 +444,10 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
 
   // A school the filters just hid cannot stay selected: its ring and card would float over nothing.
   useEffect(() => {
-    if (selectedId && !visible.some((school) => school.id === selectedId)) setSelectedId(null)
-  }, [visible, selectedId])
+    // Only once the schools are in: a school named in the address (?school=) is selected before
+    // the list loads, and must not be thrown away for not being in an empty list.
+    if (schools.length > 0 && selectedId && !visible.some((school) => school.id === selectedId)) setSelectedId(null)
+  }, [schools, visible, selectedId])
 
   useEffect(() => {
     const map = mapRef.current

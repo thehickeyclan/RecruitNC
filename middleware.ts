@@ -144,6 +144,8 @@ export async function middleware(request: NextRequest) {
     // Public college program map. The page and /api/college-map give signed-out visitors the dots
     // only; filters, staff emails and the On RecruitNC flag are decided per viewer in the API.
     '/recruiting/college-map',
+    // One page per college. Public for what the school is; the portal sections gate themselves.
+    '/recruiting/schools',
     '/api/college-map',
     '/news',
     '/blue',

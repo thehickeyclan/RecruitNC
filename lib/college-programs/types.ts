@@ -57,3 +57,12 @@ export function primaryDivision(school: Pick<CollegeMapSchool, "programs">): Col
   }
   return school.programs[0]?.division ?? "NCAA Division III"
 }
+
+/** One colour per level, readable on the dark basemap and distinct from each other. */
+export const DIVISION_COLOR: Record<CollegeDivision, string> = {
+  "NCAA Division I": "#EF4444",
+  "NCAA Division II": "#3B82F6",
+  "NCAA Division III": "#22C55E",
+  NAIA: "#F5B942",
+  NJCAA: "#A78BFA",
+}
