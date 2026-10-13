@@ -19,6 +19,21 @@ describe("the rules library", () => {
     }
   })
 
+  it("is about wrestling and no other sport", () => {
+    const words = [
+      ...Object.values(SOURCES).map((s) => s.label),
+      ...LEARN_PAGES.flatMap((p) => [p.title, p.summary]),
+      ...allSections.flatMap((s) => [
+        s.heading,
+        s.intro ?? "",
+        s.reading ?? "",
+        ...(s.bullets ?? []),
+        ...(s.rows ?? []).flatMap((r) => [r.label, r.value]),
+      ]),
+    ].join("\n")
+    expect(words).not.toMatch(/\bsports?\b|football|basketball|baseball|softball|soccer|lacrosse|volleyball|hockey|swimming|golf|tennis|track and field/i)
+  })
+
   it("says when it was checked", () => {
     expect(CHECKED).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })

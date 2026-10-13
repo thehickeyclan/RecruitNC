@@ -28,7 +28,7 @@ export default function LearnIndexPage() {
         <p className="mt-4 text-[11px] font-black uppercase tracking-widest text-[#D3B574]">RecruitNC · Recruiting Portal</p>
         <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">The rules, level by level</h1>
         <p className="mt-2 text-sm leading-6 text-white/65">
-          When a coach can contact a wrestler, when visits open, what signing means now, how scholarships work and what
+          Men&apos;s and women&apos;s wrestling, at every level, and nothing else. When a coach can contact a wrestler, when visits open, what signing means now, how scholarships work and what
           it takes to be eligible. Read from the NCAA, NAIA, NJCAA and NCHSAA&apos;s own 2026-27 documents, with the
           source under every section.
         </p>

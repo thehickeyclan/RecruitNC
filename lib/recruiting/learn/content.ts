@@ -15,6 +15,11 @@
  *   no list of which schools opted in to the House settlement, no verbal-offer date. Where the
  *   rule text needed reading rather than quoting, the section says so (`reading`).
  *
+ * - **Wrestling only** (Matt, 13 Oct 2026): men's and women's wrestling at every level, and no
+ *   other sport - not in a rule, not in an example, not in a source's label. The governing bodies'
+ *   documents cover every sport, so a label names the wrestling part and the pages say the link
+ *   opens the full document. A test holds this.
+ *
  * To change a rule: change it here, with its source, and move CHECKED. Nothing else on the site
  * states a recruiting rule.
  */
@@ -28,7 +33,7 @@ export const SOURCES = {
     url: "https://ncaaorg.s3.amazonaws.com/committees/d1/cabinet/Apr2026D1Cabinet_Apr14Report.pdf",
   },
   d1Calendar: {
-    label: "2026-27 NCAA Division I recruiting calendar, other sports",
+    label: "2026-27 NCAA Division I recruiting calendar (wrestling)",
     url: "https://ncaaorg.s3.amazonaws.com/compliance/recruiting/calendar/2026-27/2026%E2%80%9327D1Rec_OtherRecruitingCalendar.pdf",
   },
   houseQa: {
@@ -45,7 +50,7 @@ export const SOURCES = {
     url: "https://ncaaorg.s3.amazonaws.com/compliance/recruiting/calendar/2026-27/2026-27D2REC_RecGuide.pdf",
   },
   d2Calendar: {
-    label: "2026-27 NCAA Division II recruiting calendar",
+    label: "2026-27 NCAA Division II recruiting calendar (wrestling)",
     url: "https://ncaaorg.s3.amazonaws.com/compliance/recruiting/calendar/2026-27/2026-27D2Rec_RecruitingCalendar_AllSports.pdf",
   },
   d3Manual: { label: "2026-27 NCAA Division III Manual", url: "https://web3.ncaa.org/lsdbi/reports/getReport/90011" },
@@ -56,7 +61,7 @@ export const SOURCES = {
   naiaHandbook: { label: "2026-27 NAIA Official Handbook", url: "https://www.naia.org/wp-content/uploads/2026/07/2026_Official_Handbook.pdf" },
   njcaaBylaws: { label: "NJCAA Handbook and Bylaws 2026-27", url: "https://www.njcaa.org/compliance" },
   njcaaChart: {
-    label: "NJCAA 2026-27 Sports Procedures Chart",
+    label: "NJCAA 2026-27 procedures chart (wrestling)",
     url: "https://ardor-prod-media.s3.us-east-2.amazonaws.com/files/404933495157163011/3fb3dae3297443a688333ba7d0cbef68-2026-2027-Sports-Procedures-Chart-9-9-26.pdf",
   },
   nchsaa: {
@@ -149,7 +154,7 @@ export const D1_CONTACT: Record<D1Track, LearnSection> = {
   women: {
     heading: "When a Division I coach can contact you",
     intro:
-      "Women's wrestling follows the Division I general rule. The April 2026 change was for men's wrestling only.",
+      "Women's wrestling keeps the June 15 dates. The April 2026 change was for men's wrestling only.",
     rows: D1_OLD_DATES,
     sources: ["d1Manual"],
   },
@@ -204,7 +209,7 @@ export const LEARN_PAGES: LearnPage[] = [
       {
         heading: "Scholarships and roster spots",
         intro:
-          "Wrestling is an equivalency sport: a coach has a pool of scholarship money and splits it, so most wrestlers are on partial awards.",
+          "Wrestling scholarships are split: a coach has a pool of scholarship money and divides it, so most wrestlers are on partial awards.",
         bullets: [
           "At schools that opted in to the House settlement (every ACC, Big Ten, Big 12, Pac-12 and SEC member, plus any school that chose to), the roster limit is 30 for men's wrestling and 30 for women's. There is no cap on scholarships within that roster.",
           "At Division I schools that did not opt in, there is no national roster limit and the older ceilings stand: 9.9 scholarships' worth for men's wrestling, 10 for women's.",
@@ -263,7 +268,7 @@ export const LEARN_PAGES: LearnPage[] = [
       },
       {
         heading: "Scholarships",
-        intro: "Equivalency, like Division I: the money is a pool the coach divides.",
+        intro: "Split, like Division I: the money is a pool the coach divides among his wrestlers.",
         rows: [
           { label: "Men's wrestling", value: "Up to 9.0 scholarships' worth" },
           { label: "Women's wrestling", value: "Up to 10.0 scholarships' worth" },
@@ -434,9 +439,9 @@ export const LEARN_PAGES: LearnPage[] = [
         intro:
           "This is the one that catches families. The NCAA lets a high school wrestler keep prize money won on place or performance, paid by the event. The NCHSAA does not.",
         bullets: [
-          "A North Carolina public school athlete loses high school eligibility for accepting payment as a participant in an athletic contest.",
+          "A North Carolina public school wrestler loses high school eligibility for accepting payment for competing.",
           "The only exception is a gift or merchandise worth $250 or less per student per season, that is consumable or permanently labelled, and approved by the principal and superintendent.",
-          "Signing a professional contract ends high school eligibility in that sport. So does competing in an all-star event the NCHSAA has not sanctioned.",
+          "Signing a professional contract ends a wrestler's high school eligibility. So does wrestling in an all-star event the NCHSAA has not sanctioned.",
           "The rule applies from the day a student enters ninth grade.",
         ],
         reading:
@@ -444,7 +449,7 @@ export const LEARN_PAGES: LearnPage[] = [
         sources: ["nchsaa", "d1Manual"],
       },
       {
-        heading: "Name, image and likeness (NIL) for North Carolina public school athletes",
+        heading: "Name, image and likeness (NIL) for North Carolina public school wrestlers",
         intro: "It is allowed, under a state rule the NCHSAA enforces. Skipping a step makes the student ineligible.",
         bullets: [
           "The pay may not depend on athletic performance.",
@@ -452,7 +457,7 @@ export const LEARN_PAGES: LearnPage[] = [
           "The student gives the school the proposed agreement at least 10 business days before signing, and the signed copy within 5 business days after.",
           "The student, and a parent if the student is a minor, completes the NFHS NIL course at least 10 business days before signing.",
           "No school, conference or NCHSAA name, uniform, logo or mascot, and no promoting the sponsor during school competition.",
-          "Not allowed at all: adult entertainment, alcohol, tobacco and vaping, cannabis, controlled substances, weapons, and gambling including sports betting.",
+          "Not allowed at all: adult entertainment, alcohol, tobacco and vaping, cannabis, controlled substances, weapons, and gambling or betting of any kind.",
           "School staff, boosters and collectives may not use NIL to recruit a student to a school.",
         ],
         sources: ["ncNil", "nchsaa"],
@@ -461,7 +466,7 @@ export const LEARN_PAGES: LearnPage[] = [
         heading: "What about college?",
         bullets: [
           "A Division I school cannot put an NIL or revenue-share offer in writing before August 1 of senior year.",
-          "The NCAA's own advice to high school athletes on NIL is to check with the state athletic association first: here, the NCHSAA.",
+          "The NCAA's own advice to high school wrestlers on NIL is to check with the state athletic association first: here, the NCHSAA.",
         ],
         sources: ["houseQa", "cbsa"],
       },
