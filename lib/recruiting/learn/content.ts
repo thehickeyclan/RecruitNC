@@ -757,4 +757,11 @@ export const LEARN_PAGES: LearnPage[] = [
   },
 ]
 
+/** The anchor for a section, so a question can be linked to directly. */
+export const sectionId = (heading: string) =>
+  heading
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+
 export const learnPage = (slug: string) => LEARN_PAGES.find((page) => page.slug === slug) ?? null
