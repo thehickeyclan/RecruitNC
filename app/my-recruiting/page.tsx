@@ -14,7 +14,7 @@
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
-import { seniorClassYear } from "@/lib/class-years"
+import { mostRecentGraduatedClassYear, seniorClassYear } from "@/lib/class-years"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { isCollegeListStatus, type CollegeListStatus } from "@/lib/college-programs/list"
@@ -58,7 +58,13 @@ export default async function RecruitingWarRoomPage() {
         .in("id", ids)
         .order("graduationyear", { ascending: true })
     : { data: [] }
-  const athletes = (rows ?? []).map((a) => ({
+  // Recruiting ends at graduation. A graduate stays on the account (his profile and results are
+  // still his) but has nothing left to plan, so he is not in the War Room - Liam Hickey, Class of
+  // 2026, was the first tab on his father's page in October 2026.
+  const graduated = mostRecentGraduatedClassYear()
+  const inSchool = (rows ?? []).filter((a) => !a.graduationyear || Number(a.graduationyear) > graduated)
+  const graduatesOnly = (rows ?? []).length > 0 && inSchool.length === 0
+  const athletes = inSchool.map((a) => ({
     id: String(a.id),
     name: String(a.name ?? "").trim() || "Your wrestler",
     firstName: String(a.firstName ?? "").trim() || String(a.name ?? "").trim().split(" ")[0] || "Your wrestler",
@@ -131,9 +137,13 @@ export default async function RecruitingWarRoomPage() {
 
         {athletes.length === 0 ? (
           <div className="mt-8 rounded-xl border border-white/10 bg-white/[0.03] p-8 text-center">
-            <p className="text-lg font-bold">No wrestler on this account yet</p>
+            <p className="text-lg font-bold">
+              {graduatesOnly ? "No wrestler still in high school on this account" : "No wrestler on this account yet"}
+            </p>
             <p className="mx-auto mt-1 max-w-md text-sm text-white/60">
-              Claim your profile, or link to your child&apos;s as a parent, and the War Room fills in from their record.
+              {graduatesOnly
+                ? "The War Room is for wrestlers who are still being recruited. Link a younger wrestler and it fills in from their record."
+                : "Claim your profile, or link to your child's as a parent, and the War Room fills in from their record."}
             </p>
             <Link href="/athletes" className="mt-5 inline-block rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
               Find the profile

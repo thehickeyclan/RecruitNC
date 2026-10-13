@@ -2,7 +2,7 @@ import "server-only"
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 
-import { seniorClassYear } from "@/lib/class-years"
+import { mostRecentGraduatedClassYear, seniorClassYear } from "@/lib/class-years"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { coachSurname, eventDates, gradeLabel, resultClauses, spokenSchoolName } from "@/lib/college-programs/outreach-results"
@@ -85,7 +85,11 @@ export async function loadOutreachContext(
 
   const { data: rows, error } = await admin.from("athletes").select(ATHLETE_COLUMNS).in("id", ids)
   if (error) throw new Error(`outreach: athlete lookup failed: ${error.message}`)
-  const athletes = (rows ?? []) as unknown as Array<Record<string, unknown>>
+  // A graduate is not being recruited; he is not offered as the wrestler writing to a coach.
+  const graduated = mostRecentGraduatedClassYear()
+  const athletes = ((rows ?? []) as unknown as Array<Record<string, unknown>>).filter(
+    (a) => !a.graduationyear || Number(a.graduationyear) > graduated,
+  )
   const picker = athletes.map((a) => ({ id: String(a.id), name: athleteName(a) })).sort((a, b) => a.name.localeCompare(b.name))
 
   // Only a wrestler on this account; an id from anywhere else is ignored, not honoured.
