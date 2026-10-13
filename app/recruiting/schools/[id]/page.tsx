@@ -12,7 +12,7 @@
  */
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { ChevronRight, ExternalLink, Lock, MapPin, ShieldCheck } from "lucide-react"
+import { ChevronRight, ExternalLink, Lock, MapPin, ShieldCheck, Trophy } from "lucide-react"
 
 import { SchoolActions } from "@/components/colleges/school-actions"
 import { StaffList } from "@/components/colleges/staff-list"
@@ -24,6 +24,8 @@ import { schoolLogoUrl } from "@/lib/college-programs/logo"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { STATE_NAMES } from "@/lib/college-programs/states"
 import { TUITION_NOTE, tuitionFacts } from "@/lib/college-programs/tuition"
+import { rankingSentence } from "@/lib/college-programs/team-rankings"
+import { teamRankingsForSchool } from "@/lib/college-programs/team-rankings-snapshot"
 import { DIVISION_COLOR, DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -64,6 +66,7 @@ export default async function SchoolPage({ params }: Params) {
 
   const name = spoken(school.name)
   const tuition = tuitionFacts(school.id, school.state)
+  const rankings = await teamRankingsForSchool(school.id)
   const logo = await schoolLogoUrl(school)
   return (
     <main className="min-h-screen bg-[#060f1f] text-white">
@@ -111,6 +114,23 @@ export default async function SchoolPage({ params }: Params) {
               </li>
             ))}
           </ul>
+
+          {rankings.length > 0 ? (
+            <ul className="mt-3 space-y-1">
+              {rankings.map((r) => (
+                <li key={`${r.scope}-${r.gender}`} className="flex items-start gap-2 text-sm">
+                  <Trophy className="mt-0.5 h-4 w-4 shrink-0 text-[#D7B968]" aria-hidden />
+                  <span className="text-white/90">
+                    <span className="font-bold text-white">{r.gender === "womens" ? "Women: " : rankings.length > 1 ? "Men: " : ""}</span>
+                    {rankingSentence(r)}.{" "}
+                    <a href={r.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-white/55 underline hover:text-white">
+                      The poll
+                    </a>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
 
           {tuition && (tuition.control || tuition.lines.length > 0) ? (
             <div className="mt-4 max-w-xl rounded-lg border border-white/15 bg-white/[0.06] px-4 py-3 text-sm">
