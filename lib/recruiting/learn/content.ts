@@ -758,6 +758,69 @@ export const LEARN_PAGES: LearnPage[] = [
   },
 ]
 
+/**
+ * Where the rules for men's and women's wrestling differ, level by level (Matt, 13 Oct 2026:
+ * "if there are differences in rules for women's vs men's ... separate or call out").
+ *
+ * They are two programs under two sets of exceptions, and a family reading the men's dates for a
+ * daughter gets the wrong year. So every level page opens with this: what differs, side by side,
+ * and what is the same. A page with no differences says so, rather than leaving a family to
+ * wonder whether we checked. A test requires an entry for every level.
+ *
+ * Found by reading every bylaw in the 2026-27 manuals that names men's or women's wrestling.
+ */
+export type GenderDifference = { topic: string; mens: string; womens: string }
+
+export type GenderComparison = {
+  differences: GenderDifference[]
+  /** Checked, and the same for both. */
+  same: string[]
+  note?: string
+  sources: SourceKey[]
+}
+
+export const MENS_AND_WOMENS: Record<string, GenderComparison> = {
+  "division-1": {
+    differences: [
+      { topic: "A coach may first call, text or email", mens: "Class of 2028 and later: April 1 of junior year. Class of 2027: June 15 at the end of sophomore year.", womens: "June 15 at the end of sophomore year" },
+      { topic: "A coach may first meet you off campus", mens: "Class of 2028 and later: June 15 at the end of junior year. Class of 2027: August 1 at the start of junior year.", womens: "August 1 at the start of junior year" },
+      { topic: "First official and unofficial visits", mens: "Class of 2028 and later: August 15 of senior year. Class of 2027: August 1 of junior year.", womens: "August 1 of junior year" },
+      { topic: "Recruiting shutdowns in 2026-27 (no contact of any kind)", mens: "December 24-26 and March 16-21", womens: "None" },
+      { topic: "Window for a college wrestler to give notice of transfer", mens: "April 1 to April 30", womens: "February 28 to April 13, 2027" },
+      { topic: "National championship", mens: "The NCAA Division I Wrestling Championships", womens: "One National Collegiate Championship, shared by every NCAA division" },
+    ],
+    same: ["The roster limit of 30 at colleges in the House settlement", "The signing date and what is signed", "The dead periods in signing week and NWCA Convention week", "The academic standard"],
+    sources: ["d1Manual", "d1Calendar"],
+  },
+  "division-2": {
+    differences: [
+      { topic: "Scholarship limit for the whole team", mens: "The equivalent of 9 full grants", womens: "The equivalent of 10 full grants" },
+      { topic: "National championship", mens: "The NCAA Division II Men's Wrestling Championship", womens: "One National Collegiate Championship, shared by every NCAA division" },
+    ],
+    same: ["When a coach may call, write and meet you", "Official visits and tryouts, including the rule that a wrestling tryout may not include competition", "The signing date and the dead period before it", "The academic standard"],
+    sources: ["d2Manual"],
+  },
+  "division-3": {
+    differences: [
+      { topic: "National championship", mens: "A Division III championship of its own", womens: "One National Collegiate Championship, shared by every NCAA division" },
+    ],
+    same: ["When a coach may call, write and meet you", "Official and unofficial visits", "No athletic scholarships and no letter of intent", "No tryouts"],
+    note: "The Division III manual lists the shared women's championship as covering Divisions I and II from August 1, 2027, which points to Division III women getting a championship of their own. Ask a Division III coach how her team qualifies in the year you would enrol.",
+    sources: ["d3Manual"],
+  },
+  naia: {
+    differences: [],
+    same: ["No recruiting calendar and no first-contact date", "Tryouts and visits", "The eligibility rule", "The limit of 10 full grants, which each team has separately"],
+    note: "Men's and women's wrestling are separate NAIA teams with separate championships, under the same rules.",
+    sources: ["naiaHandbook", "naiaGuide"],
+  },
+  njcaa: {
+    differences: [{ topic: "Scholarship signees allowed", mens: "20", womens: "22" }],
+    same: ["Official visits", "The November 1 signing date", "What each NJCAA division's scholarship may cover", "Eligibility"],
+    sources: ["njcaaChart", "njcaaBylaws"],
+  },
+}
+
 /** The anchor for a section, so a question can be linked to directly. */
 export const sectionId = (heading: string) =>
   heading

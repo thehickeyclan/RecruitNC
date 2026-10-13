@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { CHECKED, D1_CONTACT, LEARN_PAGES, SOURCES, d1TrackFor, learnPage } from "./content"
+import { CHECKED, D1_CONTACT, LEARN_PAGES, MENS_AND_WOMENS, SOURCES, d1TrackFor, learnPage } from "./content"
 
 const allSections = [...LEARN_PAGES.flatMap((p) => p.sections), ...Object.values(D1_CONTACT)]
 
@@ -34,6 +34,20 @@ describe("the rules library", () => {
       ]),
     ].join("\n")
     expect(words).not.toMatch(/\bsports?\b|football|basketball|baseball|softball|soccer|lacrosse|volleyball|hockey|swimming|golf|tennis|track and field/i)
+  })
+
+  it("says where men's and women's wrestling differ, on every level page", () => {
+    for (const slug of ["division-1", "division-2", "division-3", "naia", "njcaa"]) {
+      const comparison = MENS_AND_WOMENS[slug]
+      expect(comparison, slug).toBeDefined()
+      expect(comparison.differences.length + comparison.same.length, slug).toBeGreaterThan(0)
+      for (const key of comparison.sources) expect(SOURCES[key], `${slug}: ${key}`).toBeDefined()
+      for (const d of comparison.differences) expect(d.mens, `${slug}: ${d.topic}`).not.toBe(d.womens)
+    }
+    // The comparison and the dated rules it summarises cannot drift apart.
+    const call = MENS_AND_WOMENS["division-1"].differences[0]
+    expect(call.mens).toContain(D1_CONTACT["men-2028"].rows![1].value)
+    expect(call.womens).toBe(D1_CONTACT.women.rows![1].value)
   })
 
   it("says when it was checked", () => {

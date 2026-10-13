@@ -12,7 +12,8 @@ import { LearnSectionCard } from "@/components/recruiting/learn/learn-section"
 import { mostRecentGraduatedClassYear } from "@/lib/class-years"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { LearnDisclaimer } from "@/components/recruiting/learn/learn-disclaimer"
-import { CHECKED, d1TrackFor, learnPage, type D1Track } from "@/lib/recruiting/learn/content"
+import { CHECKED, MENS_AND_WOMENS, d1TrackFor, learnPage, type D1Track } from "@/lib/recruiting/learn/content"
+import { MensAndWomens } from "@/components/recruiting/learn/mens-and-womens"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
@@ -67,6 +68,7 @@ export default async function LearnPage({ params }: Params) {
 
         {open ? (
           <div className="mt-6 space-y-4">
+            {MENS_AND_WOMENS[page.slug] ? <MensAndWomens comparison={MENS_AND_WOMENS[page.slug]} /> : null}
             {page.slug === "division-1" ? <D1Contact initial={track} forName={forName} /> : null}
             {page.sections.map((section) => (
               <LearnSectionCard key={section.heading} section={section} />
@@ -79,6 +81,7 @@ export default async function LearnPage({ params }: Params) {
             </p>
             <p className="mt-2 text-sm leading-6 text-white/75">It covers, with the source under each:</p>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-white/75 marker:text-[#D3B574]">
+              {MENS_AND_WOMENS[page.slug] ? <li>Men&apos;s and women&apos;s wrestling: what differs here</li> : null}
               {(page.slug === "division-1" ? [{ heading: "When a Division I coach can contact you, by class" }, ...page.sections] : page.sections).map((s) => (
                 <li key={s.heading}>{s.heading}</li>
               ))}
