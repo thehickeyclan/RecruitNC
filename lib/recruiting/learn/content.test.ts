@@ -56,8 +56,9 @@ describe("the rules library", () => {
     expect(D1_CONTACT["men-2028"].rows?.[0].value).toBe("April 1 of junior year")
     expect(D1_CONTACT["men-2027"].rows?.[0].value).toBe("June 15 at the end of sophomore year")
     expect(D1_CONTACT.women.rows?.[0].value).toBe("June 15 at the end of sophomore year")
-    // The 2027 dates are our reading of the applicability clause, and say so.
-    expect(D1_CONTACT["men-2027"].reading).toBeTruthy()
+    // The bylaws say who the new dates apply to, so the 2027 dates are stated, not hedged.
+    expect(D1_CONTACT["men-2027"].intro).toMatch(/August 1, 2028/)
+    expect(D1_CONTACT["men-2027"].reading).toBeUndefined()
   })
 
   it("never mentions the letter of intent as something a wrestler signs with the NCAA", () => {
