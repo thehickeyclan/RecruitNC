@@ -81,6 +81,9 @@ export function ConditionalAuthGuard({
     // Public college program map, for the same reason as /clubs: it is a shareable, searchable
     // page. What Blue adds (filters, staff emails, On RecruitNC) is withheld by /api/college-map.
     "/recruiting/college-map",
+    // A college's page: what and where it is are public; staff, questionnaires and the rest are
+    // withheld by their own APIs, as on the map.
+    "/recruiting/schools",
     "/news",
     "/nchsaa",
     "/nhsca",

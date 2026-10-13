@@ -179,6 +179,7 @@ export function queryCollegePrograms(args: CollegeProgramsQuery) {
           .join(" · "),
       ),
       website: school.website,
+      page_url: `/recruiting/schools/${school.id}`,
       ...(sortedSchools.length <= STAFF_DETAIL_MAX_SCHOOLS
         ? {
             // Head coaches only. The full staff is a Blue benefit on the map, and Data Dawg
