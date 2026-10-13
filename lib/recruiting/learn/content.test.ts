@@ -14,7 +14,7 @@ describe("the rules library", () => {
 
   it("cites only the governing bodies, never a recruiting service", () => {
     for (const source of Object.values(SOURCES)) {
-      expect(source.url).toMatch(/ncaa\.org|ncaaorg\.s3|fs\.ncaa\.org|naia\.org|njcaa\.org|ardor-prod-media|ardorsportshub\.com|nchsaa\.org|ncisaa\.org|ivyleague\.com|oah\.state\.nc\.us|nwcaonline\.com/)
+      expect(source.url).toMatch(/ncaa\.org|ncaaorg\.s3|fs\.ncaa\.org|naia\.org|njcaa\.org|ardor-prod-media|ardorsportshub\.com|nchsaa\.org|ncisaa\.org|ivyleague\.com|ed\.gov|studentaid\.gov|oah\.state\.nc\.us|nwcaonline\.com/)
       expect(source.url).not.toMatch(/ncsasports|flowrestling|wikipedia/)
     }
   })

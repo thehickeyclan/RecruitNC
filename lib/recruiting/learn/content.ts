@@ -99,6 +99,11 @@ export const SOURCES = {
     label: "Ivy League: information for prospective athletes",
     url: "https://ivyleague.com/sports/2017/7/28/information-psa-index.aspx",
   },
+  netPrice: {
+    label: "US Department of Education: Net Price Calculator Center",
+    url: "https://collegecost.ed.gov/net-price",
+  },
+  fafsa: { label: "Federal Student Aid (FAFSA)", url: "https://studentaid.gov/h/apply-for-aid/fafsa" },
   nwcaPortal: {
     label: "NWCA: transfer window approved by the Division I Cabinet, January 2026",
     url: "https://nwcaonline.com/news/2026/1/14/national-wrestling-coaches-association-nwca-initiative-on-transfer-portal-approved-by-ncaa-division-i-cabinet.aspx",
@@ -513,7 +518,7 @@ export const LEARN_PAGES: LearnPage[] = [
           "It depends on the kind of visit. An official visit is one the college pays for. An unofficial visit is one your family pays for, and you may take as many as you like.",
         rows: [
           { label: "Division I official visit", value: "Travel for the wrestler and up to two family members; lodging and up to three meals a day for the wrestler and up to four family members; two nights at most" },
-          { label: "Division II official visit", value: "The wrestler's round-trip travel and lodging, and meals for the wrestler and those with him; 48 hours at most. The rules do not provide for the family's airfare." },
+          { label: "Division II official visit", value: "The wrestler's round-trip travel and lodging, and meals for the wrestler and those with him; 48 hours at most. The rules do not provide for the family's airfare, but if a parent drives the wrestler the college may pay the mileage." },
           { label: "Division III official visit", value: "The wrestler's round-trip travel and lodging, and meals for the wrestler and those with him; 48 hours at most. The college may not pay the family's travel, apart from mileage if you drive together and a ride from the airport." },
           { label: "Junior college official visit", value: "The actual costs for the wrestler and two guests; 48 hours at most" },
           { label: "NAIA visit", value: "No set list. A college may pay only if it does the same for other specially talented students it recruits." },
@@ -592,6 +597,84 @@ export const LEARN_PAGES: LearnPage[] = [
           "Six Ivy League colleges are on our map with wrestling: Brown, Columbia, Cornell, Harvard, Penn and Princeton.",
         ],
         sources: ["ivy"],
+      },
+    ],
+  },
+  {
+    slug: "paying-for-college",
+    title: "Paying for college: the whole picture",
+    summary: "How common a full ride really is, how grades change the price, need-based aid, and how to compare offers on what your family will actually pay.",
+    free: false,
+    sections: [
+      {
+        heading: "How common is a full ride?",
+        intro:
+          "Rare. No governing body publishes how many wrestlers are on a full athletic scholarship, and we do not hold award data, so there is no honest percentage to give. What the rules themselves show is that the money is built to be shared.",
+        rows: [
+          { label: "NCAA Division II", value: "A whole team is limited to the equivalent of 9 full grants for men's wrestling and 10 for women's. The NCAA calls it a \"partial athletics scholarship model\"." },
+          { label: "NAIA", value: "A whole team is limited to the equivalent of 10 full grants of the college's aid" },
+          { label: "NCAA Division I", value: "At colleges in the House settlement, up to 30 wrestlers and no limit on scholarships within that. An award may be full or partial, in any amount." },
+          { label: "Junior college", value: "Up to 20 signees for men's wrestling and 22 for women's, of any size. NJCAA Division I programs may cover tuition, fees, room and board." },
+          { label: "NCAA Division III and the Ivy League", value: "No athletic scholarships at all" },
+        ],
+        bullets: [
+          "Across all teams, the NCAA says 70% of Division I athletes and 77% of Division II athletes receive some athletic aid. Some is not all.",
+          "In Division III, 80% of athletes receive aid that has nothing to do with athletics.",
+          "A full grant, in the NCAA's definition, is tuition and fees plus food and housing.",
+        ],
+        reading:
+          "The arithmetic, as an illustration only: nine full grants shared across a team of 30 wrestlers averages less than a third of a full grant each. Teams differ in size and coaches do not split evenly, so use it to set expectations, not to predict an offer.",
+        advice: "Expect a partial offer. The lowest bills usually come from combining a partial wrestling award with academic and need-based aid, which is why the rest of this page matters more than the scholarship number.",
+        rule: "NCAA Division II Bylaws 15.02.6, 15.4.2.1 and 15.4.2.2; NAIA Council of Presidents Policy XIII; NCAA Division I Bylaws 17.2 and 16.13.1.5",
+        sources: ["d2Manual", "naiaHandbook", "d1Manual", "houseQa", "njcaaChart", "cbsa"],
+      },
+      {
+        heading: "How grades change the price",
+        intro: "Grades do two jobs. They can earn aid of their own, and at some levels they let a coach give a wrestler more.",
+        bullets: [
+          "Colleges award their own academic scholarships, usually on GPA and test scores. The NCAA notes that many athletes also benefit from academic scholarships and need-based aid such as federal Pell Grants.",
+          "NAIA: a strong student costs the coach less of his limit. For an entering freshman with a 3.75 high school GPA, a 1280 SAT or 27 ACT, or a place in the top 10% of his class, none of his aid counts against the team's 10. With a 3.50 to 3.74 GPA, a 1140 SAT or 23 ACT, or the top 11% to 25%, only half counts.",
+          "NCAA Division II: only athletic aid counts against the team's limit. Academic aid from the college that does not depend on wrestling sits on top of it.",
+          "NCAA Division III and the Ivy League: there is no athletic money, so the academic record and financial need are the whole package. In the Ivy League it is need alone.",
+          "Grades also decide whether a wrestler can compete at all: a 2.3 core-course GPA for Division I and 2.2 for Division II.",
+        ],
+        advice: "Treat the GPA as part of the recruiting profile. Ask each college's admissions office what GPA and test score earn each level of academic scholarship; many publish a table. A wrestler a coach can fund partly with academic money is easier to say yes to.",
+        rule: "NAIA Council of Presidents Policy XIII, Section G (academic exemption); NCAA Division II Bylaws 15.02.2, 15.4.1.7 and 15.4.2.2; Division III Bylaw 15.01.3",
+        sources: ["naiaHandbook", "d2Manual", "d3Manual", "cbsa", "ivy"],
+      },
+      {
+        heading: "Need-based financial aid",
+        bullets: [
+          "Need-based aid comes from the college's financial aid office and the government, based on your family's finances. It starts with the federal FAFSA form.",
+          "Net price is what a student pays for one year after scholarships and grants are subtracted. Scholarships and grants do not have to be paid back; loans do.",
+          "Every college has a net price calculator on its website, where you enter your own details and see what students like yours paid. The Department of Education keeps a search for them.",
+          "A wrestler must report all the financial aid he receives to his college's financial aid office.",
+        ],
+        advice: "Run the net price calculator for every college on your list before you visit. It takes ten minutes, and it can show that a college with a high sticker price costs your family less than a cheaper-looking one.",
+        sources: ["netPrice", "fafsa", "cbsa"],
+      },
+      {
+        heading: "What an athletic scholarship covers, and for how long",
+        bullets: [
+          "It can cover some or all of tuition and fees, food and housing, and books. Read the agreement to see which, and what you are left to pay.",
+          "In Division I, athletic aid is awarded for at least one academic year and may run for more, up to the wrestler's five years of eligibility. It may be a one-year or a multi-year award.",
+          "In many cases the head coach decides who is offered a scholarship and whether it is renewed.",
+          "If a college plans to reduce, cancel or not renew it, the college must tell the wrestler in writing by July 1 and explain how to appeal.",
+        ],
+        advice: "Before signing, ask three things and get the answers in writing: how many years, what happens to the award if he is injured, and what would cause it to be reduced.",
+        rule: "NCAA Division I Bylaw 15.3.3.1",
+        sources: ["cbsa", "d1Manual"],
+      },
+      {
+        heading: "Comparing offers",
+        intro: "This is our way of doing it, not a rule.",
+        bullets: [
+          "Start with each college's full yearly cost of attendance: tuition, fees, housing, food, books and travel home.",
+          "Subtract, as yearly dollar figures, the wrestling award, the academic award, need-based grants, and any revenue share that is in the written offer.",
+          "What is left is what your family pays or borrows. Multiply it by four, and ask which parts are guaranteed beyond the first year.",
+          "Compare colleges on that number. A 25% wrestling scholarship at one college can cost a family more than no wrestling money at another.",
+        ],
+        sources: ["netPrice", "cbsa"],
       },
     ],
   },

@@ -1,4 +1,4 @@
-import { BookOpen, CalendarDays, HelpCircle, ChevronRight, FileText, MapPin, Scale, ShieldAlert, Sparkles, Trophy } from "lucide-react"
+import { BookOpen, CalendarDays, DollarSign, HelpCircle, ChevronRight, FileText, MapPin, Scale, ShieldAlert, Sparkles, Trophy } from "lucide-react"
 
 /**
  * Learn: what exists today, in the order a family needs it. Only finished material is listed -
@@ -17,6 +17,12 @@ const LESSONS = [
     title: "Questions families ask",
     text: "Who pays for a visit, do parents go, what NIL and revenue sharing are, a grant against a scholarship, and the Ivy League.",
     href: "/recruiting/learn/questions-families-ask",
+  },
+  {
+    icon: DollarSign,
+    title: "Paying for college: the whole picture",
+    text: "How common a full ride really is, how grades change the price, need-based aid, and comparing offers on what you will actually pay.",
+    href: "/recruiting/learn/paying-for-college",
   },
   {
     icon: Scale,
