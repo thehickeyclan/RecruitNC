@@ -62,7 +62,7 @@ export default async function LearnPage({ params }: Params) {
         </a>
         <h1 className="mt-4 text-3xl font-black tracking-tight sm:text-4xl">{page.title}</h1>
         <p className="mt-2 text-sm leading-6 text-white/65">{page.summary}</p>
-        <p className="mt-2 text-xs text-white/40">Wrestling, 2026-27. Last checked {checkedLabel}.</p>
+        <p className="mt-2 text-xs text-white/40">Men&apos;s and women&apos;s wrestling only, 2026-27. Last checked {checkedLabel}. Source links open the governing body&apos;s full document; what is written here is the wrestling rule from it.</p>
 
         {open ? (
           <div className="mt-6 space-y-4">

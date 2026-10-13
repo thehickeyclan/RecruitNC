@@ -751,7 +751,7 @@ export default function RecruitingPage() {
                     <li>State qualifiers and place-winners</li>
                     <li>Academically-focused student-athletes</li>
                     <li>Athletes seeking top academic programs</li>
-                    <li>Balanced college experience (sports + academics)</li>
+                    <li>Balanced college experience (wrestling + academics)</li>
                   </ul>
                 </div>
                 <div className="bg-blue-950/20 p-4 rounded-lg border border-blue-500/30">
