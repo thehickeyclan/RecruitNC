@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { rosterForSchool } from "@/lib/college-programs/rosters"
 import { loadWentHere } from "@/lib/college-programs/went-here"
+import { familyFocus } from "@/lib/recruiting/family-focus"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
@@ -20,7 +21,9 @@ export async function GET(request: NextRequest) {
 
   try {
     // A coach has no wrestler of his own to set beside it.
-    const wentHere = await loadWentHere(admin, schoolId, viewer.isBlueMember || viewer.isAdmin ? userId : null)
+    const family = viewer.isBlueMember || viewer.isAdmin ? userId : null
+    const focus = family ? await familyFocus(admin, family) : null
+    const wentHere = await loadWentHere(admin, schoolId, family, focus?.gender ?? null)
     // The roster is a file and always there; the commitments wait on the snapshot's first build.
     return NextResponse.json({ locked: false, roster: rosterForSchool(schoolId), wentHere })
   } catch (error) {

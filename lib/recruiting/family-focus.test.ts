@@ -38,3 +38,19 @@ describe("the developer's family preview", () => {
     expect(parsePreview(undefined)).toBeNull()
   })
 })
+
+import { listDetail } from "@/lib/college-programs/roadmap"
+
+describe("what the plan says about a family's list", () => {
+  it("does not tell a senior with nothing saved to narrow it", () => {
+    expect(listDetail("senior", 0, [])).toMatch(/^Start today/)
+    expect(listDetail("senior", 6, ["D1", "D2", "D3", "NAIA", "D2", "D3"])).toMatch(/^Narrow it/)
+  })
+
+  it("names a list that is all one level", () => {
+    expect(listDetail("junior", 17, Array(17).fill("D1"))).toMatch(/^All 17 are Division I/)
+    expect(listDetail("junior", 6, Array(6).fill("NAIA"))).toMatch(/^All 6 are NAIA/)
+    // Four schools is too few to call a pattern.
+    expect(listDetail("junior", 4, Array(4).fill("D1"))).toMatch(/^Go wide/)
+  })
+})

@@ -29,6 +29,8 @@ export type PlanInput = {
   /** The first unfinished profile item: what to add and which editor opens. */
   profileTodo: { todo: string; edit: string } | null
   listStatuses: CollegeListStatus[]
+  /** The level of each saved school ("D1", "NAIA"), so a list that is all one level can be named. */
+  listLevels?: string[]
   /** Saved schools that have a questionnaire and are still only "interested". */
   questionnairesWaiting: number
   scheduleCount: number
@@ -39,6 +41,24 @@ export function listTarget(grade: string | null): number {
   if (grade === "freshman") return 10
   if (grade === "senior") return 10
   return 20
+}
+
+/**
+ * What to say about the list. Two things a real family's list showed (13 Oct 2026): a senior with
+ * nothing saved was told to "narrow" it, and a junior with 17 schools had saved only Division I.
+ */
+export function listDetail(grade: string | null, count: number, levels: string[]): string {
+  const only = levels.length >= 5 && new Set(levels).size === 1 ? levels[0] : null
+  if (only === "D1") {
+    return `All ${levels.length} are Division I. Most wrestlers who compete in college do it outside Division I, and the roster is limited to 30 at Division I colleges in the House settlement. Add Division II, Division III and NAIA programs you would be glad to attend.`
+  }
+  if (only) return `All ${levels.length} are ${only}. Add a few programs at other levels so you can compare what each would offer.`
+  if (grade === "senior") {
+    return count === 0
+      ? "Start today. Programs at every level are still filling rosters in senior year. Save the ones you would attend and write to them this week."
+      : "Narrow it to the programs that are answering you, with at least two you would be happy to attend."
+  }
+  return "Go wide and across levels. Most wrestlers who compete in college do it outside Division I."
 }
 
 const reached = (statuses: CollegeListStatus[], at: CollegeListStatus) =>
@@ -67,10 +87,7 @@ export function planSteps(input: PlanInput): PlanStep[] {
     {
       key: "list",
       title: listStatuses.length >= target ? `${listStatuses.length} schools on your list` : `Build your list: ${listStatuses.length} of ${target} schools`,
-      detail:
-        grade === "senior"
-          ? "Narrow it to the programs that are answering you, with at least two you would be happy to attend."
-          : "Go wide and across levels. Most wrestlers who compete in college do it outside Division I.",
+      detail: listDetail(grade, listStatuses.length, input.listLevels ?? []),
       done: listStatuses.length >= target,
       action: { kind: "link", href: "/recruiting/college-map" },
     },

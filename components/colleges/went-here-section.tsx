@@ -156,11 +156,11 @@ export function WentHereSection({ schoolId, schoolName, focus }: { schoolId: str
 
       {wentHere?.schoolSentence ? (
         <p className="mt-3 text-sm leading-5 text-white/80">
-          Of the North Carolina wrestlers who committed to {schoolName} in the last four classes, {wentHere.schoolSentence}
+          Of the North Carolina {wentHere.among ?? "wrestlers"} who committed to {schoolName} in the last four classes, {wentHere.schoolSentence}
         </p>
       ) : wentHere?.level.sentence ? (
         <p className="mt-3 text-sm leading-5 text-white/80">
-          Across NC wrestlers who went {wentHere.level.short}: {wentHere.level.sentence}
+          Across NC {wentHere.among ?? "wrestlers"} who went {wentHere.level.short}: {wentHere.level.sentence}
         </p>
       ) : null}
 

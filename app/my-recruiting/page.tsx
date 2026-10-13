@@ -27,6 +27,7 @@ import { tuitionShort } from "@/lib/college-programs/tuition"
 import { listUpcomingEvents, type UpcomingEvent } from "@/lib/college-programs/schedule"
 import { DIVISION_SHORT, primaryDivision, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { completenessFromRow } from "@/lib/profile-completeness"
+import { familyFocus } from "@/lib/recruiting/family-focus"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
@@ -52,7 +53,7 @@ export default async function RecruitingWarRoomPage() {
   const portal = await resolvePortalViewer({ supabase, admin })
   const viewerId = portal.userId ?? user.id
   const viewer = portal.viewer
-  const ids = await familyAthleteIds(admin, viewerId)
+  const [ids, focus] = await Promise.all([familyAthleteIds(admin, viewerId), familyFocus(admin, viewerId)])
   const blue = Boolean(viewer.isBlueMember || viewer.isAdmin)
 
   const { data: rows } = ids.length
@@ -100,6 +101,7 @@ export default async function RecruitingWarRoomPage() {
           logo: null as string | null,
           hasQuestionnaire: questionnairesForSchool(school.id).length > 0,
           tuition: tuitionShort(school.id, school.state),
+          noTeam: focus && !school.programs.some((p) => p[focus.gender]) ? `No ${focus.gender === "womens" ? "women's" : "men's"} team` : null,
         },
       ]
     })

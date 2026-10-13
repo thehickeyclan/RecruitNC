@@ -44,14 +44,21 @@ export default async function LearnPage({ params }: Params) {
   // Division I dates differ by class and by boys or girls: open on the family's own wrestler.
   let track: D1Track = "men-2028"
   let forName: string | null = null
+  const trackNames: Partial<Record<D1Track, string[]>> = {}
   if (open && page.slug === "division-1" && userId) {
     const ids = await familyAthleteIds(admin, userId).catch(() => [])
     if (ids.length > 0) {
       const { data: rows } = await admin.from("athletes").select('"firstName", name, gender, graduationyear').in("id", ids)
       const graduated = mostRecentGraduatedClassYear()
-      const wrestler = (rows ?? [])
+      const current = (rows ?? [])
         .filter((a) => !a.graduationyear || Number(a.graduationyear) > graduated)
-        .sort((a, b) => Number(a.graduationyear ?? 9999) - Number(b.graduationyear ?? 9999))[0]
+        .sort((a, b) => Number(a.graduationyear ?? 9999) - Number(b.graduationyear ?? 9999))
+      for (const a of current) {
+        const t = d1TrackFor(a.gender as string | null, a.graduationyear ? Number(a.graduationyear) : null)
+        const first = String(a.firstName ?? "").trim() || String(a.name ?? "").trim().split(" ")[0]
+        if (first) trackNames[t] = [...(trackNames[t] ?? []), first]
+      }
+      const wrestler = current[0]
       if (wrestler) {
         track = d1TrackFor(wrestler.gender as string | null, wrestler.graduationyear ? Number(wrestler.graduationyear) : null)
         forName = String(wrestler.firstName ?? "").trim() || String(wrestler.name ?? "").trim().split(" ")[0] || null
@@ -72,7 +79,7 @@ export default async function LearnPage({ params }: Params) {
         {open ? (
           <div className="mt-6 space-y-4">
             {MENS_AND_WOMENS[page.slug] ? <MensAndWomens comparison={MENS_AND_WOMENS[page.slug]} focus={focus} /> : null}
-            {page.slug === "division-1" ? <D1Contact initial={track} forName={forName} /> : null}
+            {page.slug === "division-1" ? <D1Contact initial={track} forName={forName} names={trackNames} /> : null}
             {page.sections.map((section) => (
               <LearnSectionCard key={section.heading} section={section} />
             ))}

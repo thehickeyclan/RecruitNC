@@ -25,6 +25,11 @@ export type SnapshotCommit = {
   schoolId: string
   division: CollegeDivision
   standing: Standing
+  /**
+   * Men's or women's wrestling, from the profile. Absent in a snapshot saved before 13 Oct 2026
+   * and null for a profile with no gender; such a commit is in the combined figures only.
+   */
+  gender?: "mens" | "womens" | null
 }
 
 export type WentHereSnapshot = {
@@ -32,6 +37,9 @@ export type WentHereSnapshot = {
   commits: SnapshotCommit[]
   gpaBySchool: Record<string, GpaStats>
   gpaByDivision: Partial<Record<CollegeDivision, GpaStats>>
+  /** The same averages for one of men's or women's, keyed "school-id|womens" and "NAIA|womens". Five or more only. */
+  gpaBySchoolGender?: Record<string, GpaStats>
+  gpaByDivisionGender?: Record<string, GpaStats>
 }
 
 export async function saveWentHereSnapshot(snapshot: WentHereSnapshot): Promise<{ bytes: number }> {

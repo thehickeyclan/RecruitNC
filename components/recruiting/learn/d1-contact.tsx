@@ -12,12 +12,22 @@ const TRACKS: D1Track[] = ["men-2028", "men-2027", "women"]
  * in the Class of 2028 and younger, and not for the Class of 2027 or for girls. The page opens on
  * the family's own wrestler when it knows him, and says which set it is showing.
  */
-export function D1Contact({ initial, forName }: { initial: D1Track; forName: string | null }) {
+export function D1Contact({
+  initial,
+  forName,
+  names = {},
+}: {
+  initial: D1Track
+  forName: string | null
+  /** The family's wrestlers by the set of dates that is theirs, so a son and a daughter each find their own. */
+  names?: Partial<Record<D1Track, string[]>>
+}) {
   const [track, setTrack] = useState<D1Track>(initial)
+  const shownFor = names[track]?.join(" and ") || (track === initial ? forName : null)
   return (
     <div>
       <p className="text-sm text-white/60">
-        {forName && track === initial ? `Showing the dates for ${forName}.` : "The dates depend on the wrestler."} Choose:
+        {shownFor ? `Showing the dates for ${shownFor}.` : "The dates depend on the wrestler."} Choose:
       </p>
       <div className="mt-2 flex flex-wrap gap-2" role="tablist" aria-label="Which wrestler">
         {TRACKS.map((t) => (
@@ -32,6 +42,7 @@ export function D1Contact({ initial, forName }: { initial: D1Track; forName: str
             }`}
           >
             {D1_TRACK_LABEL[t]}
+            {names[t]?.length ? <span className="font-normal text-[#D3B574]"> · {names[t]!.join(", ")}</span> : null}
           </button>
         ))}
       </div>
