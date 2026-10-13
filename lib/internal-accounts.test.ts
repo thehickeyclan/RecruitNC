@@ -29,3 +29,12 @@ describe("isInternalAccount", () => {
     expect(isInternalAccount("")).toBe(false)
   })
 })
+
+describe("the test coach", () => {
+  it("is ours, so its views never read as college interest", async () => {
+    const { isInternalAccount } = await import("./internal-accounts")
+    expect(isInternalAccount("testcoach.thehickeyclan@gmail.com")).toBe(true)
+    expect(isInternalAccount("TestCoach.TheHickeyClan@gmail.com ")).toBe(true)
+    expect(isInternalAccount("thehickeyclan@gmail.com")).toBe(false)
+  })
+})
