@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { questionnairesForSchool } from "@/lib/college-programs/questionnaires"
 import { isHeadCoach, staffForSchool } from "@/lib/college-programs/staff"
-import { resolveRankingViewer } from "@/lib/ranking-access"
+import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   const schoolId = request.nextUrl.searchParams.get("school")?.trim()
   if (!schoolId) return NextResponse.json({ error: "school is required" }, { status: 400 })
 
-  const { viewer } = await resolveRankingViewer({ supabase: await createClient(), admin: createAdminClient() })
+  const { viewer } = await resolvePortalViewer({ supabase: await createClient(), admin: createAdminClient() })
   const full = Boolean(viewer.isBlueMember || viewer.isAdmin || viewer.isVerifiedCoach)
 
   if (!full) return NextResponse.json({ staff: [], questionnaires: [], locked: true })

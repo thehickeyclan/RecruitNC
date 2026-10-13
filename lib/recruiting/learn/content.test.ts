@@ -33,6 +33,8 @@ describe("the rules library", () => {
         ...(s.rows ?? []).flatMap((r) => [r.label, r.value]),
       ]),
     ].join("\n")
+    // Half the families reading this have a daughter, and some of the coaches are women.
+    expect(words).not.toMatch(/\b(he|him|his|himself)\b/i)
     expect(words).not.toMatch(/\bsports?\b|football|basketball|baseball|softball|soccer|lacrosse|volleyball|hockey|swimming|golf|tennis|track and field/i)
   })
 

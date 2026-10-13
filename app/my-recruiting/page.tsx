@@ -27,7 +27,7 @@ import { tuitionShort } from "@/lib/college-programs/tuition"
 import { listUpcomingEvents, type UpcomingEvent } from "@/lib/college-programs/schedule"
 import { DIVISION_SHORT, primaryDivision, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { completenessFromRow } from "@/lib/profile-completeness"
-import { resolveRankingViewerForUser } from "@/lib/ranking-access"
+import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { MyRecruitingAthlete } from "./my-recruiting-athlete"
@@ -48,10 +48,11 @@ export default async function RecruitingWarRoomPage() {
   if (!user) redirect("/auth/signin?returnTo=%2Fmy-recruiting")
 
   const admin = createAdminClient()
-  const [ids, { viewer }] = await Promise.all([
-    familyAthleteIds(admin, user.id),
-    resolveRankingViewerForUser({ admin, userId: user.id }),
-  ])
+  // The signed-in viewer - or, on a developer's machine, the family an admin is previewing.
+  const portal = await resolvePortalViewer({ supabase, admin })
+  const viewerId = portal.userId ?? user.id
+  const viewer = portal.viewer
+  const ids = await familyAthleteIds(admin, viewerId)
   const blue = Boolean(viewer.isBlueMember || viewer.isAdmin)
 
   const { data: rows } = ids.length
@@ -82,7 +83,7 @@ export default async function RecruitingWarRoomPage() {
   const schedules = new Map<string, UpcomingEvent[]>()
   if (blue) {
     const [list, ...events] = await Promise.all([
-      admin.from("college_list_items").select("school_id, status, updated_at").eq("user_id", user.id).order("updated_at", { ascending: false }),
+      admin.from("college_list_items").select("school_id, status, updated_at").eq("user_id", viewerId).order("updated_at", { ascending: false }),
       ...athletes.map((a) => listUpcomingEvents(admin, a.id).catch(() => ({ available: false, events: [] as UpcomingEvent[] }))),
     ])
     schools = (list.data ?? []).flatMap((row) => {

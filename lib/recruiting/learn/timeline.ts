@@ -117,7 +117,7 @@ export const TIMELINE: TimelineGrade[] = [
       },
     ],
     steps: [
-      { text: "Claim the wrestler's profile so his results are attached to him from the start.", href: "/athletes", cta: "Find the profile" },
+      { text: "Claim the wrestler's profile so every result is attached to it from the start.", href: "/athletes", cta: "Find the profile" },
       { text: "Ask the high school counselor which ninth grade classes are NCAA-approved core courses before the schedule is set." },
       { text: "Read the North Carolina page once, together. It is the rule most likely to be broken by accident.", href: "/recruiting/learn/staying-eligible-in-north-carolina", cta: "Read it" },
     ],

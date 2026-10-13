@@ -24,3 +24,17 @@ describe("whose recruiting a family is looking at", () => {
     expect(focusFrom([], 2026)).toBeNull()
   })
 })
+
+import { parsePreview } from "./portal-viewer"
+
+vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined }) }))
+vi.mock("@/lib/ranking-access", () => ({ resolveRankingViewer: async () => ({ viewer: {}, userId: null }), resolveRankingViewerForUser: async () => ({ viewer: {}, userId: null }) }))
+
+describe("the developer's family preview", () => {
+  it("accepts only an account id, with or without the Blue flag", () => {
+    expect(parsePreview("8d4ed89c-1a52-48cc-9429-ab5c24875a25")).toEqual({ userId: "8d4ed89c-1a52-48cc-9429-ab5c24875a25", blue: false })
+    expect(parsePreview("8d4ed89c-1a52-48cc-9429-ab5c24875a25:blue")).toEqual({ userId: "8d4ed89c-1a52-48cc-9429-ab5c24875a25", blue: true })
+    expect(parsePreview("someone@example.com")).toBeNull()
+    expect(parsePreview(undefined)).toBeNull()
+  })
+})

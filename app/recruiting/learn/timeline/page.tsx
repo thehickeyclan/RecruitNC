@@ -15,7 +15,7 @@ import { mostRecentGraduatedClassYear, seniorClassYear } from "@/lib/class-years
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { CHECKED, D1_TRACK_LABEL, SOURCES, d1TrackFor, type D1Track } from "@/lib/recruiting/learn/content"
 import { GRADE_NAME, TIMELINE, alwaysOpen, gradeForClass, openingsFor, type Grade } from "@/lib/recruiting/learn/timeline"
-import { resolveRankingViewer } from "@/lib/ranking-access"
+import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
@@ -34,7 +34,7 @@ type Wrestler = { firstName: string; grade: Grade; track: D1Track }
 export default async function TimelinePage({ searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
   const params = (await searchParams) ?? {}
   const admin = createAdminClient()
-  const { viewer, userId } = await resolveRankingViewer({ supabase: await createClient(), admin })
+  const { viewer, userId } = await resolvePortalViewer({ supabase: await createClient(), admin })
   const open = Boolean(viewer.isBlueMember || viewer.isAdmin || viewer.isVerifiedCoach)
 
   // The family's wrestlers still in school, oldest first: the nearest deadline leads.

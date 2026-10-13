@@ -19,7 +19,7 @@ const SUB = "text-xs font-bold uppercase tracking-wider text-white/45"
  * It sets the facts out. It never says whether he is good enough - that is the coach's call, on
  * things we cannot see.
  */
-export function WentHereSection({ schoolId, schoolName }: { schoolId: string; schoolName: string }) {
+export function WentHereSection({ schoolId, schoolName, focus }: { schoolId: string; schoolName: string; focus?: "mens" | "womens" | null }) {
   const [data, setData] = useState<{ roster: SchoolRosterView; wentHere: WentHere | null } | null>(null)
   const [showAll, setShowAll] = useState(false)
 
@@ -41,7 +41,16 @@ export function WentHereSection({ schoolId, schoolName }: { schoolId: string; sc
   }, [schoolId])
 
   if (!data) return null
-  const { roster, wentHere } = data
+  const { wentHere } = data
+  // The family's own team first: a daughter is compared with the women on the roster, not the men.
+  const theirWord = focus === "womens" ? "women's" : "men's"
+  const roster = focus
+    ? {
+        ...data.roster,
+        wrestlers: [...data.roster.wrestlers].sort((x, y) => Number(y.team === focus) - Number(x.team === focus)),
+        teamLines: [...data.roster.teamLines].sort((x, y) => Number(y.includes(` ${theirWord} `)) - Number(x.includes(` ${theirWord} `))),
+      }
+    : data.roster
 
   // A commitment we hold results for, by name: so a wrestler on the roster carries what he won,
   // and is not then listed a second time as a commit.
@@ -176,7 +185,7 @@ export function WentHereSection({ schoolId, schoolName }: { schoolId: string; sc
 
       <p className="mt-2 text-xs leading-4 text-white/40">
         Rosters as each school published them on 12 October 2026. North Carolina wrestlers only: programs also recruit
-        from other states, and a coach weighs what he needs at each weight.
+        from other states, and a coach weighs what the team needs at each weight.
       </p>
     </div>
   )

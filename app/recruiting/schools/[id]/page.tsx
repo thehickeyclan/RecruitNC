@@ -27,7 +27,7 @@ import { TUITION_NOTE, tuitionFacts } from "@/lib/college-programs/tuition"
 import { rankingSentence } from "@/lib/college-programs/team-rankings"
 import { teamRankingsForSchool } from "@/lib/college-programs/team-rankings-snapshot"
 import { DIVISION_COLOR, DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
-import { resolveRankingViewer } from "@/lib/ranking-access"
+import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { familyFocus } from "@/lib/recruiting/family-focus"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
@@ -56,7 +56,7 @@ export default async function SchoolPage({ params }: Params) {
   if (!school) notFound()
 
   const admin = createAdminClient()
-  const { viewer, userId } = await resolveRankingViewer({ supabase: await createClient(), admin })
+  const { viewer, userId } = await resolvePortalViewer({ supabase: await createClient(), admin })
   const full = Boolean(viewer.isBlueMember || viewer.isAdmin || viewer.isVerifiedCoach)
   // "On RecruitNC" is part of the portal; a map that will not load must not take the page down.
   const onRecruitNC = full
@@ -198,7 +198,7 @@ export default async function SchoolPage({ params }: Params) {
             </div>
             <div className="rounded-sm border border-white/10 bg-[#0B1D3A]/60 p-5">
               <h2 className={`text-2xl text-white ${tocDisplayClass()}`}>Where you stand</h2>
-              <WentHereSection schoolId={school.id} schoolName={name} />
+              <WentHereSection schoolId={school.id} schoolName={name} focus={theirs} />
             </div>
           </div>
         ) : (
