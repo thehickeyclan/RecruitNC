@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 
 import { isEduEmail } from "@/lib/coach-auto-approve"
 import { suggestColleges } from "@/lib/college-match"
+import { mapSchoolIdFor } from "@/lib/college-programs/load"
 
 /**
  * Which college a coach belongs to, settled when they sign up.
@@ -85,10 +86,19 @@ export async function assignCoachCollege(
     const institution = String(input.institution ?? "").trim()
     const { data: colleges } = await admin.from("colleges").select("id, name, division, logo_url")
 
-    let college: CollegeRow | null = suggestColleges((colleges ?? []) as CollegeRow[], {
-      institution,
-      email: input.email,
-    })[0] ?? null
+    /*
+     * A match on a shared word is not the same school. "Nebraska Wesleyan University" matched the
+     * "Wesleyan University" on file - Connecticut - because "wesleyan" was half of what he typed, and
+     * a Nebraska coach was put on Connecticut's staff: their board, and their name on a family's
+     * profile. The national program list knows these are two schools, so a suggestion that lands on
+     * a different dot from the one he named is not offered.
+     */
+    const namedOnMap = mapSchoolIdFor(institution)
+    let college: CollegeRow | null =
+      suggestColleges((colleges ?? []) as CollegeRow[], { institution, email: input.email }).find((candidate) => {
+        const candidateOnMap = mapSchoolIdFor(candidate.name)
+        return !namedOnMap || !candidateOnMap || candidateOnMap === namedOnMap
+      }) ?? null
     let status: "matched" | "added" = "matched"
 
     if (!college) {
@@ -109,7 +119,10 @@ export async function assignCoachCollege(
       const { data: coachSchools } = schoolIds.length
         ? await admin.from("schools").select("id, name").in("id", schoolIds)
         : { data: [] as Array<{ id: string; name: string }> }
-      const knownSchool = suggestColleges((coachSchools ?? []) as CollegeRow[], { institution, email: input.email })[0]
+      const knownSchool = suggestColleges((coachSchools ?? []) as CollegeRow[], { institution, email: input.email }).find((candidate) => {
+        const candidateOnMap = mapSchoolIdFor(candidate.name)
+        return !namedOnMap || !candidateOnMap || candidateOnMap === namedOnMap
+      })
       const newName = knownSchool?.name ?? institution
 
       const { data: created, error } = await admin
