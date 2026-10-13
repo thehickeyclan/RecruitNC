@@ -1,4 +1,4 @@
-import { BookOpen, ChevronRight, FileText, MapPin, Scale, ShieldAlert, Sparkles, Trophy } from "lucide-react"
+import { BookOpen, CalendarDays, ChevronRight, FileText, MapPin, Scale, ShieldAlert, Sparkles, Trophy } from "lucide-react"
 
 /**
  * Learn: what exists today, in the order a family needs it. Only finished material is listed -
@@ -6,6 +6,12 @@ import { BookOpen, ChevronRight, FileText, MapPin, Scale, ShieldAlert, Sparkles,
  * NAIA and NJCAA manuals, not before.
  */
 const LESSONS = [
+  {
+    icon: CalendarDays,
+    title: "Your timeline, grade by grade",
+    text: "What to do this year, from eighth grade to signing, and the dates each level of coach may first call, meet and host your wrestler.",
+    href: "/recruiting/learn/timeline",
+  },
   {
     icon: Scale,
     title: "The rules, level by level",
