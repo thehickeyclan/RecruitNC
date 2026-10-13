@@ -1,4 +1,4 @@
-import { BookOpen, CalendarDays, ChevronRight, FileText, MapPin, Scale, ShieldAlert, Sparkles, Trophy } from "lucide-react"
+import { BookOpen, CalendarDays, HelpCircle, ChevronRight, FileText, MapPin, Scale, ShieldAlert, Sparkles, Trophy } from "lucide-react"
 
 /**
  * Learn: what exists today, in the order a family needs it. Only finished material is listed -
@@ -11,6 +11,12 @@ const LESSONS = [
     title: "Your timeline, grade by grade",
     text: "What to do this year, from eighth grade to signing, and the dates each level of coach may first call, meet and host your wrestler.",
     href: "/recruiting/learn/timeline",
+  },
+  {
+    icon: HelpCircle,
+    title: "Questions families ask",
+    text: "Who pays for a visit, do parents go, what NIL and revenue sharing are, a grant against a scholarship, and the Ivy League.",
+    href: "/recruiting/learn/questions-families-ask",
   },
   {
     icon: Scale,
