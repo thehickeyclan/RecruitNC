@@ -1,0 +1,44 @@
+import { describe, expect, it } from "vitest"
+
+import { rosterForSchool, rosterNameKey } from "./rosters"
+
+// Expected numbers are the workbook's own (rosters pulled 12 Oct 2026).
+describe("NC wrestlers on college rosters", () => {
+  it("says how many of a roster are from North Carolina", () => {
+    const app = rosterForSchool("appalachian-state-university")
+    expect(app.wrestlers).toHaveLength(9)
+    expect(app.teamLines).toEqual(["9 of the 30 wrestlers on the 2026-27 roster are from North Carolina."])
+  })
+
+  it("says none when it read the roster and found none", () => {
+    expect(rosterForSchool("arizona-state-university").teamLines).toEqual([
+      "None of the 33 wrestlers on the 2026-27 roster are from North Carolina.",
+    ])
+  })
+
+  it("never calls an unread roster empty", () => {
+    const unread = Object.entries(
+      (require("./nc-rosters-2026-27.json") as { schools: Record<string, { teams: Array<{ reviewed: boolean }> }> }).schools,
+    ).find(([, s]) => s.teams.length === 1 && !s.teams[0].reviewed)!
+    const view = rosterForSchool(unread[0])
+    expect(view.anyReviewed).toBe(false)
+    expect(view.teamLines[0]).toMatch(/^We could not read the roster/)
+  })
+
+  it("names the team when a school has two", () => {
+    const lines = rosterForSchool("university-of-mount-olive").teamLines
+    expect(lines).toHaveLength(2)
+    expect(lines.join(" ")).toMatch(/men's roster/)
+    expect(lines.join(" ")).toMatch(/women's roster/)
+  })
+
+  it("holds every wrestler in the workbook", () => {
+    const all = require("./nc-rosters-2026-27.json") as { schools: Record<string, { wrestlers: unknown[] }> }
+    expect(Object.values(all.schools).reduce((n, s) => n + s.wrestlers.length, 0)).toBe(326)
+  })
+
+  it("matches names across punctuation and case", () => {
+    expect(rosterNameKey("Jovanny  Arellanes")).toBe(rosterNameKey("jovanny arellanes"))
+    expect(rosterNameKey("Deyari El-Amin")).toBe("deyari elamin")
+  })
+})
