@@ -83,6 +83,11 @@ export type EntitlementInput = {
   /** Allowlist is in force at all. While it is, nothing else grants access. */
   allowlistActive: boolean
   isAdmin: boolean
+  /**
+   * A verified college coach. Callers pass the role and `verified_coach` together: scouting
+   * reports are for college coaches and nobody else (Matt, 13 October 2026), and an account that
+   * only chose "college coach" at sign-up is not yet one.
+   */
   isCollegeCoach: boolean
   /** The viewer owns this profile, or is linked to it as a parent. */
   isOwnProfile: boolean

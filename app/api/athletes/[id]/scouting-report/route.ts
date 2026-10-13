@@ -52,7 +52,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     email: (profile?.email as string) ?? user.email ?? null,
     athleteId: id,
     isAdmin,
-    isCollegeCoach: viewer.isCollegeCoach,
+    // A coach we have let in, not anyone who chose "college coach" from a list.
+    isCollegeCoach: viewer.isCollegeCoach && viewer.verifiedCoach,
   })
   if (!entitlement.canAccess) {
     return NextResponse.json(

@@ -75,7 +75,7 @@ export async function POST(request: Request) {
       email: (profile?.email as string) ?? user.email ?? null,
       athleteId,
       isAdmin: viewer.kind === "admin" || profile?.is_admin === true,
-      isCollegeCoach: viewer.isCollegeCoach,
+      isCollegeCoach: viewer.isCollegeCoach && viewer.verifiedCoach,
     })
     if (entitlement.canAccess) {
       return NextResponse.json(
