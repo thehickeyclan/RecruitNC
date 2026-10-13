@@ -8,6 +8,7 @@
 import type { Metadata } from "next"
 import { ChevronRight, Lock } from "lucide-react"
 
+import { LearnDisclaimer } from "@/components/recruiting/learn/learn-disclaimer"
 import { CHECKED, LEARN_PAGES } from "@/lib/recruiting/learn/content"
 
 export const metadata: Metadata = {
@@ -58,10 +59,7 @@ export default function LearnIndexPage() {
           ))}
         </ul>
 
-        <p className="mt-8 text-xs leading-5 text-white/40">
-          This is education, not eligibility or legal advice. Rules change every year and a college&apos;s compliance
-          office has the final word on its own program.
-        </p>
+        <LearnDisclaimer checkedLabel={checkedLabel} />
       </div>
     </main>
   )

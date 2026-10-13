@@ -32,7 +32,15 @@ export function LearnSectionCard({ section }: { section: LearnSection }) {
         </p>
       ) : null}
 
+      {section.advice ? (
+        <p className="mt-3 rounded-lg border border-white/15 bg-white/[0.04] px-3 py-2 text-xs leading-5 text-white/75">
+          <span className="font-bold text-white">Our view, not a rule: </span>
+          {section.advice}
+        </p>
+      ) : null}
+
       <p className="mt-3 text-xs leading-5 text-white/40">
+        {section.rule ? <>Rule: {section.rule}. </> : null}
         Source:{" "}
         {section.sources.map((key, i) => (
           <span key={key}>
