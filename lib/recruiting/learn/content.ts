@@ -145,10 +145,9 @@ export const D1_CONTACT: Record<D1Track, LearnSection> = {
   },
   "men-2027": {
     heading: "When a Division I coach can contact you",
-    intro: "The Class of 2027 stays on the dates that were in force before the April 2026 change.",
+    intro:
+      "The Class of 2027 stays on the dates that were in force before the April 2026 change. The new bylaws (13.1.3.1.8 and 13.4.1.8) apply only to wrestlers who first enrol in college on or after August 1, 2028.",
     rows: D1_OLD_DATES,
-    reading:
-      "The new rule says it applies to wrestlers starting college on or after August 1, 2028. We read that as leaving the Class of 2027 on these dates; the manual does not restate it. A college's compliance office can confirm.",
     sources: ["d1Manual", "d1Cabinet"],
   },
   women: {
@@ -331,11 +330,10 @@ export const LEARN_PAGES: LearnPage[] = [
       {
         heading: "Contact, visits and tryouts",
         bullets: [
-          "The NAIA has no recruiting calendar and sets no grade at which a coach may first call or write.",
+          "The NAIA has no recruiting calendar and sets no date or grade at which a coach may first call or write. Its only contact limits concern athletes already enrolled at another college.",
           "Tryouts are allowed: up to two days per student at each school.",
           "A school may pay for your visit only if it does the same for other specially talented students.",
         ],
-        reading: "That there are no contact dates is our reading of the handbook, which sets none. It does not say so in a sentence.",
         sources: ["naiaGuide", "naiaHandbook"],
       },
       {
@@ -351,11 +349,11 @@ export const LEARN_PAGES: LearnPage[] = [
       {
         heading: "Scholarships and signing",
         bullets: [
-          "The NAIA's 2026-27 handbook sets the limit for wrestling at 10 scholarships' worth.",
+          "The NAIA's 2026-27 handbook sets the limit for wrestling at 10 scholarships' worth per program. Men's and women's wrestling are separate NAIA championships, so a school with both has 10 for each.",
+          "Older guides and some websites still show 8 for men. That figure is out of date.",
           "There is no association-wide letter of intent. You may sign with a school, but the NAIA does not bind you to attend.",
           "The NAIA permits name, image and likeness deals.",
         ],
-        reading: "The handbook lists one line for wrestling. We read it as 10 for a men's program and 10 for a women's; it does not say so.",
         sources: ["naiaHandbook", "naiaGuide"],
       },
     ],
@@ -374,7 +372,9 @@ export const LEARN_PAGES: LearnPage[] = [
           { label: "To sign", value: "You must have finished junior year" },
           { label: "The letter of intent", value: "Binding among NJCAA schools for one academic year" },
         ],
-        reading: "We found no NJCAA rule limiting when a coach may call or message a high school student.",
+        bullets: [
+          "The NJCAA sets no date before which a coach may call, message or visit a high school wrestler. Its contact limits protect only wrestlers who are in season at, or signed with, another NJCAA school.",
+        ],
         sources: ["njcaaBylaws", "njcaaChart"],
       },
       {
