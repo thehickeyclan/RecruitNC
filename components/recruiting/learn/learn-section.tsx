@@ -1,9 +1,9 @@
-import { SOURCES, type LearnSection } from "@/lib/recruiting/learn/content"
+import { SOURCES, sectionId, type LearnSection } from "@/lib/recruiting/learn/content"
 
 /** One section of a rules page: the facts, then where they came from. Used by server and client. */
 export function LearnSectionCard({ section }: { section: LearnSection }) {
   return (
-    <section className="rounded-xl border border-white/10 bg-[#0f1c2e] p-5">
+    <section id={sectionId(section.heading)} className="scroll-mt-24 rounded-xl border border-white/10 bg-[#0f1c2e] p-5">
       <h2 className="text-lg font-black tracking-tight text-white">{section.heading}</h2>
       {section.intro ? <p className="mt-2 text-sm leading-6 text-white/70">{section.intro}</p> : null}
 

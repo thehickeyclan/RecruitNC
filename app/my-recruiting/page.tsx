@@ -164,8 +164,8 @@ export default async function RecruitingWarRoomPage() {
 
         <section id="learn" className="mt-12 scroll-mt-24">
           <h2 className="text-xl font-black tracking-tight sm:text-2xl">Learn</h2>
-          <p className="mt-1 text-sm text-white/55">How college wrestling recruiting works, in the order a family needs it.</p>
-          <WarRoomLearn />
+          <p className="mt-1 text-sm text-white/55">This year&apos;s plan, the questions families ask, the money, and the rules for every level.</p>
+          <WarRoomLearn wrestlers={wrestlers} />
         </section>
 
         <section id="activity" className="mt-12 scroll-mt-24">
