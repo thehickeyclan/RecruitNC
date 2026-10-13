@@ -85,7 +85,9 @@ function toResult(row: Record<string, unknown>): OtherTournamentResult {
     weight: String(row.weight_class ?? ""),
     wins,
     losses,
-    record: String(row.record ?? `${wins}-${losses}`),
+    // A placement-only row (official standings with no bouts on file) has no record to state:
+    // "Champion · 0-0" read as a title won without wrestling.
+    record: row.record != null ? String(row.record) : wins + losses > 0 ? `${wins}-${losses}` : "",
     placement: row.placement == null ? null : Number(row.placement),
     qualified: Boolean(row.qualified),
     entrants: row.entrants == null ? null : Number(row.entrants),
