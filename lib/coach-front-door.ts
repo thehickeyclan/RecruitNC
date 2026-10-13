@@ -15,7 +15,7 @@
  * Runs in the edge runtime, so Web Crypto and fetch only.
  */
 import { accessTokenFrom, verifiedUserId } from "@/lib/admin-api-gate"
-import { COACH_HOME_PATH, PORTAL_HINT_COOKIE } from "@/lib/portal-hint"
+import { COACH_HOME_PATH, PORTAL_HINT_COOKIE, PORTAL_PARTNER_COOKIE } from "@/lib/portal-hint"
 
 export { COACH_HOME_PATH, PORTAL_HINT_COOKIE }
 
@@ -51,8 +51,17 @@ async function isCollegeCoach(userId: string): Promise<boolean> {
  * Whether a request for the front page should go to Coach Home instead, and whether the hint
  * cookie still needs setting so the next visit decides without a lookup.
  */
-export async function coachFrontDoor(headers: Headers, cookies: Cookie[]): Promise<{ redirect: boolean; setHint: boolean }> {
+export async function coachFrontDoor(
+  headers: Headers,
+  cookies: Cookie[],
+  /** The request asked for the NC United site by name (?community=1). */
+  askedForCommunity = false,
+): Promise<{ redirect: boolean; setHint: boolean }> {
   if (!hasSession(cookies)) return { redirect: false, setHint: false }
+  // A partner program's coach who chose the NC United link is let through; nobody else is.
+  if (askedForCommunity && cookies.find((c) => c.name === PORTAL_PARTNER_COOKIE)?.value === "1") {
+    return { redirect: false, setHint: false }
+  }
 
   const hint = cookies.find((c) => c.name === PORTAL_HINT_COOKIE)?.value
   if (hint === "1") return { redirect: true, setHint: false }

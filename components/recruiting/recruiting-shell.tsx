@@ -22,7 +22,7 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useCoachMessageBadge, useNavNotifications } from "@/hooks/use-nav-badges"
-import { COACH_PREVIEW_KEY, RECRUITING_BRAND, recruitingCoverage, usesRecruitingShell } from "@/lib/recruiting/brand"
+import { COACH_PREVIEW_KEY, COMMUNITY_PARTNER_LINKS, RECRUITING_BRAND, hasCommunityAccess, recruitingCoverage, usesRecruitingShell } from "@/lib/recruiting/brand"
 import { RecruitingFooter } from "@/components/recruiting/recruiting-footer"
 import { RecruitingWordmark } from "@/components/recruiting/recruiting-wordmark"
 import { RecruitingSearch } from "@/components/recruiting/recruiting-search"
@@ -51,7 +51,7 @@ import {
  */
 type Item = { href: string; label: string; icon: LucideIcon; badge?: number }
 
-function SideMenu({ items, isActive, onNavigate }: { items: Item[]; isActive: (href: string) => boolean; onNavigate?: () => void }) {
+function SideMenu({ items, isActive, onNavigate, partner }: { items: Item[]; isActive: (href: string) => boolean; onNavigate?: () => void; partner: boolean }) {
   return (
     <div className="flex h-full flex-col gap-1">
       {items.map((item) => {
@@ -76,6 +76,17 @@ function SideMenu({ items, isActive, onNavigate }: { items: Item[]; isActive: (h
           </a>
         )
       })}
+      {/* Only for a program that also works with NC United (UNC, whose room NC United practices in). */}
+      {partner ? (
+        <div className="mt-auto border-t border-white/10 pt-2">
+          <p className="px-3 pb-1 text-[11px] font-black uppercase tracking-widest text-white/45">NC United</p>
+          {COMMUNITY_PARTNER_LINKS.map((l) => (
+            <a key={l.href} href={l.href} onClick={onNavigate} className="flex min-h-[40px] items-center rounded-md px-3 text-sm text-white/60 hover:bg-white/5 hover:text-white">
+              {l.label}
+            </a>
+          ))}
+        </div>
+      ) : null}
     </div>
   )
 }
@@ -234,7 +245,7 @@ export function RecruitingShell({ children }: { children: React.ReactNode }) {
 
       <div className="flex flex-1">
         <nav aria-label="Recruiting navigation" className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-56 shrink-0 overflow-y-auto border-r border-white/10 p-3 print:hidden lg:block">
-          <SideMenu items={items} isActive={isActive} />
+          <SideMenu items={items} isActive={isActive} partner={hasCommunityAccess(profile)} />
         </nav>
         <div className="flex min-w-0 flex-1 flex-col pb-16 lg:pb-0">
           <main className="flex-1">{children}</main>
@@ -269,7 +280,7 @@ export function RecruitingShell({ children }: { children: React.ReactNode }) {
       </nav>
       <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
         <SheetContent side="right" className="w-[85vw] max-w-[360px] overflow-y-auto border-white/10 bg-[#0A1628] p-4 pt-10 text-white">
-          <SideMenu items={items} isActive={isActive} onNavigate={() => setMenuOpen(false)} />
+          <SideMenu items={items} isActive={isActive} partner={hasCommunityAccess(profile)} onNavigate={() => setMenuOpen(false)} />
         </SheetContent>
       </Sheet>
     </div>
