@@ -48,6 +48,8 @@ export type CollegeMapResponse = {
   /** Blue members, admins and verified coaches get the filters and the On RecruitNC flag. */
   access: "full" | "preview"
   schools: CollegeMapSchool[]
+  /** A family whose wrestlers are all boys or all girls: the map opens on those programs. */
+  focus?: { gender: "mens" | "womens"; names: string[] } | null
 }
 
 /** The division a dot is coloured by: the highest level any of its programs wrestles at. */

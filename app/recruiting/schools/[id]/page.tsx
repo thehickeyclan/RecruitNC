@@ -28,6 +28,7 @@ import { rankingSentence } from "@/lib/college-programs/team-rankings"
 import { teamRankingsForSchool } from "@/lib/college-programs/team-rankings-snapshot"
 import { DIVISION_COLOR, DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { resolveRankingViewer } from "@/lib/ranking-access"
+import { familyFocus } from "@/lib/recruiting/family-focus"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
@@ -55,7 +56,7 @@ export default async function SchoolPage({ params }: Params) {
   if (!school) notFound()
 
   const admin = createAdminClient()
-  const { viewer } = await resolveRankingViewer({ supabase: await createClient(), admin })
+  const { viewer, userId } = await resolveRankingViewer({ supabase: await createClient(), admin })
   const full = Boolean(viewer.isBlueMember || viewer.isAdmin || viewer.isVerifiedCoach)
   // "On RecruitNC" is part of the portal; a map that will not load must not take the page down.
   const onRecruitNC = full
@@ -66,7 +67,12 @@ export default async function SchoolPage({ params }: Params) {
 
   const name = spoken(school.name)
   const tuition = tuitionFacts(school.id, school.state)
-  const rankings = await teamRankingsForSchool(school.id)
+  // The page follows the family's wrestler: her team, its coach and its ranking come first.
+  const focus = await familyFocus(admin, userId)
+  const theirs = focus?.gender ?? null
+  const hasTheirTeam = theirs ? school.programs.some((p) => p[theirs]) : true
+  const programs = theirs ? [...school.programs].sort((a, b) => Number(b[theirs]) - Number(a[theirs])) : school.programs
+  const rankings = (await teamRankingsForSchool(school.id)).sort((a, b) => (theirs ? Number(b.gender === theirs) - Number(a.gender === theirs) : 0))
   const logo = await schoolLogoUrl(school)
   return (
     <main className="min-h-screen bg-[#060f1f] text-white">
@@ -98,8 +104,17 @@ export default async function SchoolPage({ params }: Params) {
             <p className="mt-2 text-sm font-semibold text-[#D7B968]">New program · first season {school.firstSeason}, recruiting now</p>
           ) : null}
 
+          {focus && !hasTheirTeam ? (
+            <p className="mt-4 max-w-xl rounded-lg border border-amber-300/40 bg-amber-300/10 px-4 py-3 text-sm font-semibold text-amber-100">
+              {name} does not have a {theirs === "womens" ? "women's" : "men's"} wrestling team in 2026-27.{" "}
+              <a href="/recruiting/college-map" className="underline hover:text-white">
+                See the colleges that do
+              </a>
+            </p>
+          ) : null}
+
           <ul className="mt-4 space-y-2">
-            {school.programs.map((p) => (
+            {programs.map((p) => (
               <li key={p.division} className="flex items-start gap-2 text-sm">
                 <span
                   className="mt-0.5 inline-flex min-w-[3.25rem] justify-center rounded-sm px-1.5 py-0.5 text-xs font-bold text-[#071427]"
@@ -108,7 +123,7 @@ export default async function SchoolPage({ params }: Params) {
                   {DIVISION_SHORT[p.division]}
                 </span>
                 <span className="text-white/90">
-                  {[p.mens ? "Men's" : null, p.womens ? "Women's" : null].filter(Boolean).join(" & ")} wrestling
+                  {(theirs === "womens" ? [p.womens ? "Women's" : null, p.mens ? "Men's" : null] : [p.mens ? "Men's" : null, p.womens ? "Women's" : null]).filter(Boolean).join(" & ")} wrestling
                   {p.conference ? <span className="text-white/55"> · {p.conference}</span> : null}
                 </span>
               </li>
@@ -179,7 +194,7 @@ export default async function SchoolPage({ params }: Params) {
           <div className="grid gap-6 md:grid-cols-2">
             <div className="rounded-sm border border-white/10 bg-[#0B1D3A]/60 p-5">
               <h2 className={`text-2xl text-white ${tocDisplayClass()}`}>Who to contact</h2>
-              <StaffList school={{ id: school.id, programs: school.programs }} />
+              <StaffList school={{ id: school.id, programs: school.programs }} focus={theirs} />
             </div>
             <div className="rounded-sm border border-white/10 bg-[#0B1D3A]/60 p-5">
               <h2 className={`text-2xl text-white ${tocDisplayClass()}`}>Where you stand</h2>

@@ -1,8 +1,15 @@
 import { SOURCES, type GenderComparison } from "@/lib/recruiting/learn/content"
 
 /** The first card on a level page: where men's and women's wrestling differ there, and where they do not. */
-export function MensAndWomens({ comparison }: { comparison: GenderComparison }) {
+export function MensAndWomens({ comparison, focus }: { comparison: GenderComparison; focus?: { gender: "mens" | "womens"; names: string[] } | null }) {
   const { differences, same, note, sources } = comparison
+  // The family's own wrestler leads: a daughter's family reads the women's rule first, marked as hers.
+  const order: Array<"mens" | "womens"> = focus?.gender === "womens" ? ["womens", "mens"] : ["mens", "womens"]
+  const label = (side: "mens" | "womens") => {
+    const base = side === "mens" ? "Men" : "Women"
+    if (!focus) return base
+    return side === focus.gender ? `${base}${focus.names.length > 0 ? `: ${focus.names.join(" and ")}` : ""}` : `${base}, for comparison`
+  }
   return (
     <section id="mens-and-womens" className="scroll-mt-24 rounded-xl border border-[#D3B574]/40 bg-[#0f1c2e] p-5">
       <h2 className="text-lg font-black tracking-tight text-white">Men&apos;s and women&apos;s wrestling: what differs here</h2>
@@ -13,14 +20,15 @@ export function MensAndWomens({ comparison }: { comparison: GenderComparison }) 
             <div key={d.topic} className="py-3">
               <p className="text-sm font-bold text-white">{d.topic}</p>
               <dl className="mt-1.5 grid gap-2 sm:grid-cols-2 sm:gap-4">
-                <div>
-                  <dt className="text-[11px] font-black uppercase tracking-widest text-[#D3B574]">Men</dt>
-                  <dd className="text-sm leading-6 text-white/85">{d.mens}</dd>
-                </div>
-                <div>
-                  <dt className="text-[11px] font-black uppercase tracking-widest text-[#D3B574]">Women</dt>
-                  <dd className="text-sm leading-6 text-white/85">{d.womens}</dd>
-                </div>
+                {order.map((side) => {
+                  const theirs = !focus || side === focus.gender
+                  return (
+                    <div key={side}>
+                      <dt className={`text-[11px] font-black uppercase tracking-widest ${theirs ? "text-[#D3B574]" : "text-white/40"}`}>{label(side)}</dt>
+                      <dd className={`text-sm leading-6 ${theirs ? (focus ? "font-semibold text-white" : "text-white/85") : "text-white/50"}`}>{d[side]}</dd>
+                    </div>
+                  )
+                })}
               </dl>
             </div>
           ))}

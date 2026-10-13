@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 
 import { loadCollegeMap } from "@/lib/college-programs/load"
 import { resolveRankingViewer } from "@/lib/ranking-access"
+import { familyFocus } from "@/lib/recruiting/family-focus"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
@@ -13,11 +14,13 @@ export const dynamic = "force-dynamic"
  */
 export async function GET() {
   const admin = createAdminClient()
-  const { viewer } = await resolveRankingViewer({ supabase: await createClient(), admin })
+  const { viewer, userId } = await resolveRankingViewer({ supabase: await createClient(), admin })
   const full = Boolean(viewer.isBlueMember || viewer.isAdmin || viewer.isVerifiedCoach)
 
   try {
-    return NextResponse.json(await loadCollegeMap(admin, full))
+    // The men's-or-women's filter is part of the portal, so only a viewer who has it gets a default for it.
+    const [map, focus] = await Promise.all([loadCollegeMap(admin, full), full ? familyFocus(admin, userId) : null])
+    return NextResponse.json({ ...map, focus })
   } catch (error) {
     console.error("[college-map]", error)
     return NextResponse.json({ error: "Could not load the college map." }, { status: 500 })

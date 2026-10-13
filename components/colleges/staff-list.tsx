@@ -19,7 +19,7 @@ type StaffRow = {
  * Loaded when the card opens (the staff file is ~2,000 coaches). Head coaches always show; the
  * rest of the staff sits behind one tap so the card stays a card.
  */
-export function StaffList({ school }: { school: Pick<CollegeMapSchool, "id" | "programs"> }) {
+export function StaffList({ school, focus }: { school: Pick<CollegeMapSchool, "id" | "programs">; focus?: "mens" | "womens" | null }) {
   const [staff, setStaff] = useState<StaffRow[] | null>(null)
   const [locked, setLocked] = useState(false)
   const [questionnaires, setQuestionnaires] = useState<
@@ -77,6 +77,8 @@ export function StaffList({ school }: { school: Pick<CollegeMapSchool, "id" | "p
     q.mens ? { key: `${q.division}-m`, team: "Men's", url: q.mens } : null,
     q.womens && q.womens !== q.mens ? { key: `${q.division}-w`, team: "Women's", url: q.womens } : null,
   ]).filter((f): f is { key: string; team: string; url: string } => f !== null)
+  // The family's own team first: a daughter's family should not have to look past the men's form.
+  if (focus) forms.sort((a, b) => Number(b.team === (focus === "womens" ? "Women's" : "Men's")) - Number(a.team === (focus === "womens" ? "Women's" : "Men's")))
   const questionnaireLinks =
     forms.length > 0 ? (
       <div className="mt-3 flex flex-wrap gap-2 border-t border-white/10 pt-3">
@@ -106,7 +108,8 @@ export function StaffList({ school }: { school: Pick<CollegeMapSchool, "id" | "p
   }
 
   const twoTeams = school.programs.some((p) => p.mens && p.womens) || school.programs.length > 1
-  const shown = showAll ? staff : staff.filter((m) => m.head)
+  const ordered = focus ? [...staff].sort((a, b) => Number(b.teams.includes(focus)) - Number(a.teams.includes(focus))) : staff
+  const shown = showAll ? ordered : ordered.filter((m) => m.head)
   const hidden = staff.length - shown.length
 
   return (
@@ -115,7 +118,7 @@ export function StaffList({ school }: { school: Pick<CollegeMapSchool, "id" | "p
     <div className="mt-3 border-t border-white/10 pt-3">
       <p className="text-xs font-bold uppercase tracking-wider text-white/45">Coaching staff</p>
       <ul className="mt-2 space-y-1.5">
-        {(shown.length > 0 ? shown : staff.slice(0, 1)).map((m) => (
+        {(shown.length > 0 ? shown : ordered.slice(0, 1)).map((m) => (
           <li key={`${m.name}-${m.title}-${m.division}`} className="text-sm leading-5">
             <span className={m.head ? "font-semibold text-white" : "text-white/85"}>{m.name}</span>
             <span className="text-white/50">
