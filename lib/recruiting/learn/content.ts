@@ -509,7 +509,7 @@ export const LEARN_PAGES: LearnPage[] = [
   {
     slug: "questions-families-ask",
     title: "Questions families ask",
-    summary: "Who pays for a visit and whether parents go, what NIL and revenue sharing are, a grant against a scholarship, and how the Ivy League works.",
+    summary: "Who pays for a visit and whether parents go, what NIL and revenue sharing are, whether results earn more money, a grant against a scholarship, and how the Ivy League works.",
     free: false,
     sections: [
       {
@@ -564,6 +564,21 @@ export const LEARN_PAGES: LearnPage[] = [
         advice: "A cap is not a promise. Ask the coach whether wrestlers at his college receive any revenue share, and get any figure in the written offer.",
         rule: "House settlement question and answer A1, A3, B11, D2 and D3; Division I Bylaws 13.9.3.1 and 17.2",
         sources: ["houseQa", "d1Manual"],
+      },
+      {
+        heading: "Can a wrestler earn more by wrestling well? Is that agreed up front?",
+        intro: "A scholarship can go up later, but a bonus for results cannot be written into it. What is agreed up front is the starting offer.",
+        bullets: [
+          "A scholarship may be raised at any time, for any reason, in Division I and Division II. A coach can reward a wrestler who has earned it; nothing obliges him to.",
+          "It may not be cut during the period of the award because of how a wrestler performs, or because he is injured.",
+          "A Division I college may not write an athletic condition into a scholarship, such as aid that depends on a set level of performance, that would let it cut the award.",
+          "In Division I, for a wrestler who has athletic aid in his first year, performance and injury also may not be used to reduce it or decline to renew it in later years.",
+          "NIL deals with outside businesses may not be pay for wrestling or for results.",
+          "A revenue-share or NIL agreement with a Division I college itself is negotiated. The NCAA says the college and the wrestler have discretion over its terms, and gives a payment tied to keeping a 3.0 GPA as an example. The wrestler may have a parent, guardian or lawyer present when it is negotiated.",
+        ],
+        advice: "Negotiate the first-year number, because that is the one in writing. Then ask the coach how awards on his team have changed over a career: what wrestlers who started where yours would start are receiving as juniors. A coach's record of raising awards tells you more than a promise.",
+        rule: "NCAA Division I Bylaws 15.3.4.2, 15.3.4.2.1, 15.3.4.3, 15.3.5 and 22.01.1; Division II Bylaws 15.5.4.2 and 15.5.4.3; House settlement question and answer D24",
+        sources: ["d1Manual", "d2Manual", "houseQa"],
       },
       {
         heading: "Do Division III wrestlers get NIL?",
