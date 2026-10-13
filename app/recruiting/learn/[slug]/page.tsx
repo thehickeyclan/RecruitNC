@@ -15,6 +15,7 @@ import { LearnDisclaimer } from "@/components/recruiting/learn/learn-disclaimer"
 import { CHECKED, MENS_AND_WOMENS, d1TrackFor, learnPage, type D1Track } from "@/lib/recruiting/learn/content"
 import { MensAndWomens } from "@/components/recruiting/learn/mens-and-womens"
 import { resolveRankingViewer } from "@/lib/ranking-access"
+import { familyFocus } from "@/lib/recruiting/family-focus"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
@@ -37,6 +38,8 @@ export default async function LearnPage({ params }: Params) {
   const admin = createAdminClient()
   const { viewer, userId } = await resolveRankingViewer({ supabase: await createClient(), admin })
   const open = page.free || Boolean(viewer.isBlueMember || viewer.isAdmin || viewer.isVerifiedCoach)
+
+  const focus = open ? await familyFocus(admin, userId) : null
 
   // Division I dates differ by class and by boys or girls: open on the family's own wrestler.
   let track: D1Track = "men-2028"
@@ -68,7 +71,7 @@ export default async function LearnPage({ params }: Params) {
 
         {open ? (
           <div className="mt-6 space-y-4">
-            {MENS_AND_WOMENS[page.slug] ? <MensAndWomens comparison={MENS_AND_WOMENS[page.slug]} /> : null}
+            {MENS_AND_WOMENS[page.slug] ? <MensAndWomens comparison={MENS_AND_WOMENS[page.slug]} focus={focus} /> : null}
             {page.slug === "division-1" ? <D1Contact initial={track} forName={forName} /> : null}
             {page.sections.map((section) => (
               <LearnSectionCard key={section.heading} section={section} />

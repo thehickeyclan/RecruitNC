@@ -201,7 +201,14 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
     fetch("/api/college-map", { cache: "no-store" })
       .then(async (res) => {
         if (!res.ok) throw new Error("Could not load the college map.")
-        setResponse((await res.json()) as CollegeMapResponse)
+        const body = (await res.json()) as CollegeMapResponse
+        setResponse(body)
+        // A girl's family opens on women's programs, a boy's on men's. A link that asked for one
+        // school or for My List is left alone: it must show that school whatever teams it has.
+        const params = new URLSearchParams(window.location.search)
+        if (body.focus && !params.get("school") && params.get("list") !== "1") {
+          setFilters((f) => ({ ...f, gender: body.focus!.gender }))
+        }
       })
       .catch((error) => setLoadError(error instanceof Error ? error.message : "Could not load the college map."))
   }, [])
@@ -566,6 +573,18 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
           </button>
         ) : null}
       </div>
+
+      {full && response?.focus && filters.gender === response.focus.gender ? (
+        <p className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-sm border border-[#D7B968]/30 bg-[#D7B968]/10 px-3 py-2 text-sm text-white/85">
+          <span>
+            Showing {response.focus.gender === "womens" ? "women's" : "men's"} programs
+            {response.focus.names.length > 0 ? ` for ${response.focus.names.join(" and ")}` : ""}.
+          </span>
+          <button type="button" onClick={() => setFilters((f) => ({ ...f, gender: "all" }))} className="font-semibold text-[#F5D985] hover:underline">
+            Show men&apos;s and women&apos;s
+          </button>
+        </p>
+      ) : null}
 
       {full ? (
         <div className="grid gap-3 sm:grid-cols-3">
