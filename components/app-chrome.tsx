@@ -30,7 +30,18 @@ const COACH_PORTAL_PATHS = ["/coach-home", "/my-recruits", "/prospects", "/athle
  * Pages with no Data Dawg launcher whoever is looking: the inbox (it covers the send button) and
  * the pages that exist only for coaches.
  */
-const NO_CHAT_PATHS = ["/inbox", "/coach-home", "/my-recruits", "/perfect-recruit"]
+const NO_CHAT_PATHS = [
+  "/inbox",
+  "/coach-home",
+  "/my-recruits",
+  "/perfect-recruit",
+  // Sign-up is where a college coach first meets the site, before we know he is one: the coach
+  // step is a choice made on /auth/signup itself, so the whole page goes without (Matt, 13 Oct 2026).
+  "/auth/signup",
+  "/auth/coach-signup",
+  "/auth/coach-pending",
+  "/auth/coach-verification-pending",
+]
 
 const onCoachPortal = (path: string) => COACH_PORTAL_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
 
