@@ -50,7 +50,14 @@ const division = (d: string) => {
 }
 
 /** USA Wrestling's rosters misspell two girls; the school-side spelling is the profile's. */
-const SPELLING: Record<string, string> = { "kate vazquez": "kate vasquez", "nevaeh willamson": "nevaeh williamson" }
+const SPELLING: Record<string, string> = {
+  "kate vazquez": "kate vasquez",
+  "nevaeh willamson": "nevaeh williamson",
+  // Entered under a nickname and a middle name. One Abigail Brewer (an "Abby Brewer" profile was
+  // merged into hers) and one Adriana Miller, at the weight each wrestled here.
+  "abby brewer": "abigail brewer",
+  "adriana noemi miller": "adriana miller",
+}
 const norm = (s: unknown) => {
   const n = String(s ?? "").toLowerCase().normalize("NFKD").replace(/[^a-z ]/g, "").replace(/\s+/g, " ").trim()
   return SPELLING[n] ?? n

@@ -71,7 +71,14 @@ const DIVISIONS: Record<string, Division> = {
 }
 
 /** USA Wrestling's rosters misspell two girls; the school-side spelling is the profile's (Muse, 13 Oct 2026). */
-const SPELLING: Record<string, string> = { "kate vazquez": "kate vasquez", "nevaeh willamson": "nevaeh williamson" }
+const SPELLING: Record<string, string> = {
+  "kate vazquez": "kate vasquez",
+  "nevaeh willamson": "nevaeh williamson",
+  // Entered under a nickname and a middle name. One Abigail Brewer (an "Abby Brewer" profile was
+  // merged into hers) and one Adriana Miller, at the weight each wrestled here.
+  "abby brewer": "abigail brewer",
+  "adriana noemi miller": "adriana miller",
+}
 
 const norm = (s: unknown) => {
   const n = String(s ?? "").toLowerCase().normalize("NFKD").replace(/[^a-z ]/g, "").replace(/\s+/g, " ").trim()
@@ -130,23 +137,6 @@ async function main() {
 
   const report = { placed: 0, created: 0, noProfile: 0, held: [] as string[] }
 
-  // 1. Rows we already hold: the place under the row's own weight heading, else her better one.
-  const hasRow = new Set<string>()
-  for (const row of existing ?? []) {
-    hasRow.add(`${row.event_key}|${norm(row.athlete_name)}`)
-    const hers = placings.filter((p) => p.division.key === row.event_key && norm(p.name) === norm(row.athlete_name))
-    const exact = hers.find((p) => p.weight === String(row.weight_class))
-    const place = exact?.place ?? (hers.length ? Math.min(...hers.map((p) => p.place)) : null)
-    if (place == null || Number(row.placement) === place) continue
-    console.log(`${WRITE ? "place" : "would place"}  ${row.athlete_name.padEnd(22)} ${row.event_key}  ${row.weight_class}: ${place}`)
-    if (WRITE) {
-      const { error } = await sb.from("other_tournament_results").update({ placement: place, updated_at: new Date().toISOString() }).eq("id", row.id)
-      if (error) throw error
-    }
-    report.placed++
-  }
-
-  // 2. Placers with no row: one row per girl per event, at her better place in a contested pool.
   const poolSize = new Map<string, number>()
   const lowestPlace = new Map<string, number>()
   for (const p of placings) {
@@ -159,6 +149,25 @@ async function main() {
     const k = `${p.division.key}|${p.weight}`
     return Math.max(poolSize.get(k) ?? 1, lowestPlace.get(k) ?? 1)
   }
+  // 1. Rows we already hold: the place under the row's own weight heading, else her better one.
+  const hasRow = new Set<string>()
+  for (const row of existing ?? []) {
+    hasRow.add(`${row.event_key}|${norm(row.athlete_name)}`)
+    const hers = placings.filter((p) => p.division.key === row.event_key && norm(p.name) === norm(row.athlete_name))
+    const exact = hers.find((p) => p.weight === String(row.weight_class))
+    const contested = hers.filter((p) => sizeOf(p) > 1)
+    // Alone under her heading: she entered, and that is not a place (see the header).
+    const place = exact ? (sizeOf(exact) > 1 ? exact.place : null) : contested.length ? Math.min(...contested.map((p) => p.place)) : null
+    if (!hers.length || (row.placement == null ? null : Number(row.placement)) === place) continue
+    console.log(`${WRITE ? "place" : "would place"}  ${row.athlete_name.padEnd(22)} ${row.event_key}  ${row.weight_class}: ${place ?? "no place (uncontested)"}`)
+    if (WRITE) {
+      const { error } = await sb.from("other_tournament_results").update({ placement: place, updated_at: new Date().toISOString() }).eq("id", row.id)
+      if (error) throw error
+    }
+    report.placed++
+  }
+
+  // 2. Placers with no row: one row per girl per event, at her better place in a contested pool.
   const better = (a: Placing, b: Placing) => {
     const ca = sizeOf(a) > 1
     const cb = sizeOf(b) > 1
