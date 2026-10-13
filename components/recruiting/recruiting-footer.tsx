@@ -42,7 +42,6 @@ export function RecruitingFooter() {
         </div>
         <div className="mt-8 flex flex-col gap-2 border-t border-white/10 pt-5 text-xs text-white/40 sm:flex-row sm:justify-between">
           <p>&copy; {new Date().getFullYear()} {RECRUITING_BRAND.parent}. All rights reserved.</p>
-          <a href="/?community=1" className="transition-colors hover:text-white">Clubs, events and news: {RECRUITING_BRAND.parent} &rarr;</a>
         </div>
       </div>
     </footer>

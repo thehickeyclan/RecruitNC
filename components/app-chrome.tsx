@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { COACH_PREVIEW_KEY, usesRecruitingShell } from "@/lib/recruiting/brand"
+import { PORTAL_HINT_COOKIE } from "@/lib/portal-hint"
 import { RecruitingShell } from "@/components/recruiting/recruiting-shell"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
@@ -50,10 +51,15 @@ function useRecruitingShell(): boolean {
     if (isLoading) return
     try {
       if (profile) {
-        if (usesRecruitingShell(profile)) localStorage.setItem(SHELL_HINT_KEY, "1")
+        const coach = usesRecruitingShell(profile)
+        if (coach) localStorage.setItem(SHELL_HINT_KEY, "1")
         else localStorage.removeItem(SHELL_HINT_KEY)
+        // The same answer where the server can read it, so the front page is decided before it is
+        // drawn (lib/coach-front-door.ts). A hint, not a credential.
+        document.cookie = `${PORTAL_HINT_COOKIE}=${coach ? "1" : "0"}; path=/; max-age=31536000; samesite=lax`
       } else if (!user) {
         localStorage.removeItem(SHELL_HINT_KEY)
+        document.cookie = `${PORTAL_HINT_COOKIE}=; path=/; max-age=0; samesite=lax`
       }
     } catch {}
   }, [user, profile, isLoading])
@@ -78,14 +84,15 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   const recruitingShell = useRecruitingShell() || devCoachPreview
   /*
    * A coach who opens the site at its front door is at work, not shopping for an account: the
-   * homepage sells sign-up to people who have not signed in. Send them to Coach Home. The NC
-   * United menu's Home link carries ?community=1 so the homepage is still one click away.
+   * homepage sells sign-up to people who have not signed in. Send them to Coach Home, always:
+   * the recruiting portal is being separated from the community site (Matt, 13 October 2026).
    */
   const { profile } = useAuth()
   const coachAtFrontDoor = path === "/" && usesRecruitingShell(profile)
   useEffect(() => {
+    // The server normally does this first (middleware.ts); this catches a coach it could not yet
+    // recognise. There is no way round it: the community front page is not a coach's page.
     if (!coachAtFrontDoor) return
-    if (new URLSearchParams(window.location.search).has("community")) return
     window.location.replace("/coach-home")
   }, [coachAtFrontDoor])
   // No chat launcher in the coach portal at all (Matt, 11 October 2026).

@@ -49,7 +49,6 @@ import {
 type Item = { href: string; label: string; icon: LucideIcon; badge?: number }
 
 const COMMUNITY_LINKS = [
-  { href: "/?community=1", label: "Home" },
   { href: "/clubs", label: "Clubs" },
   { href: "/calendar", label: "Calendar" },
   { href: "/news", label: "News" },
