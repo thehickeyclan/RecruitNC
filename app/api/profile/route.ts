@@ -81,7 +81,7 @@ export async function GET() {
     const viewer = classifyViewer(profileRow as Record<string, unknown>)
     const scoutingReportAccess = canAccessScoutingReport({
       email: (profileRow.email as string) ?? user.email,
-      isCollegeCoach: viewer.isCollegeCoach,
+      isCollegeCoach: viewer.isCollegeCoach && viewer.verifiedCoach,
       isAdmin: viewer.kind === "admin" || profileRow.is_admin === true,
     })
 

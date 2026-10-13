@@ -37,7 +37,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const viewer = classifyViewer(profile ?? null)
   const canAccess = canAccessScoutingReport({
     email: (profile?.email as string) ?? user.email,
-    isCollegeCoach: viewer.isCollegeCoach,
+    isCollegeCoach: viewer.isCollegeCoach && viewer.verifiedCoach,
     isAdmin: viewer.kind === "admin" || profile?.is_admin === true,
   })
 
