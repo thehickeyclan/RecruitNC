@@ -11,6 +11,7 @@ import { D1Contact } from "@/components/recruiting/learn/d1-contact"
 import { LearnSectionCard } from "@/components/recruiting/learn/learn-section"
 import { mostRecentGraduatedClassYear } from "@/lib/class-years"
 import { familyAthleteIds } from "@/lib/coach-messages"
+import { LearnDisclaimer } from "@/components/recruiting/learn/learn-disclaimer"
 import { CHECKED, d1TrackFor, learnPage, type D1Track } from "@/lib/recruiting/learn/content"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -96,14 +97,7 @@ export default async function LearnPage({ params }: Params) {
           </div>
         )}
 
-        <p className="mt-8 text-xs leading-5 text-white/40">
-          This is education, not eligibility or legal advice. Rules change every year and a college&apos;s compliance
-          office has the final word on its own program. If something here looks out of date,{" "}
-          <a href="/contact" className="underline hover:text-white/70">
-            tell us
-          </a>
-          .
-        </p>
+        <LearnDisclaimer checkedLabel={checkedLabel} />
       </div>
     </main>
   )

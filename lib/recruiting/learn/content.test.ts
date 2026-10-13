@@ -14,7 +14,7 @@ describe("the rules library", () => {
 
   it("cites only the governing bodies, never a recruiting service", () => {
     for (const source of Object.values(SOURCES)) {
-      expect(source.url).toMatch(/ncaa\.org|ncaaorg\.s3|fs\.ncaa\.org|naia\.org|njcaa\.org|ardor-prod-media|nchsaa\.org|oah\.state\.nc\.us|nwcaonline\.com/)
+      expect(source.url).toMatch(/ncaa\.org|ncaaorg\.s3|fs\.ncaa\.org|naia\.org|njcaa\.org|ardor-prod-media|ardorsportshub\.com|nchsaa\.org|ncisaa\.org|oah\.state\.nc\.us|nwcaonline\.com/)
       expect(source.url).not.toMatch(/ncsasports|flowrestling|wikipedia/)
     }
   })
@@ -27,6 +27,8 @@ describe("the rules library", () => {
         s.heading,
         s.intro ?? "",
         s.reading ?? "",
+        s.advice ?? "",
+        s.rule ?? "",
         ...(s.bullets ?? []),
         ...(s.rows ?? []).flatMap((r) => [r.label, r.value]),
       ]),
@@ -66,9 +68,16 @@ describe("the rules library", () => {
     expect(text).not.toMatch(/NLI Signing Day|sign(s|ing)? (a|the|an) National Letter/i)
   })
 
-  it("does not publish an NCAA Eligibility Center fee it could not confirm", () => {
-    const page = learnPage("eligibility-center")!
-    expect(JSON.stringify(page)).not.toMatch(/\$\d/)
+  it("publishes the Eligibility Center fee only with the page it was read from", () => {
+    const section = learnPage("eligibility-center")!.sections.find((x) => JSON.stringify(x).match(/\$\d/))!
+    expect(section.sources).toContain("ecRegister")
+    expect(section.reading).toMatch(/confirm/)
+  })
+
+  it("keeps our own advice apart from the rules", () => {
+    for (const section of allSections) {
+      for (const bullet of section.bullets ?? []) expect(bullet, section.heading).not.toMatch(/^(Our advice|We suggest|Ask the coach to)/)
+    }
   })
 
   it("keeps the North Carolina page open to everyone", () => {
