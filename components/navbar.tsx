@@ -299,7 +299,7 @@ export function Navbar() {
   // Admins see it too: they are the ones who have to check it, and most are wrestling parents.
   const showMyRecruiting = Boolean(user) && profile?.role !== "college_coach"
   const highlightNavItems = [
-    ...(showMyRecruiting ? [{ href: "/my-recruiting", label: "Recruiting War Room" }] : []),
+    ...(showMyRecruiting ? [{ href: "/my-recruiting", label: "Command Center" }] : []),
     ...(showCoachHome ? [{ href: "/coach-home", label: "Coach Home" }] : []),
     ...(showMyRecruits ? [{ href: getRecruitingPortalUrl(), label: "My Recruits" }] : []),
   ]

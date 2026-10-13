@@ -120,7 +120,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
    * (Matt, 13 October 2026). So it is decided by who is signed in, not by the page: a coach has no
    * launcher anywhere, including the split second before his profile has loaded, when this frame
    * could otherwise draw the community bar and the dog around his page. A family has it on the
-   * War Room, the college map and every school page like anywhere else.
+   * Command Center, the college map and every school page like anywhere else.
    */
   const { isLoading: authLoading } = useAuth()
   const isCoach = classifyViewer(profile).isCollegeCoach

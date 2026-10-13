@@ -1,5 +1,5 @@
 /**
- * "This month" in the Recruiting War Room: the next few things a family should do.
+ * "This month" in the Recruiting Command Center: the next few things a family should do.
  *
  * Every step is read off what the family has actually done - profile, list, emails, schedule -
  * never off a calendar. The NCAA contact dates differ by division and change; a step that told a

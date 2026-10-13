@@ -1,5 +1,6 @@
 /**
- * The Recruiting War Room: the family's recruiting portal, on one page (Matt, 12 Oct 2026).
+ * The Recruiting Command Center: the family's recruiting portal, on one page (Matt, 12 Oct 2026;
+ * named the War Room until 13 Oct, which is why the files and components here still say so).
  *
  * Coaches got a portal (app/coach-home). This is the family's: where the planning, the learning
  * and the activity happen. The map, My List, Email the coach and the schedule are features of it,
@@ -34,7 +35,7 @@ import { WarRoomPlan, type WarRoomSchool, type WarRoomWrestler } from "./war-roo
 
 export const dynamic = "force-dynamic"
 
-export const metadata = { title: "Recruiting War Room | RecruitNC" }
+export const metadata = { title: "Recruiting Command Center | RecruitNC" }
 
 const SCHOOLS = new Map([...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS].map((s) => [s.id, s]))
 
@@ -60,7 +61,7 @@ export default async function RecruitingWarRoomPage() {
         .order("graduationyear", { ascending: true })
     : { data: [] }
   // Recruiting ends at graduation. A graduate stays on the account (his profile and results are
-  // still his) but has nothing left to plan, so he is not in the War Room - Liam Hickey, Class of
+  // still his) but has nothing left to plan, so he is not in the Command Center - Liam Hickey, Class of
   // 2026, was the first tab on his father's page in October 2026.
   const graduated = mostRecentGraduatedClassYear()
   const inSchool = (rows ?? []).filter((a) => !a.graduationyear || Number(a.graduationyear) > graduated)
@@ -122,12 +123,12 @@ export default async function RecruitingWarRoomPage() {
     <main className="min-h-screen bg-[#0A1628] px-4 py-8 text-white sm:px-6">
       <div className="mx-auto max-w-5xl">
         <p className="text-[11px] font-black uppercase tracking-widest text-[#D3B574]">RecruitNC · Recruiting Portal</p>
-        <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-5xl">Recruiting War Room</h1>
+        <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-5xl">Recruiting Command Center</h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-white/65 sm:text-base">
           Welcome. This is where recruiting gets done for {who}: the plan, what to learn next, and which college programs are paying attention.
         </p>
 
-        <nav aria-label="War Room sections" className="mt-5 flex gap-2 text-sm font-bold">
+        <nav aria-label="Command Center sections" className="mt-5 flex gap-2 text-sm font-bold">
           {[
             ["#plan", "Plan"],
             ["#learn", "Learn"],
@@ -146,8 +147,8 @@ export default async function RecruitingWarRoomPage() {
             </p>
             <p className="mx-auto mt-1 max-w-md text-sm text-white/60">
               {graduatesOnly
-                ? "The War Room is for wrestlers who are still being recruited. Link a younger wrestler and it fills in from their record."
-                : "Claim your profile, or link to your child's as a parent, and the War Room fills in from their record."}
+                ? "The Command Center is for wrestlers who are still being recruited. Link a younger wrestler and it fills in from their record."
+                : "Claim your profile, or link to your child's as a parent, and the Command Center fills in from their record."}
             </p>
             <Link href="/athletes" className="mt-5 inline-block rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
               Find the profile

@@ -49,7 +49,7 @@ export function CompetingNextBlock({ athleteId, firstName, className }: { athlet
         <p className="text-[13px] leading-5 text-[#A8BBD1]">
           Add where {firstName} is wrestling next in the{" "}
           <a href="/my-recruiting#plan" className="font-bold text-[#D3B574] hover:underline">
-            Recruiting War Room
+            Recruiting Command Center
           </a>
           . Approved college coaches see it here.
         </p>

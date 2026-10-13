@@ -206,7 +206,7 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
       .catch((error) => setLoadError(error instanceof Error ? error.message : "Could not load the college map."))
   }, [])
 
-  // /recruiting/college-map?list=1 opens straight onto My List (the War Room links here), and
+  // /recruiting/college-map?list=1 opens straight onto My List (the Command Center links here), and
   // ?school=<id> opens on that school (its page links back with "See it on the map").
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)

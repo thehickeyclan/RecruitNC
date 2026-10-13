@@ -2,7 +2,7 @@
  * A college's page in the Recruiting Portal (13 Oct 2026).
  *
  * The map found the 436 schools; this is where a school's information lives. It has an address,
- * so the War Room list, the map and one parent texting another can all point at it -
+ * so the Command Center list, the map and one parent texting another can all point at it -
  * which the map's pop-up card never could.
  *
  * What the school is and where is public. Who to contact, the recruiting questionnaire, who from
@@ -70,7 +70,7 @@ export default async function SchoolPage({ params }: Params) {
         <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
           <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 text-xs font-semibold text-white/55">
             <a href="/my-recruiting" className="hover:text-white">
-              Recruiting War Room
+              Recruiting Command Center
             </a>
             <ChevronRight className="h-3 w-3" aria-hidden />
             <a href="/recruiting/college-map" className="hover:text-white">
