@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { FUNDRAISING_AUTH_RETURN_COOKIE } from "@/lib/fundraising/fundraising-auth-return-cookie"
 import { adminGateApplies, adminGateRefusal } from "@/lib/admin-api-gate"
+import { COACH_HOME_PATH, PORTAL_HINT_COOKIE, coachFrontDoor } from "@/lib/coach-front-door"
 
 function isFundraisingHubPublicPath(p: string): boolean {
   if (p === "/fundraising" || p === "/fundraising/") return true
@@ -33,6 +34,19 @@ export async function middleware(request: NextRequest) {
         { error: refusal === 401 ? "Sign in as an admin." : "Admin access required." },
         { status: refusal, headers: { "Cache-Control": "no-store" } },
       )
+    }
+  }
+
+  // A college coach's home is Coach Home; the community front page is never drawn for one.
+  if (pathname === "/" && (request.method === "GET" || request.method === "HEAD")) {
+    const door = await coachFrontDoor(request.headers, request.cookies.getAll())
+    if (door.redirect) {
+      const response = NextResponse.redirect(new URL(COACH_HOME_PATH, request.url), 307)
+      response.headers.set("Cache-Control", "private, no-store")
+      if (door.setHint) {
+        response.cookies.set(PORTAL_HINT_COOKIE, "1", { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" })
+      }
+      return response
     }
   }
 
