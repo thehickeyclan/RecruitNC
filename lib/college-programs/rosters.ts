@@ -45,6 +45,16 @@ export type SchoolRosterView = {
 
 const TEAM_WORD = { mens: "men's", womens: "women's" } as const
 
+/**
+ * Whether the roster SIZES in the file can be shown.
+ *
+ * The first pull (12 Oct 2026) counted the coaches and support staff that sit as cards on the
+ * same roster page: NC State read 48 for a team of 32. The North Carolina wrestlers themselves
+ * were checked and are right; the totals are not, so "7 of the 48" is never said. Turn this on
+ * only with a file whose counts are wrestlers only.
+ */
+const ROSTER_SIZES_VERIFIED = false
+
 export function rosterForSchool(schoolId: string): SchoolRosterView {
   const school = ROSTERS[schoolId] ?? { wrestlers: [], teams: [] }
   const both = new Set(school.teams.map((t) => t.team)).size > 1
@@ -53,7 +63,11 @@ export function rosterForSchool(schoolId: string): SchoolRosterView {
     if (!t.reviewed) return `We could not read the ${team}roster on the school's site, so we can't say who on it is from North Carolina.`
     const nc = school.wrestlers.filter((w) => w.team === t.team).length
     const season = t.season ? `${t.season} ` : ""
-    if (t.rosterSize == null) return `${nc} North Carolina ${nc === 1 ? "wrestler is" : "wrestlers are"} on the ${season}${team}roster.`
+    if (t.rosterSize == null || !ROSTER_SIZES_VERIFIED) {
+      return nc === 0
+        ? `No North Carolina wrestlers are on the ${season}${team}roster.`
+        : `${nc} North Carolina ${nc === 1 ? "wrestler is" : "wrestlers are"} on the ${season}${team}roster.`
+    }
     if (nc === 0) return `None of the ${t.rosterSize} wrestlers on the ${season}${team}roster ${t.rosterSize === 1 ? "is" : "are"} from North Carolina.`
     return `${nc} of the ${t.rosterSize} wrestlers on the ${season}${team}roster ${nc === 1 ? "is" : "are"} from North Carolina.`
   })
