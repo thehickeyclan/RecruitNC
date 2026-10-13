@@ -26,6 +26,9 @@ import {
   womensNationalRankingPoints,
   isStatePoolEvent,
   womensPoolEventPoints,
+  isInsideWomensWindow,
+  isWomensNationalDuals,
+  womensNationalDualsPoints,
 } from "./recruitnc-ranking-engine"
 import { MAX_WINDOW_PENALTY, WINDOW_PARTICIPATION_FLOOR } from "./missed-window"
 import { NATIONAL_RANKED_WIN, RANKED_WIN_CAP, TOC_FIELD_WIN, UNGRADED_RANKED_WIN, rankedOpponentValue } from "./ranked-win-value"
@@ -130,15 +133,57 @@ describe("women's in-state freestyle pools (13 October 2026)", () => {
     expect(isStatePoolEvent("Journeymen Women's World Classic")).toBe(false)
   })
 
-  it("pays a place only in a pool of four or more, and a win only per girl she could beat", () => {
-    // Champion of five, 4-0: the place and four wins.
-    expect(womensPoolEventPoints({ placement: 1, record: "4-0", entrants: 5 })).toBe(40 + 16)
-    // "2nd" of two, 1-2: no place, and one win - there was one opponent, however many times they met.
+  it("pays for matches won there and never for the place, sixteen points at most", () => {
+    // Champion of five, 4-0: four wins. The title itself scores nothing.
+    expect(womensPoolEventPoints({ placement: 1, record: "4-0", entrants: 5 })).toBe(16)
+    expect(womensPoolEventPoints({ placement: 4, record: "4-0", entrants: 5 })).toBe(16)
+    // "2nd" of two, 1-2: one opponent, however many times they met.
     expect(womensPoolEventPoints({ placement: 2, record: "1-2", entrants: 2 })).toBe(4)
-    // A best-of-three swept against the only other entrant is one opponent beaten.
     expect(womensPoolEventPoints({ placement: 1, record: "3-0", entrants: 2 })).toBe(4)
     // Uncontested, or pool size unknown: she entered, nothing more.
     expect(womensPoolEventPoints({ placement: null, record: "", entrants: 1 })).toBe(0)
     expect(womensPoolEventPoints({ placement: 1, record: "2-0", entrants: null })).toBe(0)
+  })
+
+  it("stability: no single in-state pool event can be worth more than a national result", () => {
+    // The most either event can add, at the qualifier weight. Loading one of them on 13 October
+    // 2026 was worth up to 80 points and dropped an NHSCA All-American from 7th to 20th.
+    const mostFromOnePool = Math.max(
+      ...[2, 3, 4, 5, 8].flatMap((entrants) =>
+        [1, 2, 3].map((placement) => womensPoolEventPoints({ placement, record: `${entrants}-0`, entrants })),
+      ),
+    ) * WOMENS_EVENT_WEIGHTS.qualifier
+    expect(mostFromOnePool).toBeLessThanOrEqual(20)
+    // Eight wins at Women's National Duals is worth more than any in-state pool.
+    expect(womensNationalDualsPoints("8-2") * WOMENS_EVENT_WEIGHTS.qualifier).toBeGreaterThan(mostFromOnePool * 2)
+  })
+})
+
+describe("Women's National Duals is scored by matches won (13 October 2026)", () => {
+  it("counts wins against the national field, ten at most", () => {
+    expect(isWomensNationalDuals("2026 Women's National Duals - Junior Girls Freestyle")).toBe(true)
+    expect(isWomensNationalDuals("NHSCA National Duals")).toBe(false)
+    expect(womensNationalDualsPoints("8-2")).toBe(40)
+    expect(womensNationalDualsPoints("1-9")).toBe(5)
+    expect(womensNationalDualsPoints("14-0")).toBe(50)
+    expect(womensNationalDualsPoints(null)).toBe(0)
+    // Forfeits are not wins: 7-0 with three forfeits is four matches won.
+    expect(womensNationalDualsPoints("7-0", 4)).toBe(20)
+  })
+})
+
+describe("the women's board ranks on the last twelve months (13 October 2026)", () => {
+  const now = Date.parse("2026-10-13T12:00:00Z")
+  it("counts her most recent trip to each event and nothing older", () => {
+    expect(isInsideWomensWindow({ event: "Fargo FS", year: 2026 }, now)).toBe(true)
+    expect(isInsideWomensWindow({ event: "NHSCA", year: 2026 }, now)).toBe(true)
+    expect(isInsideWomensWindow({ event: "NCHSAA state", year: 2026 }, now)).toBe(true)
+    expect(isInsideWomensWindow({ event: "Super32", year: 2025 }, now)).toBe(true)
+    expect(isInsideWomensWindow({ event: "Fargo FS", year: 2025 }, now)).toBe(false)
+    expect(isInsideWomensWindow({ event: "NHSCA", year: 2025 }, now)).toBe(false)
+    expect(isInsideWomensWindow({ event: "NCHSAA state", year: 2025 }, now)).toBe(false)
+    // A date on file wins over the guess from the year.
+    expect(isInsideWomensWindow({ event: "Journeymen", year: 2025, date: "2025-10-04" }, now)).toBe(false)
+    expect(isInsideWomensWindow({ event: "Journeymen", year: 2026, date: "2026-10-02" }, now)).toBe(true)
   })
 })

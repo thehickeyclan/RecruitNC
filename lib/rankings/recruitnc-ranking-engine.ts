@@ -540,7 +540,8 @@ export function orderProspectsByHeadToHead<T extends {
   name: string
   ai_score: number
   head_to_head: RankingHeadToHead[]
-}>(rows: T[], options?: { winnerNeedsScore?: boolean }): T[] {
+}>(rows: T[], options?: { winnerNeedsScore?: boolean; maxGap?: number }): T[] {
+  const maxGap = options?.maxGap ?? HEAD_TO_HEAD_MAX_GAP
   const remaining = [...rows]
   const ordered: T[] = []
 
@@ -558,7 +559,7 @@ export function orderProspectsByHeadToHead<T extends {
              * every empty profile in the class. The boys' board is left as it was (Matt).
              */
             (!options?.winnerNeedsScore || other.ai_score > 0) &&
-            other.ai_score >= candidate.ai_score - HEAD_TO_HEAD_MAX_GAP,
+            other.ai_score >= candidate.ai_score - maxGap,
         )
       }),
     )
@@ -860,15 +861,20 @@ const US_OPEN_EVENT = /\bu\.?\s?s\.?\s+open\b|las vegas|vegas/i
  * They were scored like any qualifier - place plus win percentage - which paid "2nd place" in a
  * two-girl pool (one loss, sometimes two) the same as second at a regional. With the full
  * placements loaded on 13 October 2026, a girl who went 1-2 in a pool of two out-scored an NHSCA
- * All-American and a girl who went 8-2 at Women's National Duals. So here:
- *   - a place counts only in a pool of four or more;
+ * All-American and a girl who went 8-2 at Women's National Duals.
+ *
+ * The first repair kept the place for a pool of four or more, and the board was still unstable:
+ * winning a four-girl pool was worth more than a state title and an NHSCA All-American finish put
+ * together, so loading these two events moved girls who had not wrestled in them from 7th to 20th
+ * (Matt: "does not feel like a stable model"). So the place scores nothing here at all:
  *   - wins count one each, and no more than the girls she could have beaten (a best-of-three
- *     against the only other entrant is one opponent, not three wins).
+ *     against the only other entrant is one opponent, not three wins);
+ *   - sixteen points at most, so neither event can outweigh a national result.
  * Who she beat there is scored separately, as head-to-head, which is where these events matter.
  */
 const STATE_POOL_EVENT = /nc\s+freestyle\s*&\s*greco\s+state|tar\s*heel\s+state\s+classic/i
-export const WOMENS_POOL_MIN_ENTRANTS = 4
 export const WOMENS_POOL_POINTS_PER_WIN = 4
+export const WOMENS_POOL_MAX_POINTS = 16
 
 export function isStatePoolEvent(eventName: string): boolean {
   return STATE_POOL_EVENT.test(eventName)
@@ -876,10 +882,66 @@ export function isStatePoolEvent(eventName: string): boolean {
 
 export function womensPoolEventPoints(result: { placement?: number | null; record?: string | null; entrants?: number | null }): number {
   const entrants = Number(result.entrants ?? 0)
-  const place = entrants >= WOMENS_POOL_MIN_ENTRANTS ? placementPoints(result.placement ?? null) : 0
   const wins = Number((String(result.record ?? "").match(/^(\d+)\s*-\s*\d+$/) ?? [])[1] ?? 0)
   const opponents = Math.max(0, entrants - 1)
-  return place + Math.min(wins, opponents) * WOMENS_POOL_POINTS_PER_WIN
+  return Math.min(WOMENS_POOL_MAX_POINTS, Math.min(wins, opponents) * WOMENS_POOL_POINTS_PER_WIN)
+}
+
+/**
+ * Women's National Duals: USA Wrestling's 16U and Junior national dual meet, in freestyle, against
+ * every other state's team. A dual has no bracket and so no place, and with only a win percentage
+ * to score, Nevaeh Williamson's 8-2 there was worth twelve points - less than second in a two-girl
+ * pool. It is scored by matches won against that national field instead, ten at most.
+ */
+const WOMENS_NATIONAL_DUALS_EVENT = /women'?s\s+national\s+duals/i
+export const WOMENS_NATIONAL_DUALS_POINTS_PER_WIN = 5
+export const WOMENS_NATIONAL_DUALS_MAX_WINS = 10
+
+export function isWomensNationalDuals(eventName: string): boolean {
+  return WOMENS_NATIONAL_DUALS_EVENT.test(eventName)
+}
+
+export function womensNationalDualsPoints(record: string | null | undefined, contestedWins?: number | null): number {
+  // Wins she wrestled for, when the bouts are on file: a forfeit is not a win over anybody, and
+  // Alyvia Hawkins's 7-0 there was four matches and three forfeits.
+  const wins = contestedWins ?? Number((String(record ?? "").match(/^(\d+)\s*-\s*\d+$/) ?? [])[1] ?? 0)
+  return Math.min(wins, WOMENS_NATIONAL_DUALS_MAX_WINS) * WOMENS_NATIONAL_DUALS_POINTS_PER_WIN
+}
+
+/**
+ * The women's board ranks on the last twelve months (Matt, 13 October 2026).
+ *
+ * Head-to-head and the match résumé already did. Event results did not: a placing from eighteen
+ * months ago scored the same as one from this summer, and All-American finishes only faded. A
+ * women's college coach is recruiting the wrestler she is now, and freestyle changes fast between
+ * a girl's sophomore and junior summers. Every annual event has run again inside twelve months, so
+ * the window is simply "her most recent trip to each one". Older results still show as evidence;
+ * they score nothing. The men's board is unchanged.
+ */
+export const WOMENS_RESULT_WINDOW_DAYS = 365
+
+/**
+ * How far a direct win reaches on the women's board.
+ *
+ * The men's reach is fifty points, set against men's scores, where a state title alone is worth
+ * forty-eight. The women's class is packed far tighter - 5th to 20th sat inside sixty points - so
+ * fifty reached almost everybody, and the wins chained: Peyton Smith (144) lost once to Adriana
+ * Miller (110), who had lost to Harley Hardin (67), who had lost to Lisa-Jean Foley (54), and Smith
+ * was ranked 22nd under all three (13 October 2026). A direct win still decides between two girls
+ * whose résumés are close, which is what it is for; it no longer drags somebody down a chain.
+ */
+export const WOMENS_HEAD_TO_HEAD_MAX_GAP = 20
+
+/** When an event with only a year on file was wrestled, near enough to place it in the window. */
+function approximateEventDate(event: string, year: number): number {
+  const monthDay = /nhsca/i.test(event) ? "03-28" : /super\s*32/i.test(event) ? "10-19" : /fargo/i.test(event) ? "07-15" : /state|nchsaa/i.test(event) ? "02-21" : "07-01"
+  return Date.parse(`${year}-${monthDay}T12:00:00Z`)
+}
+
+export function isInsideWomensWindow(input: { date?: string | null; event: string; year: number }, now: number = Date.now()): boolean {
+  const dated = input.date ? Date.parse(String(input.date)) : Number.NaN
+  const at = Number.isFinite(dated) ? dated : approximateEventDate(input.event, input.year)
+  return Number.isFinite(at) && at >= now - WOMENS_RESULT_WINDOW_DAYS * 86_400_000
 }
 
 export function isWomensTopTierEvent(eventName: string): boolean {
@@ -1126,11 +1188,34 @@ export async function buildRecruitNcRankingBoard({
    */
   const qualifierBoutsByAthleteId = new Map<string, MatchBout[]>()
   {
-    const { data: qualifierBouts } = await supabase
-      .from("other_tournament_bouts")
-      .select("athlete_id, opponent_name, opponent_club, win, is_bye, win_type, score, weight_class, event_key, event_name, event_date")
-      .in("athlete_id", athleteIds)
-    for (const row of qualifierBouts ?? []) {
+    /*
+     * Paged on the women's board. One request returns a thousand rows at most, and a class's bouts
+     * passed that the day the girls' freestyle events were loaded: whichever fell past row 1000
+     * silently did not exist for the ranking.
+     *
+     * The men's board has the same cap and is NOT paged here yet. Paging it moves men's places
+     * (Gavin Lopez 4th to 2nd in 2027 on 13 October 2026), because bouts it has never seen come
+     * into view, and the men's boards are not to change without Matt's say. Flagged to him.
+     */
+    const qualifierBouts: Array<Record<string, unknown>> = []
+    const boutColumns = "athlete_id, opponent_name, opponent_club, win, is_bye, win_type, score, weight_class, event_key, event_name, event_date"
+    if (womens) {
+      for (let from = 0; ; from += 1000) {
+        const { data, error: boutError } = await supabase
+          .from("other_tournament_bouts")
+          .select(`id, ${boutColumns}`)
+          .in("athlete_id", athleteIds)
+          .order("id")
+          .range(from, from + 999)
+        if (boutError || !data?.length) break
+        qualifierBouts.push(...(data as unknown as Array<Record<string, unknown>>))
+        if (data.length < 1000) break
+      }
+    } else {
+      const { data } = await supabase.from("other_tournament_bouts").select(boutColumns).in("athlete_id", athleteIds)
+      qualifierBouts.push(...((data ?? []) as unknown as Array<Record<string, unknown>>))
+    }
+    for (const row of qualifierBouts) {
       const raw = row as Record<string, unknown>
       if (raw.is_bye || !raw.opponent_name) continue
       if (womens && isGrecoEvent(String(raw.event_key ?? ""), String(raw.event_name ?? ""))) continue
@@ -1186,7 +1271,10 @@ export async function buildRecruitNcRankingBoard({
       }))
       const duals = dualsByAthlete.get(id) || []
 
-      const state = scoreNchsaaRowsForSeed(bundle.nchsaa || [])
+      // Counts for the score: everything on the men's board, the last twelve months on the women's.
+      const counts = (event: string, year: number, date?: string | null) =>
+        !womens || isInsideWomensWindow({ event, year: Number(year), date })
+      const state = scoreNchsaaRowsForSeed((bundle.nchsaa || []).filter((r) => counts("NCHSAA state", Number(r.year))))
       if (state > 0) {
         evidence.push({ kind: "state", label: "NCHSAA state résumé", points: state, tone: "gold" })
         // Every state result on the women's board (Matt: evidence holds all of her tournaments).
@@ -1211,7 +1299,9 @@ export async function buildRecruitNcRankingBoard({
       for (const { event, result } of nationalRows) {
         const place = placementNumber(result.placement)
         const eventWeight = !womens ? 1 : event === "NHSCA" ? WOMENS_EVENT_WEIGHTS.nhsca : WOMENS_EVENT_WEIGHTS.topTier
-        const points = Math.round((placementPoints(place) + recordWinPctPoints(result.record)) * eventWeight)
+        const points = counts(event, Number(result.year))
+          ? Math.round((placementPoints(place) + recordWinPctPoints(result.record)) * eventWeight)
+          : 0
         national += points
         const details = [
           place ? (place === 1 ? "Champion" : ordinal(place)) : "",
@@ -1238,6 +1328,14 @@ export async function buildRecruitNcRankingBoard({
       const otherResults = (bundle.other || []).filter(
         (r) => !womens || !isGrecoEvent(String(r.eventKey ?? ""), String(r.eventName ?? "")),
       )
+      /** Matches she won on the mat at one event, from its bouts. Null when we hold none of them. */
+      const contestedWinsAt = (eventName: string): number | null => {
+        const bouts = (qualifierBoutsByAthleteId.get(id) ?? []).filter((b) => String(b.venue ?? "") === eventName)
+        if (!bouts.length) return null
+        return bouts.filter(
+          (b) => String(b.win_loss ?? "").toUpperCase() === "W" && !isForfeitResult(String(b.result ?? "").trim().split(/\s+/)[0]),
+        ).length
+      }
       const womensQualifierPoints = new Map<(typeof bundle.other)[number], number>()
       if (womens) {
         const scoredQualifiers = otherResults
@@ -1245,12 +1343,15 @@ export async function buildRecruitNcRankingBoard({
             const label = String(r.eventShortName ?? r.eventName ?? "")
             return !TOC_EVENT.test(label) && !/nhsca\s+national\s+duals/i.test(label) && !isWomensTopTierEvent(label)
           })
+          .filter((r) => counts(String(r.eventShortName ?? r.eventName ?? ""), Number(r.year), r.eventDate))
           .map((r) => ({
             r,
             points: Math.round(
               (isStatePoolEvent(String(r.eventShortName ?? r.eventName ?? ""))
                 ? womensPoolEventPoints(r)
-                : placementPoints(r.placement) + recordWinPctPoints(r.record)) * WOMENS_EVENT_WEIGHTS.qualifier,
+                : isWomensNationalDuals(String(r.eventShortName ?? r.eventName ?? ""))
+                  ? womensNationalDualsPoints(r.record, contestedWinsAt(String(r.eventName ?? "")))
+                  : placementPoints(r.placement) + recordWinPctPoints(r.record)) * WOMENS_EVENT_WEIGHTS.qualifier,
             ),
           }))
           .sort((a, b) => b.points - a.points)
@@ -1272,9 +1373,11 @@ export async function buildRecruitNcRankingBoard({
                 ? WOMENS_EVENT_WEIGHTS.topTier
                 : WOMENS_EVENT_WEIGHTS.qualifier
               : QUALIFIER_WEIGHT
-        const points = womensQualifierPoints.has(result)
-          ? womensQualifierPoints.get(result)!
-          : Math.round((placementPoints(result.placement) + recordWinPctPoints(result.record)) * weight)
+        const points = !counts(eventLabel, Number(result.year), result.eventDate)
+          ? 0
+          : womensQualifierPoints.has(result)
+            ? womensQualifierPoints.get(result)!
+            : Math.round((placementPoints(result.placement) + recordWinPctPoints(result.record)) * weight)
         national += points
         const details = [
           result.placement ? (result.placement === 1 ? "Champion" : ordinal(result.placement)) : "",
@@ -1588,6 +1691,7 @@ export async function buildRecruitNcRankingBoard({
        * happened.
        */
       const allAmericanScore = allAmericanRows.reduce((sum, row) => {
+        if (!counts(row.event, row.year)) return sum
         const place = row.place!
         const depth = place === 1 ? 40 : place === 2 ? 32 : place <= 4 ? 26 : place <= 6 ? 20 : 15
         const seasonsAgo = gradYear == null ? 0 : Math.max(0, gradYear - row.year)
@@ -1836,5 +1940,5 @@ export async function buildRecruitNcRankingBoard({
     }
   })
 
-  return orderProspectsByHeadToHead(adjusted, { winnerNeedsScore: womens }).map((athlete, index) => ({ ...athlete, ai_rank: index + 1 }))
+  return orderProspectsByHeadToHead(adjusted, { winnerNeedsScore: womens, maxGap: womens ? WOMENS_HEAD_TO_HEAD_MAX_GAP : undefined }).map((athlete, index) => ({ ...athlete, ai_rank: index + 1 }))
 }
