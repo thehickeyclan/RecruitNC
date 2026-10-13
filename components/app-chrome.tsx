@@ -25,6 +25,9 @@ const SHELL_HINT_KEY = "recruiting-shell"
  * everywhere; this is only the staff preview.
  */
 const COACH_PORTAL_PATHS = ["/coach-home", "/my-recruits", "/prospects", "/athletes", "/view-profile", "/inbox", "/public-rankings", "/compare", "/perfect-recruit", "/scouting-report"]
+/** Pages with no Data Dawg launcher: the inbox (it covers the send button) and everything recruiting. */
+const NO_CHAT_PATHS = ["/inbox", "/my-recruiting", "/recruiting", "/coach-home", "/my-recruits", "/perfect-recruit"]
+
 const onCoachPortal = (path: string) => COACH_PORTAL_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
 
 function useRecruitingShell(): boolean {
@@ -97,7 +100,10 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   }, [coachAtFrontDoor])
   // No chat launcher in the coach portal at all (Matt, 11 October 2026).
   // On the community side, the inbox keeps its reply box and send button in the corner the chat launcher floats over.
-  const chat = path === "/inbox" || path.startsWith("/inbox/") ? null : <AIChatWidget />
+  // And none on RecruitNC's recruiting pages, for families or coaches: Data Dawg belongs to the
+  // NC United community site only (Matt, 13 October 2026).
+  const onRecruiting = NO_CHAT_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
+  const chat = onRecruiting ? null : <AIChatWidget />
   const isSpartanCampaign = path === "/spartan" || path.startsWith("/spartan/")
   if (isSpartanCampaign) {
     return (

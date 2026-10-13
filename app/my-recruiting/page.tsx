@@ -18,6 +18,7 @@ import { mostRecentGraduatedClassYear, seniorClassYear } from "@/lib/class-years
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { isCollegeListStatus, type CollegeListStatus } from "@/lib/college-programs/list"
+import { schoolLogoUrl } from "@/lib/college-programs/logo"
 import { gradeLabel } from "@/lib/college-programs/outreach-results"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { questionnairesForSchool } from "@/lib/college-programs/questionnaires"
@@ -93,11 +94,14 @@ export default async function RecruitingWarRoomPage() {
           place: `${school.city}, ${school.state}`,
           level: DIVISION_SHORT[primaryDivision(school)],
           status,
+          logo: null as string | null,
           hasQuestionnaire: questionnairesForSchool(school.id).length > 0,
         },
       ]
     })
     athletes.forEach((a, i) => schedules.set(a.id, events[i]?.events ?? []))
+    const logos = await Promise.all(schools.map((s) => schoolLogoUrl({ id: s.id, name: SCHOOLS.get(s.id)?.name ?? s.name })))
+    schools = schools.map((s, i) => ({ ...s, logo: logos[i] }))
   }
 
   const senior = seniorClassYear()

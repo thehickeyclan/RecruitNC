@@ -2,7 +2,7 @@
  * A college's page in the Recruiting Portal (13 Oct 2026).
  *
  * The map found the 436 schools; this is where a school's information lives. It has an address,
- * so the War Room list, the map, Data Dawg and one parent texting another can all point at it -
+ * so the War Room list, the map and one parent texting another can all point at it -
  * which the map's pop-up card never could.
  *
  * What the school is and where is public. Who to contact, the recruiting questionnaire, who from
@@ -20,6 +20,7 @@ import { WentHereSection } from "@/components/colleges/went-here-section"
 import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { loadCollegeMap } from "@/lib/college-programs/load"
+import { schoolLogoUrl } from "@/lib/college-programs/logo"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { STATE_NAMES } from "@/lib/college-programs/states"
 import { DIVISION_COLOR, DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
@@ -61,6 +62,7 @@ export default async function SchoolPage({ params }: Params) {
     : false
 
   const name = spoken(school.name)
+  const logo = await schoolLogoUrl(school)
   return (
     <main className="min-h-screen bg-[#060f1f] text-white">
       <section className="relative border-b border-white/10 bg-[#0B1D3A]">
@@ -75,7 +77,14 @@ export default async function SchoolPage({ params }: Params) {
               College programs
             </a>
           </nav>
-          <h1 className={`mt-3 text-4xl leading-[0.95] text-white sm:text-6xl ${tocDisplayClass()}`}>{name}</h1>
+          <div className="mt-3 flex items-center gap-4">
+            {logo ? (
+              // A white tile: college marks are drawn for light backgrounds and vanish on navy.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logo} alt={`${name} logo`} className="h-16 w-16 shrink-0 rounded-md bg-white object-contain p-1.5 sm:h-20 sm:w-20" />
+            ) : null}
+            <h1 className={`text-4xl leading-[0.95] text-white sm:text-6xl ${tocDisplayClass()}`}>{name}</h1>
+          </div>
           <p className="mt-2 flex items-center gap-1.5 text-sm text-white/70">
             <MapPin className="h-4 w-4 text-[#D7B968]" aria-hidden />
             {school.city}, {STATE_NAMES[school.state] ?? school.state}
