@@ -14,6 +14,8 @@ import { reviewBoard, summariseReview, type ReviewAthlete, type ReviewFlag } fro
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
 import type { StarRating } from "@/lib/athlete-star-rating"
 import { normalizeBoardAthlete } from "@/lib/rankings/board-athlete"
+import { rankingBoardDefault } from "@/lib/rankings/ranking-board-home"
+import { createClient } from "@/lib/supabase/client"
 
 type Evidence = {
   kind: string
@@ -356,6 +358,22 @@ export default function RankingBoardPage() {
   const canEdit = access === "edit"
   const showing = `${year}|${gender}`
   const boardIsCurrent = loadedFor === showing
+
+  // A link with no class on it opens a scoped ranker's own board, not the men's Class of 2027.
+  const cameWithoutBoard = useRef(!requestedYear && !requestedGender)
+  useEffect(() => {
+    if (!cameWithoutBoard.current) return
+    cameWithoutBoard.current = false
+    void createClient()
+      .auth.getSession()
+      .then(({ data }) => {
+        const board = rankingBoardDefault(data.session?.user?.app_metadata)
+        if (!board || !years.includes(String(board.year))) return
+        setYear(String(board.year))
+        setGender(board.gender)
+      })
+      .catch(() => {})
+  }, [])
 
   // Keep the class and gender in the URL, so a refresh or a shared link opens the same board.
   useEffect(() => {

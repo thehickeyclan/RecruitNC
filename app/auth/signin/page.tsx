@@ -27,7 +27,11 @@ function isTocScopedAdminTarget(path: string | null): boolean {
     // the admin-only login refused them with "Admin access required" before they reached the page
     // they had been given — Zach Tolbert, granted weigh-ins, was turned away at sign-in.
     path === "/admin/toc/weigh-ins" ||
-    path === "/admin/toc/pool/results"
+    path === "/admin/toc/pool/results" ||
+    // The same again for a scoped ranker: Brandon Palmer, sent the board link on 13 October 2026,
+    // was refused here and never reached the board his grant opens.
+    path === "/admin/rankings/board" ||
+    path.startsWith("/admin/rankings/board?")
   )
 }
 
