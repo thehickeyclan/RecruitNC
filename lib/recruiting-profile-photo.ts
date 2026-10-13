@@ -11,6 +11,19 @@ const DEFAULT_PLACEHOLDER_PATHS = new Set<string>([
 ])
 
 /**
+ * Whether a stored photo is one of our own stand-ins rather than a picture of the wrestler.
+ *
+ * The silhouette is saved on the athlete row as if it were a photo (25 profiles on 12 October
+ * 2026), so "has a photo" cannot be read off the column being filled.
+ */
+export function isPlaceholderAthletePhoto(url: string | null | undefined): boolean {
+  const value = String(url ?? "").trim()
+  if (!value) return false
+  const path = value.split(/[?#]/)[0]!.replace(/^https?:\/\/[^/]+/i, "")
+  return DEFAULT_PLACEHOLDER_PATHS.has(path)
+}
+
+/**
  * DB rows sometimes store Supabase object paths as site-relative `/storage/v1/...`, which 404 on the app origin.
  * Prefix with `NEXT_PUBLIC_SUPABASE_URL` when present (matches browser expectations for public buckets).
  */
