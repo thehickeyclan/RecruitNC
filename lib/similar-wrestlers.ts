@@ -17,7 +17,7 @@ const weightOf = (raw: unknown): number | null => {
 /** Pure ordering, so the rule is testable: published rank first, then nearest weight, then name. */
 export function rankSimilar(
   target: { id: string; weight: number },
-  candidates: Array<{ id: string; name: string; highschool: string | null; weightclass: unknown; prospect_ranking: unknown; graduationyear: number }>,
+  candidates: Array<{ id: string; name: string; highschool: string | null; weightclass: unknown; prospect_ranking: unknown; graduationyear: number; gender?: unknown }>,
   limit: number,
   maxGap = 8,
 ): SimilarWrestler[] {
@@ -27,7 +27,7 @@ export function rankSimilar(
       const raw = Number(c.prospect_ranking)
       // Only the published cut is a ranking (rankings stop at 30); past it is an unranked pool.
       const rank =
-        Number.isFinite(raw) && raw >= 1 && isPublicRankingsYearPublished(c.graduationyear) && raw <= getPublicRankingsMax(c.graduationyear)
+        Number.isFinite(raw) && raw >= 1 && isPublicRankingsYearPublished(c.graduationyear, c.gender) && raw <= getPublicRankingsMax(c.graduationyear, c.gender)
           ? raw
           : null
       return { c, w, rank }
@@ -54,7 +54,7 @@ export async function loadSimilarWrestlers(supabase: SupabaseClient, athleteId: 
   if (!a || !a.is_nc_athlete || !a.graduationyear || weight == null) return []
   let q = supabase
     .from("athletes")
-    .select("id, name, highschool, weightclass, prospect_ranking, graduationyear")
+    .select("id, name, highschool, weightclass, prospect_ranking, graduationyear, gender")
     .eq("is_nc_athlete", true)
     .eq("graduationyear", a.graduationyear)
     .limit(1000)

@@ -1950,9 +1950,9 @@ export default function BrandedSchoolPortalPage({ params }: { params: { schoolId
     // Only show rankings for NC athletes
     if (!isNCProspect(prospect)) return false
     const gradYear = Number(prospect.graduationyear)
-    if (!isPublicRankingsYearPublished(gradYear)) return false
+    if (!isPublicRankingsYearPublished(gradYear, prospect.gender)) return false
     // Only show official published public rankings
-    if (!prospect.prospect_ranking || prospect.prospect_ranking > getPublicRankingsMax(gradYear)) return false
+    if (!prospect.prospect_ranking || prospect.prospect_ranking > getPublicRankingsMax(gradYear, prospect.gender)) return false
     return true
   }
 

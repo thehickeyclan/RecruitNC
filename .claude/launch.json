@@ -52,6 +52,20 @@
         "3200"
       ],
       "port": 3200
+    },
+    {
+      "name": "womens-programs",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "/Users/matthickey/RecruitNC_MyRecruits/Recruit-NC-main/.claude/worktrees/womens-programs",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "3012"
+      ],
+      "port": 3012
     }
   ]
 }

@@ -1,4 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { parseCoachProgram, programPhrase } from "@/lib/recruiting/coach-program"
+import { setCoachProgram } from "@/lib/recruiting/coach-program-server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { decideCompleteProfile } from "@/lib/complete-profile"
@@ -76,6 +78,13 @@ export async function POST(request: NextRequest) {
 
   // A college coach is in before anybody has looked, so tell staff now - the same text the coach
   // sign-up form sends.
+  // Which program a coach works with sets what they see first. Coaches only: nobody else has one.
+  const program = decision.verifiedCoach ? parseCoachProgram(body?.program) : null
+  if (program) {
+    const failed = await setCoachProgram(admin, user.id, program)
+    if (failed) console.error("[complete-profile] coach program not saved:", failed)
+  }
+
   if (decision.verifiedCoach) {
     const meta = (user.user_metadata ?? {}) as Record<string, unknown>
     const name =
@@ -88,6 +97,7 @@ export async function POST(request: NextRequest) {
       college: institution || "college not given",
       email: String(user.email ?? ""),
       collegeNote: collegeResultNote(assigned),
+      programLabel: programPhrase(program),
     }).catch(() => 0)
   }
 

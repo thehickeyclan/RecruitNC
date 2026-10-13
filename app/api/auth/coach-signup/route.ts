@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 
+import { COACH_PROGRAM_KEY, parseCoachProgram, programPhrase } from "@/lib/recruiting/coach-program"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { canonicalRole } from "@/lib/coach-auto-approve"
 import { normalizePhoneForStorage } from "@/lib/phone-format"
@@ -44,6 +45,9 @@ export async function POST(request: NextRequest) {
   const college = String(body.college ?? "").trim()
   const cellRaw = String(body.cellPhone ?? "").trim()
   const password = String(body.password ?? "")
+  // Men's, women's or both: what the coach sees first. Asked at sign-up since 13 October 2026;
+  // an older client that does not send it is left unset and sees the men's lists, as before.
+  const program = parseCoachProgram(body.program)
 
   if (!firstName || !lastName || !email || !college || !cellRaw || !password) {
     return NextResponse.json({ error: "Please fill in every field." }, { status: 400 })
@@ -69,6 +73,7 @@ export async function POST(request: NextRequest) {
     email,
     password,
     email_confirm: true,
+    ...(program ? { app_metadata: { [COACH_PROGRAM_KEY]: program } } : {}),
     user_metadata: {
       first_name: firstName,
       last_name: lastName,
@@ -123,7 +128,13 @@ export async function POST(request: NextRequest) {
 
   // Settle their college from what they typed and their email, so nobody has to afterwards.
   const assigned = await assignCoachCollege(admin, { userId: created.user.id, institution: college, email })
-  await notifyStaffCoachSignup({ name: fullName, college, email, collegeNote: collegeResultNote(assigned) }).catch(() => 0)
+  await notifyStaffCoachSignup({
+    name: fullName,
+    college,
+    email,
+    collegeNote: collegeResultNote(assigned),
+    programLabel: programPhrase(program),
+  }).catch(() => 0)
 
   return NextResponse.json({ success: true })
 }

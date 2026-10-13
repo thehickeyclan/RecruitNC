@@ -155,8 +155,8 @@ export async function loadStarRatingInput(
     prospectRanking,
     rankingPublished:
       prospectRanking != null &&
-      isPublicRankingsYearPublished(gradYear) &&
-      prospectRanking <= getPublicRankingsMax(gradYear),
+      isPublicRankingsYearPublished(gradYear, athlete.gender) &&
+      prospectRanking <= getPublicRankingsMax(gradYear, athlete.gender),
     statePlaces: statePlaces(bundle as AthleteTournamentBundle),
     nationallyRanked: nationallyRankedIds.has(athleteId),
   }

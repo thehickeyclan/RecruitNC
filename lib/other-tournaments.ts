@@ -12,7 +12,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
+import { getPublicRankingsMax, isPublicRankingsYearPublished, isWomensBoard } from "@/lib/public-rankings-cap"
 import { HEAD_TO_HEAD_WINDOW_DAYS, isForfeitResult } from "@/lib/head-to-head"
 import type { Bout } from "@/lib/significant-wins"
 
@@ -271,6 +271,8 @@ export type OpponentCredential = {
   qualified: boolean
   /** RecruitNC prospect ranking, only when that class's rankings are published. */
   prospectRanking?: number | null
+  /** That ranking is on the women's board. */
+  womensRanking?: boolean
   graduationYear?: number | null
   /** Invited to or confirmed for the Tournament of Champions field. */
   tocParticipant?: boolean
@@ -279,6 +281,7 @@ export type OpponentCredential = {
 /** Opponent facts that come from our own athlete data rather than the bracket. */
 export type OpponentProfileFacts = {
   prospectRanking: number | null
+  womensRanking?: boolean
   graduationYear: number | null
   tocParticipant: boolean
 }
@@ -357,6 +360,7 @@ export function buildStrengthOfWins(
             record: fromEvent?.record ?? null,
             qualified: fromEvent?.qualified ?? false,
             prospectRanking: facts?.prospectRanking ?? null,
+            womensRanking: facts?.womensRanking ?? false,
             graduationYear: facts?.graduationYear ?? null,
             tocParticipant: facts?.tocParticipant ?? false,
           }
@@ -407,7 +411,7 @@ export async function loadOpponentProfileFacts(
   if (ids.length === 0) return facts
 
   const [{ data: athletes }, { data: tocRows }] = await Promise.all([
-    supabase.from("athletes").select("id, prospect_ranking, graduationyear").in("id", ids),
+    supabase.from("athletes").select("id, prospect_ranking, graduationyear, gender").in("id", ids),
     supabase.from("toc_invitations").select("athlete_id, status").in("athlete_id", ids),
   ])
 
@@ -424,10 +428,11 @@ export async function loadOpponentProfileFacts(
       rawRank != null &&
       Number.isFinite(rawRank) &&
       rawRank >= 1 &&
-      isPublicRankingsYearPublished(graduationYear) &&
-      rawRank <= getPublicRankingsMax(graduationYear)
+      isPublicRankingsYearPublished(graduationYear, row.gender) &&
+      rawRank <= getPublicRankingsMax(graduationYear, row.gender)
     facts.set(String(row.id), {
       prospectRanking: published ? rawRank : null,
+      womensRanking: isWomensBoard(row.gender),
       graduationYear,
       tocParticipant: tocField.has(String(row.id)),
     })

@@ -13,7 +13,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
-import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
+import { getPublicRankingsMax, isPublicRankingsYearPublished, rankingLabel } from "@/lib/public-rankings-cap"
 
 export type RevealCredential = {
   /** Short label for the line: "NCHSAA States", "Super 32 Early Entry". */
@@ -34,6 +34,8 @@ export type ProfileReveal = {
   graduationYear: number | null
   /** Published ranking only — an unpublished class number is not ours to show. */
   prospectRanking: number | null
+  /** "RecruitNC #4" or "RecruitNC Women's #4": the rank with its board, ready to print. */
+  prospectRankingLabel: string | null
   /** Newest and most impressive first. */
   credentials: RevealCredential[]
   /** True when there is enough here to be worth showing rather than asking. */
@@ -144,8 +146,8 @@ export async function buildProfileReveal(
     rawRank != null &&
     Number.isFinite(rawRank) &&
     rawRank >= 1 &&
-    isPublicRankingsYearPublished(graduationYear) &&
-    rawRank <= getPublicRankingsMax(graduationYear)
+    isPublicRankingsYearPublished(graduationYear, athlete.gender) &&
+    rawRank <= getPublicRankingsMax(graduationYear, athlete.gender)
 
   const photo = String(athlete.photourl ?? athlete.photo_url ?? athlete.image_url ?? "").trim()
 
@@ -157,6 +159,7 @@ export async function buildProfileReveal(
     club: String(athlete.wrestlingClub ?? "").trim() || null,
     graduationYear,
     prospectRanking: published ? rawRank : null,
+    prospectRankingLabel: published && rawRank != null ? rankingLabel(rawRank, athlete.gender) : null,
     credentials: credentials.slice(0, 6),
     hasRecord: credentials.length > 0 || published,
   }

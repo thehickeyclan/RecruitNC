@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { buildTocFieldBoard } from "@/lib/toc/field-board"
 import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
-import { accoladeLine, findSignificantLosses, findSignificantWins, withAccoladesOnly, type Bout, type RankedOpponent } from "@/lib/significant-wins"
+import { accoladeLine, findSignificantLosses, findSignificantWins, rankedOnBoard, withAccoladesOnly, type Bout, type RankedOpponent } from "@/lib/significant-wins"
 import { getQualifierSignificantWinBouts } from "@/lib/other-tournaments"
 import { HEAD_TO_HEAD_WINDOW_DAYS } from "@/lib/head-to-head"
 import { getCuratedSignificantWins } from "@/lib/curated-significant-wins"
@@ -152,7 +152,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   for (let from = 0; ; from += 1000) {
     const { data } = await admin
       .from("athletes")
-      .select("name,prospect_ranking,graduationyear")
+      .select("name,prospect_ranking,graduationyear,gender")
       .not("prospect_ranking", "is", null)
       .range(from, from + 999)
     if (!data?.length) break
@@ -162,13 +162,15 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
           name: String(row.name),
           ranking: row.prospect_ranking == null ? null : Number(row.prospect_ranking),
           graduationYear: row.graduationyear == null ? null : Number(row.graduationyear),
+          gender: (row.gender as string | null) ?? null,
         })
       }
     }
     if (data.length < 1000) break
   }
 
-  const index = { tocField, ranked, ...stateIndex }
+  // "NC ranked" opponents from this wrestler's own board only: a ranked girl is not a boy's win.
+  const index = rankedOnBoard({ tocField, ranked, ...stateIndex }, (gradRow as { gender?: unknown } | null)?.gender ?? null)
   const currentWins = findSignificantWins(bouts, index)
   const currentKeys = new Set(currentWins.map((w) => `${w.opponent.toLowerCase()}|${w.date}`))
   const earlierStateWins = findSignificantWins(earlierBouts, index, { stateOnly: true }).filter(

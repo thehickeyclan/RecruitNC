@@ -9,6 +9,8 @@
  * Verified college coaches and admins, on the comparison's rule (lib/compare-access.ts) without
  * its tester list - testers were given the comparison, not the rest of a coach's account.
  */
+import { cookies } from "next/headers"
+import { VIEW_GENDER_COOKIE } from "@/lib/recruiting/coach-program"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import CoachHomeClient from "./coach-home-client"
@@ -25,6 +27,7 @@ export default async function CoachHomePage() {
   } = await supabase.auth.getUser()
   if (!user) return <CoachHomeClient access="signed-out" data={null} />
 
-  const loaded = await loadCoachHome(createAdminClient(), user.id)
+  const chosen = (await cookies()).get(VIEW_GENDER_COOKIE)?.value
+  const loaded = await loadCoachHome(createAdminClient(), user.id, chosen)
   return <CoachHomeClient access={loaded.access} data={loaded.data} />
 }

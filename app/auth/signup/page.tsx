@@ -1,5 +1,7 @@
 "use client"
 
+import { CoachProgramField } from "@/components/recruiting/coach-program-field"
+import type { CoachProgram } from "@/lib/recruiting/coach-program"
 import type React from "react"
 
 import { Suspense, useEffect, useState } from "react"
@@ -128,6 +130,7 @@ function SignUpWizard() {
   const [password, setPassword] = useState("")
   const [cellPhone, setCellPhone] = useState("")
   const [college, setCollege] = useState("")
+  const [program, setProgram] = useState<CoachProgram | null>(null)
   const [website, setWebsite] = useState("")
 
   const [loading, setLoading] = useState(false)
@@ -165,6 +168,10 @@ function SignUpWizard() {
       setError("Enter your college.")
       return
     }
+    if (isCollegeCoach && !program) {
+      setError("Choose the program you coach: men's, women's or both.")
+      return
+    }
     if (emailFix) {
       setError(`Check your email address. Did you mean ${emailFix}?`)
       return
@@ -177,7 +184,7 @@ function SignUpWizard() {
         const res = await fetch("/api/auth/coach-signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ firstName, lastName, email, cellPhone, college, password, website }),
+          body: JSON.stringify({ firstName, lastName, email, cellPhone, college, program, password, website }),
         })
         const data = await res.json().catch(() => ({}))
         if (!res.ok) throw new Error(typeof data?.error === "string" ? data.error : "Something went wrong. Please try again.")
@@ -403,6 +410,8 @@ function SignUpWizard() {
                   {isCollegeCoach ? (
                     <CollegeField value={college} onChange={setCollege} disabled={loading} />
                   ) : null}
+
+                  {isCollegeCoach ? <CoachProgramField value={program} onChange={setProgram} disabled={loading} /> : null}
 
                   <div className="space-y-2">
                     <Label htmlFor="password">Create a password</Label>

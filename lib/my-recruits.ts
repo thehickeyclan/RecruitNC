@@ -19,6 +19,8 @@ export type MyRecruitRow = {
   club: string | null
   /** Published class rank, shown only to a viewer allowed to see rankings. */
   rank: number | null
+  /** That rank is on the women's board: printed "W #4", never a bare "#4" beside a boy's. */
+  womensRank?: boolean
   /** "NCHSAA 7A State 2nd '26" - the best state finish on file. */
   stateFinish: string | null
   /** "NHSCA 4th '25 · Super 32 3rd '24" - national placings (top 8). */
@@ -192,7 +194,7 @@ export async function loadMyRecruits(admin: ReturnType<typeof createAdminClient>
       .map((r) => `${r.ev} ${ordinal(r.place)} ${yy(r.year)}`)
     const classYear = a.graduationyear ? Number(a.graduationyear) : null
     const rank =
-      seeRank && a.prospect_ranking && isPublicRankingsYearPublished(classYear) && Number(a.prospect_ranking) <= getPublicRankingsMax(classYear)
+      seeRank && a.prospect_ranking && isPublicRankingsYearPublished(classYear, a.gender) && Number(a.prospect_ranking) <= getPublicRankingsMax(classYear, a.gender)
         ? Number(a.prospect_ranking)
         : null
     const college = (a.college ?? "").trim()
@@ -206,6 +208,7 @@ export async function loadMyRecruits(admin: ReturnType<typeof createAdminClient>
       highSchool: a.highschool ?? null,
       club: a.wrestlingClub ?? null,
       rank,
+      womensRank: rank != null && /^f/i.test(String(a.gender ?? "").trim()),
       stateFinish: best ? `NCHSAA ${best.classification ?? ""} State ${ordinal(Number(best.place))} ${yy(Number(best.year))}`.replace(/\s+/g, " ") : null,
       nationalFinish: national.length ? national.join(" · ") : null,
       committedTo: college && college !== "Not specified" ? college : null,

@@ -8,7 +8,7 @@ import {
   type AthleteCredentials,
 } from "@/lib/credentials/athlete-credentials"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { getPublicRankingsMax, isPublicRankingsYearPublished, isRankedClassYear } from "@/lib/public-rankings-cap"
+import { getPublicRankingsMax, isPublicRankingsYearPublished, isRankedClassYear, isWomensBoard } from "@/lib/public-rankings-cap"
 
 /**
  * The public read model for a class ranking — one server-side shape, the way the TOC field has one.
@@ -58,6 +58,8 @@ export type PublicRankedAthlete = {
 
 export type PublicClassRanking = {
   year: number
+  /** Whose board: the men's and the women's are separate lists that share class years. */
+  gender: "Male" | "Female"
   published: boolean
   cap: number
   athletes: PublicRankedAthlete[]
@@ -154,11 +156,17 @@ async function buildPublicClassRanking(
    * need to read exactly what customers will read - the same page, not a different one.
    */
   includeUnreleased = false,
+  /**
+   * Whose board. The query took a year alone, so the first ranked girl would have been printed
+   * on the men's board beside the boy holding the same number (13 October 2026).
+   */
+  board: "Male" | "Female" = "Male",
 ): Promise<PublicClassRanking> {
-  const cap = getPublicRankingsMax(year)
-  const reachable = includeUnreleased ? isRankedClassYear(year) : isPublicRankingsYearPublished(year)
+  const gender = isWomensBoard(board) ? "Female" : "Male"
+  const cap = getPublicRankingsMax(year, gender)
+  const reachable = includeUnreleased ? isRankedClassYear(year, gender) : isPublicRankingsYearPublished(year, gender)
   if (!reachable) {
-    return { year, published: false, cap, athletes: [] }
+    return { year, gender, published: false, cap, athletes: [] }
   }
 
   const admin = createAdminClient()
@@ -177,6 +185,7 @@ async function buildPublicClassRanking(
         ].join(", "),
       )
       .eq("graduationyear", year)
+      .eq("gender", gender)
       .eq("is_nc_athlete", true)
       .not("prospect_ranking", "is", null)
       .lte("prospect_ranking", cap)
@@ -194,7 +203,7 @@ async function buildPublicClassRanking(
    * So movement is suppressed until the class is actually released. After the first real
    * release, publishes produce movement against something readers have genuinely seen.
    */
-  const showMovement = isPublicRankingsYearPublished(year)
+  const showMovement = isPublicRankingsYearPublished(year, gender)
 
   const credentials = await loadAthleteCredentialsBatch(admin, (rows ?? []) as unknown as Array<Record<string, unknown>>)
 
@@ -221,7 +230,7 @@ async function buildPublicClassRanking(
     }
   })
 
-  return { year, published: true, cap, athletes }
+  return { year, gender, published: true, cap, athletes }
 }
 
 /**
@@ -236,6 +245,6 @@ const PUBLIC_RANKING_CACHE_VERSION = "v6-shared-credential-engine"
 
 export const loadPublicClassRanking = unstable_cache(
   buildPublicClassRanking,
-  ["public-class-ranking", PUBLIC_RANKING_CACHE_VERSION, "v16-coach-verification"],
+  ["public-class-ranking", PUBLIC_RANKING_CACHE_VERSION, "v17-board-gender"],
   { revalidate: 3600, tags: ["public-rankings"] },
 )

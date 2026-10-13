@@ -7,6 +7,7 @@
  * North Carolina wrestlers only for now. Out-of-state results are held, but opponent strength and
  * identity links are only validated for NC; other states open up as their data is checked.
  */
+import { rankingLabel } from "@/lib/public-rankings-cap"
 import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
@@ -41,7 +42,7 @@ function rankedLabel(report: ComparisonReport): string | null {
   const national = [...report.nationalRankings].sort((a, b) => a.current - b.current)[0]
   if (national) return `#${national.current} ${national.sourceLabel}`
   if (report.rankingPublished && report.prospectRanking != null) {
-    return `#${report.prospectRanking} RecruitNC, Class of ${report.identity.graduationYear}`
+    return `${rankingLabel(report.prospectRanking, report.identity.gender, "")} RecruitNC, Class of ${report.identity.graduationYear}`
   }
   return null
 }

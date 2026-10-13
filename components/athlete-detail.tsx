@@ -70,7 +70,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { getYouTubeVideoId, isDirectHighlightVideoUrl } from "@/lib/highlight-video-url"
 import { ProfileViewStatsPanel } from "./profile-view-stats-panel"
 import { BannerViewStats } from "./profile/banner-view-stats"
-import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
+import { getPublicRankingsMax, isPublicRankingsYearPublished, rankingLabel } from "@/lib/public-rankings-cap"
 import { scoutingReportAvailable } from "@/lib/scouting-report-access"
 
 /**
@@ -551,8 +551,10 @@ export function AthleteDetail({
   })()
   // Only show rank on profile when athlete is on our official published rankings.
   const graduationYearNumber = Number(graduationYear)
-  const maxRankForClass = isPublicRankingsYearPublished(graduationYearNumber)
-    ? getPublicRankingsMax(graduationYearNumber)
+  // Her own board's release and depth: a girl in a released men's class year is not thereby ranked.
+  const rankBoardGender = (athlete as { gender?: unknown }).gender
+  const maxRankForClass = isPublicRankingsYearPublished(graduationYearNumber, rankBoardGender)
+    ? getPublicRankingsMax(graduationYearNumber, rankBoardGender)
     : 0
   const publishedRank =
     rawRank != null &&
@@ -1244,7 +1246,7 @@ export function AthleteDetail({
         },
   ]
   const bannerRibbon = prospectRanking
-    ? `RecruitNC #${prospectRanking}  ·  Class of ${graduationYear || "—"}`
+    ? `${rankingLabel(prospectRanking, rankBoardGender)}  ·  Class of ${graduationYear || "—"}`
     : graduationYear
       ? `Class of ${graduationYear}`
       : null
@@ -1429,7 +1431,7 @@ export function AthleteDetail({
           <div className="mt-2 flex flex-wrap items-center gap-1.5 empty:hidden">
             {prospectRanking ? (
               <p className="inline-block rounded-md bg-[#D3B574] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.22em] text-[#0A1628]">
-                RecruitNC #{prospectRanking}
+                {rankingLabel(prospectRanking, rankBoardGender)}
               </p>
             ) : null}
           </div>
@@ -1617,7 +1619,7 @@ export function AthleteDetail({
               {prospectRanking && (
                 <div className="mb-4">
                   <Badge className="bg-[#D3B574] text-[#13294B] px-3 py-1.5 text-sm font-bold">
-                    RecruitNC #{prospectRanking} - Class of {graduationYear}
+                    {rankingLabel(prospectRanking, rankBoardGender)} - Class of {graduationYear}
                   </Badge>
                 </div>
               )}
@@ -1738,7 +1740,7 @@ export function AthleteDetail({
 
                   {prospectRanking && (
                     <Badge className="bg-[#D3B574] text-[#13294B] px-4 py-2 text-base font-bold shadow-lg mb-4">
-                      RecruitNC #{prospectRanking} - Class of {graduationYear}
+                      {rankingLabel(prospectRanking, rankBoardGender)} - Class of {graduationYear}
                     </Badge>
                   )}
 

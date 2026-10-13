@@ -334,7 +334,7 @@ export default function RankingBoardPage() {
   const [query, setQuery] = useState("")
   const [view, setView] = useState<"final" | "recommendation" | "review" | "gaps">("final")
   const [status, setStatus] = useState("")
-  const publicCap = getPublicRankingsMax(Number(year))
+  const publicCap = getPublicRankingsMax(Number(year), gender)
   const router = useRouter()
   const pathname = usePathname()
   /*
@@ -597,7 +597,12 @@ export default function RankingBoardPage() {
           : push.sent > 0
             ? ` Push sent to ${push.sent} device${push.sent === 1 ? "" : "s"}${push.failed ? `, ${push.failed} failed` : ""}.`
             : " Push sent to 0 devices — nobody is subscribed to ranking alerts."
-      setStatus(`Published the top ${data.published}. Everyone below the cut stays private.${appLine}${pushLine}`)
+      // A women's publish is staged, not live: customers see it once the class is released.
+      const releaseLine =
+        data.released === false
+          ? " NOT public yet: this board is saved for staff to review at /public-rankings, and goes live when the class is released."
+          : ""
+      setStatus(`Published the top ${data.published}. Everyone below the cut stays private.${releaseLine}${appLine}${pushLine}`)
       await loadBoard(true)
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not publish.")

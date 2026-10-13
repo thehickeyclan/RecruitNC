@@ -1,4 +1,4 @@
-import { PUBLIC_RANKINGS_MAX_BY_YEAR, PUBLISHED_PUBLIC_RANKINGS_YEARS, PUBLIC_TOP_75_COLLEGE_RELEASED, RANKED_CLASS_YEARS } from "@/lib/public-rankings-cap"
+import { PUBLIC_TOP_75_COLLEGE_RELEASED, rankedClassYears, releasedClassYears } from "@/lib/public-rankings-cap"
 
 /**
  * One switcher across every ranking board.
@@ -15,20 +15,31 @@ import { PUBLIC_RANKINGS_MAX_BY_YEAR, PUBLISHED_PUBLIC_RANKINGS_YEARS, PUBLIC_TO
 export function RankingsNav({
   current,
   isAdmin = false,
+  gender = "Male",
 }: {
+  /** Whose boards these tabs switch between. The other set is one link away, never mixed in. */
+  gender?: "Male" | "Female"
   /** The board being viewed: a class year, or "prospects" for the ranked list. */
   current: number | "prospects" | "top-100"
   isAdmin?: boolean
 }) {
-  const years = (isAdmin ? RANKED_CLASS_YEARS : PUBLISHED_PUBLIC_RANKINGS_YEARS).filter(
-    (y) => PUBLIC_RANKINGS_MAX_BY_YEAR[y] != null,
-  )
+  const womens = gender === "Female"
+  const years = isAdmin ? rankedClassYears(gender) : releasedClassYears(gender)
+  const otherYears = isAdmin ? rankedClassYears(womens ? "Male" : "Female") : releasedClassYears(womens ? "Male" : "Female")
 
-  const tabs: Array<{ href: string; label: string; key: number | "prospects" | "top-100" }> = [
-    ...years.map((y) => ({ href: `/public-rankings/${y}`, label: `Class of ${y}`, key: y as number })),
-    // Classes of 2027 and 2028, reaching past each class's published cut.
-    ...(isAdmin || PUBLIC_TOP_75_COLLEGE_RELEASED
+  const tabs: Array<{ href: string; label: string; key: number | "prospects" | "top-100" | "other" }> = [
+    ...years.map((y) => ({
+      href: womens ? `/public-rankings/women/${y}` : `/public-rankings/${y}`,
+      label: womens ? `Women's ${y}` : `Class of ${y}`,
+      key: y as number,
+    })),
+    // Classes of 2027 and 2028, reaching past each class's published cut. A men's board.
+    ...(!womens && (isAdmin || PUBLIC_TOP_75_COLLEGE_RELEASED)
       ? [{ href: "/public-rankings/college-prospects", label: "Top 75 College Prospects", key: "top-100" as const }]
+      : []),
+    // The other set of boards, as one door: never a women's tab among the men's classes.
+    ...(otherYears.length
+      ? [{ href: "/public-rankings", label: womens ? "Men's rankings →" : "Women's rankings →", key: "other" as const }]
       : []),
   ]
 

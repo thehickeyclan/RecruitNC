@@ -75,20 +75,84 @@ export const RANKED_CLASS_YEARS = Object.keys(PUBLIC_RANKINGS_MAX_BY_YEAR)
   .map(Number)
   .sort((a, b) => a - b)
 
-export function isPublicRankingsYearPublished(year: number | null | undefined): year is number {
-  return year != null && Number.isFinite(year) && PUBLIC_RELEASED_YEARS.includes(year)
+/**
+ * The women's boards: their own classes, their own depth, their own release (Matt, 13 October 2026).
+ *
+ * A girl ranked #2 in the Class of 2027 and a boy ranked #2 in the Class of 2027 are on two
+ * different lists, and every public surface has to say which one it is reading. Nothing below
+ * takes a year alone any more: it takes a year and whose board.
+ *
+ * Fifteen deep - the ranker signs off on a set list, and the classes are smaller. Only 2027 and
+ * 2028 are ranked for women.
+ */
+export const WOMENS_PUBLIC_RANKINGS_MAX_BY_YEAR: Record<number, number> = {
+  2027: 15,
+  2028: 15,
+}
+
+/**
+ * Women's classes released to customers. Empty: nothing of the women's is public until Matt says
+ * so. Pressing Publish on the board writes the ranks and lets staff read the page as customers
+ * will; adding the year here is the release.
+ */
+export const WOMENS_PUBLIC_RELEASED_YEARS: readonly number[] = []
+
+export const WOMENS_RANKED_CLASS_YEARS = Object.keys(WOMENS_PUBLIC_RANKINGS_MAX_BY_YEAR)
+  .map(Number)
+  .sort((a, b) => a - b)
+
+/** "Female", "female", "women's": the women's boards. Anything else, and nothing at all, is the men's. */
+export function isWomensBoard(gender: unknown): boolean {
+  return /^(female|women|womens|women's|f)$/i.test(String(gender ?? "").trim())
+}
+
+export function rankedClassYears(gender?: unknown): number[] {
+  return isWomensBoard(gender) ? WOMENS_RANKED_CLASS_YEARS : RANKED_CLASS_YEARS
+}
+
+export function releasedClassYears(gender?: unknown): number[] {
+  return isWomensBoard(gender) ? [...WOMENS_PUBLIC_RELEASED_YEARS].sort((a, b) => a - b) : PUBLISHED_PUBLIC_RANKINGS_YEARS
+}
+
+export function isPublicRankingsYearPublished(year: number | null | undefined, gender: unknown): year is number {
+  return year != null && Number.isFinite(year) && releasedClassYears(gender).includes(year)
 }
 
 /** A class an admin may preview: ranked by us, whether or not it has been released. */
-export function isRankedClassYear(year: number | null | undefined): year is number {
-  return year != null && Number.isFinite(year) && PUBLIC_RANKINGS_MAX_BY_YEAR[year] != null
+export function isRankedClassYear(year: number | null | undefined, gender: unknown): year is number {
+  return year != null && Number.isFinite(year) && rankedClassYears(gender).includes(year)
 }
 
-export function getPublicRankingsMax(_year?: number | null): number {
-  if (_year != null && Number.isFinite(_year) && PUBLIC_RANKINGS_MAX_BY_YEAR[_year] != null) {
-    return PUBLIC_RANKINGS_MAX_BY_YEAR[_year]!
+/**
+ * `gender` is required on purpose. Every caller used to pass a year alone, which meant "the men's
+ * board" without saying so - and a ranked girl in a released men's class year passed every check
+ * and was shown as "RecruitNC #2" on her profile, in lists and in reports. Pass the athlete's own
+ * gender; pass "Male" only where the surface really is the men's board.
+ */
+export function getPublicRankingsMax(_year: number | null | undefined, gender: unknown): number {
+  const caps = isWomensBoard(gender) ? WOMENS_PUBLIC_RANKINGS_MAX_BY_YEAR : PUBLIC_RANKINGS_MAX_BY_YEAR
+  if (_year != null && Number.isFinite(_year) && caps[_year] != null) {
+    return caps[_year]!
   }
-  return DEFAULT_PUBLIC_RANKINGS_CAP
+  // A women's class nobody has set a depth for is not ranked at all, rather than thirty deep.
+  return isWomensBoard(gender) ? 0 : DEFAULT_PUBLIC_RANKINGS_CAP
+}
+
+/**
+ * Whether a rank on an athlete's row is one the public may see: within the cut for that
+ * athlete's own board, in a class that board has released.
+ */
+export function isPublicRank(rank: unknown, year: unknown, gender: unknown): boolean {
+  const n = Number(rank)
+  const y = Number(year)
+  if (rank == null || !Number.isInteger(n) || n < 1 || !Number.isFinite(y)) return false
+  return isPublicRankingsYearPublished(y, gender) && n <= getPublicRankingsMax(y, gender)
+}
+
+/** "RecruitNC #4" for the men's board, "RecruitNC Women's #4" for the women's. */
+export function rankingLabel(rank: number | string, gender: unknown, prefix = "RecruitNC"): string {
+  const board = isWomensBoard(gender) ? "Women's " : ""
+  return `${prefix ? `${prefix} ` : ""}${board}#${rank}`
 }
 
 /** Clamp a requested top-N (or "all") to the official published top 30. */
@@ -96,7 +160,7 @@ export function clampProspectRankingsLimit(
   year: number | null | undefined,
   requested: number | null | undefined,
 ): number {
-  const max = getPublicRankingsMax(year)
+  const max = getPublicRankingsMax(year, "Male")
   if (requested == null || !Number.isFinite(requested) || requested <= 0) return max
   return Math.min(Math.floor(requested), max)
 }

@@ -7,7 +7,7 @@
  * missed the ones they had.
  */
 
-import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
+import { getPublicRankingsMax, isPublicRankingsYearPublished, isWomensBoard } from "@/lib/public-rankings-cap"
 
 export type AthleteRow = Record<string, any>
 
@@ -23,6 +23,8 @@ export type ClubRankedAthlete = {
   rank: number
   classYear: string | null
   weight: string | null
+  /** The women's board: a club's #2 on it is listed apart from, and labelled against, the men's #2. */
+  womens: boolean
 }
 
 export type ClubAchievements = {
@@ -68,16 +70,17 @@ export function buildClubAchievements(athletes: AthleteRow[]): ClubAchievements 
     if (
       Number.isFinite(rank) &&
       rank > 0 &&
-      isPublicRankingsYearPublished(year) &&
-      rank <= getPublicRankingsMax(year)
+      isPublicRankingsYearPublished(year, row.gender) &&
+      rank <= getPublicRankingsMax(year, row.gender)
     ) {
-      ranked.push({ name, rank, classYear, weight: asText(row.weightclass) || asText(row.weight) || null })
+      ranked.push({ name, rank, classYear, weight: asText(row.weightclass) || asText(row.weight) || null, womens: isWomensBoard(row.gender) })
     }
   }
 
   commits.sort((a, b) => (b.classYear ?? "").localeCompare(a.classYear ?? "") || a.name.localeCompare(b.name))
   // Newest class first, then by rank within it — ranks only compare inside a class.
-  ranked.sort((a, b) => (b.classYear ?? "").localeCompare(a.classYear ?? "") || a.rank - b.rank)
+  // The men's board first, then the women's: two lists that happen to share a page.
+  ranked.sort((a, b) => Number(a.womens) - Number(b.womens) || (b.classYear ?? "").localeCompare(a.classYear ?? "") || a.rank - b.rank)
 
   return {
     commits,

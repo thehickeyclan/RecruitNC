@@ -170,7 +170,7 @@ export async function POST(request: Request) {
     }
 
     const db = createAdminClient()
-    const publicCap = getPublicRankingsMax(year)
+    const publicCap = getPublicRankingsMax(year, body?.gender ?? "Male")
     const updates = await Promise.all(
       rankings.map((row: { id?: string; final_rank?: number; previous_ranking?: number | null }) => {
         const id = String(row.id || "")

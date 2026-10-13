@@ -9,7 +9,8 @@ import { isApprovedCoach, listThreads } from "@/lib/coach-messages"
 import { loadFitFlags } from "@/lib/program-fit-bulk"
 import { resolveFitViewer } from "@/lib/program-fit-viewer"
 import { programLogo as resolveProgramLogo } from "@/lib/coach-program-logo"
-import { PUBLIC_TOP_75_COLLEGE_RELEASED, PUBLISHED_PUBLIC_RANKINGS_YEARS, getPublicRankingsMax } from "@/lib/public-rankings-cap"
+import { PUBLIC_TOP_75_COLLEGE_RELEASED, getPublicRankingsMax, releasedClassYears } from "@/lib/public-rankings-cap"
+import { coachProgramOf, viewGenderFor } from "@/lib/recruiting/coach-program"
 import { currentClassYears } from "@/lib/class-years"
 import type { CoachHomeData } from "./coach-home-client"
 
@@ -24,6 +25,8 @@ import type { CoachHomeData } from "./coach-home-client"
 export async function loadCoachHome(
   admin: ReturnType<typeof createAdminClient>,
   userId: string,
+  /** The browser's Men's | Women's switch, when it has been used. The coach's program otherwise. */
+  chosenGender?: string | null,
 ): Promise<{ access: "not-coach"; data: null } | { access: "ok"; data: CoachHomeData }> {
   const { data: profile } = await admin
     .from("user_profiles")
@@ -35,6 +38,12 @@ export async function loadCoachHome(
   if (!isAdmin && !(classified.isCollegeCoach && classified.verifiedCoach)) {
     return { access: "not-coach", data: null }
   }
+
+  // Men's, women's or both, from sign-up: which board this coach's home is built from.
+  const coachProgram = await admin.auth.admin
+    .getUserById(userId)
+    .then((r) => coachProgramOf(r.data?.user), () => null)
+  const viewGender = viewGenderFor(coachProgram, chosenGender)
 
   // Each part fails on its own: a slow inbox must not take the search and the links down with it.
   const [board, threads, roster, school] = await Promise.all([
@@ -76,12 +85,18 @@ export async function loadCoachHome(
    */
   const onBoard = new Set(recruits.map((r) => r.athleteId))
   const lastWeight = new Map((roster as Array<{ id: string; weightclass: string | null }>).map((a) => [a.id, a.weightclass]))
-  const suggestYears = currentClassYears().filter((y) => PUBLISHED_PUBLIC_RANKINGS_YEARS.includes(y)).slice(0, 2)
+  /*
+   * From the coach's own board (Matt, 13 October 2026): a women's coach is suggested ranked women,
+   * a men's coach ranked men. The query took no gender at all, so the first ranked girls would
+   * have displaced the boys in every men's coach's suggestions.
+   */
+  const suggestYears = currentClassYears().filter((y) => releasedClassYears(viewGender).includes(y)).slice(0, 2)
   const suggested = suggestYears.length
     ? await admin
         .from("athletes")
         .select("id, name, graduationyear, highschool, prospect_ranking, college, recruiting_status")
         .eq("is_nc_athlete", true)
+        .eq("gender", viewGender)
         .in("graduationyear", suggestYears)
         .gte("prospect_ranking", 1)
         .order("prospect_ranking", { ascending: true })
@@ -93,7 +108,7 @@ export async function loadCoachHome(
               const college = String(a.college ?? "").trim()
               const status = String(a.recruiting_status ?? "").trim().toLowerCase()
               return (
-                Number(a.prospect_ranking) <= getPublicRankingsMax(year) &&
+                Number(a.prospect_ranking) <= getPublicRankingsMax(year, viewGender) &&
                 (!college || college === "Not specified") &&
                 status !== "committed" &&
                 status !== "signed" &&
@@ -160,7 +175,9 @@ export async function loadCoachHome(
     },
     suggested,
     activity: await loadStaffActivity(admin, userId, 6).catch(() => []),
-    rankingYears: [...PUBLISHED_PUBLIC_RANKINGS_YEARS],
+    rankingYears: [...releasedClassYears(viewGender)],
+    viewGender,
+    coachProgram,
     top75: PUBLIC_TOP_75_COLLEGE_RELEASED,
   }
   return { access: "ok", data }

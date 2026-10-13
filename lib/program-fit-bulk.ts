@@ -17,7 +17,7 @@ import "server-only"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { evaluateProgramFit, hasAnyCriteria, type FitCheck, type FitSubject, type ProgramFitCriteria } from "@/lib/program-fit"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
-import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
+import { getPublicRankingsMax, isPublicRankingsYearPublished, rankingLabel } from "@/lib/public-rankings-cap"
 
 export type FitVerdict = "meets" | "possible" | "misses"
 
@@ -153,7 +153,7 @@ export async function loadFitSubjects(
   for (const a of athletes) {
     const classYear = a.graduationyear ? Number(a.graduationyear) : null
     const rank = Number(a.prospect_ranking)
-    const ranked = rank >= 1 && isPublicRankingsYearPublished(classYear) && rank <= getPublicRankingsMax(classYear)
+    const ranked = rank >= 1 && isPublicRankingsYearPublished(classYear, a.gender) && rank <= getPublicRankingsMax(classYear, a.gender)
     const state = bestState.get(a.id)
     out.set(a.id, {
       graduationYear: classYear,
@@ -167,7 +167,7 @@ export async function loadFitSubjects(
       nationalEvents: nationalEvents.get(a.id)?.size ?? 0,
       stateBestPlace: state?.place ?? null,
       stateBestLabel: state?.label ?? null,
-      rankedLabel: ranked ? `#${rank} RecruitNC Class of ${classYear}` : null,
+      rankedLabel: ranked ? `${rankingLabel(rank, a.gender, "")} RecruitNC Class of ${classYear}` : null,
       female: /^(f|female|girl)/i.test(String(a.gender ?? "")),
     })
   }

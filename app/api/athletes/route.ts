@@ -62,13 +62,14 @@ export async function GET(request: Request) {
       const ids = athletes.map((a) => String((a as Record<string, unknown>).id)).filter(Boolean)
       const { data: ranked } = await createAdminClient()
         .from("athletes")
-        .select("id, prospect_ranking, graduationyear")
+        .select("id, prospect_ranking, graduationyear, gender")
         .in("id", ids)
         .not("prospect_ranking", "is", null)
       const rankById = new Map(
         (ranked ?? [])
           // Only classes actually released; an unreleased board must not leak through this list.
-          .filter((r) => isPublicRankingsYearPublished(Number(r.graduationyear)))
+          // Each on their own board: a girl's rank counts only once the women's class is released.
+          .filter((r) => isPublicRankingsYearPublished(Number(r.graduationyear), r.gender))
           .map((r) => [String(r.id), Number(r.prospect_ranking)]),
       )
       for (const athlete of athletes as Array<Record<string, unknown>>) {

@@ -13,7 +13,7 @@ import {
   mergeCommitmentHonorBadgesForDisplay,
 } from "@/lib/commitment-card-honors"
 import { prefetchAthleteProfile } from "@/lib/prefetch-athlete-profile"
-import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
+import { getPublicRankingsMax, isPublicRankingsYearPublished, rankingLabel } from "@/lib/public-rankings-cap"
 interface Athlete {
   id: string
   name: string
@@ -538,8 +538,9 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
         : null
   const ncRankPositive = rawNcRank != null && Number.isFinite(rawNcRank) && rawNcRank >= 1 ? rawNcRank : null
   const ncRankClassYear = Number(athlete.graduationyear ?? athlete.graduationYear)
-  const ncRankPublicCap = isPublicRankingsYearPublished(ncRankClassYear)
-    ? getPublicRankingsMax(ncRankClassYear)
+  const ncRankGender = (athlete as { gender?: unknown })?.gender
+  const ncRankPublicCap = isPublicRankingsYearPublished(ncRankClassYear, ncRankGender)
+    ? getPublicRankingsMax(ncRankClassYear, ncRankGender)
     : 0
   /** Shown below header on card back only when ranked (header already shows Class of). */
   const backCardNcRank = ncRankPositive != null && ncRankPositive <= ncRankPublicCap ? ncRankPositive : null
@@ -743,7 +744,7 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
                     {backCardNcRank != null && (
                       <>
                         <span className="text-white/30">•</span>
-                        <span style={{ color: "#D3B574" }}>RecruitNC #{backCardNcRank}</span>
+                        <span style={{ color: "#D3B574" }}>{rankingLabel(backCardNcRank, ncRankGender)}</span>
                       </>
                     )}
                   </div>

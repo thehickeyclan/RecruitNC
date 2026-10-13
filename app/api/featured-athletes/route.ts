@@ -313,6 +313,8 @@ export async function GET(request: Request) {
           .from("athletes")
           .select("*")
           .eq("graduationyear", targetYear)
+          // The men's board: a class has two #1s now, and this is "the top three" of one list.
+          .eq("gender", "Male")
           .not("prospect_ranking", "is", null)
           .order("prospect_ranking", { ascending: true })
           .limit(3),

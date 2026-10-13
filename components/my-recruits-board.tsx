@@ -306,7 +306,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                           <span className="text-white/35"> · </span>
                           {r.weight ? `${r.weight} lbs` : "—"}
                         </td>
-                        <td className="px-2 py-3 font-bold text-[#D3B574]">{r.rank ? `#${r.rank}` : "—"}</td>
+                        <td className="px-2 py-3 font-bold text-[#D3B574]">{r.rank ? `${r.womensRank ? "W " : ""}#${r.rank}` : "—"}</td>
                         <td className="px-2 py-3 text-xs leading-relaxed text-white/80">
                           {r.stateFinish || r.nationalFinish ? (
                             <>
@@ -357,7 +357,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                         <Link href={`/view-profile?id=${r.athleteId}`} className="font-bold text-white">
                           {r.name}
                         </Link>
-                        {r.rank ? <span className="ml-2 text-xs font-bold text-[#D3B574]">#{r.rank}</span> : null}
+                        {r.rank ? <span className="ml-2 text-xs font-bold text-[#D3B574]">{r.womensRank ? "W " : ""}#{r.rank}</span> : null}
                         <p className="text-xs text-white/60">
                           {[r.classYear ? `Class of ${r.classYear}` : null, r.weight ? `${r.weight} lbs` : null].filter(Boolean).join(" · ")}
                         </p>

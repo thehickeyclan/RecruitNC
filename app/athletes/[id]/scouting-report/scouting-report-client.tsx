@@ -1,5 +1,6 @@
 "use client"
 
+import { rankingLabel } from "@/lib/public-rankings-cap"
 import { Fragment, useEffect, useState } from "react"
 import Image from "next/image"
 import { Printer, ArrowLeft, Loader2, Link2, Check } from "lucide-react"
@@ -374,7 +375,7 @@ export function ScoutingReportDocument({
             ) : null}
             <div className="mt-2 text-[13px] font-bold text-[#03154C]">
               {[
-                report.rankingPublished && report.prospectRanking ? `RecruitNC #${report.prospectRanking}` : null,
+                report.rankingPublished && report.prospectRanking ? rankingLabel(report.prospectRanking, identity.gender) : null,
                 identity.graduationYear ? `Class of ${identity.graduationYear}` : null,
               ]
                 .filter(Boolean)

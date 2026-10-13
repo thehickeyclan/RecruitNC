@@ -11,7 +11,11 @@ import { createClient } from "@/lib/supabase/server"
 import {
   PUBLISHED_PUBLIC_RANKINGS_YEARS,
   PUBLIC_TOP_75_COLLEGE_RELEASED,
+  getPublicRankingsMax,
+  rankedClassYears,
+  releasedClassYears,
 } from "@/lib/public-rankings-cap"
+import { resolveViewGender } from "@/lib/recruiting/coach-program-server"
 
 export const dynamic = "force-dynamic"
 
@@ -90,6 +94,31 @@ export default async function PublicRankingsHomepage({
    */
   const alreadyIncluded = Boolean(((await searchParams) ?? {}).included)
 
+  /*
+   * Two groups, never one list (Matt, 13 October 2026): the men's classes and the women's classes
+   * share years, so a women's card among the men's would read as a fourth class. A women's coach
+   * gets her group first. Staff see the women's boards before release, like the men's.
+   */
+  const womensYears = isAdmin ? rankedClassYears("Female") : releasedClassYears("Female")
+  const womensLinks = womensYears.map((year) => ({
+    href: `/public-rankings/women/${year}`,
+    eyebrow: "Women's class rankings",
+    title: `Class of ${year}`,
+    description: `The published Top ${getPublicRankingsMax(year, "Female")}.`,
+    icon: ListOrdered,
+  }))
+  const { gender: viewGender } = await resolveViewGender()
+  const groups = [
+    { key: "mens", heading: "Men's Rankings", links: releasedLinks, preview: false },
+    {
+      key: "womens",
+      heading: "Women's Rankings",
+      links: womensLinks,
+      preview: isAdmin && releasedClassYears("Female").length === 0,
+    },
+  ].filter((group) => group.links.length)
+  if (viewGender === "Female") groups.reverse()
+
   return (
     <main className="min-h-screen bg-[#0A1628] text-white">
       <section className="border-b border-white/10">
@@ -142,8 +171,18 @@ export default async function PublicRankingsHomepage({
           </div>
         ) : null}
 
+        {groups.map((group) => (
+        <div key={group.key} id={group.key} className="mb-12 scroll-mt-24">
+        <div className="mb-4 flex flex-wrap items-baseline gap-3">
+          <h2 className="text-2xl font-black tracking-tight text-white">{group.heading}</h2>
+          {group.preview ? (
+            <span className="rounded-full border border-[#D3B574]/50 px-2.5 py-0.5 text-xs font-semibold text-[#D3B574]">
+              Admin preview — not yet released
+            </span>
+          ) : null}
+        </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {releasedLinks.map(({ href, eyebrow, title, description, icon: Icon }) => (
+          {group.links.map(({ href, eyebrow, title, description, icon: Icon }) => (
             <HardLink key={href} href={href} className="group block h-full">
               <Card className="h-full border-white/10 bg-[#13294B] text-white transition hover:-translate-y-0.5 hover:border-[#D3B574]/70">
                 <CardHeader>
@@ -162,6 +201,8 @@ export default async function PublicRankingsHomepage({
             </HardLink>
           ))}
         </div>
+        </div>
+        ))}
 
         {isAdmin && PUBLISHED_PUBLIC_RANKINGS_YEARS.length === 0 ? (
           <div className="mx-auto mb-8 max-w-xl rounded-xl border border-[#D3B574]/50 bg-[#D3B574]/10 px-6 py-4 text-center">

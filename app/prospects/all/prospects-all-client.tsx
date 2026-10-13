@@ -1,5 +1,7 @@
 "use client"
 
+import { VIEW_GENDER_COOKIE, coachProgramOf, parseViewGender, viewGenderFor } from "@/lib/recruiting/coach-program"
+import { usesRecruitingShell } from "@/lib/recruiting/brand"
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
@@ -136,7 +138,7 @@ export default function ProspectsAllClient({
    * NC United Blue members, verified college coaches and admins. Everyone else sees the
    * directory without the numbers, which is still a useful page.
    */
-  const { profile: viewerProfile } = useAuth()
+  const { profile: viewerProfile, user: viewerUser } = useAuth()
   const { actsAsCoach } = useCoachMode()
   /*
    * The ranks are not in the rows. The rows are public and cached; the server sends the ranks
@@ -179,6 +181,30 @@ export default function ProspectsAllClient({
   const [searchTerm, setSearchTerm] = useState("")
   const [yearFilter, setYearFilter] = useState<string>("active")
   const [genderFilter, setGenderFilter] = useState<string>("all")
+  /*
+   * Where the gender filter starts (Matt, 13 October 2026). A link can ask for one side
+   * (?gender=female, from a women's coach's home). Otherwise a college coach starts on their own
+   * program's side - a women's coach was handed every boy in the state first - and families start
+   * on everyone, as before. Set once; after that the filter is the reader's.
+   */
+  const genderDefaulted = useRef(false)
+  useEffect(() => {
+    if (genderDefaulted.current) return
+    const asked = parseViewGender(new URLSearchParams(window.location.search).get("gender"))
+    if (asked) {
+      genderDefaulted.current = true
+      setGenderFilter(asked === "Female" ? "female" : "male")
+      return
+    }
+    if (!viewerProfile) return
+    genderDefaulted.current = true
+    if (!usesRecruitingShell(viewerProfile)) return
+    const cookie = document.cookie.match(new RegExp(`(?:^|; )${VIEW_GENDER_COOKIE}=([^;]+)`))?.[1]
+    const program = coachProgramOf(viewerUser)
+    // Never asked and never switched: leave a coach who predates the question on everyone.
+    if (!program && !cookie) return
+    setGenderFilter(viewGenderFor(program, cookie) === "Female" ? "female" : "male")
+  }, [viewerProfile, viewerUser])
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [rankFilter, setRankFilter] = useState<"all" | "ranked" | "unranked">("all")
   /**
@@ -460,7 +486,7 @@ export default function ProspectsAllClient({
          * counted five 2029s the column leaves blank.
          */
         const classYear = gradYear == null ? null : Number(gradYear)
-        const maxRank = isPublicRankingsYearPublished(classYear) ? getPublicRankingsMax(classYear) : 0
+        const maxRank = isPublicRankingsYearPublished(classYear, prospect.gender) ? getPublicRankingsMax(classYear, prospect.gender) : 0
         const hasOfficialRank =
           Number.isFinite(rawRank) && rawRank >= 1 && rawRank <= maxRank
         if (rankFilter === "ranked" && !hasOfficialRank) return false
@@ -538,9 +564,9 @@ export default function ProspectsAllClient({
 
       // Only show rank for athletes on our official published rankings; show "G" for graduated (2025 and earlier)
       const gradYear = prospect.graduationyear
-      const isRankedClass = isPublicRankingsYearPublished(gradYear)
+      const isRankedClass = isPublicRankingsYearPublished(gradYear, prospect.gender)
       const rawRank = getRawRank(prospect)
-      const maxRankForClass = isRankedClass ? getPublicRankingsMax(gradYear) : 0
+      const maxRankForClass = isRankedClass ? getPublicRankingsMax(gradYear, prospect.gender) : 0
       const hasOfficialRank =
         Number.isFinite(rawRank) && rawRank >= 1 && rawRank <= maxRankForClass
       const prospectRanking = maySeeRanking && isRankedClass && hasOfficialRank ? rawRank : null

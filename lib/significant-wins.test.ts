@@ -458,3 +458,21 @@ describe("national event placings", () => {
     expect(findSignificantLosses([bout(120)], index)).toEqual([])
   })
 })
+
+describe("rankedOnBoard", () => {
+  it("keeps only the ranked wrestlers on the athlete's own board", async () => {
+    const { rankedOnBoard } = await import("./significant-wins")
+    const index = {
+      tocField: [],
+      ranked: [
+        { name: "Riley Johnson", ranking: 4, graduationYear: 2028, gender: "Female" },
+        { name: "Riley Johnson", ranking: 12, graduationYear: 2028, gender: "Male" },
+        { name: "Old Row", ranking: 9, graduationYear: 2027 },
+      ],
+    }
+    expect(rankedOnBoard(index, "Male").ranked.map((r) => r.ranking)).toEqual([12, 9])
+    expect(rankedOnBoard(index, "female").ranked.map((r) => r.ranking)).toEqual([4, 9])
+    // No gender on file reads as the men's board, which is what every ranked athlete was.
+    expect(rankedOnBoard(index, null).ranked.map((r) => r.ranking)).toEqual([12, 9])
+  })
+})

@@ -35,6 +35,25 @@ export type RankedOpponent = {
   /** Kept for ordering and for the admin view; never rendered on a public profile. */
   ranking: number | null
   graduationYear: number | null
+  /** athletes.gender: whose board the ranking is on. The men's and the women's share numbers. */
+  gender?: string | null
+}
+
+/**
+ * The ranked wrestlers one athlete could have met: those on the same board.
+ *
+ * "NC ranked" is matched by name alone, which was safe while only the men were ranked. With a
+ * women's board, a ranked girl sharing a name with a boy's opponent would credit that boy with a
+ * ranked win - and carry her number into his star rating and his place on the men's board (13
+ * October 2026). Every caller that knows whose wins it is reading narrows the index here first.
+ * An entry with no gender on it is kept, as before.
+ */
+export function rankedOnBoard<T extends { ranked: readonly RankedOpponent[] }>(index: T, gender: unknown): T {
+  const womens = /^f/i.test(String(gender ?? "").trim())
+  return {
+    ...index,
+    ranked: index.ranked.filter((r) => r.gender == null || /^f/i.test(String(r.gender).trim()) === womens),
+  }
 }
 
 export type OpponentIndex = {

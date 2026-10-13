@@ -40,7 +40,7 @@ import {
   type SignificantWin,
 } from "@/lib/significant-wins"
 import { isBlueTeam } from "@/lib/blue-team"
-import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
+import { getPublicRankingsMax, isPublicRankingsYearPublished, isWomensBoard } from "@/lib/public-rankings-cap"
 import { releasesPersonalData, type ScoutingAccessTier } from "@/lib/scouting-report-access"
 import { reportSignificantBouts } from "@/lib/report-significant-wins"
 import { getSubmittedWins } from "@/lib/athlete-submitted-wins"
@@ -271,7 +271,7 @@ export async function loadOpponentIndex(supabase: SupabaseClient): Promise<Oppon
   for (let from = 0; ; from += 1000) {
     const { data } = await supabase
       .from("athletes")
-      .select("name,prospect_ranking,graduationyear")
+      .select("name,prospect_ranking,graduationyear,gender")
       .not("prospect_ranking", "is", null)
       .range(from, from + 999)
     if (!data?.length) break
@@ -281,6 +281,8 @@ export async function loadOpponentIndex(supabase: SupabaseClient): Promise<Oppon
           name: String(row.name),
           ranking: row.prospect_ranking == null ? null : Number(row.prospect_ranking),
           graduationYear: row.graduationyear == null ? null : Number(row.graduationyear),
+          // Whose board: narrowed per athlete by rankedOnBoard before any name is matched.
+          gender: (row.gender as string | null) ?? null,
         })
       }
     }
@@ -636,6 +638,7 @@ export async function buildScoutingReport(
     matchRows: matchRows ?? [],
     opponentIndex,
     graduationYear: athlete.graduationyear == null ? null : Number(athlete.graduationyear),
+    gender: athlete.gender,
   })
   const latestSeasonRows = significant.latestSeasonRows
   const seasonStrengthSeason =
@@ -757,8 +760,8 @@ export async function buildScoutingReport(
           prospectRanking: ranking,
           rankingPublished:
             ranking != null &&
-            isPublicRankingsYearPublished(gradYear) &&
-            ranking <= getPublicRankingsMax(gradYear),
+            isPublicRankingsYearPublished(gradYear, athlete.gender) &&
+            ranking <= getPublicRankingsMax(gradYear, athlete.gender),
           statePlaces: statePlaces(bundle as never),
             nationallyRanked: rankings.length > 0,
           }),
@@ -767,8 +770,8 @@ export async function buildScoutingReport(
       : null,
     rankingPublished:
       ranking != null &&
-      isPublicRankingsYearPublished(gradYear) &&
-      ranking <= getPublicRankingsMax(gradYear),
+      isPublicRankingsYearPublished(gradYear, athlete.gender) &&
+      ranking <= getPublicRankingsMax(gradYear, athlete.gender),
   }
 }
 
@@ -850,7 +853,7 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
     membership.ncUnitedTeam ? `NC United: ${membership.ncUnitedTeam}` : "",
     report.commitment ? `Committed: ${report.commitment}` : "",
     report.rankingPublished && report.prospectRanking
-      ? `RecruitNC ranking (North Carolina class ranking, not national): #${report.prospectRanking} in the Class of ${identity.graduationYear ?? ""}`.trim()
+      ? `RecruitNC ranking (North Carolina ${isWomensBoard(identity.gender) ? "women's " : ""}class ranking, not national): #${report.prospectRanking} in the ${isWomensBoard(identity.gender) ? "women's " : ""}Class of ${identity.graduationYear ?? ""}`.trim()
       : /*
          * The absence, stated.
          *

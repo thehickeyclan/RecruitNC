@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { UsageAnalyticsPanel } from "@/components/admin/usage-analytics-panel"
 import { CollegePicker } from "@/components/admin/college-picker"
+import { CoachProgramAdmin } from "@/components/admin/coach-program-admin"
 import { formatPhoneForDisplay } from "@/lib/phone-format"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -1600,6 +1601,7 @@ export default function UsersDashboardPage() {
                       hint={{ institution: editingUser?.institution, email: editingUser?.email }}
                     />
                   </div>
+                  {editingUser ? <CoachProgramAdmin userId={editingUser.user_id} /> : null}
                 </>
               )}
               <div className="flex justify-end gap-2 pt-4">

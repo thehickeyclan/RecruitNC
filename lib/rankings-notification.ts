@@ -28,11 +28,10 @@ export function buildRankingsPush(input: {
   const { graduationYear, gender, topNames, total } = input
   const named = topNames.filter((n) => n?.trim()).slice(0, 2)
   const girls = /female|girls|women/i.test(gender)
-  const who = girls ? "girls " : ""
 
   let body: string
   if (named.length === 0) {
-    body = `${total} ranked ${girls ? "girls " : ""}wrestlers. Tap to see the list.`
+    body = `${total} ranked ${girls ? "women's " : ""}wrestlers. Tap to see the list.`
   } else if (named.length === 1) {
     body = `${named[0]} leads the class. Tap to see all ${total}.`
   } else {
@@ -40,7 +39,7 @@ export function buildRankingsPush(input: {
   }
 
   return {
-    title: `Class of ${graduationYear} ${who}rankings are out`.replace("  ", " "),
+    title: `${girls ? "Women's " : ""}Class of ${graduationYear} rankings are out`,
     body,
     /*
      * Deep-link to /public-rankings, not /rankings.
@@ -50,7 +49,7 @@ export function buildRankingsPush(input: {
      * a Blue family lands on the boards they were told about, and a stranger lands on the
      * offer. Pointing the alert at the sales page sent paying members to be sold to.
      */
-    data: { kind: "rankings", graduationYear, gender, path: "/public-rankings" },
+    data: { kind: "rankings", graduationYear, gender, path: girls ? `/public-rankings/women/${graduationYear}` : "/public-rankings" },
   }
 }
 

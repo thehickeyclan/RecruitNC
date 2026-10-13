@@ -37,7 +37,7 @@ export type PublicCredentialsResponse = {
 }
 
 async function buildCredentialsForYear(year: number): Promise<PublicCredentialsResponse> {
-  const cap = getPublicRankingsMax(year)
+  const cap = getPublicRankingsMax(year, "Male")
   const admin = createAdminClient()
 
   /*
@@ -57,6 +57,8 @@ async function buildCredentialsForYear(year: number): Promise<PublicCredentialsR
       ].join(", "),
     )
     .eq("graduationyear", year)
+    // The men's board: this feeds the app's cards, and the app carries the men's rankings only.
+    .eq("gender", "Male")
     .eq("is_nc_athlete", true)
     .not("prospect_ranking", "is", null)
     .lte("prospect_ranking", cap)

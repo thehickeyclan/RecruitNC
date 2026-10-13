@@ -9,7 +9,7 @@ import {
 } from "@/lib/athlete-star-rating"
 import { nationalEventRows, starOverrideOf, statePlaces as statePlacesOf } from "@/lib/athlete-star-rating-load"
 import { loadNationallyRankedIds } from "@/lib/national-rankings"
-import { findSignificantLosses, findSignificantWins, type OpponentIndex, type SignificantWin } from "@/lib/significant-wins"
+import { findSignificantLosses, findSignificantWins, type OpponentIndex, type SignificantWin, rankedOnBoard } from "@/lib/significant-wins"
 import { isForfeitResult } from "@/lib/head-to-head"
 import { styleOfEventForAthlete } from "@/lib/wrestling-style"
 import { loadOpponentIndex } from "@/lib/scouting-report"
@@ -1045,7 +1045,9 @@ export async function buildRecruitNcRankingBoard({
   }
 
   const [opponentIndex, nationallyRankedIds, stateIndex] = await Promise.all([
-    loadOpponentIndex(supabase).catch(() => ({ tocField: [], ranked: [] })),
+    // This board's ranked wrestlers only: a ranked win, or an upset, is against somebody on the
+    // same board. The men's index is what it always was - every ranked athlete was a boy.
+    loadOpponentIndex(supabase).then((index) => rankedOnBoard(index, gender)).catch(() => ({ tocField: [], ranked: [] })),
     loadNationallyRankedIds(supabase).catch(() => new Set<string>()),
     loadStatePlacerIndex(supabase).catch(() => ({ statePlacers: [], stateSchools: [], fargoAllAmericans: [] })),
   ])

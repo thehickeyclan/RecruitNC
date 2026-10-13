@@ -2,6 +2,7 @@
  * Coach Home exactly as one named coach sees it, on a developer's machine.
  *
  * /dev/coach-preview?coach=coachgarland@virginia.edu
+ * /dev/coach-preview?coach=...&gender=Female   the same coach on the women's side, without touching the account
  *
  * Built the morning Virginia's head coach was greeted with Ohio University's logo and nobody
  * could say what he had seen, because seeing it took his password. This runs the same load the
@@ -18,10 +19,11 @@ import { loadCoachHome } from "@/app/coach-home/load-coach-home"
 
 export const dynamic = "force-dynamic"
 
-export default async function CoachPreviewPage({ searchParams }: { searchParams: Promise<{ coach?: string }> }) {
+export default async function CoachPreviewPage({ searchParams }: { searchParams: Promise<{ coach?: string; gender?: string }> }) {
   if (process.env.NODE_ENV === "production") notFound()
 
-  const coach = String((await searchParams).coach ?? "").trim()
+  const params = await searchParams
+  const coach = String(params.coach ?? "").trim()
   if (!coach) return <p style={{ padding: 24 }}>Add ?coach=email or ?coach=user-id</p>
 
   const admin = createAdminClient()
@@ -32,6 +34,6 @@ export default async function CoachPreviewPage({ searchParams }: { searchParams:
     .maybeSingle()
   if (!profile) return <p style={{ padding: 24 }}>No account for {coach}</p>
 
-  const loaded = await loadCoachHome(admin, String(profile.user_id))
+  const loaded = await loadCoachHome(admin, String(profile.user_id), params.gender ?? null)
   return <CoachHomeClient access={loaded.access} data={loaded.data} />
 }

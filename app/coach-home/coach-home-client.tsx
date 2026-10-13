@@ -1,5 +1,7 @@
 "use client"
 
+import { BoardSwitch } from "@/components/recruiting/board-switch"
+import type { CoachProgram, ViewGender } from "@/lib/recruiting/coach-program"
 import { useMemo, useState } from "react"
 import Link from "next/link"
 import { CoachTabs } from "@/components/coach-tabs"
@@ -36,6 +38,9 @@ export type CoachHomeData = {
   activity: StaffActivityItem[]
   rankingYears: number[]
   top75: boolean
+  /** Which board this home was built from, and the program the coach gave at sign-up (null: never asked). */
+  viewGender: ViewGender
+  coachProgram: CoachProgram | null
 }
 
 const GOLD = "text-[#D3B574]"
@@ -261,6 +266,8 @@ function Tool({ href, icon: Icon, title, body }: { href: string; icon: typeof Se
 export default function CoachHomeClient({ access, data }: { access: "ok" | "signed-out" | "not-coach"; data: CoachHomeData | null }) {
   if (access !== "ok" || !data) return <AccessPanel signedOut={access === "signed-out"} />
   const { recruits, messages } = data
+  const womens = data.viewGender === "Female"
+  const profilesHref = womens ? "/prospects/all?gender=female" : "/prospects/all"
   return (
     <main className="min-h-screen bg-[#0A1628] text-white">
       <div className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
@@ -274,14 +281,16 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
               className="h-16 w-16 shrink-0 rounded-xl bg-white object-contain p-1.5 sm:h-20 sm:w-20"
             />
           ) : null}
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className={`text-[11px] font-black uppercase tracking-widest ${GOLD}`}>{RECRUITING_BRAND.name} · Coach Home</p>
             <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">{data.coachName ? `Welcome, Coach ${data.coachName}` : "Welcome, Coach"}</h1>
             <p className="mt-1 text-sm text-white/55">
               {data.program ? `${data.program} · ` : ""}Everything you use to recruit {recruitingCoverage()}, in one place.
             </p>
           </div>
+          <BoardSwitch value={data.viewGender} className="hidden shrink-0 self-start sm:inline-flex" />
         </header>
+        <BoardSwitch value={data.viewGender} className="mt-4 sm:hidden" />
 
         <div className="mt-6">
           <WrestlerSearch athletes={data.athletes} />
@@ -424,13 +433,25 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
 
         <h2 className={`${TITLE} mt-8`}>Rankings and profiles</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {data.top75 ? (
+          {/* The Top 75 is a men's board; the women's side lists its own classes and nothing else. */}
+          {data.top75 && !womens ? (
             <Tool href="/public-rankings/college-prospects" icon={BarChart3} title="Top 75 College Ready Prospects" body="The deeper board across the classes you can recruit now." />
           ) : null}
           {data.rankingYears.map((year) => (
-            <Tool key={year} href={`/public-rankings/${year}`} icon={BarChart3} title={`Class of ${year} rankings`} body="The published class board, updated through the season." />
+            <Tool
+              key={year}
+              href={womens ? `/public-rankings/women/${year}` : `/public-rankings/${year}`}
+              icon={BarChart3}
+              title={`${womens ? "Women's " : ""}Class of ${year} rankings`}
+              body="The published class board, updated through the season."
+            />
           ))}
-          <Tool href="/prospects/all" icon={Users} title="All athlete profiles" body={`Every ${recruitingCoverage()} profile, with filters for class, weight and last competed.`} />
+          <Tool
+            href={profilesHref}
+            icon={Users}
+            title={womens ? "All women's profiles" : "All athlete profiles"}
+            body={`Every ${recruitingCoverage()} ${womens ? "women's " : ""}profile, with filters for class, weight and last competed.`}
+          />
           <Tool href="/athletes" icon={Users} title="College commitments" body="Who has committed where, this class and last." />
         </div>
 

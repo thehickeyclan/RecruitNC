@@ -1,5 +1,6 @@
 "use client"
 
+import { CoachProgramSetting } from "@/components/recruiting/coach-program-setting"
 import type React from "react"
 
 import { useState, useEffect, useCallback } from "react"
@@ -843,6 +844,9 @@ export function ProfileClient() {
                 </form>
               </CardContent>
             </Card>
+
+            {/* College coaches: men's, women's or both. Renders nothing for anyone else. */}
+            <CoachProgramSetting />
 
             {/* Notification preferences — messaging (SMS & email) */}
             <Card className="border-border shadow-sm">

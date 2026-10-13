@@ -366,7 +366,7 @@ export function TournamentResultsDisplay({
                     )}
                     {win.credential?.prospectRanking != null && (
                       <Badge className="bg-[#D3B574] text-[#0A1628] hover:bg-[#c5a769] text-xs px-2 py-0.5">
-                        RecruitNC #{win.credential.prospectRanking}
+                        RecruitNC {win.credential.womensRanking ? "Women's " : ""}#{win.credential.prospectRanking}
                         {win.credential.graduationYear ? ` · Class of ${win.credential.graduationYear}` : ""}
                       </Badge>
                     )}

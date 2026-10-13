@@ -1,5 +1,7 @@
 "use client"
 
+import { releasedClassYears } from "@/lib/public-rankings-cap"
+import { coachProgramOf, viewGenderFor } from "@/lib/recruiting/coach-program"
 import { useState } from "react"
 import { usePathname } from "next/navigation"
 import type { LucideIcon } from "lucide-react"
@@ -95,10 +97,24 @@ export function RecruitingShell({ children }: { children: React.ReactNode }) {
   const athletes: Item = { href: "/prospects/all", label: "Athletes", icon: Users }
   const recruits: Item = { href: boardHref, label: "My Recruits", icon: Star }
   const inbox: Item = { href: "/inbox", label: "Messages", icon: MessageSquare, badge: messages.unread }
+  /*
+   * Once a women's class is released the menu names both sets (Matt, 13 October 2026): a women's
+   * coach must find the women's rankings in one click, not under a link that has always meant the
+   * men's. Her own program's set is listed first. Until then it is the one "Rankings", as before.
+   */
+  const womensOut = releasedClassYears("Female").length > 0
+  const womensFirst = viewGenderFor(coachProgramOf(user)) === "Female"
+  const rankings: Item[] = !womensOut
+    ? [{ href: "/public-rankings", label: "Rankings", icon: BarChart3 }]
+    : (() => {
+        const mens: Item = { href: "/public-rankings#mens", label: "Men's Rankings", icon: BarChart3 }
+        const womens: Item = { href: "/public-rankings#womens", label: "Women's Rankings", icon: BarChart3 }
+        return womensFirst ? [womens, mens] : [mens, womens]
+      })()
   const items: Item[] = [
     home,
     athletes,
-    { href: "/public-rankings", label: "Rankings", icon: BarChart3 },
+    ...rankings,
     recruits,
     inbox,
     { href: "/compare?src=nav", label: "Compare", icon: GitCompareArrows },

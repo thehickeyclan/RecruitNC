@@ -372,12 +372,12 @@ export default async function ClubDetailPage({ params }: { params: Promise<{ slu
             </h2>
             <ul className="mt-3 divide-y divide-white/5">
               {achievements.ranked.map((athlete) => (
-                <li key={`${athlete.name}-${athlete.classYear}-${athlete.rank}`} className="flex flex-wrap items-baseline gap-x-3 py-2">
+                <li key={`${athlete.name}-${athlete.classYear}-${athlete.rank}-${athlete.womens}`} className="flex flex-wrap items-baseline gap-x-3 py-2">
                   {/* Rank is always paired with the class — #5 in 2027 is not #5 in 2026. */}
                   <span className="w-12 shrink-0 font-black text-[#D7B968]">#{athlete.rank}</span>
                   <span className="font-semibold text-white">{athlete.name}</span>
                   {athlete.classYear ? (
-                    <span className="text-sm text-white/55">Class of {athlete.classYear}</span>
+                    <span className="text-sm text-white/55">{athlete.womens ? "Women's " : ""}Class of {athlete.classYear}</span>
                   ) : null}
                   {athlete.weight ? <span className="text-sm text-white/40">{athlete.weight}</span> : null}
                 </li>

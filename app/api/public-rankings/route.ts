@@ -45,7 +45,7 @@ export async function GET(request: Request) {
     const requestedLimit = limitParam ? parseInt(limitParam, 10) : null
 
     const yearNum = parseInt(String(year), 10)
-    if (!isPublicRankingsYearPublished(yearNum)) {
+    if (!isPublicRankingsYearPublished(yearNum, gender)) {
       return NextResponse.json(
         {
           error: `Class of ${yearNum} rankings are not public yet.`,
@@ -56,7 +56,7 @@ export async function GET(request: Request) {
     }
 
     // Public /public-rankings pages: always official published cap only
-    const maxPublicRank = getPublicRankingsMax(yearNum)
+    const maxPublicRank = getPublicRankingsMax(yearNum, gender)
 
     const supabase = admin
 

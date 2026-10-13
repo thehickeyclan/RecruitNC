@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await admin
     .from("athletes")
-    .select("id, graduationyear, prospect_ranking")
+    .select("id, graduationyear, prospect_ranking, gender")
     .not("prospect_ranking", "is", null)
     .gte("prospect_ranking", 1)
     .limit(5000)
@@ -39,8 +39,8 @@ export async function GET(request: NextRequest) {
   for (const row of data ?? []) {
     const year = Number(row.graduationyear)
     const rank = Number(row.prospect_ranking)
-    if (!isPublicRankingsYearPublished(year) || !Number.isFinite(rank)) continue
-    if (rank > getPublicRankingsMax(year)) continue
+    if (!isPublicRankingsYearPublished(year, row.gender) || !Number.isFinite(rank)) continue
+    if (rank > getPublicRankingsMax(year, row.gender)) continue
     ranks[String(row.id)] = rank
   }
   return NextResponse.json({ ranks }, { headers: { "Cache-Control": "private, no-store" } })

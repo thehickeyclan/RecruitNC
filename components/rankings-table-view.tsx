@@ -492,7 +492,7 @@ export function RankingsTableView({
                               className="px-3 py-1 rounded-full text-white font-bold text-sm min-w-[2.5rem] text-center"
                               style={{ backgroundColor: "#B31B1B" }}
                             >
-                              #{rankValue}
+                              {/^f/i.test(String(athlete.gender ?? "")) ? "W " : ""}#{rankValue}
                             </div>
                           )}
                           {!rankDisplayG && rankValue !== null && rankValue > dividerAfterRank && (
@@ -503,7 +503,7 @@ export function RankingsTableView({
                                   : "border-gray-300 text-gray-600"
                               }`}
                             >
-                              #{rankValue}
+                              {/^f/i.test(String(athlete.gender ?? "")) ? "W " : ""}#{rankValue}
                             </div>
                           )}
                           {!rankDisplayG && rankValue === null && (

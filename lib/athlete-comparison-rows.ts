@@ -9,6 +9,7 @@
  * Absences are stated, never left blank. A row with nothing on file says so, because an empty
  * cell reads as zero and a missing fact gets filled in by whoever reads it.
  */
+import { isWomensBoard } from "@/lib/public-rankings-cap"
 import type { ScoutingReport, ScoutingReportResultRow } from "@/lib/scouting-report"
 import { competitionLine, stylesLine } from "@/lib/wrestling-style"
 import { accoladeLineWithRank } from "@/lib/significant-wins"
@@ -513,14 +514,18 @@ function stateRankRow(l: ComparisonReport, r: ComparisonReport): ComparisonRow {
   const rank = (report: ComparisonReport) => (report.rankingPublished ? report.prospectRanking : null)
   const cell = (report: ComparisonReport): ComparisonCell => {
     const n = rank(report)
-    return { value: n != null ? `#${n} in the Class of ${report.identity.graduationYear}` : "Not ranked" }
+    const board = isWomensBoard(report.identity.gender) ? "women's " : ""
+    return { value: n != null ? `#${n} in the ${board}Class of ${report.identity.graduationYear}` : "Not ranked" }
   }
   const lr = rank(l)
   const rr = rank(r)
   const sameClass = l.identity.graduationYear != null && l.identity.graduationYear === r.identity.graduationYear
+  // The men's and women's boards share class years and numbers; #2 on one is not above #5 on the other.
+  const sameBoard = isWomensBoard(l.identity.gender) === isWomensBoard(r.identity.gender)
   let edge: RowEdge = null
   let basis: string
   if (lr == null && rr == null) basis = "Neither is ranked"
+  else if (!sameBoard) basis = "The men's and women's rankings are separate boards"
   else if (!sameClass) basis = "Different classes are ranked on different boards"
   else if (rr == null) {
     edge = "left"

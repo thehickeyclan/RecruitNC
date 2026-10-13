@@ -1,5 +1,7 @@
 "use client"
 
+import { CoachProgramField } from "@/components/recruiting/coach-program-field"
+import type { CoachProgram } from "@/lib/recruiting/coach-program"
 import { Suspense, useEffect, useRef, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -52,6 +54,7 @@ function CompleteProfileForm() {
   }, [presetType])
   const [cellPhone, setCellPhone] = useState("")
   const [institution, setInstitution] = useState("")
+  const [program, setProgram] = useState<CoachProgram | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -68,13 +71,14 @@ function CompleteProfileForm() {
     if (!profileType) return setError("Choose what brings you here.")
     if (needsPhone && cellPhone.replace(/\D/g, "").length < 10) return setError("Enter a 10-digit cell number.")
     if (isCollegeCoach && !institution.trim()) return setError("Enter your college.")
+    if (isCollegeCoach && !program) return setError("Choose the program you coach: men's, women's or both.")
 
     setSaving(true)
     try {
       const res = await fetch("/api/auth/complete-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profileType, cellPhone, institution }),
+        body: JSON.stringify({ profileType, cellPhone, institution, program }),
       })
       const data = await res.json().catch(() => ({}))
       // Already has a role: somebody signing back in through the wizard. Nothing to ask; carry on.
@@ -173,6 +177,8 @@ function CompleteProfileForm() {
                 />
               </div>
             ) : null}
+
+            {isCollegeCoach ? <CoachProgramField value={program} onChange={setProgram} disabled={saving} /> : null}
 
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
 

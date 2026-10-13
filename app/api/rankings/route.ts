@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   const verified = searchParams.get("verified")
 
   const requestedYear = year ? Number.parseInt(year, 10) : null
-  if (requestedYear != null && !isPublicRankingsYearPublished(requestedYear)) {
+  if (requestedYear != null && !isPublicRankingsYearPublished(requestedYear, "Male")) {
     return NextResponse.json(
       {
         error: `Class of ${requestedYear} rankings are not public yet.`,
@@ -35,8 +35,8 @@ export async function GET(request: NextRequest) {
     const rankings = await getProspectRankings(filters)
     const publicRankings = rankings.filter((ranking) => {
       const rankingYear = Number(ranking.graduation_year)
-      if (!isPublicRankingsYearPublished(rankingYear)) return false
-      const maxRank = getPublicRankingsMax(rankingYear)
+      if (!isPublicRankingsYearPublished(rankingYear, "Male")) return false
+      const maxRank = getPublicRankingsMax(rankingYear, "Male")
       return Number(ranking.overall_rank) >= 1 && Number(ranking.overall_rank) <= maxRank
     })
     return NextResponse.json(publicRankings)

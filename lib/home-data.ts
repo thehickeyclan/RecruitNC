@@ -153,7 +153,7 @@ export async function loadFeaturedRankings(
           .eq("graduationyear", year)
           .eq("gender", gender)
           .not("prospect_ranking", "is", null)
-          .lte("prospect_ranking", getPublicRankingsMax(year))
+          .lte("prospect_ranking", getPublicRankingsMax(year, gender))
           .order("prospect_ranking", { ascending: true })
           .limit(perYear)
 

@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
+import { isWomensBoard } from "@/lib/public-rankings-cap"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveRequestUserId } from "@/lib/request-user"
 import { buildAthleteEditPatch, mergeInstagram } from "@/lib/mobile/athlete-edit"
@@ -53,6 +54,8 @@ export type MobileAthleteProfile = {
   graduationYear: number | null
   /** Published classes only — an unpublished class number is not ours to show. */
   prospectRanking: number | null
+  /** A girl's rank on the women's board. Sent apart: builds that print `prospectRanking` say "RecruitNC #N", which is the men's board. */
+  womensRanking: number | null
   /** "#6 SI (170) · #12 MatScouts (170)": the national ranks held now, for the ribbon. */
   nationalRanking: string | null
   gender: string | null
@@ -152,7 +155,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     highSchool: reveal.highSchool,
     club: reveal.club,
     graduationYear: reveal.graduationYear,
-    prospectRanking: reveal.prospectRanking,
+    prospectRanking: isWomensBoard((row as { gender?: unknown }).gender) ? null : reveal.prospectRanking,
+    womensRanking: isWomensBoard((row as { gender?: unknown }).gender) ? reveal.prospectRanking : null,
     nationalRanking: bannerNationalRankingLabel(
       ((loaded.athlete as { national_rankings_current?: NationalRanking[] }).national_rankings_current ?? []) as NationalRanking[],
     ),

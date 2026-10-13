@@ -364,7 +364,8 @@ export type StarRatingInput = {
  * one-star sophomores. The honest answer for an underclassman is no star at all.
  */
 export function isRatedClass(graduationYear: number | null | undefined, now: Date = new Date()): boolean {
-  if (!isPublicRankingsYearPublished(graduationYear)) return false
+  // Stars are a men's-board feature for now (isRatedAthlete turns girls away before this).
+  if (!isPublicRankingsYearPublished(graduationYear, "Male")) return false
   const seniors = getCurrentSigningClass(now)
   return graduationYear === seniors || graduationYear === seniors + 1
 }

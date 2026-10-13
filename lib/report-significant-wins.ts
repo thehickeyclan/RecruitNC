@@ -15,8 +15,7 @@ import {
   withAccoladesOnly,
   type Bout,
   type OpponentIndex,
-  type SignificantWin,
-} from "@/lib/significant-wins"
+  type SignificantWin, rankedOnBoard } from "@/lib/significant-wins"
 import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
 import { highSchoolBouts, isHighSchoolSeason } from "@/lib/high-school-window"
 
@@ -39,6 +38,8 @@ export function reportSignificantBouts(input: {
   opponentIndex: OpponentIndex
   /** No middle school seasons or bouts (Matt, 1 October 2026). Omitted, nothing is filtered. */
   graduationYear?: number | null
+  /** The athlete's own gender: "NC ranked" opponents are taken from the same board only. */
+  gender?: unknown
 }): {
   wins: SignificantWin[]
   losses: SignificantWin[]
@@ -62,16 +63,17 @@ export function reportSignificantBouts(input: {
    */
   const latestSet = new Set<unknown>(latestSeasonRows)
   const earlierBouts = highSchoolBouts(boutsOf(matchRows.filter((row) => !latestSet.has(row))) as never[], grad) as Bout[]
-  const currentWins = findSignificantWins(bouts, input.opponentIndex)
+  const opponentIndex = input.gender === undefined ? input.opponentIndex : rankedOnBoard(input.opponentIndex, input.gender)
+  const currentWins = findSignificantWins(bouts, opponentIndex)
   const currentWinKeys = new Set(currentWins.map((w) => `${w.opponent.toLowerCase()}|${w.date}`))
   // Accolades only - ranked, nationally ranked, state champion or placer - as on the profile.
   const wins = withAccoladesOnly([
     ...currentWins,
-    ...findSignificantWins(earlierBouts, input.opponentIndex, { stateOnly: true }).filter(
+    ...findSignificantWins(earlierBouts, opponentIndex, { stateOnly: true }).filter(
       (w) => !currentWinKeys.has(`${w.opponent.toLowerCase()}|${w.date}`),
     ),
   ])
-  const losses = withAccoladesOnly(findSignificantLosses(bouts, input.opponentIndex))
+  const losses = withAccoladesOnly(findSignificantLosses(bouts, opponentIndex))
   return { wins, losses, latestSeasonBouts, latestSeasonRows }
 }
 
@@ -82,9 +84,17 @@ export async function loadReportSignificantWins(
   opponentIndex: OpponentIndex,
   graduationYear?: number | null,
 ): Promise<SignificantWin[]> {
-  const [{ data: matchRows }, qualifierBouts] = await Promise.all([
+  const [{ data: matchRows }, qualifierBouts, { data: who }] = await Promise.all([
     supabase.from("matches").select("season,matches").eq("athlete_id", athleteId),
     getQualifierSignificantWinBouts(supabase, athleteId, "all").catch(() => [] as Bout[]),
+    // Read here, not asked of each caller: the star rating, Data Dawg and the report all come through.
+    supabase.from("athletes").select("gender").eq("id", athleteId).maybeSingle(),
   ])
-  return reportSignificantBouts({ qualifierBouts, matchRows: matchRows ?? [], opponentIndex, graduationYear }).wins
+  return reportSignificantBouts({
+    qualifierBouts,
+    matchRows: matchRows ?? [],
+    opponentIndex,
+    graduationYear,
+    gender: (who as { gender?: unknown } | null)?.gender ?? null,
+  }).wins
 }

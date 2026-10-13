@@ -9,7 +9,7 @@ import {
   resolveCollegeCommitGroup,
 } from "@/lib/colleges"
 import { matchesDivisionFilter } from "@/lib/division-display"
-import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
+import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 
 const supabase = createAdminClient()
 
@@ -387,7 +387,8 @@ export async function GET(request: NextRequest) {
       if (
         Number.isFinite(prospectRank) &&
         prospectRank >= 1 &&
-        prospectRank <= getPublicRankingsMax(athlete.graduationyear)
+        isPublicRankingsYearPublished(Number(athlete.graduationyear), athlete.gender) &&
+        prospectRank <= getPublicRankingsMax(athlete.graduationyear, athlete.gender)
       ) {
         stats.ranked_commits++
       }

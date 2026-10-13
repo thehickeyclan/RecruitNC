@@ -11,7 +11,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { requireAdmin } from "@/lib/admin-auth"
 import { requireRankingBoardAccess } from "@/lib/rankings/ranking-board-access"
-import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
+import { getPublicRankingsMax, isPublicRankingsYearPublished, isWomensBoard } from "@/lib/public-rankings-cap"
 import { syncPublicRankingsTable } from "@/lib/rankings/publish-public-rankings"
 import { notifyRankingsPublished } from "@/lib/rankings-notification"
 
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Nothing saved to publish. Save the order first." }, { status: 400 })
   }
 
-  const cap = getPublicRankingsMax(year)
+  const cap = getPublicRankingsMax(year, gender)
   const results = await Promise.all(
     draft.map((row) =>
       admin
@@ -213,7 +213,15 @@ export async function POST(request: NextRequest) {
 
   // Never throws, and deliberately not awaited into the failure path: the rankings are public
   // by now, and failing a publish because a notification failed would be the wrong trade.
-  const push = await notifyRankingsPublished({ graduationYear: year, gender, rankedNames })
+  /*
+   * No alert for a women's publish (13 October 2026). The alert goes to every phone and opens the
+   * app's Rankings tab, which carries the men's boards only - so "Class of 2027 girls rankings are
+   * out" landed everybody on a list of boys. And a women's publish is not a release: the class is
+   * public only once its year is listed in WOMENS_PUBLIC_RELEASED_YEARS. Women's coaches and
+   * families are told by email when it is; the push comes back when the app has a women's board.
+   */
+  const womensBoard = isWomensBoard(gender)
+  const push = womensBoard ? null : await notifyRankingsPublished({ graduationYear: year, gender, rankedNames })
 
   return NextResponse.json({
     ok: true,
@@ -221,7 +229,10 @@ export async function POST(request: NextRequest) {
     published: Math.min(cap, draft.length),
     publishedAt: now,
     app: appSync,
-    push: push ? { sent: push.sent, failed: push.failed } : { sent: 0, failed: 0, note: "not sent" },
+    push: push
+      ? { sent: push.sent, failed: push.failed }
+      : { sent: 0, failed: 0, note: womensBoard ? "no app alert for a women's board" : "not sent" },
+    released: isPublicRankingsYearPublished(year, gender),
   })
 }
 

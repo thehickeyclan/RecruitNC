@@ -16,7 +16,10 @@ import { RankingsWatermark } from "@/components/rankings/rankings-watermark"
  * 560 lines each, one per year, which had drifted apart — different filters, different empty
  * states, different ways of saying the same thing.
  */
-export async function ClassRankingPage({ year }: { year: number }) {
+export async function ClassRankingPage({ year, gender = "Male" }: { year: number; gender?: "Male" | "Female" }) {
+  // "Women's " in front of every heading on the women's board; nothing on the men's, as before.
+  const womens = gender === "Female"
+  const board = womens ? "Women's " : ""
   /*
    * Gated here, server side, because nothing else was gating it.
    *
@@ -42,7 +45,7 @@ export async function ClassRankingPage({ year }: { year: number }) {
             RecruitNC · North Carolina prospect rankings
           </p>
           <h1 className="mt-3 text-3xl font-light uppercase tracking-tight text-white">
-            Class of {year}
+            {board}Class of {year}
           </h1>
           <p className="mt-4 text-sm leading-relaxed text-white/60">
             The published rankings are for NC United Blue members, verified college coaches and
@@ -65,32 +68,33 @@ export async function ClassRankingPage({ year }: { year: number }) {
     )
   }
 
-  const ranking = await loadPublicClassRanking(year, viewer.isAdmin === true)
+  const ranking = await loadPublicClassRanking(year, viewer.isAdmin === true, gender)
 
   return (
     <div className="min-h-screen bg-[#061224]">
       <section className="px-4 py-12 sm:py-16">
         <div className="mx-auto max-w-6xl">
           <p className="text-center text-[11px] font-bold uppercase tracking-[0.22em] text-[#CC0000]">
-            RecruitNC · North Carolina prospect rankings
+            RecruitNC · North Carolina {womens ? "women's " : ""}prospect rankings
           </p>
           <h1 className="mt-3 text-center text-4xl font-black uppercase tracking-tight text-white sm:text-5xl">
-            Class of {year}
+            {board}Class of {year}
           </h1>
 
           <p className="mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-white/60">
-            The top {ranking.cap} wrestlers in North Carolina&apos;s Class of {year}, ranked on results:
-            who they wrestled, how they did against them, and what they have done outside this state.
+            {womens
+              ? `The top ${ranking.cap} women's wrestlers in North Carolina's Class of ${year}, ranked on results: freestyle and national events first, then who they beat.`
+              : `The top ${ranking.cap} wrestlers in North Carolina's Class of ${year}, ranked on results: who they wrestled, how they did against them, and what they have done outside this state.`}
           </p>
 
           <RankingsSummary athletes={ranking.athletes} />
 
-          <RankingsNav current={year} isAdmin={viewer.isAdmin === true} />
+          <RankingsNav current={year} isAdmin={viewer.isAdmin === true} gender={gender} />
 
 
           {!ranking.published ? (
             <p className="mt-10 rounded-sm border border-white/10 bg-white/[0.03] p-8 text-center text-sm text-white/55">
-              The Class of {year} is not published yet.
+              The {board}Class of {year} is not published yet.
             </p>
           ) : ranking.athletes.length === 0 ? (
             <p className="mt-10 rounded-sm border border-white/10 bg-white/[0.03] p-8 text-center text-sm text-white/55">
