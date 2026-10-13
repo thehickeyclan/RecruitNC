@@ -35,7 +35,20 @@ export default function LearnIndexPage() {
         </p>
         <p className="mt-2 text-xs text-white/40">Last checked {checkedLabel}.</p>
 
-        <ul className="mt-6 space-y-3">
+        <a
+          href="/recruiting/learn/timeline"
+          className="mt-6 flex items-start gap-3 rounded-xl border border-[#D3B574]/50 bg-[#D3B574]/10 p-4 hover:border-[#D3B574]"
+        >
+          <span className="min-w-0 flex-1">
+            <span className="block text-base font-bold text-white">Your timeline, grade by grade</span>
+            <span className="mt-0.5 block text-sm leading-5 text-white/70">
+              Start here. What to do this year, from eighth grade to signing, with these rules placed in the year they matter.
+            </span>
+          </span>
+          <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-white/50" aria-hidden />
+        </a>
+
+        <ul className="mt-3 space-y-3">
           {LEARN_PAGES.map((page) => (
             <li key={page.slug}>
               <a
