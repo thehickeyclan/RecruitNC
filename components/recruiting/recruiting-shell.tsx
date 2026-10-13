@@ -40,29 +40,16 @@ import {
  * A side menu rather than a top bar because this is a tool a coach works in, with more
  * destinations than a bar holds and counts (unread messages) that belong beside their link.
  *
- * Clubs, Blue, the store and giving are the community side's, folded under the parent's name at
- * the foot of the menu. Same app and sign-in as components/navbar.tsx; none of its links or look.
+ * Nothing of the community side is in this menu: no clubs, Blue, store, giving or news (Matt,
+ * 13 October 2026 - "no need for anything NC United on the coaches portal"; the two are being
+ * separated). Same app and sign-in as components/navbar.tsx; none of its links or look.
  *
  * Links are plain <a href>, as in the community bar: app/layout.tsx navigates on capture before
  * React click handlers run.
  */
 type Item = { href: string; label: string; icon: LucideIcon; badge?: number }
 
-const COMMUNITY_LINKS = [
-  { href: "/clubs", label: "Clubs" },
-  { href: "/calendar", label: "Calendar" },
-  { href: "/news", label: "News" },
-  { href: "/blue", label: "NC United Blue" },
-  { href: "/tournament-of-champions", label: "Tournament of Champions" },
-  { href: "/fundraising", label: "Give" },
-  { href: "/store-app", label: "Store" },
-  { href: "/forum", label: "Community" },
-  { href: "/about", label: "About" },
-]
-
 function SideMenu({ items, isActive, onNavigate }: { items: Item[]; isActive: (href: string) => boolean; onNavigate?: () => void }) {
-  const sub = "flex min-h-[40px] items-center rounded-md pl-11 pr-3 text-sm text-white/60 hover:bg-white/5 hover:text-white"
-  const group = "flex min-h-[44px] cursor-pointer list-none items-center gap-3 rounded-md px-3 text-sm font-semibold text-white/70 hover:bg-white/5 hover:text-white [&::-webkit-details-marker]:hidden"
   return (
     <div className="flex h-full flex-col gap-1">
       {items.map((item) => {
@@ -87,17 +74,6 @@ function SideMenu({ items, isActive, onNavigate }: { items: Item[]; isActive: (h
           </a>
         )
       })}
-      <details className="group/community mt-auto border-t border-white/10 pt-2">
-        <summary className={`${group} text-white/45`}>
-          <span className="flex-1 text-[11px] font-black uppercase tracking-widest">NC United</span>
-          <ChevronDown className="h-4 w-4 transition-transform group-open/community:rotate-180" aria-hidden />
-        </summary>
-        {COMMUNITY_LINKS.map((l) => (
-          <a key={l.href} href={l.href} onClick={onNavigate} className={`${sub} pl-3`}>
-            {l.label}
-          </a>
-        ))}
-      </details>
     </div>
   )
 }

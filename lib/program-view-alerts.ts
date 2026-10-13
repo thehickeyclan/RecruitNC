@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { isEntitled } from "@/lib/blue-membership"
 import { collegeForCoach } from "@/lib/college-domain-schools"
 import { isApprovedCoach } from "@/lib/coach-messages"
+import { isInternalAccount } from "@/lib/internal-accounts"
 import { sendToTokens } from "@/lib/push-send"
 
 /**
@@ -51,6 +52,8 @@ export async function alertFamilyOfProgramView(
       .maybeSingle()
     // Reviewed by staff, not just let in: access-first sign-up sets verified_coach before review.
     if (!viewer || !isApprovedCoach(viewer)) return { sent: 0, skipped: "not a reviewed college coach" }
+    // Our own test and review logins are approved coaches too; a family is never alerted to us.
+    if (isInternalAccount(viewer.email as string | null)) return { sent: 0, skipped: "internal account" }
 
     const program = collegeForCoach({ institution: viewer.institution as string | null, email: viewer.email as string | null })
     if (!program) return { sent: 0, skipped: "no program" }

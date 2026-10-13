@@ -20,8 +20,12 @@
 
 const INTERNAL_DOMAINS = ["ncwrestlingunited.com", "example.com", "example.org"]
 
-/** App Store review logins, held for as long as Apple needs them. */
-const INTERNAL_ADDRESSES = ["thehickeyclan+applereview@gmail.com"]
+/**
+ * App Store review logins, held for as long as Apple needs them, and our own test coach - the
+ * account staff sign in with to see the coach portal as a coach sees it. Its views of a profile
+ * are ours looking at our own site.
+ */
+const INTERNAL_ADDRESSES = ["thehickeyclan+applereview@gmail.com", "testcoach.thehickeyclan@gmail.com"]
 
 export function isInternalAccount(email: string | null | undefined): boolean {
   const address = String(email ?? "").trim().toLowerCase()
