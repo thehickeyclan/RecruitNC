@@ -20,6 +20,8 @@ export type WarRoomSchool = {
   status: CollegeListStatus
   logo: string | null
   hasQuestionnaire: boolean
+  /** "$31,450 tuition" for a North Carolina family (2023-24, tuition only), or null. */
+  tuition: string | null
 }
 
 type SavedEvent = { id: string; title: string; startDate: string; endDate: string | null; location: string | null }
@@ -333,6 +335,7 @@ export function WarRoomPlan({
                       {school.level} · {school.place}
                       {school.hasQuestionnaire && school.status === "interested" ? " · questionnaire to fill out" : ""}
                     </span>
+                    {school.tuition ? <span className="block text-xs text-white/50">{school.tuition}</span> : null}
                   </span>
                   <span className="flex items-center gap-2">
                     <select
