@@ -160,6 +160,8 @@ export async function middleware(request: NextRequest) {
     '/recruiting/college-map',
     // One page per college. Public for what the school is; the portal sections gate themselves.
     '/recruiting/schools',
+    // The rules library. Each page decides for itself what a visitor may read.
+    '/recruiting/learn',
     '/api/college-map',
     '/news',
     '/blue',

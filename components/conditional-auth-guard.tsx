@@ -84,6 +84,9 @@ export function ConditionalAuthGuard({
     // A college's page: what and where it is are public; staff, questionnaires and the rest are
     // withheld by their own APIs, as on the map.
     "/recruiting/schools",
+    // The rules library: the list and the North Carolina page are free, and a locked page shows
+    // what it holds rather than a sign-in wall.
+    "/recruiting/learn",
     "/news",
     "/nchsaa",
     "/nhsca",

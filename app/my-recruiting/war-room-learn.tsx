@@ -1,4 +1,4 @@
-import { BookOpen, ChevronRight, FileText, MapPin, Sparkles, Trophy } from "lucide-react"
+import { BookOpen, ChevronRight, FileText, MapPin, Scale, ShieldAlert, Sparkles, Trophy } from "lucide-react"
 
 /**
  * Learn: what exists today, in the order a family needs it. Only finished material is listed -
@@ -6,6 +6,18 @@ import { BookOpen, ChevronRight, FileText, MapPin, Sparkles, Trophy } from "luci
  * NAIA and NJCAA manuals, not before.
  */
 const LESSONS = [
+  {
+    icon: Scale,
+    title: "The rules, level by level",
+    text: "When a coach can contact you, visits, signing, scholarships and eligibility for D1, D2, D3, NAIA and junior college. Every rule with its source.",
+    href: "/recruiting/learn",
+  },
+  {
+    icon: ShieldAlert,
+    title: "Staying eligible in North Carolina",
+    text: "Prize money the NCAA allows can still end a high school season here. And how NIL works for NC athletes.",
+    href: "/recruiting/learn/staying-eligible-in-north-carolina",
+  },
   {
     icon: BookOpen,
     title: "How wrestling recruiting works",
