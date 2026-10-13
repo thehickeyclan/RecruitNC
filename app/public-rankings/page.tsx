@@ -1,4 +1,5 @@
 import { ArrowRight, GraduationCap, ListOrdered, Users } from "lucide-react"
+import { hasAnyRankingBoardGrant, rankingBoardAccessFor } from "@/lib/rankings/ranking-board-access"
 import { redirect } from "next/navigation"
 
 import { HardLink } from "@/components/hard-link"
@@ -59,7 +60,10 @@ export default async function PublicRankingsHomepage({
     supabase: await createClient(),
     admin: createAdminClient(),
   })
-  if (!canSeeProspectRanking(viewer)) {
+  // Somebody who ranks a board for us reads the boards, subscriber or not.
+  const { data: session } = await (await createClient()).auth.getUser()
+  const grants = session.user?.app_metadata?.ranking_board_access
+  if (!canSeeProspectRanking(viewer) && !hasAnyRankingBoardGrant(grants)) {
     /*
      * Stripe sends a paying customer here, and the webhook that grants access may not have
      * landed yet. Carrying the flag back means they see "payment received, access activating"
@@ -99,7 +103,11 @@ export default async function PublicRankingsHomepage({
    * share years, so a women's card among the men's would read as a fourth class. A women's coach
    * gets her group first. Staff see the women's boards before release, like the men's.
    */
-  const womensYears = isAdmin ? rankedClassYears("Female") : releasedClassYears("Female")
+  // A ranker sees the women's classes he ranks before they are released, to check the page.
+  const rankerYears = rankedClassYears("Female").filter((y) => rankingBoardAccessFor(grants, "Female", y) != null)
+  const womensYears = isAdmin
+    ? rankedClassYears("Female")
+    : [...new Set([...releasedClassYears("Female"), ...rankerYears])].sort((a, b) => a - b)
   const womensLinks = womensYears.map((year) => ({
     href: `/public-rankings/women/${year}`,
     eyebrow: "Women's class rankings",
@@ -114,7 +122,7 @@ export default async function PublicRankingsHomepage({
       key: "womens",
       heading: "Women's Rankings",
       links: womensLinks,
-      preview: isAdmin && releasedClassYears("Female").length === 0,
+      preview: (isAdmin || rankerYears.length > 0) && releasedClassYears("Female").length === 0,
     },
   ].filter((group) => group.links.length)
   if (viewGender === "Female") groups.reverse()
@@ -177,7 +185,7 @@ export default async function PublicRankingsHomepage({
           <h2 className="text-2xl font-black tracking-tight text-white">{group.heading}</h2>
           {group.preview ? (
             <span className="rounded-full border border-[#D3B574]/50 px-2.5 py-0.5 text-xs font-semibold text-[#D3B574]">
-              Admin preview — not yet released
+              Staff preview — not yet released
             </span>
           ) : null}
         </div>

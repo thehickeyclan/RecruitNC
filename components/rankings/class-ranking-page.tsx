@@ -1,4 +1,6 @@
 import Link from "next/link"
+import { isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
+import { requireRankingBoardAccess } from "@/lib/rankings/ranking-board-access"
 import { RankedAthleteCard } from "@/components/rankings/ranked-athlete-card"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -37,7 +39,15 @@ export async function ClassRankingPage({ year, gender = "Male" }: { year: number
     supabase: await createClient(),
     admin: createAdminClient(),
   })
-  if (!canSeeProspectRanking(viewer)) {
+  /*
+   * The ranker reads his own board as customers will, before it is released (Matt, 13 October
+   * 2026): Brandon Palmer ranks the women's classes and has to check the published page, and he
+   * is neither an admin nor a subscriber. A grant on this exact board - the same one that opens
+   * the admin board to him - opens this page and nothing else.
+   */
+  const ranker = viewer.isAdmin === true ? false : (await requireRankingBoardAccess(gender, year, "read")).ok
+  const preview = viewer.isAdmin === true || ranker
+  if (!canSeeProspectRanking(viewer) && !ranker) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#061224] px-4">
         <div className="max-w-md text-center">
@@ -68,7 +78,7 @@ export async function ClassRankingPage({ year, gender = "Male" }: { year: number
     )
   }
 
-  const ranking = await loadPublicClassRanking(year, viewer.isAdmin === true, gender)
+  const ranking = await loadPublicClassRanking(year, preview, gender)
 
   return (
     <div className="min-h-screen bg-[#061224]">
@@ -89,7 +99,12 @@ export async function ClassRankingPage({ year, gender = "Male" }: { year: number
 
           <RankingsSummary athletes={ranking.athletes} />
 
-          <RankingsNav current={year} isAdmin={viewer.isAdmin === true} gender={gender} />
+          <RankingsNav current={year} isAdmin={preview} gender={gender} />
+          {preview && !isPublicRankingsYearPublished(year, gender) ? (
+            <p className="mx-auto mt-6 max-w-xl rounded-sm border border-[#D7B95A]/50 bg-[#D7B95A]/10 px-4 py-2 text-center text-xs font-semibold text-[#D7B95A]">
+              Staff preview. This board is not released: only admins and its ranker can see this page.
+            </p>
+          ) : null}
 
 
           {!ranking.published ? (
