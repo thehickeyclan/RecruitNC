@@ -95,6 +95,10 @@ export const SOURCES = {
     label: "NCISAA name, image and likeness policy",
     url: "https://www.ncisaa.org/wp-content/uploads/2024/08/NCISAA-NIL-Policy-2024.pdf",
   },
+  ivy: {
+    label: "Ivy League: information for prospective athletes",
+    url: "https://ivyleague.com/sports/2017/7/28/information-psa-index.aspx",
+  },
   nwcaPortal: {
     label: "NWCA: transfer window approved by the Division I Cabinet, January 2026",
     url: "https://nwcaonline.com/news/2026/1/14/national-wrestling-coaches-association-nwca-initiative-on-transfer-portal-approved-by-ncaa-division-i-cabinet.aspx",
@@ -494,6 +498,100 @@ export const LEARN_PAGES: LearnPage[] = [
         ],
         reading: "The NCAA adopted this in 2026 and its printed guide still describes the older grace-period rule, with a note to read the age-based rules. If you are planning a year off before college, confirm how it applies to you with the college's compliance office.",
         sources: ["ageRule", "cbsa"],
+      },
+    ],
+  },
+  {
+    slug: "questions-families-ask",
+    title: "Questions families ask",
+    summary: "Who pays for a visit and whether parents go, what NIL and revenue sharing are, a grant against a scholarship, and how the Ivy League works.",
+    free: false,
+    sections: [
+      {
+        heading: "Who pays for a recruiting visit?",
+        intro:
+          "It depends on the kind of visit. An official visit is one the college pays for. An unofficial visit is one your family pays for, and you may take as many as you like.",
+        rows: [
+          { label: "Division I official visit", value: "Travel for the wrestler and up to two family members; lodging and up to three meals a day for the wrestler and up to four family members; two nights at most" },
+          { label: "Division II official visit", value: "The wrestler's round-trip travel and lodging, and meals for the wrestler and those with him; 48 hours at most. The rules do not provide for the family's airfare." },
+          { label: "Division III official visit", value: "The wrestler's round-trip travel and lodging, and meals for the wrestler and those with him; 48 hours at most. The college may not pay the family's travel, apart from mileage if you drive together and a ride from the airport." },
+          { label: "Junior college official visit", value: "The actual costs for the wrestler and two guests; 48 hours at most" },
+          { label: "NAIA visit", value: "No set list. A college may pay only if it does the same for other specially talented students it recruits." },
+          { label: "Any unofficial visit", value: "Your family pays for travel, hotel and food. Division II and III colleges may give you one meal on campus; Division I may not." },
+        ],
+        bullets: [
+          "Flights paid by a Division I college must be commercial, in coach.",
+          "A college may pay for one official visit per wrestler. You may take official visits to as many colleges as invite you.",
+        ],
+        rule: "Division I Bylaws 13.5.2.6, 13.6.4, 13.6.6 and 13.6.7.7; Division II Bylaws 13.3.3 to 13.3.5; Division III Bylaws 13.5.2, 13.6.2 and 13.6.4; NJCAA Bylaws Article VI, Section 4; NAIA Bylaws Article II, Section C",
+        sources: ["d1Manual", "d2Manual", "d3Manual", "cbsa", "njcaaBylaws", "naiaHandbook"],
+      },
+      {
+        heading: "Do parents go on the visit?",
+        bullets: [
+          "The rules expect it. Division I lets the college pay travel for two family members and lodging and meals for up to four. Division II and III cover meals for those who come with the wrestler.",
+          "Family members beyond those numbers may come at their own cost.",
+        ],
+        advice: "Go, at least one parent, on every official visit. You will hear the coach describe the roster spot and the money, see where your wrestler would live and train, and meet the people who would look after him. Let the wrestler do the talking with the coach, and save your questions about cost for the meeting where aid is discussed.",
+        rule: "Division I Bylaws 13.5.2.6 and 13.6.6",
+        sources: ["d1Manual", "cbsa"],
+      },
+      {
+        heading: "What is NIL?",
+        intro: "Name, image and likeness: a wrestler being paid by a business or other third party for the use of his name, picture or reputation.",
+        bullets: [
+          "The NCAA's examples are social media posts, brand appearances, and promoting products and services.",
+          "It must be payment for something done, such as a post or an appearance. It may not be pay for wrestling or for results, and it may not be used to get a wrestler to enrol at or stay at a particular college.",
+          "All three NCAA divisions allow it. So does the NAIA.",
+          "In high school the rules are North Carolina's, not the NCAA's, and they are strict about the steps.",
+        ],
+        rule: "NCAA Division I and III Bylaw 22.01.1; NAIA Bylaws Article VII, Section B",
+        sources: ["cbsa", "d1Manual", "d3Manual", "naiaHandbook", "ncNil"],
+      },
+      {
+        heading: "What is revenue sharing?",
+        intro: "Money a Division I college pays directly to its athletes, which became possible with the House settlement. It is separate from a scholarship and separate from NIL deals with outside businesses.",
+        bullets: [
+          "Each Division I college decides whether to do it and how much to pay, up to a cap on the total across all of its teams. The cap was $20.5 million per college for 2025-26.",
+          "A college that takes part comes under the settlement's other terms, including the roster limit of 30 for men's wrestling and 30 for women's.",
+          "A college may not put a revenue-share offer in writing before August 1 of a wrestler's senior year.",
+        ],
+        advice: "A cap is not a promise. Ask the coach whether wrestlers at his college receive any revenue share, and get any figure in the written offer.",
+        rule: "House settlement question and answer A1, A3, B11, D2 and D3; Division I Bylaws 13.9.3.1 and 17.2",
+        sources: ["houseQa", "d1Manual"],
+      },
+      {
+        heading: "Do Division III wrestlers get NIL?",
+        bullets: [
+          "Yes. Division III has no athletic scholarships, but its wrestlers may be paid for the use of their name, image and likeness like anyone else in the NCAA.",
+          "The same limits apply: it must be for something done, not for wrestling, and it may not be used to get a wrestler to enrol.",
+        ],
+        rule: "NCAA Division III Bylaws 22.01.1 and 22.01.2",
+        sources: ["d3Manual", "cbsa"],
+      },
+      {
+        heading: "What is the difference between a grant and a scholarship?",
+        bullets: [
+          "\"Grant-in-aid\" is the NCAA's own term for an athletic scholarship. A coach who offers a grant-in-aid and a coach who offers a wrestling scholarship mean the same thing: money from the athletics department, written into an athletics aid agreement.",
+          "A need-based grant is different. It comes from the college's financial aid office, is based on your family's finances, and has nothing to do with wrestling.",
+          "An academic or merit scholarship is based on grades and comes from admissions or financial aid.",
+          "At Division III colleges and in the Ivy League there is no athletic money at all, so everything a wrestler receives is one of the last two.",
+        ],
+        advice: "Ask for the whole package in one place: athletic aid, academic aid and need-based aid, each as a yearly dollar figure, and for how many years. Compare colleges on what your family will pay, not on the size of the scholarship.",
+        rule: "NCAA Division I Bylaw 13.9.3.1; Division III Bylaws 15.01.3 and 15.01.4",
+        sources: ["d1Manual", "d3Manual", "cbsa"],
+      },
+      {
+        heading: "How does the Ivy League work?",
+        intro: "The Ivy League colleges are in NCAA Division I, so the Division I contact and visit dates apply. The money and the admissions process are their own.",
+        bullets: [
+          "There are no athletic scholarships and no academic scholarships. Aid is given only on financial need, as each college's financial aid office works it out.",
+          "A coach may ask the financial aid office for an estimate for a recruit. Only that office can decide the package.",
+          "You may share one Ivy college's written estimate with another, and the second may adjust its own.",
+          "An admissions office may send a \"likely letter\" to a recruit whose application is complete. It may not be sent before October 1 of senior year, and only admissions can issue it.",
+          "Six Ivy League colleges are on our map with wrestling: Brown, Columbia, Cornell, Harvard, Penn and Princeton.",
+        ],
+        sources: ["ivy"],
       },
     ],
   },
