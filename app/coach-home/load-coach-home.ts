@@ -12,6 +12,8 @@ import { programLogo as resolveProgramLogo } from "@/lib/coach-program-logo"
 import { PUBLIC_TOP_75_COLLEGE_RELEASED, getPublicRankingsMax, releasedClassYears } from "@/lib/public-rankings-cap"
 import { coachProgramOf, viewGenderFor } from "@/lib/recruiting/coach-program"
 import { currentClassYears } from "@/lib/class-years"
+import { groupRecruitsByEvent } from "@/lib/college-programs/competing-next"
+import { listUpcomingEventsForAthletes } from "@/lib/college-programs/schedule"
 import type { CoachHomeData } from "./coach-home-client"
 
 
@@ -133,6 +135,22 @@ export async function loadCoachHome(
           () => [],
         )
     : []
+  /*
+   * Where the board's wrestlers compete next. Only for a coach staff have approved (and admins):
+   * `verified_coach` alone is set at sign-up, before anyone has looked, and this is a minor's
+   * schedule. An extra, so a failure shows nothing rather than failing the page.
+   */
+  const maySeeSchedules = isAdmin || isApprovedCoach(profile ?? null)
+  const competingNext = maySeeSchedules
+    ? await listUpcomingEventsForAthletes(admin, recruits.map((r) => r.athleteId)).then(
+        (rows) =>
+          groupRecruitsByEvent(
+            rows,
+            new Map(recruits.map((r) => [r.athleteId, { id: r.athleteId, name: r.name, classYear: r.classYear, weight: r.weight, highSchool: r.highSchool }])),
+          ).slice(0, 8),
+        () => [],
+      )
+    : []
   const data: CoachHomeData = {
     // "Coach Hickey", the way a coach is addressed; the full name's last word.
     coachName: String(profile?.full_name ?? "").trim().split(/\s+/).slice(-1)[0] || String(profile?.first_name ?? "").trim() || null,
@@ -173,6 +191,7 @@ export async function loadCoachHome(
         yourTurn: t.yourTurn,
       })),
     },
+    competingNext,
     suggested,
     activity: await loadStaffActivity(admin, userId, 6).catch(() => []),
     rankingYears: [...releasedClassYears(viewGender)],

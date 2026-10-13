@@ -3,6 +3,7 @@ import "server-only"
 import type { SupabaseClient } from "@supabase/supabase-js"
 
 import { familyAthleteIds } from "@/lib/coach-messages"
+import { easternToday, isStillOn } from "@/lib/college-programs/competing-next"
 
 /**
  * A wrestler's upcoming events (scripts/add-athlete-upcoming-events.sql).
@@ -18,7 +19,7 @@ const TABLE_MISSING = "42P01"
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/
 const MAX_EVENTS = 25
 
-const today = () => new Date().toISOString().slice(0, 10)
+const today = () => easternToday()
 
 function toEvent(row: Record<string, unknown>): UpcomingEvent {
   return {
@@ -43,13 +44,36 @@ export async function listUpcomingEvents(
     .from("athlete_upcoming_events")
     .select("id, title, start_date, end_date, location")
     .eq("athlete_id", athleteId)
-    .gte("start_date", today())
     .order("start_date", { ascending: true })
   if (error) {
     if (error.code === TABLE_MISSING) return { available: false, events: [] }
     throw new Error(`upcoming events: read failed: ${error.message}`)
   }
-  return { available: true, events: (data ?? []).map(toEvent) }
+  // Filtered here, not in the query: an event under way (started yesterday, ends today) still counts.
+  const now = today()
+  return { available: true, events: (data ?? []).map(toEvent).filter((e) => isStillOn(e, now)) }
+}
+
+/** The same, for many wrestlers in one read: a coach's whole board. Empty when the table is not there. */
+export async function listUpcomingEventsForAthletes(
+  admin: SupabaseClient,
+  athleteIds: string[],
+): Promise<Array<UpcomingEvent & { athleteId: string }>> {
+  const ids = [...new Set(athleteIds.filter(Boolean))]
+  if (ids.length === 0) return []
+  const { data, error } = await admin
+    .from("athlete_upcoming_events")
+    .select("id, athlete_id, title, start_date, end_date, location")
+    .in("athlete_id", ids)
+    .order("start_date", { ascending: true })
+  if (error) {
+    if (error.code === TABLE_MISSING) return []
+    throw new Error(`upcoming events: read failed: ${error.message}`)
+  }
+  const now = today()
+  return (data ?? [])
+    .map((row) => ({ ...toEvent(row), athleteId: String(row.athlete_id) }))
+    .filter((e) => isStillOn(e, now))
 }
 
 export type AddEventResult = { ok: true; event: UpcomingEvent } | { ok: false; status: 400 | 500; error: string }
