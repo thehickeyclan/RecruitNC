@@ -1189,31 +1189,27 @@ export async function buildRecruitNcRankingBoard({
   const qualifierBoutsByAthleteId = new Map<string, MatchBout[]>()
   {
     /*
-     * Paged on the women's board. One request returns a thousand rows at most, and a class's bouts
-     * passed that the day the girls' freestyle events were loaded: whichever fell past row 1000
-     * silently did not exist for the ranking.
+     * Paged. One request returns a thousand rows at most, and a class's bouts passed that: whichever
+     * fell past row 1000 silently did not exist for the ranking. Found on the women's boards the day
+     * their freestyle events were loaded (13 October 2026); the men's boards had the same cap and
+     * had been missing bouts for longer.
      *
-     * The men's board has the same cap and is NOT paged here yet. Paging it moves men's places
-     * (Gavin Lopez 4th to 2nd in 2027 on 13 October 2026), because bouts it has never seen come
-     * into view, and the men's boards are not to change without Matt's say. Flagged to him.
+     * This changes the formula's suggested order on the admin board, because bouts it never saw
+     * come into view. It changes no ranking: the published order is `athletes.prospect_ranking` and
+     * a saved order is `ranking_drafts`, and neither is written here (Matt: fix it, don't touch the
+     * rankings).
      */
     const qualifierBouts: Array<Record<string, unknown>> = []
-    const boutColumns = "athlete_id, opponent_name, opponent_club, win, is_bye, win_type, score, weight_class, event_key, event_name, event_date"
-    if (womens) {
-      for (let from = 0; ; from += 1000) {
-        const { data, error: boutError } = await supabase
-          .from("other_tournament_bouts")
-          .select(`id, ${boutColumns}`)
-          .in("athlete_id", athleteIds)
-          .order("id")
-          .range(from, from + 999)
-        if (boutError || !data?.length) break
-        qualifierBouts.push(...(data as unknown as Array<Record<string, unknown>>))
-        if (data.length < 1000) break
-      }
-    } else {
-      const { data } = await supabase.from("other_tournament_bouts").select(boutColumns).in("athlete_id", athleteIds)
-      qualifierBouts.push(...((data ?? []) as unknown as Array<Record<string, unknown>>))
+    for (let from = 0; ; from += 1000) {
+      const { data, error: boutError } = await supabase
+        .from("other_tournament_bouts")
+        .select("id, athlete_id, opponent_name, opponent_club, win, is_bye, win_type, score, weight_class, event_key, event_name, event_date")
+        .in("athlete_id", athleteIds)
+        .order("id")
+        .range(from, from + 999)
+      if (boutError || !data?.length) break
+      qualifierBouts.push(...(data as unknown as Array<Record<string, unknown>>))
+      if (data.length < 1000) break
     }
     for (const row of qualifierBouts) {
       const raw = row as Record<string, unknown>
