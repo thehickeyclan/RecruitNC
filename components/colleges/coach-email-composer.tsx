@@ -47,12 +47,15 @@ const fromSaved = (e: SavedEvent): ScheduleEvent => ({
 export function CoachEmailComposer({
   schoolId,
   schoolName,
+  initialAthleteId,
   open,
   onOpenChange,
   onSent,
 }: {
   schoolId: string
   schoolName: string
+  /** The wrestler the page is already showing, so a parent of two is not asked twice. */
+  initialAthleteId?: string
   open: boolean
   onOpenChange: (open: boolean) => void
   /** Called once the draft has been opened or copied, with the status the school should move to. */
@@ -60,7 +63,7 @@ export function CoachEmailComposer({
 }) {
   const [context, setContext] = useState<OutreachContext | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [athleteId, setAthleteId] = useState<string | null>(null)
+  const [athleteId, setAthleteId] = useState<string | null>(initialAthleteId ?? null)
   const [kind, setKind] = useState<OutreachKind>("intro")
   const [why, setWhy] = useState("")
   const [detail, setDetail] = useState("")
