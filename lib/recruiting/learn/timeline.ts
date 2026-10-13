@@ -235,7 +235,7 @@ export const TIMELINE: TimelineGrade[] = [
     ],
     steps: [
       { text: "Take your official visits early in the fall, before the signing-week dead period." },
-      { text: "Ask each coach, in writing: is this a roster spot, how much aid, for how many years, and did your school opt in to the settlement?" },
+      { text: "Ask each coach, in writing: is this a roster spot, how much aid, for how many years, and did the college opt in to the House settlement?" },
       { text: "Compare the full cost after all aid, not the scholarship number. At Division III and for most partial awards, academic aid is the larger part." },
       { text: "Keep wrestling and keep your grades. Final certification uses your final transcript." },
       { text: "Not signed by spring? Coaches are still filling rosters after the college transfer windows close. Keep writing.", href: "/my-recruiting#plan", cta: "Email a coach" },

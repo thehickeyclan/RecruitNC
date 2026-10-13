@@ -22,6 +22,8 @@ export type WarRoomSchool = {
   hasQuestionnaire: boolean
   /** "$31,450 tuition" for a North Carolina family (2023-24, tuition only), or null. */
   tuition: string | null
+  /** "No women's team": the family's wrestlers could not wrestle here. Null when they could. */
+  noTeam: string | null
 }
 
 type SavedEvent = { id: string; title: string; startDate: string; endDate: string | null; location: string | null }
@@ -80,6 +82,7 @@ export function WarRoomPlan({
             profilePercent: wrestler.profilePercent,
             profileTodo: wrestler.profileTodo,
             listStatuses: schools.map((s) => s.status),
+            listLevels: schools.map((s) => s.level),
             questionnairesWaiting: schools.filter((s) => s.hasQuestionnaire && s.status === "interested").length,
             scheduleCount: events.length,
           })
@@ -336,6 +339,7 @@ export function WarRoomPlan({
                       {school.hasQuestionnaire && school.status === "interested" ? " · questionnaire to fill out" : ""}
                     </span>
                     {school.tuition ? <span className="block text-xs text-white/50">{school.tuition}</span> : null}
+                    {school.noTeam ? <span className="block text-xs font-semibold text-amber-200">{school.noTeam} in 2026-27</span> : null}
                   </span>
                   <span className="flex items-center gap-2">
                     <select

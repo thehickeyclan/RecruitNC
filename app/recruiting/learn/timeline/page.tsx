@@ -110,6 +110,9 @@ export default async function TimelinePage({ searchParams }: { searchParams?: Pr
                 }`}
               >
                 {D1_TRACK_LABEL[t]}
+                {wrestlers.some((w) => w.track === t) ? (
+                  <span className="font-normal text-[#D3B574]"> · {wrestlers.filter((w) => w.track === t).map((w) => w.firstName).join(", ")}</span>
+                ) : null}
               </a>
             ))}
           </div>

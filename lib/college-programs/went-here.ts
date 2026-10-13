@@ -37,6 +37,17 @@ const SCHOOLS = [...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS]
 const SCHOOL_BY_ID = new Map(SCHOOLS.map((s) => [s.id, s]))
 const SCHOOL_INDEX = buildSchoolIndex(SCHOOLS)
 
+type Team = "mens" | "womens"
+
+const teamOf = (gender: unknown): Team | null => {
+  const g = String(gender ?? "").trim().toLowerCase()
+  return g.startsWith("f") ? "womens" : g.startsWith("m") ? "mens" : null
+}
+
+/** The level a wrestler competes at there: her own team's, where the school has one. */
+const divisionFor = (school: CollegeMapSchool, team: Team | null): CollegeDivision =>
+  (team ? school.programs.find((p) => p[team])?.division : null) ?? primaryDivision(school)
+
 /** How many graduating classes back "recent" reaches, counting this year's seniors. */
 const CLASSES_BACK = 3
 
@@ -79,13 +90,15 @@ export async function buildWentHereSnapshot(admin: SupabaseClient): Promise<Went
   })
 
   const credentials = await loadAthleteCredentialsBatch(admin, committed.map((c) => c.row))
-  const gpas: Array<{ schoolId: string; division: CollegeDivision; gpa: number | null }> = []
+  const gpas: Array<{ schoolId: string; division: CollegeDivision; gender: Team | null; gpa: number | null }> = []
   const commits = committed.map(({ row, school }): SnapshotCommit => {
     const id = String(row.id)
     const creds = credentials.get(id) ?? { allAmerican: [], state: [], toc: [], national: [] }
     const full = `${String(row.firstName ?? "").trim()} ${String(row.lastName ?? "").trim()}`.trim()
-    const division = primaryDivision(school)
-    gpas.push({ schoolId: school.id, division, gpa: parseGpa(row.academic_gpa) })
+    const gender = teamOf(row.gender)
+    // A woman is counted at the level her team wrestles at: Lock Haven's women are Division II, its men Division I.
+    const division = divisionFor(school, gender)
+    gpas.push({ schoolId: school.id, division, gender, gpa: parseGpa(row.academic_gpa) })
     return {
       athleteId: id,
       name: full || String(row.name ?? "").trim(),
@@ -95,6 +108,7 @@ export async function buildWentHereSnapshot(admin: SupabaseClient): Promise<Went
       schoolId: school.id,
       division,
       standing: standingOf(creds),
+      gender,
     }
   })
 
@@ -110,7 +124,22 @@ export async function buildWentHereSnapshot(admin: SupabaseClient): Promise<Went
     if (stats) gpaByDivision[division] = stats
   }
 
-  return { builtAt: new Date().toISOString(), commits, gpaBySchool, gpaByDivision }
+  // The same again for men's and women's apart, so a daughter is set beside women and a son beside men.
+  const gpaBySchoolGender: Record<string, GpaStats> = {}
+  const gpaByDivisionGender: Record<string, GpaStats> = {}
+  for (const gender of ["mens", "womens"] as const) {
+    const ofGender = gpas.filter((g) => g.gender === gender)
+    for (const schoolId of new Set(ofGender.map((g) => g.schoolId))) {
+      const stats = gpaStats(ofGender.filter((g) => g.schoolId === schoolId).map((g) => g.gpa))
+      if (stats) gpaBySchoolGender[`${schoolId}|${gender}`] = stats
+    }
+    for (const division of new Set(ofGender.map((g) => g.division))) {
+      const stats = gpaStats(ofGender.filter((g) => g.division === division).map((g) => g.gpa))
+      if (stats) gpaByDivisionGender[`${division}|${gender}`] = stats
+    }
+  }
+
+  return { builtAt: new Date().toISOString(), commits, gpaBySchool, gpaByDivision, gpaBySchoolGender, gpaByDivisionGender }
 }
 
 export type WentHere = {
@@ -123,26 +152,42 @@ export type WentHere = {
   gpa: (GpaStats & { scope: "school" | "level"; label: string }) | null
   /** The asking family's own wrestlers still in high school, beside it. */
   yours: Array<{ firstName: string; results: string[]; gpa: number | null }>
+  /** "women" or "men" when every figure above is for that team only; null when they are combined. */
+  among: "women" | "men" | null
 }
 
 /** Enough of a school's own commits to describe them as a group rather than as examples. */
 const MIN_SCHOOL_GROUP = 5
 
-export async function loadWentHere(admin: SupabaseClient, schoolId: string, userId: string | null): Promise<WentHere | null> {
+export async function loadWentHere(
+  admin: SupabaseClient,
+  schoolId: string,
+  userId: string | null,
+  /** The family's wrestlers are all girls, or all boys: compare with that team only. */
+  focus: Team | null = null,
+): Promise<WentHere | null> {
   const school = SCHOOL_BY_ID.get(schoolId)
   if (!school) return null
   const snapshot = await readWentHereSnapshot()
   // Before the first cron run there is nothing to show; the card leaves the section out.
   if (!snapshot) return null
-  const division = primaryDivision(school)
-  const { commits } = snapshot
+  /*
+   * One team's figures only when three things hold: the family has a focus, this college has that
+   * team, and the saved snapshot records which team each commit is on. Otherwise the combined
+   * figures stand, as before - a snapshot from before this was built knows no team, and filtering
+   * it would turn every comparison into "nobody went here".
+   */
+  const team = focus && school.programs.some((p) => p[focus]) && snapshot.gpaByDivisionGender ? focus : null
+  const division = divisionFor(school, team)
+  const commits = team ? snapshot.commits.filter((c) => c.gender === team) : snapshot.commits
 
   const here = commits.filter((c) => c.schoolId === schoolId).sort((a, b) => (b.classYear ?? 0) - (a.classYear ?? 0) || a.name.localeCompare(b.name))
   const atLevel = commits.filter((c) => c.division === division)
 
-  const schoolGpa = snapshot.gpaBySchool[schoolId] ?? null
-  const levelGpa = snapshot.gpaByDivision[division] ?? null
+  const schoolGpa = (team ? snapshot.gpaBySchoolGender?.[`${schoolId}|${team}`] : snapshot.gpaBySchool[schoolId]) ?? null
+  const levelGpa = (team ? snapshot.gpaByDivisionGender?.[`${division}|${team}`] : snapshot.gpaByDivision[division]) ?? null
   const short = DIVISION_SHORT[division]
+  const who = team === "womens" ? "NC women" : team === "mens" ? "NC men" : "NC wrestlers"
   const spoken = school.name.replace(/\s*\([^)]*\)\s*/g, " ").trim()
 
   let yours: WentHere["yours"] = []
@@ -167,12 +212,18 @@ export async function loadWentHere(admin: SupabaseClient, schoolId: string, user
   return {
     wrestlers: here.map(({ athleteId, name, classYear, highSchool, results }) => ({ athleteId, name, classYear, highSchool, results })),
     schoolSentence: here.length >= MIN_SCHOOL_GROUP ? groupSentence(summariseStandings(here.map((c) => c.standing))) : null,
-    level: { short, wrestlers: atLevel.length, sentence: groupSentence(summariseStandings(atLevel.map((c) => c.standing))) },
+    // A level with only a handful of commits is examples, not a pattern: "1 of 1 was a state champion" says nothing.
+    level: {
+      short,
+      wrestlers: atLevel.length,
+      sentence: atLevel.length >= MIN_SCHOOL_GROUP ? groupSentence(summariseStandings(atLevel.map((c) => c.standing))) : null,
+    },
     gpa: schoolGpa
-      ? { ...schoolGpa, scope: "school", label: `NC wrestlers who went to ${spoken}` }
+      ? { ...schoolGpa, scope: "school", label: `${who} who went to ${spoken}` }
       : levelGpa
-        ? { ...levelGpa, scope: "level", label: `NC wrestlers who went ${short}` }
+        ? { ...levelGpa, scope: "level", label: `${who} who went ${short}` }
         : null,
     yours,
+    among: team === "womens" ? "women" : team === "mens" ? "men" : null,
   }
 }

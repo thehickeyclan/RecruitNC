@@ -618,7 +618,7 @@ export const LEARN_PAGES: LearnPage[] = [
   {
     slug: "paying-for-college",
     title: "Paying for college: the whole picture",
-    summary: "How common a full ride really is, how grades change the price, need-based aid, and how to compare offers on what your family will actually pay.",
+    summary: "How common a full ride really is, how academics change the price, need-based aid, and how to compare offers on what your family will actually pay.",
     free: false,
     sections: [
       {
@@ -626,11 +626,11 @@ export const LEARN_PAGES: LearnPage[] = [
         intro:
           "Rare. No governing body publishes how many wrestlers are on a full athletic scholarship, and we do not hold award data, so there is no honest percentage to give. What the rules themselves show is that the money is built to be shared.",
         rows: [
-          { label: "NCAA Division II", value: "A whole team is limited to the equivalent of 9 full grants for men's wrestling and 10 for women's. The NCAA calls it a \"partial athletics scholarship model\"." },
-          { label: "NAIA", value: "A whole team is limited to the equivalent of 10 full grants of the college's aid" },
           { label: "NCAA Division I", value: "At colleges in the House settlement, up to 30 wrestlers and no limit on scholarships within that. An award may be full or partial, in any amount." },
-          { label: "Junior college", value: "Up to 20 signees for men's wrestling and 22 for women's, of any size. NJCAA Division I programs may cover tuition, fees, room and board." },
+          { label: "NCAA Division II", value: "A whole team is limited to the equivalent of 9 full grants for men's wrestling and 10 for women's. The NCAA calls it a \"partial athletics scholarship model\"." },
           { label: "NCAA Division III and the Ivy League", value: "No athletic scholarships at all" },
+          { label: "NAIA", value: "A whole team is limited to the equivalent of 10 full grants of the college's aid" },
+          { label: "Junior college", value: "Up to 20 signees for men's wrestling and 22 for women's, of any size. NJCAA Division I programs may cover tuition, fees, room and board." },
         ],
         bullets: [
           "Across all teams, the NCAA says 70% of Division I athletes and 77% of Division II athletes receive some athletic aid. Some is not all.",
@@ -644,14 +644,14 @@ export const LEARN_PAGES: LearnPage[] = [
         sources: ["d2Manual", "naiaHandbook", "d1Manual", "houseQa", "njcaaChart", "cbsa"],
       },
       {
-        heading: "How grades change the price",
-        intro: "Grades do two jobs. They can earn aid of their own, and at some levels they let a coach give a wrestler more.",
+        heading: "How academics change the price",
+        intro: "Academics do two jobs. A strong academic record can earn aid of its own, and at some levels it lets a coach give a wrestler more.",
         bullets: [
           "Colleges award their own academic scholarships, usually on GPA and test scores. The NCAA notes that many athletes also benefit from academic scholarships and need-based aid such as federal Pell Grants.",
           "NAIA: a strong student costs the coach less of the team's limit. For an entering freshman with a 3.75 high school GPA, a 1280 SAT or 27 ACT, or a place in the top 10% of the class, none of that wrestler's aid counts against the team's 10. With a 3.50 to 3.74 GPA, a 1140 SAT or 23 ACT, or the top 11% to 25%, only half counts.",
           "NCAA Division II: only athletic aid counts against the team's limit. Academic aid from the college that does not depend on wrestling sits on top of it.",
           "NCAA Division III and the Ivy League: there is no athletic money, so the academic record and financial need are the whole package. In the Ivy League it is need alone.",
-          "Grades also decide whether a wrestler can compete at all: a 2.3 core-course GPA for Division I and 2.2 for Division II.",
+          "Academics also decide whether a wrestler can compete at all: a 2.3 core-course GPA for Division I and 2.2 for Division II.",
         ],
         advice: "Treat the GPA as part of the recruiting profile. Ask each college's admissions office what GPA and test score earn each level of academic scholarship; many publish a table. A wrestler a coach can fund partly with academic money is easier to say yes to.",
         rule: "NAIA Council of Presidents Policy XIII, Section G (academic exemption); NCAA Division II Bylaws 15.02.2, 15.4.1.7 and 15.4.2.2; Division III Bylaw 15.01.3",
