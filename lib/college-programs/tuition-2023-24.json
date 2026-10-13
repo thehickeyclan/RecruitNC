@@ -1,0 +1,2181 @@
+{
+ "source": "IPEDS (US Department of Education), published tuition for full-time undergraduates, 2023-24. Tuition only: no fees, housing or food. Compiled by Muse, 13 Oct 2026.",
+ "year": "2023-24",
+ "tuition": {
+  "adams-state-university": {
+   "control": "Public",
+   "inState": 6072,
+   "outOfState": 18144
+  },
+  "adrian-college": {
+   "control": "Private",
+   "inState": 39280,
+   "outOfState": 39280
+  },
+  "albion-college": {
+   "control": "Private",
+   "inState": 55226,
+   "outOfState": 55226
+  },
+  "albright-college": {
+   "control": "Private",
+   "inState": 27560,
+   "outOfState": 27560
+  },
+  "alfred-state-college": {
+   "control": "Public",
+   "inState": 7070,
+   "outOfState": 14575
+  },
+  "allen-university": {
+   "control": "Private",
+   "inState": 12540,
+   "outOfState": 12540
+  },
+  "alma-college": {
+   "control": "Private",
+   "inState": 47160,
+   "outOfState": 47160
+  },
+  "alvernia-university": {
+   "control": "Private",
+   "inState": 41060,
+   "outOfState": 41060
+  },
+  "american-university": {
+   "control": "Private",
+   "inState": 55724,
+   "outOfState": 55724
+  },
+  "ancilla-college": {
+   "control": "Private",
+   "inState": 19850,
+   "outOfState": 19850
+  },
+  "andrew-college": {
+   "control": "Private",
+   "inState": 19126,
+   "outOfState": 19126
+  },
+  "appalachian-state-university": {
+   "control": "Public",
+   "inState": 4242,
+   "outOfState": 21238
+  },
+  "arcadia-university": {
+   "control": "Private",
+   "inState": 47590,
+   "outOfState": 47590
+  },
+  "arizona-christian-university": {
+   "control": "Private",
+   "inState": 32497,
+   "outOfState": 32497
+  },
+  "arizona-state-university": {
+   "control": "Public",
+   "inState": 11308,
+   "outOfState": 31450
+  },
+  "ashland-university": {
+   "control": "Private",
+   "inState": 25200,
+   "outOfState": 25200
+  },
+  "augsburg-university": {
+   "control": "Private",
+   "inState": 43142,
+   "outOfState": 43142
+  },
+  "augustana-college-illinois": {
+   "control": "Private",
+   "inState": 49674,
+   "outOfState": 49674
+  },
+  "augustana-university": {
+   "control": "Private",
+   "inState": 38150,
+   "outOfState": 38150
+  },
+  "aurora-university": {
+   "control": "Private",
+   "inState": 28000,
+   "outOfState": 28000
+  },
+  "averett-university": {
+   "control": "Private",
+   "inState": 38400,
+   "outOfState": 38400
+  },
+  "avila-university": {
+   "control": "Private",
+   "inState": 38762,
+   "outOfState": 38762
+  },
+  "baker-university": {
+   "control": "Private",
+   "inState": 33200,
+   "outOfState": 33200
+  },
+  "baldwin-wallace-university": {
+   "control": "Private",
+   "inState": 37686,
+   "outOfState": 37686
+  },
+  "barton-community-college": {
+   "control": "Public",
+   "inState": 2432,
+   "outOfState": 3360
+  },
+  "bellarmine-university": {
+   "control": "Private",
+   "inState": 45190,
+   "outOfState": 45190
+  },
+  "bellevue-university": {
+   "control": "Private",
+   "inState": 8136,
+   "outOfState": 8136
+  },
+  "belmont-abbey-college": {
+   "control": "Private",
+   "inState": 19500,
+   "outOfState": 19500
+  },
+  "benedictine-college": {
+   "control": "Private",
+   "inState": 34000,
+   "outOfState": 34000
+  },
+  "bergen-community-college": {
+   "control": "Public",
+   "inState": 7516,
+   "outOfState": 7908
+  },
+  "bethany-college": {
+   "control": "Private",
+   "inState": 31920,
+   "outOfState": 31920
+  },
+  "big-bend-community-college": {
+   "control": "Public",
+   "inState": 4623,
+   "outOfState": 5157
+  },
+  "binghamton-university": {
+   "control": "Public",
+   "inState": 7070,
+   "outOfState": 26160
+  },
+  "bismarck-state-college": {
+   "control": "Public",
+   "inState": 4167,
+   "outOfState": 6251
+  },
+  "blackburn-college": {
+   "control": "Private",
+   "inState": 26758,
+   "outOfState": 26758
+  },
+  "bluefield-state-university": {
+   "control": "Public",
+   "inState": 9240,
+   "outOfState": 16560
+  },
+  "bluefield-university": {
+   "control": "Private",
+   "inState": 27876,
+   "outOfState": 27876
+  },
+  "brewton-parker-college": {
+   "control": "Private",
+   "inState": 18400,
+   "outOfState": 18400
+  },
+  "briar-cliff-university": {
+   "control": "Private",
+   "inState": 33369,
+   "outOfState": 33369
+  },
+  "bridgewater-state-university": {
+   "control": "Public",
+   "inState": 910,
+   "outOfState": 7050
+  },
+  "brown-university": {
+   "control": "Private",
+   "inState": 65656,
+   "outOfState": 65656
+  },
+  "bryant-stratton-college-wisconsin": {
+   "control": "Private",
+   "inState": 19330,
+   "outOfState": 19330
+  },
+  "bucknell-university": {
+   "control": "Private",
+   "inState": 64418,
+   "outOfState": 64418
+  },
+  "buena-vista-university": {
+   "control": "Private",
+   "inState": 40190,
+   "outOfState": 40190
+  },
+  "buffalo-state-university": {
+   "control": "Public",
+   "inState": 7070,
+   "outOfState": 17490
+  },
+  "california-polytechnic-state-university-cal-poly": {
+   "control": "Public",
+   "inState": 5742,
+   "outOfState": 17622
+  },
+  "california-state-polytechnic-university-humboldt": {
+   "control": "Public",
+   "inState": 5742,
+   "outOfState": 17622
+  },
+  "california-state-university-bakersfield": {
+   "control": "Public",
+   "inState": 5742,
+   "outOfState": 17622
+  },
+  "camden-county-college": {
+   "control": "Public",
+   "inState": 2856,
+   "outOfState": 2856
+  },
+  "campbell-university": {
+   "control": "Private",
+   "inState": 37750,
+   "outOfState": 37750
+  },
+  "campbellsville-university": {
+   "control": "Private",
+   "inState": 26490,
+   "outOfState": 26490
+  },
+  "carl-albert-state-college": {
+   "control": "Public",
+   "inState": 3000,
+   "outOfState": 7477
+  },
+  "carthage-college": {
+   "control": "Private",
+   "inState": 36500,
+   "outOfState": 36500
+  },
+  "case-western-reserve-university": {
+   "control": "Private",
+   "inState": 64100,
+   "outOfState": 64100
+  },
+  "cedar-crest-college": {
+   "control": "Private",
+   "inState": 44334,
+   "outOfState": 44334
+  },
+  "centenary-university": {
+   "control": "Private",
+   "inState": 36636,
+   "outOfState": 36636
+  },
+  "central-baptist-college": {
+   "control": "Private",
+   "inState": 18150,
+   "outOfState": 18150
+  },
+  "central-christian-college-of-kansas": {
+   "control": "Private",
+   "inState": 20000,
+   "outOfState": 20000
+  },
+  "central-college": {
+   "control": "Private",
+   "inState": 20988,
+   "outOfState": 20988
+  },
+  "central-methodist-university": {
+   "control": "Private",
+   "inState": 26360,
+   "outOfState": 26360
+  },
+  "central-michigan-university": {
+   "control": "Public",
+   "inState": 13862,
+   "outOfState": 13862
+  },
+  "chadron-state-college": {
+   "control": "Public",
+   "inState": 5376,
+   "outOfState": 5376
+  },
+  "chatham-university": {
+   "control": "Private",
+   "inState": 42250,
+   "outOfState": 42250
+  },
+  "clackamas-community-college": {
+   "control": "Public",
+   "inState": 5535,
+   "outOfState": 13365
+  },
+  "cleary-university": {
+   "control": "Private",
+   "inState": 23292,
+   "outOfState": 23292
+  },
+  "cloud-county-community-college": {
+   "control": "Public",
+   "inState": 2340,
+   "outOfState": 3090
+  },
+  "coe-college": {
+   "control": "Private",
+   "inState": 52226,
+   "outOfState": 52226
+  },
+  "coker-university": {
+   "control": "Private",
+   "inState": 30864,
+   "outOfState": 30864
+  },
+  "colby-community-college": {
+   "control": "Public",
+   "inState": 2696,
+   "outOfState": 4236
+  },
+  "colorado-mesa-university": {
+   "control": "Public",
+   "inState": 8592,
+   "outOfState": 23192
+  },
+  "colorado-northwestern-community-college": {
+   "control": "Public",
+   "inState": 3941,
+   "outOfState": 6571
+  },
+  "colorado-school-of-mines": {
+   "control": "Public",
+   "inState": 18390,
+   "outOfState": 41580
+  },
+  "colorado-state-university-pueblo": {
+   "control": "Public",
+   "inState": 6870,
+   "outOfState": 14711
+  },
+  "columbia-university": {
+   "control": "Private",
+   "inState": 64526,
+   "outOfState": 64526
+  },
+  "commonwealth-university-bloomsburg-bloomsburg": {
+   "control": "Public",
+   "inState": 7716,
+   "outOfState": 19290
+  },
+  "commonwealth-university-lock-haven-lock-haven": {
+   "control": "Public",
+   "inState": 7716,
+   "outOfState": 19290
+  },
+  "concord-university": {
+   "control": "Public",
+   "inState": 9100,
+   "outOfState": 20000
+  },
+  "concordia-college-moorhead": {
+   "control": "Private",
+   "inState": 29400,
+   "outOfState": 29400
+  },
+  "concordia-university-nebraska": {
+   "control": "Private",
+   "inState": 38500,
+   "outOfState": 38500
+  },
+  "concordia-university-wisconsin": {
+   "control": "Private",
+   "inState": 33750,
+   "outOfState": 33750
+  },
+  "corban-university": {
+   "control": "Private",
+   "inState": 36088,
+   "outOfState": 36088
+  },
+  "cornell-college": {
+   "control": "Private",
+   "inState": 49970,
+   "outOfState": 49970
+  },
+  "cornell-university": {
+   "control": "Private",
+   "inState": 65204,
+   "outOfState": 65204
+  },
+  "cornerstone-university": {
+   "control": "Private",
+   "inState": 28300,
+   "outOfState": 28300
+  },
+  "cowley-county-community-college": {
+   "control": "Public",
+   "inState": 2400,
+   "outOfState": 3900
+  },
+  "cumberland-university": {
+   "control": "Private",
+   "inState": 26640,
+   "outOfState": 26640
+  },
+  "d-youville-university": {
+   "control": "Private",
+   "inState": 32400,
+   "outOfState": 32400
+  },
+  "dakota-wesleyan-university": {
+   "control": "Private",
+   "inState": 31700,
+   "outOfState": 31700
+  },
+  "davenport-university": {
+   "control": "Private",
+   "inState": 22272,
+   "outOfState": 22272
+  },
+  "davidson-college": {
+   "control": "Private",
+   "inState": 59510,
+   "outOfState": 59510
+  },
+  "davis-elkins-college": {
+   "control": "Private",
+   "inState": 30360,
+   "outOfState": 30360
+  },
+  "defiance-college": {
+   "control": "Private",
+   "inState": 37978,
+   "outOfState": 37978
+  },
+  "delaware-state-university": {
+   "control": "Public",
+   "inState": 8544,
+   "outOfState": 18480
+  },
+  "delaware-valley-university": {
+   "control": "Private",
+   "inState": 40680,
+   "outOfState": 40680
+  },
+  "dickinson-state-university": {
+   "control": "Public",
+   "inState": 7470,
+   "outOfState": 9570
+  },
+  "doane-university": {
+   "control": "Private",
+   "inState": 39336,
+   "outOfState": 39336
+  },
+  "drexel-university": {
+   "control": "Private",
+   "inState": 58293,
+   "outOfState": 58293
+  },
+  "drury-university": {
+   "control": "Private",
+   "inState": 33900,
+   "outOfState": 33900
+  },
+  "duke-university": {
+   "control": "Private",
+   "inState": 63450,
+   "outOfState": 63450
+  },
+  "east-stroudsburg-university": {
+   "control": "Public",
+   "inState": 7716,
+   "outOfState": 15432
+  },
+  "eastern-oregon-university": {
+   "control": "Public",
+   "inState": 8618,
+   "outOfState": 22289
+  },
+  "eastern-university": {
+   "control": "Private",
+   "inState": 36760,
+   "outOfState": 36760
+  },
+  "elizabethtown-college": {
+   "control": "Private",
+   "inState": 36166,
+   "outOfState": 36166
+  },
+  "ellsworth-community-college": {
+   "control": "Public",
+   "inState": 4680,
+   "outOfState": 5688
+  },
+  "elmhurst-university": {
+   "control": "Private",
+   "inState": 41258,
+   "outOfState": 41258
+  },
+  "elmira-college": {
+   "control": "Private",
+   "inState": 36152,
+   "outOfState": 36152
+  },
+  "embry-riddle-aeronautical-university-prescott": {
+   "control": "Private",
+   "inState": 40680,
+   "outOfState": 40680
+  },
+  "emmanuel-college": {
+   "control": "Private",
+   "inState": 46200,
+   "outOfState": 46200
+  },
+  "emmanuel-university": {
+   "control": "Private",
+   "inState": 22914,
+   "outOfState": 22914
+  },
+  "emory-and-henry-university": {
+   "control": "Private",
+   "inState": 34500,
+   "outOfState": 34500
+  },
+  "eureka-college": {
+   "control": "Private",
+   "inState": 27450,
+   "outOfState": 27450
+  },
+  "fairmont-state-university": {
+   "control": "Public",
+   "inState": 6468,
+   "outOfState": 16174
+  },
+  "felician-university": {
+   "control": "Private",
+   "inState": 35180,
+   "outOfState": 35180
+  },
+  "ferrum-college": {
+   "control": "Private",
+   "inState": 37400,
+   "outOfState": 37400
+  },
+  "fort-hays-state-university": {
+   "control": "Public",
+   "inState": 4437,
+   "outOfState": 15615
+  },
+  "fort-hays-tech-northwest": {
+   "control": "Public",
+   "inState": null,
+   "outOfState": null
+  },
+  "franklin-marshall-college": {
+   "control": "Private",
+   "inState": 68180,
+   "outOfState": 68180
+  },
+  "friends-university": {
+   "control": "Private",
+   "inState": 32108,
+   "outOfState": 32108
+  },
+  "frostburg-state-university": {
+   "control": "Public",
+   "inState": 7110,
+   "outOfState": 22292
+  },
+  "gannon-university": {
+   "control": "Private",
+   "inState": 36865,
+   "outOfState": 36865
+  },
+  "gardner-webb-university": {
+   "control": "Private",
+   "inState": 32470,
+   "outOfState": 32470
+  },
+  "garrett-college": {
+   "control": "Public",
+   "inState": 8064,
+   "outOfState": 10080
+  },
+  "george-mason-university": {
+   "control": "Public",
+   "inState": 10095,
+   "outOfState": 34259
+  },
+  "georgetown-college": {
+   "control": "Private",
+   "inState": 41020,
+   "outOfState": 41020
+  },
+  "gettysburg-college": {
+   "control": "Private",
+   "inState": 64230,
+   "outOfState": 64230
+  },
+  "glenville-state-university": {
+   "control": "Public",
+   "inState": 8352,
+   "outOfState": 10080
+  },
+  "graceland-university": {
+   "control": "Private",
+   "inState": 32500,
+   "outOfState": 32500
+  },
+  "grand-valley-state-university": {
+   "control": "Public",
+   "inState": 14978,
+   "outOfState": 21154
+  },
+  "grand-view-university": {
+   "control": "Private",
+   "inState": 32800,
+   "outOfState": 32800
+  },
+  "greensboro-college": {
+   "control": "Private",
+   "inState": 20300,
+   "outOfState": 20300
+  },
+  "harper-college": {
+   "control": "Public",
+   "inState": 9420,
+   "outOfState": 11232
+  },
+  "harvard-university": {
+   "control": "Private",
+   "inState": 54269,
+   "outOfState": 54269
+  },
+  "hastings-college": {
+   "control": "Private",
+   "inState": 33950,
+   "outOfState": 33950
+  },
+  "hawkeye-community-college": {
+   "control": "Public",
+   "inState": 6119,
+   "outOfState": 6409
+  },
+  "heidelberg-university": {
+   "control": "Private",
+   "inState": 32900,
+   "outOfState": 32900
+  },
+  "henry-ford-college": {
+   "control": "Public",
+   "inState": 4656,
+   "outOfState": 6744
+  },
+  "hiram-college": {
+   "control": "Private",
+   "inState": 26265,
+   "outOfState": 26265
+  },
+  "hofstra-university": {
+   "control": "Private",
+   "inState": 54335,
+   "outOfState": 54335
+  },
+  "hope-international-university": {
+   "control": "Private",
+   "inState": 35000,
+   "outOfState": 35000
+  },
+  "hunter-college": {
+   "control": "Public",
+   "inState": 6930,
+   "outOfState": 14880
+  },
+  "huntingdon-college": {
+   "control": "Private",
+   "inState": 27150,
+   "outOfState": 27150
+  },
+  "illinois-wesleyan-university": {
+   "control": "Private",
+   "inState": 55500,
+   "outOfState": 55500
+  },
+  "indian-hills-community-college": {
+   "control": "Public",
+   "inState": 4872,
+   "outOfState": 6120
+  },
+  "indiana-institute-of-technology": {
+   "control": "Private",
+   "inState": 29936,
+   "outOfState": 29936
+  },
+  "indiana-university-bloomington-indiana": {
+   "control": "Public",
+   "inState": 10312,
+   "outOfState": 39004
+  },
+  "iowa-central-community-college": {
+   "control": "Public",
+   "inState": 4800,
+   "outOfState": 7092
+  },
+  "iowa-lakes-community-college": {
+   "control": "Public",
+   "inState": 6464,
+   "outOfState": 6912
+  },
+  "iowa-state-university": {
+   "control": "Public",
+   "inState": 8982,
+   "outOfState": 26168
+  },
+  "iowa-western-community-college": {
+   "control": "Public",
+   "inState": 6270,
+   "outOfState": 6420
+  },
+  "ithaca-college": {
+   "control": "Private",
+   "inState": 50070,
+   "outOfState": 50070
+  },
+  "jamestown-community-college": {
+   "control": "Public",
+   "inState": 5440,
+   "outOfState": 10880
+  },
+  "jarvis-christian-university": {
+   "control": "Private",
+   "inState": 10400,
+   "outOfState": 10400
+  },
+  "john-carroll-university": {
+   "control": "Private",
+   "inState": 47300,
+   "outOfState": 47300
+  },
+  "johns-hopkins-university": {
+   "control": "Private",
+   "inState": 62840,
+   "outOfState": 62840
+  },
+  "johnson-wales-university-ri": {
+   "control": "Private",
+   "inState": 39792,
+   "outOfState": 39792
+  },
+  "joliet-junior-college": {
+   "control": "Public",
+   "inState": 11700,
+   "outOfState": 12750
+  },
+  "kean-university": {
+   "control": "Public",
+   "inState": 11135,
+   "outOfState": 18785
+  },
+  "keiser-university": {
+   "control": "Private",
+   "inState": 22936,
+   "outOfState": 22936
+  },
+  "kent-state-university": {
+   "control": "Public",
+   "inState": 11595,
+   "outOfState": 20708
+  },
+  "kentucky-wesleyan-college": {
+   "control": "Private",
+   "inState": 31900,
+   "outOfState": 31900
+  },
+  "keystone-college": {
+   "control": "Private",
+   "inState": 15350,
+   "outOfState": 15350
+  },
+  "king-s-college-pa": {
+   "control": "Private",
+   "inState": 40520,
+   "outOfState": 40520
+  },
+  "king-university": {
+   "control": "Private",
+   "inState": 32902,
+   "outOfState": 32902
+  },
+  "kutztown-university": {
+   "control": "Public",
+   "inState": 7716,
+   "outOfState": 12220
+  },
+  "labette-community-college": {
+   "control": "Public",
+   "inState": 1824,
+   "outOfState": 2624
+  },
+  "lackawanna-college": {
+   "control": "Private",
+   "inState": 17020,
+   "outOfState": 17020
+  },
+  "lake-erie-college": {
+   "control": "Private",
+   "inState": 34596,
+   "outOfState": 34596
+  },
+  "lakeland-university": {
+   "control": "Private",
+   "inState": 30900,
+   "outOfState": 30900
+  },
+  "lander-university": {
+   "control": "Public",
+   "inState": 10700,
+   "outOfState": 20300
+  },
+  "lehigh-university": {
+   "control": "Private",
+   "inState": 61180,
+   "outOfState": 61180
+  },
+  "life-university": {
+   "control": "Private",
+   "inState": 13545,
+   "outOfState": 13545
+  },
+  "lincoln-memorial-university": {
+   "control": "Private",
+   "inState": 25680,
+   "outOfState": 25680
+  },
+  "lindenwood-university": {
+   "control": "Private",
+   "inState": 19900,
+   "outOfState": 19900
+  },
+  "lindsey-wilson-university": {
+   "control": "Private",
+   "inState": 26976,
+   "outOfState": 26976
+  },
+  "linfield-university": {
+   "control": "Private",
+   "inState": 49810,
+   "outOfState": 49810
+  },
+  "long-island-university-liu": {
+   "control": "Private",
+   "inState": 39458,
+   "outOfState": 39458
+  },
+  "loras-college": {
+   "control": "Private",
+   "inState": 36454,
+   "outOfState": 36454
+  },
+  "lourdes-university": {
+   "control": "Private",
+   "inState": 26010,
+   "outOfState": 26010
+  },
+  "luther-college": {
+   "control": "Private",
+   "inState": 49650,
+   "outOfState": 49650
+  },
+  "lycoming-college": {
+   "control": "Private",
+   "inState": 46720,
+   "outOfState": 46720
+  },
+  "lyon-college": {
+   "control": "Private",
+   "inState": 29900,
+   "outOfState": 29900
+  },
+  "maine-maritime-academy": {
+   "control": "Public",
+   "inState": 11474,
+   "outOfState": 26954
+  },
+  "manchester-university": {
+   "control": "Private",
+   "inState": 35800,
+   "outOfState": 35800
+  },
+  "marian-university": {
+   "control": "Private",
+   "inState": 39100,
+   "outOfState": 39100
+  },
+  "marymount-university": {
+   "control": "Private",
+   "inState": 37400,
+   "outOfState": 37400
+  },
+  "maryville-university": {
+   "control": "Private",
+   "inState": 24766,
+   "outOfState": 24766
+  },
+  "mcdaniel-college": {
+   "control": "Private",
+   "inState": 48672,
+   "outOfState": 48672
+  },
+  "mckendree-university": {
+   "control": "Private",
+   "inState": 32660,
+   "outOfState": 32660
+  },
+  "mcmurry-university": {
+   "control": "Private",
+   "inState": 30922,
+   "outOfState": 30922
+  },
+  "menlo-college": {
+   "control": "Private",
+   "inState": 50190,
+   "outOfState": 50190
+  },
+  "mercyhurst-university": {
+   "control": "Private",
+   "inState": 41580,
+   "outOfState": 41580
+  },
+  "messiah-university": {
+   "control": "Private",
+   "inState": 39700,
+   "outOfState": 39700
+  },
+  "michigan-state-university": {
+   "control": "Public",
+   "inState": 16930,
+   "outOfState": 43700
+  },
+  "midland-university": {
+   "control": "Private",
+   "inState": 39370,
+   "outOfState": 39370
+  },
+  "midway-university": {
+   "control": "Private",
+   "inState": 25480,
+   "outOfState": 25480
+  },
+  "millersville-university": {
+   "control": "Public",
+   "inState": 9570,
+   "outOfState": 19290
+  },
+  "millikin-university": {
+   "control": "Private",
+   "inState": 42778,
+   "outOfState": 42778
+  },
+  "milwaukee-school-of-engineering": {
+   "control": "Private",
+   "inState": 46385,
+   "outOfState": 46385
+  },
+  "minnesota-north-college-itasca": {
+   "control": "Public",
+   "inState": 5374,
+   "outOfState": 6672
+  },
+  "minnesota-state-university-mankato": {
+   "control": "Public",
+   "inState": 8356,
+   "outOfState": 17726
+  },
+  "minnesota-state-university-moorhead": {
+   "control": "Public",
+   "inState": 8838,
+   "outOfState": 8838
+  },
+  "minnesota-west-community-technical-college": {
+   "control": "Public",
+   "inState": 5848,
+   "outOfState": 11696
+  },
+  "minot-state-university": {
+   "control": "Public",
+   "inState": 7168,
+   "outOfState": 7168
+  },
+  "misericordia-university": {
+   "control": "Private",
+   "inState": 36400,
+   "outOfState": 36400
+  },
+  "missouri-baptist-university": {
+   "control": "Private",
+   "inState": 31530,
+   "outOfState": 31530
+  },
+  "missouri-valley-college": {
+   "control": "Private",
+   "inState": 21300,
+   "outOfState": 21300
+  },
+  "montana-state-university-northern": {
+   "control": "Public",
+   "inState": 4496,
+   "outOfState": 17096
+  },
+  "montreat-college": {
+   "control": "Private",
+   "inState": 31460,
+   "outOfState": 31460
+  },
+  "morgan-state-university": {
+   "control": "Public",
+   "inState": 5587,
+   "outOfState": 18800
+  },
+  "morningside-university": {
+   "control": "Private",
+   "inState": 36680,
+   "outOfState": 36680
+  },
+  "mott-community-college": {
+   "control": "Public",
+   "inState": 4646,
+   "outOfState": 6621
+  },
+  "mount-st-joseph-university": {
+   "control": "Private",
+   "inState": 35450,
+   "outOfState": 35450
+  },
+  "muhlenberg-college": {
+   "control": "Private",
+   "inState": 59505,
+   "outOfState": 59505
+  },
+  "murray-state-college": {
+   "control": "Public",
+   "inState": 4830,
+   "outOfState": 9030
+  },
+  "muskegon-community-college": {
+   "control": "Public",
+   "inState": 9720,
+   "outOfState": 13600
+  },
+  "muskingum-university": {
+   "control": "Private",
+   "inState": 30650,
+   "outOfState": 30650
+  },
+  "nassau-community-college": {
+   "control": "Public",
+   "inState": 5800,
+   "outOfState": 11600
+  },
+  "nebraska-wesleyan-university": {
+   "control": "Private",
+   "inState": 40648,
+   "outOfState": 40648
+  },
+  "neosho-county-community-college": {
+   "control": "Public",
+   "inState": 2976,
+   "outOfState": 2976
+  },
+  "new-college-of-florida": {
+   "control": "Public",
+   "inState": 5227,
+   "outOfState": 27159
+  },
+  "new-england-college": {
+   "control": "Private",
+   "inState": 25714,
+   "outOfState": 25714
+  },
+  "new-mexico-highlands-university": {
+   "control": "Public",
+   "inState": 4888,
+   "outOfState": 9808
+  },
+  "new-york-university": {
+   "control": "Private",
+   "inState": 60438,
+   "outOfState": 60438
+  },
+  "newberry-college": {
+   "control": "Private",
+   "inState": 27000,
+   "outOfState": 27000
+  },
+  "newman-university-kansas": {
+   "control": "Private",
+   "inState": 35500,
+   "outOfState": 35500
+  },
+  "north-carolina-state-university-nc-state": {
+   "control": "Public",
+   "inState": 6535,
+   "outOfState": 29407
+  },
+  "north-central-college": {
+   "control": "Private",
+   "inState": 44114,
+   "outOfState": 44114
+  },
+  "north-dakota-state-university": {
+   "control": "Public",
+   "inState": 9309,
+   "outOfState": 13963
+  },
+  "north-idaho-college": {
+   "control": "Public",
+   "inState": 4000,
+   "outOfState": 7776
+  },
+  "north-iowa-area-community-college": {
+   "control": "Public",
+   "inState": 5618,
+   "outOfState": 8427
+  },
+  "northampton-community-college": {
+   "control": "Public",
+   "inState": 7500,
+   "outOfState": 11250
+  },
+  "northeastern-junior-college": {
+   "control": "Public",
+   "inState": 4926,
+   "outOfState": 7389
+  },
+  "northeastern-oklahoma-a-m-college": {
+   "control": "Public",
+   "inState": 3000,
+   "outOfState": 9150
+  },
+  "northeastern-state-university": {
+   "control": "Public",
+   "inState": 6623,
+   "outOfState": 15743
+  },
+  "northern-illinois-university": {
+   "control": "Public",
+   "inState": 9792,
+   "outOfState": 9792
+  },
+  "northern-michigan-university": {
+   "control": "Public",
+   "inState": 12726,
+   "outOfState": 18348
+  },
+  "northern-oklahoma-college": {
+   "control": "Public",
+   "inState": 3681,
+   "outOfState": 10446
+  },
+  "northern-state-university": {
+   "control": "Public",
+   "inState": 7616,
+   "outOfState": 10718
+  },
+  "northland-community-technical-college": {
+   "control": "Public",
+   "inState": 5626,
+   "outOfState": 5626
+  },
+  "northwest-college": {
+   "control": "Public",
+   "inState": 3150,
+   "outOfState": 9450
+  },
+  "northwestern-college": {
+   "control": "Private",
+   "inState": 35000,
+   "outOfState": 35000
+  },
+  "northwestern-university": {
+   "control": "Private",
+   "inState": 64887,
+   "outOfState": 64887
+  },
+  "norwich-university": {
+   "control": "Private",
+   "inState": 46860,
+   "outOfState": 46860
+  },
+  "ohio-northern-university": {
+   "control": "Private",
+   "inState": 36500,
+   "outOfState": 36500
+  },
+  "ohio-state-university": {
+   "control": "Public",
+   "inState": 11826,
+   "outOfState": 37332
+  },
+  "ohio-university": {
+   "control": "Public",
+   "inState": 13746,
+   "outOfState": 24114
+  },
+  "ohio-wesleyan-university": {
+   "control": "Private",
+   "inState": 51710,
+   "outOfState": 51710
+  },
+  "oklahoma-city-university": {
+   "control": "Private",
+   "inState": 29836,
+   "outOfState": 29836
+  },
+  "oklahoma-state-university-stillwater-oklahoma-state": {
+   "control": "Public",
+   "inState": 5417,
+   "outOfState": 20937
+  },
+  "oklahoma-wesleyan-university": {
+   "control": "Private",
+   "inState": 29698,
+   "outOfState": 29698
+  },
+  "onondaga-community-college": {
+   "control": "Public",
+   "inState": 5290,
+   "outOfState": 10580
+  },
+  "oregon-state-university": {
+   "control": "Public",
+   "inState": 11145,
+   "outOfState": 33315
+  },
+  "otero-college": {
+   "control": "Public",
+   "inState": 3941,
+   "outOfState": 6571
+  },
+  "ottawa-university": {
+   "control": "Private",
+   "inState": 31900,
+   "outOfState": 31900
+  },
+  "otterbein-university": {
+   "control": "Private",
+   "inState": 34424,
+   "outOfState": 34424
+  },
+  "ouachita-baptist-university": {
+   "control": "Private",
+   "inState": 31780,
+   "outOfState": 31780
+  },
+  "pacific-university-oregon": {
+   "control": "Private",
+   "inState": 53174,
+   "outOfState": 53174
+  },
+  "penn-highlands-community-college": {
+   "control": "Public",
+   "inState": 7080,
+   "outOfState": 10800
+  },
+  "penn-state-altoona": {
+   "control": "Public",
+   "inState": 15388,
+   "outOfState": 26112
+  },
+  "penn-state-behrend": {
+   "control": "Public",
+   "inState": 15388,
+   "outOfState": 26112
+  },
+  "pennsylvania-college-of-technology": {
+   "control": "Public",
+   "inState": 15450,
+   "outOfState": 23190
+  },
+  "pennsylvania-state-university-penn-state": {
+   "control": "Public",
+   "inState": 19672,
+   "outOfState": 39626
+  },
+  "pennsylvania-western-university-clarion-clarion": {
+   "control": "Public",
+   "inState": 7716,
+   "outOfState": 11574
+  },
+  "pennsylvania-western-university-edinboro-edinboro": {
+   "control": "Public",
+   "inState": 7716,
+   "outOfState": 11574
+  },
+  "plymouth-state-university": {
+   "control": "Public",
+   "inState": 11870,
+   "outOfState": 22810
+  },
+  "point-park-university": {
+   "control": "Private",
+   "inState": 36240,
+   "outOfState": 36240
+  },
+  "pratt-community-college": {
+   "control": "Public",
+   "inState": 2240,
+   "outOfState": 2688
+  },
+  "presbyterian-college": {
+   "control": "Private",
+   "inState": 40200,
+   "outOfState": 40200
+  },
+  "princeton-university": {
+   "control": "Private",
+   "inState": 59710,
+   "outOfState": 59710
+  },
+  "purdue-university": {
+   "control": "Public",
+   "inState": 9718,
+   "outOfState": 28520
+  },
+  "quincy-university": {
+   "control": "Private",
+   "inState": 35740,
+   "outOfState": 35740
+  },
+  "randolph-college": {
+   "control": "Private",
+   "inState": 28330,
+   "outOfState": 28330
+  },
+  "reinhardt-university": {
+   "control": "Private",
+   "inState": 27080,
+   "outOfState": 27080
+  },
+  "rhode-island-college": {
+   "control": "Public",
+   "inState": 9481,
+   "outOfState": 25014
+  },
+  "rider-university": {
+   "control": "Private",
+   "inState": 37700,
+   "outOfState": 37700
+  },
+  "ridgewater-college": {
+   "control": "Public",
+   "inState": 5473,
+   "outOfState": 5473
+  },
+  "roanoke-college": {
+   "control": "Private",
+   "inState": 34820,
+   "outOfState": 34820
+  },
+  "rochester-christian-university": {
+   "control": "Private",
+   "inState": 27938,
+   "outOfState": 27938
+  },
+  "rochester-community-technical-college": {
+   "control": "Public",
+   "inState": 5556,
+   "outOfState": 5556
+  },
+  "rochester-institute-of-technology": {
+   "control": "Private",
+   "inState": 55784,
+   "outOfState": 55784
+  },
+  "roger-williams-university": {
+   "control": "Private",
+   "inState": 42336,
+   "outOfState": 42336
+  },
+  "rose-state-college": {
+   "control": "Public",
+   "inState": 3778,
+   "outOfState": 10155
+  },
+  "rowan-college-of-south-jersey-gloucester": {
+   "control": "Public",
+   "inState": 4440,
+   "outOfState": 4440
+  },
+  "rutgers-university-new-brunswick-rutgers": {
+   "control": "Public",
+   "inState": 13674,
+   "outOfState": 32436
+  },
+  "sacred-heart-university": {
+   "control": "Private",
+   "inState": 48160,
+   "outOfState": 48160
+  },
+  "saint-vincent-college": {
+   "control": "Private",
+   "inState": 39978,
+   "outOfState": 39978
+  },
+  "salem-university": {
+   "control": "Private",
+   "inState": 10200,
+   "outOfState": 13200
+  },
+  "san-francisco-state-university": {
+   "control": "Public",
+   "inState": 5742,
+   "outOfState": 17622
+  },
+  "schreiner-university": {
+   "control": "Private",
+   "inState": 37396,
+   "outOfState": 37396
+  },
+  "seton-hill-university": {
+   "control": "Private",
+   "inState": 40864,
+   "outOfState": 40864
+  },
+  "shenandoah-university": {
+   "control": "Private",
+   "inState": 34614,
+   "outOfState": 34614
+  },
+  "shippensburg-university": {
+   "control": "Public",
+   "inState": 9570,
+   "outOfState": 11574
+  },
+  "shorter-university": {
+   "control": "Private",
+   "inState": 23514,
+   "outOfState": 23514
+  },
+  "siena-heights-university": {
+   "control": "Private",
+   "inState": 28500,
+   "outOfState": 28500
+  },
+  "simpson-college": {
+   "control": "Private",
+   "inState": 45306,
+   "outOfState": 45306
+  },
+  "simpson-university": {
+   "control": "Private",
+   "inState": 37022,
+   "outOfState": 37022
+  },
+  "snow-college": {
+   "control": "Public",
+   "inState": 4180,
+   "outOfState": 13746
+  },
+  "south-dakota-state-university": {
+   "control": "Public",
+   "inState": 7773,
+   "outOfState": 11283
+  },
+  "southeast-community-college": {
+   "control": "Public",
+   "inState": 2912,
+   "outOfState": 3500
+  },
+  "southeastern-community-college": {
+   "control": "Public",
+   "inState": 6240,
+   "outOfState": 6240
+  },
+  "southeastern-university": {
+   "control": "Private",
+   "inState": 30432,
+   "outOfState": 30432
+  },
+  "southern-illinois-university-edwardsville-siu-edwardsville-or-siue": {
+   "control": "Public",
+   "inState": 8846,
+   "outOfState": 8846
+  },
+  "southern-oregon-university": {
+   "control": "Public",
+   "inState": 9675,
+   "outOfState": 28305
+  },
+  "southern-virginia-university": {
+   "control": "Private",
+   "inState": 19790,
+   "outOfState": 19790
+  },
+  "southwest-minnesota-state-university": {
+   "control": "Public",
+   "inState": 8840,
+   "outOfState": 8840
+  },
+  "southwestern-michigan-college": {
+   "control": "Public",
+   "inState": 5673,
+   "outOfState": 6169
+  },
+  "southwestern-oregon-community-college": {
+   "control": "Public",
+   "inState": 4650,
+   "outOfState": 4650
+  },
+  "springfield-college": {
+   "control": "Private",
+   "inState": 42566,
+   "outOfState": 42566
+  },
+  "st-ambrose-university": {
+   "control": "Private",
+   "inState": 35318,
+   "outOfState": 35318
+  },
+  "st-cloud-state-university": {
+   "control": "Public",
+   "inState": 8811,
+   "outOfState": 8811
+  },
+  "st-john-fisher-university": {
+   "control": "Private",
+   "inState": 38566,
+   "outOfState": 38566
+  },
+  "st-john-s-university-minnesota": {
+   "control": "Private",
+   "inState": 52700,
+   "outOfState": 52700
+  },
+  "st-thomas-university": {
+   "control": "Private",
+   "inState": 33580,
+   "outOfState": 33580
+  },
+  "stanford-university": {
+   "control": "Private",
+   "inState": 61731,
+   "outOfState": 61731
+  },
+  "stevens-institute-of-technology": {
+   "control": "Private",
+   "inState": 58680,
+   "outOfState": 58680
+  },
+  "suny-brockport": {
+   "control": "Public",
+   "inState": 7070,
+   "outOfState": 14140
+  },
+  "suny-cortland": {
+   "control": "Public",
+   "inState": 7070,
+   "outOfState": 16980
+  },
+  "suny-niagara": {
+   "control": "Public",
+   "inState": 5136,
+   "outOfState": 10272
+  },
+  "suny-oneonta": {
+   "control": "Public",
+   "inState": 7070,
+   "outOfState": 17490
+  },
+  "suny-oswego": {
+   "control": "Public",
+   "inState": 7070,
+   "outOfState": 16980
+  },
+  "sussex-county-community-college": {
+   "control": "Public",
+   "inState": 5232,
+   "outOfState": 6984
+  },
+  "texas-wesleyan-university": {
+   "control": "Private",
+   "inState": 32960,
+   "outOfState": 32960
+  },
+  "texas-woman-s-university": {
+   "control": "Public",
+   "inState": 5712,
+   "outOfState": 15792
+  },
+  "thaddeus-stevens-college-of-technology": {
+   "control": "Public",
+   "inState": 9000,
+   "outOfState": 9000
+  },
+  "the-citadel": {
+   "control": "Public",
+   "inState": 8356,
+   "outOfState": 32400
+  },
+  "the-college-of-new-jersey": {
+   "control": "Public",
+   "inState": 14706,
+   "outOfState": 20589
+  },
+  "the-evergreen-state-college": {
+   "control": "Public",
+   "inState": 7845,
+   "outOfState": 29826
+  },
+  "thiel-college": {
+   "control": "Private",
+   "inState": 34964,
+   "outOfState": 34964
+  },
+  "thomas-more-university": {
+   "control": "Private",
+   "inState": 37650,
+   "outOfState": 37650
+  },
+  "tiffin-university": {
+   "control": "Private",
+   "inState": 30900,
+   "outOfState": 30900
+  },
+  "trine-university": {
+   "control": "Private",
+   "inState": 35000,
+   "outOfState": 35000
+  },
+  "trinidad-state-college": {
+   "control": "Public",
+   "inState": 3940,
+   "outOfState": 6572
+  },
+  "trinity-college-connecticut": {
+   "control": "Private",
+   "inState": 64430,
+   "outOfState": 64430
+  },
+  "triton-college": {
+   "control": "Public",
+   "inState": 11310,
+   "outOfState": 14400
+  },
+  "truett-mcconnell-university": {
+   "control": "Private",
+   "inState": 23952,
+   "outOfState": 23952
+  },
+  "u-s-coast-guard-academy": {
+   "control": "Public",
+   "inState": 0,
+   "outOfState": 0
+  },
+  "u-s-merchant-marine-academy": {
+   "control": "Public",
+   "inState": 0,
+   "outOfState": 0
+  },
+  "umpqua-community-college": {
+   "control": "Public",
+   "inState": 4485,
+   "outOfState": 4485
+  },
+  "union-college": {
+   "control": "Public",
+   "inState": 9500,
+   "outOfState": 9500
+  },
+  "united-states-air-force-academy-air-force": {
+   "control": "Public",
+   "inState": 0,
+   "outOfState": 0
+  },
+  "united-states-military-academy-army": {
+   "control": "Public",
+   "inState": 0,
+   "outOfState": 0
+  },
+  "united-states-naval-academy-navy": {
+   "control": "Public",
+   "inState": 0,
+   "outOfState": 0
+  },
+  "university-at-buffalo": {
+   "control": "Public",
+   "inState": 7070,
+   "outOfState": 26860
+  },
+  "university-of-arkansas-at-little-rock-little-rock": {
+   "control": "Public",
+   "inState": 6600,
+   "outOfState": 19050
+  },
+  "university-of-bridgeport": {
+   "control": "Private",
+   "inState": 32860,
+   "outOfState": 32860
+  },
+  "university-of-central-missouri": {
+   "control": "Public",
+   "inState": 8325,
+   "outOfState": 16650
+  },
+  "university-of-central-oklahoma": {
+   "control": "Public",
+   "inState": 7284,
+   "outOfState": 18171
+  },
+  "university-of-chicago": {
+   "control": "Private",
+   "inState": 63801,
+   "outOfState": 63801
+  },
+  "university-of-dubuque": {
+   "control": "Private",
+   "inState": 38260,
+   "outOfState": 38260
+  },
+  "university-of-findlay": {
+   "control": "Private",
+   "inState": 38176,
+   "outOfState": 38176
+  },
+  "university-of-illinois-urbana-champaign-illinois": {
+   "control": "Public",
+   "inState": 14768,
+   "outOfState": 35900
+  },
+  "university-of-indianapolis": {
+   "control": "Private",
+   "inState": 34416,
+   "outOfState": 34416
+  },
+  "university-of-iowa": {
+   "control": "Public",
+   "inState": 9016,
+   "outOfState": 30979
+  },
+  "university-of-jamestown": {
+   "control": "Private",
+   "inState": 24000,
+   "outOfState": 24000
+  },
+  "university-of-lynchburg": {
+   "control": "Private",
+   "inState": 35540,
+   "outOfState": 35540
+  },
+  "university-of-mary": {
+   "control": "Private",
+   "inState": 19084,
+   "outOfState": 19084
+  },
+  "university-of-maryland-college-park-maryland": {
+   "control": "Public",
+   "inState": 9889,
+   "outOfState": 38690
+  },
+  "university-of-michigan": {
+   "control": "Public",
+   "inState": 17977,
+   "outOfState": 59775
+  },
+  "university-of-minnesota": {
+   "control": "Public",
+   "inState": 14496,
+   "outOfState": 34410
+  },
+  "university-of-missouri": {
+   "control": "Public",
+   "inState": 13008,
+   "outOfState": 33216
+  },
+  "university-of-montevallo": {
+   "control": "Public",
+   "inState": 12090,
+   "outOfState": 25110
+  },
+  "university-of-mount-olive": {
+   "control": "Private",
+   "inState": 24850,
+   "outOfState": 24850
+  },
+  "university-of-mount-union": {
+   "control": "Private",
+   "inState": 35000,
+   "outOfState": 35000
+  },
+  "university-of-nebraska-at-kearney": {
+   "control": "Public",
+   "inState": 6480,
+   "outOfState": 14130
+  },
+  "university-of-nebraska-lincoln-nebraska": {
+   "control": "Public",
+   "inState": 8010,
+   "outOfState": 25650
+  },
+  "university-of-north-carolina-at-chapel-hill-north-carolina": {
+   "control": "Public",
+   "inState": 7019,
+   "outOfState": 37360
+  },
+  "university-of-north-carolina-at-pembroke": {
+   "control": "Public",
+   "inState": 1000,
+   "outOfState": 5000
+  },
+  "university-of-northern-colorado": {
+   "control": "Public",
+   "inState": 8784,
+   "outOfState": 23196
+  },
+  "university-of-northern-iowa": {
+   "control": "Public",
+   "inState": 8396,
+   "outOfState": 19940
+  },
+  "university-of-oklahoma": {
+   "control": "Public",
+   "inState": 5070,
+   "outOfState": 22140
+  },
+  "university-of-olivet": {
+   "control": "Private",
+   "inState": 32694,
+   "outOfState": 32694
+  },
+  "university-of-pennsylvania-penn": {
+   "control": "Private",
+   "inState": 58620,
+   "outOfState": 58620
+  },
+  "university-of-pikeville": {
+   "control": "Private",
+   "inState": 24000,
+   "outOfState": 24000
+  },
+  "university-of-pittsburgh": {
+   "control": "Public",
+   "inState": 20154,
+   "outOfState": 38520
+  },
+  "university-of-pittsburgh-at-bradford": {
+   "control": "Public",
+   "inState": 13660,
+   "outOfState": 25534
+  },
+  "university-of-pittsburgh-at-johnstown": {
+   "control": "Public",
+   "inState": 13660,
+   "outOfState": 25534
+  },
+  "university-of-providence": {
+   "control": "Private",
+   "inState": 28618,
+   "outOfState": 28618
+  },
+  "university-of-puerto-rico-at-mayag-ez": {
+   "control": "Public",
+   "inState": 5024,
+   "outOfState": 5024
+  },
+  "university-of-rio-grande": {
+   "control": "Private",
+   "inState": 19600,
+   "outOfState": 19600
+  },
+  "university-of-saint-mary": {
+   "control": "Private",
+   "inState": 32750,
+   "outOfState": 32750
+  },
+  "university-of-scranton": {
+   "control": "Private",
+   "inState": 51534,
+   "outOfState": 51534
+  },
+  "university-of-sioux-falls": {
+   "control": "Private",
+   "inState": 20340,
+   "outOfState": 20340
+  },
+  "university-of-southern-maine": {
+   "control": "Public",
+   "inState": 8316,
+   "outOfState": 24500
+  },
+  "university-of-tennessee-at-chattanooga-chattanooga": {
+   "control": "Public",
+   "inState": 8232,
+   "outOfState": 16296
+  },
+  "university-of-the-cumberlands": {
+   "control": "Private",
+   "inState": 9875,
+   "outOfState": 9875
+  },
+  "university-of-the-ozarks": {
+   "control": "Private",
+   "inState": 24950,
+   "outOfState": 24950
+  },
+  "university-of-virginia": {
+   "control": "Public",
+   "inState": 18823,
+   "outOfState": 55450
+  },
+  "university-of-wisconsin-eau-claire": {
+   "control": "Public",
+   "inState": 7645,
+   "outOfState": 16884
+  },
+  "university-of-wisconsin-la-crosse": {
+   "control": "Public",
+   "inState": 7974,
+   "outOfState": 17014
+  },
+  "university-of-wisconsin-madison-wisconsin": {
+   "control": "Public",
+   "inState": 9644,
+   "outOfState": 39042
+  },
+  "university-of-wisconsin-oshkosh": {
+   "control": "Public",
+   "inState": 6806,
+   "outOfState": 14719
+  },
+  "university-of-wisconsin-parkside": {
+   "control": "Public",
+   "inState": 6582,
+   "outOfState": 15224
+  },
+  "university-of-wisconsin-platteville": {
+   "control": "Public",
+   "inState": 6827,
+   "outOfState": 15786
+  },
+  "university-of-wisconsin-stevens-point": {
+   "control": "Public",
+   "inState": 7112,
+   "outOfState": 16132
+  },
+  "university-of-wisconsin-whitewater": {
+   "control": "Public",
+   "inState": 6812,
+   "outOfState": 16478
+  },
+  "university-of-wyoming": {
+   "control": "Public",
+   "inState": 4980,
+   "outOfState": 20760
+  },
+  "upper-iowa-university": {
+   "control": "Private",
+   "inState": 18000,
+   "outOfState": 18000
+  },
+  "ursinus-college": {
+   "control": "Private",
+   "inState": 59196,
+   "outOfState": 59196
+  },
+  "utah-valley-university": {
+   "control": "Public",
+   "inState": 5614,
+   "outOfState": 17174
+  },
+  "utica-university": {
+   "control": "Private",
+   "inState": 23208,
+   "outOfState": 23208
+  },
+  "vanguard-university": {
+   "control": "Private",
+   "inState": 39250,
+   "outOfState": 39250
+  },
+  "vincennes-university": {
+   "control": "Public",
+   "inState": 6330,
+   "outOfState": 15733
+  },
+  "virginia-military-institute-vmi": {
+   "control": "Public",
+   "inState": 10076,
+   "outOfState": 40778
+  },
+  "virginia-tech": {
+   "control": "Public",
+   "inState": 12698,
+   "outOfState": 33310
+  },
+  "vtsu-castleton": {
+   "control": "Public",
+   "inState": 9984,
+   "outOfState": 19992
+  },
+  "wabash-college": {
+   "control": "Private",
+   "inState": 48200,
+   "outOfState": 48200
+  },
+  "waldorf-university": {
+   "control": "Private",
+   "inState": 23800,
+   "outOfState": 23800
+  },
+  "wartburg-college": {
+   "control": "Private",
+   "inState": 48490,
+   "outOfState": 48490
+  },
+  "washington-and-jefferson-college": {
+   "control": "Private",
+   "inState": 27605,
+   "outOfState": 27605
+  },
+  "washington-and-lee-university": {
+   "control": "Private",
+   "inState": 63315,
+   "outOfState": 63315
+  },
+  "wayland-baptist-university": {
+   "control": "Private",
+   "inState": 21728,
+   "outOfState": 21728
+  },
+  "waynesburg-university": {
+   "control": "Private",
+   "inState": 28120,
+   "outOfState": 28120
+  },
+  "wesleyan-university": {
+   "control": "Private",
+   "inState": 66716,
+   "outOfState": 66716
+  },
+  "west-liberty-university": {
+   "control": "Public",
+   "inState": 8716,
+   "outOfState": 17100
+  },
+  "west-virginia-university": {
+   "control": "Public",
+   "inState": 9648,
+   "outOfState": 27360
+  },
+  "west-virginia-university-institute-of-technology": {
+   "control": "Public",
+   "inState": 8064,
+   "outOfState": 20160
+  },
+  "westcliff-university": {
+   "control": "Private",
+   "inState": 20850,
+   "outOfState": 20850
+  },
+  "western-colorado-university": {
+   "control": "Public",
+   "inState": 7128,
+   "outOfState": 19728
+  },
+  "western-new-england-university": {
+   "control": "Private",
+   "inState": 43380,
+   "outOfState": 43380
+  },
+  "western-wyoming-community-college": {
+   "control": "Public",
+   "inState": 3150,
+   "outOfState": 9450
+  },
+  "westminster-college-missouri": {
+   "control": "Private",
+   "inState": 31156,
+   "outOfState": 31156
+  },
+  "wheaton-college-illinois": {
+   "control": "Private",
+   "inState": 43670,
+   "outOfState": 43670
+  },
+  "wheeling-university": {
+   "control": "Private",
+   "inState": 29090,
+   "outOfState": 29090
+  },
+  "wilberforce-university": {
+   "control": "Private",
+   "inState": 13222,
+   "outOfState": 13222
+  },
+  "wilkes-university": {
+   "control": "Private",
+   "inState": 40308,
+   "outOfState": 40308
+  },
+  "william-jewell-college": {
+   "control": "Private",
+   "inState": 18600,
+   "outOfState": 18600
+  },
+  "william-penn-university": {
+   "control": "Private",
+   "inState": 28750,
+   "outOfState": 28750
+  },
+  "william-woods-university": {
+   "control": "Private",
+   "inState": 27800,
+   "outOfState": 27800
+  },
+  "williams-baptist-university": {
+   "control": "Private",
+   "inState": 18860,
+   "outOfState": 18860
+  },
+  "williams-college": {
+   "control": "Private",
+   "inState": 64540,
+   "outOfState": 64540
+  },
+  "wilmington-college-ohio": {
+   "control": "Private",
+   "inState": 29837,
+   "outOfState": 29837
+  },
+  "wittenberg-university": {
+   "control": "Private",
+   "inState": 43656,
+   "outOfState": 43656
+  },
+  "worcester-polytechnic-institute": {
+   "control": "Private",
+   "inState": 57960,
+   "outOfState": 57960
+  },
+  "york-college-of-pennsylvania": {
+   "control": "Private",
+   "inState": 22120,
+   "outOfState": 22120
+  },
+  "york-university": {
+   "control": "Private",
+   "inState": 21100,
+   "outOfState": 21100
+  }
+ }
+}

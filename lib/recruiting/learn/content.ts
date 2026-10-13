@@ -662,6 +662,7 @@ export const LEARN_PAGES: LearnPage[] = [
         bullets: [
           "Need-based aid comes from the college's financial aid office and the government, based on your family's finances. It starts with the federal FAFSA form.",
           "Net price is what a student pays for one year after scholarships and grants are subtracted. Scholarships and grants do not have to be paid back; loans do.",
+          "Each college's page in this portal shows its published tuition, and whether a North Carolina family pays the in-state or out-of-state figure. It is the sticker price for tuition alone, for 2023-24.",
           "Every college has a net price calculator on its website, where you enter your own details and see what students like yours paid. The Department of Education keeps a search for them.",
           "A wrestler must report all the financial aid he receives to his college's financial aid office.",
         ],

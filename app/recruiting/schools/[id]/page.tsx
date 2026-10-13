@@ -23,6 +23,7 @@ import { loadCollegeMap } from "@/lib/college-programs/load"
 import { schoolLogoUrl } from "@/lib/college-programs/logo"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { STATE_NAMES } from "@/lib/college-programs/states"
+import { TUITION_NOTE, tuitionFacts } from "@/lib/college-programs/tuition"
 import { DIVISION_COLOR, DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -62,6 +63,7 @@ export default async function SchoolPage({ params }: Params) {
     : false
 
   const name = spoken(school.name)
+  const tuition = tuitionFacts(school.id, school.state)
   const logo = await schoolLogoUrl(school)
   return (
     <main className="min-h-screen bg-[#060f1f] text-white">
@@ -109,6 +111,27 @@ export default async function SchoolPage({ params }: Params) {
               </li>
             ))}
           </ul>
+
+          {tuition && (tuition.control || tuition.lines.length > 0) ? (
+            <div className="mt-4 max-w-xl rounded-lg border border-white/15 bg-white/[0.06] px-4 py-3 text-sm">
+              <p className="text-[11px] font-black uppercase tracking-widest text-[#D7B968]">
+                Tuition{tuition.control ? ` · ${tuition.control} college` : ""}
+              </p>
+              {tuition.lines.map((line, i) => (
+                <p key={line} className={i === 0 ? "mt-1 font-bold text-white" : "text-white/65"}>
+                  {line}
+                </p>
+              ))}
+              {tuition.lines.length > 0 ? (
+                <p className="mt-1.5 text-xs leading-5 text-white/50">
+                  {TUITION_NOTE}{" "}
+                  <a href="/recruiting/learn/paying-for-college" className="underline hover:text-white/80">
+                    What a family really pays
+                  </a>
+                </p>
+              ) : null}
+            </div>
+          ) : null}
 
           <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-semibold">
             {onRecruitNC ? (
