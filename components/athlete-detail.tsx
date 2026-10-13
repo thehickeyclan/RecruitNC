@@ -1,6 +1,7 @@
 "use client"
 
 import { COMPLETENESS_EDITORS, profileCompleteness } from "@/lib/profile-completeness"
+import { isPlaceholderAthletePhoto } from "@/lib/recruiting-profile-photo"
 import { STYLE_LABEL, type CompetitionSummary } from "@/lib/wrestling-style"
 import { mayUseComparison } from "@/lib/compare-access"
 import { SimilarComparisons } from "@/components/profile/similar-comparisons"
@@ -1297,7 +1298,8 @@ export function AthleteDetail({
    * profile with both and a phone number reads 60% - enough to see there is more to add.
    */
   const completeness = profileCompleteness({
-    photo: Boolean(athletePhoto),
+    // The stand-in silhouette is saved on some rows as the photo; it does not count as one.
+    photo: Boolean(athletePhoto) && !isPlaceholderAthletePhoto(athletePhoto),
     school: hasSchool,
     academics: hasAcademicData,
     highlight: hasHighlightContent,

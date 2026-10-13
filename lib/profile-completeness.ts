@@ -4,6 +4,8 @@
  * 10 October 2026). One rule for the wrestler's own page (components/athlete-detail.tsx) and the
  * family's recruiting page (app/my-recruiting).
  */
+import { isPlaceholderAthletePhoto } from "@/lib/recruiting-profile-photo"
+
 export type CompletenessParts = { photo: boolean; school: boolean; academics: boolean; highlight: boolean; contact: boolean }
 
 export type Completeness = {
@@ -33,7 +35,8 @@ const filled = (v: unknown) => v != null && String(v).trim() !== "" && String(v)
 /** From an athletes row, for pages that do not have the profile's own derived values. */
 export function completenessFromRow(row: Record<string, unknown>): Completeness {
   return profileCompleteness({
-    photo: filled(row.photourl),
+    // The silhouette we show in place of a photo is stored like one, and is not one.
+    photo: filled(row.photourl) && !isPlaceholderAthletePhoto(String(row.photourl)),
     school: filled(row.highschool),
     academics: filled(row.academic_gpa) || filled(row.academic_sat) || filled(row.academic_act),
     highlight: filled(row.highlight_video_url),
