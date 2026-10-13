@@ -3,6 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { resolveRankingViewerForUser } from "@/lib/ranking-access"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { classifyViewer } from "@/lib/viewer-role"
+import { rankingBoardHome } from "@/lib/rankings/ranking-board-home"
 
 /**
  * Where somebody lands after signing in, when nothing asked to send them somewhere specific.
@@ -33,6 +34,12 @@ export async function postSignInDestination(admin: SupabaseClient, userId: strin
     const who = classifyViewer(profile ?? null)
     // Admins keep the rankings: they hold the coach flags too, and are not recruiting.
     if (who.kind !== "admin" && profile?.is_admin !== true && who.isCollegeCoach && who.verifiedCoach) return COACH_HOME
+    // Somebody who ranks a board for us goes to their board, not to a page selling the rankings.
+    if (profile?.is_admin !== true) {
+      const { data: account } = await admin.auth.admin.getUserById(userId)
+      const board = rankingBoardHome(account?.user?.app_metadata)
+      if (board) return board
+    }
     const { viewer } = await resolveRankingViewerForUser({ admin, userId })
     return canSeeProspectRanking(viewer) ? RANKINGS_HOME : RANKINGS_SALES
   } catch {
