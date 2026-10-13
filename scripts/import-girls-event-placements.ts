@@ -16,6 +16,9 @@
  *     shared by two profiles is reported, never guessed.
  *   - The site lists combined pools ("95-100") beside single weights, so a girl can be under two
  *     headings. She gets one row per event, at her better place.
+ *   - A heading with one girl under it is uncontested. It never beats a contested pool she was
+ *     also in (Nicole Davidson: "1st" alone at 100, 2nd of the 100-105 pool), and where it is all
+ *     she has, the row records that she entered and gives no place.
  *   - Tar Heel 16U FS "105" shows all four as 4th (the real places are under "105a"): skipped.
  *
  *   npx tsx scripts/import-girls-event-placements.ts <dir-with-csvs>           # dry run
@@ -143,13 +146,30 @@ async function main() {
     report.placed++
   }
 
-  // 2. Placers with no row: one row per girl per event, at her better place.
+  // 2. Placers with no row: one row per girl per event, at her better place in a contested pool.
+  const poolSize = new Map<string, number>()
+  const lowestPlace = new Map<string, number>()
+  for (const p of placings) {
+    const k = `${p.division.key}|${p.weight}`
+    poolSize.set(k, (poolSize.get(k) ?? 0) + 1)
+    lowestPlace.set(k, Math.max(lowestPlace.get(k) ?? 0, p.place))
+  }
+  // A few headings show a 2nd and 3rd with no 1st displayed: the pool is at least as big as its last place.
+  const sizeOf = (p: Placing) => {
+    const k = `${p.division.key}|${p.weight}`
+    return Math.max(poolSize.get(k) ?? 1, lowestPlace.get(k) ?? 1)
+  }
+  const better = (a: Placing, b: Placing) => {
+    const ca = sizeOf(a) > 1
+    const cb = sizeOf(b) > 1
+    return ca !== cb ? ca : a.place < b.place
+  }
   const best = new Map<string, Placing>()
   for (const p of placings) {
     const k = `${p.division.key}|${norm(p.name)}`
     if (hasRow.has(k)) continue
     const cur = best.get(k)
-    if (!cur || p.place < cur.place) best.set(k, p)
+    if (!cur || better(p, cur)) best.set(k, p)
   }
   for (const p of best.values()) {
     const matches = byName.get(norm(p.name)) ?? []
@@ -159,7 +179,8 @@ async function main() {
       continue
     }
     const girl = matches[0]!
-    console.log(`${WRITE ? "add" : "would add"}  ${girl.name.padEnd(22)} ${String(girl.graduationyear ?? "").padEnd(5)} ${(girl.highschool ?? "").padEnd(24)} ${p.division.eventName.replace("2026 ", "")}  ${p.weight}: ${p.place}`)
+    const contested = sizeOf(p) > 1
+    console.log(`${WRITE ? "add" : "would add"}  ${girl.name.padEnd(22)} ${String(girl.graduationyear ?? "").padEnd(5)} ${(girl.highschool ?? "").padEnd(24)} ${p.division.eventName.replace("2026 ", "")}  ${p.weight}: ${contested ? `${p.place} of ${sizeOf(p)}` : "entered, uncontested"}`)
     if (WRITE) {
       const { error } = await sb.from("other_tournament_results").insert({
         event_key: p.division.key,
@@ -173,7 +194,8 @@ async function main() {
         club: p.club || null,
         gender: "F",
         weight_class: p.weight,
-        placement: p.place,
+        placement: contested ? p.place : null,
+        entrants: sizeOf(p),
         qualified: false,
         source_file: p.file,
         verification_status: "verified",
