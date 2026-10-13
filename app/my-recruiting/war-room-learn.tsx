@@ -1,4 +1,4 @@
-import { BookOpen, ChevronRight, FileText, MapPin, Sparkles, Trophy } from "lucide-react"
+import { BookOpen, ChevronRight, FileText, MapPin, Trophy } from "lucide-react"
 
 /**
  * Learn: what exists today, in the order a family needs it. Only finished material is listed -
@@ -29,12 +29,6 @@ const LESSONS = [
     title: "What a coach sees",
     text: "A sample of the scouting report college coaches read on a RecruitNC wrestler.",
     href: "/sample-scouting-report",
-  },
-  {
-    icon: Sparkles,
-    title: "Ask Data Dawg",
-    text: "\"How many D2 programs are in Pennsylvania?\" \"Who is the head coach at Campbell?\" Tap the dog, bottom right.",
-    href: null,
   },
 ] as const
 

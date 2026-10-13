@@ -18,6 +18,7 @@ export type WarRoomSchool = {
   place: string
   level: string
   status: CollegeListStatus
+  logo: string | null
   hasQuestionnaire: boolean
 }
 
@@ -318,6 +319,12 @@ export function WarRoomPlan({
             <ul className="mt-3 divide-y divide-white/10">
               {schools.map((school) => (
                 <li key={school.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center">
+                  {school.logo ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={school.logo} alt="" className="hidden h-9 w-9 shrink-0 rounded bg-white object-contain p-0.5 sm:block" />
+                  ) : (
+                    <span className="hidden h-9 w-9 shrink-0 rounded bg-white/[0.06] sm:block" aria-hidden />
+                  )}
                   <span className="min-w-0 flex-1">
                     <a href={`/recruiting/schools/${school.id}`} className="block truncate text-sm font-bold text-white hover:underline">
                       {school.name}
