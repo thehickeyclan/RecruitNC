@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
 import { ExternalLink, Lock, Mail, Search, ShieldCheck, Star, X } from "lucide-react"
 
 import { CoachEmailComposer } from "@/components/colleges/coach-email-composer"
+import { WentHereSection } from "@/components/colleges/went-here-section"
 
 import {
   COLLEGE_LIST_STATUSES,
@@ -235,6 +236,8 @@ function SchoolCard({
       {list}
 
       <StaffList school={school} />
+
+      <WentHereSection schoolId={school.id} schoolName={school.name.replace(/\s*\([^)]*\)\s*/g, " ").trim()} />
 
       {school.website ? (
         <a
