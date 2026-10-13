@@ -39,7 +39,7 @@ export async function middleware(request: NextRequest) {
 
   // A college coach's home is Coach Home; the community front page is never drawn for one.
   if (pathname === "/" && (request.method === "GET" || request.method === "HEAD")) {
-    const door = await coachFrontDoor(request.headers, request.cookies.getAll())
+    const door = await coachFrontDoor(request.headers, request.cookies.getAll(), request.nextUrl.searchParams.has("community"))
     if (door.redirect) {
       const response = NextResponse.redirect(new URL(COACH_HOME_PATH, request.url), 307)
       response.headers.set("Cache-Control", "private, no-store")

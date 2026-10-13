@@ -36,6 +36,28 @@ export function recruitingCoverage(): string {
  */
 export const COACH_PREVIEW_KEY = "recruiting-shell-preview"
 
+/**
+ * Programs whose coaches also use the NC United site, by `schools.id`.
+ *
+ * The coach portal carries nothing of NC United - except for a program that works with NC United
+ * as well as recruiting from it. NC United practices in UNC's wrestling room, so UNC's staff need
+ * the NC United calendar and site (Matt, 13 October 2026). Their home is still Coach Home; they
+ * get a way across that no other coach is shown.
+ */
+export const COMMUNITY_PARTNER_SCHOOL_IDS: readonly string[] = [
+  "8a62c142-afec-457f-b908-24fa0df0e273", // UNC Chapel Hill
+]
+
+/** The NC United pages a partner program's coaches are given links to. */
+export const COMMUNITY_PARTNER_LINKS = [
+  { href: "/calendar", label: "Calendar" },
+  { href: "/?community=1", label: "NC United site" },
+] as const
+
+export function hasCommunityAccess(profile: { role?: string | null; is_admin?: boolean | null; school_id?: string | null } | null | undefined): boolean {
+  return usesRecruitingShell(profile) && COMMUNITY_PARTNER_SCHOOL_IDS.includes(String(profile?.school_id ?? ""))
+}
+
 export function usesRecruitingShell(profile: { role?: string | null; is_admin?: boolean | null } | null | undefined): boolean {
   // classifyViewer, not a literal compare: the role is stored as both "college_coach" and "college-coach".
   return classifyViewer(profile).isCollegeCoach && profile?.is_admin !== true

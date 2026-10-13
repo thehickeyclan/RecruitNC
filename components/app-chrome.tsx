@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
-import { COACH_PREVIEW_KEY, usesRecruitingShell } from "@/lib/recruiting/brand"
-import { PORTAL_HINT_COOKIE } from "@/lib/portal-hint"
+import { COACH_PREVIEW_KEY, hasCommunityAccess, usesRecruitingShell } from "@/lib/recruiting/brand"
+import { PORTAL_HINT_COOKIE, PORTAL_PARTNER_COOKIE } from "@/lib/portal-hint"
 import { classifyViewer } from "@/lib/viewer-role"
 import { RecruitingShell } from "@/components/recruiting/recruiting-shell"
 import { Navbar } from "@/components/navbar"
@@ -75,9 +75,14 @@ function useRecruitingShell(): boolean {
         // The same answer where the server can read it, so the front page is decided before it is
         // drawn (lib/coach-front-door.ts). A hint, not a credential.
         document.cookie = `${PORTAL_HINT_COOKIE}=${coach ? "1" : "0"}; path=/; max-age=31536000; samesite=lax`
+        // A partner program's coach (UNC) may cross to the NC United site; the server reads this too.
+        document.cookie = hasCommunityAccess(profile)
+          ? `${PORTAL_PARTNER_COOKIE}=1; path=/; max-age=31536000; samesite=lax`
+          : `${PORTAL_PARTNER_COOKIE}=; path=/; max-age=0; samesite=lax`
       } else if (!user) {
         localStorage.removeItem(SHELL_HINT_KEY)
         document.cookie = `${PORTAL_HINT_COOKIE}=; path=/; max-age=0; samesite=lax`
+        document.cookie = `${PORTAL_PARTNER_COOKIE}=; path=/; max-age=0; samesite=lax`
       }
     } catch {}
   }, [user, profile, isLoading])
@@ -111,8 +116,10 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
     // The server normally does this first (middleware.ts); this catches a coach it could not yet
     // recognise. There is no way round it: the community front page is not a coach's page.
     if (!coachAtFrontDoor) return
+    // The one exception: a partner program's coach who chose the NC United link.
+    if (hasCommunityAccess(profile) && new URLSearchParams(window.location.search).has("community")) return
     window.location.replace("/coach-home")
-  }, [coachAtFrontDoor])
+  }, [coachAtFrontDoor, profile])
   // No chat launcher in the coach portal at all (Matt, 11 October 2026).
   // On the community side, the inbox keeps its reply box and send button in the corner the chat launcher floats over.
   /*

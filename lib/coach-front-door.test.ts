@@ -74,3 +74,20 @@ describe("coachFrontDoor", () => {
     expect(lookup).not.toHaveBeenCalled()
   })
 })
+
+describe("a partner program's coach", () => {
+  const coach = [session("u-unc", expired), { name: "recruiting-shell", value: "1" }]
+  const partner = [...coach, { name: "recruiting-partner", value: "1" }]
+
+  it("still starts on Coach Home", async () => {
+    expect((await coachFrontDoor(none, partner)).redirect).toBe(true)
+  })
+
+  it("reaches the NC United site when he asks for it", async () => {
+    expect((await coachFrontDoor(none, partner, true)).redirect).toBe(false)
+  })
+
+  it("and no other coach does", async () => {
+    expect((await coachFrontDoor(none, coach, true)).redirect).toBe(true)
+  })
+})
