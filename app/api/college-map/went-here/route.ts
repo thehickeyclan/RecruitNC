@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 
+import { rosterForSchool } from "@/lib/college-programs/rosters"
 import { loadWentHere } from "@/lib/college-programs/went-here"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -20,8 +21,8 @@ export async function GET(request: NextRequest) {
   try {
     // A coach has no wrestler of his own to set beside it.
     const wentHere = await loadWentHere(admin, schoolId, viewer.isBlueMember || viewer.isAdmin ? userId : null)
-    if (!wentHere) return NextResponse.json({ error: "Unknown school." }, { status: 404 })
-    return NextResponse.json({ locked: false, ...wentHere })
+    // The roster is a file and always there; the commitments wait on the snapshot's first build.
+    return NextResponse.json({ locked: false, roster: rosterForSchool(schoolId), wentHere })
   } catch (error) {
     console.error("[college-map/went-here]", error)
     return NextResponse.json({ error: "Could not load who went here." }, { status: 500 })
