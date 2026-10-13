@@ -14,7 +14,7 @@ import { familyAthleteIds } from "@/lib/coach-messages"
 import { LearnDisclaimer } from "@/components/recruiting/learn/learn-disclaimer"
 import { CHECKED, MENS_AND_WOMENS, d1TrackFor, learnPage, type D1Track } from "@/lib/recruiting/learn/content"
 import { MensAndWomens } from "@/components/recruiting/learn/mens-and-womens"
-import { resolveRankingViewer } from "@/lib/ranking-access"
+import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { familyFocus } from "@/lib/recruiting/family-focus"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
@@ -36,7 +36,7 @@ export default async function LearnPage({ params }: Params) {
   if (!page) notFound()
 
   const admin = createAdminClient()
-  const { viewer, userId } = await resolveRankingViewer({ supabase: await createClient(), admin })
+  const { viewer, userId } = await resolvePortalViewer({ supabase: await createClient(), admin })
   const open = page.free || Boolean(viewer.isBlueMember || viewer.isAdmin || viewer.isVerifiedCoach)
 
   const focus = open ? await familyFocus(admin, userId) : null

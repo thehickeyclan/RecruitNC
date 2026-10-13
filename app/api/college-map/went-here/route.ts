@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { rosterForSchool } from "@/lib/college-programs/rosters"
 import { loadWentHere } from "@/lib/college-programs/went-here"
-import { resolveRankingViewer } from "@/lib/ranking-access"
+import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic"
 export async function GET(request: NextRequest) {
   const schoolId = request.nextUrl.searchParams.get("school")?.trim() ?? ""
   const admin = createAdminClient()
-  const { viewer, userId } = await resolveRankingViewer({ supabase: await createClient(), admin })
+  const { viewer, userId } = await resolvePortalViewer({ supabase: await createClient(), admin })
   if (!(viewer.isBlueMember || viewer.isAdmin || viewer.isVerifiedCoach)) return NextResponse.json({ locked: true })
 
   try {

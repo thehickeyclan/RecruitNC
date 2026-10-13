@@ -57,7 +57,7 @@ export function planSteps(input: PlanInput): PlanStep[] {
       detail:
         input.profilePercent === 100
           ? "Coaches read it before they answer an email. Keep the video and grades current."
-          : `${input.profilePercent}% done. Next: ${input.profileTodo?.todo.toLowerCase() ?? "finish the profile"}. A coach opens the profile before he replies.`,
+          : `${input.profilePercent}% done. Next: ${input.profileTodo?.todo.toLowerCase() ?? "finish the profile"}. A coach opens the profile before replying.`,
       done: input.profilePercent === 100,
       action:
         input.profilePercent === 100

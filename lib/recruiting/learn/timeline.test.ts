@@ -46,6 +46,7 @@ describe("the grade-by-grade timeline", () => {
 
   it("is about wrestling and no other sport", () => {
     const words = TIMELINE.flatMap((g) => [g.headline, ...g.facts.map((f) => f.text), ...g.steps.map((s) => s.text)]).join("\n")
+    expect(words).not.toMatch(/\b(he|him|his|himself)\b/i)
     expect(words).not.toMatch(/\bsports?\b|football|basketball|baseball|soccer|lacrosse|volleyball|hockey/i)
   })
 

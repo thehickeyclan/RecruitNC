@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 
 import { loadCollegeMap } from "@/lib/college-programs/load"
-import { resolveRankingViewer } from "@/lib/ranking-access"
+import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { familyFocus } from "@/lib/recruiting/family-focus"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic"
  */
 export async function GET() {
   const admin = createAdminClient()
-  const { viewer, userId } = await resolveRankingViewer({ supabase: await createClient(), admin })
+  const { viewer, userId } = await resolvePortalViewer({ supabase: await createClient(), admin })
   const full = Boolean(viewer.isBlueMember || viewer.isAdmin || viewer.isVerifiedCoach)
 
   try {
