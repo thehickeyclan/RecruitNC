@@ -400,11 +400,10 @@ export const LEARN_PAGES: LearnPage[] = [
         heading: "Scholarships and signing",
         bullets: [
           "The NAIA's 2026-27 handbook sets the limit for wrestling at the equivalent of 10 full grants of the college's aid, athletic and academic combined, across varsity wrestlers. Strong students can be partly or fully exempt from the count.",
-          "The limit is a team's limit, and men's and women's wrestling are separate NAIA teams and championships, so a college with both has 10 for each.",
+          "Men's wrestling and women's wrestling are two separate NAIA programs, each with its own championship and its own limit of 10. A college with both has 10 for each.",
           "There is no association-wide letter of intent. You may sign with a school, but the NAIA does not oblige you to attend. Some NAIA conferences do make their members honor a letter signed with another school in the same conference, so ask.",
           "The NAIA permits name, image and likeness deals. Tell the athletics director in writing about any deal that refers to the college or to you as one of its wrestlers.",
         ],
-        reading: "The handbook's table has one line, \"Wrestling 10\", and speaks of \"the team's upper limit\". That it means 10 for each team is how the policy reads; no sentence says it outright.",
         rule: "NAIA Council of Presidents Policy XIII (upper limits for institutional aid); Bylaws Article VII, Section B",
         sources: ["naiaHandbook", "naiaGuide"],
       },
