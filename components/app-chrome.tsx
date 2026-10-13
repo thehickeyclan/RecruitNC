@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { COACH_PREVIEW_KEY, usesRecruitingShell } from "@/lib/recruiting/brand"
 import { PORTAL_HINT_COOKIE } from "@/lib/portal-hint"
+import { classifyViewer } from "@/lib/viewer-role"
 import { RecruitingShell } from "@/components/recruiting/recruiting-shell"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
@@ -25,8 +26,11 @@ const SHELL_HINT_KEY = "recruiting-shell"
  * everywhere; this is only the staff preview.
  */
 const COACH_PORTAL_PATHS = ["/coach-home", "/my-recruits", "/prospects", "/athletes", "/view-profile", "/inbox", "/public-rankings", "/compare", "/perfect-recruit", "/scouting-report"]
-/** Pages with no Data Dawg launcher: the inbox (it covers the send button) and everything recruiting. */
-const NO_CHAT_PATHS = ["/inbox", "/my-recruiting", "/recruiting", "/coach-home", "/my-recruits", "/perfect-recruit"]
+/**
+ * Pages with no Data Dawg launcher whoever is looking: the inbox (it covers the send button) and
+ * the pages that exist only for coaches.
+ */
+const NO_CHAT_PATHS = ["/inbox", "/coach-home", "/my-recruits", "/perfect-recruit"]
 
 const onCoachPortal = (path: string) => COACH_PORTAL_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
 
@@ -100,10 +104,17 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   }, [coachAtFrontDoor])
   // No chat launcher in the coach portal at all (Matt, 11 October 2026).
   // On the community side, the inbox keeps its reply box and send button in the corner the chat launcher floats over.
-  // And none on RecruitNC's recruiting pages, for families or coaches: Data Dawg belongs to the
-  // NC United community site only (Matt, 13 October 2026).
-  const onRecruiting = NO_CHAT_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
-  const chat = onRecruiting ? null : <AIChatWidget />
+  /*
+   * Data Dawg is for wrestlers, families and the community site - never for a college coach
+   * (Matt, 13 October 2026). So it is decided by who is signed in, not by the page: a coach has no
+   * launcher anywhere, including the split second before his profile has loaded, when this frame
+   * could otherwise draw the community bar and the dog around his page. A family has it on the
+   * War Room, the college map and every school page like anywhere else.
+   */
+  const { isLoading: authLoading } = useAuth()
+  const isCoach = classifyViewer(profile).isCollegeCoach
+  const noChatPage = NO_CHAT_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
+  const chat = noChatPage || isCoach || authLoading ? null : <AIChatWidget />
   const isSpartanCampaign = path === "/spartan" || path.startsWith("/spartan/")
   if (isSpartanCampaign) {
     return (

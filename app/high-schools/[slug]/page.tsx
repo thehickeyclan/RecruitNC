@@ -272,7 +272,11 @@ export default async function HighSchoolPage({ params }: PageProps) {
         facts.counts.state_qualifiers === 0 ? (
           <p className="rounded-xl border border-rnc-line bg-rnc-raised p-5 text-slate-300">
             We don&apos;t have state tournament results on file for {facts.name} yet. If that looks
-            wrong, tell Data Dawg — corrections go straight to our review queue.
+            wrong,{" "}
+            <a href="/contact" className="underline">
+              tell us
+            </a>{" "}
+            and we&apos;ll correct it.
           </p>
         ) : null}
       </div>
