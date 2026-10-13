@@ -24,6 +24,8 @@ import {
   WOMENS_RANKING_COMPONENT_WEIGHTS,
   isWomensTopTierEvent,
   womensNationalRankingPoints,
+  isStatePoolEvent,
+  womensPoolEventPoints,
 } from "./recruitnc-ranking-engine"
 import { MAX_WINDOW_PENALTY, WINDOW_PARTICIPATION_FLOOR } from "./missed-window"
 import { NATIONAL_RANKED_WIN, RANKED_WIN_CAP, TOC_FIELD_WIN, UNGRADED_RANKED_WIN, rankedOpponentValue } from "./ranked-win-value"
@@ -117,5 +119,26 @@ describe("what a duals week pays", () => {
     expect(teamRoundBonus("Champion")).toBe(20)
     expect(teamRoundBonus("Round of 32")).toBe(8)
     expect(teamRoundBonus("Round of 64")).toBe(5)
+  })
+})
+
+describe("women's in-state freestyle pools (13 October 2026)", () => {
+  it("knows the two round-robin events, and only those", () => {
+    expect(isStatePoolEvent("NC Freestyle & Greco State Championships")).toBe(true)
+    expect(isStatePoolEvent("2026 Tar Heel State Classic - Junior Girls Freestyle")).toBe(true)
+    expect(isStatePoolEvent("Frank E. Rader Southeast Regional Championships")).toBe(false)
+    expect(isStatePoolEvent("Journeymen Women's World Classic")).toBe(false)
+  })
+
+  it("pays a place only in a pool of four or more, and a win only per girl she could beat", () => {
+    // Champion of five, 4-0: the place and four wins.
+    expect(womensPoolEventPoints({ placement: 1, record: "4-0", entrants: 5 })).toBe(40 + 16)
+    // "2nd" of two, 1-2: no place, and one win - there was one opponent, however many times they met.
+    expect(womensPoolEventPoints({ placement: 2, record: "1-2", entrants: 2 })).toBe(4)
+    // A best-of-three swept against the only other entrant is one opponent beaten.
+    expect(womensPoolEventPoints({ placement: 1, record: "3-0", entrants: 2 })).toBe(4)
+    // Uncontested, or pool size unknown: she entered, nothing more.
+    expect(womensPoolEventPoints({ placement: null, record: "", entrants: 1 })).toBe(0)
+    expect(womensPoolEventPoints({ placement: 1, record: "2-0", entrants: null })).toBe(0)
   })
 })

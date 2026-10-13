@@ -853,6 +853,35 @@ const SPOKANE_EVENT = /usaw women'?s nationals|women'?s nationals|spokane/i
 const US_OPEN_EVENT = /\bu\.?\s?s\.?\s+open\b|las vegas|vegas/i
 
 /** Whether an "other" result is one of the women's top-tier freestyle nationals. */
+/**
+ * North Carolina's own freestyle events, wrestled as round-robin pools of two to five girls: the NC
+ * Freestyle & Greco State Championships and the Tar Heel State Classic.
+ *
+ * They were scored like any qualifier - place plus win percentage - which paid "2nd place" in a
+ * two-girl pool (one loss, sometimes two) the same as second at a regional. With the full
+ * placements loaded on 13 October 2026, a girl who went 1-2 in a pool of two out-scored an NHSCA
+ * All-American and a girl who went 8-2 at Women's National Duals. So here:
+ *   - a place counts only in a pool of four or more;
+ *   - wins count one each, and no more than the girls she could have beaten (a best-of-three
+ *     against the only other entrant is one opponent, not three wins).
+ * Who she beat there is scored separately, as head-to-head, which is where these events matter.
+ */
+const STATE_POOL_EVENT = /nc\s+freestyle\s*&\s*greco\s+state|tar\s*heel\s+state\s+classic/i
+export const WOMENS_POOL_MIN_ENTRANTS = 4
+export const WOMENS_POOL_POINTS_PER_WIN = 4
+
+export function isStatePoolEvent(eventName: string): boolean {
+  return STATE_POOL_EVENT.test(eventName)
+}
+
+export function womensPoolEventPoints(result: { placement?: number | null; record?: string | null; entrants?: number | null }): number {
+  const entrants = Number(result.entrants ?? 0)
+  const place = entrants >= WOMENS_POOL_MIN_ENTRANTS ? placementPoints(result.placement ?? null) : 0
+  const wins = Number((String(result.record ?? "").match(/^(\d+)\s*-\s*\d+$/) ?? [])[1] ?? 0)
+  const opponents = Math.max(0, entrants - 1)
+  return place + Math.min(wins, opponents) * WOMENS_POOL_POINTS_PER_WIN
+}
+
 export function isWomensTopTierEvent(eventName: string): boolean {
   return SPOKANE_EVENT.test(eventName) || US_OPEN_EVENT.test(eventName)
 }
@@ -1218,7 +1247,11 @@ export async function buildRecruitNcRankingBoard({
           })
           .map((r) => ({
             r,
-            points: Math.round((placementPoints(r.placement) + recordWinPctPoints(r.record)) * WOMENS_EVENT_WEIGHTS.qualifier),
+            points: Math.round(
+              (isStatePoolEvent(String(r.eventShortName ?? r.eventName ?? ""))
+                ? womensPoolEventPoints(r)
+                : placementPoints(r.placement) + recordWinPctPoints(r.record)) * WOMENS_EVENT_WEIGHTS.qualifier,
+            ),
           }))
           .sort((a, b) => b.points - a.points)
         scoredQualifiers.forEach(({ r, points }, i) =>
