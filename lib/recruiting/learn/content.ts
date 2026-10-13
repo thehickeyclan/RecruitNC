@@ -1,5 +1,5 @@
 /**
- * The Recruiting War Room's rules library (13 Oct 2026).
+ * The Recruiting Command Center's rules library (13 Oct 2026).
  *
  * A family acting on a wrong rule pays for it, so this is held to a different standard from the
  * rest of the site's copy:

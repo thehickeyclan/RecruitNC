@@ -1867,7 +1867,7 @@ export function AthleteDetail({
           className={ROW_ORDER.academics}
         />
       ) : null}
-      {/* Where he wrestles next: the family enters it in the War Room; approved coaches and the
+      {/* Where he wrestles next: the family enters it in the Command Center; approved coaches and the
           family see it here, nobody else (the block asks its own private route and hides itself). */}
       <CompetingNextBlock athleteId={String(athlete.id)} firstName={firstNames.split(" ")[0] || athleteName} className={ROW_ORDER.contact} />
       {/* Contact is for college coaches, and for the family to keep current. Nobody else sees the

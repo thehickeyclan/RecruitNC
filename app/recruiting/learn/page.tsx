@@ -23,7 +23,7 @@ export default function LearnIndexPage() {
     <main className="min-h-screen bg-[#0A1628] px-4 py-8 text-white sm:px-6">
       <div className="mx-auto max-w-3xl">
         <a href="/my-recruiting#learn" className="text-xs font-semibold text-white/55 hover:text-white">
-          ← Recruiting War Room
+          ← Recruiting Command Center
         </a>
         <p className="mt-4 text-[11px] font-black uppercase tracking-widest text-[#D3B574]">RecruitNC · Recruiting Portal</p>
         <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">The rules, level by level</h1>
