@@ -1,5 +1,6 @@
 "use client"
 
+import { formatPhoneForDisplay } from "@/lib/phone-format"
 import { useState, useEffect, useRef } from "react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
@@ -308,7 +309,7 @@ export function AthleteCRMDrawer({ athleteId, isOpen, onClose, onUpdate, viewAsC
                         <Phone className="h-5 w-5 text-primary" />
                         <div>
                           <p className="text-sm font-medium">Call Athlete</p>
-                          <p className="text-sm text-muted-foreground">{athlete.athlete_cell}</p>
+                          <p className="text-sm text-muted-foreground">{formatPhoneForDisplay(athlete.athlete_cell)}</p>
                         </div>
                       </a>
                     )}

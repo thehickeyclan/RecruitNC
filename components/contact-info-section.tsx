@@ -1,5 +1,6 @@
 "use client"
 
+import { formatPhoneForDisplay } from "@/lib/phone-format"
 import { useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -108,7 +109,7 @@ export function ContactInfoSection({ athlete }: ContactInfoSectionProps) {
                         <p className="text-sm text-gray-600">Cell Phone</p>
                         <p className="font-semibold text-gray-900">
                           <a href={`tel:${phone}`} className="hover:text-blue-600 transition-colors">
-                            {phone}
+                            {formatPhoneForDisplay(phone)}
                           </a>
                         </p>
                       </div>

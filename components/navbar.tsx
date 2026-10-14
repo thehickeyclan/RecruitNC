@@ -13,7 +13,6 @@ import {
   Star,
   ChevronDown,
   Users,
-  Users2,
   MessageSquare,
   Trophy,
   Medal,
@@ -604,11 +603,6 @@ export function Navbar() {
                 )}
               </a>
             )}
-            {user && !pathname.startsWith("/forum") && (
-              <a href="/forum" className="relative flex h-10 w-10 items-center justify-center rounded-lg text-white hover:bg-white/10 transition-colors" aria-label="Community — messaging, groups, and DMs">
-                <Users2 className="h-5 w-5" />
-              </a>
-            )}
             {user && (
               <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
                 <PopoverTrigger asChild>
@@ -697,9 +691,6 @@ export function Navbar() {
                   <DropdownMenuItem asChild>
                     <a href="/profile">My Account</a>
                   </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a href="/forum">Community</a>
-                  </DropdownMenuItem>
                   {showMyRecruits && (
                     <>
                       <DropdownMenuSeparator />
@@ -776,11 +767,6 @@ export function Navbar() {
                     {unreadMessages > 9 ? "9+" : unreadMessages}
                   </span>
                 )}
-              </a>
-            )}
-            {user && !pathname.startsWith("/forum") && (
-              <a href="/forum" className="relative flex items-center justify-center rounded-md p-2 text-white hover:bg-white/10 min-h-[44px] min-w-[44px] shrink-0" aria-label="Community">
-                <Users2 className="h-5 w-5" />
               </a>
             )}
             {/* Notifications bell - when logged in */}
@@ -1066,14 +1052,6 @@ export function Navbar() {
                   </div>
                   <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
                   <a href="/about" className={mobileLinkClass("/about")} onClick={() => setIsOpen(false)}>About</a>
-                  {user && (
-                    <>
-                      <a href="/forum" className={mobileLinkClass("/forum") + " flex items-center gap-2"} onClick={() => setIsOpen(false)}>
-                        <Users2 className="h-5 w-5 shrink-0" />
-                        <span>Community</span>
-                      </a>
-                    </>
-                  )}
                   <StoreNavLink className={mobileLinkClass("/store-app") + " block min-h-[44px] w-full text-left"} onNavigate={() => setIsOpen(false)}>Store</StoreNavLink>
                   <a href="/cart" target="_top" className={mobileLinkClass("/cart") + " flex items-center gap-2 min-h-[44px] w-full text-left"} onClick={() => setIsOpen(false)} aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}>
                     <ShoppingCart className="h-5 w-5 shrink-0" />

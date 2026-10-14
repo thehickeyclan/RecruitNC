@@ -117,11 +117,12 @@ export async function loadCoachHome(
                 !onBoard.has(String(a.id))
               )
             })
-            // Four from each class, seniors first: the ones a coach is deciding on now.
+            // Ten from each class, seniors first, shown side by side on Coach Home (Matt, 14 October
+            // 2026): coaches open profiles from lists they can see, and none was opened from the tab.
             return suggestYears.flatMap((year) =>
               open
                 .filter((a) => Number(a.graduationyear) === year)
-                .slice(0, 4)
+                .slice(0, 10)
                 .map((a) => ({
                   id: String(a.id),
                   name: String(a.name ?? ""),

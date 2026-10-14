@@ -16,9 +16,10 @@ import { classifyViewer, type ViewerProfileInput } from "@/lib/viewer-role"
  * the rest of the site still treats them as their own role (Matt, 9 October 2026).
  * Add or remove a user id here.
  */
+// The comparison is for coaches only, not parents or wrestlers (Matt, 14 October 2026), with one
+// named exception he kept the same day. The Richards family's access was removed then.
 export const COMPARISON_TESTER_USER_IDS = new Set<string>([
-  "8d4ed89c-1a52-48cc-9429-ab5c24875a25", // Brandon Palmer - testing, Matt 9 October 2026
-  "37bc8399-b877-4390-a73b-7afedc8a0853", // Luke Richards (annerichards3@icloud.com) - testing, Matt 9 October 2026
+  "8d4ed89c-1a52-48cc-9429-ab5c24875a25", // Brandon Palmer - kept, Matt 14 October 2026
 ])
 
 /** A listed tester sees the comparison as a verified coach does - inside the comparison only. */

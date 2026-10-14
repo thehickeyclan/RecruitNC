@@ -133,3 +133,10 @@ export function costShort(schoolId: string, schoolState: string, homeState = "NC
   const which = c.tuitionFeesIn !== c.tuitionFeesOut ? (resident ? " in-state" : " out-of-state") : ""
   return `${dollars(totalOf(c, resident ? c.tuitionFeesIn : c.tuitionFeesOut))} a year${which}: tuition, housing, food and books (${c.year} price, before aid)`
 }
+
+/** The full yearly cost a North Carolina family is charged, as a number, for comparing colleges. */
+export function yearlyCostFor(schoolId: string, schoolState: string, homeState = "NC"): { amount: number; year: string } | null {
+  const c = COST[schoolId]
+  if (!c || c.tuitionFeesIn == null || c.tuitionFeesOut == null || c.housingFood == null) return null
+  return { amount: totalOf(c, schoolState === homeState ? c.tuitionFeesIn : c.tuitionFeesOut), year: c.year }
+}

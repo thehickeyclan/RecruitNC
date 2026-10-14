@@ -77,14 +77,16 @@ export function stripPrivateAthleteFields<T extends Record<string, unknown>>(row
 
 /**
  * Whether this viewer may see the fields above — the same rule the profile page draws with:
- * the athlete themselves, an admin, or a verified coach.
+ * the athlete themselves, a parent linked to the athlete, an admin, or a verified coach.
  *
- * A linked parent is deliberately not included: the page shows them view statistics, not the
- * private block, and this is not the place to widen that.
+ * A linked parent used to be left out, so a family could save their wrestler's GPA and then not
+ * see it on his page (Jacob McCord, 14 October 2026). A parent link is the family's own access to
+ * a minor's profile - it is what lets them edit these very fields (Matt: "the parent link should
+ * see the private details").
  */
 export async function viewerMaySeeAthletePrivateInfo(
   supabase: SupabaseClient,
-  athlete: { claimed_by_user_id?: unknown } | null | undefined,
+  athlete: { id?: unknown; claimed_by_user_id?: unknown } | null | undefined,
 ): Promise<boolean> {
   const { data } = await supabase.auth.getUser()
   return viewerIdMaySeeAthletePrivateInfo(supabase, data.user?.id ?? null, athlete)
@@ -97,11 +99,21 @@ export async function viewerMaySeeAthletePrivateInfo(
 export async function viewerIdMaySeeAthletePrivateInfo(
   supabase: SupabaseClient,
   viewerId: string | null,
-  athlete: { claimed_by_user_id?: unknown } | null | undefined,
+  athlete: { id?: unknown; claimed_by_user_id?: unknown } | null | undefined,
 ): Promise<boolean> {
   if (!viewerId) return false
 
   if (athlete?.claimed_by_user_id && String(athlete.claimed_by_user_id) === viewerId) return true
+
+  if (athlete?.id) {
+    const { data: link } = await supabase
+      .from("parent_athlete_links")
+      .select("athlete_id")
+      .eq("user_id", viewerId)
+      .eq("athlete_id", String(athlete.id))
+      .maybeSingle()
+    if (link) return true
+  }
 
   /*
    * `user_id`, not `id`. `user_profiles.id` is the row's own key; the sign-in id is `user_id`, and

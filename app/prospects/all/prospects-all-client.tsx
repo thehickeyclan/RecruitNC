@@ -1,7 +1,7 @@
 "use client"
 
 import { VIEW_GENDER_COOKIE, coachProgramOf, parseViewGender, viewGenderFor } from "@/lib/recruiting/coach-program"
-import { usesRecruitingShell } from "@/lib/recruiting/brand"
+import { RECRUITING_BRAND, usesRecruitingShell } from "@/lib/recruiting/brand"
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
@@ -105,9 +105,37 @@ function QuickGroup({ label, children }: { label: string; children: React.ReactN
   return (
     <div className="flex flex-col gap-1.5">
       <span className="text-[11px] font-bold uppercase tracking-wider text-white/45">{label}</span>
-      <div className="flex flex-wrap gap-1.5">{children}</div>
+      {/* One line per group on a phone, scrolling sideways, so the filters do not push the list a screen down. */}
+      <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 sm:flex-wrap sm:overflow-visible">{children}</div>
     </div>
   )
+}
+
+type HonorPill = "all-american" | "state-champion" | "state-placer"
+const HONOR_PILLS: ReadonlyArray<readonly [HonorPill, string]> = [
+  ["all-american", "All-American"],
+  ["state-champion", "State champ"],
+  ["state-placer", "State placer"],
+]
+
+/** From the honours the server attaches to each row (lib/prospect-achievements.ts). */
+function hasHonor(prospect: Prospect, honor: HonorPill): boolean {
+  const facts = ((prospect as { achievement_facts?: AchievementFacts }).achievement_facts ?? {}) as AchievementFacts
+  const state = Number(facts.bestStatePlace)
+  if (honor === "state-champion") return state === 1
+  // Placed 1st to 6th at states, the champion included: lib/prospect-achievements.ts places 2-6 and
+  // counts 7th and below as qualifying.
+  if (honor === "state-placer") return Number.isFinite(state) && state >= 1 && state <= 6
+  const nhsca = Number(facts.bestNhscaPlace)
+  const s32 = Number(facts.bestSuper32Place)
+  return (Number.isFinite(nhsca) && nhsca >= 1 && nhsca <= 8) || (Number.isFinite(s32) && s32 >= 1 && s32 <= 8)
+}
+
+/** The state a wrestler competes in. Rows without one are North Carolina's: the directory holds no one else yet. */
+function stateOfProspect(prospect: Prospect): string {
+  const raw = String((prospect as { state?: string | null }).state ?? "").trim().toUpperCase()
+  if (raw === "NORTH CAROLINA") return "NC"
+  return raw || "NC"
 }
 
 function QuickChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
@@ -116,7 +144,7 @@ function QuickChip({ active, onClick, children }: { active: boolean; onClick: ()
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={`min-h-[36px] rounded-full border px-3.5 text-sm font-semibold transition-colors ${
+      className={`min-h-[36px] shrink-0 whitespace-nowrap rounded-full border px-3.5 text-sm font-semibold transition-colors ${
         active ? "border-[#D3B574] bg-[#D3B574] text-[#0A1628]" : "border-white/20 text-white/75 hover:border-white/40 hover:text-white"
       }`}
     >
@@ -219,6 +247,8 @@ export default function ProspectsAllClient({
   const sortBy: SortChoice = sortChoice ?? (actsAsCoach ? "rank" : "name")
   const [weightFilters, setWeightFilters] = useState<string[]>([])
   const [achievementFilters, setAchievementFilters] = useState<AchievementLevel[]>([])
+  const [honorFilters, setHonorFilters] = useState<HonorPill[]>([])
+  const [stateFilter, setStateFilter] = useState<string>("all")
 
   useEffect(() => {
     if (skipInitialActiveFetch.current && yearFilter === "active") {
@@ -510,9 +540,13 @@ export default function ProspectsAllClient({
         if (!achievementFilters.includes(achievement.level)) return false
       }
 
+      if (honorFilters.length > 0 && !honorFilters.some((h) => hasHonor(prospect, h))) return false
+
+      if (stateFilter !== "all" && stateOfProspect(prospect) !== stateFilter) return false
+
       return true
     })
-  }, [prospects, searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilters, ranks])
+  }, [prospects, searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilters, honorFilters, stateFilter, ranks])
 
   const sortedProspects = useMemo(() => {
     return [...filteredProspects].sort((a, b) => (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" }))
@@ -642,6 +676,8 @@ export default function ProspectsAllClient({
     setRankFilter("all")
     setWeightFilters([])
     setAchievementFilters([])
+    setHonorFilters([])
+    setStateFilter("all")
   }
 
   const hasActiveFilters = useMemo(() => {
@@ -652,9 +688,11 @@ export default function ProspectsAllClient({
       statusFilter !== "all" ||
       rankFilter !== "all" ||
       weightFilters.length > 0 ||
-      achievementFilters.length > 0
+      achievementFilters.length > 0 ||
+      honorFilters.length > 0 ||
+      stateFilter !== "all"
     )
-  }, [searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilters])
+  }, [searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilters, honorFilters, stateFilter])
 
   const isShutDown = false
 
@@ -787,189 +825,6 @@ export default function ProspectsAllClient({
 
             {/* Filter Button & View Toggle */}
             <div className="flex items-center gap-2">
-              {/* Mobile Filter Button */}
-              <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="outline" className="md:hidden gap-2">
-                    <Filter className="h-4 w-4" />
-                    Filters
-                    {hasActiveFilters && (
-                      <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 text-xs">
-                        {[yearFilter !== "all" && yearFilter !== "active", genderFilter !== "all", statusFilter !== "all", rankFilter !== "all", weightFilters.length > 0, achievementFilters.length > 0].filter(Boolean).length}
-                      </Badge>
-                    )}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-[85vw] max-w-md overflow-y-auto">
-                  <SheetHeader>
-                    <SheetTitle>Filter Prospects</SheetTitle>
-                  </SheetHeader>
-                  <div className="mt-6 space-y-6">
-                    {/* Achievement Level */}
-                    <div className="space-y-3">
-                      <label className="text-sm font-medium">Achievement Level</label>
-                      <div className="grid gap-2 grid-cols-2">
-                        {[
-                          { value: "all-american" as AchievementLevel, label: "All-American", color: "bg-purple-600" },
-                          { value: "state-champion" as AchievementLevel, label: "State Champion", color: "bg-yellow-500" },
-                          { value: "state-placer" as AchievementLevel, label: "State Placer", color: "bg-blue-600" },
-                          { value: "state-qualifier" as AchievementLevel, label: "State Qualifier", color: "bg-green-600" },
-                        ].map(({ value, label, color }) => {
-                          const isChecked = achievementFilters.includes(value)
-                          return (
-                            <label
-                              key={value}
-                              className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium cursor-pointer"
-                            >
-                              <Checkbox
-                                checked={isChecked}
-                                onCheckedChange={(checked) => {
-                                  setAchievementFilters((prev) =>
-                                    checked ? [...prev, value] : prev.filter((a) => a !== value),
-                                  )
-                                }}
-                              />
-                              <div className="flex items-center gap-2">
-                                <div className={`w-3 h-3 rounded-full ${color}`}></div>
-                                <span>{label}</span>
-                              </div>
-                            </label>
-                          )
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Quick Filters */}
-                    <div className="space-y-4">
-                      <div>
-                        <label className="mb-2 block text-sm font-medium">Graduation Year</label>
-                        <Select value={yearFilter} onValueChange={setYearFilter}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="All Years" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="active">{ACTIVE_YEARS_LABEL}</SelectItem>
-                            <SelectItem value="all">All Years</SelectItem>
-                            <SelectItem value="graduates">{GRADUATES_LABEL}</SelectItem>
-                            {availableYears.map((year) => (
-                              <SelectItem key={year} value={String(year)}>
-                                Class of {year}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="mb-2 block text-sm font-medium">Gender</label>
-                        <Select value={genderFilter} onValueChange={setGenderFilter}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="All Genders" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Genders</SelectItem>
-                            <SelectItem value="male">Men&apos;s Wrestling</SelectItem>
-                            <SelectItem value="female">Women&apos;s Wrestling</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="mb-2 block text-sm font-medium">Recruiting Status</label>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="All Statuses" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Statuses</SelectItem>
-                            <SelectItem value="committed">Committed</SelectItem>
-                            <SelectItem value="verbal">Verbal Commit</SelectItem>
-                            <SelectItem value="uncommitted">Uncommitted</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="mb-2 block text-sm font-medium">Ranking Status</label>
-                        <Select value={rankFilter} onValueChange={(value) => setRankFilter(value as typeof rankFilter)}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="All Athletes" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Athletes</SelectItem>
-                            <SelectItem value="ranked">Ranked</SelectItem>
-                            <SelectItem value="unranked">Unranked</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    {/* Weight Classes */}
-                    {availableWeightClasses.length > 0 && (
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <label className="text-sm font-medium">Weight Classes</label>
-                          {weightFilters.length > 0 && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 px-2 text-xs"
-                              onClick={() => setWeightFilters([])}
-                            >
-                              Clear
-                            </Button>
-                          )}
-                        </div>
-                        <div className="grid gap-2 grid-cols-3 max-h-48 overflow-y-auto">
-                          {availableWeightClasses.map((weight) => {
-                            const normalized = weight
-                            const isChecked = weightFilters.includes(normalized)
-                            return (
-                              <label
-                                key={normalized}
-                                className="flex items-center gap-2 rounded-md border border-border bg-background px-2 py-1.5 text-xs font-medium cursor-pointer"
-                              >
-                                <Checkbox
-                                  checked={isChecked}
-                                  onCheckedChange={(checked) => {
-                                    setWeightFilters((prev) =>
-                                      checked ? [...prev, normalized] : prev.filter((w) => w !== normalized),
-                                    )
-                                  }}
-                                />
-                                <span>{normalized.match(/^\d+$/) ? `${normalized} lbs` : normalized}</span>
-                              </label>
-                            )
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="flex gap-2 pt-4 border-t">
-                      <Button variant="outline" onClick={resetFilters} className="flex-1">
-                        Reset All
-                      </Button>
-                      <Button onClick={() => setMobileFiltersOpen(false)} className="flex-1">
-                        Apply Filters
-                      </Button>
-                    </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
-
-              {/* Desktop Filter Toggle */}
-              <Button
-                variant="outline"
-                onClick={() => setShowFilters(!showFilters)}
-                className="hidden md:flex gap-2"
-              >
-                <Filter className="h-4 w-4" />
-                {showFilters ? "Hide weights and achievements" : "Weights and achievements"}
-                {hasActiveFilters && (
-                  <Badge variant="secondary" className="ml-1 h-5 w-5 rounded-full p-0 text-xs">
-                    {[yearFilter !== "all" && yearFilter !== "active", genderFilter !== "all", statusFilter !== "all", rankFilter !== "all", weightFilters.length > 0, achievementFilters.length > 0].filter(Boolean).length}
-                  </Badge>
-                )}
-              </Button>
-
               {/* View Toggle */}
               <div className="inline-flex items-center rounded-md border bg-background p-1 shadow-sm">
                 <Button
@@ -1019,6 +874,32 @@ export default function ProspectsAllClient({
                 </QuickChip>
               ))}
             </QuickGroup>
+            {/* The three honours a coach filters by, as pills (Matt, 14 October 2026). A pill keeps
+                everyone who has that honour, so a state champion who is also an All-American is in both. */}
+            <QuickGroup label="Honors">
+              {HONOR_PILLS.map(([value, label]) => (
+                <QuickChip key={value} active={honorFilters.includes(value)} onClick={() => setHonorFilters((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]))}>
+                  {label}
+                </QuickChip>
+              ))}
+            </QuickGroup>
+            {/* Two rows on a wide screen: who (wrestling, class, honours), then how (state, show, sort). */}
+            <div className="hidden basis-full lg:block" aria-hidden />
+            <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase tracking-wider text-white/45">
+              State
+              <select
+                value={stateFilter}
+                onChange={(e) => setStateFilter(e.target.value)}
+                className="min-h-[36px] rounded-lg border border-white/20 bg-[#0A1628] px-3 text-sm font-semibold normal-case tracking-normal text-white focus:border-[#D3B574] focus:outline-none"
+              >
+                <option value="all">All states</option>
+                {RECRUITING_BRAND.states.map((st) => (
+                  <option key={st.code} value={st.code}>
+                    {st.name}
+                  </option>
+                ))}
+              </select>
+            </label>
             <QuickGroup label="Show">
               {maySeeRanking ? (
                 <QuickChip active={rankFilter === "ranked"} onClick={() => setRankFilter(rankFilter === "ranked" ? "all" : "ranked")}>
@@ -1029,7 +910,7 @@ export default function ProspectsAllClient({
                 Uncommitted only
               </QuickChip>
             </QuickGroup>
-            <label className="ml-auto flex flex-col gap-1.5 text-[11px] font-bold uppercase tracking-wider text-white/45">
+            <label className="flex w-full flex-col gap-1.5 text-[11px] font-bold uppercase tracking-wider text-white/45 sm:ml-auto sm:w-auto">
               Sort by
               <select
                 value={sortBy}
@@ -1132,166 +1013,6 @@ export default function ProspectsAllClient({
             </div>
           )}
 
-          {/* Desktop Collapsible Filters */}
-          {showFilters && (
-            <div className="rounded-lg border bg-card p-6 shadow-sm space-y-6">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-[#03154C]">Filter Options</h3>
-                <Button variant="ghost" size="sm" onClick={resetFilters}>
-                  Reset All
-                </Button>
-              </div>
-
-            <div className="space-y-3">
-              <label className="text-sm font-medium text-muted-foreground">Achievement Level</label>
-              <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-5">
-                {[
-                  { value: "all-american" as AchievementLevel, label: "All-American", color: "bg-purple-600" },
-                  { value: "state-champion" as AchievementLevel, label: "State Champion", color: "bg-yellow-500" },
-                  { value: "state-placer" as AchievementLevel, label: "State Placer", color: "bg-blue-600" },
-                  { value: "state-qualifier" as AchievementLevel, label: "State Qualifier", color: "bg-green-600" },
-                ].map(({ value, label, color }) => {
-                  const isChecked = achievementFilters.includes(value)
-                  return (
-                    <label
-                      key={value}
-                      className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm font-medium shadow-sm transition hover:border-[#D3B574] hover:text-[#03154C] cursor-pointer"
-                    >
-                      <Checkbox
-                        checked={isChecked}
-                        onCheckedChange={(checked) => {
-                          setAchievementFilters((prev) =>
-                            checked ? [...prev, value] : prev.filter((a) => a !== value),
-                          )
-                        }}
-                      />
-                      <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${color}`}></div>
-                        <span>{label}</span>
-                      </div>
-                    </label>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-              <div className="xl:col-span-2">
-                <label className="mb-2 block text-sm font-medium text-muted-foreground">Search</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    value={searchTerm}
-                    onChange={(event) => setSearchTerm(event.target.value)}
-                    placeholder="Search by name, school, club, or college..."
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-muted-foreground">Graduation Year</label>
-                <Select value={yearFilter} onValueChange={setYearFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Years" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">{ACTIVE_YEARS_LABEL}</SelectItem>
-                    <SelectItem value="all">All Years</SelectItem>
-                    <SelectItem value="graduates">{GRADUATES_LABEL}</SelectItem>
-                    {availableYears.map((year) => (
-                      <SelectItem key={year} value={String(year)}>
-                        Class of {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-muted-foreground">Gender</label>
-                <Select value={genderFilter} onValueChange={setGenderFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Genders" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Genders</SelectItem>
-                    <SelectItem value="male">Men&apos;s Wrestling</SelectItem>
-                    <SelectItem value="female">Women&apos;s Wrestling</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-muted-foreground">Recruiting Status</label>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Statuses" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="committed">Committed</SelectItem>
-                    <SelectItem value="verbal">Verbal Commit</SelectItem>
-                    <SelectItem value="uncommitted">Uncommitted</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="mb-2 block text-sm font-medium text-muted-foreground">Ranking Status</label>
-                <Select value={rankFilter} onValueChange={(value) => setRankFilter(value as typeof rankFilter)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="All Prospects" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Athletes</SelectItem>
-                    <SelectItem value="ranked">Ranked</SelectItem>
-                    <SelectItem value="unranked">Unranked</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium text-muted-foreground">Weight Classes</label>
-                {weightFilters.length > 0 && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 px-2 text-xs"
-                    onClick={() => setWeightFilters([])}
-                  >
-                    Clear
-                  </Button>
-                )}
-              </div>
-              {availableWeightClasses.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Weights populate once prospect data loads.</p>
-              ) : (
-                <div className="grid gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-                  {availableWeightClasses.map((weight) => {
-                    const normalized = weight
-                    const isChecked = weightFilters.includes(normalized)
-                    return (
-                      <label
-                        key={normalized}
-                        className="flex items-center gap-2 rounded-md border border-border bg-background px-2 py-1.5 text-xs font-medium shadow-sm transition hover:border-[#D3B574] hover:text-[#03154C]"
-                      >
-                        <Checkbox
-                          checked={isChecked}
-                          onCheckedChange={(checked) => {
-                            setWeightFilters((prev) =>
-                              checked ? [...prev, normalized] : prev.filter((w) => w !== normalized),
-                            )
-                          }}
-                        />
-                        <span>{normalized.match(/^\d+$/) ? `${normalized} lbs` : normalized}</span>
-                      </label>
-                    )
-                  })}
-                </div>
-              )}
-            </div>
-            </div>
-          )}
 
           <div className="rounded-xl border border-white/10 bg-[#0f1c2e] shadow-sm overflow-hidden">
             <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">

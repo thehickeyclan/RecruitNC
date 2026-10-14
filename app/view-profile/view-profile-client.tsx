@@ -4,11 +4,11 @@ import { accoladesFrom, offSeasonEvents } from "@/lib/profile/profile-summary"
 import { isNationalEvent } from "@/lib/wrestling-style"
 import { isInternationalStyle, styleOfEventForAthlete, summarizeCompetition } from "@/lib/wrestling-style"
 import { SignificantWinsSection } from "@/components/significant-wins-section"
-import Link from "next/link"
-import { ArrowLeft, Medal, Trophy } from "lucide-react"
+import { Medal, Trophy } from "lucide-react"
 import { AthleteDetail } from "@/components/athlete-detail"
 import { TournamentAccordion, buildNchsaaStateRows, buildTournamentRows, isTocRow } from "@/components/profile/tournament-accordion"
 import { ProfileViewTracker } from "@/components/profile-view-tracker"
+import { ProfileBackLink } from "@/components/profile/profile-back-link"
 import { useAuth } from "@/contexts/auth-context"
 import type { PublicAthleteProfile } from "@/lib/load-public-athlete-profile"
 import type { TournamentRow } from "@/lib/profile/tournament-rows"
@@ -23,6 +23,8 @@ type ViewProfileClientProps = {
   initialError: string | null
   /** Resolved on the server, so it is right even where the browser holds no session cookie. */
   initialUserId: string | null
+  /** Set on the server for the girls' ranker on a wrestler he ranks: he may change the photo. */
+  rankerMayUploadPhoto?: boolean
 }
 
 export function ViewProfileClient({
@@ -30,6 +32,7 @@ export function ViewProfileClient({
   initialAthlete,
   initialError,
   initialUserId,
+  rankerMayUploadPhoto = false,
 }: ViewProfileClientProps) {
   const { user } = useAuth()
   /**
@@ -131,19 +134,14 @@ export function ViewProfileClient({
     <main className="min-h-screen bg-[#0A1628]">
       <div className="border-b border-white/10 bg-[#0A1628]">
         <div className="container mx-auto px-4 py-3">
-          <Link
-            href="/prospects/all"
-            className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-[#D3B574] transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Athletes
-          </Link>
+          <ProfileBackLink className="inline-flex min-h-[44px] items-center gap-2 text-sm text-white/60 hover:text-[#D3B574] transition-colors" />
         </div>
       </div>
 
       <div className="container mx-auto min-w-0 max-w-full px-4 pb-4 pt-0 lg:py-8">
         <ProfileViewTracker athleteId={String(athlete.id)} athleteName={athleteName} />
         <AthleteDetail
+          rankerMayUploadPhoto={rankerMayUploadPhoto}
           theme="dark"
           mobileRecruiterLayout
           competition={competition}

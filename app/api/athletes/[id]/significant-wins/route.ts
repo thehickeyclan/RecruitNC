@@ -12,7 +12,6 @@ import { loadStatePlacerIndex } from "@/lib/state-placers"
 import { mergeBoutSources } from "@/lib/bout-source-deduplication"
 import { styleOfEventForAthlete } from "@/lib/wrestling-style"
 import { resolveRequestUserId } from "@/lib/request-user"
-import { resolveAthleteOwnership } from "@/lib/mobile/athlete-ownership"
 import { classifyViewer } from "@/lib/viewer-role"
 import { sameReportedBout } from "@/lib/same-reported-bout"
 
@@ -31,12 +30,13 @@ import { sameReportedBout } from "@/lib/same-reported-bout"
 export const dynamic = "force-dynamic"
 
 /**
- * Notable losses are for the people recruiting a wrestler and for the wrestler's own family, and
- * nobody else (Matt, 11 October 2026: "families will look at other families' notable losses all
- * the time"). Decided here, not on the page: the website hid the row while this endpoint went on
- * handing the list to anyone who asked, and the iPhone app showed it. Cookie or bearer.
+ * Notable losses are for the people recruiting a wrestler, and nobody else: verified college
+ * coaches and admins (Matt, 14 October 2026: "scouting reports, compare athletes, notable
+ * losses.. all coaches only.. not parents or kid"). The wrestler's own family used to be included.
+ * Decided here, not on the page: the website hid the row while this endpoint went on handing the
+ * list to anyone who asked, and the iPhone app showed it. Cookie or bearer.
  */
-async function maySeeLosses(request: NextRequest, admin: ReturnType<typeof createAdminClient>, athleteId: string): Promise<boolean> {
+async function maySeeLosses(request: NextRequest, admin: ReturnType<typeof createAdminClient>): Promise<boolean> {
   const userId = await resolveRequestUserId(request).catch(() => null)
   if (!userId) return false
   const { data: profile } = await admin
@@ -46,8 +46,7 @@ async function maySeeLosses(request: NextRequest, admin: ReturnType<typeof creat
     .maybeSingle()
   // A college coach has access from sign-up, before review (the same reading as the perfect-recruit flag).
   const who = classifyViewer(profile ?? null)
-  if (who.kind === "admin" || profile?.is_admin === true || (who.isCollegeCoach && who.verifiedCoach)) return true
-  return (await resolveAthleteOwnership(admin, athleteId, userId)).ok
+  return who.kind === "admin" || profile?.is_admin === true || (who.isCollegeCoach && who.verifiedCoach)
 }
 
 const PRIVATE = { headers: { "Cache-Control": "private, no-store" } }
@@ -55,7 +54,7 @@ const PRIVATE = { headers: { "Cache-Control": "private, no-store" } }
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const admin = createAdminClient()
-  const lossesVisible = await maySeeLosses(request, admin, id)
+  const lossesVisible = await maySeeLosses(request, admin)
 
   const [{ data: rawRows }, { data: invitations }, rawTournamentBouts, stateIndex, { data: gradRow }, rawEventBouts] = await Promise.all([
     admin.from("matches").select("season,matches,grade").eq("athlete_id", id),

@@ -1,5 +1,6 @@
 "use client"
 
+import { formatPhoneForDisplay } from "@/lib/phone-format"
 import { COMPLETENESS_EDITORS, profileCompleteness } from "@/lib/profile-completeness"
 import { isPlaceholderAthletePhoto } from "@/lib/recruiting-profile-photo"
 import { STYLE_LABEL, type CompetitionSummary } from "@/lib/wrestling-style"
@@ -117,6 +118,8 @@ const EDIT_SECTION_ROW: Record<string, RowKey> = {
 }
 
 interface AthleteDetailProps {
+  /** The girls' ranker on a wrestler he ranks: the photo is his to change, nothing else. */
+  rankerMayUploadPhoto?: boolean
   athlete: {
     id: string
     name?: string
@@ -253,6 +256,7 @@ export function AthleteDetail({
   tournamentResultsComponent,
   theme = "light",
   mobileRecruiterLayout = false,
+  rankerMayUploadPhoto = false,
   competition = null,
   credentials = [],
   summaryFacts = null,
@@ -405,7 +409,8 @@ export function AthleteDetail({
     setTimeout(() => document.querySelector("[data-owner-editor]")?.scrollIntoView({ block: "start" }), 300)
   }, [canEdit])
   // Private info (contact, GPA, ACT, SAT) visible only to self, coaches, and admins
-  const canSeePrivateInfo = isViewingOwnProfile || isAdmin || isVerifiedCoach
+  // A linked parent sees the family's own private details (Matt, 14 October 2026); the server sends them on the same rule.
+  const canSeePrivateInfo = isViewingOwnProfile || isParentLinkedEditor || isLinkedParentProfile || isAdmin || isVerifiedCoach
   /** The comparison: verified college coaches and admins, never on your own profile. */
   const mayCompare = mayUseComparison({ isAdmin, profile: viewerProfile, userId: currentUserId }) && !isViewingOwnProfile
 
@@ -1120,7 +1125,7 @@ export function AthleteDetail({
             aria-label="Call"
           >
             <Phone className={phoneIconClass} />
-            <span>{cellPhone}</span>
+            <span>{formatPhoneForDisplay(cellPhone)}</span>
           </a>
         )}
         {canSeePrivateInfo && contactEmail && (
@@ -1391,8 +1396,8 @@ export function AthleteDetail({
       </div>
       <div className="flex items-center gap-3">
         <div className="relative h-[156px] w-[124px] shrink-0 overflow-hidden rounded-xl bg-[#0f1c2e]">
-          {canEdit ? (
-            <ImageUploadEditor athleteId={athlete.id} currentImageUrl={athletePhoto || undefined} onUpload={handleImageUpload} canEdit={canEdit} className="h-full w-full" />
+          {canEdit || rankerMayUploadPhoto ? (
+            <ImageUploadEditor athleteId={athlete.id} currentImageUrl={athletePhoto || undefined} onUpload={handleImageUpload} canEdit={canEdit || rankerMayUploadPhoto} className="h-full w-full" />
           ) : (
             <Image
               src={athletePhoto || "/wrestler-silhouette.png"}
@@ -1684,12 +1689,12 @@ export function AthleteDetail({
               <div className="relative z-10 flex items-start gap-8 p-8">
                 <div className="flex-shrink-0 w-72 h-[360px]">
                   <div className="relative w-full h-full rounded-xl overflow-hidden border-4 border-white/30 shadow-2xl bg-[#13294B]">
-                    {canEdit ? (
+                    {canEdit || rankerMayUploadPhoto ? (
                       <ImageUploadEditor
                         athleteId={athlete.id}
                         currentImageUrl={athletePhoto || undefined}
                         onUpload={handleImageUpload}
-                        canEdit={canEdit}
+                        canEdit={canEdit || rankerMayUploadPhoto}
                         className="w-full h-full"
                       />
                     ) : (

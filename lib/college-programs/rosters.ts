@@ -10,6 +10,7 @@
  */
 
 import data from "@/lib/college-programs/nc-rosters-2026-27.json"
+import { depthFor } from "@/lib/college-programs/roster-depth"
 
 export type RosterWrestler = {
   name: string
@@ -53,15 +54,22 @@ const TEAM_WORD = { mens: "men's", womens: "women's" } as const
  * were checked and are right; the totals are not, so "7 of the 48" is never said. Turn this on
  * only with a file whose counts are wrestlers only.
  */
-const ROSTER_SIZES_VERIFIED = false
+/*
+ * Sizes now come from Muse's nationwide file (roster-depth.json), rebuilt wrestlers-only after
+ * the staff-card purge: NC State reads 32, the number Matt checked by hand (14 Oct 2026).
+ */
+const ROSTER_SIZES_VERIFIED = true
 
 export function rosterForSchool(schoolId: string): SchoolRosterView {
   const school = ROSTERS[schoolId] ?? { wrestlers: [], teams: [] }
   const both = new Set(school.teams.map((t) => t.team)).size > 1
-  const teamLines = school.teams.map((t) => {
+  const teamLines = school.teams.map((team0) => {
+    let t = team0
     const team = both ? `${TEAM_WORD[t.team]} ` : ""
     if (!t.reviewed) return `We could not read the ${team}roster on the school's site, so we can't say who on it is from North Carolina.`
     const nc = school.wrestlers.filter((w) => w.team === t.team).length
+    // The verified wrestlers-only size; the size in the NC extract counted staff cards.
+    t = { ...t, rosterSize: depthFor(schoolId, t.team)?.size ?? null }
     const season = t.season ? `${t.season} ` : ""
     if (t.rosterSize == null || !ROSTER_SIZES_VERIFIED) {
       return nc === 0
