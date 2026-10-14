@@ -15,6 +15,7 @@ import { unstable_cache } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { currentClassYears } from "@/lib/class-years"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
+import { HOME_STATE, normalizeState } from "@/lib/athlete-state"
 
 export type CoachRosterAthlete = {
   id: string
@@ -25,13 +26,17 @@ export type CoachRosterAthlete = {
   weightclass: string | null
 }
 
-async function build(): Promise<CoachRosterAthlete[]> {
+async function build(state: string = HOME_STATE): Promise<CoachRosterAthlete[]> {
   const admin = createAdminClient()
   const active = currentClassYears()
   const { data, error } = await admin
     .from("athletes")
     .select("id,name,highschool,graduationyear,weightclass")
-    .eq("is_nc_athlete", true)
+    /*
+     * A coach's roster is one state's wrestlers. Reads the state rather than `is_nc_athlete`,
+     * which is a boolean and so cannot name a second one — see lib/athlete-state.ts.
+     */
+    .eq("state", normalizeState(state))
     .gte("graduationyear", active[0]!)
     .lte("graduationyear", active[active.length - 1]!)
     .order("name")

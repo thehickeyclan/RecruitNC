@@ -63,6 +63,7 @@ import { ProfileViewStatsPanel } from "./profile-view-stats-panel"
 import { BannerViewStats } from "./profile/banner-view-stats"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { scoutingReportAvailable } from "@/lib/scouting-report-access"
+import { stateName } from "@/lib/athlete-state"
 
 /**
  * Bio/summary paragraph section.
@@ -88,6 +89,8 @@ interface AthleteDetailProps {
     weight_class?: string
     highschool?: string
     high_school?: string
+    /** Two-letter code; the state he wrestles in, shown under the school. */
+    state?: string | null
     wrestlingClub?: string
     wrestlingClubLogoUrl?: string
     ncUnitedTeam?: string
@@ -448,6 +451,12 @@ export function AthleteDetail({
     ? `Last competed: ${profileWeightDisplay.lastCompeted.weight} lbs · ${profileWeightDisplay.lastCompeted.event} ${profileWeightDisplay.lastCompeted.year}`
     : null
   const highSchool = athlete?.highschool || athlete?.high_school || "Not specified"
+  /*
+   * The state under the school, because "4A State Champion" is ambiguous the moment the product
+   * holds two states and both Carolinas run a 4A. It sits as a subline on the school card rather
+   * than a card of its own: it qualifies the school, it is not a credential beside it.
+   */
+  const athleteStateName = stateName(athlete?.state)
   const wrestlingClub = athlete?.wrestlingClub || "Not specified"
   const ncUnitedTeam = athlete?.ncUnitedTeam || ""
   /*
@@ -2018,6 +2027,9 @@ export function AthleteDetail({
                     </div>
                     <p className="profile-label text-[10px] lg:text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1 lg:mb-2">High School</p>
                     <p className="profile-text text-base lg:text-xl font-bold text-foreground leading-tight">{highSchool}</p>
+                    {athleteStateName && (
+                      <p className="profile-text mt-0.5 text-xs lg:text-sm text-muted-foreground leading-tight">{athleteStateName}</p>
+                    )}
                   </div>
                 )}
                 {wrestlingClub && wrestlingClub !== "Not specified" && (

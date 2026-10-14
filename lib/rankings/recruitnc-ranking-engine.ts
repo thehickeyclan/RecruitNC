@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { getAthleteNameSearchVariants, namesLikelySamePerson } from "@/lib/athlete-name-match"
+import { HOME_STATE, normalizeState } from "@/lib/athlete-state"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import {
   applyStarOverride,
@@ -904,11 +905,14 @@ export async function buildRecruitNcRankingBoard({
   supabase,
   year,
   gender,
+  state = HOME_STATE,
   rankedAsOfBoutDate = true,
 }: {
   supabase: SupabaseClient
   year: string
   gender: string
+  /** Which state's board this is. Defaults to North Carolina, so existing callers are unchanged. */
+  state?: string
   /**
    * Judge "nationally ranked" opponents by the lists in effect on each bout's date
    * (lib/rankings/ranking-archive.ts) instead of today's. On for both boards; pass false to compare
@@ -922,14 +926,17 @@ export async function buildRecruitNcRankingBoard({
     .eq("graduationyear", year)
     .ilike("gender", gender)
     /**
-     * These are North Carolina rankings, so a wrestler who has left the state is not in them.
+     * A board belongs to one state, so a wrestler who has left it is not in them.
      *
      * The board never checked this. Jack Harty transferred to Greens Farms Academy in
      * Connecticut and still placed fourth in the Class of 2027 on the strength of an NC résumé
      * he is no longer adding to. `is_nc_athlete` was already on the row and already false for
      * twenty-three athletes; nothing was reading it.
+     *
+     * It reads the state rather than that boolean now, because placer profiles are being minted
+     * for every state and a yes/no cannot say which one — see lib/athlete-state.ts.
      */
-    .eq("is_nc_athlete", true)
+    .eq("state", normalizeState(state))
     .order("prospect_ranking", { ascending: true })
     .order("name", { ascending: true })
 

@@ -9,6 +9,7 @@ import {
 } from "@/lib/credentials/athlete-credentials"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getPublicRankingsMax, isPublicRankingsYearPublished, isRankedClassYear } from "@/lib/public-rankings-cap"
+import { HOME_STATE, normalizeState } from "@/lib/athlete-state"
 
 /**
  * The public read model for a class ranking — one server-side shape, the way the TOC field has one.
@@ -154,6 +155,8 @@ async function buildPublicClassRanking(
    * need to read exactly what customers will read - the same page, not a different one.
    */
   includeUnreleased = false,
+  /** Which state's board. Defaults to North Carolina, so every current caller is unchanged. */
+  state: string = HOME_STATE,
 ): Promise<PublicClassRanking> {
   const cap = getPublicRankingsMax(year)
   const reachable = includeUnreleased ? isRankedClassYear(year) : isPublicRankingsYearPublished(year)
@@ -177,7 +180,8 @@ async function buildPublicClassRanking(
         ].join(", "),
       )
       .eq("graduationyear", year)
-      .eq("is_nc_athlete", true)
+      /* One state's board. See lib/athlete-state.ts for why this is not `is_nc_athlete`. */
+      .eq("state", normalizeState(state))
       .not("prospect_ranking", "is", null)
       .lte("prospect_ranking", cap)
       .order("prospect_ranking", { ascending: true })

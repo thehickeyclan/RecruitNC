@@ -179,7 +179,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     toc: rows.filter(isTocRow),
     national: rows.filter((r) => !isTocRow(r)),
     banner: {
-      credentials: profileCredentials({ stateRows, tocRows, tournamentRows: rows, max: 6 }),
+      /* His state names his state championship — see lib/profile/credentials.ts. */
+      credentials: profileCredentials({
+        stateRows,
+        tocRows,
+        tournamentRows: rows,
+        max: 6,
+        state: (row as { state?: string | null }).state ?? undefined,
+      }),
       competition: summarizeCompetition(
         [...rows, ...stateRows].flatMap((r) => [`${r.event} ${r.team ?? ""}`, ...r.bouts.map((b) => b.eventName)]),
         row.is_nc_athlete !== false,

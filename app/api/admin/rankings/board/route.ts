@@ -5,6 +5,7 @@ import { unstable_cache } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
 import { buildRecruitNcRankingBoard } from "@/lib/rankings/recruitnc-ranking-engine"
+import { HOME_STATE, normalizeState } from "@/lib/athlete-state"
 
 export const dynamic = "force-dynamic"
 
@@ -27,8 +28,12 @@ export const maxDuration = 60
  * something and want to see it.
  */
 const cachedBoard = unstable_cache(
-  async (year: string, gender: string) =>
-    buildRecruitNcRankingBoard({ supabase: createAdminClient(), year, gender }),
+  /*
+   * The state is an argument, not a constant, so it joins the cache key: two states share this
+   * entry otherwise and the second one served North Carolina's board.
+   */
+  async (year: string, gender: string, state: string) =>
+    buildRecruitNcRankingBoard({ supabase: createAdminClient(), year, gender, state }),
   // Bump this version whenever `RankingBoardAthlete` changes shape. The cache outlives a deploy,
   // so a payload built by older code is otherwise served to newer code: `all_american` went from
   // `string | null` to `string[]` while the key stayed "v1", and the board threw
@@ -43,6 +48,8 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const year = searchParams.get("year") || "2027"
   const gender = searchParams.get("gender") || "Male"
+  /* Which state's board. Absent means North Carolina, which is every caller today. */
+  const state = normalizeState(searchParams.get("state"))
   // Admins, and people granted this board (see ranking-board-access). Middleware lets this path
   // through to here for that reason.
   const auth = await requireRankingBoardAccess(gender, Number(year), "read")
@@ -52,8 +59,8 @@ export async function GET(request: Request) {
     const fresh = searchParams.get("refresh") === "1"
     const [athletes, edition, excluded, draftRanks] = await Promise.all([
       fresh
-        ? buildRecruitNcRankingBoard({ supabase: createAdminClient(), year, gender })
-        : cachedBoard(year, gender),
+        ? buildRecruitNcRankingBoard({ supabase: createAdminClient(), year, gender, state })
+        : cachedBoard(year, gender, state),
       // Never cached: the whole point of the timestamps is that they are current.
       // The draft tables may not exist yet, so this must never take the board down with it.
       (async () => {
@@ -87,7 +94,8 @@ export async function GET(request: Request) {
             .from("athletes")
             .select("id, name, highschool")
             .eq("graduationyear", Number(year))
-            .eq("is_nc_athlete", true)
+            /* One state's board; see lib/athlete-state.ts. */
+            .eq("state", normalizeState(state))
             .is("gender", null)
           return (data ?? []).map((row) => ({
             id: String(row.id),

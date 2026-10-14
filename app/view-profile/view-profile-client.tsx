@@ -106,11 +106,17 @@ export function ViewProfileClient({
     .map((row) => ({ ...row, event: shortOlympicEvent(row.event) }))
   const tocRows = folkstyleRows.filter(isTocRow)
   // Key finishes for the banner's cards (Matt's mock): national, TOC, NCHSAA, NC Freestyle titles.
+  /*
+   * The state names his state championship. Both Carolinas run a 4A, so a card reading "4A State
+   * Champion" with no state tells a coach nothing he can act on.
+   */
+  const athleteState = (athlete as { state?: string | null })?.state ?? null
   const credentials = profileCredentials({
     stateRows: stateTournamentRows,
     tocRows,
     tournamentRows: profileTournamentRows,
     max: 6,
+    state: athleteState ?? undefined,
   })
 
   return (
