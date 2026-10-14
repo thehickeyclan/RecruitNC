@@ -32,35 +32,41 @@ describe("college tuition", () => {
 })
 
 describe("what a year costs", () => {
-  it("adds fees, housing, food and books to tuition, at the rate a North Carolina family is charged", () => {
+  it("adds fees, housing, food and books to tuition, at the rate a North Carolina family is charged, and says the year", () => {
     const uva = costFacts("university-of-virginia", "VA")!
-    // The Department of Education's own page for Virginia: $58,014 tuition and fees out of state in 2023-24.
-    expect(uva.headline).toBe("$76,954 a year from out of state, which is what a North Carolina family is charged")
-    expect(uva.breakdown).toBe("Tuition and fees $58,014 · Housing and food $13,940 · Books and other costs $5,000")
-    expect(uva.other).toBe("$39,926 for residents of the state")
+    // The Department of Education's own page for Virginia: $59,512 tuition and fees out of state in 2024-25.
+    expect(uva.headline).toBe("$79,512 a year from out of state, which is what a North Carolina family is charged (2024-25 price)")
+    expect(uva.breakdown).toBe("Tuition and fees $59,512 · Housing and food $14,800 · Books and other costs $5,200")
+    expect(uva.other).toBe("$41,803 for residents of the state")
+    expect(uva.note).toMatch(/this year's will be higher/)
   })
 
   it("leads with the in-state price at a North Carolina public college, and one price at a private one", () => {
     const unc = school("University of North Carolina at Chapel Hill")
-    expect(costFacts(unc.id, unc.state)!.headline).toMatch(/a year for North Carolina residents$/)
+    expect(costFacts(unc.id, unc.state)!.headline).toMatch(/a year for North Carolina residents \(20\d\d-\d\d price\)$/)
     const duke = costFacts("duke-university", "NC")!
-    expect(duke.headline).toBe("$87,072 a year")
+    expect(duke.headline).toMatch(/^\$[\d,]+ a year \(20\d\d-\d\d price\)$/)
     expect(duke.other).toBeNull()
   })
 
-  it("is never less than tuition alone, for any college", () => {
+  it("is more than tuition alone, and carries a year, for every college", () => {
+    let counted = 0
     for (const s of programs.schools) {
       const cost = costFacts(s.id, s.state)
       const tuition = tuitionForSchool(s.id)
-      if (!cost || !tuition?.outOfState) continue
-      const total = Number(cost.headline.replace(/[^0-9]/g, "").slice(0, cost.headline.match(/\$[0-9,]+/)![0].replace(/[^0-9]/g, "").length))
-      expect(total, s.name).toBeGreaterThan(s.state === "NC" ? (tuition.inState ?? 0) : tuition.outOfState)
+      if (!cost) continue
+      counted++
+      expect(cost.headline, s.name).toMatch(/\((2023-24|2024-25) price\)$/)
+      const total = Number(cost.headline.match(/\$([\d,]+)/)![1].replace(/,/g, ""))
+      const tuitionOnly = (s.state === "NC" ? tuition?.inState : tuition?.outOfState) ?? 0
+      expect(total, s.name).toBeGreaterThan(tuitionOnly)
     }
+    expect(counted).toBeGreaterThanOrEqual(429)
   })
 
   it("falls back to tuition alone where no full price is published", () => {
     expect(costFacts("united-states-naval-academy-navy", "MD")).toBeNull()
     expect(costShort("united-states-naval-academy-navy", "MD")).toBe("No tuition (service academy)")
-    expect(costShort("university-of-virginia", "VA")).toBe("$76,954 a year out-of-state, tuition, housing and food, 2023-24, before aid")
+    expect(costShort("university-of-virginia", "VA")).toBe("$79,512 a year out-of-state: tuition, housing, food and books (2024-25 price, before aid)")
   })
 })
