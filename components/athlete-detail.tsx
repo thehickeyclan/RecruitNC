@@ -2053,6 +2053,20 @@ export function AthleteDetail({
                     <p className="profile-text text-base lg:text-xl font-bold text-foreground leading-tight">{wrestlingClub}</p>
                   </div>
                 )}
+                {/*
+                  * The state carries on its own when there is no school to hang it under.
+                  *
+                  * It began as a subline on the school card, and a profile with no school on
+                  * file then showed no state at all — which is exactly the profile a coach
+                  * knows least about. Minted placer profiles always carry a school; a
+                  * self-created one need not.
+                  */}
+                {athleteStateName && (!highSchool || highSchool === "Not specified") && (
+                  <div className="profile-panel bg-card rounded-xl p-4 lg:p-6 shadow-sm border border-border hover:shadow-md transition-shadow">
+                    <p className="profile-label text-[10px] lg:text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1 lg:mb-2">State</p>
+                    <p className="profile-text text-base lg:text-xl font-bold text-foreground leading-tight">{athleteStateName}</p>
+                  </div>
+                )}
                 {ncUnitedTeam && ncUnitedTeam !== "none" && (
                   <div className="profile-panel bg-card rounded-xl p-4 lg:p-6 shadow-sm border border-border hover:shadow-md transition-shadow col-span-2 lg:col-span-1">
                     <div className="w-10 h-10 lg:w-16 lg:h-16 rounded-lg bg-muted p-1.5 lg:p-2 flex items-center justify-center mb-2 lg:mb-3 border border-border">
