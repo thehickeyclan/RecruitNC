@@ -34,6 +34,13 @@ export type Tournament = {
 
 export type TournamentList = { key: "mens-folkstyle" | "mens-freestyle" | "womens"; title: string; intro: string; events: Tournament[] }
 
+const COLLEGE_OPEN =
+  "Most are held during the North Carolina high school season, and each sets its own entry rules for high school wrestlers. Check both with your athletic director and the event before entering."
+
+/** Said at the top of the page: the list is a guide, not a limit. */
+export const NOT_EVERY_EVENT =
+  "Many elite tournaments are not on these lists. Any chance to wrestle high-quality competition is worth taking: tough matches are what make a wrestler better, and they are what a college coach wants to see on film."
+
 const IN_SEASON =
   "Wrestled in December, inside the North Carolina high school season. NC high school wrestlers have historically not been able to enter, and we hold no NC results from it. Ask your athletic director before planning on it."
 
@@ -71,6 +78,15 @@ export const TOURNAMENT_LISTS: TournamentList[] = [
         tier: "national",
       },
       {
+        name: "AAU Scholastic Duals",
+        style: "Folkstyle",
+        when: "Late June",
+        where: null,
+        who: "High school teams",
+        why: "A summer national duals: a long run of matches against strong high school teams from across the country.",
+        tier: "national",
+      },
+      {
         name: "Ironman",
         style: "Folkstyle",
         when: "December",
@@ -99,6 +115,16 @@ export const TOURNAMENT_LISTS: TournamentList[] = [
         why: "A national-level fall bracket a month before Super 32, and a chance to be seen twice in one autumn.",
         tier: "national",
       },
+      {
+        name: "College open tournaments",
+        style: "Folkstyle",
+        when: "November to February, during the college season",
+        where: null,
+        who: "College wrestlers; many also take high school entrants",
+        why: "Wrestling college athletes, often in front of the coaches who would recruit you. A good showing against college wrestlers tells a coach more than any high school result.",
+        caution: COLLEGE_OPEN,
+        tier: "national",
+      },
     ],
   },
   {
@@ -122,6 +148,15 @@ export const TOURNAMENT_LISTS: TournamentList[] = [
         where: "Oklahoma",
         who: "State teams, 16U and Junior",
         why: "Wrestling for Team North Carolina against every other state, a month before Fargo. Many matches against national-level opponents.",
+        tier: "national",
+      },
+      {
+        name: "US Open",
+        style: "Freestyle and Greco",
+        when: "April",
+        where: "Las Vegas, Nevada",
+        who: "High school and junior wrestlers in their own brackets, beside the senior national championship",
+        why: "A national freestyle bracket in the spring, at the same event as the senior national championship.",
         tier: "national",
       },
       {
@@ -220,6 +255,16 @@ export const TOURNAMENT_LISTS: TournamentList[] = [
         who: "Club teams",
         why: "Club duals, wrestled freestyle in the girls' division: a fall run of matches against strong club teams.",
         tier: "regional",
+      },
+      {
+        name: "College open tournaments",
+        style: "Freestyle (girls)",
+        when: "November to February, during the college season",
+        where: null,
+        who: "College women; many also take high school girls",
+        why: "Wrestling college athletes, often in front of the coaches who would recruit you. A good showing against college wrestlers tells a coach more than any high school result.",
+        caution: COLLEGE_OPEN,
+        tier: "national",
       },
       {
         name: "NHSCA High School Nationals (girls)",
