@@ -9,9 +9,9 @@ describe("mayUseComparison", () => {
     expect(mayUseComparison({ profile: { role: "admin" } })).toBe(true)
   })
 
-  it("lets a listed tester in, by user id, without making him a coach", () => {
-    expect(mayUseComparison({ userId: "8d4ed89c-1a52-48cc-9429-ab5c24875a25", profile: { role: "parent" } })).toBe(true)
-    expect(mayUseComparison({ userId: "someone-else", profile: { role: "parent" } })).toBe(false)
+  it("no longer lets the former testers in: coaches only, not parents or wrestlers", () => {
+    expect(mayUseComparison({ userId: "8d4ed89c-1a52-48cc-9429-ab5c24875a25", profile: { role: "parent" } })).toBe(false)
+    expect(mayUseComparison({ userId: "37bc8399-b877-4390-a73b-7afedc8a0853", profile: { role: "parent" } })).toBe(false)
   })
 
   it("keeps everyone else out, a verified high school coach included", () => {
