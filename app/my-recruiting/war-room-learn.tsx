@@ -17,7 +17,7 @@ const eyebrow = "flex items-center gap-2 text-[11px] font-black uppercase tracki
 
 const MORE = [
   { icon: BookOpen, title: "How wrestling recruiting works", href: "/recruiting" },
-  { icon: Trophy, title: "The tournaments coaches watch", href: "/recruiting/tournaments" },
+  { icon: Trophy, title: "The tournaments college coaches watch: men's and women's", href: "/recruiting/learn/tournaments" },
   { icon: MapPin, title: "Every college program, on a map", href: "/recruiting/college-map" },
   { icon: FileText, title: "What a coach sees: a sample scouting report", href: "/sample-scouting-report" },
 ] as const
