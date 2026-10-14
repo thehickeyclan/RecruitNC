@@ -283,6 +283,7 @@ function Tool({ href, icon: Icon, title, body }: { href: string; icon: typeof Se
 export default function CoachHomeClient({ access, data }: { access: "ok" | "signed-out" | "not-coach"; data: CoachHomeData | null }) {
   if (access !== "ok" || !data) return <AccessPanel signedOut={access === "signed-out"} />
   const { recruits, messages } = data
+  const hasWork = recruits.total > 0 || messages.unread > 0 || messages.latest.length > 0
   const womens = data.viewGender === "Female"
   const profilesHref = womens ? "/prospects/all?gender=female" : "/prospects/all"
   return (
@@ -313,7 +314,13 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
           <WrestlerSearch athletes={data.athletes} />
         </div>
 
-        {data.suggested?.length ? <TopUncommitted wrestlers={data.suggested} poolSize={data.athletes.length} /> : null}
+        {/*
+         * A coach with recruits on the board or messages waiting comes back to that work, so it leads
+         * and the top uncommitted list follows. A coach with an empty board has no work yet, so the
+         * list of who to look at leads (Matt, 14 October 2026). In the two weeks before, 26 of 93
+         * coaches had starred anyone.
+         */}
+        {data.suggested?.length && !hasWork ? <TopUncommitted wrestlers={data.suggested} poolSize={data.athletes.length} /> : null}
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <RecruitsCard total={recruits.total}>
@@ -401,6 +408,8 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
             )}
           </section>
         </div>
+
+        {data.suggested?.length && hasWork ? <TopUncommitted wrestlers={data.suggested} poolSize={data.athletes.length} /> : null}
 
         {(data.competingNext ?? []).length ? (
           <section className={`${PANEL} mt-4 p-4 sm:p-5`} aria-labelledby="ch-next">
