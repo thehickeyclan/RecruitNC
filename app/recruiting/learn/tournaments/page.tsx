@@ -7,7 +7,7 @@
 import type { Metadata } from "next"
 import { AlertTriangle, Calendar, MapPin, Users } from "lucide-react"
 
-import { listsFor, type Tournament } from "@/lib/recruiting/learn/tournaments"
+import { NOT_EVERY_EVENT, listsFor, type Tournament } from "@/lib/recruiting/learn/tournaments"
 import { familyFocus } from "@/lib/recruiting/family-focus"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -73,6 +73,7 @@ export default async function TournamentsPage() {
           Where college coaches want to see a wrestler compete, most valuable first. Men&apos;s and women&apos;s are listed
           separately: a women&apos;s college coach is recruiting a freestyle wrestler.
         </p>
+        <p className="mt-4 rounded-lg border border-[#D3B574]/40 bg-[#D3B574]/10 px-4 py-3 text-sm font-semibold leading-6 text-white">{NOT_EVERY_EVENT}</p>
         <nav className="mt-4 flex flex-wrap gap-2" aria-label="Lists">
           {lists.map((l) => (
             <a key={l.key} href={`#${l.key}`} className="rounded-full border border-white/15 px-3 py-1.5 text-xs font-bold text-white/85 hover:border-[#D3B574]/60">

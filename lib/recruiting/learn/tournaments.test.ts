@@ -10,7 +10,9 @@ describe("the tournaments coaches want to see", () => {
 
   it("includes every event Matt named for the men", () => {
     const men = TOURNAMENT_LISTS[0].events.map((e) => e.name).join(" | ")
-    for (const name of ["Super 32", "NHSCA High School Nationals", "NHSCA National Duals", "Ironman", "Beast of the East"]) expect(men).toContain(name)
+    for (const name of ["Super 32", "NHSCA High School Nationals", "NHSCA National Duals", "Ironman", "Beast of the East", "AAU Scholastic Duals", "College open tournaments"]) expect(men).toContain(name)
+    expect(TOURNAMENT_LISTS[1].events.map((e) => e.name)).toContain("US Open")
+    expect(TOURNAMENT_LISTS[2].events.map((e) => e.name)).toContain("College open tournaments")
   })
 
   it("warns about the in-season events NC wrestlers have not been able to enter", () => {
