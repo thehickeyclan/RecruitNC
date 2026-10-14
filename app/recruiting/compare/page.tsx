@@ -14,6 +14,13 @@ import data from "@/lib/college-programs/programs-2026-27.json"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { INCOME_BRACKETS, fitForSchool, netPriceFor, satTotalRange, scorePlacement, type Placement } from "@/lib/college-programs/fit"
 import { rosterForSchool } from "@/lib/college-programs/rosters"
+import majorsData from "@/lib/college-programs/majors.json"
+import { readWentHereSnapshot } from "@/lib/college-programs/went-here-snapshot"
+import { parseGpa, standingOf } from "@/lib/college-programs/went-here-stats"
+import { loadAthleteCredentials } from "@/lib/credentials/athlete-credentials"
+import { EMPTY_PROFILE, academicFit, athleticFit, cleanProfile, costFit, fitScore, goalsFit, milesBetween, type FitLine, type FitStatus } from "@/lib/recruiting/family-fit"
+import ncZips from "@/lib/recruiting/nc-zips.json"
+import { FamilyFitForm } from "@/components/colleges/family-fit-form"
 import { depthAtWeights, depthFor, nearestCollegeWeights } from "@/lib/college-programs/roster-depth"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
 import { teamRankingsForSchool } from "@/lib/college-programs/team-rankings-snapshot"
@@ -42,6 +49,15 @@ const MARK: Record<Placement, { text: string; className: string }> = {
 
 type Cell = { main: string; sub?: string; className?: string }
 
+const MAJORS = majorsData.majors as Record<string, string[]>
+const NC_ZIPS = ncZips.zips as Record<string, number[]>
+const STATUS: Record<FitStatus, { label: string; className: string }> = {
+  fit: { label: "Good fit", className: "text-emerald-300" },
+  stretch: { label: "Stretch", className: "text-amber-200" },
+  concern: { label: "Concern", className: "text-red-300" },
+  unknown: { label: "Not enough to say", className: "text-white/60" },
+}
+
 export default async function ComparePage({ searchParams }: { searchParams?: Promise<Record<string, string | undefined>> }) {
   const params = (await searchParams) ?? {}
   const supabase = await createClient()
@@ -64,7 +80,7 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
 
   // The wrestler being compared: the oldest still in school, whose own scores sit beside each college's.
   const { data: rows } = ids.length
-    ? await admin.from("athletes").select('id, "firstName", name, graduationyear, academic_gpa, academic_sat, academic_act').in("id", ids)
+    ? await admin.from("athletes").select('id, name, wrestling_name, "firstName", "lastName", highschool, graduationyear, gender, weightclass, college, college_id, academic_gpa, academic_sat, academic_act, nhsca_results, super32_results').in("id", ids)
     : { data: [] }
   const graduated = mostRecentGraduatedClassYear()
   const wrestler = (rows ?? [])
@@ -74,6 +90,15 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
   const sat = Number(String(wrestler?.academic_sat ?? "").replace(/[^0-9]/g, "")) || null
   const act = Number(String(wrestler?.academic_act ?? "").replace(/[^0-9]/g, "")) || null
   const team = focus?.gender ?? null
+  // The family's own fit profile, from their account (the previewed family's, on a developer's machine).
+  const { data: account } = await admin.auth.admin.getUserById(userId)
+  const profile = cleanProfile(account?.user?.user_metadata?.family_fit ?? EMPTY_PROFILE)
+  const profileSet = Boolean(profile.majors.length || profile.budget || profile.maxMiles || profile.size || profile.settings.length)
+  const home = profile.homeZip ? (NC_ZIPS[profile.homeZip] as [number, number] | undefined) ?? null : null
+  const mine = wrestler ? standingOf(await loadAthleteCredentials(admin, wrestler as unknown as Record<string, unknown>)) : null
+  const myGpa = parseGpa(wrestler?.academic_gpa)
+  const snapshot = await readWentHereSnapshot()
+  const among = team === "womens" ? "women" : team === "mens" ? "men" : "wrestlers"
   // The weight the wrestler last competed at, never the profile's listed one (it goes stale).
   const last = wrestler ? (await loadLastCompeted(admin, [String(wrestler.id)], new Map([[String(wrestler.id), wrestler.graduationyear ? Number(wrestler.graduationyear) : null]]))).get(String(wrestler.id)) : null
   const weight = Number(String(last?.weight ?? "").replace(/[^0-9]/g, "")) || null
@@ -94,7 +119,35 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
       const depth = depthFor(school.id, rosterTeam)
       const near = weight ? nearestCollegeWeights(weight, rosterTeam) : []
       const atWeight = depth && near.length ? depthAtWeights(depth, near) : null
+      // The four parts of fit for this college.
+      const division = (team ? school.programs.find((p) => p[team])?.division : null) ?? school.programs[0]?.division
+      const group = (snapshot?.commits ?? []).filter((c) => c.division === division && (!team || c.gender === team)).map((c) => c.standing)
+      const schoolGpa = (team ? snapshot?.gpaBySchoolGender?.[`${school.id}|${team}`] : snapshot?.gpaBySchool[school.id]) ?? null
+      const levelGpa = division ? ((team ? snapshot?.gpaByDivisionGender?.[`${division}|${team}`] : snapshot?.gpaByDivision[division]) ?? null) : null
+      const gpaGroup = schoolGpa ? { ...schoolGpa, label: `NC ${among} who went to ${spoken(school.name)}` } : levelGpa ? { ...levelGpa, label: `NC ${among} who went ${division ? DIVISION_SHORT[division] : ""}` } : null
+      const satR = fit ? satTotalRange(fit) : [null, null]
+      const fitLines = {
+        athletic: division ? athleticFit(mine, group, DIVISION_SHORT[division], among) : { status: "unknown" as const, text: `No ${among === "women" ? "women's" : "men's"} team.` },
+        academic: academicFit({
+          sat: sat && satR[0] != null && satR[1] != null ? { score: sat, low: satR[0], high: satR[1] } : null,
+          act: act && fit?.act[0] != null && fit.act[1] != null ? { score: act, low: fit.act[0], high: fit.act[1] } : null,
+          gpa: myGpa != null && gpaGroup ? { mine: myGpa, average: gpaGroup.average, count: gpaGroup.count, label: gpaGroup.label } : null,
+          admitRate: fit?.admitRate ?? null,
+        }),
+        cost: costFit({ netPrice: net?.amount ?? null, netNote: net?.note ?? "", published: cost?.amount ?? null, budget: profile.budget }),
+        goals: goalsFit(profile, {
+          majors: (MAJORS[school.id] as string[] | undefined) ?? null,
+          miles: home ? milesBetween(home, [school.latitude, school.longitude]) : null,
+          undergrads: fit?.undergrads ?? null,
+          setting: fit?.setting ?? null,
+        }),
+      }
+      const fitCell = (l: FitLine): Cell => ({ main: STATUS[l.status].label, sub: l.text, className: STATUS[l.status].className })
       const cells: Record<string, Cell> = {
+        fitAthletic: fitCell(fitLines.athletic),
+        fitAcademic: fitCell(fitLines.academic),
+        fitCost: fitCell(fitLines.cost),
+        fitGoals: fitCell(fitLines.goals),
         size: depth
           ? { main: `${depth.size} wrestlers`, sub: depth.season ? `${depth.season} roster` : "Season not stated on the roster" }
           : { main: "Roster not read" },
@@ -123,11 +176,17 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
         grad: fit?.gradRate != null ? { main: `${fit.gradRate}%`, sub: fit.gradRateKind ?? undefined } : { main: "Not reported" },
         retention: fit?.retention != null ? { main: `${fit.retention}%`, sub: "Return for a second year" } : { main: "Not reported" },
       }
-      return { school, fit, cells }
+      return { school, fit, cells, score: fitScore(Object.values(fitLines)) }
     }),
   )
 
+  // Best match on what the family told us first; the order is said on the page, never called a verdict.
+  columns.sort((a, b) => b.score - a.score)
   const ROWS: Array<{ key: string; label: string; group: string }> = [
+    { key: "fitAthletic", label: "Athletic", group: "Fit for your family" },
+    { key: "fitAcademic", label: "Academic", group: "Fit for your family" },
+    { key: "fitCost", label: "Finances", group: "Fit for your family" },
+    { key: "fitGoals", label: "Your goals", group: "Fit for your family" },
     { key: "level", label: "Level and conference", group: "The program" },
     { key: "ranking", label: "Team ranking", group: "The program" },
     { key: "size", label: "Roster size", group: "The program" },
@@ -215,7 +274,13 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
               </div>
             </div>
 
-            <div className="mt-6 overflow-x-auto rounded-xl border border-white/10">
+            <FamilyFitForm initial={profile} open={!profileSet} />
+            <p className="mt-4 text-sm leading-6 text-white/70">
+              {columns.length > 1 ? `Ordered by best match on what you have told us, ${spoken(columns[0].school.name)} first. ` : ""}
+              This is how each college fits on paper. It is not which college is right: a coach&apos;s interest, a visit and the money offered decide that, and none of them is in our data.
+            </p>
+
+            <div className="mt-4 overflow-x-auto rounded-xl border border-white/10">
               <table className="w-full min-w-[640px] border-collapse text-sm">
                 <thead>
                   <tr className="bg-[#0f1c2e]">
