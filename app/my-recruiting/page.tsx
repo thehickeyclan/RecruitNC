@@ -23,7 +23,7 @@ import { schoolLogoUrl } from "@/lib/college-programs/logo"
 import { gradeLabel } from "@/lib/college-programs/outreach-results"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { questionnairesForSchool } from "@/lib/college-programs/questionnaires"
-import { tuitionShort } from "@/lib/college-programs/tuition"
+import { costShort } from "@/lib/college-programs/tuition"
 import { listUpcomingEvents, type UpcomingEvent } from "@/lib/college-programs/schedule"
 import { DIVISION_SHORT, primaryDivision, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { completenessFromRow } from "@/lib/profile-completeness"
@@ -102,7 +102,7 @@ export default async function RecruitingWarRoomPage() {
           status,
           logo: null as string | null,
           hasQuestionnaire: questionnairesForSchool(school.id).length > 0,
-          tuition: tuitionShort(school.id, school.state),
+          tuition: costShort(school.id, school.state),
           noTeam: focus && !school.programs.some((p) => p[focus.gender]) ? `No ${focus.gender === "womens" ? "women's" : "men's"} team` : null,
         },
       ]

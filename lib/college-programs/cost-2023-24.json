@@ -1,0 +1,3454 @@
+{
+ "source": "US Department of Education, IPEDS Institutional Characteristics 2023-24 (file IC2023_AY): published price of attendance for a first-time, full-time undergraduate. Joined to the program list by state and published tuition, 13 Oct 2026.",
+ "year": "2023-24",
+ "cost": {
+  "adams-state-university": {
+   "tuitionFeesIn": 9776,
+   "tuitionFeesOut": 21848,
+   "books": 1460,
+   "housingFood": 9553,
+   "other": 4410,
+   "onCampus": true
+  },
+  "adrian-college": {
+   "tuitionFeesIn": 40556,
+   "tuitionFeesOut": 40556,
+   "books": 1100,
+   "housingFood": 13424,
+   "other": 1924,
+   "onCampus": true
+  },
+  "albion-college": {
+   "tuitionFeesIn": 55746,
+   "tuitionFeesOut": 55746,
+   "books": 850,
+   "housingFood": 12570,
+   "other": 950,
+   "onCampus": true
+  },
+  "albright-college": {
+   "tuitionFeesIn": 28794,
+   "tuitionFeesOut": 28794,
+   "books": 1300,
+   "housingFood": 13954,
+   "other": 2374,
+   "onCampus": true
+  },
+  "alfred-state-college": {
+   "tuitionFeesIn": 8862,
+   "tuitionFeesOut": 16367,
+   "books": 1200,
+   "housingFood": 14180,
+   "other": 2346,
+   "onCampus": true
+  },
+  "allen-university": {
+   "tuitionFeesIn": 14304,
+   "tuitionFeesOut": 14304,
+   "books": 1308,
+   "housingFood": 8584,
+   "other": 2500,
+   "onCampus": true
+  },
+  "alma-college": {
+   "tuitionFeesIn": 47430,
+   "tuitionFeesOut": 47430,
+   "books": 850,
+   "housingFood": 13128,
+   "other": 2532,
+   "onCampus": true
+  },
+  "alvernia-university": {
+   "tuitionFeesIn": 42810,
+   "tuitionFeesOut": 42810,
+   "books": 1500,
+   "housingFood": 15090,
+   "other": 2500,
+   "onCampus": true
+  },
+  "american-university": {
+   "tuitionFeesIn": 56543,
+   "tuitionFeesOut": 56543,
+   "books": 1000,
+   "housingFood": 17012,
+   "other": 1620,
+   "onCampus": true
+  },
+  "ancilla-college": {
+   "tuitionFeesIn": 19850,
+   "tuitionFeesOut": 19850,
+   "books": 0,
+   "housingFood": 10650,
+   "other": 8674,
+   "onCampus": true
+  },
+  "andrew-college": {
+   "tuitionFeesIn": 19126,
+   "tuitionFeesOut": 19126,
+   "books": 1500,
+   "housingFood": 12432,
+   "other": 4554,
+   "onCampus": true
+  },
+  "appalachian-state-university": {
+   "tuitionFeesIn": 7541,
+   "tuitionFeesOut": 24537,
+   "books": 800,
+   "housingFood": 12258,
+   "other": 2725,
+   "onCampus": true
+  },
+  "arcadia-university": {
+   "tuitionFeesIn": 48290,
+   "tuitionFeesOut": 48290,
+   "books": 1500,
+   "housingFood": 16250,
+   "other": 1100,
+   "onCampus": true
+  },
+  "arizona-christian-university": {
+   "tuitionFeesIn": 34697,
+   "tuitionFeesOut": 34697,
+   "books": 1730,
+   "housingFood": 13500,
+   "other": 6160,
+   "onCampus": true
+  },
+  "arizona-state-university": {
+   "tuitionFeesIn": 12051,
+   "tuitionFeesOut": 32193,
+   "books": 1320,
+   "housingFood": 16091,
+   "other": 3808,
+   "onCampus": true
+  },
+  "ashland-university": {
+   "tuitionFeesIn": 28910,
+   "tuitionFeesOut": 28910,
+   "books": 912,
+   "housingFood": 11960,
+   "other": 2596,
+   "onCampus": true
+  },
+  "augsburg-university": {
+   "tuitionFeesIn": 43942,
+   "tuitionFeesOut": 43942,
+   "books": 1500,
+   "housingFood": 16418,
+   "other": 2750,
+   "onCampus": true
+  },
+  "augustana-college-illinois": {
+   "tuitionFeesIn": 49834,
+   "tuitionFeesOut": 49834,
+   "books": 1000,
+   "housingFood": 12166,
+   "other": 1848,
+   "onCampus": true
+  },
+  "augustana-university": {
+   "tuitionFeesIn": 39190,
+   "tuitionFeesOut": 39190,
+   "books": 1000,
+   "housingFood": 9470,
+   "other": 6480,
+   "onCampus": true
+  },
+  "aurora-university": {
+   "tuitionFeesIn": 28220,
+   "tuitionFeesOut": 28220,
+   "books": 1200,
+   "housingFood": 13240,
+   "other": 3204,
+   "onCampus": true
+  },
+  "averett-university": {
+   "tuitionFeesIn": 38550,
+   "tuitionFeesOut": 38550,
+   "books": 1000,
+   "housingFood": 13016,
+   "other": 2874,
+   "onCampus": true
+  },
+  "avila-university": {
+   "tuitionFeesIn": 38672,
+   "tuitionFeesOut": 38672,
+   "books": 1190,
+   "housingFood": 9065,
+   "other": 3410,
+   "onCampus": true
+  },
+  "baker-university": {
+   "tuitionFeesIn": 33900,
+   "tuitionFeesOut": 33900,
+   "books": 1250,
+   "housingFood": 10720,
+   "other": 5190,
+   "onCampus": true
+  },
+  "baldwin-wallace-university": {
+   "tuitionFeesIn": 37938,
+   "tuitionFeesOut": 37938,
+   "books": 1500,
+   "housingFood": 13180,
+   "other": 6340,
+   "onCampus": true
+  },
+  "barton-community-college": {
+   "tuitionFeesIn": 3904,
+   "tuitionFeesOut": 4832,
+   "books": 1460,
+   "housingFood": 6515,
+   "other": 4300,
+   "onCampus": true
+  },
+  "bellarmine-university": {
+   "tuitionFeesIn": 47180,
+   "tuitionFeesOut": 47180,
+   "books": null,
+   "housingFood": 10250,
+   "other": 7914,
+   "onCampus": true
+  },
+  "bellevue-university": {
+   "tuitionFeesIn": 8886,
+   "tuitionFeesOut": 8886,
+   "books": 1833,
+   "housingFood": 10683,
+   "other": 3924,
+   "onCampus": true
+  },
+  "belmont-abbey-college": {
+   "tuitionFeesIn": 19500,
+   "tuitionFeesOut": 19500,
+   "books": 1700,
+   "housingFood": 12056,
+   "other": 2900,
+   "onCampus": true
+  },
+  "benedictine-college": {
+   "tuitionFeesIn": 34800,
+   "tuitionFeesOut": 34800,
+   "books": 1200,
+   "housingFood": 11820,
+   "other": 4450,
+   "onCampus": true
+  },
+  "bergen-community-college": {
+   "tuitionFeesIn": 8613,
+   "tuitionFeesOut": 9005,
+   "books": 1500,
+   "housingFood": 13078,
+   "other": 5751,
+   "onCampus": false
+  },
+  "bethany-college": {
+   "tuitionFeesIn": 34816,
+   "tuitionFeesOut": 34816,
+   "books": 700,
+   "housingFood": 12936,
+   "other": 2716,
+   "onCampus": true
+  },
+  "big-bend-community-college": {
+   "tuitionFeesIn": 4909,
+   "tuitionFeesOut": 5443,
+   "books": 762,
+   "housingFood": 19422,
+   "other": 3888,
+   "onCampus": true
+  },
+  "binghamton-university": {
+   "tuitionFeesIn": 10363,
+   "tuitionFeesOut": 29453,
+   "books": 1000,
+   "housingFood": 18294,
+   "other": 1000,
+   "onCampus": true
+  },
+  "bismarck-state-college": {
+   "tuitionFeesIn": 5195,
+   "tuitionFeesOut": 7279,
+   "books": 1100,
+   "housingFood": 8300,
+   "other": 3400,
+   "onCampus": true
+  },
+  "blackburn-college": {
+   "tuitionFeesIn": 26758,
+   "tuitionFeesOut": 26758,
+   "books": 500,
+   "housingFood": 9120,
+   "other": 2700,
+   "onCampus": true
+  },
+  "bluefield-state-university": {
+   "tuitionFeesIn": 10240,
+   "tuitionFeesOut": 17560,
+   "books": 1200,
+   "housingFood": 11327,
+   "other": 4300,
+   "onCampus": true
+  },
+  "bluefield-university": {
+   "tuitionFeesIn": 29696,
+   "tuitionFeesOut": 29696,
+   "books": 440,
+   "housingFood": 9814,
+   "other": 3370,
+   "onCampus": true
+  },
+  "brewton-parker-college": {
+   "tuitionFeesIn": 21696,
+   "tuitionFeesOut": 21696,
+   "books": 1941,
+   "housingFood": 10138,
+   "other": 5258,
+   "onCampus": true
+  },
+  "briar-cliff-university": {
+   "tuitionFeesIn": 35534,
+   "tuitionFeesOut": 35534,
+   "books": 1544,
+   "housingFood": 10208,
+   "other": 4556,
+   "onCampus": true
+  },
+  "bridgewater-state-university": {
+   "tuitionFeesIn": 11389,
+   "tuitionFeesOut": 17529,
+   "books": 1000,
+   "housingFood": 14586,
+   "other": 3170,
+   "onCampus": true
+  },
+  "brown-university": {
+   "tuitionFeesIn": 68230,
+   "tuitionFeesOut": 68230,
+   "books": 0,
+   "housingFood": 16598,
+   "other": 2820,
+   "onCampus": true
+  },
+  "bryant-stratton-college-wisconsin": {
+   "tuitionFeesIn": 19944,
+   "tuitionFeesOut": 19944,
+   "books": 1800,
+   "housingFood": 3900,
+   "other": 1490,
+   "onCampus": false
+  },
+  "bucknell-university": {
+   "tuitionFeesIn": 64772,
+   "tuitionFeesOut": 64772,
+   "books": 900,
+   "housingFood": 16118,
+   "other": 2000,
+   "onCampus": true
+  },
+  "buena-vista-university": {
+   "tuitionFeesIn": 40190,
+   "tuitionFeesOut": 40190,
+   "books": 1132,
+   "housingFood": 10896,
+   "other": 2561,
+   "onCampus": true
+  },
+  "buffalo-state-university": {
+   "tuitionFeesIn": 8486,
+   "tuitionFeesOut": 18906,
+   "books": 1052,
+   "housingFood": 16716,
+   "other": 2814,
+   "onCampus": true
+  },
+  "california-polytechnic-state-university-cal-poly": {
+   "tuitionFeesIn": 11075,
+   "tuitionFeesOut": 30995,
+   "books": 1089,
+   "housingFood": 17220,
+   "other": 2937,
+   "onCampus": true
+  },
+  "california-state-polytechnic-university-humboldt": {
+   "tuitionFeesIn": 7913,
+   "tuitionFeesOut": 19793,
+   "books": 836,
+   "housingFood": 13166,
+   "other": 3742,
+   "onCampus": true
+  },
+  "california-state-university-bakersfield": {
+   "tuitionFeesIn": 7696,
+   "tuitionFeesOut": 19576,
+   "books": 1068,
+   "housingFood": 14430,
+   "other": 3782,
+   "onCampus": true
+  },
+  "camden-county-college": {
+   "tuitionFeesIn": 4056,
+   "tuitionFeesOut": 4056,
+   "books": 1800,
+   "housingFood": 7290,
+   "other": 4150,
+   "onCampus": false
+  },
+  "campbell-university": {
+   "tuitionFeesIn": 40410,
+   "tuitionFeesOut": 40410,
+   "books": 1384,
+   "housingFood": 15200,
+   "other": 6717,
+   "onCampus": true
+  },
+  "campbellsville-university": {
+   "tuitionFeesIn": 26990,
+   "tuitionFeesOut": 26990,
+   "books": 1200,
+   "housingFood": 9170,
+   "other": 5372,
+   "onCampus": true
+  },
+  "carl-albert-state-college": {
+   "tuitionFeesIn": 4230,
+   "tuitionFeesOut": 8707,
+   "books": 1700,
+   "housingFood": 5580,
+   "other": 6260,
+   "onCampus": true
+  },
+  "carthage-college": {
+   "tuitionFeesIn": 36500,
+   "tuitionFeesOut": 36500,
+   "books": 1200,
+   "housingFood": 12950,
+   "other": 2400,
+   "onCampus": true
+  },
+  "case-western-reserve-university": {
+   "tuitionFeesIn": 64671,
+   "tuitionFeesOut": 64671,
+   "books": 1200,
+   "housingFood": 18202,
+   "other": 2000,
+   "onCampus": true
+  },
+  "cedar-crest-college": {
+   "tuitionFeesIn": 44934,
+   "tuitionFeesOut": 44934,
+   "books": 3000,
+   "housingFood": 13001,
+   "other": 850,
+   "onCampus": true
+  },
+  "centenary-university": {
+   "tuitionFeesIn": 37732,
+   "tuitionFeesOut": 37732,
+   "books": 1000,
+   "housingFood": 12552,
+   "other": 3960,
+   "onCampus": true
+  },
+  "central-baptist-college": {
+   "tuitionFeesIn": 19680,
+   "tuitionFeesOut": 19680,
+   "books": 1704,
+   "housingFood": 8500,
+   "other": 2838,
+   "onCampus": true
+  },
+  "central-christian-college-of-kansas": {
+   "tuitionFeesIn": 21000,
+   "tuitionFeesOut": 21000,
+   "books": 1200,
+   "housingFood": 8950,
+   "other": 2570,
+   "onCampus": true
+  },
+  "central-college": {
+   "tuitionFeesIn": 20988,
+   "tuitionFeesOut": 20988,
+   "books": 1275,
+   "housingFood": 12220,
+   "other": 3242,
+   "onCampus": true
+  },
+  "central-methodist-university": {
+   "tuitionFeesIn": 27140,
+   "tuitionFeesOut": 27140,
+   "books": 1000,
+   "housingFood": 8910,
+   "other": 7350,
+   "onCampus": true
+  },
+  "central-michigan-university": {
+   "tuitionFeesIn": 14190,
+   "tuitionFeesOut": 14190,
+   "books": 1240,
+   "housingFood": 12178,
+   "other": 3450,
+   "onCampus": true
+  },
+  "chadron-state-college": {
+   "tuitionFeesIn": 8078,
+   "tuitionFeesOut": 8078,
+   "books": 1300,
+   "housingFood": 9248,
+   "other": 4512,
+   "onCampus": true
+  },
+  "chatham-university": {
+   "tuitionFeesIn": 43810,
+   "tuitionFeesOut": 43810,
+   "books": 1000,
+   "housingFood": 14324,
+   "other": 2500,
+   "onCampus": true
+  },
+  "clackamas-community-college": {
+   "tuitionFeesIn": 6210,
+   "tuitionFeesOut": 14040,
+   "books": 1800,
+   "housingFood": 20097,
+   "other": 3075,
+   "onCampus": false
+  },
+  "cleary-university": {
+   "tuitionFeesIn": 24842,
+   "tuitionFeesOut": 24842,
+   "books": null,
+   "housingFood": 12800,
+   "other": 5000,
+   "onCampus": true
+  },
+  "cloud-county-community-college": {
+   "tuitionFeesIn": 3390,
+   "tuitionFeesOut": 4140,
+   "books": 1512,
+   "housingFood": 6720,
+   "other": 7152,
+   "onCampus": true
+  },
+  "coe-college": {
+   "tuitionFeesIn": 52576,
+   "tuitionFeesOut": 52576,
+   "books": 1000,
+   "housingFood": 11336,
+   "other": 2800,
+   "onCampus": true
+  },
+  "coker-university": {
+   "tuitionFeesIn": 31854,
+   "tuitionFeesOut": 31854,
+   "books": 3000,
+   "housingFood": 10882,
+   "other": 1632,
+   "onCampus": true
+  },
+  "colby-community-college": {
+   "tuitionFeesIn": 4196,
+   "tuitionFeesOut": 5736,
+   "books": 1042,
+   "housingFood": 8378,
+   "other": 3164,
+   "onCampus": true
+  },
+  "colorado-mesa-university": {
+   "tuitionFeesIn": 9712,
+   "tuitionFeesOut": 24312,
+   "books": 1800,
+   "housingFood": 11760,
+   "other": 3275,
+   "onCampus": true
+  },
+  "colorado-northwestern-community-college": {
+   "tuitionFeesIn": 4454,
+   "tuitionFeesOut": 7084,
+   "books": 1460,
+   "housingFood": 9030,
+   "other": 6426,
+   "onCampus": true
+  },
+  "colorado-school-of-mines": {
+   "tuitionFeesIn": 21186,
+   "tuitionFeesOut": 44376,
+   "books": 1500,
+   "housingFood": 16820,
+   "other": 2500,
+   "onCampus": true
+  },
+  "colorado-state-university-pueblo": {
+   "tuitionFeesIn": 9401,
+   "tuitionFeesOut": 17242,
+   "books": 1460,
+   "housingFood": 11596,
+   "other": 4738,
+   "onCampus": true
+  },
+  "columbia-university": {
+   "tuitionFeesIn": 69045,
+   "tuitionFeesOut": 69045,
+   "books": 1392,
+   "housingFood": 16800,
+   "other": 2350,
+   "onCampus": true
+  },
+  "commonwealth-university-bloomsburg-bloomsburg": {
+   "tuitionFeesIn": 11046,
+   "tuitionFeesOut": 22870,
+   "books": 1200,
+   "housingFood": 11106,
+   "other": 3118,
+   "onCampus": true
+  },
+  "commonwealth-university-lock-haven-lock-haven": {
+   "tuitionFeesIn": 11046,
+   "tuitionFeesOut": 22870,
+   "books": 1200,
+   "housingFood": 11106,
+   "other": 3118,
+   "onCampus": true
+  },
+  "concord-university": {
+   "tuitionFeesIn": 9700,
+   "tuitionFeesOut": 20600,
+   "books": 1100,
+   "housingFood": 12114,
+   "other": 3068,
+   "onCampus": true
+  },
+  "concordia-college-moorhead": {
+   "tuitionFeesIn": 30020,
+   "tuitionFeesOut": 30020,
+   "books": 900,
+   "housingFood": 11880,
+   "other": 3400,
+   "onCampus": true
+  },
+  "concordia-university-nebraska": {
+   "tuitionFeesIn": 39330,
+   "tuitionFeesOut": 39330,
+   "books": 1070,
+   "housingFood": 10350,
+   "other": 2700,
+   "onCampus": true
+  },
+  "concordia-university-wisconsin": {
+   "tuitionFeesIn": 34250,
+   "tuitionFeesOut": 34250,
+   "books": 2400,
+   "housingFood": 12700,
+   "other": 4900,
+   "onCampus": true
+  },
+  "corban-university": {
+   "tuitionFeesIn": 37208,
+   "tuitionFeesOut": 37208,
+   "books": 1000,
+   "housingFood": 11486,
+   "other": 4000,
+   "onCampus": true
+  },
+  "cornell-college": {
+   "tuitionFeesIn": 50634,
+   "tuitionFeesOut": 50634,
+   "books": 1200,
+   "housingFood": 11358,
+   "other": 3160,
+   "onCampus": true
+  },
+  "cornell-university": {
+   "tuitionFeesIn": 66014,
+   "tuitionFeesOut": 66014,
+   "books": 1354,
+   "housingFood": 18554,
+   "other": 2218,
+   "onCampus": true
+  },
+  "cornerstone-university": {
+   "tuitionFeesIn": 29100,
+   "tuitionFeesOut": 29100,
+   "books": 840,
+   "housingFood": 12200,
+   "other": 2330,
+   "onCampus": true
+  },
+  "cowley-county-community-college": {
+   "tuitionFeesIn": 4650,
+   "tuitionFeesOut": 6150,
+   "books": 1500,
+   "housingFood": 6100,
+   "other": 4500,
+   "onCampus": true
+  },
+  "cumberland-university": {
+   "tuitionFeesIn": 27840,
+   "tuitionFeesOut": 27840,
+   "books": 1200,
+   "housingFood": 10360,
+   "other": 5340,
+   "onCampus": true
+  },
+  "d-youville-university": {
+   "tuitionFeesIn": 33560,
+   "tuitionFeesOut": 33560,
+   "books": 1200,
+   "housingFood": 11800,
+   "other": 3000,
+   "onCampus": true
+  },
+  "dakota-wesleyan-university": {
+   "tuitionFeesIn": 32890,
+   "tuitionFeesOut": 32890,
+   "books": 1500,
+   "housingFood": 7600,
+   "other": 1850,
+   "onCampus": true
+  },
+  "davenport-university": {
+   "tuitionFeesIn": 23324,
+   "tuitionFeesOut": 23324,
+   "books": 904,
+   "housingFood": 11366,
+   "other": 3648,
+   "onCampus": true
+  },
+  "davidson-college": {
+   "tuitionFeesIn": 60300,
+   "tuitionFeesOut": 60300,
+   "books": 1000,
+   "housingFood": 16400,
+   "other": 1775,
+   "onCampus": true
+  },
+  "davis-elkins-college": {
+   "tuitionFeesIn": 31270,
+   "tuitionFeesOut": 31270,
+   "books": 1462,
+   "housingFood": 10425,
+   "other": 3304,
+   "onCampus": true
+  },
+  "defiance-college": {
+   "tuitionFeesIn": 38778,
+   "tuitionFeesOut": 38778,
+   "books": 1400,
+   "housingFood": 12138,
+   "other": 3076,
+   "onCampus": true
+  },
+  "delaware-state-university": {
+   "tuitionFeesIn": 10314,
+   "tuitionFeesOut": 20250,
+   "books": 1500,
+   "housingFood": 13634,
+   "other": 4788,
+   "onCampus": true
+  },
+  "delaware-valley-university": {
+   "tuitionFeesIn": 43300,
+   "tuitionFeesOut": 43300,
+   "books": 1000,
+   "housingFood": 14750,
+   "other": 2040,
+   "onCampus": true
+  },
+  "dickinson-state-university": {
+   "tuitionFeesIn": 9118,
+   "tuitionFeesOut": 11218,
+   "books": 1200,
+   "housingFood": 7740,
+   "other": 3500,
+   "onCampus": true
+  },
+  "doane-university": {
+   "tuitionFeesIn": 40491,
+   "tuitionFeesOut": 40491,
+   "books": 1000,
+   "housingFood": 11615,
+   "other": 4730,
+   "onCampus": true
+  },
+  "drexel-university": {
+   "tuitionFeesIn": 60663,
+   "tuitionFeesOut": 60663,
+   "books": 1700,
+   "housingFood": 17550,
+   "other": 1500,
+   "onCampus": true
+  },
+  "drury-university": {
+   "tuitionFeesIn": 35235,
+   "tuitionFeesOut": 35235,
+   "books": 1200,
+   "housingFood": 10486,
+   "other": 3700,
+   "onCampus": true
+  },
+  "duke-university": {
+   "tuitionFeesIn": 65805,
+   "tuitionFeesOut": 65805,
+   "books": 1602,
+   "housingFood": 17458,
+   "other": 2207,
+   "onCampus": true
+  },
+  "east-stroudsburg-university": {
+   "tuitionFeesIn": 11036,
+   "tuitionFeesOut": 19002,
+   "books": 1000,
+   "housingFood": 11154,
+   "other": 5858,
+   "onCampus": true
+  },
+  "eastern-oregon-university": {
+   "tuitionFeesIn": 10671,
+   "tuitionFeesOut": 24621,
+   "books": 1275,
+   "housingFood": 11658,
+   "other": 4584,
+   "onCampus": true
+  },
+  "eastern-university": {
+   "tuitionFeesIn": 37420,
+   "tuitionFeesOut": 37420,
+   "books": 1424,
+   "housingFood": 13168,
+   "other": 4338,
+   "onCampus": true
+  },
+  "elizabethtown-college": {
+   "tuitionFeesIn": 36842,
+   "tuitionFeesOut": 36842,
+   "books": 1100,
+   "housingFood": 12954,
+   "other": 1050,
+   "onCampus": true
+  },
+  "ellsworth-community-college": {
+   "tuitionFeesIn": 5304,
+   "tuitionFeesOut": 6312,
+   "books": 1300,
+   "housingFood": 9000,
+   "other": 5200,
+   "onCampus": true
+  },
+  "elmhurst-university": {
+   "tuitionFeesIn": 41628,
+   "tuitionFeesOut": 41628,
+   "books": 1240,
+   "housingFood": 11858,
+   "other": 4710,
+   "onCampus": true
+  },
+  "elmira-college": {
+   "tuitionFeesIn": 37932,
+   "tuitionFeesOut": 37932,
+   "books": 600,
+   "housingFood": 13990,
+   "other": 550,
+   "onCampus": true
+  },
+  "embry-riddle-aeronautical-university-prescott": {
+   "tuitionFeesIn": 42204,
+   "tuitionFeesOut": 42204,
+   "books": 1400,
+   "housingFood": 14102,
+   "other": 5562,
+   "onCampus": true
+  },
+  "emmanuel-college": {
+   "tuitionFeesIn": 46686,
+   "tuitionFeesOut": 46686,
+   "books": 1000,
+   "housingFood": 17500,
+   "other": 1868,
+   "onCampus": true
+  },
+  "emmanuel-university": {
+   "tuitionFeesIn": 23664,
+   "tuitionFeesOut": 23664,
+   "books": null,
+   "housingFood": 10460,
+   "other": 4492,
+   "onCampus": true
+  },
+  "emory-and-henry-university": {
+   "tuitionFeesIn": 35280,
+   "tuitionFeesOut": 35280,
+   "books": 1200,
+   "housingFood": 14360,
+   "other": 2900,
+   "onCampus": true
+  },
+  "eureka-college": {
+   "tuitionFeesIn": 28400,
+   "tuitionFeesOut": 28400,
+   "books": 1200,
+   "housingFood": 10542,
+   "other": 1250,
+   "onCampus": true
+  },
+  "fairmont-state-university": {
+   "tuitionFeesIn": 8454,
+   "tuitionFeesOut": 18372,
+   "books": 1000,
+   "housingFood": 11486,
+   "other": 2000,
+   "onCampus": true
+  },
+  "felician-university": {
+   "tuitionFeesIn": 37830,
+   "tuitionFeesOut": 37830,
+   "books": 1000,
+   "housingFood": 14190,
+   "other": 1430,
+   "onCampus": true
+  },
+  "ferrum-college": {
+   "tuitionFeesIn": 38320,
+   "tuitionFeesOut": 38320,
+   "books": 1000,
+   "housingFood": 13230,
+   "other": 2550,
+   "onCampus": true
+  },
+  "fort-hays-state-university": {
+   "tuitionFeesIn": 5633,
+   "tuitionFeesOut": 16811,
+   "books": 1000,
+   "housingFood": 8772,
+   "other": 4972,
+   "onCampus": true
+  },
+  "franklin-marshall-college": {
+   "tuitionFeesIn": 68380,
+   "tuitionFeesOut": 68380,
+   "books": 800,
+   "housingFood": 15568,
+   "other": 1270,
+   "onCampus": true
+  },
+  "friends-university": {
+   "tuitionFeesIn": 32748,
+   "tuitionFeesOut": 32748,
+   "books": 1500,
+   "housingFood": 10828,
+   "other": 4548,
+   "onCampus": true
+  },
+  "frostburg-state-university": {
+   "tuitionFeesIn": 9998,
+   "tuitionFeesOut": 25180,
+   "books": 1500,
+   "housingFood": 12502,
+   "other": 3056,
+   "onCampus": true
+  },
+  "gannon-university": {
+   "tuitionFeesIn": 37951,
+   "tuitionFeesOut": 37951,
+   "books": 1210,
+   "housingFood": 15610,
+   "other": 2864,
+   "onCampus": true
+  },
+  "gardner-webb-university": {
+   "tuitionFeesIn": 33450,
+   "tuitionFeesOut": 33450,
+   "books": 1000,
+   "housingFood": 10770,
+   "other": 2400,
+   "onCampus": true
+  },
+  "garrett-college": {
+   "tuitionFeesIn": 9352,
+   "tuitionFeesOut": 11368,
+   "books": 1000,
+   "housingFood": 8384,
+   "other": 2700,
+   "onCampus": true
+  },
+  "george-mason-university": {
+   "tuitionFeesIn": 13815,
+   "tuitionFeesOut": 39397,
+   "books": 1278,
+   "housingFood": 15151,
+   "other": 3504,
+   "onCampus": true
+  },
+  "georgetown-college": {
+   "tuitionFeesIn": 42010,
+   "tuitionFeesOut": 42010,
+   "books": 1250,
+   "housingFood": 11385,
+   "other": 2456,
+   "onCampus": true
+  },
+  "gettysburg-college": {
+   "tuitionFeesIn": 64230,
+   "tuitionFeesOut": 64230,
+   "books": 1000,
+   "housingFood": 15530,
+   "other": 1200,
+   "onCampus": true
+  },
+  "glenville-state-university": {
+   "tuitionFeesIn": 9412,
+   "tuitionFeesOut": 11140,
+   "books": 780,
+   "housingFood": 11484,
+   "other": 3808,
+   "onCampus": true
+  },
+  "graceland-university": {
+   "tuitionFeesIn": 33220,
+   "tuitionFeesOut": 33220,
+   "books": 1200,
+   "housingFood": 10540,
+   "other": 3500,
+   "onCampus": true
+  },
+  "grand-valley-state-university": {
+   "tuitionFeesIn": 14628,
+   "tuitionFeesOut": 20820,
+   "books": 780,
+   "housingFood": 11142,
+   "other": 2477,
+   "onCampus": true
+  },
+  "grand-view-university": {
+   "tuitionFeesIn": 33450,
+   "tuitionFeesOut": 33450,
+   "books": 1248,
+   "housingFood": 12880,
+   "other": 4298,
+   "onCampus": true
+  },
+  "greensboro-college": {
+   "tuitionFeesIn": 20400,
+   "tuitionFeesOut": 20400,
+   "books": 1600,
+   "housingFood": 11964,
+   "other": 2881,
+   "onCampus": true
+  },
+  "harper-college": {
+   "tuitionFeesIn": 9990,
+   "tuitionFeesOut": 11802,
+   "books": 1100,
+   "housingFood": 13324,
+   "other": 11816,
+   "onCampus": false
+  },
+  "harvard-university": {
+   "tuitionFeesIn": 59076,
+   "tuitionFeesOut": 59076,
+   "books": 1000,
+   "housingFood": 20374,
+   "other": 6255,
+   "onCampus": true
+  },
+  "hastings-college": {
+   "tuitionFeesIn": 36130,
+   "tuitionFeesOut": 36130,
+   "books": 110,
+   "housingFood": 11690,
+   "other": 4310,
+   "onCampus": true
+  },
+  "hawkeye-community-college": {
+   "tuitionFeesIn": 6308,
+   "tuitionFeesOut": 6598,
+   "books": 1136,
+   "housingFood": 8942,
+   "other": 3570,
+   "onCampus": false
+  },
+  "heidelberg-university": {
+   "tuitionFeesIn": 33628,
+   "tuitionFeesOut": 33628,
+   "books": 1500,
+   "housingFood": 11700,
+   "other": 1500,
+   "onCampus": true
+  },
+  "henry-ford-college": {
+   "tuitionFeesIn": 5452,
+   "tuitionFeesOut": 7040,
+   "books": 1824,
+   "housingFood": 10656,
+   "other": 4068,
+   "onCampus": false
+  },
+  "hiram-college": {
+   "tuitionFeesIn": 26265,
+   "tuitionFeesOut": 26265,
+   "books": 800,
+   "housingFood": 11560,
+   "other": 2572,
+   "onCampus": true
+  },
+  "hofstra-university": {
+   "tuitionFeesIn": 55450,
+   "tuitionFeesOut": 55450,
+   "books": 1000,
+   "housingFood": 17720,
+   "other": 2050,
+   "onCampus": true
+  },
+  "hope-international-university": {
+   "tuitionFeesIn": 36250,
+   "tuitionFeesOut": 36250,
+   "books": 938,
+   "housingFood": 13700,
+   "other": 2871,
+   "onCampus": true
+  },
+  "hunter-college": {
+   "tuitionFeesIn": 7382,
+   "tuitionFeesOut": 15332,
+   "books": 1500,
+   "housingFood": 11324,
+   "other": 3834,
+   "onCampus": true
+  },
+  "huntingdon-college": {
+   "tuitionFeesIn": 28650,
+   "tuitionFeesOut": 28650,
+   "books": 300,
+   "housingFood": 10922,
+   "other": 2068,
+   "onCampus": true
+  },
+  "illinois-wesleyan-university": {
+   "tuitionFeesIn": 55704,
+   "tuitionFeesOut": 55704,
+   "books": 800,
+   "housingFood": 12930,
+   "other": 1700,
+   "onCampus": true
+  },
+  "indian-hills-community-college": {
+   "tuitionFeesIn": 4872,
+   "tuitionFeesOut": 6120,
+   "books": 2136,
+   "housingFood": 7608,
+   "other": 4944,
+   "onCampus": true
+  },
+  "indiana-institute-of-technology": {
+   "tuitionFeesIn": 30446,
+   "tuitionFeesOut": 30446,
+   "books": null,
+   "housingFood": 12579,
+   "other": 5019,
+   "onCampus": true
+  },
+  "indiana-university-bloomington-indiana": {
+   "tuitionFeesIn": 11790,
+   "tuitionFeesOut": 40482,
+   "books": 690,
+   "housingFood": 13380,
+   "other": 3040,
+   "onCampus": true
+  },
+  "iowa-central-community-college": {
+   "tuitionFeesIn": 5376,
+   "tuitionFeesOut": 7668,
+   "books": 1460,
+   "housingFood": 7580,
+   "other": 3459,
+   "onCampus": true
+  },
+  "iowa-lakes-community-college": {
+   "tuitionFeesIn": 7196,
+   "tuitionFeesOut": 7644,
+   "books": 1874,
+   "housingFood": 8010,
+   "other": 4038,
+   "onCampus": true
+  },
+  "iowa-state-university": {
+   "tuitionFeesIn": 10497,
+   "tuitionFeesOut": 27683,
+   "books": 1091,
+   "housingFood": 9726,
+   "other": 2890,
+   "onCampus": true
+  },
+  "iowa-western-community-college": {
+   "tuitionFeesIn": 6780,
+   "tuitionFeesOut": 6930,
+   "books": 1240,
+   "housingFood": 8750,
+   "other": 5120,
+   "onCampus": true
+  },
+  "ithaca-college": {
+   "tuitionFeesIn": 50510,
+   "tuitionFeesOut": 50510,
+   "books": 850,
+   "housingFood": 16030,
+   "other": 1326,
+   "onCampus": true
+  },
+  "jamestown-community-college": {
+   "tuitionFeesIn": 6600,
+   "tuitionFeesOut": 12040,
+   "books": 1200,
+   "housingFood": 11440,
+   "other": 2200,
+   "onCampus": true
+  },
+  "jarvis-christian-university": {
+   "tuitionFeesIn": 11720,
+   "tuitionFeesOut": 11720,
+   "books": 1000,
+   "housingFood": 9880,
+   "other": 2680,
+   "onCampus": true
+  },
+  "john-carroll-university": {
+   "tuitionFeesIn": 49100,
+   "tuitionFeesOut": 49100,
+   "books": 1250,
+   "housingFood": 14160,
+   "other": 3200,
+   "onCampus": true
+  },
+  "johns-hopkins-university": {
+   "tuitionFeesIn": 63340,
+   "tuitionFeesOut": 63340,
+   "books": 1345,
+   "housingFood": 19910,
+   "other": 1470,
+   "onCampus": true
+  },
+  "johnson-wales-university-ri": {
+   "tuitionFeesIn": 40408,
+   "tuitionFeesOut": 40408,
+   "books": 1200,
+   "housingFood": 18776,
+   "other": 1758,
+   "onCampus": true
+  },
+  "joliet-junior-college": {
+   "tuitionFeesIn": 12750,
+   "tuitionFeesOut": 13800,
+   "books": 1380,
+   "housingFood": 9612,
+   "other": 2430,
+   "onCampus": false
+  },
+  "kean-university": {
+   "tuitionFeesIn": 13426,
+   "tuitionFeesOut": 21076,
+   "books": 1200,
+   "housingFood": 16592,
+   "other": 3212,
+   "onCampus": true
+  },
+  "keiser-university": {
+   "tuitionFeesIn": 24136,
+   "tuitionFeesOut": 24136,
+   "books": 2000,
+   "housingFood": 15650,
+   "other": 8800,
+   "onCampus": true
+  },
+  "kent-state-university": {
+   "tuitionFeesIn": 12846,
+   "tuitionFeesOut": 22316,
+   "books": 1200,
+   "housingFood": 13040,
+   "other": 4732,
+   "onCampus": true
+  },
+  "kentucky-wesleyan-college": {
+   "tuitionFeesIn": 33393,
+   "tuitionFeesOut": 33393,
+   "books": 1298,
+   "housingFood": 11526,
+   "other": 3125,
+   "onCampus": true
+  },
+  "keystone-college": {
+   "tuitionFeesIn": 17850,
+   "tuitionFeesOut": 17850,
+   "books": 500,
+   "housingFood": 12400,
+   "other": 2600,
+   "onCampus": true
+  },
+  "king-s-college-pa": {
+   "tuitionFeesIn": 42600,
+   "tuitionFeesOut": 42600,
+   "books": 1300,
+   "housingFood": 15086,
+   "other": 2888,
+   "onCampus": true
+  },
+  "king-university": {
+   "tuitionFeesIn": 34800,
+   "tuitionFeesOut": 34800,
+   "books": 1706,
+   "housingFood": 10262,
+   "other": 3516,
+   "onCampus": true
+  },
+  "kutztown-university": {
+   "tuitionFeesIn": 11230,
+   "tuitionFeesOut": 16434,
+   "books": 1200,
+   "housingFood": 13116,
+   "other": 4320,
+   "onCampus": true
+  },
+  "labette-community-college": {
+   "tuitionFeesIn": 3968,
+   "tuitionFeesOut": 4768,
+   "books": 2050,
+   "housingFood": 9000,
+   "other": 2500,
+   "onCampus": false
+  },
+  "lackawanna-college": {
+   "tuitionFeesIn": 17950,
+   "tuitionFeesOut": 17950,
+   "books": 1500,
+   "housingFood": 12110,
+   "other": 2610,
+   "onCampus": true
+  },
+  "lake-erie-college": {
+   "tuitionFeesIn": 36032,
+   "tuitionFeesOut": 36032,
+   "books": 1220,
+   "housingFood": 11592,
+   "other": 3470,
+   "onCampus": true
+  },
+  "lakeland-university": {
+   "tuitionFeesIn": 32286,
+   "tuitionFeesOut": 32286,
+   "books": 1100,
+   "housingFood": 11872,
+   "other": 4344,
+   "onCampus": true
+  },
+  "lander-university": {
+   "tuitionFeesIn": 11700,
+   "tuitionFeesOut": 21300,
+   "books": 1200,
+   "housingFood": 10700,
+   "other": 4470,
+   "onCampus": true
+  },
+  "lehigh-university": {
+   "tuitionFeesIn": 62180,
+   "tuitionFeesOut": 62180,
+   "books": 1000,
+   "housingFood": 16470,
+   "other": 1500,
+   "onCampus": true
+  },
+  "life-university": {
+   "tuitionFeesIn": 15036,
+   "tuitionFeesOut": 15036,
+   "books": 2400,
+   "housingFood": 13959,
+   "other": 9900,
+   "onCampus": true
+  },
+  "lincoln-memorial-university": {
+   "tuitionFeesIn": 26150,
+   "tuitionFeesOut": 26150,
+   "books": 1500,
+   "housingFood": 11808,
+   "other": 4100,
+   "onCampus": true
+  },
+  "lindenwood-university": {
+   "tuitionFeesIn": 21100,
+   "tuitionFeesOut": 21100,
+   "books": 1400,
+   "housingFood": 10800,
+   "other": 2900,
+   "onCampus": true
+  },
+  "lindsey-wilson-university": {
+   "tuitionFeesIn": 27274,
+   "tuitionFeesOut": 27274,
+   "books": 1000,
+   "housingFood": 9978,
+   "other": 5243,
+   "onCampus": true
+  },
+  "linfield-university": {
+   "tuitionFeesIn": 49530,
+   "tuitionFeesOut": 49530,
+   "books": 200,
+   "housingFood": 14060,
+   "other": 3200,
+   "onCampus": true
+  },
+  "long-island-university-liu": {
+   "tuitionFeesIn": 41642,
+   "tuitionFeesOut": 41642,
+   "books": 2000,
+   "housingFood": 17354,
+   "other": 2500,
+   "onCampus": true
+  },
+  "loras-college": {
+   "tuitionFeesIn": 38298,
+   "tuitionFeesOut": 38298,
+   "books": 800,
+   "housingFood": 9668,
+   "other": 2075,
+   "onCampus": true
+  },
+  "lourdes-university": {
+   "tuitionFeesIn": 28930,
+   "tuitionFeesOut": 28930,
+   "books": 1471,
+   "housingFood": 12120,
+   "other": 6918,
+   "onCampus": true
+  },
+  "luther-college": {
+   "tuitionFeesIn": 50320,
+   "tuitionFeesOut": 50320,
+   "books": 1040,
+   "housingFood": 11180,
+   "other": 3015,
+   "onCampus": true
+  },
+  "lycoming-college": {
+   "tuitionFeesIn": 47675,
+   "tuitionFeesOut": 47675,
+   "books": 1200,
+   "housingFood": 14612,
+   "other": 2270,
+   "onCampus": true
+  },
+  "lyon-college": {
+   "tuitionFeesIn": 31000,
+   "tuitionFeesOut": 31000,
+   "books": 1500,
+   "housingFood": 10750,
+   "other": 2500,
+   "onCampus": true
+  },
+  "maine-maritime-academy": {
+   "tuitionFeesIn": 14746,
+   "tuitionFeesOut": 30226,
+   "books": 1300,
+   "housingFood": 11926,
+   "other": 3200,
+   "onCampus": true
+  },
+  "manchester-university": {
+   "tuitionFeesIn": 37090,
+   "tuitionFeesOut": 37090,
+   "books": 1000,
+   "housingFood": 11154,
+   "other": 1458,
+   "onCampus": true
+  },
+  "marian-university": {
+   "tuitionFeesIn": 39100,
+   "tuitionFeesOut": 39100,
+   "books": 1200,
+   "housingFood": 13200,
+   "other": 4468,
+   "onCampus": true
+  },
+  "marymount-university": {
+   "tuitionFeesIn": 39050,
+   "tuitionFeesOut": 39050,
+   "books": 2000,
+   "housingFood": 16188,
+   "other": 5360,
+   "onCampus": true
+  },
+  "maryville-university": {
+   "tuitionFeesIn": 27166,
+   "tuitionFeesOut": 27166,
+   "books": null,
+   "housingFood": 13300,
+   "other": 4300,
+   "onCampus": true
+  },
+  "mcdaniel-college": {
+   "tuitionFeesIn": 49647,
+   "tuitionFeesOut": 49647,
+   "books": 1450,
+   "housingFood": 12594,
+   "other": 2454,
+   "onCampus": true
+  },
+  "mckendree-university": {
+   "tuitionFeesIn": 34070,
+   "tuitionFeesOut": 34070,
+   "books": 1000,
+   "housingFood": 12270,
+   "other": 2710,
+   "onCampus": true
+  },
+  "mcmurry-university": {
+   "tuitionFeesIn": 31372,
+   "tuitionFeesOut": 31372,
+   "books": 200,
+   "housingFood": 9788,
+   "other": 3350,
+   "onCampus": true
+  },
+  "menlo-college": {
+   "tuitionFeesIn": 51070,
+   "tuitionFeesOut": 51070,
+   "books": 938,
+   "housingFood": 15537,
+   "other": 4824,
+   "onCampus": true
+  },
+  "mercyhurst-university": {
+   "tuitionFeesIn": 44510,
+   "tuitionFeesOut": 44510,
+   "books": 1200,
+   "housingFood": 14274,
+   "other": 2261,
+   "onCampus": true
+  },
+  "messiah-university": {
+   "tuitionFeesIn": 40640,
+   "tuitionFeesOut": 40640,
+   "books": 1460,
+   "housingFood": 11910,
+   "other": 2760,
+   "onCampus": true
+  },
+  "michigan-state-university": {
+   "tuitionFeesIn": 15988,
+   "tuitionFeesOut": 43372,
+   "books": 1334,
+   "housingFood": 11754,
+   "other": 3592,
+   "onCampus": true
+  },
+  "midland-university": {
+   "tuitionFeesIn": 40270,
+   "tuitionFeesOut": 40270,
+   "books": 1020,
+   "housingFood": 10562,
+   "other": 4296,
+   "onCampus": true
+  },
+  "midway-university": {
+   "tuitionFeesIn": 26080,
+   "tuitionFeesOut": 26080,
+   "books": 1800,
+   "housingFood": 9500,
+   "other": 11900,
+   "onCampus": true
+  },
+  "millersville-university": {
+   "tuitionFeesIn": 12262,
+   "tuitionFeesOut": 16232,
+   "books": 1000,
+   "housingFood": 12600,
+   "other": 3400,
+   "onCampus": true
+  },
+  "millikin-university": {
+   "tuitionFeesIn": 43670,
+   "tuitionFeesOut": 43670,
+   "books": 1000,
+   "housingFood": 13330,
+   "other": 2100,
+   "onCampus": true
+  },
+  "milwaukee-school-of-engineering": {
+   "tuitionFeesIn": 48421,
+   "tuitionFeesOut": 48421,
+   "books": 1000,
+   "housingFood": 12562,
+   "other": 2132,
+   "onCampus": true
+  },
+  "minnesota-north-college-itasca": {
+   "tuitionFeesIn": 6004,
+   "tuitionFeesOut": 7302,
+   "books": 660,
+   "housingFood": 8066,
+   "other": 4656,
+   "onCampus": true
+  },
+  "minnesota-state-university-mankato": {
+   "tuitionFeesIn": 9490,
+   "tuitionFeesOut": 18860,
+   "books": 1042,
+   "housingFood": 11224,
+   "other": 2672,
+   "onCampus": true
+  },
+  "minnesota-state-university-moorhead": {
+   "tuitionFeesIn": 10336,
+   "tuitionFeesOut": 10336,
+   "books": 1000,
+   "housingFood": 10594,
+   "other": 3770,
+   "onCampus": true
+  },
+  "minnesota-west-community-technical-college": {
+   "tuitionFeesIn": 6484,
+   "tuitionFeesOut": 12332,
+   "books": 1200,
+   "housingFood": 6500,
+   "other": 4900,
+   "onCampus": true
+  },
+  "minot-state-university": {
+   "tuitionFeesIn": 8634,
+   "tuitionFeesOut": 8634,
+   "books": 1100,
+   "housingFood": 8058,
+   "other": 3902,
+   "onCampus": true
+  },
+  "misericordia-university": {
+   "tuitionFeesIn": 38370,
+   "tuitionFeesOut": 38370,
+   "books": 1250,
+   "housingFood": 15426,
+   "other": 1000,
+   "onCampus": true
+  },
+  "missouri-baptist-university": {
+   "tuitionFeesIn": 33122,
+   "tuitionFeesOut": 33122,
+   "books": 1298,
+   "housingFood": 14340,
+   "other": 3260,
+   "onCampus": true
+  },
+  "missouri-valley-college": {
+   "tuitionFeesIn": 23000,
+   "tuitionFeesOut": 23000,
+   "books": 2000,
+   "housingFood": 10500,
+   "other": 2400,
+   "onCampus": true
+  },
+  "montana-state-university-northern": {
+   "tuitionFeesIn": 6269,
+   "tuitionFeesOut": 19385,
+   "books": 1400,
+   "housingFood": 7026,
+   "other": 3200,
+   "onCampus": true
+  },
+  "montreat-college": {
+   "tuitionFeesIn": 33860,
+   "tuitionFeesOut": 33860,
+   "books": 1200,
+   "housingFood": 10730,
+   "other": 1500,
+   "onCampus": true
+  },
+  "morgan-state-university": {
+   "tuitionFeesIn": 8118,
+   "tuitionFeesOut": 18800,
+   "books": 2000,
+   "housingFood": 12755,
+   "other": 3565,
+   "onCampus": true
+  },
+  "morningside-university": {
+   "tuitionFeesIn": 38190,
+   "tuitionFeesOut": 38190,
+   "books": 1250,
+   "housingFood": 11204,
+   "other": 3026,
+   "onCampus": true
+  },
+  "mott-community-college": {
+   "tuitionFeesIn": 5435,
+   "tuitionFeesOut": 7410,
+   "books": 1066,
+   "housingFood": 9837,
+   "other": 6381,
+   "onCampus": false
+  },
+  "mount-st-joseph-university": {
+   "tuitionFeesIn": 36650,
+   "tuitionFeesOut": 36650,
+   "books": 1200,
+   "housingFood": 11200,
+   "other": 1000,
+   "onCampus": true
+  },
+  "muhlenberg-college": {
+   "tuitionFeesIn": 60240,
+   "tuitionFeesOut": 60240,
+   "books": 1500,
+   "housingFood": 13955,
+   "other": 2150,
+   "onCampus": true
+  },
+  "murray-state-college": {
+   "tuitionFeesIn": 6630,
+   "tuitionFeesOut": 10830,
+   "books": 2520,
+   "housingFood": 7546,
+   "other": 3616,
+   "onCampus": true
+  },
+  "muskegon-community-college": {
+   "tuitionFeesIn": 11510,
+   "tuitionFeesOut": 15390,
+   "books": 1150,
+   "housingFood": 5380,
+   "other": 4232,
+   "onCampus": false
+  },
+  "muskingum-university": {
+   "tuitionFeesIn": 31440,
+   "tuitionFeesOut": 31440,
+   "books": 1100,
+   "housingFood": 12550,
+   "other": 1540,
+   "onCampus": true
+  },
+  "nassau-community-college": {
+   "tuitionFeesIn": 6330,
+   "tuitionFeesOut": 12130,
+   "books": 2100,
+   "housingFood": 17250,
+   "other": 5232,
+   "onCampus": false
+  },
+  "nebraska-wesleyan-university": {
+   "tuitionFeesIn": 41658,
+   "tuitionFeesOut": 41658,
+   "books": 1000,
+   "housingFood": 9982,
+   "other": 3500,
+   "onCampus": true
+  },
+  "neosho-county-community-college": {
+   "tuitionFeesIn": 5644,
+   "tuitionFeesOut": 5644,
+   "books": 1114,
+   "housingFood": 6790,
+   "other": 4708,
+   "onCampus": true
+  },
+  "new-college-of-florida": {
+   "tuitionFeesIn": 6916,
+   "tuitionFeesOut": 29944,
+   "books": 1200,
+   "housingFood": 13805,
+   "other": 3270,
+   "onCampus": true
+  },
+  "new-england-college": {
+   "tuitionFeesIn": 41578,
+   "tuitionFeesOut": 41578,
+   "books": 1000,
+   "housingFood": 17014,
+   "other": 2000,
+   "onCampus": true
+  },
+  "new-mexico-highlands-university": {
+   "tuitionFeesIn": 7260,
+   "tuitionFeesOut": 12180,
+   "books": 1144,
+   "housingFood": 9674,
+   "other": 3968,
+   "onCampus": true
+  },
+  "new-york-university": {
+   "tuitionFeesIn": 60438,
+   "tuitionFeesOut": 60438,
+   "books": 1494,
+   "housingFood": 22786,
+   "other": 3034,
+   "onCampus": true
+  },
+  "newberry-college": {
+   "tuitionFeesIn": 30050,
+   "tuitionFeesOut": 30050,
+   "books": 900,
+   "housingFood": 12850,
+   "other": 2975,
+   "onCampus": true
+  },
+  "newman-university-kansas": {
+   "tuitionFeesIn": 35500,
+   "tuitionFeesOut": 35500,
+   "books": 1393,
+   "housingFood": 10279,
+   "other": 3376,
+   "onCampus": true
+  },
+  "north-carolina-state-university-nc-state": {
+   "tuitionFeesIn": 8895,
+   "tuitionFeesOut": 31767,
+   "books": 869,
+   "housingFood": 13719,
+   "other": 3121,
+   "onCampus": true
+  },
+  "north-central-college": {
+   "tuitionFeesIn": 44394,
+   "tuitionFeesOut": 44394,
+   "books": 1200,
+   "housingFood": 12434,
+   "other": 1934,
+   "onCampus": true
+  },
+  "north-dakota-state-university": {
+   "tuitionFeesIn": 10857,
+   "tuitionFeesOut": 15511,
+   "books": 800,
+   "housingFood": 9565,
+   "other": 3476,
+   "onCampus": true
+  },
+  "north-idaho-college": {
+   "tuitionFeesIn": 4960,
+   "tuitionFeesOut": 8736,
+   "books": 2400,
+   "housingFood": 8200,
+   "other": 3366,
+   "onCampus": true
+  },
+  "north-iowa-area-community-college": {
+   "tuitionFeesIn": 6436,
+   "tuitionFeesOut": 9245,
+   "books": 1420,
+   "housingFood": 7488,
+   "other": 2462,
+   "onCampus": true
+  },
+  "northampton-community-college": {
+   "tuitionFeesIn": 10980,
+   "tuitionFeesOut": 14730,
+   "books": 1800,
+   "housingFood": 10568,
+   "other": 7130,
+   "onCampus": true
+  },
+  "northeastern-junior-college": {
+   "tuitionFeesIn": 5582,
+   "tuitionFeesOut": 8045,
+   "books": 1460,
+   "housingFood": 7762,
+   "other": 6255,
+   "onCampus": true
+  },
+  "northeastern-oklahoma-a-m-college": {
+   "tuitionFeesIn": 4943,
+   "tuitionFeesOut": 11093,
+   "books": 1550,
+   "housingFood": 7200,
+   "other": 5410,
+   "onCampus": true
+  },
+  "northeastern-state-university": {
+   "tuitionFeesIn": 7513,
+   "tuitionFeesOut": 16633,
+   "books": 1000,
+   "housingFood": 10494,
+   "other": 3020,
+   "onCampus": true
+  },
+  "northern-illinois-university": {
+   "tuitionFeesIn": 12700,
+   "tuitionFeesOut": 12700,
+   "books": 1300,
+   "housingFood": 12800,
+   "other": 2836,
+   "onCampus": true
+  },
+  "northern-michigan-university": {
+   "tuitionFeesIn": 13304,
+   "tuitionFeesOut": 18800,
+   "books": 720,
+   "housingFood": 12752,
+   "other": 2148,
+   "onCampus": true
+  },
+  "northern-oklahoma-college": {
+   "tuitionFeesIn": 5061,
+   "tuitionFeesOut": 11826,
+   "books": 1200,
+   "housingFood": 7584,
+   "other": 3040,
+   "onCampus": true
+  },
+  "northern-state-university": {
+   "tuitionFeesIn": 8845,
+   "tuitionFeesOut": 11947,
+   "books": 1200,
+   "housingFood": 10300,
+   "other": 3000,
+   "onCampus": true
+  },
+  "northland-community-technical-college": {
+   "tuitionFeesIn": 6262,
+   "tuitionFeesOut": 6262,
+   "books": 1000,
+   "housingFood": 9750,
+   "other": 5988,
+   "onCampus": false
+  },
+  "northwest-college": {
+   "tuitionFeesIn": 4935,
+   "tuitionFeesOut": 11235,
+   "books": 1440,
+   "housingFood": 8840,
+   "other": 3820,
+   "onCampus": true
+  },
+  "northwestern-college": {
+   "tuitionFeesIn": 35300,
+   "tuitionFeesOut": 35300,
+   "books": 1100,
+   "housingFood": 10700,
+   "other": 3200,
+   "onCampus": true
+  },
+  "northwestern-university": {
+   "tuitionFeesIn": 65997,
+   "tuitionFeesOut": 65997,
+   "books": 1686,
+   "housingFood": 20334,
+   "other": 3273,
+   "onCampus": true
+  },
+  "norwich-university": {
+   "tuitionFeesIn": 49600,
+   "tuitionFeesOut": 49600,
+   "books": 1500,
+   "housingFood": 14000,
+   "other": 2760,
+   "onCampus": true
+  },
+  "ohio-northern-university": {
+   "tuitionFeesIn": 37800,
+   "tuitionFeesOut": 37800,
+   "books": 1200,
+   "housingFood": 13200,
+   "other": 2286,
+   "onCampus": true
+  },
+  "ohio-state-university": {
+   "tuitionFeesIn": 12859,
+   "tuitionFeesOut": 38365,
+   "books": 1030,
+   "housingFood": 14272,
+   "other": 3070,
+   "onCampus": true
+  },
+  "ohio-university": {
+   "tuitionFeesIn": 13746,
+   "tuitionFeesOut": 24114,
+   "books": 840,
+   "housingFood": 13594,
+   "other": 2916,
+   "onCampus": true
+  },
+  "ohio-wesleyan-university": {
+   "tuitionFeesIn": 52357,
+   "tuitionFeesOut": 52357,
+   "books": 1000,
+   "housingFood": 14226,
+   "other": 1800,
+   "onCampus": true
+  },
+  "oklahoma-city-university": {
+   "tuitionFeesIn": 33586,
+   "tuitionFeesOut": 33586,
+   "books": 1500,
+   "housingFood": 9602,
+   "other": 2750,
+   "onCampus": true
+  },
+  "oklahoma-state-university-stillwater-oklahoma-state": {
+   "tuitionFeesIn": 10234,
+   "tuitionFeesOut": 25754,
+   "books": 1300,
+   "housingFood": 11300,
+   "other": 5400,
+   "onCampus": true
+  },
+  "oklahoma-wesleyan-university": {
+   "tuitionFeesIn": 31466,
+   "tuitionFeesOut": 31466,
+   "books": 1240,
+   "housingFood": 9182,
+   "other": 3188,
+   "onCampus": true
+  },
+  "onondaga-community-college": {
+   "tuitionFeesIn": 6042,
+   "tuitionFeesOut": 11332,
+   "books": 700,
+   "housingFood": 11258,
+   "other": 3200,
+   "onCampus": true
+  },
+  "oregon-state-university": {
+   "tuitionFeesIn": 13494,
+   "tuitionFeesOut": 35664,
+   "books": 600,
+   "housingFood": 15075,
+   "other": 3036,
+   "onCampus": true
+  },
+  "otero-college": {
+   "tuitionFeesIn": 4418,
+   "tuitionFeesOut": 7048,
+   "books": 1500,
+   "housingFood": 8988,
+   "other": 6300,
+   "onCampus": true
+  },
+  "ottawa-university": {
+   "tuitionFeesIn": 35300,
+   "tuitionFeesOut": 35300,
+   "books": 1200,
+   "housingFood": 12160,
+   "other": 3640,
+   "onCampus": true
+  },
+  "otterbein-university": {
+   "tuitionFeesIn": 34899,
+   "tuitionFeesOut": 34899,
+   "books": 1508,
+   "housingFood": 12968,
+   "other": 3164,
+   "onCampus": true
+  },
+  "ouachita-baptist-university": {
+   "tuitionFeesIn": 32480,
+   "tuitionFeesOut": 32480,
+   "books": 1100,
+   "housingFood": 9240,
+   "other": 4678,
+   "onCampus": true
+  },
+  "pacific-university-oregon": {
+   "tuitionFeesIn": 54466,
+   "tuitionFeesOut": 54466,
+   "books": 1050,
+   "housingFood": 15058,
+   "other": 1800,
+   "onCampus": true
+  },
+  "penn-highlands-community-college": {
+   "tuitionFeesIn": 9360,
+   "tuitionFeesOut": 13080,
+   "books": 2000,
+   "housingFood": 5000,
+   "other": 1500,
+   "onCampus": false
+  },
+  "penn-state-altoona": {
+   "tuitionFeesIn": 15944,
+   "tuitionFeesOut": 26668,
+   "books": 1840,
+   "housingFood": 13820,
+   "other": 4788,
+   "onCampus": true
+  },
+  "penn-state-behrend": {
+   "tuitionFeesIn": 15944,
+   "tuitionFeesOut": 26668,
+   "books": 1840,
+   "housingFood": 14774,
+   "other": 4788,
+   "onCampus": true
+  },
+  "pennsylvania-college-of-technology": {
+   "tuitionFeesIn": 17940,
+   "tuitionFeesOut": 25680,
+   "books": 1549,
+   "housingFood": 12314,
+   "other": 3468,
+   "onCampus": true
+  },
+  "pennsylvania-state-university-penn-state": {
+   "tuitionFeesIn": 20234,
+   "tuitionFeesOut": 40188,
+   "books": 1840,
+   "housingFood": 13030,
+   "other": 4788,
+   "onCampus": true
+  },
+  "pennsylvania-western-university-clarion-clarion": {
+   "tuitionFeesIn": 11388,
+   "tuitionFeesOut": 16006,
+   "books": 1240,
+   "housingFood": 13200,
+   "other": 3480,
+   "onCampus": true
+  },
+  "pennsylvania-western-university-edinboro-edinboro": {
+   "tuitionFeesIn": 11388,
+   "tuitionFeesOut": 16006,
+   "books": 1240,
+   "housingFood": 13200,
+   "other": 3480,
+   "onCampus": true
+  },
+  "plymouth-state-university": {
+   "tuitionFeesIn": 14558,
+   "tuitionFeesOut": 25498,
+   "books": 1410,
+   "housingFood": 12104,
+   "other": 2782,
+   "onCampus": true
+  },
+  "point-park-university": {
+   "tuitionFeesIn": 38160,
+   "tuitionFeesOut": 38160,
+   "books": 1200,
+   "housingFood": 12480,
+   "other": 2340,
+   "onCampus": true
+  },
+  "pratt-community-college": {
+   "tuitionFeesIn": 4164,
+   "tuitionFeesOut": 4712,
+   "books": 3000,
+   "housingFood": 7354,
+   "other": 5598,
+   "onCampus": true
+  },
+  "presbyterian-college": {
+   "tuitionFeesIn": 43300,
+   "tuitionFeesOut": 43300,
+   "books": 1500,
+   "housingFood": 12713,
+   "other": 2996,
+   "onCampus": true
+  },
+  "princeton-university": {
+   "tuitionFeesIn": 59710,
+   "tuitionFeesOut": 59710,
+   "books": 1050,
+   "housingFood": 19380,
+   "other": 3900,
+   "onCampus": true
+  },
+  "purdue-university": {
+   "tuitionFeesIn": 9992,
+   "tuitionFeesOut": 28794,
+   "books": 1030,
+   "housingFood": 11650,
+   "other": 2210,
+   "onCampus": true
+  },
+  "quincy-university": {
+   "tuitionFeesIn": 35740,
+   "tuitionFeesOut": 35740,
+   "books": null,
+   "housingFood": 12160,
+   "other": 2900,
+   "onCampus": true
+  },
+  "randolph-college": {
+   "tuitionFeesIn": 29010,
+   "tuitionFeesOut": 29010,
+   "books": 1240,
+   "housingFood": 11890,
+   "other": 2900,
+   "onCampus": true
+  },
+  "reinhardt-university": {
+   "tuitionFeesIn": 28420,
+   "tuitionFeesOut": 28420,
+   "books": 1500,
+   "housingFood": 12950,
+   "other": 6200,
+   "onCampus": true
+  },
+  "rhode-island-college": {
+   "tuitionFeesIn": 10986,
+   "tuitionFeesOut": 26519,
+   "books": 1200,
+   "housingFood": 13719,
+   "other": 1440,
+   "onCampus": true
+  },
+  "rider-university": {
+   "tuitionFeesIn": 38900,
+   "tuitionFeesOut": 38900,
+   "books": 1500,
+   "housingFood": 16730,
+   "other": 2000,
+   "onCampus": true
+  },
+  "ridgewater-college": {
+   "tuitionFeesIn": 6109,
+   "tuitionFeesOut": 6109,
+   "books": 1200,
+   "housingFood": 7720,
+   "other": 4550,
+   "onCampus": false
+  },
+  "roanoke-college": {
+   "tuitionFeesIn": 36774,
+   "tuitionFeesOut": 36774,
+   "books": 1000,
+   "housingFood": 15366,
+   "other": 2250,
+   "onCampus": true
+  },
+  "rochester-christian-university": {
+   "tuitionFeesIn": 27938,
+   "tuitionFeesOut": 27938,
+   "books": 2134,
+   "housingFood": 9800,
+   "other": 4042,
+   "onCampus": true
+  },
+  "rochester-community-technical-college": {
+   "tuitionFeesIn": 6359,
+   "tuitionFeesOut": 6359,
+   "books": 1600,
+   "housingFood": 8200,
+   "other": 8400,
+   "onCampus": false
+  },
+  "rochester-institute-of-technology": {
+   "tuitionFeesIn": 57016,
+   "tuitionFeesOut": 57016,
+   "books": 1100,
+   "housingFood": 15516,
+   "other": 1700,
+   "onCampus": true
+  },
+  "roger-williams-university": {
+   "tuitionFeesIn": 42666,
+   "tuitionFeesOut": 42666,
+   "books": 900,
+   "housingFood": 16690,
+   "other": 3350,
+   "onCampus": true
+  },
+  "rose-state-college": {
+   "tuitionFeesIn": 5032,
+   "tuitionFeesOut": 11409,
+   "books": 836,
+   "housingFood": 8924,
+   "other": 7914,
+   "onCampus": true
+  },
+  "rowan-college-of-south-jersey-gloucester": {
+   "tuitionFeesIn": 5820,
+   "tuitionFeesOut": 5820,
+   "books": 3600,
+   "housingFood": 10892,
+   "other": 5104,
+   "onCampus": false
+  },
+  "rutgers-university-new-brunswick-rutgers": {
+   "tuitionFeesIn": 17239,
+   "tuitionFeesOut": 36001,
+   "books": 1391,
+   "housingFood": 14715,
+   "other": 4372,
+   "onCampus": true
+  },
+  "sacred-heart-university": {
+   "tuitionFeesIn": 48460,
+   "tuitionFeesOut": 48460,
+   "books": 1200,
+   "housingFood": 18450,
+   "other": 2650,
+   "onCampus": true
+  },
+  "saint-vincent-college": {
+   "tuitionFeesIn": 41100,
+   "tuitionFeesOut": 41100,
+   "books": 1500,
+   "housingFood": 13918,
+   "other": 1800,
+   "onCampus": true
+  },
+  "salem-university": {
+   "tuitionFeesIn": 10750,
+   "tuitionFeesOut": 13750,
+   "books": 800,
+   "housingFood": 8400,
+   "other": 2000,
+   "onCampus": true
+  },
+  "san-francisco-state-university": {
+   "tuitionFeesIn": 7424,
+   "tuitionFeesOut": 19304,
+   "books": 1099,
+   "housingFood": 17955,
+   "other": 3978,
+   "onCampus": true
+  },
+  "schreiner-university": {
+   "tuitionFeesIn": 37396,
+   "tuitionFeesOut": 37396,
+   "books": 50,
+   "housingFood": 10407,
+   "other": 1575,
+   "onCampus": true
+  },
+  "seton-hill-university": {
+   "tuitionFeesIn": 41414,
+   "tuitionFeesOut": 41414,
+   "books": 1200,
+   "housingFood": 13778,
+   "other": 2500,
+   "onCampus": true
+  },
+  "shenandoah-university": {
+   "tuitionFeesIn": 36028,
+   "tuitionFeesOut": 36028,
+   "books": 1500,
+   "housingFood": 11800,
+   "other": 2600,
+   "onCampus": true
+  },
+  "shippensburg-university": {
+   "tuitionFeesIn": 13544,
+   "tuitionFeesOut": 15798,
+   "books": 1200,
+   "housingFood": 12952,
+   "other": 3382,
+   "onCampus": true
+  },
+  "shorter-university": {
+   "tuitionFeesIn": 24044,
+   "tuitionFeesOut": 24044,
+   "books": 1200,
+   "housingFood": 9784,
+   "other": 2160,
+   "onCampus": true
+  },
+  "siena-heights-university": {
+   "tuitionFeesIn": 29778,
+   "tuitionFeesOut": 29778,
+   "books": 1168,
+   "housingFood": 13240,
+   "other": 2068,
+   "onCampus": true
+  },
+  "simpson-college": {
+   "tuitionFeesIn": 46212,
+   "tuitionFeesOut": 46212,
+   "books": 1134,
+   "housingFood": 10088,
+   "other": 4130,
+   "onCampus": true
+  },
+  "simpson-university": {
+   "tuitionFeesIn": 38522,
+   "tuitionFeesOut": 38522,
+   "books": 1200,
+   "housingFood": 11900,
+   "other": 3000,
+   "onCampus": true
+  },
+  "snow-college": {
+   "tuitionFeesIn": 4564,
+   "tuitionFeesOut": 14130,
+   "books": 1000,
+   "housingFood": 5050,
+   "other": 3000,
+   "onCampus": true
+  },
+  "south-dakota-state-university": {
+   "tuitionFeesIn": 9299,
+   "tuitionFeesOut": 12809,
+   "books": 1200,
+   "housingFood": 9562,
+   "other": 4683,
+   "onCampus": true
+  },
+  "southeast-community-college": {
+   "tuitionFeesIn": 3540,
+   "tuitionFeesOut": 4260,
+   "books": 1889,
+   "housingFood": 8856,
+   "other": 2000,
+   "onCampus": true
+  },
+  "southeastern-community-college": {
+   "tuitionFeesIn": 6450,
+   "tuitionFeesOut": 6450,
+   "books": 1354,
+   "housingFood": 9844,
+   "other": 6358,
+   "onCampus": true
+  },
+  "southeastern-university": {
+   "tuitionFeesIn": 31732,
+   "tuitionFeesOut": 31732,
+   "books": 1600,
+   "housingFood": 11020,
+   "other": 7800,
+   "onCampus": true
+  },
+  "southern-illinois-university-edwardsville-siu-edwardsville-or-siue": {
+   "tuitionFeesIn": 12922,
+   "tuitionFeesOut": 12922,
+   "books": 980,
+   "housingFood": 10562,
+   "other": 5782,
+   "onCampus": true
+  },
+  "southern-oregon-university": {
+   "tuitionFeesIn": 12093,
+   "tuitionFeesOut": 30723,
+   "books": 999,
+   "housingFood": 16248,
+   "other": 1500,
+   "onCampus": true
+  },
+  "southern-virginia-university": {
+   "tuitionFeesIn": 20040,
+   "tuitionFeesOut": 20040,
+   "books": 1500,
+   "housingFood": 9376,
+   "other": 3500,
+   "onCampus": true
+  },
+  "southwest-minnesota-state-university": {
+   "tuitionFeesIn": 10304,
+   "tuitionFeesOut": 10304,
+   "books": 1200,
+   "housingFood": 10666,
+   "other": 3542,
+   "onCampus": true
+  },
+  "southwestern-michigan-college": {
+   "tuitionFeesIn": 7364,
+   "tuitionFeesOut": 7850,
+   "books": 1520,
+   "housingFood": 9500,
+   "other": 1790,
+   "onCampus": true
+  },
+  "southwestern-oregon-community-college": {
+   "tuitionFeesIn": 6840,
+   "tuitionFeesOut": 6840,
+   "books": 1500,
+   "housingFood": 7959,
+   "other": 1890,
+   "onCampus": true
+  },
+  "springfield-college": {
+   "tuitionFeesIn": 43707,
+   "tuitionFeesOut": 43707,
+   "books": 1300,
+   "housingFood": 14202,
+   "other": 2350,
+   "onCampus": true
+  },
+  "st-ambrose-university": {
+   "tuitionFeesIn": 35598,
+   "tuitionFeesOut": 35598,
+   "books": 1320,
+   "housingFood": 12348,
+   "other": 3538,
+   "onCampus": true
+  },
+  "st-cloud-state-university": {
+   "tuitionFeesIn": 10117,
+   "tuitionFeesOut": 10117,
+   "books": 1400,
+   "housingFood": 9630,
+   "other": 2600,
+   "onCampus": true
+  },
+  "st-john-fisher-university": {
+   "tuitionFeesIn": 39666,
+   "tuitionFeesOut": 39666,
+   "books": 1100,
+   "housingFood": 14342,
+   "other": 1400,
+   "onCampus": true
+  },
+  "st-john-s-university-minnesota": {
+   "tuitionFeesIn": 53942,
+   "tuitionFeesOut": 53942,
+   "books": 1000,
+   "housingFood": 12130,
+   "other": 1500,
+   "onCampus": true
+  },
+  "st-thomas-university": {
+   "tuitionFeesIn": 34770,
+   "tuitionFeesOut": 34770,
+   "books": 360,
+   "housingFood": 12478,
+   "other": 5119,
+   "onCampus": true
+  },
+  "stanford-university": {
+   "tuitionFeesIn": 62484,
+   "tuitionFeesOut": 62484,
+   "books": 825,
+   "housingFood": 19922,
+   "other": 4602,
+   "onCampus": true
+  },
+  "stevens-institute-of-technology": {
+   "tuitionFeesIn": 60952,
+   "tuitionFeesOut": 60952,
+   "books": 1200,
+   "housingFood": 18650,
+   "other": 1050,
+   "onCampus": true
+  },
+  "suny-brockport": {
+   "tuitionFeesIn": 8678,
+   "tuitionFeesOut": 15748,
+   "books": 980,
+   "housingFood": 15960,
+   "other": 2040,
+   "onCampus": true
+  },
+  "suny-cortland": {
+   "tuitionFeesIn": 8815,
+   "tuitionFeesOut": 18725,
+   "books": 1200,
+   "housingFood": 15210,
+   "other": 3050,
+   "onCampus": true
+  },
+  "suny-niagara": {
+   "tuitionFeesIn": 6726,
+   "tuitionFeesOut": 11862,
+   "books": 884,
+   "housingFood": 13120,
+   "other": 1650,
+   "onCampus": true
+  },
+  "suny-oneonta": {
+   "tuitionFeesIn": 8812,
+   "tuitionFeesOut": 19232,
+   "books": 1400,
+   "housingFood": 15810,
+   "other": 2900,
+   "onCampus": true
+  },
+  "suny-oswego": {
+   "tuitionFeesIn": 8769,
+   "tuitionFeesOut": 18679,
+   "books": 1000,
+   "housingFood": 15440,
+   "other": 2300,
+   "onCampus": true
+  },
+  "sussex-county-community-college": {
+   "tuitionFeesIn": 7272,
+   "tuitionFeesOut": 9024,
+   "books": 1481,
+   "housingFood": 5342,
+   "other": 5920,
+   "onCampus": false
+  },
+  "texas-wesleyan-university": {
+   "tuitionFeesIn": 37934,
+   "tuitionFeesOut": 37934,
+   "books": 1500,
+   "housingFood": 13024,
+   "other": 4272,
+   "onCampus": true
+  },
+  "texas-woman-s-university": {
+   "tuitionFeesIn": 8648,
+   "tuitionFeesOut": 18720,
+   "books": 1140,
+   "housingFood": 11358,
+   "other": 3564,
+   "onCampus": true
+  },
+  "thaddeus-stevens-college-of-technology": {
+   "tuitionFeesIn": 9050,
+   "tuitionFeesOut": 9050,
+   "books": 2000,
+   "housingFood": 10670,
+   "other": 1656,
+   "onCampus": true
+  },
+  "the-citadel": {
+   "tuitionFeesIn": 12570,
+   "tuitionFeesOut": 37370,
+   "books": 9741,
+   "housingFood": 9146,
+   "other": 2423,
+   "onCampus": true
+  },
+  "the-college-of-new-jersey": {
+   "tuitionFeesIn": 18685,
+   "tuitionFeesOut": 24568,
+   "books": 1200,
+   "housingFood": 15569,
+   "other": 4578,
+   "onCampus": true
+  },
+  "the-evergreen-state-college": {
+   "tuitionFeesIn": 8999,
+   "tuitionFeesOut": 30980,
+   "books": 900,
+   "housingFood": 16451,
+   "other": 3454,
+   "onCampus": true
+  },
+  "thiel-college": {
+   "tuitionFeesIn": 36864,
+   "tuitionFeesOut": 36864,
+   "books": 1300,
+   "housingFood": 14850,
+   "other": 3000,
+   "onCampus": true
+  },
+  "thomas-more-university": {
+   "tuitionFeesIn": 38400,
+   "tuitionFeesOut": 38400,
+   "books": 500,
+   "housingFood": 9530,
+   "other": 3956,
+   "onCampus": true
+  },
+  "tiffin-university": {
+   "tuitionFeesIn": 32400,
+   "tuitionFeesOut": 32400,
+   "books": 3000,
+   "housingFood": 12650,
+   "other": 500,
+   "onCampus": true
+  },
+  "trine-university": {
+   "tuitionFeesIn": 35600,
+   "tuitionFeesOut": 35600,
+   "books": 1010,
+   "housingFood": 12250,
+   "other": 3700,
+   "onCampus": true
+  },
+  "trinidad-state-college": {
+   "tuitionFeesIn": 4468,
+   "tuitionFeesOut": 7100,
+   "books": 1460,
+   "housingFood": 8346,
+   "other": 6426,
+   "onCampus": true
+  },
+  "trinity-college-connecticut": {
+   "tuitionFeesIn": 67420,
+   "tuitionFeesOut": 67420,
+   "books": 1000,
+   "housingFood": 17990,
+   "other": 1500,
+   "onCampus": true
+  },
+  "triton-college": {
+   "tuitionFeesIn": 11790,
+   "tuitionFeesOut": 14880,
+   "books": 1500,
+   "housingFood": 7868,
+   "other": 3590,
+   "onCampus": false
+  },
+  "truett-mcconnell-university": {
+   "tuitionFeesIn": 25568,
+   "tuitionFeesOut": 25568,
+   "books": 1600,
+   "housingFood": 9320,
+   "other": 3500,
+   "onCampus": true
+  },
+  "u-s-merchant-marine-academy": {
+   "tuitionFeesIn": 945,
+   "tuitionFeesOut": 945,
+   "books": 4591,
+   "housingFood": null,
+   "other": null,
+   "onCampus": false
+  },
+  "umpqua-community-college": {
+   "tuitionFeesIn": 5909,
+   "tuitionFeesOut": 5909,
+   "books": 1425,
+   "housingFood": 5704,
+   "other": 3666,
+   "onCampus": true
+  },
+  "union-college": {
+   "tuitionFeesIn": 9500,
+   "tuitionFeesOut": 9500,
+   "books": 1440,
+   "housingFood": 12678,
+   "other": 5414,
+   "onCampus": false
+  },
+  "united-states-military-academy-army": {
+   "tuitionFeesIn": 945,
+   "tuitionFeesOut": 945,
+   "books": 4591,
+   "housingFood": null,
+   "other": null,
+   "onCampus": false
+  },
+  "university-at-buffalo": {
+   "tuitionFeesIn": 10782,
+   "tuitionFeesOut": 30572,
+   "books": 1500,
+   "housingFood": 16754,
+   "other": 4752,
+   "onCampus": true
+  },
+  "university-of-arkansas-at-little-rock-little-rock": {
+   "tuitionFeesIn": 8455,
+   "tuitionFeesOut": 19210,
+   "books": 1250,
+   "housingFood": 9352,
+   "other": 6799,
+   "onCampus": true
+  },
+  "university-of-bridgeport": {
+   "tuitionFeesIn": 35760,
+   "tuitionFeesOut": 35760,
+   "books": 0,
+   "housingFood": 16350,
+   "other": 7372,
+   "onCampus": true
+  },
+  "university-of-central-missouri": {
+   "tuitionFeesIn": 9739,
+   "tuitionFeesOut": 18064,
+   "books": 1250,
+   "housingFood": 10206,
+   "other": 2608,
+   "onCampus": true
+  },
+  "university-of-central-oklahoma": {
+   "tuitionFeesIn": 8522,
+   "tuitionFeesOut": 19409,
+   "books": 1600,
+   "housingFood": 8886,
+   "other": 8160,
+   "onCampus": true
+  },
+  "university-of-chicago": {
+   "tuitionFeesIn": 66939,
+   "tuitionFeesOut": 66939,
+   "books": 1800,
+   "housingFood": 19221,
+   "other": 2400,
+   "onCampus": true
+  },
+  "university-of-dubuque": {
+   "tuitionFeesIn": 40065,
+   "tuitionFeesOut": 40065,
+   "books": 1200,
+   "housingFood": 11470,
+   "other": 1700,
+   "onCampus": true
+  },
+  "university-of-findlay": {
+   "tuitionFeesIn": 39646,
+   "tuitionFeesOut": 39646,
+   "books": 2000,
+   "housingFood": 11000,
+   "other": 2504,
+   "onCampus": true
+  },
+  "university-of-illinois-urbana-champaign-illinois": {
+   "tuitionFeesIn": 16004,
+   "tuitionFeesOut": 34501,
+   "books": 1200,
+   "housingFood": 13938,
+   "other": 2500,
+   "onCampus": true
+  },
+  "university-of-indianapolis": {
+   "tuitionFeesIn": 36136,
+   "tuitionFeesOut": 36136,
+   "books": 1068,
+   "housingFood": 15878,
+   "other": 2620,
+   "onCampus": true
+  },
+  "university-of-iowa": {
+   "tuitionFeesIn": 10964,
+   "tuitionFeesOut": 32927,
+   "books": 950,
+   "housingFood": 12616,
+   "other": 4066,
+   "onCampus": true
+  },
+  "university-of-jamestown": {
+   "tuitionFeesIn": 24820,
+   "tuitionFeesOut": 24820,
+   "books": 1300,
+   "housingFood": 8920,
+   "other": 3200,
+   "onCampus": true
+  },
+  "university-of-lynchburg": {
+   "tuitionFeesIn": 35540,
+   "tuitionFeesOut": 35540,
+   "books": 1000,
+   "housingFood": 13250,
+   "other": 2050,
+   "onCampus": true
+  },
+  "university-of-mary": {
+   "tuitionFeesIn": 21468,
+   "tuitionFeesOut": 21468,
+   "books": 1096,
+   "housingFood": 8506,
+   "other": 3188,
+   "onCampus": true
+  },
+  "university-of-maryland-college-park-maryland": {
+   "tuitionFeesIn": 11505,
+   "tuitionFeesOut": 40306,
+   "books": 1250,
+   "housingFood": 15416,
+   "other": 2714,
+   "onCampus": true
+  },
+  "university-of-michigan": {
+   "tuitionFeesIn": 17228,
+   "tuitionFeesOut": 58072,
+   "books": 1126,
+   "housingFood": 13856,
+   "other": 2572,
+   "onCampus": true
+  },
+  "university-of-minnesota": {
+   "tuitionFeesIn": 16488,
+   "tuitionFeesOut": 36402,
+   "books": 1000,
+   "housingFood": 13028,
+   "other": 2350,
+   "onCampus": true
+  },
+  "university-of-missouri": {
+   "tuitionFeesIn": 14130,
+   "tuitionFeesOut": 34338,
+   "books": 950,
+   "housingFood": 13550,
+   "other": 3642,
+   "onCampus": true
+  },
+  "university-of-montevallo": {
+   "tuitionFeesIn": 13710,
+   "tuitionFeesOut": 26730,
+   "books": 1020,
+   "housingFood": 10768,
+   "other": 3640,
+   "onCampus": true
+  },
+  "university-of-mount-olive": {
+   "tuitionFeesIn": 25950,
+   "tuitionFeesOut": 25950,
+   "books": 1350,
+   "housingFood": 11212,
+   "other": 2000,
+   "onCampus": true
+  },
+  "university-of-mount-union": {
+   "tuitionFeesIn": 35400,
+   "tuitionFeesOut": 35400,
+   "books": 1520,
+   "housingFood": 11500,
+   "other": 1556,
+   "onCampus": true
+  },
+  "university-of-nebraska-at-kearney": {
+   "tuitionFeesIn": 8302,
+   "tuitionFeesOut": 14260,
+   "books": 770,
+   "housingFood": 11936,
+   "other": 5078,
+   "onCampus": true
+  },
+  "university-of-nebraska-lincoln-nebraska": {
+   "tuitionFeesIn": 10108,
+   "tuitionFeesOut": 27748,
+   "books": 1250,
+   "housingFood": 13856,
+   "other": 3442,
+   "onCampus": true
+  },
+  "university-of-north-carolina-at-chapel-hill-north-carolina": {
+   "tuitionFeesIn": 8989,
+   "tuitionFeesOut": 39330,
+   "books": 1290,
+   "housingFood": 13016,
+   "other": 2814,
+   "onCampus": true
+  },
+  "university-of-north-carolina-at-pembroke": {
+   "tuitionFeesIn": 3571,
+   "tuitionFeesOut": 7571,
+   "books": 1000,
+   "housingFood": 11016,
+   "other": 3078,
+   "onCampus": true
+  },
+  "university-of-northern-colorado": {
+   "tuitionFeesIn": 12010,
+   "tuitionFeesOut": 26204,
+   "books": 1200,
+   "housingFood": 15230,
+   "other": 3238,
+   "onCampus": true
+  },
+  "university-of-northern-iowa": {
+   "tuitionFeesIn": 9728,
+   "tuitionFeesOut": 21272,
+   "books": 800,
+   "housingFood": 9648,
+   "other": 2550,
+   "onCampus": true
+  },
+  "university-of-oklahoma": {
+   "tuitionFeesIn": 9595,
+   "tuitionFeesOut": 26665,
+   "books": 800,
+   "housingFood": 13310,
+   "other": 6781,
+   "onCampus": true
+  },
+  "university-of-olivet": {
+   "tuitionFeesIn": 33076,
+   "tuitionFeesOut": 33076,
+   "books": 1200,
+   "housingFood": 11886,
+   "other": 2766,
+   "onCampus": true
+  },
+  "university-of-pennsylvania-penn": {
+   "tuitionFeesIn": 66104,
+   "tuitionFeesOut": 66104,
+   "books": 1358,
+   "housingFood": 18496,
+   "other": 3070,
+   "onCampus": true
+  },
+  "university-of-pikeville": {
+   "tuitionFeesIn": 24150,
+   "tuitionFeesOut": 24150,
+   "books": 190,
+   "housingFood": 8600,
+   "other": 3040,
+   "onCampus": true
+  },
+  "university-of-pittsburgh": {
+   "tuitionFeesIn": 21524,
+   "tuitionFeesOut": 39890,
+   "books": 584,
+   "housingFood": 13420,
+   "other": 2918,
+   "onCampus": true
+  },
+  "university-of-pittsburgh-at-bradford": {
+   "tuitionFeesIn": 14620,
+   "tuitionFeesOut": 26494,
+   "books": 750,
+   "housingFood": 10848,
+   "other": 4782,
+   "onCampus": true
+  },
+  "university-of-pittsburgh-at-johnstown": {
+   "tuitionFeesIn": 14646,
+   "tuitionFeesOut": 26520,
+   "books": 750,
+   "housingFood": 12290,
+   "other": 4782,
+   "onCampus": true
+  },
+  "university-of-providence": {
+   "tuitionFeesIn": 29018,
+   "tuitionFeesOut": 29018,
+   "books": 1000,
+   "housingFood": 10500,
+   "other": 4000,
+   "onCampus": true
+  },
+  "university-of-puerto-rico-at-mayag-ez": {
+   "tuitionFeesIn": 5274,
+   "tuitionFeesOut": 5274,
+   "books": 4168,
+   "housingFood": 11385,
+   "other": 4072,
+   "onCampus": false
+  },
+  "university-of-rio-grande": {
+   "tuitionFeesIn": 20560,
+   "tuitionFeesOut": 20560,
+   "books": 1200,
+   "housingFood": 10500,
+   "other": 4028,
+   "onCampus": true
+  },
+  "university-of-saint-mary": {
+   "tuitionFeesIn": 33890,
+   "tuitionFeesOut": 33890,
+   "books": 2550,
+   "housingFood": 10032,
+   "other": 3200,
+   "onCampus": true
+  },
+  "university-of-scranton": {
+   "tuitionFeesIn": 52309,
+   "tuitionFeesOut": 52309,
+   "books": 1300,
+   "housingFood": 16918,
+   "other": 1872,
+   "onCampus": true
+  },
+  "university-of-sioux-falls": {
+   "tuitionFeesIn": 20740,
+   "tuitionFeesOut": 20740,
+   "books": 1000,
+   "housingFood": 8960,
+   "other": 4345,
+   "onCampus": true
+  },
+  "university-of-southern-maine": {
+   "tuitionFeesIn": 10920,
+   "tuitionFeesOut": 27104,
+   "books": 1000,
+   "housingFood": 11650,
+   "other": 3242,
+   "onCampus": true
+  },
+  "university-of-tennessee-at-chattanooga-chattanooga": {
+   "tuitionFeesIn": 10144,
+   "tuitionFeesOut": 18208,
+   "books": 1400,
+   "housingFood": 10052,
+   "other": 4950,
+   "onCampus": true
+  },
+  "university-of-the-cumberlands": {
+   "tuitionFeesIn": 9875,
+   "tuitionFeesOut": 9875,
+   "books": 0,
+   "housingFood": 9300,
+   "other": 6968,
+   "onCampus": true
+  },
+  "university-of-the-ozarks": {
+   "tuitionFeesIn": 25950,
+   "tuitionFeesOut": 25950,
+   "books": null,
+   "housingFood": 9490,
+   "other": 2475,
+   "onCampus": true
+  },
+  "university-of-virginia": {
+   "tuitionFeesIn": 20986,
+   "tuitionFeesOut": 58014,
+   "books": 1480,
+   "housingFood": 13940,
+   "other": 3520,
+   "onCampus": true
+  },
+  "university-of-wisconsin-eau-claire": {
+   "tuitionFeesIn": 9277,
+   "tuitionFeesOut": 18516,
+   "books": 400,
+   "housingFood": 9200,
+   "other": 3366,
+   "onCampus": true
+  },
+  "university-of-wisconsin-la-crosse": {
+   "tuitionFeesIn": 9651,
+   "tuitionFeesOut": 18691,
+   "books": 120,
+   "housingFood": 7960,
+   "other": 2036,
+   "onCampus": true
+  },
+  "university-of-wisconsin-madison-wisconsin": {
+   "tuitionFeesIn": 11205,
+   "tuitionFeesOut": 40603,
+   "books": 1100,
+   "housingFood": 13500,
+   "other": 3100,
+   "onCampus": true
+  },
+  "university-of-wisconsin-oshkosh": {
+   "tuitionFeesIn": 8212,
+   "tuitionFeesOut": 16125,
+   "books": 1000,
+   "housingFood": 8940,
+   "other": 3000,
+   "onCampus": true
+  },
+  "university-of-wisconsin-parkside": {
+   "tuitionFeesIn": 7855,
+   "tuitionFeesOut": 16497,
+   "books": 590,
+   "housingFood": 8286,
+   "other": 5164,
+   "onCampus": true
+  },
+  "university-of-wisconsin-platteville": {
+   "tuitionFeesIn": 8315,
+   "tuitionFeesOut": 17274,
+   "books": 220,
+   "housingFood": 8174,
+   "other": 5360,
+   "onCampus": true
+  },
+  "university-of-wisconsin-stevens-point": {
+   "tuitionFeesIn": 8834,
+   "tuitionFeesOut": 17854,
+   "books": 250,
+   "housingFood": 8500,
+   "other": 3322,
+   "onCampus": true
+  },
+  "university-of-wisconsin-whitewater": {
+   "tuitionFeesIn": 8250,
+   "tuitionFeesOut": 17916,
+   "books": 300,
+   "housingFood": 7770,
+   "other": 3240,
+   "onCampus": true
+  },
+  "university-of-wyoming": {
+   "tuitionFeesIn": 6938,
+   "tuitionFeesOut": 22718,
+   "books": 1670,
+   "housingFood": 13340,
+   "other": 3920,
+   "onCampus": true
+  },
+  "upper-iowa-university": {
+   "tuitionFeesIn": 19000,
+   "tuitionFeesOut": 19000,
+   "books": 1000,
+   "housingFood": 9770,
+   "other": 4252,
+   "onCampus": true
+  },
+  "ursinus-college": {
+   "tuitionFeesIn": 59196,
+   "tuitionFeesOut": 59196,
+   "books": 1000,
+   "housingFood": 15064,
+   "other": 2322,
+   "onCampus": true
+  },
+  "utah-valley-university": {
+   "tuitionFeesIn": 6270,
+   "tuitionFeesOut": 17830,
+   "books": 670,
+   "housingFood": 9234,
+   "other": 3556,
+   "onCampus": false
+  },
+  "utica-university": {
+   "tuitionFeesIn": 24308,
+   "tuitionFeesOut": 24308,
+   "books": 870,
+   "housingFood": 13080,
+   "other": 1933,
+   "onCampus": true
+  },
+  "vanguard-university": {
+   "tuitionFeesIn": 39950,
+   "tuitionFeesOut": 39950,
+   "books": 935,
+   "housingFood": 10790,
+   "other": 5875,
+   "onCampus": true
+  },
+  "vincennes-university": {
+   "tuitionFeesIn": 6886,
+   "tuitionFeesOut": 16289,
+   "books": 1332,
+   "housingFood": 12708,
+   "other": 3798,
+   "onCampus": true
+  },
+  "virginia-military-institute-vmi": {
+   "tuitionFeesIn": 20484,
+   "tuitionFeesOut": 51186,
+   "books": 1200,
+   "housingFood": 10990,
+   "other": 2150,
+   "onCampus": true
+  },
+  "virginia-tech": {
+   "tuitionFeesIn": 15478,
+   "tuitionFeesOut": 36694,
+   "books": 2620,
+   "housingFood": 14888,
+   "other": 4266,
+   "onCampus": true
+  },
+  "vtsu-castleton": {
+   "tuitionFeesIn": 11400,
+   "tuitionFeesOut": 21408,
+   "books": 1000,
+   "housingFood": 12898,
+   "other": 1650,
+   "onCampus": true
+  },
+  "wabash-college": {
+   "tuitionFeesIn": 49125,
+   "tuitionFeesOut": 49125,
+   "books": 1250,
+   "housingFood": 13300,
+   "other": 1550,
+   "onCampus": true
+  },
+  "waldorf-university": {
+   "tuitionFeesIn": 25220,
+   "tuitionFeesOut": 25220,
+   "books": 1578,
+   "housingFood": 9448,
+   "other": 3720,
+   "onCampus": true
+  },
+  "wartburg-college": {
+   "tuitionFeesIn": 51040,
+   "tuitionFeesOut": 51040,
+   "books": 1100,
+   "housingFood": 11062,
+   "other": 1300,
+   "onCampus": true
+  },
+  "washington-and-jefferson-college": {
+   "tuitionFeesIn": 28185,
+   "tuitionFeesOut": 28185,
+   "books": 1000,
+   "housingFood": 13910,
+   "other": 1200,
+   "onCampus": true
+  },
+  "washington-and-lee-university": {
+   "tuitionFeesIn": 64525,
+   "tuitionFeesOut": 64525,
+   "books": 2290,
+   "housingFood": 17685,
+   "other": 2500,
+   "onCampus": true
+  },
+  "wayland-baptist-university": {
+   "tuitionFeesIn": 23186,
+   "tuitionFeesOut": 23186,
+   "books": 780,
+   "housingFood": 9356,
+   "other": 3300,
+   "onCampus": true
+  },
+  "waynesburg-university": {
+   "tuitionFeesIn": 29460,
+   "tuitionFeesOut": 29460,
+   "books": 1500,
+   "housingFood": 12300,
+   "other": 1740,
+   "onCampus": true
+  },
+  "wesleyan-university": {
+   "tuitionFeesIn": 67316,
+   "tuitionFeesOut": 67316,
+   "books": 1200,
+   "housingFood": 19034,
+   "other": 1470,
+   "onCampus": true
+  },
+  "west-liberty-university": {
+   "tuitionFeesIn": 8732,
+   "tuitionFeesOut": 17116,
+   "books": 1140,
+   "housingFood": 10694,
+   "other": 3984,
+   "onCampus": true
+  },
+  "west-virginia-university": {
+   "tuitionFeesIn": 9648,
+   "tuitionFeesOut": 27360,
+   "books": 950,
+   "housingFood": 13876,
+   "other": 3170,
+   "onCampus": true
+  },
+  "west-virginia-university-institute-of-technology": {
+   "tuitionFeesIn": 8064,
+   "tuitionFeesOut": 20120,
+   "books": 950,
+   "housingFood": 13020,
+   "other": 3170,
+   "onCampus": true
+  },
+  "westcliff-university": {
+   "tuitionFeesIn": 21000,
+   "tuitionFeesOut": 21000,
+   "books": 938,
+   "housingFood": 17272,
+   "other": 5504,
+   "onCampus": false
+  },
+  "western-colorado-university": {
+   "tuitionFeesIn": 11083,
+   "tuitionFeesOut": 23683,
+   "books": 1350,
+   "housingFood": 10442,
+   "other": 3276,
+   "onCampus": true
+  },
+  "western-new-england-university": {
+   "tuitionFeesIn": 46430,
+   "tuitionFeesOut": 46430,
+   "books": 1000,
+   "housingFood": 14900,
+   "other": 2060,
+   "onCampus": true
+  },
+  "western-wyoming-community-college": {
+   "tuitionFeesIn": 4250,
+   "tuitionFeesOut": 10550,
+   "books": 1500,
+   "housingFood": 8710,
+   "other": 2400,
+   "onCampus": true
+  },
+  "westminster-college-missouri": {
+   "tuitionFeesIn": 34188,
+   "tuitionFeesOut": 34188,
+   "books": 1100,
+   "housingFood": 12142,
+   "other": 4676,
+   "onCampus": true
+  },
+  "wheaton-college-illinois": {
+   "tuitionFeesIn": 43930,
+   "tuitionFeesOut": 43930,
+   "books": 910,
+   "housingFood": 12390,
+   "other": 2440,
+   "onCampus": true
+  },
+  "wheeling-university": {
+   "tuitionFeesIn": 29475,
+   "tuitionFeesOut": 29475,
+   "books": 1300,
+   "housingFood": 12420,
+   "other": 2092,
+   "onCampus": true
+  },
+  "wilberforce-university": {
+   "tuitionFeesIn": 14776,
+   "tuitionFeesOut": 14776,
+   "books": 1200,
+   "housingFood": 7700,
+   "other": 2000,
+   "onCampus": true
+  },
+  "wilkes-university": {
+   "tuitionFeesIn": 42286,
+   "tuitionFeesOut": 42286,
+   "books": 400,
+   "housingFood": 16006,
+   "other": 3193,
+   "onCampus": true
+  },
+  "william-jewell-college": {
+   "tuitionFeesIn": 19890,
+   "tuitionFeesOut": 19890,
+   "books": 800,
+   "housingFood": 11381,
+   "other": 3868,
+   "onCampus": true
+  },
+  "william-penn-university": {
+   "tuitionFeesIn": 28750,
+   "tuitionFeesOut": 28750,
+   "books": 1504,
+   "housingFood": 7712,
+   "other": 5834,
+   "onCampus": true
+  },
+  "william-woods-university": {
+   "tuitionFeesIn": 28860,
+   "tuitionFeesOut": 28860,
+   "books": 1300,
+   "housingFood": 12402,
+   "other": 7915,
+   "onCampus": true
+  },
+  "williams-baptist-university": {
+   "tuitionFeesIn": 20330,
+   "tuitionFeesOut": 20330,
+   "books": 1250,
+   "housingFood": 8980,
+   "other": 3310,
+   "onCampus": true
+  },
+  "williams-college": {
+   "tuitionFeesIn": 64860,
+   "tuitionFeesOut": 64860,
+   "books": 1000,
+   "housingFood": 16300,
+   "other": 2700,
+   "onCampus": true
+  },
+  "wilmington-college-ohio": {
+   "tuitionFeesIn": 30962,
+   "tuitionFeesOut": 30962,
+   "books": 1100,
+   "housingFood": 11495,
+   "other": 2800,
+   "onCampus": true
+  },
+  "wittenberg-university": {
+   "tuitionFeesIn": 44602,
+   "tuitionFeesOut": 44602,
+   "books": 1600,
+   "housingFood": 11562,
+   "other": 1600,
+   "onCampus": true
+  },
+  "worcester-polytechnic-institute": {
+   "tuitionFeesIn": 59070,
+   "tuitionFeesOut": 59070,
+   "books": 1200,
+   "housingFood": 18072,
+   "other": 1200,
+   "onCampus": true
+  },
+  "york-college-of-pennsylvania": {
+   "tuitionFeesIn": 24606,
+   "tuitionFeesOut": 24606,
+   "books": 1200,
+   "housingFood": 12780,
+   "other": 2100,
+   "onCampus": true
+  },
+  "york-university": {
+   "tuitionFeesIn": 21600,
+   "tuitionFeesOut": 21600,
+   "books": 300,
+   "housingFood": 9600,
+   "other": 3000,
+   "onCampus": true
+  }
+ }
+}
