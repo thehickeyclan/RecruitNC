@@ -143,7 +143,7 @@ export const TIMELINE: TimelineGrade[] = [
     ],
     steps: [
       { text: "Finish the profile: photo, school, club, weight and grades.", href: "/my-recruiting#plan", cta: "Open your plan" },
-      { text: "Wrestle a full schedule, in season and out. Results from the national events are what a coach looks up first.", href: "/recruiting/tournaments", cta: "Events coaches watch" },
+      { text: "Wrestle a full schedule, in season and out. Results from the national events are what a coach looks up first.", href: "/recruiting/learn/tournaments", cta: "Events coaches watch" },
       { text: "Look at the map with no pressure: which levels and which parts of the country are realistic to visit.", href: "/recruiting/college-map", cta: "Open the map" },
       { text: "Start saving match video. Nobody needs it yet; you will not be able to go back and film it later." },
     ],
