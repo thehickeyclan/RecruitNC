@@ -3,6 +3,7 @@ import { isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { publishedDateLabel } from "@/lib/rankings/published-date"
 import { requireRankingBoardAccess } from "@/lib/rankings/ranking-board-access"
 import { RankedAthleteCard } from "@/components/rankings/ranked-athlete-card"
+import { loadStarredAthleteIds } from "@/lib/recruiting/starred-ids"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
@@ -80,6 +81,9 @@ export async function ClassRankingPage({ year, gender = "Male" }: { year: number
   }
 
   const ranking = await loadPublicClassRanking(year, preview, gender)
+  // Coaches and admins get the My Recruits star on every card (Matt, 14 October 2026).
+  const canStar = (viewer.isAdmin === true || viewer.isVerifiedCoach === true) && Boolean(userId)
+  const starred = canStar ? await loadStarredAthleteIds(createAdminClient(), String(userId)).catch(() => new Set<string>()) : null
 
   return (
     <div className="min-h-screen bg-[#061224]">
@@ -129,7 +133,7 @@ export async function ClassRankingPage({ year, gender = "Male" }: { year: number
               </p>
             <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
               {ranking.athletes.map((athlete) => (
-                <RankedAthleteCard key={athlete.athleteId} athlete={athlete} />
+                <RankedAthleteCard key={athlete.athleteId} athlete={athlete} star={starred ? { starred: starred.has(athlete.athleteId) } : undefined} />
               ))}
             </ul>
             </>

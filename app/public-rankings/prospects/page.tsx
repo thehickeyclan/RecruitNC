@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { RankedAthleteCard } from "@/components/rankings/ranked-athlete-card"
+import { loadStarredAthleteIds } from "@/lib/recruiting/starred-ids"
 import { RankingsNav } from "@/components/rankings/rankings-nav"
 import { RankingsSummary } from "@/components/rankings/rankings-summary"
 import { RankingsWatermark } from "@/components/rankings/rankings-watermark"
@@ -34,6 +35,9 @@ export default async function TopProspectsPage() {
     supabase: await createClient(),
     admin: createAdminClient(),
   })
+  // Coaches and admins get the My Recruits star on every card (Matt, 14 October 2026).
+  const canStar = (viewer.isAdmin === true || viewer.isVerifiedCoach === true) && Boolean(userId)
+  const starred = canStar ? await loadStarredAthleteIds(createAdminClient(), String(userId)).catch(() => new Set<string>()) : null
 
   /*
    * Entitlement only. The release check is the gate below, which lets an admin preview.
@@ -125,7 +129,7 @@ export default async function TopProspectsPage() {
                 </p>
               <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
                 {board.athletes.map((athlete) => (
-                  <RankedAthleteCard key={athlete.athleteId} athlete={athlete} />
+                  <RankedAthleteCard key={athlete.athleteId} athlete={athlete} star={starred ? { starred: starred.has(athlete.athleteId) } : undefined} />
                 ))}
               </ul>
               </>

@@ -1,6 +1,7 @@
 "use client"
 
 import { RankingCredentialPills } from "@/components/rankings/ranking-credential-pills"
+import { RecruitStarButton } from "@/components/rankings/recruit-star-button"
 import type { PublicRankedAthlete } from "@/lib/rankings/public-rankings-view"
 
 function initials(name: string): string {
@@ -24,7 +25,14 @@ function movement(rank: number, previous: number | null): { label: string; class
  *
  * Deliberately no evidence drawer: the reasoning behind a ranking stays on the admin board.
  */
-export function RankedAthleteCard({ athlete }: { athlete: PublicRankedAthlete }) {
+export function RankedAthleteCard({
+  athlete,
+  star,
+}: {
+  athlete: PublicRankedAthlete
+  /** Coaches and admins: the My Recruits star on the photo. Absent for everyone else. */
+  star?: { starred: boolean }
+}) {
   const profileHref = `/view-profile?id=${encodeURIComponent(athlete.athleteId)}`
   const move = movement(athlete.rank, athlete.previousRank)
   const meta = [
@@ -61,6 +69,11 @@ export function RankedAthleteCard({ athlete }: { athlete: PublicRankedAthlete })
           ) : null}
         </div>
       </a>
+      {star ? (
+        <div className="relative -mt-12 h-12">
+          <RecruitStarButton athleteId={athlete.athleteId} name={athlete.name} initiallyStarred={star.starred} />
+        </div>
+      ) : null}
 
       <div className="p-3 sm:p-4">
         <a
