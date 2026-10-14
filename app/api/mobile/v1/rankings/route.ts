@@ -72,6 +72,7 @@ export async function GET(request: NextRequest) {
         title: `Class of ${year}`,
         cap: board.cap,
         published: board.published,
+        publishedAt: board.publishedAt,
         athletes: board.athletes,
       }
     }),
@@ -83,6 +84,7 @@ export async function GET(request: NextRequest) {
     title: string
     cap: number
     published: boolean
+    publishedAt?: string | null
     athletes: unknown[]
   }> = classBoards.filter((b) => b.published && b.athletes.length > 0)
 
@@ -96,6 +98,7 @@ export async function GET(request: NextRequest) {
         title: `Top ${college.cap} College Prospects`,
         cap: college.cap,
         published: college.published,
+        publishedAt: college.publishedAt,
         athletes: college.athletes,
       })
     }
@@ -127,6 +130,7 @@ export async function GET(request: NextRequest) {
           title: `Women's Class of ${year}`,
           cap: board.cap,
           published: board.published,
+          publishedAt: board.publishedAt,
           athletes: board.athletes,
         }
       }),

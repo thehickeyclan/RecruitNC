@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
+import { publishedDateLabel } from "@/lib/rankings/published-date"
 import { requireRankingBoardAccess } from "@/lib/rankings/ranking-board-access"
 import { RankedAthleteCard } from "@/components/rankings/ranked-athlete-card"
 import { createClient } from "@/lib/supabase/server"
@@ -96,6 +97,11 @@ export async function ClassRankingPage({ year, gender = "Male" }: { year: number
               ? `The top ${ranking.cap} women's wrestlers in North Carolina's Class of ${year}, ranked on results: freestyle and national events first, then who they beat.`
               : `The top ${ranking.cap} wrestlers in North Carolina's Class of ${year}, ranked on results: who they wrestled, how they did against them, and what they have done outside this state.`}
           </p>
+          {publishedDateLabel(ranking.publishedAt) ? (
+            <p className="mt-2 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-[#d6b75d]">
+              {publishedDateLabel(ranking.publishedAt)}
+            </p>
+          ) : null}
 
           <RankingsSummary athletes={ranking.athletes} />
 

@@ -64,6 +64,8 @@ export type PublicClassRanking = {
   gender: "Male" | "Female"
   published: boolean
   cap: number
+  /** When this board was last published, from `ranking_editions`. */
+  publishedAt: string | null
   athletes: PublicRankedAthlete[]
 }
 
@@ -190,7 +192,7 @@ async function buildPublicClassRanking(
   const cap = getPublicRankingsMax(year, gender)
   const reachable = includeUnreleased ? isRankedClassYear(year, gender) : isPublicRankingsYearPublished(year, gender)
   if (!reachable) {
-    return { year, gender, published: false, cap, athletes: [] }
+    return { year, gender, published: false, cap, publishedAt: null, athletes: [] }
   }
 
   const admin = createAdminClient()
@@ -262,7 +264,14 @@ async function buildPublicClassRanking(
     }
   })
 
-  return { year, gender, published: true, cap, athletes }
+  const { data: edition } = await admin
+    .from("ranking_editions")
+    .select("published_at")
+    .eq("class_year", year)
+    .eq("gender", gender)
+    .maybeSingle()
+
+  return { year, gender, published: true, cap, publishedAt: (edition?.published_at as string) ?? null, athletes }
 }
 
 /**
@@ -273,7 +282,7 @@ async function buildPublicClassRanking(
  * the page kept serving a payload built before they existed. Bump this whenever the returned
  * shape changes.
  */
-const PUBLIC_RANKING_CACHE_VERSION = "v7-womens-national-rank"
+const PUBLIC_RANKING_CACHE_VERSION = "v8-published-date"
 
 export const loadPublicClassRanking = unstable_cache(
   buildPublicClassRanking,

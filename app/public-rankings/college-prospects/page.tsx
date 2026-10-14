@@ -9,6 +9,7 @@ import { PUBLIC_TOP_75_COLLEGE_RELEASED } from "@/lib/public-rankings-cap"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { hasPremiumAccess } from "@/lib/ranking-visibility"
 import { loadTopHundred } from "@/lib/rankings/top-100-view"
+import { publishedDateLabel } from "@/lib/rankings/published-date"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
@@ -71,6 +72,11 @@ export default async function TopHundredPage() {
           <p className="mt-2 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-[#d6b75d] sm:text-xs">
             Classes of {board.classes.join(" & ")}
           </p>
+          {publishedDateLabel(board.publishedAt) ? (
+            <p className="mt-1 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-white/50">
+              {publishedDateLabel(board.publishedAt)}
+            </p>
+          ) : null}
 
           <RankingsSummary athletes={board.athletes} />
 
