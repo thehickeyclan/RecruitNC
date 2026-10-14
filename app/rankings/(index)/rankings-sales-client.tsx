@@ -14,7 +14,8 @@ import { Award, Check, ExternalLink, Instagram, Mail, Medal, Target, TrendingUp,
 import { RankingsTableView } from "@/components/rankings-table-view"
 import { useAuth } from "@/contexts/auth-context"
 import { RankingsCardView } from "@/components/rankings-card-view"
-import { PUBLISHED_PUBLIC_RANKINGS_YEARS } from "@/lib/public-rankings-cap"
+import { PUBLISHED_PUBLIC_RANKINGS_YEARS, WOMENS_PUBLIC_RELEASED_YEARS } from "@/lib/public-rankings-cap"
+import type { PlatformStats } from "@/lib/platform-stats"
 
 interface Athlete {
   id: string
@@ -40,6 +41,11 @@ const CLASS_RANGE =
     ? `${PUBLISHED_PUBLIC_RANKINGS_YEARS[0]}–${PUBLISHED_PUBLIC_RANKINGS_YEARS[PUBLISHED_PUBLIC_RANKINGS_YEARS.length - 1]}`
     : String(PUBLISHED_PUBLIC_RANKINGS_YEARS[0] ?? "")
 
+const yearRange = (years: readonly number[]) =>
+  years.length > 1 ? `${years[0]}–${years[years.length - 1]}` : String(years[0] ?? "")
+/** The women's boards released so far, from the same release list the pages read. */
+const WOMENS_RANGE = yearRange([...WOMENS_PUBLIC_RELEASED_YEARS].sort((a, b) => a - b))
+
 type RankingsSubscription = {
   status: string
   nextBillingAt: string | null
@@ -51,7 +57,10 @@ type RankingsSubscription = {
 export function RankingsSalesClient({
   collegeViews = null,
   topClasses = [],
+  platform = null,
 }: {
+  /** Coaches, programs and all-time coach profile views, counted (lib/platform-stats.ts). */
+  platform?: PlatformStats | null
   /** NC wrestler profiles college coaches viewed in the last 30 days, and by how many coaches. */
   collegeViews?: { profilesViewed: number; coaches: number } | null
   /** The classes on the published Top 75 College Ready Prospects board. */
@@ -246,24 +255,57 @@ export function RankingsSalesClient({
               College Prospect Rankings
             </h1>
             <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              Classes of {CLASS_RANGE}, and the Top 75 College Ready Prospects
-              {topFrom ? ` from ${topFrom}` : ""}.
+              Men&apos;s Classes of {CLASS_RANGE}
+              {WOMENS_RANGE ? <>, Women&apos;s Classes of {WOMENS_RANGE}</> : null}, and the Top 75 College
+              Ready Prospects{topFrom ? ` from ${topFrom}` : ""}.
+            </p>
+
+            {/*
+              * The free step first (Matt, 14 October 2026). Most people sent here from a post have
+              * no subscription and are not about to buy one; every one of them can claim a profile
+              * that already holds their results, and that is what puts them in front of coaches.
+              */}
+            <Link
+              href="/create-profile"
+              className="mx-auto mt-8 inline-flex items-center gap-3 rounded-full bg-primary px-8 py-4 text-lg font-bold text-primary-foreground shadow-lg transition hover:opacity-90"
+            >
+              Claim your profile — free
+              <span aria-hidden>→</span>
+            </Link>
+            <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
+              Your results are already on it. Add your academics and contact info. Only verified
+              college coaches can see them.
             </p>
           </div>
 
+          {/* Counted, not claimed. Hidden tile by tile when a number is not there to show. */}
+          {platform ? (
+            <div className="mx-auto mt-10 grid max-w-4xl grid-cols-2 gap-3 lg:grid-cols-4">
+              {[
+                [platform.coaches, "College coaches on RecruitNC"],
+                [platform.programs, "College programs"],
+                [platform.coachViews, "Profile views by college coaches"],
+                [platform.profilesViewed, "NC wrestlers viewed by coaches"],
+              ]
+                .filter(([n]) => Number(n) > 0)
+                .map(([n, label]) => (
+                  <div key={String(label)} className="rounded-xl border-2 border-primary/40 bg-primary/10 p-4 text-center">
+                    <p className="text-3xl font-black text-primary sm:text-4xl">{Number(n).toLocaleString()}</p>
+                    <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{String(label)}</p>
+                  </div>
+                ))}
+            </div>
+          ) : null}
+
           {/* The headline a parent buys on: real, counted, recent. Hidden if there is nothing to say. */}
           {collegeViews && collegeViews.profilesViewed > 0 ? (
-            <div className="mx-auto mt-8 max-w-2xl rounded-xl border-2 border-primary/50 bg-primary/10 p-5 text-center">
-              <p className="text-2xl font-bold text-foreground sm:text-3xl">
-                College coaches viewed{" "}
-                <span className="text-primary">{collegeViews.profilesViewed.toLocaleString()}</span> NC wrestler
-                profiles in the last 30 days.
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {collegeViews.coaches > 1 ? `${collegeViews.coaches} college coaches, all looking at North Carolina. ` : ""}
-                Subscribe and see which programs are viewing yours.
-              </p>
-            </div>
+            <p className="mx-auto mt-4 max-w-2xl text-center text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">
+                {collegeViews.profilesViewed.toLocaleString()} NC wrestler profiles viewed by college coaches in the
+                last 30 days.
+              </span>{" "}
+              Subscribe and see which programs are viewing yours.
+            </p>
           ) : null}
 
           {checkoutReturned === "canceled" && (
@@ -280,7 +322,7 @@ export function RankingsSalesClient({
           <div className="mx-auto mt-10 grid max-w-4xl gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {[
               ["Profile activity", "Which college programs are viewing you"],
-              [CLASS_RANGE, "Frequently updated class rankings"],
+              [WOMENS_RANGE ? "Men's & Women's" : CLASS_RANGE, "Frequently updated class rankings"],
               ["Top 75", topFrom ? `College Ready Prospects from ${topFrom}` : "College Ready Prospects"],
               ["Head-to-head", "Who beat whom, and when"],
             ].map((claim) => (
@@ -305,20 +347,47 @@ export function RankingsSalesClient({
             <p className="mt-2 text-lg text-foreground">
               Big wins matter. Strength of schedule matters. Competing against the best matters.
             </p>
-            <div className="mt-5 grid gap-x-8 gap-y-2 text-sm text-muted-foreground sm:grid-cols-2">
-              {[
-                "National results, individual and dual competition",
-                "Every major tournament, in state and out",
-                "Strength of competition, and quality wins",
-                "Head-to-head results between ranked wrestlers",
-                "Every match on record, not only the podium finishes",
-                "How consistently a wrestler seeks out the best",
-              ].map((line) => (
-                <div key={line} className="flex items-start gap-2">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                  <span>{line}</span>
+            <div className="mt-5 grid gap-8 md:grid-cols-2">
+              <div>
+                <p className="mb-3 text-sm font-bold uppercase tracking-wide text-primary">Men&apos;s rankings</p>
+                <div className="grid gap-y-2 text-sm text-muted-foreground">
+                  {[
+                    "National results, individual and dual competition",
+                    "Every major tournament, in state and out",
+                    "Strength of competition, and quality wins",
+                    "Head-to-head results between ranked wrestlers",
+                    "Every match on record, not only the podium finishes",
+                    "How consistently a wrestler seeks out the best",
+                  ].map((line) => (
+                    <div key={line} className="flex items-start gap-2">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <span>{line}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </div>
+              {/*
+                * The women's boards reward something different, and say so (Matt, 14 October 2026):
+                * women wrestle freestyle in college, so freestyle comes first.
+                */}
+              <div>
+                <p className="mb-3 text-sm font-bold uppercase tracking-wide text-primary">Women&apos;s rankings</p>
+                <div className="grid gap-y-2 text-sm text-muted-foreground">
+                  {[
+                    "Built on freestyle — the style women wrestle in college",
+                    "Fargo, Women's Nationals, U.S. Open, Journeymen and national duals first",
+                    "Wins over nationally ranked opponents count most",
+                    "Freestyle head-to-head between NC girls",
+                    "Folkstyle state results as supporting evidence",
+                    "The last 12 months, not a career",
+                  ].map((line) => (
+                    <div key={line} className="flex items-start gap-2">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                      <span>{line}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
             <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
               Every place is reasoned from results on the mat — not reputation, and not a poll.
