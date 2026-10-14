@@ -7,18 +7,18 @@ describe("NC wrestlers on college rosters", () => {
   it("says how many of a roster are from North Carolina", () => {
     const app = rosterForSchool("appalachian-state-university")
     expect(app.wrestlers).toHaveLength(9)
-    expect(app.teamLines).toEqual(["9 North Carolina wrestlers are on the 2026-27 roster."])
+    expect(app.teamLines).toEqual(["9 of the 30 wrestlers on the 2026-27 roster are from North Carolina."])
   })
 
   it("says none when it read the roster and found none", () => {
-    expect(rosterForSchool("arizona-state-university").teamLines).toEqual(["No North Carolina wrestlers are on the 2026-27 roster."])
+    expect(rosterForSchool("arizona-state-university").teamLines).toEqual(["None of the 33 wrestlers on the 2026-27 roster are from North Carolina."])
   })
 
-  it("never quotes a roster size from the first pull, which counted coaches and staff", () => {
-    // NC State's page was read as 48 for a team of 32.
+  it("quotes the wrestlers-only size, never the first pull's, which counted coaches and staff", () => {
+    // NC State's page was read as 48 for a team of 32; Muse's rebuilt file has 32 (14 Oct 2026).
     const lines = rosterForSchool("north-carolina-state-university-nc-state").teamLines.join(" ")
-    expect(lines).toBe("7 North Carolina wrestlers are on the roster.")
-    expect(lines).not.toMatch(/48| of the /)
+    expect(lines).toBe("7 of the 32 wrestlers on the roster are from North Carolina.")
+    expect(lines).not.toMatch(/48/)
   })
 
   it("never calls an unread roster empty", () => {
