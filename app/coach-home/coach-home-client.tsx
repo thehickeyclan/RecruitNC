@@ -94,45 +94,65 @@ function AccessPanel({ signedOut }: { signedOut: boolean }) {
  *
  * A coach with an empty board opens on the suggestions, because that is where the first action is.
  */
-function RecruitsCard({
-  total,
-  suggested,
-  poolSize,
-  children,
-}: {
-  total: number
-  suggested: CoachHomeData["suggested"]
-  /** How many wrestlers the Athletes list holds, so eight suggestions are not taken for all of them. */
-  poolSize: number
-  children: React.ReactNode
-}) {
-  const [tab, setTab] = useState<"yours" | "suggested">(total === 0 && suggested.length > 0 ? "suggested" : "yours")
-  const tabClass = (on: boolean) =>
-    `-mb-px whitespace-nowrap border-b-2 px-1 pb-2 text-[11px] font-black uppercase tracking-wider ${on ? "border-[#D3B574] text-[#D3B574]" : "border-transparent text-white/40 hover:text-white/70"}`
+/** The coach's own board: his starred wrestlers and nothing else. */
+function RecruitsCard({ total, children }: { total: number; children: React.ReactNode }) {
   return (
-    <section className={`${PANEL} p-4 sm:p-5`} aria-label="My Recruits">
-      <div className="flex items-end justify-between gap-3 border-b border-white/10">
-        <div className="flex min-w-0 gap-4 overflow-x-auto" role="tablist">
-          <button type="button" role="tab" aria-selected={tab === "yours"} onClick={() => setTab("yours")} className={tabClass(tab === "yours")}>
-            Your recruits{total ? ` (${total})` : ""}
-          </button>
-          {suggested.length ? (
-            <button type="button" role="tab" aria-selected={tab === "suggested"} onClick={() => setTab("suggested")} className={tabClass(tab === "suggested")}>
-              Top uncommitted
-            </button>
-          ) : null}
-        </div>
-        <Link href={tab === "yours" ? "/my-recruits" : "/prospects/all"} className={`${MORE} shrink-0 whitespace-nowrap pb-2`}>
-          {tab === "yours" ? "Open board" : "All athletes"} <ArrowRight className="h-3 w-3" />
+    <section className={`${PANEL} p-4 sm:p-5`} aria-labelledby="ch-recruits">
+      <div className="flex items-center justify-between gap-3">
+        <h2 id="ch-recruits" className={TITLE}>
+          <Star className={`h-3.5 w-3.5 ${GOLD}`} /> Your recruits{total ? ` (${total})` : ""}
+        </h2>
+        <Link href="/my-recruits" className={MORE}>
+          Open board <ArrowRight className="h-3 w-3" />
         </Link>
       </div>
-      {tab === "yours" ? children : <SuggestedList wrestlers={suggested} poolSize={poolSize} />}
+      {children}
+    </section>
+  )
+}
+
+/**
+ * Top uncommitted, on its own and always open: the ranked wrestlers in the two classes a coach is
+ * recruiting, side by side, every name a link to the profile (Matt, 14 October 2026).
+ *
+ * It was a second tab inside My Recruits. In its first two days coaches loaded Coach Home eight
+ * times and opened eight profiles - three from the rankings, four from the athlete list, none from
+ * here. A list a coach can see is a list he clicks.
+ */
+function TopUncommitted({ wrestlers, poolSize }: { wrestlers: CoachHomeData["suggested"]; poolSize: number }) {
+  const years = [...new Set(wrestlers.map((w) => w.classYear))].sort((x, y) => x - y)
+  return (
+    <section className={`${PANEL} mt-4 p-4 sm:p-5`} aria-labelledby="ch-top">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 id="ch-top" className={TITLE}>
+          <BarChart3 className={`h-3.5 w-3.5 ${GOLD}`} /> Top uncommitted · Classes of {years.join(" and ")}
+        </h2>
+        <Link href="/prospects/all" className={MORE}>
+          All {poolSize.toLocaleString()} athletes <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+      <p className="mt-2 text-sm text-white/55">
+        Ranked and not yet committed. Tap a name to open the profile; tap <Star className={`mx-0.5 inline h-3.5 w-3.5 ${GOLD}`} aria-label="the star" /> to add him to your recruits.
+      </p>
+      <div className="mt-2 grid gap-x-6 md:grid-cols-2">
+        {years.map((year) => (
+          <div key={year}>
+            <div className="mt-3 flex items-center justify-between gap-2 border-b border-white/10 pb-1">
+              <p className="text-xs font-black uppercase tracking-widest text-white/70">Class of {year}</p>
+              <Link href={`/public-rankings/${year}`} className={MORE}>
+                Full {year} rankings <ArrowRight className="h-3 w-3" />
+              </Link>
+            </div>
+            <SuggestedList wrestlers={wrestlers.filter((w) => w.classYear === year)} />
+          </div>
+        ))}
+      </div>
     </section>
   )
 }
 
 /** Ranked, uncommitted wrestlers who are not on the board. A star adds one; nothing is added otherwise. */
-function SuggestedList({ wrestlers, poolSize }: { wrestlers: CoachHomeData["suggested"]; poolSize: number }) {
+function SuggestedList({ wrestlers }: { wrestlers: CoachHomeData["suggested"] }) {
   const [starred, setStarred] = useState<Set<string>>(new Set())
   const [busy, setBusy] = useState<string | null>(null)
   const star = async (id: string) => {
@@ -152,9 +172,6 @@ function SuggestedList({ wrestlers, poolSize }: { wrestlers: CoachHomeData["sugg
   }
   return (
     <>
-      <p className="mt-3 text-sm text-white/55">
-        Suggestions, not your board. Tap <Star className={`mx-0.5 inline h-3.5 w-3.5 ${GOLD}`} aria-label="the star" /> to add a wrestler to your recruits.
-      </p>
       <ul className="mt-2">
         {wrestlers.map((w) => {
           const on = starred.has(w.id)
@@ -185,13 +202,6 @@ function SuggestedList({ wrestlers, poolSize }: { wrestlers: CoachHomeData["sugg
           )
         })}
       </ul>
-      {/* Eight is a starting point; say so, and make the rest one obvious click away. */}
-      <Link
-        href="/prospects/all"
-        className="mt-3 flex min-h-[44px] items-center justify-center gap-2 rounded-lg border border-[#D3B574]/50 px-4 text-sm font-bold text-[#D3B574] hover:bg-[#D3B574]/10"
-      >
-        Only the top {wrestlers.length} are shown. See all {poolSize.toLocaleString()} athletes <ArrowRight className="h-4 w-4" />
-      </Link>
     </>
   )
 }
@@ -303,8 +313,10 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
           <WrestlerSearch athletes={data.athletes} />
         </div>
 
+        {data.suggested?.length ? <TopUncommitted wrestlers={data.suggested} poolSize={data.athletes.length} /> : null}
+
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <RecruitsCard total={recruits.total} suggested={data.suggested ?? []} poolSize={data.athletes.length}>
+          <RecruitsCard total={recruits.total}>
             {!recruits.loaded ? (
               <p className="mt-4 text-sm text-white/55">Your board could not be loaded just now. Open it directly to try again.</p>
             ) : recruits.total === 0 ? (
