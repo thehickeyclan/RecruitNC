@@ -31,6 +31,8 @@ import { familyFocus } from "@/lib/recruiting/family-focus"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { buildMapPreview } from "@/lib/college-programs/map-preview"
+import { MapPreviewCard } from "./map-preview"
 import { MyRecruitingAthlete } from "./my-recruiting-athlete"
 import { WarRoomLearn } from "./war-room-learn"
 import { WarRoomPlan, type WarRoomSchool, type WarRoomWrestler } from "./war-room-plan"
@@ -165,6 +167,16 @@ export default async function RecruitingWarRoomPage() {
           <h2 className="text-xl font-black tracking-tight sm:text-2xl">Plan</h2>
           <p className="mt-1 text-sm text-white/55">What to do next, the schools you&apos;re aiming at, and where coaches can watch.</p>
           {athletes.length > 0 ? <WarRoomPlan blue={blue} wrestlers={wrestlers} schools={schools} /> : null}
+          <MapPreviewCard
+            preview={buildMapPreview([...SCHOOLS.values()], {
+              team: focus?.gender ?? null,
+              savedIds: schools.map((s) => s.id),
+              accessToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN,
+            })}
+            who={focus?.names.join(" and ") || null}
+            team={focus?.gender ?? null}
+            savedCount={schools.length}
+          />
         </section>
 
         <section id="learn" className="mt-12 scroll-mt-24">
