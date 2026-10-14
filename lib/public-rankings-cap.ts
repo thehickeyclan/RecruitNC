@@ -91,11 +91,12 @@ export const WOMENS_PUBLIC_RANKINGS_MAX_BY_YEAR: Record<number, number> = {
 }
 
 /**
- * Women's classes released to customers. Empty: nothing of the women's is public until Matt says
- * so. Pressing Publish on the board writes the ranks and lets staff read the page as customers
- * will; adding the year here is the release.
+ * Women's classes released to customers. Pressing Publish on the board writes the ranks and lets
+ * staff read the page as customers will; adding the year here is the release.
+ *
+ * 2027 and 2028 released by Matt, 14 October 2026.
  */
-export const WOMENS_PUBLIC_RELEASED_YEARS: readonly number[] = []
+export const WOMENS_PUBLIC_RELEASED_YEARS: readonly number[] = [2027, 2028]
 
 export const WOMENS_RANKED_CLASS_YEARS = Object.keys(WOMENS_PUBLIC_RANKINGS_MAX_BY_YEAR)
   .map(Number)
