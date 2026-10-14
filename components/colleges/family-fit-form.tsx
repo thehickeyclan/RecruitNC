@@ -6,7 +6,7 @@ import { useState } from "react"
 import { MAJOR_FAMILIES, type FamilyFitProfile } from "@/lib/recruiting/family-fit"
 
 /** What matters to the family, saved on their own account and never shown to a coach. */
-export function FamilyFitForm({ initial, open: startOpen }: { initial: FamilyFitProfile; open: boolean }) {
+export function FamilyFitForm({ initial, open: startOpen, embedded = false, afterSave }: { initial: FamilyFitProfile; open: boolean; embedded?: boolean; afterSave?: string }) {
   const router = useRouter()
   const [open, setOpen] = useState(startOpen)
   const [p, setP] = useState<FamilyFitProfile>(initial)
@@ -21,6 +21,7 @@ export function FamilyFitForm({ initial, open: startOpen }: { initial: FamilyFit
     const res = await fetch("/api/family-fit", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(p) }).catch(() => null)
     setSaving(false)
     if (!res?.ok) return setError("Could not save. Try again.")
+    if (afterSave) return router.push(afterSave)
     setOpen(false)
     router.refresh()
   }
@@ -33,11 +34,15 @@ export function FamilyFitForm({ initial, open: startOpen }: { initial: FamilyFit
     )
   }
   return (
-    <div className="mt-4 rounded-xl border border-white/10 bg-[#0f1c2e] p-5 text-sm">
-      <p className="font-bold text-white">What matters to your family</p>
-      <p className="mt-1 text-xs text-white/55">Saved on your account only. A coach never sees it.</p>
+    <div className={embedded ? "mt-2 text-sm" : "mt-4 rounded-xl border border-white/10 bg-[#0f1c2e] p-5 text-sm"}>
+      {embedded ? null : (
+        <>
+          <p className="font-bold text-white">What matters to your family</p>
+          <p className="mt-1 text-xs text-white/55">Saved on your account only. A coach never sees it.</p>
+        </>
+      )}
 
-      <p className="mt-4 text-xs font-semibold text-white/60">Intended major (up to three)</p>
+      <p className="mt-5 text-sm font-semibold text-white">Intended major <span className="font-normal text-white/50">(up to three)</span></p>
       <div className="mt-2 flex flex-wrap gap-2">
         {MAJOR_FAMILIES.map((m) => (
           <button key={m.code} type="button" className={chip(p.majors.includes(m.code))} onClick={() => setP({ ...p, majors: toggle(p.majors, m.code, 3) })}>
@@ -61,7 +66,7 @@ export function FamilyFitForm({ initial, open: startOpen }: { initial: FamilyFit
         </label>
       </div>
 
-      <p className="mt-4 text-xs font-semibold text-white/60">School size</p>
+      <p className="mt-5 text-sm font-semibold text-white">School size</p>
       <div className="mt-2 flex flex-wrap gap-2">
         {([["small", "Small, under 5,000"], ["medium", "Medium, 5,000 to 15,000"], ["large", "Large, over 15,000"]] as const).map(([v, label]) => (
           <button key={v} type="button" className={chip(p.size === v)} onClick={() => setP({ ...p, size: p.size === v ? null : v })}>
@@ -69,7 +74,7 @@ export function FamilyFitForm({ initial, open: startOpen }: { initial: FamilyFit
           </button>
         ))}
       </div>
-      <p className="mt-4 text-xs font-semibold text-white/60">Setting</p>
+      <p className="mt-5 text-sm font-semibold text-white">Setting</p>
       <div className="mt-2 flex flex-wrap gap-2">
         {(["city", "suburb", "town", "rural"] as const).map((v) => (
           <button key={v} type="button" className={chip(p.settings.includes(v))} onClick={() => setP({ ...p, settings: toggle(p.settings, v) })}>
@@ -80,7 +85,7 @@ export function FamilyFitForm({ initial, open: startOpen }: { initial: FamilyFit
 
       <div className="mt-5 flex items-center gap-3">
         <button type="button" disabled={saving} onClick={save} className="rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d] disabled:opacity-60">
-          {saving ? "Saving…" : "Save and compare"}
+          {saving ? "Saving…" : "Save and see the comparison →"}
         </button>
         {error ? <span className="text-xs text-red-300">{error}</span> : null}
       </div>

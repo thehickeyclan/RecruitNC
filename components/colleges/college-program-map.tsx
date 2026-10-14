@@ -176,6 +176,8 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
   const [mapError, setMapError] = useState<string | null>(null)
   const [mapReady, setMapReady] = useState(false)
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  /** Arrived from Compare colleges to add one: show the way back. */
+  const [fromCompare, setFromCompare] = useState(false)
   const [filters, setFilters] = useState<Filters>({
     divisions: new Set(COLLEGE_DIVISIONS),
     gender: "all",
@@ -218,6 +220,7 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get("list") === "1") setFilters((f) => ({ ...f, myListOnly: true }))
+    if (params.get("from") === "compare") setFromCompare(true)
     const school = params.get("school")
     if (school) setSelectedId(school)
   }, [])
@@ -573,6 +576,15 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
           </button>
         ) : null}
       </div>
+
+      {fromCompare ? (
+        <div className="sticky top-2 z-20 flex flex-wrap items-center justify-between gap-3 rounded-sm border border-[#D7B968] bg-[#0B1D3A] px-4 py-3 text-sm text-white shadow-lg">
+          <span>Tap a college, then <b>Save to My List</b>. It will be there to compare.</span>
+          <Link href="/recruiting/compare?step=colleges" className="rounded-sm bg-[#D7B968] px-3 py-1.5 font-bold text-[#071427] hover:bg-[#F5D985]">
+            Back to compare →
+          </Link>
+        </div>
+      ) : null}
 
       {full && response?.focus && filters.gender === response.focus.gender ? (
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-sm border border-[#D7B968]/30 bg-[#D7B968]/10 px-3 py-2 text-sm text-white/85">
