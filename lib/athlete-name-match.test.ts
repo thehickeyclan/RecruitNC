@@ -7,6 +7,7 @@ import {
   namesReferToSamePerson,
   pickBestAthleteCandidate,
   scoreAthleteRowMatch,
+  schoolsLikelySame,
 } from "@/lib/athlete-name-match"
 
 describe("athlete-name-match", () => {
@@ -138,5 +139,18 @@ describe("apostrophes across sources", () => {
 
   it("still tells two different wrestlers apart", () => {
     expect(namesLikelySamePerson("Kevin O'Brien", "Kevin O'Brian")).toBe(false)
+  })
+})
+
+describe("schoolsLikelySame", () => {
+  it("folds a backtick apostrophe, so one school is not read as a transfer", () => {
+    // RankWrestlers writes "Gray`s Creek High School"; the profile holds "Gray's Creek".
+    expect(schoolsLikelySame("Gray`s Creek High School", "Gray's Creek")).toBe(true)
+    expect(schoolsLikelySame("Northside High School (Jacksonville)", "Northside (Jacksonville)")).toBe(true)
+  })
+
+  it("still refuses two different schools", () => {
+    expect(schoolsLikelySame("East Forsyth", "Robert B. Glenn")).toBe(false)
+    expect(schoolsLikelySame("", "Gray's Creek")).toBe(false)
   })
 })
