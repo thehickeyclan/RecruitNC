@@ -64,6 +64,22 @@ describe("what a year costs", () => {
     expect(counted).toBeGreaterThanOrEqual(429)
   })
 
+  it("never shows a tuition-only dollar figure: every price on a page or a list is the full yearly cost", () => {
+    const fullCost = programs.schools.filter((s) => costFacts(s.id, s.state))
+    expect(fullCost.length).toBe(429)
+    for (const s of programs.schools) {
+      const cost = costFacts(s.id, s.state)
+      if (cost) {
+        expect(cost.breakdown, s.name).toMatch(/^Tuition and fees \$[\d,]+ · Housing and food \$[\d,]+/)
+        expect(costShort(s.id, s.state), s.name).toMatch(/tuition, housing, food and books/)
+      } else {
+        // The service academies, Simon Fraser and Fort Hays Tech Northwest: no price at all, never a partial one.
+        expect((tuitionFacts(s.id, s.state)?.lines ?? []).join(" "), s.name).not.toMatch(/\$/)
+        expect(costShort(s.id, s.state) ?? "", s.name).not.toMatch(/\$/)
+      }
+    }
+  })
+
   it("falls back to tuition alone where no full price is published", () => {
     expect(costFacts("united-states-naval-academy-navy", "MD")).toBeNull()
     expect(costShort("united-states-naval-academy-navy", "MD")).toBe("No tuition (service academy)")
