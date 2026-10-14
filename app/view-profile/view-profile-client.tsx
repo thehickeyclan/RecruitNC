@@ -23,6 +23,8 @@ type ViewProfileClientProps = {
   initialError: string | null
   /** Resolved on the server, so it is right even where the browser holds no session cookie. */
   initialUserId: string | null
+  /** Set on the server for the girls' ranker on a wrestler he ranks: he may change the photo. */
+  rankerMayUploadPhoto?: boolean
 }
 
 export function ViewProfileClient({
@@ -30,6 +32,7 @@ export function ViewProfileClient({
   initialAthlete,
   initialError,
   initialUserId,
+  rankerMayUploadPhoto = false,
 }: ViewProfileClientProps) {
   const { user } = useAuth()
   /**
@@ -138,6 +141,7 @@ export function ViewProfileClient({
       <div className="container mx-auto min-w-0 max-w-full px-4 pb-4 pt-0 lg:py-8">
         <ProfileViewTracker athleteId={String(athlete.id)} athleteName={athleteName} />
         <AthleteDetail
+          rankerMayUploadPhoto={rankerMayUploadPhoto}
           theme="dark"
           mobileRecruiterLayout
           competition={competition}

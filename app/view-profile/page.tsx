@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
 import { stripPrivateAthleteFields, stripRankFields, viewerMaySeeAthletePrivateInfo } from "@/lib/athlete-private-fields"
 import { resolveRankingViewerForUser } from "@/lib/ranking-access"
+import { rankerMayUploadPhotoFor } from "@/lib/rankings/ranker-photo-access"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
@@ -120,9 +121,13 @@ async function ViewProfilePageInner({ searchParams }: ViewProfilePageProps) {
     : false
   const shown = athlete && !mayRank ? (stripRankFields(athlete as unknown as Record<string, unknown>) as typeof athlete) : athlete
 
+  // The girls' ranker sets photos for the girls on his board (lib/rankings/ranker-photo-access.ts).
+  const mayUploadPhoto = user && result.ok ? rankerMayUploadPhotoFor(user.app_metadata?.ranking_board_access, result.athlete as never) : false
+
   return (
     <ViewProfileClient
       id={id}
+      rankerMayUploadPhoto={mayUploadPhoto}
       initialAthlete={shown}
       initialError={result.ok ? null : result.error}
       initialUserId={user?.id ?? null}

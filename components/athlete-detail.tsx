@@ -118,6 +118,8 @@ const EDIT_SECTION_ROW: Record<string, RowKey> = {
 }
 
 interface AthleteDetailProps {
+  /** The girls' ranker on a wrestler he ranks: the photo is his to change, nothing else. */
+  rankerMayUploadPhoto?: boolean
   athlete: {
     id: string
     name?: string
@@ -254,6 +256,7 @@ export function AthleteDetail({
   tournamentResultsComponent,
   theme = "light",
   mobileRecruiterLayout = false,
+  rankerMayUploadPhoto = false,
   competition = null,
   credentials = [],
   summaryFacts = null,
@@ -1393,8 +1396,8 @@ export function AthleteDetail({
       </div>
       <div className="flex items-center gap-3">
         <div className="relative h-[156px] w-[124px] shrink-0 overflow-hidden rounded-xl bg-[#0f1c2e]">
-          {canEdit ? (
-            <ImageUploadEditor athleteId={athlete.id} currentImageUrl={athletePhoto || undefined} onUpload={handleImageUpload} canEdit={canEdit} className="h-full w-full" />
+          {canEdit || rankerMayUploadPhoto ? (
+            <ImageUploadEditor athleteId={athlete.id} currentImageUrl={athletePhoto || undefined} onUpload={handleImageUpload} canEdit={canEdit || rankerMayUploadPhoto} className="h-full w-full" />
           ) : (
             <Image
               src={athletePhoto || "/wrestler-silhouette.png"}
@@ -1686,12 +1689,12 @@ export function AthleteDetail({
               <div className="relative z-10 flex items-start gap-8 p-8">
                 <div className="flex-shrink-0 w-72 h-[360px]">
                   <div className="relative w-full h-full rounded-xl overflow-hidden border-4 border-white/30 shadow-2xl bg-[#13294B]">
-                    {canEdit ? (
+                    {canEdit || rankerMayUploadPhoto ? (
                       <ImageUploadEditor
                         athleteId={athlete.id}
                         currentImageUrl={athletePhoto || undefined}
                         onUpload={handleImageUpload}
-                        canEdit={canEdit}
+                        canEdit={canEdit || rankerMayUploadPhoto}
                         className="w-full h-full"
                       />
                     ) : (
