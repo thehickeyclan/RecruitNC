@@ -1,12 +1,40 @@
 import { Suspense } from "react"
-import Link from "next/link"
-import { ArrowRight, Search } from "lucide-react"
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
 import { ProfileClient } from "./profile-client"
+import { MyWrestlers, type MyWrestler } from "./my-wrestlers"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
+
+/** The wrestlers this account owns or is a linked parent of. Never allowed to fail the page. */
+async function loadMyWrestlers(userId: string): Promise<MyWrestler[]> {
+  try {
+    const admin = createAdminClient()
+    const [{ data: owned }, { data: links }] = await Promise.all([
+      admin.from("athletes").select("id").eq("claimed_by_user_id", userId),
+      admin.from("parent_athlete_links").select("athlete_id").eq("user_id", userId),
+    ])
+    const self = new Set((owned ?? []).map((r) => String(r.id)))
+    const ids = [...new Set([...self, ...(links ?? []).map((r) => String(r.athlete_id))])]
+    if (!ids.length) return []
+    const { data: rows } = await admin.from("athletes").select("id, name, graduationyear, highschool, photourl").in("id", ids)
+    return (rows ?? [])
+      .map((r) => ({
+        id: String(r.id),
+        name: String(r.name ?? ""),
+        classYear: r.graduationyear == null ? null : Number(r.graduationyear),
+        school: (r.highschool as string | null) ?? null,
+        photo: (r.photourl as string | null) ?? null,
+        relationship: self.has(String(r.id)) ? ("self" as const) : ("parent" as const),
+      }))
+      .sort((x, y) => (x.relationship === y.relationship ? x.name.localeCompare(y.name) : x.relationship === "self" ? -1 : 1))
+  } catch (e) {
+    console.error("[profile] my wrestlers:", e)
+    return []
+  }
+}
 
 export default async function ProfilePage() {
   try {
@@ -29,22 +57,9 @@ export default async function ProfilePage() {
           </div>
         }
       >
-        {/* One in five people who land here leave immediately for /prospects/all,
-            /view-profile or /athletes, and another one in eight reload this page. They came
-            looking for a wrestler and the navigation said "Profile". This catches them at the
-            moment they realise, rather than making them hunt through the menu again. */}
-        <div className="bg-slate-50 px-4 pt-6">
-          <Link
-            href="/prospects/all"
-            className="mx-auto flex max-w-3xl items-center gap-3 rounded-xl border border-[#D3B574] bg-white px-4 py-3 shadow-sm transition-colors hover:bg-[#FBF6E9]"
-          >
-            <Search className="h-5 w-5 shrink-0 text-[#0A1628]" aria-hidden="true" />
-            <span className="min-w-0 text-sm text-slate-700">
-              <b className="text-[#0A1628]">Looking for a wrestler&rsquo;s profile?</b> This page is
-              your own account. Browse every North Carolina athlete instead.
-            </span>
-            <ArrowRight className="ml-auto h-4 w-4 shrink-0 text-[#0A1628]" aria-hidden="true" />
-          </Link>
+        <MyWrestlers wrestlers={await loadMyWrestlers(user!.id)} />
+        <div className="border-t border-white/10 bg-[#0A1628] px-4 pt-6">
+          <h2 className="mx-auto max-w-3xl text-sm font-black uppercase tracking-widest text-white/45">Account settings</h2>
         </div>
         <ProfileClient />
       </Suspense>
