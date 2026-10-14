@@ -15,7 +15,7 @@
  * Merged systems share one record: PennWest Clarion and Edinboro carry the same figures, as do
  * Commonwealth Bloomsburg and Lock Haven. The federal academies charge no tuition.
  */
-import costData from "@/lib/college-programs/cost-2023-24.json"
+import costData from "@/lib/college-programs/cost-published.json"
 import data from "@/lib/college-programs/tuition-2023-24.json"
 
 export type SchoolTuition = { control: "Public" | "Private" | null; inState: number | null; outOfState: number | null }
@@ -76,12 +76,19 @@ export function tuitionFacts(schoolId: string, schoolState: string, homeState = 
  * the few colleges with no published price (the service academies charge nothing).
  */
 
-type SchoolCost = { tuitionFeesIn: number | null; tuitionFeesOut: number | null; books: number | null; housingFood: number | null; other: number | null; onCampus: boolean }
+type SchoolCost = { tuitionFeesIn: number | null; tuitionFeesOut: number | null; books: number | null; housingFood: number | null; other: number | null; onCampus: boolean; year: string }
 
 const COST = costData.cost as Record<string, SchoolCost>
 
-export const COST_NOTE_ON = `Published price for a first-year student living on campus, ${costData.year}, from the US Department of Education. Before any scholarship, grant or other aid; most families pay less.`
-export const COST_NOTE_OFF = `Published price for a first-year student, ${costData.year}, from the US Department of Education; the college publishes no on-campus housing price, so housing is its off-campus estimate. Before any aid.`
+/*
+ * The year is part of the number. The newest price the Department of Education publishes is a year
+ * or two behind what a college charges today (Virginia: $79,512 for 2024-25 against about $84,000
+ * for 2026-27), so the year is in the headline, not the small print, and the note sends the family
+ * to the college for this year's. 372 colleges carry 2024-25; the rest 2023-24, where the newer
+ * page could not be matched figure for figure against the older file.
+ */
+const costNote = (c: SchoolCost) =>
+  `The ${c.year} published price for a first-year student${c.onCampus ? " living on campus" : " (the college publishes no on-campus housing price, so housing is its off-campus estimate)"}, from the US Department of Education: the newest it has released. Prices rise most years, so this year's will be higher; the college's own cost of attendance page has it. Before any scholarship, grant or other aid.`
 
 export type CostFacts = {
   control: "Public" | "Private" | null
@@ -108,13 +115,13 @@ export function costFacts(schoolId: string, schoolState: string, homeState = "NC
   return {
     control,
     headline: !split
-      ? `${dollars(totalOf(c, theirs))} a year`
+      ? `${dollars(totalOf(c, theirs))} a year (${c.year} price)`
       : resident
-        ? `${dollars(totalOf(c, theirs))} a year for North Carolina residents`
-        : `${dollars(totalOf(c, theirs))} a year from out of state, which is what a North Carolina family is charged`,
+        ? `${dollars(totalOf(c, theirs))} a year for North Carolina residents (${c.year} price)`
+        : `${dollars(totalOf(c, theirs))} a year from out of state, which is what a North Carolina family is charged (${c.year} price)`,
     breakdown: [`Tuition and fees ${dollars(theirs)}`, `Housing and food ${dollars(c.housingFood)}`, extras > 0 ? `Books and other costs ${dollars(extras)}` : null].filter(Boolean).join(" · "),
     other: !split ? null : resident ? `${dollars(totalOf(c, c.tuitionFeesOut))} from out of state` : `${dollars(totalOf(c, c.tuitionFeesIn))} for residents of the state`,
-    note: c.onCampus ? COST_NOTE_ON : COST_NOTE_OFF,
+    note: costNote(c),
   }
 }
 
@@ -124,5 +131,5 @@ export function costShort(schoolId: string, schoolState: string, homeState = "NC
   if (!c || c.tuitionFeesIn == null || c.tuitionFeesOut == null || c.housingFood == null) return tuitionShort(schoolId, schoolState, homeState)
   const resident = schoolState === homeState
   const which = c.tuitionFeesIn !== c.tuitionFeesOut ? (resident ? " in-state" : " out-of-state") : ""
-  return `${dollars(totalOf(c, resident ? c.tuitionFeesIn : c.tuitionFeesOut))} a year${which}, tuition, housing and food, ${costData.year}, before aid`
+  return `${dollars(totalOf(c, resident ? c.tuitionFeesIn : c.tuitionFeesOut))} a year${which}: tuition, housing, food and books (${c.year} price, before aid)`
 }
