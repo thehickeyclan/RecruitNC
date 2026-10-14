@@ -1,5 +1,6 @@
 "use client"
 
+import { formatPhoneForDisplay } from "@/lib/phone-format"
 import { COMPLETENESS_EDITORS, profileCompleteness } from "@/lib/profile-completeness"
 import { isPlaceholderAthletePhoto } from "@/lib/recruiting-profile-photo"
 import { STYLE_LABEL, type CompetitionSummary } from "@/lib/wrestling-style"
@@ -1121,7 +1122,7 @@ export function AthleteDetail({
             aria-label="Call"
           >
             <Phone className={phoneIconClass} />
-            <span>{cellPhone}</span>
+            <span>{formatPhoneForDisplay(cellPhone)}</span>
           </a>
         )}
         {canSeePrivateInfo && contactEmail && (

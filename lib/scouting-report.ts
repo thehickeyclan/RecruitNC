@@ -10,6 +10,7 @@
  * from these same facts and never introduces one of its own.
  */
 
+import { formatPhoneForDisplay } from "@/lib/phone-format"
 import { loadNationallyRanked } from "@/lib/state-placers"
 import { competitionLine, stylesLine, styleOfEvent, STYLE_LABEL, summarizeCompetition, type CompetitionSummary, styleOfEventForAthlete } from "@/lib/wrestling-style"
 import type { SupabaseClient } from "@supabase/supabase-js"
@@ -557,7 +558,7 @@ export function buildResultRows(bundle: {
  */
 export function mapContact(athlete: Record<string, unknown>, personal: boolean): ScoutingReportContact {
   return {
-    cell: personal ? text(athlete.phone ?? athlete.cell ?? athlete.cell_number) : null,
+    cell: personal ? text(formatPhoneForDisplay(String(athlete.phone ?? athlete.cell ?? athlete.cell_number ?? "")) || null) : null,
     email: personal ? text(athlete.contactEmail ?? athlete.contact_email ?? athlete.email) : null,
     // Film is promotional and the athlete publishes it themselves — not personal data.
     highlightVideoUrl: text(athlete.highlight_video_url),
