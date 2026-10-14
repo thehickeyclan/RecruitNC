@@ -77,8 +77,15 @@ async function main() {
   }
   const byName = new Map<string, any[]>()
   for (const a of ath) { const k = key(a.name); if (!k) continue; const v = byName.get(k) ?? []; v.push(a); byName.set(k, v) }
+  /*
+   * Two files disagreeing about ONE wrestler's class year is a contradiction and both rows are
+   * dropped. Two wrestlers who share a name at different schools are not: there are two Liam
+   * Jacksons in the 2026 field, an Apex Friendship senior and a Polk County sophomore, and
+   * keying the check on the name alone threw away both - including the one still in school.
+   * The year is compared per name AND school, which is how the profile is picked below.
+   */
   const perName = new Map<string, Set<string>>()
-  for (const r of rows) { const k = key(r.name); if (!k) continue; const v = perName.get(k) ?? new Set<string>(); v.add(r.grad_year); perName.set(k, v) }
+  for (const r of rows) { const k = `${key(r.name)}|${key(r.school)}`; if (!key(r.name)) continue; const v = perName.get(k) ?? new Set<string>(); v.add(r.grad_year); perName.set(k, v) }
   const dupCount = new Map<string, number>()
   for (const r of rows) dupCount.set(key(r.name), (dupCount.get(key(r.name)) ?? 0) + 1)
 
@@ -86,7 +93,7 @@ async function main() {
   const skip = { noProfile: 0, disagree: 0, impossible: 0, already: 0, ambiguous: 0 }
   for (const r of rows) {
     const k = key(r.name)
-    if ((perName.get(k)?.size ?? 0) > 1) { skip.disagree++; continue }
+    if ((perName.get(`${k}|${key(r.school)}`)?.size ?? 0) > 1) { skip.disagree++; console.log(`   disagree: ${r.name} (${r.school}) — ${[...perName.get(`${k}|${key(r.school)}`)!].join(" vs ")}`); continue }
     let hits = byName.get(k) ?? []
     if ((dupCount.get(k) ?? 0) > 1) hits = hits.filter((h) => schoolsLikelySame(h.highschool, r.school))
     if (!hits.length) { skip.noProfile++; continue }

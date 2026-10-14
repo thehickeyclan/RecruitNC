@@ -56,6 +56,16 @@ const GENDER = arg("gender", "Girls")!
  * win a title and have no page for a college coach to open (Matt, 14 Oct 2026).
  */
 const EVERYONE = process.argv.includes("--everyone")
+/*
+ * --link-only attaches placements to profiles that already exist and creates nothing.
+ *
+ * A PRIOR season is full of wrestlers who have since graduated, and graduated profiles are
+ * pruned on purpose - minting them back is the opposite of what the prune is for. But a junior's
+ * sophomore-year placement still belongs on his page: 184 rows from 2024 and 2025 named a
+ * wrestler who is still in school and reached nobody, so his profile showed one season of a
+ * three-season career.
+ */
+const LINK_ONLY = process.argv.includes("--link-only")
 const ALLOW_TRANSFER = process.argv.includes("--allow-transfer")
 const nn = (raw: unknown) => nameWords(String(raw ?? "")).join(" ")
 const title = (s: string) => s.replace(/\S+/g, (w) => (/[a-z]/.test(w) && /[A-Z]/.test(w) ? w : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()))
@@ -121,6 +131,7 @@ async function main() {
       ambiguous.push(`${r.wrestler_name} (${r.school}) vs ${sameName.map((a) => `${a.name} (${a.highschool ?? "no school"})`).join(" / ")}`)
       continue
     }
+    if (LINK_ONLY) continue
     const key = `${nn(r.wrestler_name)}|${nn(r.school)}`
     const held = toCreate.get(key)
     if (held) { held.placerIds.push(r.id); continue }
@@ -143,7 +154,7 @@ async function main() {
     })
   }
   console.log(`   already have a profile at that school, to LINK : ${toLink.length}`)
-  console.log(`   need a profile created                         : ${toCreate.size}`)
+  console.log(LINK_ONLY ? `   no profile to link to, skipped (--link-only)   : ${unlinked.length - toLink.length - ambiguous.length}` : `   need a profile created                         : ${toCreate.size}`)
   console.log(`   name matches a profile at a different school   : ${ambiguous.length}`)
   for (const a of ambiguous) console.log(`      ${a}`)
   const withYear = [...toCreate.values()].filter((c) => c.row.graduationyear).length
