@@ -46,14 +46,17 @@ export function RecruitStarButton({ athleteId, name, initiallyStarred }: { athle
       title={failed ? "Could not save — try again" : label}
       aria-label={label}
       aria-pressed={starred}
-      className={`absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full border px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide shadow-lg backdrop-blur transition ${
-        starred
-          ? "border-[#D7B95A] bg-[#D7B95A] text-[#060f1f]"
-          : "border-white/40 bg-black/60 text-white hover:border-[#D7B95A] hover:text-[#D7B95A]"
+      // Top-right of the photo, the corner people look to save something. Icon only: the label is
+      // in the tooltip and for screen readers, and a word there would sit across faces.
+      className={`absolute right-2 top-2 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border shadow-lg backdrop-blur transition ${
+        failed
+          ? "border-red-300 bg-black/70 text-red-300"
+          : starred
+            ? "border-[#D7B95A] bg-[#D7B95A] text-[#060f1f]"
+            : "border-white/50 bg-black/55 text-white hover:border-[#D7B95A] hover:text-[#D7B95A]"
       } ${busy ? "opacity-60" : ""}`}
     >
-      <Star className={`h-3.5 w-3.5 ${starred ? "fill-[#060f1f]" : ""}`} aria-hidden />
-      {failed ? "Retry" : starred ? "My Recruits" : "Add"}
+      <Star className={`h-[18px] w-[18px] ${starred ? "fill-[#060f1f]" : ""}`} aria-hidden />
     </button>
   )
 }

@@ -43,7 +43,7 @@ export function RankedAthleteCard({
     .join(" · ")
 
   return (
-    <li className="overflow-hidden rounded-sm border border-white/10 bg-white/[0.03] transition-colors hover:border-[#D7B95A]/40">
+    <li className="relative overflow-hidden rounded-sm border border-white/10 bg-white/[0.03] transition-colors hover:border-[#D7B95A]/40">
       <a href={profileHref} className="block">
         <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#0B1D3A]">
           {athlete.photoUrl ? (
@@ -59,20 +59,19 @@ export function RankedAthleteCard({
               <span className="text-4xl font-black text-white/20">{initials(athlete.name)}</span>
             </div>
           )}
-          <span className="absolute left-0 top-0 bg-[#D7B95A] px-2.5 py-1 text-sm font-black text-[#060f1f]">
-            #{athlete.rank}
+          {/* Rank and movement share the top-left; the top-right belongs to the My Recruits star. */}
+          <span className="absolute left-0 top-0 flex items-stretch">
+            <span className="bg-[#D7B95A] px-2.5 py-1 text-sm font-black text-[#060f1f]">#{athlete.rank}</span>
+            {move ? (
+              <span className={`flex items-center bg-black/60 px-1.5 text-[10px] font-bold ${move.className}`}>
+                {move.label}
+              </span>
+            ) : null}
           </span>
-          {move ? (
-            <span className={`absolute right-1.5 top-1.5 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-bold ${move.className}`}>
-              {move.label}
-            </span>
-          ) : null}
         </div>
       </a>
       {star ? (
-        <div className="relative -mt-12 h-12">
-          <RecruitStarButton athleteId={athlete.athleteId} name={athlete.name} initiallyStarred={star.starred} />
-        </div>
+        <RecruitStarButton athleteId={athlete.athleteId} name={athlete.name} initiallyStarred={star.starred} />
       ) : null}
 
       <div className="p-3 sm:p-4">
