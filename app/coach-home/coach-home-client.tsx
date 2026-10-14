@@ -132,7 +132,7 @@ function TopUncommitted({ wrestlers, poolSize }: { wrestlers: CoachHomeData["sug
         </Link>
       </div>
       <p className="mt-2 text-sm text-white/55">
-        Ranked and not yet committed. Tap a name to open the profile; tap <Star className={`mx-0.5 inline h-3.5 w-3.5 ${GOLD}`} aria-label="the star" /> to add him to your recruits.
+        Ranked and not yet committed. Tap a name to open the profile; tap <Star className={`mx-0.5 inline h-3.5 w-3.5 ${GOLD}`} aria-label="the star" /> to add the wrestler to your recruits.
       </p>
       <div className="mt-2 grid gap-x-6 md:grid-cols-2">
         {years.map((year) => (
@@ -330,8 +330,8 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
               <div className="mt-4 rounded-lg border border-dashed border-white/15 p-4">
                 <p className="text-base font-bold text-white">Start your recruiting board</p>
                 <p className="mt-1 text-sm text-white/60">
-                  Tap the <Star className={`mx-0.5 inline h-3.5 w-3.5 ${GOLD}`} aria-label="star" /> on any wrestler&apos;s profile to add him to My Recruits. From
-                  there you track his stage, log calls and texts, and message him. Your staff shares one board.
+                  Tap the <Star className={`mx-0.5 inline h-3.5 w-3.5 ${GOLD}`} aria-label="star" /> on any wrestler&apos;s profile to add them to My Recruits. From
+                  there you track each wrestler&apos;s stage, log calls and texts, and send messages. Your staff shares one board.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Link href="/prospects/all" className="rounded-lg bg-[#D3B574] px-4 py-2 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
