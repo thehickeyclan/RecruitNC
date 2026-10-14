@@ -9,7 +9,10 @@ import { loadTopHundred } from "@/lib/rankings/top-100-view"
 import {
   PUBLISHED_PUBLIC_RANKINGS_YEARS,
   PUBLIC_TOP_75_COLLEGE_RELEASED,
+  rankedClassYears,
+  releasedClassYears,
 } from "@/lib/public-rankings-cap"
+import { coachProgramOf, viewGenderFor } from "@/lib/recruiting/coach-program"
 
 /**
  * Every published board, for the app.
@@ -65,6 +68,7 @@ export async function GET(request: NextRequest) {
       const board = await loadPublicClassRanking(year, isAdmin)
       return {
         key: String(year),
+        gender: "Male" as const,
         title: `Class of ${year}`,
         cap: board.cap,
         published: board.published,
@@ -73,7 +77,14 @@ export async function GET(request: NextRequest) {
     }),
   )
 
-  const boards = classBoards.filter((b) => b.published && b.athletes.length > 0)
+  const boards: Array<{
+    key: string
+    gender?: "Male" | "Female"
+    title: string
+    cap: number
+    published: boolean
+    athletes: unknown[]
+  }> = classBoards.filter((b) => b.published && b.athletes.length > 0)
 
   // The board that replaced the ranked list: classes of 2027 and 2028, past every class cut.
   if (isAdmin || PUBLIC_TOP_75_COLLEGE_RELEASED) {
@@ -81,6 +92,7 @@ export async function GET(request: NextRequest) {
     if (college.published && college.athletes.length > 0) {
       boards.push({
         key: "college-prospects",
+        gender: "Male",
         title: `Top ${college.cap} College Prospects`,
         cap: college.cap,
         published: college.published,
@@ -95,5 +107,35 @@ export async function GET(request: NextRequest) {
    * called "Top 75" in front of the person least able to tell them apart from a phone.
    */
 
-  return NextResponse.json({ ok: true, entitled: true, boards })
+  /*
+   * The women's boards, only to builds that ask (`?women=1`, 14 October 2026).
+   *
+   * Builds already on phones label any board whose key is not a bare year "Top {cap}" and lay
+   * the tabs out in one row that fits four. Sent to them, two women's boards would read as two
+   * unexplained "Top 15" tabs pushing the row off the screen. Newer builds ask, and get a Men's |
+   * Women's switch. Keys are "women-2027", never "2027", so no build can mistake one for the other.
+   */
+  let defaultGender: "Male" | "Female" = "Male"
+  if (request.nextUrl.searchParams.get("women") === "1") {
+    const womensYears = isAdmin ? rankedClassYears("Female") : releasedClassYears("Female")
+    const womensBoards = await Promise.all(
+      womensYears.map(async (year) => {
+        const board = await loadPublicClassRanking(year, isAdmin, "Female")
+        return {
+          key: `women-${year}`,
+          gender: "Female" as const,
+          title: `Women's Class of ${year}`,
+          cap: board.cap,
+          published: board.published,
+          athletes: board.athletes,
+        }
+      }),
+    )
+    boards.push(...womensBoards.filter((b) => b.published && b.athletes.length > 0))
+    // A women's coach opens on the women's boards, as on the website.
+    const { data: userData } = await admin.auth.admin.getUserById(userId).catch(() => ({ data: null }))
+    defaultGender = viewGenderFor(coachProgramOf(userData?.user ?? null))
+  }
+
+  return NextResponse.json({ ok: true, entitled: true, boards, defaultGender })
 }
