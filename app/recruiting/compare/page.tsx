@@ -51,6 +51,13 @@ type Cell = { main: string; sub?: string; className?: string }
 
 const MAJORS = majorsData.majors as Record<string, string[]>
 const NC_ZIPS = ncZips.zips as Record<string, number[]>
+/** Athletic fit is a target to build toward, so it is never called a "concern". */
+const ATHLETIC_STATUS: Record<FitStatus, { label: string; className: string }> = {
+  fit: { label: "In line with what they recruit", className: "text-emerald-300" },
+  stretch: { label: "Close", className: "text-amber-200" },
+  concern: { label: "Still building toward it", className: "text-white" },
+  unknown: { label: "Not enough to say", className: "text-white/60" },
+}
 const STATUS: Record<FitStatus, { label: string; className: string }> = {
   fit: { label: "Good fit", className: "text-emerald-300" },
   stretch: { label: "Stretch", className: "text-amber-200" },
@@ -127,7 +134,7 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
       const gpaGroup = schoolGpa ? { ...schoolGpa, label: `NC ${among} who went to ${spoken(school.name)}` } : levelGpa ? { ...levelGpa, label: `NC ${among} who went ${division ? DIVISION_SHORT[division] : ""}` } : null
       const satR = fit ? satTotalRange(fit) : [null, null]
       const fitLines = {
-        athletic: division ? athleticFit(mine, group, DIVISION_SHORT[division], among) : { status: "unknown" as const, text: `No ${among === "women" ? "women's" : "men's"} team.` },
+        athletic: division ? athleticFit(mine, group, DIVISION_SHORT[division], among, first ?? "Your wrestler") : { status: "unknown" as const, text: `No ${among === "women" ? "women's" : "men's"} team.` },
         academic: academicFit({
           sat: sat && satR[0] != null && satR[1] != null ? { score: sat, low: satR[0], high: satR[1] } : null,
           act: act && fit?.act[0] != null && fit.act[1] != null ? { score: act, low: fit.act[0], high: fit.act[1] } : null,
@@ -142,9 +149,9 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
           setting: fit?.setting ?? null,
         }),
       }
-      const fitCell = (l: FitLine): Cell => ({ main: STATUS[l.status].label, sub: l.text, className: STATUS[l.status].className })
+      const fitCell = (l: FitLine, labels = STATUS): Cell => ({ main: labels[l.status].label, sub: l.text, className: labels[l.status].className })
       const cells: Record<string, Cell> = {
-        fitAthletic: fitCell(fitLines.athletic),
+        fitAthletic: fitCell(fitLines.athletic, ATHLETIC_STATUS),
         fitAcademic: fitCell(fitLines.academic),
         fitCost: fitCell(fitLines.cost),
         fitGoals: fitCell(fitLines.goals),

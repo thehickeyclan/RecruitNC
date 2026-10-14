@@ -7,11 +7,13 @@ const placer = { tier: "state-placer" as const, national: false }
 const none = { tier: "none" as const, national: false }
 
 describe("best fit for a family", () => {
-  it("compares the wrestler with the NC wrestlers who went to the level, and only with five or more", () => {
+  it("says what programs at the level typically want to see, then where the wrestler is so far", () => {
     const d1 = [champ, champ, champ, champ, placer, champ]
-    expect(athleticFit(placer, d1, "D1", "men").status).toBe("stretch")
+    const line = athleticFit(placer, d1, "D1", "men", "Gavin")
+    expect(line.text).toBe("D1 programs typically want to see a state champion: 5 of the 6 NC men who went D1 were state champions, 1 more placed at state. Gavin so far: a state placer.")
+    expect(line.status).toBe("stretch")
     expect(athleticFit(none, d1, "D1", "men").status).toBe("concern")
-    expect(athleticFit(champ, d1, "D1", "men")).toMatchObject({ status: "fit", text: expect.stringMatching(/6 of the 6 NC men who went D1/) })
+    expect(athleticFit(champ, d1, "D1", "men").status).toBe("fit")
     expect(athleticFit(champ, [champ, placer], "D1", "women").status).toBe("unknown")
   })
 

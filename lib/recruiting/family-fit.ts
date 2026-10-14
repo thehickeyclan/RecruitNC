@@ -95,15 +95,30 @@ const describe = (s: Standing) =>
     .filter(Boolean)
     .join(" and ") || "no state or national placing yet"
 
-/** The wrestler's best results against the NC wrestlers who went to this level. */
-export function athleticFit(mine: Standing | null, group: Standing[], level: string, among: string): FitLine {
-  if (!mine) return { status: "unknown", text: "No results on file to compare." }
-  if (group.length < 5) return { status: "unknown", text: `Too few NC ${among} who went ${level} to compare (${group.length}).` }
+/**
+ * What programs at a level typically recruit, from the NC wrestlers who went there, and where the
+ * wrestler is so far. Worded as a target to build toward, not a verdict (Matt, 14 Oct 2026): a
+ * sophomore state qualifier read "Concern ... as good as 1 of the 38" against Division I, which is
+ * true and useless. It says what the level looks for, then where the wrestler stands today.
+ */
+export function athleticFit(mine: Standing | null, group: Standing[], level: string, among: string, name = "Your wrestler"): FitLine {
+  if (group.length < 5) return { status: "unknown", text: `Too few NC ${among} who went ${level} to say what its programs typically recruit (${group.length}).` }
+  const n = group.length
+  const champs = group.filter((g) => g.tier === "state-champion").length
+  const placers = group.filter((g) => g.tier === "state-placer").length
+  const national = group.filter((g) => g.national).length
   const sorted = group.map(score).sort((a, b) => a - b)
   const median = sorted[Math.floor(sorted.length / 2)]
-  const atOrAbove = group.filter((g) => score(mine) >= score(g)).length
-  const text = `So far ${describe(mine)}. As good as or better than ${atOrAbove} of the ${group.length} NC ${among} who went ${level}.`
-  return { status: score(mine) >= median ? "fit" : score(mine) >= median - 1 ? "stretch" : "concern", text }
+  const typical = group.find((g) => score(g) === median) ?? group[0]
+  const counts = [
+    champs ? `${champs} of the ${n} NC ${among} who went ${level} were state champions` : null,
+    placers ? `${placers}${champs ? " more" : ` of the ${n}`} placed at state` : null,
+    national ? `${national} placed at a national tournament` : null,
+  ].filter(Boolean)
+  const want = `${level} programs typically want to see ${describe(typical)}: ${counts.length ? counts.join(", ") : `none of the ${n} placed at state on our records`}.`
+  if (!mine) return { status: "unknown", text: `${want} ${name} has no results on file yet.` }
+  const gap = median - score(mine)
+  return { status: gap <= 0 ? "fit" : gap === 1 ? "stretch" : "concern", text: `${want} ${name} so far: ${describe(mine)}.` }
 }
 
 /** Test scores against the middle half; GPA against the NC wrestlers who went there. */
