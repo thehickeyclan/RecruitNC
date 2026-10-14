@@ -3,6 +3,29 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        // The Community area (group chats and DMs) was taken down on 14 Oct 2026: no group post had
+        // ever been written, and 69 people a month opened it to an empty room. Recruiting messages
+        // live in the inbox. The tables are left as they were.
+        source: "/forum/:path*",
+        destination: "/inbox",
+        permanent: false,
+      },
+      {
+        source: "/forum",
+        destination: "/inbox",
+        permanent: false,
+      },
+      {
+        source: "/messages/:path*",
+        destination: "/inbox",
+        permanent: false,
+      },
+      {
+        source: "/messages",
+        destination: "/inbox",
+        permanent: false,
+      },
+      {
         /*
          * /ranking, singular. Nothing in this codebase links to it, but people keep arriving:
          * 17 login-wall hits in one week, and it was the last page six named accounts saw. It
