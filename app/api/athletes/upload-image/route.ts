@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getAthletesColumnNames } from "@/lib/athletes-schema"
 import { nanoid } from "nanoid"
 import { resolveAthleteOwnership } from "@/lib/mobile/athlete-ownership"
+import { rankerMayUploadPhoto } from "@/lib/rankings/ranker-photo-access"
 
 export const runtime = "nodejs"
 export const dynamic = "force-dynamic"
@@ -62,7 +63,9 @@ export async function POST(request: NextRequest) {
         .eq("user_id", user.id)
         .maybeSingle()
       const isAdmin = viewerProfile?.is_admin === true || viewerProfile?.role === "admin"
-      if (!isAdmin) {
+      // A ranker may set the profile photo of a wrestler ranked on his board, and nothing else.
+      const ranker = category === "profile" && (await rankerMayUploadPhoto(adminSupabase, user, athleteId))
+      if (!isAdmin && !ranker) {
         return NextResponse.json({ error: ownership.error }, { status: ownership.status })
       }
     }
