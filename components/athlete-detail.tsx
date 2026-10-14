@@ -405,7 +405,8 @@ export function AthleteDetail({
     setTimeout(() => document.querySelector("[data-owner-editor]")?.scrollIntoView({ block: "start" }), 300)
   }, [canEdit])
   // Private info (contact, GPA, ACT, SAT) visible only to self, coaches, and admins
-  const canSeePrivateInfo = isViewingOwnProfile || isAdmin || isVerifiedCoach
+  // A linked parent sees the family's own private details (Matt, 14 October 2026); the server sends them on the same rule.
+  const canSeePrivateInfo = isViewingOwnProfile || isParentLinkedEditor || isLinkedParentProfile || isAdmin || isVerifiedCoach
   /** The comparison: verified college coaches and admins, never on your own profile. */
   const mayCompare = mayUseComparison({ isAdmin, profile: viewerProfile, userId: currentUserId }) && !isViewingOwnProfile
 
