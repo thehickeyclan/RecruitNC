@@ -117,11 +117,15 @@ export default async function PublicRankingsHomepage({
   }))
   const { gender: viewGender } = await resolveViewGender()
   const groups = [
-    { key: "mens", heading: "Men's Rankings", links: releasedLinks, preview: false },
+    { key: "mens", heading: "Men's Rankings", links: releasedLinks, preview: false, note: null },
     {
       key: "womens",
       heading: "Women's Rankings",
       links: womensLinks,
+      // Matt, 14 October 2026: say up front what the women's boards reward, because it is not
+      // what the men's do. Women wrestle freestyle in college.
+      note:
+        "Weighted heavily on freestyle. Women wrestle freestyle in college, so national and state freestyle results and wins over nationally ranked opponents count most. Folkstyle state results are supporting evidence.",
       preview: (isAdmin || rankerYears.length > 0) && releasedClassYears("Female").length === 0,
     },
   ].filter((group) => group.links.length)
@@ -189,6 +193,9 @@ export default async function PublicRankingsHomepage({
             </span>
           ) : null}
         </div>
+        {group.note ? (
+          <p className="mb-5 max-w-3xl text-sm leading-relaxed text-white/65">{group.note}</p>
+        ) : null}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {group.links.map(({ href, eyebrow, title, description, icon: Icon }) => (
             <HardLink key={href} href={href} className="group block h-full">
