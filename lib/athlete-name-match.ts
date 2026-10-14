@@ -106,6 +106,14 @@ export function normalizeApostrophes(s: string): string {
      */
     .replace(/`/g, "'")
     .replace(/\u00B4/g, "'")
+    /*
+     * A lone "?" or U+FFFD between two letters is a mangled apostrophe, not a character: an
+     * export whose UTF-8 was read as something else writes "Jackson D?Ettore" for
+     * "Jackson D'Ettore". NHSCA 2026 arrived that way, and those two bouts never reached him -
+     * a 6A state champion's national results sat unlinked beside four spellings that did match.
+     * No wrestler's name contains a question mark between letters, so the rule is safe narrow.
+     */
+    .replace(/(?<=\p{L})[?\uFFFD](?=\p{L})/gu, "'")
 }
 
 function normalizeForAlias(name: string): string {
