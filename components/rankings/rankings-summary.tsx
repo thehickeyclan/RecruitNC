@@ -22,6 +22,7 @@ const CHAMPION_OF: Partial<Record<PublicRankingCredentialKind, PublicRankingCred
 }
 
 const ROWS: Array<{ kind: PublicRankingCredentialKind; label: string; plural: string }> = [
+  { kind: "national-rank", label: "Nationally ranked", plural: "Nationally ranked" },
   { kind: "toc-champion", label: "TOC champion", plural: "TOC champions" },
   { kind: "toc-placer", label: "TOC placer", plural: "TOC placers" },
   { kind: "all-american", label: "All-American", plural: "All-Americans" },

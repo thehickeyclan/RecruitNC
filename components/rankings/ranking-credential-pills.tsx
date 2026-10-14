@@ -5,6 +5,8 @@ import type { PublicRankingCredential, PublicRankingCredentialKind } from "@/lib
  * does not have to learn two visual systems.
  */
 const PILL_CLASS: Record<PublicRankingCredentialKind, string> = {
+  // Women's boards only: a current national list, named by outlet.
+  "national-rank": "border-white/70 bg-white text-[#060f1f]",
   "all-american": "border-[#CC0000]/55 bg-[#CC0000]/20 text-red-200",
   "state-champion": "border-[#D7B95A]/55 bg-[#D7B95A] text-[#060f1f]",
   "state-placer": "border-sky-300/45 bg-sky-400/15 text-sky-200",

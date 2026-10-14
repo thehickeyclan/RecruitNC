@@ -9,6 +9,7 @@ import {
 } from "@/lib/credentials/athlete-credentials"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getPublicRankingsMax, isPublicRankingsYearPublished, isRankedClassYear, isWomensBoard } from "@/lib/public-rankings-cap"
+import { loadWomensNationalRanks, type WomensNationalRankRow } from "@/lib/rankings/womens-national-ranks"
 
 /**
  * The public read model for a class ranking — one server-side shape, the way the TOC field has one.
@@ -28,6 +29,7 @@ import { getPublicRankingsMax, isPublicRankingsYearPublished, isRankedClassYear,
  * seven pills onto a card and buried the two that decide a ranking.
  */
 export type PublicRankingCredentialKind =
+  | "national-rank"
   | "all-american"
   | "state-champion"
   | "state-placer"
@@ -142,6 +144,28 @@ export function credentialsFrom(held: AthleteCredentials | undefined): PublicRan
 }
 
 /**
+ * The women's boards only (Matt, 14 October 2026): a girl on a current national list says so,
+ * with the outlet, because a women's college coach reads "SI #16" faster than any state title.
+ *
+ * Her best rank is the pill; every list she is on, with the edition month, is the detail. Read
+ * live from the newest edition of each list, so a new SI pull or Muse import changes the pill
+ * with no publish. The men's cards keep their four credentials.
+ */
+export function nationalRankCredential(ranks: ReadonlyArray<WomensNationalRankRow> | undefined): PublicRankingCredential | null {
+  if (!ranks?.length) return null
+  const sorted = [...ranks].sort((a, b) => a.rank - b.rank)
+  const month = (m: string) => {
+    const d = new Date(`${m.slice(0, 10)}T00:00:00Z`)
+    return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString("en-US", { month: "short", year: "numeric", timeZone: "UTC" })
+  }
+  return {
+    kind: "national-rank",
+    label: sorted[0]!.label,
+    detail: `Nationally ranked: ${sorted.map((r) => `${r.label}${month(r.month) ? ` (${month(r.month)})` : ""}`).join(" · ")}`,
+  }
+}
+
+/**
  * The columns the shared matcher needs, on top of what the card renders.
  *
  * An allowlist rather than `select("*")`: this table also carries GPA, contact details and staff
@@ -205,7 +229,12 @@ async function buildPublicClassRanking(
    */
   const showMovement = isPublicRankingsYearPublished(year, gender)
 
-  const credentials = await loadAthleteCredentialsBatch(admin, (rows ?? []) as unknown as Array<Record<string, unknown>>)
+  const [credentials, nationalRanks] = await Promise.all([
+    loadAthleteCredentialsBatch(admin, (rows ?? []) as unknown as Array<Record<string, unknown>>),
+    gender === "Female"
+      ? loadWomensNationalRanks(admin, (rows ?? []).map((row) => String((row as unknown as Record<string, unknown>).id)))
+      : Promise.resolve(new Map<string, WomensNationalRankRow[]>()),
+  ])
 
   const athletes: PublicRankedAthlete[] = (rows ?? []).map((row) => {
     const raw = row as unknown as Record<string, unknown>
@@ -226,7 +255,10 @@ async function buildPublicClassRanking(
        * Credentials only. Records, named quality wins and direct wins over other ranked
        * wrestlers stay on the admin board and never reach the browser.
        */
-      credentials: credentialsFrom(credentials.get(String(raw.id))),
+      credentials: [
+        nationalRankCredential(nationalRanks.get(String(raw.id))),
+        ...credentialsFrom(credentials.get(String(raw.id))),
+      ].filter((c): c is PublicRankingCredential => c != null),
     }
   })
 
@@ -241,7 +273,7 @@ async function buildPublicClassRanking(
  * the page kept serving a payload built before they existed. Bump this whenever the returned
  * shape changes.
  */
-const PUBLIC_RANKING_CACHE_VERSION = "v6-shared-credential-engine"
+const PUBLIC_RANKING_CACHE_VERSION = "v7-womens-national-rank"
 
 export const loadPublicClassRanking = unstable_cache(
   buildPublicClassRanking,

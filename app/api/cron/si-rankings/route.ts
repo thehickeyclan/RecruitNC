@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { revalidateTag } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { syncSiNationalRankings } from "@/lib/rankings/si-national"
 
@@ -25,6 +26,8 @@ export async function GET(request: NextRequest) {
       force: request.nextUrl.searchParams.get("force") === "1",
     })
     console.info("[si-rankings]", JSON.stringify(result))
+    // The women's class pages print national ranks live; a new edition must show without a publish.
+    revalidateTag("public-rankings")
     return NextResponse.json(result)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)

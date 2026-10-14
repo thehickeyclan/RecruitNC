@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { revalidateTag } from "next/cache"
 import { timingSafeEqual } from "node:crypto"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NATIONAL_RANKING_SOURCES, type NationalRankingSource } from "@/lib/national-rankings"
@@ -109,6 +110,8 @@ export async function POST(request: NextRequest) {
     })
     console.info("[rankings-ingest]", JSON.stringify({ ...result, ncMatched: result.ncMatched.length }))
     if (result.statusError) console.error("[rankings-ingest] rows landed but freshness did not:", result.statusError)
+    // The women's class pages print national ranks live; a new edition must show without a publish.
+    revalidateTag("public-rankings")
     return NextResponse.json(result)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
