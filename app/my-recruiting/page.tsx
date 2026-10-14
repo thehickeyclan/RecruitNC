@@ -177,6 +177,18 @@ export default async function RecruitingWarRoomPage() {
             team={focus?.gender ?? null}
             savedCount={schools.length}
           />
+          {blue && schools.length >= 2 ? (
+            <a
+              href="/recruiting/compare"
+              className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-[#D3B574]/40 bg-[#D3B574]/10 p-4 hover:border-[#D3B574]"
+            >
+              <span>
+                <span className="block text-sm font-bold text-white">Compare your colleges side by side</span>
+                <span className="block text-sm text-white/65">Cost, what families like yours paid, admissions, test scores, graduation rate and the team.</span>
+              </span>
+              <span className="shrink-0 rounded-lg bg-[#D3B574] px-3 py-2 text-sm font-bold text-[#0A1628]">Compare</span>
+            </a>
+          ) : null}
         </section>
 
         <section id="learn" className="mt-12 scroll-mt-24">
