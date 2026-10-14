@@ -14,6 +14,8 @@ import data from "@/lib/college-programs/programs-2026-27.json"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { INCOME_BRACKETS, fitForSchool, netPriceFor, satTotalRange, scorePlacement, type Placement } from "@/lib/college-programs/fit"
 import { rosterForSchool } from "@/lib/college-programs/rosters"
+import { depthAtWeights, depthFor, nearestCollegeWeights } from "@/lib/college-programs/roster-depth"
+import { loadLastCompeted } from "@/lib/prospect-last-competed"
 import { teamRankingsForSchool } from "@/lib/college-programs/team-rankings-snapshot"
 import { yearlyCostFor } from "@/lib/college-programs/tuition"
 import { DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
@@ -72,6 +74,9 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
   const sat = Number(String(wrestler?.academic_sat ?? "").replace(/[^0-9]/g, "")) || null
   const act = Number(String(wrestler?.academic_act ?? "").replace(/[^0-9]/g, "")) || null
   const team = focus?.gender ?? null
+  // The weight the wrestler last competed at, never the profile's listed one (it goes stale).
+  const last = wrestler ? (await loadLastCompeted(admin, [String(wrestler.id)], new Map([[String(wrestler.id), wrestler.graduationyear ? Number(wrestler.graduationyear) : null]]))).get(String(wrestler.id)) : null
+  const weight = Number(String(last?.weight ?? "").replace(/[^0-9]/g, "")) || null
 
   const columns = await Promise.all(
     chosen.map(async (school) => {
@@ -85,14 +90,31 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
       const actMark = fit ? scorePlacement(act, fit.act) : null
       const net = fit ? netPriceFor(fit, school.state, income) : null
       const programs = school.programs.filter((p) => !team || p[team])
+      const rosterTeam = team ?? (school.programs.some((p) => p.mens) ? "mens" : "womens")
+      const depth = depthFor(school.id, rosterTeam)
+      const near = weight ? nearestCollegeWeights(weight, rosterTeam) : []
+      const atWeight = depth && near.length ? depthAtWeights(depth, near) : null
       const cells: Record<string, Cell> = {
+        size: depth
+          ? { main: `${depth.size} wrestlers`, sub: depth.season ? `${depth.season} roster` : "Season not stated on the roster" }
+          : { main: "Roster not read" },
+        depth: !weight
+          ? { main: "No recent weight on file" }
+          : !depth
+            ? { main: "Roster not read" }
+            : !atWeight
+              ? { main: "The roster lists no weights" }
+              : {
+                  main: atWeight.map((l) => `${l.weight}: ${l.wrestlers}`).join(" · "),
+                  sub: `${atWeight.map((l) => `${l.finalYear} in their final year at ${l.weight}`).join(", ")}. ${depth.season ?? "Current"} roster; redshirts and transfers change it.`,
+                },
         level: programs.length
           ? { main: programs.map((p) => DIVISION_SHORT[p.division]).join(", "), sub: programs.map((p) => p.conference).filter(Boolean).join(", ") || undefined }
           : { main: `No ${team === "womens" ? "women's" : "men's"} team`, className: "text-amber-200" },
         ranking: rankings[0] ? { main: `No. ${rankings[0].rank}`, sub: `${rankings[0].pollName}, ${rankings[0].pollDate.slice(0, 4)}` } : { main: "Not ranked in a poll we read" },
         nc: roster.anyReviewed ? { main: `${ncOnRoster} from North Carolina`, sub: "On the current roster" } : { main: "Roster not read" },
         where: { main: `${school.city}, ${school.state}`, sub: fit?.setting ?? undefined },
-        size: fit?.undergrads ? { main: `${fit.undergrads.toLocaleString("en-US")} undergraduates` } : { main: "Not published" },
+        students: fit?.undergrads ? { main: `${fit.undergrads.toLocaleString("en-US")} undergraduates` } : { main: "Not published" },
         cost: cost ? { main: dollars(cost.amount), sub: `Tuition, fees, housing, food and books, ${cost.year}, before aid` } : { main: "Not published" },
         net: net?.amount != null ? { main: dollars(net.amount), sub: net.note } : { main: "No published figure", sub: net?.note ?? undefined },
         admit: fit?.admitRate != null ? { main: `${fit.admitRate}% admitted` } : { main: "Admits most applicants or does not report" },
@@ -108,6 +130,8 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
   const ROWS: Array<{ key: string; label: string; group: string }> = [
     { key: "level", label: "Level and conference", group: "The program" },
     { key: "ranking", label: "Team ranking", group: "The program" },
+    { key: "size", label: "Roster size", group: "The program" },
+    { key: "depth", label: weight ? `Wrestlers at the college weights near ${first}'s ${weight}` : "Wrestlers at your weight", group: "The program" },
     { key: "nc", label: "North Carolina wrestlers", group: "The program" },
     { key: "cost", label: "Published yearly cost", group: "Cost" },
     { key: "net", label: "What families like yours paid", group: "Cost" },
@@ -117,7 +141,7 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
     { key: "grad", label: "Graduation rate", group: "Academics" },
     { key: "retention", label: "First-year retention", group: "Academics" },
     { key: "where", label: "Where", group: "Campus" },
-    { key: "size", label: "Size", group: "Campus" },
+    { key: "students", label: "Size", group: "Campus" },
   ]
   const link = (next: Record<string, string | null>) => {
     const q = new URLSearchParams()
@@ -256,7 +280,8 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
             <p className="mt-4 max-w-3xl text-xs leading-5 text-white/45">
               College figures are from the US Department of Education: costs for 2024-25 or 2023-24; admissions and test scores for students entering
               in fall 2023; what families paid is the average for first-year students receiving federal aid in 2022-23. A public college reports that
-              figure for its own state&apos;s students only. Test scores are compared with the middle half of admitted students, the 25th to 75th
+              figure for its own state&apos;s students only. Rosters are each program&apos;s published roster as read in October 2026: a count at a
+              weight shows how crowded it is, not whether a spot is open, because redshirts and incoming transfers are often not listed. Test scores are compared with the middle half of admitted students, the 25th to 75th
               percentile. Your family&apos;s income is not saved, and nothing on this page is shown to a coach.
             </p>
           </>
