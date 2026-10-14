@@ -23,7 +23,7 @@ import { loadCollegeMap } from "@/lib/college-programs/load"
 import { schoolLogoUrl } from "@/lib/college-programs/logo"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { STATE_NAMES } from "@/lib/college-programs/states"
-import { TUITION_NOTE, tuitionFacts } from "@/lib/college-programs/tuition"
+import { TUITION_NOTE, costFacts, tuitionFacts } from "@/lib/college-programs/tuition"
 import { rankingSentence } from "@/lib/college-programs/team-rankings"
 import { teamRankingsForSchool } from "@/lib/college-programs/team-rankings-snapshot"
 import { DIVISION_COLOR, DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
@@ -67,6 +67,7 @@ export default async function SchoolPage({ params }: Params) {
 
   const name = spoken(school.name)
   const tuition = tuitionFacts(school.id, school.state)
+  const cost = costFacts(school.id, school.state)
   // The page follows the family's wrestler: her team, its coach and its ranking come first.
   const focus = await familyFocus(admin, userId)
   const theirs = focus?.gender ?? null
@@ -147,7 +148,22 @@ export default async function SchoolPage({ params }: Params) {
             </ul>
           ) : null}
 
-          {tuition && (tuition.control || tuition.lines.length > 0) ? (
+          {cost ? (
+            <div className="mt-4 max-w-xl rounded-lg border border-white/15 bg-white/[0.06] px-4 py-3 text-sm">
+              <p className="text-[11px] font-black uppercase tracking-widest text-[#D7B968]">
+                What a year costs{cost.control ? ` · ${cost.control} college` : ""}
+              </p>
+              <p className="mt-1 text-base font-bold text-white">{cost.headline}</p>
+              <p className="text-white/75">{cost.breakdown}</p>
+              {cost.other ? <p className="text-white/55">{cost.other}</p> : null}
+              <p className="mt-1.5 text-xs leading-5 text-white/50">
+                {cost.note}{" "}
+                <a href="/recruiting/learn/paying-for-college" className="underline hover:text-white/80">
+                  What a family really pays
+                </a>
+              </p>
+            </div>
+          ) : tuition && (tuition.control || tuition.lines.length > 0) ? (
             <div className="mt-4 max-w-xl rounded-lg border border-white/15 bg-white/[0.06] px-4 py-3 text-sm">
               <p className="text-[11px] font-black uppercase tracking-widest text-[#D7B968]">
                 Tuition{tuition.control ? ` · ${tuition.control} college` : ""}
@@ -157,14 +173,7 @@ export default async function SchoolPage({ params }: Params) {
                   {line}
                 </p>
               ))}
-              {tuition.lines.length > 0 ? (
-                <p className="mt-1.5 text-xs leading-5 text-white/50">
-                  {TUITION_NOTE}{" "}
-                  <a href="/recruiting/learn/paying-for-college" className="underline hover:text-white/80">
-                    What a family really pays
-                  </a>
-                </p>
-              ) : null}
+              {tuition.lines.length > 0 && !/No tuition/.test(tuition.lines[0]) ? <p className="mt-1.5 text-xs leading-5 text-white/50">{TUITION_NOTE}</p> : null}
             </div>
           ) : null}
 
