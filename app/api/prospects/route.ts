@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { fetchProspectDirectoryPage } from "@/lib/prospects-directory"
 import { lastCompetedLabel, loadLastCompeted } from "@/lib/prospect-last-competed"
+import { highestAchievement, loadAchievements } from "@/lib/prospect-achievements"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -41,8 +42,16 @@ export async function GET(request: NextRequest) {
       (prospects as Array<{ id: string }>).map((p) => String(p.id)),
       new Map((prospects as Array<{ id: string; graduationyear?: unknown }>).map((p) => [String(p.id), Number(p.graduationyear) || null])),
     )
+    // The honours too, for the same reason: without them the Honors pills emptied the list the
+    // first time a coach changed class.
+    const facts = await loadAchievements(
+      supabase,
+      (prospects as Array<{ id: string; name?: string | null }>).map((p) => ({ id: p.id, name: p.name })),
+    )
     const withLastCompeted = (prospects as Array<Record<string, unknown>>).map((p) => ({
       ...p,
+      achievement_facts: facts.get(String(p.id)) ?? {},
+      achievement_level: highestAchievement(facts.get(String(p.id)) ?? {}).level,
       last_competed: lastCompetedLabel(lastCompeted.get(String(p.id))),
     }))
 
