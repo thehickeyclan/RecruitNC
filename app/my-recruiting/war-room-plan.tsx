@@ -22,6 +22,8 @@ export type WarRoomSchool = {
   hasQuestionnaire: boolean
   /** "$31,450 tuition" for a North Carolina family (2023-24, tuition only), or null. */
   tuition: string | null
+  /** When the family saved or last moved it, for the home screen's recent activity. */
+  savedAt?: string | null
   /** "No women's team": the family's wrestlers could not wrestle here. Null when they could. */
   noTeam: string | null
 }

@@ -1,212 +1,182 @@
 /**
- * The Recruiting Command Center: the family's recruiting portal, on one page (Matt, 12 Oct 2026;
- * named the War Room until 13 Oct, which is why the files and components here still say so).
+ * The Recruiting Command Center home (Matt's design, 14 Oct 2026): where recruiting stands for the
+ * family's wrestler at a glance - four numbers, the next steps, recent activity, the college list
+ * and the map - inside the portal frame, with Plan, Colleges, Map, Messages, Learn and Activity a
+ * tap away in the menu. Was one long page with Plan, Learn and Activity sections (named the War
+ * Room until 13 Oct, which is why files here still say so).
  *
- * Coaches got a portal (app/coach-home). This is the family's: where the planning, the learning
- * and the activity happen. The map, My List, Email the coach and the schedule are features of it,
- * not places of their own.
- *
- * - **Plan** - this month's steps, the college list, where the wrestler competes next. Part of
- *   NC United Blue; everyone else sees what it is and how to get it.
- * - **Learn** - how recruiting works, in the order a family needs it.
- * - **Activity** - who wrote, who looked, what a coach will find missing. The panels are the
- *   profile's own, so the views paywall and messaging rules are the same here as there.
+ * The plan, list and schedule are NC United Blue; everyone else sees what they are and how to get
+ * them. The data comes from ./load.ts, shared with the other portal pages.
  */
 import Link from "next/link"
-import { redirect } from "next/navigation"
+import { ArrowRight, Eye, ListChecks, Pencil, Star, UserCheck } from "lucide-react"
 
-import { mostRecentGraduatedClassYear, seniorClassYear } from "@/lib/class-years"
-import { familyAthleteIds } from "@/lib/coach-messages"
-import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
-import { isCollegeListStatus, type CollegeListStatus } from "@/lib/college-programs/list"
-import { schoolLogoUrl } from "@/lib/college-programs/logo"
-import { gradeLabel } from "@/lib/college-programs/outreach-results"
-import data from "@/lib/college-programs/programs-2026-27.json"
-import { questionnairesForSchool } from "@/lib/college-programs/questionnaires"
-import { costShort } from "@/lib/college-programs/tuition"
-import { listUpcomingEvents, type UpcomingEvent } from "@/lib/college-programs/schedule"
-import { DIVISION_SHORT, primaryDivision, type CollegeMapSchool } from "@/lib/college-programs/types"
-import { completenessFromRow } from "@/lib/profile-completeness"
-import { familyFocus } from "@/lib/recruiting/family-focus"
-import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
-import { createAdminClient } from "@/lib/supabase/admin"
-import { createClient } from "@/lib/supabase/server"
+import { PortalShell } from "@/components/portal/portal-shell"
 import { buildMapPreview } from "@/lib/college-programs/map-preview"
+import { listTarget, planSteps } from "@/lib/college-programs/roadmap"
+import data from "@/lib/college-programs/programs-2026-27.json"
+import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
+import type { CollegeMapSchool } from "@/lib/college-programs/types"
+import { loadCommandCenter } from "./load"
 import { MapPreviewCard } from "./map-preview"
-import { MyRecruitingAthlete } from "./my-recruiting-athlete"
-import { WarRoomLearn } from "./war-room-learn"
-import { WarRoomPlan, type WarRoomSchool, type WarRoomWrestler } from "./war-room-plan"
+import { WarRoomPlan } from "./war-room-plan"
 
 export const dynamic = "force-dynamic"
-
 export const metadata = { title: "Recruiting Command Center | RecruitNC" }
 
-const SCHOOLS = new Map([...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS].map((s) => [s.id, s]))
+const ALL_SCHOOLS = [...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS]
+const card = "rounded-xl border border-white/10 bg-[#0f1c2e]"
+const ago = (iso: string) => {
+  const days = Math.floor((Date.now() - Date.parse(iso)) / 86_400_000)
+  return days <= 0 ? "Today" : days === 1 ? "Yesterday" : days < 30 ? `${days} days ago` : new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+}
 
-export default async function RecruitingWarRoomPage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) redirect("/auth/signin?returnTo=%2Fmy-recruiting")
+export default async function CommandCenterHome() {
+  const cc = await loadCommandCenter("/my-recruiting")
+  const { athletes, wrestlers, schools, blue, focus, views, premium } = cc
+  const first = athletes[0] ?? null
+  const w = wrestlers[0] ?? null
 
-  const admin = createAdminClient()
-  // The signed-in viewer - or, on a developer's machine, the family an admin is previewing.
-  const portal = await resolvePortalViewer({ supabase, admin })
-  const viewerId = portal.userId ?? user.id
-  const viewer = portal.viewer
-  const [ids, focus] = await Promise.all([familyAthleteIds(admin, viewerId), familyFocus(admin, viewerId)])
-  const blue = Boolean(viewer.isBlueMember || viewer.isAdmin)
+  const steps = w
+    ? planSteps({
+        firstName: w.firstName,
+        athleteId: w.id,
+        grade: w.grade,
+        profilePercent: w.profilePercent,
+        profileTodo: w.profileTodo,
+        listStatuses: schools.map((s) => s.status),
+        listLevels: schools.map((s) => s.level),
+        questionnairesWaiting: schools.filter((s) => s.hasQuestionnaire && s.status === "interested").length,
+        scheduleCount: w.events.length,
+      })
+    : []
+  const open = steps.filter((s) => !s.done).length
+  const seen = first ? views.get(first.id) : null
+  const target = listTarget(w?.grade ?? null)
 
-  const { data: rows } = ids.length
-    ? await admin
-        .from("athletes")
-        .select("id, name, firstName, graduationyear, highschool, photourl, academic_gpa, academic_sat, academic_act, highlight_video_url, phone, contactEmail")
-        .in("id", ids)
-        .order("graduationyear", { ascending: true })
-    : { data: [] }
-  // Recruiting ends at graduation. A graduate stays on the account (his profile and results are
-  // still his) but has nothing left to plan, so he is not in the Command Center - Liam Hickey, Class of
-  // 2026, was the first tab on his father's page in October 2026.
-  const graduated = mostRecentGraduatedClassYear()
-  const inSchool = (rows ?? []).filter((a) => !a.graduationyear || Number(a.graduationyear) > graduated)
-  const graduatesOnly = (rows ?? []).length > 0 && inSchool.length === 0
-  const athletes = inSchool.map((a) => ({
-    id: String(a.id),
-    name: String(a.name ?? "").trim() || "Your wrestler",
-    firstName: String(a.firstName ?? "").trim() || String(a.name ?? "").trim().split(" ")[0] || "Your wrestler",
-    classYear: a.graduationyear ? Number(a.graduationyear) : null,
-    highSchool: a.highschool && a.highschool !== "Not specified" ? String(a.highschool) : null,
-    photo: a.photourl ? String(a.photourl) : null,
-    completeness: completenessFromRow(a as Record<string, unknown>),
-  }))
-
-  // The plan is Blue's. Each part fails on its own: a list that will not load must not take the page down.
-  let schools: WarRoomSchool[] = []
-  const schedules = new Map<string, UpcomingEvent[]>()
-  if (blue) {
-    const [list, ...events] = await Promise.all([
-      admin.from("college_list_items").select("school_id, status, updated_at").eq("user_id", viewerId).order("updated_at", { ascending: false }),
-      ...athletes.map((a) => listUpcomingEvents(admin, a.id).catch(() => ({ available: false, events: [] as UpcomingEvent[] }))),
-    ])
-    schools = (list.data ?? []).flatMap((row) => {
-      const school = SCHOOLS.get(String(row.school_id))
-      if (!school) return []
-      const status: CollegeListStatus = isCollegeListStatus(row.status) ? row.status : "interested"
-      return [
+  const tiles = first
+    ? [
+        { icon: UserCheck, value: `${first.completeness.percent}%`, label: "Profile complete", action: first.completeness.percent === 100 ? "Keep it current" : "Finish the profile", href: `/athletes/${first.id}` },
+        { icon: Star, value: String(schools.length), label: "Colleges on your list", action: schools.length >= target ? "Compare them" : `Build toward ${target}`, href: schools.length >= 2 ? "/recruiting/compare" : "/recruiting/college-map" },
         {
-          id: school.id,
-          name: school.name.replace(/\s*\([^)]*\)\s*/g, " ").trim(),
-          place: `${school.city}, ${school.state}`,
-          level: DIVISION_SHORT[primaryDivision(school)],
-          status,
-          logo: null as string | null,
-          hasQuestionnaire: questionnairesForSchool(school.id).length > 0,
-          tuition: costShort(school.id, school.state),
-          noTeam: focus && !school.programs.some((p) => p[focus.gender]) ? `No ${focus.gender === "womens" ? "women's" : "men's"} team` : null,
+          icon: Eye,
+          value: seen ? String(seen.programs) : "–",
+          label: "College programs viewed the profile",
+          action: !seen || seen.programs === 0 ? "Finish the profile and email a coach" : "See who",
+          href: "/my-recruiting/activity",
         },
+        { icon: ListChecks, value: String(open), label: "Next actions", action: open ? "See your plan" : "All done for now", href: "#plan" },
       ]
-    })
-    athletes.forEach((a, i) => schedules.set(a.id, events[i]?.events ?? []))
-    const logos = await Promise.all(schools.map((s) => schoolLogoUrl({ id: s.id, name: SCHOOLS.get(s.id)?.name ?? s.name })))
-    schools = schools.map((s, i) => ({ ...s, logo: logos[i] }))
-  }
+    : []
 
-  const senior = seniorClassYear()
-  const wrestlers: WarRoomWrestler[] = athletes.map((a) => ({
-    id: a.id,
-    firstName: a.firstName,
-    name: a.name,
-    grade: gradeLabel(a.classYear, senior),
-    profilePercent: a.completeness.percent,
-    profileTodo: a.completeness.items.find((item) => !item.done) ?? null,
-    events: schedules.get(a.id) ?? [],
-  }))
-
-  const names = athletes.map((a) => a.firstName)
-  const who = names.length === 0 ? "your wrestler" : names.length === 1 ? names[0] : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`
+  // Recent activity: colleges saved or moved, and college programs that viewed the profile.
+  const recent = [
+    ...schools.filter((s) => s.savedAt).map((s) => ({ at: s.savedAt!, title: s.name, text: "On your college list" })),
+    ...(premium && seen ? seen.schools.map((v) => ({ at: v.lastViewedAt, title: v.school, text: `Viewed ${first?.firstName ?? "the"}'s profile` })) : []),
+  ]
+    .sort((a, b) => b.at.localeCompare(a.at))
+    .slice(0, 6)
 
   return (
-    <main className="min-h-screen bg-[#0A1628] px-4 py-8 text-white sm:px-6">
-      <div className="mx-auto max-w-5xl">
-        <p className="text-[11px] font-black uppercase tracking-widest text-[#D3B574]">RecruitNC · Recruiting Portal</p>
-        <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-5xl">Recruiting Command Center</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-white/65 sm:text-base">
-          Welcome. This is where recruiting gets done for {who}: the plan, what to learn next, and which college programs are paying attention.
-        </p>
-
-        <nav aria-label="Command Center sections" className="mt-5 flex gap-2 text-sm font-bold">
-          {[
-            ["#plan", "Plan"],
-            ["#learn", "Learn"],
-            ["#activity", "Activity"],
-          ].map(([href, label]) => (
-            <a key={href} href={href} className="rounded-lg border border-white/15 px-4 py-2 text-white/85 hover:border-[#D3B574] hover:text-white">
-              {label}
-            </a>
-          ))}
-        </nav>
-
-        {athletes.length === 0 ? (
-          <div className="mt-8 rounded-xl border border-white/10 bg-white/[0.03] p-8 text-center">
-            <p className="text-lg font-bold">
-              {graduatesOnly ? "No wrestler still in high school on this account" : "No wrestler on this account yet"}
-            </p>
-            <p className="mx-auto mt-1 max-w-md text-sm text-white/60">
-              {graduatesOnly
-                ? "The Command Center is for wrestlers who are still being recruited. Link a younger wrestler and it fills in from their record."
-                : "Claim your profile, or link to your child's as a parent, and the Command Center fills in from their record."}
-            </p>
-            <Link href="/athletes" className="mt-5 inline-block rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
-              Find the profile
-            </Link>
-          </div>
-        ) : null}
-
-        <section id="plan" className="mt-10 scroll-mt-24">
-          <h2 className="text-xl font-black tracking-tight sm:text-2xl">Plan</h2>
-          <p className="mt-1 text-sm text-white/55">What to do next, the schools you&apos;re aiming at, and where coaches can watch.</p>
-          {athletes.length > 0 ? <WarRoomPlan blue={blue} wrestlers={wrestlers} schools={schools} /> : null}
-          <MapPreviewCard
-            preview={buildMapPreview([...SCHOOLS.values()], {
-              team: focus?.gender ?? null,
-              savedIds: schools.map((s) => s.id),
-              accessToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN,
-            })}
-            who={focus?.names.join(" and ") || null}
-            team={focus?.gender ?? null}
-            savedCount={schools.length}
-          />
-          {blue && schools.length >= 2 ? (
-            <a
-              href="/recruiting/compare"
-              className="mt-3 flex items-center justify-between gap-3 rounded-xl border border-[#D3B574]/40 bg-[#D3B574]/10 p-4 hover:border-[#D3B574]"
-            >
-              <span>
-                <span className="block text-sm font-bold text-white">Compare your colleges side by side</span>
-                <span className="block text-sm text-white/65">Cost, what families like yours paid, admissions, test scores, graduation rate and the team.</span>
-              </span>
-              <span className="shrink-0 rounded-lg bg-[#D3B574] px-3 py-2 text-sm font-bold text-[#0A1628]">Compare</span>
-            </a>
+    <PortalShell active="home">
+      <header className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Recruiting Command Center</h1>
+          <p className="mt-1 text-sm text-white/65">
+            {first ? `Welcome back. Here is where ${athletes.map((a) => a.firstName).join(" and ")}'s recruiting stands.` : "Welcome. This is where recruiting gets done."}
+          </p>
+          {first ? (
+            <p className="mt-1 text-sm text-white/45">{[first.classYear ? `Class of ${first.classYear}` : null, first.highSchool].filter(Boolean).join(" · ")}</p>
           ) : null}
-        </section>
+        </div>
+        {first ? (
+          <Link href={`/athletes/${first.id}`} className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 px-3 py-2 text-sm font-semibold text-white/85 hover:border-[#D3B574]">
+            <Pencil className="h-4 w-4" aria-hidden /> Edit profile
+          </Link>
+        ) : null}
+      </header>
 
-        <section id="learn" className="mt-12 scroll-mt-24">
-          <h2 className="text-xl font-black tracking-tight sm:text-2xl">Learn</h2>
-          <p className="mt-1 text-sm text-white/55">This year&apos;s plan, the questions families ask, the money, and the rules for every level.</p>
-          <WarRoomLearn wrestlers={wrestlers} />
-        </section>
-
-        <section id="activity" className="mt-12 scroll-mt-24">
-          <h2 className="text-xl font-black tracking-tight sm:text-2xl">Activity</h2>
-          <p className="mt-1 text-sm text-white/55">Which programs have looked, which have written, and what a coach will find on the profile.</p>
-          <div className="mt-5 space-y-10">
-            {athletes.map((a) => (
-              <MyRecruitingAthlete key={a.id} athlete={a} />
+      {!first ? (
+        <div className={`${card} mt-8 p-8 text-center`}>
+          <p className="text-lg font-bold">{cc.graduatesOnly ? "No wrestler still in high school on this account" : "No wrestler on this account yet"}</p>
+          <p className="mx-auto mt-1 max-w-md text-sm text-white/60">
+            {cc.graduatesOnly
+              ? "The Command Center is for wrestlers who are still being recruited. Link a younger wrestler and it fills in from their record."
+              : "Claim your profile, or link to your child's as a parent, and the Command Center fills in from their record."}
+          </p>
+          <Link href="/athletes" className="mt-5 inline-block rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
+            Find the profile
+          </Link>
+        </div>
+      ) : (
+        <>
+          <ul className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {tiles.map(({ icon: Icon, value, label, action, href }) => (
+              <li key={label}>
+                <Link href={href} className={`${card} flex h-full flex-col p-4 hover:border-[#D3B574]/60`}>
+                  <Icon className="h-4 w-4 text-[#D3B574]" aria-hidden />
+                  <span className="mt-2 text-3xl font-black">{value}</span>
+                  <span className="text-sm text-white/70">{label}</span>
+                  <span className="mt-auto pt-2 text-xs font-bold text-[#D3B574]">{action} →</span>
+                </Link>
+              </li>
             ))}
+          </ul>
+
+          <div className="mt-6 grid gap-6 xl:grid-cols-3">
+            <section id="plan" className="scroll-mt-24 xl:col-span-2" aria-label="Your plan">
+              <WarRoomPlan blue={blue} wrestlers={wrestlers} schools={schools} />
+            </section>
+
+            <div className="grid content-start gap-6 md:grid-cols-2 xl:grid-cols-1">
+              <section className={`${card} p-5`} aria-labelledby="cc-recent">
+                <div className="flex items-center justify-between">
+                  <h2 id="cc-recent" className="text-sm font-black uppercase tracking-widest text-[#D3B574]">
+                    Recent activity
+                  </h2>
+                  <Link href="/my-recruiting/activity" className="text-xs font-bold text-white/60 hover:text-white">
+                    View all →
+                  </Link>
+                </div>
+                {recent.length ? (
+                  <ul className="mt-3 divide-y divide-white/10">
+                    {recent.map((r) => (
+                      <li key={`${r.title}-${r.at}`} className="flex items-start justify-between gap-3 py-2.5">
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-bold text-white">{r.title}</span>
+                          <span className="block text-xs text-white/55">{r.text}</span>
+                        </span>
+                        <span className="shrink-0 text-xs text-white/45">{ago(r.at)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="mt-3 text-sm text-white/60">Nothing yet. Save colleges from the map and they appear here, with the college programs that view the profile.</p>
+                )}
+              </section>
+
+              <div className="[&>a]:mt-0">
+              <MapPreviewCard
+                preview={buildMapPreview(ALL_SCHOOLS, { team: focus?.gender ?? null, savedIds: schools.map((s) => s.id), accessToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN })}
+                who={focus?.names.join(" and ") || null}
+                team={focus?.gender ?? null}
+                savedCount={schools.length}
+              />
+              </div>
+
+              {blue && schools.length >= 2 ? (
+                <Link href="/recruiting/compare" className={`${card} flex items-center justify-between gap-3 border-[#D3B574]/40 p-4 hover:border-[#D3B574]`}>
+                  <span>
+                    <span className="block text-sm font-bold text-white">Compare your colleges</span>
+                    <span className="block text-xs text-white/60">Fit, cost, admissions and the team, side by side.</span>
+                  </span>
+                  <ArrowRight className="h-5 w-5 shrink-0 text-[#D3B574]" aria-hidden />
+                </Link>
+              ) : null}
+            </div>
           </div>
-        </section>
-      </div>
-    </main>
+        </>
+      )}
+    </PortalShell>
   )
 }

@@ -8,6 +8,7 @@
  * only: income is never stored, and none of it is shown to a coach.
  */
 import type { Metadata } from "next"
+import { PortalShell } from "@/components/portal/portal-shell"
 import { Fragment } from "react"
 import { redirect } from "next/navigation"
 
@@ -239,7 +240,7 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
   const dot: Record<FitStatus, string> = { fit: "bg-emerald-400", stretch: "bg-amber-300", concern: "bg-red-400", unknown: "bg-white/30" }
 
   return (
-    <main className="min-h-screen bg-[#0A1628] px-4 py-8 text-white sm:px-6">
+    <PortalShell active="colleges">
       <div className="mx-auto max-w-5xl">
         <a href="/my-recruiting#plan" className="text-xs font-semibold text-white/55 hover:text-white">
           ← Recruiting Command Center
@@ -466,6 +467,6 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
           </>
         )}
       </div>
-    </main>
+    </PortalShell>
   )
 }
