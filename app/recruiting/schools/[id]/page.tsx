@@ -16,6 +16,7 @@ import { notFound } from "next/navigation"
 import type { LucideIcon } from "lucide-react"
 import {
   ArrowLeft,
+  Eye,
   BarChart3,
   BookOpen,
   Building2,
@@ -52,6 +53,8 @@ import { teamRankingsForSchool } from "@/lib/college-programs/team-rankings-snap
 import { DIVISION_COLOR, DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { readWentHereSnapshot } from "@/lib/college-programs/went-here-snapshot"
 import { collegeFitFor, loadFamilyFitContext } from "@/lib/recruiting/college-fit"
+import { collegeViewsFor } from "@/lib/recruiting/college-views"
+import { familyAthleteIds } from "@/lib/coach-messages"
 import { MAJOR_FAMILIES, type FitLine, type FitStatus } from "@/lib/recruiting/family-fit"
 import { familyFocus } from "@/lib/recruiting/family-focus"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
@@ -176,6 +179,12 @@ export default async function SchoolPage({ params }: Params) {
     .sort((a, b) => (b.classYear ?? 0) - (a.classYear ?? 0))
   // The family's own fit only once there is a wrestler to fit; a coach or a family without one sees none.
   const fitResult = ctx && ctx.first ? collegeFitFor(ctx, school, null) : null
+  // This college's coaches looking at the family's wrestler: the reason RecruitNC exists.
+  const viewed =
+    familySide && userId
+      ? ((await collegeViewsFor(admin, await familyAthleteIds(admin, userId).catch(() => [])).catch(() => new Map())).get(school.id) ?? null)
+      : null
+  const viewedDate = viewed ? new Date(viewed.lastViewedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : null
   const satRange = fit ? satTotalRange(fit) : [null, null]
   const majors = new Set(MAJORS[school.id] ?? [])
   const majorLabels = MAJOR_FAMILIES.filter((m) => majors.has(m.code)).map((m) => m.label)
@@ -223,6 +232,11 @@ export default async function SchoolPage({ params }: Params) {
                   {ranking ? (
                     <span className="inline-flex items-center gap-1 rounded-md bg-white/10 px-2.5 py-1 text-white">
                       <Trophy className="h-3.5 w-3.5" style={{ color: GOLD }} aria-hidden /> No. {ranking.rank} {ranking.gender === "womens" && team !== "womens" ? "women" : ""}
+                    </span>
+                  ) : null}
+                  {viewed ? (
+                    <span className="inline-flex items-center gap-1 rounded-md bg-emerald-400/15 px-2.5 py-1 text-emerald-200">
+                      <Eye className="h-3.5 w-3.5" aria-hidden /> Viewed {ctx?.first ? `${ctx.first}'s` : "your"} profile · {viewed.views}× · {viewedDate}
                     </span>
                   ) : null}
                   {onRecruitNC ? (

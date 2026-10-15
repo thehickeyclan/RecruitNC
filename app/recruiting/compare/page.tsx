@@ -18,6 +18,8 @@ import { INCOME_BRACKETS, satTotalRange, scorePlacement, type Placement } from "
 import { rosterForSchool } from "@/lib/college-programs/rosters"
 import { fitScore, type FitLine, type FitStatus } from "@/lib/recruiting/family-fit"
 import { collegeFitFor, loadFamilyFitContext } from "@/lib/recruiting/college-fit"
+import { collegeViewsFor } from "@/lib/recruiting/college-views"
+import { familyAthleteIds } from "@/lib/coach-messages"
 import { FamilyFitForm } from "@/components/colleges/family-fit-form"
 import { teamRankingsForSchool } from "@/lib/college-programs/team-rankings-snapshot"
 import { DIVISION_COLOR, DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
@@ -94,6 +96,8 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
   // Logos for the picking step only: the list can be long.
   const savedLogos = askedStep === "colleges" || (!askedStep && chosen.length < 2) ? await Promise.all(saved.map((sc) => schoolLogoUrl(sc).catch(() => null))) : []
   const { first, sat, act, profile, profileSet, weight } = ctx
+  // Coaches of each college who viewed the wrestler: a verified signal, shown beside the list stage.
+  const viewsByCollege = blue ? await collegeViewsFor(admin, await familyAthleteIds(admin, userId).catch(() => [])).catch(() => new Map()) : new Map()
 
   const columns = await Promise.all(
     chosen.map(async (school) => {
@@ -422,6 +426,11 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
                           return (
                             <td key={school.id} className="border-l border-white/10 px-4 py-3 align-top">
                               <span className="block font-semibold text-white">{item ? COLLEGE_LIST_STATUS_LABEL[item.status] : "Not on your list"}</span>
+                              {viewsByCollege.get(school.id) ? (
+                                <span className="mt-1 block text-xs font-semibold text-emerald-300">
+                                  Coach viewed {first ? `${first}'s` : "the"} profile · {viewsByCollege.get(school.id)!.views}× · {new Date(viewsByCollege.get(school.id)!.lastViewedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" })}
+                                </span>
+                              ) : null}
                               {item?.note ? <span className="mt-0.5 line-clamp-2 block text-xs italic text-white/55">{item.note}</span> : null}
                             </td>
                           )
