@@ -40,6 +40,7 @@ import { placementPoints, recordWinPctPoints } from "@/lib/toc/athlete-compare"
 import { describeMissedWindow, findClassWindows, missedWindowsFor } from "@/lib/rankings/missed-window"
 import { HEAD_TO_HEAD_MAX_GAP, filterFargoFreestyleResults, scoreNchsaaRowsForSeed } from "@/lib/toc/ai-seeding"
 import { getNationalTeamResults } from "@/lib/tournament-utils"
+import { inState } from "@/lib/recruiting/states"
 
 type EvidenceKind =
   | "head_to_head"
@@ -1002,9 +1003,7 @@ export async function buildRecruitNcRankingBoard({
    */
   rankedAsOfBoutDate?: boolean
 }): Promise<RankingBoardAthlete[]> {
-  const { data: athletes, error } = await supabase
-    .from("athletes")
-    .select("*")
+  const { data: athletes, error } = await inState(supabase.from("athletes").select("*"))
     .eq("graduationyear", year)
     .ilike("gender", gender)
     /**
@@ -1013,9 +1012,9 @@ export async function buildRecruitNcRankingBoard({
      * The board never checked this. Jack Harty transferred to Greens Farms Academy in
      * Connecticut and still placed fourth in the Class of 2027 on the strength of an NC résumé
      * he is no longer adding to. `is_nc_athlete` was already on the row and already false for
-     * twenty-three athletes; nothing was reading it.
+     * twenty-three athletes; nothing was reading it. The state filter above (lib/recruiting/states.ts)
+     * is that check.
      */
-    .eq("is_nc_athlete", true)
     .order("prospect_ranking", { ascending: true })
     .order("name", { ascending: true })
 

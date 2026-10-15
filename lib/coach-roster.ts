@@ -15,6 +15,7 @@ import { unstable_cache } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { currentClassYears } from "@/lib/class-years"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
+import { HOME_STATE, inState } from "@/lib/recruiting/states"
 
 export type CoachRosterAthlete = {
   id: string
@@ -25,13 +26,11 @@ export type CoachRosterAthlete = {
   weightclass: string | null
 }
 
-async function build(): Promise<CoachRosterAthlete[]> {
+/** One state's wrestlers; North Carolina, as before, when none is named (lib/recruiting/states.ts). */
+async function build(state: string = HOME_STATE): Promise<CoachRosterAthlete[]> {
   const admin = createAdminClient()
   const active = currentClassYears()
-  const { data, error } = await admin
-    .from("athletes")
-    .select("id,name,highschool,graduationyear,weightclass")
-    .eq("is_nc_athlete", true)
+  const { data, error } = await inState(admin.from("athletes").select("id,name,highschool,graduationyear,weightclass"), state)
     .gte("graduationyear", active[0]!)
     .lte("graduationyear", active[active.length - 1]!)
     .order("name")
