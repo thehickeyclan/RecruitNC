@@ -3,6 +3,9 @@ import { FUNDRAISING_AUTH_RETURN_COOKIE } from "@/lib/fundraising/fundraising-au
 import { adminGateApplies, adminGateRefusal } from "@/lib/admin-api-gate"
 import { COACH_HOME_PATH, PORTAL_HINT_COOKIE, coachFrontDoor } from "@/lib/coach-front-door"
 
+const NATIONAL_HOST = "recruitwrestlers.com"
+const APP_ORIGIN = "https://app.ncwrestlingunited.com"
+
 function isFundraisingHubPublicPath(p: string): boolean {
   if (p === "/fundraising" || p === "/fundraising/") return true
   if (p.startsWith("/fundraising/scholarships")) return true
@@ -20,6 +23,21 @@ function isFundraisingHubPublicPath(p: string): boolean {
  */
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
+
+  /*
+   * recruitwrestlers.com - the national recruiting product's own domain (Guild Ventures, 15 Oct 2026).
+   * For now it is a front door only: "/" draws the national homepage (app/recruitwrestlers), and every
+   * other path goes to the same page on app.ncwrestlingunited.com, where accounts, sign-in and the
+   * Command Center still live. Nothing on the app's own domain changes. Moving the app here is a
+   * separate, planned migration.
+   */
+  const host = (request.headers.get("host") ?? "").toLowerCase().split(":")[0]
+  if (host === NATIONAL_HOST || host === `www.${NATIONAL_HOST}`) {
+    if (pathname === "/") return NextResponse.rewrite(new URL("/recruitwrestlers", request.url))
+    if (!pathname.startsWith("/recruitwrestlers") && !pathname.startsWith("/_next")) {
+      return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, APP_ORIGIN), 307)
+    }
+  }
 
   /*
    * The admin API, closed at the door. 61 admin routes had no guard of their own - one returned

@@ -150,6 +150,19 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   const chat = noChatPage || isCoach || authLoading ? null : <AIChatWidget />
   const familyBand = isCoach ? null : familyBandAt(path)
   const isSpartanCampaign = path === "/spartan" || path.startsWith("/spartan/")
+  /*
+   * The national recruiting site's front door (recruitwrestlers.com, served from app/recruitwrestlers):
+   * its own page top to bottom. Nothing of NC United, no coach portal frame, no chat launcher - for
+   * a coach or an admin too, since this is the page a stranger sees.
+   */
+  const isNationalHome = path === "/recruitwrestlers" || path.startsWith("/recruitwrestlers/")
+  if (isNationalHome) {
+    return (
+      <div id="app-content" className="relative flex min-h-screen flex-col bg-[#0A1628]">
+        <main className="flex-1">{children}</main>
+      </div>
+    )
+  }
   if (isSpartanCampaign) {
     return (
       <div id="app-content" className="relative flex min-h-screen flex-col bg-[#0A0A0A]">
