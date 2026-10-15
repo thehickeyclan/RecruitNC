@@ -39,11 +39,45 @@ import { loadNationalStats, type NationalStats } from "@/lib/recruiting/national
 
 export const revalidate = 3600
 
+const SHARE_TITLE = "RecruitWrestlers | College wrestling recruiting, built on verified results"
+const SHARE_DESCRIPTION =
+  "The recruiting platform where college wrestling coaches and families meet: verified results, a Command Center for families, and a free recruiting portal for college coaches."
+
+/*
+ * Every field the site-wide metadata sets (app/layout.tsx) is replaced here. Left alone, a link to
+ * recruitwrestlers.com previewed as "NC United Wrestling" with the NC United logo, and the tab
+ * showed NC United's icon.
+ */
 export const metadata: Metadata = {
+  metadataBase: new URL(`https://${NATIONAL_BRAND.domain}`),
   // Absolute: the site-wide template would append "| NC United Wrestling".
-  title: { absolute: "RecruitWrestlers | College wrestling recruiting, built on verified results" },
-  description:
-    "The recruiting platform where college wrestling coaches and families meet: verified results, a Command Center for families, and a free recruiting portal for college coaches.",
+  title: { absolute: SHARE_TITLE },
+  description: SHARE_DESCRIPTION,
+  applicationName: NATIONAL_BRAND.name,
+  manifest: null,
+  alternates: { canonical: "/" },
+  openGraph: {
+    title: SHARE_TITLE,
+    description: SHARE_DESCRIPTION,
+    url: "/",
+    siteName: NATIONAL_BRAND.name,
+    type: "website",
+    images: [{ url: "/recruitwrestlers/share.jpg", width: 1200, height: 630, alt: "RecruitWrestlers: get recruited on verified results" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SHARE_TITLE,
+    description: SHARE_DESCRIPTION,
+    images: ["/recruitwrestlers/share.jpg"],
+  },
+  appleWebApp: { capable: true, statusBarStyle: "default", title: NATIONAL_BRAND.name },
+  icons: {
+    icon: [
+      { url: "/recruitwrestlers/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/recruitwrestlers/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/recruitwrestlers/apple-icon.png", sizes: "180x180", type: "image/png" }],
+  },
 }
 
 const APP = NATIONAL_BRAND.appOrigin
