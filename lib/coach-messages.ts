@@ -407,15 +407,18 @@ export async function listThreads(admin: SupabaseClient, userId: string, opts: {
     admin.from("user_profiles").select("user_id, full_name, first_name, last_name").in("user_id", [...new Set(threads.map((t) => t.coach_user_id))]),
     admin.from("coach_thread_reads").select("thread_id, last_read_at").eq("user_id", userId).in("thread_id", ids),
     // Latest message per thread. Threads are short; this reads the recent tail and keeps the first per thread.
-    admin.from("coach_messages").select("thread_id, body, sender_role, created_at").in("thread_id", ids).order("created_at", { ascending: false }).limit(Math.max(50, ids.length * 5)),
+    admin.from("coach_messages").select("id, thread_id, body, sender_role, created_at").in("thread_id", ids).order("created_at", { ascending: false }).limit(Math.max(50, ids.length * 5)),
   ])
 
   const coachName = new Map((coaches ?? []).map((c) => [String(c.user_id), displayName(c)]))
   const logos = await loadProgramLogos(admin, threads.map((t) => ({ coachUserId: t.coach_user_id, program: t.program })))
   const readAt = new Map((reads ?? []).map((r) => [String(r.thread_id), String(r.last_read_at)]))
   const latest = new Map<string, { body: string; sender_role: string; created_at: string }>()
-  for (const m of (messages ?? []) as Array<{ thread_id: string; body: string; sender_role: string; created_at: string }>) {
-    if (!latest.has(m.thread_id)) latest.set(m.thread_id, m)
+  const tail = (messages ?? []) as Array<{ id: string; thread_id: string; body: string; sender_role: string; created_at: string }>
+  const { unsentIds } = await import("@/lib/coach-messages-extras")
+  const unsent = await unsentIds(admin, tail.map((m) => m.id))
+  for (const m of tail) {
+    if (!latest.has(m.thread_id)) latest.set(m.thread_id, unsent.has(m.id) ? { ...m, body: "Message unsent" } : m)
   }
 
   return threads.map((t) => {
@@ -460,7 +463,12 @@ export type ThreadDetail = {
   canReply: boolean
   /** Who the coach is writing to. Null for the family, who know their own wrestler. */
   wrestler: WrestlerIdentity | null
-  messages: Array<{ id: string; body: string; senderRole: string; senderName: string; createdAt: string; mine: boolean }>
+  messages: Array<{ id: string; body: string; senderRole: string; senderName: string; createdAt: string; mine: boolean } & import("@/lib/coach-messages-extras").MessageExtras>
+  /** The college this conversation is with, for the family's side panel; null for the coach or when it cannot be placed. */
+  college: import("@/lib/coach-messages-extras").ThreadCollege | null
+  firstMessageAt: string | null
+  /** Whether edit, unsend, reactions, replies and attachments are switched on (the SQL has been run). */
+  extras: boolean
 }
 
 /** One conversation with every message, marked read for this account. */
@@ -493,21 +501,7 @@ export async function getThread(admin: SupabaseClient, threadId: string, userId:
       .upsert({ thread_id: threadId, user_id: userId, last_read_at: new Date().toISOString() }, { onConflict: "thread_id,user_id" })
   }
 
-  return {
-    id: t.id,
-    athleteId: t.athlete_id,
-    athleteName: wrestler,
-    coachName: names.get(t.coach_user_id) || "College coach",
-    program: t.program,
-    programLogo: (await loadProgramLogos(admin, [{ coachUserId: t.coach_user_id, program: t.program }])).get(t.coach_user_id) ?? null,
-    stopped: Boolean(t.stopped_at),
-    viewerRole: role,
-    canReply: role === "athlete" || role === "parent" || (role === "coach" && !t.stopped_at),
-    wrestler:
-      identity && (role === "coach" || role === "admin")
-        ? { classYear: identity.classYear, weight: identity.weight, school: identity.school, state: identity.state, stage: identity.stage }
-        : null,
-    messages: (messages ?? []).map((m) => {
+  const plain = (messages ?? []).map((m) => {
       const senderRole = String(m.sender_role)
       const name = names.get(String(m.sender_user_id)) || ""
       return {
@@ -525,7 +519,31 @@ export async function getThread(admin: SupabaseClient, threadId: string, userId:
         createdAt: String(m.created_at),
         mine: m.sender_user_id === userId,
       }
-    }),
+    })
+  const { decorateMessages, extrasAvailable, threadCollege } = await import("@/lib/coach-messages-extras")
+  const [decorated, college] = await Promise.all([
+    decorateMessages(admin, t, plain, userId, role),
+    role === "athlete" || role === "parent" ? threadCollege(admin, t.coach_user_id, t.program, userId).catch(() => null) : Promise.resolve(null),
+  ])
+
+  return {
+    id: t.id,
+    athleteId: t.athlete_id,
+    athleteName: wrestler,
+    coachName: names.get(t.coach_user_id) || "College coach",
+    program: t.program,
+    programLogo: (await loadProgramLogos(admin, [{ coachUserId: t.coach_user_id, program: t.program }])).get(t.coach_user_id) ?? null,
+    stopped: Boolean(t.stopped_at),
+    viewerRole: role,
+    canReply: role === "athlete" || role === "parent" || (role === "coach" && !t.stopped_at),
+    wrestler:
+      identity && (role === "coach" || role === "admin")
+        ? { classYear: identity.classYear, weight: identity.weight, school: identity.school, state: identity.state, stage: identity.stage }
+        : null,
+    messages: decorated,
+    college,
+    firstMessageAt: messages?.[0] ? String(messages[0].created_at) : null,
+    extras: await extrasAvailable(admin),
   }
 }
 

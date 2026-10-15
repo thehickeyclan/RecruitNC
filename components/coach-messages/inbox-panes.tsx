@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import { ArrowLeft, MessageSquare, PenSquare, Search } from "lucide-react"
+import { ArrowLeft, Lock, MessageSquare, PenSquare, Search } from "lucide-react"
+import { CollegeRail } from "@/components/coach-messages/college-rail"
 import { cn } from "@/lib/utils"
 import { useCoachMode } from "@/hooks/use-coach-mode"
 import { RECRUITING_BRAND } from "@/lib/recruiting/brand"
@@ -22,7 +23,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
  */
 type BoardWrestler = { athleteId: string }
 
-export function InboxPanes({ initialThreadId = null }: { initialThreadId?: string | null }) {
+type SearchHit = { threadId: string; messageId: string; body: string; createdAt: string }
+type LoadedThread = Parameters<typeof CollegeRail>[0]["thread"] & { id: string; viewerRole: string }
+
+/** `embedded`: inside the Command Center shell, which already gives the page its frame. */
+export function InboxPanes({ initialThreadId = null, embedded = false }: { initialThreadId?: string | null; embedded?: boolean }) {
   const { actsAsCoach: coach, previewNotice } = useCoachMode()
   const [selectedId, setSelectedId] = useState<string | null>(initialThreadId)
   const [filter, setFilter] = useState<InboxFilter>("all")
@@ -30,6 +35,22 @@ export function InboxPanes({ initialThreadId = null }: { initialThreadId?: strin
   const [counts, setCounts] = useState({ all: 0, unread: 0, reply: 0 })
   const [reloadKey, setReloadKey] = useState(0)
   const [picking, setPicking] = useState(false)
+  const [loaded, setLoaded] = useState<LoadedThread | null>(null)
+  const [hits, setHits] = useState<SearchHit[]>([])
+
+  // Words inside messages, not just names: searched on the server, in this account's conversations only.
+  useEffect(() => {
+    const q = query.trim()
+    if (q.length < 2) return setHits([])
+    const t = setTimeout(() => {
+      fetch(`/api/coach-messages/search?q=${encodeURIComponent(q)}`, { credentials: "include" })
+        .then((r) => r.json())
+        .then((d) => setHits(Array.isArray(d?.results) ? d.results : []))
+        .catch(() => setHits([]))
+    }, 250)
+    return () => clearTimeout(t)
+  }, [query])
+  const rail = !coach && loaded && loaded.id === selectedId && (loaded.viewerRole === "athlete" || loaded.viewerRole === "parent")
 
   const open = (id: string | null) => {
     setSelectedId(id)
@@ -43,18 +64,25 @@ export function InboxPanes({ initialThreadId = null }: { initialThreadId?: strin
   ]
 
   return (
-    <main className="bg-[#0A1628] text-white">
-      <div className="mx-auto flex h-[calc(100dvh-3.5rem-4rem)] max-w-7xl flex-col px-4 py-5 lg:h-[calc(100dvh-3.5rem)] lg:px-6">
+    <main className={embedded ? "text-white" : "bg-[#0A1628] text-white"}>
+      <div className={embedded ? "flex h-[calc(100dvh-11rem)] min-h-[560px] flex-col" : "mx-auto flex h-[calc(100dvh-3.5rem-4rem)] max-w-7xl flex-col px-4 py-5 lg:h-[calc(100dvh-3.5rem)] lg:px-6"}>
         <div className={cn("flex flex-wrap items-end justify-between gap-3", selectedId && "hidden lg:flex")}>
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D3B574]">{RECRUITING_BRAND.name}</p>
-            <h1 className="mt-1 text-3xl font-black tracking-tight">Messages</h1>
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#D3B574]">Messages · {RECRUITING_BRAND.name}</p>
+            <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">Messages</h1>
             <p className="mt-1 text-sm text-white/60">
-              {coach
-                ? "Conversations you started with wrestlers. Their linked parents see them too."
-                : "College coaches who have reached out. Only coaches can start a conversation; you can reply."}
+              {coach ? "Conversations you started with wrestlers. Their linked parents see them too." : "Every recruiting conversation with college coaches, in one place."}
             </p>
           </div>
+          {!coach ? (
+            <div className="hidden max-w-sm items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 md:flex">
+              <Lock className="mt-0.5 h-4 w-4 shrink-0 text-white/60" aria-hidden />
+              <p className="text-xs leading-5 text-white/60">
+                <b className="block text-sm text-white">Only verified college coaches can message you.</b>
+                Parents see every conversation. You can stop a coach or report a message at any time.
+              </p>
+            </div>
+          ) : null}
           {coach ? (
             <button
               type="button"
@@ -67,7 +95,7 @@ export function InboxPanes({ initialThreadId = null }: { initialThreadId?: strin
           ) : null}
         </div>
 
-        <div className="mt-4 grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(340px,420px)_1fr]">
+        <div className={cn("mt-4 grid min-h-0 flex-1 gap-4 lg:grid-cols-[minmax(300px,380px)_1fr]", rail && "xl:grid-cols-[minmax(280px,340px)_1fr_280px]")}>
           <section aria-label="Conversations" className={cn("flex min-h-0 flex-col rounded-xl border border-white/10 bg-white/[0.03]", selectedId && "hidden lg:flex")}>
             <div className="border-b border-white/10 p-3">
               <div className="flex gap-1.5">
@@ -102,6 +130,17 @@ export function InboxPanes({ initialThreadId = null }: { initialThreadId?: strin
               </label>
             </div>
             <div className="min-h-0 flex-1 overflow-y-auto">
+              {hits.length ? (
+                <div className="border-b border-white/10 p-2">
+                  <p className="px-2 py-1 text-[10px] font-black uppercase tracking-widest text-[#D3B574]">In messages</p>
+                  {hits.slice(0, 8).map((h) => (
+                    <button key={h.messageId} type="button" onClick={() => open(h.threadId)} className="block w-full rounded-lg px-2 py-2 text-left text-sm hover:bg-white/5">
+                      <span className="line-clamp-2 text-white/80">{h.body}</span>
+                      <span className="text-[11px] text-white/40">{new Date(h.createdAt).toLocaleDateString()}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
               <InboxList
                 selectedId={selectedId}
                 onSelect={(t: ThreadSummary) => open(t.id)}
@@ -123,7 +162,7 @@ export function InboxPanes({ initialThreadId = null }: { initialThreadId?: strin
                   All messages
                 </button>
                 <div className="min-h-0 flex-1">
-                  <Conversation key={selectedId} threadId={selectedId} pane onSent={() => setReloadKey((k) => k + 1)} />
+                  <Conversation key={selectedId} threadId={selectedId} pane onSent={() => setReloadKey((k) => k + 1)} onThread={(t) => setLoaded(t as unknown as LoadedThread)} />
                 </div>
               </div>
             ) : (
@@ -136,6 +175,12 @@ export function InboxPanes({ initialThreadId = null }: { initialThreadId?: strin
               </div>
             )}
           </section>
+
+          {rail && loaded ? (
+            <div className="hidden min-h-0 xl:flex">
+              <CollegeRail thread={loaded} />
+            </div>
+          ) : null}
         </div>
       </div>
 
