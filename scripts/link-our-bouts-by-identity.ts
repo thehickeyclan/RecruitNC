@@ -68,19 +68,80 @@ async function main() {
   const mine = aliases.filter((a) => a.status === "linked" && byIdentity.has(a.identity_id))
   console.log(`aliases pointing at one of our profiles: ${mine.length}`)
 
-  /* Every bout already attributed to one of our athletes — the weights we can corroborate against. */
+  /*
+   * Weights we can corroborate a bout against — every weight the athlete is already known to
+   * have made, from any source that attributes one to him by id.
+   *
+   * It read only already-linked bouts, which is circular for a wrestler who has none: every
+   * South Carolina profile was minted days ago and held its whole national record back for
+   * "no linked bouts to corroborate a weight against", while its state placements named the
+   * weight he made that season on the row above.
+   *
+   * So a state placement counts, and a high-school season counts. Both attribute a weight to a
+   * profile by id, which is the whole requirement — a name is still never enough.
+   */
+  const known = new Map<string, Array<{ weight: number; year: number }>>()
+  const note = (id: unknown, weight: unknown, year: unknown) => {
+    const a = String(id ?? "")
+    const w = Number(weight)
+    const y = Number(year)
+    if (!a || !w || !y) return
+    if (!known.has(a)) known.set(a, [])
+    known.get(a)!.push({ weight: w, year: y })
+  }
+
   const linked = await page<{ athlete_id: string; weight_class: string | null; year: number | null }>(
     "other_tournament_bouts",
     "athlete_id, weight_class, year",
     (q) => q.not("athlete_id", "is", null),
   )
-  const known = new Map<string, Array<{ weight: number; year: number }>>()
-  for (const b of linked) {
-    const w = Number(b.weight_class)
-    const y = Number(b.year)
-    if (!w || !y) continue
-    if (!known.has(b.athlete_id)) known.set(b.athlete_id, [])
-    known.get(b.athlete_id)!.push({ weight: w, year: y })
+  for (const b of linked) note(b.athlete_id, b.weight_class, b.year)
+
+  /* North Carolina's state tournament. */
+  const nchsaa = await page<{ athlete_id: string; weight_class: string | null; year: number | null }>(
+    "wrestling_nchsaa_results",
+    "athlete_id, weight_class, year",
+    (q) => q.not("athlete_id", "is", null),
+  )
+  for (const r of nchsaa) note(r.athlete_id, r.weight_class, r.year)
+
+  /* Every other state's. `season` is the year; `weight` the class he made. */
+  /*
+   * Asked per athlete rather than as one scan: `state_tournament_placers` holds ~120,000 rows
+   * across 49 states and "every row with an athlete_id" times out on it, while the few hundred
+   * rows belonging to the profiles in hand come back at once.
+   */
+  const ourIds = [...new Set(ours.map((o) => String(o.athlete_id)))].filter(Boolean)
+  for (let i = 0; i < ourIds.length; i += 50) {
+    const slice = ourIds.slice(i, i + 50)
+    const { data, error } = await sb
+      .from("state_tournament_placers")
+      .select("athlete_id, weight, season")
+      .in("athlete_id", slice)
+    if (error) {
+      console.log(`   (state_tournament_placers slice ${i}: ${error.message})`)
+      continue
+    }
+    for (const r of (data ?? []) as Array<{ athlete_id: string; weight: string | null; season: number | null }>) {
+      note(r.athlete_id, r.weight, r.season)
+    }
+  }
+
+  /*
+   * The high-school season. `season` is "2025-26", so the second half is the year the bouts in
+   * it mostly fall in, and each match in the JSON carries the weight he wrestled it at.
+   */
+  const seasons = await page<{ athlete_id: string; season: string | null; matches: unknown }>(
+    "matches",
+    "athlete_id, season, matches",
+    (q) => q.not("athlete_id", "is", null),
+  )
+  for (const r of seasons) {
+    const end = Number(String(r.season ?? "").split("-").pop())
+    const year = end > 1900 ? end : end > 0 ? 2000 + end : 0
+    for (const m of Array.isArray(r.matches) ? r.matches : []) {
+      note(r.athlete_id, (m as { weight?: unknown })?.weight, year)
+    }
   }
 
   const claim: Array<{ boutId: string; athleteId: string }> = []

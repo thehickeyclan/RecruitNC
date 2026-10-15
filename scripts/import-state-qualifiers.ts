@@ -70,6 +70,22 @@ function csv(file: string): Array<Record<string, string>> {
  * 2025/2026 import recorded it for 49 states — PIAA, UIL, CIF and the rest — and `association` is
  * NOT NULL, so guessing it would be both wrong and load-bearing.
  */
+/*
+ * A classification's signature, for matching one spelling of a division to another.
+ *
+ * Roman numerals are folded to digits first: New York's 2024 rebuild says "Division I" where its
+ * 2025 and 2026 rows say "D1", and a digits-only signature finds nothing in "Division I" — so one
+ * division would have been held under two names across seasons, which is the Virginia "Class 6"
+ * against "6A" problem wearing numerals.
+ */
+const ROMAN: Record<string, string> = { i: "1", ii: "2", iii: "3", iv: "4", v: "5", vi: "6", vii: "7", viii: "8" }
+function signature(raw: string): string {
+  const folded = String(raw ?? "")
+    .toLowerCase()
+    .replace(/\b(viii|vii|vi|iv|iii|ii|i|v)\b/g, (m) => ROMAN[m] ?? m)
+  return (folded.match(/\d+/g) ?? []).join("-")
+}
+
 async function associationFor(state: string): Promise<string | null> {
   const { data } = await sb.from("state_tournament_divisions").select("association").eq("state", state).limit(1)
   return (data ?? [])[0]?.association ?? null
@@ -90,7 +106,20 @@ async function divisionSpellings(state: string, gender: string) {
     }
     if (!data || data.length < 1000) break
   }
-  return seen
+  /*
+   * Also indexed by signature, so a division spelled differently still finds itself. An exact
+   * match alone left New York holding "Division I" for 2024 beside "D1" for 2025 and 2026 — one
+   * division under two names, which splits a wrestler's career across what look like two events.
+   * A signature claimed by more than one spelling is ambiguous and maps to nothing.
+   */
+  const bySignature = new Map<string, Set<string>>()
+  for (const raw of seen.values()) {
+    const sig = signature(raw)
+    if (!sig) continue
+    if (!bySignature.has(sig)) bySignature.set(sig, new Set())
+    bySignature.get(sig)!.add(raw)
+  }
+  return { exact: seen, bySignature }
 }
 
 async function main() {
@@ -126,8 +155,14 @@ async function main() {
       console.log(`\n${key}\n   SKIPPED — North Carolina lives in wrestling_nchsaa_results; use import-nc-qualifiers.ts`)
       continue
     }
-    const spellings = await divisionSpellings(state, gender)
-    const classOf = (raw: string) => spellings.get(raw.trim().toLowerCase()) ?? raw.trim()
+    const { exact, bySignature } = await divisionSpellings(state, gender)
+    const classOf = (raw: string) => {
+      const trimmed = raw.trim()
+      const hit = exact.get(trimmed.toLowerCase())
+      if (hit) return hit
+      const candidates = [...(bySignature.get(signature(trimmed)) ?? [])]
+      return candidates.length === 1 ? candidates[0] : trimmed
+    }
     const renamed = [...new Set(group.map((r) => r.division))]
       .map((d) => [d, classOf(d)] as const)
       .filter(([a, b]) => a !== b)
@@ -254,7 +289,27 @@ async function main() {
     if (missingDepth.length) { console.log(`   no placement anywhere in ${missingDepth.length} division(s) — not written`); continue }
     const { error: dErr } = await sb.from("state_tournament_divisions").upsert([...divisions.values()] as never, { onConflict: "season,state,association,gender,classification" })
     if (dErr) { console.log(`   divisions FAILED: ${dErr.message}`); continue }
-    await sb.from("state_tournament_placers").delete().eq("state", state).eq("season", Number(season)).eq("gender", gender)
+    /*
+     * Clear only THIS association's rows, never the whole state-season-gender.
+     *
+     * A state can run two championships for the same boys in the same season: South Carolina has
+     * the SCHSL and SCISA, Georgia the GHSA and GIAA. Keyed on (state, season, gender) alone, the
+     * 137-row SCISA file deleted all 858 SCHSL boys rows behind it — 2,030 rows across three
+     * seasons, and with them every profile link those rows carried. The association is already on
+     * every entry below; it belongs here too.
+     */
+    const associations = [...new Set(entries.map((e) => String((e as { association?: unknown }).association ?? "")))].filter(Boolean)
+    for (const assoc of associations) {
+      const { error } = await sb
+        .from("state_tournament_placers")
+        .delete()
+        .eq("state", state)
+        .eq("season", Number(season))
+        .eq("gender", gender)
+        .eq("association", assoc)
+      if (error) { console.log(`   clearing ${assoc} FAILED: ${error.message}`); return }
+    }
+    console.log(`   cleared and replacing: ${associations.join(", ")}`)
     let done = 0
     for (let i = 0; i < entries.length; i += 500) {
       const { error } = await sb.from("state_tournament_placers").insert(entries.slice(i, i + 500) as never)
