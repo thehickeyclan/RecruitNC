@@ -17,8 +17,23 @@ describe("searching the Learn library", () => {
     expect(searchLearn(index, "fargo").some((e) => e.title.startsWith("Fargo"))).toBe(true)
   })
 
+  it("finds the practical steps too", () => {
+    expect(searchLearn(index, "spam folder")[0].where).toBe("Working the process")
+    expect(searchLearn(index, "questions to ask coach")[0].title).toBe("Questions to ask a college coach")
+  })
+
   it("finds nothing for nothing", () => {
     expect(searchLearn(index, "")).toEqual([])
     expect(searchLearn(index, "zzqx")).toEqual([])
+  })
+})
+
+import { COACH_QUESTIONS, WORKING_STEPS } from "./working"
+
+describe("working the process", () => {
+  it("never says he or his, or names another sport", () => {
+    const words = [...WORKING_STEPS.flatMap((s) => [s.heading, ...s.points]), ...COACH_QUESTIONS].join("\n")
+    expect(words).not.toMatch(/\b(he|him|his)\b/i)
+    expect(words).not.toMatch(/\bsports?\b|football|basketball|soccer/i)
   })
 })

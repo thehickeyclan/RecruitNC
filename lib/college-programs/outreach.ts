@@ -38,6 +38,8 @@ export type OutreachContext = {
   athletes: Array<{ id: string; name: string }>
   facts: OutreachFacts | null
   coach: { name: string; title: string; email: string | null } | null
+  /** The rest of that team's staff with an address, to copy: a family rarely knows who runs recruiting. */
+  cc: Array<{ name: string; email: string }>
   hasQuestionnaire: boolean
   /** Upcoming events from the RecruitNC calendar, to pick from rather than type. */
   suggestedEvents: SuggestedEvent[]
@@ -81,7 +83,7 @@ export async function loadOutreachContext(
   const ids = await familyAthleteIds(admin, userId)
   const suggestedEvents = await upcomingEvents(admin)
   const hasQuestionnaire = questionnairesForSchool(schoolId).length > 0
-  if (ids.length === 0) return { athletes: [], facts: null, coach: null, hasQuestionnaire, suggestedEvents }
+  if (ids.length === 0) return { athletes: [], facts: null, coach: null, cc: [], hasQuestionnaire, suggestedEvents }
 
   const { data: rows, error } = await admin.from("athletes").select(ATHLETE_COLUMNS).in("id", ids)
   if (error) throw new Error(`outreach: athlete lookup failed: ${error.message}`)
@@ -94,7 +96,7 @@ export async function loadOutreachContext(
 
   // Only a wrestler on this account; an id from anywhere else is ignored, not honoured.
   const athlete = athletes.find((a) => String(a.id) === requestedAthleteId) ?? athletes.find((a) => String(a.id) === picker[0]?.id)
-  if (!athlete) return { athletes: picker, facts: null, coach: null, hasQuestionnaire, suggestedEvents }
+  if (!athlete) return { athletes: picker, facts: null, coach: null, cc: [], hasQuestionnaire, suggestedEvents }
 
   const athleteId = String(athlete.id)
   const graduationYear = Number(athlete.graduationyear) || null
@@ -133,6 +135,9 @@ export async function loadOutreachContext(
     athletes: picker,
     facts,
     coach: head ? { name: head.name, title: head.title, email: head.email } : null,
+    cc: staffForSchool(schoolId)
+      .filter((m) => m !== head && m.teams.includes(team) && m.email && m.email !== head?.email)
+      .map((m) => ({ name: m.name, email: m.email! })),
     hasQuestionnaire,
     suggestedEvents,
   }

@@ -17,6 +17,9 @@ import { listTarget, planSteps } from "@/lib/college-programs/roadmap"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import type { CollegeMapSchool } from "@/lib/college-programs/types"
+import { InfoSheetCard } from "@/components/portal/info-sheet-card"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { buildInfoSheet } from "./info-sheet"
 import { loadCommandCenter } from "./load"
 import { MapPreviewCard } from "./map-preview"
 import { WarRoomPlan } from "./war-room-plan"
@@ -53,6 +56,7 @@ export default async function CommandCenterHome() {
   const open = steps.filter((s) => !s.done).length
   const seen = first ? views.get(first.id) : null
   const target = listTarget(w?.grade ?? null)
+  const sheet = blue && first ? await buildInfoSheet(createAdminClient(), first.id).catch(() => null) : null
 
   const tiles = first
     ? [
@@ -154,6 +158,8 @@ export default async function CommandCenterHome() {
                   <p className="mt-3 text-sm text-white/60">Nothing yet. Save colleges from the map and they appear here, with the college programs that view the profile.</p>
                 )}
               </section>
+
+              {sheet && first ? <InfoSheetCard sheet={sheet} name={first.firstName} /> : null}
 
               <div className="[&>a]:mt-0">
               <MapPreviewCard

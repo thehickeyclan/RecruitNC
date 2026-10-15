@@ -66,6 +66,7 @@ export function CoachEmailComposer({
   const [athleteId, setAthleteId] = useState<string | null>(initialAthleteId ?? null)
   const [kind, setKind] = useState<OutreachKind>("intro")
   const [why, setWhy] = useState("")
+  const [copyStaff, setCopyStaff] = useState(true)
   const [detail, setDetail] = useState("")
   const [questionnaireDone, setQuestionnaireDone] = useState(false)
   const [events, setEvents] = useState<ScheduleEvent[]>([])
@@ -170,8 +171,10 @@ export function CoachEmailComposer({
   }
 
   const finish = () => onSent(STATUS_AFTER[kind])
+  // Copy the rest of the team's staff: a family rarely knows which coach runs recruiting.
+  const ccList = copyStaff ? (context?.cc ?? []).map((c) => c.email) : []
   const mailto = email
-    ? `mailto:${context?.coach?.email ?? ""}?subject=${encodeURIComponent(email.subject)}&body=${encodeURIComponent(email.body)}`
+    ? `mailto:${context?.coach?.email ?? ""}?${ccList.length ? `cc=${encodeURIComponent(ccList.join(","))}&` : ""}subject=${encodeURIComponent(email.subject)}&body=${encodeURIComponent(email.body)}`
     : undefined
   const copy = async () => {
     if (!email) return
@@ -370,6 +373,14 @@ export function CoachEmailComposer({
               )}
             </div>
 
+            {(context?.cc?.length ?? 0) > 0 ? (
+              <label className="flex items-start gap-2 text-sm text-slate-700">
+                <input type="checkbox" checked={copyStaff} onChange={(e) => setCopyStaff(e.target.checked)} className="mt-0.5" />
+                <span>
+                  Copy the rest of the staff ({context!.cc.map((c) => c.name).join(", ")}). You may not know which coach runs recruiting; the staff will tell you.
+                </span>
+              </label>
+            ) : null}
             <div className="flex flex-col gap-2 sm:flex-row">
               <a
                 href={mailto}

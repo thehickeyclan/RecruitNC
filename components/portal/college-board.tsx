@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { GripVertical, Mail, Sparkles } from "lucide-react"
+import { BadgeCheck, GripVertical, Mail, Sparkles } from "lucide-react"
 
 import { COLLEGE_LIST_STATUSES, COLLEGE_LIST_STATUS_LABEL, type CollegeListStatus } from "@/lib/college-programs/list"
 
@@ -23,6 +23,10 @@ export type BoardCollege = {
   logo: string | null
   cost: string | null
   note: string | null
+  /** The family's own note: calls, what the coach said, next steps. */
+  memo: string | null
+  /** The college's coaches are on RecruitNC: they can see the profile and write in the app. */
+  onRecruitNC: boolean
 }
 
 const STAGE_HINT: Record<CollegeListStatus, string> = {
@@ -45,11 +49,14 @@ export function CollegeBoard({
   colleges,
   onMove,
   onEmail,
+  onMemo,
 }: {
   colleges: BoardCollege[]
   onMove: (id: string, status: CollegeListStatus) => void
   onEmail: (id: string) => void
+  onMemo: (id: string, memo: string) => void
 }) {
+  const [editing, setEditing] = useState<{ id: string; text: string } | null>(null)
   const [drag, setDrag] = useState<Drag | null>(null)
   const [celebrate, setCelebrate] = useState<{ id: string; text: string } | null>(null)
   const start = useRef<{ id: string; x: number; y: number; rect: DOMRect; active: boolean } | null>(null)
@@ -159,6 +166,11 @@ export function CollegeBoard({
                         <GripVertical className="h-4 w-4" />
                       </span>
                     </div>
+                    {c.onRecruitNC ? (
+                      <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#D3B574]/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-[#D3B574]">
+                        <BadgeCheck className="h-3 w-3" aria-hidden /> Coaches on RecruitNC
+                      </p>
+                    ) : null}
                     {c.cost ? <p className="mt-2 text-[11px] leading-4 text-white/55">{c.cost}</p> : null}
                     {c.note ? <p className="mt-1 text-[11px] font-semibold text-amber-200">{c.note}</p> : null}
                     {celebrate?.id === c.id ? (
@@ -166,7 +178,37 @@ export function CollegeBoard({
                         <Sparkles className="h-3.5 w-3.5" aria-hidden /> {celebrate.text}
                       </p>
                     ) : null}
+                    {editing?.id === c.id ? (
+                      <div className="mt-2">
+                        <textarea
+                          value={editing.text}
+                          onChange={(e) => setEditing({ id: c.id, text: e.target.value })}
+                          rows={3}
+                          maxLength={2000}
+                          placeholder="Calls, what the coach said, next steps…"
+                          aria-label={`Note on ${c.name}`}
+                          className="w-full rounded-md border border-white/15 bg-[#0A1628] p-2 text-xs text-white placeholder:text-white/35"
+                        />
+                        <div className="mt-1 flex gap-2">
+                          <button type="button" onClick={() => { onMemo(c.id, editing.text); setEditing(null) }} className="rounded-md bg-[#D3B574] px-2 py-1 text-[11px] font-bold text-[#0A1628]">
+                            Save note
+                          </button>
+                          <button type="button" onClick={() => setEditing(null)} className="text-[11px] font-semibold text-white/55 hover:text-white">
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    ) : c.memo ? (
+                      <button type="button" onClick={() => setEditing({ id: c.id, text: c.memo ?? "" })} className="mt-2 block w-full rounded-md border border-white/10 bg-[#0A1628]/60 p-2 text-left text-[11px] leading-4 text-white/75 hover:border-white/30">
+                        {c.memo}
+                      </button>
+                    ) : null}
                     <div className="mt-2 flex items-center gap-2">
+                      {editing?.id !== c.id && !c.memo ? (
+                        <button type="button" onClick={() => setEditing({ id: c.id, text: "" })} className="inline-flex h-7 items-center rounded-md border border-white/15 px-2 text-[11px] font-bold text-white/75 hover:text-white">
+                          + Note
+                        </button>
+                      ) : null}
                       <button type="button" onClick={() => onEmail(c.id)} className="inline-flex h-7 items-center gap-1 rounded-md bg-[#CC0000] px-2 text-[11px] font-bold text-white hover:bg-[#a80000]">
                         <Mail className="h-3.5 w-3.5" aria-hidden /> Email
                       </button>

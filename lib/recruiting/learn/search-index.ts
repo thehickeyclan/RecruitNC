@@ -7,6 +7,7 @@
 import { LEARN_PAGES, MENS_AND_WOMENS, sectionId } from "./content"
 import { GRADE_NAME, TIMELINE } from "./timeline"
 import { TOURNAMENT_LISTS } from "./tournaments"
+import { COACH_QUESTIONS, WORKING_STEPS } from "./working"
 
 export type SearchEntry = { title: string; where: string; href: string; text: string }
 
@@ -49,6 +50,10 @@ export function buildSearchIndex(): SearchEntry[] {
       })
     }
   }
+  for (const step of WORKING_STEPS) {
+    entries.push({ title: step.heading, where: "Working the process", href: "/recruiting/learn/working-the-process", text: step.points.join(" ") })
+  }
+  entries.push({ title: "Questions to ask a college coach", where: "Working the process", href: "/recruiting/learn/working-the-process", text: COACH_QUESTIONS.join(" ") })
   return entries
 }
 
