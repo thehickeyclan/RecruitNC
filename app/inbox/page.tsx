@@ -1,13 +1,8 @@
-"use client"
+import { InboxScreen } from "./inbox-screen"
 
-import { AuthGuard } from "@/components/auth-guard"
-import { InboxPanes } from "@/components/coach-messages/inbox-panes"
+export const dynamic = "force-dynamic"
 
 /** Recruiting messages: coaches and the families they wrote to. See lib/coach-messages.ts. */
 export default function InboxPage() {
-  return (
-    <AuthGuard>
-      <InboxPanes />
-    </AuthGuard>
-  )
+  return <InboxScreen threadId={null} />
 }

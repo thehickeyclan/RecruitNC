@@ -4,6 +4,7 @@ import { resolveRequestUserId } from "@/lib/request-user"
 import { coachSend, listThreads } from "@/lib/coach-messages"
 import { notifyNewMessage } from "@/lib/coach-messages-notify"
 import { noteCoachMessaged } from "@/lib/recruiting/program-stage"
+import { moveListsOnCoachMessage } from "@/lib/coach-messages-extras"
 
 /**
  * Coach → prospect messaging. Web (cookies) and the app (bearer token) both call this.
@@ -39,5 +40,7 @@ export async function POST(request: NextRequest) {
 
   after(() => notifyNewMessage(admin, { threadId: result.threadId, senderUserId: userId, senderRole: result.senderRole }))
   after(() => noteCoachMessaged(admin, userId, athleteId).catch((e) => console.error("[coach-messages] stage:", e)))
+  // The family's list follows the conversation: this college goes on it at "Coach replied".
+  after(() => moveListsOnCoachMessage(admin, result.threadId).catch((e) => console.error("[coach-messages] family list:", e)))
   return NextResponse.json({ threadId: result.threadId, messageId: result.messageId, isNewThread: result.isNewThread })
 }

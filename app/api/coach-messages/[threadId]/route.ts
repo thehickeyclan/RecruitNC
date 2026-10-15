@@ -4,6 +4,7 @@ import { resolveRequestUserId } from "@/lib/request-user"
 import { getThread, replyInThread } from "@/lib/coach-messages"
 import { notifyNewMessage } from "@/lib/coach-messages-notify"
 import { noteCoachMessaged } from "@/lib/recruiting/program-stage"
+import { cleanAttachment, moveListsOnCoachMessage, saveMessageExtras } from "@/lib/coach-messages-extras"
 
 /**
  * One conversation.
@@ -11,7 +12,8 @@ import { noteCoachMessaged } from "@/lib/recruiting/program-stage"
  * GET  - every message, marked read for this account. The coach, the wrestler, a linked parent
  *        or an admin (reviewing a report); anyone else gets a 404, not a 403, so a thread id
  *        does not confirm that a conversation exists.
- * POST - write inside it: { body }. This is the only way a family can send anything.
+ * POST - write inside it: { body, replyToId?, attachment? }. This is the only way a family can send
+ *        anything. A file alone sends with its name as the words.
  */
 
 export const dynamic = "force-dynamic"
@@ -29,11 +31,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const { threadId } = await params
   const userId = await resolveRequestUserId(request)
   if (!userId) return NextResponse.json({ error: "Sign in to reply." }, { status: 401 })
-  const body = (await request.json().catch(() => ({}))) as { body?: unknown }
+  const body = (await request.json().catch(() => ({}))) as { body?: unknown; replyToId?: unknown; attachment?: unknown }
+  const attachment = cleanAttachment(threadId, body.attachment)
+  const words = typeof body.body === "string" && body.body.trim() ? body.body : attachment ? `📎 ${attachment.name}` : body.body
 
   const admin = createAdminClient()
-  const result = await replyInThread(admin, threadId, userId, body.body)
+  const result = await replyInThread(admin, threadId, userId, words)
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
+  await saveMessageExtras(admin, threadId, result.messageId, { replyToId: body.replyToId, attachment })
 
   after(() => notifyNewMessage(admin, { threadId, senderUserId: userId, senderRole: result.senderRole }))
   // A coach writing again is contact too; a family's reply moves nothing.
@@ -42,6 +47,8 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       const { data: t } = await admin.from("coach_threads").select("athlete_id").eq("id", threadId).maybeSingle()
       if (t?.athlete_id) await noteCoachMessaged(admin, userId, String(t.athlete_id)).catch((e) => console.error("[coach-messages] stage:", e))
     })
+    // The family's list follows the conversation: this college moves to "Coach replied".
+    after(() => moveListsOnCoachMessage(admin, threadId).catch((e) => console.error("[coach-messages] family list:", e)))
   }
   return NextResponse.json({ messageId: result.messageId })
 }
