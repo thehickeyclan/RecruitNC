@@ -132,7 +132,7 @@ export async function loadCommandCenter(returnTo: string) {
     ),
   )
 
-  return { viewerId, blue, focus, athletes, wrestlers, schools, graduatesOnly, views, premium }
+  return { viewerId, authUserId: user.id, blue, focus, athletes, wrestlers, schools, graduatesOnly, views, premium }
 }
 
 export type CommandCenter = Awaited<ReturnType<typeof loadCommandCenter>>

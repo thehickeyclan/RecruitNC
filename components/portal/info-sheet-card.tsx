@@ -26,8 +26,11 @@ export function InfoSheetCard({ sheet, name }: { sheet: string; name: string }) 
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
-      <p className="mt-1 text-xs text-white/55">Every college questionnaire asks the same things. Copy this and paste it in.</p>
-      <pre className="mt-3 max-h-48 overflow-auto whitespace-pre-wrap rounded-lg bg-[#0A1628] p-3 font-sans text-xs leading-5 text-white/80">{sheet}</pre>
+      <p className="mt-1 text-xs text-white/55">Name, results, GPA and contact, ready to paste into any questionnaire.</p>
+      <details className="mt-3 text-xs">
+        <summary className="cursor-pointer font-semibold text-white/60 hover:text-white">Show it</summary>
+        <pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap rounded-lg bg-[#0A1628] p-3 font-sans text-xs leading-5 text-white/80">{sheet}</pre>
+      </details>
     </section>
   )
 }
