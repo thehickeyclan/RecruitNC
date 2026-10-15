@@ -178,20 +178,20 @@ export default async function CommandCenterActivity({ searchParams }: { searchPa
             <p className="text-xs font-black uppercase tracking-[0.25em]" style={{ color: GOLD }}>Activity</p>
             <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-5xl">Activity</h1>
             <p className="mt-2 text-sm text-white/70 sm:text-base">Everything happening in {name}&apos;s recruiting.</p>
-            <div className="mt-5 flex flex-wrap items-center gap-2">
+            <div className="-mx-6 mt-5 flex items-center gap-2 overflow-x-auto whitespace-nowrap px-6 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden">
               {FILTERS.map((f) => (
                 <a
                   key={f.key}
                   href={link({ f: f.key })}
                   aria-current={f.key === filter.key ? "true" : undefined}
-                  className={`rounded-lg border px-3 py-1.5 text-sm font-semibold ${f.key === filter.key ? "border-[#D3B574] text-[#D3B574]" : "border-white/15 text-white/75 hover:text-white"}`}
+                  className={`shrink-0 rounded-lg border px-3 py-1.5 text-sm font-semibold ${f.key === filter.key ? "border-[#D3B574] text-[#D3B574]" : "border-white/15 text-white/75 hover:text-white"}`}
                 >
                   {f.label}
                 </a>
               ))}
               <span className="mx-1 hidden h-5 w-px bg-white/15 sm:block" aria-hidden />
               {RANGES.map((r) => (
-                <a key={r.key} href={link({ d: r.key })} className={`rounded-lg px-2.5 py-1.5 text-xs font-semibold ${r.key === range.key ? "bg-white/10 text-white" : "text-white/55 hover:text-white"}`}>
+                <a key={r.key} href={link({ d: r.key })} className={`shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold ${r.key === range.key ? "bg-white/10 text-white" : "text-white/55 hover:text-white"}`}>
                   {r.label}
                 </a>
               ))}
@@ -213,8 +213,8 @@ export default async function CommandCenterActivity({ searchParams }: { searchPa
                   const label = dayLabel(key)
                   const today = shown.filter((i) => dayKey(i.at) === key)
                   return (
-                    <li key={key} className="grid grid-cols-[5.5rem_1fr] gap-3 sm:grid-cols-[7rem_1fr]">
-                      <div className="pt-3 text-right">
+                    <li key={key} className="sm:grid sm:grid-cols-[7rem_1fr] sm:gap-3">
+                      <div className="mb-2 flex items-baseline gap-2 sm:mb-0 sm:block sm:pt-3 sm:text-right">
                         <p className="text-sm font-bold">{label.top}</p>
                         {label.date ? <p className="text-xs text-white/45">{label.date}</p> : null}
                       </div>
@@ -229,12 +229,12 @@ export default async function CommandCenterActivity({ searchParams }: { searchPa
                                 {item.sub ? <span className="mt-0.5 line-clamp-1 block text-xs text-white/55">{item.sub}</span> : null}
                               </span>
                               <span className={`hidden shrink-0 rounded-md border px-2 py-0.5 text-[11px] font-semibold sm:inline ${k.chip}`}>{k.label}</span>
-                              <span className="w-16 shrink-0 text-right text-xs text-white/45">{time(item.at)}</span>
+                              <span className="w-14 shrink-0 text-right text-[11px] text-white/45 sm:w-16 sm:text-xs">{time(item.at)}</span>
                             </>
                           )
                           return (
                             <li key={`${item.at}-${n}`} className="relative">
-                              <span className={`absolute -left-[1.15rem] top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full ${k.dot} ring-4 ring-[#060f1f] sm:-left-[1.4rem]`} aria-hidden />
+                              <span className={`absolute -left-[1.4rem] top-1/2 hidden h-2.5 w-2.5 -translate-y-1/2 rounded-full sm:block ${k.dot} ring-4 ring-[#060f1f]`} aria-hidden />
                               {item.href ? (
                                 <a href={item.href} className="flex items-center gap-3 p-3 hover:bg-white/[0.03]">{body}</a>
                               ) : (
