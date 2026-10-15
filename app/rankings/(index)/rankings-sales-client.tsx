@@ -273,21 +273,24 @@ export function RankingsSalesClient({
     /** Free, Rankings, Command Center, Blue (Matt, 15 Oct 2026). */
     const PLAN_ROWS: Array<[string, boolean, boolean, boolean, boolean]> = [
       ["Your profile, with every result already on it", true, true, true, true],
+      ["Messages from verified college coaches, with parents seeing every one", true, true, true, true],
       ["Academics and contact info, seen only by verified college coaches", true, true, true, true],
       ["How many college coaches viewed your profile", true, true, true, true],
       ["Which college programs viewed your profile", false, true, true, true],
       [`Class rankings${WOMENS_RANGE ? ", men's and women's" : ""} and the Top 75`, false, true, true, true],
       ["Head-to-head: who beat whom, and when", false, true, true, true],
       ["Recruiting plan, college list, compare and full costs", false, false, true, true],
-      ["Messages from college coaches, with the college beside each", false, false, true, true],
+      ["Every coach conversation tied to its college and your list", false, false, true, true],
+      ["Your recruiting assistant: next steps for every stage, 8th grade to signing", false, false, true, true],
       ["Learn: rules, timeline and costs, men's and women's", false, false, true, true],
-      ["NC United practices", false, false, false, true],
+      ["Practices run by college coaches, with the state's best partners", false, false, false, true],
+      ["The NC United national team pathway", false, false, false, true],
       ["A drop-in each month at Darkhorse or RAW", false, false, false, true],
     ]
     const FAQ: Array<[string, string]> = [
       ["Can I cancel?", "Yes, anytime, from your account. The yearly plan runs to the end of the year you paid for."],
       ["Who sees my wrestler's contact information?", "Only college coaches we have verified. Never the public, and never other families."],
-      ["What's the difference between the plans?", "Rankings is the boards and who is viewing your profile. Command Center adds the full recruiting portal: your plan, college list, costs and messages from coaches. Blue is NC United's program: everything in Command Center plus practices and a monthly drop-in at Darkhorse or RAW."],
+      ["What's the difference between the plans?", "Rankings is the boards and who is viewing your profile. The Recruiting Command Center is your recruiting assistant from 8th grade through signing: your plan, college list, full costs and every coach conversation in one place. Blue is NC United's program: everything in the Recruiting Command Center plus practices run by college coaches, the state's best training partners, the national team pathway and a monthly drop-in at Darkhorse or RAW."],
       ["Can I share the rankings?", "Share your own wrestler's ranking anywhere. Please don't repost the full boards or screenshots of them; that is what keeps them going."],
     ]
     const check = (on: boolean) =>
@@ -425,15 +428,15 @@ export function RankingsSalesClient({
               {/* Command Center */}
               <div className="relative flex flex-col rounded-2xl border-2 border-sky-400/70 bg-[#0b1a33] p-6">
                 <Target className="h-9 w-9 text-sky-400" aria-hidden />
-                <p className="mt-4 text-3xl font-black">Command Center</p>
-                <p className="mt-1 text-sm text-white/60">For families actively going through recruiting.</p>
+                <p className="mt-4 text-3xl font-black leading-tight">Recruiting Command Center</p>
+                <p className="mt-1 text-sm text-white/60">Your recruiting assistant, from 8th grade through signing day.</p>
                 <p className="mt-5 text-5xl font-black">
                   {formatPrice(SCOUTING_REPORT_PRICES.command_center)}
                   <span className="text-lg font-semibold text-white/60"> / month</span>
                 </p>
                 <p className="mt-4 text-xs font-black uppercase tracking-widest text-sky-300">Everything in Rankings, plus:</p>
                 <ul className="mt-3 space-y-2.5 text-sm text-white/85">
-                  {["Recruiting plan and roadmap, 8th to 12th grade", "My College List: your stage, next step and verified coach activity", "Compare fit, with full yearly cost", "College pages: cost, ranking, roster, coaches", "Messages from college coaches", "Learn: rules, timeline and costs, men's and women's"].map((l) => (
+                  {["Next steps for every stage, 8th grade to signing", "My College List: your stage, next step and verified coach activity", "Compare fit, with full yearly cost", "College pages: cost, ranking, roster, coaches", "Coach conversations tied to each college", "Learn: rules, timeline and costs, men's and women's"].map((l) => (
                     <li key={l} className="flex gap-2.5"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: gold }} aria-hidden /> {l}</li>
                   ))}
                 </ul>
@@ -445,7 +448,7 @@ export function RankingsSalesClient({
                       onClick={() => { void startCheckout("command_center") }}
                       className="mt-6 rounded-xl bg-sky-400 px-4 py-3 text-base font-black text-[#0A1628] transition hover:brightness-110 disabled:opacity-60"
                     >
-                      {checkingOut === "command_center" ? "Starting…" : "Get Command Center →"}
+                      {checkingOut === "command_center" ? "Starting…" : "Get the Recruiting Command Center →"}
                     </button>
                     <p className="mt-2 text-center text-xs text-white/45">On Rankings already? It replaces your $9.99 plan.</p>
                   </>
@@ -476,9 +479,9 @@ export function RankingsSalesClient({
                   <p className="mt-5 text-5xl font-black">
                     $55<span className="text-lg font-semibold text-white/60"> / month</span>
                   </p>
-                  <p className="mt-4 text-xs font-black uppercase tracking-widest" style={{ color: gold }}>Everything in Command Center, plus:</p>
+                  <p className="mt-4 text-xs font-black uppercase tracking-widest" style={{ color: gold }}>Everything in the Recruiting Command Center, plus:</p>
                   <ul className="mt-3 space-y-2.5 text-sm text-white/85">
-                    {["NC United practices", "One drop-in each month at Darkhorse or RAW"].map((l) => (
+                    {["Practices run by college coaches", "The state's best training partners", "The NC United national team pathway", "One drop-in each month at Darkhorse or RAW"].map((l) => (
                       <li key={l} className="flex gap-2.5"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: gold }} aria-hidden /> {l}</li>
                     ))}
                   </ul>
@@ -544,7 +547,7 @@ export function RankingsSalesClient({
                     <th className="p-4 text-left font-bold" />
                     <th className="p-4 text-center">Free</th>
                     <th className="p-4 text-center" style={{ color: gold }}>Rankings</th>
-                    <th className="p-4 text-center text-sky-400">Command Center</th>
+                    <th className="p-4 text-center text-sky-400">Recruiting Command Center</th>
                     <th className="p-4 text-center text-sky-300">Blue</th>
                   </tr>
                 </thead>

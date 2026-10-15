@@ -103,7 +103,7 @@ export default async function CommandCenterSalesPage() {
             </span>
           </h1>
           <p className="mt-5 max-w-xl text-base text-white/75 sm:text-lg">
-            Your plan, your colleges, the full cost, and the college coaches who are looking, in one place. Men&apos;s and women&apos;s wrestling, every level.
+            Your recruiting assistant from 8th grade through signing day: the plan, your colleges, the full cost and the college coaches who are looking, in one place. Men&apos;s and women&apos;s wrestling, every level.
           </p>
           <div className="mt-6 flex items-baseline gap-2">
             <span className="text-5xl font-black">{price}</span>
@@ -111,7 +111,7 @@ export default async function CommandCenterSalesPage() {
           </div>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href={d.onSale ? BUY : "/plans"} className="rounded-xl px-7 py-3.5 text-base font-black text-[#0A1628] shadow-lg transition hover:brightness-110" style={{ backgroundColor: SKY }}>
-              {d.onSale ? "Get the Command Center →" : "See plans →"}
+              {d.onSale ? "Get the Recruiting Command Center →" : "See plans →"}
             </Link>
             <Link href="/plans" className="rounded-xl border border-white/25 bg-[#060f1f]/40 px-7 py-3.5 text-base font-bold transition hover:bg-white/10">
               Compare all plans
@@ -230,7 +230,7 @@ export default async function CommandCenterSalesPage() {
           icon={MessageSquare}
           eyebrow="Messages"
           title="Hear from college coaches"
-          points={["Only verified college coaches can start a conversation", "Parents see every message; stop or report a coach anytime", "Each conversation shows the college, and your list moves on its own"]}
+          points={["Free for every family: only verified college coaches can start a conversation", "Parents see every message; stop or report a coach anytime", "In the Command Center, each conversation shows its college and your list moves on its own"]}
           visual={
             <Example>
               <div className="space-y-3 pt-5 text-sm">
@@ -272,8 +272,8 @@ export default async function CommandCenterSalesPage() {
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {[
               { name: "Rankings", price: formatPrice(SCOUTING_REPORT_PRICES.subscription), line: "Rankings, Top 75, head-to-head, and who viewed your profile", color: GOLD, href: "/plans" },
-              { name: "Command Center", price, line: "Everything in Rankings, plus the full recruiting portal", color: SKY, href: d.onSale ? BUY : "/plans", best: true },
-              { name: "NC United Blue", price: "$55", line: "Everything in Command Center, plus practices and a monthly drop-in at Darkhorse or RAW", color: "#7dd3fc", href: "/blue" },
+              { name: "Recruiting Command Center", price, line: "Everything in Rankings, plus your recruiting assistant from 8th grade through signing", color: SKY, href: d.onSale ? BUY : "/plans", best: true },
+              { name: "NC United Blue", price: "$55", line: "Everything in the Recruiting Command Center, plus practices run by college coaches, the state's best partners and the national team pathway", color: "#7dd3fc", href: "/blue" },
             ].map((p) => (
               <Link key={p.name} href={p.href} className={`${card} flex flex-col border-2 p-6 transition hover:-translate-y-0.5`} style={{ borderColor: p.best ? p.color : "rgba(255,255,255,0.1)" }}>
                 <p className="text-sm font-black uppercase tracking-widest" style={{ color: p.color }}>{p.name}</p>
@@ -301,8 +301,8 @@ export default async function CommandCenterSalesPage() {
               ["Is it only for North Carolina?", "The rankings and results are North Carolina's today, with South Carolina next. The college map, Compare, Learn and the coach messages work for every family."],
               ["Does it work for girls?", "Yes. Women's wrestling has its own colleges, rules and rankings, and the Command Center follows your wrestler: a daughter's map, colleges and rules are the women's ones."],
               ["Who sees my information?", "Your plan, list and notes are yours alone, and a family's income is never saved. Academics and contact info are seen only by verified college coaches, never the public."],
-              ["Can college coaches message my wrestler?", "Only verified college coaches, and only inside the Command Center, where parents see every message and can stop a coach at any time."],
-              ["I'm on Rankings. What happens if I upgrade?", "Your $9.99 plan is cancelled automatically when the Command Center starts, so you never pay for both."],
+              ["Can college coaches message my wrestler?", "Only verified college coaches can start a conversation, and parents see every message and can stop a coach at any time. Messages are free for every family; the Recruiting Command Center ties each conversation to its college and your plan."],
+              ["I'm on Rankings. What happens if I upgrade?", "Your $9.99 plan is cancelled automatically when the Recruiting Command Center starts, so you never pay for both."],
               ["Can I cancel?", "Anytime, from your account."],
             ].map(([q, a]) => (
               <details key={q} className="group p-5">
@@ -316,7 +316,7 @@ export default async function CommandCenterSalesPage() {
           </div>
           <div className="mt-10 text-center">
             <Link href={d.onSale ? BUY : "/plans"} className="inline-block rounded-xl px-8 py-4 text-base font-black text-[#0A1628] hover:brightness-110" style={{ backgroundColor: SKY }}>
-              {d.onSale ? `Get the Command Center, ${price}/month →` : "See plans →"}
+              {d.onSale ? `Get the Recruiting Command Center, ${price}/month →` : "See plans →"}
             </Link>
           </div>
         </section>
