@@ -1246,7 +1246,7 @@ export function AthleteDetail({
 
                 {/* Identity panel below the photo: the banner's pieces, stacked. */}
                 <div className="relative bg-[#0A1628] px-4 pb-6 pt-5 text-white">
-                  <BannerEyebrow />
+                  <BannerEyebrow state={athlete?.state} />
                   <BannerName name={athleteName} className="mt-2" />
                   {bannerRibbon || bannerNationalRanking ? (
                     <div className="mt-4 flex flex-wrap items-center gap-2">
@@ -1457,7 +1457,7 @@ export function AthleteDetail({
 
                 <div className="relative z-10 ml-[34%] flex flex-col gap-6 px-10 pb-10 pt-16 xl:pr-14">
                   <div>
-                    <BannerEyebrow />
+                    <BannerEyebrow state={athlete?.state} />
                     <BannerName name={athleteName} className="mt-3" />
                     {/* The scouting report beside the ribbon: in the content, where it cannot collide
                         with the name or the eyebrow at narrower desktop widths. */}
