@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { athleteStateCode } from "@/lib/recruiting/states"
 
 export const dynamic = "force-dynamic"
 
@@ -27,7 +28,7 @@ export async function GET(request: NextRequest) {
   const admin = createAdminClient()
   const { data, error } = await admin
     .from("athletes")
-    .select('id, name, highschool, graduationyear, weightclass, photourl, "wrestlingClub", claimed_by_user_id, "contactEmail"')
+    .select('id, name, highschool, graduationyear, weightclass, photourl, "wrestlingClub", claimed_by_user_id, "contactEmail", state, is_nc_athlete')
     .ilike("name", `%${q.replace(/[%_]/g, "")}%`)
     .eq("status", "active")
     .order("name")
@@ -45,6 +46,8 @@ export async function GET(request: NextRequest) {
       id: a.id,
       name: a.name,
       highSchool: a.highschool,
+      /** Two namesakes in different states are different wrestlers; the state tells them apart. */
+      state: athleteStateCode(a),
       graduationYear: a.graduationyear,
       weightClass: a.weightclass,
       club: a.wrestlingClub,
