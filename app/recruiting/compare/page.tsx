@@ -91,6 +91,8 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
   // The wrestler being compared and the family's own fit profile (the previewed family's, on a developer's machine).
   const team = focus?.gender ?? null
   const ctx = await loadFamilyFitContext(admin, userId, team)
+  // Logos for the picking step only: the list can be long.
+  const savedLogos = askedStep === "colleges" || (!askedStep && chosen.length < 2) ? await Promise.all(saved.map((sc) => schoolLogoUrl(sc).catch(() => null))) : []
   const { first, sat, act, profile, profileSet, weight } = ctx
 
   const columns = await Promise.all(
@@ -239,32 +241,48 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
             </ol>
 
             {step === "colleges" ? (
-              <section className="mt-6 rounded-xl border border-white/10 bg-[#0f1c2e] p-5 sm:p-6">
-                <h2 className="text-lg font-black">Which colleges do you want to compare?</h2>
-                <p className="mt-1 text-sm text-white/60">Pick two to four from your list. Tap one to add or remove it.</p>
+              <section className="mt-6 rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-5 sm:p-6">
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <h2 className="text-xl font-black">Choose up to {MAX} colleges</h2>
+                  <span className="text-sm font-semibold text-[#D3B574]">{chosen.length} of {MAX} chosen</span>
+                </div>
                 {saved.length ? (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {saved.map((sc) => {
+                  <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    {saved.map((sc, i) => {
                       const on = chosen.some((c) => c.id === sc.id)
                       const nextIds = on ? chosen.filter((c) => c.id !== sc.id).map((c) => c.id) : [...chosen.map((c) => c.id), sc.id].slice(0, MAX)
+                      const division = sc.programs.find((p) => !team || p[team])?.division ?? sc.programs[0]?.division
                       return (
-                        <a key={sc.id} href={link({ s: nextIds.join(","), step: "colleges" })} aria-pressed={on} className={chip(on)}>
-                          {on ? "✓ " : ""}
-                          {spoken(sc.name)}
-                        </a>
+                        <li key={sc.id}>
+                          <a
+                            href={link({ s: nextIds.join(","), step: "colleges" })}
+                            aria-pressed={on}
+                            className={`relative flex h-full items-center gap-3 rounded-xl border p-3 transition ${on ? "border-[#D3B574] bg-[#D3B574]/10" : "border-white/10 bg-white/[0.03] hover:border-white/30"}`}
+                          >
+                            {savedLogos[i] ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={savedLogos[i]!} alt="" className="h-11 w-11 shrink-0 rounded-lg bg-white object-contain p-1" />
+                            ) : (
+                              <span className="h-11 w-11 shrink-0 rounded-lg bg-white/10" aria-hidden />
+                            )}
+                            <span className="min-w-0 flex-1">
+                              <span className="line-clamp-2 block text-sm font-bold leading-5 text-white">{spoken(sc.name)}</span>
+                              <span className="block text-xs text-white/50">
+                                {division ? DIVISION_SHORT[division] : ""} · {sc.state}
+                              </span>
+                            </span>
+                            <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-black ${on ? "border-[#D3B574] bg-[#D3B574] text-[#0A1628]" : "border-white/25 text-transparent"}`}>✓</span>
+                          </a>
+                        </li>
                       )
                     })}
-                  </div>
+                  </ul>
                 ) : (
                   <p className="mt-4 text-sm text-white/70">Your list is empty.</p>
                 )}
-                <div className="mt-5 rounded-lg border border-dashed border-white/20 p-4">
-                  <p className="text-sm font-bold text-white">Want to compare a college that is not here?</p>
-                  <p className="mt-1 text-sm text-white/60">Find it on the map and tap Save to My List. Then come back here.</p>
-                  <a href="/recruiting/college-map?from=compare" className={`${ghost} mt-3`}>
-                    + Add more colleges
-                  </a>
-                </div>
+                <a href="/recruiting/college-map?from=compare" className="mt-4 flex items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 p-4 text-sm font-bold text-white/75 hover:border-[#D3B574] hover:text-[#D3B574]">
+                  + Add a college from the map
+                </a>
                 <div className="mt-6 flex justify-end">
                   {chosen.length >= 2 ? (
                     <a href={link({ step: profileSet ? "results" : "matters" })} className={button}>
@@ -276,9 +294,9 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
                 </div>
               </section>
             ) : step === "matters" ? (
-              <section className="mt-6 rounded-xl border border-white/10 bg-[#0f1c2e] p-5 sm:p-6">
-                <h2 className="text-lg font-black">What matters to your family?</h2>
-                <p className="mt-1 text-sm text-white/60">Answer what you can. Everything is optional, and a coach never sees it.</p>
+              <section className="mt-6 rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-5 sm:p-6">
+                <h2 className="text-xl font-black">What matters to your family?</h2>
+                <p className="mt-1 text-sm text-white/60">All optional. A coach never sees it.</p>
                 <p className="mt-5 text-sm font-semibold text-white">Your family&apos;s income</p>
                 <p className="text-xs text-white/50">To show what families like yours actually paid. Not saved anywhere.</p>
                 <div className="mt-2 flex flex-wrap gap-2">
