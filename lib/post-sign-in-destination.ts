@@ -3,6 +3,8 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { resolveRankingViewerForUser } from "@/lib/ranking-access"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { classifyViewer } from "@/lib/viewer-role"
+import { familyAthleteIds } from "@/lib/coach-messages"
+import { mostRecentGraduatedClassYear } from "@/lib/class-years"
 import { rankingBoardHome } from "@/lib/rankings/ranking-board-home"
 
 /**
@@ -22,6 +24,22 @@ export const RANKINGS_SALES = "/rankings"
  * the scouting reports or their own board from there.
  */
 export const COACH_HOME = "/coach-home"
+/**
+ * A family - a wrestler, or a parent linked to one - lands on the Recruiting Command Center, which
+ * leads with their wrestler and a one-tap way to his or her profile (Matt, 15 October 2026: "when
+ * parents or kids log in we should make it super easy to get to their profile"). They had been
+ * landing on the rankings, and nine in ten then went looking for the profile through /profile.
+ */
+export const COMMAND_CENTER = "/my-recruiting"
+
+/** Whether this account is family for a wrestler still in school. Graduates have nothing left to plan. */
+async function hasWrestlerInSchool(admin: SupabaseClient, userId: string): Promise<boolean> {
+  const ids = await familyAthleteIds(admin, userId)
+  if (!ids.length) return false
+  const { data } = await admin.from("athletes").select("graduationyear").in("id", ids)
+  const graduated = mostRecentGraduatedClassYear()
+  return (data ?? []).some((a) => !a.graduationyear || Number(a.graduationyear) > graduated)
+}
 
 export async function postSignInDestination(admin: SupabaseClient, userId: string | null | undefined): Promise<string> {
   if (!userId) return RANKINGS_SALES
@@ -39,6 +57,10 @@ export async function postSignInDestination(admin: SupabaseClient, userId: strin
       const { data: account } = await admin.auth.admin.getUserById(userId)
       const board = rankingBoardHome(account?.user?.app_metadata)
       if (board) return board
+    }
+    // Families go to their wrestler. Admins keep the rankings even when they have children.
+    if (profile?.is_admin !== true && who.kind !== "admin" && !who.isCollegeCoach && (await hasWrestlerInSchool(admin, userId))) {
+      return COMMAND_CENTER
     }
     const { viewer } = await resolveRankingViewerForUser({ admin, userId })
     return canSeeProspectRanking(viewer) ? RANKINGS_HOME : RANKINGS_SALES
