@@ -28,6 +28,23 @@ export const RECRUITING_BRAND = {
   ],
 } as const
 
+/**
+ * The national product: RecruitWrestlers, on recruitwrestlers.com (Guild Ventures, 15 October
+ * 2026). Drawn like the state marks - RECRUIT in white, the second word in gold - so RecruitNC,
+ * RecruitSC and RecruitWrestlers read as one family. No owner name in the mark; the footer credit
+ * waits for the exact legal name.
+ */
+export const NATIONAL_BRAND = {
+  name: "RecruitWrestlers",
+  wordmark: ["Recruit", "Wrestlers"] as const,
+  domain: "recruitwrestlers.com",
+  /** Where accounts, sign-in and the Command Center live until the app itself moves. */
+  appOrigin: "https://app.ncwrestlingunited.com",
+} as const
+
+/** "RecruitNC", "RecruitSC": a state's own brand to families. */
+export const stateBrand = (code: string) => `Recruit${code.toUpperCase()}`
+
 export type RecruitingState = (typeof RECRUITING_BRAND.states)[number]
 
 /** States a viewer may open: the live ones, and the ones still being checked for an admin. */
