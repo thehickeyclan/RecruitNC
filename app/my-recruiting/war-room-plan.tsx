@@ -23,6 +23,10 @@ export type WarRoomSchool = {
   hasQuestionnaire: boolean
   /** "$31,450 tuition" for a North Carolina family (2023-24, tuition only), or null. */
   tuition: string | null
+  /** The family's own note on the college: calls, what the coach said, next steps. */
+  memo?: string | null
+  /** The college's coaches are on RecruitNC. */
+  onRecruitNC?: boolean
   /** When the family saved or last moved it, for the home screen's recent activity. */
   savedAt?: string | null
   /** "No women's team": the family's wrestlers could not wrestle here. Null when they could. */
@@ -129,6 +133,21 @@ export function WarRoomPlan({
     if (!res.ok) {
       setSchools(before)
       setError("Could not save that change. Try again.")
+    }
+  }
+
+  const setMemo = async (school: WarRoomSchool, memo: string) => {
+    const before = schools
+    setError(null)
+    setSchools((current) => current.map((s) => (s.id === school.id ? { ...s, memo: memo.trim() || null } : s)))
+    const res = await fetch("/api/college-list", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ schoolId: school.id, note: memo }),
+    })
+    if (!res.ok) {
+      setSchools(before)
+      setError("Could not save that note. Try again.")
     }
   }
 
@@ -329,10 +348,16 @@ export function WarRoomPlan({
                   logo: s.logo,
                   cost: s.tuition,
                   note: s.noTeam ? `${s.noTeam} in 2026-27` : s.hasQuestionnaire && s.status === "interested" ? "Questionnaire to fill out" : null,
+                  memo: s.memo ?? null,
+                  onRecruitNC: Boolean(s.onRecruitNC),
                 }))}
                 onMove={(id, status) => {
                   const school = schools.find((s) => s.id === id)
                   if (school) void setStatus(school, status)
+                }}
+                onMemo={(id, memo) => {
+                  const school = schools.find((s) => s.id === id)
+                  if (school) void setMemo(school, memo)
                 }}
                 onEmail={(id) => {
                   const school = schools.find((s) => s.id === id)

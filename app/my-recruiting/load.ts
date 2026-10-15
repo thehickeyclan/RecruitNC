@@ -14,6 +14,7 @@ import { mostRecentGraduatedClassYear, seniorClassYear } from "@/lib/class-years
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { isCollegeListStatus, type CollegeListStatus } from "@/lib/college-programs/list"
+import { loadCollegeMap } from "@/lib/college-programs/load"
 import { schoolLogoUrl } from "@/lib/college-programs/logo"
 import { gradeLabel } from "@/lib/college-programs/outreach-results"
 import data from "@/lib/college-programs/programs-2026-27.json"
@@ -75,7 +76,7 @@ export async function loadCommandCenter(returnTo: string) {
   const schedules = new Map<string, UpcomingEvent[]>()
   if (blue) {
     const [list, ...events] = await Promise.all([
-      admin.from("college_list_items").select("school_id, status, updated_at").eq("user_id", viewerId).order("updated_at", { ascending: false }),
+      admin.from("college_list_items").select("school_id, status, note, updated_at").eq("user_id", viewerId).order("updated_at", { ascending: false }),
       ...athletes.map((a) => listUpcomingEvents(admin, a.id).catch(() => ({ available: false, events: [] as UpcomingEvent[] }))),
     ])
     schools = (list.data ?? []).flatMap((row) => {
@@ -92,6 +93,8 @@ export async function loadCommandCenter(returnTo: string) {
           logo: null as string | null,
           hasQuestionnaire: questionnairesForSchool(school.id).length > 0,
           savedAt: row.updated_at ? String(row.updated_at) : null,
+          memo: row.note ? String(row.note) : null,
+          onRecruitNC: false,
           tuition: costShort(school.id, school.state),
           noTeam: focus && !school.programs.some((p) => p[focus.gender]) ? `No ${focus.gender === "womens" ? "women's" : "men's"} team` : null,
         },
@@ -99,7 +102,11 @@ export async function loadCommandCenter(returnTo: string) {
     })
     athletes.forEach((a, i) => schedules.set(a.id, events[i]?.events ?? []))
     const logos = await Promise.all(schools.map((s) => schoolLogoUrl({ id: s.id, name: SCHOOLS.get(s.id)?.name ?? s.name })))
-    schools = schools.map((s, i) => ({ ...s, logo: logos[i] }))
+    // Colleges whose coaches are on RecruitNC: the thing no recruiting service has (Matt, 15 Oct 2026).
+    const onPlatform = await loadCollegeMap(admin, true)
+      .then((map) => new Set(map.schools.filter((s) => s.onRecruitNC).map((s) => s.id)))
+      .catch(() => new Set<string>())
+    schools = schools.map((s, i) => ({ ...s, logo: logos[i], onRecruitNC: onPlatform.has(s.id) }))
   }
 
   const senior = seniorClassYear()

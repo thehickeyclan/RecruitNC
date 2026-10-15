@@ -7,7 +7,7 @@
  * library in lib/recruiting/learn.
  */
 import Link from "next/link"
-import { ArrowRight, BookOpen, CalendarDays, DollarSign, HelpCircle, Scale, ShieldAlert, Trophy } from "lucide-react"
+import { ArrowRight, BookOpen, CalendarDays, ListChecks, DollarSign, HelpCircle, Scale, ShieldAlert, Trophy } from "lucide-react"
 
 import { LearnSearch } from "@/components/portal/learn-search"
 import { PortalShell } from "@/components/portal/portal-shell"
@@ -24,6 +24,7 @@ export const metadata = { title: "Learn | Recruiting Command Center" }
 const TRACKS: D1Track[] = ["men-2028", "men-2027", "women"]
 const TOPICS = [
   { icon: CalendarDays, title: "Your timeline", text: "What to do each year, 8th grade to signing", href: "/recruiting/learn/timeline" },
+  { icon: ListChecks, title: "Working the process", text: "Questionnaires, writing to coaches, camps, calls", href: "/recruiting/learn/working-the-process" },
   { icon: HelpCircle, title: "Questions families ask", text: "Visits, NIL, revenue sharing, the Ivies", href: "/recruiting/learn/questions-families-ask" },
   { icon: DollarSign, title: "Paying for college", text: "Full rides, academics, need-based aid", href: "/recruiting/learn/paying-for-college" },
   { icon: Scale, title: "The rules, level by level", text: "D1, D2, D3, NAIA and junior college", href: "/recruiting/learn" },
