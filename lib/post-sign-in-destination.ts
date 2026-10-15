@@ -31,6 +31,11 @@ export const COACH_HOME = "/coach-home"
  * landing on the rankings, and nine in ten then went looking for the profile through /profile.
  */
 export const COMMAND_CENTER = "/my-recruiting"
+/**
+ * Off until the Command Center is finished (Matt, 15 Oct 2026: "we are still building"). Set
+ * FAMILY_LANDING_COMMAND_CENTER=1 in Vercel to send families there; nothing else needs to change.
+ */
+const FAMILIES_LAND_ON_COMMAND_CENTER = process.env.FAMILY_LANDING_COMMAND_CENTER === "1"
 
 /** Whether this account is family for a wrestler still in school. Graduates have nothing left to plan. */
 async function hasWrestlerInSchool(admin: SupabaseClient, userId: string): Promise<boolean> {
@@ -59,7 +64,7 @@ export async function postSignInDestination(admin: SupabaseClient, userId: strin
       if (board) return board
     }
     // Families go to their wrestler. Admins keep the rankings even when they have children.
-    if (profile?.is_admin !== true && who.kind !== "admin" && !who.isCollegeCoach && (await hasWrestlerInSchool(admin, userId))) {
+    if (FAMILIES_LAND_ON_COMMAND_CENTER && profile?.is_admin !== true && who.kind !== "admin" && !who.isCollegeCoach && (await hasWrestlerInSchool(admin, userId))) {
       return COMMAND_CENTER
     }
     const { viewer } = await resolveRankingViewerForUser({ admin, userId })
