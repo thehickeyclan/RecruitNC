@@ -49,7 +49,7 @@ export async function loadCommandCenter(returnTo: string) {
   const { data: rows } = ids.length
     ? await admin
         .from("athletes")
-        .select("id, name, firstName, graduationyear, highschool, photourl, academic_gpa, academic_sat, academic_act, highlight_video_url, phone, contactEmail")
+        .select("id, name, firstName, gender, graduationyear, highschool, photourl, academic_gpa, academic_sat, academic_act, highlight_video_url, phone, contactEmail")
         .in("id", ids)
         .order("graduationyear", { ascending: true })
     : { data: [] }
@@ -64,6 +64,7 @@ export async function loadCommandCenter(returnTo: string) {
     name: String(a.name ?? "").trim() || "Your wrestler",
     firstName: String(a.firstName ?? "").trim() || String(a.name ?? "").trim().split(" ")[0] || "Your wrestler",
     classYear: a.graduationyear ? Number(a.graduationyear) : null,
+    gender: a.gender ? String(a.gender) : null,
     highSchool: a.highschool && a.highschool !== "Not specified" ? String(a.highschool) : null,
     photo: a.photourl ? String(a.photourl) : null,
     completeness: completenessFromRow(a as Record<string, unknown>),
