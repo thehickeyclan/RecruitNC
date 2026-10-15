@@ -10,7 +10,6 @@ import type { WentHere } from "@/lib/college-programs/went-here"
 type Response = { locked: false; roster: SchoolRosterView; wentHere: WentHere | null } | { locked: true } | { error: string }
 
 const gpa = (n: number) => n.toFixed(2)
-const SUB = "text-xs font-bold uppercase tracking-wider text-white/45"
 
 /**
  * "Where you stand" on a school's page: the North Carolina wrestlers on its roster now, the ones
@@ -63,130 +62,149 @@ export function WentHereSection({ schoolId, schoolName, focus }: { schoolId: str
   const arriving = offRoster.filter((w) => w.classYear != null && w.classYear > graduated)
   const notListed = offRoster.filter((w) => w.classYear == null || w.classYear <= graduated)
   const both = new Set(roster.wrestlers.map((w) => w.team)).size > 1
-  const shown = showAll ? roster.wrestlers : roster.wrestlers.slice(0, 5)
+  const shown = showAll ? roster.wrestlers : roster.wrestlers.slice(0, 6)
 
   return (
-    <div className="mt-3 border-t border-white/10 pt-3">
-      <p className={SUB}>North Carolina wrestlers on the roster</p>
-      {roster.teamLines.map((line) => (
-        <p key={line} className="mt-2 text-sm leading-5 text-white/80">
-          {line}
-        </p>
-      ))}
-
-      {roster.wrestlers.length > 0 ? (
-        <>
-          <ul className="mt-2 space-y-2">
-            {shown.map((w) => {
-              const commit = commits.get(rosterNameKey(w.name))
-              return (
-                <li key={`${w.team}-${w.name}`} className="text-sm leading-5">
-                  {commit ? (
-                    <a href={`/view-profile?id=${commit.athleteId}`} className="font-semibold text-white hover:underline">
-                      {w.name}
-                    </a>
-                  ) : (
-                    <span className="font-semibold text-white">{w.name}</span>
-                  )}
-                  <span className="text-white/50">
-                    {[w.class, w.weight ? `${w.weight} lbs` : null, both ? (w.team === "womens" ? "women's" : "men's") : null]
-                      .filter(Boolean)
-                      .map((part) => ` · ${part}`)
-                      .join("")}
-                  </span>
-                  <span className="block text-xs text-white/65">
-                    {[w.highSchool, w.hometown].filter(Boolean).join(" · ") || "Hometown not listed"}
-                    {commit && commit.results.length > 0 ? ` · ${commit.results.join(" · ")}` : ""}
-                  </span>
-                </li>
-              )
-            })}
-          </ul>
-          {!showAll && roster.wrestlers.length > shown.length ? (
-            <button type="button" onClick={() => setShowAll(true)} className="mt-2 text-xs font-semibold text-[#F5D985] hover:underline">
-              Show all {roster.wrestlers.length}
-            </button>
-          ) : null}
-        </>
+    <div className="mt-4 space-y-6">
+      {/* The family's own wrestler beside the people who went here: the comparison, first. */}
+      {wentHere && (wentHere.yours.length > 0 || wentHere.schoolSentence || wentHere.level.sentence || wentHere.gpa) ? (
+        <div className="grid gap-3 md:grid-cols-2">
+          {wentHere.yours.map((y) => (
+            <div key={y.firstName} className="rounded-xl border border-[#D3B574]/50 bg-[#D3B574]/[0.08] p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#D3B574]">{y.firstName} so far</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {y.results.length > 0 ? y.results.map((r) => <Chip key={r} text={r} gold />) : <span className="text-sm text-white/60">No state or national placing on our records yet</span>}
+              </div>
+              <p className="mt-3 text-sm">
+                <span className="text-white/55">GPA </span>
+                <b>{y.gpa != null ? gpa(y.gpa) : "not on the profile"}</b>
+              </p>
+            </div>
+          ))}
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/50">
+              {wentHere.schoolSentence ? `NC ${wentHere.among ?? "wrestlers"} who committed here` : `NC ${wentHere.among ?? "wrestlers"} who went ${wentHere.level.short}`}
+            </p>
+            <p className="mt-2 text-sm leading-6 text-white/85">{wentHere.schoolSentence ?? wentHere.level.sentence}</p>
+            {wentHere.gpa ? (
+              <p className="mt-3 flex items-baseline gap-2 text-sm">
+                <span className="text-2xl font-black">{gpa(wentHere.gpa.average)}</span>
+                <span className="text-white/55">
+                  average GPA, {gpa(wentHere.gpa.low)}–{gpa(wentHere.gpa.high)} ({wentHere.gpa.count}, as reported)
+                </span>
+              </p>
+            ) : null}
+          </div>
+        </div>
       ) : null}
 
+      <div>
+        <Heading text="On the roster now" count={roster.wrestlers.length} />
+        {roster.wrestlers.length === 0 ? (
+          roster.teamLines.map((line) => (
+            <p key={line} className="mt-2 text-sm text-white/60">
+              {line}
+            </p>
+          ))
+        ) : (
+          <>
+            <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {shown.map((w) => {
+                const commit = commits.get(rosterNameKey(w.name))
+                return (
+                  <Card
+                    key={`${w.team}-${w.name}`}
+                    name={w.name}
+                    href={commit ? `/view-profile?id=${commit.athleteId}` : null}
+                    line={[w.class, w.weight ? `${w.weight} lbs` : null, both ? (w.team === "womens" ? "Women's" : "Men's") : null].filter(Boolean).join(" · ")}
+                    place={[w.highSchool, w.hometown].filter(Boolean).join(" · ") || "Hometown not listed"}
+                    results={commit?.results ?? []}
+                  />
+                )
+              })}
+            </ul>
+            {!showAll && roster.wrestlers.length > shown.length ? (
+              <button type="button" onClick={() => setShowAll(true)} className="mt-3 text-sm font-semibold text-[#F5D985] hover:underline">
+                Show all {roster.wrestlers.length}
+              </button>
+            ) : null}
+          </>
+        )}
+      </div>
+
       {arriving.length > 0 ? (
-        <>
-          <p className={`${SUB} mt-4`}>Committed, arriving</p>
-          <ul className="mt-2 space-y-2">
+        <div>
+          <Heading text="Committed, arriving" count={arriving.length} />
+          <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {arriving.map((w) => (
-              <li key={w.athleteId} className="text-sm leading-5">
-                <a href={`/view-profile?id=${w.athleteId}`} className="font-semibold text-white hover:underline">
-                  {w.name}
-                </a>
-                <span className="text-white/50">
-                  {w.classYear ? ` · Class of ${w.classYear}` : ""}
-                  {w.highSchool ? ` · ${w.highSchool}` : ""}
-                </span>
-                <span className="block text-xs text-white/65">
-                  {w.results.length > 0 ? w.results.join(" · ") : "No state or national placing on our records"}
-                </span>
-              </li>
+              <Card key={w.athleteId} name={w.name} href={`/view-profile?id=${w.athleteId}`} line={w.classYear ? `Class of ${w.classYear}` : ""} place={w.highSchool ?? ""} results={w.results} />
             ))}
           </ul>
-        </>
+        </div>
       ) : null}
 
       {notListed.length > 0 ? (
-        <>
-          <p className={`${SUB} mt-4`}>Committed here, not on the roster we read</p>
-          <ul className="mt-2 space-y-2">
+        <div>
+          <Heading text="Committed here, not on the roster we read" count={notListed.length} />
+          <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {notListed.map((w) => (
-              <li key={w.athleteId} className="text-sm leading-5">
-                <a href={`/view-profile?id=${w.athleteId}`} className="font-semibold text-white hover:underline">
-                  {w.name}
-                </a>
-                <span className="text-white/50">
-                  {w.classYear ? ` · Class of ${w.classYear}` : ""}
-                  {w.highSchool ? ` · ${w.highSchool}` : ""}
-                </span>
-                <span className="block text-xs text-white/65">
-                  {w.results.length > 0 ? w.results.join(" · ") : "No state or national placing on our records"}
-                </span>
-              </li>
+              <Card key={w.athleteId} name={w.name} href={`/view-profile?id=${w.athleteId}`} line={w.classYear ? `Class of ${w.classYear}` : ""} place={w.highSchool ?? ""} results={w.results} />
             ))}
           </ul>
-        </>
+        </div>
       ) : null}
 
-      {wentHere?.schoolSentence ? (
-        <p className="mt-3 text-sm leading-5 text-white/80">
-          Of the North Carolina {wentHere.among ?? "wrestlers"} who committed to {schoolName} in the last four classes, {wentHere.schoolSentence}
-        </p>
-      ) : wentHere?.level.sentence ? (
-        <p className="mt-3 text-sm leading-5 text-white/80">
-          Across NC {wentHere.among ?? "wrestlers"} who went {wentHere.level.short}: {wentHere.level.sentence}
-        </p>
-      ) : null}
-
-      {wentHere?.gpa ? (
-        <p className="mt-2 text-sm leading-5 text-white/80">
-          {wentHere.gpa.label}: average GPA {gpa(wentHere.gpa.average)}, from {gpa(wentHere.gpa.low)} to {gpa(wentHere.gpa.high)}{" "}
-          <span className="text-white/45">({wentHere.gpa.count} wrestlers, as reported)</span>
-        </p>
-      ) : null}
-
-      {wentHere && wentHere.yours.length > 0 ? (
-        <ul className="mt-2 space-y-1 rounded-sm bg-white/[0.06] p-2.5">
-          {wentHere.yours.map((y) => (
-            <li key={y.firstName} className="text-sm leading-5 text-white">
-              <span className="font-semibold">{y.firstName}:</span>{" "}
-              {y.results.length > 0 ? y.results.join(" · ") : "no state or national placing on our records yet"}
-              {y.gpa != null ? ` · GPA ${gpa(y.gpa)}` : " · no GPA on the profile"}
-            </li>
-          ))}
-        </ul>
-      ) : null}
-
-      <p className="mt-2 text-xs leading-4 text-white/40">
-        Rosters as each school published them on 12 October 2026. North Carolina wrestlers only: programs also recruit
-        from other states, and a coach weighs what the team needs at each weight.
+      <p className="text-xs leading-4 text-white/40">
+        Rosters as each school published them on 12 October 2026. North Carolina wrestlers only: programs also recruit from other states, and a coach weighs what the team needs at each weight.
       </p>
     </div>
+  )
+}
+
+function Heading({ text, count }: { text: string; count: number }) {
+  return (
+    <p className="flex items-center gap-2 text-sm font-bold text-white">
+      {text}
+      <span className="rounded-full bg-white/10 px-2 py-0.5 text-xs text-white/70">{count}</span>
+    </p>
+  )
+}
+
+/** One result, as a chip. */
+function Chip({ text, gold = false }: { text: string; gold?: boolean }) {
+  return <span className={`rounded-md px-2 py-0.5 text-[11px] font-semibold ${gold ? "bg-[#D3B574]/20 text-[#f0dcae]" : "bg-white/10 text-white/80"}`}>{text}</span>
+}
+
+function Card({ name, href, line, place, results }: { name: string; href: string | null; line: string; place: string; results: string[] }) {
+  const initials = name
+    .split(/\s+/)
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase()
+  return (
+    <li className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+      <div className="flex items-center gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-xs font-black">{initials}</span>
+        <div className="min-w-0">
+          {href ? (
+            <a href={href} className="block truncate font-semibold text-white hover:underline">
+              {name}
+            </a>
+          ) : (
+            <span className="block truncate font-semibold text-white">{name}</span>
+          )}
+          {line ? <span className="block text-xs text-white/55">{line}</span> : null}
+        </div>
+      </div>
+      {place ? <p className="mt-2 truncate text-xs text-white/50">{place}</p> : null}
+      {results.length > 0 ? (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {results.map((r) => (
+            <Chip key={r} text={r} />
+          ))}
+        </div>
+      ) : null}
+    </li>
   )
 }
