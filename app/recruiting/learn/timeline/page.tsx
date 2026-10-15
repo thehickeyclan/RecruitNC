@@ -8,6 +8,7 @@
  * Part of NC United Blue, like the level pages. Locked, it still shows what each year is for.
  */
 import type { Metadata } from "next"
+import { PortalShell } from "@/components/portal/portal-shell"
 import { ChevronDown, Lock } from "lucide-react"
 
 import { LearnDisclaimer } from "@/components/recruiting/learn/learn-disclaimer"
@@ -65,7 +66,7 @@ export default async function TimelinePage({ searchParams }: { searchParams?: Pr
   const anyAge = alwaysOpen(track)
 
   return (
-    <main className="min-h-screen bg-[#0A1628] px-4 py-8 text-white sm:px-6">
+    <PortalShell active="plan">
       <div className="mx-auto max-w-3xl">
         <a href="/my-recruiting#learn" className="text-xs font-semibold text-white/55 hover:text-white">
           ← Recruiting Command Center
@@ -274,6 +275,6 @@ export default async function TimelinePage({ searchParams }: { searchParams?: Pr
 
         <LearnDisclaimer checkedLabel={checkedLabel} />
       </div>
-    </main>
+    </PortalShell>
   )
 }
