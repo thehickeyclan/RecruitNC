@@ -124,11 +124,11 @@ export default async function CommandCenterHome() {
           </ul>
 
           <div className="mt-6 grid gap-6 xl:grid-cols-3">
-            <section id="plan" className="scroll-mt-24 xl:col-span-2" aria-label="Your plan">
+            <section id="plan" className="min-w-0 scroll-mt-24 xl:col-span-2" aria-label="Your plan">
               <WarRoomPlan blue={blue} wrestlers={wrestlers} schools={schools} />
             </section>
 
-            <div className="grid content-start gap-6 md:grid-cols-2 xl:grid-cols-1">
+            <div className="grid min-w-0 content-start gap-6 md:grid-cols-2 xl:grid-cols-1">
               <section className={`${card} p-5`} aria-labelledby="cc-recent">
                 <div className="flex items-center justify-between">
                   <h2 id="cc-recent" className="text-sm font-black uppercase tracking-widest text-[#D3B574]">
