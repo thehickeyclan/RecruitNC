@@ -114,6 +114,10 @@ const CANONICAL: Array<[RegExp, string]> = [
   [/journeymen women/i, "Journeymen Women's World Classic"],
   [/journeymen/i, "Journeymen Fall Classic"],
   // The spring and fall duals are two events months apart; "I-64 Duals" alone said neither.
+  // South Carolina's two championships arrive under several spellings ("SCHSL (SC) State
+  // Championships", "SCHSL AA State Indy").
+  [/\bschsl\b/i, "SCHSL State Championships"],
+  [/\bscisa\b/i, "SCISA State Championships"],
   [/(i-64|interstate 64).*fall/i, "I-64 Fall Duals"],
   [/(i-64|interstate 64).*spring/i, "I-64 Spring Duals"],
   [/i-64|interstate 64/i, "I-64 Duals"],
@@ -188,6 +192,28 @@ export async function loadLastCompeted(
     return out
   }
 
+  /**
+   * Another state's championships (state_tournament_placers), the only result most out-of-state
+   * wrestlers have on file. Without it every South Carolina wrestler showed no weight and no
+   * last event. Dated to February like the NCHSAA's; no NC wrestler is linked to this table.
+   */
+  const otherStates = async (): Promise<Candidate[]> => {
+    const out: Candidate[] = []
+    for (const part of chunk(ids)) {
+      const rows = await allRows((from, to) =>
+        supabase.from("state_tournament_placers").select("athlete_id, season, association, state, weight").in("athlete_id", part).order("id").range(from, to),
+      )
+      for (const r of rows) {
+        const athleteId = String(r.athlete_id ?? "")
+        const year = Number(r.season)
+        if (!athleteId || !Number.isFinite(year)) continue
+        const body = String(r.association ?? r.state ?? "").replace(/\s*\(.*?\)/g, "").trim()
+        out.push({ athleteId, entry: { event: `${body ? `${body} ` : ""}State Championships`, date: `${year}-02-20`, year, weight: normalizeWeightClassLabel(r.weight as string | null) } })
+      }
+    }
+    return out
+  }
+
   /** Every dated bout - the duals live only here. Small chunks: one Fargo entrant is dozens of rows. */
   const bouts = async (): Promise<Candidate[]> => {
     const out: Candidate[] = []
@@ -241,7 +267,7 @@ export async function loadLastCompeted(
    * better than a coach's season entry - so the order below is the tie-break, and it is fixed
    * however the queries finish.
    */
-  const sources = await Promise.all([results(), bouts(), season(), yearly()])
+  const sources = await Promise.all([results(), bouts(), season(), yearly(), otherStates()])
   /** The newest result that records a weight; not always the newest result. */
   const weighed = new Map<string, { date: string; weight: string }>()
   for (const candidates of sources) {
