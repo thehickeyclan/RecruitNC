@@ -4,7 +4,8 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
-import { Star } from "lucide-react"
+import { ArrowRight, BookOpen, Building2, Check, GraduationCap, Medal, Star, Target, Trophy, Users } from "lucide-react"
+import { tocDisplayClass } from "@/components/toc/toc-theme"
 import { BLUE_IMAGE_KEYS, type BlueContent } from "@/lib/blue-content"
 import type { BlueAlumnus } from "@/lib/blue-alumni"
 import { BlueAlumniTable } from "./blue-alumni-table"
@@ -62,33 +63,115 @@ export default function BluePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="container mx-auto max-w-3xl px-4 py-10 md:px-6">
-        <figure className="mb-12">
-          <div className="overflow-hidden rounded-xl border-4 border-[#D3B574]/50 bg-white shadow-lg">
-            <Image
-              src={images.blue_banner_url}
-              alt="NC United Blue"
-              width={1200}
-              height={600}
-              className="h-auto w-full object-contain"
-              unoptimized
-              priority
-            />
-          </div>
-        </figure>
-
-        <div className="mb-10 rounded-xl border-2 border-[#B31B1B] bg-[#B31B1B] px-5 py-4 text-center text-white">
-          <p className="font-semibold">
-            Interested in NC United Blue? Fill out the form below to express interest.
+      {/*
+        * What Blue is, up front (Matt, 15 Oct 2026: "you are underselling it"). The facts below are
+        * the program's own, from further down this page: college coaches running practice, the
+        * state's best room, the national team pathway, and now the Recruiting Command Center.
+        */}
+      <section className="relative overflow-hidden bg-[#060f1f] text-white">
+        <Image src={images.blue_team_photo} alt="" aria-hidden fill className="object-cover opacity-30" unoptimized priority />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#060f1f] via-[#060f1f]/85 to-[#060f1f]/30" aria-hidden />
+        <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-14 sm:pt-20">
+          <p className="text-xs font-bold uppercase tracking-[0.3em]" style={{ color: GOLD }}>NC United Blue</p>
+          <h1 className={`mt-4 text-6xl leading-[0.9] sm:text-8xl ${tocDisplayClass()}`}>
+            The state&apos;s best.
+            <span className="block" style={{ color: GOLD }}>One room.</span>
+          </h1>
+          <p className="mt-5 max-w-2xl text-base text-white/80 sm:text-lg">
+            Practices run by college coaches. North Carolina&apos;s most elite training partners. The national team pathway. And the Recruiting Command Center, your recruiting assistant from 8th grade through signing day.
           </p>
-          <Link
-            href="#state-qualifier"
-            className="mt-2 inline-block text-sm font-medium text-white hover:underline"
-          >
-            Go to form →
-          </Link>
+          <div className="mt-6 flex items-baseline gap-2">
+            <span className="text-5xl font-black">$55</span>
+            <span className="text-lg text-white/60">/ month</span>
+          </div>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="#state-qualifier" className="rounded-xl px-7 py-3.5 text-base font-black text-[#0A1628] hover:brightness-110" style={{ backgroundColor: GOLD }}>
+              Express interest →
+            </Link>
+            <Link href="/plans" className="rounded-xl border border-white/25 px-7 py-3.5 text-base font-bold hover:bg-white/10">
+              Compare all plans
+            </Link>
+          </div>
+          <div className="mt-12 grid grid-cols-2 border-y border-white/10 py-6 lg:grid-cols-4">
+            {[
+              ["40+", "State titles on the roster"],
+              ["70+", "State qualifiers on the roster"],
+              ["D1–JUCO", "Commits at every level"],
+              ["7+", "College programs coaching practice"],
+            ].map(([n, label], i) => (
+              <div key={label} className={`px-4 py-2 text-center ${i > 0 ? "lg:border-l lg:border-white/10" : ""}`}>
+                <p className={`text-5xl ${tocDisplayClass()}`} style={{ color: GOLD }}>{n}</p>
+                <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-white/60">{label}</p>
+              </div>
+            ))}
+          </div>
         </div>
+      </section>
 
+      {/* What Blue gives a wrestler */}
+      <section className="bg-[#0b1a33] text-white">
+        <div className="mx-auto max-w-6xl px-4 py-14">
+          <h2 className={`text-4xl sm:text-5xl ${tocDisplayClass()}`}>What you get</h2>
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { icon: GraduationCap, title: "College coaches run practice", text: "Coaches from UNC, NC State, Mount Olive, Roanoke, Greensboro, Lynchburg, Belmont Abbey and more run Blue practices and tell athletes what their programs look for." },
+              { icon: Users, title: "The state's best partners", text: "A room of state champions and placers, alongside current NCAA wrestlers. Elite wrestlers grow faster training with elite wrestlers." },
+              { icon: Trophy, title: "National team pathway", text: "Blue is the path to wrestling for NC United at NHSCA and Scholastic Duals: the best wrestler at each weight, plus an alternate who competes." },
+              { icon: Target, title: "Recruiting Command Center", text: "Your recruiting assistant from 8th grade through signing: the plan, your college list, full costs, rankings, who's viewing your profile, and every coach conversation.", href: "/command-center" },
+              { icon: Building2, title: "Train in college rooms", text: "UNC is Blue's Sunday home, with more college rooms through the year. Twice-a-month sessions concentrate the best partners." },
+              { icon: BookOpen, title: "Drop-ins and family education", text: "A free drop-in every month at Darkhorse or RAW, and virtual sessions for families on strength, nutrition and recruiting." },
+            ].map(({ icon: Icon, title, text, href }) => {
+              const body = (
+                <>
+                  <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ backgroundColor: "rgba(211,181,116,0.15)" }}>
+                    <Icon className="h-5 w-5" style={{ color: GOLD }} aria-hidden />
+                  </span>
+                  <p className="mt-4 text-lg font-bold">{title}</p>
+                  <p className="mt-1 text-sm leading-6 text-white/65">{text}</p>
+                  {href ? <span className="mt-3 inline-flex items-center gap-1 text-sm font-bold" style={{ color: GOLD }}>See what it does <ArrowRight className="h-4 w-4" aria-hidden /></span> : null}
+                </>
+              )
+              return href ? (
+                <Link key={title} href={href} className="rounded-2xl border border-white/10 bg-[#060f1f]/60 p-6 transition hover:border-[#D3B574]/60">{body}</Link>
+              ) : (
+                <div key={title} className="rounded-2xl border border-white/10 bg-[#060f1f]/60 p-6">{body}</div>
+              )
+            })}
+          </div>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
+            <div className="flex gap-4 rounded-2xl border border-[#D3B574]/40 bg-[#D3B574]/[0.07] p-6">
+              <Medal className="h-8 w-8 shrink-0" style={{ color: GOLD }} aria-hidden />
+              <div>
+                <p className="text-lg font-bold">Led by an NCAA champion</p>
+                <p className="mt-1 text-sm leading-6 text-white/70">Co-founder Mike Macchiavello is an NCAA Division I national champion at NC State and a former U.S. National Team member. Colton Palmer is a former NC State co-captain and NCAA qualifier.</p>
+              </div>
+            </div>
+            <figure className="flex gap-4 rounded-2xl border border-white/10 bg-[#060f1f]/60 p-6">
+              <Star className="h-8 w-8 shrink-0 fill-current" style={{ color: GOLD }} aria-hidden />
+              <div>
+                <blockquote className="text-lg font-semibold italic leading-7">&ldquo;NC United is doing an incredible job of bringing together the best talent in North Carolina.&rdquo;</blockquote>
+                <figcaption className="mt-2 text-sm text-white/60">Tony Ramos, Associate Head Coach, UNC Wrestling</figcaption>
+              </div>
+            </figure>
+          </div>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-[1fr_auto] md:items-center rounded-2xl border border-white/10 bg-[#060f1f]/60 p-6">
+            <div>
+              <p className="text-lg font-bold">Not in Blue? There&apos;s a plan for every family.</p>
+              <p className="mt-1 text-sm text-white/65">Rankings ($9.99) or the Recruiting Command Center ($24.99) on their own. Blue includes both.</p>
+              <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-white/75">
+                {["Practices run by college coaches", "National team pathway", "Recruiting Command Center", "Rankings and profile views"].map((l) => (
+                  <li key={l} className="flex items-center gap-1.5"><Check className="h-4 w-4" style={{ color: GOLD }} aria-hidden /> {l}</li>
+                ))}
+              </ul>
+            </div>
+            <Link href="/plans" className="rounded-xl bg-white px-6 py-3 text-center text-sm font-black text-[#0A1628] hover:bg-white/90">Compare plans →</Link>
+          </div>
+        </div>
+      </section>
+
+      <div className="container mx-auto max-w-3xl px-4 py-10 md:px-6">
         <FormerMemberRejoin />
         <article className="space-y-16">
           <section id="what-is">
@@ -132,11 +215,11 @@ export default function BluePage() {
                     <li>Full access to the NC prospect rankings.</li>
                     <li>Visibility into which college programs are viewing your profile.</li>
                     <li>
-                      Our recruiting portal, starting with the{" "}
-                      <Link href="/recruiting/college-map" className="font-semibold underline">
-                        college program map
+                      The{" "}
+                      <Link href="/command-center" className="font-semibold underline">
+                        Recruiting Command Center
                       </Link>
-                      : every college wrestling program in the country, its coaches, and which ones are on RecruitNC.
+                      : your recruiting assistant from 8th grade through signing, with the plan, your college list, full costs, the college map and every coach conversation.
                     </li>
                   </ul>
                 </CardContent>
@@ -147,24 +230,6 @@ export default function BluePage() {
               <p className="text-sm leading-relaxed text-[#003366]/90">
                 Blue is the path to competing with NC United at events like NHSCA and Scholastic Duals. Spots are not guaranteed: we commit to bringing the best wrestler at each weight, plus an alternate who will also compete.
               </p>
-            </div>
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-              <div className="rounded-xl border-2 border-[#003366] bg-[#003366] p-5 text-white">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#D3B574]">NC United Blue</p>
-                <p className="mt-1 text-2xl font-bold">$55<span className="text-base font-medium">/month</span></p>
-                <p className="mt-2 text-sm text-white/85">Everything above: practices, club drop-ins, family meetings, recruiting support, the national-event pathway, plus rankings, profile views, and the recruiting portal.</p>
-                <Link href="#state-qualifier" className="mt-4 inline-flex rounded-md bg-[#D3B574] px-4 py-2 text-sm font-semibold text-[#003366] hover:bg-white">
-                  Express interest →
-                </Link>
-              </div>
-              <div className="rounded-xl border-2 border-[#D3B574]/60 bg-white p-5">
-                <p className="text-xs font-semibold uppercase tracking-wider text-[#003366]/70">Recruiting only</p>
-                <p className="mt-1 text-2xl font-bold text-[#003366]">$9.99<span className="text-base font-medium">/month</span></p>
-                <p className="mt-2 text-sm text-[#003366]/85">NC prospect rankings and which college programs are viewing your profile. No practices, team events, or recruiting portal.</p>
-                <Link href="/rankings?plan=subscription" className="mt-4 inline-flex rounded-md bg-[#003366] px-4 py-2 text-sm font-semibold text-white hover:bg-[#B31B1B]">
-                  Subscribe →
-                </Link>
-              </div>
             </div>
           </section>
 
