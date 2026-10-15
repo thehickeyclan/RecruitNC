@@ -9,6 +9,7 @@ import { classifyViewer } from "@/lib/viewer-role"
 import { RecruitingShell } from "@/components/recruiting/recruiting-shell"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
+import { FamilyProfileBand } from "@/components/family-profile-band"
 import { ConditionalAuthGuard } from "@/components/conditional-auth-guard"
 import { AIChatWidget } from "@/components/ai-chat-widget-recruitnc"
 
@@ -30,6 +31,20 @@ const COACH_PORTAL_PATHS = ["/coach-home", "/my-recruits", "/prospects", "/athle
  * Pages with no Data Dawg launcher whoever is looking: the inbox (it covers the send button) and
  * the pages that exist only for coaches.
  */
+/**
+ * Pages that carry no "your profile" band (components/family-profile-band.tsx): the profile and
+ * the claim flow themselves, the family portal, sign-in, staff pages, and pages that already open
+ * with their own claim prompt (the homepage, the rankings sales page, the athlete directory).
+ */
+const NO_FAMILY_BAND_PATHS = ["/profile", "/view-profile", "/my-recruiting", "/recruiting", "/auth", "/admin", "/create-profile", "/claim", "/checkout", "/inbox", "/unsubscribe", "/dev", "/prospects/all", "/submit-profile", "/profile-setup"]
+function familyBandAt(path: string): "top" | "foot" | null {
+  if (path === "/" || path === "/rankings") return null
+  if (/^\/athletes\/[^/]+/.test(path)) return null
+  if (NO_FAMILY_BAND_PATHS.some((p) => path === p || path.startsWith(`${p}/`))) return null
+  // On the rankings it leads the page: that is where a family is looking for their wrestler.
+  return path === "/public-rankings" || path.startsWith("/public-rankings/") ? "top" : "foot"
+}
+
 const NO_CHAT_PATHS = [
   "/inbox",
   "/coach-home",
@@ -133,6 +148,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   const isCoach = classifyViewer(profile).isCollegeCoach
   const noChatPage = NO_CHAT_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
   const chat = noChatPage || isCoach || authLoading ? null : <AIChatWidget />
+  const familyBand = isCoach ? null : familyBandAt(path)
   const isSpartanCampaign = path === "/spartan" || path.startsWith("/spartan/")
   if (isSpartanCampaign) {
     return (
@@ -157,9 +173,11 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   return (
     <div id="app-content" data-shell="community" className="group/shell relative flex min-h-screen flex-col">
       <Navbar />
+      {familyBand === "top" ? <FamilyProfileBand /> : null}
       <main className="flex-1">
         <ConditionalAuthGuard>{children}</ConditionalAuthGuard>
       </main>
+      {familyBand === "foot" ? <FamilyProfileBand /> : null}
       <Footer />
       {chat}
     </div>
