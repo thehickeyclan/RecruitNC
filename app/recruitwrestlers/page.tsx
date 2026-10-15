@@ -282,8 +282,63 @@ export default async function RecruitWrestlersHome() {
           </div>
         </section>
 
+        {/* The product, as it looks: real screens of public pages, no wrestler's data on them. */}
+        <section className="py-20" aria-label="Inside the Command Center">
+          <div className="mx-auto max-w-6xl space-y-16 px-4 sm:px-6">
+            <div>
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div className="max-w-2xl">
+                  <Eyebrow>College map</Eyebrow>
+                  <h3 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl">Every college wrestling program on one map.</h3>
+                  <p className="mt-2 text-white/65">D1, D2, D3, NAIA and junior college, men&apos;s and women&apos;s. Most wrestlers who keep competing do it outside D1.</p>
+                </div>
+                <a href={`${APP}/recruiting/college-map`} className={`inline-flex items-center gap-1 text-sm font-bold ${GOLD}`}>
+                  Open the map <ArrowRight className="h-4 w-4" />
+                </a>
+              </div>
+              <a href={`${APP}/recruiting/college-map`} className="mt-6 block overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/40">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/recruitwrestlers/college-map.jpg"
+                  alt="Map of every college wrestling program in the United States, colored by division"
+                  width={1600}
+                  height={818}
+                  loading="lazy"
+                  className="h-auto w-full"
+                />
+              </a>
+            </div>
+
+            <div className="grid items-center gap-8 lg:grid-cols-[1fr_1.3fr]">
+              <div>
+                <Eyebrow>College pages</Eyebrow>
+                <h3 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl">Know what a college really costs.</h3>
+                <p className="mt-2 text-white/65">The full yearly cost, what families at each income actually paid, admissions, roster size and team ranking. Not just tuition.</p>
+                <ul className="mt-5 space-y-2 text-sm text-white/80">
+                  {["Full cost of a year, in state and out", "What families paid, by income", "Test scores of admitted students", "Team ranking and roster size"].map((t) => (
+                    <li key={t} className="flex items-center gap-2">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#D3B574]" aria-hidden /> {t}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/40">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/recruitwrestlers/college-page.jpg"
+                  alt="A college page: program snapshot, the full cost of a year and what families paid by income"
+                  width={1200}
+                  height={1119}
+                  loading="lazy"
+                  className="h-auto w-full"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Coaches */}
-        <section id="coaches" className="py-20">
+        <section id="coaches" className="border-y border-white/10 bg-[#0c1a2c] py-20">
           <div className="mx-auto max-w-6xl px-4 sm:px-6">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="max-w-2xl">
