@@ -33,6 +33,7 @@ export function ConditionalAuthGuard({
   const publicRoutePrefixes = [
     // Local-only "view as this coach" preview; the page itself does not exist in production.
     "/dev/coach-preview",
+    "/dev/profile-preview",
     /*
      * The unsubscribe link in every email. The page was written to need no sign-in - most
      * recipients have no account - but it was never listed here, so the guard put a sign-in form
