@@ -236,263 +236,304 @@ export function RankingsSalesClient({
 
   if (!loadingAthletes && locked) {
     /*
-     * A pricing page, not a leaflet.
+     * The subscriptions page (rebuilt 15 Oct 2026: "it's horrible").
      *
-     * The first version explained the model in four paragraphs on a pale background and put
-     * the price underneath as an afterthought. Nobody reads a page to be convinced a ranking
-     * is rigorous; they look for what it costs, what they get, and whether they already have
-     * it. So: dark, three plans on one row, the claims cut to a line each, and the product
-     * shown rather than described.
+     * It sells the one thing no recruiting service has - college coaches on the platform, counted -
+     * then three plans side by side: Free (claim the profile), Rankings ($9.99) and Blue (everything,
+     * including the Recruiting Command Center). Cards, big numbers, short lines; the method and the
+     * fine print sit behind a tap. Every number is live; a tile with nothing to show is left out.
      */
+    const gold = "#D3B574"
+    const stats = platform
+      ? ([
+          [platform.coaches, "College coaches on RecruitNC"],
+          [platform.programs, "College programs"],
+          [platform.profilesViewed, "NC wrestlers viewed by coaches"],
+          [platform.coachViews, "Profile views by coaches"],
+        ] as Array<[number, string]>).filter(([n]) => Number(n) > 0)
+      : []
+    /** Free, Rankings, Command Center, Blue (Matt, 15 Oct 2026). */
+    const PLAN_ROWS: Array<[string, boolean, boolean, boolean, boolean]> = [
+      ["Your profile, with every result already on it", true, true, true, true],
+      ["Academics and contact info, seen only by verified college coaches", true, true, true, true],
+      ["How many college coaches viewed your profile", true, true, true, true],
+      ["Which college programs viewed your profile", false, true, true, true],
+      [`Class rankings${WOMENS_RANGE ? ", men's and women's" : ""} and the Top 75`, false, true, true, true],
+      ["Head-to-head: who beat whom, and when", false, true, true, true],
+      ["Recruiting plan, college list, compare and full costs", false, false, true, true],
+      ["Messages from college coaches, with the college beside each", false, false, true, true],
+      ["Learn: rules, timeline and costs, men's and women's", false, false, true, true],
+      ["NC United practices", false, false, false, true],
+      ["A drop-in each month at Darkhorse or RAW", false, false, false, true],
+    ]
+    const FAQ: Array<[string, string]> = [
+      ["Can I cancel?", "Yes, anytime, from your account. The yearly plan runs to the end of the year you paid for."],
+      ["Who sees my wrestler's contact information?", "Only college coaches we have verified. Never the public, and never other families."],
+      ["What's the difference between the plans?", "Rankings is the boards and who is viewing your profile. Command Center adds the full recruiting portal: your plan, college list, costs and messages from coaches. Blue is NC United's program: everything in Command Center plus practices and a monthly drop-in at Darkhorse or RAW."],
+      ["Can I share the rankings?", "Share your own wrestler's ranking anywhere. Please don't repost the full boards or screenshots of them; that is what keeps them going."],
+    ]
+    const check = (on: boolean) =>
+      on ? <Check className="mx-auto h-5 w-5" style={{ color: gold }} aria-label="Included" /> : <span className="text-white/25" aria-label="Not included">—</span>
+
     return (
-      <div className="profile-surface min-h-screen bg-background">
-        <div className="mx-auto max-w-5xl px-4 py-16 sm:py-20">
-          <div className="text-center">
-            <Badge className="mb-4 bg-primary text-primary-foreground hover:bg-primary">
-              NC United · RecruitNC
-            </Badge>
-            <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-              College Prospect Rankings
-            </h1>
-            <p className="mx-auto mt-4 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              Men&apos;s Classes of {CLASS_RANGE}
-              {WOMENS_RANGE ? <>, Women&apos;s Classes of {WOMENS_RANGE}</> : null}, and the Top 75 College
-              Ready Prospects{topFrom ? ` from ${topFrom}` : ""}.
+      <div className="min-h-screen bg-[#060f1f] text-white">
+        {/* Hero */}
+        <section className="relative overflow-hidden border-b border-white/10">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/hero-banner-nchsaa-2026-arena.png" alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-30" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#060f1f]/60 via-[#060f1f]/80 to-[#060f1f]" aria-hidden />
+          <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-16 text-center sm:pt-24">
+            <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: gold }}>
+              RecruitNC · College recruiting on verified results
             </p>
-
-            {/*
-              * The free step first (Matt, 14 October 2026). Most people sent here from a post have
-              * no subscription and are not about to buy one; every one of them can claim a profile
-              * that already holds their results, and that is what puts them in front of coaches.
-              */}
-            <Link
-              href="/create-profile"
-              className="mx-auto mt-8 inline-flex items-center gap-3 rounded-full bg-primary px-8 py-4 text-lg font-bold text-primary-foreground shadow-lg transition hover:opacity-90"
-            >
-              Claim your profile — free
-              <span aria-hidden>→</span>
-            </Link>
-            <p className="mx-auto mt-3 max-w-xl text-sm text-muted-foreground">
-              Your results are already on it. Add your academics and contact info. Only verified
-              college coaches can see them.
+            <h1 className="mx-auto mt-4 max-w-3xl text-4xl font-black leading-tight tracking-tight sm:text-6xl">College coaches are already looking.</h1>
+            <p className="mx-auto mt-4 max-w-2xl text-base text-white/70 sm:text-lg">
+              {collegeViews && collegeViews.profilesViewed > 0
+                ? `${collegeViews.profilesViewed.toLocaleString()} NC wrestlers were viewed by college coaches in the last 30 days. See who is looking at yours.`
+                : "College coaches recruit on RecruitNC. See who is looking at your wrestler."}
             </p>
-          </div>
+            <div className="mt-8 flex flex-wrap justify-center gap-3">
+              <a href="#plans" className="rounded-xl px-7 py-3.5 text-base font-bold text-[#0A1628] shadow-lg transition hover:brightness-110" style={{ backgroundColor: gold }}>
+                See plans
+              </a>
+              <Link href="/create-profile" className="rounded-xl border border-white/25 px-7 py-3.5 text-base font-bold text-white transition hover:bg-white/10">
+                Claim your profile, free
+              </Link>
+            </div>
 
-          {/* Counted, not claimed. Hidden tile by tile when a number is not there to show. */}
-          {platform ? (
-            <div className="mx-auto mt-10 grid max-w-4xl grid-cols-2 gap-3 lg:grid-cols-4">
-              {[
-                [platform.coaches, "College coaches on RecruitNC"],
-                [platform.programs, "College programs"],
-                [platform.coachViews, "Profile views by college coaches"],
-                [platform.profilesViewed, "NC wrestlers viewed by coaches"],
-              ]
-                .filter(([n]) => Number(n) > 0)
-                .map(([n, label]) => (
-                  <div key={String(label)} className="rounded-xl border-2 border-primary/40 bg-primary/10 p-4 text-center">
-                    <p className="text-3xl font-black text-primary sm:text-4xl">{Number(n).toLocaleString()}</p>
-                    <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{String(label)}</p>
+            {stats.length ? (
+              <div className="mx-auto mt-12 grid max-w-4xl grid-cols-2 gap-3 lg:grid-cols-4">
+                {stats.map(([n, label]) => (
+                  <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur">
+                    <p className="text-4xl font-black tracking-tight" style={{ color: gold }}>
+                      {Number(n).toLocaleString()}
+                    </p>
+                    <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-white/55">{label}</p>
                   </div>
                 ))}
-            </div>
-          ) : null}
+              </div>
+            ) : null}
+          </div>
+        </section>
 
-          {/* The headline a parent buys on: real, counted, recent. Hidden if there is nothing to say. */}
-          {collegeViews && collegeViews.profilesViewed > 0 ? (
-            <p className="mx-auto mt-4 max-w-2xl text-center text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">
-                {collegeViews.profilesViewed.toLocaleString()} NC wrestler profiles viewed by college coaches in the
-                last 30 days.
-              </span>{" "}
-              Subscribe and see which programs are viewing yours.
-            </p>
-          ) : null}
-
-          {checkoutReturned === "canceled" && (
-            <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-border bg-card p-4 text-center text-sm text-muted-foreground">
+        <div className="mx-auto max-w-6xl px-4 py-14">
+          {checkoutReturned === "canceled" ? (
+            <div className="mx-auto mb-8 max-w-2xl rounded-xl border border-white/15 bg-white/[0.04] p-4 text-center text-sm text-white/70">
               Checkout was canceled. You were not charged and can choose a plan whenever you are ready.
             </div>
-          )}
-          {checkoutReturned === "purchased" && (
-            <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-primary/40 bg-primary/10 p-4 text-center text-sm text-foreground">
-              Payment was received, but access is still activating. Refresh in a moment; if it remains locked, contact support.
+          ) : null}
+          {checkoutReturned === "purchased" ? (
+            <div className="mx-auto mb-8 max-w-2xl rounded-xl border border-[#D3B574]/50 bg-[#D3B574]/10 p-4 text-center text-sm">
+              Payment received. Access is activating; refresh in a moment, and if it stays locked, contact support.
             </div>
-          )}
+          ) : null}
 
-          <div className="mx-auto mt-10 grid max-w-4xl gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {/* What you get, shown */}
+          <div className="grid gap-4 md:grid-cols-3">
             {[
-              ["Profile activity", "Which college programs are viewing you"],
-              [WOMENS_RANGE ? "Men's & Women's" : CLASS_RANGE, "Frequently updated class rankings"],
-              ["Top 75", topFrom ? `College Ready Prospects from ${topFrom}` : "College Ready Prospects"],
-              ["Head-to-head", "Who beat whom, and when"],
-            ].map((claim) => (
-              <div key={claim[0]} className="rounded-xl border border-border bg-card p-4 text-left">
-                <p className="text-xl font-semibold text-primary">{claim[0]}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{claim[1]}</p>
+              { icon: Users, title: "Who's looking", text: "The college programs viewing your wrestler's profile, and when." },
+              { icon: Trophy, title: "The rankings", text: `Class boards${WOMENS_RANGE ? " for men and women" : ""} and the Top 75, built from results on the mat.` },
+              { icon: Target, title: "The Command Center", text: "Plan, track colleges, compare full costs and hear from coaches." },
+            ].map(({ icon: Icon, title, text }) => (
+              <div key={title} className="rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-6">
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ backgroundColor: "rgba(211,181,116,0.15)" }}>
+                  <Icon className="h-5 w-5" style={{ color: gold }} aria-hidden />
+                </span>
+                <p className="mt-4 text-lg font-bold">{title}</p>
+                <p className="mt-1 text-sm leading-6 text-white/60">{text}</p>
               </div>
             ))}
           </div>
 
-          {/*
-            * How the order is arrived at, before the price.
-            *
-            * The page said what you get and what it costs and never what it rests on, which is
-            * the first question a coach or a parent asks and the only one that decides whether
-            * the rest is worth anything. Six lines, because the detail belongs in the product.
-            */}
-          <div className="mx-auto mt-10 max-w-4xl rounded-2xl border border-border bg-card p-6 text-left">
-            <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              How we rank
-            </p>
-            <p className="mt-2 text-lg text-foreground">
-              Big wins matter. Strength of schedule matters. Competing against the best matters.
-            </p>
-            <div className="mt-5 grid gap-8 md:grid-cols-2">
-              <div>
-                <p className="mb-3 text-sm font-bold uppercase tracking-wide text-primary">Men&apos;s rankings</p>
-                <div className="grid gap-y-2 text-sm text-muted-foreground">
-                  {[
-                    "National results, individual and dual competition",
-                    "Every major tournament, in state and out",
-                    "Strength of competition, and quality wins",
-                    "Head-to-head results between ranked wrestlers",
-                    "Every match on record, not only the podium finishes",
-                    "How consistently a wrestler seeks out the best",
-                  ].map((line) => (
-                    <div key={line} className="flex items-start gap-2">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      <span>{line}</span>
-                    </div>
+          {/* Plans */}
+          <section id="plans" className="scroll-mt-20 pt-16">
+            <h2 className="text-center text-3xl font-black tracking-tight sm:text-4xl">Choose your plan</h2>
+            <p className="mt-2 text-center text-sm text-white/55">Cancel anytime.</p>
+            <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+              {/* Free */}
+              <div className="flex flex-col rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-6">
+                <p className="text-sm font-bold uppercase tracking-widest text-white/55">Free</p>
+                <p className="mt-3 text-5xl font-black">$0</p>
+                <p className="mt-1 text-sm text-white/50">Your profile, in front of coaches</p>
+                <ul className="mt-6 flex-1 space-y-2.5 text-sm text-white/80">
+                  {["Every result already on it", "Academics and contact, coaches only", "How many coaches viewed it"].map((l) => (
+                    <li key={l} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: gold }} aria-hidden /> {l}</li>
                   ))}
-                </div>
-              </div>
-              {/*
-                * The women's boards reward something different, and say so (Matt, 14 October 2026):
-                * women wrestle freestyle in college, so freestyle comes first.
-                */}
-              <div>
-                <p className="mb-3 text-sm font-bold uppercase tracking-wide text-primary">Women&apos;s rankings</p>
-                <div className="grid gap-y-2 text-sm text-muted-foreground">
-                  {[
-                    "Built on freestyle — the style women wrestle in college",
-                    "Fargo, Women's Nationals, U.S. Open, Journeymen and national duals first",
-                    "Wins over nationally ranked opponents count most",
-                    "Freestyle head-to-head between NC girls",
-                    "Folkstyle state results as supporting evidence",
-                    "The last 12 months, not a career",
-                  ].map((line) => (
-                    <div key={line} className="flex items-start gap-2">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                      <span>{line}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-            <p className="mt-5 text-sm leading-relaxed text-muted-foreground">
-              Every place is reasoned from results on the mat — not reputation, and not a poll.
-            </p>
-          </div>
-
-          <div className="mx-auto mt-10 grid max-w-3xl gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-border bg-card p-6">
-              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Blue families</p>
-              <p className="mt-3 text-4xl font-semibold">Included</p>
-              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                Blue athletes and parents get full rankings access, profile views, and the recruiting portal (coming soon) with their Blue membership.
-              </p>
-              <Button asChild variant="outline" className="mt-6 w-full border-border bg-transparent text-foreground hover:bg-accent">
-                <Link href="/blue">Learn about Blue</Link>
-              </Button>
-              {signedInWithoutAccess ? null : (
-                <Link href="/auth/signin?returnTo=/rankings" className="mt-3 block text-center text-sm text-primary underline">
-                  Blue family sign in
+                </ul>
+                <Link href="/create-profile" className="mt-6 block rounded-xl border border-white/25 px-4 py-3 text-center text-sm font-bold hover:bg-white/10">
+                  Claim your profile
                 </Link>
-              )}
+              </div>
+
+              {/* Rankings */}
+              <div className="relative flex flex-col rounded-2xl border-2 bg-[#0d1d36] p-6 shadow-2xl" style={{ borderColor: gold }}>
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wider text-[#0A1628]" style={{ backgroundColor: gold }}>
+                  Most popular
+                </span>
+                <p className="text-sm font-bold uppercase tracking-widest" style={{ color: gold }}>Rankings</p>
+                <p className="mt-3 text-5xl font-black">
+                  {formatPrice(SCOUTING_REPORT_PRICES.subscription)}
+                  <span className="text-base font-semibold text-white/50"> /month</span>
+                </p>
+                <p className="mt-1 text-sm text-white/50">
+                  or {formatPrice(SCOUTING_REPORT_PRICES.subscription_annual)} a year, save {formatPrice(annualSavingCents())}
+                </p>
+                <ul className="mt-6 flex-1 space-y-2.5 text-sm text-white/80">
+                  {["Everything in Free", "Which programs viewed your profile", `Class rankings${WOMENS_RANGE ? ", men's and women's" : ""}`, "Top 75 College Ready Prospects", "Head-to-head results"].map((l) => (
+                    <li key={l} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: gold }} aria-hidden /> {l}</li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  disabled={checkingOut !== null}
+                  onClick={() => { void startCheckout("subscription") }}
+                  className="mt-6 rounded-xl px-4 py-3 text-sm font-black text-[#0A1628] transition hover:brightness-110 disabled:opacity-60"
+                  style={{ backgroundColor: gold }}
+                >
+                  {checkingOut === "subscription" ? "Starting…" : "Subscribe monthly"}
+                </button>
+                <button
+                  type="button"
+                  disabled={checkingOut !== null}
+                  onClick={() => { void startCheckout("subscription_annual") }}
+                  className="mt-2 rounded-xl border border-white/20 px-4 py-2.5 text-sm font-bold hover:bg-white/10 disabled:opacity-60"
+                >
+                  {checkingOut === "subscription_annual" ? "Starting…" : `Pay yearly, ${formatPrice(SCOUTING_REPORT_PRICES.subscription_annual)}`}
+                </button>
+              </div>
+
+              {/* Command Center: on sale once its checkout exists */}
+              <div className="flex flex-col rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-6">
+                <p className="text-sm font-bold uppercase tracking-widest text-emerald-300">Command Center</p>
+                <p className="mt-3 text-3xl font-black">Coming soon</p>
+                <p className="mt-1 text-sm text-white/50">The full recruiting portal</p>
+                <ul className="mt-6 flex-1 space-y-2.5 text-sm text-white/80">
+                  {["Everything in Rankings", "Your recruiting plan and roadmap", "College list, compare and full costs", "Messages from college coaches", "The Learn library"].map((l) => (
+                    <li key={l} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden /> {l}</li>
+                  ))}
+                </ul>
+                <p className="mt-6 rounded-xl border border-white/15 px-4 py-3 text-center text-sm font-semibold text-white/60">Included in Blue today</p>
+              </div>
+
+              {/* Blue */}
+              <div className="flex flex-col rounded-2xl border border-white/10 bg-gradient-to-b from-[#13294B] to-[#0d1d36] p-6">
+                <p className="text-sm font-bold uppercase tracking-widest text-sky-300">NC United Blue</p>
+                <p className="mt-3 text-5xl font-black">
+                  $55<span className="text-base font-semibold text-white/50"> /month</span>
+                </p>
+                <p className="mt-1 text-sm text-white/50">Train, compete and get recruited</p>
+                <ul className="mt-6 flex-1 space-y-2.5 text-sm text-white/80">
+                  {["Everything in Command Center", "NC United practices", "A drop-in each month at Darkhorse or RAW"].map((l) => (
+                    <li key={l} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-sky-300" aria-hidden /> {l}</li>
+                  ))}
+                </ul>
+                <Link href="/blue" className="mt-6 block rounded-xl bg-white px-4 py-3 text-center text-sm font-black text-[#0A1628] hover:bg-white/90">
+                  Learn about Blue
+                </Link>
+                {signedInWithoutAccess ? null : (
+                  <Link href="/auth/signin?returnTo=/rankings" className="mt-2 block text-center text-sm text-white/60 underline hover:text-white">
+                    Blue family? Sign in
+                  </Link>
+                )}
+              </div>
             </div>
+            {checkoutError ? <p className="mt-4 text-center text-sm text-red-300">{checkoutError}</p> : null}
+          </section>
 
-            <div className="relative rounded-2xl border-2 border-primary bg-card p-6 shadow-lg">
-              <span className="absolute -top-3 left-6 rounded-full bg-primary px-3 py-0.5 text-xs font-bold text-primary-foreground">
-                Open to everyone
-              </span>
-              <p className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Full access</p>
-              <p className="mt-3 text-4xl font-semibold">{formatPrice(SCOUTING_REPORT_PRICES.subscription)}</p>
-              <p className="mt-1 text-sm text-muted-foreground">per month</p>
-              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                All class rankings and the Top 75 College Ready Prospects board. Full profile
-                management, and see which college programs are viewing your profile. Cancel
-                anytime.
-              </p>
-              <Button
-                disabled={checkingOut !== null}
-                onClick={() => { void startCheckout("subscription") }}
-                className="mt-6 w-full bg-secondary text-secondary-foreground hover:bg-accent"
-              >
-                {checkingOut === "subscription" ? "Starting…" : "Subscribe"}
-              </Button>
-              {/* The annual sits under the monthly rather than as a fourth column: it is the
-                  same tier, paid differently, and a column of its own implied otherwise. */}
-              <button
-                type="button"
-                disabled={checkingOut !== null}
-                onClick={() => { void startCheckout("subscription_annual") }}
-                className="mt-3 w-full text-sm text-primary underline disabled:opacity-50"
-              >
-                {checkingOut === "subscription_annual"
-                  ? "Starting…"
-                  : `or ${formatPrice(SCOUTING_REPORT_PRICES.subscription_annual)} a year — save ${formatPrice(annualSavingCents())}`}
-              </button>
+          {/* Compare plans */}
+          <section className="pt-16">
+            <h2 className="text-center text-2xl font-black tracking-tight">Compare plans</h2>
+            <div className="mt-6 overflow-x-auto rounded-2xl border border-white/10 bg-[#0d1d36]/80">
+              <table className="w-full min-w-[680px] text-sm">
+                <thead>
+                  <tr className="border-b border-white/10 text-xs font-bold uppercase tracking-wider text-white/55">
+                    <th className="p-4 text-left font-bold" />
+                    <th className="p-4 text-center">Free</th>
+                    <th className="p-4 text-center" style={{ color: gold }}>Rankings</th>
+                    <th className="p-4 text-center text-emerald-300">Command Center</th>
+                    <th className="p-4 text-center text-sky-300">Blue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {PLAN_ROWS.map(([label, free, rank, cc, blue]) => (
+                    <tr key={label} className="border-t border-white/5">
+                      <td className="p-4 text-white/80">{label}</td>
+                      <td className="p-4 text-center">{check(free)}</td>
+                      <td className="p-4 text-center">{check(rank)}</td>
+                      <td className="p-4 text-center">{check(cc)}</td>
+                      <td className="p-4 text-center">{check(blue)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-          </div>
+          </section>
 
-          {checkoutError && (
-            <p className="mt-4 text-center text-sm text-destructive">{checkoutError}</p>
-          )}
+          {/* How we rank, behind a tap */}
+          <section className="grid gap-4 pt-16 md:grid-cols-2">
+            {[
+              { title: "Men's rankings", lines: ["National results, individual and duals", "Every major tournament, in state and out", "Strength of competition and quality wins", "Head-to-head between ranked wrestlers", "Every match on record, not only podiums", "How consistently a wrestler seeks out the best"] },
+              { title: "Women's rankings", lines: ["Built on freestyle, the style women wrestle in college", "Fargo, Women's Nationals, U.S. Open, Journeymen and national duals first", "Wins over nationally ranked opponents count most", "Freestyle head-to-head between NC girls", "Folkstyle state results as supporting evidence", "The last 12 months, not a career"] },
+            ].map((g) => (
+              <details key={g.title} className="group rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-6">
+                <summary className="flex cursor-pointer list-none items-center justify-between [&::-webkit-details-marker]:hidden">
+                  <span>
+                    <span className="block text-xs font-bold uppercase tracking-widest" style={{ color: gold }}>How we rank</span>
+                    <span className="mt-1 block text-lg font-bold">{g.title}</span>
+                  </span>
+                  <span className="text-white/40 transition group-open:rotate-45">+</span>
+                </summary>
+                <ul className="mt-4 space-y-2 text-sm text-white/70">
+                  {g.lines.map((l) => (
+                    <li key={l} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: gold }} aria-hidden /> {l}</li>
+                  ))}
+                </ul>
+                <p className="mt-4 text-xs text-white/45">Every place is reasoned from results on the mat, not reputation and not a poll.</p>
+              </details>
+            ))}
+          </section>
 
-          {/*
-            * Said at the moment of purchase, not buried in terms.
-            *
-            * A ranking is the whole product in one screenshot. Fine print stops nobody and
-            * earns no goodwill; a plain sentence with the reason attached does better, and
-            * naming which half of sharing is welcome makes it a rule people follow rather than
-            * one they resent. A parent posting "my son is fourth in North Carolina" is the best
-            * advertising this has.
-            */}
-          <p className="mx-auto mt-6 max-w-xl text-center text-xs leading-relaxed text-muted-foreground">
-            Your subscription is for you and your family. Share your own wrestler&apos;s ranking
-            anywhere &mdash; please don&apos;t repost the full boards or screenshots of them.
-            That&apos;s what keeps these rankings going.
-          </p>
+          {/* FAQ */}
+          <section className="mx-auto max-w-3xl pt-16">
+            <h2 className="text-center text-2xl font-black tracking-tight">Questions</h2>
+            <div className="mt-6 divide-y divide-white/10 rounded-2xl border border-white/10 bg-[#0d1d36]/80">
+              {FAQ.map(([q, a]) => (
+                <details key={q} className="group p-5">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold [&::-webkit-details-marker]:hidden">
+                    {q}
+                    <span className="text-white/40 transition group-open:rotate-45">+</span>
+                  </summary>
+                  <p className="mt-2 text-sm leading-6 text-white/65">{a}</p>
+                </details>
+              ))}
+            </div>
+          </section>
 
           {signedInWithoutAccess ? (
-            <div className="mx-auto mt-8 max-w-xl rounded-lg border border-border bg-card px-4 py-4 text-center text-sm text-muted-foreground">
+            <div className="mx-auto mt-10 max-w-xl rounded-2xl border border-white/10 bg-[#0d1d36]/80 px-5 py-5 text-center text-sm text-white/65">
               <p>
-                You&apos;re signed in{user?.email ? <> as <strong className="text-foreground">{user.email}</strong></> : null}.
+                You&apos;re signed in{user?.email ? <> as <strong className="text-white">{user.email}</strong></> : null}.
               </p>
               <p className="mt-2">
                 Blue family and still seeing this? This account isn&apos;t linked to your wrestler yet. Open your
                 wrestler&apos;s profile and tap{" "}
-                <strong className="text-foreground">&ldquo;I&apos;m [their name]&apos;s parent&rdquo;</strong> to link it,
-                or{" "}
-                <a href="mailto:info@ncwrestlingunited.com?subject=Rankings%20access" className="text-primary underline">
+                <strong className="text-white">&ldquo;I&apos;m [their name]&apos;s parent&rdquo;</strong> to link it, or{" "}
+                <a href="mailto:info@ncwrestlingunited.com?subject=Rankings%20access" className="underline" style={{ color: gold }}>
                   email us
                 </a>{" "}
                 and we&apos;ll link it for you.
               </p>
-              <div className="mt-3 flex flex-wrap justify-center gap-3">
-                <Link href="/prospects/all" className="text-primary underline">
-                  Find your wrestler
-                </Link>
-                <button type="button" onClick={() => void switchAccount()} className="text-primary underline">
+              <div className="mt-3 flex flex-wrap justify-center gap-4">
+                <Link href="/prospects/all" className="underline" style={{ color: gold }}>Find your wrestler</Link>
+                <button type="button" onClick={() => void switchAccount()} className="underline" style={{ color: gold }}>
                   Use a different account
                 </button>
               </div>
             </div>
           ) : (
-            <p className="mt-8 text-center text-sm text-muted-foreground">
+            <p className="mt-10 text-center text-sm text-white/55">
               Already a Blue family or subscriber?{" "}
-              <Link href="/auth/signin?returnTo=/rankings" className="text-primary underline">Sign in</Link>
-              .
+              <Link href="/auth/signin?returnTo=/rankings" className="underline" style={{ color: gold }}>Sign in</Link>
             </p>
           )}
         </div>
