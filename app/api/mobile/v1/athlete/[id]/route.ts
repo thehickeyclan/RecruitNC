@@ -116,6 +116,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const stateRows = buildNchsaaStateRows(
     (loaded.athlete.nchsaa_profile ?? []) as never[],
     (loaded.athlete.nchsaa_state_bouts ?? []) as never[],
+    (row as { state?: string | null }).state ?? undefined,
   )
   // Same rule as the web profile: the Ultimate Club Duals are freestyle for the girls.
   const athleteGender = (row as { gender?: string | null }).gender ?? null

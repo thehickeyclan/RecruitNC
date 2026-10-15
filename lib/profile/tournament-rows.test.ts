@@ -134,3 +134,33 @@ describe("attached event bouts", () => {
     expect(rows[0].record).toBe("5-2")
   })
 })
+
+describe("the state names the state tournament", () => {
+  const result = { year: 2026, place: 1, classification: "4A", weight_class: "132" }
+
+  it("names North Carolina's when no state is passed, as before", () => {
+    expect(buildNchsaaStateRows([result], [])[0]!.event).toBe("NCHSAA 4A State Championships")
+  })
+
+  it("names South Carolina's SCHSL, a tournament the NCHSAA does not run", () => {
+    expect(buildNchsaaStateRows([result], [], "SC")[0]!.event).toBe("SCHSL 4A State Championships")
+  })
+
+  it("does not repeat the body when the classification already is it", () => {
+    expect(
+      buildNchsaaStateRows([{ ...result, classification: "NCISA" }], [])[0]!.event,
+    ).toBe("NCISA State Championships")
+    expect(
+      buildNchsaaStateRows([{ ...result, classification: "SCISA" }], [], "SC")[0]!.event,
+    ).toBe("SCISA State Championships")
+  })
+
+  it("carries the name onto the bouts, so a bout does not cite the wrong tournament", () => {
+    const rows = buildNchsaaStateRows(
+      [result],
+      [{ year: 2026, date: null, opponent: "A B", opponentSchool: null, outcome: "W", round: "Finals", weight: "132", method: "Dec", score: "3-1" }],
+      "SC",
+    )
+    expect(rows[0]!.bouts[0]!.eventName).toBe("SCHSL State Championships")
+  })
+})

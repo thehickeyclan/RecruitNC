@@ -11,6 +11,7 @@ import type { NhscaNationalBout } from "@/lib/nhsca-national-bouts"
  */
 import { displayName, placementLabel, type OtherTournamentProfileBlock } from "@/lib/other-tournaments"
 import { parseFargoDivisionString } from "@/lib/fargo-division"
+import { HOME_STATE, stateChampionshipName } from "@/lib/athlete-state"
 import type { NchsaaStateBout } from "@/lib/nchsaa-state-bouts"
 import {
   fargoEventKey,
@@ -119,18 +120,31 @@ export function inferNchsaaStateRounds(
 }
 
 /** State results in the exact same summary-row + expandable-bouts shape as TOC. */
+/**
+ * A wrestler's state tournament rows.
+ *
+ * The event is named from HIS state, not hardcoded. Both Carolinas run a 4A, and "NCHSAA 4A State
+ * Championships" on a South Carolina wrestler names a tournament he was never at — his is the
+ * SCHSL's, or SCISA's if he wrestles for an independent school.
+ */
 export function buildNchsaaStateRows(
   results: NchsaaSummaryResult[],
   stateBouts: NchsaaStateBout[],
+  state: string = HOME_STATE,
 ): TournamentRow[] {
+  const body = (classification: string) => stateChampionshipName(state, classification)
   return results
     .map((result, index) => {
       const bouts = stateBouts.filter((bout) => bout.year === result.year)
       const rounds = inferNchsaaStateRounds(result.place, bouts)
       const wins = bouts.filter((bout) => bout.outcome === "W").length
       return {
-        id: `nchsaa-states-${result.year}-${result.classification}-${result.weight_class}-${index}`,
-        event: `NCHSAA ${result.classification} State Championships`,
+        id: `state-tournament-${result.year}-${result.classification}-${result.weight_class}-${index}`,
+        event: `${body(result.classification)}${
+          result.classification && !result.classification.toUpperCase().startsWith(body(result.classification).toUpperCase())
+            ? ` ${result.classification}`
+            : ""
+        } State Championships`,
         team: null,
         isDuals: false,
         year: result.year,
@@ -140,8 +154,8 @@ export function buildNchsaaStateRows(
         record: bouts.length ? `${wins}-${bouts.length - wins}` : null,
         entrants: null,
         bouts: bouts.map((bout, boutOrder) => ({
-          eventKey: `nchsaa-states-${result.year}`,
-          eventName: "NCHSAA State Championships",
+          eventKey: `state-tournament-${result.year}`,
+          eventName: `${body(result.classification)} State Championships`,
           year: result.year,
           weight: bout.weight ?? result.weight_class,
           round: bout.round || rounds[boutOrder] || "State Championships",

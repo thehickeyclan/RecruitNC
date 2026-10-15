@@ -81,7 +81,9 @@ export function ViewProfileClient({
     nationalTeamResults: nationalTeamResults as never[],
     attachedEventBouts: (Array.isArray(athlete.attached_event_bouts) ? athlete.attached_event_bouts : []) as never[],
   })
-  const stateTournamentRows = buildNchsaaStateRows(nchsaaResults, nchsaaStateBouts)
+  /* His state names his state tournament: the SCHSL does not run the NCHSAA's 4A. */
+  const athleteState = (athlete as { state?: string | null })?.state ?? null
+  const stateTournamentRows = buildNchsaaStateRows(nchsaaResults, nchsaaStateBouts, athleteState ?? undefined)
   // Every event on the record, bouts included (NC United duals and Fargo Greco have no results row).
   // A North Carolina wrestler has a folkstyle season whatever else they wrestle.
   const competition = summarizeCompetition(
@@ -110,7 +112,6 @@ export function ViewProfileClient({
    * The state names his state championship. Both Carolinas run a 4A, so a card reading "4A State
    * Champion" with no state tells a coach nothing he can act on.
    */
-  const athleteState = (athlete as { state?: string | null })?.state ?? null
   const credentials = profileCredentials({
     stateRows: stateTournamentRows,
     tocRows,
