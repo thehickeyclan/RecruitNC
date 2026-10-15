@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react"
 import { CalendarDays, Check, ChevronRight, Circle, ListChecks, Lock, Mail, MapPin, X } from "lucide-react"
 
+import { CollegeBoard } from "@/components/portal/college-board"
 import { CoachEmailComposer } from "@/components/colleges/coach-email-composer"
 import {
   COLLEGE_LIST_STATUSES,
@@ -186,7 +187,7 @@ export function WarRoomPlan({
   const counts = COLLEGE_LIST_STATUSES.map((status) => ({ status, n: schools.filter((s) => s.status === status).length }))
 
   return (
-    <div className="mt-5 space-y-4">
+    <div className="mt-5 min-w-0 space-y-4">
       {wrestlers.length > 1 ? (
         <div className="flex flex-wrap gap-2" role="tablist" aria-label="Wrestler">
           {wrestlers.map((w) => (
@@ -299,10 +300,10 @@ export function WarRoomPlan({
         </div>
       </div>
 
-      <div ref={listRef} className={`${PANEL} p-5`}>
+      <div ref={listRef} className={`${PANEL} min-w-0 p-5`}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className={TITLE}>
-            <MapPin className="h-4 w-4 text-[#D3B574]" aria-hidden /> My college list · {schools.length} {schools.length === 1 ? "school" : "schools"}
+            <MapPin className="h-4 w-4 text-[#D3B574]" aria-hidden /> My college board · {schools.length} {schools.length === 1 ? "school" : "schools"}
           </p>
           <a href="/recruiting/college-map" className="inline-flex items-center gap-1 text-xs font-bold text-[#D3B574] hover:underline">
             Add schools on the map <ChevronRight className="h-3.5 w-3.5" aria-hidden />
@@ -316,57 +317,29 @@ export function WarRoomPlan({
           </p>
         ) : (
           <>
-            <ul className="mt-3 flex flex-wrap gap-1.5">
-              {counts.map(({ status, n }) => (
-                <li key={status} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${n > 0 ? "bg-[#D3B574]/15 text-[#e9d5a4]" : "bg-white/[0.04] text-white/35"}`}>
-                  {COLLEGE_LIST_STATUS_LABEL[status]} · {n}
-                </li>
-              ))}
-            </ul>
-            <ul className="mt-3 divide-y divide-white/10">
-              {schools.map((school) => (
-                <li key={school.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center">
-                  {school.logo ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={school.logo} alt="" className="hidden h-9 w-9 shrink-0 rounded bg-white object-contain p-0.5 sm:block" />
-                  ) : (
-                    <span className="hidden h-9 w-9 shrink-0 rounded bg-white/[0.06] sm:block" aria-hidden />
-                  )}
-                  <span className="min-w-0 flex-1">
-                    <a href={`/recruiting/schools/${school.id}`} className="block truncate text-sm font-bold text-white hover:underline">
-                      {school.name}
-                    </a>
-                    <span className="block text-xs text-white/50">
-                      {school.level} · {school.place}
-                      {school.hasQuestionnaire && school.status === "interested" ? " · questionnaire to fill out" : ""}
-                    </span>
-                    {school.tuition ? <span className="block text-xs text-white/50">{school.tuition}</span> : null}
-                    {school.noTeam ? <span className="block text-xs font-semibold text-amber-200">{school.noTeam} in 2026-27</span> : null}
-                  </span>
-                  <span className="flex items-center gap-2">
-                    <select
-                      value={school.status}
-                      onChange={(e) => setStatus(school, e.target.value as CollegeListStatus)}
-                      aria-label={`Where things stand with ${school.name}`}
-                      className="h-9 rounded-lg border border-white/15 bg-[#0A1628] px-2 text-sm text-white"
-                    >
-                      {COLLEGE_LIST_STATUSES.map((status) => (
-                        <option key={status} value={status}>
-                          {COLLEGE_LIST_STATUS_LABEL[status]}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      onClick={() => setEmailSchool(school)}
-                      className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg bg-[#CC0000] px-3 text-sm font-bold text-white hover:bg-[#a80000]"
-                    >
-                      <Mail className="h-4 w-4" aria-hidden /> Email
-                    </button>
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <p className="mt-1 text-xs text-white/45">Drag a college to the stage it has reached, or use Move to on the card.</p>
+            <div className="mt-3">
+              <CollegeBoard
+                colleges={schools.map((s) => ({
+                  id: s.id,
+                  name: s.name,
+                  level: s.level,
+                  place: s.place,
+                  status: s.status,
+                  logo: s.logo,
+                  cost: s.tuition,
+                  note: s.noTeam ? `${s.noTeam} in 2026-27` : s.hasQuestionnaire && s.status === "interested" ? "Questionnaire to fill out" : null,
+                }))}
+                onMove={(id, status) => {
+                  const school = schools.find((s) => s.id === id)
+                  if (school) void setStatus(school, status)
+                }}
+                onEmail={(id) => {
+                  const school = schools.find((s) => s.id === id)
+                  if (school) setEmailSchool(school)
+                }}
+              />
+            </div>
           </>
         )}
       </div>
