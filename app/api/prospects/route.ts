@@ -72,6 +72,7 @@ export async function GET(request: NextRequest) {
       achievement_facts: facts.get(String(p.id)) ?? {},
       achievement_level: highestAchievement(facts.get(String(p.id)) ?? {}).level,
       last_competed: lastCompetedLabel(lastCompeted.get(String(p.id))),
+      last_competed_weight: lastCompeted.get(String(p.id))?.weight ?? null,
     }))
 
     return NextResponse.json(

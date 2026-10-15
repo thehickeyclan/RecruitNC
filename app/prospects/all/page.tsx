@@ -35,6 +35,7 @@ export default async function ProspectsAllPage() {
       achievement_facts: facts.get(String(p.id)) ?? {},
       achievement_level: highestAchievement(facts.get(String(p.id)) ?? {}).level,
       last_competed: lastCompetedLabel(lastCompeted.get(String(p.id))),
+      last_competed_weight: lastCompeted.get(String(p.id))?.weight ?? null,
     })) as unknown as typeof initialProspects
   } catch (error) {
     console.error("[prospects/all] SSR prefetch failed:", error)

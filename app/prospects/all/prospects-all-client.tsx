@@ -133,6 +133,16 @@ function hasHonor(prospect: Prospect, honor: HonorPill): boolean {
 }
 
 /** The state a wrestler competes in. Rows without one are North Carolina's: the directory holds no one else yet. */
+/**
+ * The weight he last competed at (the server sends it beside last_competed); the listed weight
+ * only when no result records one. The listed weight goes stale and nobody corrects it, and an
+ * out-of-state profile has none at all.
+ */
+function lastWeight(prospect: Prospect): string | null {
+  const w = (prospect as { last_competed_weight?: string | null }).last_competed_weight
+  return w && String(w).trim() ? String(w).trim() : null
+}
+
 function stateOfProspect(prospect: Prospect): string {
   const raw = String((prospect as { state?: string | null }).state ?? "").trim().toUpperCase()
   if (raw === "NORTH CAROLINA") return "NC"
@@ -349,6 +359,7 @@ export default function ProspectsAllClient({
     const weights = new Set<string>()
     prospects.forEach((prospect) => {
       const raw =
+        lastWeight(prospect) ??
         (prospect as any).weightclass ??
         (prospect as any).weight_class ??
         prospect.weight?.toString() ??
@@ -533,6 +544,7 @@ export default function ProspectsAllClient({
 
       if (weightFilters.length > 0) {
         const rawWeight =
+          lastWeight(prospect) ??
           (prospect as any).weightclass ??
           (prospect as any).weight_class ??
           prospect.weight?.toString() ??
@@ -584,12 +596,12 @@ export default function ProspectsAllClient({
 
   const tableAthletes = useMemo(() => {
     const mapped = sortedProspects.map((prospect, index) => {
-      const weightValue =
-        prospect.weightclass && prospect.weightclass.trim() !== ""
+      const weightValue = lastWeight(prospect) ??
+        (prospect.weightclass && prospect.weightclass.trim() !== ""
           ? prospect.weightclass
           : prospect.weight
             ? String(prospect.weight)
-            : ""
+            : "")
 
       const hasRankedWin =
         !!prospect.nationally_ranked_wins &&
@@ -765,7 +777,9 @@ export default function ProspectsAllClient({
             <h1 className="text-4xl font-black tracking-tight text-white md:text-5xl">Athlete Profiles</h1>
           </div>
           <p className="text-white/70 text-lg max-w-2xl leading-relaxed mb-8">
-            All NC wrestlers — browse by name, school, class year, and commitment status. Create your profile and we pull in NCHSAA, NHSCA, and Super 32 results.
+            {stateFilter === HOME_STATE
+              ? "All NC wrestlers — browse by name, school, class year, and commitment status. Create your profile and we pull in NCHSAA, NHSCA, and Super 32 results."
+              : `${stateChoices.find((st) => st.code === stateFilter)?.name ?? stateFilter} state placers — browse by name, school, class year, and commitment status.`}
           </p>
           {/* Side by side, and the same page: most NC wrestlers are already here from their results
               (Matt, 8 Oct 2026), so /create-profile looks for the existing profile first and offers
