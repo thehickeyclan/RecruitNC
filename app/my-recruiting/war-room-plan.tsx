@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { CalendarDays, Check, ChevronRight, Circle, ListChecks, Lock, Mail, MapPin, X } from "lucide-react"
 
 import { CollegeBoard } from "@/components/portal/college-board"
@@ -60,10 +60,13 @@ export function WarRoomPlan({
   blue,
   wrestlers,
   schools: initialSchools,
+  show = ["steps", "schedule", "list"],
 }: {
   blue: boolean
   wrestlers: WarRoomWrestler[]
   schools: WarRoomSchool[]
+  /** Which parts this page shows: Plan shows steps and schedule, Colleges the board. */
+  show?: Array<"steps" | "schedule" | "list">
 }) {
   const [wrestlerId, setWrestlerId] = useState(wrestlers[0]?.id ?? "")
   const [schools, setSchools] = useState(initialSchools)
@@ -77,6 +80,13 @@ export function WarRoomPlan({
   const listRef = useRef<HTMLDivElement | null>(null)
 
   const wrestler = wrestlers.find((w) => w.id === wrestlerId) ?? wrestlers[0]
+
+  // The home screen's Email buttons land here with ?email=<college>: open that draft straight away.
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("email")
+    const target = id ? initialSchools.find((s) => s.id === id) : null
+    if (target) setEmailSchool(target)
+  }, [initialSchools])
   const events = useMemo(() => eventsBy[wrestler?.id ?? ""] ?? [], [eventsBy, wrestler])
 
   const steps = useMemo(
@@ -228,8 +238,8 @@ export function WarRoomPlan({
 
       {error ? <p className="rounded-lg bg-red-500/15 px-4 py-2 text-sm text-red-200">{error}</p> : null}
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <div className={`${PANEL} p-5`}>
+      <div className={`grid gap-4 ${show.includes("steps") && show.includes("schedule") ? "lg:grid-cols-2" : ""}`}>
+        <div className={`${PANEL} p-5 ${show.includes("steps") ? "" : "hidden"}`}>
           <p className={TITLE}>
             <ListChecks className="h-4 w-4 text-[#D3B574]" aria-hidden /> This month for {wrestler.firstName}
             {wrestler.grade ? ` · ${wrestler.grade}` : ""}
@@ -275,7 +285,7 @@ export function WarRoomPlan({
           </ol>
         </div>
 
-        <div ref={scheduleRef} className={`${PANEL} p-5`}>
+        <div ref={scheduleRef} className={`${PANEL} p-5 ${show.includes("schedule") ? "" : "hidden"}`}>
           <p className={TITLE}>
             <CalendarDays className="h-4 w-4 text-[#D3B574]" aria-hidden /> Where {wrestler.firstName} is wrestling next
           </p>
@@ -319,7 +329,7 @@ export function WarRoomPlan({
         </div>
       </div>
 
-      <div ref={listRef} className={`${PANEL} min-w-0 p-5`}>
+      <div ref={listRef} className={`${PANEL} min-w-0 p-5 ${show.includes("list") ? "" : "hidden"}`}>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className={TITLE}>
             <MapPin className="h-4 w-4 text-[#D3B574]" aria-hidden /> My college board · {schools.length} {schools.length === 1 ? "school" : "schools"}
