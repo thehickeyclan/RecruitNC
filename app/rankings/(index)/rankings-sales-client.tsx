@@ -300,7 +300,7 @@ export function RankingsSalesClient({
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/hero-banner-nchsaa-2026-arena.png" alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-20" />
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/nc-united-dom-singlet.jpg" alt="" aria-hidden className="absolute inset-y-0 right-0 hidden h-full w-[48%] object-cover object-[50%_20%] opacity-80 lg:block" />
+          <img src="/toc-finals-north-carolina-bw.jpg" alt="" aria-hidden className="absolute inset-y-0 right-0 hidden h-full w-[50%] object-cover object-[55%_30%] opacity-90 lg:block" style={{ maskImage: "linear-gradient(to right, transparent, black 35%)", WebkitMaskImage: "linear-gradient(to right, transparent, black 35%)" }} />
           <div className="absolute inset-0 bg-gradient-to-r from-[#060f1f] via-[#060f1f]/90 to-[#060f1f]/10" aria-hidden />
           <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#060f1f] to-transparent" aria-hidden />
           <div className="relative mx-auto max-w-6xl px-4 pb-12 pt-12 sm:pt-16">
@@ -493,7 +493,7 @@ export function RankingsSalesClient({
                 </div>
                 <div className="relative h-48 lg:h-56">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/nc-united-tobin-tee.jpg" alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover object-[50%_25%]" />
+                  <img src="/toc-finals-attack.jpg" alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover object-[35%_45%]" />
                   <div className="absolute inset-0 bg-gradient-to-r from-[#0b1a33] via-[#0b1a33]/50 to-transparent" aria-hidden />
                   <p className={`absolute bottom-4 left-5 text-3xl leading-[0.95] ${tocDisplayClass()}`}>
                     Train.<br />Compete.<br />Get recruited.
