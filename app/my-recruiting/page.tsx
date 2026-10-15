@@ -7,7 +7,7 @@
  * ./load.ts, shared with the other portal pages.
  */
 import Link from "next/link"
-import { ArrowRight, CalendarDays, Check, Circle, DollarSign, HelpCircle, ListChecks, Mail, Pencil, Scale } from "lucide-react"
+import { ArrowRight, CalendarDays, Check, Circle, DollarSign, HelpCircle, ListChecks, Mail, Scale } from "lucide-react"
 
 import { InfoSheetCard } from "@/components/portal/info-sheet-card"
 import { PortalShell } from "@/components/portal/portal-shell"
@@ -20,6 +20,7 @@ import { listTarget, planSteps } from "@/lib/college-programs/roadmap"
 import type { CollegeMapSchool } from "@/lib/college-programs/types"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { isPlaceholderAthletePhoto } from "@/lib/recruiting-profile-photo"
 import { buildInfoSheet } from "./info-sheet"
 import { loadCommandCenter } from "./load"
 import { MapPreviewCard } from "./map-preview"
@@ -87,10 +88,21 @@ export default async function CommandCenterHome() {
             </p>
             {first ? <p className="mt-1 text-sm text-white/50">{[first.classYear ? `Class of ${first.classYear}` : null, first.highSchool, weight].filter(Boolean).join(" · ")}</p> : null}
           </div>
-          {first ? (
-            <Link href={`/athletes/${first.id}`} className="inline-flex items-center gap-1.5 rounded-lg border border-white/25 bg-[#0A1628]/60 px-3 py-2 text-sm font-semibold text-white hover:border-[#D3B574]">
-              <Pencil className="h-4 w-4" aria-hidden /> Edit profile
-            </Link>
+          {/* Every wrestler on the account, one tap from his or her profile: the thing families most often came looking for. */}
+          {athletes.length ? (
+            <div className="flex flex-wrap gap-2">
+              {athletes.map((a) => (
+                <Link
+                  key={a.id}
+                  href={`/athletes/${a.id}`}
+                  className="inline-flex min-h-[44px] items-center gap-2 rounded-lg bg-[#D3B574] py-1.5 pl-1.5 pr-3 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={a.photo && !isPlaceholderAthletePhoto(a.photo) ? a.photo : "/wrestler-silhouette.png"} alt="" className="h-8 w-8 rounded-md bg-[#13294B] object-cover" />
+                  {athletes.length > 1 ? `${a.firstName}'s profile` : "Open profile"} <ArrowRight className="h-4 w-4" aria-hidden />
+                </Link>
+              ))}
+            </div>
           ) : null}
         </div>
         {first ? (
