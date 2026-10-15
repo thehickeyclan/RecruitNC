@@ -195,7 +195,7 @@ export default async function SchoolPage({ params }: Params) {
     ...(full ? [{ href: "#staff", label: "Coaching staff" }, { href: "#roster", label: "Roster" }] : []),
     { href: "#academics", label: "Academics" },
   ]
-  const button = "inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition"
+  const button = "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition sm:px-4 sm:py-2.5"
 
   const page = (
     <div className="mx-auto max-w-7xl text-white">
