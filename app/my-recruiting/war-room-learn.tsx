@@ -47,7 +47,7 @@ function QuestionList({ slug, icon: Icon }: { slug: string; icon: typeof HelpCir
   )
 }
 
-export function WarRoomLearn({ wrestlers }: { wrestlers: Array<{ firstName: string; grade: string | null }> }) {
+export function WarRoomLearn({ wrestlers, showYear = true }: { wrestlers: Array<{ firstName: string; grade: string | null }>; showYear?: boolean }) {
   // One card per grade the family has a wrestler in; the oldest leads.
   const years = new Map<Grade, string[]>()
   for (const w of wrestlers) {
@@ -59,7 +59,7 @@ export function WarRoomLearn({ wrestlers }: { wrestlers: Array<{ firstName: stri
 
   return (
     <div className="mt-5 space-y-4">
-      {thisYear.map(([grade, names]) => {
+      {(showYear ? thisYear : []).map(([grade, names]) => {
         const year = timelineFor(grade)
         return (
           <div key={grade} className={`${card} border-[#D3B574]/50`}>
@@ -84,7 +84,7 @@ export function WarRoomLearn({ wrestlers }: { wrestlers: Array<{ firstName: stri
         )
       })}
 
-      {thisYear.length === 0 ? (
+      {showYear && thisYear.length === 0 ? (
         <a href="/recruiting/learn/timeline" className={`${card} flex items-start gap-3 hover:border-[#D3B574]/60`}>
           <CalendarDays className="mt-0.5 h-5 w-5 shrink-0 text-[#D3B574]" aria-hidden />
           <span className="min-w-0 flex-1">
