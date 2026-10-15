@@ -1,41 +1,81 @@
 /**
- * A college's page in the Recruiting Portal (13 Oct 2026).
+ * A college's page in the Recruiting Portal (13 Oct 2026; redesigned 15 Oct 2026 from the
+ * Command Center mock-up Matt had ChatGPT draw).
  *
- * The map found the 436 schools; this is where a school's information lives. It has an address,
- * so the Command Center list, the map and one parent texting another can all point at it -
- * which the map's pop-up card never could.
+ * A product page, not a pile of text: big numbers, short labels, cards, and the explanation behind
+ * a tap. Every figure is ours and true - the mock's invented records, results and family quotes
+ * became what we actually hold: the team ranking, the full yearly cost, what families at each
+ * income paid, the family's own fit, and the North Carolina wrestlers on the roster and gone there.
  *
- * What the school is and where is public. Who to contact, the recruiting questionnaire, who from
- * North Carolina went there, My List and the coach email are the Recruiting Portal: NC United
- * Blue (admins and verified coaches see the read-only parts too). Each section asks its own API,
- * so the gate is the same here as on the map.
+ * What the school is and what it costs is public. Who to contact, who from North Carolina went
+ * there, fit, My List and the coach email are the Recruiting Portal: NC United Blue (admins and
+ * verified coaches see the read-only parts too). A college coach never gets the family's shell.
  */
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { ChevronRight, ExternalLink, Lock, MapPin, ShieldCheck, Trophy } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
+import {
+  ArrowLeft,
+  BarChart3,
+  BookOpen,
+  Building2,
+  ChevronRight,
+  DollarSign,
+  ExternalLink,
+  GraduationCap,
+  Lock,
+  Map as MapIcon,
+  MapPin,
+  Medal,
+  Plane,
+  ShieldCheck,
+  Target,
+  Trophy,
+  Users,
+} from "lucide-react"
 
+import { PortalShell } from "@/components/portal/portal-shell"
 import { SchoolActions } from "@/components/colleges/school-actions"
 import { StaffList } from "@/components/colleges/staff-list"
 import { WentHereSection } from "@/components/colleges/went-here-section"
-import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
+import { INCOME_BRACKETS, fitForSchool, satTotalRange } from "@/lib/college-programs/fit"
 import { loadCollegeMap } from "@/lib/college-programs/load"
 import { schoolLogoUrl } from "@/lib/college-programs/logo"
+import majorsData from "@/lib/college-programs/majors.json"
 import data from "@/lib/college-programs/programs-2026-27.json"
+import { depthFor } from "@/lib/college-programs/roster-depth"
+import { rosterForSchool } from "@/lib/college-programs/rosters"
 import { STATE_NAMES } from "@/lib/college-programs/states"
-import { TUITION_NOTE, costFacts, tuitionFacts } from "@/lib/college-programs/tuition"
-import { rankingSentence } from "@/lib/college-programs/team-rankings"
+import { costLines, tuitionFacts } from "@/lib/college-programs/tuition"
 import { teamRankingsForSchool } from "@/lib/college-programs/team-rankings-snapshot"
 import { DIVISION_COLOR, DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
-import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
+import { readWentHereSnapshot } from "@/lib/college-programs/went-here-snapshot"
+import { collegeFitFor, loadFamilyFitContext } from "@/lib/recruiting/college-fit"
+import { MAJOR_FAMILIES, type FitLine, type FitStatus } from "@/lib/recruiting/family-fit"
 import { familyFocus } from "@/lib/recruiting/family-focus"
+import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
 
 const SCHOOLS = new Map([...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS].map((s) => [s.id, s]))
+const MAJORS = majorsData.majors as Record<string, string[]>
 const spoken = (name: string) => name.replace(/\s*\([^)]*\)\s*/g, " ").trim()
+const dollars = (n: number) => `$${n.toLocaleString("en-US")}`
+
+const GOLD = "#D3B574"
+const card = "rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-5 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]"
+const cardTitle = "text-base font-bold text-white"
+
+/** Athletic fit is a target to build toward, so it is never called a "concern". */
+const FIT_LABEL: Record<"athletic" | "other", Record<FitStatus, string>> = {
+  athletic: { fit: "In line", stretch: "Close", concern: "Building toward it", unknown: "Not enough to say" },
+  other: { fit: "Good fit", stretch: "Stretch", concern: "Concern", unknown: "Not enough to say" },
+}
+const DOT: Record<FitStatus, string> = { fit: "bg-emerald-400", stretch: "bg-amber-300", concern: "bg-red-400", unknown: "bg-white/30" }
+const DOT_ATHLETIC: Record<FitStatus, string> = { ...DOT, concern: "bg-sky-300" }
 
 type Params = { params: Promise<{ id: string }> }
 
@@ -46,8 +86,49 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const levels = school.programs.map((p) => DIVISION_SHORT[p.division]).join(" / ")
   return {
     title: `${name} wrestling | RecruitNC`,
-    description: `${name} wrestling (${levels}) in ${school.city}, ${STATE_NAMES[school.state] ?? school.state}: programs, conference and recruiting information for wrestlers and families.`,
+    description: `${name} wrestling (${levels}) in ${school.city}, ${STATE_NAMES[school.state] ?? school.state}: programs, conference, cost and recruiting information for wrestlers and families.`,
   }
+}
+
+function SnapshotRow({ icon: Icon, label, value, sub }: { icon: LucideIcon; label: string; value: React.ReactNode; sub?: string }) {
+  return (
+    <li className="flex items-start gap-3 py-2">
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-white/40" aria-hidden />
+      <span className="w-28 shrink-0 text-sm text-white/55">{label}</span>
+      <span className="min-w-0 text-sm font-semibold text-white">
+        {value}
+        {sub ? <span className="block text-xs font-normal text-white/45">{sub}</span> : null}
+      </span>
+    </li>
+  )
+}
+
+function FitRow({ icon: Icon, label, line, athletic }: { icon: LucideIcon; label: string; line: FitLine; athletic?: boolean }) {
+  const status = FIT_LABEL[athletic ? "athletic" : "other"][line.status]
+  return (
+    <details className="group border-t border-white/10 first:border-t-0">
+      <summary className="flex cursor-pointer list-none items-center gap-3 py-3 [&::-webkit-details-marker]:hidden">
+        <Icon className="h-5 w-5 shrink-0" style={{ color: GOLD }} aria-hidden />
+        <span className="w-24 shrink-0 text-sm font-semibold text-white">{label}</span>
+        <span className="flex min-w-0 flex-1 items-center gap-2 text-sm font-semibold text-white">
+          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${(athletic ? DOT_ATHLETIC : DOT)[line.status]}`} aria-hidden />
+          {status}
+        </span>
+        <ChevronRight className="h-4 w-4 shrink-0 text-white/40 transition group-open:rotate-90" aria-hidden />
+      </summary>
+      <p className="pb-3 pl-8 text-xs leading-5 text-white/65">{line.text}</p>
+    </details>
+  )
+}
+
+function Stat({ value, label, sub }: { value: string; label: string; sub?: string }) {
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4">
+      <p className="text-2xl font-black tracking-tight text-white">{value}</p>
+      <p className="mt-0.5 text-xs font-semibold uppercase tracking-wider text-white/50">{label}</p>
+      {sub ? <p className="mt-1 text-xs text-white/40">{sub}</p> : null}
+    </div>
+  )
 }
 
 export default async function SchoolPage({ params }: Params) {
@@ -58,179 +139,379 @@ export default async function SchoolPage({ params }: Params) {
   const admin = createAdminClient()
   const { viewer, userId } = await resolvePortalViewer({ supabase: await createClient(), admin })
   const full = Boolean(viewer.isBlueMember || viewer.isAdmin || viewer.isVerifiedCoach)
-  // "On RecruitNC" is part of the portal; a map that will not load must not take the page down.
-  const onRecruitNC = full
-    ? await loadCollegeMap(admin, true)
-        .then((map) => map.schools.find((s) => s.id === id)?.onRecruitNC === true)
-        .catch(() => false)
-    : false
-
+  // A college coach reads the page, but never inside the family's Command Center.
+  const familySide = Boolean(viewer.isBlueMember || viewer.isAdmin)
   const name = spoken(school.name)
-  const tuition = tuitionFacts(school.id, school.state)
-  const cost = costFacts(school.id, school.state)
-  // The page follows the family's wrestler: her team, its coach and its ranking come first.
+
   const focus = await familyFocus(admin, userId)
   const theirs = focus?.gender ?? null
+  const team: "mens" | "womens" = theirs && school.programs.some((p) => p[theirs]) ? theirs : school.programs.some((p) => p.mens) ? "mens" : "womens"
   const hasTheirTeam = theirs ? school.programs.some((p) => p[theirs]) : true
   const programs = theirs ? [...school.programs].sort((a, b) => Number(b[theirs]) - Number(a[theirs])) : school.programs
-  const rankings = (await teamRankingsForSchool(school.id)).sort((a, b) => (theirs ? Number(b.gender === theirs) - Number(a.gender === theirs) : 0))
-  const logo = await schoolLogoUrl(school)
-  return (
-    <main className="min-h-screen bg-[#060f1f] text-white">
-      <section className="relative border-b border-white/10 bg-[#0B1D3A]">
-        <TocPatrioticBar />
-        <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-10">
-          <nav aria-label="Breadcrumb" className="flex flex-wrap items-center gap-1 text-xs font-semibold text-white/55">
-            <a href="/my-recruiting" className="hover:text-white">
-              Recruiting Command Center
+  const program = programs.find((p) => p[team]) ?? programs[0]
+
+  const [rankingsAll, logo, onRecruitNC, ctx, snapshot] = await Promise.all([
+    teamRankingsForSchool(school.id),
+    schoolLogoUrl(school),
+    // "On RecruitNC" is part of the portal; a map that will not load must not take the page down.
+    full
+      ? loadCollegeMap(admin, true)
+          .then((map) => map.schools.find((s) => s.id === id)?.onRecruitNC === true)
+          .catch(() => false)
+      : Promise.resolve(false),
+    familySide && userId ? loadFamilyFitContext(admin, userId, theirs).catch(() => null) : Promise.resolve(null),
+    full ? readWentHereSnapshot().catch(() => null) : Promise.resolve(null),
+  ])
+  const rankings = rankingsAll.sort((a, b) => Number(b.gender === team) - Number(a.gender === team))
+  const ranking = rankings[0] ?? null
+
+  const cost = costLines(school.id, school.state)
+  const tuition = cost ? null : tuitionFacts(school.id, school.state)
+  const fit = fitForSchool(school.id)
+  const depth = depthFor(school.id, team)
+  const roster = rosterForSchool(school.id)
+  const ncNow = roster.wrestlers.filter((w) => w.team === team)
+  const wentHere = (snapshot?.commits ?? [])
+    .filter((c) => c.schoolId === school.id && (!c.gender || c.gender === team))
+    .sort((a, b) => (b.classYear ?? 0) - (a.classYear ?? 0))
+  // The family's own fit only once there is a wrestler to fit; a coach or a family without one sees none.
+  const fitResult = ctx && ctx.first ? collegeFitFor(ctx, school, null) : null
+  const satRange = fit ? satTotalRange(fit) : [null, null]
+  const majors = new Set(MAJORS[school.id] ?? [])
+  const majorLabels = MAJOR_FAMILIES.filter((m) => majors.has(m.code)).map((m) => m.label)
+  const teamWord = team === "womens" ? "Women's" : "Men's"
+  const tabs = [
+    { href: "#overview", label: "Overview" },
+    { href: "#cost", label: "Cost & aid" },
+    ...(full ? [{ href: "#staff", label: "Coaching staff" }, { href: "#roster", label: "Roster" }] : []),
+    { href: "#academics", label: "Academics" },
+  ]
+  const button = "inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold transition"
+
+  const page = (
+    <div className="mx-auto max-w-7xl text-white">
+      {/* Header band */}
+      <section id="overview" className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0B1D3A]">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/hero-banner-nchsaa-2026-arena.png" alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-25" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0B1D3A] via-[#0B1D3A]/90 to-[#0B1D3A]/40" aria-hidden />
+        <div className="relative flex flex-col gap-6 p-5 sm:p-8 lg:flex-row lg:items-end lg:justify-between">
+          <div className="min-w-0">
+            <a href="/recruiting/college-map" className="inline-flex items-center gap-1.5 text-sm font-semibold" style={{ color: GOLD }}>
+              <ArrowLeft className="h-4 w-4" aria-hidden /> All colleges
             </a>
-            <ChevronRight className="h-3 w-3" aria-hidden />
-            <a href="/recruiting/college-map" className="hover:text-white">
-              College programs
-            </a>
-          </nav>
-          <div className="mt-3 flex items-center gap-4">
-            {logo ? (
-              // A white tile: college marks are drawn for light backgrounds and vanish on navy.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={logo} alt={`${name} logo`} className="h-16 w-16 shrink-0 rounded-md bg-white object-contain p-1.5 sm:h-20 sm:w-20" />
-            ) : null}
-            <h1 className={`text-4xl leading-[0.95] text-white sm:text-6xl ${tocDisplayClass()}`}>{name}</h1>
-          </div>
-          <p className="mt-2 flex items-center gap-1.5 text-sm text-white/70">
-            <MapPin className="h-4 w-4 text-[#D7B968]" aria-hidden />
-            {school.city}, {STATE_NAMES[school.state] ?? school.state}
-          </p>
-          {school.firstSeason ? (
-            <p className="mt-2 text-sm font-semibold text-[#D7B968]">New program · first season {school.firstSeason}, recruiting now</p>
-          ) : null}
-
-          {focus && !hasTheirTeam ? (
-            <p className="mt-4 max-w-xl rounded-lg border border-amber-300/40 bg-amber-300/10 px-4 py-3 text-sm font-semibold text-amber-100">
-              {name} does not have a {theirs === "womens" ? "women's" : "men's"} wrestling team in 2026-27.{" "}
-              <a href="/recruiting/college-map" className="underline hover:text-white">
-                See the colleges that do
-              </a>
-            </p>
-          ) : null}
-
-          <ul className="mt-4 space-y-2">
-            {programs.map((p) => (
-              <li key={p.division} className="flex items-start gap-2 text-sm">
-                <span
-                  className="mt-0.5 inline-flex min-w-[3.25rem] justify-center rounded-sm px-1.5 py-0.5 text-xs font-bold text-[#071427]"
-                  style={{ backgroundColor: DIVISION_COLOR[p.division] }}
-                >
-                  {DIVISION_SHORT[p.division]}
-                </span>
-                <span className="text-white/90">
-                  {(theirs === "womens" ? [p.womens ? "Women's" : null, p.mens ? "Men's" : null] : [p.mens ? "Men's" : null, p.womens ? "Women's" : null]).filter(Boolean).join(" & ")} wrestling
-                  {p.conference ? <span className="text-white/55"> · {p.conference}</span> : null}
-                </span>
-              </li>
-            ))}
-          </ul>
-
-          {rankings.length > 0 ? (
-            <ul className="mt-3 space-y-1">
-              {rankings.map((r) => (
-                <li key={`${r.scope}-${r.gender}`} className="flex items-start gap-2 text-sm">
-                  <Trophy className="mt-0.5 h-4 w-4 shrink-0 text-[#D7B968]" aria-hidden />
-                  <span className="text-white/90">
-                    <span className="font-bold text-white">{r.gender === "womens" ? "Women: " : rankings.length > 1 ? "Men: " : ""}</span>
-                    {rankingSentence(r)}.{" "}
-                    <a href={r.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-white/55 underline hover:text-white">
-                      The poll
-                    </a>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-
-          {cost ? (
-            <div className="mt-4 max-w-xl rounded-lg border border-white/15 bg-white/[0.06] px-4 py-3 text-sm">
-              <p className="text-[11px] font-black uppercase tracking-widest text-[#D7B968]">
-                What a year costs{cost.control ? ` · ${cost.control} college` : ""}
-              </p>
-              <p className="mt-1 text-base font-bold text-white">{cost.headline}</p>
-              <p className="text-white/75">{cost.breakdown}</p>
-              {cost.other ? <p className="text-white/55">{cost.other}</p> : null}
-              <p className="mt-1.5 text-xs leading-5 text-white/50">
-                {cost.note}{" "}
-                <a href="/recruiting/learn/paying-for-college" className="underline hover:text-white/80">
-                  What a family really pays
-                </a>
-              </p>
-            </div>
-          ) : tuition && (tuition.control || tuition.lines.length > 0) ? (
-            <div className="mt-4 max-w-xl rounded-lg border border-white/15 bg-white/[0.06] px-4 py-3 text-sm">
-              <p className="text-[11px] font-black uppercase tracking-widest text-[#D7B968]">
-                Tuition{tuition.control ? ` · ${tuition.control} college` : ""}
-              </p>
-              {tuition.lines.map((line, i) => (
-                <p key={line} className={i === 0 ? "mt-1 font-bold text-white" : "text-white/65"}>
-                  {line}
+            <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
+              {logo ? (
+                // A white tile: college marks are drawn for light backgrounds and vanish on navy.
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logo} alt={`${name} logo`} className="h-16 w-16 shrink-0 rounded-2xl bg-white object-contain p-2 shadow-lg sm:h-28 sm:w-28" />
+              ) : null}
+              <div className="min-w-0">
+                <h1 className="text-2xl font-black leading-tight tracking-tight sm:text-4xl">{name}</h1>
+                <p className="mt-1 flex items-center gap-1.5 text-sm text-white/70">
+                  <MapPin className="h-4 w-4" style={{ color: GOLD }} aria-hidden />
+                  {school.city}, {STATE_NAMES[school.state] ?? school.state}
                 </p>
-              ))}
-              {tuition.lines.length > 0 && !/No tuition/.test(tuition.lines[0]) ? <p className="mt-1.5 text-xs leading-5 text-white/50">{TUITION_NOTE}</p> : null}
+                <div className="mt-3 flex flex-wrap gap-2 whitespace-nowrap text-xs font-bold">
+                  {program ? (
+                    <span className="rounded-md px-2.5 py-1 text-[#071427]" style={{ backgroundColor: DIVISION_COLOR[program.division] }}>
+                      {DIVISION_SHORT[program.division]}
+                    </span>
+                  ) : null}
+                  {program?.conference ? <span className="rounded-md border border-white/20 px-2.5 py-1 text-white/85">{program.conference}</span> : null}
+                  {school.programs.some((p) => p[team]) ? <span className="rounded-md border border-white/20 px-2.5 py-1 text-white/85">{teamWord} wrestling</span> : null}
+                  {ranking ? (
+                    <span className="inline-flex items-center gap-1 rounded-md bg-white/10 px-2.5 py-1 text-white">
+                      <Trophy className="h-3.5 w-3.5" style={{ color: GOLD }} aria-hidden /> No. {ranking.rank} {ranking.gender === "womens" && team !== "womens" ? "women" : ""}
+                    </span>
+                  ) : null}
+                  {onRecruitNC ? (
+                    <span className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[#0A1628]" style={{ backgroundColor: GOLD }}>
+                      <ShieldCheck className="h-3.5 w-3.5" aria-hidden /> Coaches on RecruitNC
+                    </span>
+                  ) : null}
+                  {school.firstSeason ? <span className="rounded-md bg-emerald-400/15 px-2.5 py-1 text-emerald-200">New program · {school.firstSeason}</span> : null}
+                </div>
+              </div>
             </div>
-          ) : null}
-
-          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm font-semibold">
-            {onRecruitNC ? (
-              <span className="inline-flex items-center gap-1.5 rounded-sm bg-white/10 px-2 py-1 text-xs text-white">
-                <ShieldCheck className="h-3.5 w-3.5 text-[#D7B968]" aria-hidden /> Coaches on RecruitNC
-              </span>
-            ) : null}
-            {school.website ? (
-              <a href={school.website} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-[#F5D985] hover:underline">
-                Athletics website <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-              </a>
-            ) : null}
-            <a href={`/recruiting/college-map?school=${school.id}`} className="inline-flex items-center gap-1.5 text-[#F5D985] hover:underline">
-              See it on the map <ChevronRight className="h-3.5 w-3.5" aria-hidden />
-            </a>
           </div>
-
-          <SchoolActions schoolId={school.id} schoolName={name} />
+          <div className="flex flex-col items-start gap-3 lg:items-end">
+            <p className="hidden text-right text-sm font-semibold uppercase leading-6 tracking-[0.3em] text-white/70 lg:block">
+              Same grind.
+              <br />
+              Higher opportunities.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {familySide ? (
+                <a href={`/recruiting/compare?s=${school.id}&step=colleges`} className={`${button} border border-white/20 hover:bg-white/10`}>
+                  <BarChart3 className="h-4 w-4" aria-hidden /> Compare
+                </a>
+              ) : null}
+              <a href={`/recruiting/college-map?school=${school.id}`} className={`${button} border border-white/20 hover:bg-white/10`}>
+                <MapIcon className="h-4 w-4" aria-hidden /> Map
+              </a>
+              {school.website ? (
+                <a href={school.website} target="_blank" rel="noopener noreferrer" className={`${button} border border-white/20 hover:bg-white/10`}>
+                  Athletics <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                </a>
+              ) : null}
+            </div>
+          </div>
         </div>
-        <TocPatrioticBar />
+        {familySide ? (
+          <div className="relative border-t border-white/10 px-5 py-4 sm:px-8">
+            <SchoolActions schoolId={school.id} schoolName={name} />
+          </div>
+        ) : null}
       </section>
 
-      <section className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
-        {full ? (
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="rounded-sm border border-white/10 bg-[#0B1D3A]/60 p-5">
-              <h2 className={`text-2xl text-white ${tocDisplayClass()}`}>Who to contact</h2>
+      {focus && !hasTheirTeam ? (
+        <p className="mt-4 rounded-xl border border-amber-300/40 bg-amber-300/10 px-4 py-3 text-sm font-semibold text-amber-100">
+          No {theirs === "womens" ? "women's" : "men's"} team here in 2026-27.{" "}
+          <a href="/recruiting/college-map" className="underline hover:text-white">
+            Colleges that have one
+          </a>
+        </p>
+      ) : null}
+
+      {/* Section tabs */}
+      <nav aria-label="On this page" className="sticky top-0 z-10 -mx-4 mt-4 overflow-x-auto border-b border-white/10 bg-[#060f1f]/90 px-4 backdrop-blur sm:mx-0 sm:px-0">
+        <ul className="flex gap-6 whitespace-nowrap text-sm font-semibold">
+          {tabs.map((t, i) => (
+            <li key={t.href}>
+              <a href={t.href} className={`block border-b-2 py-3 ${i === 0 ? "border-[#D3B574] text-[#D3B574]" : "border-transparent text-white/65 hover:text-white"}`}>
+                {t.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div className="mt-6 grid gap-5 lg:grid-cols-3">
+        {/* Column one */}
+        <div className="space-y-5">
+          <section className={card}>
+            <h2 className={cardTitle}>Program snapshot</h2>
+            <ul className="mt-2 divide-y divide-white/5">
+              {program ? <SnapshotRow icon={Medal} label="Division" value={DIVISION_SHORT[program.division]} /> : null}
+              {program?.conference ? <SnapshotRow icon={Building2} label="Conference" value={program.conference} /> : null}
+              <SnapshotRow icon={MapPin} label="Location" value={`${school.city}, ${school.state}`} sub={fit?.setting ?? undefined} />
+              {fit?.undergrads ? <SnapshotRow icon={Users} label="Undergrads" value={fit.undergrads.toLocaleString("en-US")} /> : null}
+              <SnapshotRow
+                icon={Trophy}
+                label="Team ranking"
+                value={ranking ? `No. ${ranking.rank} of ${ranking.of}` : "Unranked"}
+                sub={ranking ? `${ranking.pollName}, ${new Date(`${ranking.pollDate}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}` : undefined}
+              />
+              {depth ? <SnapshotRow icon={Users} label="Roster" value={`${depth.size} wrestlers`} sub={depth.season ? `${depth.season} roster` : undefined} /> : null}
+              {full && roster.anyReviewed ? <SnapshotRow icon={MapPin} label="From NC" value={`${ncNow.length} on the roster`} /> : null}
+            </ul>
+            {ranking ? (
+              <a href={ranking.sourceUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs text-white/45 underline hover:text-white">
+                The poll
+              </a>
+            ) : null}
+          </section>
+
+          {full ? (
+            <section className={card}>
+              <div className="flex items-baseline justify-between">
+                <h2 className={cardTitle}>North Carolina here</h2>
+                <a href="#roster" className="text-xs font-semibold" style={{ color: GOLD }}>
+                  Where you stand →
+                </a>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <Stat value={roster.anyReviewed ? String(ncNow.length) : "-"} label="On the roster" sub={roster.anyReviewed ? undefined : "Roster not read"} />
+                <Stat value={String(wentHere.length)} label="Committed from NC" />
+              </div>
+              {ncNow.length > 0 ? (
+                <ul className="mt-4 space-y-2">
+                  {ncNow.slice(0, 5).map((w) => (
+                    <li key={w.name} className="flex items-center justify-between gap-3 text-sm">
+                      <span className="min-w-0 truncate font-semibold">{w.name}</span>
+                      <span className="shrink-0 text-xs text-white/50">{[w.weight, w.class].filter(Boolean).join(" · ")}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </section>
+          ) : null}
+        </div>
+
+        {/* Column two */}
+        <div className="space-y-5">
+          <section id="cost" className={`${card} scroll-mt-16`}>
+            <h2 className={cardTitle}>What a year costs{cost ? <span className="font-normal text-white/50"> ({cost.year})</span> : null}</h2>
+            {cost ? (
+              <>
+                <div className="mt-3 flex flex-wrap items-end gap-x-6 gap-y-3">
+                  <div>
+                    <p className="text-4xl font-black tracking-tight">{dollars(cost.total)}</p>
+                    <p className="mt-1 text-xs text-white/55">{cost.who}</p>
+                  </div>
+                  <ul className="min-w-[11rem] flex-1 space-y-1 text-xs">
+                    {cost.lines.map((l) => (
+                      <li key={l.label} className="flex justify-between gap-3 border-b border-white/5 pb-1">
+                        <span className="text-white/60">{l.label}</span>
+                        <span className="font-semibold">{dollars(l.amount)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                {cost.other ? <p className="mt-3 text-xs text-white/55">{cost.other}</p> : null}
+                <details className="mt-3 text-xs text-white/45">
+                  <summary className="cursor-pointer">Source · before aid</summary>
+                  <p className="mt-1 leading-5">{cost.note}</p>
+                </details>
+              </>
+            ) : tuition && tuition.lines.length > 0 ? (
+              <p className="mt-2 text-sm text-white/75">{tuition.lines[0]}</p>
+            ) : (
+              <p className="mt-2 text-sm text-white/55">Not published.</p>
+            )}
+          </section>
+
+          {fitResult && ctx ? (
+            <section className={card}>
+              <div className="flex items-baseline justify-between">
+                <h2 className={cardTitle}>A good fit for {ctx.first}?</h2>
+                <a href={`/recruiting/compare?s=${school.id}&step=matters`} className="text-xs font-semibold" style={{ color: GOLD }}>
+                  {ctx.profileSet ? "Edit goals" : "Add goals"}
+                </a>
+              </div>
+              <div className="mt-2">
+                <FitRow icon={Target} label="Athletic" line={fitResult.lines.athletic} athletic />
+                <FitRow icon={GraduationCap} label="Academic" line={fitResult.lines.academic} />
+                <FitRow icon={DollarSign} label="Financial" line={fitResult.lines.cost} />
+                <FitRow icon={MapPin} label="Your goals" line={fitResult.lines.goals} />
+              </div>
+            </section>
+          ) : null}
+
+          {fit ? (
+            <section className={card}>
+              <h2 className={cardTitle}>What families paid</h2>
+              {fit.netPriceInStateOnly && school.state !== "NC" ? (
+                <p className="mt-2 text-sm text-white/65">
+                  Published for in-state families only.{" "}
+                  {fit.netPriceCalculatorUrl ? (
+                    <a href={fit.netPriceCalculatorUrl} target="_blank" rel="noopener noreferrer" className="font-semibold underline" style={{ color: GOLD }}>
+                      Their calculator
+                    </a>
+                  ) : null}
+                </p>
+              ) : fit.netPriceByIncome?.some((n) => n != null) ? (
+                <>
+                  <ul className="mt-4 space-y-2.5">
+                    {INCOME_BRACKETS.map((label, i) => {
+                      const amount = fit.netPriceByIncome?.[i] ?? null
+                      const top = Math.max(...(fit.netPriceByIncome ?? []).map((n) => n ?? 0), 1)
+                      return (
+                        <li key={label} className="grid grid-cols-[7.5rem_1fr_4.5rem] items-center gap-3 text-xs">
+                          <span className="text-white/55">{label.replace(" to ", "–")}</span>
+                          <span className="h-2 overflow-hidden rounded-full bg-white/10">
+                            {amount != null ? <span className="block h-full rounded-full" style={{ width: `${Math.max(4, (amount / top) * 100)}%`, backgroundColor: GOLD }} /> : null}
+                          </span>
+                          <span className="text-right font-semibold">{amount != null ? dollars(amount) : "-"}</span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                  <p className="mt-3 text-xs text-white/40">Average paid after grants, first-year students, 2022-23.</p>
+                </>
+              ) : (
+                <p className="mt-2 text-sm text-white/55">Not published.</p>
+              )}
+            </section>
+          ) : null}
+        </div>
+
+        {/* Column three */}
+        <div className="space-y-5">
+          {full ? (
+            <section id="staff" className={`${card} scroll-mt-16`}>
+              <h2 className={cardTitle}>Coaching staff</h2>
               <StaffList school={{ id: school.id, programs: school.programs }} focus={theirs} />
-            </div>
-            <div className="rounded-sm border border-white/10 bg-[#0B1D3A]/60 p-5">
-              <h2 className={`text-2xl text-white ${tocDisplayClass()}`}>Where you stand</h2>
-              <WentHereSection schoolId={school.id} schoolName={name} focus={theirs} />
-            </div>
-          </div>
-        ) : (
-          <div className="rounded-sm border border-[#D7B968]/30 bg-[#D7B968]/10 p-5 sm:p-6">
-            <p className="flex items-center gap-2 text-base font-bold">
-              <Lock className="h-4 w-4 text-[#F5D985]" aria-hidden /> The rest of this page is part of NC United Blue
-            </p>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/75">
-              Blue members see {name}&apos;s coaching staff and how to reach them, the recruiting questionnaire, which North
-              Carolina wrestlers went there and what they had won, and can save the school to their list and email the
-              coach from verified results.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <a href="/blue" className="rounded-sm bg-[#CC0000] px-5 py-2.5 text-sm font-bold text-white hover:bg-[#a80000]">
+            </section>
+          ) : (
+            <section className="rounded-2xl border border-[#D3B574]/40 bg-[#D3B574]/10 p-5">
+              <p className="flex items-center gap-2 text-base font-bold">
+                <Lock className="h-4 w-4" style={{ color: GOLD }} aria-hidden /> Part of NC United Blue
+              </p>
+              <ul className="mt-3 space-y-1.5 text-sm text-white/75">
+                <li>Coaching staff and emails</li>
+                <li>NC wrestlers on the roster</li>
+                <li>Fit for your wrestler</li>
+                <li>Save, track and email the coach</li>
+              </ul>
+              <a href="/blue" className={`${button} mt-4 bg-[#D3B574] text-[#0A1628] hover:bg-[#e2c98d]`}>
                 Learn about Blue
               </a>
-              <a href="/recruiting/college-map" className="rounded-sm border border-white/25 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/10">
-                See every program on the map
-              </a>
-            </div>
+            </section>
+          )}
+
+          {familySide ? (
+            <section className={card}>
+              <h2 className={cardTitle}>Next steps</h2>
+              <ul className="mt-3 space-y-2">
+                {[
+                  { href: `/recruiting/compare?s=${school.id}&step=colleges`, icon: BarChart3, label: "Compare with other colleges" },
+                  { href: "/recruiting/learn/questions-families-ask", icon: Plane, label: "Plan a visit: who pays" },
+                  { href: "/my-recruiting/plan", icon: Target, label: "Your recruiting plan" },
+                  { href: "/recruiting/learn/paying-for-college", icon: BookOpen, label: "How aid works" },
+                ].map(({ href, icon: Icon, label }) => (
+                  <li key={href}>
+                    <a href={href} className="flex items-center gap-3 rounded-lg border border-white/10 px-3 py-2.5 text-sm font-semibold hover:border-white/30 hover:bg-white/5">
+                      <Icon className="h-4 w-4" style={{ color: GOLD }} aria-hidden />
+                      <span className="flex-1">{label}</span>
+                      <ChevronRight className="h-4 w-4 text-white/40" aria-hidden />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ) : null}
+        </div>
+      </div>
+
+      {full ? (
+        <section id="roster" className={`${card} mt-5 scroll-mt-16`}>
+          <h2 className={cardTitle}>Where you stand</h2>
+          <WentHereSection schoolId={school.id} schoolName={name} focus={theirs} />
+        </section>
+      ) : null}
+
+      <section id="academics" className={`${card} mt-5 scroll-mt-16`}>
+        <h2 className={cardTitle}>Academics</h2>
+        {fit ? (
+          <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <Stat value={fit.admitRate != null ? `${fit.admitRate}%` : "Open"} label="Admitted" sub={fit.admitRate == null ? "Admits most or does not report" : undefined} />
+            <Stat value={satRange[0] != null ? `${satRange[0]}–${satRange[1]}` : "-"} label="SAT middle half" />
+            <Stat value={fit.act[0] != null ? `${fit.act[0]}–${fit.act[1]}` : "-"} label="ACT middle half" />
+            <Stat value={fit.gradRate != null ? `${fit.gradRate}%` : "-"} label="Graduate" sub={fit.gradRateKind ?? undefined} />
           </div>
+        ) : (
+          <p className="mt-2 text-sm text-white/55">Not reported.</p>
         )}
+        {majorLabels.length > 0 ? (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {majorLabels.slice(0, 8).map((m) => (
+              <span key={m} className="rounded-full border border-white/15 px-3 py-1 text-xs text-white/75">
+                {m}
+              </span>
+            ))}
+            {majorLabels.length > 8 ? <span className="px-1 py-1 text-xs text-white/45">+{majorLabels.length - 8} more fields of study</span> : null}
+          </div>
+        ) : null}
+        <p className="mt-4 text-xs text-white/40">US Department of Education.</p>
       </section>
-    </main>
+    </div>
+  )
+
+  return familySide ? (
+    <PortalShell active="colleges">{page}</PortalShell>
+  ) : (
+    <main className="min-h-screen bg-[#060f1f] px-4 py-6 sm:px-6 lg:px-8">{page}</main>
   )
 }
