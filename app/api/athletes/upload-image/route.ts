@@ -1,4 +1,5 @@
 import { put } from "@vercel/blob"
+import { revalidateTag } from "next/cache"
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -105,6 +106,12 @@ export async function POST(request: NextRequest) {
       )
     }
     console.log("[v0] Database update successful")
+    /*
+     * The ranking boards are cached for an hour (lib/rankings/public-rankings-view.ts), so a new
+     * photo stayed off the rankings until the hour ran out: Brandon Palmer set photos for the top
+     * fifteen 2027 girls and the board still showed initials (15 October 2026).
+     */
+    if (category === "profile" || category === "headshot") revalidateTag("public-rankings")
 
     return NextResponse.json({
       success: true,
