@@ -92,7 +92,7 @@ export default async function CommandCenterSalesPage() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/hero-banner-nchsaa-2026-arena.png" alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-20" />
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/nc-united-dom-singlet.jpg" alt="" aria-hidden className="absolute inset-y-0 right-0 hidden h-full w-[45%] object-cover object-[50%_20%] opacity-75 lg:block" />
+        <img src="/toc-finals-looking-ahead-bw.jpg" alt="" aria-hidden className="absolute inset-y-0 right-0 hidden h-full w-[48%] object-cover object-[50%_30%] opacity-90 lg:block" style={{ maskImage: "linear-gradient(to right, transparent, black 35%)", WebkitMaskImage: "linear-gradient(to right, transparent, black 35%)" }} />
         <div className="absolute inset-0 bg-gradient-to-r from-[#060f1f] via-[#060f1f]/90 to-[#060f1f]/10" aria-hidden />
         <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-12 sm:pt-16">
           <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-white/70">RecruitNC · For wrestling families</p>
