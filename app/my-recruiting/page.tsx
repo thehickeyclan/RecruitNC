@@ -10,10 +10,12 @@ import Link from "next/link"
 import { ArrowRight, CalendarDays, Check, Circle, DollarSign, HelpCircle, ListChecks, Mail, Scale } from "lucide-react"
 
 import { InfoSheetCard } from "@/components/portal/info-sheet-card"
+import { StageSelect } from "@/components/portal/stage-select"
+import { yearlyCostFor } from "@/lib/college-programs/tuition"
+import { DIVISION_COLOR } from "@/lib/college-programs/types"
 import { PortalShell } from "@/components/portal/portal-shell"
 import { unreadCount } from "@/lib/coach-messages"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
-import { COLLEGE_LIST_STATUS_LABEL } from "@/lib/college-programs/list"
 import { buildMapPreview } from "@/lib/college-programs/map-preview"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { listTarget, planSteps } from "@/lib/college-programs/roadmap"
@@ -29,6 +31,8 @@ export const dynamic = "force-dynamic"
 export const metadata = { title: "Recruiting Command Center | RecruitNC" }
 
 const ALL_SCHOOLS = [...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS]
+const SCHOOL_BY_ID = new Map(ALL_SCHOOLS.map((s) => [s.id, s]))
+const LEVEL_COLOR: Record<string, string> = { D1: DIVISION_COLOR["NCAA Division I"], D2: DIVISION_COLOR["NCAA Division II"], D3: DIVISION_COLOR["NCAA Division III"], NAIA: DIVISION_COLOR.NAIA, NJCAA: DIVISION_COLOR.NJCAA }
 const card = "rounded-xl border border-white/10 bg-[#0f1c2e]"
 const title = "text-base font-black text-white"
 const more = "inline-flex items-center gap-1 text-xs font-bold text-[#D3B574] hover:underline"
@@ -194,27 +198,41 @@ export default async function CommandCenterHome() {
               </div>
               {schools.length ? (
                 <ul className="mt-3 space-y-3">
-                  {schools.slice(0, 3).map((s) => (
-                    <li key={s.id} className="flex items-center gap-3">
-                      {s.logo ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={s.logo} alt="" className="h-10 w-10 shrink-0 rounded bg-white object-contain p-0.5" />
-                      ) : (
-                        <span className="h-10 w-10 shrink-0 rounded bg-white/[0.06]" aria-hidden />
-                      )}
-                      <span className="min-w-0 flex-1">
-                        <a href={`/recruiting/schools/${s.id}`} className="block truncate text-sm font-bold text-white hover:underline">
-                          {s.name}
-                        </a>
-                        <span className="block text-xs text-white/50">
-                          {s.level} · {COLLEGE_LIST_STATUS_LABEL[s.status]}
-                        </span>
-                      </span>
-                      <Link href={`/my-recruiting/colleges?email=${s.id}`} className="inline-flex shrink-0 items-center gap-1 rounded-md border border-white/20 px-2 py-1 text-xs font-bold text-white/85 hover:border-[#D3B574]">
-                        <Mail className="h-3.5 w-3.5" aria-hidden /> Email
-                      </Link>
-                    </li>
-                  ))}
+                  {schools.slice(0, 2).map((s) => {
+                    const school = SCHOOL_BY_ID.get(s.id)
+                    const cost = school ? yearlyCostFor(s.id, school.state) : null
+                    const which = school && cost ? (school.state === "NC" ? "in-state" : "out-of-state") : null
+                    return (
+                      <li key={s.id} className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                        <div className="flex items-center gap-3">
+                          {s.logo ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={s.logo} alt="" className="h-11 w-11 shrink-0 rounded-lg bg-white object-contain p-1" />
+                          ) : (
+                            <span className="h-11 w-11 shrink-0 rounded-lg bg-white/[0.06]" aria-hidden />
+                          )}
+                          <span className="min-w-0 flex-1">
+                            <a href={`/recruiting/schools/${s.id}`} className="line-clamp-1 block text-sm font-bold text-white hover:underline">
+                              {s.name}
+                            </a>
+                            <span className="mt-0.5 flex items-center gap-1.5 text-xs text-white/50">
+                              <span className="rounded px-1 text-[10px] font-black text-[#071427]" style={{ backgroundColor: LEVEL_COLOR[s.level] ?? "#94a3b8" }}>
+                                {s.level}
+                              </span>
+                              {s.place}
+                            </span>
+                            {cost ? <span className="block text-xs text-white/45">${cost.amount.toLocaleString("en-US")} a year ({which})</span> : null}
+                          </span>
+                        </div>
+                        <div className="mt-2.5 flex gap-2">
+                          <StageSelect schoolId={s.id} status={s.status} readOnly={cc.viewerId !== cc.authUserId} />
+                          <Link href={`/my-recruiting/colleges?email=${s.id}`} className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-white/20 px-3 text-sm font-bold text-white/85 hover:border-[#D3B574]">
+                            <Mail className="h-4 w-4" aria-hidden /> Email
+                          </Link>
+                        </div>
+                      </li>
+                    )
+                  })}
                 </ul>
               ) : (
                 <p className="mt-3 text-sm text-white/60">No colleges yet. Save them from the map; go wide, across levels.</p>
