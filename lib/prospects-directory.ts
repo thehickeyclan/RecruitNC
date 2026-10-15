@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { currentClassYears, mostRecentGraduatedClassYear } from "@/lib/class-years"
+import { HOME_STATE, inState, normalizeStateCode } from "@/lib/recruiting/states"
 
 /**
  * Directory list columns only — omit bio and other large fields.
@@ -53,6 +54,8 @@ export type ProspectDirectoryRow = Record<string, unknown> & {
 }
 
 export type ProspectDirectoryFilters = {
+  /** Two-letter state; North Carolina when absent. */
+  state?: string | null
   graduationYear?: string | null
   minYear?: number | null
   maxYear?: number | null
@@ -224,14 +227,19 @@ export async function fetchProspectDirectoryPage(
     )
   }
 
+  // Another state's wrestlers by the one state rule (lib/recruiting/states.ts). North Carolina keeps
+  // this directory's own rule below, so its list is what it always was.
+  const state = normalizeStateCode(filters.state) ?? HOME_STATE
+  if (state !== HOME_STATE) query = inState(query, state)
+
   const { data, error } = await query
   if (error) throw new Error(error.message)
 
   const normalized = (data ?? []).map((row) => normalizeProspectDirectoryRow(row as Record<string, unknown>))
-  const ncOnly = normalized.filter(isNorthCarolinaProspect)
+  const inList = state === HOME_STATE ? normalized.filter(isNorthCarolinaProspect) : normalized
 
   return {
-    prospects: ncOnly,
+    prospects: inList,
     hasMore: (data?.length ?? 0) >= limit,
   }
 }

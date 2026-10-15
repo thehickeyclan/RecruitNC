@@ -3,7 +3,7 @@ import "server-only"
 
 import { createAdminClient } from "@/lib/supabase/admin"
 import { classifyViewer } from "@/lib/viewer-role"
-import { loadCoachRoster } from "@/lib/coach-roster"
+import { loadLiveRoster } from "@/lib/coach-roster"
 import { loadMyRecruits } from "@/lib/my-recruits"
 import { isApprovedCoach, listThreads } from "@/lib/coach-messages"
 import { loadFitFlags } from "@/lib/program-fit-bulk"
@@ -52,7 +52,7 @@ export async function loadCoachHome(
   const [board, threads, roster, school] = await Promise.all([
     loadMyRecruits(admin, userId).catch(() => null),
     listThreads(admin, userId).catch(() => null),
-    loadCoachRoster().catch(() => []),
+    loadLiveRoster().catch(() => []),
     profile?.school_id
       ? admin
           .from("schools")

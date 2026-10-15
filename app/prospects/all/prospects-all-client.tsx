@@ -1,7 +1,8 @@
 "use client"
 
 import { VIEW_GENDER_COOKIE, coachProgramOf, parseViewGender, viewGenderFor } from "@/lib/recruiting/coach-program"
-import { RECRUITING_BRAND, usesRecruitingShell } from "@/lib/recruiting/brand"
+import { usesRecruitingShell, visibleStates } from "@/lib/recruiting/brand"
+import { HOME_STATE } from "@/lib/recruiting/states"
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
@@ -248,7 +249,12 @@ export default function ProspectsAllClient({
   const [weightFilters, setWeightFilters] = useState<string[]>([])
   const [achievementFilters, setAchievementFilters] = useState<AchievementLevel[]>([])
   const [honorFilters, setHonorFilters] = useState<HonorPill[]>([])
-  const [stateFilter, setStateFilter] = useState<string>("all")
+  /*
+   * One state's wrestlers at a time, North Carolina first: each state is its own list (and its
+   * own brand to families). Choosing another state loads it from the server.
+   */
+  const [stateFilter, setStateFilter] = useState<string>(HOME_STATE)
+  const stateChoices = visibleStates(viewerProfile?.is_admin === true || viewerProfile?.role === "admin")
 
   useEffect(() => {
     if (skipInitialActiveFetch.current && yearFilter === "active") {
@@ -274,6 +280,7 @@ export default function ProspectsAllClient({
           if (yearParams.graduationYear) params.set("graduationYear", yearParams.graduationYear)
           if (yearParams.minYear != null) params.set("minYear", String(yearParams.minYear))
           if (yearParams.maxYear != null) params.set("maxYear", String(yearParams.maxYear))
+          if (stateFilter !== HOME_STATE) params.set("state", stateFilter)
 
           const url = `/api/prospects?${params.toString()}`
           const maxAttempts = 3
@@ -324,7 +331,8 @@ export default function ProspectsAllClient({
     }
 
     run()
-  }, [yearFilter])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [yearFilter, stateFilter])
 
   const availableYears = useMemo(() => {
     const years = new Set<number>()
@@ -542,7 +550,7 @@ export default function ProspectsAllClient({
 
       if (honorFilters.length > 0 && !honorFilters.some((h) => hasHonor(prospect, h))) return false
 
-      if (stateFilter !== "all" && stateOfProspect(prospect) !== stateFilter) return false
+      if (stateFilter !== HOME_STATE && stateOfProspect(prospect) !== stateFilter) return false
 
       return true
     })
@@ -677,7 +685,7 @@ export default function ProspectsAllClient({
     setWeightFilters([])
     setAchievementFilters([])
     setHonorFilters([])
-    setStateFilter("all")
+    setStateFilter(HOME_STATE)
   }
 
   const hasActiveFilters = useMemo(() => {
@@ -690,7 +698,7 @@ export default function ProspectsAllClient({
       weightFilters.length > 0 ||
       achievementFilters.length > 0 ||
       honorFilters.length > 0 ||
-      stateFilter !== "all"
+      stateFilter !== HOME_STATE
     )
   }, [searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilters, honorFilters, stateFilter])
 
@@ -885,21 +893,23 @@ export default function ProspectsAllClient({
             </QuickGroup>
             {/* Two rows on a wide screen: who (wrestling, class, honours), then how (state, show, sort). */}
             <div className="hidden basis-full lg:block" aria-hidden />
-            <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase tracking-wider text-white/45">
-              State
-              <select
-                value={stateFilter}
-                onChange={(e) => setStateFilter(e.target.value)}
-                className="min-h-[36px] rounded-lg border border-white/20 bg-[#0A1628] px-3 text-sm font-semibold normal-case tracking-normal text-white focus:border-[#D3B574] focus:outline-none"
-              >
-                <option value="all">All states</option>
-                {RECRUITING_BRAND.states.map((st) => (
-                  <option key={st.code} value={st.code}>
-                    {st.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {stateChoices.length > 1 ? (
+              <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase tracking-wider text-white/45">
+                State
+                <select
+                  value={stateFilter}
+                  onChange={(e) => setStateFilter(e.target.value)}
+                  className="min-h-[36px] rounded-lg border border-white/20 bg-[#0A1628] px-3 text-sm font-semibold normal-case tracking-normal text-white focus:border-[#D3B574] focus:outline-none"
+                >
+                  {stateChoices.map((st) => (
+                    <option key={st.code} value={st.code}>
+                      Recruit{st.code} · {st.name}
+                      {st.live ? "" : " (staff only)"}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             <QuickGroup label="Show">
               {maySeeRanking ? (
                 <QuickChip active={rankFilter === "ranked"} onClick={() => setRankFilter(rankFilter === "ranked" ? "all" : "ranked")}>

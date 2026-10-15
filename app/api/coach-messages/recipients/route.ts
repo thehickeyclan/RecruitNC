@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveRequestUserId } from "@/lib/request-user"
-import { loadCoachRoster } from "@/lib/coach-roster"
+import { loadLiveRoster } from "@/lib/coach-roster"
 import { classifyViewer } from "@/lib/viewer-role"
 
 /**
@@ -20,6 +20,6 @@ export async function GET(request: NextRequest) {
   if (!who.isCollegeCoach && who.kind !== "admin" && profile?.is_admin !== true) {
     return NextResponse.json({ error: "College coaches only." }, { status: 403 })
   }
-  const athletes = await loadCoachRoster()
+  const athletes = await loadLiveRoster()
   return NextResponse.json({ athletes })
 }

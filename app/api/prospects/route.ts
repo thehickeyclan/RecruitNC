@@ -1,5 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
+import { isVisibleState } from "@/lib/recruiting/brand"
+import { HOME_STATE, normalizeStateCode } from "@/lib/recruiting/states"
 import { fetchProspectDirectoryPage } from "@/lib/prospects-directory"
 import { lastCompetedLabel, loadLastCompeted } from "@/lib/prospect-last-competed"
 import { highestAchievement, loadAchievements } from "@/lib/prospect-achievements"
@@ -20,6 +23,21 @@ export async function GET(request: NextRequest) {
     const offset = Number.parseInt(searchParams.get("offset") || "0", 10)
     const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 500) : 500
 
+    /*
+     * One state per request; North Carolina when none is asked for, which is every request made
+     * before a second state existed. A state not yet announced is admins' only.
+     */
+    const state = normalizeStateCode(searchParams.get("state")) ?? HOME_STATE
+    let isAdmin = false
+    if (state !== HOME_STATE) {
+      const { data: auth } = await (await createClient()).auth.getUser()
+      if (auth.user) {
+        const { data: me } = await supabase.from("user_profiles").select("is_admin, role").eq("user_id", auth.user.id).maybeSingle()
+        isAdmin = me?.is_admin === true || me?.role === "admin"
+      }
+      if (!isVisibleState(state, isAdmin)) return NextResponse.json({ error: "That state is not open yet." }, { status: 404 })
+    }
+
     const minYear = minYearParam ? Number.parseInt(minYearParam, 10) : null
     const maxYear = maxYearParam ? Number.parseInt(maxYearParam, 10) : null
 
@@ -30,6 +48,7 @@ export async function GET(request: NextRequest) {
       maxYear: Number.isFinite(maxYear!) ? maxYear : null,
       limit,
       offset,
+      state,
     })
 
     /*
@@ -66,7 +85,8 @@ export async function GET(request: NextRequest) {
       },
       {
         headers: {
-          "Cache-Control": "public, s-maxage=120, stale-while-revalidate=300",
+          // A state still being checked is answered per person, never from a shared cache.
+          "Cache-Control": isVisibleState(state, false) ? "public, s-maxage=120, stale-while-revalidate=300" : "private, no-store",
           "Content-Type": "application/json",
         },
       },
