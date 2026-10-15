@@ -179,7 +179,7 @@ export default async function CommandCenterHome() {
                   ))}
                 </ul>
               ) : (
-                <p className="mt-3 text-sm text-white/60">The plan, college board and schedule are part of NC United Blue.</p>
+                <p className="mt-3 text-sm text-white/60">The plan, college board and schedule are part of the Command Center.</p>
               )}
               <Link href={blue ? "/my-recruiting/plan" : "/blue"} className="mt-auto inline-flex w-fit items-center gap-1 rounded-lg bg-[#D3B574] px-3 py-2 pt-2 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d] [margin-top:1rem]">
                 {blue ? "View your full plan" : "Learn about Blue"} <ArrowRight className="h-4 w-4" aria-hidden />
@@ -320,7 +320,7 @@ export default async function CommandCenterHome() {
 
           {blue ? (
             <p className="mt-4 flex items-center gap-2 text-xs text-white/45">
-              <ListChecks className="h-4 w-4" aria-hidden /> Your plan, list and schedule are part of NC United Blue.
+              <ListChecks className="h-4 w-4" aria-hidden /> Your plan, list and schedule are part of your Command Center plan.
             </p>
           ) : null}
         </>

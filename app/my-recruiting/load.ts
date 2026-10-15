@@ -28,6 +28,7 @@ import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import type { WarRoomSchool, WarRoomWrestler } from "./war-room-plan"
+import { hasPortalAccess } from "@/lib/ranking-visibility"
 
 
 const SCHOOLS = new Map([...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS].map((s) => [s.id, s]))
@@ -45,7 +46,7 @@ export async function loadCommandCenter(returnTo: string) {
   const viewerId = portal.userId ?? user.id
   const viewer = portal.viewer
   const [ids, focus] = await Promise.all([familyAthleteIds(admin, viewerId), familyFocus(admin, viewerId)])
-  const blue = Boolean(viewer.isBlueMember || viewer.isAdmin)
+  const blue = hasPortalAccess(viewer)
 
   const { data: rows } = ids.length
     ? await admin

@@ -159,6 +159,7 @@ export async function resolveRankingViewerForUser(options: {
       role: profile?.role ?? null,
       isBlueMember: isBlueFromStripe(memberships) || isBlueViaAthlete || isWiqBlue,
       hasSubscription: isSubscriptionLive(subscription ?? null),
+      hasCommandCenter: isSubscriptionLive(subscription ?? null) ? await subscriptionTier(admin, user.id).then((t) => t === "command_center") : false,
       isOwnProfile,
     },
   }
@@ -171,3 +172,20 @@ export const RANKING_PAYWALL = {
 } as const
 
 export { normalizeRole }
+
+/**
+ * Which plan a live subscription is. Asked on its own, never in the subscription select above:
+ * a select naming a column the database does not have yet fails whole, and that would lock every
+ * paying subscriber out of the rankings (memory: column revokes break the whole select).
+ */
+async function subscriptionTier(admin: SupabaseClient, userId: string): Promise<"rankings" | "command_center"> {
+  const { data, error } = await admin.from("recruitnc_subscriptions").select("plan").eq("user_id", userId).maybeSingle()
+  if (error) return "rankings"
+  return (data as { plan?: string | null } | null)?.plan === "command_center" ? "command_center" : "rankings"
+}
+
+/** The Command Center can be sold once its subscriptions can be recorded (the `plan` column exists). */
+export async function commandCenterOnSale(admin: SupabaseClient): Promise<boolean> {
+  const { error } = await admin.from("recruitnc_subscriptions").select("plan").limit(1)
+  return !error
+}

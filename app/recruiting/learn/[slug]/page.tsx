@@ -18,6 +18,7 @@ import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { familyFocus } from "@/lib/recruiting/family-focus"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { hasPortalAccess } from "@/lib/ranking-visibility"
 
 export const dynamic = "force-dynamic"
 
@@ -37,7 +38,7 @@ export default async function LearnPage({ params }: Params) {
 
   const admin = createAdminClient()
   const { viewer, userId } = await resolvePortalViewer({ supabase: await createClient(), admin })
-  const open = page.free || Boolean(viewer.isBlueMember || viewer.isAdmin || viewer.isVerifiedCoach)
+  const open = page.free || Boolean(hasPortalAccess(viewer) || viewer.isVerifiedCoach)
 
   const focus = open ? await familyFocus(admin, userId) : null
 
@@ -87,7 +88,7 @@ export default async function LearnPage({ params }: Params) {
         ) : (
           <div className="mt-6 rounded-xl border border-[#D3B574]/40 bg-[#D3B574]/10 p-5 sm:p-6">
             <p className="flex items-center gap-2 text-base font-bold">
-              <Lock className="h-4 w-4 text-[#D3B574]" aria-hidden /> This page is part of NC United Blue
+              <Lock className="h-4 w-4 text-[#D3B574]" aria-hidden /> This page is part of the Command Center
             </p>
             <p className="mt-2 text-sm leading-6 text-white/75">It covers, with the source under each:</p>
             <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-white/75 marker:text-[#D3B574]">
@@ -97,8 +98,8 @@ export default async function LearnPage({ params }: Params) {
               ))}
             </ul>
             <div className="mt-4 flex flex-wrap gap-2">
-              <a href="/blue" className="rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
-                Learn about Blue
+              <a href="/plans" className="rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
+                See plans
               </a>
               <a
                 href="/recruiting/learn/staying-eligible-in-north-carolina"

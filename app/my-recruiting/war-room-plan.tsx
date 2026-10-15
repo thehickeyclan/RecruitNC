@@ -111,7 +111,7 @@ export function WarRoomPlan({
     return (
       <div className={`${PANEL} mt-5 p-5 sm:p-6`}>
         <p className="flex items-center gap-2 text-base font-bold">
-          <Lock className="h-4 w-4 text-[#D3B574]" aria-hidden /> The plan is part of NC United Blue
+          <Lock className="h-4 w-4 text-[#D3B574]" aria-hidden /> The plan is part of the Command Center
         </p>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-white/65">
           Blue members get this month&apos;s steps for each wrestler, a college list that tracks every school from
@@ -119,8 +119,8 @@ export function WarRoomPlan({
           questionnaire for every program, and a schedule that tells coaches where to watch.
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
-          <a href="/blue" className="rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
-            Learn about Blue
+          <a href="/plans" className="rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
+            See plans
           </a>
           <a href="/recruiting/college-map" className="rounded-lg border border-white/20 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/5">
             See the college map

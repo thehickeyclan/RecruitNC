@@ -11,7 +11,7 @@ import {
 } from "@/lib/scouting-report-entitlement"
 import { loadScoutingEntitlement } from "@/lib/scouting-report-entitlement-db"
 import { classifyViewer } from "@/lib/viewer-role"
-import { canSeeProspectRanking } from "@/lib/ranking-visibility"
+import { canSeeProspectRanking, hasPortalAccess } from "@/lib/ranking-visibility"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 
 /**
@@ -96,9 +96,13 @@ export async function POST(request: Request) {
    */
   if (plan) {
     const { viewer } = await resolveRankingViewer({ supabase, admin })
-    if (canSeeProspectRanking(viewer)) {
+    // The Command Center is sold to anyone without the portal, including a Rankings subscriber
+    // upgrading; the Rankings plans to anyone without the rankings.
+    if (kind === "command_center" ? hasPortalAccess(viewer) : canSeeProspectRanking(viewer)) {
       return NextResponse.json(
-        { error: "Your account already includes the rankings.", reason: "already_entitled" },
+        kind === "command_center"
+          ? { error: "Your account already includes the Command Center.", reason: "already_entitled_portal" }
+          : { error: "Your account already includes the rankings.", reason: "already_entitled" },
         { status: 409 },
       )
     }
@@ -134,12 +138,16 @@ export async function POST(request: Request) {
             unit_amount: SCOUTING_REPORT_PRICES[kind],
             ...(plan ? { recurring: { interval: plan.interval } } : {}),
             product_data: {
-              name: plan
-                ? `RecruitNC ${plan.label.toLowerCase()} — rankings and scouting reports`
-                : `Scouting report — ${athleteName || "athlete"}`,
-              description: plan
-                ? "Full class rankings and unlimited scouting reports while the subscription is active."
-                : "One athlete's scouting report: results, significant wins and losses, competition strength.",
+              name: kind === "command_center"
+                ? "RecruitNC Command Center — monthly"
+                : plan
+                  ? `RecruitNC ${plan.label.toLowerCase()} — rankings and scouting reports`
+                  : `Scouting report — ${athleteName || "athlete"}`,
+              description: kind === "command_center"
+                ? "The Recruiting Command Center: plan, college list, compare, coach messages and Learn, with full rankings and profile views."
+                : plan
+                  ? "Full class rankings and unlimited scouting reports while the subscription is active."
+                  : "One athlete's scouting report: results, significant wins and losses, competition strength.",
             },
           },
         },
