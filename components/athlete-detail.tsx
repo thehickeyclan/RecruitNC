@@ -496,8 +496,9 @@ export function AthleteDetail({
     })
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.error || "Failed to upload image")
+      // A request the platform refuses (too large, timed out) comes back as plain text, not JSON.
+      const error = await response.json().catch(() => null)
+      throw new Error(error?.error || (response.status === 413 ? "That photo is too large. Try a smaller one." : "The photo did not upload. Please try again."))
     }
 
     const data = await response.json()
