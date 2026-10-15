@@ -6,6 +6,8 @@ export type ExistingMatch = {
   id: string
   name: string
   highSchool: string | null
+  /** "NC", "SC"; null when the profile has no state on file. */
+  state: string | null
   graduationYear: number | null
   weightClass: string | null
   club: string | null
@@ -102,7 +104,14 @@ export function FindExistingStep({
                   <span className="h-12 w-12 shrink-0 rounded bg-white/5" />
                 )}
                 <span className="min-w-0 flex-1">
-                  <span className="block font-semibold text-white">{m.name}</span>
+                  <span className="flex items-center gap-2 font-semibold text-white">
+                    {m.name}
+                    {m.state ? (
+                      <span className="rounded border border-white/20 px-1.5 py-px text-[10px] font-black tracking-wider text-white/70" title="State">
+                        {m.state}
+                      </span>
+                    ) : null}
+                  </span>
                   <span className="block truncate text-sm text-white/55">
                     {[m.highSchool, m.graduationYear ? `Class of ${m.graduationYear}` : null, m.club]
                       .filter(Boolean)
