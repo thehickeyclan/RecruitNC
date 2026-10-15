@@ -4,6 +4,7 @@ import { addUpcomingEvent, listUpcomingEvents, ownsAthlete, removeUpcomingEvent 
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { hasPortalAccess } from "@/lib/ranking-visibility"
 
 export const dynamic = "force-dynamic"
 
@@ -15,7 +16,7 @@ export const dynamic = "force-dynamic"
 async function owner(athleteId: string) {
   const admin = createAdminClient()
   const { viewer, userId } = await resolveRankingViewer({ supabase: await createClient(), admin })
-  if (!userId || !(viewer.isBlueMember || viewer.isAdmin)) return { admin, userId: null, status: 403 as const }
+  if (!userId || !hasPortalAccess(viewer)) return { admin, userId: null, status: 403 as const }
   if (!athleteId || !(await ownsAthlete(admin, userId, athleteId))) return { admin, userId: null, status: 403 as const }
   return { admin, userId, status: 200 as const }
 }

@@ -5,6 +5,7 @@ import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { familyFocus } from "@/lib/recruiting/family-focus"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { hasPortalAccess } from "@/lib/ranking-visibility"
 
 export const dynamic = "force-dynamic"
 
@@ -15,7 +16,7 @@ export const dynamic = "force-dynamic"
 export async function GET() {
   const admin = createAdminClient()
   const { viewer, userId } = await resolvePortalViewer({ supabase: await createClient(), admin })
-  const full = Boolean(viewer.isBlueMember || viewer.isAdmin || viewer.isVerifiedCoach)
+  const full = Boolean(hasPortalAccess(viewer) || viewer.isVerifiedCoach)
 
   try {
     // The men's-or-women's filter is part of the portal, so only a viewer who has it gets a default for it.

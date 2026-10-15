@@ -32,6 +32,8 @@ export type RankingViewer = {
    * had no way to pay for the rankings at all.
    */
   hasSubscription?: boolean
+  /** A live Command Center subscription: the recruiting portal without Blue (Matt, 15 Oct 2026). */
+  hasCommandCenter?: boolean
 }
 
 /**
@@ -47,6 +49,15 @@ export type RankingViewer = {
  * what makes it worth buying, and a free account can view profiles and edit its own and
  * nothing more.
  */
+/**
+ * The Recruiting Command Center: Blue families, Command Center subscribers, and admins. Every
+ * portal page and API asks this one question, so a new way in is a change here.
+ */
+export function hasPortalAccess(viewer: RankingViewer | null | undefined): boolean {
+  if (!viewer) return false
+  return viewer.isAdmin === true || viewer.isBlueMember === true || viewer.hasCommandCenter === true
+}
+
 export function hasPremiumAccess(viewer: RankingViewer | null | undefined): boolean {
   if (!viewer) return false
   if (viewer.isAdmin) return true

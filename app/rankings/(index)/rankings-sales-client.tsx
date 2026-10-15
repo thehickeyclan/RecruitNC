@@ -58,7 +58,13 @@ export function RankingsSalesClient({
   collegeViews = null,
   topClasses = [],
   platform = null,
+  alwaysShowPlans = false,
+  commandCenterOnSale = false,
 }: {
+  /** False until the database can record a Command Center subscription; the card says "coming soon". */
+  commandCenterOnSale?: boolean
+  /** /plans: show the plans even to someone who already has the rankings (to upgrade). */
+  alwaysShowPlans?: boolean
   /** Coaches, programs and all-time coach profile views, counted (lib/platform-stats.ts). */
   platform?: PlatformStats | null
   /** NC wrestler profiles college coaches viewed in the last 30 days, and by how many coaches. */
@@ -96,7 +102,7 @@ export function RankingsSalesClient({
   }
   const [checkingOut, setCheckingOut] = useState<string | null>(null)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
-  const [requestedPlan, setRequestedPlan] = useState<"subscription" | "subscription_annual" | null>(null)
+  const [requestedPlan, setRequestedPlan] = useState<"subscription" | "subscription_annual" | "command_center" | null>(null)
   const [checkoutReturned, setCheckoutReturned] = useState<"purchased" | "canceled" | null>(null)
   const [subscription, setSubscription] = useState<RankingsSubscription | null>(null)
   const [managingSubscription, setManagingSubscription] = useState(false)
@@ -113,11 +119,11 @@ export function RankingsSalesClient({
     return ret.startsWith("/") && !ret.startsWith("//") ? ret : "/public-rankings"
   }
 
-  const startCheckout = async (kind: "subscription" | "subscription_annual") => {
+  const startCheckout = async (kind: "subscription" | "subscription_annual" | "command_center") => {
     // Stripe needs an account to attach the subscription to, so signing in comes first —
     // but only once they have chosen, and the plan rides along so the choice is not lost.
     if (locked === "anonymous") {
-      window.location.href = `/auth/signin?returnTo=${encodeURIComponent(`/rankings?plan=${kind}`)}`
+      window.location.href = `/auth/signin?returnTo=${encodeURIComponent(`${kind === "command_center" ? "/plans" : "/rankings"}?plan=${kind}`)}`
       return
     }
     setCheckingOut(kind)
@@ -140,6 +146,10 @@ export function RankingsSalesClient({
        * error reads as a failed purchase, when the true answer is better news than the one
        * they came for: you have this already, here it is.
        */
+      if (response.status === 409 && payload?.reason === "already_entitled_portal") {
+        window.location.href = "/my-recruiting"
+        return
+      }
       if (response.status === 409 && payload?.reason === "already_entitled") {
         window.location.href = "/public-rankings?included=1"
         return
@@ -156,7 +166,7 @@ export function RankingsSalesClient({
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const plan = params.get("plan")
-    if (plan === "subscription" || plan === "subscription_annual") setRequestedPlan(plan)
+    if (plan === "subscription" || plan === "subscription_annual" || plan === "command_center") setRequestedPlan(plan)
     if (params.get("purchased") === "1") setCheckoutReturned("purchased")
     if (params.get("canceled") === "1") setCheckoutReturned("canceled")
 
@@ -192,10 +202,12 @@ export function RankingsSalesClient({
   }, [])
 
   useEffect(() => {
-    if (locked !== "unentitled" || !requestedPlan || autoCheckoutStarted.current) return
+    // Signed in and choosing a plan: start checkout. A Rankings subscriber upgrading has no lock.
+    const signedIn = locked === "unentitled" || (locked === null && !loadingAthletes)
+    if (!signedIn || !requestedPlan || autoCheckoutStarted.current) return
     autoCheckoutStarted.current = true
     void startCheckout(requestedPlan)
-  }, [locked, requestedPlan])
+  }, [locked, requestedPlan, loadingAthletes])
 
   useEffect(() => {
     if (loadingAthletes || locked) return
@@ -229,12 +241,12 @@ export function RankingsSalesClient({
    * open, just after a purchase.
    */
   useEffect(() => {
-    if (!loadingAthletes && locked === null) window.location.replace("/public-rankings")
-  }, [loadingAthletes, locked])
+    if (!alwaysShowPlans && !requestedPlan && !loadingAthletes && locked === null) window.location.replace("/public-rankings")
+  }, [loadingAthletes, locked, alwaysShowPlans, requestedPlan])
 
-  if (!loadingAthletes && locked === null) return null
+  if (!alwaysShowPlans && !loadingAthletes && locked === null) return null
 
-  if (!loadingAthletes && locked) {
+  if (!loadingAthletes && (locked || alwaysShowPlans)) {
     /*
      * The subscriptions page (rebuilt 15 Oct 2026: "it's horrible").
      *
@@ -402,17 +414,32 @@ export function RankingsSalesClient({
                 </button>
               </div>
 
-              {/* Command Center: on sale once its checkout exists */}
-              <div className="flex flex-col rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-6">
+              {/* Command Center: the portal without Blue (Matt, 15 Oct 2026) */}
+              <div className="flex flex-col rounded-2xl border border-emerald-300/40 bg-[#0d1d36]/80 p-6">
                 <p className="text-sm font-bold uppercase tracking-widest text-emerald-300">Command Center</p>
-                <p className="mt-3 text-3xl font-black">Coming soon</p>
+                <p className="mt-3 text-5xl font-black">
+                  {formatPrice(SCOUTING_REPORT_PRICES.command_center)}
+                  <span className="text-base font-semibold text-white/50"> /month</span>
+                </p>
                 <p className="mt-1 text-sm text-white/50">The full recruiting portal</p>
                 <ul className="mt-6 flex-1 space-y-2.5 text-sm text-white/80">
                   {["Everything in Rankings", "Your recruiting plan and roadmap", "College list, compare and full costs", "Messages from college coaches", "The Learn library"].map((l) => (
                     <li key={l} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden /> {l}</li>
                   ))}
                 </ul>
-                <p className="mt-6 rounded-xl border border-white/15 px-4 py-3 text-center text-sm font-semibold text-white/60">Included in Blue today</p>
+                {commandCenterOnSale ? (<>
+                <button
+                  type="button"
+                  disabled={checkingOut !== null}
+                  onClick={() => { void startCheckout("command_center") }}
+                  className="mt-6 rounded-xl bg-emerald-300 px-4 py-3 text-sm font-black text-[#0A1628] transition hover:brightness-110 disabled:opacity-60"
+                >
+                  {checkingOut === "command_center" ? "Starting…" : "Get the Command Center"}
+                </button>
+                <p className="mt-2 text-center text-xs text-white/45">Already on Rankings? Your $9.99 plan is replaced, not added.</p>
+                </>) : (
+                  <p className="mt-6 rounded-xl border border-white/15 px-4 py-3 text-center text-sm font-semibold text-white/60">Coming soon · included in Blue today</p>
+                )}
               </div>
 
               {/* Blue */}

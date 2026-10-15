@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 
 import { RankingsSalesClient } from "./rankings-sales-client"
-import { resolveRankingViewer } from "@/lib/ranking-access"
+import { commandCenterOnSale, resolveRankingViewer } from "@/lib/ranking-access"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
@@ -43,6 +43,8 @@ export default async function RankingsIndexPage({
      * from that flag; dropping it here meant no coach ever saw the modal (2 Oct-3 Oct 2026).
      */
     const params = (await searchParams) ?? {}
+    // Choosing the Command Center from here: the plans page sells it to rankings holders too.
+    if (params.plan === "command_center") redirect("/plans?plan=command_center")
     const carried = new URLSearchParams()
     for (const [k, v] of Object.entries(params)) if (typeof v === "string") carried.set(k, v)
     const query = carried.toString()
@@ -51,16 +53,18 @@ export default async function RankingsIndexPage({
 
   // The reason a parent pays: college coaches are looking. Counted, cached for an hour.
   // Which classes the Top 75 holds is read off the published board, so the copy can't drift from it.
-  const [collegeViews, topBoard, platform] = await Promise.all([
+  const [collegeViews, topBoard, platform, onSale] = await Promise.all([
     recentCollegeViewStats(createAdminClient()).catch(() => null),
     loadTopHundred("Male").catch(() => null),
     loadPlatformStats(createAdminClient()).catch(() => null),
+    commandCenterOnSale(createAdminClient()).catch(() => false),
   ])
   return (
     <RankingsSalesClient
       collegeViews={collegeViews}
       topClasses={topBoard?.classes ?? []}
       platform={platform}
+      commandCenterOnSale={onSale}
     />
   )
 }

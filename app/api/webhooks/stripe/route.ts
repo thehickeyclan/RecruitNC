@@ -975,6 +975,13 @@ export async function POST(request: NextRequest) {
       })
       if (!result.ok) {
         console.error("[stripe webhook] scouting report fulfilment failed:", result.reason)
+      } else if (result.replacedSubscriptionId) {
+        // An upgrade to the Command Center: stop the Rankings plan it replaces, so nobody pays twice.
+        try {
+          await getStripe().subscriptions.cancel(result.replacedSubscriptionId)
+        } catch (cancelErr) {
+          console.error("[stripe webhook] could not cancel the replaced subscription:", result.replacedSubscriptionId, cancelErr)
+        }
       }
       return NextResponse.json({ received: true, channel: "scouting_report" })
     }

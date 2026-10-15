@@ -6,6 +6,7 @@ import { isCollegeListStatus, type CollegeListItem, type CollegeListResponse } f
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { hasPortalAccess } from "@/lib/ranking-visibility"
 
 export const dynamic = "force-dynamic"
 
@@ -20,7 +21,7 @@ const TABLE_MISSING = "42P01"
 async function listOwner() {
   const admin = createAdminClient()
   const { viewer, userId } = await resolveRankingViewer({ supabase: await createClient(), admin })
-  const allowed = Boolean(userId && (viewer.isBlueMember || viewer.isAdmin))
+  const allowed = Boolean(userId && hasPortalAccess(viewer))
   return { admin, userId: allowed ? userId : null }
 }
 

@@ -10,7 +10,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { isSubscriptionKind } from "@/lib/scouting-report-entitlement"
+import { isSubscriptionKind, isSubscriptionLive, planTierForKind } from "@/lib/scouting-report-entitlement"
 import {
   notifyStaffSubscriptionCancelled,
   notifyStaffSubscriptionStarted,
@@ -29,7 +29,7 @@ export function isScoutingReportSession(metadata: ScoutingCheckoutMetadata | nul
 }
 
 export type FulfilResult =
-  | { ok: true; granted: "purchase" | "subscription" }
+  | { ok: true; granted: "purchase" | "subscription"; replacedSubscriptionId?: string | null }
   | { ok: false; reason: string }
 
 /**
@@ -55,18 +55,32 @@ export async function fulfilScoutingReportCheckout(
   const kind = String(params.metadata.kind ?? "single")
 
   if (isSubscriptionKind(kind)) {
-    const { error } = await supabase.from("recruitnc_subscriptions").upsert(
-      {
-        user_id: userId,
-        stripe_customer_id: params.stripeCustomerId,
-        stripe_subscription_id: params.stripeSubscriptionId,
-        status: "active",
-        current_period_end: params.currentPeriodEnd,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id" },
-    )
+    // An upgrade (Rankings to Command Center) replaces the row; the old Stripe subscription is
+    // handed back so the webhook can cancel it, and nobody is billed for both.
+    const { data: before } = await supabase
+      .from("recruitnc_subscriptions")
+      .select("stripe_subscription_id, status, current_period_end")
+      .eq("user_id", userId)
+      .maybeSingle()
+    const row = {
+      user_id: userId,
+      stripe_customer_id: params.stripeCustomerId,
+      stripe_subscription_id: params.stripeSubscriptionId,
+      status: "active",
+      current_period_end: params.currentPeriodEnd,
+      updated_at: new Date().toISOString(),
+    }
+    let { error } = await supabase.from("recruitnc_subscriptions").upsert({ ...row, plan: planTierForKind(kind) }, { onConflict: "user_id" })
+    if (error && /plan/i.test(error.message)) {
+      // The plan column is not there yet: never lose the payment over it. Logged loudly, because a
+      // Command Center buyer recorded this way only gets the rankings until the column exists.
+      console.error("[scouting-report] recruitnc_subscriptions.plan missing; recorded without plan:", error.message)
+      ;({ error } = await supabase.from("recruitnc_subscriptions").upsert(row, { onConflict: "user_id" }))
+    }
     if (error) return { ok: false, reason: error.message }
+    const previous = before?.stripe_subscription_id && before.stripe_subscription_id !== params.stripeSubscriptionId && isSubscriptionLive(before)
+      ? String(before.stripe_subscription_id)
+      : null
 
     // Both plans land here; the kind in metadata says which was bought. The email is not in
     // the session metadata, so it comes from the profile the subscription was granted to.
@@ -81,7 +95,7 @@ export async function fulfilScoutingReportCheckout(
       amountCents: params.amountTotal,
       interval,
     })
-    return { ok: true, granted: "subscription" }
+    return { ok: true, granted: "subscription", replacedSubscriptionId: previous }
   }
 
   const athleteId = String(params.metadata.athlete_id ?? "").trim()

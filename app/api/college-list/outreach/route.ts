@@ -4,6 +4,7 @@ import { loadOutreachContext } from "@/lib/college-programs/outreach"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { hasPortalAccess } from "@/lib/ranking-visibility"
 
 export const dynamic = "force-dynamic"
 
@@ -15,7 +16,7 @@ export const dynamic = "force-dynamic"
 export async function GET(request: NextRequest) {
   const admin = createAdminClient()
   const { viewer, userId } = await resolveRankingViewer({ supabase: await createClient(), admin })
-  if (!userId || !(viewer.isBlueMember || viewer.isAdmin)) {
+  if (!userId || !hasPortalAccess(viewer)) {
     return NextResponse.json({ error: "Emailing coaches is part of NC United Blue." }, { status: 403 })
   }
 

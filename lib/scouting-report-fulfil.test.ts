@@ -5,7 +5,7 @@ import {
 } from "@/lib/scouting-report-fulfil"
 
 /** Minimal Supabase stand-in that records what was upserted. */
-function fakeSupabase() {
+function fakeSupabase(existing: Record<string, unknown> = { email: "buyer@example.com" }) {
   const calls: Array<{ table: string; row: Record<string, unknown>; onConflict?: string }> = []
   return {
     calls,
@@ -21,7 +21,7 @@ function fakeSupabase() {
               eq() {
                 return {
                   maybeSingle() {
-                    return Promise.resolve({ data: { email: "buyer@example.com" }, error: null })
+                    return Promise.resolve({ data: existing, error: null })
                   },
                 }
               },
@@ -79,7 +79,7 @@ describe("fulfilScoutingReportCheckout", () => {
       metadata: { source: "scouting_report", kind: "subscription", user_id: "u1" },
       stripeSubscriptionId: "sub_1",
     })
-    expect(result).toEqual({ ok: true, granted: "subscription" })
+    expect(result).toEqual({ ok: true, granted: "subscription", replacedSubscriptionId: null })
     expect(calls[0]!.table).toBe("recruitnc_subscriptions")
     expect(calls[0]!.onConflict).toBe("user_id")
     expect(calls[0]!.row).toMatchObject({ user_id: "u1", status: "active", stripe_subscription_id: "sub_1" })
@@ -93,7 +93,7 @@ describe("fulfilScoutingReportCheckout", () => {
       metadata: { source: "scouting_report", kind: "subscription_annual", user_id: "u1" },
       stripeSubscriptionId: "sub_annual",
     })
-    expect(result).toEqual({ ok: true, granted: "subscription" })
+    expect(result).toEqual({ ok: true, granted: "subscription", replacedSubscriptionId: null })
     expect(calls[0]!.table).toBe("recruitnc_subscriptions")
     expect(calls[0]!.row).toMatchObject({ user_id: "u1", status: "active", stripe_subscription_id: "sub_annual" })
   })
@@ -115,5 +115,25 @@ describe("fulfilScoutingReportCheckout", () => {
       metadata: { source: "scouting_report", kind: "single", user_id: "u1" },
     })
     expect(result).toMatchObject({ ok: false })
+  })
+
+  it("records the Command Center as its own plan", async () => {
+    const fake = fakeSupabase()
+    await fulfilScoutingReportCheckout(fake.client, { ...base, stripeSubscriptionId: "sub_cc", metadata: { source: "scouting_report", kind: "command_center", user_id: "u1" } })
+    const row = fake.calls.find((c) => c.table === "recruitnc_subscriptions")?.row
+    expect(row?.plan).toBe("command_center")
+    expect(row?.stripe_subscription_id).toBe("sub_cc")
+  })
+
+  it("hands back a live Rankings subscription replaced by an upgrade, so it can be cancelled", async () => {
+    const fake = fakeSupabase({ email: "buyer@example.com", stripe_subscription_id: "sub_old", status: "active", current_period_end: null })
+    const result = await fulfilScoutingReportCheckout(fake.client, { ...base, stripeSubscriptionId: "sub_cc", metadata: { source: "scouting_report", kind: "command_center", user_id: "u1" } })
+    expect(result).toEqual({ ok: true, granted: "subscription", replacedSubscriptionId: "sub_old" })
+  })
+
+  it("does not cancel anything when the same subscription is redelivered", async () => {
+    const fake = fakeSupabase({ email: "buyer@example.com", stripe_subscription_id: "sub_cc", status: "active", current_period_end: null })
+    const result = await fulfilScoutingReportCheckout(fake.client, { ...base, stripeSubscriptionId: "sub_cc", metadata: { source: "scouting_report", kind: "command_center", user_id: "u1" } })
+    expect(result).toEqual({ ok: true, granted: "subscription", replacedSubscriptionId: null })
   })
 })

@@ -35,6 +35,11 @@ export const SCOUTING_REPORT_PRICES = {
    * offer and the buyer recognises it without doing arithmetic.
    */
   subscription_annual: 7900,
+  /**
+   * The Recruiting Command Center on its own (Matt, 15 Oct 2026): the full recruiting portal with
+   * the rankings and profile views. Blue ($55) is this plus NC United practices and a drop-in.
+   */
+  command_center: 2499,
 } as const
 
 export type ScoutingPurchaseKind = keyof typeof SCOUTING_REPORT_PRICES
@@ -43,12 +48,17 @@ export type ScoutingPurchaseKind = keyof typeof SCOUTING_REPORT_PRICES
 export const SUBSCRIPTION_PLANS = {
   subscription: { interval: "month" as const, label: "Monthly", amount: SCOUTING_REPORT_PRICES.subscription },
   subscription_annual: { interval: "year" as const, label: "Annual", amount: SCOUTING_REPORT_PRICES.subscription_annual },
+  command_center: { interval: "month" as const, label: "Command Center", amount: SCOUTING_REPORT_PRICES.command_center },
 } as const
+
+/** What a stored subscription unlocks: the rankings bundle, or that plus the Command Center. */
+export type SubscriptionPlanTier = "rankings" | "command_center"
+export const planTierForKind = (kind: string): SubscriptionPlanTier => (kind === "command_center" ? "command_center" : "rankings")
 
 export type SubscriptionPlanKind = keyof typeof SUBSCRIPTION_PLANS
 
 export function isSubscriptionKind(kind: string): kind is SubscriptionPlanKind {
-  return kind === "subscription" || kind === "subscription_annual"
+  return kind === "subscription" || kind === "subscription_annual" || kind === "command_center"
 }
 
 /** What the annual plan saves against twelve months, for the page to state plainly. */

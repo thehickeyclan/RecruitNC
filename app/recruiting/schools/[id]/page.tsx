@@ -58,6 +58,7 @@ import { familyAthleteIds } from "@/lib/coach-messages"
 import { MAJOR_FAMILIES, type FitLine, type FitStatus } from "@/lib/recruiting/family-fit"
 import { familyFocus } from "@/lib/recruiting/family-focus"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
+import { hasPortalAccess } from "@/lib/ranking-visibility"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
@@ -141,9 +142,9 @@ export default async function SchoolPage({ params }: Params) {
 
   const admin = createAdminClient()
   const { viewer, userId } = await resolvePortalViewer({ supabase: await createClient(), admin })
-  const full = Boolean(viewer.isBlueMember || viewer.isAdmin || viewer.isVerifiedCoach)
+  const full = Boolean(hasPortalAccess(viewer) || viewer.isVerifiedCoach)
   // A college coach reads the page, but never inside the family's Command Center.
-  const familySide = Boolean(viewer.isBlueMember || viewer.isAdmin)
+  const familySide = hasPortalAccess(viewer)
   const name = spoken(school.name)
 
   const focus = await familyFocus(admin, userId)
@@ -451,7 +452,7 @@ export default async function SchoolPage({ params }: Params) {
           ) : (
             <section className="rounded-2xl border border-[#D3B574]/40 bg-[#D3B574]/10 p-5">
               <p className="flex items-center gap-2 text-base font-bold">
-                <Lock className="h-4 w-4" style={{ color: GOLD }} aria-hidden /> Part of NC United Blue
+                <Lock className="h-4 w-4" style={{ color: GOLD }} aria-hidden /> Part of the Command Center
               </p>
               <ul className="mt-3 space-y-1.5 text-sm text-white/75">
                 <li>Coaching staff and emails</li>
@@ -459,8 +460,8 @@ export default async function SchoolPage({ params }: Params) {
                 <li>Fit for your wrestler</li>
                 <li>Save, track and email the coach</li>
               </ul>
-              <a href="/blue" className={`${button} mt-4 bg-[#D3B574] text-[#0A1628] hover:bg-[#e2c98d]`}>
-                Learn about Blue
+              <a href="/plans" className={`${button} mt-4 bg-[#D3B574] text-[#0A1628] hover:bg-[#e2c98d]`}>
+                See plans
               </a>
             </section>
           )}

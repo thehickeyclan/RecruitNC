@@ -30,6 +30,7 @@ import { familyFocus } from "@/lib/recruiting/family-focus"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { hasPortalAccess } from "@/lib/ranking-visibility"
 
 export const dynamic = "force-dynamic"
 export const metadata: Metadata = { title: "Compare colleges | RecruitNC" }
@@ -77,7 +78,7 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
   const admin = createAdminClient()
   const portal = await resolvePortalViewer({ supabase, admin })
   const userId = portal.userId ?? auth.user.id
-  const blue = Boolean(portal.viewer.isBlueMember || portal.viewer.isAdmin)
+  const blue = hasPortalAccess(portal.viewer)
 
   const [{ data: list }, focus] = await Promise.all([
     admin.from("college_list_items").select("school_id, status, note, updated_at").eq("user_id", userId).order("updated_at", { ascending: false }),
@@ -217,9 +218,9 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
 
         {!blue ? (
           <div className="mt-6 rounded-xl border border-[#D3B574]/40 bg-[#D3B574]/10 p-5 text-sm leading-6 text-white/80">
-            Comparing colleges is part of NC United Blue.{" "}
-            <a href="/blue" className="font-bold text-[#D3B574] underline">
-              Learn about Blue
+            Comparing colleges is part of the Command Center.{" "}
+            <a href="/plans" className="font-bold text-[#D3B574] underline">
+              See plans
             </a>
           </div>
         ) : (

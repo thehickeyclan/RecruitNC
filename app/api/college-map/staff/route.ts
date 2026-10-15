@@ -5,6 +5,7 @@ import { isHeadCoach, staffForSchool } from "@/lib/college-programs/staff"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { hasPortalAccess } from "@/lib/ranking-visibility"
 
 export const dynamic = "force-dynamic"
 
@@ -21,7 +22,7 @@ export async function GET(request: NextRequest) {
   if (!schoolId) return NextResponse.json({ error: "school is required" }, { status: 400 })
 
   const { viewer } = await resolvePortalViewer({ supabase: await createClient(), admin: createAdminClient() })
-  const full = Boolean(viewer.isBlueMember || viewer.isAdmin || viewer.isVerifiedCoach)
+  const full = Boolean(hasPortalAccess(viewer) || viewer.isVerifiedCoach)
 
   if (!full) return NextResponse.json({ staff: [], questionnaires: [], locked: true })
 
