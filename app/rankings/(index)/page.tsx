@@ -1,13 +1,11 @@
 import { redirect } from "next/navigation"
 
 import { RankingsSalesClient } from "./rankings-sales-client"
-import { commandCenterOnSale, resolveRankingViewer } from "@/lib/ranking-access"
+import { resolveRankingViewer } from "@/lib/ranking-access"
+import { loadSalesData } from "@/lib/recruiting/sales-data"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
-import { recentCollegeViewStats } from "@/lib/college-view-signal"
-import { loadTopHundred } from "@/lib/rankings/top-100-view"
-import { loadPlatformStats } from "@/lib/platform-stats"
 
 // Per viewer: which of the two things this route does depends entirely on who is asking.
 export const dynamic = "force-dynamic"
@@ -51,20 +49,15 @@ export default async function RankingsIndexPage({
     redirect(query ? `/public-rankings?${query}` : "/public-rankings")
   }
 
-  // The reason a parent pays: college coaches are looking. Counted, cached for an hour.
-  // Which classes the Top 75 holds is read off the published board, so the copy can't drift from it.
-  const [collegeViews, topBoard, platform, onSale] = await Promise.all([
-    recentCollegeViewStats(createAdminClient()).catch(() => null),
-    loadTopHundred("Male").catch(() => null),
-    loadPlatformStats(createAdminClient()).catch(() => null),
-    commandCenterOnSale(createAdminClient()).catch(() => false),
-  ])
+  // The reason a parent pays: college coaches are looking. Counted live; the map is the real one.
+  const d = await loadSalesData(createAdminClient())
   return (
     <RankingsSalesClient
-      collegeViews={collegeViews}
-      topClasses={topBoard?.classes ?? []}
-      platform={platform}
-      commandCenterOnSale={onSale}
+      collegeViews={d.collegeViews}
+      topClasses={d.topClasses}
+      platform={d.platform}
+      commandCenterOnSale={d.onSale}
+      mapPreview={d.mapPreview}
     />
   )
 }

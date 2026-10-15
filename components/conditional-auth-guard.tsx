@@ -68,6 +68,10 @@ export function ConditionalAuthGuard({
      * form first defeats that entirely.
      */
     "/public-rankings",
+    // Every plan side by side, and the Command Center's own sales page: people read these before
+    // they have an account, so a login wall here loses the sale (15 Oct 2026).
+    "/plans",
+    "/command-center",
     "/schools",
     // A school's wrestling record is public history, same as /schools and /nchsaa — and Data
     // Dawg, which is open to everyone, links school names straight to /high-schools/[slug].
