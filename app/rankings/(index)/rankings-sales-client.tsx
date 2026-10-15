@@ -10,7 +10,10 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Award, Check, ExternalLink, Instagram, Mail, Medal, Target, TrendingUp, Trophy, Users } from "lucide-react"
+import { Award, Check, ExternalLink, Instagram, Mail, Medal, Target, TrendingUp, Trophy, UserRound, Users } from "lucide-react"
+import { tocDisplayClass } from "@/components/toc/toc-theme"
+import { MapDots } from "@/components/portal/map-dots"
+import type { MapPreview } from "@/lib/college-programs/map-preview"
 import { RankingsTableView } from "@/components/rankings-table-view"
 import { useAuth } from "@/contexts/auth-context"
 import { RankingsCardView } from "@/components/rankings-card-view"
@@ -60,7 +63,10 @@ export function RankingsSalesClient({
   platform = null,
   alwaysShowPlans = false,
   commandCenterOnSale = false,
+  mapPreview = null,
 }: {
+  /** The real college map, drawn on the Command Center card. */
+  mapPreview?: MapPreview | null
   /** False until the database can record a Command Center subscription; the card says "coming soon". */
   commandCenterOnSale?: boolean
   /** /plans: show the plans even to someone who already has the rankings (to upgrade). */
@@ -289,46 +295,52 @@ export function RankingsSalesClient({
 
     return (
       <div className="min-h-screen bg-[#060f1f] text-white">
-        {/* Hero */}
+        {/* Hero: two-tone display headline, the three promises, and a wrestler */}
         <section className="relative overflow-hidden border-b border-white/10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/hero-banner-nchsaa-2026-arena.png" alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-30" />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#060f1f]/60 via-[#060f1f]/80 to-[#060f1f]" aria-hidden />
-          <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-16 text-center sm:pt-24">
-            <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: gold }}>
-              RecruitNC · College recruiting on verified results
+          <img src="/hero-banner-nchsaa-2026-arena.png" alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover opacity-20" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/triumphant-wrestler.png" alt="" aria-hidden className="absolute inset-y-0 right-0 hidden h-full w-[55%] object-cover object-center opacity-70 lg:block" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#060f1f] via-[#060f1f]/90 to-[#060f1f]/10" aria-hidden />
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#060f1f] to-transparent" aria-hidden />
+          <div className="relative mx-auto max-w-6xl px-4 pb-12 pt-12 sm:pt-16">
+            <p className="text-[11px] font-bold uppercase leading-5 tracking-[0.3em] text-white/70">
+              Wrestling · People · Opportunity
             </p>
-            <h1 className="mx-auto mt-4 max-w-3xl text-4xl font-black leading-tight tracking-tight sm:text-6xl">College coaches are already looking.</h1>
-            <p className="mx-auto mt-4 max-w-2xl text-base text-white/70 sm:text-lg">
+            <h1 className={`mt-5 text-6xl leading-[0.9] sm:text-8xl ${tocDisplayClass()}`}>
+              More than a ranking.
+              <span className="block" style={{ color: gold }}>
+                A higher future.
+              </span>
+            </h1>
+            <p className="mt-5 max-w-xl text-base text-white/75 sm:text-lg">
               {collegeViews && collegeViews.profilesViewed > 0
-                ? `${collegeViews.profilesViewed.toLocaleString()} NC wrestlers were viewed by college coaches in the last 30 days. See who is looking at yours.`
-                : "College coaches recruit on RecruitNC. See who is looking at your wrestler."}
+                ? `College coaches viewed ${collegeViews.profilesViewed.toLocaleString()} NC wrestlers in the last 30 days. Tools, guidance and real exposure to get yours recruited.`
+                : "Tools, guidance and real exposure to help North Carolina wrestlers get recruited."}
             </p>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <a href="#plans" className="rounded-xl px-7 py-3.5 text-base font-bold text-[#0A1628] shadow-lg transition hover:brightness-110" style={{ backgroundColor: gold }}>
+            <ul className="mt-7 flex flex-wrap gap-x-6 gap-y-3 text-xs font-bold uppercase tracking-widest text-white/85">
+              {[
+                { icon: TrendingUp, label: "Verified data" },
+                { icon: Users, label: "College exposure" },
+                { icon: Trophy, label: "Real opportunity" },
+              ].map(({ icon: Icon, label }) => (
+                <li key={label} className="flex items-center gap-2">
+                  <Icon className="h-5 w-5" style={{ color: gold }} aria-hidden /> {label}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <a href="#plans" className="rounded-xl px-7 py-3.5 text-base font-black text-[#0A1628] shadow-lg transition hover:brightness-110" style={{ backgroundColor: gold }}>
                 See plans
               </a>
-              <Link href="/create-profile" className="rounded-xl border border-white/25 px-7 py-3.5 text-base font-bold text-white transition hover:bg-white/10">
+              <Link href="/create-profile" className="rounded-xl border border-white/25 bg-[#060f1f]/40 px-7 py-3.5 text-base font-bold text-white backdrop-blur transition hover:bg-white/10">
                 Claim your profile, free
               </Link>
             </div>
-
-            {stats.length ? (
-              <div className="mx-auto mt-12 grid max-w-4xl grid-cols-2 gap-3 lg:grid-cols-4">
-                {stats.map(([n, label]) => (
-                  <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 backdrop-blur">
-                    <p className="text-4xl font-black tracking-tight" style={{ color: gold }}>
-                      {Number(n).toLocaleString()}
-                    </p>
-                    <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-white/55">{label}</p>
-                  </div>
-                ))}
-              </div>
-            ) : null}
           </div>
         </section>
 
-        <div className="mx-auto max-w-6xl px-4 py-14">
+        <div className="mx-auto max-w-6xl px-4 py-12">
           {checkoutReturned === "canceled" ? (
             <div className="mx-auto mb-8 max-w-2xl rounded-xl border border-white/15 bg-white/[0.04] p-4 text-center text-sm text-white/70">
               Checkout was canceled. You were not charged and can choose a plan whenever you are ready.
@@ -340,132 +352,187 @@ export function RankingsSalesClient({
             </div>
           ) : null}
 
-          {/* What you get, shown */}
-          <div className="grid gap-4 md:grid-cols-3">
-            {[
-              { icon: Users, title: "Who's looking", text: "The college programs viewing your wrestler's profile, and when." },
-              { icon: Trophy, title: "The rankings", text: `Class boards${WOMENS_RANGE ? " for men and women" : ""} and the Top 75, built from results on the mat.` },
-              { icon: Target, title: "The Command Center", text: "Plan, track colleges, compare full costs and hear from coaches." },
-            ].map(({ icon: Icon, title, text }) => (
-              <div key={title} className="rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-6">
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ backgroundColor: "rgba(211,181,116,0.15)" }}>
-                  <Icon className="h-5 w-5" style={{ color: gold }} aria-hidden />
-                </span>
-                <p className="mt-4 text-lg font-bold">{title}</p>
-                <p className="mt-1 text-sm leading-6 text-white/60">{text}</p>
-              </div>
-            ))}
-          </div>
-
           {/* Plans */}
-          <section id="plans" className="scroll-mt-20 pt-16">
-            <h2 className="text-center text-3xl font-black tracking-tight sm:text-4xl">Choose your plan</h2>
-            <p className="mt-2 text-center text-sm text-white/55">Cancel anytime.</p>
-            <div className="mt-8 grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-              {/* Free */}
-              <div className="flex flex-col rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-6">
-                <p className="text-sm font-bold uppercase tracking-widest text-white/55">Free</p>
-                <p className="mt-3 text-5xl font-black">$0</p>
-                <p className="mt-1 text-sm text-white/50">Your profile, in front of coaches</p>
-                <ul className="mt-6 flex-1 space-y-2.5 text-sm text-white/80">
-                  {["Every result already on it", "Academics and contact, coaches only", "How many coaches viewed it"].map((l) => (
-                    <li key={l} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: gold }} aria-hidden /> {l}</li>
-                  ))}
-                </ul>
-                <Link href="/create-profile" className="mt-6 block rounded-xl border border-white/25 px-4 py-3 text-center text-sm font-bold hover:bg-white/10">
-                  Claim your profile
-                </Link>
-              </div>
+          <section id="plans" className="scroll-mt-20">
+            <div className="flex flex-wrap items-center gap-4">
+              <h2 className={`text-4xl sm:text-5xl ${tocDisplayClass()}`}>NC United subscriptions</h2>
+              <span className="hidden h-px flex-1 sm:block" style={{ backgroundColor: gold, opacity: 0.6 }} aria-hidden />
+              <span className="text-xs font-bold uppercase tracking-[0.25em] text-white/60">Same data. More opportunity.</span>
+            </div>
 
+            <div className="mt-8 grid gap-5 lg:grid-cols-3">
               {/* Rankings */}
-              <div className="relative flex flex-col rounded-2xl border-2 bg-[#0d1d36] p-6 shadow-2xl" style={{ borderColor: gold }}>
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-wider text-[#0A1628]" style={{ backgroundColor: gold }}>
-                  Most popular
-                </span>
-                <p className="text-sm font-bold uppercase tracking-widest" style={{ color: gold }}>Rankings</p>
-                <p className="mt-3 text-5xl font-black">
+              <div className="relative flex flex-col rounded-2xl border-2 bg-[#0b1a33] p-6" style={{ borderColor: gold }}>
+                <div className="flex items-start justify-between">
+                  <TrendingUp className="h-9 w-9" style={{ color: gold }} aria-hidden />
+                  <span className="rounded-md px-2.5 py-1 text-[11px] font-black uppercase tracking-wider text-[#0A1628]" style={{ backgroundColor: gold }}>
+                    Most popular
+                  </span>
+                </div>
+                <p className="mt-4 text-3xl font-black">Rankings</p>
+                <p className="mt-1 text-sm text-white/60">For families who want to know where their wrestler stands, and who&apos;s watching.</p>
+                <p className="mt-5 text-5xl font-black">
                   {formatPrice(SCOUTING_REPORT_PRICES.subscription)}
-                  <span className="text-base font-semibold text-white/50"> /month</span>
+                  <span className="text-lg font-semibold text-white/60"> / month</span>
                 </p>
-                <p className="mt-1 text-sm text-white/50">
-                  or {formatPrice(SCOUTING_REPORT_PRICES.subscription_annual)} a year, save {formatPrice(annualSavingCents())}
+                <p className="mt-1 text-sm font-bold" style={{ color: gold }}>
+                  or {formatPrice(SCOUTING_REPORT_PRICES.subscription_annual)}/year (save {formatPrice(annualSavingCents())})
                 </p>
-                <ul className="mt-6 flex-1 space-y-2.5 text-sm text-white/80">
-                  {["Everything in Free", "Which programs viewed your profile", `Class rankings${WOMENS_RANGE ? ", men's and women's" : ""}`, "Top 75 College Ready Prospects", "Head-to-head results"].map((l) => (
-                    <li key={l} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: gold }} aria-hidden /> {l}</li>
+                <ul className="mt-5 space-y-2.5 text-sm text-white/85">
+                  {[`All class rankings${WOMENS_RANGE ? ", men's and women's" : ""}`, "Top 75 College Ready Prospects board", "Head-to-head: who beat whom, and when", "Which college programs viewed your profile, and when", "Full profile management"].map((l) => (
+                    <li key={l} className="flex gap-2.5"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: gold }} aria-hidden /> {l}</li>
                   ))}
                 </ul>
                 <button
                   type="button"
                   disabled={checkingOut !== null}
                   onClick={() => { void startCheckout("subscription") }}
-                  className="mt-6 rounded-xl px-4 py-3 text-sm font-black text-[#0A1628] transition hover:brightness-110 disabled:opacity-60"
+                  className="mt-6 rounded-xl px-4 py-3 text-base font-black text-[#0A1628] transition hover:brightness-110 disabled:opacity-60"
                   style={{ backgroundColor: gold }}
                 >
-                  {checkingOut === "subscription" ? "Starting…" : "Subscribe monthly"}
+                  {checkingOut === "subscription" ? "Starting…" : "Get Rankings →"}
                 </button>
                 <button
                   type="button"
                   disabled={checkingOut !== null}
                   onClick={() => { void startCheckout("subscription_annual") }}
-                  className="mt-2 rounded-xl border border-white/20 px-4 py-2.5 text-sm font-bold hover:bg-white/10 disabled:opacity-60"
+                  className="mt-2 text-sm font-semibold underline-offset-2 hover:underline disabled:opacity-60"
+                  style={{ color: gold }}
                 >
-                  {checkingOut === "subscription_annual" ? "Starting…" : `Pay yearly, ${formatPrice(SCOUTING_REPORT_PRICES.subscription_annual)}`}
+                  {checkingOut === "subscription_annual" ? "Starting…" : `Or pay yearly, ${formatPrice(SCOUTING_REPORT_PRICES.subscription_annual)}`}
                 </button>
+                {/* The board, blurred: what you buy, without giving it away or inventing anyone. */}
+                <div className="relative mt-6 overflow-hidden rounded-xl border border-white/10 bg-[#060f1f]">
+                  <div className="flex items-center justify-between border-b border-white/10 px-3 py-2 text-[11px] font-bold">
+                    <span className="italic" style={{ color: gold }}>RANKINGS</span>
+                    <span className="text-white/50">Class of {PUBLISHED_PUBLIC_RANKINGS_YEARS[0] ?? ""}</span>
+                  </div>
+                  <ul className="space-y-0 px-3 py-1 blur-[3px]" aria-hidden>
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <li key={n} className="flex items-center gap-2 border-b border-white/5 py-2 text-[11px] last:border-0">
+                        <span className="w-3 text-white/50">{n}</span>
+                        <span className="h-5 w-5 rounded-full bg-white/20" />
+                        <span className="h-2 flex-1 rounded bg-white/25" />
+                        <span className="h-2 w-12 rounded bg-white/15" />
+                        <span className="h-2 w-8 rounded bg-white/15" />
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="absolute inset-x-0 bottom-2 text-center text-xs font-bold text-white">See how you compare</p>
+                </div>
               </div>
 
-              {/* Command Center: the portal without Blue (Matt, 15 Oct 2026) */}
-              <div className="flex flex-col rounded-2xl border border-emerald-300/40 bg-[#0d1d36]/80 p-6">
-                <p className="text-sm font-bold uppercase tracking-widest text-emerald-300">Command Center</p>
-                <p className="mt-3 text-5xl font-black">
+              {/* Command Center */}
+              <div className="relative flex flex-col rounded-2xl border-2 border-sky-400/70 bg-[#0b1a33] p-6">
+                <Target className="h-9 w-9 text-sky-400" aria-hidden />
+                <p className="mt-4 text-3xl font-black">Command Center</p>
+                <p className="mt-1 text-sm text-white/60">For families actively going through recruiting.</p>
+                <p className="mt-5 text-5xl font-black">
                   {formatPrice(SCOUTING_REPORT_PRICES.command_center)}
-                  <span className="text-base font-semibold text-white/50"> /month</span>
+                  <span className="text-lg font-semibold text-white/60"> / month</span>
                 </p>
-                <p className="mt-1 text-sm text-white/50">The full recruiting portal</p>
-                <ul className="mt-6 flex-1 space-y-2.5 text-sm text-white/80">
-                  {["Everything in Rankings", "Your recruiting plan and roadmap", "College list, compare and full costs", "Messages from college coaches", "The Learn library"].map((l) => (
-                    <li key={l} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" aria-hidden /> {l}</li>
+                <p className="mt-4 text-xs font-black uppercase tracking-widest text-sky-300">Everything in Rankings, plus:</p>
+                <ul className="mt-3 space-y-2.5 text-sm text-white/85">
+                  {["Recruiting plan and roadmap, 8th to 12th grade", "My College List: your stage, next step and verified coach activity", "Compare fit, with full yearly cost", "College pages: cost, ranking, roster, coaches", "Messages from college coaches", "Learn: rules, timeline and costs, men's and women's"].map((l) => (
+                    <li key={l} className="flex gap-2.5"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: gold }} aria-hidden /> {l}</li>
                   ))}
                 </ul>
-                {commandCenterOnSale ? (<>
-                <button
-                  type="button"
-                  disabled={checkingOut !== null}
-                  onClick={() => { void startCheckout("command_center") }}
-                  className="mt-6 rounded-xl bg-emerald-300 px-4 py-3 text-sm font-black text-[#0A1628] transition hover:brightness-110 disabled:opacity-60"
-                >
-                  {checkingOut === "command_center" ? "Starting…" : "Get the Command Center"}
-                </button>
-                <p className="mt-2 text-center text-xs text-white/45">Already on Rankings? Your $9.99 plan is replaced, not added.</p>
-                </>) : (
+                {commandCenterOnSale ? (
+                  <>
+                    <button
+                      type="button"
+                      disabled={checkingOut !== null}
+                      onClick={() => { void startCheckout("command_center") }}
+                      className="mt-6 rounded-xl bg-sky-400 px-4 py-3 text-base font-black text-[#0A1628] transition hover:brightness-110 disabled:opacity-60"
+                    >
+                      {checkingOut === "command_center" ? "Starting…" : "Get Command Center →"}
+                    </button>
+                    <p className="mt-2 text-center text-xs text-white/45">On Rankings already? It replaces your $9.99 plan.</p>
+                  </>
+                ) : (
                   <p className="mt-6 rounded-xl border border-white/15 px-4 py-3 text-center text-sm font-semibold text-white/60">Coming soon · included in Blue today</p>
                 )}
+                {/* The real map: every college wrestling program, by level. */}
+                {mapPreview ? (
+                  <a href="/command-center" className="mt-6 block overflow-hidden rounded-xl border border-white/10 bg-[#060f1f] transition hover:border-sky-400/60">
+                    <div className="flex items-center justify-between px-3 pt-2 text-[11px] font-bold">
+                      <span>College program map</span>
+                      <span className="text-white/50">{mapPreview.total} colleges</span>
+                    </div>
+                    <MapDots preview={mapPreview} className="mt-1" />
+                  </a>
+                ) : null}
+                <a href="/command-center" className="mt-3 text-center text-sm font-semibold text-sky-300 hover:underline">
+                  See everything it does →
+                </a>
               </div>
 
               {/* Blue */}
-              <div className="flex flex-col rounded-2xl border border-white/10 bg-gradient-to-b from-[#13294B] to-[#0d1d36] p-6">
-                <p className="text-sm font-bold uppercase tracking-widest text-sky-300">NC United Blue</p>
-                <p className="mt-3 text-5xl font-black">
-                  $55<span className="text-base font-semibold text-white/50"> /month</span>
-                </p>
-                <p className="mt-1 text-sm text-white/50">Train, compete and get recruited</p>
-                <ul className="mt-6 flex-1 space-y-2.5 text-sm text-white/80">
-                  {["Everything in Command Center", "NC United practices", "A drop-in each month at Darkhorse or RAW"].map((l) => (
-                    <li key={l} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0 text-sky-300" aria-hidden /> {l}</li>
-                  ))}
-                </ul>
-                <Link href="/blue" className="mt-6 block rounded-xl bg-white px-4 py-3 text-center text-sm font-black text-[#0A1628] hover:bg-white/90">
-                  Learn about Blue
-                </Link>
-                {signedInWithoutAccess ? null : (
-                  <Link href="/auth/signin?returnTo=/rankings" className="mt-2 block text-center text-sm text-white/60 underline hover:text-white">
-                    Blue family? Sign in
+              <div className="relative flex flex-col overflow-hidden rounded-2xl border-2 border-sky-300/50 bg-[#0b1a33]">
+                <div className="flex flex-1 flex-col p-6">
+                  <Users className="h-9 w-9 text-sky-300" aria-hidden />
+                  <p className="mt-4 text-3xl font-black">NC United Blue</p>
+                  <p className="mt-1 text-sm text-white/60">For NC families who want to train, compete and get recruited.</p>
+                  <p className="mt-5 text-5xl font-black">
+                    $55<span className="text-lg font-semibold text-white/60"> / month</span>
+                  </p>
+                  <p className="mt-4 text-xs font-black uppercase tracking-widest" style={{ color: gold }}>Everything in Command Center, plus:</p>
+                  <ul className="mt-3 space-y-2.5 text-sm text-white/85">
+                    {["NC United practices", "One drop-in each month at Darkhorse or RAW"].map((l) => (
+                      <li key={l} className="flex gap-2.5"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: gold }} aria-hidden /> {l}</li>
+                    ))}
+                  </ul>
+                  <Link href="/blue" className="mt-6 block rounded-xl bg-sky-300 px-4 py-3 text-center text-base font-black text-[#0A1628] hover:brightness-110">
+                    Join Blue →
                   </Link>
-                )}
+                  {signedInWithoutAccess ? null : (
+                    <Link href="/auth/signin?returnTo=/rankings" className="mt-2 block text-center text-sm text-white/60 underline hover:text-white">
+                      Blue family? Sign in
+                    </Link>
+                  )}
+                </div>
+                <div className="relative h-48 lg:h-56">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/focused-wrestler.png" alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#0b1a33] via-[#0b1a33]/50 to-transparent" aria-hidden />
+                  <p className={`absolute bottom-4 left-5 text-3xl leading-[0.95] ${tocDisplayClass()}`}>
+                    Train.<br />Compete.<br />Get recruited.
+                  </p>
+                </div>
               </div>
             </div>
             {checkoutError ? <p className="mt-4 text-center text-sm text-red-300">{checkoutError}</p> : null}
           </section>
+
+          {/* Free profile, full width */}
+          <section className="mt-6 grid items-center gap-6 rounded-2xl border border-white/15 bg-[#0b1a33] p-6 md:grid-cols-[auto_1fr_auto_auto]">
+            <UserRound className="h-14 w-14 text-sky-400" aria-hidden />
+            <div>
+              <p className="text-2xl font-black">Free profile</p>
+              <p className="text-sm text-white/60">Everyone starts here.</p>
+              <ul className="mt-2 space-y-1 text-sm text-white/80">
+                {["Claim the profile; every result is already on it", "Academics and contact, seen only by verified college coaches", "See how many college coaches viewed it"].map((l) => (
+                  <li key={l} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: gold }} aria-hidden /> {l}</li>
+                ))}
+              </ul>
+            </div>
+            <p className="text-5xl font-black md:border-l md:border-white/10 md:pl-6">$0</p>
+            <Link href="/create-profile" className="rounded-xl bg-white px-6 py-3 text-center text-base font-black text-[#0A1628] hover:bg-white/90">
+              Claim your profile →
+            </Link>
+          </section>
+
+          {/* Counted, not claimed */}
+          {stats.length ? (
+            <div className="mt-10 grid grid-cols-2 border-y border-white/10 py-6 lg:grid-cols-4">
+              {stats.map(([n, label], i) => (
+                <div key={label} className={`px-4 text-center ${i > 0 ? "lg:border-l lg:border-white/10" : ""}`}>
+                  <p className={`text-5xl ${tocDisplayClass()}`} style={{ color: gold }}>{Number(n).toLocaleString()}</p>
+                  <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-white/60">{label}</p>
+                </div>
+              ))}
+            </div>
+          ) : null}
 
           {/* Compare plans */}
           <section className="pt-16">
@@ -477,7 +544,7 @@ export function RankingsSalesClient({
                     <th className="p-4 text-left font-bold" />
                     <th className="p-4 text-center">Free</th>
                     <th className="p-4 text-center" style={{ color: gold }}>Rankings</th>
-                    <th className="p-4 text-center text-emerald-300">Command Center</th>
+                    <th className="p-4 text-center text-sky-400">Command Center</th>
                     <th className="p-4 text-center text-sky-300">Blue</th>
                   </tr>
                 </thead>

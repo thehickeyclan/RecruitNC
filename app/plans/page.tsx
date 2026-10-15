@@ -1,11 +1,8 @@
 import type { Metadata } from "next"
 
 import { RankingsSalesClient } from "../rankings/(index)/rankings-sales-client"
-import { recentCollegeViewStats } from "@/lib/college-view-signal"
-import { loadPlatformStats } from "@/lib/platform-stats"
-import { loadTopHundred } from "@/lib/rankings/top-100-view"
+import { loadSalesData } from "@/lib/recruiting/sales-data"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { commandCenterOnSale } from "@/lib/ranking-access"
 
 export const dynamic = "force-dynamic"
 export const metadata: Metadata = {
@@ -19,12 +16,15 @@ export const metadata: Metadata = {
  * the portal's own locks have somewhere to point.
  */
 export default async function PlansPage() {
-  const admin = createAdminClient()
-  const [collegeViews, topBoard, platform, onSale] = await Promise.all([
-    recentCollegeViewStats(admin).catch(() => null),
-    loadTopHundred("Male").catch(() => null),
-    loadPlatformStats(admin).catch(() => null),
-    commandCenterOnSale(admin).catch(() => false),
-  ])
-  return <RankingsSalesClient collegeViews={collegeViews} topClasses={topBoard?.classes ?? []} platform={platform} alwaysShowPlans commandCenterOnSale={onSale} />
+  const d = await loadSalesData(createAdminClient())
+  return (
+    <RankingsSalesClient
+      collegeViews={d.collegeViews}
+      topClasses={d.topClasses}
+      platform={d.platform}
+      commandCenterOnSale={d.onSale}
+      mapPreview={d.mapPreview}
+      alwaysShowPlans
+    />
+  )
 }
