@@ -1,44 +1,57 @@
 /**
- * The Recruiting Command Center home (Matt's design, 14 Oct 2026): where recruiting stands for the
- * family's wrestler at a glance - four numbers, the next steps, recent activity, the college list
- * and the map - inside the portal frame, with Plan, Colleges, Map, Messages, Learn and Activity a
- * tap away in the menu. Was one long page with Plan, Learn and Activity sections (named the War
- * Room until 13 Oct, which is why files here still say so).
+ * The Recruiting Command Center home: a dashboard taken in at a glance (Matt's design, 15 Oct
+ * 2026). The detail lives behind the menu - Plan (steps and schedule), Colleges (the board and the
+ * comparison), Learn, Activity - and every card here links into it.
  *
- * The plan, list and schedule are NC United Blue; everyone else sees what they are and how to get
- * them. The data comes from ./load.ts, shared with the other portal pages.
+ * Every number is real: the plan steps, the list, the profile views and the inbox. Data comes from
+ * ./load.ts, shared with the other portal pages.
  */
 import Link from "next/link"
-import { ArrowRight, Eye, ListChecks, Pencil, Star, UserCheck } from "lucide-react"
+import { ArrowRight, CalendarDays, Check, Circle, DollarSign, HelpCircle, ListChecks, Mail, Pencil, Scale } from "lucide-react"
 
-import { PortalShell } from "@/components/portal/portal-shell"
-import { buildMapPreview } from "@/lib/college-programs/map-preview"
-import { listTarget, planSteps } from "@/lib/college-programs/roadmap"
-import data from "@/lib/college-programs/programs-2026-27.json"
-import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
-import type { CollegeMapSchool } from "@/lib/college-programs/types"
 import { InfoSheetCard } from "@/components/portal/info-sheet-card"
+import { PortalShell } from "@/components/portal/portal-shell"
+import { unreadCount } from "@/lib/coach-messages"
+import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
+import { COLLEGE_LIST_STATUS_LABEL } from "@/lib/college-programs/list"
+import { buildMapPreview } from "@/lib/college-programs/map-preview"
+import data from "@/lib/college-programs/programs-2026-27.json"
+import { listTarget, planSteps } from "@/lib/college-programs/roadmap"
+import type { CollegeMapSchool } from "@/lib/college-programs/types"
+import { loadLastCompeted } from "@/lib/prospect-last-competed"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { buildInfoSheet } from "./info-sheet"
 import { loadCommandCenter } from "./load"
 import { MapPreviewCard } from "./map-preview"
-import { WarRoomPlan } from "./war-room-plan"
 
 export const dynamic = "force-dynamic"
 export const metadata = { title: "Recruiting Command Center | RecruitNC" }
 
 const ALL_SCHOOLS = [...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS]
 const card = "rounded-xl border border-white/10 bg-[#0f1c2e]"
-const ago = (iso: string) => {
-  const days = Math.floor((Date.now() - Date.parse(iso)) / 86_400_000)
-  return days <= 0 ? "Today" : days === 1 ? "Yesterday" : days < 30 ? `${days} days ago` : new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-}
+const title = "text-base font-black text-white"
+const more = "inline-flex items-center gap-1 text-xs font-bold text-[#D3B574] hover:underline"
+
+const LEARN_LINKS = [
+  { icon: CalendarDays, label: "Grade-by-grade timeline", href: "/recruiting/learn/timeline" },
+  { icon: Scale, label: "Rules by level", href: "/recruiting/learn" },
+  { icon: DollarSign, label: "Costs and financial aid", href: "/recruiting/learn/paying-for-college" },
+  { icon: HelpCircle, label: "Questions families ask", href: "/recruiting/learn/questions-families-ask" },
+]
 
 export default async function CommandCenterHome() {
   const cc = await loadCommandCenter("/my-recruiting")
-  const { athletes, wrestlers, schools, blue, focus, views, premium } = cc
+  const { athletes, wrestlers, schools, blue, focus, views, viewerId } = cc
+  const admin = createAdminClient()
   const first = athletes[0] ?? null
   const w = wrestlers[0] ?? null
+
+  const [lastCompeted, unread, sheet] = await Promise.all([
+    first ? loadLastCompeted(admin, [first.id], new Map([[first.id, first.classYear]])).then((m) => m.get(first.id) ?? null).catch(() => null) : null,
+    unreadCount(admin, viewerId).catch(() => 0),
+    blue && first ? buildInfoSheet(admin, first.id).catch(() => null) : null,
+  ])
+  const weight = lastCompeted?.weight ? `${String(lastCompeted.weight).replace(/\s*lbs?$/i, "")} lbs` : null
 
   const steps = w
     ? planSteps({
@@ -56,49 +69,63 @@ export default async function CommandCenterHome() {
   const open = steps.filter((s) => !s.done).length
   const seen = first ? views.get(first.id) : null
   const target = listTarget(w?.grade ?? null)
-  const sheet = blue && first ? await buildInfoSheet(createAdminClient(), first.id).catch(() => null) : null
-
-  const tiles = first
-    ? [
-        { icon: UserCheck, value: `${first.completeness.percent}%`, label: "Profile complete", action: first.completeness.percent === 100 ? "Keep it current" : "Finish the profile", href: `/athletes/${first.id}` },
-        { icon: Star, value: String(schools.length), label: "Colleges on your list", action: schools.length >= target ? "Compare them" : `Build toward ${target}`, href: schools.length >= 2 ? "/recruiting/compare" : "/recruiting/college-map" },
-        {
-          icon: Eye,
-          value: seen ? String(seen.programs) : "–",
-          label: "College programs viewed the profile",
-          action: !seen || seen.programs === 0 ? "Finish the profile and email a coach" : "See who",
-          href: "/my-recruiting/activity",
-        },
-        { icon: ListChecks, value: String(open), label: "Next actions", action: open ? "See your plan" : "All done for now", href: "#plan" },
-      ]
-    : []
-
-  // Recent activity: colleges saved or moved, and college programs that viewed the profile.
-  const recent = [
-    ...schools.filter((s) => s.savedAt).map((s) => ({ at: s.savedAt!, title: s.name, text: "On your college list" })),
-    ...(premium && seen ? seen.schools.map((v) => ({ at: v.lastViewedAt, title: v.school, text: `Viewed ${first?.firstName ?? "the"}'s profile` })) : []),
-  ]
-    .sort((a, b) => b.at.localeCompare(a.at))
-    .slice(0, 6)
+  const percent = first?.completeness.percent ?? 0
 
   return (
     <PortalShell active="home">
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black tracking-tight sm:text-4xl">Recruiting Command Center</h1>
-          <p className="mt-1 text-sm text-white/65">
-            {first ? `Welcome back. Here is where ${athletes.map((a) => a.firstName).join(" and ")}'s recruiting stands.` : "Welcome. This is where recruiting gets done."}
-          </p>
+      {/* Header band: who this is for, over an NC arena. */}
+      <section className="relative -mx-4 -mt-6 overflow-hidden border-b border-white/10 px-4 pb-6 pt-8 sm:-mx-6 sm:px-6 lg:-mx-8 lg:-mt-8 lg:px-8">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/hero-banner-nchsaa-2026-arena.png" alt="" className="absolute inset-0 h-full w-full object-cover opacity-30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628] via-[#0A1628]/85 to-[#0A1628]/40" aria-hidden />
+        <div className="relative flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-black uppercase tracking-widest text-[#D3B574]">RecruitNC · Recruiting Portal</p>
+            <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-5xl">Recruiting Command Center</h1>
+            <p className="mt-2 text-sm text-white/75 sm:text-base">
+              {first ? `Welcome back. Here is ${athletes.map((a) => a.firstName).join(" and ")}'s recruiting progress and what to do next.` : "Welcome. This is where recruiting gets done."}
+            </p>
+            {first ? <p className="mt-1 text-sm text-white/50">{[first.classYear ? `Class of ${first.classYear}` : null, first.highSchool, weight].filter(Boolean).join(" · ")}</p> : null}
+          </div>
           {first ? (
-            <p className="mt-1 text-sm text-white/45">{[first.classYear ? `Class of ${first.classYear}` : null, first.highSchool].filter(Boolean).join(" · ")}</p>
+            <Link href={`/athletes/${first.id}`} className="inline-flex items-center gap-1.5 rounded-lg border border-white/25 bg-[#0A1628]/60 px-3 py-2 text-sm font-semibold text-white hover:border-[#D3B574]">
+              <Pencil className="h-4 w-4" aria-hidden /> Edit profile
+            </Link>
           ) : null}
         </div>
         {first ? (
-          <Link href={`/athletes/${first.id}`} className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 px-3 py-2 text-sm font-semibold text-white/85 hover:border-[#D3B574]">
-            <Pencil className="h-4 w-4" aria-hidden /> Edit profile
-          </Link>
+          <ul className="relative mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <li className={`${card} bg-[#0f1c2e]/90 p-4`}>
+              <p className="text-3xl font-black">{percent}%</p>
+              <p className="text-sm text-white/70">Profile complete</p>
+              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+                <div className="h-full rounded-full bg-[#D3B574]" style={{ width: `${percent}%` }} />
+              </div>
+            </li>
+            <li>
+              <Link href="/my-recruiting/colleges" className={`${card} flex h-full flex-col bg-[#0f1c2e]/90 p-4 hover:border-[#D3B574]/60`}>
+                <span className="text-3xl font-black">{schools.length}</span>
+                <span className="text-sm text-white/70">Colleges on my list</span>
+                <span className={`${more} mt-auto pt-1`}>{schools.length >= target ? "Compare them" : `Build toward ${target}`} →</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="/my-recruiting/activity" className={`${card} flex h-full flex-col bg-[#0f1c2e]/90 p-4 hover:border-[#D3B574]/60`}>
+                <span className="text-3xl font-black">{seen ? seen.programs : "–"}</span>
+                <span className="text-sm text-white/70">College programs viewed</span>
+                <span className={`${more} mt-auto pt-1`}>{!seen || seen.programs === 0 ? "Keep building" : "See who"} →</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="/my-recruiting/plan" className={`${card} flex h-full flex-col bg-[#0f1c2e]/90 p-4 hover:border-[#D3B574]/60`}>
+                <span className="text-3xl font-black">{open}</span>
+                <span className="text-sm text-white/70">Next actions</span>
+                <span className={`${more} mt-auto pt-1`}>{open ? "View your plan" : "All done for now"} →</span>
+              </Link>
+            </li>
+          </ul>
         ) : null}
-      </header>
+      </section>
 
       {!first ? (
         <div className={`${card} mt-8 p-8 text-center`}>
@@ -114,73 +141,158 @@ export default async function CommandCenterHome() {
         </div>
       ) : (
         <>
-          <ul className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
-            {tiles.map(({ icon: Icon, value, label, action, href }) => (
-              <li key={label}>
-                <Link href={href} className={`${card} flex h-full flex-col p-4 hover:border-[#D3B574]/60`}>
-                  <Icon className="h-4 w-4 text-[#D3B574]" aria-hidden />
-                  <span className="mt-2 text-3xl font-black">{value}</span>
-                  <span className="text-sm text-white/70">{label}</span>
-                  <span className="mt-auto pt-2 text-xs font-bold text-[#D3B574]">{action} →</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-6 grid gap-6 xl:grid-cols-3">
-            <section id="plan" className="min-w-0 scroll-mt-24 xl:col-span-2" aria-label="Your plan">
-              <WarRoomPlan blue={blue} wrestlers={wrestlers} schools={schools} />
+          <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            {/* Next steps */}
+            <section className={`${card} flex flex-col p-5`} aria-labelledby="cc-steps">
+              <div className="flex items-baseline justify-between">
+                <h2 id="cc-steps" className={title}>
+                  Your next steps
+                </h2>
+                <span className="text-xs text-white/45">This month</span>
+              </div>
+              {blue ? (
+                <ul className="mt-3 space-y-3">
+                  {steps.slice(0, 4).map((s) => (
+                    <li key={s.key} className="flex gap-3">
+                      {s.done ? <Check className="mt-0.5 h-5 w-5 shrink-0 rounded-full bg-emerald-500 p-0.5 text-[#0A1628]" aria-label="Done" /> : <Circle className="mt-0.5 h-5 w-5 shrink-0 text-white/40" aria-label="To do" />}
+                      <span className="min-w-0">
+                        <span className={`block text-sm font-semibold ${s.done ? "text-white/60" : "text-white"}`}>{s.title}</span>
+                        <span className="line-clamp-1 text-xs text-white/45">{s.detail}</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-3 text-sm text-white/60">The plan, college board and schedule are part of NC United Blue.</p>
+              )}
+              <Link href={blue ? "/my-recruiting/plan" : "/blue"} className="mt-auto inline-flex w-fit items-center gap-1 rounded-lg bg-[#D3B574] px-3 py-2 pt-2 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d] [margin-top:1rem]">
+                {blue ? "View your full plan" : "Learn about Blue"} <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
             </section>
 
-            <div className="grid min-w-0 content-start gap-6 md:grid-cols-2 xl:grid-cols-1">
-              <section className={`${card} p-5`} aria-labelledby="cc-recent">
-                <div className="flex items-center justify-between">
-                  <h2 id="cc-recent" className="text-sm font-black uppercase tracking-widest text-[#D3B574]">
-                    Recent activity
-                  </h2>
-                  <Link href="/my-recruiting/activity" className="text-xs font-bold text-white/60 hover:text-white">
-                    View all →
-                  </Link>
-                </div>
-                {recent.length ? (
-                  <ul className="mt-3 divide-y divide-white/10">
-                    {recent.map((r) => (
-                      <li key={`${r.title}-${r.at}`} className="flex items-start justify-between gap-3 py-2.5">
-                        <span className="min-w-0">
-                          <span className="block truncate text-sm font-bold text-white">{r.title}</span>
-                          <span className="block text-xs text-white/55">{r.text}</span>
+            {/* My college list */}
+            <section className={`${card} flex flex-col p-5`} aria-labelledby="cc-list">
+              <div className="flex items-baseline justify-between">
+                <h2 id="cc-list" className={title}>
+                  My college list <span className="text-xs font-semibold text-white/45">{schools.length} {schools.length === 1 ? "school" : "schools"}</span>
+                </h2>
+                <Link href="/my-recruiting/colleges" className={more}>
+                  View all →
+                </Link>
+              </div>
+              {schools.length ? (
+                <ul className="mt-3 space-y-3">
+                  {schools.slice(0, 3).map((s) => (
+                    <li key={s.id} className="flex items-center gap-3">
+                      {s.logo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={s.logo} alt="" className="h-10 w-10 shrink-0 rounded bg-white object-contain p-0.5" />
+                      ) : (
+                        <span className="h-10 w-10 shrink-0 rounded bg-white/[0.06]" aria-hidden />
+                      )}
+                      <span className="min-w-0 flex-1">
+                        <a href={`/recruiting/schools/${s.id}`} className="block truncate text-sm font-bold text-white hover:underline">
+                          {s.name}
+                        </a>
+                        <span className="block text-xs text-white/50">
+                          {s.level} · {COLLEGE_LIST_STATUS_LABEL[s.status]}
                         </span>
-                        <span className="shrink-0 text-xs text-white/45">{ago(r.at)}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="mt-3 text-sm text-white/60">Nothing yet. Save colleges from the map and they appear here, with the college programs that view the profile.</p>
-                )}
-              </section>
+                      </span>
+                      <Link href={`/my-recruiting/colleges?email=${s.id}`} className="inline-flex shrink-0 items-center gap-1 rounded-md border border-white/20 px-2 py-1 text-xs font-bold text-white/85 hover:border-[#D3B574]">
+                        <Mail className="h-3.5 w-3.5" aria-hidden /> Email
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="mt-3 text-sm text-white/60">No colleges yet. Save them from the map; go wide, across levels.</p>
+              )}
+              <Link href={schools.length ? "/my-recruiting/colleges" : "/recruiting/college-map"} className={`${more} mt-auto pt-4`}>
+                {schools.length ? "Open your college board" : "Open the map"} →
+              </Link>
+            </section>
 
-              {sheet && first ? <InfoSheetCard sheet={sheet} name={first.firstName} /> : null}
-
-              <div className="[&>a]:mt-0">
+            {/* The map */}
+            <div className="min-w-0 [&>a]:mt-0">
               <MapPreviewCard
                 preview={buildMapPreview(ALL_SCHOOLS, { team: focus?.gender ?? null, savedIds: schools.map((s) => s.id), accessToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN })}
                 who={focus?.names.join(" and ") || null}
                 team={focus?.gender ?? null}
                 savedCount={schools.length}
               />
-              </div>
-
-              {blue && schools.length >= 2 ? (
-                <Link href="/recruiting/compare" className={`${card} flex items-center justify-between gap-3 border-[#D3B574]/40 p-4 hover:border-[#D3B574]`}>
-                  <span>
-                    <span className="block text-sm font-bold text-white">Compare your colleges</span>
-                    <span className="block text-xs text-white/60">Fit, cost, admissions and the team, side by side.</span>
-                  </span>
-                  <ArrowRight className="h-5 w-5 shrink-0 text-[#D3B574]" aria-hidden />
-                </Link>
-              ) : null}
             </div>
           </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-3">
+            {/* Recruiting activity */}
+            <section className={`${card} p-5`} aria-labelledby="cc-activity">
+              <div className="flex items-baseline justify-between">
+                <h2 id="cc-activity" className={title}>
+                  Recruiting activity
+                </h2>
+                <Link href="/my-recruiting/activity" className={more}>
+                  View all →
+                </Link>
+              </div>
+              <dl className="mt-4 grid grid-cols-3 gap-3 text-center">
+                <div>
+                  <dt className="sr-only">College programs that viewed</dt>
+                  <dd className="text-3xl font-black text-[#D3B574]">{seen ? seen.programs : 0}</dd>
+                  <dd className="text-[11px] leading-4 text-white/55">Programs viewed {first.firstName}</dd>
+                </div>
+                <div>
+                  <dt className="sr-only">Total profile views</dt>
+                  <dd className="text-3xl font-black">{seen ? seen.total : 0}</dd>
+                  <dd className="text-[11px] leading-4 text-white/55">Total profile views</dd>
+                </div>
+                <div>
+                  <dt className="sr-only">New messages</dt>
+                  <dd className="text-3xl font-black">{unread}</dd>
+                  <dd className="text-[11px] leading-4 text-white/55">{unread ? <Link href="/inbox" className="underline">New messages</Link> : "New messages"}</dd>
+                </div>
+              </dl>
+            </section>
+
+            {/* Learn */}
+            <section className={`${card} p-5`} aria-labelledby="cc-learn">
+              <div className="flex items-baseline justify-between">
+                <h2 id="cc-learn" className={title}>
+                  Learn
+                </h2>
+                <Link href="/my-recruiting/learn" className={more}>
+                  Open →
+                </Link>
+              </div>
+              <p className="mt-1 text-xs text-white/50">Rules, timelines, costs and answers to the questions families ask.</p>
+              <ul className="mt-3 grid grid-cols-2 gap-2">
+                {LEARN_LINKS.map(({ icon: Icon, label, href }) => (
+                  <li key={label}>
+                    <a href={href} className="flex h-full items-center gap-2 rounded-lg border border-white/10 p-2.5 text-xs font-semibold text-white/85 hover:border-[#D3B574]/60">
+                      <Icon className="h-4 w-4 shrink-0 text-[#D3B574]" aria-hidden /> {label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            {/* Info sheet, or the brand line before there is one */}
+            {sheet ? (
+              <InfoSheetCard sheet={sheet} name={first.firstName} />
+            ) : (
+              <section className={`${card} relative overflow-hidden p-5`}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/hero-banner-nchsaa-2026-arena.png" alt="" className="absolute inset-0 h-full w-full object-cover opacity-20" />
+                <p className="relative text-lg font-black leading-7 text-white">Same grind. Higher opportunities.</p>
+                <p className="relative mt-2 text-sm text-white/65">Plan, prepare, compete, succeed.</p>
+              </section>
+            )}
+          </div>
+
+          {blue ? (
+            <p className="mt-4 flex items-center gap-2 text-xs text-white/45">
+              <ListChecks className="h-4 w-4" aria-hidden /> Your plan, list and schedule are part of NC United Blue.
+            </p>
+          ) : null}
         </>
       )}
     </PortalShell>
