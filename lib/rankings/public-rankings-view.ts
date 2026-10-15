@@ -10,6 +10,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getPublicRankingsMax, isPublicRankingsYearPublished, isRankedClassYear, isWomensBoard } from "@/lib/public-rankings-cap"
 import { loadWomensNationalRanks, type WomensNationalRankRow } from "@/lib/rankings/womens-national-ranks"
+import { inState } from "@/lib/recruiting/states"
 
 /**
  * The public read model for a class ranking — one server-side shape, the way the TOC field has one.
@@ -196,7 +197,8 @@ async function buildPublicClassRanking(
   }
 
   const admin = createAdminClient()
-  const { data: rows } = await 
+  // North Carolina's board (lib/recruiting/states.ts).
+  const { data: rows } = await inState(
     admin
       .from("athletes")
       .select(
@@ -209,10 +211,10 @@ async function buildPublicClassRanking(
           "prospect_ranking, previous_ranking, college",
           ...IDENTITY_COLUMNS,
         ].join(", "),
-      )
+      ),
+  )
       .eq("graduationyear", year)
       .eq("gender", gender)
-      .eq("is_nc_athlete", true)
       .not("prospect_ranking", "is", null)
       .lte("prospect_ranking", cap)
       .order("prospect_ranking", { ascending: true })

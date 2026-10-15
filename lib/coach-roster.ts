@@ -15,6 +15,8 @@ import { unstable_cache } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { currentClassYears } from "@/lib/class-years"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
+import { HOME_STATE, inState } from "@/lib/recruiting/states"
+import { RECRUITING_BRAND } from "@/lib/recruiting/brand"
 
 export type CoachRosterAthlete = {
   id: string
@@ -25,13 +27,11 @@ export type CoachRosterAthlete = {
   weightclass: string | null
 }
 
-async function build(): Promise<CoachRosterAthlete[]> {
+/** One state's wrestlers; North Carolina, as before, when none is named (lib/recruiting/states.ts). */
+async function build(state: string = HOME_STATE): Promise<CoachRosterAthlete[]> {
   const admin = createAdminClient()
   const active = currentClassYears()
-  const { data, error } = await admin
-    .from("athletes")
-    .select("id,name,highschool,graduationyear,weightclass")
-    .eq("is_nc_athlete", true)
+  const { data, error } = await inState(admin.from("athletes").select("id,name,highschool,graduationyear,weightclass"), state)
     .gte("graduationyear", active[0]!)
     .lte("graduationyear", active[active.length - 1]!)
     .order("name")
@@ -47,3 +47,13 @@ async function build(): Promise<CoachRosterAthlete[]> {
 }
 
 export const loadCoachRoster = unstable_cache(build, ["coach-roster", "v1"], { revalidate: 3600, tags: ["coach-roster"] })
+
+/**
+ * Every live state's wrestlers (lib/recruiting/brand.ts), for the searches a coach uses to find
+ * anyone: the top bar, Coach Home and New message. North Carolina alone until a second state is live.
+ */
+export async function loadLiveRoster(): Promise<CoachRosterAthlete[]> {
+  const codes = RECRUITING_BRAND.states.filter((s) => s.live).map((s) => s.code)
+  const lists = await Promise.all(codes.map((code) => (code === HOME_STATE ? loadCoachRoster() : loadCoachRoster(code))))
+  return lists.flat().sort((a, b) => a.name.localeCompare(b.name))
+}

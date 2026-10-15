@@ -1,7 +1,8 @@
 "use client"
 
 import { VIEW_GENDER_COOKIE, coachProgramOf, parseViewGender, viewGenderFor } from "@/lib/recruiting/coach-program"
-import { RECRUITING_BRAND, usesRecruitingShell } from "@/lib/recruiting/brand"
+import { usesRecruitingShell, visibleStates } from "@/lib/recruiting/brand"
+import { HOME_STATE } from "@/lib/recruiting/states"
 import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
@@ -132,6 +133,16 @@ function hasHonor(prospect: Prospect, honor: HonorPill): boolean {
 }
 
 /** The state a wrestler competes in. Rows without one are North Carolina's: the directory holds no one else yet. */
+/**
+ * The weight he last competed at (the server sends it beside last_competed); the listed weight
+ * only when no result records one. The listed weight goes stale and nobody corrects it, and an
+ * out-of-state profile has none at all.
+ */
+function lastWeight(prospect: Prospect): string | null {
+  const w = (prospect as { last_competed_weight?: string | null }).last_competed_weight
+  return w && String(w).trim() ? String(w).trim() : null
+}
+
 function stateOfProspect(prospect: Prospect): string {
   const raw = String((prospect as { state?: string | null }).state ?? "").trim().toUpperCase()
   if (raw === "NORTH CAROLINA") return "NC"
@@ -248,7 +259,12 @@ export default function ProspectsAllClient({
   const [weightFilters, setWeightFilters] = useState<string[]>([])
   const [achievementFilters, setAchievementFilters] = useState<AchievementLevel[]>([])
   const [honorFilters, setHonorFilters] = useState<HonorPill[]>([])
-  const [stateFilter, setStateFilter] = useState<string>("all")
+  /*
+   * One state's wrestlers at a time, North Carolina first: each state is its own list (and its
+   * own brand to families). Choosing another state loads it from the server.
+   */
+  const [stateFilter, setStateFilter] = useState<string>(HOME_STATE)
+  const stateChoices = visibleStates(viewerProfile?.is_admin === true || viewerProfile?.role === "admin")
 
   useEffect(() => {
     if (skipInitialActiveFetch.current && yearFilter === "active") {
@@ -274,6 +290,7 @@ export default function ProspectsAllClient({
           if (yearParams.graduationYear) params.set("graduationYear", yearParams.graduationYear)
           if (yearParams.minYear != null) params.set("minYear", String(yearParams.minYear))
           if (yearParams.maxYear != null) params.set("maxYear", String(yearParams.maxYear))
+          if (stateFilter !== HOME_STATE) params.set("state", stateFilter)
 
           const url = `/api/prospects?${params.toString()}`
           const maxAttempts = 3
@@ -324,7 +341,8 @@ export default function ProspectsAllClient({
     }
 
     run()
-  }, [yearFilter])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [yearFilter, stateFilter])
 
   const availableYears = useMemo(() => {
     const years = new Set<number>()
@@ -341,6 +359,7 @@ export default function ProspectsAllClient({
     const weights = new Set<string>()
     prospects.forEach((prospect) => {
       const raw =
+        lastWeight(prospect) ??
         (prospect as any).weightclass ??
         (prospect as any).weight_class ??
         prospect.weight?.toString() ??
@@ -525,6 +544,7 @@ export default function ProspectsAllClient({
 
       if (weightFilters.length > 0) {
         const rawWeight =
+          lastWeight(prospect) ??
           (prospect as any).weightclass ??
           (prospect as any).weight_class ??
           prospect.weight?.toString() ??
@@ -542,7 +562,7 @@ export default function ProspectsAllClient({
 
       if (honorFilters.length > 0 && !honorFilters.some((h) => hasHonor(prospect, h))) return false
 
-      if (stateFilter !== "all" && stateOfProspect(prospect) !== stateFilter) return false
+      if (stateFilter !== HOME_STATE && stateOfProspect(prospect) !== stateFilter) return false
 
       return true
     })
@@ -576,12 +596,12 @@ export default function ProspectsAllClient({
 
   const tableAthletes = useMemo(() => {
     const mapped = sortedProspects.map((prospect, index) => {
-      const weightValue =
-        prospect.weightclass && prospect.weightclass.trim() !== ""
+      const weightValue = lastWeight(prospect) ??
+        (prospect.weightclass && prospect.weightclass.trim() !== ""
           ? prospect.weightclass
           : prospect.weight
             ? String(prospect.weight)
-            : ""
+            : "")
 
       const hasRankedWin =
         !!prospect.nationally_ranked_wins &&
@@ -677,7 +697,7 @@ export default function ProspectsAllClient({
     setWeightFilters([])
     setAchievementFilters([])
     setHonorFilters([])
-    setStateFilter("all")
+    setStateFilter(HOME_STATE)
   }
 
   const hasActiveFilters = useMemo(() => {
@@ -690,7 +710,7 @@ export default function ProspectsAllClient({
       weightFilters.length > 0 ||
       achievementFilters.length > 0 ||
       honorFilters.length > 0 ||
-      stateFilter !== "all"
+      stateFilter !== HOME_STATE
     )
   }, [searchTerm, yearFilter, genderFilter, statusFilter, rankFilter, weightFilters, achievementFilters, honorFilters, stateFilter])
 
@@ -757,7 +777,9 @@ export default function ProspectsAllClient({
             <h1 className="text-4xl font-black tracking-tight text-white md:text-5xl">Athlete Profiles</h1>
           </div>
           <p className="text-white/70 text-lg max-w-2xl leading-relaxed mb-8">
-            All NC wrestlers — browse by name, school, class year, and commitment status. Create your profile and we pull in NCHSAA, NHSCA, and Super 32 results.
+            {stateFilter === HOME_STATE
+              ? "All NC wrestlers — browse by name, school, class year, and commitment status. Create your profile and we pull in NCHSAA, NHSCA, and Super 32 results."
+              : `${stateChoices.find((st) => st.code === stateFilter)?.name ?? stateFilter} state placers — browse by name, school, class year, and commitment status.`}
           </p>
           {/* Side by side, and the same page: most NC wrestlers are already here from their results
               (Matt, 8 Oct 2026), so /create-profile looks for the existing profile first and offers
@@ -885,21 +907,23 @@ export default function ProspectsAllClient({
             </QuickGroup>
             {/* Two rows on a wide screen: who (wrestling, class, honours), then how (state, show, sort). */}
             <div className="hidden basis-full lg:block" aria-hidden />
-            <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase tracking-wider text-white/45">
-              State
-              <select
-                value={stateFilter}
-                onChange={(e) => setStateFilter(e.target.value)}
-                className="min-h-[36px] rounded-lg border border-white/20 bg-[#0A1628] px-3 text-sm font-semibold normal-case tracking-normal text-white focus:border-[#D3B574] focus:outline-none"
-              >
-                <option value="all">All states</option>
-                {RECRUITING_BRAND.states.map((st) => (
-                  <option key={st.code} value={st.code}>
-                    {st.name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            {stateChoices.length > 1 ? (
+              <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase tracking-wider text-white/45">
+                State
+                <select
+                  value={stateFilter}
+                  onChange={(e) => setStateFilter(e.target.value)}
+                  className="min-h-[36px] rounded-lg border border-white/20 bg-[#0A1628] px-3 text-sm font-semibold normal-case tracking-normal text-white focus:border-[#D3B574] focus:outline-none"
+                >
+                  {stateChoices.map((st) => (
+                    <option key={st.code} value={st.code}>
+                      Recruit{st.code} · {st.name}
+                      {st.live ? "" : " (staff only)"}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
             <QuickGroup label="Show">
               {maySeeRanking ? (
                 <QuickChip active={rankFilter === "ranked"} onClick={() => setRankFilter(rankFilter === "ranked" ? "all" : "ranked")}>

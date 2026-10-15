@@ -16,13 +16,32 @@ export const RECRUITING_BRAND = {
   /** Who runs the community side, and who holds the copyright until the company exists. */
   parent: "NC United Wrestling",
   supportEmail: "info@ncwrestlingunited.com",
-  /** States whose wrestlers are in the product, in the order they opened. */
-  states: [{ code: "NC", name: "North Carolina" }],
+  /**
+   * States whose wrestlers are in the product, in the order they opened. Each state is its own
+   * brand to families - Recruit + the state code (Matt, 15 October 2026). `live: false` is a state
+   * being checked before it is announced: admins can open it, coaches cannot, and the coverage
+   * line does not name it. Setting it to true is the launch.
+   */
+  states: [
+    { code: "NC", name: "North Carolina", live: true },
+    { code: "SC", name: "South Carolina", live: false },
+  ],
 } as const
+
+export type RecruitingState = (typeof RECRUITING_BRAND.states)[number]
+
+/** States a viewer may open: the live ones, and the ones still being checked for an admin. */
+export function visibleStates(isAdmin: boolean): RecruitingState[] {
+  return RECRUITING_BRAND.states.filter((s) => s.live || isAdmin)
+}
+
+export function isVisibleState(code: string | null | undefined, isAdmin: boolean): boolean {
+  return visibleStates(isAdmin).some((s) => s.code === String(code ?? "").toUpperCase())
+}
 
 /** "North Carolina", "North Carolina and South Carolina", "North Carolina, South Carolina, and Virginia". */
 export function recruitingCoverage(): string {
-  const names = RECRUITING_BRAND.states.map((s) => s.name)
+  const names = RECRUITING_BRAND.states.filter((s) => s.live).map((s) => s.name)
   return new Intl.ListFormat("en-US", { style: "long", type: "conjunction" }).format(names)
 }
 

@@ -5,6 +5,7 @@ import { unstable_cache } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
 import { buildRecruitNcRankingBoard } from "@/lib/rankings/recruitnc-ranking-engine"
+import { inState } from "@/lib/recruiting/states"
 
 export const dynamic = "force-dynamic"
 
@@ -83,11 +84,8 @@ export async function GET(request: Request) {
        */
       (async () => {
         try {
-          const { data } = await createAdminClient()
-            .from("athletes")
-            .select("id, name, highschool")
+          const { data } = await inState(createAdminClient().from("athletes").select("id, name, highschool"))
             .eq("graduationyear", Number(year))
-            .eq("is_nc_athlete", true)
             .is("gender", null)
           return (data ?? []).map((row) => ({
             id: String(row.id),

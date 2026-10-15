@@ -5,6 +5,7 @@ import { unstable_cache } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { loadAthleteCredentialsBatch } from "@/lib/credentials/athlete-credentials"
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
+import { inState } from "@/lib/recruiting/states"
 
 /**
  * Credentials for a published class ranking — the one endpoint the phone app may ask.
@@ -44,9 +45,9 @@ async function buildCredentialsForYear(year: number): Promise<PublicCredentialsR
    * An allowlist, not `select("*")`. The matcher needs identity columns, and this table also
    * carries GPA, contact details and staff evaluation notes on the same row.
    */
-  const { data: rows } = await admin
-    .from("athletes")
-    .select(
+  // North Carolina's board (lib/recruiting/states.ts).
+  const { data: rows } = await inState(
+    admin.from("athletes").select(
       [
         "id, name, highschool, graduationyear, prospect_ranking",
         "wrestling_name",
@@ -55,11 +56,11 @@ async function buildCredentialsForYear(year: number): Promise<PublicCredentialsR
         "nhsca_results",
         "super32_results",
       ].join(", "),
-    )
+    ),
+  )
     .eq("graduationyear", year)
     // The men's board: this feeds the app's cards, and the app carries the men's rankings only.
     .eq("gender", "Male")
-    .eq("is_nc_athlete", true)
     .not("prospect_ranking", "is", null)
     .lte("prospect_ranking", cap)
     .order("prospect_ranking", { ascending: true })

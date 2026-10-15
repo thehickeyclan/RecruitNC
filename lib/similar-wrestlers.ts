@@ -5,6 +5,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
+import { athleteStateCode, COMPARE_STATES, inState } from "@/lib/recruiting/states"
 
 export type SimilarWrestler = { id: string; name: string; school: string | null; weight: string | null; rank: number | null }
 
@@ -47,15 +48,15 @@ export function rankSimilar(
 export async function loadSimilarWrestlers(supabase: SupabaseClient, athleteId: string, limit = 4): Promise<SimilarWrestler[]> {
   const { data: a } = await supabase
     .from("athletes")
-    .select("id, graduationyear, weightclass, gender, is_nc_athlete")
+    .select("id, graduationyear, weightclass, gender, is_nc_athlete, state")
     .eq("id", athleteId)
     .maybeSingle()
   const weight = weightOf(a?.weightclass)
-  if (!a || !a.is_nc_athlete || !a.graduationyear || weight == null) return []
-  let q = supabase
-    .from("athletes")
-    .select("id, name, highschool, weightclass, prospect_ranking, graduationyear, gender")
-    .eq("is_nc_athlete", true)
+  // Wrestlers from his own state: an NC wrestler is compared with NC wrestlers, as before.
+  const state = athleteStateCode(a)
+  // The comparison these feed opens one state at a time (COMPARE_STATES).
+  if (!a || !state || !COMPARE_STATES.includes(state) || !a.graduationyear || weight == null) return []
+  let q = inState(supabase.from("athletes").select("id, name, highschool, weightclass, prospect_ranking, graduationyear, gender"), state)
     .eq("graduationyear", a.graduationyear)
     .limit(1000)
   q = a.gender ? q.eq("gender", a.gender) : q

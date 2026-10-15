@@ -3,7 +3,7 @@ import "server-only"
 
 import { createAdminClient } from "@/lib/supabase/admin"
 import { classifyViewer } from "@/lib/viewer-role"
-import { loadCoachRoster } from "@/lib/coach-roster"
+import { loadLiveRoster } from "@/lib/coach-roster"
 import { loadMyRecruits } from "@/lib/my-recruits"
 import { isApprovedCoach, listThreads } from "@/lib/coach-messages"
 import { loadFitFlags } from "@/lib/program-fit-bulk"
@@ -15,6 +15,7 @@ import { currentClassYears } from "@/lib/class-years"
 import { groupRecruitsByEvent } from "@/lib/college-programs/competing-next"
 import { listUpcomingEventsForAthletes } from "@/lib/college-programs/schedule"
 import type { CoachHomeData } from "./coach-home-client"
+import { inState } from "@/lib/recruiting/states"
 
 
 /**
@@ -51,7 +52,7 @@ export async function loadCoachHome(
   const [board, threads, roster, school] = await Promise.all([
     loadMyRecruits(admin, userId).catch(() => null),
     listThreads(admin, userId).catch(() => null),
-    loadCoachRoster().catch(() => []),
+    loadLiveRoster().catch(() => []),
     profile?.school_id
       ? admin
           .from("schools")
@@ -94,10 +95,7 @@ export async function loadCoachHome(
    */
   const suggestYears = currentClassYears().filter((y) => releasedClassYears(viewGender).includes(y)).slice(0, 2)
   const suggested = suggestYears.length
-    ? await admin
-        .from("athletes")
-        .select("id, name, graduationyear, highschool, prospect_ranking, college, recruiting_status")
-        .eq("is_nc_athlete", true)
+    ? await inState(admin.from("athletes").select("id, name, graduationyear, highschool, prospect_ranking, college, recruiting_status"))
         .eq("gender", viewGender)
         .in("graduationyear", suggestYears)
         .gte("prospect_ranking", 1)
