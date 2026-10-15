@@ -622,7 +622,7 @@ export function PlaybookMembersContent() {
           Gifts are made to NC United Wrestling and administered under NC United policy. Contributions may be tax-deductible to the extent allowed by law — donors should confirm with a tax advisor.
         </p>
         <p>
-          NCUnitedWrestling.com ·{" "}
+          NCWrestlingUnited.com ·{" "}
           <a href="mailto:info@ncwrestlingunited.com" className="text-[#C8A94A] underline-offset-4 hover:underline">
             info@ncwrestlingunited.com
           </a>

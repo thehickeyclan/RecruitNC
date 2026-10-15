@@ -157,9 +157,9 @@ Please respond directly to ${body.email} to contact this athlete.
             Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
           },
           body: JSON.stringify({
-            from: "NC United Wrestling <noreply@ncunitedwrestling.com>",
+            from: "NC Wrestling United <info@ncwrestlingunited.com>",
             to: ["ncunitedwrestling@gmail.com"],
-            replyTo: body.email,
+            reply_to: body.email,
             subject: `NC United National Team Interest: ${body.firstName} ${body.lastName} (${body.graduationYear})`,
             text: emailBody,
           }),
@@ -167,8 +167,11 @@ Please respond directly to ${body.email} to contact this athlete.
 
         if (!emailResponse.ok) {
           const errorText = await emailResponse.text()
-          console.error("Failed to send email via Resend:", errorText)
+          console.error(`Failed to send email via Resend (${emailResponse.status}):`, errorText)
           // Continue anyway - the form submission is still valid
+        } else {
+          const sent = (await emailResponse.json().catch(() => null)) as { id?: string } | null
+          console.log("National team interest email sent via Resend:", sent?.id ?? "(no id)")
         }
       } catch (emailError) {
         console.error("Error sending email:", emailError)

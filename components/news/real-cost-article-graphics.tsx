@@ -348,8 +348,8 @@ export function RealCostNonprofitMissionGraphic() {
           way.
         </p>
         <p className="mt-3 text-xs text-slate-300">
-          <a href="https://ncunitedwrestling.com" className="font-semibold text-amber-200/90 underline" target="_blank" rel="noopener noreferrer">
-            NCUnitedWrestling.com
+          <a href="https://www.ncwrestlingunited.com" className="font-semibold text-amber-200/90 underline" target="_blank" rel="noopener noreferrer">
+            NCWrestlingUnited.com
           </a>{" "}
           · #StrengthInUnity
         </p>
