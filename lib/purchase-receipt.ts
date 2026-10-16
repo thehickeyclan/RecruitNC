@@ -30,7 +30,7 @@ import { appDownloadEmailHtml, appDownloadEmailText } from "@/lib/app-download-e
 const FROM = "NC Wrestling United <info@ncwrestlingunited.com>"
 const CONTACT_EMAIL = "info@ncwrestlingunited.com"
 
-export type ReceiptKind = "subscription" | "scouting_report" | "blue" | "toc_registration" | "drop_in"
+export type ReceiptKind = "subscription" | "command_center" | "scouting_report" | "blue" | "toc_registration" | "drop_in"
 
 type Metadata = Record<string, string | undefined> | null | undefined
 
@@ -45,6 +45,8 @@ export function receiptKindForCheckout(metadata: Metadata): ReceiptKind | null {
   const m = metadata ?? {}
   if (m.source === "national_team" || m.channel === "spartan") return null
   if (m.source === "scouting_report") {
+    // The Recruiting Command Center is a subscription of its own, never "Scouting report".
+    if (m.kind === "command_center") return "command_center"
     return m.kind === "subscription" || m.kind === "subscription_annual" ? "subscription" : "scouting_report"
   }
   if (m.channel === "blue" && (m.signup_id || m.membership_id)) return "blue"
@@ -54,7 +56,8 @@ export function receiptKindForCheckout(metadata: Metadata): ReceiptKind | null {
 }
 
 const KIND_LABEL: Record<ReceiptKind, string> = {
-  subscription: "RecruitNC subscription",
+  subscription: "RecruitNC Rankings subscription",
+  command_center: "Recruiting Command Center subscription",
   scouting_report: "Scouting report",
   blue: "NC United Blue membership",
   toc_registration: "Tournament of Champions registration",
