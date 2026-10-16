@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { BarChart3, Eye, Mail, MessageSquare, MoreVertical } from "lucide-react"
+import { BarChart3, Eye, Mail, MessageSquare, MoreVertical, PhoneCall } from "lucide-react"
 
 import { CoachEmailComposer } from "@/components/colleges/coach-email-composer"
 import { StageSelect } from "@/components/portal/stage-select"
@@ -24,6 +24,8 @@ export type ListRow = {
   /** Verified, from our own records: never what the family typed. */
   viewed: { views: number; last: string } | null
   messaged: { threadId: string; yourTurn: boolean } | null
+  /** What the family logged: the furthest step (reached out, visit, offer) and the latest contact. */
+  reached?: { label: string; date: string } | null
   hasQuestionnaire: boolean
   note: string | null
 }
@@ -197,7 +199,12 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
                           <MessageSquare className="h-3.5 w-3.5" aria-hidden /> Messaged
                         </a>
                       ) : null}
-                      {!r.viewed && !r.messaged ? <span className="text-xs text-white/30">None yet</span> : null}
+                      {r.reached ? (
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold text-amber-200">
+                          <PhoneCall className="h-3.5 w-3.5" aria-hidden /> {r.reached.label} · {r.reached.date}
+                        </span>
+                      ) : null}
+                      {!r.viewed && !r.messaged && !r.reached ? <span className="text-xs text-white/30">None yet</span> : null}
                     </span>
                   </td>
                   <td className="w-44 p-3">

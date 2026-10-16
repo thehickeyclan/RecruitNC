@@ -9,7 +9,7 @@
  * uploads are left out until they exist.
  */
 import type { LucideIcon } from "lucide-react"
-import { ArrowRight, BarChart3, Bookmark, CalendarDays, CheckCircle2, Eye, MessageSquare, Send, UserRound } from "lucide-react"
+import { ArrowRight, BarChart3, Bookmark, CalendarDays, CheckCircle2, Eye, MessageSquare, PhoneCall, Send, UserRound } from "lucide-react"
 
 import { PortalShell } from "@/components/portal/portal-shell"
 import { getCoachViewsForAthlete } from "@/lib/coach-profile-views"
@@ -20,6 +20,10 @@ import { ROADMAP, cleanDone } from "@/lib/recruiting/learn/roadmap"
 import { gradeFromLabel } from "@/lib/recruiting/learn/timeline"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { loadCommandCenter } from "../load"
+import { CONTACT_LABEL } from "@/lib/college-programs/contacts"
+import { loadCollegeContacts } from "@/lib/college-programs/contacts-server"
+import { ANNOUNCED_PROGRAMS as CONTACT_ANNOUNCED } from "@/lib/college-programs/announced"
+import contactData from "@/lib/college-programs/programs-2026-27.json"
 
 export const dynamic = "force-dynamic"
 export const metadata = { title: "Activity | Recruiting Command Center" }
@@ -28,7 +32,9 @@ export const metadata = { title: "Activity | Recruiting Command Center" }
 const GOLD = "var(--recruit-accent)"
 const card = "rounded-2xl border border-white/10 bg-[#0d1d36]/80"
 
-type Kind = "view" | "message" | "sent" | "action"
+const CONTACT_SCHOOLS = new Map([...(contactData.schools as Array<{ id: string; name: string }>), ...CONTACT_ANNOUNCED].map((s) => [s.id, s]))
+
+type Kind = "view" | "message" | "sent" | "action" | "contact"
 type Item = { at: string; kind: Kind; title: string; sub: string | null; logo: string | null; href: string | null }
 
 const KIND: Record<Kind, { label: string; chip: string; icon: LucideIcon; dot: string }> = {
@@ -36,11 +42,13 @@ const KIND: Record<Kind, { label: string; chip: string; icon: LucideIcon; dot: s
   message: { label: "Message", chip: "border-sky-400/50 text-sky-200", icon: MessageSquare, dot: "bg-sky-400" },
   sent: { label: "My action", chip: "border-emerald-400/50 text-emerald-200", icon: Send, dot: "bg-emerald-400" },
   action: { label: "My action", chip: "border-emerald-400/50 text-emerald-200", icon: Bookmark, dot: "bg-emerald-400" },
+  contact: { label: "Reached out", chip: "border-amber-300/60 text-amber-100", icon: PhoneCall, dot: "bg-amber-300" },
 }
 
 const FILTERS = [
-  { key: "all", label: "All activity", kinds: ["view", "message", "sent", "action"] },
-  { key: "coach", label: "Coach activity", kinds: ["view", "message"] },
+  { key: "all", label: "All activity", kinds: ["view", "message", "sent", "action", "contact"] },
+  { key: "coach", label: "Coach activity", kinds: ["view", "message", "contact"] },
+  { key: "reached", label: "Reached out", kinds: ["contact"] },
   { key: "views", label: "Profile views", kinds: ["view"] },
   { key: "messages", label: "Messages", kinds: ["message", "sent"] },
   { key: "mine", label: "My actions", kinds: ["sent", "action"] },
@@ -131,6 +139,19 @@ export default async function CommandCenterActivity({ searchParams }: { searchPa
       sub: [s.level, s.place].filter(Boolean).join(" · "),
       logo: s.logo,
       href: `/recruiting/schools/${s.id}`,
+    })
+  }
+  // What the family logged: calls, texts, visits and offers that happen off the site.
+  for (const c of await loadCollegeContacts(admin, cc.athletes.map((a) => a.id))) {
+    const school = CONTACT_SCHOOLS.get(c.schoolId)
+    const who = cc.athletes.length > 1 ? cc.athletes.find((a) => a.id === c.athleteId)?.firstName : null
+    items.push({
+      at: `${c.happenedOn}T12:00:00.000Z`,
+      kind: "contact",
+      title: `${school ? school.name.replace(/\s*\([^)]*\)\s*/g, " ").trim() : "A college"}: ${CONTACT_LABEL[c.kind].toLowerCase()}${who ? ` (${who})` : ""}`,
+      sub: c.note,
+      logo: null,
+      href: `/recruiting/schools/${c.schoolId}`,
     })
   }
   const inRange = items.filter((i) => !since || i.at >= since)
