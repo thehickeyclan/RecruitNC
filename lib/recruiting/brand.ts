@@ -42,6 +42,8 @@ export const NATIONAL_BRAND = {
   appOrigin: "https://app.ncwrestlingunited.com",
 } as const
 
+export { NATIONAL_PATH_PREFIXES, isNationalPath } from "@/lib/recruiting/national-paths"
+
 /** recruitwrestlers.com or www.recruitwrestlers.com. */
 export function isNationalHost(hostname: string | null | undefined): boolean {
   const h = String(hostname ?? "").toLowerCase()

@@ -24,7 +24,8 @@ import { loadCommandCenter } from "../load"
 export const dynamic = "force-dynamic"
 export const metadata = { title: "Activity | Recruiting Command Center" }
 
-const GOLD = "#D3B574"
+// The recruiting accent: blue in recruiting areas, gold elsewhere (app/recruit-brand.css).
+const GOLD = "var(--recruit-accent)"
 const card = "rounded-2xl border border-white/10 bg-[#0d1d36]/80"
 
 type Kind = "view" | "message" | "sent" | "action"

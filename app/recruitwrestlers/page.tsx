@@ -84,7 +84,8 @@ export const metadata: Metadata = {
 
 const saira = Saira({ subsets: ["latin"], style: ["italic"], axes: ["wdth"], display: "swap" })
 
-const APP = NATIONAL_BRAND.appOrigin
+// Every page lives on this address now (lib/recruiting/national-paths.ts), so links stay here.
+const APP = ""
 const GOLD = "text-[#4B8BFF]" // the accent: brand blue, lifted a step so it reads on navy
 const PANEL = "rounded-2xl border border-white/10 bg-[#0f1c2e]"
 const BUTTON = "inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition-colors"

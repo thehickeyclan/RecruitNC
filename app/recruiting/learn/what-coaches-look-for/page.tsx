@@ -19,7 +19,8 @@ export const metadata: Metadata = {
 }
 
 const MIN_GROUP = 5
-const GOLD = "#D3B574"
+// The recruiting accent: blue in recruiting areas, gold elsewhere (app/recruit-brand.css).
+const GOLD = "var(--recruit-accent)"
 const card = "rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-5"
 
 type Group = { division: CollegeDivision; gender: "mens" | "womens"; n: number; champ: number; placer: number; qual: number; other: number; national: number }

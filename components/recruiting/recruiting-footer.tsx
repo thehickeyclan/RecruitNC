@@ -1,4 +1,5 @@
 import { RECRUITING_BRAND, recruitingCoverage } from "@/lib/recruiting/brand"
+import { NationalLockup } from "@/components/recruiting/national-frame"
 import { RecruitingWordmark } from "@/components/recruiting/recruiting-wordmark"
 
 /**
@@ -20,7 +21,12 @@ export function RecruitingFooter() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-8 md:flex-row md:justify-between">
           <div className="max-w-sm">
-            <RecruitingWordmark className="text-xl" />
+            <span className="ncu-only">
+              <RecruitingWordmark className="text-xl" />
+            </span>
+            <span className="national-only">
+              <NationalLockup />
+            </span>
             <p className="mt-2 text-sm text-white/50">{RECRUITING_BRAND.tagline}</p>
             <p className="mt-1 text-sm text-white/50">Covering {recruitingCoverage()}. Free for college coaching staff.</p>
           </div>
@@ -41,7 +47,10 @@ export function RecruitingFooter() {
           </div>
         </div>
         <div className="mt-8 flex flex-col gap-2 border-t border-white/10 pt-5 text-xs text-white/40 sm:flex-row sm:justify-between">
-          <p>&copy; {new Date().getFullYear()} {RECRUITING_BRAND.parent}. All rights reserved.</p>
+          <p>
+            &copy; {new Date().getFullYear()} <span className="ncu-only">{RECRUITING_BRAND.parent}</span>
+            <span className="national-only">RecruitWrestlers</span>. All rights reserved.
+          </p>
         </div>
       </div>
     </footer>
