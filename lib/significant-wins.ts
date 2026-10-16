@@ -502,6 +502,29 @@ function weightFits(boutWeight: number | string | null | undefined, finishes: re
 }
 
 /**
+ * A family-added win over a state placer, held to the weight rule a bracket line is held to: the
+ * wrestler's own weight at the time must fit a finish the named placer had in the state the
+ * family named (Matt, 16 October 2026: "are you verifying that the kids the parent says are indeed
+ * state placers?"). False when the placer's weights are on file and none fits; null when there is
+ * nothing to compare - the wrestler's weight then is unknown, or the placer's finishes carry no
+ * weight (North Carolina's results do not), which leaves the bracket-line standard of name and state.
+ */
+export function reportedPlacerWeightFits(
+  index: OpponentIndex,
+  name: string,
+  state: string,
+  date: string | null | undefined,
+  wrestlerWeight: number | null | undefined,
+): boolean | null {
+  if (!wrestlerWeight || wrestlerWeight <= 0) return null
+  const finishes = statePlacersNamed(index, name)
+    .filter((p) => (state === "NC" ? !p.state || p.state === "NC" : p.state === state))
+    .flatMap((p) => finishesInReach(p.finishes, date))
+  if (!finishes.some((f) => f.weight != null && f.weight > 0)) return null
+  return weightFits(wrestlerWeight, finishes)
+}
+
+/**
  * Whether a bout can be credited to a nationally ranked wrestler. His state on the bout ("AZ",
  * "Storm Wrestling Center - HSB (GA)"), his school, or his name already confirmed as a placer in
  * that state - never the name alone, since the national lists name boys from every state and NC
