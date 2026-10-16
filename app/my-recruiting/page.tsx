@@ -12,7 +12,10 @@ import { ArrowRight, CalendarDays, Check, Circle, DollarSign, HelpCircle, ListCh
 import { InfoSheetCard } from "@/components/portal/info-sheet-card"
 import { StageSelect } from "@/components/portal/stage-select"
 import { yearlyCostFor } from "@/lib/college-programs/tuition"
-import { DIVISION_COLOR } from "@/lib/college-programs/types"
+import { DIVISION_COLOR, DIVISION_SHORT, primaryDivision } from "@/lib/college-programs/types"
+import { CONTACT_LABEL, summarizeContacts } from "@/lib/college-programs/contacts"
+import { loadCollegeContacts } from "@/lib/college-programs/contacts-server"
+import { ReachedOutButton, type ReachedOutSchool } from "@/components/portal/reached-out-button"
 import { PortalShell } from "@/components/portal/portal-shell"
 import { unreadCount } from "@/lib/coach-messages"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
@@ -34,6 +37,10 @@ const ALL_SCHOOLS = [...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGR
 const SCHOOL_BY_ID = new Map(ALL_SCHOOLS.map((s) => [s.id, s]))
 const LEVEL_COLOR: Record<string, string> = { D1: DIVISION_COLOR["NCAA Division I"], D2: DIVISION_COLOR["NCAA Division II"], D3: DIVISION_COLOR["NCAA Division III"], NAIA: DIVISION_COLOR.NAIA, NJCAA: DIVISION_COLOR.NJCAA }
 const card = "rounded-xl border border-white/10 bg-[#0f1c2e]"
+const cleanName = (n: string) => n.replace(/\s*\([^)]*\)\s*/g, " ").trim()
+const shortDate = (d: string) => new Date(`${d}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })
+/** Every program this season, for "A college reached out". */
+const PICKER_SCHOOLS: ReachedOutSchool[] = ALL_SCHOOLS.map((s) => ({ id: s.id, name: cleanName(s.name), place: `${s.city}, ${s.state}`, level: DIVISION_SHORT[primaryDivision(s)] })).sort((a, b) => a.name.localeCompare(b.name))
 const title = "text-base font-black text-white"
 const more = "inline-flex items-center gap-1 text-xs font-bold text-[#D3B574] hover:underline"
 
@@ -51,11 +58,16 @@ export default async function CommandCenterHome() {
   const first = athletes[0] ?? null
   const w = wrestlers[0] ?? null
 
-  const [lastCompeted, unread, sheet] = await Promise.all([
+  const [lastCompeted, unread, sheet, contacts] = await Promise.all([
     first ? loadLastCompeted(admin, [first.id], new Map([[first.id, first.classYear]])).then((m) => m.get(first.id) ?? null).catch(() => null) : null,
     unreadCount(admin, viewerId).catch(() => 0),
     blue && first ? buildInfoSheet(admin, first.id).catch(() => null) : null,
+    loadCollegeContacts(admin, athletes.map((a) => a.id)),
   ])
+  // Who has reached out: what the family logged (calls, visits, offers happen off the platform).
+  const reach = summarizeContacts(contacts)
+  const viewedPrograms = athletes.reduce((n, a) => n + (views.get(a.id)?.programs ?? 0), 0)
+  const recentContacts = contacts.slice(0, 4)
   const weight = lastCompeted?.weight ? `${String(lastCompeted.weight).replace(/\s*lbs?$/i, "")} lbs` : null
 
   const steps = w
@@ -157,6 +169,63 @@ export default async function CommandCenterHome() {
         </div>
       ) : (
         <>
+          {/* Who's reaching out: the family's side of the coach funnel (Matt, 16 Oct 2026). */}
+          <section className={`${card} mt-6 p-5`} aria-labelledby="cc-reach">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h2 id="cc-reach" className={title}>
+                  Who&apos;s reaching out
+                </h2>
+                <p className="text-xs text-white/55">Coaches call, text and visit off the site. Log it here and keep every college in one place.</p>
+              </div>
+              <ReachedOutButton
+                athletes={athletes.map((a) => ({ id: a.id, firstName: a.firstName }))}
+                schools={PICKER_SCHOOLS}
+                listIds={schools.map((s) => s.id)}
+              />
+            </div>
+            <ol className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {[
+                { n: viewedPrograms, label: "Viewed the profile", sub: "verified" },
+                { n: reach.reached, label: "Reached out", sub: "colleges" },
+                { n: reach.visits, label: "Visits", sub: "colleges" },
+                { n: reach.offers, label: "Offers", sub: "colleges" },
+              ].map((s, i) => (
+                <li
+                  key={s.label}
+                  className="rounded-lg p-3 text-center"
+                  style={{ backgroundColor: `rgba(var(--recruit-fill-rgb, 211, 181, 116), ${0.1 + i * 0.1})` }}
+                >
+                  <p className="text-3xl font-black">{s.n}</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-white/80">{s.label}</p>
+                  <p className="text-[10px] text-white/45">{s.sub}</p>
+                </li>
+              ))}
+            </ol>
+            {recentContacts.length ? (
+              <ul className="mt-4 divide-y divide-white/5">
+                {recentContacts.map((c) => {
+                  const s = SCHOOL_BY_ID.get(c.schoolId)
+                  return (
+                    <li key={c.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                      <span className="min-w-0">
+                        <Link href={`/recruiting/schools/${c.schoolId}`} className="font-semibold text-white hover:underline">
+                          {s ? cleanName(s.name) : c.schoolId}
+                        </Link>
+                        <span className="text-white/55"> · {CONTACT_LABEL[c.kind]}</span>
+                        {athletes.length > 1 ? <span className="text-white/40"> · {athletes.find((a) => a.id === c.athleteId)?.firstName}</span> : null}
+                        {c.note ? <span className="block truncate text-xs text-white/45">{c.note}</span> : null}
+                      </span>
+                      <span className="shrink-0 text-xs text-white/45">{shortDate(c.happenedOn)}</span>
+                    </li>
+                  )
+                })}
+              </ul>
+            ) : (
+              <p className="mt-4 text-sm text-white/55">Nothing logged yet. When a coach calls, texts, invites you to camp, or you visit, tap the button.</p>
+            )}
+          </section>
+
           <div className="mt-6 grid gap-4 lg:grid-cols-3">
             {/* Next steps */}
             <section className={`${card} flex flex-col p-5`} aria-labelledby="cc-steps">

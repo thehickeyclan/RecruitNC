@@ -21,6 +21,8 @@ import { yearlyCostFor } from "@/lib/college-programs/tuition"
 import { DIVISION_COLOR, DIVISION_SHORT, type CollegeDivision, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { collegeFitFor, loadFamilyFitContext } from "@/lib/recruiting/college-fit"
 import { collegeViewsFor } from "@/lib/recruiting/college-views"
+import { CONTACT_LABEL, summarizeContacts } from "@/lib/college-programs/contacts"
+import { loadCollegeContacts } from "@/lib/college-programs/contacts-server"
 import type { FitLine } from "@/lib/recruiting/family-fit"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { loadCommandCenter } from "../load"
@@ -80,11 +82,13 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
 
   // Fit, verified coach activity and cost for every college on the list.
   const ids = athletes.map((a) => a.id)
-  const [ctx, views, threads] = await Promise.all([
+  const [ctx, views, threads, contacts] = await Promise.all([
     loadFamilyFitContext(admin, viewerId, focus?.gender ?? null).catch(() => null),
     collegeViewsFor(admin, ids).catch(() => new Map()),
     listThreads(admin, viewerId).catch(() => []),
+    loadCollegeContacts(admin, ids),
   ])
+  const reach = summarizeContacts(contacts)
   const { data: threadRows } = threads.length ? await admin.from("coach_threads").select("id, coach_user_id, program").in("id", threads.map((t) => t.id)) : { data: [] }
   const threadCollege = new Map<string, { threadId: string; yourTurn: boolean }>()
   for (const row of threadRows ?? []) {
@@ -115,6 +119,12 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
         athletic: fit ? athleticMark(fit.lines.athletic) : { label: "—", tone: "none", why: "" },
         viewed: v ? { views: v.views, last: v.lastViewedAt } : null,
         messaged: threadCollege.get(s.id) ?? null,
+        reached: (() => {
+          const r = reach.bySchool.get(s.id)
+          if (!r) return null
+          const label = r.stage === "offer" ? "Offer" : r.stage === "visit" ? "Visit" : CONTACT_LABEL[r.latest.kind]
+          return { label, date: new Date(`${r.latest.happenedOn}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }) }
+        })(),
         hasQuestionnaire: s.hasQuestionnaire,
         note: s.memo ?? null,
       },
