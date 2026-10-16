@@ -2,6 +2,8 @@
 
 import { useState } from "react"
 import { Star } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
+import { SUPER32_2026, super32NoticeActive } from "@/lib/recruiting/super32-report"
 
 /**
  * One tap to put a ranked wrestler on My Recruits, from the board itself (Matt, 14 October 2026).
@@ -30,6 +32,10 @@ export function RecruitStarButton({ athleteId, name, initiallyStarred }: { athle
       if (!response.ok) throw new Error(String(response.status))
       const data = (await response.json()) as { action?: string }
       setStarred(data.action === "added")
+      // Tell the coach what a star now gets them, while the Super 32 promise runs.
+      if (data.action === "added" && super32NoticeActive()) {
+        toast({ title: "Added to My Recruits", description: `You'll get a ${SUPER32_2026.name} report on this wrestler within ${SUPER32_2026.reportWithinHours} hours of the finals.` })
+      }
     } catch {
       setFailed(true)
     } finally {

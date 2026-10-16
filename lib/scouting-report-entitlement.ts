@@ -19,7 +19,8 @@ export const SCOUTING_REPORT_PRICES = {
   /** One athlete's report, forever. Impulse-priced: the coach who needs one before Saturday. */
   single: 499,
   /**
-   * The RecruitNC monthly membership: unlimited scouting reports, full rankings, and the
+   * The RecruitNC Rankings plan: every class ranking, the Top 75 and which programs viewed the
+   * profile. Scouting reports are not in it (they are a coach-only product, not on sale). Was: the
    * other recruiting services. Priced as one thing because it is sold as one thing.
    *
    * Deliberately two single reports. At 2x the one-off the upgrade is arithmetic a buyer does

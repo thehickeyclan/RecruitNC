@@ -271,7 +271,7 @@ export default async function CommandCenterSalesPage() {
           <h2 className={`text-center text-4xl sm:text-5xl ${tocDisplayClass()}`}>Choose your plan</h2>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             {[
-              { name: "Rankings", price: formatPrice(SCOUTING_REPORT_PRICES.subscription), line: "Rankings, Top 75, head-to-head, and who viewed your profile", color: GOLD, href: "/plans" },
+              { name: "Rankings", price: formatPrice(SCOUTING_REPORT_PRICES.subscription), line: "Class rankings, the Top 75, and which programs viewed your profile", color: GOLD, href: "/plans" },
               { name: "Recruiting Command Center", price, line: "Everything in Rankings, plus your recruiting assistant from 8th grade through signing", color: SKY, href: d.onSale ? BUY : "/plans", best: true },
               { name: "NC United Blue", price: "$55", line: "Everything in the Recruiting Command Center, plus practices run by college coaches, the state's best partners and the national team pathway", color: "#7dd3fc", href: "/blue" },
             ].map((p) => (
