@@ -10,6 +10,7 @@
  * When the app's screen changes, change this with it.
  */
 import { useEffect, useState, type ReactNode } from "react"
+import { bestWins } from "@/lib/best-wins"
 import Link from "next/link"
 import type { LucideIcon } from "lucide-react"
 import { BarChart3, ChevronDown, ChevronRight, ChevronUp, Lock, TrendingDown, Trophy } from "lucide-react"
@@ -527,18 +528,25 @@ function SeeAll({ open, label, onClick }: { open: boolean; label: string; onClic
  * Significant wins or notable losses, In-state | National. National means an opponent from
  * another state; it opens on National when there is one, the stronger list.
  */
-function BoutList({ bouts }: { bouts: AppWin[] }) {
+function BoutList({ bouts, best = false }: { bouts: AppWin[]; best?: boolean }) {
   const national = bouts.filter((b) => b.scope === "national")
   const inState = bouts.filter((b) => b.scope !== "national")
-  const [tab, setTab] = useState<"in-state" | "national">(national.length ? "national" : "in-state")
+  /*
+   * Wins open on the three best (lib/best-wins.ts) when there are more than three to choose from:
+   * a long list was overwhelming (Matt, 16 October 2026). All, In-state and National are a tap away.
+   */
+  const top = best ? bestWins(bouts) : []
+  const offerBest = best && bouts.length > 3 && top.length > 0
+  const [tab, setTab] = useState<"best" | "all" | "in-state" | "national">(offerBest ? "best" : national.length ? "national" : "in-state")
   const [showAll, setShowAll] = useState(false)
-  const list = tab === "national" ? national : inState
+  const list = tab === "best" ? top : tab === "all" ? bouts : tab === "national" ? national : inState
   const shown = showAll ? list : list.slice(0, 6)
   return (
     <div className="space-y-2">
       <Toggle
         value={tab}
         options={[
+          ...(offerBest ? ([["best", "Best 3"], ["all", `All (${bouts.length})`]] as Array<["best" | "all", string]>) : []),
           ["in-state", `In-state (${inState.length})`],
           ["national", `National (${national.length})`],
         ]}
@@ -563,7 +571,7 @@ function BoutList({ bouts }: { bouts: AppWin[] }) {
           </div>
         ))
       ) : (
-        <p className="text-xs text-[#A8BBD1]">{tab === "national" ? "None against out-of-state opponents on file." : "None against NC opponents on file."}</p>
+        <p className="text-xs text-[#A8BBD1]">{tab === "national" ? "None against out-of-state opponents on file." : tab === "in-state" ? "None against NC opponents on file." : "None on file."}</p>
       )}
       {list.length > 6 && !showAll ? (
         <button type="button" onClick={() => setShowAll(true)} className="text-[13px] font-extrabold text-[#D3B574]">
@@ -574,7 +582,7 @@ function BoutList({ bouts }: { bouts: AppWin[] }) {
   )
 }
 
-function StyledBoutList({ bouts }: { bouts: AppWin[] }) {
+function StyledBoutList({ bouts, best = false }: { bouts: AppWin[]; best?: boolean }) {
   const [style, setStyle] = useState<StyleFilter>("all")
   const both = bouts.some((b) => isOlympic(b.style)) && bouts.some((b) => !isOlympic(b.style))
   const list = !both || style === "all" ? bouts : bouts.filter((b) => (style === "olympic" ? isOlympic(b.style) : !isOlympic(b.style)))
@@ -582,7 +590,7 @@ function StyledBoutList({ bouts }: { bouts: AppWin[] }) {
     <div className="space-y-3">
       {both ? <StyleToggle value={style} onChange={setStyle} /> : null}
       {/* Keyed so the In-state | National tab re-picks itself for the filtered list. */}
-      <BoutList key={style} bouts={list} />
+      <BoutList key={style} bouts={list} best={best} />
     </div>
   )
 }
@@ -597,7 +605,7 @@ export function AppSignificantWins({ wins, loaded, footer, className }: { wins: 
     >
       {wins.length || footer ? (
         <div className="space-y-3">
-          {wins.length ? <StyledBoutList bouts={wins} /> : <p className="text-xs text-[#A8BBD1]">No wins over ranked, All-American or state-placing opponents on file yet.</p>}
+          {wins.length ? <StyledBoutList bouts={wins} best /> : <p className="text-xs text-[#A8BBD1]">No wins over ranked, All-American or state-placing opponents on file yet.</p>}
           {footer ? <div className="flex flex-wrap items-center gap-2 border-t border-[#1a3a5f] pt-3">{footer}</div> : null}
         </div>
       ) : null}
