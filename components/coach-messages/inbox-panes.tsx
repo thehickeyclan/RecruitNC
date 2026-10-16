@@ -10,6 +10,7 @@ import { Conversation } from "@/components/coach-messages/conversation"
 import { CoachComposeDialog } from "@/components/coach-messages/coach-message-button"
 import { InboxEmpty, InboxList, type InboxFilter, type ThreadSummary } from "@/components/coach-messages/inbox-list"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { BrandName } from "@/components/recruiting/brand-name"
 
 /**
  * Messages as one screen (Matt, 11 October 2026): conversations down the left, the open one on
@@ -68,7 +69,7 @@ export function InboxPanes({ initialThreadId = null, embedded = false }: { initi
       <div className={embedded ? "flex h-[calc(100dvh-11rem)] min-h-[560px] flex-col" : "mx-auto flex h-[calc(100dvh-3.5rem-4rem)] max-w-7xl flex-col px-4 py-5 lg:h-[calc(100dvh-3.5rem)] lg:px-6"}>
         <div className={cn("flex flex-wrap items-end justify-between gap-3", selectedId && "hidden lg:flex")}>
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#D3B574]">Messages · {RECRUITING_BRAND.name}</p>
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-[#D3B574]">Messages · <BrandName /></p>
             <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">Messages</h1>
             <p className="mt-1 text-sm text-white/60">
               {coach ? "Conversations you started with wrestlers. Their linked parents see them too." : "Every recruiting conversation with college coaches, in one place."}

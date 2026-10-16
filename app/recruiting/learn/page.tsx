@@ -10,6 +10,7 @@ import { ChevronRight, Lock } from "lucide-react"
 
 import { LearnDisclaimer } from "@/components/recruiting/learn/learn-disclaimer"
 import { CHECKED, LEARN_PAGES } from "@/lib/recruiting/learn/content"
+import { BrandName } from "@/components/recruiting/brand-name"
 
 export const metadata: Metadata = {
   title: "College Wrestling Recruiting Rules | RecruitNC",
@@ -26,7 +27,7 @@ export default function LearnIndexPage() {
         <a href="/my-recruiting#learn" className="text-xs font-semibold text-white/55 hover:text-white">
           ← Recruiting Command Center
         </a>
-        <p className="mt-4 text-[11px] font-black uppercase tracking-widest text-[#D3B574]">RecruitNC · Recruiting Portal</p>
+        <p className="mt-4 text-[11px] font-black uppercase tracking-widest text-[#D3B574]"><BrandName /> · Recruiting Portal</p>
         <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">The rules, level by level</h1>
         <p className="mt-2 text-sm leading-6 text-white/65">
           Men&apos;s and women&apos;s wrestling, at every level, and nothing else. When a coach can contact a wrestler, when visits open, what signing means now, how scholarships work and what

@@ -9,6 +9,7 @@ import { FitBadge } from "@/components/fit-badge"
 import { CoachTabs } from "@/components/coach-tabs"
 import { RECRUITING_BRAND, recruitingCoverage } from "@/lib/recruiting/brand"
 import { EMPTY_CRITERIA, describePerfectRecruit, type FitKey, type FitStatus } from "@/lib/program-fit"
+import { BrandName } from "@/components/recruiting/brand-name"
 
 export type PerfectRecruitMatch = {
   id: string
@@ -124,7 +125,7 @@ export default function PerfectRecruitClient({
       <div className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
         <CoachTabs active="standard" className="mb-6" />
         <header>
-          <p className={`text-[11px] font-black uppercase tracking-widest ${GOLD}`}>{RECRUITING_BRAND.name} · For your program</p>
+          <p className={`text-[11px] font-black uppercase tracking-widest ${GOLD}`}><BrandName /> · For your program</p>
           <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">Your perfect recruit</h1>
           <p className="mt-2 max-w-2xl text-sm text-white/60">
             Set what your program needs once. Wrestlers are then flagged against it on this page, on your recruits board, on their

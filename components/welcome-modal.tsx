@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import Link from "next/link"
 import { recruitingCoverage, usesRecruitingShell } from "@/lib/recruiting/brand"
+import { BrandName } from "@/components/recruiting/brand-name"
 import {
   BarChart3,
   GitCompareArrows,
@@ -291,7 +292,7 @@ export function WelcomeModal() {
           <X className="h-4 w-4" />
         </button>
 
-        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#D3B574]">NC United · RecruitNC</p>
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#D3B574]"><BrandName ncu="NC United · RecruitNC" /></p>
         <h2 id="welcome-title" className="mt-2 pr-8 text-2xl font-black text-white">
           {headingFor(welcome, asked, profile)}
         </h2>

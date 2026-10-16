@@ -77,6 +77,25 @@ export function accessTokenFrom(headers: Headers, cookies: Array<{ name: string;
   }
 }
 
+/** The user id and email in a valid, unexpired HS256 token signed with our project secret; otherwise null. */
+export async function verifiedClaims(token: string, secret: string, nowSeconds = Date.now() / 1000): Promise<{ sub: string; email: string | null } | null> {
+  const [h, p, s] = token.split(".")
+  if (!h || !p || !s) return null
+  try {
+    const header = JSON.parse(new TextDecoder().decode(b64urlToBytes(h))) as { alg?: string }
+    if (header.alg !== "HS256") return null
+    const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["verify"])
+    const ok = await crypto.subtle.verify("HMAC", key, b64urlToBytes(s), new TextEncoder().encode(`${h}.${p}`))
+    if (!ok) return null
+    const claims = JSON.parse(new TextDecoder().decode(b64urlToBytes(p))) as { sub?: string; exp?: number; role?: string; email?: string }
+    if (typeof claims.exp !== "number" || claims.exp < nowSeconds) return null
+    if (claims.role !== "authenticated" || typeof claims.sub !== "string") return null
+    return { sub: claims.sub, email: typeof claims.email === "string" ? claims.email : null }
+  } catch {
+    return null
+  }
+}
+
 /** The user id in a valid, unexpired HS256 token signed with our project secret; otherwise null. */
 export async function verifiedUserId(token: string, secret: string, nowSeconds = Date.now() / 1000): Promise<string | null> {
   const [h, p, s] = token.split(".")
@@ -99,7 +118,7 @@ export async function verifiedUserId(token: string, secret: string, nowSeconds =
 const adminCache = new Map<string, { admin: boolean; at: number }>()
 const CACHE_MS = 60_000
 
-async function isAdminUser(userId: string): Promise<boolean> {
+export async function isAdminUser(userId: string): Promise<boolean> {
   const hit = adminCache.get(userId)
   if (hit && Date.now() - hit.at < CACHE_MS) return hit.admin
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL

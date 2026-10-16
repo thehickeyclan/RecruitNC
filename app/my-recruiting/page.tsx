@@ -29,6 +29,7 @@ import { isPlaceholderAthletePhoto } from "@/lib/recruiting-profile-photo"
 import { buildInfoSheet } from "./info-sheet"
 import { loadCommandCenter } from "./load"
 import { MapPreviewCard } from "./map-preview"
+import { BrandName } from "@/components/recruiting/brand-name"
 
 export const dynamic = "force-dynamic"
 export const metadata = { title: "Recruiting Command Center | RecruitNC" }
@@ -97,7 +98,7 @@ export default async function CommandCenterHome() {
         <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628] via-[#0A1628]/85 to-[#0A1628]/40" aria-hidden />
         <div className="relative flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-widest text-[#D3B574]">RecruitNC · Recruiting Portal</p>
+            <p className="text-[11px] font-black uppercase tracking-widest text-[#D3B574]"><BrandName /> · Recruiting Portal</p>
             <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-5xl">Recruiting Command Center</h1>
             <p className="mt-2 text-sm text-white/75 sm:text-base">
               {first ? `Welcome back. Here is ${athletes.map((a) => a.firstName).join(" and ")}'s recruiting progress and what to do next.` : "Welcome. This is where recruiting gets done."}
