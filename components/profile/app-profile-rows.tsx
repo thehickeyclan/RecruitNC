@@ -63,6 +63,10 @@ export type AppWin = {
   style?: "folkstyle" | "freestyle" | "greco" | null
   nationalRankLabel?: string | null
   stateLabel?: string | null
+  /** "athlete-reported": added by the family. */
+  source?: string | null
+  /** A family-added win we also hold in a bracket. */
+  boutVerified?: boolean
   /** The opponent's state podium finish, whatever the headline reason (the endpoint sets it). */
   stateFinish?: "champion" | "placer" | null
 }
@@ -551,7 +555,11 @@ function BoutList({ bouts }: { bouts: AppWin[] }) {
               {w.opponentSchool ? <span className="ml-2 text-xs font-medium text-[#6B829D]">{w.opponentSchool}</span> : null}
             </p>
             {accoladeOf(w) ? <p className="text-xs font-bold text-[#D3B574]">{accoladeOf(w)}</p> : null}
-            <p className="text-xs text-[#A8BBD1]">{[w.result, w.event].filter(Boolean).join(" · ")}</p>
+            <p className="text-xs text-[#A8BBD1]">
+              {[w.result, w.event].filter(Boolean).join(" · ")}
+              {/* A coach is owed the difference between a bracket result and a win typed into a form. */}
+              {w.source === "athlete-reported" && !w.boutVerified ? <span className="ml-2 text-[11px] italic text-[#6B829D]">Reported by family</span> : null}
+            </p>
           </div>
         ))
       ) : (

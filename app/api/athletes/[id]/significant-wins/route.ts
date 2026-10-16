@@ -22,6 +22,8 @@ import { resolveRequestUserId } from "@/lib/request-user"
 import { maySeeNotableLosses } from "@/lib/viewer-role"
 import { sameReportedBout } from "@/lib/same-reported-bout"
 import { stateNamedIn } from "@/lib/reported-win-state"
+import { loadLastCompeted } from "@/lib/prospect-last-competed"
+import { isWin, reportedPlacerWeightFits } from "@/lib/significant-wins"
 
 /**
  * The wins on a profile worth a reader's attention: over the TOC field, or over a ranked prospect.
@@ -210,7 +212,42 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     index,
     { stateOnly: true },
   )
-  const verifiedSubmitted = submittedWins.map((win) => {
+  const lastWeight = submittedWins.length
+    ? await loadLastCompeted(admin, [id], new Map([[id, grad]]))
+        .then((m) => Number.parseInt(String(m.get(id)?.weight ?? ""), 10) || null)
+        .catch(() => null)
+    : null
+  /*
+   * His weight at the time: the nearest bout we hold with a weight, within six months either way.
+   * Unknown means the placer cannot be confirmed - a name and a state are not enough without it.
+   */
+  const weighed = [...(rawEventBouts as Bout[]), ...(rawTournamentBouts as Bout[]), ...matchBouts]
+    .map((b) => ({ day: Date.parse(String(b.date ?? "")), weight: Number.parseInt(String(b.weight ?? ""), 10) }))
+    .filter((b) => Number.isFinite(b.day) && Number.isFinite(b.weight) && b.weight > 0)
+  const weightAt = (date: string | null | undefined): number | null => {
+    const day = Date.parse(String(date ?? ""))
+    if (!Number.isFinite(day)) return null
+    const near = weighed
+      .filter((b) => Math.abs(b.day - day) <= 183 * 86_400_000)
+      .sort((a, b) => Math.abs(a.day - day) - Math.abs(b.day - day))[0]
+    // No bout of his near that date carries a weight: the weight he last competed at.
+    return near?.weight ?? lastWeight
+  }
+  /*
+   * The bout itself, where we hold the event: a win over that opponent within two days in our
+   * brackets. Then it is no longer only the family's word.
+   */
+  const inBrackets = (win: (typeof submittedWins)[number]) =>
+    [...(rawEventBouts as Bout[]), ...(rawTournamentBouts as Bout[])].some(
+      (b) =>
+        isWin(b) &&
+        sameReportedBout(
+          { opponent: win.opponent, date: win.date, event: win.event, result: win.result },
+          { opponent: String(b.opponent ?? b.opponent_name ?? ""), date: b.date ?? null, event: b.venue ?? null, result: b.result ?? null },
+        ),
+    )
+  const verifiedSubmitted = submittedWins.map((raw) => {
+    const win = { ...raw, boutVerified: inBrackets(raw) }
     const claimed = reportedState(win)
     const hit = claimed
       ? checked.find(
@@ -218,7 +255,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
             c.opponent.toLowerCase() === win.opponent.toLowerCase() &&
             c.date === win.date &&
             (c.reason === "state-champion" || c.reason === "state-placer") &&
-            (claimed === "NC" ? !c.opponentState || c.opponentState === "NC" : c.opponentState === claimed),
+            (claimed === "NC" ? !c.opponentState || c.opponentState === "NC" : c.opponentState === claimed) &&
+            // His weight then must be known, and must fit the placer's finishes wherever those carry a weight.
+            weightAt(win.date) != null &&
+            reportedPlacerWeightFits(index, win.opponent, claimed, win.date, weightAt(win.date)) !== false,
         )
       : null
     if (!hit) return win
