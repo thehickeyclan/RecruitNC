@@ -1,6 +1,7 @@
 "use client"
 
 import { NationalLockup } from "@/components/recruiting/national-frame"
+import { GuildRecruitingLockup } from "@/components/recruiting/guild-frame"
 import { releasedClassYears } from "@/lib/public-rankings-cap"
 import { coachProgramOf, viewGenderFor } from "@/lib/recruiting/coach-program"
 import { useState } from "react"
@@ -168,6 +169,9 @@ export function RecruitingShell({ children }: { children: React.ReactNode }) {
           </span>
           <span className="national-only">
             <NationalLockup />
+          </span>
+          <span className="guild-only">
+            <GuildRecruitingLockup />
           </span>
           <span className="hidden text-[10px] font-semibold uppercase tracking-[0.25em] text-white/45 sm:inline">{recruitingCoverage()} wrestling</span>
         </a>

@@ -12,6 +12,7 @@ import { familyFocus } from "@/lib/recruiting/family-focus"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { BrandName } from "@/components/recruiting/brand-name"
 
 export const dynamic = "force-dynamic"
 
@@ -67,7 +68,7 @@ export default async function TournamentsPage() {
         <a href="/my-recruiting#learn" className="text-xs font-semibold text-white/55 hover:text-white">
           ← Recruiting Command Center
         </a>
-        <p className="mt-4 text-[11px] font-black uppercase tracking-widest text-[#D3B574]">RecruitNC · Recruiting Portal</p>
+        <p className="mt-4 text-[11px] font-black uppercase tracking-widest text-[#D3B574]"><BrandName /> · Recruiting Portal</p>
         <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">The tournaments college coaches watch</h1>
         <p className="mt-2 text-sm leading-6 text-white/65">
           Where college coaches want to see a wrestler compete, most valuable first. Men&apos;s and women&apos;s are listed

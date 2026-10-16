@@ -13,6 +13,7 @@ import { loadTopHundred } from "@/lib/rankings/top-100-view"
 import { publishedDateLabel } from "@/lib/rankings/published-date"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { BrandName } from "@/components/recruiting/brand-name"
 
 // Per-viewer: gated inside, so it cannot be cached as one document for everybody.
 export const dynamic = "force-dynamic"
@@ -39,7 +40,7 @@ export default async function TopHundredPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#061224] px-4">
         <div className="max-w-md text-center">
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#CC0000]">RecruitNC</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#CC0000]"><BrandName /></p>
           <h1 className="mt-3 text-3xl font-light uppercase tracking-tight text-white">
             Top 75 College Prospects
           </h1>

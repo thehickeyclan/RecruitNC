@@ -38,6 +38,7 @@ import { Saira } from "next/font/google"
 import { RwMark } from "@/components/recruiting/rw-mark"
 import { NATIONAL_BRAND, RECRUITING_BRAND, stateBrand } from "@/lib/recruiting/brand"
 import { loadNationalStats, type NationalStats } from "@/lib/recruiting/national-stats"
+import { COACH_FEATURES, EVENTS, FAMILY_FEATURES } from "@/lib/recruiting/national-content"
 
 export const revalidate = 3600
 
@@ -197,39 +198,6 @@ function StatsBand({ stats }: { stats: NationalStats | null }) {
     </div>
   )
 }
-
-const FAMILY_FEATURES: Array<{ icon: LucideIcon; title: string; body: string }> = [
-  { icon: ListChecks, title: "A plan for every month", body: "What to do now for your grade: profile, college list, questionnaires, emails." },
-  { icon: ClipboardList, title: "Your college list", body: "Every school you're considering, with cost, fit, your stage and the next step." },
-  { icon: Map, title: "Every program on one map", body: "D1, D2, D3, NAIA and junior college, men's and women's." },
-  { icon: GitCompareArrows, title: "Compare colleges", body: "Your scores against admitted students, real cost at your income, rosters." },
-  { icon: Mail, title: "Email coaches, ready to send", body: "Drafts built from your verified results, plus the info every questionnaire asks." },
-  { icon: Eye, title: "See who's looking", body: "Which college programs viewed your profile, and when." },
-  { icon: MessageSquare, title: "Messages from coaches", body: "College coaches write to you here. Parents see every message." },
-  { icon: GraduationCap, title: "Learn the process", body: "Rules by level, eligibility, paying for college, the timeline." },
-]
-
-const COACH_FEATURES: Array<{ icon: LucideIcon; title: string; body: string }> = [
-  { icon: Search, title: "Search every wrestler", body: "Class, weight last competed, honors, committed or not." },
-  { icon: BarChart3, title: "Prospect rankings", body: "Men's and women's class boards, built on verified results." },
-  { icon: FileText, title: "Scouting reports", body: "Results, significant wins, head to head, academics and contact." },
-  { icon: Star, title: "One board for your staff", body: "Star wrestlers, move them through your funnel, log every call and visit." },
-  { icon: Inbox, title: "Message families directly", body: "The wrestler and every parent see it, and can reply." },
-  { icon: GitCompareArrows, title: "Compare two wrestlers", body: "Head to head, common opponents and strength of schedule." },
-  { icon: Target, title: "Your perfect recruit", body: "Set your needs once; every wrestler is flagged against them." },
-  { icon: CalendarCheck, title: "Where they compete next", body: "Your recruits' upcoming events, so you know where to watch." },
-]
-
-const EVENTS = [
-  "State championships",
-  "NHSCA Nationals",
-  "Super 32",
-  "Fargo",
-  "Journeymen",
-  "National Duals",
-  "Ultimate Club Duals",
-  "Women's Nationals",
-]
 
 export default async function RecruitWrestlersHome() {
   const stats = await loadNationalStats().catch(() => null)

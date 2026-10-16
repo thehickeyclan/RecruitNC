@@ -13,6 +13,7 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Trophy, Users, Edit, ArrowRight } from "lucide-react"
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button"
+import { GuildSignInPanel } from "@/components/recruiting/guild-frame"
 
 function isTocScopedAdminTarget(path: string | null): boolean {
   if (!path) return false
@@ -305,9 +306,11 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-start justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 pt-4 sm:pt-8 pb-8 px-4">
+    <div className="auth-surface min-h-screen flex items-start justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 pt-4 sm:pt-8 pb-8 px-4">
       <div className="w-full max-w-6xl mt-4 sm:mt-8">
         <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
+          {/* NC United's panel on its own address; Guild Recruiting's on recruit.wrestlingguild.com (app/recruit-brand.css). */}
+          <div className="ncu-only">
           {/* Prominent Registration Banner for New Users */}
           <Card className="w-full shadow-xl border-2 border-[#B31B1B] bg-gradient-to-br from-[#003366] to-[#1e3a8a] text-white overflow-hidden order-2 lg:order-1">
             <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10 pointer-events-none"></div>
@@ -371,6 +374,10 @@ export default function SignInPage() {
               </div>
             </CardContent>
           </Card>
+          </div>
+          <div className="guild-only">
+            <GuildSignInPanel />
+          </div>
 
           {/* Sign In Card */}
           <Card className="w-full shadow-lg relative z-10 order-1 lg:order-2">

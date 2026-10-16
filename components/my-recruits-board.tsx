@@ -22,6 +22,7 @@ import { CoachTabs } from "@/components/coach-tabs"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { FitBadge, type FitBadgeFlag } from "@/components/fit-badge"
 import { useRouter } from "next/navigation"
+import { BrandName } from "@/components/recruiting/brand-name"
 
 type Payload = {
   recruits: MyRecruitRow[]
@@ -183,7 +184,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
           <CoachTabs active="recruits" className="mb-6" />
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D3B574]">RecruitNC</p>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D3B574]"><BrandName /></p>
               <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">My Recruits</h1>
               <p className="mt-1 text-sm text-white/60">
                 Every wrestler you{data?.hasSchool ? " and your staff" : ""} added to the watch list.{" "}

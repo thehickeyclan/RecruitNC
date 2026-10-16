@@ -1,6 +1,7 @@
 "use client"
 
 import { NationalFooter, NationalHeader } from "@/components/recruiting/national-frame"
+import { GuildFooter, GuildHeader } from "@/components/recruiting/guild-frame"
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
@@ -163,7 +164,22 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
    */
   const onNationalDomain = typeof window !== "undefined" && isNationalHost(window.location.hostname)
   // The homepage draws its own header; every other page on that address gets RecruitWrestlers' frame below.
-  const isNationalHome = (onNationalDomain && path === "/") || path === "/recruitwrestlers" || path.startsWith("/recruitwrestlers/")
+  const onGuildDomain = typeof window !== "undefined" && window.location.hostname === "recruit.wrestlingguild.com"
+  /*
+   * The <head> script marks the brand address before first paint; a rewritten front page ("/" is
+   * served from /guild-recruiting) re-renders <html> on load and drops it. Put it back.
+   */
+  useEffect(() => {
+    const brand = window.location.hostname === "recruit.wrestlingguild.com" ? "guild" : isNationalHost(window.location.hostname) ? "national" : null
+    if (brand && document.documentElement.getAttribute("data-host") !== brand) document.documentElement.setAttribute("data-host", brand)
+  }, [path])
+  // Brand front pages draw their own header: RecruitWrestlers' and Guild Recruiting's, and Guild's holding page.
+  const isNationalHome =
+    ((onNationalDomain || onGuildDomain) && path === "/") ||
+    path === "/recruitwrestlers" ||
+    path.startsWith("/recruitwrestlers/") ||
+    path === "/guild-recruiting" ||
+    path.startsWith("/guild-recruiting/")
   if (isNationalHome) {
     return (
       <div id="app-content" className="relative flex min-h-screen flex-col bg-[#0A1628]">
@@ -204,6 +220,9 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
       <div className="national-only">
         <NationalHeader />
       </div>
+      <div className="guild-only">
+        <GuildHeader />
+      </div>
       <div className="ncu-only">{familyBand === "top" ? <FamilyProfileBand /> : null}</div>
       <main className="flex-1">
         <ConditionalAuthGuard>{children}</ConditionalAuthGuard>
@@ -215,6 +234,9 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
       </div>
       <div className="national-only">
         <NationalFooter />
+      </div>
+      <div className="guild-only">
+        <GuildFooter />
       </div>
     </div>
   )

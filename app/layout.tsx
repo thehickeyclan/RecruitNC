@@ -2,7 +2,7 @@ import type React from "react"
 import type { Metadata, Viewport } from "next"
 import Script from "next/script"
 import "@/app/globals.css"
-// Blue on recruitwrestlers.com only (scripts/gen-recruit-brand-css.mjs).
+// Brand colours on the pre-launch brand addresses only (scripts/gen-recruit-brand-css.mjs).
 import "@/app/recruit-brand.css"
 import "@/app/force-styles.css"
 import "@/app/flip-card.css"
@@ -86,13 +86,13 @@ export default function RootLayout({
           Apple PWA / home-screen title & capable flags come from export const metadata.appleWebApp
           so /spartan can override. Keep generic mobile cap flags here. */}
         {/*
-          recruitwrestlers.com: mark the page before it paints, so its blue (app/recruit-brand.css) and
+          recruit.wrestlingguild.com (data-host=guild) and recruitwrestlers.com (data-host=national): mark the page before it paints, so its blue (app/recruit-brand.css) and
           its frame (components/app-chrome.tsx) show from the first frame with no NC United gold, and
           the tab says RecruitWrestlers. Same pages, two addresses; this is the one switch.
         */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{if(!/(^|\\.)recruitwrestlers\\.com$/.test(location.hostname))return;var d=document.documentElement;d.setAttribute('data-host','national');var fix=function(){var t=document.title;if(t&&t.indexOf('NC United Wrestling')>-1)document.title=t.replace(/ \\| RecruitNC(?= \\|)/g,'').replace(/NC United Wrestling/g,'RecruitWrestlers')};fix();new MutationObserver(fix).observe(document.documentElement,{subtree:true,childList:true});var n=0,iv=setInterval(function(){fix();if(++n>40)clearInterval(iv)},250)}catch(e){}})();`,
+            __html: `(function(){try{var h=location.hostname,b=h==='recruit.wrestlingguild.com'?'guild':/(^|\\.)recruitwrestlers\\.com$/.test(h)?'national':null;if(!b)return;var name=b==='guild'?'Guild Recruiting':'RecruitWrestlers';var d=document.documentElement;d.setAttribute('data-host',b);var fix=function(){var t=document.title;if(t&&t.indexOf('NC United Wrestling')>-1)document.title=t.replace(/ \\| RecruitNC(?= \\|)/g,'').replace(/NC United Wrestling/g,name)};fix();new MutationObserver(fix).observe(document.documentElement,{subtree:true,childList:true});var n=0,iv=setInterval(function(){fix();if(++n>40)clearInterval(iv)},250)}catch(e){}})();`,
           }}
         />
         <meta name="mobile-web-app-capable" content="yes" />

@@ -12,6 +12,7 @@ import type { StaffActivityItem } from "@/lib/recruiting/staff-activity"
 import type { EventWithRecruits } from "@/lib/college-programs/competing-next"
 import { eventDates } from "@/lib/college-programs/outreach-results"
 import { ArrowRight, BarChart3, CalendarDays, History, FileText, GitCompareArrows, Lock, MessageSquare, Search, Star, Target, Users } from "lucide-react"
+import { BrandName } from "@/components/recruiting/brand-name"
 
 export type CoachHomeData = {
   coachName: string | null
@@ -300,7 +301,7 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
             />
           ) : null}
           <div className="min-w-0 flex-1">
-            <p className={`text-[11px] font-black uppercase tracking-widest ${GOLD}`}>{RECRUITING_BRAND.name} · Coach Home</p>
+            <p className={`text-[11px] font-black uppercase tracking-widest ${GOLD}`}><BrandName /> · Coach Home</p>
             <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">{data.coachName ? `Welcome, Coach ${data.coachName}` : "Welcome, Coach"}</h1>
             <p className="mt-1 text-sm text-white/55">
               {data.program ? `${data.program} · ` : ""}Everything you use to recruit {recruitingCoverage()}, in one place.

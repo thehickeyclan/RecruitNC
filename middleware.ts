@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { isNationalPath } from "@/lib/recruiting/national-paths"
+import { isNationalPath, isOpenWhileStaged, stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { stagingGateAllows } from "@/lib/staging-gate"
 import { FUNDRAISING_AUTH_RETURN_COOKIE } from "@/lib/fundraising/fundraising-auth-return-cookie"
 import { adminGateApplies, adminGateRefusal } from "@/lib/admin-api-gate"
 import { COACH_HOME_PATH, PORTAL_HINT_COOKIE, coachFrontDoor } from "@/lib/coach-front-door"
 
-const NATIONAL_HOST = "recruitwrestlers.com"
 const APP_ORIGIN = "https://app.ncwrestlingunited.com"
 
 function isFundraisingHubPublicPath(p: string): boolean {
@@ -22,20 +22,45 @@ function isFundraisingHubPublicPath(p: string): boolean {
  *
  * See AUTH_CONFIG_LOCKED.md for full documentation.
  */
+/** Every response on a pre-launch brand address says: do not index. */
 export async function middleware(request: NextRequest) {
+  const response = await routeRequest(request)
+  if (stagedBrandForHost(request.headers.get("host"))) {
+    response.headers.set("X-Robots-Tag", "noindex, nofollow")
+    response.headers.set("Cache-Control", "private, no-store")
+  }
+  return response
+}
+
+async function routeRequest(request: NextRequest): Promise<NextResponse> {
   const pathname = request.nextUrl.pathname
 
   /*
-   * recruitwrestlers.com - the national recruiting product's own domain (Guild Ventures, 15 Oct 2026).
-   * "/" draws the national homepage (app/recruitwrestlers); every recruiting page is served here as
-   * well (lib/recruiting/brand.ts NATIONAL_PATH_PREFIXES), drawn in RecruitWrestlers' frame and blue
-   * (components/app-chrome.tsx, app/recruit-brand.css). NC United's own pages asked for here go to
-   * app.ncwrestlingunited.com. Nothing on the app's own domain changes.
+   * Recruiting under another brand, before public launch: recruit.wrestlingguild.com (Guild
+   * Recruiting) and recruitwrestlers.com. Same pages as the app's own address, drawn in that brand
+   * (a <head> script in app/layout.tsx and app/recruit-brand.css). Until Matt approves launch, a
+   * server-enforced gate (lib/staging-gate.ts) lets in admins and our internal test accounts only;
+   * everyone else gets a holding page and no data, and nothing on these addresses is indexed.
+   * NC United's own pages asked for here go to app.ncwrestlingunited.com. Nothing on the app's own
+   * address changes.
    */
-  const host = (request.headers.get("host") ?? "").toLowerCase().split(":")[0]
-  if (host === NATIONAL_HOST || host === `www.${NATIONAL_HOST}`) {
-    if (pathname === "/") return NextResponse.rewrite(new URL("/recruitwrestlers", request.url))
-    if (!isNationalPath(pathname) && !pathname.startsWith("/_next")) {
+  const brand = stagedBrandForHost(request.headers.get("host"))
+  // Guild Recruiting's own pages exist only on its address.
+  if (!brand && pathname.startsWith("/guild-recruiting")) return NextResponse.redirect(new URL("/", request.url), 307)
+  if (brand) {
+    if (pathname === "/robots.txt") {
+      return new NextResponse("User-agent: *\nDisallow: /\n", { headers: { "Content-Type": "text/plain", "X-Robots-Tag": "noindex, nofollow" } })
+    }
+    if (!isOpenWhileStaged(pathname) && !(await stagingGateAllows(request.headers, request.cookies.getAll()))) {
+      if (pathname.startsWith("/api/")) {
+        return NextResponse.json({ error: "Not available yet." }, { status: 403, headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" } })
+      }
+      const holding = NextResponse.rewrite(new URL("/guild-recruiting/coming-soon", request.url))
+      holding.headers.set("Cache-Control", "private, no-store")
+      return holding
+    }
+    if (pathname === "/") return NextResponse.rewrite(new URL(brand === "guild" ? "/guild-recruiting" : "/recruitwrestlers", request.url))
+    if (!isNationalPath(pathname) && !isOpenWhileStaged(pathname) && !pathname.startsWith("/guild-recruiting")) {
       return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, APP_ORIGIN), 307)
     }
   }
