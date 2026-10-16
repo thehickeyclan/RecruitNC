@@ -278,11 +278,13 @@ export function RankingsSalesClient({
       ["How many college coaches viewed your profile", true, true, true, true],
       ["Which college programs viewed your profile", false, true, true, true],
       [`Class rankings${WOMENS_RANGE ? ", men's and women's" : ""} and the Top 75`, false, true, true, true],
+      ["Your wrestler's rank, shown on the profile", false, true, true, true],
       ["Rankings built on results, quality wins and head-to-head", false, true, true, true],
       ["Recruiting plan, college list, compare and full costs", false, false, true, true],
       ["Every coach conversation tied to its college and your list", false, false, true, true],
       ["Your recruiting assistant: next steps for every stage, 8th grade to signing", false, false, true, true],
-      ["Learn: rules, timeline and costs, men's and women's", false, false, true, true],
+      ["Every college's coaching staff and the NC wrestlers on its roster", false, false, true, true],
+      ["The full Learn library: rules, timeline and costs, men's and women's", false, false, true, true],
       ["Practices run by college coaches, with the state's best partners", false, false, false, true],
       ["The NC United national team pathway", false, false, false, true],
       ["A drop-in each month at Darkhorse or RAW", false, false, false, true],
@@ -382,7 +384,7 @@ export function RankingsSalesClient({
                   or {formatPrice(SCOUTING_REPORT_PRICES.subscription_annual)}/year (save {formatPrice(annualSavingCents())})
                 </p>
                 <ul className="mt-5 space-y-2.5 text-sm text-white/85">
-                  {[`All class rankings${WOMENS_RANGE ? ", men's and women's" : ""}`, "Top 75 College Ready Prospects board", "Ranked on results, quality wins and head-to-head", "Which college programs viewed your profile, and when", "Full profile management"].map((l) => (
+                  {[`All class rankings${WOMENS_RANGE ? ", men's and women's" : ""}`, "Top 75 College Ready Prospects board", "Ranked on results, quality wins and head-to-head", "Your wrestler's rank, shown on the profile", "Which college programs viewed your profile, and when"].map((l) => (
                     <li key={l} className="flex gap-2.5"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: gold }} aria-hidden /> {l}</li>
                   ))}
                 </ul>
@@ -436,7 +438,7 @@ export function RankingsSalesClient({
                 </p>
                 <p className="mt-4 text-xs font-black uppercase tracking-widest text-sky-300">Everything in Rankings, plus:</p>
                 <ul className="mt-3 space-y-2.5 text-sm text-white/85">
-                  {["Next steps for every stage, 8th grade to signing", "My College List: your stage, next step and verified coach activity", "Compare fit, with full yearly cost", "College pages: cost, ranking, roster, coaches", "Coach conversations tied to each college", "Learn: rules, timeline and costs, men's and women's"].map((l) => (
+                  {["Next steps for every stage, 8th grade to signing", "My College List: your stage, next step and verified coach activity", "Compare fit, with full yearly cost", "Every college's coaching staff and the NC wrestlers on its roster", "Coach conversations tied to each college", "The full Learn library: rules, timeline and costs"].map((l) => (
                     <li key={l} className="flex gap-2.5"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: gold }} aria-hidden /> {l}</li>
                   ))}
                 </ul>
@@ -514,7 +516,7 @@ export function RankingsSalesClient({
               <p className="text-2xl font-black">Free profile</p>
               <p className="text-sm text-white/60">Everyone starts here.</p>
               <ul className="mt-2 space-y-1 text-sm text-white/80">
-                {["Claim the profile; every result is already on it", "Academics and contact, seen only by verified college coaches", "See how many college coaches viewed it"].map((l) => (
+                {["Claim the profile; every result is already on it", "Academics and contact, seen only by verified college coaches", "See how many college coaches viewed it", "Messages from verified college coaches, parents seeing every one"].map((l) => (
                   <li key={l} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: gold }} aria-hidden /> {l}</li>
                 ))}
               </ul>

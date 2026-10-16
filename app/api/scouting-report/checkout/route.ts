@@ -141,12 +141,12 @@ export async function POST(request: Request) {
               name: kind === "command_center"
                 ? "RecruitNC Command Center — monthly"
                 : plan
-                  ? `RecruitNC ${plan.label.toLowerCase()} — rankings and scouting reports`
+                  ? `RecruitNC Rankings — ${plan.label.toLowerCase()}`
                   : `Scouting report — ${athleteName || "athlete"}`,
               description: kind === "command_center"
                 ? "The Recruiting Command Center: plan, college list, compare, coach messages and Learn, with full rankings and profile views."
                 : plan
-                  ? "Full class rankings and unlimited scouting reports while the subscription is active."
+                  ? "Every published class ranking and the Top 75, your wrestler's rank on the profile, and which college programs viewed it."
                   : "One athlete's scouting report: results, significant wins and losses, competition strength.",
             },
           },

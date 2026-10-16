@@ -96,7 +96,7 @@ export function RankingsSubscriptionCard({ access }: { access: RankingsAccess })
           RecruitNC Rankings
         </CardTitle>
         <CardDescription className="text-muted-foreground">
-          Every published class ranking, the college prospects board and scouting reports.
+          Every published class ranking, the Top 75 College Ready Prospects board, and which college programs viewed your profile.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3 text-sm text-muted-foreground">

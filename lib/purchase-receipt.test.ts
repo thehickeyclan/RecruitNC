@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest"
 import { buildPurchaseReceiptEmail, receiptKindForCheckout } from "./purchase-receipt"
 
 describe("receiptKindForCheckout", () => {
+  it("names a Recruiting Command Center purchase as itself, never a scouting report", () => {
+    expect(receiptKindForCheckout({ source: "scouting_report", kind: "command_center" })).toBe("command_center")
+  })
+
   it("names each of our products", () => {
     expect(receiptKindForCheckout({ source: "scouting_report", kind: "subscription" })).toBe("subscription")
     expect(receiptKindForCheckout({ source: "scouting_report", kind: "subscription_annual" })).toBe("subscription")
@@ -35,7 +39,7 @@ describe("buildPurchaseReceiptEmail", () => {
 
   it("states the amount, the date and the reference, and offers the app", () => {
     const { subject, html, text } = buildPurchaseReceiptEmail(base)
-    expect(subject).toBe("Your receipt: RecruitNC subscription ($9.99)")
+    expect(subject).toBe("Your receipt: RecruitNC Rankings subscription ($9.99)")
     for (const body of [html, text]) {
       expect(body).toContain("$9.99")
       expect(body).toContain("October 11, 2026")
