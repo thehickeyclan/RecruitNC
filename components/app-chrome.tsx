@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
-import { COACH_PREVIEW_KEY, hasCommunityAccess, usesRecruitingShell } from "@/lib/recruiting/brand"
+import { COACH_PREVIEW_KEY, hasCommunityAccess, isNationalHost, usesRecruitingShell } from "@/lib/recruiting/brand"
 import { PORTAL_HINT_COOKIE, PORTAL_PARTNER_COOKIE } from "@/lib/portal-hint"
 import { classifyViewer } from "@/lib/viewer-role"
 import { RecruitingShell } from "@/components/recruiting/recruiting-shell"
@@ -126,7 +126,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
    * the recruiting portal is being separated from the community site (Matt, 13 October 2026).
    */
   const { profile } = useAuth()
-  const coachAtFrontDoor = path === "/" && usesRecruitingShell(profile)
+  const coachAtFrontDoor = path === "/" && usesRecruitingShell(profile) && !(typeof window !== "undefined" && isNationalHost(window.location.hostname))
   useEffect(() => {
     // The server normally does this first (middleware.ts); this catches a coach it could not yet
     // recognise. There is no way round it: the community front page is not a coach's page.
@@ -155,7 +155,13 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
    * its own page top to bottom. Nothing of NC United, no coach portal frame, no chat launcher - for
    * a coach or an admin too, since this is the page a stranger sees.
    */
-  const isNationalHome = path === "/recruitwrestlers" || path.startsWith("/recruitwrestlers/")
+  /*
+   * On recruitwrestlers.com the address bar says "/" (middleware rewrites it to this page), and the
+   * browser's path is what this frame reads once the page is running - so a path check alone drew
+   * the NC United menu around the national homepage there. The domain decides it as well.
+   */
+  const onNationalDomain = typeof window !== "undefined" && isNationalHost(window.location.hostname)
+  const isNationalHome = onNationalDomain || path === "/recruitwrestlers" || path.startsWith("/recruitwrestlers/")
   if (isNationalHome) {
     return (
       <div id="app-content" className="relative flex min-h-screen flex-col bg-[#0A1628]">
