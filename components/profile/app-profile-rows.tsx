@@ -63,6 +63,8 @@ export type AppWin = {
   style?: "folkstyle" | "freestyle" | "greco" | null
   nationalRankLabel?: string | null
   stateLabel?: string | null
+  /** The opponent's state podium finish, whatever the headline reason (the endpoint sets it). */
+  stateFinish?: "champion" | "placer" | null
 }
 
 const accoladeOf = (w: AppWin) => w.credential ?? w.nationalRankLabel ?? w.stateLabel ?? null
@@ -104,12 +106,16 @@ const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one :
 export function winsCategoryLine(wins: AppWin[]): string | null {
   if (!wins.length) return null
   const count = (reason: string) => wins.filter((w) => w.reason === reason).length
+  // A ranked opponent who also placed at state counts as a state placer too: each count answers its
+  // own question ("how many state placers has he beaten?"), so they may add up to more than the wins.
+  const finish = (kind: "champion" | "placer") =>
+    wins.filter((w) => w.stateFinish === kind || (w.stateFinish == null && w.reason === (kind === "champion" ? "state-champion" : "state-placer"))).length
   return [
     plural(wins.length, "win", "wins"),
     count("national-ranked") ? `${count("national-ranked")} nationally ranked` : null,
-    count("state-champion") ? plural(count("state-champion"), "state champion", "state champions") : null,
+    finish("champion") ? plural(finish("champion"), "state champion", "state champions") : null,
     count("national-placer") ? plural(count("national-placer"), "All-American", "All-Americans") : null,
-    count("state-placer") ? plural(count("state-placer"), "state placer", "state placers") : null,
+    finish("placer") ? plural(finish("placer"), "state placer", "state placers") : null,
   ]
     .filter(Boolean)
     .slice(0, 4)
