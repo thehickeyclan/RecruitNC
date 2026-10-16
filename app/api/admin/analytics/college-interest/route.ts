@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { loadCollegeInterest } from "@/lib/admin-college-interest"
+import { loadFollowThrough } from "@/lib/admin-follow-through"
 
 /**
  * Which colleges viewed which athletes. Admin only.
@@ -34,7 +35,8 @@ export async function GET(req: Request) {
 
     const range = new URL(req.url).searchParams.get("range")?.trim() || "all"
     const report = await loadCollegeInterest(admin, range)
-    return NextResponse.json({ ok: true, range, ...report })
+    const followThrough = await loadFollowThrough(admin, report.since).catch(() => null)
+    return NextResponse.json({ ok: true, range, ...report, followThrough })
   } catch (e) {
     console.error("[admin/college-interest]", e instanceof Error ? e.message : e)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })

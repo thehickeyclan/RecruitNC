@@ -173,7 +173,8 @@ export function ScoutingReportDocument({
   const facts = keyFacts(report)
 
   return (
-    <div className="min-h-screen bg-[#e9eaee] print:bg-white">
+    // data-contact-athlete: a coach tapping Call, Text or Email here is recorded (components/contact-tap-tracker.tsx).
+    <div className="min-h-screen bg-[#e9eaee] print:bg-white" data-contact-athlete={athleteId}>
       {/*
         The report lives inside the site shell, so printing would otherwise carry the nav,
         the footer and the Data Dawg button onto the page. Hiding those individually breaks
