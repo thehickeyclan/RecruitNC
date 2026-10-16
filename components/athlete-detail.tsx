@@ -1095,6 +1095,8 @@ export function AthleteDetail({
 
     return (
       <div
+        // A coach tapping Call or Email here is recorded (components/contact-tap-tracker.tsx).
+        data-contact-athlete={String(athlete.id)}
         className={
           variant === "pills"
             ? "mt-3.5 flex gap-2 overflow-x-auto scroll-table-x pb-0.5"

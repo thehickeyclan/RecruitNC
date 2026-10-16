@@ -15,6 +15,7 @@ import { LayoutOptionalClients } from "@/components/layout-optional-clients"
 import { BulletproofInternalLinks } from "@/components/bulletproof-internal-links"
 import { Analytics } from "@vercel/analytics/next"
 import { UserActivityTracker } from "@/components/user-activity-tracker"
+import { ContactTapTracker } from "@/components/contact-tap-tracker"
 
 const defaultTitle = "NC United Wrestling"
 const defaultDescription =
@@ -156,6 +157,8 @@ export default function RootLayout({
             <UserActivityTracker />
             <LayoutOptionalClients />
             <AppChrome>{children}</AppChrome>
+            {/* Coach Call/Text/Email taps on a wrestler, the closest signal of off-site contact. */}
+            <ContactTapTracker />
             {/* Renders nothing without ?welcome=<role>, set at verification and at coach sign-up. */}
             <WelcomeModal />
             <Toaster />

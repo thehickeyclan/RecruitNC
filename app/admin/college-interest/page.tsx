@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2, GraduationCap, Eye, Users, RefreshCw, ChevronDown, ChevronRight } from "lucide-react"
 import type { CollegeInterestReport } from "@/lib/admin-college-interest"
+import type { FollowThrough } from "@/lib/admin-follow-through"
 
 const RANGE_OPTIONS = [
   { value: "last7", label: "Last 7 days" },
@@ -35,7 +36,7 @@ function when(iso: string): string {
 
 export default function CollegeInterestPage() {
   const [range, setRange] = useState<string>("last90")
-  const [report, setReport] = useState<CollegeInterestReport | null>(null)
+  const [report, setReport] = useState<(CollegeInterestReport & { followThrough: FollowThrough | null }) | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [open, setOpen] = useState<Set<string>>(new Set())
@@ -47,7 +48,7 @@ export default function CollegeInterestPage() {
       const res = await fetch(`/api/admin/analytics/college-interest?range=${range}`)
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Could not load college interest")
-      setReport(data as CollegeInterestReport)
+      setReport(data as CollegeInterestReport & { followThrough: FollowThrough | null })
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not load college interest")
     } finally {
@@ -151,6 +152,53 @@ export default function CollegeInterestPage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Follow-through: did looking turn into contact? Both sides happen off the site. */}
+          {report.followThrough ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Follow-through</CardTitle>
+                <CardDescription>
+                  After a coach finds a wrestler: verified coaches tapping Call, Text or Email on a profile or scouting report, and families logging that a
+                  college reached out (Command Center).
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-6 lg:grid-cols-2">
+                <div>
+                  <p className="text-sm font-semibold">Coach contact taps</p>
+                  <p className="mt-1 text-3xl font-bold">{report.followThrough.taps.total}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {report.followThrough.taps.programs} programs · {report.followThrough.taps.wrestlers} wrestlers · call {report.followThrough.taps.byChannel.call}, text{" "}
+                    {report.followThrough.taps.byChannel.text}, email {report.followThrough.taps.byChannel.email}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">Families reporting contact</p>
+                  <p className="mt-1 text-3xl font-bold">{report.followThrough.family.total}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {report.followThrough.family.families} families · {report.followThrough.family.wrestlers} wrestlers · {report.followThrough.family.colleges} colleges
+                    {Object.entries(report.followThrough.family.byKind).length
+                      ? ` · ${Object.entries(report.followThrough.family.byKind)
+                          .map(([k, n]) => `${k} ${n}`)
+                          .join(", ")}`
+                      : ""}
+                  </p>
+                  {report.followThrough.family.recent.length ? (
+                    <ul className="mt-3 space-y-1 text-sm">
+                      {report.followThrough.family.recent.map((r, i) => (
+                        <li key={i} className="flex justify-between gap-3">
+                          <span>
+                            <span className="font-medium">{r.school}</span> · {r.kind} · {r.wrestler}
+                          </span>
+                          <span className="text-muted-foreground">{r.on}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              </CardContent>
+            </Card>
+          ) : null}
 
           <Card>
             <CardHeader>
