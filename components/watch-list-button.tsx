@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { Star } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
+import { SUPER32_2026, super32NoticeActive } from "@/lib/recruiting/super32-report"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/auth-context"
 
@@ -75,6 +77,10 @@ export function WatchListButton({ athleteId, className, compact = false }: Watch
       if (res.ok) {
         const data = await res.json()
         setIsStarred(data.action === "added")
+      // Tell the coach what a star now gets them, while the Super 32 promise runs.
+      if (data.action === "added" && super32NoticeActive()) {
+        toast({ title: "Added to My Recruits", description: `You'll get a ${SUPER32_2026.name} report on this wrestler within ${SUPER32_2026.reportWithinHours} hours of the finals.` })
+      }
         console.log("[v0] WatchListButton - Star toggled successfully:", data.action)
       } else {
         const errorData = await res.json()

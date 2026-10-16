@@ -11,6 +11,7 @@ import { StaffActivityList } from "@/components/recruiting/staff-activity-list"
 import type { StaffActivityItem } from "@/lib/recruiting/staff-activity"
 import type { EventWithRecruits } from "@/lib/college-programs/competing-next"
 import { eventDates } from "@/lib/college-programs/outreach-results"
+import { SUPER32_2026, super32Dates, super32NoticeActive, super32ReportPromise } from "@/lib/recruiting/super32-report"
 import { ArrowRight, BarChart3, CalendarDays, History, FileText, GitCompareArrows, Lock, MessageSquare, Search, Star, Target, Users } from "lucide-react"
 
 export type CoachHomeData = {
@@ -280,6 +281,25 @@ function Tool({ href, icon: Icon, title, body }: { href: string; icon: typeof Se
   )
 }
 
+/** The Super 32 report promise, until the finals are over (lib/recruiting/super32-report.ts). */
+function Super32Notice({ womens }: { womens: boolean }) {
+  if (!super32NoticeActive()) return null
+  return (
+    <section className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-[#D3B574]/60 bg-[#D3B574]/10 p-4" aria-label={`${SUPER32_2026.name} reports`}>
+      <Star className="h-6 w-6 shrink-0 fill-[#D3B574] text-[#D3B574]" aria-hidden />
+      <div className="min-w-0 flex-1">
+        <p className="font-black">
+          {SUPER32_2026.name}, {super32Dates()}: star your recruits now
+        </p>
+        <p className="text-sm text-white/70">{super32ReportPromise()}</p>
+      </div>
+      <Link href={womens ? "/public-rankings#womens" : "/public-rankings"} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-[#D3B574] px-4 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
+        Find wrestlers <ArrowRight className="h-4 w-4" aria-hidden />
+      </Link>
+    </section>
+  )
+}
+
 export default function CoachHomeClient({ access, data }: { access: "ok" | "signed-out" | "not-coach"; data: CoachHomeData | null }) {
   if (access !== "ok" || !data) return <AccessPanel signedOut={access === "signed-out"} />
   const { recruits, messages } = data
@@ -313,6 +333,8 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
         <div className="mt-6">
           <WrestlerSearch athletes={data.athletes} />
         </div>
+
+        <Super32Notice womens={womens} />
 
         {/*
          * A coach with recruits on the board or messages waiting comes back to that work, so it leads
