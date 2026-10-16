@@ -19,7 +19,7 @@ export default async function StaffActivityPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) redirect("/auth/login?next=/my-recruits/activity")
+  if (!user) redirect("/auth/signin?returnTo=/my-recruits/activity")
 
   const items = await loadStaffActivity(createAdminClient(), user.id, 200).catch(() => null)
 

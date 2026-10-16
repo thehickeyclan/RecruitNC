@@ -251,7 +251,7 @@ export default async function RecruitWrestlersHome() {
             <a href={`${APP}/recruiting/learn`} className="hover:text-white">Learn</a>
           </nav>
           <div className="flex items-center gap-2">
-            <a href={`${APP}/auth/login`} className="hidden text-sm font-semibold text-white/80 hover:text-white sm:inline">
+            <a href={`${APP}/auth/signin`} className="hidden text-sm font-semibold text-white/80 hover:text-white sm:inline">
               Sign in
             </a>
             <a href={`${APP}/create-profile`} className={`${PRIMARY} px-4 py-2`}>
@@ -401,7 +401,7 @@ export default async function RecruitWrestlersHome() {
                 <a href={`${APP}/auth/signup?type=college-coach`} className={PRIMARY}>
                   Create a free account <ArrowRight className="h-4 w-4" />
                 </a>
-                <a href={`${APP}/auth/login`} className={SECONDARY}>
+                <a href={`${APP}/auth/signin`} className={SECONDARY}>
                   Sign in
                 </a>
               </div>

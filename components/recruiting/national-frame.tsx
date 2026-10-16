@@ -62,7 +62,7 @@ export function NationalHeader() {
             </>
           ) : (
             <>
-              <a href="/auth/login" className="hidden text-sm font-semibold text-white/80 hover:text-white sm:inline">
+              <a href="/auth/signin" className="hidden text-sm font-semibold text-white/80 hover:text-white sm:inline">
                 Sign in
               </a>
               <a href="/create-profile" className="rounded-xl bg-[#1F6BFF] px-4 py-2 text-sm font-bold text-white hover:bg-[#4B8BFF]">
@@ -77,7 +77,7 @@ export function NationalHeader() {
       </div>
       {open ? (
         <nav className="border-t border-white/10 px-4 py-3 lg:hidden">
-          {[...links, ...(user ? [{ href: "/profile", label: "My account" }] : [{ href: "/auth/login", label: "Sign in" }])].map((l) => (
+          {[...links, ...(user ? [{ href: "/profile", label: "My account" }] : [{ href: "/auth/signin", label: "Sign in" }])].map((l) => (
             <a key={l.href} href={l.href} className="block rounded-lg px-2 py-2.5 text-base font-semibold text-white/85 hover:bg-white/5">
               {l.label}
             </a>
