@@ -42,6 +42,12 @@ export const NATIONAL_BRAND = {
   appOrigin: "https://app.ncwrestlingunited.com",
 } as const
 
+/** recruitwrestlers.com or www.recruitwrestlers.com. */
+export function isNationalHost(hostname: string | null | undefined): boolean {
+  const h = String(hostname ?? "").toLowerCase()
+  return h === NATIONAL_BRAND.domain || h === `www.${NATIONAL_BRAND.domain}`
+}
+
 /** "RecruitNC", "RecruitSC": a state's own brand to families. */
 export const stateBrand = (code: string) => `Recruit${code.toUpperCase()}`
 
