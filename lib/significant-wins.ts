@@ -172,6 +172,33 @@ export function accoladeLine(win: Pick<SignificantWin, "stateLabel" | "fargoLabe
   return [win.stateLabel, win.eventLabel, win.fargoLabel].filter(Boolean).join(" · ") || null
 }
 
+/**
+ * The credential printed beside a significant win on the profile (and in every report that must
+ * agree with it). The opponent's state finish, when he has one, is the label a reader recognises -
+ * beside the stronger reason rather than instead of it.
+ */
+export function significantWinCredential(
+  win: Pick<SignificantWin, "reason" | "stateLabel" | "fargoLabel" | "eventLabel" | "nationalRankLabel">,
+): string | null {
+  return !accoladeLine(win)
+    ? win.reason === "national-ranked"
+      ? (win.nationalRankLabel ?? "Nationally ranked")
+      : null
+    : win.reason === "state-champion" || win.reason === "state-placer" || win.reason === "national-placer"
+      ? accoladeLine(win)
+      : `${win.reason === "toc-field" ? "TOC field" : win.reason === "national-ranked" ? win.nationalRankLabel ?? "Nationally ranked" : "NC ranked"} · ${accoladeLine(win)}`
+}
+
+/** The credential printed beside a notable loss, as the profile prints it. */
+export function notableLossCredential(
+  loss: Pick<SignificantWin, "reason" | "stateLabel" | "fargoLabel" | "eventLabel" | "nationalRankLabel">,
+): string | null {
+  return (
+    accoladeLine(loss) ??
+    (loss.reason === "national-ranked" ? (loss.nationalRankLabel ?? "Nationally ranked") : loss.reason === "ranked" ? "NC ranked" : null)
+  )
+}
+
 /** The same with a national ranking in front: "#9 Sports Illustrated · 2026 AZ D3 State Champion". */
 export function accoladeLineWithRank(
   win: Pick<SignificantWin, "stateLabel" | "fargoLabel" | "eventLabel" | "nationalRankLabel">,

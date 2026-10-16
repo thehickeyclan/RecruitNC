@@ -1,19 +1,27 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { buildTocFieldBoard } from "@/lib/toc/field-board"
 import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
-import { accoladeLine, findSignificantLosses, findSignificantWins, rankedOnBoard, withAccoladesOnly, type Bout, type RankedOpponent } from "@/lib/significant-wins"
+import {
+  findSignificantLosses,
+  findSignificantWins,
+  notableLossCredential,
+  rankedOnBoard,
+  significantWinCredential,
+  withAccoladesOnly,
+  type Bout,
+} from "@/lib/significant-wins"
 import { getQualifierSignificantWinBouts } from "@/lib/other-tournaments"
 import { HEAD_TO_HEAD_WINDOW_DAYS } from "@/lib/head-to-head"
 import { getCuratedSignificantWins } from "@/lib/curated-significant-wins"
 import { getSubmittedWins } from "@/lib/athlete-submitted-wins"
 import { highSchoolBouts, isHighSchoolSeason } from "@/lib/high-school-window"
-import { loadStatePlacerIndex } from "@/lib/state-placers"
+import { loadOutOfStatePlacerIndex, loadRankedOpponents, tocFieldNames } from "@/lib/significant-opponent-index"
 import { mergeBoutSources } from "@/lib/bout-source-deduplication"
 import { styleOfEventForAthlete } from "@/lib/wrestling-style"
 import { resolveRequestUserId } from "@/lib/request-user"
-import { classifyViewer } from "@/lib/viewer-role"
+import { maySeeNotableLosses } from "@/lib/viewer-role"
 import { sameReportedBout } from "@/lib/same-reported-bout"
+import { stateNamedIn } from "@/lib/reported-win-state"
 
 /**
  * The wins on a profile worth a reader's attention: over the TOC field, or over a ranked prospect.
@@ -45,8 +53,20 @@ async function maySeeLosses(request: NextRequest, admin: ReturnType<typeof creat
     .eq("user_id", userId)
     .maybeSingle()
   // A college coach has access from sign-up, before review (the same reading as the perfect-recruit flag).
-  const who = classifyViewer(profile ?? null)
-  return who.kind === "admin" || profile?.is_admin === true || (who.isCollegeCoach && who.verifiedCoach)
+  return maySeeNotableLosses(profile ?? null)
+}
+
+/**
+ * Whether the opponent finished on a state podium, whatever the win's headline reason - a ranked
+ * opponent who also placed is still a state placer, and the profile's counts should say so
+ * (Kristopher Kerr, NC ranked and 2026 NCHSAA 4th, counted only as "ranked").
+ */
+function stateFinishOf(win: { reason: string; stateLabel?: string | null }): "champion" | "placer" | null {
+  if (win.reason === "state-champion") return "champion"
+  if (win.reason === "state-placer") return "placer"
+  if (!win.stateLabel) return null
+  // "State Champion", not Kentucky's "State Championship State 3rd".
+  return /champion(?!ship)/i.test(win.stateLabel) ? "champion" : "placer"
 }
 
 const PRIVATE = { headers: { "Cache-Control": "private, no-store" } }
@@ -62,11 +82,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     // Qualifier and national-event wins live in their own table, not in the match import.
     getQualifierSignificantWinBouts(admin, id, "wins", "any").catch(() => [] as Bout[]),
     // Other states' placers too: a win over a Virginia champion at NHSCA belongs here.
-    loadStatePlacerIndex(admin, new Date(), { outOfState: true }).catch(() => ({
-      statePlacers: [],
-      stateSchools: [],
-      fargoAllAmericans: [],
-    })),
+    loadOutOfStatePlacerIndex(admin),
     admin.from("athletes").select("graduationyear,gender").eq("id", id).maybeSingle(),
     // Wins and losses, last 12 months: the notable losses, as the scouting report lists them.
     getQualifierSignificantWinBouts(admin, id, "all").catch(() => [] as Bout[]),
@@ -141,32 +157,10 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ wins: submittedWins, losses: [], lossesVisible }, PRIVATE)
   }
 
-  const tocField = buildTocFieldBoard(invitations ?? []).weights
-    .flatMap((weight) => weight.athletes.filter((a) => a.status === "confirmed").map((a) => a.name))
-    .filter(Boolean)
+  const tocField = tocFieldNames(invitations)
 
-  // Paginated: PostgREST caps a request at 1000 rows and there are more ranked athletes than that
-  // across every class once the unpublished ones are included.
-  const ranked: RankedOpponent[] = []
-  for (let from = 0; ; from += 1000) {
-    const { data } = await admin
-      .from("athletes")
-      .select("name,prospect_ranking,graduationyear,gender")
-      .not("prospect_ranking", "is", null)
-      .range(from, from + 999)
-    if (!data?.length) break
-    for (const row of data) {
-      if (row.name) {
-        ranked.push({
-          name: String(row.name),
-          ranking: row.prospect_ranking == null ? null : Number(row.prospect_ranking),
-          graduationYear: row.graduationyear == null ? null : Number(row.graduationyear),
-          gender: (row.gender as string | null) ?? null,
-        })
-      }
-    }
-    if (data.length < 1000) break
-  }
+  // Every ranked athlete, unpublished classes included (lib/significant-opponent-index.ts).
+  const ranked = await loadRankedOpponents(admin)
 
   // "NC ranked" opponents from this wrestler's own board only: a ranked girl is not a boy's win.
   const index = rankedOnBoard({ tocField, ranked, ...stateIndex }, (gradRow as { gender?: unknown } | null)?.gender ?? null)
@@ -185,17 +179,57 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     weight: win.weight,
     reason: win.reason,
     // The opponent's state finish, when they have one, is the label a reader recognises - beside
-    // the stronger reason rather than instead of it.
-    credential: !accoladeLine(win)
-      ? win.reason === "national-ranked"
-        ? (win.nationalRankLabel ?? "Nationally ranked")
-        : null
-      : win.reason === "state-champion" || win.reason === "state-placer" || win.reason === "national-placer"
-        ? accoladeLine(win)
-        : `${win.reason === "toc-field" ? "TOC field" : win.reason === "national-ranked" ? win.nationalRankLabel ?? "Nationally ranked" : "NC ranked"} · ${accoladeLine(win)}`,
+    // the stronger reason rather than instead of it (lib/significant-wins.ts).
+    credential: significantWinCredential(win),
+    stateFinish: stateFinishOf(win),
     // A win over another state's placer is a national result, and the filter should say so.
     scope: win.opponentState && win.opponentState !== "NC" ? ("national" as const) : ("in-state" as const),
   }))
+
+  /*
+   * A family-added win, checked against our state results (Jim Bernthal, 16 October 2026: 21 wins
+   * for Xavier, all over state placers, and the profile counted 11). The same matcher as every
+   * imported bout, with the state the family typed standing where a bracket would print the
+   * opponent's state ("Virginia 3rd Place" reads as NHSCA's "VA") - so a namesake in another state
+   * is refused, and no state named means no check. A match takes our label and counts; the win
+   * stays marked as family-reported, because the bout itself is still theirs.
+   */
+  const reportedState = (win: (typeof submittedWins)[number]) => stateNamedIn(win.credential)
+  const checked = findSignificantWins(
+    submittedWins
+      .filter((win) => reportedState(win))
+      .map((win) => ({
+        opponent: win.opponent,
+        // NC placers carry no state; their check is the name and school, as for an NC bracket line.
+        opponent_school: reportedState(win) === "NC" ? win.opponentSchool : win.opponentSchool || reportedState(win),
+        win_loss: "W",
+        result: win.result,
+        date: win.date,
+        venue: win.event,
+      })),
+    index,
+    { stateOnly: true },
+  )
+  const verifiedSubmitted = submittedWins.map((win) => {
+    const claimed = reportedState(win)
+    const hit = claimed
+      ? checked.find(
+          (c) =>
+            c.opponent.toLowerCase() === win.opponent.toLowerCase() &&
+            c.date === win.date &&
+            (c.reason === "state-champion" || c.reason === "state-placer") &&
+            (claimed === "NC" ? !c.opponentState || c.opponentState === "NC" : c.opponentState === claimed),
+        )
+      : null
+    if (!hit) return win
+    return {
+      ...win,
+      reason: hit.reason,
+      credential: significantWinCredential(hit) ?? win.credential,
+      stateFinish: stateFinishOf(hit),
+      scope: hit.opponentState && hit.opponentState !== "NC" ? ("national" as const) : ("in-state" as const),
+    }
+  })
 
   /*
    * The same bout, reported twice. A family's submitted win and the imported bracket rarely agree
@@ -204,8 +238,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
    * could be the same person and the dates are within two days. The earlier list wins.
    * (lib/same-reported-bout.ts)
    */
-  const wins: Array<(typeof submittedWins)[number] | (typeof curatedWins)[number] | (typeof calculatedWins)[number]> = []
-  for (const win of [...submittedWins, ...curatedWins, ...calculatedWins]) {
+  const wins: Array<(typeof verifiedSubmitted)[number] | (typeof curatedWins)[number] | (typeof calculatedWins)[number]> = []
+  for (const win of [...verifiedSubmitted, ...curatedWins, ...calculatedWins]) {
     if (!wins.some((kept) => sameReportedBout(kept, win))) wins.push(win)
   }
 
@@ -230,9 +264,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     result: loss.result,
     weight: loss.weight,
     reason: loss.reason,
-    credential:
-      accoladeLine(loss) ??
-      (loss.reason === "national-ranked" ? (loss.nationalRankLabel ?? "Nationally ranked") : loss.reason === "ranked" ? "NC ranked" : null),
+    credential: notableLossCredential(loss),
     scope: loss.opponentState && loss.opponentState !== "NC" ? ("national" as const) : ("in-state" as const),
     style: styleOfEventForAthlete(loss.event, null, gender),
   }))

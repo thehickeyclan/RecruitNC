@@ -88,3 +88,13 @@ export function classifyViewer(profile: ViewerProfileInput): ViewerClassificatio
     role: effective || "unknown",
   }
 }
+
+/**
+ * Who may read a wrestler's notable losses: verified college coaches and admins (Matt, 14 October
+ * 2026: "scouting reports, compare athletes, notable losses.. all coaches only.. not parents or
+ * kid"). The profile route and the coach event report email both decide it here.
+ */
+export function maySeeNotableLosses(profile: (ViewerProfileInput & { is_admin?: unknown }) | null | undefined): boolean {
+  const who = classifyViewer(profile ?? null)
+  return who.kind === "admin" || profile?.is_admin === true || (who.isCollegeCoach && who.verifiedCoach)
+}

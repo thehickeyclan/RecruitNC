@@ -50,6 +50,9 @@ export type OtherTournamentBout = {
   isBye: boolean
   winType: string
   score: string
+  /** The import file the row came from: how an event is told apart from a mislabelled one. */
+  sourceFile?: string | null
+  eventDate?: string | null
 }
 
 /**
@@ -110,6 +113,8 @@ function toBout(row: Record<string, unknown>): OtherTournamentBout {
     isBye: Boolean(row.is_bye),
     winType: String(row.win_type ?? ""),
     score: String(row.score ?? ""),
+    sourceFile: (row.source_file as string) ?? null,
+    eventDate: (row.event_date as string) ?? null,
   }
 }
 
@@ -545,20 +550,30 @@ export async function getQualifierSignificantWinBouts(
   const cutoff = Date.now() - HEAD_TO_HEAD_WINDOW_DAYS * 86_400_000
   const out: Bout[] = []
   for (const row of data) {
-    if (row.is_bye || !row.opponent_name) continue
+    const bout = significantWinBout(row)
+    if (!bout) continue
     const at = row.event_date ? Date.parse(String(row.event_date)) : NaN
     if (window === "head-to-head" && Number.isFinite(at) && at < cutoff) continue
-    out.push({
-      opponent: displayName(String(row.opponent_name)),
-      opponent_school: (row.opponent_club as string) ?? null,
-      win_loss: row.win ? "W" : "L",
-      result: [row.win_type, row.score].filter(Boolean).join(" ").trim() || null,
-      date: (row.event_date as string) ?? null,
-      venue: (row.event_name as string) ?? null,
-      weight: (row.weight_class as string) ?? null,
-    })
+    out.push(bout)
   }
   return out
+}
+
+/**
+ * One `other_tournament_bouts` row in the shape the significant-wins list reads, or null for a bye
+ * or a row with no opponent. Shared by the profile list and the coach event report.
+ */
+export function significantWinBout(row: Record<string, unknown>): Bout | null {
+  if (row.is_bye || !row.opponent_name) return null
+  return {
+    opponent: displayName(String(row.opponent_name)),
+    opponent_school: (row.opponent_club as string) ?? null,
+    win_loss: row.win ? "W" : "L",
+    result: [row.win_type, row.score].filter(Boolean).join(" ").trim() || null,
+    date: (row.event_date as string) ?? null,
+    venue: (row.event_name as string) ?? null,
+    weight: (row.weight_class as string) ?? null,
+  }
 }
 
 /** NC United's own NHSCA Duals bouts (scripts/import-nc-united-duals-2026.py). */
