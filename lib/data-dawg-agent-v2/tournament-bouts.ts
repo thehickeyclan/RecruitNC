@@ -89,7 +89,7 @@ const SELECT = "event_name,year,event_date,round,weight_class,opponent_name,oppo
  * from the placement rounds the same way scripts/import-national-event-placers.py derives it:
  * winning the 3rd-place match is third, losing it is fourth.
  */
-const PLACEMENT_ROUNDS: Array<[RegExp, number, number]> = [
+export const PLACEMENT_ROUNDS: Array<[RegExp, number, number]> = [
   [/1st place|^finals$|championship final/i, 1, 2],
   [/3rd place/i, 3, 4],
   [/5th place/i, 5, 6],
