@@ -1,5 +1,6 @@
 "use client"
 
+import { NationalFooter, NationalHeader } from "@/components/recruiting/national-frame"
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
@@ -161,7 +162,8 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
    * the NC United menu around the national homepage there. The domain decides it as well.
    */
   const onNationalDomain = typeof window !== "undefined" && isNationalHost(window.location.hostname)
-  const isNationalHome = onNationalDomain || path === "/recruitwrestlers" || path.startsWith("/recruitwrestlers/")
+  // The homepage draws its own header; every other page on that address gets RecruitWrestlers' frame below.
+  const isNationalHome = (onNationalDomain && path === "/") || path === "/recruitwrestlers" || path.startsWith("/recruitwrestlers/")
   if (isNationalHome) {
     return (
       <div id="app-content" className="relative flex min-h-screen flex-col bg-[#0A1628]">
@@ -191,14 +193,29 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
 
   return (
     <div id="app-content" data-shell="community" className="group/shell relative flex min-h-screen flex-col">
-      <Navbar />
-      {familyBand === "top" ? <FamilyProfileBand /> : null}
+      {/*
+        Both frames are drawn; the address decides which shows (app/recruit-brand.css), set before
+        the first paint - so recruitwrestlers.com never flashes NC United's menu, and nothing about
+        app.ncwrestlingunited.com changes.
+      */}
+      <div className="ncu-only">
+        <Navbar />
+      </div>
+      <div className="national-only">
+        <NationalHeader />
+      </div>
+      <div className="ncu-only">{familyBand === "top" ? <FamilyProfileBand /> : null}</div>
       <main className="flex-1">
         <ConditionalAuthGuard>{children}</ConditionalAuthGuard>
       </main>
-      {familyBand === "foot" ? <FamilyProfileBand /> : null}
-      <Footer />
-      {chat}
+      <div className="ncu-only">
+        {familyBand === "foot" ? <FamilyProfileBand /> : null}
+        <Footer />
+        {chat}
+      </div>
+      <div className="national-only">
+        <NationalFooter />
+      </div>
     </div>
   )
 }

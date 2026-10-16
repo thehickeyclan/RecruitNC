@@ -79,7 +79,7 @@ export default async function TimelinePage({ searchParams }: { searchParams?: Pr
   const readOnly = !auth.user || auth.user.id !== userId
   const { data: account } = userId ? await admin.auth.admin.getUserById(userId) : { data: null }
   const done = cleanDone(account?.user?.user_metadata?.roadmap_done)
-  const gold = "#D3B574"
+  const gold = "var(--recruit-accent)"
   const card = "rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-5"
   const tabs = [
     { label: "Grade by grade", href: "/recruiting/learn/timeline" },

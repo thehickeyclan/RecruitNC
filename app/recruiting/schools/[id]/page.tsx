@@ -69,7 +69,8 @@ const MAJORS = majorsData.majors as Record<string, string[]>
 const spoken = (name: string) => name.replace(/\s*\([^)]*\)\s*/g, " ").trim()
 const dollars = (n: number) => `$${n.toLocaleString("en-US")}`
 
-const GOLD = "#D3B574"
+// The recruiting accent: blue in recruiting areas, gold elsewhere (app/recruit-brand.css).
+const GOLD = "var(--recruit-accent)"
 const card = "rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-5 shadow-[0_1px_0_rgba(255,255,255,0.04)_inset]"
 const cardTitle = "text-base font-bold text-white"
 
@@ -241,7 +242,7 @@ export default async function SchoolPage({ params }: Params) {
                     </span>
                   ) : null}
                   {onRecruitNC ? (
-                    <span className="inline-flex items-center gap-1 rounded-md px-2.5 py-1 text-[#0A1628]" style={{ backgroundColor: GOLD }}>
+                    <span className="inline-flex items-center gap-1 rounded-md px-2.5 py-1" style={{ backgroundColor: GOLD, color: "var(--recruit-on-accent)" }}>
                       <ShieldCheck className="h-3.5 w-3.5" aria-hidden /> Coaches on RecruitNC
                     </span>
                   ) : null}

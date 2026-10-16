@@ -602,12 +602,14 @@ function Funnel({
                 aria-label={`${st}: ${count}`}
                 style={{
                   clipPath: `polygon(0 ${left}%, 100% ${right}%, 100% ${100 - right}%, 0 ${100 - left}%)`,
-                  backgroundColor: on ? "#D3B574" : `rgba(211, 181, 116, ${0.16 + i * 0.07})`,
+                  // Gold on NC United, blue on recruitwrestlers.com (app/recruit-brand.css).
+                  backgroundColor: on ? "rgb(var(--recruit-fill-rgb))" : `rgba(var(--recruit-fill-rgb), ${0.16 + i * 0.07})`,
+                  color: on ? "var(--recruit-on-accent)" : undefined,
                 }}
-                className={cn("flex flex-1 flex-col items-center justify-center transition-colors", on ? "text-[#0A1628]" : "text-white hover:brightness-125")}
+                className={cn("flex flex-1 flex-col items-center justify-center transition-colors", on ? "" : "text-white hover:brightness-125")}
               >
                 <span className={cn("text-2xl font-black leading-none", !on && count === 0 && "text-white/40")}>{count}</span>
-                <span className={cn("mt-1 text-[10px] font-bold uppercase tracking-wider", on ? "text-[#0A1628]" : "text-white/75")}>{st}</span>
+                <span className={cn("mt-1 text-[10px] font-bold uppercase tracking-wider", on ? "" : "text-white/75")}>{st}</span>
               </button>
             )
           })}

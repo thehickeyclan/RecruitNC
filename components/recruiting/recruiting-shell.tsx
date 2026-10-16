@@ -1,5 +1,6 @@
 "use client"
 
+import { NationalLockup } from "@/components/recruiting/national-frame"
 import { releasedClassYears } from "@/lib/public-rankings-cap"
 import { coachProgramOf, viewGenderFor } from "@/lib/recruiting/coach-program"
 import { useState } from "react"
@@ -161,7 +162,13 @@ export function RecruitingShell({ children }: { children: React.ReactNode }) {
     <div id="app-content" data-shell="recruiting" className="group/shell relative flex min-h-screen flex-col bg-[#0A1628]">
       <header className="sticky top-0 z-50 flex h-14 items-center gap-4 border-b border-white/10 bg-[#0A1628] px-4 print:hidden lg:px-5">
         <a href="/coach-home" className="flex shrink-0 items-baseline gap-3" aria-label={`${RECRUITING_BRAND.name} — Home`}>
-          <RecruitingWordmark className="text-xl" />
+          {/* RecruitNC here; RecruitWrestlers on recruitwrestlers.com (app/recruit-brand.css). */}
+          <span className="ncu-only">
+            <RecruitingWordmark className="text-xl" />
+          </span>
+          <span className="national-only">
+            <NationalLockup />
+          </span>
           <span className="hidden text-[10px] font-semibold uppercase tracking-[0.25em] text-white/45 sm:inline">{recruitingCoverage()} wrestling</span>
         </a>
         <RecruitingSearch className="hidden min-w-0 max-w-md flex-1 md:block" />
