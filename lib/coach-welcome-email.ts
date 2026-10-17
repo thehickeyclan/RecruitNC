@@ -96,6 +96,11 @@ export function renderCoachWelcomeEmail(input: CoachWelcomeInput): { subject: st
       <a href="${BASE}/coach-home" style="display:inline-block;border:1px solid rgba(211,181,116,0.6);color:${GOLD};font-size:14px;font-weight:800;text-decoration:none;padding:10px 16px;border-radius:10px;margin:0 0 8px 0;">Coach Home</a>
     </div>
     <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:10px;">Open any profile or ranking and tap the &#9733;.</div>
+    <!-- What the report looks like: a real one, from the 2025 Super 32 (public/email/super32-report-sample.jpg). -->
+    <a href="${BASE}/coach-home" style="display:block;margin-top:16px;text-decoration:none;">
+      <img src="${BASE}/email/super32-report-sample.jpg" width="512" alt="Sample Super 32 report: placement, record, significant wins with each opponent's accolades" style="display:block;width:100%;max-width:512px;height:auto;border:0;border-radius:12px;">
+    </a>
+    <div style="font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:${GOLD};margin-top:8px;">Sample report · 2025 Super 32</div>
   </td></tr></table>
 </td></tr>
 
