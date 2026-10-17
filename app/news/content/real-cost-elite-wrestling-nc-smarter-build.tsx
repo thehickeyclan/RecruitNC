@@ -455,8 +455,8 @@ export function RealCostEliteWrestlingNcSmarterBuildContent() {
           </em>
         </p>
         <p className="my-2">
-          <a href="https://ncunitedwrestling.com" className="font-medium text-[#003366] underline" target="_blank" rel="noopener noreferrer">
-            NCUnitedWrestling.com
+          <a href="https://www.ncwrestlingunited.com" className="font-medium text-[#003366] underline" target="_blank" rel="noopener noreferrer">
+            NCWrestlingUnited.com
           </a>
           {" · "}
           <a
