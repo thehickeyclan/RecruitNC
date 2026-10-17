@@ -615,7 +615,7 @@ export function ScoutingReportDocument({
 {(() => {
   const folkstyleSection = (
     <>
-          <StyleDivider title="Folkstyle" note="NCHSAA State Championships, national tournaments, duals and the high-school season" />
+          <StyleDivider title="Folkstyle" note="State championships, national tournaments, duals and the high-school season" />
           <Block n={n()} title="Competition record — Folkstyle">
             {folkResults.length ? (
               <ResultsTable rows={folkResults} />
@@ -1113,7 +1113,7 @@ function ResultsTable({ rows }: { rows: ScoutingReport["results"] }) {
       {rows.map((row, i) => (
         <li key={i} className="py-2 text-[12px]">
           <div className="flex items-baseline justify-between gap-3">
-            <span className="font-semibold text-[#03154C]">{row.event}</span>
+            <span className="font-semibold text-[#03154C]">{row.label ?? row.event}</span>
             <span className="shrink-0 font-mono text-[10.5px] text-gray-600">{row.date ? dayLabel(row.date) : row.year}</span>
           </div>
           <div className="mt-0.5 text-gray-800">{row.detail}</div>
@@ -1126,7 +1126,7 @@ function ResultsTable({ rows }: { rows: ScoutingReport["results"] }) {
         <tr key={i} className="border-t border-gray-200">
           {/* The day where we have it, the year where the source only published one. */}
           <Td mono>{row.date ? dayLabel(row.date) : row.year}</Td>
-          <Td bold>{row.event}</Td>
+          <Td bold>{row.label ?? row.event}</Td>
           <Td>{row.detail}</Td>
         </tr>
       ))}

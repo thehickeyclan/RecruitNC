@@ -25,6 +25,7 @@ type PlacerRow = {
   season: number | string | null
   state: string | null
   classification: string | null
+  association: string | null
   weight: string | number | null
   place: number | null
   wrestler_name: string | null
@@ -49,7 +50,7 @@ export async function getStateTournamentResultsForAthlete(
 
   const { data, error } = await client
     .from("state_tournament_placers")
-    .select("season, state, classification, weight, place, wrestler_name, school_clean, school_raw")
+    .select("season, state, classification, association, weight, place, wrestler_name, school_clean, school_raw")
     .eq("athlete_id", id)
     .eq("state", state)
   if (error || !data) return []
@@ -63,6 +64,7 @@ export async function getStateTournamentResultsForAthlete(
       place: r.place == null ? null : Number(r.place),
       school: String(r.school_clean ?? r.school_raw ?? "").trim(),
       wrestler_name: String(r.wrestler_name ?? "").trim(),
+      association: String(r.association ?? "").trim().toUpperCase() || null,
     }))
     .filter((r) => r.year > 0)
     .sort((a, b) => b.year - a.year || (a.place ?? 99) - (b.place ?? 99))

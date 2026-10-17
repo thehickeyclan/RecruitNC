@@ -10,6 +10,8 @@ export type NchsaaRowForProfile = {
   place: number | null
   school: string
   wrestler_name: string
+  /** Whose championship: SCHSL, SCISA... Absent on NCHSAA rows, which are the default. */
+  association?: string | null
 }
 
 /**
