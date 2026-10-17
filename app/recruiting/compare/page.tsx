@@ -25,7 +25,8 @@ import { teamRankingsForSchool } from "@/lib/college-programs/team-rankings-snap
 import { DIVISION_COLOR, DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { schoolLogoUrl } from "@/lib/college-programs/logo"
 import { COLLEGE_LIST_STATUS_LABEL, type CollegeListStatus } from "@/lib/college-programs/list"
-import { DollarSign, GraduationCap, MapPin, Plus, Target, X } from "lucide-react"
+import { Building2, DollarSign, GraduationCap, MapPin, Plus, Target, X } from "lucide-react"
+import { NICHE_CATEGORIES, NICHE_SOURCE, gradePoints, gradeTone, nicheFor } from "@/lib/college-programs/niche"
 import { familyFocus } from "@/lib/recruiting/family-focus"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -420,6 +421,62 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
                           })}
                         </Fragment>
                       ))}
+                      {/* Campus life: Niche's report-card grades, best in each row marked (lib/college-programs/niche.ts). */}
+                      {(() => {
+                        const graded = columns.map(({ school }) => nicheFor(school.id))
+                        const rows = NICHE_CATEGORIES.filter((c) => graded.some((g) => g?.grades[c.key]))
+                        if (!rows.length) return null
+                        return (
+                          <>
+                            <tr className="border-t border-white/10 bg-white/[0.03]">
+                              <th className="sticky left-0 z-10 bg-[#111f38] px-4 py-3 text-left">
+                                <span className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#D3B574]">
+                                  <Building2 className="h-4 w-4" aria-hidden /> Campus life grades
+                                </span>
+                              </th>
+                              {columns.map(({ school }, i) => (
+                                <td key={school.id} className="border-l border-white/10 px-4 py-3 align-top text-[11px] text-white/45">
+                                  {graded[i]?.url ? (
+                                    <a href={graded[i]!.url!} target="_blank" rel="noreferrer" className="underline hover:text-white/70">
+                                      Niche report card
+                                    </a>
+                                  ) : (
+                                    "No Niche grades"
+                                  )}
+                                </td>
+                              ))}
+                            </tr>
+                            {rows.map((c) => {
+                              const points = graded.map((g) => gradePoints(g?.grades[c.key]))
+                              const best = Math.max(...points.map((p) => p ?? -1))
+                              const gradedCount = points.filter((p) => p != null).length
+                              return (
+                                <tr key={`niche-${c.key}`} className="border-t border-white/5">
+                                  <th className="sticky left-0 z-10 bg-[#0d1d36] px-4 py-2 text-left text-xs font-semibold text-white/55">{c.label}</th>
+                                  {columns.map(({ school }, i) => {
+                                    const grade = graded[i]?.grades[c.key]
+                                    const top = grade != null && gradedCount > 1 && points[i] === best
+                                    return (
+                                      <td key={school.id} className="border-l border-white/10 px-4 py-2 align-top">
+                                        {grade ? (
+                                          <span className={`inline-flex min-w-[2.25rem] justify-center rounded-md px-2 py-0.5 text-sm font-black ring-1 ${gradeTone(grade)} ${top ? "outline outline-2 outline-offset-1 outline-[#D3B574]" : ""}`}>{grade}</span>
+                                        ) : (
+                                          <span className="text-xs text-white/35">Not graded</span>
+                                        )}
+                                      </td>
+                                    )
+                                  })}
+                                </tr>
+                              )
+                            })}
+                            <tr>
+                              <td colSpan={columns.length + 1} className="px-4 pb-3 pt-1 text-[11px] text-white/40">
+                                Gold outline: the best grade in the row. {NICHE_SOURCE}.
+                              </td>
+                            </tr>
+                          </>
+                        )
+                      })()}
                       <tr className="border-t border-white/10 bg-white/[0.03]">
                         <th className="sticky left-0 z-10 bg-[#111f38] px-4 py-3 text-left text-xs font-black uppercase tracking-widest text-[#D3B574]">Your relationship</th>
                         {columns.map(({ school }) => {

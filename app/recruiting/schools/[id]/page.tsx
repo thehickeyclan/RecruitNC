@@ -49,6 +49,7 @@ import { depthFor } from "@/lib/college-programs/roster-depth"
 import { rosterForSchool } from "@/lib/college-programs/rosters"
 import { STATE_NAMES } from "@/lib/college-programs/states"
 import { costLines, tuitionFacts } from "@/lib/college-programs/tuition"
+import { NICHE_CATEGORIES, NICHE_SOURCE, gradeTone, nicheFor } from "@/lib/college-programs/niche"
 import { teamRankingsForSchool } from "@/lib/college-programs/team-rankings-snapshot"
 import { DIVISION_COLOR, DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { readWentHereSnapshot, snapshotForState } from "@/lib/college-programs/went-here-snapshot"
@@ -141,6 +142,7 @@ function Stat({ value, label, sub }: { value: string; label: string; sub?: strin
 export default async function SchoolPage({ params }: Params) {
   const { id } = await params
   const school = SCHOOLS.get(id)
+  const niche = school ? nicheFor(school.id) : null
   if (!school) notFound()
 
   const admin = createAdminClient()
@@ -529,6 +531,35 @@ export default async function SchoolPage({ params }: Params) {
         ) : null}
         <p className="mt-4 text-xs text-white/40">US Department of Education.</p>
       </section>
+
+      {niche && Object.keys(niche.grades).length ? (
+        <section id="campus" className={`${card} mt-5 scroll-mt-16`}>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className={cardTitle}>Campus life grades</h2>
+            {niche.grades.overall ? (
+              <span className="text-sm text-white/60">
+                Overall <span className={`ml-1 rounded-md px-2 py-0.5 text-base font-black ring-1 ${gradeTone(niche.grades.overall)}`}>{niche.grades.overall}</span>
+              </span>
+            ) : null}
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+            {NICHE_CATEGORIES.filter((c) => c.key !== "overall" && niche.grades[c.key]).map((c) => (
+              <div key={c.key} className="flex items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-2">
+                <span className="text-xs text-white/65">{c.label}</span>
+                <span className={`rounded px-1.5 py-0.5 text-sm font-black ring-1 ${gradeTone(niche.grades[c.key]!)}`}>{niche.grades[c.key]}</span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 text-xs text-white/40">
+            {NICHE_SOURCE}.{" "}
+            {niche.url ? (
+              <a href={niche.url} target="_blank" rel="noreferrer" className="underline hover:text-white/70">
+                The full report card
+              </a>
+            ) : null}
+          </p>
+        </section>
+      ) : null}
     </div>
   )
 
