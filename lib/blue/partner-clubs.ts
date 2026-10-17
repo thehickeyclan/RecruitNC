@@ -15,6 +15,8 @@ export type PartnerClub = {
 
 export const PARTNER_CLUBS: readonly PartnerClub[] = [
   { id: "darkhorse", name: "Darkhorse Wrestling Club" },
+  // RAW, Raleigh (Matt, 17 Oct 2026). Not RAW West in Kernersville.
+  { id: "raw", name: "Raleigh Area Wolfpack (RAW)" },
 ]
 
 export function partnerClubById(id: string): PartnerClub | null {
