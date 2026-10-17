@@ -290,20 +290,20 @@ export function renderCoachInviteLetter(input: CoachInviteInput): { subject: str
   const subject = coach === "Coach" ? "Super 32 reports on the wrestlers you're recruiting" : `${coach}, Super 32 reports on the wrestlers you're recruiting`
   const levels = (input.divisions ?? []).filter(([, n]) => n > 0).map(([d, n]) => `${n} ${d}`).join(", ")
   const brand = RECRUITING_BRAND.name
+  // A follow-up, not an introduction: these coaches have heard from us before (Matt, 17 Oct 2026).
+  // Contact details and academics are not on every profile (about 40-65% of ranked athletes), so
+  // they are described as growing, never as "every".
   const paras = [
     `${coach},`,
-    `I'm Matt Hickey. I run ${brand}, where ${input.coaches} college coaches from ${input.programs} programs${levels ? ` (${levels})` : ""} now evaluate North Carolina wrestlers: every result we hold, scouting reports, and strength of competition, meaning who each wrestler has beaten and those opponents' accolades.`,
-    `New for Super 32 (Oct 24–25): star the wrestlers you're recruiting, and within 24 hours of the finals you'll get a report on each one, with placement, record, significant wins and notable losses.`,
+    `Super 32 is Oct 24–25. Star the wrestlers you're recruiting on ${brand}, and within 24 hours of the finals you'll get a report on each one: placement, record, significant wins and notable losses.`,
+    `${brand} has state and national results for every elite wrestler in North Carolina, plus GPA, academic interests and contact information, which families keep adding, and strength of competition: who each wrestler has beaten and those opponents' accolades. ${input.coaches} college coaches from ${input.programs} programs${levels ? ` (${levels})` : ""} are using it, and we're expanding state by state, starting with South Carolina next week.`,
   ]
   const steps = [
     `Create your coach account. It's free for college coaches and access is instant:`,
     `Star the wrestlers you're following, on any profile or ranking.`,
     `Get your Super 32 report the day after the finals.`,
   ]
-  const after = [
-    `We cover North Carolina today. South Carolina launches next week, and more states follow quickly.`,
-    `Questions? Just reply. It comes straight to me.`,
-  ]
+  const after = [`Questions? Just reply. It comes straight to me.`]
   const p = (t: string) => `<p style="margin:0 0 14px;">${esc(t)}</p>`
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
 <body style="margin:0;padding:0;background:#ffffff;">
