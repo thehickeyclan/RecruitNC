@@ -95,15 +95,15 @@ export default async function CommandCenterSalesPage() {
         <img src="/toc-finals-looking-ahead-bw.jpg" alt="" aria-hidden className="absolute inset-y-0 right-0 hidden h-full w-[48%] object-cover object-[50%_30%] opacity-90 lg:block" style={{ maskImage: "linear-gradient(to right, transparent, black 35%)", WebkitMaskImage: "linear-gradient(to right, transparent, black 35%)" }} />
         <div className="absolute inset-0 bg-gradient-to-r from-[#060f1f] via-[#060f1f]/90 to-[#060f1f]/10" aria-hidden />
         <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-12 sm:pt-16">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-white/70">RecruitNC · For wrestling families</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-white/70">RecruitNC · Recruiting Command Center</p>
           <h1 className={`mt-5 text-6xl leading-[0.9] sm:text-8xl ${tocDisplayClass()}`}>
-            The recruiting
+            College recruiting is complicated.
             <span className="block" style={{ color: SKY }}>
-              Command Center
+              Your plan shouldn&apos;t be.
             </span>
           </h1>
           <p className="mt-5 max-w-xl text-base text-white/75 sm:text-lg">
-            Your recruiting assistant from 8th grade through signing day: the plan, your colleges, the full cost and the college coaches who are looking, in one place. Men&apos;s and women&apos;s wrestling, every level.
+            Hundreds of college wrestling programs, each with its own rules, costs, roster and expectations, and most families are left to figure it out alone. Now there&apos;s one place to manage it: build your plan, discover colleges, compare your options, track coach interest and know what to do next. Men&apos;s and women&apos;s wrestling, every division.
           </p>
           <div className="mt-6 flex items-baseline gap-2">
             <span className="text-5xl font-black">{price}</span>
@@ -111,22 +111,22 @@ export default async function CommandCenterSalesPage() {
           </div>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href={d.onSale ? BUY : "/plans"} className="rounded-xl px-7 py-3.5 text-base font-black text-[#0A1628] shadow-lg transition hover:brightness-110" style={{ backgroundColor: SKY }}>
-              {d.onSale ? "Get the Recruiting Command Center →" : "See plans →"}
+              {d.onSale ? "Take control of recruiting →" : "See plans →"}
             </Link>
-            <Link href="/plans" className="rounded-xl border border-white/25 bg-[#060f1f]/40 px-7 py-3.5 text-base font-bold transition hover:bg-white/10">
-              Compare all plans
-            </Link>
+            <a href="#find-your-colleges" className="rounded-xl border border-white/25 bg-[#060f1f]/40 px-7 py-3.5 text-base font-bold transition hover:bg-white/10">
+              Try the college map
+            </a>
           </div>
-          <p className="mt-3 text-sm text-white/50">Included in NC United Blue. On Rankings already? It replaces your $9.99 plan.</p>
+          <p className="mt-3 text-sm text-white/50">Cancel anytime · Includes Rankings · Included with NC United Blue</p>
         </div>
       </section>
 
       {/* The reason it works */}
       <section className="border-b border-white/10 bg-[#0b1a33]/60">
         <div className="mx-auto max-w-6xl px-4 py-10">
-          <p className="text-center text-sm font-bold uppercase tracking-[0.25em] text-white/70">
-            College coaches recruit here. That&apos;s the difference.
-          </p>
+          <h2 className={`text-center text-4xl leading-[0.95] sm:text-5xl ${tocDisplayClass()}`}>
+            This isn&apos;t just a recruiting guide. <span style={{ color: GOLD }}>College coaches are already here.</span>
+          </h2>
           {stats.length ? (
             <div className="mt-6 grid grid-cols-2 gap-y-6 lg:grid-cols-4">
               {stats.map(([n, label], i) => (
@@ -137,76 +137,51 @@ export default async function CommandCenterSalesPage() {
               ))}
             </div>
           ) : null}
+          <p className="mt-6 text-center text-xs text-white/45">Counted live from real activity on RecruitNC. A profile view means a college coach looked; it is not an offer or a promise of interest.</p>
         </div>
       </section>
 
       <div className="mx-auto max-w-6xl px-4">
+        {/* The problem, in a family's own words, and what changes (17 Oct 2026 review). */}
+        <section className="pt-16">
+          <h2 className={`text-center text-4xl leading-[0.95] sm:text-5xl ${tocDisplayClass()}`}>Recruiting has changed. Families need better tools.</h2>
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
+            {[
+              ["“I don’t know what we should be doing.”", "A recruiting roadmap for your wrestler from 8th grade through signing day, with the next steps always in front of you."],
+              ["“I don’t know which colleges are realistic.”", "Every wrestling program at every level, with athletic, academic, financial and personal fit compared side by side."],
+              ["“I don’t know if coaches are interested.”", "See which college programs viewed the profile, keep every coach conversation in one place, and track each college."],
+              ["“I don’t understand the rules or the costs.”", "Recruiting rules checked against each governing body, and the full yearly cost of every college, not just tuition."],
+            ].map(([challenge, answer]) => (
+              <div key={challenge} className={`${card} grid gap-4 p-6 sm:grid-cols-2`}>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/45">The challenge</p>
+                  <p className="mt-2 text-lg font-bold leading-6 text-white/90">{challenge}</p>
+                </div>
+                <div className="sm:border-l sm:border-white/10 sm:pl-4">
+                  <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: SKY }}>Recruiting Command Center</p>
+                  <p className="mt-2 text-sm leading-6 text-white/75">{answer}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <div className="pt-16">
+          <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: SKY }}>Find your colleges</p>
+          <h2 className={`mt-2 text-5xl leading-[0.95] sm:text-6xl ${tocDisplayClass()}`}>Find the right college, not just the biggest name.</h2>
+        </div>
         {/* The real map, live: tap any college and see what subscribing unlocks (Matt, 17 Oct 2026). */}
-        <section className="py-12">
+        <section id="find-your-colleges" className="scroll-mt-20 py-12">
           <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.25em]" style={{ color: GOLD }}>
-            <MapIcon className="h-4 w-4" aria-hidden /> The college map
+            <MapIcon className="h-4 w-4" aria-hidden /> Try it
           </p>
-          <h2 className={`mt-3 text-4xl leading-[0.95] sm:text-5xl ${tocDisplayClass()}`}>
-            {d.mapPreview?.total ?? "Every"} colleges with wrestling. Tap one.
-          </h2>
-          <p className="mt-3 max-w-2xl text-base text-white/70">
-            Every program at every level, men&apos;s and women&apos;s. Open any college to see its coaching staff, its recruiting questionnaire and the wrestlers from your state who went there, then save it to your list and compare.
+          <p className="mt-2 max-w-2xl text-base text-white/70">
+            Explore {d.mapPreview?.total ?? "every"} college wrestling programs across NCAA Division I, II, III, NAIA and junior college, men&apos;s and women&apos;s. Tap any college to see its coaching staff, its recruiting questionnaire and the wrestlers from your state who went there, then save it to your list and compare.
           </p>
           <div className="mt-6">
             <CollegeProgramMap accessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? ""} upsellHref={d.onSale ? BUY : "/plans"} heightClass="h-[460px] sm:h-[560px]" />
           </div>
         </section>
-
-        <Feature
-          icon={Target}
-          eyebrow="Your plan"
-          title="Know what to do this year"
-          points={["A roadmap for every grade, 8th to 12th, with a checklist you tick off", "The dates coaches may call, meet and host, for your wrestler's class", "The next three steps, always on your home screen"]}
-          visual={
-            <Example>
-              <div className="grid grid-cols-5 gap-2 pt-4">
-                {[["8th", "#5B9BFF"], ["9th", "#38BDF8"], ["10th", "#A78BFA"], ["11th", "#F5C04E"], ["12th", "#F87171"]].map(([g, c], i) => (
-                  <div key={g} className="rounded-lg border-t-4 bg-[#060f1f] p-2" style={{ borderTopColor: c }}>
-                    <p className="text-xs font-black">{g}</p>
-                    {[0, 1, 2, 3].map((n) => (
-                      <div key={n} className="mt-2 flex items-center gap-1">
-                        <span className={`h-2.5 w-2.5 rounded-sm border ${n < (i === 3 ? 2 : i < 3 ? 4 : 0) ? "border-transparent" : "border-white/30"}`} style={n < (i === 3 ? 2 : i < 3 ? 4 : 0) ? { backgroundColor: c } : undefined} />
-                        <span className="h-1.5 flex-1 rounded bg-white/15" />
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </Example>
-          }
-        />
-
-        <Feature
-          flip
-          icon={ListChecks}
-          eyebrow="My College List"
-          title="Every college, and the next step"
-          points={["Your stage with each program, from interested to offer", "Verified coach activity: who viewed the profile, who wrote", "Draft a coach email from your wrestler's verified results"]}
-          visual={
-            <Example>
-              <div className="pt-4 text-[12px]">
-                {[
-                  ["Interested", "Send intro", "bg-sky-400/20 text-sky-200"],
-                  ["Viewed 2×", "Questionnaire", "bg-emerald-400/20 text-emerald-200"],
-                  ["Coach replied", "Plan a visit", "bg-amber-300/20 text-amber-100"],
-                  ["Visited", "Compare", "bg-violet-400/20 text-violet-200"],
-                ].map(([status, next, tone], i) => (
-                  <div key={i} className="flex items-center gap-2 border-b border-white/5 py-2.5 last:border-0">
-                    <span className="h-7 w-7 rounded bg-white/90" />
-                    <span className="h-2 flex-1 rounded bg-white/25" />
-                    <span className={`rounded px-2 py-0.5 font-semibold ${tone}`}>{status}</span>
-                    <span className="rounded border border-white/15 px-2 py-0.5 text-white/70">{next}</span>
-                  </div>
-                ))}
-              </div>
-            </Example>
-          }
-        />
 
         <Feature
           flip
@@ -234,7 +209,85 @@ export default async function CommandCenterSalesPage() {
           }
         />
 
+        <div className="pt-16">
+          <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: SKY }}>Build your plan</p>
+          <h2 className={`mt-2 text-5xl leading-[0.95] sm:text-6xl ${tocDisplayClass()}`}>Know what to do, every year.</h2>
+          <p className="mt-3 max-w-2xl text-base text-white/65">A personalized roadmap and the rules that apply to your wrestler, from 8th grade through signing day.</p>
+        </div>
         <Feature
+          icon={Target}
+          eyebrow="Your plan"
+          title="Know what to do this year"
+          points={["A roadmap for every grade, 8th to 12th, with a checklist you tick off", "The dates coaches may call, meet and host, for your wrestler's class", "The next three steps, always on your home screen"]}
+          visual={
+            <Example>
+              <div className="grid grid-cols-5 gap-2 pt-4">
+                {[["8th", "#5B9BFF"], ["9th", "#38BDF8"], ["10th", "#A78BFA"], ["11th", "#F5C04E"], ["12th", "#F87171"]].map(([g, c], i) => (
+                  <div key={g} className="rounded-lg border-t-4 bg-[#060f1f] p-2" style={{ borderTopColor: c }}>
+                    <p className="text-xs font-black">{g}</p>
+                    {[0, 1, 2, 3].map((n) => (
+                      <div key={n} className="mt-2 flex items-center gap-1">
+                        <span className={`h-2.5 w-2.5 rounded-sm border ${n < (i === 3 ? 2 : i < 3 ? 4 : 0) ? "border-transparent" : "border-white/30"}`} style={n < (i === 3 ? 2 : i < 3 ? 4 : 0) ? { backgroundColor: c } : undefined} />
+                        <span className="h-1.5 flex-1 rounded bg-white/15" />
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </Example>
+          }
+        />
+
+        <Feature
+          flip
+          icon={BookOpen}
+          eyebrow="Learn"
+          title="Know the rules before you need them"
+          points={["Every level's rules, checked against the governing body, men's and women's", "What coaches look at, from where NC wrestlers actually went", "Paying for college, visits, NIL and the questions families ask"]}
+          visual={
+            <div className={`${card} p-6`}>
+              <p className={`text-6xl ${tocDisplayClass()}`} style={{ color: GOLD }}>Rules, not rumors</p>
+              <p className="mt-2 text-sm text-white/60">Each rule cites its source and the date we checked it.</p>
+              <Link href="/recruiting/learn/what-coaches-look-for" className="mt-4 inline-flex items-center gap-1 text-sm font-bold hover:underline" style={{ color: GOLD }}>
+                Read a free guide <ArrowRight className="h-4 w-4" aria-hidden />
+              </Link>
+            </div>
+          }
+        />
+
+        <div className="pt-16">
+          <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: SKY }}>Manage your recruiting</p>
+          <h2 className={`mt-2 text-5xl leading-[0.95] sm:text-6xl ${tocDisplayClass()}`}>Every college, every coach, one place.</h2>
+          <p className="mt-3 max-w-2xl text-base text-white/65">Track each college, see verified coach activity, and keep every conversation tied to the college it&apos;s about.</p>
+        </div>
+        <Feature
+          icon={ListChecks}
+          eyebrow="My College List"
+          title="Every college, and the next step"
+          points={["Your stage with each program, from interested to offer", "Verified coach activity: who viewed the profile, who wrote", "Draft a coach email from your wrestler's verified results"]}
+          visual={
+            <Example>
+              <div className="pt-4 text-[12px]">
+                {[
+                  ["Interested", "Send intro", "bg-sky-400/20 text-sky-200"],
+                  ["Viewed 2×", "Questionnaire", "bg-emerald-400/20 text-emerald-200"],
+                  ["Coach replied", "Plan a visit", "bg-amber-300/20 text-amber-100"],
+                  ["Visited", "Compare", "bg-violet-400/20 text-violet-200"],
+                ].map(([status, next, tone], i) => (
+                  <div key={i} className="flex items-center gap-2 border-b border-white/5 py-2.5 last:border-0">
+                    <span className="h-7 w-7 rounded bg-white/90" />
+                    <span className="h-2 flex-1 rounded bg-white/25" />
+                    <span className={`rounded px-2 py-0.5 font-semibold ${tone}`}>{status}</span>
+                    <span className="rounded border border-white/15 px-2 py-0.5 text-white/70">{next}</span>
+                  </div>
+                ))}
+              </div>
+            </Example>
+          }
+        />
+
+        <Feature
+          flip
           icon={MessageSquare}
           eyebrow="Messages"
           title="Hear from college coaches"
@@ -257,11 +310,16 @@ export default async function CommandCenterSalesPage() {
           }
         />
 
+        <div className="pt-16">
+          <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: SKY }}>Your assistant</p>
+          <h2 className={`mt-2 text-5xl leading-[0.95] sm:text-6xl ${tocDisplayClass()}`}>Questions answered, any time.</h2>
+          <p className="mt-3 max-w-2xl text-base text-white/65">Data Dawg combines verified results, sourced rules and program information, so its answers are about wrestling and about your wrestler.</p>
+        </div>
         <Feature
           icon={Bot}
           eyebrow="Your assistant"
-          title="Ask Data Dawg anything, anytime"
-          points={["The rules for your wrestler's class, what to say to a coach, what a college really costs", "Answers drawn from our verified results and the checked rules library", "Training questions too. Never weight cutting or medical advice"]}
+          title="An assistant that knows wrestling"
+          points={["Not a generic chatbot: Data Dawg answers from verified wrestling results, sourced recruiting rules and every college program's information", "The rules for your wrestler's class, what to say to a coach, what a college really costs, any time", "Training questions too. Never weight cutting or medical advice"]}
           visual={
             <div className={`${card} flex items-center gap-5 p-6`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -275,47 +333,35 @@ export default async function CommandCenterSalesPage() {
           }
         />
 
-        <Feature
-          flip
-          icon={BookOpen}
-          eyebrow="Learn"
-          title="Know the rules before you need them"
-          points={["Every level's rules, checked against the governing body, men's and women's", "What coaches look at, from where NC wrestlers actually went", "Paying for college, visits, NIL and the questions families ask"]}
-          visual={
-            <div className={`${card} p-6`}>
-              <p className={`text-6xl ${tocDisplayClass()}`} style={{ color: GOLD }}>Rules, not rumors</p>
-              <p className="mt-2 text-sm text-white/60">Each rule cites its source and the date we checked it.</p>
-              <Link href="/recruiting/learn/what-coaches-look-for" className="mt-4 inline-flex items-center gap-1 text-sm font-bold hover:underline" style={{ color: GOLD }}>
-                Read a free guide <ArrowRight className="h-4 w-4" aria-hidden />
-              </Link>
-            </div>
-          }
-        />
+        {/* The emotional promise, without promising outcomes. */}
+        <section className="mt-16 rounded-3xl border border-white/10 bg-gradient-to-br from-[#13294B] to-[#0b1a33] px-6 py-12 text-center sm:px-12">
+          <h2 className={`text-5xl leading-[0.95] sm:text-6xl ${tocDisplayClass()}`}>Stop guessing. Start recruiting with a plan.</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-base text-white/75">
+            You don&apos;t need to know every recruiting rule, every college coach or every program in the country. You need to know which opportunities fit your wrestler, what to do next, and how to manage it. That&apos;s what the Recruiting Command Center is built for.
+          </p>
+          <p className="mt-6 text-sm font-bold uppercase tracking-[0.25em]" style={{ color: GOLD }}>You don&apos;t have to figure out college wrestling recruiting on your own.</p>
+        </section>
 
-        {/* The plans, short */}
-        <section className="py-12">
-          <h2 className={`text-center text-4xl sm:text-5xl ${tocDisplayClass()}`}>Choose your plan</h2>
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            {[
-              { name: "Rankings", price: formatPrice(SCOUTING_REPORT_PRICES.subscription), line: "Class rankings, the Top 75, and which programs viewed your profile", color: GOLD, href: "/plans" },
-              { name: "Recruiting Command Center", price, line: "Everything in Rankings, plus your recruiting assistant from 8th grade through signing", color: SKY, href: d.onSale ? BUY : "/plans", best: true },
-              { name: "NC United Blue", price: "$55", line: "Everything in the Recruiting Command Center, plus practices run by college coaches, the state's best partners and the national team pathway", color: "#7dd3fc", href: "/blue" },
-            ].map((p) => (
-              <Link key={p.name} href={p.href} className={`${card} flex flex-col border-2 p-6 transition hover:-translate-y-0.5`} style={{ borderColor: p.best ? p.color : "rgba(255,255,255,0.1)" }}>
-                <p className="text-sm font-black uppercase tracking-widest" style={{ color: p.color }}>{p.name}</p>
-                <p className="mt-2 text-4xl font-black">
-                  {p.price}
-                  <span className="text-base font-semibold text-white/50"> / month</span>
-                </p>
-                <p className="mt-2 flex-1 text-sm text-white/65">{p.line}</p>
-                <span className="mt-4 inline-flex items-center gap-1 text-sm font-bold" style={{ color: p.color }}>
-                  {p.best && d.onSale ? "Get it" : "Details"} <ArrowRight className="h-4 w-4" aria-hidden />
-                </span>
-              </Link>
-            ))}
+        {/* One offer: the Command Center. The other plans are a link, not a second decision. */}
+        <section className="py-16">
+          <div className="mx-auto max-w-xl rounded-3xl border-2 p-8 text-center" style={{ borderColor: SKY, backgroundColor: "#0b1a33" }}>
+            <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: SKY }}>Recruiting Command Center</p>
+            <p className="mt-3 text-6xl font-black">
+              {price}
+              <span className="text-xl font-semibold text-white/55"> / month</span>
+            </p>
+            <ul className="mx-auto mt-6 max-w-sm space-y-2 text-left text-sm text-white/80">
+              {["Your roadmap, 8th grade to signing", "Every college: coaches, full cost, roster, alumni", "Your college list, compare and coach conversations", "Rankings and which programs viewed your profile", "Data Dawg and the full Learn library"].map((l) => (
+                <li key={l} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: GOLD }} aria-hidden /> {l}</li>
+              ))}
+            </ul>
+            <Link href={d.onSale ? BUY : "/plans"} className="mt-8 block rounded-xl px-6 py-4 text-base font-black text-[#0A1628] hover:brightness-110" style={{ backgroundColor: SKY }}>
+              {d.onSale ? "Take control of recruiting →" : "See plans →"}
+            </Link>
+            <p className="mt-3 text-xs text-white/50">Cancel anytime · Includes Rankings · Included with NC United Blue</p>
           </div>
-          <p className="mt-4 text-center text-sm text-white/55">
-            Not ready? <Link href="/create-profile" className="underline" style={{ color: GOLD }}>Claim your free profile</Link> and see how many coaches have viewed it.
+          <p className="mt-6 text-center text-sm text-white/55">
+            Just the rankings? <Link href="/plans" className="underline" style={{ color: GOLD }}>Rankings is {formatPrice(SCOUTING_REPORT_PRICES.subscription)}/month</Link>. Training too? <Link href="/blue" className="underline" style={{ color: GOLD }}>NC United Blue</Link> includes the Command Center. Or <Link href="/create-profile" className="underline" style={{ color: GOLD }}>claim your free profile</Link>.
           </p>
         </section>
 
@@ -324,8 +370,9 @@ export default async function CommandCenterSalesPage() {
           <h2 className={`text-center text-4xl ${tocDisplayClass()}`}>Questions</h2>
           <div className="mt-6 divide-y divide-white/10 rounded-2xl border border-white/10 bg-[#0b1a33]">
             {[
-              ["Is it only for North Carolina?", "The rankings and results are North Carolina's today, with South Carolina next. The college map, Compare, Learn and the coach messages work for every family."],
-              ["Does it work for girls?", "Yes. Women's wrestling has its own colleges, rules and rankings, and the Command Center follows your wrestler: a daughter's map, colleges and rules are the women's ones."],
+              ["Is it only for North Carolina?", "The rankings and results are North Carolina's today, with more states coming. The college map, Compare, Learn and coach messages work for every family."],
+              ["Does the Command Center support women's wrestling?", "Yes. Women's wrestling has its own colleges, rules and rankings, and the Command Center follows your wrestler: a daughter's map, colleges and rules are the women's ones."],
+              ["Does it guarantee a scholarship or an offer?", "No. Nothing can. It helps you find the colleges that fit, know what to do next and see real coach activity, so your wrestler's opportunities aren't left to chance."],
               ["Who sees my information?", "Your plan, list and notes are yours alone, and a family's income is never saved. Academics and contact info are seen only by verified college coaches, never the public."],
               ["Can college coaches message my wrestler?", "Only verified college coaches can start a conversation, and parents see every message and can stop a coach at any time. Messages are free for every family; the Recruiting Command Center ties each conversation to its college and your plan."],
               ["I'm on Rankings. What happens if I upgrade?", "Your $9.99 plan is cancelled automatically when the Recruiting Command Center starts, so you never pay for both."],
@@ -342,7 +389,7 @@ export default async function CommandCenterSalesPage() {
           </div>
           <div className="mt-10 text-center">
             <Link href={d.onSale ? BUY : "/plans"} className="inline-block rounded-xl px-8 py-4 text-base font-black text-[#0A1628] hover:brightness-110" style={{ backgroundColor: SKY }}>
-              {d.onSale ? `Get the Recruiting Command Center, ${price}/month →` : "See plans →"}
+              {d.onSale ? `Take control of recruiting, ${price}/month →` : "See plans →"}
             </Link>
           </div>
         </section>
