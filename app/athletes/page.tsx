@@ -5,6 +5,7 @@ import {
   fetchCommitmentStats,
   type CommitmentAthleteFilters,
 } from "@/lib/athletes-commitments-fetch"
+import { withCompetedWeights } from "@/lib/commitments-competed-weight"
 import { AthletesCommitmentsClient } from "@/components/athletes-commitments-client"
 import { AthletesPageSkeleton } from "@/components/athletes-page-skeleton"
 
@@ -35,7 +36,7 @@ export default async function AthletesPage() {
       fetchCommitmentAthletes(supabase, DEFAULT_FILTERS),
       fetchCommitmentStats(supabase, DEFAULT_FILTERS),
     ])
-    initialAthletes = athletesResult.athletes
+    initialAthletes = await withCompetedWeights(athletesResult.athletes)
     initialStats = statsResult
   } catch (error) {
     console.error("[athletes/page] SSR prefetch failed:", error)
