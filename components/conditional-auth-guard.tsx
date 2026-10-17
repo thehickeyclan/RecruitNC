@@ -72,6 +72,8 @@ export function ConditionalAuthGuard({
     // they have an account, so a login wall here loses the sale (15 Oct 2026).
     "/plans",
     "/command-center",
+    // Dev-only product screenshots (404 in production).
+    "/dev/screens",
     "/schools",
     // A school's wrestling record is public history, same as /schools and /nchsaa — and Data
     // Dawg, which is open to everyone, links school names straight to /high-schools/[slug].
