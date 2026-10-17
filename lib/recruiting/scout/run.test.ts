@@ -17,3 +17,13 @@ describe("draftProblems", () => {
     expect(draftProblems("Two wrestlers from my school, Topsail, wrestle for you, and Buies Creek is two hours from home.", true)).toEqual([])
   })
 })
+
+describe("collegesNamedIn", () => {
+  it("finds the colleges a question names", async () => {
+    const { collegesNamedIn } = await vi.importActual<typeof import("@/lib/recruiting/scout/tools")>("@/lib/recruiting/scout/tools")
+    expect(collegesNamedIn("what gpa does mount olive require?")).toEqual(["university-of-mount-olive"])
+    expect(collegesNamedIn("What GPA is needed for Roanoke college?")).toEqual(["roanoke-college"])
+    expect(collegesNamedIn("Compare NC State and Campbell")).toEqual(expect.arrayContaining(["north-carolina-state-university-nc-state", "campbell-university"]))
+    expect(collegesNamedIn("When can a coach call us?")).toEqual([])
+  })
+})

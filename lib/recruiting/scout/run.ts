@@ -2,7 +2,7 @@ import "server-only"
 
 import type { ScoutContext, ScoutLink } from "@/lib/recruiting/scout/context"
 import { SCOUT_SYSTEM } from "@/lib/recruiting/scout/prompt"
-import { SCOUT_TOOLS, runScoutTool } from "@/lib/recruiting/scout/tools"
+import { SCOUT_TOOLS, collegesNamedIn, runScoutTool } from "@/lib/recruiting/scout/tools"
 
 export type ScoutDraft = { to: string[]; subject: string; body: string }
 export type ScoutAnswer = { headline: string; body: string; links: ScoutLink[]; draft: ScoutDraft | null }
@@ -49,6 +49,17 @@ export async function askScout(context: ScoutContext, question: string, history:
   // Every email address a lookup showed: the only ones a draft may go to.
   const seenEmails = new Set<string>()
   let questionnaireNotDone = false
+  const remember = (out: string) => {
+    for (const email of out.match(EMAIL) ?? []) seenEmails.add(email.toLowerCase())
+    if (/NOT recorded the questionnaire/.test(out)) questionnaireNotDone = true
+  }
+  // A college the question names is looked up before the model answers, not left to its choice.
+  const named = collegesNamedIn(question)
+  if (named.length) {
+    const outs = await Promise.all(named.map((id) => runScoutTool(context.session, "college_details", { school_id: id }).catch(() => "")))
+    outs.forEach(remember)
+    messages.push({ role: "system", content: `Already looked up for this question (college_details):\n\n${outs.filter(Boolean).join("\n\n")}` })
+  }
   let retried = false
 
   for (let round = 0; round < MAX_ROUNDS; round++) {
@@ -83,8 +94,7 @@ export async function askScout(context: ScoutContext, question: string, history:
           args = {}
         }
         const out = await runScoutTool(context.session, call.function.name, args).catch((e: unknown) => `The lookup failed: ${e instanceof Error ? e.message : String(e)}`)
-        for (const email of out.match(EMAIL) ?? []) seenEmails.add(email.toLowerCase())
-        if (/NOT recorded the questionnaire/.test(out)) questionnaireNotDone = true
+        remember(out)
         messages.push({ role: "tool", tool_call_id: call.id, content: out.slice(0, 12_000) })
       }
       continue
