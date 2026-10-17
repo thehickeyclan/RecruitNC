@@ -9,7 +9,7 @@
  */
 import type { Metadata } from "next"
 import Image from "next/image"
-import { ArrowRight, Eye, MessageSquare, PhoneCall, Search, ShieldCheck, Trophy, Users, type LucideIcon } from "lucide-react"
+import { ArrowRight, MessageSquare, PhoneCall, Search, ShieldCheck, Trophy, Users, type LucideIcon } from "lucide-react"
 import { GuildRecruitingLockup } from "@/components/recruiting/guild-frame"
 import { GUILD_GOLD, guildMetadata } from "@/lib/recruiting/guild-brand"
 import { RECRUITING_BRAND } from "@/lib/recruiting/brand"
@@ -45,8 +45,8 @@ function Feature({ icon: Icon, title, body }: { icon: LucideIcon; title: string;
 /** The family's funnel, drawn as an example - no real family's data. */
 function FunnelPreview() {
   const steps = [
-    { n: 9, label: "Viewed the profile" },
-    { n: 4, label: "Reached out" },
+    { n: 6, label: "Reached out" },
+    { n: 4, label: "Calls" },
     { n: 2, label: "Visits" },
     { n: 1, label: "Offers" },
   ]
@@ -67,7 +67,7 @@ function FunnelPreview() {
       <ul className="mt-4 space-y-2 text-sm">
         {[
           ["A Division II program", "Phone call", "Oct 14"],
-          ["A Division I program", "Viewed the profile", "Oct 12"],
+          ["A Division I program", "Message", "Oct 12"],
           ["An NAIA program", "Camp invite", "Oct 9"],
         ].map(([who, what, when]) => (
           <li key={who + what} className="flex items-center justify-between gap-3 border-t border-white/5 pt-2">
@@ -174,14 +174,14 @@ export default async function GuildRecruitingHome() {
             <div>
               <Label>The difference</Label>
               <h2 className="mt-3 max-w-2xl text-3xl font-black tracking-tight sm:text-4xl">College coaches work here.</h2>
-              <p className="mt-3 max-w-2xl text-white/60">Not a profile emailed out in hope. Coaches search, track and contact athletes from the same platform families use, and families see who is reaching out.</p>
+              <p className="mt-3 max-w-2xl text-white/60">Not a profile emailed out in hope. Coaches search, track and contact athletes from the same platform families use, so every profile is one a coach can act on.</p>
             </div>
             <FunnelPreview />
           </div>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             <Feature icon={Search} title="Coaches search here" body="Every profile is in the search college staff use, with the weight each athlete last competed at." />
-            <Feature icon={Eye} title="You see who looked" body="When a college program opens a profile, the family sees the program and when." />
-            <Feature icon={PhoneCall} title="Track who reached out" body="Calls, texts, visits and offers, logged in one place beside the verified views." />
+            <Feature icon={Users} title="Families ready to talk" body="Profiles kept current by the family: verified results, grades and how to reach them." />
+            <Feature icon={PhoneCall} title="Contact in one place" body="Message a family, call or text, and log every visit and offer on your staff board." />
           </div>
         </section>
 

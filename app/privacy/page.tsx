@@ -110,6 +110,13 @@ export default function PrivacyPolicyPage() {
               time.
             </p>
 
+            <h3 id="coach-views" className="mt-5 font-semibold text-rnc-gold">When a college coach views a profile</h3>
+            <p className="mt-2">
+              When a signed-in college coach opens an athlete&apos;s profile, the athlete&apos;s family can
+              see that the coach&apos;s program viewed it, and when. The coach&apos;s own name is never
+              shown to the family.
+            </p>
+
             <h3 className="mt-5 font-semibold text-rnc-gold">Website usage</h3>
             <p className="mt-2">
               The website uses Vercel Web Analytics to count page views, which pages are visited and
