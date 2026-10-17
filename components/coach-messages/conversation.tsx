@@ -41,6 +41,8 @@ type Thread = {
   college?: ThreadCollege | null
   firstMessageAt?: string | null
   extras?: boolean
+  /** For a coach only: their level may not recruit this wrestler yet (lib/coach-messages-compliance.ts). */
+  compliance?: { status: string; title: string; detail: string; allowed: string; href: string } | null
 }
 
 /** "MH" for "Matthew Hickey (parent)"; the bracketed role is not part of the name. */
@@ -255,6 +257,17 @@ export function Conversation({
           ) : null}
           </div>
         </div>
+        {thread.viewerRole === "coach" && thread.compliance ? (
+          <div role="alert" className="w-full rounded-lg border border-amber-400/40 bg-amber-500/10 p-3 text-sm text-amber-100">
+            <p className="font-bold">{thread.compliance.title}</p>
+            <p className="mt-1 text-xs leading-5 text-amber-100/80">
+              {thread.compliance.allowed}{" "}
+              <a href={thread.compliance.href} target="_blank" rel="noreferrer" className="underline">
+                The rules
+              </a>
+            </p>
+          </div>
+        ) : null}
         {thread.viewerRole === "coach" && !compact ? (
           <div className="flex flex-wrap gap-2">
             <a href={`/athletes/${thread.athleteId}`} className={action}>Profile</a>
