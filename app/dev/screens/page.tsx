@@ -66,10 +66,12 @@ export default async function Screens({ searchParams }: { searchParams?: Promise
           <CollegeListTable rows={rows} readOnly wrestlerId={null} />
         </div>
       ) : (
-        <div className="mx-auto max-w-[1380px]">
+        <div className="shot-roadmap mx-auto max-w-[1060px]">
+          {/* Three years, not five: at sales-page size five columns are too small to read. */}
+          <style>{".shot-roadmap .xl\\:grid-cols-5{grid-template-columns:repeat(3,minmax(0,1fr))!important}.shot-roadmap .xl\\:grid-cols-5>:nth-child(1){order:2!important}.shot-roadmap .xl\\:grid-cols-5>:nth-child(2){order:1!important}.shot-roadmap .xl\\:grid-cols-5>:nth-child(3){order:3!important}"}</style>
           <p className="mb-4 text-2xl font-black">Jordan&apos;s recruiting roadmap</p>
           <RoadmapBoard
-            years={ROADMAP}
+            years={ROADMAP.filter((y) => y.grade >= 10)}
             initialDone={["g8-profile", "g8-compete", "g8-core", "g8-ec", "g8-nc", "g8-levels", "g9-grades", "g9-schedule", "g9-events", "g9-profile", "g9-explore", "g10-list", "g10-questionnaires", "g10-email", "g10-grades", "g11-answer"]}
             current={11}
             selected={11}
