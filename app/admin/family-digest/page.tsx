@@ -25,7 +25,7 @@ export default async function FamilyDigestPreview() {
   const sending = process.env.FAMILY_DIGEST_SEND === "1"
 
   return (
-    <div className="min-h-screen bg-[#060f1f] px-4 py-8 text-white">
+    <div className="admin-dark-page min-h-screen bg-[#060f1f] px-4 py-8 text-white">
       <div className="mx-auto max-w-5xl">
         <h1 className="text-3xl font-black">This week&apos;s family emails</h1>
         <p className="mt-1 text-sm text-white/60">

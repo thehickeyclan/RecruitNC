@@ -62,7 +62,7 @@ export default async function SalesFunnelPage() {
   const card = "rounded-xl border border-white/10 bg-[#0d1d36] p-5"
 
   return (
-    <div className="min-h-screen bg-[#060f1f] px-4 py-8 text-white">
+    <div className="admin-dark-page min-h-screen bg-[#060f1f] px-4 py-8 text-white">
       <div className="mx-auto max-w-5xl">
         <h1 className="text-3xl font-black">Sales funnel</h1>
         <p className="mt-1 text-sm text-white/55">Family plans: sales-page views, map Subscribe taps, checkouts started, subscriptions. Bots are excluded at the source.</p>
