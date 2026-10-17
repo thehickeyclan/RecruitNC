@@ -20,9 +20,15 @@ import { SCOUTING_REPORT_PRICES, formatPrice } from "@/lib/scouting-report-entit
 import { createAdminClient } from "@/lib/supabase/admin"
 
 export const dynamic = "force-dynamic"
+const SHARE_TITLE = "Recruiting Command Center | RecruitNC"
+const SHARE_DESCRIPTION = "Meet Scout, your AI recruiting assistant. Plan every stage, compare colleges and hear from college coaches, on the same platform they use to recruit."
+// The link preview when the page is texted or posted: Scout, not the NC United logo (Matt, 17 Oct 2026).
+const SHARE_IMAGE = { url: "/images/command-center-share.jpg", width: 1200, height: 630, alt: "Recruiting Command Center: meet Scout, your AI recruiting assistant" }
 export const metadata: Metadata = {
-  title: "Recruiting Command Center | RecruitNC",
+  title: SHARE_TITLE,
   description: "Plan, track colleges, compare full costs and hear from college coaches: the recruiting portal for wrestling families, men's and women's.",
+  openGraph: { title: SHARE_TITLE, description: SHARE_DESCRIPTION, url: "/command-center", type: "website", images: [SHARE_IMAGE] },
+  twitter: { card: "summary_large_image", title: SHARE_TITLE, description: SHARE_DESCRIPTION, images: [SHARE_IMAGE.url] },
 }
 
 const GOLD = "#D3B574"
