@@ -295,13 +295,13 @@ export function renderCoachInviteLetter(input: CoachInviteInput): { subject: str
   // they are described as growing, never as "every".
   const paras = [
     `${coach},`,
-    `Super 32 is Oct 24–25. Star the wrestlers you're recruiting on ${brand}, and within 24 hours of the finals you'll get a report on each one: placement, record, significant wins and notable losses.`,
+    `Super 32 is Oct 24–25. Before it, star the wrestlers you're recruiting on ${brand} and download their scouting reports for your prep. After it, within 24 hours of the finals, you'll get a report on each one: placement, record, significant wins and notable losses.`,
     `${brand} has state and national results for every elite wrestler in North Carolina, plus GPA, academic interests and contact information, which families keep adding, and strength of competition: who each wrestler has beaten and those opponents' accolades. ${input.coaches} college coaches from ${input.programs} programs${levels ? ` (${levels})` : ""} are using it, and we're expanding state by state, starting with South Carolina next week.`,
     `It also runs your whole recruiting process. Every wrestler you star goes onto your My Recruits board, shared with your staff: move each one from prospect to signed, log calls, texts and visits, and message families directly. It's free for every college coach: NCAA, NAIA and NJCAA.`,
   ]
   const steps = [
     `Create your coach account. Access is instant:`,
-    `Star the wrestlers you're following, on any profile or ranking.`,
+    `Before Oct 24, star the wrestlers you're following and download their scouting reports, from any profile or ranking.`,
     `Get your Super 32 report the day after the finals.`,
   ]
   const after = [`Questions? Just reply. It comes straight to me.`]
