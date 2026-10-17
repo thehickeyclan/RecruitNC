@@ -14,6 +14,7 @@ import { loadWentHere } from "@/lib/college-programs/went-here"
 import { collegeFitFor, type FamilyFitContext } from "@/lib/recruiting/college-fit"
 import { collegeKey } from "@/lib/recruiting/roadmap-adapt"
 import { fitForSchool, satTotalRange } from "@/lib/college-programs/fit"
+import { NICHE_CATEGORIES, gradePoints, nicheFor } from "@/lib/college-programs/niche"
 
 /**
  * Scout's college tools (17 Oct 2026, Matt: "understands all the colleges, the line ups, the NC
@@ -72,6 +73,8 @@ export const SCOUT_TOOLS = [
           conference: { type: "string" },
           max_cost: { type: "number", description: "Most the full published yearly cost may be, in dollars." },
           room_at_weight: { type: "boolean", description: "Only colleges with two or fewer wrestlers at the wrestler's college weight, or one in his final year." },
+          grade_category: { type: "string", enum: NICHE_CATEGORIES.map((c) => c.key), description: "A Niche campus-life grade to filter on, with min_grade." },
+          min_grade: { type: "string", description: "Lowest Niche grade to accept in grade_category, e.g. 'B+'." },
         },
       },
     },
@@ -128,6 +131,7 @@ function short(s: ScoutSession, school: CollegeMapSchool): string {
     school.firstSeason ? `first season ${school.firstSeason}` : null,
     cost ? `full yearly cost ${money(cost.amount)}` : null,
     lineup(s, school.id),
+    nicheFor(school.id)?.grades.overall ? `Niche overall grade ${nicheFor(school.id)!.grades.overall}` : null,
     stage ? `on the family's list (${COLLEGE_LIST_STATUS_LABEL[stage]})` : null,
     s.viewed.has(collegeKey(school.name)) ? "its coaches viewed the profile" : null,
   ]
@@ -150,6 +154,11 @@ function findColleges(s: ScoutSession, a: Record<string, unknown>): string {
     if (conference && !programs.some((p) => (p.conference ?? "").toLowerCase().includes(conference))) return false
     if (maxCost != null && (yearlyCostFor(school.id, school.state)?.amount ?? Infinity) > maxCost) return false
     if (a.room_at_weight === true && !roomAtWeight(s, school.id)) return false
+    if (typeof a.grade_category === "string" && typeof a.min_grade === "string") {
+      const have = gradePoints(nicheFor(school.id)?.grades[a.grade_category as keyof NonNullable<ReturnType<typeof nicheFor>>["grades"]])
+      const need = gradePoints(a.min_grade.trim().toUpperCase())
+      if (have == null || need == null || have < need) return false
+    }
     return true
   })
   const total = hits.length
@@ -180,6 +189,15 @@ async function collegeDetails(s: ScoutSession, a: Record<string, unknown>): Prom
         .join("; ") || "none published"}.${facts.admissionsUrl ? ` Admissions: ${facts.admissionsUrl}` : ""}`,
     )
   }
+  // Campus life: Niche's report-card grades, as published on the college's Niche profile.
+  const niche = nicheFor(school.id)
+  if (niche && Object.keys(niche.grades).length) {
+    lines.push(
+      `Campus life grades from Niche (niche.com report card, from student reviews and public data; Niche's grades, not ours): ${NICHE_CATEGORIES.filter((c) => niche.grades[c.key])
+        .map((c) => `${c.label} ${niche.grades[c.key]}`)
+        .join(", ")}. Categories not listed are not graded by Niche for this college.`,
+    )
+  } else lines.push("Campus life grades: Niche publishes none for this college.")
   const fit = s.fit ? collegeFitFor(s.fit, school, null) : null
   if (fit) {
     if (fit.net?.amount != null) lines.push(`Net price: ${money(fit.net.amount)}, the average paid after aid by all aided students (not this family's income)`)

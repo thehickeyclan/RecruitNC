@@ -1,0 +1,7341 @@
+{
+ "source": "Niche (niche.com) report cards",
+ "collected": "2026-10-17",
+ "schools": {
+  "university-of-arkansas-at-little-rock-little-rock": {
+   "url": "https://www.niche.com/colleges/university-of-arkansas-at-little-rock/",
+   "grades": {
+    "overall": "B",
+    "academics": "B+",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "C",
+    "athletics": "B+",
+    "party_scene": "B-",
+    "professors": "A-",
+    "location": "C+",
+    "dorms": "B+",
+    "campus_food": "A-",
+    "student_life": "C+",
+    "safety": "B"
+   }
+  },
+  "arizona-state-university": {
+   "url": "https://www.niche.com/colleges/arizona-state-university/",
+   "grades": {
+    "overall": "A",
+    "academics": "A-",
+    "value": "B+",
+    "diversity": "A+",
+    "campus": "A-",
+    "athletics": "A",
+    "party_scene": "A+",
+    "professors": "A+",
+    "location": "A",
+    "dorms": "B",
+    "campus_food": "A-",
+    "student_life": "A+",
+    "safety": "C+"
+   }
+  },
+  "california-polytechnic-state-university-cal-poly": {
+   "url": "https://www.niche.com/colleges/cal-poly/",
+   "grades": {
+    "overall": "A",
+    "academics": "A-",
+    "value": "A-",
+    "diversity": "A-",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "A",
+    "professors": "B",
+    "location": "A",
+    "dorms": "B-",
+    "campus_food": "C-",
+    "student_life": "A",
+    "safety": "B",
+    "student_wellness": "A",
+    "future_readiness": "A+"
+   }
+  },
+  "california-state-university-bakersfield": {
+   "url": "https://www.niche.com/colleges/california-state-university-bakersfield/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "A",
+    "diversity": "A-",
+    "campus": "B",
+    "athletics": "B+",
+    "party_scene": "B-",
+    "professors": "B",
+    "location": "C+",
+    "campus_food": "B+",
+    "student_life": "B",
+    "safety": "B+"
+   }
+  },
+  "stanford-university": {
+   "url": "https://www.niche.com/colleges/stanford-university/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "A+",
+    "diversity": "A+",
+    "campus": "A",
+    "athletics": "A+",
+    "party_scene": "A-",
+    "professors": "A+",
+    "location": "B+",
+    "dorms": "A-",
+    "campus_food": "A-",
+    "student_life": "A+",
+    "safety": "B"
+   }
+  },
+  "united-states-air-force-academy-air-force": {
+   "url": "https://www.niche.com/colleges/united-states-air-force-academy/",
+   "grades": {
+    "overall": "A",
+    "academics": "A+",
+    "diversity": "B+",
+    "campus": "C+",
+    "party_scene": "D+",
+    "professors": "B+",
+    "location": "C+",
+    "dorms": "B-",
+    "campus_food": "B-",
+    "student_life": "C"
+   }
+  },
+  "university-of-northern-colorado": {
+   "url": "https://www.niche.com/colleges/university-of-northern-colorado/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "B-",
+    "athletics": "B+",
+    "party_scene": "B",
+    "professors": "B+",
+    "location": "C-",
+    "dorms": "B+",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "C"
+   }
+  },
+  "sacred-heart-university": {
+   "url": "https://www.niche.com/colleges/sacred-heart-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "C+",
+    "diversity": "B",
+    "campus": "A",
+    "athletics": "B+",
+    "party_scene": "A",
+    "professors": "B-",
+    "location": "B",
+    "dorms": "A",
+    "campus_food": "A+",
+    "student_life": "A",
+    "safety": "A-",
+    "student_wellness": "A+",
+    "future_readiness": "A+"
+   }
+  },
+  "american-university": {
+   "url": "https://www.niche.com/colleges/american-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "A",
+    "value": "C",
+    "diversity": "A",
+    "campus": "C",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "B+",
+    "location": "A",
+    "dorms": "C-",
+    "campus_food": "D+",
+    "student_life": "B-",
+    "safety": "B",
+    "student_wellness": "A",
+    "future_readiness": "A"
+   }
+  },
+  "delaware-state-university": {
+   "url": "https://www.niche.com/colleges/delaware-state-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "C-",
+    "athletics": "B",
+    "party_scene": "A-",
+    "professors": "C+",
+    "location": "C-",
+    "dorms": "C",
+    "campus_food": "C",
+    "student_life": "C+",
+    "safety": "C+"
+   }
+  },
+  "iowa-state-university": {
+   "url": "https://www.niche.com/colleges/iowa-state-university/",
+   "grades": {
+    "overall": "A",
+    "academics": "A-",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "A",
+    "athletics": "A-",
+    "party_scene": "A",
+    "professors": "A",
+    "location": "A-",
+    "dorms": "B+",
+    "campus_food": "A",
+    "student_life": "A+",
+    "safety": "B-",
+    "student_wellness": "A+",
+    "future_readiness": "A+"
+   }
+  },
+  "university-of-iowa": {
+   "url": "https://www.niche.com/colleges/university-of-iowa/",
+   "grades": {
+    "overall": "A",
+    "academics": "A",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "A",
+    "athletics": "A",
+    "party_scene": "A+",
+    "professors": "A+",
+    "location": "A-",
+    "dorms": "A-",
+    "campus_food": "A+",
+    "student_life": "A+",
+    "safety": "C+",
+    "student_wellness": "A+",
+    "future_readiness": "A+"
+   }
+  },
+  "university-of-northern-iowa": {
+   "url": "https://www.niche.com/colleges/university-of-northern-iowa/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B",
+    "value": "B+",
+    "diversity": "B-",
+    "campus": "A",
+    "athletics": "B+",
+    "party_scene": "A-",
+    "professors": "B+",
+    "location": "B+",
+    "dorms": "B",
+    "campus_food": "A+",
+    "student_life": "A",
+    "safety": "B-"
+   }
+  },
+  "northern-illinois-university": {
+   "url": "https://www.niche.com/colleges/northern-illinois-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B+",
+    "diversity": "A",
+    "campus": "C",
+    "athletics": "B+",
+    "party_scene": "A",
+    "professors": "A-",
+    "location": "C",
+    "dorms": "C+",
+    "campus_food": "B",
+    "student_life": "B-",
+    "safety": "C"
+   }
+  },
+  "northwestern-university": {
+   "url": "https://www.niche.com/colleges/northwestern-university/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "A",
+    "diversity": "A+",
+    "campus": "B+",
+    "athletics": "A-",
+    "party_scene": "B+",
+    "professors": "A+",
+    "location": "A",
+    "dorms": "B-",
+    "campus_food": "B-",
+    "student_life": "A",
+    "safety": "B+"
+   }
+  },
+  "southern-illinois-university-edwardsville-siu-edwardsville-or-siue": {
+   "url": "https://www.niche.com/colleges/southern-illinois-university-edwardsville/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "B+",
+    "campus": "A-",
+    "athletics": "B+",
+    "party_scene": "B",
+    "professors": "B+",
+    "location": "B+",
+    "dorms": "B+",
+    "campus_food": "A",
+    "student_life": "B+",
+    "safety": "B+"
+   }
+  },
+  "university-of-illinois-urbana-champaign-illinois": {
+   "url": "https://www.niche.com/colleges/university-of-illinois-urbana-champaign/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "A",
+    "diversity": "A+",
+    "campus": "A-",
+    "athletics": "A-",
+    "party_scene": "A+",
+    "professors": "A+",
+    "location": "B+",
+    "dorms": "B",
+    "campus_food": "A",
+    "student_life": "A+",
+    "safety": "B-"
+   }
+  },
+  "indiana-university-bloomington-indiana": {
+   "url": "https://www.niche.com/colleges/indiana-university-bloomington/",
+   "grades": {
+    "overall": "A",
+    "academics": "A",
+    "value": "B+",
+    "diversity": "A",
+    "campus": "A",
+    "athletics": "A",
+    "party_scene": "A+",
+    "professors": "A+",
+    "location": "A-",
+    "dorms": "B-",
+    "campus_food": "B+",
+    "student_life": "A+",
+    "safety": "C"
+   }
+  },
+  "purdue-university": {
+   "url": "https://www.niche.com/colleges/purdue-university/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A",
+    "value": "A",
+    "diversity": "A",
+    "campus": "B+",
+    "athletics": "A-",
+    "party_scene": "B+",
+    "professors": "A+",
+    "location": "C+",
+    "dorms": "B-",
+    "campus_food": "A",
+    "student_life": "A",
+    "safety": "B"
+   }
+  },
+  "bellarmine-university": {
+   "url": "https://www.niche.com/colleges/bellarmine-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "C+",
+    "value": "B+",
+    "diversity": "B+",
+    "campus": "B+",
+    "athletics": "A-",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "A+",
+    "dorms": "B",
+    "campus_food": "B",
+    "student_life": "B+",
+    "safety": "B+",
+    "student_wellness": "A",
+    "future_readiness": "A+"
+   }
+  },
+  "harvard-university": {
+   "url": "https://www.niche.com/colleges/harvard-university/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "A",
+    "diversity": "A+",
+    "campus": "A-",
+    "athletics": "B+",
+    "party_scene": "B+",
+    "professors": "A+",
+    "location": "A+",
+    "dorms": "B+",
+    "campus_food": "B",
+    "student_life": "A+",
+    "safety": "B+"
+   }
+  },
+  "morgan-state-university": {
+   "url": "https://www.niche.com/colleges/morgan-state-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "B-",
+    "athletics": "B+",
+    "party_scene": "A+",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "C-",
+    "campus_food": "B",
+    "student_life": "B+",
+    "safety": "C-"
+   }
+  },
+  "united-states-naval-academy-navy": {
+   "url": "https://www.niche.com/colleges/united-states-naval-academy/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "diversity": "A-",
+    "campus": "B",
+    "party_scene": "C-",
+    "professors": "B+",
+    "location": "B",
+    "dorms": "C",
+    "campus_food": "B+",
+    "student_life": "B-"
+   }
+  },
+  "university-of-maryland-college-park-maryland": {
+   "url": "https://www.niche.com/colleges/university-of-maryland-college-park/",
+   "grades": {
+    "overall": "A",
+    "academics": "A+",
+    "value": "B",
+    "diversity": "A",
+    "campus": "B",
+    "athletics": "A+",
+    "party_scene": "A",
+    "professors": "A+",
+    "location": "B+",
+    "dorms": "C",
+    "campus_food": "B+",
+    "student_life": "A+",
+    "safety": "B-"
+   }
+  },
+  "central-michigan-university": {
+   "url": "https://www.niche.com/colleges/central-michigan-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "B",
+    "athletics": "B+",
+    "party_scene": "A",
+    "professors": "A",
+    "location": "C+",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "A-",
+    "safety": "B+"
+   }
+  },
+  "michigan-state-university": {
+   "url": "https://www.niche.com/colleges/michigan-state-university/",
+   "grades": {
+    "overall": "A",
+    "academics": "A",
+    "value": "B",
+    "diversity": "A",
+    "campus": "A",
+    "athletics": "A+",
+    "party_scene": "A+",
+    "professors": "A+",
+    "location": "B+",
+    "dorms": "B",
+    "campus_food": "A-",
+    "student_life": "A+",
+    "safety": "C+"
+   }
+  },
+  "university-of-michigan": {
+   "url": "https://www.niche.com/colleges/university-of-michigan-ann-arbor/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "A-",
+    "diversity": "A",
+    "campus": "A",
+    "athletics": "A+",
+    "party_scene": "A+",
+    "professors": "A+",
+    "location": "A",
+    "dorms": "B",
+    "campus_food": "A-",
+    "student_life": "A+",
+    "safety": "B+"
+   }
+  },
+  "university-of-minnesota": {
+   "url": "https://www.niche.com/colleges/university-of-minnesota-twin-cities/",
+   "grades": {
+    "overall": "A",
+    "academics": "A",
+    "value": "A-",
+    "diversity": "A",
+    "campus": "B+",
+    "athletics": "A",
+    "party_scene": "A+",
+    "professors": "A",
+    "location": "A+",
+    "dorms": "B-",
+    "campus_food": "B",
+    "student_life": "A+",
+    "safety": "C-"
+   }
+  },
+  "lindenwood-university": {
+   "url": "https://www.niche.com/colleges/lindenwood-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "A",
+    "campus": "B-",
+    "athletics": "B+",
+    "party_scene": "B-",
+    "professors": "C",
+    "location": "B+",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "B-"
+   }
+  },
+  "university-of-missouri": {
+   "url": "https://www.niche.com/colleges/university-of-missouri/",
+   "grades": {
+    "overall": "A-",
+    "academics": "A",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "A-",
+    "athletics": "A-",
+    "party_scene": "A+",
+    "professors": "A",
+    "location": "B+",
+    "dorms": "B+",
+    "campus_food": "A-",
+    "student_life": "A",
+    "safety": "C+",
+    "student_wellness": "A",
+    "future_readiness": "A"
+   }
+  },
+  "appalachian-state-university": {
+   "url": "https://www.niche.com/colleges/appalachian-state-university/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B",
+    "value": "B-",
+    "diversity": "B",
+    "campus": "B+",
+    "athletics": "A",
+    "party_scene": "A",
+    "professors": "B+",
+    "location": "A",
+    "dorms": "C+",
+    "campus_food": "C+",
+    "student_life": "A",
+    "safety": "B-"
+   }
+  },
+  "campbell-university": {
+   "url": "https://www.niche.com/colleges/campbell-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "C+",
+    "athletics": "A-",
+    "party_scene": "C+",
+    "professors": "B-",
+    "location": "C-",
+    "dorms": "B",
+    "campus_food": "C",
+    "student_life": "B-",
+    "safety": "B+"
+   }
+  },
+  "davidson-college": {
+   "url": "https://www.niche.com/colleges/davidson-college/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "A",
+    "diversity": "A",
+    "campus": "B+",
+    "athletics": "B+",
+    "party_scene": "B",
+    "professors": "A",
+    "location": "B+",
+    "dorms": "A-",
+    "campus_food": "C+",
+    "student_life": "A",
+    "safety": "B"
+   }
+  },
+  "duke-university": {
+   "url": "https://www.niche.com/colleges/duke-university/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "A+",
+    "diversity": "A+",
+    "campus": "A",
+    "athletics": "A+",
+    "party_scene": "A",
+    "professors": "A+",
+    "location": "B-",
+    "dorms": "A",
+    "campus_food": "A+",
+    "student_life": "A+",
+    "safety": "B-"
+   }
+  },
+  "gardner-webb-university": {
+   "url": "https://www.niche.com/colleges/gardner-webb-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "C+",
+    "athletics": "B+",
+    "party_scene": "C-",
+    "professors": "B",
+    "location": "C+",
+    "dorms": "B",
+    "campus_food": "B",
+    "student_life": "C+",
+    "safety": "A"
+   }
+  },
+  "north-carolina-state-university-nc-state": {
+   "url": "https://www.niche.com/colleges/north-carolina-state-university/",
+   "grades": {
+    "overall": "A",
+    "academics": "A",
+    "value": "B+",
+    "diversity": "A-",
+    "campus": "B",
+    "athletics": "A-",
+    "party_scene": "A-",
+    "professors": "A-",
+    "location": "B+",
+    "dorms": "B-",
+    "campus_food": "B",
+    "student_life": "A",
+    "safety": "C+",
+    "student_wellness": "A",
+    "future_readiness": "A"
+   }
+  },
+  "university-of-north-carolina-at-chapel-hill-north-carolina": {
+   "url": "https://www.niche.com/colleges/university-of-north-carolina-at-chapel-hill/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "B+",
+    "diversity": "A",
+    "campus": "A-",
+    "athletics": "A+",
+    "party_scene": "A+",
+    "professors": "A+",
+    "location": "A",
+    "dorms": "B-",
+    "campus_food": "B",
+    "student_life": "A+",
+    "safety": "B-"
+   }
+  },
+  "north-dakota-state-university": {
+   "url": "https://www.niche.com/colleges/north-dakota-state-university/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B",
+    "value": "B+",
+    "diversity": "B",
+    "campus": "A-",
+    "athletics": "A+",
+    "party_scene": "A",
+    "professors": "B+",
+    "location": "A-",
+    "dorms": "A-",
+    "campus_food": "A",
+    "student_life": "A",
+    "safety": "B"
+   }
+  },
+  "university-of-nebraska-lincoln-nebraska": {
+   "url": "https://www.niche.com/colleges/university-of-nebraska-lincoln/",
+   "grades": {
+    "overall": "A-",
+    "academics": "A-",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "A-",
+    "athletics": "A-",
+    "party_scene": "A",
+    "professors": "A-",
+    "location": "B+",
+    "dorms": "B+",
+    "campus_food": "A",
+    "student_life": "A",
+    "safety": "B-"
+   }
+  },
+  "princeton-university": {
+   "url": "https://www.niche.com/colleges/princeton-university/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "A+",
+    "diversity": "A+",
+    "campus": "A-",
+    "athletics": "B+",
+    "party_scene": "B+",
+    "professors": "A+",
+    "location": "B+",
+    "dorms": "A-",
+    "campus_food": "A-",
+    "student_life": "A+",
+    "safety": "B+"
+   }
+  },
+  "rider-university": {
+   "url": "https://www.niche.com/colleges/rider-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B",
+    "value": "B-",
+    "diversity": "A",
+    "campus": "C+",
+    "athletics": "B+",
+    "party_scene": "B",
+    "professors": "B",
+    "location": "B-",
+    "dorms": "D+",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "B"
+   }
+  },
+  "rutgers-university-new-brunswick-rutgers": {
+   "url": "https://www.niche.com/colleges/rutgers-university-new-brunswick/",
+   "grades": {
+    "overall": "A",
+    "academics": "A",
+    "value": "A",
+    "diversity": "A+",
+    "campus": "B-",
+    "athletics": "A",
+    "party_scene": "A+",
+    "professors": "A",
+    "location": "B-",
+    "dorms": "C+",
+    "campus_food": "B+",
+    "student_life": "A",
+    "safety": "B-"
+   }
+  },
+  "binghamton-university": {
+   "url": "https://www.niche.com/colleges/binghamton-university-suny/",
+   "grades": {
+    "overall": "A",
+    "academics": "A",
+    "value": "A-",
+    "diversity": "A",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "A+",
+    "professors": "A",
+    "location": "C",
+    "dorms": "B",
+    "campus_food": "C+",
+    "student_life": "A-",
+    "safety": "C+"
+   }
+  },
+  "columbia-university": {
+   "url": "https://www.niche.com/colleges/columbia-university/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "A-",
+    "diversity": "A+",
+    "campus": "A+",
+    "athletics": "B+",
+    "party_scene": "A",
+    "professors": "A+",
+    "location": "A+",
+    "dorms": "A-",
+    "campus_food": "A",
+    "student_life": "A+",
+    "safety": "B-"
+   }
+  },
+  "cornell-university": {
+   "url": "https://www.niche.com/colleges/cornell-university/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "A-",
+    "diversity": "A+",
+    "campus": "A",
+    "athletics": "B+",
+    "party_scene": "A",
+    "professors": "A+",
+    "location": "B+",
+    "dorms": "B-",
+    "campus_food": "A+",
+    "student_life": "A+",
+    "safety": "B"
+   }
+  },
+  "hofstra-university": {
+   "url": "https://www.niche.com/colleges/hofstra-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B+",
+    "value": "C+",
+    "diversity": "A",
+    "campus": "B",
+    "athletics": "B+",
+    "party_scene": "B+",
+    "professors": "B+",
+    "location": "C-",
+    "dorms": "B+",
+    "campus_food": "B+",
+    "student_life": "B+",
+    "safety": "B",
+    "student_wellness": "A+",
+    "future_readiness": "A+"
+   }
+  },
+  "long-island-university-liu": {
+   "url": "https://www.niche.com/colleges/long-island-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A",
+    "campus": "C",
+    "athletics": "B+",
+    "party_scene": "C+",
+    "professors": "B-",
+    "location": "B",
+    "dorms": "C-",
+    "campus_food": "B-",
+    "student_life": "C+",
+    "safety": "A"
+   }
+  },
+  "united-states-military-academy-army": {
+   "url": "https://www.niche.com/colleges/united-states-military-academy-at-west-point/",
+   "grades": {
+    "overall": "A-",
+    "academics": "A+",
+    "diversity": "B+",
+    "campus": "D+",
+    "athletics": "C-",
+    "party_scene": "C-",
+    "professors": "A-",
+    "location": "C",
+    "dorms": "C",
+    "campus_food": "C-",
+    "student_life": "D"
+   }
+  },
+  "university-at-buffalo": {
+   "url": "https://www.niche.com/colleges/university-at-buffalo-suny/",
+   "grades": {
+    "overall": "A-",
+    "academics": "A-",
+    "value": "B",
+    "diversity": "A",
+    "campus": "B-",
+    "athletics": "B+",
+    "party_scene": "A-",
+    "professors": "A",
+    "location": "B-",
+    "dorms": "B-",
+    "campus_food": "B+",
+    "student_life": "A-",
+    "safety": "B+",
+    "student_wellness": "A",
+    "future_readiness": "A+"
+   }
+  },
+  "kent-state-university": {
+   "url": "https://www.niche.com/colleges/kent-state-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "B+",
+    "athletics": "B+",
+    "party_scene": "A",
+    "professors": "B+",
+    "location": "A-",
+    "dorms": "B",
+    "campus_food": "B",
+    "student_life": "A",
+    "safety": "B"
+   }
+  },
+  "ohio-state-university": {
+   "url": "https://www.niche.com/colleges/the-ohio-state-university/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A",
+    "value": "B",
+    "diversity": "A",
+    "campus": "A",
+    "athletics": "A+",
+    "party_scene": "A+",
+    "professors": "A+",
+    "location": "A+",
+    "dorms": "B",
+    "campus_food": "A+",
+    "student_life": "A+",
+    "safety": "C-",
+    "future_readiness": "A"
+   }
+  },
+  "ohio-university": {
+   "url": "https://www.niche.com/colleges/ohio-university/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B",
+    "value": "B+",
+    "diversity": "B",
+    "campus": "A",
+    "athletics": "B+",
+    "party_scene": "A+",
+    "professors": "B+",
+    "location": "A-",
+    "dorms": "B",
+    "campus_food": "B+",
+    "student_life": "A+",
+    "safety": "B-"
+   }
+  },
+  "oklahoma-state-university-stillwater-oklahoma-state": {
+   "url": "https://www.niche.com/colleges/oklahoma-state-university/",
+   "grades": {
+    "overall": "A",
+    "academics": "A",
+    "value": "B+",
+    "diversity": "A-",
+    "campus": "A",
+    "athletics": "A",
+    "party_scene": "A",
+    "professors": "A+",
+    "location": "B",
+    "dorms": "A-",
+    "campus_food": "A",
+    "student_life": "A+",
+    "safety": "B"
+   }
+  },
+  "university-of-oklahoma": {
+   "url": "https://www.niche.com/colleges/university-of-oklahoma/",
+   "grades": {
+    "overall": "A",
+    "academics": "A",
+    "value": "B",
+    "diversity": "A",
+    "campus": "A-",
+    "athletics": "A+",
+    "party_scene": "A+",
+    "professors": "A",
+    "dorms": "B-",
+    "campus_food": "A",
+    "student_life": "A+",
+    "safety": "B"
+   }
+  },
+  "oregon-state-university": {
+   "url": "https://www.niche.com/colleges/oregon-state-university/",
+   "grades": {
+    "overall": "A-",
+    "academics": "A-",
+    "value": "B+",
+    "diversity": "A",
+    "campus": "B+",
+    "athletics": "A",
+    "party_scene": "A",
+    "professors": "A",
+    "location": "B+",
+    "dorms": "C+",
+    "campus_food": "B+",
+    "student_life": "A",
+    "safety": "B"
+   }
+  },
+  "bucknell-university": {
+   "url": "https://www.niche.com/colleges/bucknell-university/",
+   "grades": {
+    "overall": "A",
+    "academics": "A+",
+    "value": "B+",
+    "diversity": "B",
+    "campus": "B-",
+    "athletics": "B+",
+    "party_scene": "A",
+    "professors": "A",
+    "location": "B-",
+    "dorms": "C+",
+    "campus_food": "C",
+    "student_life": "B+",
+    "safety": "B-"
+   }
+  },
+  "commonwealth-university-bloomsburg-bloomsburg": {
+   "url": "https://www.niche.com/colleges/commonwealth-university-of-pennsylvania/",
+   "grades": {
+    "overall": "B-"
+   }
+  },
+  "commonwealth-university-lock-haven-lock-haven": {
+   "url": "https://www.niche.com/colleges/commonwealth-university-of-pennsylvania/",
+   "grades": {
+    "overall": "C+"
+   }
+  },
+  "drexel-university": {
+   "url": "https://www.niche.com/colleges/drexel-university/",
+   "grades": {
+    "overall": "A-",
+    "academics": "A-",
+    "value": "B+",
+    "diversity": "A+",
+    "campus": "C-",
+    "athletics": "B",
+    "party_scene": "B+",
+    "professors": "A+",
+    "location": "A",
+    "dorms": "C-",
+    "campus_food": "C",
+    "student_life": "B",
+    "safety": "C+"
+   }
+  },
+  "franklin-marshall-college": {
+   "url": "https://www.niche.com/colleges/franklin-and-marshall-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "A",
+    "value": "B-",
+    "diversity": "A",
+    "campus": "C-",
+    "athletics": "B-",
+    "party_scene": "B",
+    "professors": "A",
+    "location": "B",
+    "dorms": "C-",
+    "campus_food": "C-",
+    "student_life": "C+",
+    "safety": "C+"
+   }
+  },
+  "lehigh-university": {
+   "url": "https://www.niche.com/colleges/lehigh-university/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "A",
+    "diversity": "A",
+    "campus": "B",
+    "athletics": "B+",
+    "party_scene": "A+",
+    "professors": "A",
+    "location": "C+",
+    "dorms": "B-",
+    "campus_food": "C+",
+    "student_life": "A",
+    "safety": "B-"
+   }
+  },
+  "mercyhurst-university": {
+   "url": "https://www.niche.com/colleges/mercyhurst-university/",
+   "grades": {
+    "overall": "C",
+    "academics": "C+",
+    "value": "C+",
+    "diversity": "B+",
+    "campus": "C-",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "C+",
+    "location": "C+",
+    "dorms": "C",
+    "campus_food": "B-",
+    "student_life": "C+",
+    "safety": "C+"
+   }
+  },
+  "pennsylvania-state-university-penn-state": {
+   "url": "https://www.niche.com/colleges/penn-state/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A",
+    "value": "B+",
+    "diversity": "A",
+    "campus": "A",
+    "athletics": "A",
+    "party_scene": "A+",
+    "professors": "A+",
+    "location": "B+",
+    "dorms": "B",
+    "campus_food": "A-",
+    "student_life": "A+",
+    "safety": "B-"
+   }
+  },
+  "pennsylvania-western-university-clarion-clarion": {
+   "url": "https://www.niche.com/colleges/pennwest-clarion/",
+   "grades": {
+    "overall": "C+",
+    "value": "C+",
+    "diversity": "B",
+    "campus": "C",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "location": "B-",
+    "dorms": "A",
+    "campus_food": "C+",
+    "student_life": "C",
+    "safety": "B-"
+   }
+  },
+  "pennsylvania-western-university-edinboro-edinboro": {
+   "url": "https://www.niche.com/colleges/pennwest-edinboro/",
+   "grades": {
+    "overall": "C+",
+    "value": "C",
+    "diversity": "B+",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "B-",
+    "location": "B-",
+    "dorms": "A",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "B"
+   }
+  },
+  "university-of-pennsylvania-penn": {
+   "url": "https://www.niche.com/colleges/university-of-pennsylvania/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "A+",
+    "diversity": "A+",
+    "campus": "B+",
+    "athletics": "B+",
+    "party_scene": "A+",
+    "professors": "A+",
+    "location": "A+",
+    "dorms": "B",
+    "campus_food": "C",
+    "student_life": "A+",
+    "safety": "B-"
+   }
+  },
+  "university-of-pittsburgh": {
+   "url": "https://www.niche.com/colleges/university-of-pittsburgh/",
+   "grades": {
+    "overall": "A",
+    "academics": "A",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "B+",
+    "athletics": "A-",
+    "party_scene": "A",
+    "professors": "A+",
+    "location": "A+",
+    "dorms": "B",
+    "campus_food": "C",
+    "student_life": "A",
+    "safety": "C+",
+    "student_wellness": "A",
+    "future_readiness": "A+"
+   }
+  },
+  "brown-university": {
+   "url": "https://www.niche.com/colleges/brown-university/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "A",
+    "diversity": "A+",
+    "campus": "A-",
+    "athletics": "B+",
+    "party_scene": "A-",
+    "professors": "A+",
+    "location": "A+",
+    "dorms": "B-",
+    "campus_food": "B",
+    "student_life": "A+",
+    "safety": "B-"
+   }
+  },
+  "presbyterian-college": {
+   "url": "https://www.niche.com/colleges/presbyterian-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "B-",
+    "athletics": "B-",
+    "party_scene": "B+",
+    "professors": "B",
+    "location": "C",
+    "dorms": "C+",
+    "campus_food": "C+",
+    "student_life": "B-",
+    "safety": "C",
+    "student_wellness": "A"
+   }
+  },
+  "the-citadel": {
+   "url": "https://www.niche.com/colleges/citadel-military-college-of-south-carolina/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B",
+    "value": "B+",
+    "diversity": "B+",
+    "campus": "B-",
+    "athletics": "B+",
+    "party_scene": "C",
+    "professors": "B+",
+    "location": "A-",
+    "dorms": "C-",
+    "campus_food": "B-",
+    "student_life": "B+",
+    "safety": "B"
+   }
+  },
+  "south-dakota-state-university": {
+   "url": "https://www.niche.com/colleges/south-dakota-state-university/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "B",
+    "athletics": "A+",
+    "party_scene": "A-",
+    "professors": "A-",
+    "location": "B+",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "A-",
+    "safety": "B-"
+   }
+  },
+  "university-of-tennessee-at-chattanooga-chattanooga": {
+   "url": "https://www.niche.com/colleges/university-of-tennessee---chattanooga/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "B",
+    "campus": "A-",
+    "athletics": "B+",
+    "party_scene": "B+",
+    "professors": "B+",
+    "location": "A-",
+    "dorms": "B+",
+    "campus_food": "B+",
+    "student_life": "B+",
+    "safety": "C+"
+   }
+  },
+  "utah-valley-university": {
+   "url": "https://www.niche.com/colleges/utah-valley-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "B",
+    "campus": "A",
+    "athletics": "B+",
+    "party_scene": "B+",
+    "professors": "C",
+    "location": "B+",
+    "student_life": "A-",
+    "safety": "A-"
+   }
+  },
+  "george-mason-university": {
+   "url": "https://www.niche.com/colleges/george-mason-university/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B+",
+    "value": "B+",
+    "diversity": "A+",
+    "campus": "B-",
+    "athletics": "B+",
+    "party_scene": "B-",
+    "professors": "B+",
+    "location": "A",
+    "dorms": "B-",
+    "campus_food": "B",
+    "student_life": "B+",
+    "safety": "B"
+   }
+  },
+  "university-of-virginia": {
+   "url": "https://www.niche.com/colleges/university-of-virginia/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "B+",
+    "diversity": "A",
+    "campus": "A-",
+    "athletics": "A+",
+    "party_scene": "A+",
+    "professors": "A+",
+    "location": "A-",
+    "dorms": "B",
+    "campus_food": "C-",
+    "student_life": "A+",
+    "safety": "C+"
+   }
+  },
+  "virginia-military-institute-vmi": {
+   "url": "https://www.niche.com/colleges/virginia-military-institute/",
+   "grades": {
+    "overall": "A-",
+    "academics": "B+",
+    "value": "A",
+    "diversity": "B",
+    "campus": "C-",
+    "athletics": "B",
+    "party_scene": "C-",
+    "professors": "B",
+    "location": "B",
+    "dorms": "D+",
+    "campus_food": "C-",
+    "student_life": "C+",
+    "safety": "B"
+   }
+  },
+  "virginia-tech": {
+   "url": "https://www.niche.com/colleges/virginia-tech/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A",
+    "value": "A-",
+    "diversity": "A",
+    "campus": "A+",
+    "athletics": "A",
+    "party_scene": "A+",
+    "professors": "A+",
+    "location": "A-",
+    "dorms": "A-",
+    "campus_food": "A+",
+    "student_life": "A+",
+    "safety": "B"
+   }
+  },
+  "university-of-wisconsin-madison-wisconsin": {
+   "url": "https://www.niche.com/colleges/university-of-wisconsin-madison/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "A",
+    "diversity": "A",
+    "campus": "A",
+    "athletics": "A",
+    "party_scene": "A+",
+    "professors": "A",
+    "location": "A",
+    "dorms": "B",
+    "campus_food": "A",
+    "student_life": "A+",
+    "safety": "B-"
+   }
+  },
+  "west-virginia-university": {
+   "url": "https://www.niche.com/colleges/west-virginia-university/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B+",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "B+",
+    "athletics": "A-",
+    "party_scene": "A+",
+    "professors": "A",
+    "location": "A-",
+    "dorms": "B-",
+    "campus_food": "B-",
+    "student_life": "A+",
+    "safety": "C+"
+   }
+  },
+  "university-of-wyoming": {
+   "url": "https://www.niche.com/colleges/university-of-wyoming/",
+   "grades": {
+    "overall": "A-",
+    "academics": "A-",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "B",
+    "athletics": "A-",
+    "party_scene": "B+",
+    "professors": "A",
+    "location": "B+",
+    "dorms": "C+",
+    "campus_food": "B-",
+    "student_life": "A-",
+    "safety": "B-"
+   }
+  },
+  "university-of-montevallo": {
+   "url": "https://www.niche.com/colleges/university-of-montevallo/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "B",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "B-",
+    "dorms": "C+",
+    "campus_food": "B",
+    "student_life": "B",
+    "safety": "A"
+   }
+  },
+  "ouachita-baptist-university": {
+   "url": "https://www.niche.com/colleges/ouachita-baptist-university/",
+   "grades": {
+    "overall": "B+",
+    "academics": "A-",
+    "value": "B",
+    "diversity": "B",
+    "campus": "B+",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "B+",
+    "location": "C-",
+    "dorms": "B+",
+    "campus_food": "B+",
+    "student_life": "B+",
+    "safety": "A-"
+   }
+  },
+  "california-state-polytechnic-university-humboldt": {
+   "url": "https://www.niche.com/colleges/california-state-polytechnic-university-humboldt/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "C+",
+    "diversity": "B+",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B+",
+    "location": "B",
+    "dorms": "D+",
+    "campus_food": "C+",
+    "student_life": "C+",
+    "safety": "C+"
+   }
+  },
+  "menlo-college": {
+   "url": "https://www.niche.com/colleges/menlo-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A+",
+    "campus": "B",
+    "athletics": "B+",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "A-",
+    "dorms": "B",
+    "campus_food": "B",
+    "student_life": "B+",
+    "safety": "B+"
+   }
+  },
+  "san-francisco-state-university": {
+   "url": "https://www.niche.com/colleges/san-francisco-state-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "A-",
+    "diversity": "A",
+    "campus": "B-",
+    "athletics": "B-",
+    "party_scene": "B+",
+    "professors": "B",
+    "location": "A+",
+    "dorms": "C-",
+    "campus_food": "B",
+    "student_life": "B+",
+    "safety": "B-"
+   }
+  },
+  "vanguard-university": {
+   "url": "https://www.niche.com/colleges/vanguard-university-of-southern-california/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B-",
+    "value": "A-",
+    "diversity": "B+",
+    "campus": "B+",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "B-",
+    "location": "A+",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "B+",
+    "safety": "A-"
+   }
+  },
+  "adams-state-university": {
+   "url": "https://www.niche.com/colleges/adams-state-university/",
+   "grades": {
+    "overall": "C",
+    "academics": "C",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "C-",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B-",
+    "location": "C-",
+    "dorms": "B-",
+    "campus_food": "C",
+    "student_life": "C-",
+    "safety": "C"
+   }
+  },
+  "colorado-mesa-university": {
+   "url": "https://www.niche.com/colleges/colorado-mesa-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B+",
+    "professors": "B-",
+    "location": "B-",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "B-"
+   }
+  },
+  "colorado-school-of-mines": {
+   "url": "https://www.niche.com/colleges/colorado-school-of-mines/",
+   "grades": {
+    "overall": "A",
+    "academics": "A",
+    "value": "A",
+    "diversity": "B",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "A-",
+    "location": "A-",
+    "dorms": "C+",
+    "campus_food": "D+",
+    "student_life": "B",
+    "safety": "B+"
+   }
+  },
+  "colorado-state-university-pueblo": {
+   "url": "https://www.niche.com/colleges/colorado-state-university-pueblo/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A",
+    "campus": "B",
+    "athletics": "A-",
+    "party_scene": "B",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "B+",
+    "campus_food": "B+",
+    "student_life": "B",
+    "safety": "B-"
+   }
+  },
+  "western-colorado-university": {
+   "url": "https://www.niche.com/colleges/western-state-colorado-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B",
+    "location": "B+",
+    "dorms": "B+",
+    "campus_food": "C-",
+    "student_life": "B",
+    "safety": "B"
+   }
+  },
+  "university-of-bridgeport": {
+   "url": "https://www.niche.com/colleges/university-of-bridgeport/",
+   "grades": {
+    "overall": "C",
+    "academics": "C+",
+    "value": "C+",
+    "diversity": "A+",
+    "campus": "D+",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "C+",
+    "location": "C-",
+    "dorms": "C-",
+    "campus_food": "C",
+    "student_life": "C",
+    "safety": "B"
+   }
+  },
+  "emmanuel-university": {
+   "url": "https://www.niche.com/colleges/emmanuel-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B",
+    "value": "C+",
+    "diversity": "A-",
+    "campus": "C",
+    "athletics": "B+",
+    "party_scene": "C",
+    "professors": "C",
+    "location": "C+",
+    "dorms": "B-",
+    "campus_food": "C",
+    "student_life": "C+",
+    "safety": "A+"
+   }
+  },
+  "shorter-university": {
+   "url": "https://www.niche.com/colleges/shorter-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "C",
+    "athletics": "B-",
+    "party_scene": "C",
+    "professors": "B-",
+    "location": "B-",
+    "dorms": "B-",
+    "campus_food": "B-",
+    "student_life": "C+",
+    "safety": "A"
+   }
+  },
+  "upper-iowa-university": {
+   "url": "https://www.niche.com/colleges/upper-iowa-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "C+",
+    "diversity": "A-",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "A-",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "A"
+   }
+  },
+  "mckendree-university": {
+   "url": "https://www.niche.com/colleges/mckendree-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A",
+    "campus": "C+",
+    "athletics": "B+",
+    "party_scene": "B-",
+    "professors": "C",
+    "location": "B-",
+    "dorms": "C+",
+    "campus_food": "C+",
+    "student_life": "B",
+    "safety": "A-"
+   }
+  },
+  "quincy-university": {
+   "url": "https://www.niche.com/colleges/quincy-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A",
+    "campus": "C-",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "C+",
+    "location": "B",
+    "dorms": "C-",
+    "campus_food": "B-",
+    "student_life": "C+",
+    "safety": "B"
+   }
+  },
+  "university-of-indianapolis": {
+   "url": "https://www.niche.com/colleges/university-of-indianapolis/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "A",
+    "campus": "C",
+    "athletics": "B+",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "B-",
+    "campus_food": "C",
+    "student_life": "C+",
+    "safety": "C"
+   }
+  },
+  "fort-hays-state-university": {
+   "url": "https://www.niche.com/colleges/fort-hays-state-university/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B",
+    "value": "B+",
+    "diversity": "B",
+    "campus": "B+",
+    "athletics": "B",
+    "party_scene": "A",
+    "professors": "B",
+    "location": "B+",
+    "dorms": "B+",
+    "campus_food": "B",
+    "student_life": "A",
+    "safety": "B"
+   }
+  },
+  "newman-university-kansas": {
+   "url": "https://www.niche.com/colleges/newman-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "B-",
+    "location": "B+",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "A-"
+   }
+  },
+  "kentucky-wesleyan-college": {
+   "url": "https://www.niche.com/colleges/kentucky-wesleyan-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "C+",
+    "diversity": "A-",
+    "campus": "C+",
+    "athletics": "A-",
+    "party_scene": "C+",
+    "professors": "C",
+    "location": "B",
+    "dorms": "B",
+    "campus_food": "B",
+    "student_life": "B-",
+    "safety": "B"
+   }
+  },
+  "thomas-more-university": {
+   "url": "https://www.niche.com/colleges/thomas-more-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B+",
+    "diversity": "A-",
+    "campus": "B",
+    "athletics": "B-",
+    "party_scene": "C",
+    "professors": "B-",
+    "location": "A-",
+    "dorms": "B-",
+    "campus_food": "B",
+    "student_life": "B",
+    "safety": "A+"
+   }
+  },
+  "frostburg-state-university": {
+   "url": "https://www.niche.com/colleges/frostburg-state-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B",
+    "diversity": "A",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "A-",
+    "professors": "A-",
+    "location": "B-",
+    "dorms": "C",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "B"
+   }
+  },
+  "davenport-university": {
+   "url": "https://www.niche.com/colleges/davenport-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C",
+    "value": "C+",
+    "diversity": "B+",
+    "campus": "A-",
+    "athletics": "B+",
+    "party_scene": "C+",
+    "professors": "C",
+    "location": "B-",
+    "dorms": "A+",
+    "campus_food": "A-",
+    "student_life": "B+",
+    "safety": "A-"
+   }
+  },
+  "grand-valley-state-university": {
+   "url": "https://www.niche.com/colleges/grand-valley-state-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B+",
+    "diversity": "B",
+    "campus": "B+",
+    "athletics": "A+",
+    "party_scene": "B+",
+    "professors": "B+",
+    "location": "B",
+    "dorms": "B+",
+    "campus_food": "B",
+    "student_life": "A-",
+    "safety": "B-"
+   }
+  },
+  "northern-michigan-university": {
+   "url": "https://www.niche.com/colleges/northern-michigan-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "A",
+    "dorms": "B+",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "B",
+    "student_wellness": "A+"
+   }
+  },
+  "minnesota-state-university-moorhead": {
+   "url": "https://www.niche.com/colleges/minnesota-state-university-moorhead/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "B",
+    "athletics": "B-",
+    "party_scene": "B",
+    "professors": "B-",
+    "location": "B-",
+    "dorms": "A-",
+    "campus_food": "B",
+    "student_life": "B",
+    "safety": "B+"
+   }
+  },
+  "southwest-minnesota-state-university": {
+   "url": "https://www.niche.com/colleges/southwest-minnesota-state-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B+",
+    "diversity": "A-",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "B",
+    "campus_food": "B",
+    "student_life": "B-",
+    "safety": "A"
+   }
+  },
+  "st-cloud-state-university": {
+   "url": "https://www.niche.com/colleges/st-cloud-state-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "A",
+    "campus": "C+",
+    "athletics": "B+",
+    "party_scene": "B+",
+    "professors": "B-",
+    "location": "B-",
+    "dorms": "C+",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "B-"
+   }
+  },
+  "drury-university": {
+   "url": "https://www.niche.com/colleges/drury-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B+",
+    "value": "C+",
+    "diversity": "A-",
+    "campus": "B",
+    "athletics": "A-",
+    "party_scene": "B+",
+    "professors": "B+",
+    "location": "B",
+    "dorms": "B-",
+    "campus_food": "B",
+    "student_life": "A-",
+    "safety": "B-"
+   }
+  },
+  "maryville-university": {
+   "url": "https://www.niche.com/colleges/maryville-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "A-",
+    "campus": "A-",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "C+",
+    "location": "A-",
+    "dorms": "A",
+    "campus_food": "A-",
+    "student_life": "A",
+    "safety": "A-"
+   }
+  },
+  "university-of-central-missouri": {
+   "url": "https://www.niche.com/colleges/university-of-central-missouri/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "B",
+    "athletics": "A",
+    "party_scene": "A",
+    "professors": "B",
+    "location": "B-",
+    "dorms": "B-",
+    "campus_food": "B",
+    "student_life": "A-",
+    "safety": "B"
+   }
+  },
+  "william-jewell-college": {
+   "url": "https://www.niche.com/colleges/william-jewell-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B+",
+    "diversity": "B+",
+    "campus": "C-",
+    "athletics": "B-",
+    "party_scene": "C",
+    "professors": "C+",
+    "location": "B-",
+    "dorms": "C-",
+    "campus_food": "C",
+    "student_life": "C",
+    "safety": "B+"
+   }
+  },
+  "belmont-abbey-college": {
+   "url": "https://www.niche.com/colleges/belmont-abbey-college/",
+   "grades": {
+    "overall": "C",
+    "academics": "C",
+    "value": "C+",
+    "diversity": "A",
+    "campus": "C",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "C",
+    "location": "B",
+    "dorms": "C",
+    "campus_food": "C-",
+    "student_life": "C+",
+    "safety": "B-"
+   }
+  },
+  "university-of-mount-olive": {
+   "url": "https://www.niche.com/colleges/university-of-mount-olive/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B-",
+    "diversity": "A",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "C+",
+    "location": "C",
+    "dorms": "B-",
+    "campus_food": "B",
+    "student_life": "B-",
+    "safety": "A+"
+   }
+  },
+  "university-of-north-carolina-at-pembroke": {
+   "url": "https://www.niche.com/colleges/university-of-north-carolina-at-pembroke/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "A",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "A-",
+    "location": "C-",
+    "dorms": "B+",
+    "campus_food": "B+",
+    "student_life": "B",
+    "safety": "C+"
+   }
+  },
+  "minot-state-university": {
+   "url": "https://www.niche.com/colleges/minot-state-university/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B+",
+    "value": "B+",
+    "diversity": "A",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B-",
+    "location": "B",
+    "dorms": "B",
+    "campus_food": "A-",
+    "student_life": "A-",
+    "safety": "A-"
+   }
+  },
+  "university-of-jamestown": {
+   "url": "https://www.niche.com/colleges/university-of-jamestown/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B+",
+    "diversity": "A-",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B",
+    "location": "C+",
+    "dorms": "B+",
+    "campus_food": "C",
+    "student_life": "B-",
+    "safety": "B"
+   }
+  },
+  "university-of-mary": {
+   "url": "https://www.niche.com/colleges/university-of-mary/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "C+",
+    "location": "C+",
+    "dorms": "B+",
+    "campus_food": "A",
+    "student_life": "B",
+    "safety": "A-"
+   }
+  },
+  "chadron-state-college": {
+   "url": "https://www.niche.com/colleges/chadron-state-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "B+",
+    "athletics": "B",
+    "party_scene": "B+",
+    "professors": "B-",
+    "location": "B+",
+    "dorms": "A",
+    "campus_food": "C+",
+    "student_life": "B+",
+    "safety": "B"
+   }
+  },
+  "university-of-nebraska-at-kearney": {
+   "url": "https://www.niche.com/colleges/university-of-nebraska-at-kearney/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "B+",
+    "athletics": "B",
+    "party_scene": "B+",
+    "professors": "B",
+    "location": "B+",
+    "dorms": "B+",
+    "campus_food": "B",
+    "student_life": "B+",
+    "safety": "B"
+   }
+  },
+  "felician-university": {
+   "url": "https://www.niche.com/colleges/felician-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C",
+    "value": "B+",
+    "diversity": "A",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "C",
+    "location": "A-",
+    "dorms": "C-",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "B+"
+   }
+  },
+  "new-mexico-highlands-university": {
+   "url": "https://www.niche.com/colleges/new-mexico-highlands-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "C",
+    "athletics": "B-",
+    "party_scene": "C+",
+    "professors": "B+",
+    "location": "C+",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "C",
+    "safety": "B+"
+   }
+  },
+  "d-youville-university": {
+   "url": "https://www.niche.com/colleges/dyouville-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "A-",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "B+",
+    "dorms": "B-",
+    "campus_food": "B+",
+    "student_life": "B+",
+    "safety": "B"
+   }
+  },
+  "ashland-university": {
+   "url": "https://www.niche.com/colleges/ashland-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "B",
+    "campus": "B",
+    "athletics": "A-",
+    "party_scene": "B-",
+    "professors": "C+",
+    "location": "B-",
+    "dorms": "C+",
+    "campus_food": "A",
+    "student_life": "B",
+    "safety": "B+"
+   }
+  },
+  "lake-erie-college": {
+   "url": "https://www.niche.com/colleges/lake-erie-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "C+",
+    "diversity": "A-",
+    "campus": "C-",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "C+",
+    "location": "C",
+    "dorms": "C-",
+    "campus_food": "C+",
+    "student_life": "C",
+    "safety": "A-"
+   }
+  },
+  "tiffin-university": {
+   "url": "https://www.niche.com/colleges/tiffin-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "C+",
+    "diversity": "A",
+    "campus": "B+",
+    "athletics": "B+",
+    "party_scene": "B",
+    "professors": "C+",
+    "location": "B",
+    "dorms": "B+",
+    "campus_food": "B-",
+    "student_life": "B+",
+    "safety": "B+",
+    "future_readiness": "A"
+   }
+  },
+  "university-of-findlay": {
+   "url": "https://www.niche.com/colleges/university-of-findlay/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B-",
+    "diversity": "B",
+    "campus": "B-",
+    "athletics": "A-",
+    "party_scene": "C+",
+    "professors": "B-",
+    "location": "B-",
+    "dorms": "B",
+    "campus_food": "C+",
+    "student_life": "B-",
+    "safety": "B+"
+   }
+  },
+  "northeastern-state-university": {
+   "url": "https://www.niche.com/colleges/northeastern-state-university/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "B+",
+    "athletics": "B+",
+    "party_scene": "B+",
+    "professors": "B+",
+    "location": "B",
+    "dorms": "B",
+    "campus_food": "A",
+    "student_life": "B+",
+    "safety": "B+"
+   }
+  },
+  "university-of-central-oklahoma": {
+   "url": "https://www.niche.com/colleges/university-of-central-oklahoma/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B+",
+    "value": "B-",
+    "diversity": "A",
+    "campus": "A-",
+    "athletics": "B+",
+    "party_scene": "B",
+    "professors": "B",
+    "location": "B+",
+    "dorms": "B+",
+    "campus_food": "A-",
+    "student_life": "A-",
+    "safety": "B+"
+   }
+  },
+  "east-stroudsburg-university": {
+   "url": "https://www.niche.com/colleges/east-stroudsburg-university-of-pennsylvania/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "A",
+    "professors": "B",
+    "location": "B+",
+    "dorms": "B+",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "C"
+   }
+  },
+  "gannon-university": {
+   "url": "https://www.niche.com/colleges/gannon-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B",
+    "value": "B",
+    "diversity": "A",
+    "campus": "C-",
+    "athletics": "B",
+    "party_scene": "B+",
+    "professors": "B",
+    "location": "C+",
+    "dorms": "B-",
+    "campus_food": "C+",
+    "student_life": "B-",
+    "safety": "B"
+   }
+  },
+  "kutztown-university": {
+   "url": "https://www.niche.com/colleges/kutztown-university-of-pennsylvania/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "A-",
+    "athletics": "B",
+    "party_scene": "A-",
+    "professors": "B",
+    "location": "A-",
+    "dorms": "B",
+    "campus_food": "B+",
+    "student_life": "A-",
+    "safety": "B"
+   }
+  },
+  "millersville-university": {
+   "url": "https://www.niche.com/colleges/millersville-university-of-pennsylvania/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B",
+    "location": "B+",
+    "dorms": "A-",
+    "campus_food": "C+",
+    "student_life": "B-",
+    "safety": "B+"
+   }
+  },
+  "point-park-university": {
+   "url": "https://www.niche.com/colleges/point-park-university/",
+   "grades": {
+    "overall": "C",
+    "academics": "C",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "C-",
+    "athletics": "B-",
+    "party_scene": "B",
+    "professors": "C+",
+    "location": "A+",
+    "dorms": "C-",
+    "campus_food": "D+",
+    "student_life": "B-",
+    "safety": "B"
+   }
+  },
+  "seton-hill-university": {
+   "url": "https://www.niche.com/colleges/seton-hill-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B-",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "B+",
+    "location": "B",
+    "dorms": "C",
+    "campus_food": "B+",
+    "student_life": "B-",
+    "safety": "B+"
+   }
+  },
+  "shippensburg-university": {
+   "url": "https://www.niche.com/colleges/shippensburg-university-of-pennsylvania/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B+",
+    "professors": "B",
+    "location": "B-",
+    "dorms": "A",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "B"
+   }
+  },
+  "university-of-pittsburgh-at-johnstown": {
+   "url": "https://www.niche.com/colleges/university-of-pittsburgh-johnstown/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "C",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B",
+    "location": "C",
+    "dorms": "C+",
+    "campus_food": "C",
+    "student_life": "C+",
+    "safety": "B-"
+   }
+  },
+  "allen-university": {
+   "url": "https://www.niche.com/colleges/allen-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "C+",
+    "diversity": "B-",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B+",
+    "professors": "B-",
+    "location": "A-",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "A"
+   }
+  },
+  "coker-university": {
+   "url": "https://www.niche.com/colleges/coker-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "C",
+    "diversity": "A",
+    "campus": "C",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "B-",
+    "campus_food": "C+",
+    "student_life": "C+",
+    "safety": "B"
+   }
+  },
+  "lander-university": {
+   "url": "https://www.niche.com/colleges/lander-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "B+",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B",
+    "location": "C+",
+    "dorms": "B+",
+    "campus_food": "B",
+    "student_life": "B",
+    "safety": "B-"
+   }
+  },
+  "newberry-college": {
+   "url": "https://www.niche.com/colleges/newberry-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "C",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "C+",
+    "location": "C+",
+    "dorms": "C+",
+    "campus_food": "B-",
+    "student_life": "C+",
+    "safety": "B-"
+   }
+  },
+  "augustana-university": {
+   "url": "https://www.niche.com/colleges/augustana-university/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B+",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "B",
+    "athletics": "A",
+    "party_scene": "B",
+    "professors": "B",
+    "location": "B",
+    "dorms": "B+",
+    "campus_food": "B",
+    "student_life": "A-",
+    "safety": "B",
+    "future_readiness": "A"
+   }
+  },
+  "northern-state-university": {
+   "url": "https://www.niche.com/colleges/northern-state-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "B",
+    "campus": "A-",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "B",
+    "dorms": "A",
+    "campus_food": "B",
+    "student_life": "B+",
+    "safety": "B+"
+   }
+  },
+  "university-of-sioux-falls": {
+   "url": "https://www.niche.com/colleges/university-of-sioux-falls/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "B-",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "C+",
+    "location": "B",
+    "dorms": "B-",
+    "campus_food": "B",
+    "student_life": "B",
+    "safety": "A-"
+   }
+  },
+  "king-university": {
+   "url": "https://www.niche.com/colleges/king-university-tennessee/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "C-",
+    "athletics": "B",
+    "party_scene": "C-",
+    "professors": "B-",
+    "location": "B",
+    "dorms": "D+",
+    "campus_food": "C",
+    "student_life": "C+",
+    "safety": "B"
+   }
+  },
+  "lincoln-memorial-university": {
+   "url": "https://www.niche.com/colleges/lincoln-memorial-university/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "B+",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "A-",
+    "location": "C",
+    "dorms": "A+",
+    "campus_food": "B",
+    "student_life": "B-",
+    "safety": "A-"
+   }
+  },
+  "texas-woman-s-university": {
+   "url": "https://www.niche.com/colleges/texas-womans-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "A-",
+    "diversity": "B+",
+    "campus": "A-",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "B-",
+    "location": "A-",
+    "dorms": "B+",
+    "campus_food": "B",
+    "student_life": "B+",
+    "safety": "B"
+   }
+  },
+  "emory-and-henry-university": {
+   "url": "https://www.niche.com/colleges/emory-and-henry-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "C-",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "B",
+    "location": "C",
+    "dorms": "C",
+    "campus_food": "C-",
+    "student_life": "C",
+    "safety": "B-"
+   }
+  },
+  "ferrum-college": {
+   "url": "https://www.niche.com/colleges/ferrum-college/",
+   "grades": {
+    "overall": "C",
+    "academics": "C",
+    "value": "C+",
+    "diversity": "A-",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B-",
+    "location": "C-",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "B-"
+   }
+  },
+  "university-of-wisconsin-parkside": {
+   "url": "https://www.niche.com/colleges/university-of-wisconsin-parkside/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "B",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "B+",
+    "dorms": "B-",
+    "campus_food": "B+",
+    "student_life": "B",
+    "safety": "A"
+   }
+  },
+  "bluefield-state-university": {
+   "url": "https://www.niche.com/colleges/bluefield-state-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "C-",
+    "athletics": "C-",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "D",
+    "campus_food": "B",
+    "student_life": "C-",
+    "safety": "B+"
+   }
+  },
+  "concord-university": {
+   "url": "https://www.niche.com/colleges/concord-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B+",
+    "location": "C+",
+    "dorms": "A",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "A"
+   }
+  },
+  "davis-elkins-college": {
+   "url": "https://www.niche.com/colleges/davis-and-elkins-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "A",
+    "campus": "C",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "C+",
+    "location": "C+",
+    "dorms": "C+",
+    "campus_food": "C+",
+    "student_life": "C",
+    "safety": "B-"
+   }
+  },
+  "fairmont-state-university": {
+   "url": "https://www.niche.com/colleges/fairmont-state-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "B",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "B",
+    "campus_food": "A-",
+    "student_life": "B",
+    "safety": "B"
+   }
+  },
+  "glenville-state-university": {
+   "url": "https://www.niche.com/colleges/glenville-state-university/",
+   "grades": {
+    "overall": "C-",
+    "academics": "C-",
+    "value": "C+",
+    "diversity": "C+",
+    "campus": "C+",
+    "athletics": "B+",
+    "party_scene": "C+",
+    "professors": "C+",
+    "location": "C+",
+    "dorms": "B+",
+    "campus_food": "C+",
+    "student_life": "C",
+    "safety": "A-"
+   }
+  },
+  "salem-university": {
+   "url": "https://www.niche.com/colleges/salem-university/",
+   "grades": {
+    "overall": "C-",
+    "academics": "C",
+    "value": "C",
+    "diversity": "A+",
+    "campus": "C-",
+    "athletics": "B-",
+    "party_scene": "C+",
+    "professors": "C+",
+    "location": "C-",
+    "dorms": "C",
+    "campus_food": "C+",
+    "student_life": "C",
+    "safety": "A+"
+   }
+  },
+  "west-liberty-university": {
+   "url": "https://www.niche.com/colleges/west-liberty-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B",
+    "location": "C",
+    "dorms": "B-",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "A-"
+   }
+  },
+  "wheeling-university": {
+   "url": "https://www.niche.com/colleges/wheeling-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "B-",
+    "athletics": "B+",
+    "party_scene": "B-",
+    "professors": "C+",
+    "location": "C+",
+    "dorms": "B-",
+    "campus_food": "B-",
+    "student_life": "C+",
+    "safety": "B"
+   }
+  },
+  "huntingdon-college": {
+   "url": "https://www.niche.com/colleges/huntingdon-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B+",
+    "professors": "B-",
+    "location": "B-",
+    "dorms": "B",
+    "campus_food": "A-",
+    "student_life": "B+",
+    "safety": "B"
+   }
+  },
+  "lyon-college": {
+   "url": "https://www.niche.com/colleges/lyon-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "A",
+    "campus": "C-",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "B",
+    "location": "C-",
+    "dorms": "B-",
+    "campus_food": "C-",
+    "student_life": "C",
+    "safety": "B-"
+   }
+  },
+  "university-of-the-ozarks": {
+   "url": "https://www.niche.com/colleges/university-of-the-ozarks/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B+",
+    "diversity": "A+",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "B",
+    "location": "C",
+    "dorms": "C+",
+    "campus_food": "C+",
+    "student_life": "B",
+    "safety": "B+"
+   }
+  },
+  "trinity-college-connecticut": {
+   "url": "https://www.niche.com/colleges/trinity-college/",
+   "grades": {
+    "overall": "A",
+    "academics": "A",
+    "value": "A",
+    "diversity": "A",
+    "campus": "C",
+    "athletics": "B+",
+    "party_scene": "A",
+    "professors": "A",
+    "location": "C",
+    "dorms": "C",
+    "campus_food": "C+",
+    "student_life": "B",
+    "safety": "C"
+   }
+  },
+  "u-s-coast-guard-academy": {
+   "url": "https://www.niche.com/colleges/united-states-coast-guard-academy/",
+   "grades": {
+    "overall": "A-",
+    "academics": "A",
+    "diversity": "A-",
+    "campus": "C",
+    "party_scene": "C",
+    "professors": "B+",
+    "location": "B-",
+    "dorms": "B-",
+    "student_life": "C",
+    "safety": "B-"
+   }
+  },
+  "wesleyan-university": {
+   "url": "https://www.niche.com/colleges/wesleyan-university/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "B+",
+    "diversity": "A+",
+    "campus": "B+",
+    "athletics": "B",
+    "party_scene": "B+",
+    "professors": "A",
+    "location": "B-",
+    "dorms": "B+",
+    "campus_food": "A+",
+    "student_life": "A",
+    "safety": "B"
+   }
+  },
+  "buena-vista-university": {
+   "url": "https://www.niche.com/colleges/buena-vista-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "B",
+    "campus": "C+",
+    "athletics": "B-",
+    "party_scene": "B",
+    "professors": "C+",
+    "location": "C+",
+    "dorms": "B",
+    "campus_food": "C+",
+    "student_life": "B-",
+    "safety": "C+"
+   }
+  },
+  "central-college": {
+   "url": "https://www.niche.com/colleges/central-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "B-",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "B",
+    "location": "B",
+    "dorms": "B+",
+    "campus_food": "B",
+    "student_life": "B-",
+    "safety": "B"
+   }
+  },
+  "coe-college": {
+   "url": "https://www.niche.com/colleges/coe-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B+",
+    "value": "B+",
+    "diversity": "A-",
+    "campus": "D+",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "B",
+    "location": "C+",
+    "dorms": "C-",
+    "campus_food": "C-",
+    "student_life": "C",
+    "safety": "B-"
+   }
+  },
+  "loras-college": {
+   "url": "https://www.niche.com/colleges/loras-college/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "A",
+    "athletics": "B",
+    "party_scene": "B+",
+    "professors": "B",
+    "location": "B+",
+    "dorms": "A-",
+    "campus_food": "B+",
+    "student_life": "A",
+    "safety": "B",
+    "future_readiness": "A+"
+   }
+  },
+  "luther-college": {
+   "url": "https://www.niche.com/colleges/luther-college/",
+   "grades": {
+    "overall": "B+",
+    "academics": "A-",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "B+",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "B",
+    "location": "B",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "B+"
+   }
+  },
+  "simpson-college": {
+   "url": "https://www.niche.com/colleges/simpson-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "B-",
+    "campus": "B+",
+    "athletics": "B-",
+    "party_scene": "B",
+    "professors": "B-",
+    "location": "B",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "B-"
+   }
+  },
+  "university-of-dubuque": {
+   "url": "https://www.niche.com/colleges/university-of-dubuque/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "B",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "B",
+    "dorms": "C+",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "C+"
+   }
+  },
+  "wartburg-college": {
+   "url": "https://www.niche.com/colleges/wartburg-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "C+",
+    "diversity": "B+",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B+",
+    "professors": "B-",
+    "location": "B-",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "B+",
+    "future_readiness": "A"
+   }
+  },
+  "augustana-college-illinois": {
+   "url": "https://www.niche.com/colleges/augustana-college-illinois/",
+   "grades": {
+    "overall": "B",
+    "academics": "B+",
+    "value": "B-",
+    "diversity": "A",
+    "campus": "B",
+    "athletics": "B-",
+    "party_scene": "A",
+    "professors": "B",
+    "location": "C+",
+    "dorms": "B-",
+    "campus_food": "B+",
+    "student_life": "A-",
+    "safety": "B-",
+    "student_wellness": "A+"
+   }
+  },
+  "aurora-university": {
+   "url": "https://www.niche.com/colleges/aurora-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "C+",
+    "value": "A-",
+    "diversity": "A-",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "C+",
+    "location": "B",
+    "dorms": "B",
+    "campus_food": "B",
+    "student_life": "B",
+    "safety": "A"
+   }
+  },
+  "blackburn-college": {
+   "url": "https://www.niche.com/colleges/blackburn-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "B",
+    "campus": "B+",
+    "athletics": "C+",
+    "party_scene": "B-",
+    "professors": "B",
+    "location": "B+",
+    "dorms": "A-",
+    "campus_food": "B",
+    "student_life": "B",
+    "safety": "A-"
+   }
+  },
+  "elmhurst-university": {
+   "url": "https://www.niche.com/colleges/elmhurst-university/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B",
+    "value": "B+",
+    "diversity": "B+",
+    "campus": "B+",
+    "athletics": "B-",
+    "party_scene": "C+",
+    "professors": "B-",
+    "location": "B+",
+    "dorms": "B",
+    "campus_food": "B+",
+    "student_life": "B+",
+    "safety": "B+"
+   }
+  },
+  "eureka-college": {
+   "url": "https://www.niche.com/colleges/eureka-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "C+",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "C+",
+    "location": "B-",
+    "dorms": "B-",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "B"
+   }
+  },
+  "illinois-wesleyan-university": {
+   "url": "https://www.niche.com/colleges/illinois-wesleyan-university/",
+   "grades": {
+    "overall": "B+",
+    "academics": "A-",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "B-",
+    "athletics": "B+",
+    "party_scene": "B",
+    "professors": "B",
+    "location": "B+",
+    "dorms": "C-",
+    "campus_food": "B",
+    "student_life": "B+",
+    "safety": "B"
+   }
+  },
+  "millikin-university": {
+   "url": "https://www.niche.com/colleges/millikin-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B+",
+    "diversity": "A-",
+    "campus": "C",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B-",
+    "location": "C-",
+    "dorms": "C-",
+    "campus_food": "C+",
+    "student_life": "C+",
+    "safety": "C"
+   }
+  },
+  "north-central-college": {
+   "url": "https://www.niche.com/colleges/north-central-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "B-",
+    "location": "A",
+    "dorms": "B-",
+    "campus_food": "C+",
+    "student_life": "B",
+    "safety": "B-"
+   }
+  },
+  "university-of-chicago": {
+   "url": "https://www.niche.com/colleges/university-of-chicago/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "A",
+    "diversity": "A+",
+    "campus": "A-",
+    "athletics": "B-",
+    "party_scene": "B",
+    "professors": "A+",
+    "location": "B",
+    "dorms": "A+",
+    "campus_food": "B+",
+    "student_life": "A-",
+    "safety": "C+"
+   }
+  },
+  "wheaton-college-illinois": {
+   "url": "https://www.niche.com/colleges/wheaton-college-illinois/",
+   "grades": {
+    "overall": "A-",
+    "academics": "A-",
+    "value": "C+",
+    "diversity": "A-",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "C-",
+    "professors": "B+",
+    "location": "B",
+    "dorms": "A-",
+    "campus_food": "A-",
+    "student_life": "B+",
+    "safety": "A-",
+    "student_wellness": "A",
+    "future_readiness": "A+"
+   }
+  },
+  "manchester-university": {
+   "url": "https://www.niche.com/colleges/manchester-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "B",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B+",
+    "location": "C+",
+    "dorms": "C+",
+    "campus_food": "C+",
+    "student_life": "C+",
+    "safety": "B-"
+   }
+  },
+  "trine-university": {
+   "url": "https://www.niche.com/colleges/trine-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "B",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B+",
+    "professors": "B",
+    "location": "B",
+    "dorms": "A",
+    "campus_food": "B+",
+    "student_life": "A-",
+    "safety": "B"
+   }
+  },
+  "wabash-college": {
+   "url": "https://www.niche.com/colleges/wabash-college/",
+   "grades": {
+    "overall": "A",
+    "academics": "A-",
+    "value": "A-",
+    "diversity": "A-",
+    "campus": "B",
+    "party_scene": "B",
+    "professors": "A-",
+    "location": "C",
+    "dorms": "A",
+    "campus_food": "B-",
+    "student_life": "A",
+    "safety": "A-"
+   }
+  },
+  "bridgewater-state-university": {
+   "url": "https://www.niche.com/colleges/bridgewater-state-university/",
+   "grades": {
+    "overall": "C",
+    "academics": "C",
+    "value": "B",
+    "diversity": "B",
+    "campus": "C+",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "C",
+    "location": "C+",
+    "dorms": "C+",
+    "campus_food": "B+",
+    "student_life": "C+",
+    "safety": "B-"
+   }
+  },
+  "emmanuel-college": {
+   "url": "https://www.niche.com/colleges/emmanuel-college-massachusetts/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "C+",
+    "diversity": "B+",
+    "campus": "B-",
+    "athletics": "C+",
+    "party_scene": "B-",
+    "professors": "C+",
+    "location": "A+",
+    "dorms": "C+",
+    "campus_food": "B+",
+    "student_life": "B-",
+    "safety": "B+"
+   }
+  },
+  "springfield-college": {
+   "url": "https://www.niche.com/colleges/springfield-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B",
+    "value": "C+",
+    "diversity": "A-",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "A-",
+    "professors": "B",
+    "location": "C",
+    "dorms": "C+",
+    "campus_food": "C+",
+    "student_life": "B+",
+    "safety": "C+"
+   }
+  },
+  "western-new-england-university": {
+   "url": "https://www.niche.com/colleges/western-new-england-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "C+",
+    "diversity": "A-",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B+",
+    "location": "C",
+    "dorms": "C+",
+    "campus_food": "C+",
+    "student_life": "C+",
+    "safety": "B"
+   }
+  },
+  "williams-college": {
+   "url": "https://www.niche.com/colleges/williams-college/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "A",
+    "diversity": "A+",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "A",
+    "location": "C+",
+    "dorms": "B+",
+    "campus_food": "C-",
+    "student_life": "A-",
+    "safety": "B"
+   }
+  },
+  "worcester-polytechnic-institute": {
+   "url": "https://www.niche.com/colleges/worcester-polytechnic-institute/",
+   "grades": {
+    "overall": "A-",
+    "academics": "A",
+    "value": "A-",
+    "diversity": "A-",
+    "campus": "C",
+    "athletics": "B-",
+    "party_scene": "A-",
+    "professors": "B+",
+    "location": "B",
+    "dorms": "C",
+    "campus_food": "C-",
+    "student_life": "B+",
+    "safety": "B"
+   }
+  },
+  "johns-hopkins-university": {
+   "url": "https://www.niche.com/colleges/johns-hopkins-university/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "A+",
+    "diversity": "A+",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "A+",
+    "location": "B",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "A-",
+    "safety": "B-"
+   }
+  },
+  "mcdaniel-college": {
+   "url": "https://www.niche.com/colleges/mcdaniel-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "C+",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "B",
+    "location": "C",
+    "dorms": "C",
+    "campus_food": "C-",
+    "student_life": "B-",
+    "safety": "B-"
+   }
+  },
+  "maine-maritime-academy": {
+   "url": "https://www.niche.com/colleges/maine-maritime-academy/",
+   "grades": {
+    "overall": "B",
+    "academics": "B+",
+    "value": "A-",
+    "diversity": "C+",
+    "campus": "C",
+    "athletics": "C",
+    "party_scene": "C+",
+    "professors": "B-",
+    "location": "B-",
+    "dorms": "C+",
+    "campus_food": "C+",
+    "student_life": "C",
+    "safety": "A+"
+   }
+  },
+  "university-of-southern-maine": {
+   "url": "https://www.niche.com/colleges/university-of-southern-maine/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "B+",
+    "campus": "D+",
+    "athletics": "B-",
+    "party_scene": "C+",
+    "professors": "C+",
+    "location": "A-",
+    "dorms": "C-",
+    "campus_food": "C+",
+    "student_life": "C-",
+    "safety": "B-"
+   }
+  },
+  "adrian-college": {
+   "url": "https://www.niche.com/colleges/adrian-college/",
+   "grades": {
+    "overall": "C",
+    "academics": "C+",
+    "value": "B-",
+    "diversity": "A",
+    "campus": "B-",
+    "athletics": "B+",
+    "party_scene": "B+",
+    "professors": "C",
+    "location": "C",
+    "dorms": "C+",
+    "campus_food": "C",
+    "student_life": "B-",
+    "safety": "B-"
+   }
+  },
+  "albion-college": {
+   "url": "https://www.niche.com/colleges/albion-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B",
+    "value": "B",
+    "diversity": "A",
+    "campus": "C-",
+    "athletics": "B-",
+    "party_scene": "B",
+    "professors": "B+",
+    "location": "D+",
+    "dorms": "C-",
+    "campus_food": "C",
+    "student_life": "C",
+    "safety": "C+"
+   }
+  },
+  "alma-college": {
+   "url": "https://www.niche.com/colleges/alma-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "C+",
+    "diversity": "B",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "B+",
+    "campus_food": "C+",
+    "student_life": "B",
+    "safety": "B-",
+    "student_wellness": "A",
+    "future_readiness": "A"
+   }
+  },
+  "university-of-olivet": {
+   "url": "https://www.niche.com/colleges/the-university-of-olivet/",
+   "grades": {
+    "overall": "C",
+    "academics": "C",
+    "value": "C+",
+    "diversity": "B",
+    "campus": "C",
+    "athletics": "B-",
+    "party_scene": "B",
+    "professors": "C",
+    "location": "C",
+    "dorms": "B-",
+    "campus_food": "C+",
+    "student_life": "B-",
+    "safety": "A-"
+   }
+  },
+  "augsburg-university": {
+   "url": "https://www.niche.com/colleges/augsburg-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A",
+    "campus": "C+",
+    "athletics": "B-",
+    "party_scene": "B",
+    "professors": "B",
+    "location": "A",
+    "dorms": "C",
+    "campus_food": "C",
+    "student_life": "B-",
+    "safety": "C+"
+   }
+  },
+  "concordia-college-moorhead": {
+   "url": "https://www.niche.com/colleges/concordia-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B+",
+    "diversity": "B+",
+    "campus": "B+",
+    "athletics": "C+",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "A-",
+    "campus_food": "A",
+    "student_life": "B",
+    "safety": "B-"
+   }
+  },
+  "st-john-s-university-minnesota": {
+   "url": "https://www.niche.com/colleges/saint-johns-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "A-",
+    "diversity": "B",
+    "campus": "B",
+    "party_scene": "B+",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "B-",
+    "campus_food": "B",
+    "student_life": "B+",
+    "safety": "B-"
+   }
+  },
+  "westminster-college-missouri": {
+   "url": "https://www.niche.com/colleges/westminster-college-missouri/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "C+",
+    "diversity": "B",
+    "campus": "C+",
+    "athletics": "C+",
+    "party_scene": "B+",
+    "professors": "B-",
+    "location": "C",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "C+"
+   }
+  },
+  "greensboro-college": {
+   "url": "https://www.niche.com/colleges/greensboro-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "A",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B-",
+    "location": "B+",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "B"
+   }
+  },
+  "nebraska-wesleyan-university": {
+   "url": "https://www.niche.com/colleges/nebraska-wesleyan-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "B+",
+    "campus": "C+",
+    "athletics": "B+",
+    "party_scene": "B",
+    "professors": "C+",
+    "location": "B",
+    "dorms": "C",
+    "campus_food": "C+",
+    "student_life": "B",
+    "safety": "C+"
+   }
+  },
+  "new-england-college": {
+   "url": "https://www.niche.com/colleges/new-england-college/",
+   "grades": {
+    "overall": "C-",
+    "academics": "C+",
+    "value": "C-",
+    "diversity": "A+",
+    "campus": "C-",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "B-",
+    "campus_food": "C+",
+    "student_life": "C+",
+    "safety": "B+"
+   }
+  },
+  "plymouth-state-university": {
+   "url": "https://www.niche.com/colleges/plymouth-state-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "C+",
+    "athletics": "B-",
+    "party_scene": "A",
+    "professors": "B+",
+    "location": "B+",
+    "dorms": "C+",
+    "campus_food": "C-",
+    "student_life": "B",
+    "safety": "B-"
+   }
+  },
+  "centenary-university": {
+   "url": "https://www.niche.com/colleges/centenary-university/",
+   "grades": {
+    "overall": "C",
+    "academics": "C",
+    "value": "B",
+    "diversity": "B",
+    "campus": "C-",
+    "athletics": "B-",
+    "party_scene": "C",
+    "professors": "C",
+    "location": "B-",
+    "dorms": "C",
+    "campus_food": "B-",
+    "student_life": "C",
+    "safety": "B+"
+   }
+  },
+  "kean-university": {
+   "url": "https://www.niche.com/colleges/kean-university/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B",
+    "value": "A-",
+    "diversity": "A",
+    "campus": "A-",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B",
+    "location": "B+",
+    "dorms": "A-",
+    "campus_food": "A",
+    "student_life": "B+",
+    "safety": "A-"
+   }
+  },
+  "stevens-institute-of-technology": {
+   "url": "https://www.niche.com/colleges/stevens-institute-of-technology/",
+   "grades": {
+    "overall": "A-",
+    "academics": "A",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "B",
+    "athletics": "B-",
+    "party_scene": "B",
+    "professors": "B+",
+    "location": "A+",
+    "dorms": "B",
+    "campus_food": "C+",
+    "student_life": "A-",
+    "safety": "A-"
+   }
+  },
+  "the-college-of-new-jersey": {
+   "url": "https://www.niche.com/colleges/the-college-of-new-jersey/",
+   "grades": {
+    "overall": "B+",
+    "academics": "A-",
+    "value": "A-",
+    "diversity": "B+",
+    "campus": "C-",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "B+",
+    "location": "C",
+    "dorms": "C+",
+    "campus_food": "C-",
+    "student_life": "B-",
+    "safety": "B-"
+   }
+  },
+  "alfred-state-college": {
+   "url": "https://www.niche.com/colleges/suny-alfred-state-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "B-",
+    "campus": "B-",
+    "athletics": "C+",
+    "party_scene": "A-",
+    "professors": "C+",
+    "location": "B",
+    "dorms": "B",
+    "campus_food": "C",
+    "student_life": "B+",
+    "safety": "B"
+   }
+  },
+  "buffalo-state-university": {
+   "url": "https://www.niche.com/colleges/suny-buffalo-state-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "C-",
+    "athletics": "B-",
+    "party_scene": "A-",
+    "professors": "B",
+    "location": "B-",
+    "dorms": "C-",
+    "campus_food": "C+",
+    "student_life": "C",
+    "safety": "C"
+   }
+  },
+  "elmira-college": {
+   "url": "https://www.niche.com/colleges/elmira-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "C+",
+    "location": "C-",
+    "dorms": "C+",
+    "campus_food": "C",
+    "student_life": "B-",
+    "safety": "B"
+   }
+  },
+  "hunter-college": {
+   "url": "https://www.niche.com/colleges/cuny-hunter-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "A",
+    "diversity": "A-",
+    "campus": "D-",
+    "athletics": "C-",
+    "party_scene": "C+",
+    "professors": "B-",
+    "location": "A",
+    "student_life": "C-",
+    "safety": "A"
+   }
+  },
+  "ithaca-college": {
+   "url": "https://www.niche.com/colleges/ithaca-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B+",
+    "value": "C+",
+    "diversity": "B+",
+    "campus": "C-",
+    "athletics": "B",
+    "party_scene": "B+",
+    "professors": "A",
+    "location": "A",
+    "dorms": "C",
+    "campus_food": "D+",
+    "student_life": "B-",
+    "safety": "B+"
+   }
+  },
+  "new-york-university": {
+   "url": "https://www.niche.com/colleges/new-york-university/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "B",
+    "diversity": "A+",
+    "campus": "B-",
+    "athletics": "B-",
+    "party_scene": "A-",
+    "professors": "A+",
+    "location": "A+",
+    "dorms": "C+",
+    "campus_food": "B",
+    "student_life": "A-",
+    "safety": "B"
+   }
+  },
+  "rochester-institute-of-technology": {
+   "url": "https://www.niche.com/colleges/rochester-institute-of-technology/",
+   "grades": {
+    "overall": "B+",
+    "academics": "A-",
+    "value": "B+",
+    "diversity": "A-",
+    "campus": "C-",
+    "athletics": "C+",
+    "party_scene": "B-",
+    "professors": "A-",
+    "location": "B-",
+    "dorms": "C-",
+    "campus_food": "C",
+    "student_life": "B-",
+    "safety": "B+"
+   }
+  },
+  "st-john-fisher-university": {
+   "url": "https://www.niche.com/colleges/st-john-fisher-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B+",
+    "diversity": "B-",
+    "campus": "A",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B",
+    "location": "B+",
+    "dorms": "A",
+    "campus_food": "A+",
+    "student_life": "B+",
+    "safety": "A-"
+   }
+  },
+  "suny-brockport": {
+   "url": "https://www.niche.com/colleges/suny-brockport/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "B+",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "B+",
+    "professors": "C+",
+    "location": "B",
+    "dorms": "C+",
+    "campus_food": "C+",
+    "student_life": "B-",
+    "safety": "B"
+   }
+  },
+  "suny-cortland": {
+   "url": "https://www.niche.com/colleges/suny-cortland/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B",
+    "value": "B",
+    "diversity": "B",
+    "campus": "C+",
+    "athletics": "B+",
+    "party_scene": "A+",
+    "professors": "C+",
+    "location": "C",
+    "dorms": "B",
+    "campus_food": "C",
+    "student_life": "B+",
+    "safety": "B-"
+   }
+  },
+  "suny-oneonta": {
+   "url": "https://www.niche.com/colleges/suny-oneonta/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "B-",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "A+",
+    "professors": "B-",
+    "location": "B+",
+    "dorms": "B",
+    "campus_food": "C+",
+    "student_life": "A-",
+    "safety": "B+"
+   }
+  },
+  "suny-oswego": {
+   "url": "https://www.niche.com/colleges/suny-oswego/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "A",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "B-",
+    "campus_food": "B",
+    "student_life": "B",
+    "safety": "B"
+   }
+  },
+  "u-s-merchant-marine-academy": {
+   "url": "https://www.niche.com/colleges/united-states-merchant-marine-academy/",
+   "grades": {
+    "overall": "A-",
+    "academics": "B",
+    "value": "A+",
+    "diversity": "B-",
+    "campus": "C-",
+    "athletics": "B-",
+    "party_scene": "C",
+    "professors": "C-",
+    "location": "B-",
+    "dorms": "B",
+    "campus_food": "C-",
+    "student_life": "C+",
+    "safety": "B+"
+   }
+  },
+  "utica-university": {
+   "url": "https://www.niche.com/colleges/utica-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B+",
+    "diversity": "A-",
+    "campus": "C-",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "C-",
+    "dorms": "C+",
+    "campus_food": "C+",
+    "student_life": "C",
+    "safety": "B+"
+   }
+  },
+  "baldwin-wallace-university": {
+   "url": "https://www.niche.com/colleges/baldwin-wallace-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B+",
+    "value": "B-",
+    "diversity": "B",
+    "campus": "B",
+    "athletics": "B-",
+    "party_scene": "C+",
+    "professors": "B+",
+    "location": "B+",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "A-"
+   }
+  },
+  "case-western-reserve-university": {
+   "url": "https://www.niche.com/colleges/case-western-reserve-university/",
+   "grades": {
+    "overall": "A",
+    "academics": "A+",
+    "value": "B+",
+    "diversity": "A+",
+    "campus": "C-",
+    "athletics": "B-",
+    "party_scene": "C+",
+    "professors": "A+",
+    "location": "B-",
+    "dorms": "C-",
+    "campus_food": "C",
+    "student_life": "B-",
+    "safety": "C"
+   }
+  },
+  "heidelberg-university": {
+   "url": "https://www.niche.com/colleges/heidelberg-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B-",
+    "diversity": "B",
+    "campus": "B+",
+    "athletics": "B-",
+    "party_scene": "B",
+    "professors": "B-",
+    "location": "B",
+    "dorms": "A-",
+    "campus_food": "B",
+    "student_life": "B+",
+    "safety": "B+"
+   }
+  },
+  "john-carroll-university": {
+   "url": "https://www.niche.com/colleges/john-carroll-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B",
+    "diversity": "B",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B",
+    "location": "B+",
+    "dorms": "C",
+    "campus_food": "C",
+    "student_life": "B",
+    "safety": "B-"
+   }
+  },
+  "mount-st-joseph-university": {
+   "url": "https://www.niche.com/colleges/mount-st-joseph-university/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B",
+    "value": "A-",
+    "diversity": "B",
+    "campus": "B+",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "B",
+    "location": "B-",
+    "dorms": "A-",
+    "campus_food": "B",
+    "student_life": "B+",
+    "safety": "A"
+   }
+  },
+  "muskingum-university": {
+   "url": "https://www.niche.com/colleges/muskingum-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "B",
+    "campus": "B+",
+    "athletics": "B+",
+    "party_scene": "B",
+    "professors": "B",
+    "location": "B-",
+    "dorms": "B",
+    "campus_food": "C+",
+    "student_life": "B+",
+    "safety": "B-"
+   }
+  },
+  "ohio-northern-university": {
+   "url": "https://www.niche.com/colleges/ohio-northern-university/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B+",
+    "value": "B+",
+    "diversity": "B-",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "A-",
+    "location": "B-",
+    "dorms": "B",
+    "campus_food": "C",
+    "student_life": "B+",
+    "safety": "A-"
+   }
+  },
+  "ohio-wesleyan-university": {
+   "url": "https://www.niche.com/colleges/ohio-wesleyan-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B+",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "C-",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "C+",
+    "campus_food": "D-",
+    "student_life": "C+",
+    "safety": "C"
+   }
+  },
+  "otterbein-university": {
+   "url": "https://www.niche.com/colleges/otterbein-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "A-",
+    "diversity": "B",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B-",
+    "location": "A-",
+    "dorms": "C+",
+    "campus_food": "C-",
+    "student_life": "B+",
+    "safety": "B"
+   }
+  },
+  "university-of-mount-union": {
+   "url": "https://www.niche.com/colleges/university-of-mount-union/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B",
+    "campus": "A-",
+    "athletics": "A",
+    "party_scene": "B+",
+    "professors": "B",
+    "location": "C+",
+    "dorms": "A-",
+    "campus_food": "B",
+    "student_life": "A-",
+    "safety": "B"
+   }
+  },
+  "wilmington-college-ohio": {
+   "url": "https://www.niche.com/colleges/wilmington-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "C+",
+    "location": "C",
+    "dorms": "B-",
+    "campus_food": "C",
+    "student_life": "B-",
+    "safety": "B+"
+   }
+  },
+  "wittenberg-university": {
+   "url": "https://www.niche.com/colleges/wittenberg-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "C-",
+    "athletics": "B",
+    "party_scene": "B+",
+    "professors": "B",
+    "location": "C-",
+    "dorms": "C",
+    "campus_food": "C",
+    "student_life": "C",
+    "safety": "C-"
+   }
+  },
+  "linfield-university": {
+   "url": "https://www.niche.com/colleges/linfield-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "A-",
+    "diversity": "A-",
+    "campus": "C+",
+    "athletics": "A",
+    "party_scene": "B",
+    "professors": "B-",
+    "location": "B-",
+    "dorms": "C",
+    "campus_food": "C-",
+    "student_life": "B+",
+    "safety": "B+"
+   }
+  },
+  "pacific-university-oregon": {
+   "url": "https://www.niche.com/colleges/pacific-university-oregon/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B+",
+    "value": "C",
+    "diversity": "A",
+    "campus": "B-",
+    "athletics": "B-",
+    "party_scene": "C+",
+    "professors": "B+",
+    "location": "C",
+    "dorms": "B-",
+    "campus_food": "C",
+    "student_life": "B-",
+    "safety": "B+"
+   }
+  },
+  "alvernia-university": {
+   "url": "https://www.niche.com/colleges/alvernia-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "B-",
+    "athletics": "B-",
+    "party_scene": "C+",
+    "professors": "C",
+    "location": "B-",
+    "dorms": "A-",
+    "campus_food": "C",
+    "student_life": "B-",
+    "safety": "A-"
+   }
+  },
+  "arcadia-university": {
+   "url": "https://www.niche.com/colleges/arcadia-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B",
+    "value": "C+",
+    "diversity": "B+",
+    "campus": "C",
+    "athletics": "C+",
+    "party_scene": "C-",
+    "professors": "B-",
+    "location": "B+",
+    "dorms": "D+",
+    "campus_food": "C+",
+    "student_life": "C",
+    "safety": "B"
+   }
+  },
+  "cedar-crest-college": {
+   "url": "https://www.niche.com/colleges/cedar-crest-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C",
+    "value": "B+",
+    "diversity": "B",
+    "campus": "C",
+    "athletics": "C",
+    "party_scene": "C-",
+    "professors": "C",
+    "location": "B+",
+    "dorms": "C-",
+    "campus_food": "C",
+    "student_life": "C-",
+    "safety": "B-"
+   }
+  },
+  "chatham-university": {
+   "url": "https://www.niche.com/colleges/chatham-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "C+",
+    "diversity": "B",
+    "campus": "C+",
+    "athletics": "B-",
+    "party_scene": "C+",
+    "professors": "B-",
+    "location": "A+",
+    "dorms": "C+",
+    "campus_food": "C-",
+    "student_life": "C+",
+    "safety": "B"
+   }
+  },
+  "delaware-valley-university": {
+   "url": "https://www.niche.com/colleges/delaware-valley-university/",
+   "grades": {
+    "overall": "C",
+    "academics": "C+",
+    "value": "C+",
+    "diversity": "B+",
+    "campus": "C-",
+    "athletics": "B-",
+    "party_scene": "C+",
+    "professors": "C+",
+    "location": "B",
+    "dorms": "C-",
+    "campus_food": "D-",
+    "student_life": "C",
+    "safety": "B"
+   }
+  },
+  "eastern-university": {
+   "url": "https://www.niche.com/colleges/eastern-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B-",
+    "diversity": "A",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "C+",
+    "location": "A-",
+    "dorms": "C+",
+    "campus_food": "C-",
+    "student_life": "B-",
+    "safety": "B"
+   }
+  },
+  "elizabethtown-college": {
+   "url": "https://www.niche.com/colleges/elizabethtown-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "C+",
+    "diversity": "B",
+    "campus": "C+",
+    "athletics": "B-",
+    "party_scene": "C+",
+    "professors": "C+",
+    "location": "B",
+    "dorms": "C",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "B",
+    "student_wellness": "A",
+    "future_readiness": "A"
+   }
+  },
+  "gettysburg-college": {
+   "url": "https://www.niche.com/colleges/gettysburg-college/",
+   "grades": {
+    "overall": "B+",
+    "academics": "A-",
+    "value": "B",
+    "diversity": "A",
+    "campus": "B-",
+    "athletics": "B-",
+    "party_scene": "A-",
+    "professors": "B",
+    "location": "B-",
+    "dorms": "C+",
+    "campus_food": "A-",
+    "student_life": "B-",
+    "safety": "C+"
+   }
+  },
+  "keystone-college": {
+   "url": "https://www.niche.com/colleges/keystone-college/",
+   "grades": {
+    "overall": "C-",
+    "academics": "C",
+    "value": "C",
+    "diversity": "B-",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "C",
+    "location": "B",
+    "dorms": "B+",
+    "campus_food": "B",
+    "student_life": "B-",
+    "safety": "A-"
+   }
+  },
+  "king-s-college-pa": {
+   "url": "https://www.niche.com/colleges/kings-college-pennsylvania/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "B-",
+    "athletics": "C",
+    "party_scene": "B+",
+    "professors": "B",
+    "location": "B",
+    "dorms": "B+",
+    "campus_food": "B",
+    "student_life": "B+",
+    "safety": "B+"
+   }
+  },
+  "lycoming-college": {
+   "url": "https://www.niche.com/colleges/lycoming-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "C-",
+    "athletics": "B-",
+    "party_scene": "B",
+    "professors": "B",
+    "location": "B-",
+    "dorms": "C-",
+    "campus_food": "C-",
+    "student_life": "B-",
+    "safety": "C+"
+   }
+  },
+  "messiah-university": {
+   "url": "https://www.niche.com/colleges/messiah-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "B",
+    "athletics": "B+",
+    "party_scene": "D+",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "B",
+    "campus_food": "B+",
+    "student_life": "B-",
+    "safety": "A-"
+   }
+  },
+  "misericordia-university": {
+   "url": "https://www.niche.com/colleges/misericordia-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "B-",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "B",
+    "location": "C+",
+    "dorms": "A",
+    "campus_food": "C+",
+    "student_life": "B",
+    "safety": "B+"
+   }
+  },
+  "muhlenberg-college": {
+   "url": "https://www.niche.com/colleges/muhlenberg-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B+",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "B+",
+    "athletics": "B-",
+    "party_scene": "B",
+    "professors": "B",
+    "location": "C+",
+    "dorms": "B",
+    "campus_food": "A+",
+    "student_life": "B-",
+    "safety": "C+"
+   }
+  },
+  "penn-state-altoona": {
+   "url": "https://www.niche.com/colleges/penn-state-altoona/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "A-",
+    "campus": "B-",
+    "athletics": "C",
+    "party_scene": "B",
+    "professors": "B-",
+    "location": "B-",
+    "dorms": "B-",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "B-"
+   }
+  },
+  "penn-state-behrend": {
+   "url": "https://www.niche.com/colleges/penn-state-erie-the-behrend-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "A-",
+    "campus": "B-",
+    "athletics": "C",
+    "party_scene": "B-",
+    "professors": "B",
+    "location": "B-",
+    "dorms": "B-",
+    "campus_food": "C+",
+    "student_life": "B",
+    "safety": "A-"
+   }
+  },
+  "pennsylvania-college-of-technology": {
+   "url": "https://www.niche.com/colleges/pennsylvania-college-of-technology/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "C+",
+    "campus": "A-",
+    "athletics": "B-",
+    "party_scene": "B+",
+    "professors": "B-",
+    "location": "B-",
+    "dorms": "A",
+    "campus_food": "A",
+    "student_life": "B",
+    "safety": "B"
+   }
+  },
+  "saint-vincent-college": {
+   "url": "https://www.niche.com/colleges/saint-vincent-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B",
+    "value": "B",
+    "diversity": "B",
+    "campus": "C",
+    "athletics": "B-",
+    "party_scene": "C",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "C+",
+    "campus_food": "C-",
+    "student_life": "C",
+    "safety": "B+"
+   }
+  },
+  "thiel-college": {
+   "url": "https://www.niche.com/colleges/thiel-college/",
+   "grades": {
+    "overall": "C",
+    "academics": "C+",
+    "value": "C+",
+    "diversity": "B",
+    "campus": "C",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "C+",
+    "campus_food": "C-",
+    "student_life": "C+",
+    "safety": "B+",
+    "student_wellness": "A",
+    "future_readiness": "A"
+   }
+  },
+  "university-of-pittsburgh-at-bradford": {
+   "url": "https://www.niche.com/colleges/university-of-pittsburgh-bradford/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "A",
+    "campus": "C-",
+    "athletics": "B-",
+    "party_scene": "C",
+    "professors": "B",
+    "location": "C-",
+    "dorms": "B",
+    "campus_food": "C",
+    "student_life": "C-",
+    "safety": "B"
+   }
+  },
+  "university-of-scranton": {
+   "url": "https://www.niche.com/colleges/university-of-scranton/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B+",
+    "value": "B+",
+    "diversity": "B-",
+    "campus": "A-",
+    "athletics": "B-",
+    "party_scene": "A-",
+    "professors": "B+",
+    "location": "B-",
+    "dorms": "B",
+    "campus_food": "A",
+    "student_life": "A-",
+    "safety": "B"
+   }
+  },
+  "ursinus-college": {
+   "url": "https://www.niche.com/colleges/ursinus-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B",
+    "value": "B-",
+    "diversity": "B",
+    "campus": "B-",
+    "athletics": "B-",
+    "party_scene": "B",
+    "professors": "B",
+    "location": "B+",
+    "dorms": "C+",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "B"
+   }
+  },
+  "washington-and-jefferson-college": {
+   "url": "https://www.niche.com/colleges/washington-and-jefferson-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B",
+    "diversity": "B",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B",
+    "location": "B-",
+    "dorms": "C+",
+    "campus_food": "C",
+    "student_life": "B-",
+    "safety": "B+",
+    "student_wellness": "A+",
+    "future_readiness": "A"
+   }
+  },
+  "waynesburg-university": {
+   "url": "https://www.niche.com/colleges/waynesburg-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "B-",
+    "campus": "C",
+    "athletics": "C+",
+    "party_scene": "C-",
+    "professors": "B-",
+    "location": "D+",
+    "dorms": "C+",
+    "campus_food": "C-",
+    "student_life": "C-",
+    "safety": "A-"
+   }
+  },
+  "wilkes-university": {
+   "url": "https://www.niche.com/colleges/wilkes-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "B-",
+    "athletics": "B-",
+    "party_scene": "B",
+    "professors": "B+",
+    "location": "C+",
+    "dorms": "A-",
+    "campus_food": "C+",
+    "student_life": "B",
+    "safety": "B"
+   }
+  },
+  "york-college-of-pennsylvania": {
+   "url": "https://www.niche.com/colleges/york-college-of-pennsylvania/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "C+",
+    "athletics": "B-",
+    "party_scene": "A-",
+    "professors": "C+",
+    "location": "B+",
+    "dorms": "C+",
+    "campus_food": "C",
+    "student_life": "B",
+    "safety": "C+",
+    "future_readiness": "A"
+   }
+  },
+  "johnson-wales-university-ri": {
+   "url": "https://www.niche.com/colleges/johnson-and-wales-university-providence/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "C-",
+    "diversity": "A",
+    "campus": "B-",
+    "athletics": "B-",
+    "party_scene": "A",
+    "professors": "B-",
+    "location": "A+",
+    "dorms": "C+",
+    "campus_food": "C",
+    "student_life": "B+",
+    "safety": "B+"
+   }
+  },
+  "rhode-island-college": {
+   "url": "https://www.niche.com/colleges/rhode-island-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "A-",
+    "diversity": "B+",
+    "campus": "B-",
+    "athletics": "C+",
+    "party_scene": "C+",
+    "professors": "B-",
+    "location": "B+",
+    "dorms": "C+",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "A-"
+   }
+  },
+  "roger-williams-university": {
+   "url": "https://www.niche.com/colleges/roger-williams-university/",
+   "grades": {
+    "overall": "C",
+    "academics": "C+",
+    "value": "C",
+    "diversity": "B",
+    "campus": "B-",
+    "athletics": "B-",
+    "party_scene": "C+",
+    "professors": "C+",
+    "location": "B-",
+    "dorms": "C+",
+    "campus_food": "A+",
+    "student_life": "C+",
+    "safety": "A-"
+   }
+  },
+  "mcmurry-university": {
+   "url": "https://www.niche.com/colleges/mcmurry-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B",
+    "location": "B",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "B+"
+   }
+  },
+  "schreiner-university": {
+   "url": "https://www.niche.com/colleges/schreiner-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "B",
+    "campus": "A",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "B-",
+    "location": "B",
+    "dorms": "A+",
+    "campus_food": "B+",
+    "student_life": "A-",
+    "safety": "A-"
+   }
+  },
+  "averett-university": {
+   "url": "https://www.niche.com/colleges/averett-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B-",
+    "diversity": "A",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "C",
+    "location": "B-",
+    "dorms": "B",
+    "campus_food": "B+",
+    "student_life": "B",
+    "safety": "B-"
+   }
+  },
+  "marymount-university": {
+   "url": "https://www.niche.com/colleges/marymount-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B-",
+    "diversity": "A",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B",
+    "location": "A+",
+    "dorms": "B-",
+    "campus_food": "C+",
+    "student_life": "B",
+    "safety": "A-",
+    "student_wellness": "A",
+    "future_readiness": "A"
+   }
+  },
+  "randolph-college": {
+   "url": "https://www.niche.com/colleges/randolph-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "C+",
+    "diversity": "A",
+    "campus": "B-",
+    "athletics": "C+",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "B",
+    "dorms": "C+",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "C+"
+   }
+  },
+  "roanoke-college": {
+   "url": "https://www.niche.com/colleges/roanoke-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "C+",
+    "diversity": "B-",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "B+",
+    "professors": "B",
+    "location": "B-",
+    "dorms": "C",
+    "campus_food": "B",
+    "student_life": "B",
+    "safety": "B-"
+   }
+  },
+  "shenandoah-university": {
+   "url": "https://www.niche.com/colleges/shenandoah-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B",
+    "location": "A-",
+    "dorms": "B+",
+    "campus_food": "C-",
+    "student_life": "A-",
+    "safety": "A-"
+   }
+  },
+  "southern-virginia-university": {
+   "url": "https://www.niche.com/colleges/southern-virginia-university/",
+   "grades": {
+    "overall": "C",
+    "academics": "C+",
+    "value": "C-",
+    "diversity": "B",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "B+",
+    "safety": "A"
+   }
+  },
+  "university-of-lynchburg": {
+   "url": "https://www.niche.com/colleges/university-of-lynchburg/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "B-",
+    "athletics": "B+",
+    "party_scene": "B+",
+    "professors": "B-",
+    "location": "B",
+    "dorms": "B",
+    "campus_food": "B+",
+    "student_life": "B",
+    "safety": "B",
+    "student_wellness": "A",
+    "future_readiness": "A+"
+   }
+  },
+  "washington-and-lee-university": {
+   "url": "https://www.niche.com/colleges/washington-and-lee-university/",
+   "grades": {
+    "overall": "A+",
+    "academics": "A+",
+    "value": "A-",
+    "diversity": "A-",
+    "campus": "A",
+    "athletics": "B-",
+    "party_scene": "A",
+    "professors": "A+",
+    "location": "A-",
+    "dorms": "A",
+    "campus_food": "A-",
+    "student_life": "A+",
+    "safety": "B",
+    "student_wellness": "A+",
+    "future_readiness": "A+"
+   }
+  },
+  "norwich-university": {
+   "url": "https://www.niche.com/colleges/norwich-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B",
+    "value": "B+",
+    "diversity": "A-",
+    "campus": "C-",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "B-",
+    "location": "C-",
+    "dorms": "B-",
+    "campus_food": "C-",
+    "student_life": "C+",
+    "safety": "B+"
+   }
+  },
+  "vtsu-castleton": {
+   "url": "https://www.niche.com/colleges/castleton-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "A-",
+    "campus": "D+",
+    "athletics": "C+",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "C",
+    "campus_food": "C-",
+    "student_life": "C+",
+    "safety": "B"
+   }
+  },
+  "carthage-college": {
+   "url": "https://www.niche.com/colleges/carthage-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "B-",
+    "athletics": "B-",
+    "party_scene": "B+",
+    "professors": "B",
+    "location": "B-",
+    "dorms": "C-",
+    "campus_food": "C-",
+    "student_life": "B",
+    "safety": "B-"
+   }
+  },
+  "concordia-university-wisconsin": {
+   "url": "https://www.niche.com/colleges/concordia-university-wisconsin/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B",
+    "value": "C+",
+    "diversity": "B",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "C+",
+    "location": "B-",
+    "dorms": "A-",
+    "campus_food": "C",
+    "student_life": "C+",
+    "safety": "A-"
+   }
+  },
+  "lakeland-university": {
+   "url": "https://www.niche.com/colleges/lakeland-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "B-",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "C+",
+    "location": "B-",
+    "dorms": "B+",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "B+"
+   }
+  },
+  "milwaukee-school-of-engineering": {
+   "url": "https://www.niche.com/colleges/milwaukee-school-of-engineering/",
+   "grades": {
+    "overall": "B",
+    "academics": "B+",
+    "value": "A",
+    "diversity": "B+",
+    "campus": "C-",
+    "athletics": "B-",
+    "party_scene": "B",
+    "professors": "B-",
+    "location": "A+",
+    "dorms": "C+",
+    "campus_food": "C-",
+    "student_life": "C+",
+    "safety": "C"
+   }
+  },
+  "university-of-wisconsin-eau-claire": {
+   "url": "https://www.niche.com/colleges/university-of-wisconsin-eau-claire/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "C+",
+    "location": "A-",
+    "dorms": "C+",
+    "campus_food": "C+",
+    "student_life": "B",
+    "safety": "B"
+   }
+  },
+  "university-of-wisconsin-la-crosse": {
+   "url": "https://www.niche.com/colleges/university-of-wisconsin-la-crosse/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B",
+    "value": "B+",
+    "diversity": "C+",
+    "campus": "A-",
+    "athletics": "B-",
+    "party_scene": "A+",
+    "professors": "B",
+    "location": "A",
+    "dorms": "B-",
+    "campus_food": "C+",
+    "student_life": "A",
+    "safety": "B"
+   }
+  },
+  "university-of-wisconsin-oshkosh": {
+   "url": "https://www.niche.com/colleges/university-of-wisconsin-oshkosh/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "B+",
+    "athletics": "B+",
+    "party_scene": "A",
+    "professors": "B-",
+    "location": "A-",
+    "dorms": "B+",
+    "campus_food": "B+",
+    "student_life": "A",
+    "safety": "B+"
+   }
+  },
+  "university-of-wisconsin-platteville": {
+   "url": "https://www.niche.com/colleges/university-of-wisconsin-platteville/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "B-",
+    "campus": "B-",
+    "athletics": "C+",
+    "party_scene": "A-",
+    "professors": "B-",
+    "location": "B",
+    "dorms": "B",
+    "campus_food": "A-",
+    "student_life": "B",
+    "safety": "B+"
+   }
+  },
+  "university-of-wisconsin-stevens-point": {
+   "url": "https://www.niche.com/colleges/university-of-wisconsin-stevens-point/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "B-",
+    "campus": "B",
+    "athletics": "A",
+    "party_scene": "B+",
+    "professors": "B",
+    "location": "A-",
+    "dorms": "B",
+    "campus_food": "A-",
+    "student_life": "B+",
+    "safety": "B"
+   }
+  },
+  "university-of-wisconsin-whitewater": {
+   "url": "https://www.niche.com/colleges/university-of-wisconsin-whitewater/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "B",
+    "campus": "B",
+    "athletics": "A+",
+    "party_scene": "A",
+    "professors": "B-",
+    "location": "B-",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "A-",
+    "safety": "B"
+   }
+  },
+  "bethany-college": {
+   "url": "https://www.niche.com/colleges/bethany-college-west-virginia/",
+   "grades": {
+    "overall": "C",
+    "academics": "C+",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "C-",
+    "athletics": "C+",
+    "party_scene": "B",
+    "professors": "C+",
+    "location": "C",
+    "dorms": "C+",
+    "campus_food": "C",
+    "student_life": "C-",
+    "safety": "C-"
+   }
+  },
+  "williams-baptist-university": {
+   "url": "https://www.niche.com/colleges/williams-baptist-university/",
+   "grades": {
+    "overall": "C",
+    "academics": "C+",
+    "value": "C-",
+    "diversity": "B+",
+    "campus": "B-",
+    "athletics": "B-",
+    "party_scene": "C+",
+    "professors": "B-",
+    "location": "B",
+    "dorms": "B",
+    "campus_food": "C+",
+    "student_life": "B-",
+    "safety": "A+"
+   }
+  },
+  "arizona-christian-university": {
+   "url": "https://www.niche.com/colleges/arizona-christian-university/",
+   "grades": {
+    "overall": "C-",
+    "academics": "C+",
+    "value": "D-",
+    "diversity": "A",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "C",
+    "location": "B",
+    "dorms": "B-",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "A-"
+   }
+  },
+  "embry-riddle-aeronautical-university-prescott": {
+   "url": "https://www.niche.com/colleges/embry-riddle-aeronautical-university-prescott/",
+   "grades": {
+    "overall": "B",
+    "academics": "B+",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "C",
+    "athletics": "B-",
+    "party_scene": "C",
+    "professors": "B+",
+    "location": "B-",
+    "dorms": "B-",
+    "campus_food": "D+",
+    "student_life": "B-",
+    "safety": "A"
+   }
+  },
+  "hope-international-university": {
+   "url": "https://www.niche.com/colleges/hope-international-university/",
+   "grades": {
+    "overall": "C",
+    "academics": "B-",
+    "value": "D+",
+    "diversity": "B+",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "C+",
+    "location": "A",
+    "dorms": "B-",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "A-"
+   }
+  },
+  "simpson-university": {
+   "url": "https://www.niche.com/colleges/simpson-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "C-",
+    "professors": "B-",
+    "location": "B-",
+    "dorms": "B",
+    "campus_food": "B+",
+    "student_life": "B-",
+    "safety": "B+"
+   }
+  },
+  "new-college-of-florida": {
+   "url": "https://www.niche.com/colleges/new-college-of-florida/",
+   "grades": {
+    "overall": "B+",
+    "academics": "A-",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "C-",
+    "party_scene": "B",
+    "professors": "A",
+    "location": "B+",
+    "dorms": "C",
+    "campus_food": "C-",
+    "student_life": "C",
+    "safety": "B-"
+   }
+  },
+  "southeastern-university": {
+   "url": "https://www.niche.com/colleges/southeastern-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "C-",
+    "diversity": "A-",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "C+",
+    "location": "B+",
+    "dorms": "B+",
+    "campus_food": "C+",
+    "student_life": "B",
+    "safety": "B+",
+    "future_readiness": "A"
+   }
+  },
+  "st-thomas-university": {
+   "url": "https://www.niche.com/colleges/st-thomas-university-florida/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "C",
+    "diversity": "A-",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "B+",
+    "campus_food": "B",
+    "student_life": "B-",
+    "safety": "A-"
+   }
+  },
+  "andrew-college": {
+   "url": "https://www.niche.com/colleges/andrew-college/",
+   "grades": {
+    "overall": "C",
+    "academics": "B-",
+    "value": "C-",
+    "diversity": "A-",
+    "campus": "C-",
+    "athletics": "C+",
+    "party_scene": "C+",
+    "professors": "B",
+    "location": "C-",
+    "dorms": "B-",
+    "campus_food": "C+",
+    "student_life": "C",
+    "safety": "B"
+   }
+  },
+  "brewton-parker-college": {
+   "url": "https://www.niche.com/colleges/brewton-parker-college/",
+   "grades": {
+    "overall": "C-",
+    "academics": "C",
+    "value": "C+",
+    "diversity": "A-",
+    "campus": "C-",
+    "athletics": "B-",
+    "party_scene": "C",
+    "professors": "C",
+    "location": "C-",
+    "dorms": "B-",
+    "campus_food": "C+",
+    "student_life": "C-",
+    "safety": "A"
+   }
+  },
+  "life-university": {
+   "url": "https://www.niche.com/colleges/life-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "C+",
+    "diversity": "A+",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "B",
+    "location": "B",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "B+"
+   }
+  },
+  "reinhardt-university": {
+   "url": "https://www.niche.com/colleges/reinhardt-university/",
+   "grades": {
+    "overall": "C",
+    "academics": "B-",
+    "value": "C+",
+    "diversity": "A-",
+    "campus": "C-",
+    "athletics": "B",
+    "party_scene": "C-",
+    "professors": "C+",
+    "location": "C-",
+    "dorms": "C+",
+    "campus_food": "C+",
+    "student_life": "C-",
+    "safety": "A"
+   }
+  },
+  "truett-mcconnell-university": {
+   "url": "https://www.niche.com/colleges/truett-mcconnell-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "A-",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "C",
+    "dorms": "A",
+    "campus_food": "B+",
+    "student_life": "A-",
+    "safety": "A+"
+   }
+  },
+  "briar-cliff-university": {
+   "url": "https://www.niche.com/colleges/briar-cliff-university/",
+   "grades": {
+    "overall": "C",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "D+",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "C+",
+    "location": "C+",
+    "dorms": "C-",
+    "campus_food": "C",
+    "student_life": "C",
+    "safety": "B-"
+   }
+  },
+  "graceland-university": {
+   "url": "https://www.niche.com/colleges/graceland-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A",
+    "campus": "B-",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "B",
+    "location": "B-",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "A-"
+   }
+  },
+  "grand-view-university": {
+   "url": "https://www.niche.com/colleges/grand-view-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "A",
+    "campus": "B+",
+    "athletics": "B+",
+    "party_scene": "B+",
+    "professors": "B-",
+    "location": "B-",
+    "dorms": "A-",
+    "campus_food": "B-",
+    "student_life": "A",
+    "safety": "B"
+   }
+  },
+  "morningside-university": {
+   "url": "https://www.niche.com/colleges/morningside-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A",
+    "campus": "B-",
+    "athletics": "B+",
+    "party_scene": "B",
+    "professors": "C+",
+    "location": "B-",
+    "dorms": "B-",
+    "campus_food": "C+",
+    "student_life": "B",
+    "safety": "B+"
+   }
+  },
+  "northwestern-college": {
+   "url": "https://www.niche.com/colleges/northwestern-college-iowa/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "B",
+    "campus": "A",
+    "athletics": "B-",
+    "party_scene": "C",
+    "professors": "B-",
+    "location": "B+",
+    "dorms": "A+",
+    "campus_food": "A-",
+    "student_life": "A-",
+    "safety": "A"
+   }
+  },
+  "st-ambrose-university": {
+   "url": "https://www.niche.com/colleges/st-ambrose-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "B",
+    "athletics": "B-",
+    "party_scene": "B+",
+    "professors": "B-",
+    "location": "B-",
+    "dorms": "A-",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "C+"
+   }
+  },
+  "waldorf-university": {
+   "url": "https://www.niche.com/colleges/waldorf-university/",
+   "grades": {
+    "overall": "C",
+    "academics": "C",
+    "value": "B+",
+    "diversity": "B+",
+    "campus": "C-",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "C",
+    "location": "C+",
+    "dorms": "C",
+    "campus_food": "B-",
+    "student_life": "C-",
+    "safety": "B"
+   }
+  },
+  "william-penn-university": {
+   "url": "https://www.niche.com/colleges/william-penn-university/",
+   "grades": {
+    "overall": "C",
+    "academics": "C+",
+    "value": "C-",
+    "diversity": "A",
+    "campus": "C-",
+    "athletics": "B+",
+    "party_scene": "B",
+    "professors": "C",
+    "location": "C",
+    "dorms": "B",
+    "campus_food": "C",
+    "student_life": "C+",
+    "safety": "B"
+   }
+  },
+  "indiana-institute-of-technology": {
+   "url": "https://www.niche.com/colleges/indiana-institute-of-technology/",
+   "grades": {
+    "overall": "C",
+    "academics": "C",
+    "value": "C",
+    "diversity": "A",
+    "campus": "B+",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "C+",
+    "location": "B-",
+    "dorms": "A",
+    "campus_food": "B+",
+    "student_life": "B-",
+    "safety": "B",
+    "student_wellness": "A",
+    "future_readiness": "A"
+   }
+  },
+  "marian-university": {
+   "url": "https://www.niche.com/colleges/marian-university-indianapolis/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B+",
+    "diversity": "A-",
+    "campus": "C",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B",
+    "location": "B-",
+    "dorms": "C",
+    "campus_food": "C+",
+    "student_life": "B",
+    "safety": "B"
+   }
+  },
+  "baker-university": {
+   "url": "https://www.niche.com/colleges/baker-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "B",
+    "campus_food": "B+",
+    "student_life": "B+",
+    "safety": "A-",
+    "student_wellness": "A",
+    "future_readiness": "A"
+   }
+  },
+  "benedictine-college": {
+   "url": "https://www.niche.com/colleges/benedictine-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "C+",
+    "diversity": "B",
+    "campus": "B+",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "C",
+    "dorms": "A-",
+    "campus_food": "C",
+    "student_life": "A-",
+    "safety": "B+"
+   }
+  },
+  "central-christian-college-of-kansas": {
+   "url": "https://www.niche.com/colleges/central-christian-college-of-kansas/",
+   "grades": {
+    "overall": "C",
+    "academics": "C",
+    "value": "B-",
+    "diversity": "A",
+    "campus": "C-",
+    "athletics": "B-",
+    "party_scene": "C",
+    "professors": "C-",
+    "location": "B-",
+    "dorms": "B-",
+    "campus_food": "C+",
+    "student_life": "C+",
+    "safety": "A-"
+   }
+  },
+  "friends-university": {
+   "url": "https://www.niche.com/colleges/friends-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "A",
+    "campus": "B+",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "C+",
+    "location": "A-",
+    "dorms": "A-",
+    "campus_food": "B-",
+    "student_life": "B",
+    "safety": "B"
+   }
+  },
+  "ottawa-university": {
+   "url": "https://www.niche.com/colleges/ottawa-university/",
+   "grades": {
+    "overall": "C-",
+    "academics": "C",
+    "value": "D+",
+    "diversity": "A",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "C+",
+    "location": "B",
+    "dorms": "B",
+    "campus_food": "C+",
+    "student_life": "C+",
+    "safety": "B+"
+   }
+  },
+  "university-of-saint-mary": {
+   "url": "https://www.niche.com/colleges/university-of-saint-mary/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "A",
+    "campus": "C",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "C+",
+    "campus_food": "B-",
+    "student_life": "C",
+    "safety": "B-"
+   }
+  },
+  "georgetown-college": {
+   "url": "https://www.niche.com/colleges/georgetown-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "C-",
+    "athletics": "B+",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "B-",
+    "dorms": "C-",
+    "campus_food": "C",
+    "student_life": "C+",
+    "safety": "B"
+   }
+  },
+  "lindsey-wilson-university": {
+   "url": "https://www.niche.com/colleges/lindsey-wilson-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "C-",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "B",
+    "location": "C+",
+    "dorms": "C+",
+    "campus_food": "C+",
+    "student_life": "C+",
+    "safety": "B"
+   }
+  },
+  "midway-university": {
+   "url": "https://www.niche.com/colleges/midway-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "B+",
+    "athletics": "B-",
+    "party_scene": "C+",
+    "professors": "B-",
+    "location": "B+",
+    "dorms": "C+",
+    "campus_food": "B",
+    "student_life": "B+",
+    "safety": "A+"
+   }
+  },
+  "university-of-pikeville": {
+   "url": "https://www.niche.com/colleges/university-of-pikeville/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "B+",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B+",
+    "location": "B-",
+    "dorms": "A-",
+    "campus_food": "B",
+    "student_life": "B",
+    "safety": "A+"
+   }
+  },
+  "university-of-the-cumberlands": {
+   "url": "https://www.niche.com/colleges/university-of-the-cumberlands/",
+   "grades": {
+    "overall": "B",
+    "academics": "C+",
+    "value": "B+",
+    "diversity": "A-",
+    "campus": "B+",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "B+",
+    "location": "B-",
+    "dorms": "A-",
+    "campus_food": "A-",
+    "student_life": "B+",
+    "safety": "A"
+   }
+  },
+  "cleary-university": {
+   "url": "https://www.niche.com/colleges/cleary-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "C",
+    "location": "B-",
+    "dorms": "A-",
+    "campus_food": "B",
+    "student_life": "B",
+    "safety": "A+"
+   }
+  },
+  "cornerstone-university": {
+   "url": "https://www.niche.com/colleges/cornerstone-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "C+",
+    "diversity": "B+",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "B-",
+    "location": "A",
+    "dorms": "B+",
+    "campus_food": "B-",
+    "student_life": "B+",
+    "safety": "A"
+   }
+  },
+  "rochester-christian-university": {
+   "url": "https://www.niche.com/colleges/rochester-christian-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "C",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "C",
+    "location": "B+",
+    "dorms": "C",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "A"
+   }
+  },
+  "siena-heights-university": {
+   "url": "https://www.niche.com/colleges/siena-heights-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "C+",
+    "location": "C+",
+    "dorms": "C+",
+    "campus_food": "C+",
+    "student_life": "B-",
+    "safety": "B+"
+   }
+  },
+  "avila-university": {
+   "url": "https://www.niche.com/colleges/avila-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C",
+    "value": "A-",
+    "diversity": "A-",
+    "campus": "C",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "C+",
+    "location": "B-",
+    "dorms": "C",
+    "campus_food": "C+",
+    "student_life": "B-",
+    "safety": "B+"
+   }
+  },
+  "central-methodist-university": {
+   "url": "https://www.niche.com/colleges/central-methodist-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B-",
+    "location": "C",
+    "dorms": "B",
+    "campus_food": "C+",
+    "student_life": "B-",
+    "safety": "A-"
+   }
+  },
+  "missouri-baptist-university": {
+   "url": "https://www.niche.com/colleges/missouri-baptist-university/",
+   "grades": {
+    "overall": "C",
+    "academics": "C+",
+    "value": "C",
+    "diversity": "B+",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "C-",
+    "location": "B+",
+    "dorms": "B",
+    "campus_food": "B",
+    "student_life": "B-",
+    "safety": "A"
+   }
+  },
+  "missouri-valley-college": {
+   "url": "https://www.niche.com/colleges/missouri-valley-college/",
+   "grades": {
+    "overall": "C-",
+    "academics": "C+",
+    "value": "C+",
+    "diversity": "A+",
+    "campus": "D-",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "B-",
+    "location": "D",
+    "dorms": "D+",
+    "campus_food": "C-",
+    "student_life": "D-",
+    "safety": "B"
+   }
+  },
+  "william-woods-university": {
+   "url": "https://www.niche.com/colleges/william-woods-university/",
+   "grades": {
+    "overall": "C",
+    "academics": "C+",
+    "value": "C-",
+    "diversity": "A",
+    "campus": "C",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "C-",
+    "dorms": "B",
+    "campus_food": "C-",
+    "student_life": "C+",
+    "safety": "B"
+   }
+  },
+  "montana-state-university-northern": {
+   "url": "https://www.niche.com/colleges/montana-state-university-northern/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B+",
+    "diversity": "B-",
+    "campus": "C+",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "C+",
+    "location": "B-",
+    "dorms": "B-",
+    "campus_food": "B",
+    "student_life": "B-",
+    "safety": "B"
+   }
+  },
+  "university-of-providence": {
+   "url": "https://www.niche.com/colleges/university-of-providence/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B+",
+    "diversity": "A-",
+    "campus": "C",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B",
+    "location": "B-",
+    "dorms": "B-",
+    "campus_food": "C+",
+    "student_life": "B-",
+    "safety": "A"
+   }
+  },
+  "montreat-college": {
+   "url": "https://www.niche.com/colleges/montreat-college/",
+   "grades": {
+    "overall": "C-",
+    "academics": "C+",
+    "value": "C-",
+    "diversity": "B+",
+    "campus": "C+",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "C",
+    "location": "B+",
+    "dorms": "C",
+    "campus_food": "C-",
+    "student_life": "C-",
+    "safety": "A"
+   }
+  },
+  "bismarck-state-college": {
+   "url": "https://www.niche.com/colleges/bismarck-state-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B+",
+    "diversity": "B-",
+    "campus": "B+",
+    "athletics": "C",
+    "party_scene": "B",
+    "professors": "C+",
+    "location": "B",
+    "dorms": "A-",
+    "campus_food": "A",
+    "student_life": "B+",
+    "safety": "B+"
+   }
+  },
+  "dickinson-state-university": {
+   "url": "https://www.niche.com/colleges/dickinson-state-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "C+",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "C+",
+    "dorms": "B",
+    "campus_food": "B",
+    "student_life": "C+",
+    "safety": "A"
+   }
+  },
+  "bellevue-university": {
+   "url": "https://www.niche.com/colleges/bellevue-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C-",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "B+",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "C",
+    "location": "B",
+    "campus_food": "A-",
+    "student_life": "B+",
+    "safety": "A+"
+   }
+  },
+  "concordia-university-nebraska": {
+   "url": "https://www.niche.com/colleges/concordia-university-nebraska/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "B+",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "C+",
+    "location": "B-",
+    "dorms": "A-",
+    "campus_food": "C+",
+    "student_life": "B+",
+    "safety": "A"
+   }
+  },
+  "doane-university": {
+   "url": "https://www.niche.com/colleges/doane-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "B+",
+    "professors": "B-",
+    "location": "B-",
+    "dorms": "B",
+    "campus_food": "C",
+    "student_life": "B+",
+    "safety": "B+"
+   }
+  },
+  "hastings-college": {
+   "url": "https://www.niche.com/colleges/hastings-college/",
+   "grades": {
+    "overall": "C",
+    "academics": "C+",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "C",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "C",
+    "location": "B-",
+    "dorms": "B-",
+    "campus_food": "C-",
+    "student_life": "C+",
+    "safety": "B+"
+   }
+  },
+  "midland-university": {
+   "url": "https://www.niche.com/colleges/midland-university/",
+   "grades": {
+    "overall": "C",
+    "academics": "C+",
+    "value": "C+",
+    "diversity": "A-",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "C",
+    "location": "C+",
+    "dorms": "C",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "B+"
+   }
+  },
+  "york-university": {
+   "url": "https://www.niche.com/colleges/york-university-nebraska/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B",
+    "value": "B",
+    "diversity": "A",
+    "campus": "C-",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "C",
+    "location": "C+",
+    "dorms": "B-",
+    "campus_food": "C",
+    "student_life": "C-",
+    "safety": "B"
+   }
+  },
+  "defiance-college": {
+   "url": "https://www.niche.com/colleges/defiance-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "C",
+    "athletics": "B",
+    "party_scene": "B-",
+    "professors": "C+",
+    "location": "B-",
+    "dorms": "B",
+    "campus_food": "C+",
+    "student_life": "C+",
+    "safety": "B-"
+   }
+  },
+  "lourdes-university": {
+   "url": "https://www.niche.com/colleges/lourdes-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B-",
+    "diversity": "B",
+    "campus": "B",
+    "athletics": "B-",
+    "party_scene": "B",
+    "professors": "C+",
+    "location": "A",
+    "dorms": "A",
+    "campus_food": "B",
+    "student_life": "B",
+    "safety": "A"
+   }
+  },
+  "university-of-rio-grande": {
+   "url": "https://www.niche.com/colleges/university-of-rio-grande/",
+   "grades": {
+    "overall": "C-",
+    "academics": "C",
+    "value": "C-",
+    "diversity": "B+",
+    "campus": "B-",
+    "athletics": "B-",
+    "party_scene": "C+",
+    "professors": "C",
+    "location": "B-",
+    "dorms": "C",
+    "campus_food": "C+",
+    "student_life": "B-",
+    "safety": "A-"
+   }
+  },
+  "wilberforce-university": {
+   "url": "https://www.niche.com/colleges/wilberforce-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "A-",
+    "diversity": "C+",
+    "campus": "D",
+    "athletics": "C+",
+    "party_scene": "B",
+    "professors": "C-",
+    "location": "C",
+    "dorms": "C-",
+    "campus_food": "C-",
+    "student_life": "C+",
+    "safety": "A-"
+   }
+  },
+  "oklahoma-city-university": {
+   "url": "https://www.niche.com/colleges/oklahoma-city-university/",
+   "grades": {
+    "overall": "A-",
+    "academics": "A-",
+    "value": "B+",
+    "diversity": "A",
+    "campus": "A-",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "A-",
+    "location": "B+",
+    "dorms": "B+",
+    "campus_food": "B+",
+    "student_life": "A",
+    "safety": "C+"
+   }
+  },
+  "oklahoma-wesleyan-university": {
+   "url": "https://www.niche.com/colleges/oklahoma-wesleyan-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "A",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "C+",
+    "location": "C+",
+    "dorms": "B-",
+    "campus_food": "B-",
+    "student_life": "C+",
+    "safety": "B+"
+   }
+  },
+  "corban-university": {
+   "url": "https://www.niche.com/colleges/corban-university/",
+   "grades": {
+    "overall": "B",
+    "academics": "B+",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "B-",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "C+",
+    "location": "C+",
+    "dorms": "A-",
+    "campus_food": "C-",
+    "student_life": "B",
+    "safety": "A-"
+   }
+  },
+  "eastern-oregon-university": {
+   "url": "https://www.niche.com/colleges/eastern-oregon-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "B-",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "B",
+    "dorms": "B",
+    "campus_food": "B",
+    "student_life": "B-",
+    "safety": "B+"
+   }
+  },
+  "southern-oregon-university": {
+   "url": "https://www.niche.com/colleges/southern-oregon-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "B+",
+    "athletics": "B-",
+    "party_scene": "B-",
+    "professors": "B+",
+    "location": "A-",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "B-"
+   }
+  },
+  "dakota-wesleyan-university": {
+   "url": "https://www.niche.com/colleges/dakota-wesleyan-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "B-",
+    "campus": "B",
+    "athletics": "B",
+    "party_scene": "B",
+    "professors": "B-",
+    "location": "B",
+    "dorms": "B",
+    "campus_food": "B",
+    "student_life": "B+",
+    "safety": "A"
+   }
+  },
+  "cumberland-university": {
+   "url": "https://www.niche.com/colleges/cumberland-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "C",
+    "athletics": "B",
+    "party_scene": "C+",
+    "professors": "C",
+    "location": "C+",
+    "dorms": "C-",
+    "campus_food": "B-",
+    "student_life": "B-",
+    "safety": "A"
+   }
+  },
+  "jarvis-christian-university": {
+   "url": "https://www.niche.com/colleges/jarvis-christian-university/",
+   "grades": {
+    "overall": "C",
+    "academics": "C",
+    "value": "B",
+    "diversity": "B",
+    "campus": "C",
+    "athletics": "B-",
+    "party_scene": "B+",
+    "professors": "B-",
+    "location": "C-",
+    "dorms": "B",
+    "campus_food": "B+",
+    "student_life": "C+",
+    "safety": "A"
+   }
+  },
+  "texas-wesleyan-university": {
+   "url": "https://www.niche.com/colleges/texas-wesleyan-university/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "C",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "B",
+    "location": "C-",
+    "dorms": "C",
+    "campus_food": "C+",
+    "student_life": "C+",
+    "safety": "B-"
+   }
+  },
+  "wayland-baptist-university": {
+   "url": "https://www.niche.com/colleges/wayland-baptist-university/",
+   "grades": {
+    "overall": "C",
+    "academics": "C+",
+    "value": "C",
+    "diversity": "A",
+    "campus": "B-",
+    "athletics": "B-",
+    "party_scene": "C+",
+    "professors": "C+",
+    "location": "B",
+    "dorms": "B-",
+    "campus_food": "C+",
+    "student_life": "C",
+    "safety": "A-"
+   }
+  },
+  "bluefield-university": {
+   "url": "https://www.niche.com/colleges/bluefield-university/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "C",
+    "athletics": "B",
+    "party_scene": "C",
+    "professors": "B",
+    "location": "B-",
+    "dorms": "B",
+    "campus_food": "C+",
+    "student_life": "C",
+    "safety": "B-"
+   }
+  },
+  "the-evergreen-state-college": {
+   "url": "https://www.niche.com/colleges/the-evergreen-state-college/",
+   "grades": {
+    "overall": "C",
+    "academics": "C+",
+    "value": "C-",
+    "diversity": "B+",
+    "campus": "C+",
+    "athletics": "C",
+    "party_scene": "B-",
+    "professors": "B-",
+    "location": "B+",
+    "dorms": "C",
+    "campus_food": "C+",
+    "student_life": "C",
+    "safety": "C+"
+   }
+  },
+  "west-virginia-university-institute-of-technology": {
+   "url": "https://www.niche.com/colleges/west-virginia-university-institute-of-technology/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "C+",
+    "athletics": "C+",
+    "party_scene": "C",
+    "professors": "B",
+    "location": "C+",
+    "dorms": "B+",
+    "campus_food": "B",
+    "student_life": "C+",
+    "safety": "B"
+   }
+  },
+  "colorado-northwestern-community-college": {
+   "url": "https://www.niche.com/colleges/colorado-northwestern-community-college/",
+   "grades": {
+    "overall": "C",
+    "academics": "C+",
+    "value": "C+",
+    "diversity": "B+",
+    "campus": "D-",
+    "professors": "C+",
+    "location": "C-",
+    "student_life": "C-",
+    "safety": "A+"
+   }
+  },
+  "northeastern-junior-college": {
+   "url": "https://www.niche.com/colleges/northeastern-junior-college/",
+   "grades": {
+    "overall": "B",
+    "value": "B-",
+    "diversity": "A-",
+    "professors": "B-",
+    "location": "C",
+    "student_life": "B+",
+    "safety": "B-"
+   }
+  },
+  "otero-college": {
+   "url": "https://www.niche.com/colleges/otero-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "C+",
+    "diversity": "A",
+    "campus": "B+",
+    "professors": "B-",
+    "location": "B-",
+    "student_life": "A-",
+    "safety": "B+"
+   }
+  },
+  "trinidad-state-college": {
+   "url": "https://www.niche.com/colleges/trinidad-state-college/",
+   "grades": {
+    "overall": "B-",
+    "value": "C+",
+    "diversity": "A",
+    "professors": "B",
+    "location": "C+",
+    "student_life": "B+",
+    "safety": "B+"
+   }
+  },
+  "ellsworth-community-college": {
+   "url": "https://www.niche.com/colleges/ellsworth-community-college/",
+   "grades": {
+    "overall": "B-",
+    "value": "B-",
+    "diversity": "A",
+    "professors": "B-",
+    "location": "B",
+    "student_life": "B-",
+    "safety": "A-"
+   }
+  },
+  "hawkeye-community-college": {
+   "url": "https://www.niche.com/colleges/hawkeye-community-college/",
+   "grades": {
+    "overall": "B",
+    "value": "B",
+    "diversity": "B",
+    "professors": "B-",
+    "location": "B-",
+    "student_life": "B+",
+    "safety": "A"
+   }
+  },
+  "indian-hills-community-college": {
+   "url": "https://www.niche.com/colleges/indian-hills-community-college/",
+   "grades": {
+    "overall": "B-",
+    "value": "B+",
+    "diversity": "B",
+    "professors": "B-",
+    "location": "C",
+    "student_life": "B-",
+    "safety": "B"
+   }
+  },
+  "iowa-central-community-college": {
+   "url": "https://www.niche.com/colleges/iowa-central-community-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "B-",
+    "professors": "C+",
+    "location": "C-",
+    "student_life": "C+",
+    "safety": "B-"
+   }
+  },
+  "iowa-lakes-community-college": {
+   "url": "https://www.niche.com/colleges/iowa-lakes-community-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B",
+    "campus": "B",
+    "professors": "B",
+    "location": "B-",
+    "student_life": "B+",
+    "safety": "A-"
+   }
+  },
+  "iowa-western-community-college": {
+   "url": "https://www.niche.com/colleges/iowa-western-community-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B-",
+    "diversity": "A",
+    "campus": "C+",
+    "professors": "C+",
+    "location": "C+",
+    "student_life": "B-",
+    "safety": "B-"
+   }
+  },
+  "north-iowa-area-community-college": {
+   "url": "https://www.niche.com/colleges/north-iowa-area-community-college/",
+   "grades": {
+    "overall": "B",
+    "value": "B",
+    "diversity": "B+",
+    "professors": "B-",
+    "location": "B-",
+    "student_life": "B+",
+    "safety": "B+"
+   }
+  },
+  "southeastern-community-college": {
+   "url": "https://www.niche.com/colleges/southeastern-community-college-iowa/",
+   "grades": {
+    "overall": "B",
+    "value": "B",
+    "diversity": "B",
+    "professors": "B-",
+    "location": "B-",
+    "student_life": "B+",
+    "safety": "A"
+   }
+  },
+  "north-idaho-college": {
+   "url": "https://www.niche.com/colleges/north-idaho-college/",
+   "grades": {
+    "overall": "B-",
+    "value": "C+",
+    "diversity": "B",
+    "professors": "B-",
+    "location": "A",
+    "student_life": "A-",
+    "safety": "A-"
+   }
+  },
+  "harper-college": {
+   "url": "https://www.niche.com/colleges/harper-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "C+",
+    "value": "B+",
+    "diversity": "B+",
+    "campus": "A-",
+    "professors": "C+",
+    "location": "B+",
+    "student_life": "A-",
+    "safety": "A"
+   }
+  },
+  "joliet-junior-college": {
+   "url": "https://www.niche.com/colleges/joliet-junior-college/",
+   "grades": {
+    "overall": "B-",
+    "value": "B",
+    "diversity": "B+",
+    "professors": "C+",
+    "location": "C+",
+    "student_life": "B-",
+    "safety": "A"
+   }
+  },
+  "triton-college": {
+   "url": "https://www.niche.com/colleges/triton-college/",
+   "grades": {
+    "overall": "B-",
+    "value": "B-",
+    "diversity": "B+",
+    "professors": "C+",
+    "location": "B",
+    "student_life": "B",
+    "safety": "A"
+   }
+  },
+  "ancilla-college": {
+   "url": "https://www.niche.com/colleges/ancilla-college/",
+   "grades": {
+    "overall": "C+",
+    "value": "C",
+    "diversity": "B+",
+    "professors": "C+",
+    "location": "C-",
+    "student_life": "C-",
+    "safety": "A+"
+   }
+  },
+  "vincennes-university": {
+   "url": "https://www.niche.com/colleges/vincennes-university/",
+   "grades": {
+    "overall": "C-",
+    "academics": "C-",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "B-",
+    "athletics": "C",
+    "party_scene": "B-",
+    "professors": "C-",
+    "location": "C+",
+    "dorms": "B",
+    "campus_food": "B-",
+    "student_life": "C",
+    "safety": "B"
+   }
+  },
+  "barton-community-college": {
+   "url": "https://www.niche.com/colleges/barton-community-college/",
+   "grades": {
+    "overall": "B-",
+    "value": "B-",
+    "diversity": "A",
+    "professors": "C+",
+    "location": "B-",
+    "student_life": "B+",
+    "safety": "A"
+   }
+  },
+  "cloud-county-community-college": {
+   "url": "https://www.niche.com/colleges/cloud-county-community-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B",
+    "diversity": "A-",
+    "campus": "B",
+    "professors": "B-",
+    "location": "B",
+    "student_life": "B+",
+    "safety": "A-"
+   }
+  },
+  "colby-community-college": {
+   "url": "https://www.niche.com/colleges/colby-community-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "A-",
+    "campus": "B",
+    "professors": "C+",
+    "location": "B+",
+    "student_life": "A-",
+    "safety": "A-"
+   }
+  },
+  "cowley-county-community-college": {
+   "url": "https://www.niche.com/colleges/cowley-county-community-college/",
+   "grades": {
+    "overall": "B",
+    "value": "B-",
+    "diversity": "A",
+    "professors": "B-",
+    "location": "B",
+    "student_life": "A-",
+    "safety": "B+"
+   }
+  },
+  "fort-hays-tech-northwest": {
+   "url": "https://www.niche.com/colleges/fort-hays-tech-northwest/",
+   "grades": {
+    "overall": "B+",
+    "academics": "B",
+    "value": "A",
+    "diversity": "B+",
+    "campus": "B-",
+    "professors": "B-",
+    "location": "B-",
+    "student_life": "B+",
+    "safety": "B"
+   }
+  },
+  "labette-community-college": {
+   "url": "https://www.niche.com/colleges/labette-community-college/",
+   "grades": {
+    "overall": "B-",
+    "value": "B-",
+    "diversity": "B+",
+    "professors": "B-",
+    "location": "C",
+    "student_life": "B-",
+    "safety": "B"
+   }
+  },
+  "neosho-county-community-college": {
+   "url": "https://www.niche.com/colleges/neosho-county-community-college/",
+   "grades": {
+    "overall": "B+",
+    "value": "B+",
+    "diversity": "A",
+    "professors": "B-",
+    "location": "C+",
+    "student_life": "A-",
+    "safety": "A+"
+   }
+  },
+  "pratt-community-college": {
+   "url": "https://www.niche.com/colleges/pratt-community-college/",
+   "grades": {
+    "overall": "B",
+    "value": "A-",
+    "diversity": "A",
+    "professors": "B-",
+    "location": "B-",
+    "student_life": "B",
+    "safety": "B-"
+   }
+  },
+  "garrett-college": {
+   "url": "https://www.niche.com/colleges/garrett-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "C+",
+    "diversity": "B+",
+    "campus": "C+",
+    "professors": "C+",
+    "location": "C+",
+    "student_life": "B-",
+    "safety": "A"
+   }
+  },
+  "henry-ford-college": {
+   "url": "https://www.niche.com/colleges/henry-ford-college/",
+   "grades": {
+    "overall": "C",
+    "academics": "C-",
+    "value": "B+",
+    "diversity": "C+",
+    "campus": "B+",
+    "professors": "C+",
+    "location": "A-",
+    "student_life": "C",
+    "safety": "A"
+   }
+  },
+  "mott-community-college": {
+   "url": "https://www.niche.com/colleges/mott-community-college/",
+   "grades": {
+    "overall": "C",
+    "academics": "C",
+    "value": "C+",
+    "diversity": "B",
+    "campus": "C",
+    "professors": "B-",
+    "location": "C",
+    "student_life": "C",
+    "safety": "A-"
+   }
+  },
+  "southwestern-michigan-college": {
+   "url": "https://www.niche.com/colleges/southwestern-michigan-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "B",
+    "campus": "B+",
+    "professors": "B-",
+    "location": "C",
+    "student_life": "B+",
+    "safety": "A"
+   }
+  },
+  "minnesota-north-college-itasca": {
+   "url": "https://www.niche.com/colleges/minnesota-north-college-itasca/",
+   "grades": {
+    "overall": "B-",
+    "value": "C-",
+    "diversity": "B",
+    "campus": "B-",
+    "location": "C",
+    "student_life": "B-",
+    "safety": "A+"
+   }
+  },
+  "minnesota-west-community-technical-college": {
+   "url": "https://www.niche.com/colleges/minnesota-west-community-and-technical-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B+",
+    "diversity": "B",
+    "professors": "C+",
+    "location": "C-",
+    "student_life": "B",
+    "safety": "A"
+   }
+  },
+  "northland-community-technical-college": {
+   "url": "https://www.niche.com/colleges/northland-community-and-technical-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B",
+    "value": "B",
+    "diversity": "B",
+    "campus": "B",
+    "professors": "B",
+    "location": "B-",
+    "student_life": "B",
+    "safety": "A+"
+   }
+  },
+  "ridgewater-college": {
+   "url": "https://www.niche.com/colleges/ridgewater-college/",
+   "grades": {
+    "overall": "B-",
+    "value": "B",
+    "diversity": "B-",
+    "professors": "B-",
+    "location": "B-",
+    "student_life": "B",
+    "safety": "A+"
+   }
+  },
+  "rochester-community-technical-college": {
+   "url": "https://www.niche.com/colleges/rochester-community-and-technical-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C",
+    "value": "B",
+    "diversity": "B",
+    "campus": "B-",
+    "professors": "C",
+    "location": "B-",
+    "student_life": "C+",
+    "safety": "A-"
+   }
+  },
+  "southeast-community-college": {
+   "url": "https://www.niche.com/colleges/southeast-community-college/",
+   "grades": {
+    "overall": "B+",
+    "value": "B+",
+    "diversity": "B+",
+    "professors": "B-",
+    "location": "A-",
+    "student_life": "A-",
+    "safety": "A"
+   }
+  },
+  "bergen-community-college": {
+   "url": "https://www.niche.com/colleges/bergen-community-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "B+",
+    "professors": "C+",
+    "location": "A",
+    "student_life": "A-",
+    "safety": "A"
+   }
+  },
+  "camden-county-college": {
+   "url": "https://www.niche.com/colleges/camden-county-college/",
+   "grades": {
+    "overall": "C+",
+    "value": "B-",
+    "diversity": "A-",
+    "professors": "C",
+    "location": "B-",
+    "student_life": "B-",
+    "safety": "A-"
+   }
+  },
+  "rowan-college-of-south-jersey-gloucester": {
+   "url": "https://www.niche.com/colleges/rowan-college-south-jersey-gloucester/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C",
+    "value": "C+",
+    "diversity": "B-",
+    "campus": "B+",
+    "professors": "C",
+    "location": "B+",
+    "student_life": "B",
+    "safety": "A"
+   }
+  },
+  "sussex-county-community-college": {
+   "url": "https://www.niche.com/colleges/sussex-county-community-college/",
+   "grades": {
+    "overall": "C",
+    "academics": "C",
+    "value": "C+",
+    "diversity": "B+",
+    "campus": "B-",
+    "professors": "C",
+    "location": "C+",
+    "student_life": "B-",
+    "safety": "A"
+   }
+  },
+  "union-college": {
+   "url": "https://www.niche.com/colleges/union-county-college/",
+   "grades": {
+    "overall": "B-",
+    "value": "B",
+    "diversity": "B+",
+    "professors": "C+",
+    "location": "A-",
+    "student_life": "B+",
+    "safety": "A"
+   }
+  },
+  "jamestown-community-college": {
+   "url": "https://www.niche.com/colleges/suny-jamestown-community-college/",
+   "grades": {
+    "overall": "C+",
+    "value": "B-",
+    "diversity": "B+",
+    "professors": "B-",
+    "location": "C+",
+    "student_life": "C+",
+    "safety": "B+"
+   }
+  },
+  "nassau-community-college": {
+   "url": "https://www.niche.com/colleges/suny-nassau-community-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C",
+    "value": "B",
+    "diversity": "B+",
+    "campus": "B-",
+    "professors": "C",
+    "location": "A-",
+    "student_life": "B-",
+    "safety": "B+"
+   }
+  },
+  "onondaga-community-college": {
+   "url": "https://www.niche.com/colleges/suny-onondaga-community-college/",
+   "grades": {
+    "overall": "C-",
+    "academics": "C",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "C-",
+    "professors": "C",
+    "location": "C-",
+    "student_life": "D",
+    "safety": "B+"
+   }
+  },
+  "suny-niagara": {
+   "url": "https://www.niche.com/colleges/suny-niagara-county-community-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "C+",
+    "value": "B",
+    "diversity": "B",
+    "campus": "C+",
+    "professors": "B-",
+    "location": "C+",
+    "student_life": "B",
+    "safety": "A"
+   }
+  },
+  "carl-albert-state-college": {
+   "url": "https://www.niche.com/colleges/carl-albert-state-college/",
+   "grades": {
+    "overall": "B-",
+    "value": "B",
+    "diversity": "B",
+    "professors": "C+",
+    "location": "B-",
+    "student_life": "B-",
+    "safety": "A-"
+   }
+  },
+  "murray-state-college": {
+   "url": "https://www.niche.com/colleges/murray-state-college/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "B+",
+    "campus": "B+",
+    "professors": "B",
+    "location": "B",
+    "student_life": "A-",
+    "safety": "A-"
+   }
+  },
+  "northeastern-oklahoma-a-m-college": {
+   "url": "https://www.niche.com/colleges/northeastern-oklahoma-a-and-m-college/",
+   "grades": {
+    "overall": "B-",
+    "value": "B",
+    "diversity": "A",
+    "professors": "C+",
+    "location": "B-",
+    "student_life": "B-",
+    "safety": "B"
+   }
+  },
+  "northern-oklahoma-college": {
+   "url": "https://www.niche.com/colleges/northern-oklahoma-college/",
+   "grades": {
+    "overall": "B",
+    "value": "B",
+    "diversity": "A-",
+    "professors": "B",
+    "location": "B-",
+    "student_life": "B-",
+    "safety": "A"
+   }
+  },
+  "rose-state-college": {
+   "url": "https://www.niche.com/colleges/rose-state-college/",
+   "grades": {
+    "overall": "B-",
+    "value": "B-",
+    "diversity": "B+",
+    "professors": "C+",
+    "location": "B",
+    "student_life": "B+",
+    "safety": "A-"
+   }
+  },
+  "clackamas-community-college": {
+   "url": "https://www.niche.com/colleges/clackamas-community-college/",
+   "grades": {
+    "overall": "C+",
+    "value": "B-",
+    "diversity": "C+",
+    "professors": "C+",
+    "location": "B",
+    "student_life": "B-",
+    "safety": "B+"
+   }
+  },
+  "southwestern-oregon-community-college": {
+   "url": "https://www.niche.com/colleges/southwestern-oregon-community-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "C+",
+    "diversity": "A-",
+    "campus": "B-",
+    "professors": "B-",
+    "location": "C+",
+    "student_life": "C+",
+    "safety": "B-"
+   }
+  },
+  "umpqua-community-college": {
+   "url": "https://www.niche.com/colleges/umpqua-community-college/",
+   "grades": {
+    "overall": "B-",
+    "value": "B-",
+    "diversity": "B",
+    "professors": "B",
+    "location": "A-",
+    "student_life": "B",
+    "safety": "A+"
+   }
+  },
+  "northampton-community-college": {
+   "url": "https://www.niche.com/colleges/northampton-community-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "C+",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "C+",
+    "professors": "C+",
+    "location": "B+",
+    "student_life": "B-",
+    "safety": "B"
+   }
+  },
+  "penn-highlands-community-college": {
+   "url": "https://www.niche.com/colleges/pennsylvania-highlands-community-college/",
+   "grades": {
+    "overall": "C",
+    "value": "B-",
+    "diversity": "C+",
+    "professors": "C-",
+    "location": "B",
+    "student_life": "B-",
+    "safety": "A+"
+   }
+  },
+  "thaddeus-stevens-college-of-technology": {
+   "url": "https://www.niche.com/colleges/thaddeus-stevens-college-of-technology/",
+   "grades": {
+    "overall": "B",
+    "academics": "B-",
+    "value": "A+",
+    "diversity": "C",
+    "campus": "C-",
+    "professors": "C+",
+    "location": "B",
+    "student_life": "C+",
+    "safety": "A+"
+   }
+  },
+  "snow-college": {
+   "url": "https://www.niche.com/colleges/snow-college/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "C",
+    "diversity": "A-",
+    "campus": "A-",
+    "professors": "B",
+    "location": "C+",
+    "student_life": "B",
+    "safety": "B+"
+   }
+  },
+  "big-bend-community-college": {
+   "url": "https://www.niche.com/colleges/big-bend-community-college/",
+   "grades": {
+    "overall": "B-",
+    "value": "B-",
+    "diversity": "B",
+    "professors": "C+",
+    "location": "A-",
+    "student_life": "A",
+    "safety": "A+"
+   }
+  },
+  "bryant-stratton-college-wisconsin": {
+   "url": "https://www.niche.com/colleges/bryant-and-stratton-college-wauwatosa/",
+   "grades": {
+    "overall": "C",
+    "academics": "C",
+    "value": "D+",
+    "diversity": "B",
+    "campus": "A-",
+    "athletics": "B-",
+    "party_scene": "C+",
+    "professors": "C+",
+    "location": "B+",
+    "student_life": "B",
+    "safety": "A+"
+   }
+  },
+  "northwest-college": {
+   "url": "https://www.niche.com/colleges/northwest-college-wyoming/",
+   "grades": {
+    "overall": "B-",
+    "academics": "B-",
+    "value": "B-",
+    "diversity": "A-",
+    "campus": "B-",
+    "professors": "B-",
+    "location": "C+",
+    "student_life": "B",
+    "safety": "B-"
+   }
+  },
+  "western-wyoming-community-college": {
+   "url": "https://www.niche.com/colleges/western-wyoming-community-college/",
+   "grades": {
+    "overall": "C+",
+    "academics": "B-",
+    "value": "C+",
+    "diversity": "B-",
+    "campus": "C+",
+    "professors": "B",
+    "location": "C",
+    "student_life": "C",
+    "safety": "B-"
+   }
+  }
+ }
+}
