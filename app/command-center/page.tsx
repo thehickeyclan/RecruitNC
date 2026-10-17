@@ -15,6 +15,7 @@ import { ArrowRight, BarChart3, BookOpen, Bot, Check, ListChecks, Map as MapIcon
 import { CollegeProgramMap } from "@/components/colleges/college-program-map"
 import { tocDisplayClass } from "@/components/toc/toc-theme"
 import { loadSalesData } from "@/lib/recruiting/sales-data"
+import { approvedTestimonials } from "@/lib/recruiting/testimonials"
 import { SCOUTING_REPORT_PRICES, formatPrice } from "@/lib/scouting-report-entitlement"
 import { createAdminClient } from "@/lib/supabase/admin"
 
@@ -220,21 +221,11 @@ export default async function CommandCenterSalesPage() {
           title="Know what to do this year"
           points={["A roadmap for every grade, 8th to 12th, with a checklist you tick off", "The dates coaches may call, meet and host, for your wrestler's class", "The next three steps, always on your home screen"]}
           visual={
-            <Example>
-              <div className="grid grid-cols-5 gap-2 pt-4">
-                {[["8th", "#5B9BFF"], ["9th", "#38BDF8"], ["10th", "#A78BFA"], ["11th", "#F5C04E"], ["12th", "#F87171"]].map(([g, c], i) => (
-                  <div key={g} className="rounded-lg border-t-4 bg-[#060f1f] p-2" style={{ borderTopColor: c }}>
-                    <p className="text-xs font-black">{g}</p>
-                    {[0, 1, 2, 3].map((n) => (
-                      <div key={n} className="mt-2 flex items-center gap-1">
-                        <span className={`h-2.5 w-2.5 rounded-sm border ${n < (i === 3 ? 2 : i < 3 ? 4 : 0) ? "border-transparent" : "border-white/30"}`} style={n < (i === 3 ? 2 : i < 3 ? 4 : 0) ? { backgroundColor: c } : undefined} />
-                        <span className="h-1.5 flex-1 rounded bg-white/15" />
-                      </div>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            </Example>
+            <figure className={`${card} overflow-hidden`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/screens/roadmap.jpg" alt="The recruiting roadmap: five grade columns with checklists, 11th grade marked as the wrestler's year" loading="lazy" className="block w-full" />
+              <figcaption className="px-4 py-2 text-[11px] text-white/45">The real screen, with an example family.</figcaption>
+            </figure>
           }
         />
 
@@ -266,23 +257,11 @@ export default async function CommandCenterSalesPage() {
           title="Every college, and the next step"
           points={["Your stage with each program, from interested to offer", "Verified coach activity: who viewed the profile, who wrote", "Draft a coach email from your wrestler's verified results"]}
           visual={
-            <Example>
-              <div className="pt-4 text-[12px]">
-                {[
-                  ["Interested", "Send intro", "bg-sky-400/20 text-sky-200"],
-                  ["Viewed 2×", "Questionnaire", "bg-emerald-400/20 text-emerald-200"],
-                  ["Coach replied", "Plan a visit", "bg-amber-300/20 text-amber-100"],
-                  ["Visited", "Compare", "bg-violet-400/20 text-violet-200"],
-                ].map(([status, next, tone], i) => (
-                  <div key={i} className="flex items-center gap-2 border-b border-white/5 py-2.5 last:border-0">
-                    <span className="h-7 w-7 rounded bg-white/90" />
-                    <span className="h-2 flex-1 rounded bg-white/25" />
-                    <span className={`rounded px-2 py-0.5 font-semibold ${tone}`}>{status}</span>
-                    <span className="rounded border border-white/15 px-2 py-0.5 text-white/70">{next}</span>
-                  </div>
-                ))}
-              </div>
-            </Example>
+            <figure className={`${card} overflow-hidden`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/screens/college-list.jpg" alt="My College List: six colleges with fit, full cost, verified coach activity, status and next step" loading="lazy" className="block w-full" />
+              <figcaption className="px-4 py-2 text-[11px] text-white/45">The real screen, with an example family.</figcaption>
+            </figure>
           }
         />
 
@@ -291,7 +270,7 @@ export default async function CommandCenterSalesPage() {
           icon={MessageSquare}
           eyebrow="Messages"
           title="Hear from college coaches"
-          points={["Free for every family: only verified college coaches can start a conversation", "Parents see every message; stop or report a coach anytime", "In the Command Center, each conversation shows its college and your list moves on its own"]}
+          points={["Free for every family: only verified college coaches can start a conversation", "Parents are part of every conversation, alongside their wrestler", "In the Command Center, each conversation shows its college and your list moves on its own"]}
           visual={
             <Example>
               <div className="space-y-3 pt-5 text-sm">
@@ -332,6 +311,24 @@ export default async function CommandCenterSalesPage() {
             </div>
           }
         />
+
+        {/* Families, in their own words: approved quotes only (lib/recruiting/testimonials.ts). */}
+        {approvedTestimonials().length ? (
+          <section className="pt-16">
+            <h2 className={`text-center text-4xl leading-[0.95] sm:text-5xl ${tocDisplayClass()}`}>From wrestling families</h2>
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
+              {approvedTestimonials().map((t) => (
+                <figure key={t.name} className={`${card} flex flex-col p-6`}>
+                  <blockquote className="flex-1 text-base leading-7 text-white/85">&ldquo;{t.quote}&rdquo;</blockquote>
+                  <figcaption className="mt-4 text-sm">
+                    <span className="font-bold text-white">{t.name}</span>
+                    <span className="block text-white/50">{t.detail}</span>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         {/* The emotional promise, without promising outcomes. */}
         <section className="mt-16 rounded-3xl border border-white/10 bg-gradient-to-br from-[#13294B] to-[#0b1a33] px-6 py-12 text-center sm:px-12">
@@ -374,7 +371,7 @@ export default async function CommandCenterSalesPage() {
               ["Does the Command Center support women's wrestling?", "Yes. Women's wrestling has its own colleges, rules and rankings, and the Command Center follows your wrestler: a daughter's map, colleges and rules are the women's ones."],
               ["Does it guarantee a scholarship or an offer?", "No. Nothing can. It helps you find the colleges that fit, know what to do next and see real coach activity, so your wrestler's opportunities aren't left to chance."],
               ["Who sees my information?", "Your plan, list and notes are yours alone, and a family's income is never saved. Academics and contact info are seen only by verified college coaches, never the public."],
-              ["Can college coaches message my wrestler?", "Only verified college coaches can start a conversation, and parents see every message and can stop a coach at any time. Messages are free for every family; the Recruiting Command Center ties each conversation to its college and your plan."],
+              ["Can college coaches message my wrestler?", "Yes, verified college coaches can write to your wrestler, and parents are part of every conversation. You stay in control: you can turn off messages from any coach. Messages are free for every family; the Recruiting Command Center ties each conversation to its college and your plan."],
               ["I'm on Rankings. What happens if I upgrade?", "Your $9.99 plan is cancelled automatically when the Recruiting Command Center starts, so you never pay for both."],
               ["Can I cancel?", "Anytime, from your account."],
             ].map(([q, a]) => (
