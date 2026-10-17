@@ -374,6 +374,36 @@ export function buildTournamentRows(input: {
     }
   })
 
+  /*
+   * Any other event the wrestler has bouts at and no result row for - a non-placer at an event
+   * whose file lists placers only. Participation is the evidence; the record is counted from the
+   * bouts (Matt, 17 October 2026).
+   */
+  const orphanEvents = new Map<string, AttachedEventBout[]>()
+  for (const b of input.attachedEventBouts ?? []) {
+    const k = b.eventKey
+    if (k.startsWith("fargo-") || k.startsWith("ucd-") || k === NC_UNITED_DUALS_EVENT_KEY || k === NC_UNITED_AAU_DUALS_EVENT_KEY) continue
+    orphanEvents.set(k, [...(orphanEvents.get(k) ?? []), b])
+  }
+  const orphanEventRows: TournamentRow[] = [...orphanEvents.entries()].map(([key, bouts]): TournamentRow => {
+    const real = bouts.filter((b) => !b.isBye)
+    const wins = real.filter((b) => b.win).length
+    const first = bouts[0]!
+    return {
+      id: key,
+      event: first.eventName,
+      team: null,
+      isDuals: /duals/i.test(first.eventName),
+      year: first.year,
+      sortKey: first.eventDate ? String(first.eventDate).slice(0, 10) : `${first.year}-06-01`,
+      weight: first.weight || null,
+      placement: null,
+      record: `${wins}-${real.length - wins}`,
+      entrants: null,
+      bouts: bouts.map(({ team: _team, ...bout }) => bout),
+    }
+  })
+
   const fargoRows: TournamentRow[] = [
     ...fargoFromResults,
     ...[...orphanFargo.entries()].map(([key, bouts]): TournamentRow => {
@@ -419,6 +449,7 @@ export function buildTournamentRows(input: {
      */
     ...ucdRows,
     ...fargoRows,
+    ...orphanEventRows,
     /*
      * The event is the duals; NC United is who they wrestled for.
      *
