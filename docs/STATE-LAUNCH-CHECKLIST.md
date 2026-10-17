@@ -33,7 +33,7 @@ Sign in as the test coach (testcoach.thehickeyclan@gmail.com) on app.ncwrestling
 - [ ] Three profiles (a champion, a mid-placer, a girl): association named correctly (e.g. SCHSL / SCISA), state section and credential cards right, no other state's results
 - [ ] Scouting report on the same three: read it in full; every absence stated, nothing invented, he/she from gender
 - [ ] Coach Home, Perfect Recruit: counts include the state; coverage wording reads right
-- [ ] Compare: still limited to `COMPARE_STATES` and says so (`compareCoverage()`), unless the state's opponent credentials have been checked
+- [ ] Compare: still limited to `COMPARE_STATES` (lib/recruiting/states.ts), and its wording names only those states, not the full live list (today it reads `recruitingCoverage()`, which would wrongly include the new state)
 - [ ] Rankings: say plainly whether the state has a board yet; never show an empty one
 - [ ] Logos and school names on the state's profiles render
 - [ ] Nothing new on NC United's front end beyond the coach-facing coverage line
