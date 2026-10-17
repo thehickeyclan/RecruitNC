@@ -111,6 +111,16 @@ Most entrants will not match, and that is expected — these events draw heavily
 state. Unlinked rows stay in the table as the event record; they just do not appear on a
 profile.
 
+Matching happens once, at import. A profile created later (the state-qualifier minter, a family
+sign-up) does not pick up the event's rows by id. Run the relink after minting, dry run first:
+
+```bash
+npx tsx --env-file=.env.local scripts/relink-other-tournament-event.ts --event-key <key> [--apply]
+```
+
+It uses the same `matchAthlete`, fills only empty ids in place (no delete/re-insert, so
+result_athlete_links survive), requires the weight to corroborate, and backs up every row first.
+
 ## Club corrections
 
 Bracket operators mistype club names, and the team is not cosmetic: it is half the key that
