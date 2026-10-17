@@ -986,6 +986,10 @@ html[data-host="guild"] .bg-\[\#0A1628\]\/70 {
   background-color: rgb(10 10 11 / 0.7);
 }
 
+html[data-host="guild"] .bg-\[\#0A1628\]\/80 {
+  background-color: rgb(10 10 11 / 0.8);
+}
+
 html[data-host="guild"] .bg-\[\#0A1628\]\/90 {
   background-color: rgb(10 10 11 / 0.9);
 }
