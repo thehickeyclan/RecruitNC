@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 vi.mock("server-only", () => ({}))
 vi.mock("@/lib/recruiting/scout/tools", () => ({ SCOUT_TOOLS: [], runScoutTool: vi.fn() }))
 
-import { draftProblems } from "@/lib/recruiting/scout/run"
+import { answerProblems, draftProblems } from "@/lib/recruiting/scout/run"
 
 describe("draftProblems", () => {
   it("catches praise, roster talk and a questionnaire not done", () => {
@@ -36,5 +36,14 @@ describe("compareNiche", () => {
     const { compareNiche } = await vi.importActual<typeof import("@/lib/recruiting/scout/tools")>("@/lib/recruiting/scout/tools")
     const text = compareNiche(["campbell-university", "appalachian-state-university"])!
     expect(text).toMatch(/Dorms: Campbell University B, Appalachian State University C\+: Campbell University is higher/)
+  })
+})
+
+describe("answerProblems", () => {
+  it("catches a college said to require the NCAA minimum, and grades read as verdicts", () => {
+    expect(answerProblems("Mount Olive requires a 2.2 GPA to compete in Division II.")).toHaveLength(1)
+    expect(answerProblems("The NCAA requires a 2.2 GPA in 16 core courses.")).toEqual([])
+    expect(answerProblems("Mount Olive is safer than Campbell.")).toHaveLength(1)
+    expect(answerProblems("Mount Olive has the higher safety grade: A+ to Campbell's B+.")).toEqual([])
   })
 })
