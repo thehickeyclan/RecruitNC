@@ -76,6 +76,17 @@ function sectionLabel(text: string): string {
   return `<div style="font-family:${FONT};font-size:11px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:${MUTED};margin:14px 0 2px;">${esc(text)}</div>`
 }
 
+/**
+ * Strength of Competition, as the wrestler's profile shows it: the grade as a small pill and its
+ * one line beside it. Nothing at all when it could not be computed - never a placeholder grade.
+ */
+function strengthRow(strength: AthleteEventReport["strength"]): string {
+  if (!strength) return ""
+  return `${sectionLabel("Strength of Competition")}<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+<td valign="top" style="padding:4px 0;font-family:${FONT};font-size:13px;line-height:1.5;color:${MUTED};"><span style="display:inline-block;padding:2px 8px;margin-right:6px;border-radius:999px;background:${NAVY};color:${GOLD};font-size:11px;font-weight:800;letter-spacing:0.4px;white-space:nowrap;">${esc(strength.grade)}</span>${esc(strength.line)}</td>
+</tr></table>`
+}
+
 function competedCard(r: AthleteEventReport, photo: string | undefined, lossesVisible: boolean): string {
   const facts = [r.classYear ? `Class of ${r.classYear}` : null, r.school, r.weight ? `${r.weight} lb` : null].filter(Boolean).map(esc).join(" · ")
   const bouts = r.bouts
@@ -93,6 +104,7 @@ function competedCard(r: AthleteEventReport, photo: string | undefined, lossesVi
     </td>
   </tr></table>
   ${r.placementNote ? `<div style="font-family:${FONT};font-size:12px;color:${MUTED};margin-top:8px;">${esc(r.placementNote)}.</div>` : ""}
+  ${strengthRow(r.strength)}
   ${r.significantWins.length ? `${sectionLabel(`Significant wins · ${r.significantWins.length}`)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${r.significantWins.map((w) => resultRow(w, "W")).join("")}</table>` : ""}
   ${lossesVisible && r.notableLosses.length ? `${sectionLabel(`Notable losses · ${r.notableLosses.length}`)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${r.notableLosses.map((l) => resultRow(l, "L")).join("")}</table>` : ""}
   ${bouts ? `${sectionLabel("Every bout")}<div style="font-family:${FONT};font-size:12px;line-height:1.7;color:#475569;">${bouts}</div>` : ""}
