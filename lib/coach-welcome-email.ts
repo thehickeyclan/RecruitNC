@@ -81,8 +81,7 @@ export function renderCoachWelcomeEmail(input: CoachWelcomeInput): { subject: st
 </td></tr>
 
 <tr><td style="background:#ffffff;padding:24px 24px 8px;border-left:1px solid ${LINE};border-right:1px solid ${LINE};font-family:${FONT};font-size:15px;line-height:1.6;color:#334155;">
-  <p style="margin:0 0 14px;">You're one of ${input.coaches} college coaches from ${input.programs} programs${esc(named)} using ${esc(RECRUITING_BRAND.name)} to find and follow wrestlers. We built it for you, so tell us what's working and what isn't: <strong>just reply to this email</strong>, it comes straight to me.</p>
-  <p style="margin:0 0 6px;"><strong>Where we're going.</strong> Our goal is every state. <strong>South Carolina launches next week</strong>, and more states follow quickly.</p>
+  <p style="margin:0 0 14px;">You're one of ${input.coaches} college coaches from ${input.programs} programs${esc(named)} using ${esc(RECRUITING_BRAND.name)} to evaluate and engage wrestlers. We built it for you, so tell us what's working and what isn't: <strong>just reply to this email</strong>, it comes straight to me.</p>
 </td></tr>
 
 <tr><td style="background:#ffffff;padding:4px 24px 4px;border-left:1px solid ${LINE};border-right:1px solid ${LINE};">
@@ -109,6 +108,7 @@ export function renderCoachWelcomeEmail(input: CoachWelcomeInput): { subject: st
 </td></tr>
 
 <tr><td style="background:#ffffff;padding:6px 24px 24px;border-left:1px solid ${LINE};border-right:1px solid ${LINE};font-family:${FONT};font-size:15px;line-height:1.6;color:#334155;">
+  <p style="margin:6px 0 14px;"><strong>Where we're going.</strong> Our goal is every state. <strong>South Carolina launches next week</strong>, and more states follow quickly.</p>
   <p style="margin:12px 0 0;">Thank you for being part of it,</p>
   <p style="margin:2px 0 0;font-weight:800;color:${INK};">Matt Hickey</p>
   <p style="margin:0;color:${MUTED};font-size:13px;">${esc(RECRUITING_BRAND.name)}</p>
