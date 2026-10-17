@@ -145,10 +145,11 @@ async function measure(state: string) {
     const { data } = await sb.from("athletes").select("id,name,state,is_nc_athlete,graduationyear").in("id", linkedIds.slice(i, i + 200))
     for (const a of data ?? []) {
       const counts = a.is_nc_athlete === true ? HOME_STATE : normalizeStateCode(a.state)
-      // A wrestler graduated before this state's coverage, or who moved to NC, is not this check's business.
-      if (counts === state || Number(a.graduationyear) < SENIORS) continue
-      if (counts === HOME_STATE && state !== HOME_STATE) continue
-      wrongState.push(`${a.name} (${a.graduationyear ?? "no class"}) counts as ${counts ?? "no state"} · ${a.id}`)
+      // A graduate is not this check's business, and a recorded other state is a decision (a move:
+      // Jack Harty, NC champion now at a Connecticut prep school, is CT by Matt's ruling, 17 Oct 2026).
+      // What this catches is a champion with no state at all, invisible in every state's lists.
+      if (counts || Number(a.graduationyear) < SENIORS) continue
+      wrongState.push(`${a.name} (${a.graduationyear ?? "no class"}) has no state · ${a.id}`)
     }
   }
 
@@ -191,7 +192,7 @@ async function measure(state: string) {
         pass: pct(recentNoClass.length, recentIds.size) <= 5,
         detail: recentNoClass.map((a) => `${a.name}, ${a.highschool ?? "?"} · ${a.id}`),
       },
-      { check: "Championship-linked profiles counted under another state", kind: "GATE", value: String(wrongState.length), pass: wrongState.length === 0, detail: wrongState },
+      { check: "Championship-linked profiles with no state", kind: "GATE", value: String(wrongState.length), pass: wrongState.length === 0, detail: wrongState },
       { check: "Results too early for the class year (namesake or wrong class)", kind: "GATE", value: String(namesakes.length), pass: namesakes.length === 0, detail: namesakes },
       { check: "Independent-school results from 7th/8th grade (check class year)", kind: "INFO", value: String(middleSchool.length), pass: true, detail: middleSchool },
       { check: "NC results on this state's profiles (review each)", kind: "GATE", value: String(crossState.length), pass: crossState.length === 0, detail: crossState },
