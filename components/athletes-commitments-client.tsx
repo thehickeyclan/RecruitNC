@@ -423,7 +423,6 @@ export function AthletesCommitmentsClient({
                       <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">High School</th>
                       <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">Weight</th>
                       <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">Gender</th>
-                      <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">NHSCA 2025</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -447,13 +446,6 @@ export function AthletesCommitmentsClient({
                         <td className="p-3 text-white/70">{athlete.highschool || "—"}</td>
                         <td className="p-3 text-white/70">{athlete.weightclass ?? "—"}</td>
                         <td className="p-3 text-white/70">{athlete.gender || "—"}</td>
-                        <td className="p-3 text-white/70">
-                          {athlete.nhsca_2025_placement
-                            ? athlete.nhsca_2025_placement
-                            : athlete.nhsca_2025_record
-                              ? athlete.nhsca_2025_record
-                              : "—"}
-                        </td>
                       </tr>
                     ))}
                   </tbody>

@@ -6,6 +6,7 @@ import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { normalizeCollegeToCanonical } from "@/lib/canonical-college"
 import { fetchCommitmentAthletes, fetchCommitmentStats, type CommitmentAthleteFilters } from "@/lib/athletes-commitments-fetch"
+import { withCompetedWeights } from "@/lib/commitments-competed-weight"
 import { jsonSafeClone } from "@/lib/json-safe-clone"
 import { adminGate } from "@/lib/admin-gate"
 import { ATHLETE_PUBLIC_COLUMNS } from "@/lib/athlete-public-columns"
@@ -39,10 +40,11 @@ export async function GET(request: Request) {
 
     const athletesPromise = fetchCommitmentAthletes(supabase, filters)
     const statsPromise = includeStats ? fetchCommitmentStats(supabase, filters) : null
-    const [{ athletes, total }, stats] = await Promise.all([
+    const [{ athletes: listed, total }, stats] = await Promise.all([
       athletesPromise,
       statsPromise ?? Promise.resolve(null),
     ])
+    const athletes = await withCompetedWeights(listed)
     /*
      * Rank numbers on the commitment list, for the people entitled to them.
      *
