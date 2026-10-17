@@ -155,6 +155,8 @@ export function Navbar() {
   const athletesItems = [profilesItem, compareItem, ...commitmentItems, recruitingItem]
 
   const programsItems = [
+    { href: "/command-center", label: "Recruiting Command Center", description: "Your recruiting assistant, 8th grade to signing" },
+    { href: "/plans", label: "Plans & Pricing", description: "Free, Rankings, Command Center and Blue, side by side" },
     { href: "/blue", label: "NC United Blue", description: "Training, apparel, and member benefits" },
     { href: "/national-team", label: "National Team", description: "NC United national competition teams" },
     { href: "/recruiting/college-map", label: "College Program Map", description: "Every college wrestling program, coast to coast" },
@@ -299,6 +301,8 @@ export function Navbar() {
   const showMyRecruiting = Boolean(user) && profile?.role !== "college_coach"
   const highlightNavItems = [
     ...(showMyRecruiting ? [{ href: "/my-recruiting", label: "Command Center" }] : []),
+    // Signed out, the same slot is the way in: what the Command Center is and what it costs.
+    ...(!user ? [{ href: "/command-center", label: "Command Center" }] : []),
     ...(showCoachHome ? [{ href: "/coach-home", label: "Coach Home" }] : []),
     ...(showMyRecruits ? [{ href: getRecruitingPortalUrl(), label: "My Recruits" }] : []),
   ]

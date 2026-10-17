@@ -134,6 +134,12 @@ export function RankingsSalesClient({
     }
     setCheckingOut(kind)
     setCheckoutError(null)
+    void fetch("/api/track-funnel-event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: "checkout_started", source: kind, path: window.location.pathname }),
+      keepalive: true,
+    }).catch(() => {})
     try {
       const response = await fetch("/api/scouting-report/checkout", {
         method: "POST",

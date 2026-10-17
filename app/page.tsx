@@ -423,6 +423,35 @@ export default async function HomePage() {
           </div>
         </section>
 
+        {/* The Recruiting Command Center, sold where families land (17 Oct 2026). */}
+        <section>
+          <SectionHeader
+            title="Recruiting Command Center"
+            href="/command-center"
+            linkLabel="See what it does"
+            icon={<TrendingUp className="h-5 w-5 text-rnc-gold" />}
+          />
+          <div className="grid gap-6 rounded-xl border border-rnc-gold/30 bg-rnc-raised p-6 md:grid-cols-[1fr_auto] md:items-center">
+            <div>
+              <p className="text-lg font-semibold text-white">Your recruiting assistant, from 8th grade through signing day.</p>
+              <ul className="mt-3 grid gap-1.5 text-sm text-white/70 sm:grid-cols-2">
+                <li>Every college wrestling program, on one map</li>
+                <li>Each college&apos;s coaches, full cost and roster</li>
+                <li>Your plan for every grade, with the rules</li>
+                <li>Which college programs viewed your profile</li>
+              </ul>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row md:flex-col">
+              <Link href="/command-center" className="rounded-lg bg-rnc-gold px-5 py-2.5 text-center text-sm font-semibold text-rnc-ink hover:opacity-90">
+                See the Command Center
+              </Link>
+              <Link href="/plans" className="rounded-lg border border-white/20 px-5 py-2.5 text-center text-sm font-semibold text-white hover:bg-white/5">
+                Compare plans
+              </Link>
+            </div>
+          </div>
+        </section>
+
         {/* News */}
         <HomeNewsHighlightsCarousel />
 
