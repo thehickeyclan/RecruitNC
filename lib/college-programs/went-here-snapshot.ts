@@ -30,6 +30,8 @@ export type SnapshotCommit = {
    * and null for a profile with no gender; such a commit is in the combined figures only.
    */
   gender?: "mens" | "womens" | null
+  /** The wrestler's state ("NC", "SC"). Absent in a snapshot built before 17 Oct 2026, when every commit was North Carolina's. */
+  state?: string | null
 }
 
 export type WentHereSnapshot = {

@@ -13,9 +13,11 @@ export const dynamic = "force-dynamic"
  * One school's coaching staff, fetched when its card opens - 2,000 coaches would otherwise ride
  * along with every map load.
  *
- * The staff list and the recruiting questionnaire links are the Recruiting Portal (Matt, 10 Oct 2026): where the programs are is public,
- * who to contact is Blue. Anyone else gets `locked` and no names - not merely no emails - so the
- * collected list cannot be read out one school at a time.
+ * The staff list and the recruiting questionnaire links are the Recruiting Command Center (Matt,
+ * 10 Oct 2026): where the programs are is public, who to contact is paid. Anyone else gets
+ * `locked` and no names - not merely no emails - so the collected list cannot be read out one
+ * school at a time. They get counts instead (Matt, 17 Oct 2026: show what subscribing unlocks):
+ * how many coaches, and whether there is a questionnaire.
  */
 export async function GET(request: NextRequest) {
   const schoolId = request.nextUrl.searchParams.get("school")?.trim()
@@ -24,7 +26,16 @@ export async function GET(request: NextRequest) {
   const { viewer } = await resolvePortalViewer({ supabase: await createClient(), admin: createAdminClient() })
   const full = Boolean(hasPortalAccess(viewer) || viewer.isVerifiedCoach)
 
-  if (!full) return NextResponse.json({ staff: [], questionnaires: [], locked: true })
+  if (!full) {
+    const questionnaires = questionnairesForSchool(schoolId)
+    return NextResponse.json({
+      staff: [],
+      questionnaires: [],
+      locked: true,
+      staffCount: staffForSchool(schoolId).length,
+      hasQuestionnaire: questionnaires.some((q) => q.mens || q.womens),
+    })
+  }
 
   const staff = staffForSchool(schoolId).map((member) => ({ ...member, head: isHeadCoach(member) }))
   return NextResponse.json({ staff, questionnaires: questionnairesForSchool(schoolId), locked: false })
