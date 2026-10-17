@@ -5,7 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { coachLabel, displayName, familyOf, firstName, unreadCount } from "@/lib/coach-messages"
 import { getAppBaseUrl } from "@/lib/news-share-formats"
 import { sendToTokens } from "@/lib/push-send"
-import { notifyStaffMessageReport } from "@/lib/staff-alerts-sms"
+import { notifyStaffMessageReport, notifyStaffUnclaimedMessage } from "@/lib/staff-alerts-sms"
 
 /**
  * Telling people a message arrived. The phone alert is the point of the whole feature; email
@@ -95,7 +95,7 @@ ${lines.footer ? `<p style="color:#64748b;font-size:14px;">${escapeHtml(lines.fo
 /** Called after a message is saved. Tells the other side of the conversation. */
 export async function notifyNewMessage(
   admin: SupabaseClient,
-  input: { threadId: string; senderUserId: string; senderRole: "coach" | "athlete" | "parent" },
+  input: { threadId: string; senderUserId: string; senderRole: "coach" | "athlete" | "parent"; isNewThread?: boolean },
 ): Promise<void> {
   try {
     const { data: thread } = await admin
@@ -118,6 +118,15 @@ export async function notifyNewMessage(
     if (input.senderRole === "coach") {
       const family = await familyOf(admin, String(thread.athlete_id))
       const recipients = [family.athleteUserId, ...family.parentUserIds].filter((id): id is string => Boolean(id))
+      // Nobody to tell: text Matt so the profile gets claimed. Once per conversation - its first message.
+      if (!recipients.length && input.isNewThread) {
+        await notifyStaffUnclaimedMessage({
+          program: (thread.program as string | null) ?? null,
+          coach: coachName,
+          athleteName: (athlete?.name as string | null) ?? null,
+          profileUrl: `${getAppBaseUrl()}/view-profile?id=${thread.athlete_id}`,
+        }).catch((e) => console.error("[coach-messages] unclaimed text", e instanceof Error ? e.message : e))
+      }
       const pushed = await pushTo(admin, recipients, {
         title: "New message",
         body: `${from} sent ${wrestler} a message.`,

@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
   const result = await coachSend(admin, userId, athleteId, body.body)
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
 
-  after(() => notifyNewMessage(admin, { threadId: result.threadId, senderUserId: userId, senderRole: result.senderRole }))
+  after(() => notifyNewMessage(admin, { threadId: result.threadId, senderUserId: userId, senderRole: result.senderRole, isNewThread: result.isNewThread }))
   after(() => noteCoachMessaged(admin, userId, athleteId).catch((e) => console.error("[coach-messages] stage:", e)))
   // The family's list follows the conversation: this college goes on it at "Coach replied".
   after(() => moveListsOnCoachMessage(admin, result.threadId).catch((e) => console.error("[coach-messages] family list:", e)))
