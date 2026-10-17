@@ -74,6 +74,7 @@ import { ProfileViewStatsPanel } from "./profile-view-stats-panel"
 import { BannerViewStats } from "./profile/banner-view-stats"
 import { getPublicRankingsMax, isPublicRankingsYearPublished, rankingLabel } from "@/lib/public-rankings-cap"
 import { scoutingReportAvailable } from "@/lib/scouting-report-access"
+import { stateName } from "@/lib/athlete-state"
 
 /**
  * Bio/summary paragraph section.
@@ -132,6 +133,8 @@ interface AthleteDetailProps {
     weight_class?: string
     highschool?: string
     high_school?: string
+    /** Two-letter code; the state he wrestles in, shown under the school. */
+    state?: string | null
     wrestlingClub?: string
     wrestlingClubLogoUrl?: string
     ncUnitedTeam?: string
@@ -542,8 +545,27 @@ export function AthleteDetail({
     ? `Last competed: ${profileWeightDisplay.lastCompeted.weight} lbs · ${profileWeightDisplay.lastCompeted.event} ${profileWeightDisplay.lastCompeted.year}`
     : null
   const highSchool = athlete?.highschool || athlete?.high_school || "Not specified"
+  /*
+   * The state under the school, because "4A State Champion" is ambiguous the moment the product
+   * holds two states and both Carolinas run a 4A. It sits as a subline on the school card rather
+   * than a card of its own: it qualifies the school, it is not a credential beside it.
+   */
+  const athleteStateName = stateName(athlete?.state)
   const wrestlingClub = athlete?.wrestlingClub || "Not specified"
   const ncUnitedTeam = athlete?.ncUnitedTeam || ""
+  /*
+   * School, club and NC United team, in the hero.
+   *
+   * The banner named the class, the weight and the credentials but never the school — "High
+   * School and Programs" is the better part of a thousand lines below it, under panels that
+   * render nothing for most viewers. A coach opening a profile had to scroll to learn where
+   * the kid wrestles, which is the second thing anybody wants after the name (Matt, 10 Oct 2026).
+   */
+  const heroAffiliations = [
+    highSchool && highSchool !== "Not specified" ? highSchool : null,
+    wrestlingClub && wrestlingClub !== "Not specified" ? wrestlingClub : null,
+    ncUnitedTeam ? `NC United ${ncUnitedTeam}` : null,
+  ].filter(Boolean) as string[]
   const recruitingStatus = athlete?.recruiting_status || "Uncommitted"
   const rawRank = (() => {
     const p = (athlete as any)?.prospect_ranking
@@ -1320,6 +1342,7 @@ export function AthleteDetail({
   /* Wins over ranked opponents, last twelve months, national and North Carolina apart. */
   const ranked12 = rankedWinsLast12Months(appData.wins)
   const sentences = summarySentences({
+    stateName: stateName(athlete?.state) || null,
     name: athleteName,
     gender: (athlete as { gender?: string | null }).gender ?? null,
     school: hasSchool ? highSchool : null,
@@ -1343,7 +1366,7 @@ export function AthleteDetail({
   })
   const styleWords = (competition?.styles ?? []).map((st) => (st === "greco" ? "Greco-Roman" : st === "freestyle" ? "Freestyle" : "Folkstyle"))
   const aboutLine = competition
-    ? [competition.scope === "national" ? "Competes nationally" : "Competes in North Carolina", styleWords.join(" and ")].filter(Boolean).join(" · ")
+    ? [competition.scope === "national" ? "Competes nationally" : `Competes in ${stateName(athlete?.state) || "North Carolina"}`, styleWords.join(" and ")].filter(Boolean).join(" · ")
     : null
   const glance: Array<[string, string]> = [
     ...(competition
@@ -1414,7 +1437,7 @@ export function AthleteDetail({
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#D3B574]">NC Wrestling</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#D3B574]">{`${stateName(athlete?.state) || "North Carolina"} Wrestling`}</p>
           <h1 className="mt-1 uppercase text-white">
             {firstNames ? <span className="block text-[22px] font-medium leading-6 tracking-tight text-white/90">{firstNames}</span> : null}
             <span className="block break-words text-[32px] font-black leading-[34px] tracking-tight">{lastNames}</span>
@@ -1633,6 +1656,12 @@ export function AthleteDetail({
                 </div>
               )}
 
+              {heroAffiliations.length > 0 && (
+                <p className="mb-3 text-sm font-medium leading-snug text-white/80">
+                  {heroAffiliations.join(" · ")}
+                </p>
+              )}
+
               <div className="grid grid-cols-2 gap-3">
                   <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 border border-white/20">
                   <p className="text-white/70 text-xs font-medium uppercase tracking-wide">Year</p>
@@ -1751,6 +1780,12 @@ export function AthleteDetail({
                     <Badge className="bg-[#D3B574] text-[#13294B] px-4 py-2 text-base font-bold shadow-lg mb-4">
                       {rankingLabel(prospectRanking, rankBoardGender)} - Class of {graduationYear}
                     </Badge>
+                  )}
+
+                  {heroAffiliations.length > 0 && (
+                    <p className="mb-4 max-w-md text-base font-medium leading-snug text-white/80">
+                      {heroAffiliations.join(" · ")}
+                    </p>
                   )}
 
                   <div className="grid grid-cols-2 gap-4 max-w-md">
@@ -2393,6 +2428,9 @@ export function AthleteDetail({
                     </div>
                     <p className="profile-label text-[10px] lg:text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1 lg:mb-2">High School</p>
                     <p className="profile-text text-base lg:text-xl font-bold text-foreground leading-tight">{highSchool}</p>
+                    {athleteStateName && (
+                      <p className="profile-text mt-0.5 text-xs lg:text-sm text-muted-foreground leading-tight">{athleteStateName}</p>
+                    )}
                   </div>
                 )}
                 {wrestlingClub && wrestlingClub !== "Not specified" && (
@@ -2414,6 +2452,20 @@ export function AthleteDetail({
                     </div>
                     <p className="profile-label text-[10px] lg:text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1 lg:mb-2">Wrestling Club</p>
                     <p className="profile-text text-base lg:text-xl font-bold text-foreground leading-tight">{wrestlingClub}</p>
+                  </div>
+                )}
+                {/*
+                  * The state carries on its own when there is no school to hang it under.
+                  *
+                  * It began as a subline on the school card, and a profile with no school on
+                  * file then showed no state at all — which is exactly the profile a coach
+                  * knows least about. Minted placer profiles always carry a school; a
+                  * self-created one need not.
+                  */}
+                {athleteStateName && (!highSchool || highSchool === "Not specified") && (
+                  <div className="profile-panel bg-card rounded-xl p-4 lg:p-6 shadow-sm border border-border hover:shadow-md transition-shadow">
+                    <p className="profile-label text-[10px] lg:text-xs text-muted-foreground font-semibold uppercase tracking-wider mb-1 lg:mb-2">State</p>
+                    <p className="profile-text text-base lg:text-xl font-bold text-foreground leading-tight">{athleteStateName}</p>
                   </div>
                 )}
                 {ncUnitedTeam && ncUnitedTeam !== "none" && (

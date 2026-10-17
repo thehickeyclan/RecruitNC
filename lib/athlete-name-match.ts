@@ -106,6 +106,14 @@ export function normalizeApostrophes(s: string): string {
      */
     .replace(/`/g, "'")
     .replace(/\u00B4/g, "'")
+    /*
+     * A lone "?" or U+FFFD between two letters is a mangled apostrophe, not a character: an
+     * export whose UTF-8 was read as something else writes "Jackson D?Ettore" for
+     * "Jackson D'Ettore". NHSCA 2026 arrived that way, and those two bouts never reached him -
+     * a 6A state champion's national results sat unlinked beside four spellings that did match.
+     * No wrestler's name contains a question mark between letters, so the rule is safe narrow.
+     */
+    .replace(/(?<=\p{L})[?\uFFFD](?=\p{L})/gu, "'")
 }
 
 function normalizeForAlias(name: string): string {
@@ -226,9 +234,35 @@ export function rowNameMatchesAthleteContext(rowName: string, context: AthleteMa
   return false
 }
 
+/**
+ * Two spellings of one school.
+ *
+ * Apostrophes are folded the way names are: sources write "Gray`s Creek" with a backtick and
+ * "Gray's Creek" with an apostrophe, and the same character made Kevin O`Brien look like a
+ * different wrestler. "High School" is dropped too, because it can sit in the MIDDLE of one
+ * spelling and not the other - "Northside High School (Jacksonville)" against "Northside
+ * (Jacksonville)" - which no substring test can bridge. Both made a wrestler look like a transfer
+ * and sent her season record to review.
+ */
 export function schoolsLikelySame(a?: string | null, b?: string | null): boolean {
-  const x = (a ?? "").trim().toLowerCase()
-  const y = (b ?? "").trim().toLowerCase()
+  /*
+   * Punctuation is not a school. One tournament writes "Corinth-Holders" and the next "Corinth
+   * Holders"; "R.J. Reynolds" and "R J Reynolds" are one place, as are "Rutherfordton-Spindale
+   * Central" and its unhyphenated spelling. Folding every non-letter to a space settles all of
+   * them. Single letters go too, so "Mills E. Godwin" meets "Mills Godwin" - a middle initial
+   * that appears in one roster and not the other was enough to call a wrestler a transfer and
+   * mint him a second profile (NC 2026 minting, 14 Oct 2026).
+   */
+  const fold = (v?: string | null) =>
+    normalizeApostrophes((v ?? "").trim().toLowerCase().replace(/`/g, "'"))
+      .replace(/\bhigh school\b|\bhigh\b|\bh\.?s\.?\b|\bschool\b/g, " ")
+      .replace(/[^a-z0-9]+/g, " ")
+      .split(" ")
+      .filter((w) => w.length > 1)
+      .join(" ")
+      .trim()
+  const x = fold(a)
+  const y = fold(b)
   if (!x || !y) return false
   return x.includes(y) || y.includes(x)
 }

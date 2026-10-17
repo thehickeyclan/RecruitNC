@@ -143,7 +143,8 @@ describe("who may start a conversation", () => {
     const r = await coachSend(client, COACH, ATHLETE, "Hi Liam, Coach Smith at Campbell.")
     expect(r.ok).toBe(true)
     expect(tables.coach_threads).toHaveLength(1)
-    expect(tables.coach_threads[0].program).toBe("Campbell")
+    // The mapped .edu domain names the school, so two coaches there are one program (lib/college-domain-schools.ts).
+    expect(tables.coach_threads[0].program).toBe("Campbell University")
     expect(tables.coach_messages[0].sender_role).toBe("coach")
   })
 

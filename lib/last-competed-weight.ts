@@ -2,6 +2,7 @@
  * Derive "last competed at" weight from tournament rows already loaded for a profile.
  * Display-only — does not write `athletes.weightclass`.
  */
+import { stateChampionshipName } from "@/lib/athlete-state"
 
 export type LastCompetedWeightCandidate = {
   year: number
@@ -140,7 +141,9 @@ export function buildProfileWeightDisplay(
 
 /** Build candidates from public profile tournament payload fields. */
 export function candidatesFromPublicProfilePayload(athlete: {
-  nchsaa_profile?: Array<{ year?: number; weight_class?: string | null }>
+  nchsaa_profile?: Array<{ year?: number; weight_class?: string | null; classification?: string | null }>
+  /** The wrestler's state, which names his state tournament on the "last competed" line. */
+  state?: string | null
   other_tournament_results?: Array<{
     year?: number
     weight?: string | null
@@ -208,7 +211,11 @@ export function candidatesFromPublicProfilePayload(athlete: {
     out.push({
       year: Number(r.year),
       weight: r.weight_class,
-      event: "NCHSAA States",
+      /*
+       * His state's tournament. "Last competed: 106 lbs — NCHSAA States 2026" on a South
+       * Carolina wrestler names a tournament he was never at; the SCHSL and SCISA run his.
+       */
+      event: `${stateChampionshipName(athlete.state, r.classification)} States`,
       priority: 10,
       month: 2,
     })

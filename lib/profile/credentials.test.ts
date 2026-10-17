@@ -47,3 +47,64 @@ describe("profileCredentials", () => {
     ])
   })
 })
+
+describe("the state names the championship", () => {
+  /*
+   * Both Carolinas run a 4A. "4A State Champion" on a profile that never says which state is a
+   * credential a coach cannot read, and "NCHSAA 4A State Champion" on a South Carolina wrestler
+   * is simply false — the SCHSL runs that championship.
+   */
+  it("labels a South Carolina placing SCHSL, not NCHSAA", () => {
+    const labels = profileCredentials({
+      stateRows: [row("SCHSL 4A State Championships", "Champion")],
+      tocRows: [],
+      tournamentRows: [],
+      state: "SC",
+    }).map((c) => c.label)
+    expect(labels).toEqual(["SCHSL 4A State Champion · ’26"])
+  })
+
+  it("keeps North Carolina as it was when no state is passed", () => {
+    const labels = profileCredentials({
+      stateRows: [row("NCHSAA 4A State Championships", "Champion")],
+      tocRows: [],
+      tournamentRows: [],
+    }).map((c) => c.label)
+    expect(labels).toEqual(["NCHSAA 4A State Champion · ’26"])
+  })
+
+  it("names the independent-schools championship where he actually placed", () => {
+    expect(
+      profileCredentials({ stateRows: [row("NCISA State Championships", "2nd")], tocRows: [], tournamentRows: [] })
+        .map((c) => c.label),
+    ).toEqual(["NCISA State 2nd · ’26"])
+    expect(
+      profileCredentials({
+        stateRows: [row("SCISA State Championships", "2nd")],
+        tocRows: [],
+        tournamentRows: [],
+        state: "SC",
+      }).map((c) => c.label),
+    ).toEqual(["SCISA State 2nd · ’26"])
+  })
+
+  it("carries the state onto a USA Wrestling state title too", () => {
+    const labels = profileCredentials({
+      stateRows: [],
+      tocRows: [],
+      tournamentRows: [row("2026 SC Freestyle & Greco State Championships - 16U Boys Freestyle", "Champion")],
+      state: "SC",
+    }).map((c) => c.label)
+    expect(labels).toEqual(["SC Freestyle State Champion · ’26"])
+  })
+
+  it("names a state we hold no association for by the state itself", () => {
+    const labels = profileCredentials({
+      stateRows: [row("Georgia 6A State Championships", "3rd")],
+      tocRows: [],
+      tournamentRows: [],
+      state: "GA",
+    }).map((c) => c.label)
+    expect(labels).toEqual(["Georgia 6A State 3rd · ’26"])
+  })
+})

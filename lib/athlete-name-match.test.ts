@@ -7,6 +7,7 @@ import {
   namesReferToSamePerson,
   pickBestAthleteCandidate,
   scoreAthleteRowMatch,
+  schoolsLikelySame,
 } from "@/lib/athlete-name-match"
 
 describe("athlete-name-match", () => {
@@ -138,5 +139,34 @@ describe("apostrophes across sources", () => {
 
   it("still tells two different wrestlers apart", () => {
     expect(namesLikelySamePerson("Kevin O'Brien", "Kevin O'Brian")).toBe(false)
+  })
+})
+
+describe("schoolsLikelySame", () => {
+  it("folds a backtick apostrophe, so one school is not read as a transfer", () => {
+    // RankWrestlers writes "Gray`s Creek High School"; the profile holds "Gray's Creek".
+    expect(schoolsLikelySame("Gray`s Creek High School", "Gray's Creek")).toBe(true)
+    expect(schoolsLikelySame("Northside High School (Jacksonville)", "Northside (Jacksonville)")).toBe(true)
+  })
+
+  it("still refuses two different schools", () => {
+    expect(schoolsLikelySame("East Forsyth", "Robert B. Glenn")).toBe(false)
+    expect(schoolsLikelySame("", "Gray's Creek")).toBe(false)
+  })
+})
+
+describe("a mangled apostrophe", () => {
+  /*
+   * NHSCA's 2026 export wrote "Jackson D?Ettore". Four other spellings of his name already
+   * matched the profile; this one did not, so a 6A state champion's two national bouts sat
+   * unlinked. The question mark is the apostrophe, mangled on export.
+   */
+  it("joins D?Ettore and D\uFFFDEttore to D'Ettore", () => {
+    expect(namesLikelySamePerson("Jackson D?Ettore", "Jackson D'Ettore")).toBe(true)
+    expect(namesLikelySamePerson("Jackson D\uFFFDEttore", "Jackson D'Ettore")).toBe(true)
+  })
+
+  it("still refuses a trailing question mark, which decides nothing", () => {
+    expect(namesLikelySamePerson("Jackson Smith?", "Jackson Jones")).toBe(false)
   })
 })

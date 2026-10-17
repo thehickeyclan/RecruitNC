@@ -6,6 +6,7 @@ import { normalizePhoneForStorage } from "@/lib/phone-format"
 import { auditIpFrom, recordAthleteEvent } from "@/lib/athlete-audit"
 import { getUserFromRequest } from "@/lib/supabase/auth-from-request"
 import { claimProfile, recordClaimConsent } from "@/lib/profile-claim"
+import { isHomeState, normalizeState } from "@/lib/athlete-state"
 import { linkResults } from "@/lib/identity/link-results"
 
 // The response returns at once; linking the new profile's results runs after it (see below).
@@ -121,6 +122,9 @@ export async function POST(request: NextRequest) {
         ? Math.min(30, Math.max(1, Number(formData.prospect_ranking)))
         : null
 
+    /* Defaults to North Carolina when the form does not say, which is what it meant before. */
+    const athleteState = normalizeState(formData.state)
+
     const insertPayload: Record<string, unknown> = {
       name: athleteName,
       firstName: String(formData.firstName).trim(),
@@ -129,6 +133,17 @@ export async function POST(request: NextRequest) {
       graduationyear,
       weightclass: formData.weightClass || null,
       highschool: formData.highSchool || null,
+      /*
+       * The state is written explicitly, because the database default is the wrong answer.
+       *
+       * `is_nc_athlete` defaults to TRUE, so every profile created here was stamped North
+       * Carolina whatever state the family lives in, and `state` was left null. That was
+       * invisible while North Carolina was the only state in the product; with placer profiles
+       * being minted for every state it would put a South Carolina wrestler in NC's rankings
+       * and on every coach's NC roster. The form asks, and both columns are kept in step.
+       */
+      state: athleteState,
+      is_nc_athlete: isHomeState(athleteState),
       wrestlingClub: formData.wrestlingClub || formData.club || null,
       bio: formData.bio || null,
       // Achievements are no longer asked for here. One free-text box produced a single blob

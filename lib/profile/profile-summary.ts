@@ -151,6 +151,8 @@ export function summarySentences(input: {
   club?: string | null
   accolades: Accolades
   scope: "national" | "in-state" | null
+  /** The wrestler's state by name, for "competes in South Carolina"; North Carolina when absent. */
+  stateName?: string | null
   styles: readonly string[]
   offSeasonEvents: number
   lastCompeted?: { weight?: string | number | null; event?: string | null; date?: string | null; year?: number | null } | null
@@ -179,7 +181,7 @@ export function summarySentences(input: {
     const parts: SummaryPart[] = [{ text: out.length ? `${subject} ` : `${name} ` }]
     const competes: SummaryPart[] = []
     if (input.scope) {
-      competes.push({ text: "competes " }, s(input.scope === "national" ? "nationally" : "in North Carolina"))
+      competes.push({ text: "competes " }, s(input.scope === "national" ? "nationally" : `in ${input.stateName || "North Carolina"}`))
       if (input.offSeasonEvents >= YEAR_ROUND_MIN_EVENTS) competes.push({ text: ", " }, s("year-round"), { text: styles.length ? "," : "" })
       if (styles.length) competes.push({ text: " in " }, s(list(styles)))
     } else if (styles.length) {

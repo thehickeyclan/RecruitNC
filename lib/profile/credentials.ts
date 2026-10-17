@@ -1,14 +1,20 @@
 /**
  * The handful of finishes a coach decides on, for the top of the profile: national placings, the
- * Tournament of Champions, NCHSAA state placings, and NC Freestyle & Greco state titles.
+ * Tournament of Champions, his state's placings, and USA Wrestling state titles.
  *
  * Built from the same rows the sections below print, so the strip can never claim a finish the
  * page does not show. Labels name the tournament in full enough to be unambiguous - "NCHSAA 7A
  * State 4th", never "State 4th", and USA Wrestling's state title is "NC Freestyle State Champion"
  * (Matt: always label their state championships). Overflow brackets ("(OF)") and duals are not
  * finishes.
+ *
+ * The state is a parameter because the label is wrong without it. "NCHSAA 4A State Champion" is
+ * right in North Carolina and false in South Carolina, where the public championship is the
+ * SCHSL's — and both states run a 4A, so the division cannot tell them apart. A coach reading
+ * "4A State Champion" on a profile that never says which state has been told nothing he can use.
  */
 
+import { normalizeState, stateChampionshipName } from "@/lib/athlete-state"
 import { isNationalEvent, styleOfEvent } from "@/lib/wrestling-style"
 import type { TournamentRow } from "@/lib/profile/tournament-rows"
 
@@ -58,7 +64,10 @@ export function profileCredentials(input: {
   tocRows: readonly TournamentRow[]
   tournamentRows: readonly TournamentRow[]
   max?: number
+  /** The wrestler's state, which names his state championship. Defaults to North Carolina. */
+  state?: string
 }): Credential[] {
+  const state = normalizeState(input.state)
   const out: Array<Credential & { place: number; year: number }> = []
   const add = (title: string, detail: string, tier: Credential["tier"], place: number, year: number) =>
     out.push({ title, detail, label: `${title} ${detail}`, tier, place, year })
@@ -70,9 +79,9 @@ export function profileCredentials(input: {
     if (isNationalEvent(row.event)) {
       const aa = /fargo|nhsca/i.test(row.event) && place > 1 ? " · All-American" : ""
       add(nationalName(row), `${placeWord(place)}${aa} · ${shortYear(row.year)}`, "national", place, row.year)
-    } else if (place === 1 && /nc freestyle|freestyle & greco/i.test(row.event)) {
+    } else if (place === 1 && /\b[a-z]{2} freestyle\b|freestyle & greco/i.test(row.event)) {
       const style = styleOfEvent(row.event, row.team) === "greco" ? "Greco" : "Freestyle"
-      add(`NC ${style} State`, `Champion · ${shortYear(row.year)}`, "olympic-state", place, row.year)
+      add(`${state} ${style} State`, `Champion · ${shortYear(row.year)}`, "olympic-state", place, row.year)
     }
   }
   for (const row of input.tocRows) {
@@ -83,8 +92,13 @@ export function profileCredentials(input: {
   for (const row of input.stateRows) {
     const place = placeNumber(row.placement)
     if (place == null || place > 6) continue
-    const cls = row.event.match(/\b(\d+A|NCISA[^ ]*)\b/i)?.[1]
-    add(`NCHSAA${cls ? ` ${cls}` : ""} State`, `${placeWord(place)} · ${shortYear(row.year)}`, "state", place, row.year)
+    const cls = row.event.match(/\b(\d+A(?:\/\d+A)?|NCISA[^ ]*|SCISA[^ ]*)\b/i)?.[1]
+    /*
+     * The championship is named from the wrestler's state, not hardcoded: an independent-schools
+     * division ("NCISA", "SCISA") names that championship instead of the public one.
+     */
+    const body = stateChampionshipName(state, cls ?? row.event)
+    add(`${body}${cls && !cls.toUpperCase().startsWith(body.toUpperCase()) ? ` ${cls}` : ""} State`, `${placeWord(place)} · ${shortYear(row.year)}`, "state", place, row.year)
   }
 
   /*
