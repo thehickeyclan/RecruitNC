@@ -24,7 +24,9 @@ const REPLY_TO = arg("reply-to") ?? "info@ncwrestlingunited.com"
 const INTERNAL = /ncwrestlingunited|thehickeyclan|testcoach|@example\.com$|^test@/i
 
 async function main() {
-  const { renderCoachInviteEmail } = await import("../lib/coach-welcome-email")
+  const { renderCoachInviteEmail, renderCoachInviteLetter } = await import("../lib/coach-welcome-email")
+  // --letter: the plain personal letter (lands in the inbox); otherwise the designed email.
+  const asLetter = flag("letter")
   const { filterUnsubscribed, unsubscribeHeaders, unsubscribeUrl } = await import("../lib/email-unsubscribe")
   const { programLogo } = await import("../lib/coach-program-logo")
   const { mapSchoolIdFor } = await import("../lib/college-programs/load")
@@ -90,8 +92,8 @@ async function main() {
   const list = candidates.filter((c) => ok.has(String(c.email).toLowerCase().trim()) && !sent[String(c.email).toLowerCase().trim()])
 
   const logoFor = async (program: string | null) => (program ? ((await programLogo({ name: program, logo_url: null }).catch(() => ({ url: null }))).url ?? null) : null)
-  const render = async (c: (typeof list)[number] | null, unsub: string | null) =>
-    renderCoachInviteEmail({
+  const render = async (c: (typeof list)[number] | null, unsub: string | null): Promise<{ subject: string; html: string; text?: string }> =>
+    (asLetter ? renderCoachInviteLetter : renderCoachInviteEmail)({
       coachName: c?.coach_name ?? null,
       coachEmail: c?.email ?? null,
       program: c?.college_program ?? null,
@@ -114,7 +116,7 @@ async function main() {
   const send = async (to: string, c: (typeof list)[number] | null) => {
     const unsub = unsubscribeUrl("https://app.ncwrestlingunited.com", to)
     const email = await render(c, unsub)
-    return resend.emails.send({ from: "Matt Hickey · RecruitNC <info@ncwrestlingunited.com>", to: [to], replyTo: REPLY_TO, subject: email.subject, html: email.html, headers: unsubscribeHeaders(unsub) })
+    return resend.emails.send({ from: asLetter ? "Matt Hickey <info@ncwrestlingunited.com>" : "Matt Hickey · RecruitNC <info@ncwrestlingunited.com>", to: [to], replyTo: REPLY_TO, subject: email.subject, html: email.html, ...(email.text ? { text: email.text } : {}), headers: unsubscribeHeaders(unsub) })
   }
   const testTo = arg("test-to")
   if (testTo) { const r = await send(testTo, sample); console.log(r.error ? `Test failed: ${r.error.message}` : `Test sent to ${testTo}`); return }

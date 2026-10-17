@@ -277,3 +277,58 @@ ${section("Where we're going", "Every state", `
 </body></html>`
   return { subject, html }
 }
+
+/* ------------------------------------------------------------------ invitation as a letter */
+
+/**
+ * The invitation as a short personal letter from Matt: no images, no buttons, one link, and a
+ * plain-text twin. The designed version went to Gmail's Promotions tab twice (17 Oct 2026); cold
+ * outreach that reads like a person writing lands in the inbox.
+ */
+export function renderCoachInviteLetter(input: CoachInviteInput): { subject: string; html: string; text: string } {
+  const coach = coachSalutation(input.coachName, input.coachEmail)
+  const subject = coach === "Coach" ? "Super 32 reports on the wrestlers you're recruiting" : `${coach}, Super 32 reports on the wrestlers you're recruiting`
+  const levels = (input.divisions ?? []).filter(([, n]) => n > 0).map(([d, n]) => `${n} ${d}`).join(", ")
+  const brand = RECRUITING_BRAND.name
+  const paras = [
+    `${coach},`,
+    `I'm Matt Hickey. I run ${brand}, where ${input.coaches} college coaches from ${input.programs} programs${levels ? ` (${levels})` : ""} now evaluate North Carolina wrestlers: every result we hold, scouting reports, and strength of competition, meaning who each wrestler has beaten and those opponents' accolades.`,
+    `New for Super 32 (Oct 24–25): star the wrestlers you're recruiting, and within 24 hours of the finals you'll get a report on each one, with placement, record, significant wins and notable losses.`,
+  ]
+  const steps = [
+    `Create your coach account. It's free for college coaches and access is instant:`,
+    `Star the wrestlers you're following, on any profile or ranking.`,
+    `Get your Super 32 report the day after the finals.`,
+  ]
+  const after = [
+    `We cover North Carolina today. South Carolina launches next week, and more states follow quickly.`,
+    `Questions? Just reply. It comes straight to me.`,
+  ]
+  const p = (t: string) => `<p style="margin:0 0 14px;">${esc(t)}</p>`
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:#ffffff;">
+<div style="max-width:560px;margin:0 auto;padding:24px 16px;font-family:${FONT};font-size:15px;line-height:1.6;color:#1f2937;">
+${paras.map(p).join("\n")}
+<ol style="margin:0 0 14px;padding-left:22px;">
+  <li style="margin:0 0 6px;">${esc(steps[0])} <a href="${SIGNUP_URL}" style="color:#1d4ed8;">${SIGNUP_URL.replace(/^https:\/\//, "")}</a></li>
+  <li style="margin:0 0 6px;">${esc(steps[1])}</li>
+  <li style="margin:0 0 6px;">${esc(steps[2])}</li>
+</ol>
+${after.map(p).join("\n")}
+<p style="margin:18px 0 0;">Matt Hickey<br>${esc(brand)}</p>
+${input.unsubscribeUrl ? `<p style="margin:28px 0 0;font-size:12px;color:#9ca3af;">Not recruiting North Carolina? <a href="${esc(input.unsubscribeUrl)}" style="color:#9ca3af;">Unsubscribe</a> and you won't hear from us again.</p>` : ""}
+</div></body></html>`
+  const text = [
+    ...paras,
+    `1. ${steps[0]} ${SIGNUP_URL}`,
+    `2. ${steps[1]}`,
+    `3. ${steps[2]}`,
+    "",
+    ...after,
+    "",
+    `Matt Hickey`,
+    brand,
+    ...(input.unsubscribeUrl ? ["", `Not recruiting North Carolina? Unsubscribe: ${input.unsubscribeUrl}`] : []),
+  ].join("\n\n").replace(/\n\n\n\n/g, "\n\n")
+  return { subject, html, text }
+}
