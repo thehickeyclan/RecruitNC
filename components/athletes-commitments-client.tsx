@@ -423,6 +423,7 @@ export function AthletesCommitmentsClient({
                       <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">High School</th>
                       <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">Weight</th>
                       <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">Gender</th>
+                      <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">Top achievement</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -446,6 +447,7 @@ export function AthletesCommitmentsClient({
                         <td className="p-3 text-white/70">{athlete.highschool || "—"}</td>
                         <td className="p-3 text-white/70">{athlete.weightclass ?? "—"}</td>
                         <td className="p-3 text-white/70">{athlete.gender || "—"}</td>
+                        <td className="p-3 font-semibold text-[#D3B574]">{(athlete as { top_honor?: string | null }).top_honor || <span className="font-normal text-white/30">—</span>}</td>
                       </tr>
                     ))}
                   </tbody>
