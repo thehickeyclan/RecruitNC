@@ -1,15 +1,15 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { ArrowUp, BarChart3, CalendarDays, Check, ChevronRight, Copy, DollarSign, Mail, FileText, GraduationCap, School, Sparkles, Users } from "lucide-react"
+import { ArrowUp, BarChart3, CalendarDays, Check, ChevronRight, Copy, DollarSign, ExternalLink, Mail, FileText, GraduationCap, School, Sparkles, Users } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
-type Link = { label: string; href: string; kind: "rule" | "timeline" | "college" | "tool" }
+type Link = { label: string; href: string; kind: "rule" | "timeline" | "college" | "tool" | "source" }
 type Draft = { to: string[]; subject: string; body: string }
 export type Turn = { role: "user"; text: string } | { role: "scout"; headline: string; body: string; links: Link[]; draft?: Draft | null } | { role: "error"; text: string }
 
 const GOLD = "#D3B574"
-const LINK_ICON: Record<Link["kind"], LucideIcon> = { rule: FileText, timeline: CalendarDays, college: School, tool: ChevronRight }
+const LINK_ICON: Record<Link["kind"], LucideIcon> = { rule: FileText, timeline: CalendarDays, college: School, tool: ChevronRight, source: ExternalLink }
 const STORE = "scout-conversation"
 
 /** Scout's avatar: the mascot's head (public/images/scout-avatar.webp, from Matt's art). */
@@ -194,9 +194,9 @@ export function ScoutChat({ firstName, initialTurns }: { firstName: string | nul
                 <p className="text-lg font-semibold leading-7">{t.headline}</p>
                 {t.body ? <Body text={t.body} /> : null}
                 {t.draft ? <DraftCard draft={t.draft} /> : null}
-                {t.links.length ? (
+                {t.links.some((l) => l.kind !== "source") ? (
                   <div className="mt-4 space-y-2">
-                    {t.links.map((l) => {
+                    {t.links.filter((l) => l.kind !== "source").map((l) => {
                       const Icon = LINK_ICON[l.kind]
                       return (
                         <a key={l.href} href={l.href} className="flex items-center gap-3 rounded-xl border border-white/10 bg-[#0A1628]/70 px-4 py-3 text-[15px] font-medium hover:border-white/25">
@@ -206,6 +206,19 @@ export function ScoutChat({ firstName, initialTurns }: { firstName: string | nul
                         </a>
                       )
                     })}
+                  </div>
+                ) : null}
+                {t.links.some((l) => l.kind === "source") ? (
+                  <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs">
+                    <span className="font-semibold text-white/45">Sources</span>
+                    {t.links
+                      .filter((l) => l.kind === "source")
+                      .map((l) => (
+                        <a key={l.href} href={l.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/[0.04] px-2.5 py-1 text-white/75 hover:border-white/30 hover:text-white">
+                          {l.label}
+                          <ExternalLink className="h-3 w-3" aria-hidden />
+                        </a>
+                      ))}
                   </div>
                 ) : null}
               </div>

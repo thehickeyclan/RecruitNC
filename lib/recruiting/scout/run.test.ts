@@ -25,5 +25,16 @@ describe("collegesNamedIn", () => {
     expect(collegesNamedIn("What GPA is needed for Roanoke college?")).toEqual(["roanoke-college"])
     expect(collegesNamedIn("Compare NC State and Campbell")).toEqual(expect.arrayContaining(["north-carolina-state-university-nc-state", "campbell-university"]))
     expect(collegesNamedIn("When can a coach call us?")).toEqual([])
+    expect(collegesNamedIn("Which is the better campus, NC State or UNC?")).toEqual(expect.arrayContaining(["north-carolina-state-university-nc-state", "university-of-north-carolina-at-chapel-hill-north-carolina"]))
+    expect(collegesNamedIn("How many wrestlers from North Carolina went D1?")).toEqual([])
+    expect(collegesNamedIn("Is App State a good fit?")).toEqual(["appalachian-state-university"])
+  })
+})
+
+describe("compareNiche", () => {
+  it("decides each category in code", async () => {
+    const { compareNiche } = await vi.importActual<typeof import("@/lib/recruiting/scout/tools")>("@/lib/recruiting/scout/tools")
+    const text = compareNiche(["campbell-university", "appalachian-state-university"])!
+    expect(text).toMatch(/Dorms: Campbell University B, Appalachian State University C\+: Campbell University is higher/)
   })
 })

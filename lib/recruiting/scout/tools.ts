@@ -14,6 +14,7 @@ import { loadWentHere } from "@/lib/college-programs/went-here"
 import { collegeFitFor, type FamilyFitContext } from "@/lib/recruiting/college-fit"
 import { collegeKey } from "@/lib/recruiting/roadmap-adapt"
 import { fitForSchool, satTotalRange } from "@/lib/college-programs/fit"
+import { STATE_NAMES } from "@/lib/college-programs/states"
 import { NICHE_CATEGORIES, gradePoints, nicheFor } from "@/lib/college-programs/niche"
 
 /**
@@ -41,7 +42,7 @@ export type ScoutSession = {
   /** Names of programs that viewed the wrestler, reduced for matching. */
   viewed: Set<string>
   /** Links Scout may offer; tools add the colleges they return. */
-  links: Record<string, { label: string; href: string; kind: "rule" | "timeline" | "college" | "tool" }>
+  links: Record<string, { label: string; href: string; kind: "rule" | "timeline" | "college" | "tool" | "source" }>
 }
 
 /**
@@ -192,10 +193,11 @@ async function collegeDetails(s: ScoutSession, a: Record<string, unknown>): Prom
   // Campus life: Niche's report-card grades, as published on the college's Niche profile.
   const niche = nicheFor(school.id)
   if (niche && Object.keys(niche.grades).length) {
+    if (niche.url) s.links[`niche:${school.id}`] = { label: `Niche: ${spoken(school.name)}`, href: niche.url, kind: "source" }
     lines.push(
       `Campus life grades from Niche (niche.com report card, from student reviews and public data; Niche's grades, not ours): ${NICHE_CATEGORIES.filter((c) => niche.grades[c.key])
         .map((c) => `${c.label} ${niche.grades[c.key]}`)
-        .join(", ")}. Categories not listed are not graded by Niche for this college.`,
+        .join(", ")}. Categories not listed are not graded by Niche for this college.${niche.url ? ` [link: niche:${school.id}]` : ""}`,
     )
   } else lines.push("Campus life grades: Niche publishes none for this college.")
   const fit = s.fit ? collegeFitFor(s.fit, school, null) : null
@@ -268,12 +270,30 @@ function collegeCommits(s: ScoutSession, a: Record<string, unknown>): string {
  * answered "what GPA does Mount Olive require?" from nothing rather than calling a tool).
  * Longest names first, so "Mount Olive" is not also "Olive"; at most two.
  */
+/** What families call colleges, beyond their names: "UNC", "App State". Exact words only. */
+const STATE_WORDS = new Set(Object.values(STATE_NAMES).map((n) => n.toLowerCase()))
+const SHORT_NAMES: Record<string, string> = {
+  unc: "university-of-north-carolina-at-chapel-hill-north-carolina",
+  "unc chapel hill": "university-of-north-carolina-at-chapel-hill-north-carolina",
+  "chapel hill": "university-of-north-carolina-at-chapel-hill-north-carolina",
+  uncp: "university-of-north-carolina-at-pembroke",
+  "unc pembroke": "university-of-north-carolina-at-pembroke",
+  pembroke: "university-of-north-carolina-at-pembroke",
+  "app state": "appalachian-state-university",
+  appalachian: "appalachian-state-university",
+}
+
 export function collegesNamedIn(question: string): string[] {
   const q = ` ${question.toLowerCase().replace(/[^a-z0-9& ]+/g, " ")} `
   const found: Array<{ id: string; at: number; len: number }> = []
+  for (const [short, id] of Object.entries(SHORT_NAMES)) {
+    const at = q.indexOf(` ${short} `)
+    if (at >= 0 && BY_ID.has(id)) found.push({ id, at, len: short.length + 100 })
+  }
   for (const school of SCHOOLS) {
     const nick = school.name.match(/\(([^)]+)\)/)?.[1]?.toLowerCase()
-    const keys = [collegeKey(school.name), spoken(school.name).toLowerCase(), nick].filter((k): k is string => Boolean(k) && k!.length >= 5)
+    // A nickname that is a state ("(North Carolina)" on UNC) names the state, not the college.
+    const keys = [collegeKey(school.name), spoken(school.name).toLowerCase(), nick].filter((k): k is string => Boolean(k) && k!.length >= 5 && !STATE_WORDS.has(k!))
     for (const key of keys) {
       const at = q.indexOf(` ${key.replace(/[^a-z0-9& ]+/g, " ")} `)
       if (at >= 0) found.push({ id: school.id, at, len: key.length })
@@ -288,6 +308,24 @@ export function collegesNamedIn(question: string): string[] {
     if (out.length === 2) break
   }
   return out
+}
+
+/**
+ * Niche grades for two colleges, compared in code category by category ("Dorms: Campbell B, App
+ * State C+: Campbell is higher"). The model once read B against C+ and called C+ better.
+ */
+export function compareNiche(ids: string[]): string | null {
+  if (ids.length < 2) return null
+  const [a, b] = ids.map((id) => ({ id, name: spoken(BY_ID.get(id)?.name ?? id), g: nicheFor(id)?.grades ?? {} }))
+  const lines: string[] = []
+  for (const c of NICHE_CATEGORIES) {
+    const ga = a.g[c.key], gb = b.g[c.key]
+    if (!ga || !gb) continue
+    const pa = gradePoints(ga)!, pb = gradePoints(gb)!
+    const verdict = pa === pb ? "the same" : `${pa > pb ? a.name : b.name} is higher`
+    lines.push(`- ${c.label}: ${a.name} ${ga}, ${b.name} ${gb}: ${verdict}`)
+  }
+  return lines.length ? `Niche grades compared (computed; use these verdicts exactly):\n${lines.join("\n")}` : null
 }
 
 export async function runScoutTool(s: ScoutSession, name: string, args: Record<string, unknown>): Promise<string> {
