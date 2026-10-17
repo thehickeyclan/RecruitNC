@@ -103,7 +103,7 @@ export function renderCoachWelcomeEmail(input: CoachWelcomeInput): { subject: st
     ${feature("&#9733;", "My Recruits", "Every wrestler you star goes onto your board: track activity, contacts and where each one is in your recruiting.")}
     ${feature("&#9783;", "Athlete profiles", "Every result we hold in one place: state, national and off-season events, records, and the weight they last competed at.")}
     ${feature("&#9776;", "Scouting reports", "A one-page report on any wrestler, free for college coaches.")}
-    ${feature("&#9650;", "Strength of competition", "Who a wrestler has actually beaten, and where they compete.")}
+    ${feature("&#9650;", "Strength of competition", "Who a wrestler has beaten, along with each competitor's accolades.")}
   </table>
 </td></tr>
 
