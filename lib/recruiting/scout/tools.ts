@@ -13,6 +13,7 @@ import { DIVISION_SHORT, type CollegeDivision, type CollegeMapSchool } from "@/l
 import { loadWentHere } from "@/lib/college-programs/went-here"
 import { collegeFitFor, type FamilyFitContext } from "@/lib/recruiting/college-fit"
 import { collegeKey } from "@/lib/recruiting/roadmap-adapt"
+import { fitForSchool, satTotalRange } from "@/lib/college-programs/fit"
 
 /**
  * Scout's college tools (17 Oct 2026, Matt: "understands all the colleges, the line ups, the NC
@@ -40,6 +41,19 @@ export type ScoutSession = {
   viewed: Set<string>
   /** Links Scout may offer; tools add the colleges they return. */
   links: Record<string, { label: string; href: string; kind: "rule" | "timeline" | "college" | "tool" }>
+}
+
+/**
+ * What a wrestler needs academically to compete at each level, from the rules library
+ * (content.ts: Division I and II "Minimum core-course GPA", the NAIA rule, Division III and NJCAA
+ * having none). Said with every college so "what GPA does X need" never gets "it sets its own".
+ */
+export const ELIGIBILITY_MINIMUM: Record<CollegeDivision, string> = {
+  "NCAA Division I": "To compete as a freshman in Division I: a 2.3 GPA in 16 NCAA core courses, certified by the NCAA Eligibility Center [link: learn:division-1]",
+  "NCAA Division II": "To compete as a freshman in Division II: a 2.2 GPA in 16 NCAA core courses, certified by the NCAA Eligibility Center [link: learn:division-2]",
+  "NCAA Division III": "Division III has no NCAA GPA minimum: getting admitted to the college is the requirement [link: learn:division-3]",
+  NAIA: "To compete in the NAIA: graduate high school with a 2.3 GPA or better, or meet two of three (18 ACT or 970 SAT in one sitting; a 2.0 GPA; top half of the class) [link: learn:naia]",
+  NJCAA: "Junior college: a high school diploma or equivalent; no minimum high school GPA or test score [link: learn:njcaa]",
 }
 
 export const SCOUT_TOOLS = [
@@ -148,6 +162,24 @@ async function collegeDetails(s: ScoutSession, a: Record<string, unknown>): Prom
   const school = BY_ID.get(String(a.school_id ?? ""))
   if (!school) return "Unknown school_id: call find_colleges first."
   const lines = [short(s, school)]
+  // Academics: the level's minimum to compete, then the college's own admission figures.
+  const division = (s.team ? school.programs.find((p) => p[s.team!])?.division : null) ?? school.programs[0]?.division
+  if (division) lines.push(`Academic minimum: ${ELIGIBILITY_MINIMUM[division]}.`)
+  const facts = fitForSchool(school.id)
+  if (facts) {
+    const [satLow, satHigh] = satTotalRange(facts)
+    lines.push(
+      `Admission figures (US Department of Education College Scorecard; colleges do not publish a minimum GPA there): ${[
+        facts.admitRate != null ? `admits ${facts.admitRate}% of applicants` : null,
+        satLow != null && satHigh != null ? `middle half of admitted students' SAT ${satLow} to ${satHigh}` : null,
+        facts.act[0] != null && facts.act[1] != null ? `ACT ${facts.act[0]} to ${facts.act[1]}` : null,
+        facts.gradRate != null ? `${facts.gradRate}% graduate` : null,
+        facts.undergrads != null ? `${facts.undergrads.toLocaleString("en-US")} undergraduates` : null,
+      ]
+        .filter(Boolean)
+        .join("; ") || "none published"}.${facts.admissionsUrl ? ` Admissions: ${facts.admissionsUrl}` : ""}`,
+    )
+  }
   const fit = s.fit ? collegeFitFor(s.fit, school, null) : null
   if (fit) {
     if (fit.net?.amount != null) lines.push(`Net price: ${money(fit.net.amount)}, the average paid after aid by all aided students (not this family's income)`)
@@ -211,6 +243,33 @@ function collegeCommits(s: ScoutSession, a: Record<string, unknown>): string {
       return `- ${c.name}${c.classYear ? ` (${c.classYear})` : ""}${c.highSchool ? `, ${c.highSchool}` : ""} to ${school ? spoken(school.name) : c.schoolId} (${DIVISION_SHORT[c.division]})${c.results.length ? `: ${c.results.slice(0, 2).join("; ")}` : ""}`
     })
     .join("\n")}`
+}
+
+/**
+ * The colleges a question names, found in code so Scout looks them up before answering (it
+ * answered "what GPA does Mount Olive require?" from nothing rather than calling a tool).
+ * Longest names first, so "Mount Olive" is not also "Olive"; at most two.
+ */
+export function collegesNamedIn(question: string): string[] {
+  const q = ` ${question.toLowerCase().replace(/[^a-z0-9& ]+/g, " ")} `
+  const found: Array<{ id: string; at: number; len: number }> = []
+  for (const school of SCHOOLS) {
+    const nick = school.name.match(/\(([^)]+)\)/)?.[1]?.toLowerCase()
+    const keys = [collegeKey(school.name), spoken(school.name).toLowerCase(), nick].filter((k): k is string => Boolean(k) && k!.length >= 5)
+    for (const key of keys) {
+      const at = q.indexOf(` ${key.replace(/[^a-z0-9& ]+/g, " ")} `)
+      if (at >= 0) found.push({ id: school.id, at, len: key.length })
+    }
+  }
+  const out: string[] = []
+  for (const f of found.sort((a, b) => b.len - a.len)) {
+    if (out.includes(f.id)) continue
+    // A shorter name inside a longer one already found is the same mention.
+    if (found.some((g) => out.includes(g.id) && g.len > f.len && f.at >= g.at && f.at < g.at + g.len + 1)) continue
+    out.push(f.id)
+    if (out.length === 2) break
+  }
+  return out
 }
 
 export async function runScoutTool(s: ScoutSession, name: string, args: Record<string, unknown>): Promise<string> {
