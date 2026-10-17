@@ -8,7 +8,7 @@ import type { Metadata } from "next"
 import { ArrowRight, CheckCircle2 } from "lucide-react"
 
 import { PortalShell } from "@/components/portal/portal-shell"
-import { readWentHereSnapshot } from "@/lib/college-programs/went-here-snapshot"
+import { readWentHereSnapshot, snapshotForState } from "@/lib/college-programs/went-here-snapshot"
 import { COLLEGE_DIVISIONS, DIVISION_COLOR, DIVISION_SHORT, type CollegeDivision } from "@/lib/college-programs/types"
 import { LOOK_POINTS } from "@/lib/recruiting/learn/coaches-look-for"
 
@@ -26,7 +26,8 @@ const card = "rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-5"
 type Group = { division: CollegeDivision; gender: "mens" | "womens"; n: number; champ: number; placer: number; qual: number; other: number; national: number }
 
 export default async function WhatCoachesLookFor() {
-  const snapshot = await readWentHereSnapshot().catch(() => null)
+  // North Carolina's wrestlers only: the page's numbers are said of NC.
+  const snapshot = snapshotForState(await readWentHereSnapshot().catch(() => null), "NC")
   const groups: Group[] = []
   for (const gender of ["mens", "womens"] as const) {
     for (const division of COLLEGE_DIVISIONS) {
