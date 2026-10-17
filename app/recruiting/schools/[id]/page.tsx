@@ -51,7 +51,8 @@ import { STATE_NAMES } from "@/lib/college-programs/states"
 import { costLines, tuitionFacts } from "@/lib/college-programs/tuition"
 import { teamRankingsForSchool } from "@/lib/college-programs/team-rankings-snapshot"
 import { DIVISION_COLOR, DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
-import { readWentHereSnapshot } from "@/lib/college-programs/went-here-snapshot"
+import { readWentHereSnapshot, snapshotForState } from "@/lib/college-programs/went-here-snapshot"
+import { familyState } from "@/lib/recruiting/family-state"
 import { collegeFitFor, loadFamilyFitContext } from "@/lib/recruiting/college-fit"
 import { collegeViewsFor } from "@/lib/recruiting/college-views"
 import { familyAthleteIds } from "@/lib/coach-messages"
@@ -156,6 +157,9 @@ export default async function SchoolPage({ params }: Params) {
   const programs = theirs ? [...school.programs].sort((a, b) => Number(b[theirs]) - Number(a[theirs])) : school.programs
   const program = programs.find((p) => p[team]) ?? programs[0]
 
+  // The family's own state: a RecruitSC family sees South Carolina's alumni, not North Carolina's.
+  const homeState = familySide ? await familyState(admin, userId).catch(() => "NC") : "NC"
+  const homeStateName = STATE_NAMES[homeState] ?? homeState
   const [rankingsAll, logo, onRecruitNC, ctx, snapshot] = await Promise.all([
     teamRankingsForSchool(school.id),
     schoolLogoUrl(school),
@@ -166,7 +170,7 @@ export default async function SchoolPage({ params }: Params) {
           .catch(() => false)
       : Promise.resolve(false),
     familySide && userId ? loadFamilyFitContext(admin, userId, theirs).catch(() => null) : Promise.resolve(null),
-    full ? readWentHereSnapshot().catch(() => null) : Promise.resolve(null),
+    full ? readWentHereSnapshot().then((s) => snapshotForState(s, homeState)).catch(() => null) : Promise.resolve(null),
   ])
   const rankings = rankingsAll.sort((a, b) => Number(b.gender === team) - Number(a.gender === team))
   const ranking = rankings[0] ?? null
@@ -176,7 +180,9 @@ export default async function SchoolPage({ params }: Params) {
   const fit = fitForSchool(school.id)
   const depth = depthFor(school.id, team)
   const roster = rosterForSchool(school.id)
-  const ncNow = roster.wrestlers.filter((w) => w.team === team)
+  // The roster file lists North Carolina wrestlers only, so it speaks to an NC family alone.
+  const ncNow = homeState === "NC" ? roster.wrestlers.filter((w) => w.team === team) : []
+  const rosterRead = homeState === "NC" && roster.anyReviewed
   const wentHere = (snapshot?.commits ?? [])
     .filter((c) => c.schoolId === school.id && (!c.gender || c.gender === team))
     .sort((a, b) => (b.classYear ?? 0) - (a.classYear ?? 0))
@@ -321,7 +327,7 @@ export default async function SchoolPage({ params }: Params) {
                 sub={ranking ? `${ranking.pollName}, ${new Date(`${ranking.pollDate}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}` : undefined}
               />
               {depth ? <SnapshotRow icon={Users} label="Roster" value={`${depth.size} wrestlers`} sub={depth.season ? `${depth.season} roster` : undefined} /> : null}
-              {full && roster.anyReviewed ? <SnapshotRow icon={MapPin} label="From NC" value={`${ncNow.length} on the roster`} /> : null}
+              {full && rosterRead ? <SnapshotRow icon={MapPin} label={`From ${homeState}`} value={`${ncNow.length} on the roster`} /> : null}
             </ul>
             {ranking ? (
               <a href={ranking.sourceUrl} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-xs text-white/45 underline hover:text-white">
@@ -333,14 +339,14 @@ export default async function SchoolPage({ params }: Params) {
           {full ? (
             <section className={card}>
               <div className="flex items-baseline justify-between">
-                <h2 className={cardTitle}>North Carolina here</h2>
+                <h2 className={cardTitle}>{homeStateName} here</h2>
                 <a href="#roster" className="text-xs font-semibold" style={{ color: GOLD }}>
                   Where you stand →
                 </a>
               </div>
               <div className="mt-4 grid grid-cols-2 gap-3">
-                <Stat value={roster.anyReviewed ? String(ncNow.length) : "-"} label="On the roster" sub={roster.anyReviewed ? undefined : "Roster not read"} />
-                <Stat value={String(wentHere.length)} label="Committed from NC" />
+                <Stat value={rosterRead ? String(ncNow.length) : "-"} label="On the roster" sub={rosterRead ? undefined : homeState === "NC" ? "Roster not read" : "Coming soon"} />
+                <Stat value={String(wentHere.length)} label={`Committed from ${homeState}`} />
               </div>
               {ncNow.length > 0 ? (
                 <ul className="mt-4 space-y-2">

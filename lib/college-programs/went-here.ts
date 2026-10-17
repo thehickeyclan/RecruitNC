@@ -10,7 +10,8 @@ import { buildSchoolIndex, matchSchool } from "@/lib/college-programs/match"
 import { resultClauses } from "@/lib/college-programs/outreach-results"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { DIVISION_SHORT, primaryDivision, type CollegeDivision, type CollegeMapSchool } from "@/lib/college-programs/types"
-import { readWentHereSnapshot, type SnapshotCommit, type WentHereSnapshot } from "@/lib/college-programs/went-here-snapshot"
+import { readWentHereSnapshot, snapshotForState, type GpaGroups, type SnapshotCommit, type WentHereSnapshot } from "@/lib/college-programs/went-here-snapshot"
+import { familyState } from "@/lib/recruiting/family-state"
 import {
   asHeadline,
   gpaStats,
@@ -66,55 +67,8 @@ export type WentHereWrestler = {
 }
 
 /** Run by the cron. Reads every recent commit, their credentials, and the GPA averages - never a GPA itself into the result. */
-export async function buildWentHereSnapshot(admin: SupabaseClient): Promise<WentHereSnapshot> {
-  const senior = seniorClassYear()
-  const classes = Array.from({ length: CLASSES_BACK + 1 }, (_, i) => senior - i)
-
-  const rows: Array<Record<string, unknown>> = []
-  for (let from = 0; ; from += 1000) {
-    const { data: page, error } = await admin.from("athletes").select(COLUMNS).in("graduationyear", classes).range(from, from + 999)
-    if (error) throw new Error(`went-here: athletes read failed: ${error.message}`)
-    rows.push(...((page ?? []) as unknown as Array<Record<string, unknown>>))
-    if ((page ?? []).length < 1000) break
-  }
-
-  const { data: colleges, error: collegeError } = await admin.from("colleges").select("id, name")
-  if (collegeError) throw new Error(`went-here: colleges read failed: ${collegeError.message}`)
-  const collegeName = new Map((colleges ?? []).map((c) => [String(c.id), String(c.name)]))
-
-  // A commitment counts only when it lands on a school on the map; "Undecided" and club teams do not.
-  const committed = rows.flatMap((row) => {
-    const name = (row.college_id ? collegeName.get(String(row.college_id)) : null) ?? (row.college ? String(row.college) : "")
-    const schoolId = name ? matchSchool(SCHOOL_INDEX, name) : null
-    const school = schoolId ? SCHOOL_BY_ID.get(schoolId) : null
-    return school ? [{ row, school }] : []
-  })
-
-  const credentials = await loadAthleteCredentialsBatch(admin, committed.map((c) => c.row))
-  const gpas: Array<{ schoolId: string; division: CollegeDivision; gender: Team | null; gpa: number | null }> = []
-  const commits = committed.map(({ row, school }): SnapshotCommit => {
-    const id = String(row.id)
-    const creds = credentials.get(id) ?? { allAmerican: [], state: [], toc: [], national: [] }
-    const full = `${String(row.firstName ?? "").trim()} ${String(row.lastName ?? "").trim()}`.trim()
-    const gender = teamOf(row.gender)
-    // A woman is counted at the level her team wrestles at: Lock Haven's women are Division II, its men Division I.
-    const division = divisionFor(school, gender)
-    gpas.push({ schoolId: school.id, division, gender, gpa: parseGpa(row.academic_gpa) })
-    return {
-      athleteId: id,
-      name: full || String(row.name ?? "").trim(),
-      classYear: Number(row.graduationyear) || null,
-      highSchool: row.highschool && row.highschool !== "Not specified" ? String(row.highschool) : null,
-      results: resultClauses(creds, 2).map(asHeadline),
-      schoolId: school.id,
-      division,
-      standing: standingOf(creds),
-      gender,
-      // The wrestler's state, so a family sees its own state's alumni (NC when flagged NC).
-      state: athleteStateCode(row as { state?: string | null; is_nc_athlete?: boolean | null }),
-    }
-  })
-
+/** Average GPAs by school and level, men's and women's apart. Only groups of five or more become a number. */
+function gpaGroups(gpas: Array<{ schoolId: string; division: CollegeDivision; gender: Team | null; gpa: number | null }>): GpaGroups {
   // Only groups of five or more leave this function as a number; everything smaller is dropped here.
   const gpaBySchool: Record<string, GpaStats> = {}
   for (const schoolId of new Set(gpas.map((g) => g.schoolId))) {
@@ -142,7 +96,64 @@ export async function buildWentHereSnapshot(admin: SupabaseClient): Promise<Went
     }
   }
 
-  return { builtAt: new Date().toISOString(), commits, gpaBySchool, gpaByDivision, gpaBySchoolGender, gpaByDivisionGender }
+  return { gpaBySchool, gpaByDivision, gpaBySchoolGender, gpaByDivisionGender }
+}
+
+export async function buildWentHereSnapshot(admin: SupabaseClient): Promise<WentHereSnapshot> {
+  const senior = seniorClassYear()
+  const classes = Array.from({ length: CLASSES_BACK + 1 }, (_, i) => senior - i)
+
+  const rows: Array<Record<string, unknown>> = []
+  for (let from = 0; ; from += 1000) {
+    const { data: page, error } = await admin.from("athletes").select(COLUMNS).in("graduationyear", classes).range(from, from + 999)
+    if (error) throw new Error(`went-here: athletes read failed: ${error.message}`)
+    rows.push(...((page ?? []) as unknown as Array<Record<string, unknown>>))
+    if ((page ?? []).length < 1000) break
+  }
+
+  const { data: colleges, error: collegeError } = await admin.from("colleges").select("id, name")
+  if (collegeError) throw new Error(`went-here: colleges read failed: ${collegeError.message}`)
+  const collegeName = new Map((colleges ?? []).map((c) => [String(c.id), String(c.name)]))
+
+  // A commitment counts only when it lands on a school on the map; "Undecided" and club teams do not.
+  const committed = rows.flatMap((row) => {
+    const name = (row.college_id ? collegeName.get(String(row.college_id)) : null) ?? (row.college ? String(row.college) : "")
+    const schoolId = name ? matchSchool(SCHOOL_INDEX, name) : null
+    const school = schoolId ? SCHOOL_BY_ID.get(schoolId) : null
+    return school ? [{ row, school }] : []
+  })
+
+  const credentials = await loadAthleteCredentialsBatch(admin, committed.map((c) => c.row))
+  const gpas: Array<{ schoolId: string; division: CollegeDivision; gender: Team | null; gpa: number | null; state: string }> = []
+  const commits = committed.map(({ row, school }): SnapshotCommit => {
+    const id = String(row.id)
+    const creds = credentials.get(id) ?? { allAmerican: [], state: [], toc: [], national: [] }
+    const full = `${String(row.firstName ?? "").trim()} ${String(row.lastName ?? "").trim()}`.trim()
+    const gender = teamOf(row.gender)
+    // A woman is counted at the level her team wrestles at: Lock Haven's women are Division II, its men Division I.
+    const division = divisionFor(school, gender)
+    const state = athleteStateCode(row as { state?: string | null; is_nc_athlete?: boolean | null }) ?? "NC"
+    gpas.push({ schoolId: school.id, division, gender, gpa: parseGpa(row.academic_gpa), state })
+    return {
+      athleteId: id,
+      name: full || String(row.name ?? "").trim(),
+      classYear: Number(row.graduationyear) || null,
+      highSchool: row.highschool && row.highschool !== "Not specified" ? String(row.highschool) : null,
+      results: resultClauses(creds, 2).map(asHeadline),
+      schoolId: school.id,
+      division,
+      standing: standingOf(creds),
+      gender,
+      // The wrestler's state, so a family sees its own state's alumni (NC when flagged NC).
+      state: athleteStateCode(row as { state?: string | null; is_nc_athlete?: boolean | null }),
+    }
+  })
+
+  // Each state's averages on their own; the top-level groups are North Carolina's (17 Oct 2026).
+  const byState: Record<string, GpaGroups> = {}
+  for (const state of new Set(gpas.map((g) => g.state))) byState[state] = gpaGroups(gpas.filter((g) => g.state === state))
+  const home = byState.NC ?? gpaGroups([])
+  return { builtAt: new Date().toISOString(), commits, ...home, byState }
 }
 
 export type WentHere = {
@@ -171,7 +182,9 @@ export async function loadWentHere(
 ): Promise<WentHere | null> {
   const school = SCHOOL_BY_ID.get(schoolId)
   if (!school) return null
-  const snapshot = await readWentHereSnapshot()
+  // The family's own state's wrestlers only: RecruitNC sees NC, RecruitSC sees SC (17 Oct 2026).
+  const state = await familyState(admin, userId)
+  const snapshot = snapshotForState(await readWentHereSnapshot(), state)
   // Before the first cron run there is nothing to show; the card leaves the section out.
   if (!snapshot) return null
   /*
@@ -190,7 +203,7 @@ export async function loadWentHere(
   const schoolGpa = (team ? snapshot.gpaBySchoolGender?.[`${schoolId}|${team}`] : snapshot.gpaBySchool[schoolId]) ?? null
   const levelGpa = (team ? snapshot.gpaByDivisionGender?.[`${division}|${team}`] : snapshot.gpaByDivision[division]) ?? null
   const short = DIVISION_SHORT[division]
-  const who = team === "womens" ? "NC women" : team === "mens" ? "NC men" : "NC wrestlers"
+  const who = team === "womens" ? `${state} women` : team === "mens" ? `${state} men` : `${state} wrestlers`
   const spoken = school.name.replace(/\s*\([^)]*\)\s*/g, " ").trim()
 
   let yours: WentHere["yours"] = []

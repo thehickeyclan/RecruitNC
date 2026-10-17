@@ -14,7 +14,8 @@ import { fitForSchool, netPriceFor, satTotalRange, type CollegeFit, type NetPric
 import { depthAtWeights, depthFor, nearestCollegeWeights, type TeamDepth, type WeightLine } from "@/lib/college-programs/roster-depth"
 import { yearlyCostFor } from "@/lib/college-programs/tuition"
 import { DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
-import { readWentHereSnapshot } from "@/lib/college-programs/went-here-snapshot"
+import { readWentHereSnapshot, snapshotForState } from "@/lib/college-programs/went-here-snapshot"
+import { familyState } from "@/lib/recruiting/family-state"
 import { parseGpa, standingOf, type Standing } from "@/lib/college-programs/went-here-stats"
 import { loadAthleteCredentials } from "@/lib/credentials/athlete-credentials"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
@@ -56,7 +57,8 @@ export async function loadFamilyFitContext(admin: SupabaseClient, userId: string
   const profile = cleanProfile(account?.user?.user_metadata?.family_fit ?? EMPTY_PROFILE)
   const [mine, snapshot, last] = await Promise.all([
     wrestler ? loadAthleteCredentials(admin, wrestler as unknown as Record<string, unknown>).then(standingOf) : Promise.resolve(null),
-    readWentHereSnapshot(),
+    // The family's own state's alumni only (RecruitNC: NC, RecruitSC: SC).
+    familyState(admin, userId).then(async (state) => snapshotForState(await readWentHereSnapshot(), state)),
     wrestler
       ? loadLastCompeted(admin, [String(wrestler.id)], new Map([[String(wrestler.id), wrestler.graduationyear ? Number(wrestler.graduationyear) : null]])).then((m) => m.get(String(wrestler.id)) ?? null)
       : Promise.resolve(null),

@@ -42,6 +42,37 @@ export type WentHereSnapshot = {
   /** The same averages for one of men's or women's, keyed "school-id|womens" and "NAIA|womens". Five or more only. */
   gpaBySchoolGender?: Record<string, GpaStats>
   gpaByDivisionGender?: Record<string, GpaStats>
+  /**
+   * The same four groups for each state's wrestlers (17 Oct 2026). The top-level groups are North
+   * Carolina's. Absent in a snapshot built before then, when every commit was North Carolina's.
+   */
+  byState?: Record<string, GpaGroups>
+}
+
+export type GpaGroups = {
+  gpaBySchool: Record<string, GpaStats>
+  gpaByDivision: Partial<Record<CollegeDivision, GpaStats>>
+  gpaBySchoolGender: Record<string, GpaStats>
+  gpaByDivisionGender: Record<string, GpaStats>
+}
+
+/**
+ * One state's slice of the snapshot: its commits and its averages only. A RecruitNC family sees
+ * North Carolina, a RecruitSC family South Carolina, never the two mixed (Matt, 17 Oct 2026). A
+ * commit with no state is from before other states existed, so it is North Carolina's.
+ */
+export function snapshotForState(snapshot: WentHereSnapshot | null, state: string): WentHereSnapshot | null {
+  if (!snapshot) return null
+  const home = state === "NC"
+  const groups = snapshot.byState?.[state] ?? (home ? null : { gpaBySchool: {}, gpaByDivision: {}, gpaBySchoolGender: {}, gpaByDivisionGender: {} })
+  return {
+    builtAt: snapshot.builtAt,
+    commits: snapshot.commits.filter((c) => (c.state ?? "NC") === state),
+    gpaBySchool: groups?.gpaBySchool ?? snapshot.gpaBySchool,
+    gpaByDivision: groups?.gpaByDivision ?? snapshot.gpaByDivision,
+    gpaBySchoolGender: groups?.gpaBySchoolGender ?? snapshot.gpaBySchoolGender,
+    gpaByDivisionGender: groups?.gpaByDivisionGender ?? snapshot.gpaByDivisionGender,
+  }
 }
 
 export async function saveWentHereSnapshot(snapshot: WentHereSnapshot): Promise<{ bytes: number }> {
