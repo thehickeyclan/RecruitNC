@@ -223,7 +223,7 @@ export default async function CommandCenterSalesPage() {
           visual={
             <figure className={`${card} overflow-hidden`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/screens/roadmap.jpg" alt="The recruiting roadmap: five grade columns with checklists, 11th grade marked as the wrestler's year" loading="lazy" className="block w-full" />
+              <img src="/screens/roadmap.jpg" alt="The recruiting roadmap: 10th, 11th and 12th grade checklists, with 11th grade marked as the wrestler's year" loading="lazy" className="block w-full" />
               <figcaption className="px-4 py-2 text-[11px] text-white/45">The real screen, with an example family.</figcaption>
             </figure>
           }
