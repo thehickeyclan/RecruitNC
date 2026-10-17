@@ -171,6 +171,8 @@ export type CoachInviteInput = {
   programs: number
   divisions?: Array<[string, number]>
   unsubscribeUrl?: string | null
+  /** Matt's number, for the letter's sign-off. */
+  senderPhone?: string | null
 }
 
 const SIGNUP_URL = `${BASE}/auth/signup?type=college-coach`
@@ -299,36 +301,25 @@ export function renderCoachInviteLetter(input: CoachInviteInput): { subject: str
     `${brand} has state and national results for every elite wrestler in North Carolina, plus GPA, academic interests and contact information, which families keep adding, and strength of competition: who each wrestler has beaten and those opponents' accolades. ${input.coaches} college coaches from ${input.programs} programs${levels ? ` (${levels})` : ""} are using it, and we're expanding state by state, starting with South Carolina next week.`,
     `It also runs your whole recruiting process. Every wrestler you star goes onto your My Recruits board, shared with your staff: move each one from prospect to signed, log calls, texts and visits, and message families directly. It's free for every college coach: NCAA, NAIA and NJCAA.`,
   ]
-  const steps = [
-    `Create your coach account. Access is instant:`,
-    `Before Oct 24, star the wrestlers you're following and download their scouting reports, from any profile or ranking.`,
-    `Get your Super 32 report the day after the finals.`,
-  ]
-  const after = [`Questions? Just reply. It comes straight to me.`]
+  // No numbered steps (Matt, 17 Oct 2026): one sentence carries the sign-up link.
+  const signup = `Create your coach account here; access is instant:`
+  const after = [`Questions? Call or text me.`]
   const p = (t: string) => `<p style="margin:0 0 14px;">${esc(t)}</p>`
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
 <body style="margin:0;padding:0;background:#ffffff;">
 <div style="max-width:560px;margin:0 auto;padding:24px 16px;font-family:${FONT};font-size:15px;line-height:1.6;color:#1f2937;">
 ${paras.map(p).join("\n")}
-<ol style="margin:0 0 14px;padding-left:22px;">
-  <li style="margin:0 0 6px;">${esc(steps[0])} <a href="${SIGNUP_URL}" style="color:#1d4ed8;">${SIGNUP_URL.replace(/^https:\/\//, "")}</a></li>
-  <li style="margin:0 0 6px;">${esc(steps[1])}</li>
-  <li style="margin:0 0 6px;">${esc(steps[2])}</li>
-</ol>
+<p style="margin:0 0 14px;">${esc(signup)} <a href="${SIGNUP_URL}" style="color:#1d4ed8;">${SIGNUP_URL.replace(/^https:\/\//, "")}</a></p>
 ${after.map(p).join("\n")}
-<p style="margin:18px 0 0;">Matt Hickey<br>${esc(brand)}</p>
+<p style="margin:18px 0 0;">Matt Hickey${input.senderPhone ? `<br>${esc(input.senderPhone)}` : ""}<br>${esc(brand)}</p>
 ${input.unsubscribeUrl ? `<p style="margin:28px 0 0;font-size:12px;color:#9ca3af;">Not recruiting North Carolina? <a href="${esc(input.unsubscribeUrl)}" style="color:#9ca3af;">Unsubscribe</a> and you won't hear from us again.</p>` : ""}
 </div></body></html>`
   const text = [
     ...paras,
-    `1. ${steps[0]} ${SIGNUP_URL}`,
-    `2. ${steps[1]}`,
-    `3. ${steps[2]}`,
-    "",
+    `${signup} ${SIGNUP_URL}`,
     ...after,
     "",
-    `Matt Hickey`,
-    brand,
+    [`Matt Hickey`, input.senderPhone, brand].filter(Boolean).join("\n"),
     ...(input.unsubscribeUrl ? ["", `Not recruiting North Carolina? Unsubscribe: ${input.unsubscribeUrl}`] : []),
   ].join("\n\n").replace(/\n\n\n\n/g, "\n\n")
   return { subject, html, text }

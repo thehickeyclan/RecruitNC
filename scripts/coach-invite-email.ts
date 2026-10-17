@@ -102,6 +102,7 @@ async function main() {
       programs,
       divisions,
       unsubscribeUrl: unsub,
+      senderPhone: arg("phone") ?? "(631) 662-5409",
     })
 
   console.log(`On the platform: ${onPlatform.length} coaches, ${programs} programs (${divisions.map(([d, k]) => `${k} ${d}`).join(" · ")})`)
