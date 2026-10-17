@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   analyzeBrackets,
   buildEventReport,
+  hasBoutsAtEvent,
   renderCoachEventReportEmail,
   REPORT_EVENTS,
   roundRank,
@@ -9,6 +10,7 @@ import {
   type ReportAthleteInput,
   type ReportEvent,
 } from "@/lib/coach-event-report"
+import { renderCoachReportEmailHtml } from "@/lib/coach-event-report-email"
 import type { OtherTournamentBout } from "@/lib/other-tournaments"
 import type { OpponentIndex } from "@/lib/significant-wins"
 
@@ -327,6 +329,59 @@ describe("renderCoachEventReportEmail", () => {
     expect(bodyHtml).toContain("Coach Biehl,")
     expect(bodyHtml).not.toContain("<b>")
     expect(bodyHtml.indexOf("Pat Placer")).toBeLessThan(bodyHtml.indexOf("Zed Absent"))
+  })
+})
+
+describe("strength of competition", () => {
+  const TESTED = { grade: "Tested", line: "Beats ranked opponents, competes nationally, and wrestles the post and preseason majors." }
+  const list = bouts("super32-2025", "main.csv", "150", [["Round of 32", "A", true], ["Round of 16", "B", false]])
+
+  it("carries the profile's grade and line onto a competed wrestler", () => {
+    const [r] = buildEventReport({ event: SINGLE, athletes: [athlete("s", "Pat Tested", list, { strength: TESTED })], field: [], index: NO_INDEX, lossesVisible: true })
+    expect(r!.competed).toBe(true)
+    expect(r!.strength).toEqual(TESTED)
+  })
+
+  it("is null when it could not be computed, and for a wrestler who did not compete", () => {
+    const reports = buildEventReport({
+      event: SINGLE,
+      athletes: [athlete("a", "No Grade", list, { strength: null }), athlete("b", "Absent", [], { strength: TESTED })],
+      field: [],
+      index: NO_INDEX,
+      lossesVisible: true,
+    })
+    expect(reports.find((r) => r.athleteId === "a")!.strength).toBeNull()
+    expect(reports.find((r) => r.athleteId === "b")!.strength).toBeNull()
+  })
+
+  it("hasBoutsAtEvent sees only contested bouts at the event's sources", () => {
+    expect(hasBoutsAtEvent(SINGLE, list)).toBe(true)
+    expect(hasBoutsAtEvent(SINGLE, bouts("super32-2025", "other.csv", "150", [["Round of 32", "A", true]]))).toBe(false)
+    expect(hasBoutsAtEvent(SINGLE, bouts("super32-2025", "main.csv", "150", [["Round of 32", "", false, { isBye: true }]]))).toBe(false)
+  })
+
+  it("renders a labelled row with the grade as a pill, escaped, on the competed card only", () => {
+    const reports = buildEventReport({
+      event: SINGLE,
+      athletes: [
+        athlete("s", "Pat Tested", list, { strength: { grade: "Getting <tested>", line: "Room & more." } }),
+        athlete("n", "Nora None", bouts("super32-2025", "main.csv", "106", [["Round of 32", "C", true]]), { strength: null }),
+      ],
+      field: [],
+      index: NO_INDEX,
+      lossesVisible: true,
+    })
+    const { html } = renderCoachReportEmailHtml({ event: SINGLE, coachName: null, program: null, programLogo: null, reports, lossesVisible: true })
+    expect(html.match(/Strength of Competition/g)).toHaveLength(1)
+    expect(html).toContain("Getting &lt;tested&gt;</span>Room &amp; more.")
+    expect(html).toContain("border-radius:999px;background:#0A1628;color:#D3B574")
+    // On Pat's card: after his name, before the next card's link.
+    const pat = html.indexOf(">Pat Tested</a>")
+    expect(html.indexOf("Strength of Competition")).toBeGreaterThan(pat)
+    expect(html.indexOf("Strength of Competition")).toBeLessThan(html.indexOf("Open full profile", pat))
+
+    const legacy = renderCoachEventReportEmail({ event: SINGLE, coachName: null, reports }).bodyHtml
+    expect(legacy).toContain("Strength of Competition: Getting &lt;tested&gt;")
   })
 })
 

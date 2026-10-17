@@ -1,12 +1,11 @@
 "use client"
 
-import { accoladesFrom, offSeasonEvents } from "@/lib/profile/profile-summary"
-import { isNationalEvent } from "@/lib/wrestling-style"
-import { isInternationalStyle, styleOfEventForAthlete, summarizeCompetition } from "@/lib/wrestling-style"
+import { buildProfileRecord } from "@/lib/profile/profile-competition"
+import { isInternationalStyle, styleOfEventForAthlete } from "@/lib/wrestling-style"
 import { SignificantWinsSection } from "@/components/significant-wins-section"
 import { Medal, Trophy } from "lucide-react"
 import { AthleteDetail } from "@/components/athlete-detail"
-import { TournamentAccordion, buildNchsaaStateRows, buildTournamentRows, isTocRow } from "@/components/profile/tournament-accordion"
+import { TournamentAccordion, isTocRow } from "@/components/profile/tournament-accordion"
 import { ProfileViewTracker } from "@/components/profile-view-tracker"
 import { ProfileBackLink } from "@/components/profile/profile-back-link"
 import { useAuth } from "@/contexts/auth-context"
@@ -15,8 +14,6 @@ import type { TournamentRow } from "@/lib/profile/tournament-rows"
 import { profileCredentials } from "@/lib/profile/credentials"
 import { stateChampionshipName, stateName } from "@/lib/athlete-state"
 import { shortOlympicEvent } from "@/lib/profile/olympic-event"
-
-type NchsaaResult = { year: number; place: number | null; classification: string; weight_class: string }
 
 type ViewProfileClientProps = {
   id: string
@@ -67,29 +64,10 @@ export function ViewProfileClient({
     )
   }
 
-  const nchsaaResults = Array.isArray(athlete.nchsaa_profile) ? (athlete.nchsaa_profile as NchsaaResult[]) : []
-  const nchsaaStateBouts = Array.isArray(athlete.nchsaa_state_bouts) ? athlete.nchsaa_state_bouts : []
-  const nhscaResults = Array.isArray(athlete.nhsca_results) ? athlete.nhsca_results : []
-  const super32Results = Array.isArray(athlete.super32_results) ? athlete.super32_results : []
-  const fargoResults = Array.isArray(athlete.fargo_results) ? athlete.fargo_results : []
-  const otherTournamentBlocks = Array.isArray(athlete.other_tournament_blocks)
-    ? athlete.other_tournament_blocks
-    : []
-  const nationalTeamResults = Array.isArray(athlete.national_team_results) ? athlete.national_team_results : []
-
-  const profileTournamentRows = buildTournamentRows({
-    otherTournamentBlocks: otherTournamentBlocks as never[],
-    nhscaResults: nhscaResults as never[],
-    nhscaBouts: (Array.isArray(athlete.nhsca_bouts) ? athlete.nhsca_bouts : []) as never[],
-    super32Results: super32Results as never[],
-    super32Bouts: (Array.isArray(athlete.super32_bouts) ? athlete.super32_bouts : []) as never[],
-    fargoResults: fargoResults as never[],
-    nationalTeamResults: nationalTeamResults as never[],
-    attachedEventBouts: (Array.isArray(athlete.attached_event_bouts) ? athlete.attached_event_bouts : []) as never[],
-  })
+  /* The record rows and the competition facts read from them (lib/profile/profile-competition.ts). */
+  const { nchsaaResults, profileTournamentRows, stateTournamentRows, competition, summaryFacts } = buildProfileRecord(athlete)
   /* His state names his state tournament: the SCHSL does not run the NCHSAA's 4A. */
   const athleteState = (athlete as { state?: string | null })?.state ?? null
-  const stateTournamentRows = buildNchsaaStateRows(nchsaaResults, nchsaaStateBouts, athleteState ?? undefined)
   /*
    * The body that runs his championship, for the section heading. Taken from the classification
    * his results actually carry, so an independent-schools placer reads "SCISA", not "SCHSL".
@@ -97,17 +75,6 @@ export function ViewProfileClient({
   const stateChampionshipBody = stateChampionshipName(
     athleteState,
     nchsaaResults.find((r) => String(r?.classification ?? "").trim())?.classification ?? null,
-  )
-  // Every event on the record, bouts included (NC United duals and Fargo Greco have no results row).
-  // A North Carolina wrestler has a folkstyle season whatever else they wrestle.
-  const competition = summarizeCompetition(
-    [...profileTournamentRows, ...stateTournamentRows].flatMap((row) => [
-      `${row.event} ${row.team ?? ""}`,
-      ...row.bouts.map((b) => b.eventName),
-    ]),
-    athlete.is_nc_athlete !== false,
-    /* Girls lead with freestyle - the college standard. */
-    (athlete as { gender?: string | null })?.gender,
   )
   const athleteName = String(athlete.name ?? "Athlete")
   // Freestyle and Greco-Roman go in their own section, last on the page; folkstyle keeps the rest.
@@ -133,18 +100,6 @@ export function ViewProfileClient({
     max: 6,
     state: athleteState ?? undefined,
   })
-
-  /*
-   * The facts behind the three sentences under the name (lib/profile/profile-summary.ts), from the
-   * same rows the page prints: accolades, and how many events fall outside the NC season.
-   */
-  const summaryRows = [...profileTournamentRows, ...stateTournamentRows]
-  const summaryFacts = {
-    accolades: accoladesFrom({ stateRows: stateTournamentRows, tournamentRows: profileTournamentRows }),
-    offSeasonEvents: offSeasonEvents(summaryRows),
-    // Every national event-year on file, for the competition grade the scouting report also uses.
-    offSeasonCareer: new Set(profileTournamentRows.filter((r) => isNationalEvent(r.event)).map((r) => `${r.event.replace(/^\d{4}\s+/, "")}|${r.year}`)).size,
-  }
 
   return (
     <main className="min-h-screen bg-[#0A1628]">

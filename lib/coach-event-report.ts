@@ -148,7 +148,15 @@ export type ReportAthleteInput = {
    * Shutt wrestler's Journeymen 2026 bouts - and is held back, never reported.
    */
   profileResults?: ReadonlyArray<{ eventKey: string; weight: string }> | null
+  /**
+   * The Strength of Competition grade his public profile shows today
+   * (lib/profile/load-profile-strength.ts). Null or absent: it could not be computed.
+   */
+  strength?: StrengthOfCompetitionLine | null
 }
+
+/** The profile's "Strength of Competition" row: the grade label and its one-line verdict. */
+export type StrengthOfCompetitionLine = { grade: string; line: string }
 
 export type ReportBout = {
   round: string
@@ -199,6 +207,11 @@ export type AthleteEventReport = {
   opponentSideOnly: number
   /** One computed sentence: "He went 4-1 at 152 and placed 3rd." */
   summary: string
+  /**
+   * Strength of Competition exactly as his profile shows it ("Tested" · "Beats ranked opponents,
+   * ..."). Competed wrestlers only; null when it could not be computed - never guessed.
+   */
+  strength: StrengthOfCompetitionLine | null
 }
 
 /* ------------------------------------------------------------------ *
@@ -296,6 +309,15 @@ export function analyzeBrackets(event: ReportEvent, field: readonly FieldRow[]):
  * ------------------------------------------------------------------ */
 
 type EventBout = OtherTournamentBout & { source: ReportEventSource }
+
+/**
+ * Whether any contested bout linked to him is at this event's sources - the cheap test a loader uses
+ * to skip per-wrestler work for those who cannot have competed. Not the competed verdict itself
+ * (buildAthleteEventReport also holds back bouts his profile does not show).
+ */
+export function hasBoutsAtEvent(event: ReportEvent, bouts: readonly OtherTournamentBout[]): boolean {
+  return eventBoutsFor(event, bouts).some((b) => !b.isBye)
+}
 
 function eventBoutsFor(event: ReportEvent, bouts: readonly OtherTournamentBout[]): EventBout[] {
   const out: EventBout[] = []
@@ -459,6 +481,7 @@ export function buildAthleteEventReport(athlete: ReportAthleteInput, ctx: Report
       unverifiedBouts,
       opponentSideOnly: 0,
       summary: unverifiedBouts ? `No verified result at ${event.name}.` : `Did not compete at ${event.name}.`,
+      strength: null,
     }
   }
 
@@ -517,6 +540,7 @@ export function buildAthleteEventReport(athlete: ReportAthleteInput, ctx: Report
     unverifiedBouts,
     opponentSideOnly: 0,
     summary: `${subject} went ${wins}-${losses}${weight ? ` at ${weight}` : ""}${finish}.`,
+    strength: athlete.strength?.grade && athlete.strength.line ? { grade: athlete.strength.grade, line: athlete.strength.line } : null,
   }
 }
 
@@ -609,6 +633,9 @@ ${facts ? `<p style="margin:2px 0 8px;color:#64748b;font-size:13px;">${facts}</p
   const stats = `<p style="margin:0 0 6px;">${badge} &nbsp;<strong>${r.record.wins}-${r.record.losses}</strong>${r.weight ? ` &nbsp;·&nbsp; ${esc(r.weight)} lb` : ""}</p>
 <p style="margin:0 0 6px;color:#334155;">${esc(r.summary)}</p>`
   const note = r.placementNote ? `<p style="margin:0 0 8px;color:#64748b;font-size:13px;">${esc(r.placementNote)}.</p>` : ""
+  const strength = r.strength
+    ? `<p style="margin:0 0 8px;font-size:13px;"><strong style="color:#0A1628;">Strength of Competition: ${esc(r.strength.grade)}</strong> <span style="color:#64748b;">· ${esc(r.strength.line)}</span></p>`
+    : ""
   const wins = r.significantWins.length
     ? `<p style="margin:8px 0 4px;font-weight:600;color:#0A1628;">Significant wins</p><ul style="margin:0;padding-left:18px;">${r.significantWins.map((w) => resultLine(w, "Beat")).join("")}</ul>`
     : `<p style="margin:8px 0 0;color:#64748b;font-size:13px;">No wins over a ranked or state-placing opponent on file at this event.</p>`
@@ -618,7 +645,7 @@ ${facts ? `<p style="margin:2px 0 8px;color:#64748b;font-size:13px;">${facts}</p
   const matches = `<p style="margin:10px 0 4px;color:#64748b;font-size:12px;">${r.bouts
     .map((b) => `${esc(b.round)}${b.bracket ? ` (${esc(b.bracket)})` : ""}: ${b.outcome} ${esc(b.opponent)}${b.method || b.score ? ` ${esc([b.method, b.score].filter(Boolean).join(" "))}` : ""}`)
     .join("<br>")}</p>`
-  return `<div style="border-top:1px solid #e2e8f0;padding:16px 0;">${head}${stats}${note}${wins}${losses}${matches}
+  return `<div style="border-top:1px solid #e2e8f0;padding:16px 0;">${head}${stats}${note}${strength}${wins}${losses}${matches}
 <p style="margin:8px 0 0;font-size:13px;"><a href="${url}" style="color:#003366;">View full profile</a></p></div>`
 }
 

@@ -17,7 +17,8 @@
  * coach (classifyViewer), never to an address that unsubscribed, and only notable losses the
  * profile would show that coach.
  *
- * Other options: --athletes-file <ids.txt> (comma or newline separated), --no-profile-check (skip the profile cross-check, faster), --concurrency N.
+ * Other options: --athletes-file <ids.txt> (comma or newline separated), --no-profile-check (skip the profile cross-check, faster),
+ * --no-strength (skip each wrestler's Strength of Competition grade), --concurrency N.
  */
 import fs from "fs"
 import path from "path"
@@ -98,12 +99,16 @@ async function main() {
   if (coach) console.log(`Coach ${coach.email} - role ${viewer!.role}, college coach ${viewer!.isCollegeCoach}, notable losses ${lossesVisible}`)
   console.log(`${athleteIds.length} athletes`)
 
+  // Loaded once: the report's significant wins and each wrestler's Strength of Competition read it.
+  const indexLoad = loadSignificantOpponentIndex(admin)
   const [field, index, loaded] = await Promise.all([
     load.loadEventField(admin, event),
-    loadSignificantOpponentIndex(admin),
+    indexLoad,
     load.loadReportAthletes(admin, event, athleteIds, {
       profileCheck: !flag("no-profile-check"),
       concurrency: Number(arg("concurrency")) || 8,
+      strength: !flag("no-strength"),
+      opponentIndex: indexLoad,
     }),
   ])
   if (field.length === 0) throw new Error(`No bouts on file for ${event.key} at those source files`)
@@ -129,6 +134,7 @@ async function main() {
         `${r.record.wins}-${r.record.losses}`.padEnd(6),
         `wt ${r.weight ?? "-"}`.padEnd(10),
         `sig ${r.significantWins.length} loss ${r.notableLosses.length}`.padEnd(14),
+        (r.competed ? `SoC ${r.strength?.grade ?? "n/a"}` : "").padEnd(20),
         `profile ${shown}${a.profileRecord ? ` (${a.profileRecord})` : ""}`,
         disagree ? "  << differs from profile" : "",
         r.unverifiedBouts ? `  !! ${r.unverifiedBouts} linked bouts not on the profile: held back` : "",

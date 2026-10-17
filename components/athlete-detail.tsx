@@ -25,7 +25,7 @@ import { CompetingNextBlock } from "@/components/profile/competing-next-block"
 import { AppNotableLosses, AppRow, AppSignificantWins, AppTournamentResults, rankedWinsLast12Months, useAppProfile } from "@/components/profile/app-profile-rows"
 import { ProfileViewsBlock } from "@/components/profile/profile-views-block"
 import { summarySentences, type Accolades } from "@/lib/profile/profile-summary"
-import { buildCompetitionGrade } from "@/lib/competition-grade"
+import { profileStrengthOfCompetition } from "@/lib/profile/profile-competition"
 import { SignificantWinSubmissionDialog } from "@/components/significant-win-submission-dialog"
 import { TournamentResultSubmissionDialog } from "@/components/tournament-result-submission-dialog"
 import { ProfileFitFlag } from "@/components/profile/profile-fit-flag"
@@ -1359,11 +1359,7 @@ export function AthleteDetail({
    * Strength of competition, on the scouting report's own scale (lib/competition-grade.ts):
    * wins over credentialed opponents, national events, and events outside the season.
    */
-  const strength = buildCompetitionGrade({
-    rankedWins: appData.wins.length,
-    nationalEvents: competition?.nationalEvents.length ?? 0,
-    offSeasonEvents: summaryFacts?.offSeasonCareer ?? 0,
-  })
+  const strength = profileStrengthOfCompetition({ significantWins: appData.wins.length, competition, summaryFacts })
   const styleWords = (competition?.styles ?? []).map((st) => (st === "greco" ? "Greco-Roman" : st === "freestyle" ? "Freestyle" : "Folkstyle"))
   const aboutLine = competition
     ? [competition.scope === "national" ? "Competes nationally" : `Competes in ${stateName(athlete?.state) || "North Carolina"}`, styleWords.join(" and ")].filter(Boolean).join(" · ")

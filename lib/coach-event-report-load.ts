@@ -11,7 +11,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { loadAthleteTournamentBundle } from "@/lib/athlete-tournament-bundle"
 import { getOtherTournamentBoutsForAthleteRecord } from "@/lib/other-tournaments"
-import type { FieldRow, ReportAthleteInput, ReportEvent } from "@/lib/coach-event-report"
+import { loadProfileStrengthOfCompetition } from "@/lib/profile/load-profile-strength"
+import type { OpponentIndex } from "@/lib/significant-wins"
+import { hasBoutsAtEvent, type FieldRow, type ReportAthleteInput, type ReportEvent } from "@/lib/coach-event-report"
 
 /** Every row at the event's source files. Ordered by id: unordered pages skip and repeat rows. */
 export async function loadEventField(admin: SupabaseClient, event: ReportEvent): Promise<FieldRow[]> {
@@ -103,7 +105,17 @@ export async function loadReportAthletes(
   admin: SupabaseClient,
   event: ReportEvent,
   athleteIds: readonly string[],
-  options?: { profileCheck?: boolean; concurrency?: number },
+  options?: {
+    profileCheck?: boolean
+    concurrency?: number
+    /** Compute each wrestler's profile Strength of Competition grade. Default true. */
+    strength?: boolean
+    /**
+     * The opponent index the report already loads (loadSignificantOpponentIndex), so the grade's
+     * significant-wins read does not load it again per wrestler.
+     */
+    opponentIndex?: OpponentIndex | Promise<OpponentIndex> | null
+  },
 ): Promise<{ athletes: LoadedAthlete[]; missing: string[] }> {
   const rows: Record<string, unknown>[] = []
   for (let i = 0; i < athleteIds.length; i += 100) {
@@ -117,11 +129,24 @@ export async function loadReportAthletes(
 
   const athletes = await mapLimit(present, options?.concurrency ?? 8, async (id): Promise<LoadedAthlete> => {
     const row = byId.get(id)!
-    const [bouts, bundle] = await Promise.all([
-      getOtherTournamentBoutsForAthleteRecord(admin, row),
+    const boutsLoad = getOtherTournamentBoutsForAthleteRecord(admin, row)
+    const [bouts, bundle, grade] = await Promise.all([
+      boutsLoad,
       options?.profileCheck === false || !event.profileSection
         ? Promise.resolve(null)
         : loadAthleteTournamentBundle(admin, row).catch(() => null),
+      /*
+       * Strength of Competition exactly as his profile shows it today: the profile's own reads and
+       * assembly (lib/profile/load-profile-strength.ts). Null when it cannot be computed. Only for
+       * a wrestler with bouts at the event: the report shows it on competed cards alone.
+       */
+      options?.strength === false
+        ? Promise.resolve(null)
+        : boutsLoad.then(async (b) => {
+            if (!hasBoutsAtEvent(event, b)) return null
+            const index = await Promise.resolve(options?.opponentIndex ?? undefined).catch(() => undefined)
+            return loadProfileStrengthOfCompetition(admin, id, { index: index ?? undefined })
+          }),
     ])
     let profilePlacement: string | null = null
     let profileRecord: string | null = null
@@ -150,6 +175,7 @@ export async function loadReportAthletes(
       school: String(row.highschool ?? "").trim() || null,
       bouts,
       profileResults,
+      strength: grade ? { grade: grade.label, line: grade.verdict } : null,
       profilePlacement,
       profileRecord,
     }
