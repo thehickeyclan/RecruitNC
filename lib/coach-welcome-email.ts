@@ -96,7 +96,7 @@ ${section("Thank you", "You're part of something special.", `
   <p style="margin:0 0 12px;">You're one of ${input.coaches} college coaches from ${input.programs} programs${esc(named)} using ${esc(RECRUITING_BRAND.name)} to evaluate and engage wrestlers. <strong>We are building this for you.</strong></p>
   <p style="margin:0;">Tell us what's working and what isn't: <strong>just reply to this email</strong>, it comes straight to me.</p>`)}
 
-${section("Built for you", "What matters most", `
+${section("The platform", "What matters most", `
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
     ${feature("&#9733;", "My Recruits", "Every wrestler you star goes onto your board: track activity, contacts and where each one is in your recruiting.")}
     ${feature("&#9783;", "Athlete profiles", "Every result we hold in one place: state, national and off-season events, records, and the weight they last competed at.")}
