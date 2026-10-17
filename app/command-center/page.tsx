@@ -291,24 +291,20 @@ export default async function CommandCenterSalesPage() {
 
         <div className="pt-16">
           <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: SKY }}>Your assistant</p>
-          <h2 className={`mt-2 text-5xl leading-[0.95] sm:text-6xl ${tocDisplayClass()}`}>Questions answered, any time.</h2>
-          <p className="mt-3 max-w-2xl text-base text-white/65">Data Dawg combines verified results, sourced rules and program information, so its answers are about wrestling and about your wrestler.</p>
+          <h2 className={`mt-2 text-5xl leading-[0.95] sm:text-6xl ${tocDisplayClass()}`}>Meet Scout.</h2>
+          <p className="mt-3 max-w-2xl text-base text-white/65">Your wrestling recruiting assistant. Scout knows the rules for your wrestler&apos;s class, your college list and who has viewed the profile, so every answer is about your family.</p>
         </div>
         <Feature
           icon={Bot}
-          eyebrow="Your assistant"
-          title="An assistant that knows wrestling"
-          points={["Not a generic chatbot: Data Dawg answers from verified wrestling results, sourced recruiting rules and every college program's information", "The rules for your wrestler's class, what to say to a coach, what a college really costs, any time", "Training questions too. Never weight cutting or medical advice"]}
+          eyebrow="Scout"
+          title="Ask anything about recruiting"
+          points={["The exact date a coach may call, meet or host your wrestler, worked out for their class", "Which colleges took wrestlers with the same results, and what each one on your list really costs", "What to do next, from your own roadmap. Recruiting only: never weight cutting or medical advice"]}
           visual={
-            <div className={`${card} flex items-center gap-5 p-6`}>
+            <figure className={`${card} overflow-hidden`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images/data-dawg-avatar.webp" alt="Data Dawg" className="h-24 w-24 shrink-0 rounded-full border-2" style={{ borderColor: GOLD }} />
-              <div className="space-y-2 text-sm">
-                <p className="rounded-2xl bg-[#1f5fbf] px-4 py-2.5">When can a Division I coach first call my wrestler? Class of 2028, men&apos;s.</p>
-                <p className="rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-2.5 text-white/80">April 1 of junior year. Here&apos;s the NCAA rule, and the date we last checked it.</p>
-                <p className="text-[11px] text-white/40">Example question</p>
-              </div>
-            </div>
+              <img src="/screens/scout.jpg" alt="Scout answering when a Division I coach can first contact a class of 2028 wrestler: April 1, 2027" loading="lazy" className="block w-full" />
+              <figcaption className="px-4 py-2 text-[11px] text-white/45">The real screen, with an example family.</figcaption>
+            </figure>
           }
         />
 
@@ -348,7 +344,7 @@ export default async function CommandCenterSalesPage() {
               <span className="text-xl font-semibold text-white/55"> / month</span>
             </p>
             <ul className="mx-auto mt-6 max-w-sm space-y-2 text-left text-sm text-white/80">
-              {["Your roadmap, 8th grade to signing", "Every college: coaches, full cost, roster, alumni", "Your college list, compare and coach conversations", "Rankings and which programs viewed your profile", "Data Dawg and the full Learn library"].map((l) => (
+              {["Your roadmap, 8th grade to signing", "Every college: coaches, full cost, roster, alumni", "Your college list, compare and coach conversations", "Rankings and which programs viewed your profile", "Scout, your recruiting assistant, and the full Learn library"].map((l) => (
                 <li key={l} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: GOLD }} aria-hidden /> {l}</li>
               ))}
             </ul>

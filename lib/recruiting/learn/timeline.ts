@@ -73,6 +73,9 @@ function datedRules(track: D1Track): Opening[] {
   ]
 }
 
+/** Every dated contact and visit rule for one kind of wrestler (Scout puts calendar dates on them). */
+export const allDatedRules = (track: D1Track): Opening[] => datedRules(track)
+
 /** What first opens in a grade. */
 export function openingsFor(grade: Grade, track: D1Track): Opening[] {
   return datedRules(track).filter((rule) => gradeOfRule(rule.when) === grade)

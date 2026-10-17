@@ -13,6 +13,7 @@ import data from "@/lib/college-programs/programs-2026-27.json"
 import { yearlyCostFor } from "@/lib/college-programs/tuition"
 import { DIVISION_COLOR, DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { adaptRoadmap } from "@/lib/recruiting/roadmap-adapt"
+import { ScoutChat } from "@/app/my-recruiting/scout/scout-chat"
 
 export const dynamic = "force-dynamic"
 
@@ -81,7 +82,25 @@ export default async function Screens({ searchParams }: { searchParams?: Promise
     <div className="admin-dark-page min-h-screen bg-[#060f1f] p-8 text-white">
       {/* A screenshot shows the product only: no site menu, assistant bubble or dev badge. */}
       <style>{"nav[aria-label='Main navigation'],nextjs-portal,.fixed,footer{display:none!important}"}</style>
-      {shot === "list" ? (
+      {shot === "scout" ? (
+        <div className="mx-auto max-w-3xl">
+          <ScoutChat
+            firstName="Jordan"
+            initialTurns={[
+              { role: "user", text: "When can a Division I coach first contact Jordan? Class of 2028." },
+              {
+                role: "scout",
+                headline: "For the Class of 2028, a Division I coach can first call or message Jordan on April 1, 2027: April 1 of his junior year.",
+                body: "Until then, Division II coaches can already call and message, and Division III coaches any time. Use this year to get on their radar: questionnaires, an introduction email and a short highlight video.",
+                links: [
+                  { label: "View the NCAA Division I rules", href: "/recruiting/learn/division-1", kind: "rule" },
+                  { label: "See the roadmap for your class", href: "/recruiting/learn/timeline", kind: "timeline" },
+                ],
+              },
+            ]}
+          />
+        </div>
+      ) : shot === "list" ? (
         <div className="mx-auto max-w-[1340px]">
           <p className="mb-4 text-2xl font-black">My College List</p>
           <CollegeListTable rows={rows} readOnly wrestlerId={null} />

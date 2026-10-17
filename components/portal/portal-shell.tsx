@@ -3,14 +3,14 @@ import Link from "next/link"
 import { unreadCount } from "@/lib/coach-messages"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
-import { Activity, BookOpen, CalendarDays, Compass, LayoutDashboard, Map as MapIcon, MessageSquare } from "lucide-react"
+import { Activity, BookOpen, CalendarDays, Compass, LayoutDashboard, Map as MapIcon, MessageSquare, Sparkles } from "lucide-react"
 
 /**
  * The family portal's frame (Matt's design, 14 Oct 2026): one menu down the left on a computer, a
  * scrolling bar of the same items on a phone. Every Command Center page sits inside it, so a
  * family always knows where they are and how to get to the rest.
  */
-export type PortalSection = "home" | "plan" | "colleges" | "map" | "messages" | "learn" | "activity"
+export type PortalSection = "home" | "plan" | "colleges" | "map" | "messages" | "scout" | "learn" | "activity"
 
 const ITEMS: Array<{ key: PortalSection; label: string; href: string; icon: typeof Activity }> = [
   { key: "home", label: "Command Center", href: "/my-recruiting", icon: LayoutDashboard },
@@ -18,6 +18,7 @@ const ITEMS: Array<{ key: PortalSection; label: string; href: string; icon: type
   { key: "colleges", label: "Colleges", href: "/my-recruiting/colleges", icon: Compass },
   { key: "map", label: "Map", href: "/recruiting/college-map", icon: MapIcon },
   { key: "messages", label: "Messages", href: "/inbox", icon: MessageSquare },
+  { key: "scout", label: "Scout", href: "/my-recruiting/scout", icon: Sparkles },
   { key: "learn", label: "Learn", href: "/my-recruiting/learn", icon: BookOpen },
   { key: "activity", label: "Activity", href: "/my-recruiting/activity", icon: Activity },
 ]

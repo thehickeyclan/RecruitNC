@@ -1542,6 +1542,10 @@ html[data-host="guild"] .to-\[\#13294B\] {
   --tw-gradient-to: rgb(26 26 30) var(--tw-gradient-to-position);
 }
 
+html[data-host="guild"] .via-\[\#060f1f\] {
+  --tw-gradient-to: rgb(8 8 10 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), rgb(8 8 10) var(--tw-gradient-via-position), var(--tw-gradient-to);
+}
+
 html[data-host="guild"] .via-\[\#060f1f\]\/75 {
   --tw-gradient-to: rgb(8 8 10 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), rgb(8 8 10 / 0.75) var(--tw-gradient-via-position), var(--tw-gradient-to);
 }
