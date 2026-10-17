@@ -36,6 +36,8 @@ export type CoachWelcomeInput = {
   programs: number
   /** Programs to name, recognisable first. */
   namedPrograms: string[]
+  /** Programs by level, in display order: [["DI", 12], ["DII", 13], ...]. Empty levels are left out. */
+  divisions?: Array<[string, number]>
   unsubscribeUrl?: string | null
 }
 
@@ -72,6 +74,10 @@ export function renderCoachWelcomeEmail(input: CoachWelcomeInput): { subject: st
     <td width="50%" align="center" style="padding:14px 4px;background:${PANEL};border-radius:12px;"><div style="font-family:${FONT};font-size:26px;font-weight:900;color:#fff;line-height:1;">${input.coaches}</div><div style="font-family:${FONT};font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:${GOLD};margin-top:6px;">College coaches</div></td>
     <td width="50%" align="center" style="padding:14px 4px;background:${PANEL};border-radius:12px;"><div style="font-family:${FONT};font-size:26px;font-weight:900;color:#fff;line-height:1;">${input.programs}</div><div style="font-family:${FONT};font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:${GOLD};margin-top:6px;">College programs</div></td>
   </tr></table>
+  ${(input.divisions ?? []).filter(([, n]) => n > 0).length ? `<div style="font-family:${FONT};font-size:13px;font-weight:800;letter-spacing:0.6px;color:#ffffff;text-align:center;margin-top:12px;">${(input.divisions ?? [])
+    .filter(([, n]) => n > 0)
+    .map(([d, n]) => `<span style="white-space:nowrap;">${n} <span style="color:${GOLD};">${esc(d)}</span></span>`)
+    .join(`<span style="color:rgba(255,255,255,0.35);"> &nbsp;·&nbsp; </span>`)}</div>` : ""}
 </td></tr>
 
 <tr><td style="background:#ffffff;padding:24px 24px 8px;border-left:1px solid ${LINE};border-right:1px solid ${LINE};font-family:${FONT};font-size:15px;line-height:1.6;color:#334155;">
