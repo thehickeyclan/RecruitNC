@@ -10,7 +10,7 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import type { LucideIcon } from "lucide-react"
-import { ArrowRight, BarChart3, BookOpen, Check, ListChecks, Map as MapIcon, MessageSquare, ShieldCheck, Target } from "lucide-react"
+import { ArrowRight, BarChart3, BookOpen, Bot, Check, ListChecks, Map as MapIcon, MessageSquare, ShieldCheck, Target } from "lucide-react"
 
 import { CollegeProgramMap } from "@/components/colleges/college-program-map"
 import { tocDisplayClass } from "@/components/toc/toc-theme"
@@ -254,6 +254,24 @@ export default async function CommandCenterSalesPage() {
                 </p>
               </div>
             </Example>
+          }
+        />
+
+        <Feature
+          icon={Bot}
+          eyebrow="Your assistant"
+          title="Ask Data Dawg anything, anytime"
+          points={["The rules for your wrestler's class, what to say to a coach, what a college really costs", "Answers drawn from our verified results and the checked rules library", "Training questions too. Never weight cutting or medical advice"]}
+          visual={
+            <div className={`${card} flex items-center gap-5 p-6`}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images/data-dawg-avatar.webp" alt="Data Dawg" className="h-24 w-24 shrink-0 rounded-full border-2" style={{ borderColor: GOLD }} />
+              <div className="space-y-2 text-sm">
+                <p className="rounded-2xl bg-[#1f5fbf] px-4 py-2.5">When can a Division I coach first call my wrestler? Class of 2028, men&apos;s.</p>
+                <p className="rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-2.5 text-white/80">April 1 of junior year. Here&apos;s the NCAA rule, and the date we last checked it.</p>
+                <p className="text-[11px] text-white/40">Example question</p>
+              </div>
+            </div>
           }
         />
 

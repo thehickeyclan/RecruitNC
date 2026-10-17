@@ -144,7 +144,18 @@ function LockedActions({ schoolId, href }: { schoolId: string; href: string }) {
       <ul className="space-y-1.5">
         {rows.map(({ icon: Icon, label }) => (
           <li key={label}>
-            <a href={href} className="group flex items-center gap-2 rounded-sm px-1.5 py-1.5 text-sm text-white/85 hover:bg-white/5">
+            <a
+              href={href}
+              onClick={() => {
+                void fetch("/api/track-funnel-event", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ event: "upsell_click", source: label.replace(/\d+/g, "N").slice(0, 80), path: window.location.pathname }),
+                  keepalive: true,
+                }).catch(() => {})
+              }}
+              className="group flex items-center gap-2 rounded-sm px-1.5 py-1.5 text-sm text-white/85 hover:bg-white/5"
+            >
               <Icon className="h-4 w-4 shrink-0 text-white/50" aria-hidden />
               <span className="flex-1">{label}</span>
               <span className="inline-flex shrink-0 items-center gap-1 rounded-sm bg-[#D7B968]/15 px-1.5 py-0.5 text-[11px] font-bold text-[#F5D985] group-hover:bg-[#D7B968] group-hover:text-[#071427]">

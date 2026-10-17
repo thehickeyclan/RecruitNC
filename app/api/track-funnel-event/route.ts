@@ -20,6 +20,9 @@ const ALLOWED_EVENTS = new Set([
   "verification_completed",
   "signin_started",
   "signin_completed",
+  // The sales funnel (17 Oct 2026): a plan's checkout opened, and a locked college-card action tapped.
+  "checkout_started",
+  "upsell_click",
 ])
 
 function cleanPath(value: unknown): string {
