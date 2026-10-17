@@ -730,6 +730,14 @@ html[data-host="guild"] .marker\:text-\[\#D3B574\]\/70::marker {
   color: rgb(212 188 130 / 0.7);
 }
 
+html[data-host="national"] .outline-\[\#D3B574\] {
+  outline-color: rgb(31 107 255);
+}
+
+html[data-host="guild"] .outline-\[\#D3B574\] {
+  outline-color: rgb(184 157 96);
+}
+
 html[data-host="national"] .ring-\[\#D3B574\] {
   --tw-ring-color: rgb(31 107 255);
 }
