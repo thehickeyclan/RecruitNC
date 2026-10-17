@@ -28,8 +28,28 @@ function wordmark(size: number): string {
   return `<span style="font-family:${MARK_FONT};font-weight:900;font-style:italic;font-size:${size}px;letter-spacing:-0.5px;text-transform:uppercase;color:#ffffff;">${esc(lead)}<span style="color:${GOLD};">${esc(accent)}</span></span>`
 }
 
+/**
+ * "Coach Morrill" from what the coach typed: "eric morrill" and "SCOTT BOSAK" are capitalised,
+ * names already mixed-case ("McDonald", "LaHaye") are left alone, and a name that is only the email
+ * prefix, a single word ("tallen", "radskya"), gives plain "Coach" - never a coach's username.
+ */
+export function coachSalutation(name: string | null | undefined, email?: string | null): string {
+  const parts = String(name ?? "").trim().split(/\s+/).filter(Boolean)
+  // One word is a username or a first name alone ("tallen", "radskya"). Two words that happen to
+  // spell the email prefix are still a name: Billy Gordy is billygordy@.
+  void email
+  if (parts.length < 2) return "Coach"
+  let last = parts[parts.length - 1]!
+  if (last === last.toLowerCase() || last === last.toUpperCase()) {
+    last = last.toLowerCase().replace(/(^|[-'])([a-z])/g, (_m: string, sep: string, ch: string) => sep + ch.toUpperCase())
+  }
+  return `Coach ${last}`
+}
+
 export type CoachWelcomeInput = {
   coachName: string | null
+  /** For telling a real name from a username. */
+  coachEmail?: string | null
   program: string | null
   programLogo: string | null
   /** Platform-wide, counted at send time. */
@@ -59,7 +79,7 @@ function section(kicker: string, title: string, content: string, last = false): 
 }
 
 export function renderCoachWelcomeEmail(input: CoachWelcomeInput): { subject: string; html: string } {
-  const coach = input.coachName ? `Coach ${input.coachName.trim().split(/\s+/).slice(-1)[0]}` : "Coach"
+  const coach = coachSalutation(input.coachName, input.coachEmail)
   const subject = "Thank you, and your Super 32 reports start next week"
   const named = input.namedPrograms.length ? `, including ${input.namedPrograms.slice(0, -1).join(", ")} and ${input.namedPrograms.at(-1)}` : ""
   const preheader = "Star wrestlers this weekend: within 24 hours of the Super 32 finals you get a report on every one."
