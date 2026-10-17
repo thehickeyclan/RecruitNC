@@ -16,6 +16,7 @@ const GOLD = "#D3B574"
 const INK = "#0f172a"
 const MUTED = "#64748b"
 const LINE = "#e2e8f0"
+const GOLD_DARK = "#8a6d2b"
 const FONT = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
 const MARK_FONT = "'Arial Black','Helvetica Neue',Helvetica,Arial,sans-serif"
 
@@ -44,6 +45,17 @@ export type CoachWelcomeInput = {
 function feature(icon: string, title: string, body: string): string {
   return `<tr><td valign="top" width="44" style="padding:10px 12px 10px 0;"><div style="width:36px;height:36px;border-radius:10px;background:${NAVY};color:${GOLD};font-size:18px;line-height:36px;text-align:center;">${icon}</div></td>
 <td valign="top" style="padding:10px 0;font-family:${FONT};"><div style="font-size:15px;font-weight:800;color:${INK};">${esc(title)}</div><div style="font-size:14px;line-height:1.5;color:#475569;margin-top:2px;">${body}</div></td></tr>`
+}
+
+/** One newsletter section: a small kicker, a heading, then its content; a rule above every one but the first. */
+function section(kicker: string, title: string, content: string, last = false): string {
+  return `<tr><td style="background:#ffffff;padding:${last ? "22px 24px 26px" : "22px 24px 18px"};border-left:1px solid ${LINE};border-right:1px solid ${LINE};font-family:${FONT};font-size:15px;line-height:1.6;color:#334155;">
+  <div style="border-top:1px solid ${LINE};padding-top:20px;">
+    <div style="font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:${GOLD_DARK};">${esc(kicker)}</div>
+    <div style="font-size:21px;font-weight:900;color:${INK};line-height:1.25;margin:4px 0 12px;">${esc(title)}</div>
+    ${content}
+  </div>
+</td></tr>`
 }
 
 export function renderCoachWelcomeEmail(input: CoachWelcomeInput): { subject: string; html: string } {
@@ -80,46 +92,42 @@ export function renderCoachWelcomeEmail(input: CoachWelcomeInput): { subject: st
     .join(`<span style="color:rgba(255,255,255,0.35);"> &nbsp;·&nbsp; </span>`)}</div>` : ""}
 </td></tr>
 
-<tr><td style="background:#ffffff;padding:24px 24px 8px;border-left:1px solid ${LINE};border-right:1px solid ${LINE};font-family:${FONT};font-size:15px;line-height:1.6;color:#334155;">
-  <p style="margin:0 0 14px;">You're one of ${input.coaches} college coaches from ${input.programs} programs${esc(named)} using ${esc(RECRUITING_BRAND.name)} to evaluate and engage wrestlers. We built it for you, so tell us what's working and what isn't: <strong>just reply to this email</strong>, it comes straight to me.</p>
-</td></tr>
+${section("Thank you", "You're part of something special.", `
+  <p style="margin:0 0 12px;">You're one of ${input.coaches} college coaches from ${input.programs} programs${esc(named)} using ${esc(RECRUITING_BRAND.name)} to evaluate and engage wrestlers. <strong>We are building this for you.</strong></p>
+  <p style="margin:0;">Tell us what's working and what isn't: <strong>just reply to this email</strong>, it comes straight to me.</p>`)}
 
-<tr><td style="background:#ffffff;padding:4px 24px 4px;border-left:1px solid ${LINE};border-right:1px solid ${LINE};">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${NAVY};border-radius:14px;"><tr><td style="padding:18px 20px;font-family:${FONT};">
-    <div style="font-size:11px;font-weight:800;letter-spacing:1.4px;color:${GOLD};">STAR THIS WEEKEND · SUPER 32 IS OCT 24–25</div>
-    <div style="font-size:20px;font-weight:900;color:#ffffff;margin-top:6px;line-height:1.25;">Star your recruits. Get their tournament report within 24 hours.</div>
-    <div style="font-size:14px;line-height:1.55;color:rgba(255,255,255,0.78);margin-top:8px;">After every major tournament, starting with Super 32, you'll get a report on how your recruits performed: <strong style="color:#fff;">placement, record, significant wins, notable losses and strength of competition</strong>, with every bout.</div>
-    <!-- All three land on Coach Home (Matt, 17 Oct 2026): the coach's hub, signed in, in the coach portal. -->
-    <div style="margin-top:14px;">
-      <a href="${BASE}/coach-home" style="display:inline-block;background:${GOLD};color:${NAVY};font-size:14px;font-weight:800;text-decoration:none;padding:11px 18px;border-radius:10px;margin:0 6px 8px 0;">Open the rankings</a>
-      <a href="${BASE}/coach-home" style="display:inline-block;border:1px solid rgba(211,181,116,0.6);color:${GOLD};font-size:14px;font-weight:800;text-decoration:none;padding:10px 16px;border-radius:10px;margin:0 6px 8px 0;">Browse all athletes</a>
-      <a href="${BASE}/coach-home" style="display:inline-block;border:1px solid rgba(211,181,116,0.6);color:${GOLD};font-size:14px;font-weight:800;text-decoration:none;padding:10px 16px;border-radius:10px;margin:0 0 8px 0;">Coach Home</a>
-    </div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:10px;">Open any profile or ranking and tap the &#9733;.</div>
-    <!-- What the report looks like: a real one, from the 2025 Super 32 (public/email/super32-report-sample.jpg). -->
-    <a href="${BASE}/coach-home" style="display:block;margin-top:16px;text-decoration:none;">
-      <img src="${BASE}/email/super32-report-sample.jpg" width="512" alt="Sample Super 32 report: placement, record, significant wins with each opponent's accolades" style="display:block;width:100%;max-width:512px;height:auto;border:0;border-radius:12px;">
-    </a>
-    <div style="font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:${GOLD};margin-top:8px;">Sample report · 2025 Super 32</div>
-  </td></tr></table>
-</td></tr>
-
-<tr><td style="background:#ffffff;padding:18px 24px 10px;border-left:1px solid ${LINE};border-right:1px solid ${LINE};">
-  <div style="font-family:${FONT};font-size:13px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:${NAVY};margin-bottom:4px;">What matters most</div>
+${section("Built for you", "What matters most", `
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
     ${feature("&#9733;", "My Recruits", "Every wrestler you star goes onto your board: track activity, contacts and where each one is in your recruiting.")}
     ${feature("&#9783;", "Athlete profiles", "Every result we hold in one place: state, national and off-season events, records, and the weight they last competed at.")}
     ${feature("&#9776;", "Scouting reports", "A one-page report on any wrestler, free for college coaches.")}
     ${feature("&#9650;", "Strength of competition", "Who a wrestler has beaten, along with each competitor's accolades.")}
-  </table>
+  </table>`)}
+
+${section("New · Super 32, Oct 24–25", "Tournament reports on your recruits", `
+  <p style="margin:0 0 14px;">After every major tournament, starting with Super 32, you'll get a report on how your recruits performed: <strong>placement, record, significant wins, notable losses and strength of competition</strong>, with every bout. It arrives within 24 hours of the finals, for every wrestler you've starred.</p>
+  <img src="${BASE}/email/super32-report-sample.jpg" width="552" alt="Sample Super 32 report: placement, record, significant wins with each opponent's accolades" style="display:block;width:100%;max-width:552px;height:auto;border:1px solid ${LINE};border-radius:12px;">
+  <div style="font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:${MUTED};margin-top:8px;">Sample report · 2025 Super 32</div>`)}
+
+<tr><td style="background:#ffffff;padding:8px 24px 8px;border-left:1px solid ${LINE};border-right:1px solid ${LINE};">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${NAVY};border-radius:14px;"><tr><td align="center" style="padding:22px 18px;font-family:${FONT};">
+    <div style="font-size:11px;font-weight:800;letter-spacing:1.4px;color:${GOLD};">START TODAY</div>
+    <div style="font-size:20px;font-weight:900;color:#ffffff;margin-top:6px;line-height:1.25;">Star your recruits before Super 32</div>
+    <div style="font-size:14px;color:rgba(255,255,255,0.75);margin-top:6px;">Open any profile or ranking and tap the &#9733;.</div>
+    <!-- All three land on Coach Home (Matt, 17 Oct 2026): the coach's hub, signed in, in the coach portal. -->
+    <div style="margin-top:16px;">
+      <a href="${BASE}/coach-home" style="display:inline-block;background:${GOLD};color:${NAVY};font-size:14px;font-weight:800;text-decoration:none;padding:11px 18px;border-radius:10px;margin:0 4px 8px;">Open the rankings</a>
+      <a href="${BASE}/coach-home" style="display:inline-block;border:1px solid rgba(211,181,116,0.6);color:${GOLD};font-size:14px;font-weight:800;text-decoration:none;padding:10px 16px;border-radius:10px;margin:0 4px 8px;">Browse all athletes</a>
+      <a href="${BASE}/coach-home" style="display:inline-block;border:1px solid rgba(211,181,116,0.6);color:${GOLD};font-size:14px;font-weight:800;text-decoration:none;padding:10px 16px;border-radius:10px;margin:0 4px 8px;">Coach Home</a>
+    </div>
+  </td></tr></table>
 </td></tr>
 
-<tr><td style="background:#ffffff;padding:6px 24px 24px;border-left:1px solid ${LINE};border-right:1px solid ${LINE};font-family:${FONT};font-size:15px;line-height:1.6;color:#334155;">
-  <p style="margin:6px 0 14px;"><strong>Where we're going.</strong> Our goal is every state. <strong>South Carolina launches next week</strong>, and more states follow quickly.</p>
-  <p style="margin:12px 0 0;">Thank you for being part of it,</p>
+${section("Where we're going", "Every state", `
+  <p style="margin:0 0 18px;">Our goal is every state. <strong>South Carolina launches next week</strong>, and more states follow quickly.</p>
+  <p style="margin:0;">Thank you for being part of it,</p>
   <p style="margin:2px 0 0;font-weight:800;color:${INK};">Matt Hickey</p>
-  <p style="margin:0;color:${MUTED};font-size:13px;">${esc(RECRUITING_BRAND.name)}</p>
-</td></tr>
+  <p style="margin:0;color:${MUTED};font-size:13px;">${esc(RECRUITING_BRAND.name)}</p>`, true)}
 
 <tr><td style="background:${NAVY};border-radius:0 0 16px 16px;padding:18px 24px;">
   <div>${wordmark(14)}</div>
