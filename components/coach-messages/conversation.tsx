@@ -258,9 +258,9 @@ export function Conversation({
           </div>
         </div>
         {thread.viewerRole === "coach" && thread.compliance ? (
-          <div role="alert" className="w-full rounded-lg border border-amber-400/40 bg-amber-500/10 p-3 text-sm text-amber-100">
-            <p className="font-bold">{thread.compliance.title}</p>
-            <p className="mt-1 text-xs leading-5 text-amber-100/80">
+          <div className="w-full rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white/75">
+            <p className="font-semibold">{thread.compliance.title}</p>
+            <p className="mt-0.5 text-xs leading-5 text-white/55">
               {thread.compliance.allowed}{" "}
               <a href={thread.compliance.href} target="_blank" rel="noreferrer" className="underline">
                 The rules

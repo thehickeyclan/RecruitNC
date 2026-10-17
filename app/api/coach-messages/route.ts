@@ -39,8 +39,7 @@ export async function POST(request: NextRequest) {
   const result = await coachSend(admin, userId, athleteId, body.body)
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
 
-  // A message sent before the coach's level may recruit this wrestler is recorded, with whether the
-  // coach confirmed it was permitted (a reply that does not recruit, camp information).
+  // A message sent before the coach's level may recruit this wrestler is recorded; nothing is blocked.
   after(async () => {
     const compliance = await coachMessagingCompliance(admin, userId, athleteId).catch(() => null)
     if (!compliance || compliance.status === "open") return
@@ -48,7 +47,7 @@ export async function POST(request: NextRequest) {
       user_id: userId,
       event_type: "coach_compliance_override",
       page_url: "/api/coach-messages",
-      event_data: { athlete_id: athleteId, thread_id: result.threadId, status: compliance.status, title: compliance.title, acknowledged: body.complianceAcknowledged === true, timestamp: new Date().toISOString() },
+      event_data: { athlete_id: athleteId, thread_id: result.threadId, status: compliance.status, title: compliance.title, timestamp: new Date().toISOString() },
     })
   })
   after(() => notifyNewMessage(admin, { threadId: result.threadId, senderUserId: userId, senderRole: result.senderRole, isNewThread: result.isNewThread }))

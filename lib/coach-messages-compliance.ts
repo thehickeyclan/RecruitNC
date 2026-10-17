@@ -9,8 +9,8 @@
  * boys of the Class of 2028 and later, April 1 of junior year; boys of 2027 and girls, June 15 at
  * the end of sophomore year. The date is worked out here, never typed.
  *
- * A warning, not a lock: a Division I coach may still send a reply that does not recruit, camp
- * information or a referral to admissions, so the coach confirms and the override is logged.
+ * A soft caution, never a block (Matt, 17 Oct 2026: "do not block anyone"): the note shows, the
+ * coach sends as they choose, and a send before the date is logged.
  */
 import { D1_CONTACT, D1_TRACK_LABEL, d1TrackFor } from "@/lib/recruiting/learn/content"
 import { resolveRuleDate } from "@/lib/recruiting/scout/dates"

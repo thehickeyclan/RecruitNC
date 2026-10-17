@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { AlertTriangle, ChevronRight, Loader2, Mail, MessageSquare, Send } from "lucide-react"
+import { ChevronRight, Info, Loader2, Mail, MessageSquare, Send } from "lucide-react"
 import type { MessagingCompliance } from "@/lib/coach-messages-compliance"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/auth-context"
@@ -173,12 +173,10 @@ export function CoachComposeDialog({
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [compliance, setCompliance] = useState<MessagingCompliance | null>(null)
-  const [acknowledged, setAcknowledged] = useState(false)
   const label = athleteName ? `Message ${athleteName}` : "Message"
   // Whether this coach's level may message this wrestler yet (lib/coach-messages-compliance.ts).
   useEffect(() => {
     if (!open) return
-    setAcknowledged(false)
     if (previewCompliance) {
       setCompliance(previewCompliance)
       return
@@ -190,7 +188,7 @@ export function CoachComposeDialog({
   const warn = compliance && compliance.status !== "open" ? compliance : null
 
   const send = async () => {
-    if (!draft.trim() || sending || (warn && !acknowledged)) return
+    if (!draft.trim() || sending) return
     setSending(true)
     setError(null)
     try {
@@ -198,7 +196,7 @@ export function CoachComposeDialog({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ athleteId, body: draft, complianceAcknowledged: warn ? acknowledged : undefined }),
+        body: JSON.stringify({ athleteId, body: draft }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error ?? "Could not send.")
@@ -227,21 +225,17 @@ export function CoachComposeDialog({
         {blockedMessage ? null : (
           <div className="space-y-3">
             {warn ? (
-              <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
-                <p className="flex items-start gap-2 font-bold">
-                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden />
+              <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-[13px] leading-5 text-slate-700">
+                <p className="flex items-start gap-1.5 font-semibold text-slate-800">
+                  <Info className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-500" aria-hidden />
                   {warn.title}
                 </p>
-                <p className="mt-1.5 leading-5">{warn.detail}</p>
-                <p className="mt-1.5 leading-5">{warn.allowed}</p>
-                {warn.rule ? <p className="mt-1.5 text-xs text-amber-900/70">NCAA {warn.rule}</p> : null}
-                <a href={warn.href} target="_blank" rel="noreferrer" className="mt-1.5 inline-block text-xs font-semibold text-amber-900 underline">
-                  The Division I contact rules
-                </a>
-                <label className="mt-2.5 flex items-start gap-2 border-t border-amber-200 pt-2.5 text-[13px] font-semibold">
-                  <input type="checkbox" checked={acknowledged} onChange={(e) => setAcknowledged(e.target.checked)} className="mt-0.5 h-4 w-4 accent-amber-600" />
-                  This message is permitted for my program (for example, camp information or a reply that does not recruit).
-                </label>
+                <p className="mt-1">
+                  {warn.allowed}{" "}
+                  <a href={warn.href} target="_blank" rel="noreferrer" className="font-medium underline">
+                    The rules
+                  </a>
+                </p>
               </div>
             ) : null}
             <Textarea
@@ -257,7 +251,7 @@ export function CoachComposeDialog({
               <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={sending}>
                 Cancel
               </Button>
-              <Button onClick={send} disabled={!draft.trim() || sending || Boolean(warn && !acknowledged)} className="bg-[#0A1628] text-white hover:bg-[#13294B]">
+              <Button onClick={send} disabled={!draft.trim() || sending} className="bg-[#0A1628] text-white hover:bg-[#13294B]">
                 {sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                 Send
               </Button>
