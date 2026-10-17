@@ -597,45 +597,59 @@ export type AttachedEventBout = OtherTournamentBout & { team: "national" | "sele
  * 2026 NHSCA Duals and AAU Scholastic Duals (the team records) and Fargo (fargo_results). They carry no results row, so the
  * tournament list hangs them under the row that already exists instead of adding a second one.
  */
+/**
+ * Events whose bouts reach the profile through their own loader or their own row, never as a
+ * bouts-only event: NHSCA Nationals, Super 32 and the NCHSAA state series (attached to their result
+ * rows by year), plus Fargo, the Ultimate Club Duals and NC United's team duals (handled below).
+ */
+function hasOwnLoader(eventKey: string): boolean {
+  return /^nhsca-nationals-|^super32-\d{4}$|^nchsaa-states-|^fargo-|^ucd-/.test(eventKey) ||
+    eventKey === NC_UNITED_DUALS_EVENT_KEY || eventKey === NC_UNITED_AAU_DUALS_EVENT_KEY
+}
+
 export async function getAttachedEventBouts(supabase: SupabaseClient, athleteId: string): Promise<AttachedEventBout[]> {
   if (!athleteId?.trim()) return []
-  const { data, error } = await supabase
-    .from("other_tournament_bouts")
-    .select("event_key, event_name, year, weight_class, round, bout_order, opponent_name, opponent_club, athlete_club, win, is_bye, win_type, score")
-    .eq("athlete_id", athleteId)
-    .or(
-      [NC_UNITED_DUALS_EVENT_KEY, NC_UNITED_AAU_DUALS_EVENT_KEY]
-        .map((key) => `event_key.eq.${key}`)
-        /*
-         * Ultimate Club Duals by prefix rather than by one named key.
-         *
-         * It was `ucd-2025-nc-united` alone, which was every North Carolina team at the time. It
-         * is not any more: Carolina Gold wrestled it in 2025, and in 2026 the same girls under
-         * the name NC Gold, alongside Capital City. Each team keeps its own key so a wrestler's
-         * club is on the row, and a prefix means next year's team needs no code change - the same
-         * arrangement Fargo already has.
-         */
-        .concat("event_key.like.fargo-%", "event_key.like.ucd-%")
-        .join(","),
-    )
-    .order("bout_order", { ascending: true })
+  const [{ data, error }, { data: resultRows }] = await Promise.all([
+    supabase
+      .from("other_tournament_bouts")
+      .select("event_key, event_name, year, weight_class, round, bout_order, opponent_name, opponent_club, athlete_club, win, is_bye, win_type, score, event_date")
+      .eq("athlete_id", athleteId)
+      .order("bout_order", { ascending: true }),
+    supabase.from("other_tournament_results").select("event_key").eq("athlete_id", athleteId),
+  ])
   if (error || !data) return []
-  return data.map((row) => ({
-    eventKey: String(row.event_key),
-    eventName: String(row.event_name),
-    year: Number(row.year),
-    weight: String(row.weight_class ?? ""),
-    round: String(row.round ?? ""),
-    boutOrder: Number(row.bout_order ?? 0),
-    opponentName: (row.opponent_name as string) ?? null,
-    opponentClub: (row.opponent_club as string) ?? null,
-    opponentAthleteId: null,
-    win: Boolean(row.win),
-    isBye: Boolean(row.is_bye),
-    winType: String(row.win_type ?? ""),
-    score: String(row.score ?? ""),
-    team: /select/i.test(String(row.athlete_club ?? "")) ? "select" : "national",
-  }))
+  /*
+   * Every event the wrestler has a bout at counts, placed or not (Matt, 17 October 2026: "look
+   * for evidence of participation in freestyle / greco - should not just be placement"). Laila
+   * Andujar-Novak went 0-4 at the NC freestyle state championships; the event's file lists placers
+   * only, so with no result row her profile showed no tournaments and no freestyle. An event with a
+   * result row is printed from that row, with its bouts, so it is not repeated here.
+   */
+  const withResultRow = new Set((resultRows ?? []).map((r) => String((r as { event_key: string }).event_key)))
+  const fixedKeys = new Set([NC_UNITED_DUALS_EVENT_KEY, NC_UNITED_AAU_DUALS_EVENT_KEY])
+  return data
+    .filter((row) => {
+      const key = String(row.event_key)
+      if (fixedKeys.has(key) || key.startsWith("fargo-") || key.startsWith("ucd-")) return true
+      return !hasOwnLoader(key) && !withResultRow.has(key)
+    })
+    .map((row) => ({
+      eventKey: String(row.event_key),
+      eventName: String(row.event_name),
+      year: Number(row.year),
+      weight: String(row.weight_class ?? ""),
+      round: String(row.round ?? ""),
+      boutOrder: Number(row.bout_order ?? 0),
+      opponentName: (row.opponent_name as string) ?? null,
+      opponentClub: (row.opponent_club as string) ?? null,
+      opponentAthleteId: null,
+      win: Boolean(row.win),
+      isBye: Boolean(row.is_bye),
+      winType: String(row.win_type ?? ""),
+      score: String(row.score ?? ""),
+      eventDate: (row.event_date as string | null) ?? null,
+      team: /select/i.test(String(row.athlete_club ?? "")) ? "select" : "national",
+    }))
 }
 
 /** One meeting between two wrestlers, dated so the most recent one can be weighed highest. */
