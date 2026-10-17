@@ -229,7 +229,7 @@ export function renderCoachInviteEmail(input: CoachInviteInput): { subject: stri
   ${levels.length ? `<div style="font-family:${FONT};font-size:13px;font-weight:800;letter-spacing:0.6px;color:#ffffff;text-align:center;margin-top:12px;">${levels
     .map(([d, n]) => `<span style="white-space:nowrap;">${n} <span style="color:${GOLD};">${esc(d)}</span></span>`)
     .join(`<span style="color:rgba(255,255,255,0.35);"> &nbsp;·&nbsp; </span>`)}</div>` : ""}
-  <div style="text-align:center;margin-top:20px;">${button("Get free coach access")}</div>
+  <div style="text-align:center;margin-top:20px;">${button("Create a free account now")}</div>
 </td></tr>
 
 ${section("Why coaches use it", "Everything on a wrestler, in one place", `
@@ -248,10 +248,17 @@ ${section("New · Super 32, Oct 24–25", "Tournament reports on your recruits",
 
 <tr><td style="background:#ffffff;padding:8px 24px 8px;border-left:1px solid ${LINE};border-right:1px solid ${LINE};">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${NAVY};border-radius:14px;"><tr><td align="center" style="padding:22px 18px;font-family:${FONT};">
-    <div style="font-size:11px;font-weight:800;letter-spacing:1.4px;color:${GOLD};">FREE · ONE MINUTE</div>
-    <div style="font-size:20px;font-weight:900;color:#ffffff;margin-top:6px;line-height:1.25;">Get your coach account before Super 32</div>
-    <div style="font-size:14px;color:rgba(255,255,255,0.75);margin:6px 0 16px;">Sign up with your school email and you're in.</div>
-    ${button("Get free coach access")}
+    <div style="font-size:11px;font-weight:800;letter-spacing:1.4px;color:${GOLD};">FREE · BEFORE SUPER 32</div>
+    <div style="font-size:20px;font-weight:900;color:#ffffff;margin-top:6px;line-height:1.25;">Three steps to your Super 32 report</div>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:14px auto 16px;max-width:400px;">
+      <tr><td valign="top" width="34" style="padding:6px 10px 6px 0;"><div style="width:26px;height:26px;border-radius:999px;background:${GOLD};color:${NAVY};font-size:13px;font-weight:900;line-height:26px;text-align:center;">1</div></td>
+        <td valign="top" style="padding:6px 0;text-align:left;"><div style="font-size:15px;font-weight:800;color:#ffffff;">Create your free account</div><div style="font-size:13px;color:rgba(255,255,255,0.7);">One minute with your school email. Access is instant.</div></td></tr>
+      <tr><td valign="top" width="34" style="padding:6px 10px 6px 0;"><div style="width:26px;height:26px;border-radius:999px;background:${GOLD};color:${NAVY};font-size:13px;font-weight:900;line-height:26px;text-align:center;">2</div></td>
+        <td valign="top" style="padding:6px 0;text-align:left;"><div style="font-size:15px;font-weight:800;color:#ffffff;">Star athletes before Super 32</div><div style="font-size:13px;color:rgba(255,255,255,0.7);">Tap the &#9733; on any profile or ranking.</div></td></tr>
+      <tr><td valign="top" width="34" style="padding:6px 10px 6px 0;"><div style="width:26px;height:26px;border-radius:999px;background:${GOLD};color:${NAVY};font-size:13px;font-weight:900;line-height:26px;text-align:center;">3</div></td>
+        <td valign="top" style="padding:6px 0;text-align:left;"><div style="font-size:15px;font-weight:800;color:#ffffff;">Get your Super 32 report</div><div style="font-size:13px;color:rgba(255,255,255,0.7);">Within 24 hours of the finals: placement, record, significant wins, notable losses.</div></td></tr>
+    </table>
+    ${button("Create a free account now")}
   </td></tr></table>
 </td></tr>
 
