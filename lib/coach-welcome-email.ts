@@ -158,3 +158,114 @@ ${section("Where we're going", "Every state", `
 </body></html>`
   return { subject, html }
 }
+
+/* ------------------------------------------------------------------ invitation */
+
+export type CoachInviteInput = {
+  coachName: string | null
+  coachEmail?: string | null
+  program: string | null
+  programLogo: string | null
+  /** Coaches and programs on the platform, counted at send time. */
+  coaches: number
+  programs: number
+  divisions?: Array<[string, number]>
+  unsubscribeUrl?: string | null
+}
+
+const SIGNUP_URL = `${BASE}/auth/signup?type=college-coach`
+
+/** "Oklahoma State University–Stillwater (Oklahoma State)" reads as "Oklahoma State": the directory's short name when it gives one. */
+export function programDisplayName(program: string | null | undefined): string | null {
+  const p = String(program ?? "").trim()
+  if (!p) return null
+  const short = p.match(/\(([^()]+)\)\s*$/)?.[1]?.trim()
+  // A bracketed state tells two schools apart ("King's College (PA)", "Pacific University (Oregon)"):
+  // keep the whole name. Only a bracketed short name replaces it ("... (Oklahoma State)").
+  if (!short || /^[A-Z]{2}$/.test(short) || isStateName(short)) return p
+  return short
+}
+function isStateName(s: string): boolean {
+  const t = s.toLowerCase()
+  return ["alabama","alaska","arizona","arkansas","california","colorado","connecticut","delaware","florida","georgia","hawaii","idaho","illinois","indiana","iowa","kansas","kentucky","louisiana","maine","maryland","massachusetts","michigan","minnesota","mississippi","missouri","montana","nebraska","nevada","new hampshire","new jersey","new mexico","new york","north carolina","north dakota","ohio","oklahoma","oregon","pennsylvania","rhode island","south carolina","south dakota","tennessee","texas","utah","vermont","virginia","washington","west virginia","wisconsin","wyoming"].includes(t)
+}
+
+/**
+ * Invitation to college coaches who have not signed up (Matt, 17 October 2026): the same newsletter
+ * design as the welcome email, written for someone who has never used it - what it is, the Super
+ * 32 report, and one button to free coach access. No other program is named. Sent as RecruitNC.
+ */
+export function renderCoachInviteEmail(input: CoachInviteInput): { subject: string; html: string } {
+  const coach = coachSalutation(input.coachName, input.coachEmail)
+  const subject = "Free for college coaches: every NC wrestler's results, and Super 32 reports"
+  const preheader = `${input.coaches} college coaches from ${input.programs} programs already use it. Sign up free and get Super 32 reports on your recruits.`
+  const levels = (input.divisions ?? []).filter(([, n]) => n > 0)
+  const button = (label: string) =>
+    `<a href="${SIGNUP_URL}" style="display:inline-block;background:${GOLD};color:${NAVY};font-family:${FONT};font-size:15px;font-weight:800;text-decoration:none;padding:13px 24px;border-radius:10px;">${esc(label)}</a>`
+  const html = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:#eef2f7;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">${esc(preheader)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef2f7;"><tr><td align="center" style="padding:24px 12px;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
+
+<tr><td style="background:${NAVY};border-radius:16px 16px 0 0;padding:18px 24px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+    <td>${wordmark(22)}</td>
+    <td align="right" style="font-family:${FONT};font-size:11px;font-weight:800;letter-spacing:1.4px;color:${GOLD};">BUILT FOR COLLEGE COACHES</td>
+  </tr></table>
+</td></tr>
+
+<tr><td style="background:${NAVY};padding:4px 24px 26px;border-top:1px solid rgba(211,181,116,0.25);">
+  <div style="font-family:${FONT};font-size:14px;color:rgba(255,255,255,0.75);margin-top:18px;">${esc(coach)},</div>
+  <div style="font-family:${FONT};font-size:28px;line-height:1.15;font-weight:900;color:#ffffff;margin-top:6px;">Recruit North Carolina wrestlers. Free for college coaches.</div>
+  ${input.program ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:12px;"><tr>
+    ${input.programLogo ? `<td style="padding-right:10px;"><img src="${esc(input.programLogo)}" width="36" height="36" alt="" style="display:block;width:36px;height:36px;border-radius:8px;background:#ffffff;object-fit:contain;padding:3px;border:0;"></td>` : ""}
+    <td style="font-family:${FONT};font-size:14px;color:rgba(255,255,255,0.75);">For ${esc(programDisplayName(input.program))}</td></tr></table>` : ""}
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="6" style="margin-top:16px;"><tr>
+    <td width="50%" align="center" style="padding:14px 4px;background:${PANEL};border-radius:12px;"><div style="font-family:${FONT};font-size:26px;font-weight:900;color:#fff;line-height:1;">${input.coaches}</div><div style="font-family:${FONT};font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:${GOLD};margin-top:6px;">College coaches already on it</div></td>
+    <td width="50%" align="center" style="padding:14px 4px;background:${PANEL};border-radius:12px;"><div style="font-family:${FONT};font-size:26px;font-weight:900;color:#fff;line-height:1;">${input.programs}</div><div style="font-family:${FONT};font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:${GOLD};margin-top:6px;">College programs</div></td>
+  </tr></table>
+  ${levels.length ? `<div style="font-family:${FONT};font-size:13px;font-weight:800;letter-spacing:0.6px;color:#ffffff;text-align:center;margin-top:12px;">${levels
+    .map(([d, n]) => `<span style="white-space:nowrap;">${n} <span style="color:${GOLD};">${esc(d)}</span></span>`)
+    .join(`<span style="color:rgba(255,255,255,0.35);"> &nbsp;·&nbsp; </span>`)}</div>` : ""}
+  <div style="text-align:center;margin-top:20px;">${button("Get free coach access")}</div>
+</td></tr>
+
+${section("Why coaches use it", "Everything on a wrestler, in one place", `
+  <p style="margin:0 0 6px;">${esc(RECRUITING_BRAND.name)} is where college coaches evaluate and engage North Carolina wrestlers. Access is free for college coaches and immediate when you sign up.</p>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+    ${feature("&#9783;", "Athlete profiles", "Every result we hold in one place: state, national and off-season events, records, and the weight they last competed at.")}
+    ${feature("&#9776;", "Scouting reports", "A one-page report on any wrestler, free for college coaches.")}
+    ${feature("&#9650;", "Strength of competition", "Who a wrestler has beaten, along with each competitor's accolades.")}
+    ${feature("&#9733;", "My Recruits", "Star a wrestler and they go onto your board: track activity, contacts and where each one is in your recruiting.")}
+  </table>`)}
+
+${section("New · Super 32, Oct 24–25", "Tournament reports on your recruits", `
+  <p style="margin:0 0 14px;">After every major tournament, starting with Super 32, coaches get a report on how their recruits performed: <strong>placement, record, significant wins, notable losses and strength of competition</strong>, with every bout, within 24 hours of the finals. <strong>Sign up and star your recruits before Oct 24</strong> to get yours.</p>
+  <img src="${BASE}/email/super32-report-sample.jpg" width="552" alt="Sample Super 32 report: placement, record, significant wins with each opponent's accolades" style="display:block;width:100%;max-width:552px;height:auto;border:1px solid ${LINE};border-radius:12px;">
+  <div style="font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:${MUTED};margin-top:8px;">Sample report · 2025 Super 32</div>`)}
+
+<tr><td style="background:#ffffff;padding:8px 24px 8px;border-left:1px solid ${LINE};border-right:1px solid ${LINE};">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${NAVY};border-radius:14px;"><tr><td align="center" style="padding:22px 18px;font-family:${FONT};">
+    <div style="font-size:11px;font-weight:800;letter-spacing:1.4px;color:${GOLD};">FREE · ONE MINUTE</div>
+    <div style="font-size:20px;font-weight:900;color:#ffffff;margin-top:6px;line-height:1.25;">Get your coach account before Super 32</div>
+    <div style="font-size:14px;color:rgba(255,255,255,0.75);margin:6px 0 16px;">Sign up with your school email and you're in.</div>
+    ${button("Get free coach access")}
+  </td></tr></table>
+</td></tr>
+
+${section("Where we're going", "Every state", `
+  <p style="margin:0 0 18px;">We cover North Carolina today. Our goal is every state: <strong>South Carolina launches next week</strong>, and more states follow quickly. Questions or ideas? Just reply to this email; it comes straight to me.</p>
+  <p style="margin:2px 0 0;font-weight:800;color:${INK};">Matt Hickey</p>
+  <p style="margin:0;color:${MUTED};font-size:13px;">${esc(RECRUITING_BRAND.name)}</p>`, true)}
+
+<tr><td style="background:${NAVY};border-radius:0 0 16px 16px;padding:18px 24px;">
+  <div>${wordmark(14)}</div>
+  <div style="font-family:${FONT};font-size:11px;line-height:1.6;color:rgba(255,255,255,0.55);margin-top:8px;">You're receiving this because you're listed as a college wrestling coach. Not for you? Unsubscribe below and you won't hear from us again.${input.unsubscribeUrl ? `<br><a href="${esc(input.unsubscribeUrl)}" style="color:rgba(255,255,255,0.55);">Unsubscribe</a>` : ""}</div>
+</td></tr>
+
+</table></td></tr></table>
+</body></html>`
+  return { subject, html }
+}
