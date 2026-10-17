@@ -1,4 +1,5 @@
 import { after, NextResponse, type NextRequest } from "next/server"
+import { coachMessagingCompliance } from "@/lib/coach-messages-compliance-server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveRequestUserId } from "@/lib/request-user"
 import { getThread, replyInThread } from "@/lib/coach-messages"
@@ -22,9 +23,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   const { threadId } = await params
   const userId = await resolveRequestUserId(request)
   if (!userId) return NextResponse.json({ error: "Sign in to read this conversation." }, { status: 401 })
-  const thread = await getThread(createAdminClient(), threadId, userId)
+  const admin = createAdminClient()
+  const thread = await getThread(admin, threadId, userId)
   if (!thread) return NextResponse.json({ error: "Conversation not found." }, { status: 404 })
-  return NextResponse.json({ thread })
+  // The coach sees whether their level may recruit this wrestler yet; the family never sees it.
+  const compliance = thread.viewerRole === "coach" ? await coachMessagingCompliance(admin, userId, thread.athleteId).catch(() => null) : null
+  return NextResponse.json({ thread: compliance && compliance.status !== "open" ? { ...thread, compliance } : thread })
 }
 
 export async function POST(request: NextRequest, { params }: { params: Promise<{ threadId: string }> }) {

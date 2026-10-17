@@ -41,6 +41,7 @@ export const ALIASES: Record<string, string> = {
   Emmanuel: "emmanuel-university", // ec.edu, Franklin Springs GA
   gomules1: "muhlenberg-college", // muhlenberg.edu; the school row was named after a password-like handle
   Castleton: "vtsu-castleton",
+  "Ohio University": "ohio-university", // "ohio" is shared with Ohio State, Ohio Northern and Ohio Wesleyan, so the key matches none
   "Oswego State": "suny-oswego",
   "Rochester Institute of Technology (RIT)": "rochester-institute-of-technology",
   "UNC Chapel Hill": "university-of-north-carolina-at-chapel-hill-north-carolina",

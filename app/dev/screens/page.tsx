@@ -14,6 +14,7 @@ import { yearlyCostFor } from "@/lib/college-programs/tuition"
 import { DIVISION_COLOR, DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { adaptRoadmap } from "@/lib/recruiting/roadmap-adapt"
 import { ScoutChat } from "@/app/my-recruiting/scout/scout-chat"
+import { CoachWarningPreview } from "./coach-warning-preview"
 
 export const dynamic = "force-dynamic"
 
@@ -81,8 +82,10 @@ export default async function Screens({ searchParams }: { searchParams?: Promise
   return (
     <div className="admin-dark-page min-h-screen bg-[#060f1f] p-8 text-white">
       {/* A screenshot shows the product only: no site menu, assistant bubble or dev badge. */}
-      <style>{"nav[aria-label='Main navigation'],nextjs-portal,.fixed,footer{display:none!important}"}</style>
-      {shot === "scout-email" ? (
+      <style>{shot === "coach-warning" ? "nav[aria-label='Main navigation'],nextjs-portal,footer{display:none!important}" : "nav[aria-label='Main navigation'],nextjs-portal,.fixed,footer{display:none!important}"}</style>
+      {shot === "coach-warning" ? (
+        <CoachWarningPreview />
+      ) : shot === "scout-email" ? (
         <div className="mx-auto max-w-3xl">
           <ScoutChat
             firstName="Jordan"

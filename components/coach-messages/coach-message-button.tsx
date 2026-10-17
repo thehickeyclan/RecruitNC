@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { ChevronRight, Loader2, Mail, MessageSquare, Send } from "lucide-react"
+import { AlertTriangle, ChevronRight, Loader2, Mail, MessageSquare, Send } from "lucide-react"
+import type { MessagingCompliance } from "@/lib/coach-messages-compliance"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/auth-context"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
@@ -128,7 +129,7 @@ export function CoachMessageButton({
   )
 }
 
-type Gate = { show: boolean; canSend?: boolean; threadId?: string | null; message?: string }
+type Gate = { show: boolean; canSend?: boolean; threadId?: string | null; message?: string; compliance?: MessagingCompliance }
 /**
  * One eligibility request per wrestler per page: the profile renders this button in its phone,
  * desktop and older layouts at once. Kept for a minute, then asked again (a send changes it).
@@ -154,6 +155,7 @@ export function CoachComposeDialog({
   onOpenChange,
   blockedMessage = null,
   onSent,
+  previewCompliance,
 }: {
   athleteId: string
   athleteName?: string
@@ -163,15 +165,32 @@ export function CoachComposeDialog({
   blockedMessage?: string | null
   /** Called with the new thread id; defaults to opening the conversation. */
   onSent?: (threadId: string) => void
+  /** A screenshot or preview supplies the note instead of asking the server. */
+  previewCompliance?: MessagingCompliance
 }) {
   const router = useRouter()
   const [draft, setDraft] = useState("")
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [compliance, setCompliance] = useState<MessagingCompliance | null>(null)
+  const [acknowledged, setAcknowledged] = useState(false)
   const label = athleteName ? `Message ${athleteName}` : "Message"
+  // Whether this coach's level may message this wrestler yet (lib/coach-messages-compliance.ts).
+  useEffect(() => {
+    if (!open) return
+    setAcknowledged(false)
+    if (previewCompliance) {
+      setCompliance(previewCompliance)
+      return
+    }
+    eligibility(athleteId)
+      .then((g) => setCompliance(g.compliance ?? null))
+      .catch(() => setCompliance(null))
+  }, [open, athleteId, previewCompliance])
+  const warn = compliance && compliance.status !== "open" ? compliance : null
 
   const send = async () => {
-    if (!draft.trim() || sending) return
+    if (!draft.trim() || sending || (warn && !acknowledged)) return
     setSending(true)
     setError(null)
     try {
@@ -179,7 +198,7 @@ export function CoachComposeDialog({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ athleteId, body: draft }),
+        body: JSON.stringify({ athleteId, body: draft, complianceAcknowledged: warn ? acknowledged : undefined }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error ?? "Could not send.")
@@ -207,6 +226,24 @@ export function CoachComposeDialog({
         </DialogHeader>
         {blockedMessage ? null : (
           <div className="space-y-3">
+            {warn ? (
+              <div role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+                <p className="flex items-start gap-2 font-bold">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden />
+                  {warn.title}
+                </p>
+                <p className="mt-1.5 leading-5">{warn.detail}</p>
+                <p className="mt-1.5 leading-5">{warn.allowed}</p>
+                {warn.rule ? <p className="mt-1.5 text-xs text-amber-900/70">NCAA {warn.rule}</p> : null}
+                <a href={warn.href} target="_blank" rel="noreferrer" className="mt-1.5 inline-block text-xs font-semibold text-amber-900 underline">
+                  The Division I contact rules
+                </a>
+                <label className="mt-2.5 flex items-start gap-2 border-t border-amber-200 pt-2.5 text-[13px] font-semibold">
+                  <input type="checkbox" checked={acknowledged} onChange={(e) => setAcknowledged(e.target.checked)} className="mt-0.5 h-4 w-4 accent-amber-600" />
+                  This message is permitted for my program (for example, camp information or a reply that does not recruit).
+                </label>
+              </div>
+            ) : null}
             <Textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
@@ -220,7 +257,7 @@ export function CoachComposeDialog({
               <Button variant="ghost" onClick={() => onOpenChange(false)} disabled={sending}>
                 Cancel
               </Button>
-              <Button onClick={send} disabled={!draft.trim() || sending} className="bg-[#0A1628] text-white hover:bg-[#13294B]">
+              <Button onClick={send} disabled={!draft.trim() || sending || Boolean(warn && !acknowledged)} className="bg-[#0A1628] text-white hover:bg-[#13294B]">
                 {sending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
                 Send
               </Button>

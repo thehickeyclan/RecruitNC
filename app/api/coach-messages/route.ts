@@ -5,6 +5,7 @@ import { coachSend, listThreads } from "@/lib/coach-messages"
 import { notifyNewMessage } from "@/lib/coach-messages-notify"
 import { noteCoachMessaged } from "@/lib/recruiting/program-stage"
 import { moveListsOnCoachMessage } from "@/lib/coach-messages-extras"
+import { coachMessagingCompliance } from "@/lib/coach-messages-compliance-server"
 
 /**
  * Coach → prospect messaging. Web (cookies) and the app (bearer token) both call this.
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const userId = await resolveRequestUserId(request)
   if (!userId) return NextResponse.json({ error: "Sign in to send a message." }, { status: 401 })
-  const body = (await request.json().catch(() => ({}))) as { athleteId?: unknown; body?: unknown }
+  const body = (await request.json().catch(() => ({}))) as { athleteId?: unknown; body?: unknown; complianceAcknowledged?: unknown }
   const athleteId = typeof body.athleteId === "string" ? body.athleteId.trim() : ""
   if (!athleteId) return NextResponse.json({ error: "athleteId is required" }, { status: 400 })
 
@@ -38,6 +39,18 @@ export async function POST(request: NextRequest) {
   const result = await coachSend(admin, userId, athleteId, body.body)
   if (!result.ok) return NextResponse.json({ error: result.error }, { status: result.status })
 
+  // A message sent before the coach's level may recruit this wrestler is recorded, with whether the
+  // coach confirmed it was permitted (a reply that does not recruit, camp information).
+  after(async () => {
+    const compliance = await coachMessagingCompliance(admin, userId, athleteId).catch(() => null)
+    if (!compliance || compliance.status === "open") return
+    await admin.from("user_analytics").insert({
+      user_id: userId,
+      event_type: "coach_compliance_override",
+      page_url: "/api/coach-messages",
+      event_data: { athlete_id: athleteId, thread_id: result.threadId, status: compliance.status, title: compliance.title, acknowledged: body.complianceAcknowledged === true, timestamp: new Date().toISOString() },
+    })
+  })
   after(() => notifyNewMessage(admin, { threadId: result.threadId, senderUserId: userId, senderRole: result.senderRole, isNewThread: result.isNewThread }))
   after(() => noteCoachMessaged(admin, userId, athleteId).catch((e) => console.error("[coach-messages] stage:", e)))
   // The family's list follows the conversation: this college goes on it at "Coach replied".
