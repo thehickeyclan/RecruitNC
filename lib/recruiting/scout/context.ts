@@ -42,7 +42,7 @@ const TIER_LABEL: Record<string, string> = {
 const standingText = (m: { tier: string; national: boolean }) => `${TIER_LABEL[m.tier] ?? m.tier}${m.national ? ", national placer" : ""}`
 const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`
 
-export type ScoutLink = { label: string; href: string; kind: "rule" | "timeline" | "college" | "tool" }
+export type ScoutLink = { label: string; href: string; kind: "rule" | "timeline" | "college" | "tool" | "source" }
 
 export type ScoutContext = {
   /** The wrestler's first name, for the greeting; null when the family has no wrestler in school. */

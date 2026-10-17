@@ -2,7 +2,7 @@ import "server-only"
 
 import type { ScoutContext, ScoutLink } from "@/lib/recruiting/scout/context"
 import { SCOUT_SYSTEM } from "@/lib/recruiting/scout/prompt"
-import { SCOUT_TOOLS, collegesNamedIn, runScoutTool } from "@/lib/recruiting/scout/tools"
+import { SCOUT_TOOLS, collegesNamedIn, compareNiche, runScoutTool } from "@/lib/recruiting/scout/tools"
 
 export type ScoutDraft = { to: string[]; subject: string; body: string }
 export type ScoutAnswer = { headline: string; body: string; links: ScoutLink[]; draft: ScoutDraft | null }
@@ -49,7 +49,10 @@ export async function askScout(context: ScoutContext, question: string, history:
   // Every email address a lookup showed: the only ones a draft may go to.
   const seenEmails = new Set<string>()
   let questionnaireNotDone = false
+  // Niche report cards the lookups showed: cited whenever the answer uses Niche's grades.
+  const nicheKeys = new Set<string>()
   const remember = (out: string) => {
+    for (const m of out.matchAll(/\[link: (niche:[^\]]+)\]/g)) nicheKeys.add(m[1])
     for (const email of out.match(EMAIL) ?? []) seenEmails.add(email.toLowerCase())
     if (/NOT recorded the questionnaire/.test(out)) questionnaireNotDone = true
   }
@@ -58,7 +61,8 @@ export async function askScout(context: ScoutContext, question: string, history:
   if (named.length) {
     const outs = await Promise.all(named.map((id) => runScoutTool(context.session, "college_details", { school_id: id }).catch(() => "")))
     outs.forEach(remember)
-    messages.push({ role: "system", content: `Already looked up for this question (college_details):\n\n${outs.filter(Boolean).join("\n\n")}` })
+    const compared = compareNiche(named)
+    messages.push({ role: "system", content: `Already looked up for this question (college_details):\n\n${[...outs.filter(Boolean), compared].filter(Boolean).join("\n\n")}` })
   }
   let retried = false
 
@@ -100,6 +104,13 @@ export async function askScout(context: ScoutContext, question: string, history:
       continue
     }
     const answer = parseAnswer(message.content ?? "", context, seenEmails)
+    if (answer && /niche/i.test(`${answer.headline} ${answer.body}`)) {
+      const have = new Set(answer.links.map((l) => l.href))
+      for (const key of nicheKeys) {
+        const link = context.links[key]
+        if (link && !have.has(link.href)) answer.links.push(link)
+      }
+    }
     const problems = [
       ...(answer?.draft ? draftProblems(answer.draft.body, questionnaireNotDone) : []),
       // The family's income is never known: a net price is an average, not theirs.
@@ -134,7 +145,9 @@ function parseAnswer(raw: string, context: ScoutContext, seenEmails: Set<string>
     .map((k) => context.links[k])
     .filter((l): l is ScoutLink => Boolean(l))
     .filter((l, i, all) => all.findIndex((x) => x.href === l.href) === i)
-    .slice(0, 3)
+  // Sources (a college's Niche report card) ride beside up to three action links.
+  const actions = links.filter((l) => l.kind !== "source").slice(0, 3)
+  const sources = links.filter((l) => l.kind === "source").slice(0, 4)
   let draft: ScoutDraft | null = null
   const d = parsed.draft as { to?: unknown; subject?: unknown; body?: unknown } | null | undefined
   if (d && typeof d.body === "string" && d.body.trim()) {
@@ -144,5 +157,5 @@ function parseAnswer(raw: string, context: ScoutContext, seenEmails: Set<string>
       body: d.body.trim(),
     }
   }
-  return { headline, body: typeof parsed.body === "string" ? parsed.body.trim() : "", links, draft }
+  return { headline, body: typeof parsed.body === "string" ? parsed.body.trim() : "", links: [...actions, ...sources], draft }
 }
