@@ -502,6 +502,14 @@ html[data-host="guild"] .group:hover .group-hover\:bg-\[\#D3B574\] {
   background-color: rgb(184 157 96); color: #0A0A0B;
 }
 
+html[data-host="national"] .group:hover .group-hover\:bg-\[\#D7B968\] {
+  background-color: rgb(31 107 255); color: #fff;
+}
+
+html[data-host="guild"] .group:hover .group-hover\:bg-\[\#D7B968\] {
+  background-color: rgb(184 157 96); color: #0A0A0B;
+}
+
 html[data-host="national"] .group:hover .group-hover\:bg-\[\#e2c98d\] {
   background-color: rgb(75 139 255); color: #fff;
 }
