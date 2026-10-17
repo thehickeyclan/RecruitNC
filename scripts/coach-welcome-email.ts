@@ -64,6 +64,14 @@ async function main() {
     ["NJCAA", countLevel("NJCAA")],
   ]
 
+  const { programLogo } = await import("../lib/coach-program-logo")
+  const logos = new Map<string, string | null>()
+  for (const c of coaches) {
+    const sch = school(c.school_id)
+    logos.set(c.email!, (await programLogo({ name: sch?.name ?? c.institution ?? null, logo_url: sch?.logo_url ?? null }).catch(() => ({ url: null }))).url ?? null)
+  }
+  console.log(`Logos: ${[...logos.values()].filter(Boolean).length} of ${coaches.length}`)
+
   const { allowed } = await filterUnsubscribed(admin, coaches.map((c) => c.email!))
   const sendable = new Set(allowed.map((e: string) => e.toLowerCase()))
   const sent: Record<string, string> = fs.existsSync(LOG) ? JSON.parse(fs.readFileSync(LOG, "utf8")) : {}
@@ -72,8 +80,10 @@ async function main() {
   const render = (c: (typeof coaches)[number] | null, unsub: string | null) =>
     renderCoachWelcomeEmail({
       coachName: c ? (c.full_name || [c.first_name, c.last_name].filter(Boolean).join(" ") || null) : null,
+      coachEmail: c?.email ?? null,
       program: c ? (school(c.school_id)?.name ?? c.institution ?? null) : null,
-      programLogo: c ? (school(c.school_id)?.logo_url ?? null) : null,
+      // The logo Coach Home shows the coach (lib/coach-program-logo.ts), not only the school record's.
+      programLogo: c ? (logos.get(c.email!) ?? null) : null,
       coaches: coaches.length,
       programs,
       namedPrograms: NAMED,
