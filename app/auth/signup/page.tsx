@@ -427,6 +427,12 @@ function SignUpWizard() {
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "Creating your account…" : isCollegeCoach ? "Get access" : "Create account"}
                   </Button>
+                  {isCollegeCoach ? (
+                    <p className="text-xs leading-5 text-muted-foreground">
+                      Families see that your program viewed their wrestler&apos;s profile, never which coach.{" "}
+                      <a href="/privacy#coach-views" className="underline">Privacy</a>
+                    </p>
+                  ) : null}
                 </form>
 
                 {/* Coaches owe us a cell and a college, which Google does not have; /auth/complete-profile
