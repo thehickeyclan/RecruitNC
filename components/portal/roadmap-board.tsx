@@ -1,10 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { Check, ChevronRight, GraduationCap, Medal, Search, Target, Trophy, Users } from "lucide-react"
+import { Check, ChevronRight, GraduationCap, Medal, Search, Sparkles, Target, Trophy, Users } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
 import type { RoadmapYear } from "@/lib/recruiting/learn/roadmap"
+import type { AdaptedItem } from "@/lib/recruiting/roadmap-adapt"
 
 const GRADE_LABEL: Record<number, string> = { 8: "8th grade", 9: "9th grade", 10: "10th grade", 11: "11th grade", 12: "12th grade" }
 const ACCENT: Record<number, string> = { 8: "#5B9BFF", 9: "#38BDF8", 10: "#A78BFA", 11: "#F5C04E", 12: "#F87171" }
@@ -15,6 +16,9 @@ const ICON: Record<number, LucideIcon> = { 8: Medal, 9: Target, 10: Search, 11: 
 /**
  * Five grade columns with a checklist each. The wrestler's own year is marked and leads on a
  * phone; ticking saves to the family's account. Read-only in a developer's family preview.
+ *
+ * Adapted (lib/recruiting/roadmap-adapt.ts): a step the data proves is ticked and locked, a step
+ * added for this wrestler has a spark instead of a box, and each shows its reason underneath.
  */
 export function RoadmapBoard({
   years,
@@ -24,7 +28,7 @@ export function RoadmapBoard({
   readOnly,
   name,
 }: {
-  years: RoadmapYear[]
+  years: Array<Omit<RoadmapYear, "items"> & { items: AdaptedItem[] }>
   initialDone: string[]
   current: number | null
   selected: number
@@ -36,6 +40,8 @@ export function RoadmapBoard({
 
   const toggle = async (id: string) => {
     if (readOnly) return
+    const item = years.flatMap((y) => y.items).find((i) => i.id === id)
+    if (item?.auto || item?.added) return
     const next = !done.has(id)
     setDone((d) => {
       const copy = new Set(d)
@@ -100,6 +106,25 @@ export function RoadmapBoard({
               <ul className="flex-1 space-y-1 border-t border-white/10 p-3">
                 {year.items.map((item) => {
                   const on = done.has(item.id)
+                  const label = item.href ? (
+                    <a href={item.href} className={`group text-sm leading-5 ${on ? "text-white/45 line-through" : item.added ? "font-semibold text-white hover:text-white" : "text-white/85 hover:text-white"}`}>
+                      {item.text}
+                      <ChevronRight className="ml-0.5 inline h-3.5 w-3.5 text-white/30 group-hover:text-white/70" aria-hidden />
+                    </a>
+                  ) : (
+                    <span className={`text-sm leading-5 ${on ? "text-white/45 line-through" : item.added ? "font-semibold text-white" : "text-white/85"}`}>{item.text}</span>
+                  )
+                  if (item.added) {
+                    return (
+                      <li key={item.id} className="flex items-start gap-2.5 rounded-lg px-1.5 py-1.5" style={{ backgroundColor: `${accent}14` }}>
+                        <Sparkles className="mt-0.5 h-[18px] w-[18px] shrink-0" style={{ color: accent }} aria-label="Added for this wrestler" />
+                        <span className="flex-1">
+                          {label}
+                          {item.because ? <span className="block text-[11px] leading-4 text-white/50">{item.because}</span> : null}
+                        </span>
+                      </li>
+                    )
+                  }
                   return (
                     <li key={item.id} className="flex items-start gap-2.5 rounded-lg px-1.5 py-1.5 hover:bg-white/[0.04]">
                       <button
@@ -107,21 +132,18 @@ export function RoadmapBoard({
                         role="checkbox"
                         aria-checked={on}
                         aria-label={item.text}
-                        disabled={readOnly}
+                        disabled={readOnly || item.auto}
+                        title={item.auto ? `Done: ${item.because}` : undefined}
                         onClick={() => toggle(item.id)}
                         className={`mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded border transition ${on ? "border-transparent text-[#0A1628]" : "border-white/35 hover:border-white/70"}`}
                         style={on ? { backgroundColor: accent } : undefined}
                       >
                         {on ? <Check className="h-3.5 w-3.5" strokeWidth={3} aria-hidden /> : null}
                       </button>
-                      {item.href ? (
-                        <a href={item.href} className={`group flex-1 text-sm leading-5 ${on ? "text-white/45 line-through" : "text-white/85 hover:text-white"}`}>
-                          {item.text}
-                          <ChevronRight className="ml-0.5 inline h-3.5 w-3.5 text-white/30 group-hover:text-white/70" aria-hidden />
-                        </a>
-                      ) : (
-                        <span className={`flex-1 text-sm leading-5 ${on ? "text-white/45 line-through" : "text-white/85"}`}>{item.text}</span>
-                      )}
+                      <span className="flex-1">
+                        {label}
+                        {item.because ? <span className={`block text-[11px] leading-4 ${item.auto ? "text-white/35" : "text-[#D3B574]/80"}`}>{item.because}</span> : null}
+                      </span>
                     </li>
                   )
                 })}

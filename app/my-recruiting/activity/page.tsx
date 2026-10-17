@@ -17,6 +17,8 @@ import { listThreads } from "@/lib/coach-messages"
 import { unsentIds } from "@/lib/coach-messages-extras"
 import { COLLEGE_LIST_STATUSES, COLLEGE_LIST_STATUS_LABEL } from "@/lib/college-programs/list"
 import { ROADMAP, cleanDone } from "@/lib/recruiting/learn/roadmap"
+import { adaptRoadmap } from "@/lib/recruiting/roadmap-adapt"
+import { loadRoadmapSignals } from "@/lib/recruiting/roadmap-signals"
 import { gradeFromLabel } from "@/lib/recruiting/learn/timeline"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { loadCommandCenter } from "../load"
@@ -161,21 +163,25 @@ export default async function CommandCenterActivity({ searchParams }: { searchPa
   // The summary, for the chosen period.
   const contacted = cc.schools.filter((s) => COLLEGE_LIST_STATUSES.indexOf(s.status) >= COLLEGE_LIST_STATUSES.indexOf("contacted")).length
   const done = cleanDone(account?.user?.user_metadata?.roadmap_done)
+  const grade = gradeFromLabel(cc.wrestlers[0]?.grade ?? null)
+  // The wrestler's own roadmap: steps added for him lead, steps the data proves are done drop out.
+  const signals = grade && first ? await loadRoadmapSignals(admin, { athleteId: first.id, userId: cc.viewerId, grade }).catch(() => null) : null
+  const adapted = signals ? adaptRoadmap(signals, done) : null
   const tiles = [
     { value: inRange.filter((i) => i.kind === "view").length, label: "Profile views" },
     { value: inRange.filter((i) => i.kind === "message").length, label: "Coach messages" },
     { value: contacted, label: "Colleges contacted" },
-    { value: done.length, label: "Roadmap steps done" },
+    { value: (adapted?.done ?? done).length, label: "Roadmap steps done" },
   ]
 
   // What to do next: replies owed first, then the profile, the schedule and this year's roadmap.
-  const grade = gradeFromLabel(cc.wrestlers[0]?.grade ?? null)
-  const year = ROADMAP.find((y) => y.grade === grade)
+  const year = (adapted?.years ?? ROADMAP).find((y) => y.grade === grade)
+  const doneNow = adapted?.done ?? done
   const todo: Array<{ title: string; sub: string; href: string; logo: string | null; icon: LucideIcon }> = [
     ...threads.filter((t) => t.yourTurn).slice(0, 3).map((t) => ({ title: `Reply to ${t.coachName}`, sub: t.program ?? "College coach", href: `/inbox/${t.id}`, logo: t.programLogo, icon: MessageSquare })),
     ...cc.wrestlers.flatMap((w) => (w.profileTodo ? [{ title: w.profileTodo.todo, sub: `${w.profilePercent}% complete`, href: "/my-recruiting", logo: null, icon: UserRound }] : [])),
     ...cc.wrestlers.flatMap((w) => (w.events.length === 0 ? [{ title: "Add upcoming tournaments", sub: "Coaches see where to watch", href: "/my-recruiting/plan", logo: null, icon: CalendarDays }] : [])),
-    ...(year?.items.filter((i) => !done.includes(i.id)).slice(0, 2).map((i) => ({ title: i.text, sub: "This year's roadmap", href: i.href ?? "/recruiting/learn/timeline", logo: null, icon: CheckCircle2 })) ?? []),
+    ...(year?.items.filter((i) => !doneNow.includes(i.id)).slice(0, 2).map((i) => ({ title: i.text, sub: String(("because" in i && i.because) || "This year's roadmap"), href: i.href ?? "/recruiting/learn/timeline", logo: null, icon: CheckCircle2 })) ?? []),
   ].slice(0, 5)
 
   const recent = cc.premium ? views.flatMap((v) => v?.schools ?? []).sort((a, b) => b.lastViewedAt.localeCompare(a.lastViewedAt)).slice(0, 5) : []
