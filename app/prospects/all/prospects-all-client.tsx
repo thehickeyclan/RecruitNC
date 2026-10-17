@@ -268,6 +268,23 @@ export default function ProspectsAllClient({
   const [brandHost, setBrandHost] = useState(false)
   useEffect(() => setBrandHost(document.documentElement.hasAttribute("data-host")), [])
   const stateChoices = visibleStates(viewerProfile?.is_admin === true || viewerProfile?.role === "admin")
+  /*
+   * A link can open the list on a state (?state=SC, from a state page such as wrestlingguild.com/recruit/sc).
+   * Only a state this viewer may open is honoured; anything else stays on North Carolina.
+   */
+  const stateFromLink = useRef(false)
+  useEffect(() => {
+    if (stateFromLink.current) return
+    const asked = new URLSearchParams(window.location.search).get("state")?.toUpperCase()
+    if (!asked) {
+      stateFromLink.current = true
+      return
+    }
+    if (stateChoices.some((s) => s.code === asked)) {
+      stateFromLink.current = true
+      setStateFilter(asked)
+    }
+  }, [stateChoices])
 
   useEffect(() => {
     if (skipInitialActiveFetch.current && yearFilter === "active") {
