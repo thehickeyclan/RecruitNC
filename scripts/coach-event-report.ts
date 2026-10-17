@@ -52,7 +52,6 @@ async function main() {
   const load = await import("../lib/coach-event-report-load")
   const { loadSignificantOpponentIndex } = await import("../lib/significant-opponent-index")
   const { classifyViewer, maySeeNotableLosses } = await import("../lib/viewer-role")
-  const { buildAdminBlastEmailHtml } = await import("../lib/admin-blast-email-html")
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -139,10 +138,31 @@ async function main() {
     )
   }
 
-  const email = report.renderCoachEventReportEmail({ event, coachName: coach?.name ?? null, reports })
-  const footer = "RecruitNC · computed from the brackets we hold"
+  // The branded email (lib/coach-event-report-email.ts): photos, and the coach's program and logo.
+  const { renderCoachReportEmailHtml } = await import("../lib/coach-event-report-email")
+  const { isPlaceholderAthletePhoto } = await import("../lib/recruiting-profile-photo")
+  const { data: photoRows } = await admin.from("athletes").select("id, photourl").in("id", reports.map((r) => r.athleteId))
+  const photos = new Map(
+    (photoRows ?? [])
+      .filter((p) => p.photourl && /^https:/.test(String(p.photourl)) && !isPlaceholderAthletePhoto(String(p.photourl)))
+      .map((p) => [String(p.id), String(p.photourl)]),
+  )
+  let program: string | null = null
+  let programLogo: string | null = null
+  if (coach) {
+    const { data: prof } = await admin.from("user_profiles").select("institution, school_id").eq("user_id", coach.userId).maybeSingle()
+    program = (prof?.institution as string | null) ?? null
+    if (prof?.school_id) {
+      const { data: school } = await admin.from("schools").select("name, logo_url").eq("id", prof.school_id).maybeSingle()
+      program = (school?.name as string | null) ?? program
+      programLogo = (school?.logo_url as string | null) ?? null
+    }
+  }
+  const renderFor = (unsubscribeUrl: string | null) =>
+    renderCoachReportEmailHtml({ event: event!, coachName: coach?.name ?? null, program, programLogo, reports, photos, lossesVisible, unsubscribeUrl })
+  const email = renderFor(null)
   fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true })
-  fs.writeFileSync(out, buildAdminBlastEmailHtml(email.subject, email.bodyHtml, report.PROFILE_BASE_URL, "recruitnc", footer))
+  fs.writeFileSync(out, email.html)
   fs.writeFileSync(out.replace(/\.html?$/i, "") + ".json", JSON.stringify({ event, coach: coach?.email ?? null, reports }, null, 2))
   console.log(`\nSubject: ${email.subject}\nPreview: ${path.resolve(out)}\nTook ${((Date.now() - started) / 1000).toFixed(1)}s`)
 
@@ -150,19 +170,22 @@ async function main() {
     console.log("Dry run: nothing sent.")
     return
   }
-  const { filterUnsubscribed, unsubscribeFooterHtml, unsubscribeHeaders, unsubscribeUrl } = await import("../lib/email-unsubscribe")
-  const { sendAdminBlastEmail } = await import("../lib/email")
+  const { filterUnsubscribed, unsubscribeHeaders, unsubscribeUrl } = await import("../lib/email-unsubscribe")
   const { allowed } = await filterUnsubscribed(admin, [coach!.email])
   if (!allowed.length) {
     console.log(`${coach!.email} has unsubscribed; not sent.`)
     return
   }
   const unsub = unsubscribeUrl(report.PROFILE_BASE_URL, coach!.email)
-  const result = await sendAdminBlastEmail(coach!.email, email.subject, email.bodyHtml + unsubscribeFooterHtml(unsub), "recruitnc", {
-    footer,
+  const { Resend } = await import("resend")
+  const sent = await new Resend(process.env.RESEND_API_KEY).emails.send({
+    from: "RecruitNC <info@ncwrestlingunited.com>",
+    to: [coach!.email],
+    subject: email.subject,
+    html: renderFor(unsub).html,
     headers: unsubscribeHeaders(unsub),
   })
-  console.log(result.success ? `Sent to ${coach!.email} (${result.resendMessageId ?? "no id"})` : `Send failed: ${result.error}`)
+  console.log(sent.error ? `Send failed: ${sent.error.message}` : `Sent to ${coach!.email} (${sent.data?.id ?? "no id"})`)
 }
 
 main().catch((e) => {
