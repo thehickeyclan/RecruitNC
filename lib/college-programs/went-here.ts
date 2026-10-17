@@ -3,6 +3,7 @@ import "server-only"
 import type { SupabaseClient } from "@supabase/supabase-js"
 
 import { mostRecentGraduatedClassYear, seniorClassYear } from "@/lib/class-years"
+import { athleteStateCode } from "@/lib/recruiting/states"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { buildSchoolIndex, matchSchool } from "@/lib/college-programs/match"
@@ -53,7 +54,7 @@ const CLASSES_BACK = 3
 
 // The credential engine matches unlinked results by name and school, so it needs these exactly.
 const COLUMNS =
-  'id, name, wrestling_name, "firstName", "lastName", highschool, graduationyear, gender, weightclass, college, college_id, academic_gpa, nhsca_results, super32_results'
+  'id, name, wrestling_name, "firstName", "lastName", highschool, graduationyear, gender, weightclass, college, college_id, academic_gpa, nhsca_results, super32_results, state, is_nc_athlete'
 
 export type WentHereWrestler = {
   athleteId: string
@@ -109,6 +110,8 @@ export async function buildWentHereSnapshot(admin: SupabaseClient): Promise<Went
       division,
       standing: standingOf(creds),
       gender,
+      // The wrestler's state, so a family sees its own state's alumni (NC when flagged NC).
+      state: athleteStateCode(row as { state?: string | null; is_nc_athlete?: boolean | null }),
     }
   })
 

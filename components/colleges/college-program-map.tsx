@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
-import { ChevronRight, Lock, Search, ShieldCheck, Star, X } from "lucide-react"
+import { BarChart3, Bookmark, ChevronRight, ClipboardList, GraduationCap, Lock, Search, ShieldCheck, Star, Users, X } from "lucide-react"
 
 import { CoachEmailComposer } from "@/components/colleges/coach-email-composer"
 import { ListControls } from "@/components/colleges/list-controls"
@@ -98,12 +98,75 @@ function programLine(p: CollegeMapSchool["programs"][number]): string {
   return teams
 }
 
+/**
+ * What subscribing unlocks for this college, shown to anyone without the Recruiting Command Center
+ * (Matt, 17 Oct 2026). Counts, never names: how many coaches, whether there is a questionnaire, how
+ * many wrestlers from the family's state went here. Each line is a way in.
+ */
+function LockedActions({ schoolId, href }: { schoolId: string; href: string }) {
+  const [staff, setStaff] = useState<{ staffCount: number; hasQuestionnaire: boolean } | null>(null)
+  const [alumni, setAlumni] = useState<{ count: number; stateName: string } | null>(null)
+  useEffect(() => {
+    let cancelled = false
+    setStaff(null)
+    setAlumni(null)
+    fetch(`/api/college-map/staff?school=${encodeURIComponent(schoolId)}`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((b) => {
+        if (!cancelled && b?.locked) setStaff({ staffCount: Number(b.staffCount) || 0, hasQuestionnaire: Boolean(b.hasQuestionnaire) })
+      })
+      .catch(() => {})
+    fetch(`/api/college-map/went-here?school=${encodeURIComponent(schoolId)}`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((b) => {
+        if (!cancelled && b?.locked && b.alumni) setAlumni({ count: Number(b.alumni.count) || 0, stateName: String(b.alumni.stateName ?? "North Carolina") })
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [schoolId])
+  const rows: Array<{ icon: typeof Users; label: string }> = [
+    { icon: Users, label: staff && staff.staffCount > 0 ? `See all ${staff.staffCount} coaches and their emails` : "See the coaching staff and their emails" },
+    ...(staff?.hasQuestionnaire ? [{ icon: ClipboardList, label: "Fill out the recruiting questionnaire" }] : []),
+    {
+      icon: GraduationCap,
+      label:
+        alumni && alumni.count > 0
+          ? `See the ${alumni.count} ${alumni.stateName} wrestler${alumni.count === 1 ? "" : "s"} who went here`
+          : `See the ${alumni?.stateName ?? "North Carolina"} wrestlers who went here`,
+    },
+    { icon: Bookmark, label: "Save to your college list" },
+    { icon: BarChart3, label: "Compare with other colleges" },
+  ]
+  return (
+    <div className="mt-3 border-t border-white/10 pt-3">
+      <ul className="space-y-1.5">
+        {rows.map(({ icon: Icon, label }) => (
+          <li key={label}>
+            <a href={href} className="group flex items-center gap-2 rounded-sm px-1.5 py-1.5 text-sm text-white/85 hover:bg-white/5">
+              <Icon className="h-4 w-4 shrink-0 text-white/50" aria-hidden />
+              <span className="flex-1">{label}</span>
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-sm bg-[#D7B968]/15 px-1.5 py-0.5 text-[11px] font-bold text-[#F5D985] group-hover:bg-[#D7B968] group-hover:text-[#071427]">
+                <Lock className="h-3 w-3" aria-hidden /> Subscribe
+              </span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 function SchoolCard({
   school,
   filters,
   onClose,
   list,
+  upsellHref = null,
 }: {
+  /** Set when the viewer does not have the Command Center: the card shows what subscribing unlocks. */
+  upsellHref?: string | null
   school: CollegeMapSchool
   /** Programs the filters hid are shown dimmed, so a D1 + D2 school reads right under a D2 filter. */
   filters: Filters | null
@@ -160,6 +223,8 @@ function SchoolCard({
 
       {list}
 
+      {upsellHref ? <LockedActions schoolId={school.id} href={upsellHref} /> : null}
+
       {/* Everything else about the school - staff, questionnaire, who went there - is on its page. */}
       <a
         href={`/recruiting/schools/${school.id}`}
@@ -171,7 +236,16 @@ function SchoolCard({
   )
 }
 
-export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
+export function CollegeProgramMap({
+  accessToken,
+  upsellHref = "/command-center",
+  heightClass = "h-[520px] sm:h-[620px]",
+}: {
+  accessToken: string
+  /** Where the Subscribe actions on a locked college card go. */
+  upsellHref?: string
+  heightClass?: string
+}) {
   const [response, setResponse] = useState<CollegeMapResponse | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [mapError, setMapError] = useState<string | null>(null)
@@ -640,20 +714,20 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
             <Lock className="mt-1 h-4 w-4 shrink-0 text-[#F5D985]" />
             <span>
               Filter by level, men&apos;s or women&apos;s, state, and see which programs have coaches on <BrandName /> — part of the{" "}
-              <BrandName ncu="Recruiting Portal with NC United Blue." guild="full Command Center, coming soon." />
+              <BrandName ncu="Recruiting Command Center." guild="full Command Center, coming soon." />
             </span>
           </p>
           <Link
-            href="/blue"
-            className="ncu-only inline-flex shrink-0 items-center justify-center rounded-sm bg-[#CC0000] px-4 py-2 text-sm font-bold text-white hover:bg-[#a80000]"
+            href={upsellHref}
+            className="ncu-only inline-flex shrink-0 items-center justify-center rounded-sm bg-[#D7B968] px-4 py-2 text-sm font-bold text-[#071427] hover:bg-[#F5D985]"
           >
-            Learn about Blue
+            See the Recruiting Command Center
           </Link>
         </div>
       )}
 
       <div className="relative overflow-hidden rounded-sm border border-white/10">
-        <div ref={containerRef} className="h-[520px] w-full bg-[#0a1528] sm:h-[620px]" />
+        <div ref={containerRef} className={`${heightClass} w-full bg-[#0a1528]`} />
         {!response ? (
           <div className="absolute inset-0 flex items-center justify-center text-sm text-white/60">Loading programs…</div>
         ) : null}
@@ -666,6 +740,7 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
             <SchoolCard
               school={selected}
               filters={full ? filters : null}
+              upsellHref={full ? null : upsellHref}
               onClose={() => setSelectedId(null)}
               list={
                 listAvailable ? (

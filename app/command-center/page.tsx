@@ -12,7 +12,7 @@ import Link from "next/link"
 import type { LucideIcon } from "lucide-react"
 import { ArrowRight, BarChart3, BookOpen, Check, ListChecks, Map as MapIcon, MessageSquare, ShieldCheck, Target } from "lucide-react"
 
-import { MapDots } from "@/components/portal/map-dots"
+import { CollegeProgramMap } from "@/components/colleges/college-program-map"
 import { tocDisplayClass } from "@/components/toc/toc-theme"
 import { loadSalesData } from "@/lib/recruiting/sales-data"
 import { SCOUTING_REPORT_PRICES, formatPrice } from "@/lib/scouting-report-entitlement"
@@ -192,13 +192,21 @@ export default async function CommandCenterSalesPage() {
           }
         />
 
-        <Feature
-          icon={MapIcon}
-          eyebrow="The college map"
-          title={`${d.mapPreview?.total ?? "Every"} colleges with wrestling`}
-          points={["Every program by level: D1, D2, D3, NAIA and junior college", "Each college's coaches, ranking, roster and full yearly cost", "The North Carolina wrestlers on each roster, and who went there"]}
-          visual={d.mapPreview ? <div className={`${card} overflow-hidden`}><MapDots preview={d.mapPreview} /></div> : null}
-        />
+        {/* The real map, live: tap any college and see what subscribing unlocks (Matt, 17 Oct 2026). */}
+        <section className="py-12">
+          <p className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.25em]" style={{ color: GOLD }}>
+            <MapIcon className="h-4 w-4" aria-hidden /> The college map
+          </p>
+          <h2 className={`mt-3 text-4xl leading-[0.95] sm:text-5xl ${tocDisplayClass()}`}>
+            {d.mapPreview?.total ?? "Every"} colleges with wrestling. Tap one.
+          </h2>
+          <p className="mt-3 max-w-2xl text-base text-white/70">
+            Every program at every level, men&apos;s and women&apos;s. Open any college to see its coaching staff, its recruiting questionnaire and the wrestlers from your state who went there, then save it to your list and compare.
+          </p>
+          <div className="mt-6">
+            <CollegeProgramMap accessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? ""} upsellHref={d.onSale ? BUY : "/plans"} heightClass="h-[460px] sm:h-[560px]" />
+          </div>
+        </section>
 
         <Feature
           flip

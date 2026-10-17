@@ -7,6 +7,19 @@ import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
+import { familyAthleteIds } from "@/lib/coach-messages"
+import { STATE_NAMES } from "@/lib/college-programs/states"
+import { readWentHereSnapshot } from "@/lib/college-programs/went-here-snapshot"
+import { HOME_STATE, athleteStateCode } from "@/lib/recruiting/states"
+import type { SupabaseClient } from "@supabase/supabase-js"
+
+/** The state of the family's wrestler (their oldest still listed), or null when there is none. */
+async function familyState(admin: SupabaseClient, userId: string): Promise<string | null> {
+  const ids = await familyAthleteIds(admin, userId)
+  if (!ids.length) return null
+  const { data } = await admin.from("athletes").select("state, is_nc_athlete, graduationyear").in("id", ids).order("graduationyear", { ascending: true }).limit(1)
+  return athleteStateCode(data?.[0] ?? null)
+}
 
 export const dynamic = "force-dynamic"
 
@@ -18,7 +31,15 @@ export async function GET(request: NextRequest) {
   const schoolId = request.nextUrl.searchParams.get("school")?.trim() ?? ""
   const admin = createAdminClient()
   const { viewer, userId } = await resolvePortalViewer({ supabase: await createClient(), admin })
-  if (!(hasPortalAccess(viewer) || viewer.isVerifiedCoach)) return NextResponse.json({ locked: true })
+  if (!(hasPortalAccess(viewer) || viewer.isVerifiedCoach)) {
+    // Locked: who went here is paid, but how many is the reason to subscribe (Matt, 17 Oct 2026).
+    // Counted for the family's own state - South Carolina alumni for an SC family - and North
+    // Carolina for everyone else. A commit with no state is from before SC, so it is NC's.
+    const state = (userId ? await familyState(admin, userId).catch(() => null) : null) ?? HOME_STATE
+    const snapshot = await readWentHereSnapshot().catch(() => null)
+    const count = (snapshot?.commits ?? []).filter((c) => c.schoolId === schoolId && (c.state ?? HOME_STATE) === state).length
+    return NextResponse.json({ locked: true, alumni: { count, state, stateName: STATE_NAMES[state] ?? state } })
+  }
 
   try {
     // A coach has no wrestler of his own to set beside it.
