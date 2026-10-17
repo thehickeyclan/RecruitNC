@@ -64,10 +64,10 @@ export function StaffList({ school, focus }: { school: Pick<CollegeMapSchool, "i
         <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#F5D985]" />
         <span>
           Coaching staff, contacts and recruiting questionnaires are part of{" "}
-          <Link href="/blue" className="font-semibold text-[#F5D985] hover:underline">
+          <Link href="/blue" className="ncu-only font-semibold text-[#F5D985] hover:underline">
             NC United Blue
           </Link>
-          .
+          <span className="guild-only">the full Command Center, coming soon</span>.
         </span>
       </p>
     )

@@ -251,9 +251,15 @@ export default async function CommandCenterHome() {
               ) : (
                 <p className="mt-3 text-sm text-white/60">The plan, college board and schedule are part of the Command Center.</p>
               )}
-              <Link href={blue ? "/my-recruiting/plan" : "/blue"} className="mt-auto inline-flex w-fit items-center gap-1 rounded-lg bg-[#D3B574] px-3 py-2 pt-2 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d] [margin-top:1rem]">
+              {/* Not Blue: NC United's Blue page on its own address; on Guild Recruiting's, nothing to buy until national pricing is set. */}
+              <Link href={blue ? "/my-recruiting/plan" : "/blue"} className={`${blue ? "" : "ncu-only "}mt-auto inline-flex w-fit items-center gap-1 rounded-lg bg-[#D3B574] px-3 py-2 pt-2 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d] [margin-top:1rem]`}>
                 {blue ? "View your full plan" : "Learn about Blue"} <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
+              {!blue ? (
+                <span className="guild-only">
+                  <span className="mt-4 inline-flex w-fit rounded-lg border border-white/15 px-3 py-2 text-sm font-semibold text-white/60">Full Command Center: coming soon</span>
+                </span>
+              ) : null}
             </section>
 
             {/* My college list */}

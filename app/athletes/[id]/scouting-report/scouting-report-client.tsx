@@ -1311,7 +1311,7 @@ function ScoutingReportPaywall({ athleteId }: { athleteId: string }) {
           <button
             onClick={() => void buy("single")}
             disabled={busy !== null}
-            className="flex min-h-[52px] w-full items-center justify-between rounded-sm bg-[#B31B1B] px-4 text-left text-white hover:bg-[#8f1616] disabled:opacity-60"
+            className="ncu-only flex min-h-[52px] w-full items-center justify-between rounded-sm bg-[#B31B1B] px-4 text-left text-white hover:bg-[#8f1616] disabled:opacity-60"
           >
             <span>
               <span className="block text-sm font-bold">This report</span>
@@ -1320,10 +1320,13 @@ function ScoutingReportPaywall({ athleteId }: { athleteId: string }) {
             <span className="text-lg font-black">$4.99</span>
           </button>
 
+          <span className="guild-only">
+            <span className="block rounded-sm border border-white/15 px-4 py-3 text-sm text-white/60">Memberships open at launch.</span>
+          </span>
           <button
             onClick={() => void buy("subscription")}
             disabled={busy !== null}
-            className="flex min-h-[52px] w-full items-center justify-between rounded-sm border border-[#D3B574] bg-transparent px-4 text-left text-[#D3B574] hover:bg-[#D3B574]/10 disabled:opacity-60"
+            className="ncu-only flex min-h-[52px] w-full items-center justify-between rounded-sm border border-[#D3B574] bg-transparent px-4 text-left text-[#D3B574] hover:bg-[#D3B574]/10 disabled:opacity-60"
           >
             <span>
               <span className="block text-sm font-bold">RecruitNC membership</span>

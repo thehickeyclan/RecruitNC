@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 
 import { CollegeProgramMap } from "@/components/colleges/college-program-map"
 import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
+import { BrandName } from "@/components/recruiting/brand-name"
 
 export const metadata: Metadata = {
   title: "College Wrestling Program Map | RecruitNC",
@@ -22,7 +23,7 @@ export default function CollegeMapPage() {
         <TocPatrioticBar />
         <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
           <p className="text-xs font-bold uppercase tracking-[0.32em] text-[#D7B968]">
-            RecruitNC · Recruiting Portal
+            <BrandName /> · Recruiting Portal
           </p>
           <h1 className={`mt-4 text-5xl leading-[0.95] text-white sm:text-6xl ${tocDisplayClass()}`}>
             College program map

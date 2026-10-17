@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { BadgeCheck, GripVertical, Mail, Sparkles } from "lucide-react"
 
 import { COLLEGE_LIST_STATUSES, COLLEGE_LIST_STATUS_LABEL, type CollegeListStatus } from "@/lib/college-programs/list"
+import { BrandName } from "@/components/recruiting/brand-name"
 
 /**
  * The college list as a board (Command Center Phase 1, 14 Oct 2026): a column per stage of
@@ -168,7 +169,7 @@ export function CollegeBoard({
                     </div>
                     {c.onRecruitNC ? (
                       <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#D3B574]/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-[#D3B574]">
-                        <BadgeCheck className="h-3 w-3" aria-hidden /> Coaches on RecruitNC
+                        <BadgeCheck className="h-3 w-3" aria-hidden /> Coaches on <BrandName />
                       </p>
                     ) : null}
                     {c.cost ? <p className="mt-2 text-[11px] leading-4 text-white/55">{c.cost}</p> : null}

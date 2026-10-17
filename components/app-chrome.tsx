@@ -1,7 +1,6 @@
 "use client"
 
-import { NationalFooter, NationalHeader } from "@/components/recruiting/national-frame"
-import { GuildFooter, GuildHeader } from "@/components/recruiting/guild-frame"
+import { BrandFooter, BrandHeader } from "@/components/recruiting/brand-frames"
 import { useEffect, useState } from "react"
 import { usePathname } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
@@ -217,12 +216,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
       <div className="ncu-only">
         <Navbar />
       </div>
-      <div className="national-only">
-        <NationalHeader />
-      </div>
-      <div className="guild-only">
-        <GuildHeader />
-      </div>
+      <BrandHeader />
       <div className="ncu-only">{familyBand === "top" ? <FamilyProfileBand /> : null}</div>
       <main className="flex-1">
         <ConditionalAuthGuard>{children}</ConditionalAuthGuard>
@@ -232,12 +226,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
         <Footer />
         {chat}
       </div>
-      <div className="national-only">
-        <NationalFooter />
-      </div>
-      <div className="guild-only">
-        <GuildFooter />
-      </div>
+      <BrandFooter />
     </div>
   )
 }

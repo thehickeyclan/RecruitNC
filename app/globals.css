@@ -300,3 +300,14 @@
     color: hsl(var(--foreground));
   }
 }
+
+/*
+ * Brand frames (components/app-chrome.tsx): the RecruitWrestlers and Guild Recruiting parts are
+ * hidden by default here, in the stylesheet every page loads, so app.ncwrestlingunited.com can
+ * never show them - even if app/recruit-brand.css (which turns them on for their own addresses)
+ * fails to load.
+ */
+.national-only,
+.guild-only {
+  display: none !important;
+}

@@ -8,6 +8,7 @@
  * attribution is approved.
  */
 import type { Metadata } from "next"
+import Image from "next/image"
 import { ArrowRight, Eye, MessageSquare, PhoneCall, Search, ShieldCheck, Trophy, Users, type LucideIcon } from "lucide-react"
 import { GuildRecruitingLockup } from "@/components/recruiting/guild-frame"
 import { GUILD_GOLD, GUILD_INTEGRITY_RULE, guildMetadata } from "@/lib/recruiting/guild-brand"
@@ -140,7 +141,10 @@ export default async function GuildRecruitingHome() {
               </a>
             </div>
           </div>
-          <FunnelPreview />
+          {/* The Guild emblem: earned, like a Hall of Fame trophy (Matt, 16 Oct 2026). */}
+          <div className="relative mx-auto w-full max-w-[520px]">
+            <Image src="/guild/guild-emblem.png" alt="The Wrestling Guild emblem: two wrestlers in front of the gold G" width={1100} height={1007} priority sizes="(min-width: 1024px) 520px, 90vw" className="h-auto w-full drop-shadow-[0_30px_60px_rgba(184,157,96,0.18)]" />
+          </div>
         </section>
 
         {/* Numbers */}
@@ -166,9 +170,14 @@ export default async function GuildRecruitingHome() {
 
         {/* The difference */}
         <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <Label>The difference</Label>
-          <h2 className="mt-3 max-w-2xl text-3xl font-black tracking-tight sm:text-4xl">College coaches work here.</h2>
-          <p className="mt-3 max-w-2xl text-white/60">Not a profile emailed out in hope. Coaches search, track and contact athletes from the same platform families use.</p>
+          <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_1fr]">
+            <div>
+              <Label>The difference</Label>
+              <h2 className="mt-3 max-w-2xl text-3xl font-black tracking-tight sm:text-4xl">College coaches work here.</h2>
+              <p className="mt-3 max-w-2xl text-white/60">Not a profile emailed out in hope. Coaches search, track and contact athletes from the same platform families use, and families see who is reaching out.</p>
+            </div>
+            <FunnelPreview />
+          </div>
           <div className="mt-8 grid gap-4 md:grid-cols-3">
             <Feature icon={Search} title="Coaches search here" body="Every profile is in the search college staff use, with the weight each athlete last competed at." />
             <Feature icon={Eye} title="You see who looked" body="When a college program opens a profile, the family sees the program and when." />
