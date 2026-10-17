@@ -16,7 +16,7 @@ Read-only. Exits 0 when every gate passes, 2 when one fails, and lists the wrest
 |---|---|---|
 | Placers with a profile | ≥ 90% of the latest championship's placers (1st–6th, not graduated) | Coaches search for placers first; a missing one reads as "we don't have him" |
 | Class year on recent placers | ≤ 5% missing | No class year = absent from every class list and board |
-| State stamp | 0 championship-linked profiles counted under another state | The Alex Johnson / Logan Hinton fault: a champion invisible in his own state |
+| State stamp | 0 championship-linked profiles with no state (a recorded move to another state is allowed) | The Alex Johnson / Logan Hinton fault: a champion invisible in his own state |
 | Results too early | 0 results before freshman year (independent schools: before 7th grade) | A namesake's result, or a wrong class year |
 | NC results on the state's profiles | 0, or each one reviewed | A move is possible; it is never assumed |
 | Duplicates | 0 same name + class | Two profiles split views, messages and claims |
