@@ -133,3 +133,16 @@ export async function notifyStaffMessageReport(input: { program: string | null; 
   const about = [input.program, input.athleteName ? `re ${input.athleteName}` : null].filter(Boolean).join(" ")
   return send(`Message reported${about ? ` (${about})` : ""}. Act within 24h: /admin/coach-messages`, "message-report")
 }
+
+/**
+ * A college coach wrote to a wrestler nobody has claimed: no family will see it until someone
+ * claims the profile, so Matt makes sure they do (16 October 2026: "when coaches message an
+ * unclaimed profile.. let me know via text and i will make sure that profile gets claimed").
+ */
+export async function notifyStaffUnclaimedMessage(input: { program: string | null; coach: string; athleteName: string | null; profileUrl: string }): Promise<number> {
+  const from = input.program ? `${input.coach} (${input.program})` : input.coach
+  return send(
+    `${from} messaged ${input.athleteName ?? "a wrestler"}, whose profile is NOT claimed - nobody will see it until the family claims. ${input.profileUrl}`,
+    "unclaimed-message",
+  )
+}
