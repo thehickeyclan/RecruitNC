@@ -197,8 +197,9 @@ function isStateName(s: string): boolean {
  */
 export function renderCoachInviteEmail(input: CoachInviteInput): { subject: string; html: string } {
   const coach = coachSalutation(input.coachName, input.coachEmail)
-  const subject = "Free for college coaches: every NC wrestler's results, and Super 32 reports"
-  const preheader = `${input.coaches} college coaches from ${input.programs} programs already use it. Sign up free and get Super 32 reports on your recruits.`
+  // Personal, and no "free" in the subject or preview: the first version landed in Gmail's Promotions tab (Matt, 17 Oct 2026).
+  const subject = coach === "Coach" ? "Super 32 reports on the wrestlers you're recruiting" : `${coach}, Super 32 reports on the wrestlers you're recruiting`
+  const preheader = `${input.coaches} college coaches from ${input.programs} programs use it. Star your recruits before Oct 24.`
   const levels = (input.divisions ?? []).filter(([, n]) => n > 0)
   const button = (label: string) =>
     `<a href="${SIGNUP_URL}" style="display:inline-block;background:${GOLD};color:${NAVY};font-family:${FONT};font-size:15px;font-weight:800;text-decoration:none;padding:13px 24px;border-radius:10px;">${esc(label)}</a>`
