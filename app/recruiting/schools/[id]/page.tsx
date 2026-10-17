@@ -61,6 +61,7 @@ import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { BrandName } from "@/components/recruiting/brand-name"
 
 export const dynamic = "force-dynamic"
 
@@ -243,7 +244,7 @@ export default async function SchoolPage({ params }: Params) {
                   ) : null}
                   {onRecruitNC ? (
                     <span className="inline-flex items-center gap-1 rounded-md px-2.5 py-1" style={{ backgroundColor: GOLD, color: "var(--recruit-on-accent)" }}>
-                      <ShieldCheck className="h-3.5 w-3.5" aria-hidden /> Coaches on RecruitNC
+                      <ShieldCheck className="h-3.5 w-3.5" aria-hidden /> Coaches on <BrandName />
                     </span>
                   ) : null}
                   {school.firstSeason ? <span className="rounded-md bg-emerald-400/15 px-2.5 py-1 text-emerald-200">New program · {school.firstSeason}</span> : null}

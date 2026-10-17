@@ -337,7 +337,8 @@ export default async function CommandCenterActivity({ searchParams }: { searchPa
               ) : (
                 <p className="mt-2 text-sm text-white/55">
                   {views.reduce((n, v) => n + (v?.totalViews ?? 0), 0)} views by college coaches.{" "}
-                  <a href="/blue" className="font-semibold underline" style={{ color: GOLD }}>Blue shows which programs</a>
+                  <a href="/blue" className="ncu-only font-semibold underline" style={{ color: GOLD }}>Blue shows which programs</a>
+                  <span className="guild-only">Program names: coming soon.</span>
                 </p>
               )}
             </section>

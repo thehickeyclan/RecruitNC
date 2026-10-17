@@ -13,7 +13,7 @@ import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Trophy, Users, Edit, ArrowRight } from "lucide-react"
 import { GoogleSignInButton } from "@/components/auth/google-sign-in-button"
-import { GuildSignInPanel } from "@/components/recruiting/guild-frame"
+import { BrandSignInPanel } from "@/components/recruiting/brand-frames"
 
 function isTocScopedAdminTarget(path: string | null): boolean {
   if (!path) return false
@@ -375,9 +375,7 @@ export default function SignInPage() {
             </CardContent>
           </Card>
           </div>
-          <div className="guild-only">
-            <GuildSignInPanel />
-          </div>
+          <BrandSignInPanel />
 
           {/* Sign In Card */}
           <Card className="w-full shadow-lg relative z-10 order-1 lg:order-2">

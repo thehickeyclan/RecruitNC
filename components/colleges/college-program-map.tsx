@@ -16,6 +16,7 @@ import {
 } from "@/lib/college-programs/list"
 import { STATE_NAMES } from "@/lib/college-programs/states"
 import { loadMapbox, type MapLike } from "@/lib/mapbox/load-mapbox"
+import { BrandName } from "@/components/recruiting/brand-name"
 import {
   COLLEGE_DIVISIONS,
   DIVISION_COLOR,
@@ -153,7 +154,7 @@ function SchoolCard({
       {school.onRecruitNC ? (
         <p className="mt-3 inline-flex items-center gap-1.5 rounded-sm bg-white/10 px-2 py-1 text-xs font-semibold text-white">
           <ShieldCheck className="h-3.5 w-3.5 text-[#D7B968]" />
-          Coaches on RecruitNC
+          Coaches on <BrandName />
         </p>
       ) : null}
 
@@ -545,7 +546,7 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
             }`}
           >
             <span className="h-3 w-3 rounded-full border-2 border-white bg-transparent" />
-            On RecruitNC ({recruitNCCount})
+            On <BrandName /> ({recruitNCCount})
           </button>
         ) : null}
         {full && listAvailable ? (
@@ -637,12 +638,14 @@ export function CollegeProgramMap({ accessToken }: { accessToken: string }) {
         <div className="flex flex-col gap-3 rounded-sm border border-[#D7B968]/30 bg-[#D7B968]/10 p-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="flex items-start gap-2 text-sm leading-6 text-white/80">
             <Lock className="mt-1 h-4 w-4 shrink-0 text-[#F5D985]" />
-            Filter by level, men&apos;s or women&apos;s, state, and see which programs have coaches on RecruitNC — part of the
-            Recruiting Portal with NC United Blue.
+            <span>
+              Filter by level, men&apos;s or women&apos;s, state, and see which programs have coaches on <BrandName /> — part of the{" "}
+              <BrandName ncu="Recruiting Portal with NC United Blue." guild="full Command Center, coming soon." />
+            </span>
           </p>
           <Link
             href="/blue"
-            className="inline-flex shrink-0 items-center justify-center rounded-sm bg-[#CC0000] px-4 py-2 text-sm font-bold text-white hover:bg-[#a80000]"
+            className="ncu-only inline-flex shrink-0 items-center justify-center rounded-sm bg-[#CC0000] px-4 py-2 text-sm font-bold text-white hover:bg-[#a80000]"
           >
             Learn about Blue
           </Link>

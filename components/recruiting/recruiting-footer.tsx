@@ -1,6 +1,6 @@
 import { RECRUITING_BRAND, recruitingCoverage } from "@/lib/recruiting/brand"
-import { NationalLockup } from "@/components/recruiting/national-frame"
-import { GuildRecruitingLockup } from "@/components/recruiting/guild-frame"
+import { BrandLockup } from "@/components/recruiting/brand-frames"
+import { BrandName } from "@/components/recruiting/brand-name"
 import { RecruitingWordmark } from "@/components/recruiting/recruiting-wordmark"
 
 /**
@@ -25,12 +25,7 @@ export function RecruitingFooter() {
             <span className="ncu-only">
               <RecruitingWordmark className="text-xl" />
             </span>
-            <span className="national-only">
-              <NationalLockup />
-            </span>
-            <span className="guild-only">
-              <GuildRecruitingLockup />
-            </span>
+            <BrandLockup />
             <p className="mt-2 text-sm text-white/50">{RECRUITING_BRAND.tagline}</p>
             <p className="mt-1 text-sm text-white/50">Covering {recruitingCoverage()}. Free for college coaching staff.</p>
           </div>
@@ -53,8 +48,7 @@ export function RecruitingFooter() {
         <div className="mt-8 flex flex-col gap-2 border-t border-white/10 pt-5 text-xs text-white/40 sm:flex-row sm:justify-between">
           <p>
             &copy; {new Date().getFullYear()} <span className="ncu-only">{RECRUITING_BRAND.parent}</span>
-            <span className="national-only">RecruitWrestlers</span>
-            <span className="guild-only">Guild Recruiting</span>. All rights reserved.
+            <BrandName ncu="" />. All rights reserved.
           </p>
         </div>
       </div>

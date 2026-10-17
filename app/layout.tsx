@@ -92,7 +92,7 @@ export default function RootLayout({
         */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var h=location.hostname,b=h==='recruit.wrestlingguild.com'?'guild':/(^|\\.)recruitwrestlers\\.com$/.test(h)?'national':null;if(!b)return;var name=b==='guild'?'Guild Recruiting':'RecruitWrestlers';var d=document.documentElement;d.setAttribute('data-host',b);var fix=function(){var t=document.title;if(t&&t.indexOf('NC United Wrestling')>-1)document.title=t.replace(/ \\| RecruitNC(?= \\|)/g,'').replace(/NC United Wrestling/g,name)};fix();new MutationObserver(fix).observe(document.documentElement,{subtree:true,childList:true});var n=0,iv=setInterval(function(){fix();if(++n>40)clearInterval(iv)},250)}catch(e){}})();`,
+            __html: `(function(){try{var h=location.hostname,b=/^recruit\\./.test(h)?'guild':/(^|\\.)recruitwrestlers\\.com$/.test(h)?'national':null;if(!b)return;document.documentElement.setAttribute('data-host',b)}catch(e){}})();`,
           }}
         />
         <meta name="mobile-web-app-capable" content="yes" />

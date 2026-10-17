@@ -264,6 +264,9 @@ export default function ProspectsAllClient({
    * own brand to families). Choosing another state loads it from the server.
    */
   const [stateFilter, setStateFilter] = useState<string>(HOME_STATE)
+  // On a brand address (Guild Recruiting) the picker names states plainly; RecruitNC is NC United's name.
+  const [brandHost, setBrandHost] = useState(false)
+  useEffect(() => setBrandHost(document.documentElement.hasAttribute("data-host")), [])
   const stateChoices = visibleStates(viewerProfile?.is_admin === true || viewerProfile?.role === "admin")
 
   useEffect(() => {
@@ -917,7 +920,7 @@ export default function ProspectsAllClient({
                 >
                   {stateChoices.map((st) => (
                     <option key={st.code} value={st.code}>
-                      Recruit{st.code} · {st.name}
+                      {brandHost ? st.name : `Recruit${st.code} · ${st.name}`}
                       {st.live ? "" : " (staff only)"}
                     </option>
                   ))}
