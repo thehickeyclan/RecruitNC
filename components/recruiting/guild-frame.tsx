@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Playfair_Display } from "next/font/google"
 import { LogOut, Menu, X } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
-import { GUILD_GOLD, GUILD_INTEGRITY_RULE } from "@/lib/recruiting/guild-brand"
+import { GUILD_GOLD } from "@/lib/recruiting/guild-brand"
 
 /**
  * Guild Recruiting's own header and footer (recruit.wrestlingguild.com). Related to Guild Training
@@ -17,7 +17,7 @@ import { GUILD_GOLD, GUILD_INTEGRITY_RULE } from "@/lib/recruiting/guild-brand"
  */
 const playfair = Playfair_Display({ subsets: ["latin"], weight: ["700", "800"], display: "swap" })
 
-export { GUILD_GOLD, GUILD_INTEGRITY_RULE } from "@/lib/recruiting/guild-brand"
+export { GUILD_GOLD } from "@/lib/recruiting/guild-brand"
 
 const LINKS = [
   { href: "/prospects/all", label: "Athletes" },
@@ -122,7 +122,6 @@ export function GuildFooter() {
             </a>
           </nav>
         </div>
-        <p className="mt-8 border-t border-white/10 pt-6 text-xs leading-5 text-white/45">{GUILD_INTEGRITY_RULE}</p>
       </div>
     </footer>
   )
@@ -145,7 +144,6 @@ export function GuildSignInPanel() {
       <a href="/create-profile" className="mt-8 inline-flex w-fit items-center rounded-md px-5 py-3 text-sm font-bold text-black hover:opacity-90" style={{ backgroundColor: GUILD_GOLD }}>
         New here? Find your profile
       </a>
-      <p className="mt-8 text-xs leading-5 text-white/40">{GUILD_INTEGRITY_RULE}</p>
     </div>
   )
 }

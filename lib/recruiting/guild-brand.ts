@@ -3,9 +3,6 @@ import type { Metadata } from "next"
 /** Guild Recruiting's brand values, shared by server pages and the browser frame (components/recruiting/guild-frame.tsx). */
 export const GUILD_GOLD = "#B89D60"
 
-/** The rule every Guild Recruiting page carries (wording approved by Matt, 16 Oct 2026). */
-export const GUILD_INTEGRITY_RULE =
-  "Purchasing Guild Training does not influence rankings, placement, profile visibility, or treatment within Guild Recruiting. Rankings are based on verified results. Paid placement is prohibited."
 
 /**
  * Replaces every field the site-wide metadata sets (app/layout.tsx), so a Guild page never
