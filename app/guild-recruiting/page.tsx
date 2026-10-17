@@ -11,7 +11,7 @@ import type { Metadata } from "next"
 import Image from "next/image"
 import { ArrowRight, Eye, MessageSquare, PhoneCall, Search, ShieldCheck, Trophy, Users, type LucideIcon } from "lucide-react"
 import { GuildRecruitingLockup } from "@/components/recruiting/guild-frame"
-import { GUILD_GOLD, GUILD_INTEGRITY_RULE, guildMetadata } from "@/lib/recruiting/guild-brand"
+import { GUILD_GOLD, guildMetadata } from "@/lib/recruiting/guild-brand"
 import { RECRUITING_BRAND } from "@/lib/recruiting/brand"
 import { COACH_FEATURES, EVENTS, FAMILY_FEATURES } from "@/lib/recruiting/national-content"
 import { loadNationalStats } from "@/lib/recruiting/national-stats"
@@ -273,21 +273,6 @@ export default async function GuildRecruitingHome() {
                   </li>
                 ))}
               </ul>
-            </div>
-          </div>
-        </section>
-
-        {/* The rule */}
-        <section className="py-16">
-          <div className="mx-auto max-w-4xl px-4 sm:px-6">
-            <div className="rounded-xl border p-6 sm:p-8" style={{ borderColor: "rgba(184, 157, 96, 0.45)" }}>
-              <div className="flex items-start gap-4">
-                <ShieldCheck className={`mt-0.5 h-6 w-6 shrink-0 ${GOLD_TEXT}`} aria-hidden />
-                <div>
-                  <p className="text-lg font-bold">Our integrity rule</p>
-                  <p className="mt-2 leading-7 text-white/70">{GUILD_INTEGRITY_RULE}</p>
-                </div>
-              </div>
             </div>
           </div>
         </section>
