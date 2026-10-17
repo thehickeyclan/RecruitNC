@@ -89,11 +89,18 @@ export function renderCoachWelcomeEmail(input: CoachWelcomeInput): { subject: st
     <div style="font-size:11px;font-weight:800;letter-spacing:1.4px;color:${GOLD};">STAR THIS WEEKEND · SUPER 32 IS OCT 24–25</div>
     <div style="font-size:20px;font-weight:900;color:#ffffff;margin-top:6px;line-height:1.25;">Star your recruits. Get their tournament report within 24 hours.</div>
     <div style="font-size:14px;line-height:1.55;color:rgba(255,255,255,0.78);margin-top:8px;">After every major tournament, starting with Super 32, you'll get a report on how your recruits performed: <strong style="color:#fff;">placement, record, significant wins, notable losses and strength of competition</strong>, with every bout.</div>
-    <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:14px;"><tr>
-      <td style="padding-right:8px;"><a href="${BASE}/public-rankings" style="display:inline-block;background:${GOLD};color:${NAVY};font-size:14px;font-weight:800;text-decoration:none;padding:11px 18px;border-radius:10px;">Open the rankings</a></td>
-      <td><a href="${BASE}/coach-home" style="display:inline-block;border:1px solid rgba(211,181,116,0.6);color:${GOLD};font-size:14px;font-weight:800;text-decoration:none;padding:10px 16px;border-radius:10px;">Coach Home</a></td>
-    </tr></table>
+    <!-- All three land on Coach Home (Matt, 17 Oct 2026): the coach's hub, signed in, in the coach portal. -->
+    <div style="margin-top:14px;">
+      <a href="${BASE}/coach-home" style="display:inline-block;background:${GOLD};color:${NAVY};font-size:14px;font-weight:800;text-decoration:none;padding:11px 18px;border-radius:10px;margin:0 6px 8px 0;">Open the rankings</a>
+      <a href="${BASE}/coach-home" style="display:inline-block;border:1px solid rgba(211,181,116,0.6);color:${GOLD};font-size:14px;font-weight:800;text-decoration:none;padding:10px 16px;border-radius:10px;margin:0 6px 8px 0;">Browse all athletes</a>
+      <a href="${BASE}/coach-home" style="display:inline-block;border:1px solid rgba(211,181,116,0.6);color:${GOLD};font-size:14px;font-weight:800;text-decoration:none;padding:10px 16px;border-radius:10px;margin:0 0 8px 0;">Coach Home</a>
+    </div>
     <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:10px;">Open any profile or ranking and tap the &#9733;.</div>
+    <!-- What the report looks like: a real one, from the 2025 Super 32 (public/email/super32-report-sample.jpg). -->
+    <a href="${BASE}/coach-home" style="display:block;margin-top:16px;text-decoration:none;">
+      <img src="${BASE}/email/super32-report-sample.jpg" width="512" alt="Sample Super 32 report: placement, record, significant wins with each opponent's accolades" style="display:block;width:100%;max-width:512px;height:auto;border:0;border-radius:12px;">
+    </a>
+    <div style="font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:${GOLD};margin-top:8px;">Sample report · 2025 Super 32</div>
   </td></tr></table>
 </td></tr>
 
@@ -103,7 +110,7 @@ export function renderCoachWelcomeEmail(input: CoachWelcomeInput): { subject: st
     ${feature("&#9733;", "My Recruits", "Every wrestler you star goes onto your board: track activity, contacts and where each one is in your recruiting.")}
     ${feature("&#9783;", "Athlete profiles", "Every result we hold in one place: state, national and off-season events, records, and the weight they last competed at.")}
     ${feature("&#9776;", "Scouting reports", "A one-page report on any wrestler, free for college coaches.")}
-    ${feature("&#9650;", "Strength of competition", "Who a wrestler has actually beaten, and where they compete.")}
+    ${feature("&#9650;", "Strength of competition", "Who a wrestler has beaten, along with each competitor's accolades.")}
   </table>
 </td></tr>
 
