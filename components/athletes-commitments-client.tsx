@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, Trophy, FileSearch, FileText, LayoutGrid, List, ArrowLeft, GraduationCap, UserPlus } from "lucide-react"
+import { Search, Trophy, FileSearch, LayoutGrid, List, ArrowLeft, GraduationCap, UserPlus } from "lucide-react"
 import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
 import { normalizeAthleteList } from "@/lib/professional-athlete"
 import { AthletesLegacySearchContent } from "@/components/athletes-legacy-search-content"
@@ -21,8 +21,6 @@ import {
 } from "@/lib/athletes-commitments-fetch"
 import { prefetchAthleteProfile } from "@/lib/prefetch-athlete-profile"
 import { RankingsCrosslink } from "@/components/rankings-crosslink"
-import { useAuth } from "@/contexts/auth-context"
-import { scoutingReportAvailable } from "@/lib/scouting-report-access"
 
 type AthletesTab = "commitments" | "legacy"
 type CommitViewMode = "cards" | "table"
@@ -40,16 +38,6 @@ export function AthletesCommitmentsClient({
 }: AthletesCommitmentsClientProps) {
   const initialFiltersKey = useMemo(() => commitmentFiltersKey(initialFilters), [initialFilters])
   const searchParams = useSearchParams()
-  /*
-   * The scouting-report column, for coaches and admins only.
-   *
-   * `scouting_report_access` is decided on the server (/api/profile) - the allowlist and the
-   * role rules must not be re-derived on the client, where they could disagree with the
-   * endpoint. `scoutingReportAvailable` is the same test the report route runs, so the icon is
-   * absent for exactly the athletes it would refuse rather than leading a coach to a 404.
-   */
-  const { profile: viewerProfile } = useAuth()
-  const canSeeScoutingReports = viewerProfile?.scouting_report_access === true
 
   const [tab, setTab] = useState<AthletesTab>("commitments")
   const [athletes, setAthletes] = useState<CommitmentAthleteListItem[]>(initialAthletes)
@@ -436,11 +424,6 @@ export function AthletesCommitmentsClient({
                       <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">Weight</th>
                       <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">Gender</th>
                       <th className="text-left p-3 font-semibold text-white/60 text-xs uppercase tracking-wider">NHSCA 2025</th>
-                      {canSeeScoutingReports ? (
-                        <th className="p-3 text-center font-semibold text-white/60 text-xs uppercase tracking-wider">
-                          Report
-                        </th>
-                      ) : null}
                     </tr>
                   </thead>
                   <tbody>
@@ -471,27 +454,6 @@ export function AthletesCommitmentsClient({
                               ? athlete.nhsca_2025_record
                               : "—"}
                         </td>
-                        {canSeeScoutingReports ? (
-                          <td className="p-3 text-center">
-                            {scoutingReportAvailable(athlete as { gender?: unknown; graduationyear?: unknown }) ? (
-                              /* The tooltip sits on the wrapper: HardLink takes no title or aria props. */
-                              <span title="Scouting report" className="inline-flex">
-                                <HardLink
-                                  href={`/athletes/${encodeURIComponent(athlete.id)}/scouting-report`}
-                                  className="inline-flex h-8 w-8 items-center justify-center rounded-md text-[#D3B574] transition-colors hover:bg-[#D3B574]/15"
-                                >
-                                  <FileText className="h-4 w-4" />
-                                  {/* An icon alone is unreadable to a screen reader. */}
-                                  <span className="sr-only">Scouting report for {athlete.name}</span>
-                                </HardLink>
-                              </span>
-                            ) : (
-                              <span className="text-white/20" title="No scouting report for this athlete">
-                                —
-                              </span>
-                            )}
-                          </td>
-                        ) : null}
                       </tr>
                     ))}
                   </tbody>
@@ -502,23 +464,6 @@ export function AthletesCommitmentsClient({
                 {normalizeAthleteList(filteredAthletes).map((athlete) => (
                   <div key={athlete.id} className="flex flex-col gap-2">
                     <ProfessionalCommitmentCard athlete={athlete} listMode />
-                    {/*
-                      * The report link belongs on the cards too, because cards are the default
-                      * view - a column in the table only reaches a coach who thought to switch.
-                      * Outside the card rather than inside it: the card is a flip card used on
-                      * five other pages, and a link in its face would turn every click into a
-                      * guess about whether the card flips or navigates.
-                      */}
-                    {canSeeScoutingReports &&
-                    scoutingReportAvailable(athlete as { gender?: unknown; graduationyear?: unknown }) ? (
-                      <HardLink
-                        href={`/athletes/${encodeURIComponent(athlete.id)}/scouting-report`}
-                        className="inline-flex min-h-[36px] items-center justify-center gap-2 rounded-lg border border-[#D3B574]/40 bg-[#D3B574]/10 px-3 text-xs font-semibold uppercase tracking-wider text-[#D3B574] transition-colors hover:bg-[#D3B574]/20"
-                      >
-                        <FileText className="h-3.5 w-3.5" />
-                        Scouting report
-                      </HardLink>
-                    ) : null}
                   </div>
                 ))}
               </div>
