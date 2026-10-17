@@ -1,22 +1,77 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { ArrowUp, BarChart3, CalendarDays, ChevronRight, Compass, DollarSign, FileText, GraduationCap, School, Sparkles, Users } from "lucide-react"
+import { ArrowUp, BarChart3, CalendarDays, Check, ChevronRight, Copy, DollarSign, Mail, FileText, GraduationCap, School, Sparkles, Users } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 
 type Link = { label: string; href: string; kind: "rule" | "timeline" | "college" | "tool" }
-export type Turn = { role: "user"; text: string } | { role: "scout"; headline: string; body: string; links: Link[] } | { role: "error"; text: string }
+type Draft = { to: string[]; subject: string; body: string }
+export type Turn = { role: "user"; text: string } | { role: "scout"; headline: string; body: string; links: Link[]; draft?: Draft | null } | { role: "error"; text: string }
 
 const GOLD = "#D3B574"
 const LINK_ICON: Record<Link["kind"], LucideIcon> = { rule: FileText, timeline: CalendarDays, college: School, tool: ChevronRight }
 const STORE = "scout-conversation"
 
-/** Scout's avatar: a plain mark until RecruitNC has its own mascot art (the mock-up's mascot carries another brand's mark). */
+/** Scout's avatar: the mascot's head (public/images/scout-avatar.webp, from Matt's art). */
 function Avatar({ size = 44 }: { size?: number }) {
   return (
-    <span className="flex shrink-0 items-center justify-center rounded-full border-2 bg-[#0A1628]" style={{ width: size, height: size, borderColor: GOLD }} aria-hidden>
-      <Compass className="h-1/2 w-1/2" style={{ color: GOLD }} />
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/images/scout-avatar.webp"
+      alt=""
+      aria-hidden
+      width={size}
+      height={size}
+      className="shrink-0 rounded-full border-2 bg-[#0A1628] object-cover object-top"
+      style={{ width: size, height: size, borderColor: GOLD }}
+    />
+  )
+}
+
+/** An email Scout drafted: who it goes to, the subject and the body, ready to copy or open. */
+function DraftCard({ draft }: { draft: Draft }) {
+  const [copied, setCopied] = useState(false)
+  const all = `${draft.to.length ? `To: ${draft.to.join(", ")}\n` : ""}Subject: ${draft.subject}\n\n${draft.body}`
+  const mailto = `mailto:${draft.to.join(",")}?subject=${encodeURIComponent(draft.subject)}&body=${encodeURIComponent(draft.body)}`
+  return (
+    <div className="mt-4 overflow-hidden rounded-xl border border-white/15 bg-[#0A1628]/80">
+      <div className="space-y-1 border-b border-white/10 px-4 py-3 text-sm">
+        <p className="text-[10px] font-black uppercase tracking-widest" style={{ color: GOLD }}>Draft email</p>
+        {draft.to.length ? (
+          <p className="text-white/60">
+            To: <span className="text-white/85">{draft.to.join(", ")}</span>
+          </p>
+        ) : (
+          <p className="text-white/45">To: no staff emails on file; use the athletics website.</p>
+        )}
+        <p className="text-white/60">
+          Subject: <span className="font-semibold text-white">{draft.subject}</span>
+        </p>
+      </div>
+      <p className="whitespace-pre-wrap px-4 py-3 text-[15px] leading-6 text-white/85">{draft.body}</p>
+      <div className="flex flex-wrap gap-2 border-t border-white/10 px-4 py-3">
+        <button
+          type="button"
+          onClick={async () => {
+            try {
+              await navigator.clipboard.writeText(all)
+              setCopied(true)
+              setTimeout(() => setCopied(false), 2000)
+            } catch {
+              /* clipboard blocked: the text is still on screen to select */
+            }
+          }}
+          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-black text-[#0A1628]"
+          style={{ backgroundColor: GOLD }}
+        >
+          {copied ? <Check className="h-4 w-4" aria-hidden /> : <Copy className="h-4 w-4" aria-hidden />}
+          {copied ? "Copied" : "Copy email"}
+        </button>
+        <a href={mailto} className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 px-3 py-2 text-sm font-bold text-white hover:border-white/40">
+          <Mail className="h-4 w-4" aria-hidden /> Open in email
+        </a>
+      </div>
+    </div>
   )
 }
 
@@ -79,10 +134,10 @@ export function ScoutChat({ firstName, initialTurns }: { firstName: string | nul
     setDraft("")
     setBusy(true)
     const res = await fetch("/api/scout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ question: q, history }) }).catch(() => null)
-    const json = (await res?.json().catch(() => null)) as { headline?: string; body?: string; links?: Link[]; error?: string } | null
+    const json = (await res?.json().catch(() => null)) as { headline?: string; body?: string; links?: Link[]; draft?: Draft | null; error?: string } | null
     setTurns((all) => [
       ...all,
-      res?.ok && json?.headline ? { role: "scout", headline: json.headline, body: json.body ?? "", links: json.links ?? [] } : { role: "error", text: json?.error ?? "Scout couldn't answer just now. Try again in a moment." },
+      res?.ok && json?.headline ? { role: "scout", headline: json.headline, body: json.body ?? "", links: json.links ?? [], draft: json.draft ?? null } : { role: "error", text: json?.error ?? "Scout couldn't answer just now. Try again in a moment." },
     ])
     setBusy(false)
   }
@@ -113,11 +168,12 @@ export function ScoutChat({ firstName, initialTurns }: { firstName: string | nul
 
       <div className="mt-6 flex-1 space-y-5">
         {turns.length === 0 ? (
-          <div className="flex items-start gap-3">
-            <Avatar />
-            <div className="rounded-2xl border border-white/10 bg-[#0d1d36]/90 p-5">
+          <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-end">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/scout-mascot.webp" alt="Scout, the recruiting assistant" width={820} height={771} className="w-48 shrink-0 drop-shadow-[0_20px_30px_rgba(0,0,0,0.6)] sm:w-60" />
+            <div className="rounded-2xl border border-white/10 bg-[#0d1d36]/90 p-5 sm:mb-6">
               <p className="text-lg font-semibold leading-7">Hi, I&apos;m Scout. Ask me anything about {firstName ? `${firstName}'s` : "your"} recruiting.</p>
-              <p className="mt-2 text-[15px] leading-6 text-white/60">I know the rules for {firstName ? `${firstName}'s` : "your"} class, your college list, who has viewed the profile and what to do next.</p>
+              <p className="mt-2 text-[15px] leading-6 text-white/60">I know the rules for {firstName ? `${firstName}'s` : "your"} class, every college program and its coaches, your list and who has viewed the profile. I can write your emails to coaches too.</p>
             </div>
           </div>
         ) : null}
@@ -137,6 +193,7 @@ export function ScoutChat({ firstName, initialTurns }: { firstName: string | nul
               <div className="min-w-0 flex-1 rounded-2xl border border-white/10 bg-[#0d1d36]/90 p-5">
                 <p className="text-lg font-semibold leading-7">{t.headline}</p>
                 {t.body ? <Body text={t.body} /> : null}
+                {t.draft ? <DraftCard draft={t.draft} /> : null}
                 {t.links.length ? (
                   <div className="mt-4 space-y-2">
                     {t.links.map((l) => {
@@ -200,7 +257,7 @@ export function ScoutChat({ firstName, initialTurns }: { firstName: string | nul
             <ArrowUp className="h-5 w-5" strokeWidth={2.5} aria-hidden />
           </button>
         </form>
-        <p className="mt-2 text-center text-xs text-white/45">Get answers on recruiting rules, colleges, costs, next steps and more.</p>
+        <p className="mt-2 text-center text-xs text-white/45">Recruiting rules, colleges, coaches, costs, next steps and emails to coaches.</p>
       </div>
     </div>
   )

@@ -292,19 +292,24 @@ export default async function CommandCenterSalesPage() {
         <div className="pt-16">
           <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: SKY }}>Your assistant</p>
           <h2 className={`mt-2 text-5xl leading-[0.95] sm:text-6xl ${tocDisplayClass()}`}>Meet Scout.</h2>
-          <p className="mt-3 max-w-2xl text-base text-white/65">Your wrestling recruiting assistant. Scout knows the rules for your wrestler&apos;s class, your college list and who has viewed the profile, so every answer is about your family.</p>
+          <p className="mt-3 max-w-2xl text-base text-white/65">Your wrestling recruiting assistant. Scout knows your family, the rules for your wrestler&apos;s class and every college program in the country, so every answer is about you.</p>
         </div>
         <Feature
           icon={Bot}
           eyebrow="Scout"
           title="Ask anything about recruiting"
-          points={["The exact date a coach may call, meet or host your wrestler, worked out for their class", "Which colleges took wrestlers with the same results, and what each one on your list really costs", "What to do next, from your own roadmap. Recruiting only: never weight cutting or medical advice"]}
+          points={["The exact date a coach may call, meet or host your wrestler, worked out for their class", "Every college program: its coaches, the lineup at your weight, the NC wrestlers who went there and what it really costs", "Writes your emails to coaches from your real results, addressed to the whole staff", "Recruiting only: never weight cutting or medical advice"]}
           visual={
-            <figure className={`${card} overflow-hidden`}>
+            <div className="relative">
+              {/* Scout himself, crouched beside the screen as in Matt's mock-up. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/screens/scout.jpg" alt="Scout answering when a Division I coach can first contact a class of 2028 wrestler: April 1, 2027" loading="lazy" className="block w-full" />
-              <figcaption className="px-4 py-2 text-[11px] text-white/45">The real screen, with an example family.</figcaption>
-            </figure>
+              <img src="/images/scout-mascot.webp" alt="" aria-hidden loading="lazy" className="pointer-events-none absolute -bottom-4 -left-3 z-10 w-[40%] max-w-[260px] drop-shadow-[0_20px_30px_rgba(0,0,0,0.7)] sm:-left-12" />
+              <figure className={`${card} ml-[24%] overflow-hidden`}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/screens/scout.jpg" alt="Scout answering when a Division I coach can first contact a class of 2028 wrestler: April 1, 2027" loading="lazy" className="block w-full" />
+                <figcaption className="px-4 py-2 text-[11px] text-white/45">The real screen, with an example family.</figcaption>
+              </figure>
+            </div>
           }
         />
 

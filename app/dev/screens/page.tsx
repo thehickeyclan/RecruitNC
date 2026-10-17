@@ -82,7 +82,27 @@ export default async function Screens({ searchParams }: { searchParams?: Promise
     <div className="admin-dark-page min-h-screen bg-[#060f1f] p-8 text-white">
       {/* A screenshot shows the product only: no site menu, assistant bubble or dev badge. */}
       <style>{"nav[aria-label='Main navigation'],nextjs-portal,.fixed,footer{display:none!important}"}</style>
-      {shot === "scout" ? (
+      {shot === "scout-email" ? (
+        <div className="mx-auto max-w-3xl">
+          <ScoutChat
+            firstName="Jordan"
+            initialTurns={[
+              { role: "user", text: "Write an introduction email to the Campbell coaches. Keep it short." },
+              {
+                role: "scout",
+                headline: "Here's a short introduction to Campbell's coaches.",
+                body: "Fill out Campbell's recruiting questionnaire before you send it, and copy the whole staff.",
+                links: [{ label: "Campbell University", href: "/recruiting/schools/campbell-university", kind: "college" }],
+                draft: {
+                  to: ["coach.one@example.edu", "coach.two@example.edu", "coach.three@example.edu"],
+                  subject: "Jordan Example, Class of 2028, 152 lbs",
+                  body: "Hi Coach,\n\nMy name is Jordan Example, a junior at Example High School wrestling at 152 lbs. I placed 3rd at the 2026 NCHSAA state tournament. I'm interested in Campbell because two wrestlers from my school went there and it wrestles in the Southern Conference.\n\nWhat would you want to see from me this season?\n\nThank you,\nJordan Example\nClass of 2028, Example High School\n[phone]\n[email]",
+                },
+              },
+            ]}
+          />
+        </div>
+      ) : shot === "scout" ? (
         <div className="mx-auto max-w-3xl">
           <ScoutChat
             firstName="Jordan"

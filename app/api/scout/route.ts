@@ -1,21 +1,20 @@
 import { NextResponse, type NextRequest } from "next/server"
 
 import { hasPortalAccess } from "@/lib/ranking-visibility"
-import { buildScoutContext, type ScoutLink } from "@/lib/recruiting/scout/context"
-import { SCOUT_SYSTEM } from "@/lib/recruiting/scout/prompt"
+import { buildScoutContext } from "@/lib/recruiting/scout/context"
+import { askScout } from "@/lib/recruiting/scout/run"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 
 export const dynamic = "force-dynamic"
-export const maxDuration = 60
+export const maxDuration = 120
 
 /** Questions a family may ask in a day: generous for a real family, a ceiling for a runaway script. */
 const DAILY_LIMIT = 80
 const MAX_TURNS = 6
 
 type Turn = { role: "user" | "assistant"; content: string }
-export type ScoutAnswer = { headline: string; body: string; links: ScoutLink[] }
 
 /**
  * Scout, the Recruiting Command Center's recruiting assistant (17 Oct 2026). Command Center, Blue
@@ -41,48 +40,12 @@ export async function POST(request: NextRequest) {
   const { count } = await admin.from("user_analytics").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("event_type", "scout_question").gte("created_at", since)
   if ((count ?? 0) >= DAILY_LIMIT) return NextResponse.json({ error: "That's today's questions. Scout will be back tomorrow." }, { status: 429 })
 
-  const apiKey = process.env.OPENAI_API_KEY
-  if (!apiKey) return NextResponse.json({ error: "Scout is not available right now." }, { status: 503 })
+  if (!process.env.OPENAI_API_KEY) return NextResponse.json({ error: "Scout is not available right now." }, { status: 503 })
 
   const context = await buildScoutContext(admin, userId)
   const started = Date.now()
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: process.env.SCOUT_MODEL || "gpt-4o",
-      temperature: 0.2,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: SCOUT_SYSTEM },
-        { role: "system", content: `# Facts\n${context.facts}` },
-        ...history,
-        { role: "user", content: question },
-      ],
-    }),
-    signal: AbortSignal.timeout(45_000),
-  }).catch((e: unknown) => ({ ok: false, status: 0, text: async () => String(e) }) as unknown as Response)
-  if (!res.ok) {
-    console.error("[scout]", res.status, (await res.text().catch(() => "")).slice(0, 300))
-    return NextResponse.json({ error: "Scout couldn't answer just now. Try again in a moment." }, { status: 502 })
-  }
-  const json = (await res.json().catch(() => null)) as { choices?: Array<{ message?: { content?: string } }> } | null
-  let parsed: { headline?: unknown; body?: unknown; links?: unknown } = {}
-  try {
-    parsed = JSON.parse(json?.choices?.[0]?.message?.content ?? "{}")
-  } catch {
-    parsed = {}
-  }
-  const headline = typeof parsed.headline === "string" ? parsed.headline.trim() : ""
-  if (!headline) return NextResponse.json({ error: "Scout couldn't answer just now. Try again in a moment." }, { status: 502 })
-  // Only links Scout was handed: a made-up path never reaches the page.
-  const links = (Array.isArray(parsed.links) ? parsed.links : [])
-    .filter((k): k is string => typeof k === "string")
-    .map((k) => context.links[k])
-    .filter((l): l is ScoutLink => Boolean(l))
-    .filter((l, i, all) => all.findIndex((x) => x.href === l.href) === i)
-    .slice(0, 3)
-  const answer: ScoutAnswer = { headline, body: typeof parsed.body === "string" ? parsed.body.trim() : "", links }
+  const answer = await askScout(context, question, history)
+  if (!answer) return NextResponse.json({ error: "Scout couldn't answer just now. Try again in a moment." }, { status: 502 })
 
   // Counted for the daily limit and for usage; the question's words are not stored.
   await admin

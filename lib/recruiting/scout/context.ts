@@ -16,6 +16,10 @@ import { GRADE_NAME, allDatedRules, gradeForClass, type Grade } from "@/lib/recr
 import { adaptRoadmap } from "@/lib/recruiting/roadmap-adapt"
 import { loadRoadmapSignals } from "@/lib/recruiting/roadmap-signals"
 import { resolveRuleDate } from "@/lib/recruiting/scout/dates"
+import { listStage, type ScoutSession } from "@/lib/recruiting/scout/tools"
+import { buildInfoSheet } from "@/app/my-recruiting/info-sheet"
+import { collegeKey } from "@/lib/recruiting/roadmap-adapt"
+import { WORKING_STEPS } from "@/lib/recruiting/learn/working"
 
 /**
  * Everything Scout knows when a family asks a question (17 Oct 2026). Built fresh for each
@@ -48,6 +52,8 @@ export type ScoutContext = {
   facts: string
   /** The only links Scout may offer, by key. */
   links: Record<string, ScoutLink>
+  /** What the college tools read while Scout looks things up. */
+  session: ScoutSession
 }
 
 /** The library as plain text, the family's Division I contact dates in place of all three sets. */
@@ -118,6 +124,7 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
       firstName: null,
       classYear: null,
       links,
+      session: { admin, userId, team: null, highSchool: null, fit: null, list: new Map(), viewed: new Set(), links },
       facts: `Today is ${today}.\nNo wrestler in school is linked to this account, so you know nothing about the family's wrestler. Ask for the class year when a date depends on it.\n\n# Rules library\n${libraryText("men-2028")}`,
     }
   }
@@ -131,11 +138,12 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
   const focus = await familyFocus(admin, userId).catch(() => null)
   const team = focus?.gender ?? (wrestler.gender ? (female ? "womens" : "mens") : null)
 
-  const [signals, fitCtx, views, list] = await Promise.all([
+  const [signals, fitCtx, views, list, infoSheet] = await Promise.all([
     grade ? loadRoadmapSignals(admin, { athleteId: String(wrestler.id), userId, grade }).catch(() => null) : Promise.resolve(null),
     loadFamilyFitContext(admin, userId, team).catch(() => null),
     getCoachViewsForAthlete(admin, String(wrestler.id)).catch(() => null),
     admin.from("college_list_items").select("school_id, status").eq("user_id", userId).then((r) => r.data ?? []),
+    buildInfoSheet(admin, String(wrestler.id)).catch(() => null),
   ])
   const { data: account } = await admin.auth.admin.getUserById(userId)
   const ticked = Array.isArray(account?.user?.user_metadata?.roadmap_done) ? (account!.user!.user_metadata!.roadmap_done as string[]) : []
@@ -189,7 +197,7 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
     listLines.push(
       `- ${spoken(school.name)} (${division}, ${school.city}, ${school.state}) [link: school:${school.id}]: stage ${stage}.` +
         (fit?.cost ? ` Full yearly cost ${money(fit.cost.amount)} (${fit.cost.year}).` : "") +
-        (fit?.net?.amount != null ? ` Average net price ${money(fit.net.amount)}.` : "") +
+        (fit?.net?.amount != null ? ` Net price ${money(fit.net.amount)}, the average for all aided students.` : "") +
         (fit ? ` Athletic: ${fit.lines.athletic.text} Academic: ${fit.lines.academic.text}` : ""),
     )
   }
@@ -222,8 +230,23 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
     )
   }
 
+  // For a coach email: the family's own details, exactly as the profile has them.
+  out.push(`# ${firstName}'s info sheet (use for emails and questionnaires; a line not here is unknown)\n${infoSheet ?? "Not available."}`)
+  const writing = WORKING_STEPS.find((w) => /write to coaches/i.test(w.heading))
+  if (writing) out.push(`# How to write to a college coach (our advice)\n${writing.points.map((p) => `- ${p}`).join("\n")}`)
+
   out.push(`# What college coaches look at (our advice from working with college coaches)\n${LOOK_POINTS.map((p) => `- ${p.title}: ${p.text}`).join("\n")}`)
   out.push(`# Rules library (verified, with sources)\n${libraryText(track)}`)
 
-  return { firstName, classYear, links, facts: out.join("\n\n") }
+  const session: ScoutSession = {
+    admin,
+    userId,
+    team,
+    highSchool: wrestler.highschool && wrestler.highschool !== "Not specified" ? String(wrestler.highschool) : null,
+    fit: fitCtx,
+    list: new Map(list.map((r) => [String(r.school_id), listStage(r.status)])),
+    viewed: new Set((views?.schools ?? []).map((v) => collegeKey(v.school))),
+    links,
+  }
+  return { firstName, classYear, links, session, facts: out.join("\n\n") }
 }
