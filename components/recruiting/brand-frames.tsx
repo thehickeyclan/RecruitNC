@@ -49,6 +49,8 @@ export function BrandFooter() {
 
 export function BrandLockup() {
   const host = useBrandHost()
+  // The coach portal has no BrandHeader; its lockup carries the tab-title rename instead.
+  useBrandTitle(host)
   return host === "guild" ? <GuildLockup /> : host === "national" ? <NationalLockup /> : null
 }
 
