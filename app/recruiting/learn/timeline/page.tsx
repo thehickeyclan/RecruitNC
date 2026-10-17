@@ -13,6 +13,8 @@ import { ArrowRight, BarChart3, FileText, Lock, ShieldAlert } from "lucide-react
 
 import { RoadmapBoard } from "@/components/portal/roadmap-board"
 import { ROADMAP, cleanDone } from "@/lib/recruiting/learn/roadmap"
+import { adaptRoadmap } from "@/lib/recruiting/roadmap-adapt"
+import { loadRoadmapSignals } from "@/lib/recruiting/roadmap-signals"
 
 import { LearnDisclaimer } from "@/components/recruiting/learn/learn-disclaimer"
 import { mostRecentGraduatedClassYear, seniorClassYear } from "@/lib/class-years"
@@ -34,7 +36,7 @@ export const metadata: Metadata = {
 const TRACKS: D1Track[] = ["men-2028", "men-2027", "women"]
 const checkedLabel = new Date(`${CHECKED}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
 
-type Wrestler = { firstName: string; lastName: string; classYear: number | null; team: string | null; grade: Grade; track: D1Track }
+type Wrestler = { id: string; firstName: string; lastName: string; classYear: number | null; team: string | null; grade: Grade; track: D1Track }
 
 export default async function TimelinePage({ searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
   const params = (await searchParams) ?? {}
@@ -47,7 +49,7 @@ export default async function TimelinePage({ searchParams }: { searchParams?: Pr
   if (userId) {
     const ids = await familyAthleteIds(admin, userId).catch(() => [])
     if (ids.length > 0) {
-      const { data: rows } = await admin.from("athletes").select('"firstName", "lastName", name, gender, graduationyear').in("id", ids)
+      const { data: rows } = await admin.from("athletes").select('id, "firstName", "lastName", name, gender, graduationyear').in("id", ids)
       const graduated = mostRecentGraduatedClassYear()
       for (const a of (rows ?? []).sort((x, y) => Number(x.graduationyear ?? 9999) - Number(y.graduationyear ?? 9999))) {
         const classYear = a.graduationyear ? Number(a.graduationyear) : null
@@ -55,6 +57,7 @@ export default async function TimelinePage({ searchParams }: { searchParams?: Pr
         const grade = gradeForClass(classYear, seniorClassYear())
         if (!grade) continue
         wrestlers.push({
+          id: String(a.id),
           firstName: String(a.firstName ?? "").trim() || String(a.name ?? "").trim().split(" ")[0] || "Your wrestler",
           lastName: String(a.lastName ?? "").trim(),
           classYear,
@@ -78,7 +81,11 @@ export default async function TimelinePage({ searchParams }: { searchParams?: Pr
   const { data: auth } = await (await createClient()).auth.getUser()
   const readOnly = !auth.user || auth.user.id !== userId
   const { data: account } = userId ? await admin.auth.admin.getUserById(userId) : { data: null }
-  const done = cleanDone(account?.user?.user_metadata?.roadmap_done)
+  const ticked = cleanDone(account?.user?.user_metadata?.roadmap_done)
+  // The roadmap adapts to the wrestler: his grades, results, list and who has viewed him.
+  const signals = open && me && userId ? await loadRoadmapSignals(admin, { athleteId: me.id, userId, grade: me.grade }).catch(() => null) : null
+  const adapted = signals ? adaptRoadmap(signals, ticked) : null
+  const done = adapted?.done ?? ticked
   const gold = "var(--recruit-accent)"
   const card = "rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-5"
   const tabs = [
@@ -129,7 +136,12 @@ export default async function TimelinePage({ searchParams }: { searchParams?: Pr
         {open ? (
           <>
             <div className="mt-6">
-              <RoadmapBoard years={ROADMAP} initialDone={done} current={me?.grade ?? null} selected={selected} readOnly={readOnly} name={me?.firstName ?? null} />
+              {adapted && me && adapted.changes > 0 ? (
+                <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#D3B574]/40 bg-[#D3B574]/10 px-3 py-1 text-xs font-bold text-[#D3B574]">
+                  Updated for {me.firstName}: {adapted.changes} change{adapted.changes === 1 ? "" : "s"} from grades, results and your list
+                </p>
+              ) : null}
+              <RoadmapBoard years={adapted?.years ?? ROADMAP} initialDone={done} current={me?.grade ?? null} selected={selected} readOnly={readOnly} name={me?.firstName ?? null} />
             </div>
 
             <section id="this-year" className={`${card} mt-6 scroll-mt-20`}>

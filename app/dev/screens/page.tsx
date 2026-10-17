@@ -12,7 +12,7 @@ import { schoolLogoUrl } from "@/lib/college-programs/logo"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { yearlyCostFor } from "@/lib/college-programs/tuition"
 import { DIVISION_COLOR, DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
-import { ROADMAP } from "@/lib/recruiting/learn/roadmap"
+import { adaptRoadmap } from "@/lib/recruiting/roadmap-adapt"
 
 export const dynamic = "force-dynamic"
 
@@ -56,6 +56,27 @@ export default async function Screens({ searchParams }: { searchParams?: Promise
     })
   }
 
+  // The example family's roadmap, adapted by the real rules: invented grades, results and list.
+  const jordan = adaptRoadmap(
+    {
+      firstName: "Jordan",
+      grade: 11,
+      gpa: 3.62,
+      sat: null,
+      act: null,
+      hasVideo: false,
+      profilePercent: 80,
+      listCount: 6,
+      questionnaireOrBeyond: 3,
+      contactedOrBeyond: 2,
+      upcomingEvents: 4,
+      viewedNotListed: 2,
+      stateFinish: { year: 2026, place: 3 },
+      nationalFinish: null,
+    },
+    ["g8-compete", "g8-core", "g8-ec", "g8-nc", "g8-levels", "g9-grades", "g9-events", "g9-profile", "g10-grades", "g11-answer"],
+  )
+
   return (
     <div className="admin-dark-page min-h-screen bg-[#060f1f] p-8 text-white">
       {/* A screenshot shows the product only: no site menu, assistant bubble or dev badge. */}
@@ -70,9 +91,12 @@ export default async function Screens({ searchParams }: { searchParams?: Promise
           {/* Three years, not five: at sales-page size five columns are too small to read. */}
           <style>{".shot-roadmap .xl\\:grid-cols-5{grid-template-columns:repeat(3,minmax(0,1fr))!important}.shot-roadmap .xl\\:grid-cols-5>:nth-child(1){order:2!important}.shot-roadmap .xl\\:grid-cols-5>:nth-child(2){order:1!important}.shot-roadmap .xl\\:grid-cols-5>:nth-child(3){order:3!important}"}</style>
           <p className="mb-4 text-2xl font-black">Jordan&apos;s recruiting roadmap</p>
+          <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#D3B574]/40 bg-[#D3B574]/10 px-3 py-1 text-xs font-bold text-[#D3B574]">
+            Updated for Jordan: {jordan.changes} changes from grades, results and your list
+          </p>
           <RoadmapBoard
-            years={ROADMAP.filter((y) => y.grade >= 10)}
-            initialDone={["g8-profile", "g8-compete", "g8-core", "g8-ec", "g8-nc", "g8-levels", "g9-grades", "g9-schedule", "g9-events", "g9-profile", "g9-explore", "g10-list", "g10-questionnaires", "g10-email", "g10-grades", "g11-answer"]}
+            years={jordan.years.filter((y) => y.grade >= 10)}
+            initialDone={jordan.done}
             current={11}
             selected={11}
             readOnly={false}

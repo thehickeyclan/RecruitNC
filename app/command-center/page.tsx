@@ -148,7 +148,7 @@ export default async function CommandCenterSalesPage() {
           <h2 className={`text-center text-4xl leading-[0.95] sm:text-5xl ${tocDisplayClass()}`}>Recruiting has changed. Families need better tools.</h2>
           <div className="mt-8 grid gap-4 md:grid-cols-2">
             {[
-              ["“I don’t know what we should be doing.”", "A recruiting roadmap for your wrestler from 8th grade through signing day, with the next steps always in front of you."],
+              ["“I don’t know what we should be doing.”", "A recruiting roadmap from 8th grade through signing day that changes as your wrestler does."],
               ["“I don’t know which colleges are realistic.”", "Every wrestling program at every level, with athletic, academic, financial and personal fit compared side by side."],
               ["“I don’t know if coaches are interested.”", "See which college programs viewed the profile, keep every coach conversation in one place, and track each college."],
               ["“I don’t understand the rules or the costs.”", "Recruiting rules checked against each governing body, and the full yearly cost of every college, not just tuition."],
@@ -213,17 +213,17 @@ export default async function CommandCenterSalesPage() {
         <div className="pt-16">
           <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: SKY }}>Build your plan</p>
           <h2 className={`mt-2 text-5xl leading-[0.95] sm:text-6xl ${tocDisplayClass()}`}>Know what to do, every year.</h2>
-          <p className="mt-3 max-w-2xl text-base text-white/65">A personalized roadmap and the rules that apply to your wrestler, from 8th grade through signing day.</p>
+          <p className="mt-3 max-w-2xl text-base text-white/65">A roadmap that adapts to your wrestler. As grades, results and requirements change, so does the plan.</p>
         </div>
         <Feature
           icon={Target}
           eyebrow="Your plan"
           title="Know what to do this year"
-          points={["A roadmap for every grade, 8th to 12th, with a checklist you tick off", "The dates coaches may call, meet and host, for your wrestler's class", "The next three steps, always on your home screen"]}
+          points={["A checklist for every grade, 8th to 12th, that ticks itself from the profile and your college list", "New steps when something changes: a state placing to send coaches, a GPA under a division's minimum", "The dates coaches may call, meet and host, for your wrestler's class"]}
           visual={
             <figure className={`${card} overflow-hidden`}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/screens/roadmap.jpg" alt="The recruiting roadmap: 10th, 11th and 12th grade checklists, with 11th grade marked as the wrestler's year" loading="lazy" className="block w-full" />
+              <img src="/screens/roadmap.jpg" alt="The recruiting roadmap adapted for an example junior: steps added for a state placing and programs that viewed him, and steps ticked from his profile" loading="lazy" className="block w-full" />
               <figcaption className="px-4 py-2 text-[11px] text-white/45">The real screen, with an example family.</figcaption>
             </figure>
           }
