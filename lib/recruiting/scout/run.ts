@@ -14,6 +14,21 @@ const MAX_ROUNDS = 5
  * What a draft to a coach must never say, checked in code (a prompt rule alone did not hold: the
  * first drafts praised a "strong wrestling program" and pointed out "room at my weight").
  */
+/**
+ * Wording an answer must not use, checked in code: the minimum to compete is the NCAA's or the
+ * NAIA's, never the college's ("Mount Olive requires a 2.2" held through a prompt rule), and a
+ * Niche grade is a grade, not a verdict ("Mount Olive is safer").
+ */
+export function answerProblems(text: string): string[] {
+  const out: string[] = []
+  for (const m of text.matchAll(/\brequires? (a |at least a )?(2\.\d|minimum)/gi)) {
+    const before = text.slice(Math.max(0, m.index! - 14), m.index!)
+    if (!/NCAA|NAIA/.test(before)) out.push('The GPA minimum is the NCAA\'s (or NAIA\'s), not the college\'s: write "the NCAA requires", never "<college> requires".')
+  }
+  if (/\bis (safer|better|nicer|cheaper to live)\b/i.test(text)) out.push('Say which college has the higher grade ("Mount Olive has the higher safety grade"), not that it "is safer" or "is better".')
+  return [...new Set(out)]
+}
+
 export function draftProblems(body: string, questionnaireNotDone: boolean): string[] {
   const out: string[] = []
   if (/\b(strong|great|excellent|prestigious|renowned|elite|top-notch|storied|rich|impressive|successful|outstanding|proud|tradition)\b/i.test(body))
@@ -115,6 +130,7 @@ export async function askScout(context: ScoutContext, question: string, history:
       ...(answer?.draft ? draftProblems(answer.draft.body, questionnaireNotDone) : []),
       // The family's income is never known: a net price is an average, not theirs.
       ...(answer && /\byour income\b/i.test(`${answer.headline} ${answer.body}`) ? ["We do not know the family's income: call the net price an average for aided students."] : []),
+      ...(answer ? answerProblems(`${answer.headline} ${answer.body}`) : []),
     ]
     if (answer && problems.length && !retried && round < MAX_ROUNDS - 1) {
       // One rewrite, told exactly what to fix.
