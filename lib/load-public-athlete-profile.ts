@@ -154,6 +154,8 @@ export async function loadPublicAthleteProfile(
   const national_team_highlight_videos = getNationalTeamProfileHighlights(trimmed, nameBases)
 
   const profilePayload = {
+    /* His state names his state tournament on the "last competed" line. */
+    state: (athleteRow.state as string | null) ?? null,
     nchsaa_profile,
     nhsca_results: nhscaMerged,
     super32_results: super32Merged,

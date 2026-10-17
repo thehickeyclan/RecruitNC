@@ -8,6 +8,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { getMergedNchsaaForAthlete } from "@/lib/nchsaa-results"
+import { getStateTournamentResultsForAthlete } from "@/lib/state-tournament-results"
 import type { NchsaaRowForProfile } from "@/lib/nchsaa-results-json"
 import {
   getNHSCAForAthlete,
@@ -52,8 +53,14 @@ export async function loadAthleteTournamentBundle(
   // Started, not awaited: the NHSCA roster and other-event searches do not need it and run alongside.
   const useLinks = options?.linkedRead ?? resultLinksEnabled()
   const linked = useLinks && athlete.id ? loadLinkedSourceRows(supabase, String(athlete.id)) : Promise.resolve(null)
-  const [nchsaa, nhsca, super32, fargo, other] = await Promise.all([
+  const [nchsaa, outOfState, nhsca, super32, fargo, other] = await Promise.all([
     linked.then((l) => getMergedNchsaaForAthlete(supabase, athlete, l)),
+    /*
+     * A wrestler outside North Carolina gets his placements from `state_tournament_placers`
+     * instead; the NCHSAA table has no row for him. Returns nothing for an NC wrestler, so the
+     * two can never both answer and print a placement twice.
+     */
+    getStateTournamentResultsForAthlete(supabase, athlete).catch(() => []),
     getNHSCAForAthlete(supabase, athlete, { tablesAllTime: options?.nhscaAllTime === true, linked }),
     linked.then((l) => getSuper32ForAthlete(supabase, athlete, l)),
     linked.then((l) => getFargoForAthlete(supabase, athlete, l)),
@@ -66,7 +73,9 @@ export async function loadAthleteTournamentBundle(
   return {
     // Except a high school state tournament itself: NCISA private schools wrestle eighth graders on
     // varsity, and Josh Stonebraker's 2023 NCISA title is a state title (Matt, 1 October 2026).
-    nchsaa: nchsaa.filter((r) => r.classification === "NCISA" || hs(r.year, "NCHSAA")),
+    nchsaa: [...nchsaa, ...outOfState].filter(
+      (r) => /^(NC|SC)ISA/i.test(r.classification) || hs(r.year, "NCHSAA"),
+    ),
     nhsca: nhsca.filter((r) => hs(r.year, "NHSCA")),
     super32: super32.filter((r) => hs(r.year, "Super 32")),
     fargo: fargo.filter((r) => hs(r.year, "Fargo")),

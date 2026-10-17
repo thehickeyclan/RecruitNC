@@ -15,6 +15,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle, CheckCircle, Loader2, ArrowLeft } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
+import { HOME_STATE, US_STATES } from "@/lib/athlete-state"
 import { BlobImageUpload } from "@/components/blob-image-upload"
 import { AuthGuard } from "@/components/auth-guard"
 
@@ -56,6 +57,8 @@ export default function SubmitProfilePage() {
     weightClass: "",
     collegeWeightClass: "",
     highSchool: "",
+    /* Which state he wrestles in. Defaults to North Carolina, where all but a handful are. */
+    state: HOME_STATE,
     highSchoolDivision: "",
     wrestlingClub: "",
     location: "",
@@ -132,6 +135,7 @@ export default function SubmitProfilePage() {
     if (!formData.lastName.trim()) return "Last Name is required"
     if (!formData.email.trim()) return "Email is required"
     if (!formData.highSchool.trim()) return "High School is required"
+    if (!formData.state.trim()) return "State is required"
     
     // Check required select fields (these don't trigger HTML5 validation)
     if (!formData.gender) return "Gender is required"
@@ -517,18 +521,48 @@ export default function SubmitProfilePage() {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold border-b pb-2">School & Club Information</h3>
 
-              <div className="space-y-2">
-                <Label htmlFor="highSchool">
-                  High School <span className="text-red-500">*</span>
-                </Label>
-                <Input
-                  id="highSchool"
-                  name="highSchool"
-                  value={formData.highSchool}
-                  onChange={handleChange}
-                  placeholder="Enter high school name"
-                  required
-                />
+              <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
+                <div className="space-y-2">
+                  <Label htmlFor="highSchool">
+                    High School <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="highSchool"
+                    name="highSchool"
+                    value={formData.highSchool}
+                    onChange={handleChange}
+                    placeholder="Enter high school name"
+                    required
+                  />
+                </div>
+
+                {/*
+                  * The state sits beside the school because it is a fact about the school, and
+                  * because nothing else on the form can tell us: the database stamps a new
+                  * profile North Carolina by default, which is wrong for every other state and
+                  * would put the wrestler in NC's rankings and on NC coaches' rosters.
+                  */}
+                <div className="space-y-2">
+                  <Label htmlFor="state">
+                    State <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={formData.state}
+                    onValueChange={(value) => handleSelectChange("state", value)}
+                    required
+                  >
+                    <SelectTrigger id="state">
+                      <SelectValue placeholder="Select state" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {US_STATES.map((s) => (
+                        <SelectItem key={s.code} value={s.code}>
+                          {s.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="space-y-2">

@@ -84,3 +84,23 @@ describe("summary sentences", () => {
     expect(summarySentences({ name: "No Data", accolades: NONE, scope: null, styles: [], offSeasonEvents: 0 })).toEqual([])
   })
 })
+
+describe("the association is the one he won in", () => {
+  it("calls a South Carolina champion an SCHSL or SCISA one, never NCHSAA", () => {
+    const a = accoladesFrom({ stateRows: [{ event: "SCISA State Championships", placement: "Champion" }, { event: "SCISA State Championships", placement: "Champion" }], tournamentRows: [] } as never)
+    expect(accoladePhrases(a)).toEqual(["two-time SCISA state champion"])
+    const b = accoladesFrom({ stateRows: [{ event: "SCHSL 2A/1A State", placement: "2nd" }], tournamentRows: [] } as never)
+    expect(accoladePhrases(b)[0]).toBe("SCHSL 2A state runner-up")
+  })
+  it("keeps NCHSAA for a North Carolina public-school finish", () => {
+    const a = accoladesFrom({ stateRows: [{ event: "NCHSAA 7A State Championships", placement: "Champion" }], tournamentRows: [] } as never)
+    expect(accoladePhrases(a)).toEqual(["NCHSAA 7A state champion"])
+  })
+})
+
+describe("a or an before an association", () => {
+  it("says an SCHSL state champion, by sound", () => {
+    const s = summarySentences({ name: "Audrey Naughten", gender: "Female", school: "Rock Hill", accolades: accoladesFrom({ stateRows: [{ event: "SCHSL State", placement: "Champion" }], tournamentRows: [] } as never), scope: "in-state", stateName: "South Carolina", styles: ["folkstyle"], offSeasonEvents: 0 })
+    expect(s.map(sentenceText).join(" ")).toContain("an SCHSL state champion who competes in South Carolina")
+  })
+})

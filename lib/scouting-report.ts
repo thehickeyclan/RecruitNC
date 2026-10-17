@@ -10,6 +10,7 @@
  * from these same facts and never introduces one of its own.
  */
 
+import { stateName } from "@/lib/athlete-state"
 import { formatPhoneForDisplay } from "@/lib/phone-format"
 import { loadNationallyRanked } from "@/lib/state-placers"
 import { competitionLine, stylesLine, styleOfEvent, STYLE_LABEL, summarizeCompetition, type CompetitionSummary, styleOfEventForAthlete } from "@/lib/wrestling-style"
@@ -130,7 +131,13 @@ export type ScoutingReportMembership = {
 }
 
 export type ScoutingReportResultRow = {
+  /**
+   * The event as a key. A state title is always "NCHSAA State Championships" here, whatever the
+   * state, because star ratings, last-competed weight and the rankings match on that string.
+   */
   event: string
+  /** What a reader sees when it differs from `event`: "SCISA State Championships" (17 Oct 2026). */
+  label?: string
   year: number
   detail: string
   /**
@@ -480,7 +487,7 @@ export function placeNumber(raw: unknown): number | null {
  * must agree with the profile about this or the two documents contradict each other.
  */
 export function buildResultRows(bundle: {
-  nchsaa: Array<{ year: number; place: number | null; classification: string; weight_class: string }>
+  nchsaa: Array<{ year: number; place: number | null; classification: string; weight_class: string; association?: string | null }>
   nhsca: Array<{ year: number; placement?: string; record?: string; weight?: string }>
   super32: Array<{ year: number; placement?: string; record?: string; weight?: string }>
   fargo: Array<{ year: number; placement?: string; record?: string; weight?: string; division?: string }>
@@ -494,7 +501,8 @@ export function buildResultRows(bundle: {
     // The state tournament publishes a year, not a day: `when` is a sort key, never a date.
     // Named in full: "NCHSAA State Championships" is the folkstyle title, never to be confused with
     // the NC Freestyle & Greco State Championships.
-    rows.push({ event: "NCHSAA State Championships", style: "folkstyle", place: r.place && r.place > 0 ? r.place : null, record: null, year: r.year, when: when("NCHSAA States", r.year), date: null, weight: String(r.weight_class ?? "") || null, detail: `${r.classification} · ${r.weight_class} · ${place}` })
+    const body = r.association && r.association !== "NCHSAA" ? r.association : null
+    rows.push({ event: "NCHSAA State Championships", ...(body ? { label: `${body} State Championships` } : {}), style: "folkstyle", place: r.place && r.place > 0 ? r.place : null, record: null, year: r.year, when: when("NCHSAA States", r.year), date: null, weight: String(r.weight_class ?? "") || null, detail: `${r.classification} · ${r.weight_class} · ${place}` })
   }
   const national: Array<[string, typeof bundle.fargo]> = [
     ["NHSCA Nationals", bundle.nhsca ?? []],
@@ -674,7 +682,7 @@ export async function buildScoutingReport(
   // row - and a North Carolina season counts as folkstyle.
   const competition = summarizeCompetition(
     [
-      ...resultRows.map((r) => `${r.event} ${r.detail}`),
+      ...resultRows.map((r) => `${r.label ?? r.event} ${r.detail}`),
       ...((eventRows ?? []) as Array<{ event_name: string | null }>).map((r) => r.event_name),
     ],
     seasonsOnFile > 0 || (bundle.nchsaa?.length ?? 0) > 0,
@@ -898,7 +906,7 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
 
   if (report.results.length) {
     lines.push("", "Tournament results:")
-    for (const r of report.results.slice(0, 14)) lines.push(`- ${r.year} ${r.event}: ${r.detail}`)
+    for (const r of report.results.slice(0, 14)) lines.push(`- ${r.year} ${r.label ?? r.event}: ${r.detail}`)
 
     /*
      * The absence, stated — and stated carefully.
@@ -949,7 +957,7 @@ export function summaryFacts(report: Omit<ScoutingReport, "summary">): string {
       lines.push(
         "",
         "National results: none on file. Say that no national results are on file and that the" +
-          " record here is North Carolina in-season competition. Do NOT write that they do not" +
+          ` record here is ${stateName(report.identity.state) || "North Carolina"} competition. Do NOT write that they do not` +
           " compete nationally — our records do not cover every national event.",
       )
     }

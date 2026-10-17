@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { HOME_STATE, US_STATES } from "@/lib/athlete-state"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PublicImageUpload } from "@/components/public-image-upload"
 import { AlertCircle, CheckCircle, GraduationCap, Instagram, Link2, Phone, School, User } from "lucide-react"
@@ -86,6 +87,8 @@ interface ProfileFormData {
   graduationYear: string
   weightClass: string
   highSchool: string
+  /** Which state he wrestles in; the state the profile is ranked and listed in. */
+  state: string
   wrestlingClub: string
   academicGpa: string
   academicSat: string
@@ -123,6 +126,7 @@ export function CreateProfileForm({
     graduationYear: "",
     weightClass: "",
     highSchool: "",
+    state: HOME_STATE,
     wrestlingClub: "",
     academicGpa: "",
     academicSat: "",
@@ -453,6 +457,25 @@ export function CreateProfileForm({
                     onChange={(e) => handleChange("highSchool", e.target.value)}
                     required
                   />
+                </div>
+                {/*
+                  * Asked here because nothing else can tell us, and because the database answers
+                  * "North Carolina" when nobody says. Rankings and every coach's roster read it.
+                  */}
+                <div>
+                  <Label className="text-white/80">State *</Label>
+                  <Select value={formData.state} onValueChange={(value) => handleChange("state", value)}>
+                    <SelectTrigger className={`mt-1.5 w-full ${FIELD}`}>
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {US_STATES.map((st) => (
+                        <SelectItem key={st.code} value={st.code}>
+                          {st.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
                   <Label htmlFor="wrestlingClub" className="text-white/80">

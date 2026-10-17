@@ -52,6 +52,12 @@ const TOC = /tournament of champions/i
 const NATIONAL = /^(NHSCA Nationals|Super 32|Journeymen|Beast of the East|Ironman)/i
 const NCHSAA = /^NCHSAA State Championships$/i
 
+/** "SCISA" for a South Carolina independent's title; NCHSAA when the rows carry no other body. */
+function stateBody(report: ScoutingReport): string {
+  const labelled = report.results.find((r) => NCHSAA.test(r.event) && r.label)
+  return labelled?.label?.replace(/ State Championships$/, "") || "NCHSAA"
+}
+
 /** A star-rating part's line by label - "23-8 at national events in 2026". */
 export function starPart(report: ScoutingReport, label: string): string | null {
   for (const c of report.starRating?.components ?? []) {
@@ -73,8 +79,8 @@ export function snapshotFigures(report: ScoutingReport): SnapshotFigure[] {
   if (toc) out.push({ label: "TOC", value: placeWord(toc.place), sub: String(toc.year) })
   const state = bestFinish(report.results, NCHSAA)
   const stateTitles = titleYears(report.results, NCHSAA)
-  if (stateTitles.length > 1) out.push({ label: "NCHSAA State", value: `${stateTitles.length}x Champion`, sub: stateTitles.join(", ") })
-  else if (state) out.push({ label: "NCHSAA State", value: placeWord(state.place), sub: String(state.year) })
+  if (stateTitles.length > 1) out.push({ label: `${stateBody(report)} State`, value: `${stateTitles.length}x Champion`, sub: stateTitles.join(", ") })
+  else if (state) out.push({ label: `${stateBody(report)} State`, value: placeWord(state.place), sub: String(state.year) })
   const nat = nationalRecord(report)
   if (nat) out.push({ label: "National record", value: nat.record, sub: nat.year })
   const ranked = report.strengthOfCompetition.rankedWins
@@ -99,8 +105,9 @@ export function keyFacts(report: ScoutingReport): string[] {
   if (toc) facts.push(toc.place === 1 ? `Tournament of Champions champion (${toc.year})` : `Tournament of Champions ${placeWord(toc.place)} (${toc.year})`)
   const state = bestFinish(report.results, NCHSAA)
   const stateTitles = titleYears(report.results, NCHSAA)
-  if (stateTitles.length > 1) facts.push(`${stateTitles.length}x NCHSAA state champion (${stateTitles.join(", ")})`)
-  else if (state) facts.push(state.place === 1 ? `NCHSAA state champion (${state.year})` : `NCHSAA State Championships ${placeWord(state.place)} (${state.year})`)
+  const body = stateBody(report)
+  if (stateTitles.length > 1) facts.push(`${stateTitles.length}x ${body} state champion (${stateTitles.join(", ")})`)
+  else if (state) facts.push(state.place === 1 ? `${body} state champion (${state.year})` : `${body} State Championships ${placeWord(state.place)} (${state.year})`)
   const placings = starPart(report, "National placement")
   // Only real placings: the same line carries "4-2 at NHSCA, no place" for a deep run without one.
   if (placings && placeIn(placings) != null && !/no place/i.test(placings)) facts.push(`National placings: ${placings}`)

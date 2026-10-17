@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, message: "Account created successfully! Please check your email to verify your account." })
     }
 
-    const { firstName, lastName, cellPhone, profileType, fullName, email, password, returnTo } = body as {
+    const { firstName, lastName, cellPhone, profileType, fullName, email, password, returnTo, college } = body as {
       firstName?: string
       lastName?: string
       cellPhone?: string
@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
       email: string
       password: string
       returnTo?: string
+      college?: string
     }
 
     const finalFullName =
@@ -51,6 +52,19 @@ export async function POST(request: NextRequest) {
 
     if (password.length < 6) {
       return NextResponse.json({ error: "Password must be at least 6 characters long" }, { status: 400 })
+    }
+
+    /*
+     * A college coach owes us his college.
+     *
+     * The form has asked for it and marked it required since it was written, but this route never
+     * read the field, so every coach who signed up here landed with institution null. Six did,
+     * two of them on personal addresses where the .edu domain cannot stand in - and a coach with
+     * no institution shows on a wrestler's panel as a view from no program at all, which is the
+     * one thing the panel is for (Luke Moore of Coker, 12 Oct 2026).
+     */
+    if (profileType === "college-coach" && !String(college ?? "").trim()) {
+      return NextResponse.json({ error: "Enter your college." }, { status: 400 })
     }
 
     const roleNeedsPhone = profileType === "athlete" || profileType === "parent"
@@ -135,6 +149,8 @@ export async function POST(request: NextRequest) {
       // Canonical spelling: the picker says `college-coach`, the approval queue reads
       // `college_coach`, and for as long as those differed every coach was invisible to it.
       if (profileType) profilePayload.role = canonicalRole(profileType)
+      // Stored as `institution`, the one field `collegeForCoach` reads to name a program.
+      if (String(college ?? "").trim()) profilePayload.institution = String(college).trim()
 
       // A college coach on a .edu address skips the manual approval queue. Only this exact
       // combination does — see lib/coach-auto-approve.ts for why the rule is kept narrow.

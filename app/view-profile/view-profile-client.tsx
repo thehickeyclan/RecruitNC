@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/auth-context"
 import type { PublicAthleteProfile } from "@/lib/load-public-athlete-profile"
 import type { TournamentRow } from "@/lib/profile/tournament-rows"
 import { profileCredentials } from "@/lib/profile/credentials"
+import { stateChampionshipName, stateName } from "@/lib/athlete-state"
 import { shortOlympicEvent } from "@/lib/profile/olympic-event"
 
 type NchsaaResult = { year: number; place: number | null; classification: string; weight_class: string }
@@ -86,7 +87,17 @@ export function ViewProfileClient({
     nationalTeamResults: nationalTeamResults as never[],
     attachedEventBouts: (Array.isArray(athlete.attached_event_bouts) ? athlete.attached_event_bouts : []) as never[],
   })
-  const stateTournamentRows = buildNchsaaStateRows(nchsaaResults, nchsaaStateBouts)
+  /* His state names his state tournament: the SCHSL does not run the NCHSAA's 4A. */
+  const athleteState = (athlete as { state?: string | null })?.state ?? null
+  const stateTournamentRows = buildNchsaaStateRows(nchsaaResults, nchsaaStateBouts, athleteState ?? undefined)
+  /*
+   * The body that runs his championship, for the section heading. Taken from the classification
+   * his results actually carry, so an independent-schools placer reads "SCISA", not "SCHSL".
+   */
+  const stateChampionshipBody = stateChampionshipName(
+    athleteState,
+    nchsaaResults.find((r) => String(r?.classification ?? "").trim())?.classification ?? null,
+  )
   // Every event on the record, bouts included (NC United duals and Fargo Greco have no results row).
   // A North Carolina wrestler has a folkstyle season whatever else they wrestle.
   const competition = summarizeCompetition(
@@ -111,11 +122,16 @@ export function ViewProfileClient({
     .map((row) => ({ ...row, event: shortOlympicEvent(row.event) }))
   const tocRows = folkstyleRows.filter(isTocRow)
   // Key finishes for the banner's cards (Matt's mock): national, TOC, NCHSAA, NC Freestyle titles.
+  /*
+   * The state names his state championship. Both Carolinas run a 4A, so a card reading "4A State
+   * Champion" with no state tells a coach nothing he can act on.
+   */
   const credentials = profileCredentials({
     stateRows: stateTournamentRows,
     tocRows,
     tournamentRows: profileTournamentRows,
     max: 6,
+    state: athleteState ?? undefined,
   })
 
   /*
@@ -187,9 +203,15 @@ export function ViewProfileClient({
                   theme="dark"
                   sectionId="nchsaa-states"
                   icon={Medal}
-                  title="NCHSAA State Championships"
-                  subtitle="Folkstyle — the North Carolina high school state tournament"
-                  emptyText="No NCHSAA state results recorded"
+                  /*
+                   * His state's tournament, named after it. "NCHSAA State Championships" over a
+                   * South Carolina wrestler's SCHSL titles names a tournament he was never at —
+                   * the rows below the heading already said SCHSL and the heading contradicted
+                   * them.
+                   */
+                  title={`${stateChampionshipBody} State Championships`}
+                  subtitle={`Folkstyle — the ${stateName(athleteState) || "North Carolina"} high school state tournament`}
+                  emptyText={`No ${stateChampionshipBody} state results recorded`}
                 />
               </div>
               <TournamentAccordion

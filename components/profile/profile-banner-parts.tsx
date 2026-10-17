@@ -9,15 +9,23 @@
 import type { ReactNode } from "react"
 import { ArrowLeftRight, Crown, FileText, Medal, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { stateName } from "@/lib/athlete-state"
 import type { Credential } from "@/lib/profile/credentials"
 import { STYLE_LABEL, type CompetitionSummary } from "@/lib/wrestling-style"
 
 const GOLD = "#D3B574"
 
-export function BannerEyebrow({ className }: { className?: string }) {
+/**
+ * "North Carolina Wrestling" over the name — or his own state's.
+ *
+ * It was fixed text while North Carolina was the only state in the product. Over a South
+ * Carolina wrestler's SCHSL titles it is simply wrong, and it is the first line a college coach
+ * reads on the page.
+ */
+export function BannerEyebrow({ className, state }: { className?: string; state?: string | null }) {
   return (
     <p className={cn("text-[10px] font-semibold uppercase tracking-[0.45em] text-[#D3B574] lg:text-xs", className)}>
-      North Carolina Wrestling
+      {`${stateName(state) || "North Carolina"} Wrestling`}
     </p>
   )
 }

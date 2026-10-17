@@ -31,6 +31,11 @@ export type Accolades = {
   bestStatePlace: number | null
   /** "7A" for the best finish, when the event names one. */
   bestStateClass: string | null
+  /**
+   * Whose championship the best finish was: SCHSL, SCISA, NCISA, NCHSAA. Read from the event, so
+   * a South Carolina champion is never called an NCHSAA one (17 Oct 2026). Absent means NCHSAA.
+   */
+  bestStateAssociation?: string | null
   statePlacings: number
   stateTitles: number
   /** Reached the state tournament without placing. */
@@ -69,6 +74,7 @@ export function accoladesFrom(input: { stateRows: readonly SummaryRow[]; tournam
     if (out.bestStatePlace == null || place < out.bestStatePlace) {
       out.bestStatePlace = place
       out.bestStateClass = row.event.match(/\b(\d+A)\b/i)?.[1]?.toUpperCase() ?? null
+      out.bestStateAssociation = row.event.match(/\b(SCHSL|SCISA|NCISAA?|NCHSAA)\b/i)?.[1]?.toUpperCase().replace("NCISAA", "NCISA") ?? null
     }
   }
   return out
@@ -83,8 +89,9 @@ export function accoladePhrases(a: Accolades): string[] {
   if (a.nationalTitles > 0) out.push(`${times(a.nationalTitles)}national champion`)
   else if (a.allAmericans > 0) out.push(`${times(a.allAmericans)}All-American`)
   const cls = a.bestStateClass ? ` ${a.bestStateClass}` : ""
-  if (a.bestStatePlace === 1) out.push(`${times(a.stateTitles)}NCHSAA${cls} state champion`)
-  else if (a.bestStatePlace === 2) out.push(`NCHSAA${cls} state runner-up`)
+  const assoc = a.bestStateAssociation || "NCHSAA"
+  if (a.bestStatePlace === 1) out.push(`${times(a.stateTitles)}${assoc}${cls} state champion`)
+  else if (a.bestStatePlace === 2) out.push(`${assoc}${cls} state runner-up`)
   else if (a.bestStatePlace != null) out.push(`${times(a.statePlacings)}state placer`)
   else if (a.stateQualifier) out.push("state qualifier")
   return out.slice(0, 2)
@@ -123,8 +130,8 @@ export const YEAR_ROUND_MIN_EVENTS = 2
 
 const list = (items: string[]) => (items.length <= 1 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items[items.length - 1]}`)
 const STYLE_WORD: Record<string, string> = { folkstyle: "folkstyle", freestyle: "freestyle", greco: "Greco-Roman" }
-// By sound, not spelling: "an NCHSAA state champion" (en-see-...), "an All-American", "a state placer".
-const article = (phrase: string) => (/^(all-american|nchsaa|ncisa|nhsca|[aeiou])/i.test(phrase) && !/^(one|uni)/i.test(phrase) ? "an" : "a")
+// By sound, not spelling: "an NCHSAA" or "an SCHSL state champion" (letters said aloud), "an All-American", "a state placer".
+const article = (phrase: string) => (/^(all-american|nchsaa|ncisa|nhsca|schsl|scisa|[aeiou])/i.test(phrase) && !/^(one|uni)/i.test(phrase) ? "an" : "a")
 
 /** "the RAW club", "Triangle Wrestling Academy": a bare name gets "the ... club". */
 function clubPhrase(club: string): string {
@@ -151,6 +158,8 @@ export function summarySentences(input: {
   club?: string | null
   accolades: Accolades
   scope: "national" | "in-state" | null
+  /** The wrestler's state by name, for "competes in South Carolina"; North Carolina when absent. */
+  stateName?: string | null
   styles: readonly string[]
   offSeasonEvents: number
   lastCompeted?: { weight?: string | number | null; event?: string | null; date?: string | null; year?: number | null } | null
@@ -179,7 +188,7 @@ export function summarySentences(input: {
     const parts: SummaryPart[] = [{ text: out.length ? `${subject} ` : `${name} ` }]
     const competes: SummaryPart[] = []
     if (input.scope) {
-      competes.push({ text: "competes " }, s(input.scope === "national" ? "nationally" : "in North Carolina"))
+      competes.push({ text: "competes " }, s(input.scope === "national" ? "nationally" : `in ${input.stateName || "North Carolina"}`))
       if (input.offSeasonEvents >= YEAR_ROUND_MIN_EVENTS) competes.push({ text: ", " }, s("year-round"), { text: styles.length ? "," : "" })
       if (styles.length) competes.push({ text: " in " }, s(list(styles)))
     } else if (styles.length) {
