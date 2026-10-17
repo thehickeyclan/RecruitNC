@@ -17,22 +17,26 @@ export const NICHE_CATEGORIES = [
   { key: "dorms", label: "Dorms" },
   { key: "campus_food", label: "Campus food" },
   { key: "student_life", label: "Student life" },
-  { key: "party_scene", label: "Party scene" },
-  { key: "athletics", label: "Athletics" },
   { key: "location", label: "Location" },
   { key: "safety", label: "Safety" },
-  { key: "diversity", label: "Diversity" },
-  { key: "student_wellness", label: "Student wellness" },
-  { key: "future_readiness", label: "Future readiness" },
 ] as const
 
 export type NicheCategory = (typeof NICHE_CATEGORIES)[number]["key"]
 
 export const NICHE_SOURCE = "Niche report cards (niche.com), collected October 17, 2026"
 
-const SCHOOLS = data.schools as Record<string, NicheGrades>
+const SCHOOLS = data.schools as Record<string, { url: string | null; grades: Record<string, string> }>
+const SHOWN = new Set<string>(NICHE_CATEGORIES.map((c) => c.key))
 
-export const nicheFor = (schoolId: string): NicheGrades | null => SCHOOLS[schoolId] ?? null
+/**
+ * The grades we show (Matt, 17 Oct 2026): party scene, athletics, diversity, student wellness and
+ * future readiness are left out everywhere - the pages, Compare and Scout - though the file keeps them.
+ */
+export function nicheFor(schoolId: string): NicheGrades | null {
+  const row = SCHOOLS[schoolId]
+  if (!row) return null
+  return { url: row.url, grades: Object.fromEntries(Object.entries(row.grades).filter(([k]) => SHOWN.has(k))) as NicheGrades["grades"] }
+}
 
 /** A+ is 13 points, F is 1: for finding the best grade in a row, never shown. */
 export function gradePoints(grade: string | null | undefined): number | null {

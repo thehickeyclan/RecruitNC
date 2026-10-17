@@ -9,7 +9,11 @@ describe("niche grades", () => {
     expect(gradePoints("unavailable")).toBeNull()
   })
   it("has the colleges Matt checked", () => {
-    expect(nicheFor("presbyterian-college")?.grades).toMatchObject({ overall: "B-", party_scene: "B+", safety: "C", student_wellness: "A" })
-    expect(nicheFor("presbyterian-college")?.grades.future_readiness).toBeUndefined()
+    expect(nicheFor("presbyterian-college")?.grades).toMatchObject({ overall: "B-", dorms: "C+", safety: "C" })
+  })
+  it("leaves out the categories Matt dropped", () => {
+    const grades = nicheFor("presbyterian-college")!.grades as Record<string, string>
+    for (const k of ["party_scene", "athletics", "diversity", "student_wellness", "future_readiness"]) expect(grades[k]).toBeUndefined()
+    expect(Object.keys(grades).sort()).toEqual(["academics", "campus", "campus_food", "dorms", "location", "overall", "professors", "safety", "student_life", "value"])
   })
 })
