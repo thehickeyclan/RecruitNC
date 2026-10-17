@@ -61,7 +61,22 @@ async function main() {
     users.push(...((data ?? []) as never[])); if (!data || data.length < 1000) break
   }
   const isUser = new Set(users.map((u) => String(u.email ?? "").toLowerCase().trim()))
-  const { data: dir } = await admin.from("toc_college_coaches").select("coach_name, college_program, email, division, title, opted_out").limit(5000)
+  // --from-csv: a staff list (email,name,program,division,title), e.g. Matt's men's coaches sheet of 17 Oct 2026.
+  // Otherwise the college coach directory table.
+  const csvPath = arg("from-csv")
+  const parseCsv = (text: string) => {
+    const [head, ...lines] = text.trim().split(/\r?\n/)
+    const cols = head!.split(",")
+    return lines.map((line) => {
+      const cells: string[] = []; let cur = ""; let q = false
+      for (const ch of line) { if (ch === '"') q = !q; else if (ch === "," && !q) { cells.push(cur); cur = "" } else cur += ch }
+      cells.push(cur)
+      return Object.fromEntries(cols.map((c, i) => [c, cells[i] ?? ""]))
+    })
+  }
+  const dir = csvPath
+    ? parseCsv(fs.readFileSync(csvPath, "utf8")).map((r) => ({ coach_name: r.name, college_program: r.program, email: r.email, division: r.division, title: r.title, opted_out: false }))
+    : (await admin.from("toc_college_coaches").select("coach_name, college_program, email, division, title, opted_out").limit(5000)).data
   const seen = new Set<string>()
   const candidates = (dir ?? []).filter((r) => {
     const e = String(r.email ?? "").toLowerCase().trim()
@@ -88,7 +103,7 @@ async function main() {
     })
 
   console.log(`On the platform: ${onPlatform.length} coaches, ${programs} programs (${divisions.map(([d, k]) => `${k} ${d}`).join(" · ")})`)
-  console.log(`Directory: ${dir?.length ?? 0} rows | invitable: ${candidates.length} | unsubscribed: ${candidates.length - ok.size} | already invited: ${Object.keys(sent).length} | to send: ${list.length}`)
+  console.log(`${csvPath ? `List ${csvPath}` : "Directory"}: ${dir?.length ?? 0} rows | invitable: ${candidates.length} | unsubscribed: ${candidates.length - ok.size} | already invited: ${Object.keys(sent).length} | to send: ${list.length}`)
   const sample = list.find((c) => /asu\.edu$/i.test(String(c.email))) ?? list[0] ?? null
   fs.writeFileSync(PREVIEW, (await render(sample, null)).html)
   fs.writeFileSync(PREVIEW.replace(/\.html$/, "-list.csv"), "email,name,program,division,title\n" + list.map((c) => `${c.email},"${c.coach_name ?? ""}","${c.college_program ?? ""}","${c.division ?? ""}","${c.title ?? ""}"`).join("\n"))
