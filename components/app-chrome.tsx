@@ -13,6 +13,7 @@ import { Footer } from "@/components/footer"
 import { FamilyProfileBand } from "@/components/family-profile-band"
 import { ConditionalAuthGuard } from "@/components/conditional-auth-guard"
 import { AIChatWidget } from "@/components/ai-chat-widget-recruitnc"
+import { ScoutLauncher } from "@/components/scout-launcher"
 
 /**
  * A college coach's header and footer are the recruiting product's (lib/recruiting/brand.ts), on
@@ -45,6 +46,13 @@ function familyBandAt(path: string): "top" | "foot" | null {
   // On the rankings it leads the page: that is where a family is looking for their wrestler.
   return path === "/public-rankings" || path.startsWith("/public-rankings/") ? "top" : "foot"
 }
+
+/**
+ * The families' recruiting pages: their assistant is Scout (Matt, 18 Oct 2026). Scout's own page
+ * has no launcher; everywhere else keeps Data Dawg.
+ */
+const SCOUT_PATHS = ["/my-recruiting", "/recruiting", "/command-center", "/plans"]
+const onScoutPage = (path: string) => SCOUT_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
 
 const NO_CHAT_PATHS = [
   "/inbox",
@@ -148,7 +156,8 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   const { isLoading: authLoading } = useAuth()
   const isCoach = classifyViewer(profile).isCollegeCoach
   const noChatPage = NO_CHAT_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
-  const chat = noChatPage || isCoach || authLoading ? null : <AIChatWidget />
+  const chat =
+    noChatPage || isCoach || authLoading ? null : onScoutPage(path) ? (path.startsWith("/my-recruiting/scout") ? null : <ScoutLauncher />) : <AIChatWidget />
   const familyBand = isCoach ? null : familyBandAt(path)
   const isSpartanCampaign = path === "/spartan" || path.startsWith("/spartan/")
   /*
