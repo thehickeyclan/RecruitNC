@@ -235,6 +235,9 @@ export default function TransferPortalPage() {
           </More>
           <More title="The new eligibility clock">
             <p>{ELIGIBILITY_CLOCK.text}</p>
+            <a href="/recruiting/learn/eligibility-clock" className="mt-3 inline-flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-black text-[#0A1628]" style={{ backgroundColor: "#D3B574" }}>
+              Work out your wrestler&apos;s clock <ArrowRight className="h-4 w-4" aria-hidden />
+            </a>
             <Sources list={ELIGIBILITY_CLOCK.sources} />
           </More>
           <More title="Women's wrestling: a different picture">
