@@ -84,10 +84,14 @@ export const TRANSFER_RULES: Array<{ level: string; how: string; point: string; 
   },
 ]
 
-export const CASE_STUDIES: Array<{ name: string; move: string; story: string; lesson: string; sources: TransferSource[] }> = [
+export const CASE_STUDIES: Array<{ name: string; move: string; from: string; to: string; weights: string; results: string[]; story: string; lesson: string; sources: TransferSource[] }> = [
   {
     name: "Jacob Cardenas",
     move: "Cornell → Michigan, 197",
+    from: "Cornell",
+    to: "Michigan",
+    weights: "197",
+    results: ["Big Ten champion", "NCAA 4th", "24–3"],
     story:
       "Two All-America finishes at Cornell (8th in 2023, 4th in 2024). With a season of eligibility left after graduating, which Ivy League rules would not let him use as a graduate student there, he joined Michigan. He won the 2025 Big Ten title and placed 4th at the NCAA Championships, going 24–3.",
     lesson: "A college can recruit a wrestler whose college results are already proven, not just projected.",
@@ -96,10 +100,28 @@ export const CASE_STUDIES: Array<{ name: string; move: string; story: string; le
   {
     name: "Dean Hamiti",
     move: "Wisconsin → Oklahoma State, 165 → 174",
+    from: "Wisconsin",
+    to: "Oklahoma State",
+    weights: "165 → 174",
+    results: ["NCAA champion", "27–1"],
     story: "Hamiti wrestled 165 for Wisconsin and 174 for Oklahoma State. In 2024–25 he went 27–1 and won the NCAA title, beating Missouri's Keegan O'Toole 4–1 in sudden victory.",
     lesson: "The chance at a college depends on the weight a wrestler will actually wrestle there, the roster and the coach's plan.",
     sources: [S.hamiti],
   },
+]
+
+/**
+ * The 2026-27 recruiting and transfer calendar, for the timeline graphic: every date from a
+ * checked source (the women's window and signing from the rules library, content.ts).
+ */
+export const CALENDAR_START = "2026-08-01"
+export const CALENDAR_END = "2027-07-31"
+export const TRANSFER_CALENDAR: Array<{ label: string; detail: string; from: string; to?: string; tone: "signing" | "men" | "women" | "rule" | "event" }> = [
+  { label: "Division III rule change", detail: "Notification of transfer begins, Aug 1", from: "2026-08-01", tone: "rule" },
+  { label: "Seniors sign", detail: "First signing date, Nov 11", from: "2026-11-11", tone: "signing" },
+  { label: "D1 women's window", detail: "Feb 28 – Apr 13", from: "2027-02-28", to: "2027-04-13", tone: "women" },
+  { label: "D1 championships", detail: "Mar 16–21", from: "2027-03-16", to: "2027-03-21", tone: "event" },
+  { label: "D1 men's window", detail: "Apr 1–30", from: "2027-04-01", to: "2027-04-30", tone: "men" },
 ]
 
 /** Our advice, not rules. */

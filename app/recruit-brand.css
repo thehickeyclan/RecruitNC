@@ -254,6 +254,14 @@ html[data-host="guild"] .border-\[\#D3B574\]\/60 {
   border-color: rgb(184 157 96 / 0.6);
 }
 
+html[data-host="national"] .border-\[\#D3B574\]\/70 {
+  border-color: rgb(31 107 255 / 0.7);
+}
+
+html[data-host="guild"] .border-\[\#D3B574\]\/70 {
+  border-color: rgb(184 157 96 / 0.7);
+}
+
 html[data-host="national"] .border-\[\#D7B968\] {
   border-color: rgb(31 107 255);
 }
