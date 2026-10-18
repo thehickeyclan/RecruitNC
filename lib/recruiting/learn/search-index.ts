@@ -7,6 +7,7 @@
 import { LEARN_PAGES, MENS_AND_WOMENS, sectionId } from "./content"
 import { GRADE_NAME, TIMELINE } from "./timeline"
 import { TOURNAMENT_LISTS } from "./tournaments"
+import { FAMILY_CHECKLIST, JUCO_QUESTIONS, TRANSFER_RULES, TRANSFER_SUMMARY } from "./transfer-portal"
 import { COACH_QUESTIONS, WORKING_STEPS } from "./working"
 import { LOOK_POINTS } from "./coaches-look-for"
 
@@ -58,6 +59,8 @@ export function buildSearchIndex(): SearchEntry[] {
     entries.push({ title: p.title, where: "What college coaches look at", href: "/recruiting/learn/what-coaches-look-for", text: p.text })
   }
   entries.push({ title: "Does my wrestler need to be a state champion?", where: "What college coaches look at", href: "/recruiting/learn/what-coaches-look-for", text: "state champion placer qualifier division level where NC wrestlers went" })
+  for (const r of TRANSFER_RULES) entries.push({ title: `Transfer rules: ${r.level}`, where: "The transfer portal", href: "/recruiting/learn/transfer-portal", text: `${r.how} ${r.point} transfer portal window` })
+  entries.push({ title: "The transfer portal", where: "The transfer portal", href: "/recruiting/learn/transfer-portal", text: [...TRANSFER_SUMMARY, ...FAMILY_CHECKLIST, ...JUCO_QUESTIONS].join(" ") + " transfer portal junior college eligibility roster weight" })
   entries.push({ title: "Questions to ask a college coach", where: "Working the process", href: "/recruiting/learn/working-the-process", text: COACH_QUESTIONS.join(" ") })
   return entries
 }
