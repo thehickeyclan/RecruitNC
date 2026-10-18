@@ -4,10 +4,11 @@
  * with the longer explanations behind a tap. Content and sources: lib/recruiting/learn/transfer-portal.ts.
  */
 import type { Metadata } from "next"
-import { ArrowRight, CheckCircle2, ChevronDown, ExternalLink, Scale, ShieldAlert, Users } from "lucide-react"
+import { ArrowRight, CheckCircle2, ChevronDown, ExternalLink, Scale, ShieldAlert } from "lucide-react"
 
 import { PortalShell } from "@/components/portal/portal-shell"
 import { LearnDisclaimer } from "@/components/recruiting/learn/learn-disclaimer"
+import { JucoPaths, RoomBeforeAfter, TransferCalendar, TransferMove } from "@/components/recruiting/learn/transfer-graphics"
 import {
   CASE_STUDIES,
   COACH_QUESTIONS_TRANSFER,
@@ -114,22 +115,8 @@ export default function TransferPortalPage() {
         <p className="mt-3 text-sm text-white/60">The portal is a private NCAA database for colleges, not a list families can browse.</p>
 
         <SectionTitle eyebrow="Why wrestling is different" title="One starter per weight" />
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div className={card}>
-            <p className="text-sm text-white/60">An example 165-pound room, after a transfer arrives:</p>
-            <div className="mt-3 space-y-2">
-              {["Returning starter", "Sophomore", "Incoming freshman", "The transfer"].map((w, i) => (
-                <div key={w} className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm ${i === 3 ? "border-[#D3B574]/60 bg-[#D3B574]/10" : "border-white/10 bg-white/[0.03]"}`}>
-                  <span className="flex items-center gap-2">
-                    <Users className="h-4 w-4 text-white/50" aria-hidden /> {w}
-                  </span>
-                  <span className="text-xs text-white/45">165</span>
-                </div>
-              ))}
-            </div>
-            <p className="mt-3 text-sm font-bold">4 wrestlers · 1 starting spot</p>
-            <p className="mt-1 text-xs text-white/50">An illustration, not a real roster.</p>
-          </div>
+        <div className="mt-4 space-y-4">
+          <RoomBeforeAfter />
           <div className={`${card} flex flex-col justify-between`}>
             <div>
               <p className="text-[15px] leading-6 text-white/85">
@@ -147,6 +134,9 @@ export default function TransferPortalPage() {
         </div>
 
         <SectionTitle eyebrow="The rules" title="Transfer rules, level by level" />
+        <div className="mt-4">
+          <TransferCalendar />
+        </div>
         {/* A phone swipes through the levels; wider screens show them as a grid. */}
         <div className="-mx-4 mt-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:overflow-visible sm:px-0 sm:pb-0 sm:grid-cols-2 lg:grid-cols-3">
           {TRANSFER_RULES.map((r) => (
@@ -168,8 +158,10 @@ export default function TransferPortalPage() {
           {CASE_STUDIES.map((c) => (
             <div key={c.name} className={`${card} w-[88%] shrink-0 snap-center sm:w-auto`}>
               <p className="text-lg font-black">{c.name}</p>
-              <p className="text-sm font-bold" style={{ color: GOLD }}>{c.move}</p>
-              <p className="mt-2 text-sm leading-6 text-white/75">{c.story}</p>
+              <div className="mt-3">
+                <TransferMove from={c.from} to={c.to} weights={c.weights} results={c.results} />
+              </div>
+              <p className="mt-3 text-sm leading-6 text-white/75">{c.story}</p>
               <p className="mt-3 rounded-lg bg-white/[0.04] p-3 text-sm font-semibold text-white/90">{c.lesson}</p>
               <Sources list={c.sources} />
             </div>
@@ -231,6 +223,7 @@ export default function TransferPortalPage() {
             <p>
               It can: junior college time can count toward NCAA eligibility, and it never resets the clock. It doesn&apos;t rule a wrestler out. Junior college straight to an NCAA school follows the two-year transfer rules (&quot;2–4&quot;); four-year, then junior college, then four-year (&quot;4–2–4&quot;) is different again. Neither uses the Division I men&apos;s April window. Credits, GPA, full-time terms and sometimes an associate degree decide when a wrestler can compete, and not every credit transfers.
             </p>
+            <JucoPaths />
             <p className="mt-3 font-semibold text-white">Ask before choosing junior college:</p>
             <ul className="mt-1 list-disc space-y-1 pl-5">
               {JUCO_QUESTIONS.map((q) => (
