@@ -252,6 +252,7 @@ export function CollegeProgramMap({
   upsellHref = "/command-center",
   heightClass = "h-[520px] sm:h-[620px]",
   showList = true,
+  cooperative = false,
 }: {
   accessToken: string
   /** Where the Subscribe actions on a locked college card go. */
@@ -259,6 +260,8 @@ export function CollegeProgramMap({
   heightClass?: string
   /** The list of every college under the map. Off on the sales page, where the map is the demo (Matt, 17 Oct 2026). */
   showList?: boolean
+  /** One finger scrolls the page, two move the map: for a map in the middle of a page people scroll on a phone. */
+  cooperative?: boolean
 }) {
   const [response, setResponse] = useState<CollegeMapResponse | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -406,6 +409,7 @@ export function CollegeProgramMap({
           minZoom: 2.5,
           maxZoom: 13,
           attributionControl: true,
+          cooperativeGestures: cooperative,
         })
         mapRef.current = map
         map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-right")
