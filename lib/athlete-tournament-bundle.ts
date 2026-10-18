@@ -18,6 +18,7 @@ import {
 } from "@/lib/public-profile-data"
 import { loadLinkedSourceRows, resultLinksEnabled } from "@/lib/identity/linked-results"
 import { isHighSchoolEvent } from "@/lib/high-school-window"
+import { loadNationalResultsFromBouts } from "@/lib/national-results-from-bouts"
 import {
   getOtherTournamentResultsForAthleteRecord,
   type OtherTournamentResult,
@@ -53,7 +54,7 @@ export async function loadAthleteTournamentBundle(
   // Started, not awaited: the NHSCA roster and other-event searches do not need it and run alongside.
   const useLinks = options?.linkedRead ?? resultLinksEnabled()
   const linked = useLinks && athlete.id ? loadLinkedSourceRows(supabase, String(athlete.id)) : Promise.resolve(null)
-  const [nchsaa, outOfState, nhsca, super32, fargo, other] = await Promise.all([
+  const [nchsaa, outOfState, nhscaTable, super32Table, fargoTable, otherTable, fromBouts] = await Promise.all([
     linked.then((l) => getMergedNchsaaForAthlete(supabase, athlete, l)),
     /*
      * A wrestler outside North Carolina gets his placements from `state_tournament_placers`
@@ -65,7 +66,22 @@ export async function loadAthleteTournamentBundle(
     linked.then((l) => getSuper32ForAthlete(supabase, athlete, l)),
     linked.then((l) => getFargoForAthlete(supabase, athlete, l)),
     getOtherTournamentResultsForAthleteRecord(supabase, athlete),
+    /*
+     * Outside North Carolina the placement tables are empty, so his Super 32, NHSCA, Fargo and
+     * Journeymen results are worked out from his linked bouts (lib/national-results-from-bouts.ts).
+     * Empty for an NC wrestler: NC reads exactly what it read before.
+     */
+    loadNationalResultsFromBouts(supabase, athlete).catch(() => ({ nhsca: [], super32: [], fargo: [], other: [] })),
   ])
+  // A derived row only where no table row covers that event already, so nothing prints twice.
+  const addMissing = <T extends { year: number }>(table: T[], derived: T[], key: (r: T) => string): T[] => {
+    const have = new Set(table.map(key))
+    return [...table, ...derived.filter((r) => !have.has(key(r)))]
+  }
+  const nhsca = addMissing(nhscaTable, fromBouts.nhsca, (r) => String(r.year))
+  const super32 = addMissing(super32Table, fromBouts.super32, (r) => String(r.year))
+  const fargo = addMissing(fargoTable, fromBouts.fargo, (r) => `${r.year}|${r.division ?? ""}`)
+  const other = addMissing(otherTable, fromBouts.other, (r) => r.eventKey)
   // No middle school results anywhere (Matt, 1 October 2026). Every surface reads this bundle.
   const grad = Number(athlete.graduationyear) || null
   const hs = (year: unknown, event: string, eventDate?: string | null) =>

@@ -40,7 +40,7 @@ import { placementPoints, recordWinPctPoints } from "@/lib/toc/athlete-compare"
 import { describeMissedWindow, findClassWindows, missedWindowsFor } from "@/lib/rankings/missed-window"
 import { HEAD_TO_HEAD_MAX_GAP, filterFargoFreestyleResults, scoreNchsaaRowsForSeed } from "@/lib/toc/ai-seeding"
 import { getNationalTeamResults } from "@/lib/tournament-utils"
-import { inState } from "@/lib/recruiting/states"
+import { HOME_STATE, inState } from "@/lib/recruiting/states"
 
 type EvidenceKind =
   | "head_to_head"
@@ -992,10 +992,16 @@ export async function buildRecruitNcRankingBoard({
   year,
   gender,
   rankedAsOfBoutDate = true,
+  state = HOME_STATE,
 }: {
   supabase: SupabaseClient
   year: string
   gender: string
+  /**
+   * Whose board (Matt, 18 October 2026: South Carolina men). North Carolina when unset, which is
+   * every caller before this - so no NC board can change. lib/recruiting/states.ts decides who is in.
+   */
+  state?: string
   /**
    * Judge "nationally ranked" opponents by the lists in effect on each bout's date
    * (lib/rankings/ranking-archive.ts) instead of today's. On for both boards; pass false to compare
@@ -1003,7 +1009,7 @@ export async function buildRecruitNcRankingBoard({
    */
   rankedAsOfBoutDate?: boolean
 }): Promise<RankingBoardAthlete[]> {
-  const { data: athletes, error } = await inState(supabase.from("athletes").select("*"))
+  const { data: athletes, error } = await inState(supabase.from("athletes").select("*"), state)
     .eq("graduationyear", year)
     .ilike("gender", gender)
     /**

@@ -289,9 +289,20 @@ function recordTotals(rows: TournamentResultForDisplay[]): { wins: number; losse
   return { wins, losses }
 }
 
-function classificationStrengthPoints(classification: string): number {
+export function classificationStrengthPoints(classification: string, association?: string | null): number {
   const match = String(classification ?? "").toUpperCase().match(/(\d+)A/)
   const divisions = match ? Number(match[1]) : 0
+  /*
+   * South Carolina's public schools wrestle in four classifications, 5A the largest (Matt, 18
+   * October 2026). Read on North Carolina's eight-tier ladder an SC 5A title would score like an
+   * NC 5A one, six points, and SC's top division would sit below NC's middle. Each SC tier takes
+   * the value of the NC tier at the same place from the top: 5A as 8A, 4A as 7A, 3A as 6A, 2A/1A
+   * as 5A. SCISA, the independents, scores as NCISA does: nothing. NC rows carry no association
+   * and never reach this branch.
+   */
+  if (String(association ?? "").toUpperCase() === "SCHSL") {
+    return divisions >= 5 ? 25 : divisions === 4 ? 20 : divisions === 3 ? 10 : divisions >= 1 ? 6 : 0
+  }
   return divisions >= 8 ? 25 : divisions === 7 ? 20 : divisions === 6 ? 10 : divisions === 5 ? 6 : divisions === 4 ? 3 : divisions === 3 ? 1 : 0
 }
 
@@ -315,7 +326,7 @@ export function scoreNchsaaRowsForSeed(rows: NchsaaRowForProfile[]): number {
   lesserRows.forEach((row, index) => {
     points += placementPoints(Number(row.place)) * (index === 0 ? 0.5 : 0.25)
   })
-  points += Math.max(...bestRows.map((row) => classificationStrengthPoints(row.classification)))
+  points += Math.max(...bestRows.map((row) => classificationStrengthPoints(row.classification, row.association)))
   points += bestRows.filter((row) => row.place === 1).length * 8
   return Math.round(points * 10) / 10
 }

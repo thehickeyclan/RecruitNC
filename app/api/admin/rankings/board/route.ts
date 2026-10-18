@@ -5,7 +5,8 @@ import { unstable_cache } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
 import { buildRecruitNcRankingBoard } from "@/lib/rankings/recruitnc-ranking-engine"
-import { inState } from "@/lib/recruiting/states"
+import { HOME_STATE, inState, normalizeStateCode } from "@/lib/recruiting/states"
+import { requireAdmin } from "@/lib/admin-auth"
 
 export const dynamic = "force-dynamic"
 
@@ -28,15 +29,16 @@ export const maxDuration = 60
  * something and want to see it.
  */
 const cachedBoard = unstable_cache(
-  async (year: string, gender: string) =>
-    buildRecruitNcRankingBoard({ supabase: createAdminClient(), year, gender }),
+  async (year: string, gender: string, state: string) =>
+    buildRecruitNcRankingBoard({ supabase: createAdminClient(), year, gender, state }),
   // Bump this version whenever `RankingBoardAthlete` changes shape. The cache outlives a deploy,
   // so a payload built by older code is otherwise served to newer code: `all_american` went from
   // `string | null` to `string[]` while the key stayed "v1", and the board threw
   // "t.map is not a function" on every cached class until the entry expired.
   // v3: draft_rank, toc_result, and class-qualified standings on significant wins and losses.
   // A cached v2 payload has none of them, and serving one to this code is what broke the board.
-  ["admin-ranking-board", "v3"],
+  // v4: keyed by state as well (South Carolina boards, 18 October 2026).
+  ["admin-ranking-board", "v4"],
   { revalidate: 600, tags: ["admin-ranking-board"] },
 )
 
@@ -44,17 +46,24 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const year = searchParams.get("year") || "2027"
   const gender = searchParams.get("gender") || "Male"
+  // Whose board. North Carolina unless asked; ranker grants cover NC boards only, so any other
+  // state's board is for full admins until it has rankers of its own.
+  const state = normalizeStateCode(searchParams.get("state")) ?? HOME_STATE
   // Admins, and people granted this board (see ranking-board-access). Middleware lets this path
   // through to here for that reason.
   const auth = await requireRankingBoardAccess(gender, Number(year), "read")
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
+  if (state !== HOME_STATE) {
+    const adminOnly = await requireAdmin()
+    if (!adminOnly.ok) return NextResponse.json({ error: adminOnly.error }, { status: adminOnly.status })
+  }
 
   try {
     const fresh = searchParams.get("refresh") === "1"
     const [athletes, edition, excluded, draftRanks] = await Promise.all([
       fresh
-        ? buildRecruitNcRankingBoard({ supabase: createAdminClient(), year, gender })
-        : cachedBoard(year, gender),
+        ? buildRecruitNcRankingBoard({ supabase: createAdminClient(), year, gender, state })
+        : cachedBoard(year, gender, state),
       // Never cached: the whole point of the timestamps is that they are current.
       // The draft tables may not exist yet, so this must never take the board down with it.
       (async () => {
@@ -64,6 +73,7 @@ export async function GET(request: Request) {
             .select("draft_saved_at, published_at")
             .eq("class_year", Number(year))
             .eq("gender", gender)
+            .eq("state", state)
             .maybeSingle()
           return data ?? null
         } catch {
@@ -84,7 +94,7 @@ export async function GET(request: Request) {
        */
       (async () => {
         try {
-          const { data } = await inState(createAdminClient().from("athletes").select("id, name, highschool"))
+          const { data } = await inState(createAdminClient().from("athletes").select("id, name, highschool"), state)
             .eq("graduationyear", Number(year))
             .is("gender", null)
           return (data ?? []).map((row) => ({
@@ -115,6 +125,7 @@ export async function GET(request: Request) {
             .select("athlete_id, rank")
             .eq("class_year", Number(year))
             .eq("gender", gender)
+            .eq("state", state)
           return new Map((data ?? []).map((row) => [String(row.athlete_id), Number(row.rank)]))
         } catch {
           return new Map<string, number>()
@@ -132,6 +143,7 @@ export async function GET(request: Request) {
         excluded_no_gender: excluded,
         year,
         gender,
+        state,
         count: athletes.length,
         scored_at: new Date().toISOString(),
         draft_saved_at: edition?.draft_saved_at ?? null,
@@ -139,7 +151,8 @@ export async function GET(request: Request) {
         formula: "recruitnc-toc-resume-v2",
         /** What this viewer may do here: reorder and save, or only read. Publishing is admin-only. */
         access: auth.access,
-        can_publish: auth.isAdmin,
+        // Only North Carolina has public boards; another state's order is saved, never published.
+        can_publish: auth.isAdmin && state === HOME_STATE,
       },
     })
   } catch (error) {

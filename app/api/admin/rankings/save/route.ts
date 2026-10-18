@@ -14,6 +14,7 @@ import { requireRankingBoardAccess } from "@/lib/rankings/ranking-board-access"
 import { getPublicRankingsMax, isPublicRankingsYearPublished, isWomensBoard } from "@/lib/public-rankings-cap"
 import { syncPublicRankingsTable } from "@/lib/rankings/publish-public-rankings"
 import { notifyRankingsPublished } from "@/lib/rankings-notification"
+import { athleteStateCode, HOME_STATE, normalizeStateCode } from "@/lib/recruiting/states"
 
 export const dynamic = "force-dynamic"
 
@@ -24,6 +25,8 @@ type Body = {
   action?: "save" | "publish"
   year?: unknown
   gender?: unknown
+  /** Whose board. North Carolina when absent, which is every caller before South Carolina. */
+  state?: unknown
   rankings?: Array<{ id?: string; final_rank?: number }>
 }
 
@@ -32,8 +35,17 @@ export async function POST(request: NextRequest) {
   const year = Number(body?.year)
   const gender = String(body?.gender ?? "Male")
   const action = body?.action === "publish" ? "publish" : "save"
+  const state = normalizeStateCode(String(body?.state ?? "")) ?? HOME_STATE
   if (!Number.isFinite(year)) {
     return NextResponse.json({ error: "A valid graduation year is required." }, { status: 400 })
+  }
+  /*
+   * Only North Carolina has public boards. Another state's order is saved for review and never
+   * published: publishing writes `athletes.prospect_ranking` and clears everyone else in the class,
+   * and the public pages and app have no South Carolina board to show it on.
+   */
+  if (action === "publish" && state !== HOME_STATE) {
+    return NextResponse.json({ error: `${state} boards are saved for review only; there is no public ${state} board yet.` }, { status: 400 })
   }
   /*
    * Saving a draft needs edit access to this board, which a scoped ranker can hold. Publishing
@@ -45,6 +57,11 @@ export async function POST(request: NextRequest) {
   } else {
     const auth = await requireRankingBoardAccess(gender, year, "edit")
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
+    // Ranker grants cover North Carolina's boards; another state's is for full admins.
+    if (state !== HOME_STATE) {
+      const adminOnly = await requireAdmin()
+      if (!adminOnly.ok) return NextResponse.json({ error: adminOnly.error }, { status: adminOnly.status })
+    }
   }
 
   const admin = createAdminClient()
@@ -69,18 +86,20 @@ export async function POST(request: NextRequest) {
     for (let i = 0; i < ids.length; i += 200) {
       const { data, error } = await admin
         .from("athletes")
-        .select("id, name, gender, graduationyear")
+        .select("id, name, gender, graduationyear, state, is_nc_athlete")
         .in("id", ids.slice(i, i + 200))
       if (error) return NextResponse.json({ error: error.message }, { status: 500 })
       for (const athlete of data ?? []) {
         const sameGender = String(athlete.gender ?? "").toLowerCase() === gender.toLowerCase()
-        if (!sameGender || Number(athlete.graduationyear) !== year) strays.push(String(athlete.name))
+        // And this state: an NC save must never carry an SC wrestler into NC's draft, or the reverse.
+        const sameState = athleteStateCode(athlete as { state?: string | null; is_nc_athlete?: boolean | null }) === state
+        if (!sameGender || !sameState || Number(athlete.graduationyear) !== year) strays.push(String(athlete.name))
       }
     }
     if (strays.length) {
       return NextResponse.json(
         {
-          error: `Not saved: ${strays.length} wrestler(s) in this order are not ${gender} Class of ${year} (${strays
+          error: `Not saved: ${strays.length} wrestler(s) in this order are not ${state} ${gender} Class of ${year} (${strays
             .slice(0, 3)
             .join(", ")}${strays.length > 3 ? ", ..." : ""}). Reload the board and try again.`,
         },
@@ -94,18 +113,19 @@ export async function POST(request: NextRequest) {
       .delete()
       .eq("class_year", year)
       .eq("gender", gender)
+      .eq("state", state)
     if (clearError) return NextResponse.json({ error: tableHint(clearError.message) }, { status: 500 })
 
     const { error } = await admin
       .from("ranking_drafts")
-      .insert(rows.map((row) => ({ ...row, class_year: year, gender })))
+      .insert(rows.map((row) => ({ ...row, class_year: year, gender, state })))
     if (error) return NextResponse.json({ error: tableHint(error.message) }, { status: 500 })
 
     await admin
       .from("ranking_editions")
       .upsert(
-        { class_year: year, gender, draft_saved_at: now, draft_saved_by: userId },
-        { onConflict: "class_year,gender" },
+        { class_year: year, gender, state, draft_saved_at: now, draft_saved_by: userId },
+        { onConflict: "class_year,gender,state" },
       )
 
     return NextResponse.json({ ok: true, action, saved: rows.length, draftSavedAt: now })
@@ -118,6 +138,7 @@ export async function POST(request: NextRequest) {
     .select("athlete_id, rank")
     .eq("class_year", year)
     .eq("gender", gender)
+    .eq("state", HOME_STATE)
     .order("rank", { ascending: true })
   if (draftError) return NextResponse.json({ error: tableHint(draftError.message) }, { status: 500 })
   if (!draft?.length) {
@@ -170,7 +191,7 @@ export async function POST(request: NextRequest) {
 
   await admin
     .from("ranking_editions")
-    .upsert({ class_year: year, gender, published_at: now, published_by: userId }, { onConflict: "class_year,gender" })
+    .upsert({ class_year: year, gender, state: HOME_STATE, published_at: now, published_by: userId }, { onConflict: "class_year,gender,state" })
 
   // The public page caches its class rankings; a publish must show up.
   revalidateTag("public-rankings")

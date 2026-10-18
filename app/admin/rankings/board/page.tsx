@@ -1,15 +1,36 @@
 "use client"
 
+/**
+ * The rankings board, rebuilt to be worked rather than read (Matt, 18 October 2026: "pretty
+ * confusing ... should be easier ... drag drop, AI suggested should be plain sight").
+ *
+ * One list is the order you are building, dragged into place. The formula's order sits beside it
+ * the whole time, and every row says where the formula has that wrestler, so a disagreement is
+ * visible without opening anything. The reasons — score, wins, losses, events — open under a row
+ * when you want them.
+ *
+ * Nothing about saving or publishing changed: Save writes the draft for this state, class and
+ * gender; Publish copies the saved draft, admins only, North Carolina only. The previous board is
+ * still at /admin/rankings/board/classic.
+ */
 import { useEffect, useMemo, useRef, useState } from "react"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
+import { DragDropContext, Droppable, Draggable, type DropResult } from "@hello-pangea/dnd"
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronDown,
+  ChevronUp,
+  Flag,
+  GripVertical,
+  Lock,
+  RefreshCw,
+  Search,
+  Sparkles,
+  Unlock,
+} from "lucide-react"
 import { AdminHeader } from "@/components/admin-header"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { ArrowDown, ArrowUp, Bot, CheckCircle2, ChevronDown, ChevronUp, Eye, Lock, Save, Search, Sparkles, UploadCloud } from "lucide-react"
 import { reviewBoard, summariseReview, type ReviewAthlete, type ReviewFlag } from "@/lib/rankings/ranking-review"
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
 import type { StarRating } from "@/lib/athlete-star-rating"
@@ -17,12 +38,7 @@ import { normalizeBoardAthlete } from "@/lib/rankings/board-athlete"
 import { rankingBoardDefault } from "@/lib/rankings/ranking-board-home"
 import { createClient } from "@/lib/supabase/client"
 
-type Evidence = {
-  kind: string
-  label: string
-  points?: number
-  tone?: "gold" | "blue" | "purple" | "green" | "orange" | "red" | "slate"
-}
+type Evidence = { kind: string; label: string; points?: number; tone?: string }
 
 type BoardAthlete = {
   id: string
@@ -47,14 +63,10 @@ type BoardAthlete = {
   college?: string | null
   college_opens_experience?: string | null
   final_rank?: number
-  /** Rank in the saved draft, when one exists. The working order, and it wins. */
   draft_rank?: number | null
   locked?: boolean
-  reviewer_note?: string
   all_american: string[]
-  /** Women's board: SI / MatScouts / Flo positions she holds now. */
   national_rankings?: string[]
-  /** Women's board: "Folkstyle only", "Freestyle only" or "Folkstyle + Freestyle". */
   competes_styles?: string | null
   last_competed: string | null
   nhsca_by_year: string[]
@@ -66,21 +78,27 @@ type BoardAthlete = {
   toc_result: string | null
   super32_record: string | null
   significant_wins: Array<{ opponent: string; result: string | null; event: string | null; standing: string }>
-  significant_losses: Array<{
-    opponent: string
-    result: string | null
-    event: string | null
-    standing: string
-    upset: boolean
-  }>
+  significant_losses: Array<{ opponent: string; result: string | null; event: string | null; standing: string; upset: boolean }>
 }
 
-// 2030 is in the data already. A class missing from this list cannot be worked on at all.
-const years = ["2026", "2027", "2028", "2029", "2030"]
-const genders = ["Male", "Female"]
-const darkOutlineButton = "border-blue-800 bg-slate-950 text-blue-100 hover:bg-blue-950 hover:text-white"
+const YEARS = ["2027", "2028", "2029", "2030", "2026"]
+/** States with a board. North Carolina's is public; the others are worked here and saved only. */
+const STATES: Array<{ code: string; label: string }> = [
+  { code: "NC", label: "North Carolina" },
+  { code: "SC", label: "South Carolina" },
+]
 
-/** `last_competed` is written for a card — "NHSCA Nationals · Mar 15, 2026". Pull the date back out. */
+const SCORE_SEGMENTS: Array<{ key: string; label: string; className: string }> = [
+  { key: "national", label: "National", className: "bg-[#d6b75d]" },
+  { key: "matchResume", label: "Season", className: "bg-emerald-500" },
+  { key: "state", label: "State", className: "bg-sky-500" },
+  { key: "rankedWins", label: "Ranked wins", className: "bg-rose-500" },
+  { key: "allAmerican", label: "All-American", className: "bg-red-600" },
+  { key: "duals", label: "Duals", className: "bg-purple-500" },
+  { key: "nationalRanking", label: "National rank", className: "bg-white" },
+  { key: "rankWrestler", label: "RankWrestler", className: "bg-slate-400" },
+]
+
 function parseLastCompeted(value: string | null | undefined): string | null {
   const match = String(value ?? "").match(/([A-Z][a-z]{2} \d{1,2}, \d{4})/)
   if (!match) return null
@@ -88,14 +106,92 @@ function parseLastCompeted(value: string | null | undefined): string | null {
   return Number.isFinite(at) ? new Date(at).toISOString().slice(0, 10) : null
 }
 
-/** A contradiction, coloured by how much it should interrupt a reviewer. */
-function ReviewFlags({ flags }: { flags: ReviewFlag[] }) {
+function timeAgo(iso: string | null): string {
+  if (!iso) return "never"
+  const then = new Date(iso).getTime()
+  if (Number.isNaN(then)) return "never"
+  const minutes = Math.round((Date.now() - then) / 60000)
+  if (minutes < 1) return "just now"
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+  const days = Math.round(hours / 24)
+  return days === 1 ? "yesterday" : `${days}d ago`
+}
+
+function renumber(rows: BoardAthlete[]): BoardAthlete[] {
+  return rows.map((row, index) => ({ ...row, final_rank: index + 1 }))
+}
+
+function moveTo(rows: BoardAthlete[], id: string, toIndex: number): BoardAthlete[] {
+  const from = rows.findIndex((r) => r.id === id)
+  if (from < 0) return rows
+  const next = [...rows]
+  const [item] = next.splice(from, 1)
+  next.splice(Math.max(0, Math.min(toIndex, next.length)), 0, item!)
+  return renumber(next)
+}
+
+/** The best state result, for the one-line badge. */
+function bestState(placements: string[]): string | null {
+  if (!placements.length) return null
+  return placements.find((p) => /champion/i.test(p)) ?? placements[0] ?? null
+}
+
+/** How far the formula is from where you have them: "Formula #4 ▲2". */
+function FormulaChip({ aiRank, working }: { aiRank: number; working: number }) {
+  const delta = working - aiRank
+  const tone =
+    delta === 0
+      ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200"
+      : Math.abs(delta) <= 3
+        ? "border-violet-400/40 bg-violet-400/10 text-violet-200"
+        : "border-amber-400/50 bg-amber-400/15 text-amber-200"
+  return (
+    <span
+      className={`inline-flex shrink-0 items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] font-bold ${tone}`}
+      title={
+        delta === 0
+          ? "The formula agrees with this place"
+          : `The formula has them #${aiRank}: ${Math.abs(delta)} ${delta > 0 ? "higher" : "lower"} than here`
+      }
+    >
+      <Sparkles className="h-3 w-3" aria-hidden />#{aiRank}
+      {delta !== 0 ? <span>{delta > 0 ? `▲${delta}` : `▼${-delta}`}</span> : null}
+    </span>
+  )
+}
+
+function ScoreBar({ breakdown, total }: { breakdown: Record<string, number>; total: number }) {
+  const parts = SCORE_SEGMENTS.map((s) => ({ ...s, value: Math.round(Number(breakdown[s.key] ?? 0)) })).filter((s) => s.value > 0)
+  const sum = parts.reduce((a, s) => a + s.value, 0) || 1
+  return (
+    <div>
+      <div className="flex h-2 w-full overflow-hidden rounded-full bg-slate-950">
+        {parts.map((s) => (
+          <div key={s.key} className={s.className} style={{ width: `${(s.value / sum) * 100}%` }} title={`${s.label}: ${s.value}`} />
+        ))}
+      </div>
+      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-slate-300">
+        <span className="font-black text-white">Score {Math.round(total)}</span>
+        {parts.map((s) => (
+          <span key={s.key} className="flex items-center gap-1">
+            <span className={`inline-block h-2 w-2 rounded-full ${s.className}`} aria-hidden />
+            {s.label} <b className="text-white">{s.value}</b>
+          </span>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function FlagList({ flags }: { flags: ReviewFlag[] }) {
   if (!flags.length) return null
   return (
-    <ul className="mt-2 space-y-1">
-      {flags.map((flag, index) => (
+    <ul className="space-y-1">
+      {flags.map((flag, i) => (
         <li
-          key={`${flag.kind}-${index}`}
+          key={`${flag.kind}-${i}`}
           className={`rounded border px-2 py-1 text-[11px] leading-snug ${
             flag.severity === "high"
               ? "border-red-500/40 bg-red-500/10 text-red-200"
@@ -110,256 +206,207 @@ function ReviewFlags({ flags }: { flags: ReviewFlag[] }) {
     </ul>
   )
 }
-const activeGoldButton = "bg-[#d6b75d] text-slate-950 hover:bg-[#e6c86b]"
 
-function evidenceClass(tone: Evidence["tone"]): string {
-  switch (tone) {
-    case "gold":
-      return "bg-amber-100 text-amber-950 border-amber-300"
-    case "blue":
-      return "bg-blue-100 text-blue-900 border-blue-300"
-    case "purple":
-      return "bg-purple-100 text-purple-900 border-purple-300"
-    case "green":
-      return "bg-emerald-100 text-emerald-900 border-emerald-300"
-    case "orange":
-      return "bg-orange-100 text-orange-900 border-orange-300"
-    case "red":
-      return "bg-red-100 text-red-900 border-red-300"
-    default:
-      return "bg-slate-100 text-slate-800 border-slate-300"
-  }
-}
-
-/**
- * The star beside a ranking candidate, and the place to set one by hand.
- *
- * Shown next to the working rank because they answer different questions — the rank is where a
- * wrestler sits in this class, the star is how strong the record is against everyone — and a
- * reviewer wants both in one glance.
- *
- * An override always shows what the formula said as well. That is the point of reviewing here:
- * if hand-set stars start piling up, the bands are wrong and the fix belongs in the rating.
- */
-function StarCell({
-  rating,
-  editing,
-  error,
-  onEdit,
-  onChange,
-  onCancel,
-  onSave,
-  canOverride = true,
+/** What opens under a row: the reasons for the formula's number, and the results behind them. */
+function Details({
+  athlete,
+  flags,
+  stars,
+  canOverrideStars,
+  onStarsSaved,
 }: {
-  /** Star overrides are for full admins; a scoped ranker sees the rating only. */
-  canOverride?: boolean
-  rating?: StarRating
-  editing: { stars: string; reason: string } | null
-  error: string | null
-  onEdit: () => void
-  onChange: (patch: Partial<{ stars: string; reason: string }>) => void
-  onCancel: () => void
-  onSave: () => void
+  athlete: BoardAthlete
+  flags: ReviewFlag[]
+  stars: StarRating | undefined
+  canOverrideStars: boolean
+  onStarsSaved: (rating: StarRating) => void
 }) {
-  if (!rating && !editing) {
-    return (
-      <div className="flex min-w-24 flex-col items-center justify-center rounded-2xl bg-slate-800 p-3 text-center">
-        <span className="text-[10px] font-bold uppercase text-blue-200">Stars</span>
-        <span className="mt-1 text-xs text-blue-300">Not rated</span>
-      </div>
-    )
-  }
+  const [edit, setEdit] = useState<{ stars: string; reason: string } | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const national: Array<[string, string[]]> = [
+    ["NHSCA", athlete.nhsca_by_year],
+    ["Super 32", athlete.super32_by_year],
+    ["Fargo", athlete.fargo_by_year],
+  ]
   return (
-    <div className="flex min-w-24 flex-col items-center rounded-2xl bg-slate-800 p-3 text-center">
-      <span className="text-[10px] font-bold uppercase text-blue-200">Stars</span>
-      <span className="text-3xl font-black text-[#d6b75d]">{rating ? `${rating.stars}★` : "—"}</span>
-      {rating ? (
-        <span className="text-[10px] text-blue-300">
-          {rating.score}/100{rating.provisional ? " · prov" : ""}
-        </span>
-      ) : null}
-      {rating?.override ? (
-        <span className="mt-1 rounded bg-amber-600 px-1 text-[9px] font-bold uppercase text-slate-950">
-          Set by hand · formula {rating.override.computedStars}★
-        </span>
-      ) : null}
+    <div className="space-y-3 border-t border-slate-800 bg-slate-950/60 p-3 text-xs sm:p-4">
+      <FlagList flags={flags} />
+      <ScoreBar breakdown={athlete.score_breakdown} total={athlete.ai_score} />
 
-      {editing ? (
-        <div className="mt-2 w-44 space-y-1 text-left">
-          <select
-            value={editing.stars}
-            onChange={(e) => onChange({ stars: e.target.value })}
-            className="w-full rounded border border-blue-800 bg-slate-950 p-1 text-xs text-white"
-          >
-            <option value="">Use the formula</option>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <option key={n} value={n}>{n} star{n === 1 ? "" : "s"}</option>
-            ))}
-          </select>
-          {editing.stars ? (
-            <textarea
-              value={editing.reason}
-              onChange={(e) => onChange({ reason: e.target.value })}
-              rows={2}
-              placeholder="Why? Shown wherever the rating is."
-              className="w-full rounded border border-blue-800 bg-slate-950 p-1 text-xs text-white"
-            />
-          ) : null}
-          {error ? <p className="text-[10px] text-red-300">{error}</p> : null}
-          <div className="flex gap-1">
-            <Button size="sm" className="h-6 flex-1 bg-[#d6b75d] text-[10px] text-slate-950" onClick={onSave}>Save</Button>
-            <Button size="sm" variant="outline" className="h-6 flex-1 border-blue-800 bg-slate-950 text-[10px] text-blue-100" onClick={onCancel}>Cancel</Button>
-          </div>
+      <div className="grid gap-3 lg:grid-cols-3">
+        <div>
+          <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-[#d6b75d]">State</p>
+          {athlete.state_placements.length ? (
+            <ul className="space-y-0.5 text-slate-200">{athlete.state_placements.map((p) => <li key={p}>{p}</li>)}</ul>
+          ) : (
+            <p className="text-slate-500">No state result on file</p>
+          )}
         </div>
-      ) : (
-        canOverride ? (
-          <button onClick={onEdit} className="mt-1 text-[10px] text-blue-300 underline hover:text-white">
-            {rating?.override ? "Change" : "Override"}
-          </button>
-        ) : null
-      )}
-    </div>
-  )
-}
-
-/**
- * Evidence, grouped the way the Tournament of Champions field board groups it.
- *
- * A flat wall of thirty badges is not reviewable. These buckets put a wrestler's state record
- * next to their national record next to who they actually beat, which is the order the questions
- * get asked in.
- */
-/** How many losses contradict this wrestler's place in the order. */
-function upsetCount(athlete: BoardAthlete): number {
-  return (athlete.significant_losses ?? []).filter((loss) => loss.upset).length
-}
-
-const EVIDENCE_GROUPS: Array<{ label: string; match: RegExp }> = [
-  { label: "State", match: /NCHSAA|state|\b\d+A\b/i },
-  { label: "National", match: /NHSCA|Super\s*32|Fargo|Early Entry|qualifier/i },
-  { label: "Schedule", match: /match record|quality win/i },
-  { label: "Duals and other", match: /duals|college open|RankWrestler|elite achievement/i },
-]
-
-/** Longest first, so the reason a wrestler scores what they score is the first thing read. */
-const SCORE_SEGMENTS: Array<{ key: string; label: string; className: string }> = [
-  { key: "matchResume", label: "Schedule", className: "bg-emerald-500" },
-  { key: "national", label: "National", className: "bg-[#d6b75d]" },
-  { key: "state", label: "State", className: "bg-sky-500" },
-  { key: "duals", label: "Duals", className: "bg-purple-500" },
-  { key: "rankWrestler", label: "RankWrestler", className: "bg-slate-400" },
-  { key: "nationalRanking", label: "National rank", className: "bg-[#CC0000]" },
-  { key: "collegeOpen", label: "College open", className: "bg-slate-500" },
-  { key: "profile", label: "Profile", className: "bg-slate-600" },
-]
-
-function ScoreBar({ breakdown, total }: { breakdown: Record<string, number>; total: number }) {
-  // A component scoring nothing is not worth a tile, a colour or a word.
-  const parts = SCORE_SEGMENTS.map((seg) => ({ ...seg, value: Number(breakdown[seg.key] ?? 0) })).filter(
-    (seg) => seg.value > 0,
-  )
-  const sum = parts.reduce((acc, seg) => acc + seg.value, 0) || 1
-
-  return (
-    <div>
-      <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-slate-950">
-        {parts.map((seg) => (
-          <div
-            key={seg.key}
-            className={seg.className}
-            style={{ width: `${(seg.value / sum) * 100}%` }}
-            title={`${seg.label}: ${seg.value}`}
-          />
+        {national.map(([label, lines]) => (
+          <div key={label}>
+            <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-[#d6b75d]">{label}</p>
+            {lines?.length ? (
+              <ul className="space-y-0.5 text-slate-200">{lines.map((l) => <li key={l}>{l}</li>)}</ul>
+            ) : (
+              <p className="text-slate-500">Not on file</p>
+            )}
+          </div>
         ))}
       </div>
-      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-blue-100">
-        <span className="font-black text-white">{Math.round(total * 10) / 10}</span>
-        {parts.map((seg) => (
-          <span key={seg.key} className="flex items-center gap-1.5">
-            <span className={`inline-block h-2 w-2 rounded-full ${seg.className}`} aria-hidden />
-            {seg.label} <span className="font-semibold text-white">{seg.value}</span>
-          </span>
-        ))}
+
+      <div className="grid gap-3 lg:grid-cols-2">
+        <div className="rounded-md border border-emerald-400/25 bg-emerald-400/5 p-2">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-300">
+            Wins over ranked opponents · {athlete.significant_wins.length}
+          </p>
+          {athlete.significant_wins.length ? (
+            <ul className="mt-1 space-y-0.5 text-slate-200">
+              {athlete.significant_wins.map((w, i) => (
+                <li key={`${w.opponent}-${i}`}>
+                  <b className="text-white">{w.opponent}</b> <span className="text-slate-400">({w.standing})</span>
+                  {w.result ? <span className="font-mono text-emerald-200"> {w.result}</span> : null}
+                  {w.event ? <span className="text-slate-500"> · {w.event}</span> : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-1 text-slate-500">None on file</p>
+          )}
+        </div>
+        <div className="rounded-md border border-red-400/25 bg-red-500/5 p-2">
+          <p className="text-[10px] font-bold uppercase tracking-wide text-red-300">
+            Losses to ranked opponents · {athlete.significant_losses.length}
+          </p>
+          {athlete.significant_losses.length ? (
+            <ul className="mt-1 space-y-0.5 text-slate-200">
+              {athlete.significant_losses.map((l, i) => (
+                <li key={`${l.opponent}-${i}`}>
+                  {l.upset ? <span className="mr-1 rounded bg-red-600 px-1 text-[9px] font-black uppercase text-white">Upset</span> : null}
+                  <b className="text-white">{l.opponent}</b> <span className="text-slate-400">({l.standing})</span>
+                  {l.result ? <span className="font-mono text-red-200"> {l.result}</span> : null}
+                  {l.event ? <span className="text-slate-500"> · {l.event}</span> : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-1 text-slate-500">None on file</p>
+          )}
+        </div>
       </div>
+
+      <div className="flex flex-wrap items-start gap-4">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Head-to-head in this class</p>
+          {athlete.head_to_head.length ? (
+            <p className="mt-0.5 text-slate-200">
+              {athlete.head_to_head.map((h) => `${h.opponent} ${h.wins}-${h.losses}`).join(" · ")}
+            </p>
+          ) : (
+            <p className="mt-0.5 text-slate-500">None on file</p>
+          )}
+        </div>
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Season</p>
+          <p className="mt-0.5 text-slate-200">
+            {athlete.match_count ? `${athlete.match_count} matches${athlete.win_loss ? ` · ${athlete.win_loss}` : ""}` : "No match data"}
+          </p>
+        </div>
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Stars</p>
+          <p className="mt-0.5 text-slate-200">
+            {stars ? `${stars.stars}★ (${stars.score}/100)${stars.override ? ` · set by hand, formula ${stars.override.computedStars}★` : ""}` : "Not rated"}
+            {canOverrideStars && stars && !edit ? (
+              <button
+                className="ml-2 text-[11px] text-sky-300 underline"
+                onClick={() => setEdit({ stars: String(stars.override?.stars ?? ""), reason: stars.override?.reason ?? "" })}
+              >
+                {stars.override ? "Change" : "Override"}
+              </button>
+            ) : null}
+          </p>
+          {edit ? (
+            <div className="mt-1 flex flex-wrap items-center gap-1">
+              <select
+                value={edit.stars}
+                onChange={(e) => setEdit({ ...edit, stars: e.target.value })}
+                className="rounded border border-slate-700 bg-slate-950 p-1 text-xs text-white"
+              >
+                <option value="">Use the formula</option>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <option key={n} value={n}>{n}★</option>
+                ))}
+              </select>
+              {edit.stars ? (
+                <input
+                  value={edit.reason}
+                  onChange={(e) => setEdit({ ...edit, reason: e.target.value })}
+                  placeholder="Why?"
+                  className="w-48 rounded border border-slate-700 bg-slate-950 p-1 text-xs text-white"
+                />
+              ) : null}
+              <button
+                className="rounded bg-[#d6b75d] px-2 py-1 text-[11px] font-bold text-slate-950"
+                onClick={async () => {
+                  const res = await fetch("/api/admin/rankings/stars", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ athleteId: athlete.id, stars: edit.stars === "" ? null : Number(edit.stars), reason: edit.reason }),
+                  })
+                  const body = await res.json().catch(() => ({}))
+                  if (!res.ok) return setError(body.error ?? "Could not save that.")
+                  const computed = stars!.override?.computedStars ?? stars!.stars
+                  const n = edit.stars === "" ? computed : Number(edit.stars)
+                  onStarsSaved({ ...stars!, stars: n, override: edit.stars === "" ? undefined : { stars: n, computedStars: computed, reason: edit.reason } })
+                  setEdit(null)
+                  setError(null)
+                }}
+              >
+                Save
+              </button>
+              <button className="text-[11px] text-slate-400 underline" onClick={() => setEdit(null)}>Cancel</button>
+              {error ? <span className="text-[11px] text-red-300">{error}</span> : null}
+            </div>
+          ) : null}
+        </div>
+      </div>
+      {athlete.data_gaps.length ? <p className="text-[11px] text-amber-200/70">Data note: {athlete.data_gaps.join(" · ")}</p> : null}
     </div>
   )
-}
-
-/** "3 minutes ago", "yesterday" — a reviewer wants the gap, not a timestamp to subtract. */
-function timeAgo(iso: string | null): string {
-  if (!iso) return "never"
-  const then = new Date(iso).getTime()
-  if (Number.isNaN(then)) return "never"
-  const minutes = Math.round((Date.now() - then) / 60000)
-  if (minutes < 1) return "just now"
-  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`
-  const hours = Math.round(minutes / 60)
-  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`
-  const days = Math.round(hours / 24)
-  return days === 1 ? "yesterday" : `${days} days ago`
-}
-
-function confidenceClass(confidence: BoardAthlete["confidence"]): string {
-  if (confidence === "High") return "bg-emerald-600 text-white"
-  if (confidence === "Medium") return "bg-amber-500 text-slate-950"
-  return "bg-red-600 text-white"
-}
-
-function move<T>(items: T[], from: number, to: number): T[] {
-  const next = [...items]
-  const [item] = next.splice(from, 1)
-  next.splice(to, 0, item)
-  return next
 }
 
 export default function RankingBoardPage() {
-  // The class and gender live in the URL so the older ranking routes can redirect straight to
-  // the right board rather than dropping somebody on a default they have to fix.
   const searchParams = useSearchParams()
   const requestedYear = searchParams.get("year")
   const requestedGender = searchParams.get("gender")
-  const [year, setYear] = useState(requestedYear && years.includes(requestedYear) ? requestedYear : "2027")
+  const requestedState = (searchParams.get("state") ?? "NC").toUpperCase()
+  const [year, setYear] = useState(requestedYear && YEARS.includes(requestedYear) ? requestedYear : "2027")
   const [gender, setGender] = useState(requestedGender === "Female" ? "Female" : "Male")
+  const [state, setState] = useState(STATES.some((s) => s.code === requestedState) ? requestedState : "NC")
   const [athletes, setAthletes] = useState<BoardAthlete[]>([])
-  /** Athletes this class query dropped for a missing field, rather than for a reason. */
-  const [excluded, setExcluded] = useState<Array<{ id: string; name: string; highschool: string | null }>>([])
   const [stars, setStars] = useState<Record<string, StarRating>>({})
-  const [starEdit, setStarEdit] = useState<{ id: string; stars: string; reason: string } | null>(null)
-  const [starError, setStarError] = useState<string | null>(null)
-  /** Only one athlete's evidence is open at a time, the way the TOC field board does it. */
-  const [expandedEvidenceId, setExpandedEvidenceId] = useState<string | null>(null)
+  const [excluded, setExcluded] = useState<Array<{ id: string; name: string; highschool: string | null }>>([])
+  const [open, setOpen] = useState<string | null>(null)
   const [draftSavedAt, setDraftSavedAt] = useState<string | null>(null)
   const [publishedAt, setPublishedAt] = useState<string | null>(null)
-  const [publishing, setPublishing] = useState(false)
+  const [dirty, setDirty] = useState(false)
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [publishing, setPublishing] = useState(false)
   const [query, setQuery] = useState("")
-  const [view, setView] = useState<"final" | "recommendation" | "review" | "gaps">("final")
+  const [filter, setFilter] = useState<"all" | "review" | "gaps">("all")
   const [status, setStatus] = useState("")
-  const publicCap = getPublicRankingsMax(Number(year), gender)
-  const router = useRouter()
-  const pathname = usePathname()
-  /*
-   * Which class and gender the rows on screen belong to, and which load is the latest.
-   *
-   * Switching to Female started the girls' load while the boys' load from opening the page was
-   * still running. Whichever answered last won, and the boys' class is bigger and slower, so the
-   * select said Female over a list of boys - and Save would have written them as the girls' draft.
-   */
-  const latestLoad = useRef(0)
-  const [loadedFor, setLoadedFor] = useState<string | null>(null)
-  /*
-   * What this viewer may do on this board. A scoped ranker (Brandon Palmer: women's 2027 and 2028)
-   * can reorder and save; on a board granted read-only every control is hidden. Publishing and
-   * star overrides are for full admins only.
-   */
   const [access, setAccess] = useState<"edit" | "read">("read")
   const [canPublish, setCanPublish] = useState(false)
+  const latestLoad = useRef(0)
+  const [loadedFor, setLoadedFor] = useState<string | null>(null)
+  const router = useRouter()
+  const pathname = usePathname()
+  const publicCap = getPublicRankingsMax(Number(year), gender)
   const canEdit = access === "edit"
-  const showing = `${year}|${gender}`
+  const showing = `${state}|${year}|${gender}`
   const boardIsCurrent = loadedFor === showing
 
-  // A link with no class on it opens a scoped ranker's own board, not the men's Class of 2027.
+  // A link with no class on it opens a scoped ranker's own board.
   const cameWithoutBoard = useRef(!requestedYear && !requestedGender)
   useEffect(() => {
     if (!cameWithoutBoard.current) return
@@ -368,73 +415,49 @@ export default function RankingBoardPage() {
       .auth.getSession()
       .then(({ data }) => {
         const board = rankingBoardDefault(data.session?.user?.app_metadata)
-        if (!board || !years.includes(String(board.year))) return
+        if (!board || !YEARS.includes(String(board.year))) return
         setYear(String(board.year))
         setGender(board.gender)
       })
       .catch(() => {})
   }, [])
 
-  // Keep the class and gender in the URL, so a refresh or a shared link opens the same board.
   useEffect(() => {
-    if (searchParams.get("year") === year && searchParams.get("gender") === gender) return
-    router.replace(`${pathname}?year=${year}&gender=${gender}`, { scroll: false })
-  }, [year, gender, pathname, router, searchParams])
+    if (searchParams.get("year") === year && searchParams.get("gender") === gender && (searchParams.get("state") ?? "NC") === state) return
+    router.replace(`${pathname}?year=${year}&gender=${gender}${state !== "NC" ? `&state=${state}` : ""}`, { scroll: false })
+  }, [year, gender, state, pathname, router, searchParams])
 
   const loadBoard = async (forceRefresh = false) => {
     const loadId = ++latestLoad.current
-    const requested = `${year}|${gender}`
-    // Never leave one class or gender's rows on screen under the other's filter.
+    const requested = `${state}|${year}|${gender}`
     if (requested !== loadedFor) setAthletes([])
     setLoading(true)
     setStatus("")
     try {
       const res = await fetch(
-        `/api/admin/rankings/board?year=${year}&gender=${gender}${forceRefresh ? "&refresh=1" : ""}`,
+        `/api/admin/rankings/board?year=${year}&gender=${gender}&state=${state}${forceRefresh ? "&refresh=1" : ""}`,
         { cache: "no-store" },
       )
       const data = await res.json()
       if (loadId !== latestLoad.current) return
       if (!res.ok) throw new Error(data.error || "Failed to load board")
       const rows = ((data.athletes || []) as BoardAthlete[]).map(normalizeBoardAthlete)
-      // The rating comes back on the board itself now. Fetching it separately meant a second
-      // full pass over the class — ninety-two athletes, in series — and the page took minutes.
       setStars(Object.fromEntries(rows.filter((r) => r.star_rating).map((r) => [r.id, r.star_rating!])))
       setDraftSavedAt(data.meta?.draft_saved_at ?? null)
-      setExcluded(Array.isArray(data.meta?.excluded_no_gender) ? data.meta.excluded_no_gender : [])
       setPublishedAt(data.meta?.published_at ?? null)
+      setExcluded(Array.isArray(data.meta?.excluded_no_gender) ? data.meta.excluded_no_gender : [])
       setAccess(data.meta?.access === "edit" ? "edit" : "read")
       setCanPublish(data.meta?.can_publish === true)
-      /*
-       * A saved draft is the working order and outranks everything else on screen.
-       *
-       * This used to rebuild from `prospect_ranking` — the last published order — on every load,
-       * so a saved draft was written and never seen again. Reordering a class, saving it and
-       * reloading put the published order back, which reads exactly like the Save button doing
-       * nothing.
-       *
-       * With no draft saved the old behaviour stands: the published thirty stay exactly as they
-       * are and the formula only orders the private watchlist below them.
-       */
-      const drafted = rows
-        .filter((athlete) => athlete.draft_rank != null)
-        .sort((a, b) => (a.draft_rank ?? 999) - (b.draft_rank ?? 999))
-      const undrafted = rows
-        .filter((athlete) => athlete.draft_rank == null)
-        .sort((a, b) => a.ai_rank - b.ai_rank)
-
+      // Saved draft first; with none, the published order, then the formula for everyone else.
+      const drafted = rows.filter((a) => a.draft_rank != null).sort((a, b) => (a.draft_rank ?? 999) - (b.draft_rank ?? 999))
+      const undrafted = rows.filter((a) => a.draft_rank == null).sort((a, b) => a.ai_rank - b.ai_rank)
       const published = rows
-        .filter((athlete) => athlete.prospect_ranking != null && athlete.prospect_ranking <= publicCap)
+        .filter((a) => a.prospect_ranking != null && a.prospect_ranking <= publicCap)
         .sort((a, b) => (a.prospect_ranking || 999) - (b.prospect_ranking || 999))
-      const watchlist = rows
-        .filter((athlete) => athlete.prospect_ranking == null || athlete.prospect_ranking > publicCap)
-        .sort((a, b) => a.ai_rank - b.ai_rank)
-
-      const ordered = drafted.length > 0 ? [...drafted, ...undrafted] : [...published, ...watchlist]
-      const withFinal = ordered
-        .map((athlete) => ({ ...athlete, locked: false, reviewer_note: "" }))
-        .map((athlete, index) => ({ ...athlete, final_rank: index + 1 }))
-      setAthletes(withFinal)
+      const rest = rows.filter((a) => a.prospect_ranking == null || a.prospect_ranking > publicCap).sort((a, b) => a.ai_rank - b.ai_rank)
+      const ordered = drafted.length ? [...drafted, ...undrafted] : published.length ? [...published, ...rest] : [...rows].sort((a, b) => a.ai_rank - b.ai_rank)
+      setAthletes(renumber(ordered.map((a) => ({ ...a, locked: false }))))
+      setDirty(false)
       setLoadedFor(requested)
     } catch (error) {
       if (loadId !== latestLoad.current) return
@@ -445,18 +468,10 @@ export default function RankingBoardPage() {
   }
 
   useEffect(() => {
-    loadBoard()
-  }, [year, gender])
+    void loadBoard()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [year, gender, state])
 
-  /*
-   * What argues against the order on screen.
-   *
-   * Every real error found while reviewing this class by hand was already in the data and took
-   * somebody noticing it. This computes the contradictions instead — a wrestler ranked above
-   * somebody who beat them, a rating that disagrees with the order, a résumé that stopped in
-   * March, a match history that was never imported. It never proposes a rank; it states what a
-   * reviewer would want to answer before publishing.
-   */
   const reviewFlags = useMemo(() => {
     const rows: ReviewAthlete[] = athletes
       .filter((a) => (a.final_rank ?? 0) > 0 && (a.final_rank ?? 0) <= publicCap)
@@ -469,109 +484,75 @@ export default function RankingBoardPage() {
         starScore: stars[a.id]?.score ?? a.star_rating?.score ?? null,
         matchCount: a.match_count,
         lastCompetedAt: parseLastCompeted(a.last_competed),
-        headToHead: (a.head_to_head ?? []).map((h) => ({
-          opponentId: h.opponentId,
-          opponent: h.opponent,
-          wins: h.wins,
-          losses: h.losses,
-        })),
+        headToHead: (a.head_to_head ?? []).map((h) => ({ opponentId: h.opponentId, opponent: h.opponent, wins: h.wins, losses: h.losses })),
       }))
     return reviewBoard(rows)
   }, [athletes, publicCap, stars])
-
   const reviewSummary = useMemo(() => summariseReview(reviewFlags), [reviewFlags])
+  const gaps = athletes.filter((a) => a.match_count < 20).length
 
-  const filtered = useMemo(() => {
+  const visible = useMemo(() => {
     const term = query.trim().toLowerCase()
     let rows = athletes
-    if (view === "recommendation") rows = [...rows].sort((a, b) => a.ai_rank - b.ai_rank)
-    if (view === "review") {
-      // Something has to actually argue against the row, rather than the row merely being
-      // unfamiliar. Low confidence on its own flagged a quarter of the class and taught nobody
-      // anything.
-      rows = rows.filter((a) => (reviewFlags.get(a.id)?.length ?? 0) > 0 || a.data_gaps.length >= 3)
-    }
-    if (view === "gaps") {
-      rows = [...rows]
-        .filter((a) => a.match_count < 20)
-        .sort((a, b) => a.match_count - b.match_count || a.ai_rank - b.ai_rank)
-    }
+    if (filter === "review") rows = rows.filter((a) => (reviewFlags.get(a.id)?.length ?? 0) > 0)
+    if (filter === "gaps") rows = rows.filter((a) => a.match_count < 20)
     if (term) {
       rows = rows.filter(
         (a) =>
           a.name.toLowerCase().includes(term) ||
           String(a.highschool || "").toLowerCase().includes(term) ||
-          String(a.weightclass || "").toLowerCase().includes(term),
+          String(a.weightclass || "").includes(term),
       )
     }
     return rows
-  }, [athletes, query, view, reviewFlags])
+  }, [athletes, filter, query, reviewFlags])
+  // Dragging only makes sense on the whole list; a filtered list has gaps in it.
+  const canDrag = canEdit && filter === "all" && !query.trim()
+  const formulaOrder = useMemo(() => [...athletes].sort((a, b) => a.ai_rank - b.ai_rank), [athletes])
+  const agreeing = athletes.filter((a) => (a.final_rank ?? 0) <= publicCap && a.final_rank === a.ai_rank).length
 
-  const currentlyPublished = athletes.filter(
-    (athlete) => athlete.prospect_ranking != null && athlete.prospect_ranking <= publicCap,
-  ).length
-  const highConfidence = athletes.filter((a) => a.confidence === "High").length
-  const needsReview = reviewSummary.contested
-  const missingMatches = athletes.filter((a) => a.match_count === 0).length
-  const thinMatches = athletes.filter((a) => a.match_count > 0 && a.match_count < 20).length
-
-  const reorderAthlete = (id: string, direction: "up" | "down") => {
-    setAthletes((prev) => {
-      const currentIndex = prev.findIndex((a) => a.id === id)
-      if (currentIndex < 0) return prev
-      const targetIndex = direction === "up" ? currentIndex - 1 : currentIndex + 1
-      if (targetIndex < 0 || targetIndex >= prev.length) return prev
-      if (prev[currentIndex].locked || prev[targetIndex].locked) return prev
-      return move(prev, currentIndex, targetIndex).map((athlete, index) => ({ ...athlete, final_rank: index + 1 }))
-    })
+  const change = (next: (prev: BoardAthlete[]) => BoardAthlete[]) => {
+    setAthletes(next)
+    setDirty(true)
   }
 
-  const applyRecommendationOrder = () => {
-    setStatus("Formula order previewed on the working board. Nothing has been saved or published.")
-    setAthletes((prev) => {
-      const locked = prev.filter((a) => a.locked).sort((a, b) => (a.final_rank || 999) - (b.final_rank || 999))
+  const onDragEnd = (result: DropResult) => {
+    if (!result.destination || result.destination.index === result.source.index) return
+    change((prev) => moveTo(prev, result.draggableId, result.destination!.index))
+  }
+
+  const useFormulaOrder = () => {
+    change((prev) => {
+      const locked = prev.filter((a) => a.locked)
       const unlocked = prev.filter((a) => !a.locked).sort((a, b) => a.ai_rank - b.ai_rank)
       const next: BoardAthlete[] = []
-      let unlockedIndex = 0
+      let u = 0
       for (let rank = 1; rank <= prev.length; rank++) {
-        const lockedAtRank = locked.find((a) => a.final_rank === rank)
-        if (lockedAtRank) next.push(lockedAtRank)
-        else if (unlocked[unlockedIndex]) next.push(unlocked[unlockedIndex++])
+        const keep = locked.find((a) => a.final_rank === rank)
+        if (keep) next.push(keep)
+        else if (unlocked[u]) next.push(unlocked[u++]!)
       }
-      while (unlocked[unlockedIndex]) next.push(unlocked[unlockedIndex++])
-      return next.map((athlete, index) => ({ ...athlete, final_rank: index + 1 }))
+      while (unlocked[u]) next.push(unlocked[u++]!)
+      return renumber(next)
     })
+    setStatus("Formula order applied to your list (locked wrestlers stayed put). Nothing is saved until you press Save.")
   }
 
-  /**
-   * Saving records the working order. Publishing copies what was saved.
-   *
-   * The board used to have one button that wrote `prospect_ranking` straight away, so the order
-   * on screen was the public order the instant anybody moved a wrestler. Publishing now reads the
-   * saved draft rather than the screen, which means it can never ship an order nobody reviewed.
-   */
   const saveDraft = async () => {
-    if (!boardIsCurrent) {
-      setStatus("The board is still loading this class. Wait for it to finish before saving.")
-      return
-    }
+    if (!boardIsCurrent) return setStatus("Still loading this board — wait for it before saving.")
     setSaving(true)
     setStatus("")
     try {
       const res = await fetch("/api/admin/rankings/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "save",
-          year,
-          gender,
-          rankings: athletes.map((athlete, index) => ({ id: athlete.id, final_rank: index + 1 })),
-        }),
+        body: JSON.stringify({ action: "save", year, gender, state, rankings: athletes.map((a, i) => ({ id: a.id, final_rank: i + 1 })) }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || "Could not save the order.")
       setDraftSavedAt(data.draftSavedAt ?? new Date().toISOString())
-      setStatus(`Saved ${data.saved} wrestlers. Nothing is public until you publish.`)
+      setDirty(false)
+      setStatus(`Saved ${data.saved} wrestlers.${canPublish ? " Nothing is public until you publish." : ""}`)
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not save the order.")
     } finally {
@@ -580,47 +561,28 @@ export default function RankingBoardPage() {
   }
 
   const publishDraft = async () => {
-    if (!boardIsCurrent) {
-      setStatus("The board is still loading this class. Wait for it to finish before publishing.")
-      return
-    }
+    if (!boardIsCurrent) return setStatus("Still loading this board — wait for it before publishing.")
+    if (dirty) return setStatus("You have unsaved moves. Save first — Publish only ever publishes the saved order.")
     setPublishing(true)
     setStatus("")
     try {
       const res = await fetch("/api/admin/rankings/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "publish", year, gender }),
+        body: JSON.stringify({ action: "publish", year, gender, state }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || "Could not publish.")
       setPublishedAt(data.publishedAt ?? new Date().toISOString())
-      // Whether the phone got it too. These were two separate publishes and the app quietly ran
-      // three weeks behind; a publish that only half-landed should say so.
       const app = data.app as { synced?: boolean; rows?: number; note?: string } | undefined
-      const appLine = app?.synced
-        ? ` The iPhone app has the same ${app.rows}.`
-        : app?.note
-          ? ` App NOT updated — ${app.note}`
-          : ""
-      /*
-       * Say whether the phones heard. A push that silently sends to nobody looks identical to a
-       * push that went out, and this one was wired to a route no button calls for long enough
-       * that every publish went out in silence.
-       */
       const push = data.push as { sent?: number; failed?: number; note?: string } | undefined
-      const pushLine =
-        push?.note || push?.sent == null
-          ? " No push sent."
-          : push.sent > 0
-            ? ` Push sent to ${push.sent} device${push.sent === 1 ? "" : "s"}${push.failed ? `, ${push.failed} failed` : ""}.`
-            : " Push sent to 0 devices — nobody is subscribed to ranking alerts."
-      // A women's publish is staged, not live: customers see it once the class is released.
-      const releaseLine =
-        data.released === false
-          ? " NOT public yet: this board is saved for staff to review at /public-rankings, and goes live when the class is released."
-          : ""
-      setStatus(`Published the top ${data.published}. Everyone below the cut stays private.${releaseLine}${appLine}${pushLine}`)
+      const parts = [
+        `Published the top ${data.published}.`,
+        data.released === false ? "Staged: not public until this class is released." : "",
+        app?.synced ? `App has the same ${app.rows}.` : app?.note ? `App not updated — ${app.note}` : "",
+        push?.sent ? `Push sent to ${push.sent} device${push.sent === 1 ? "" : "s"}.` : "No push sent.",
+      ]
+      setStatus(parts.filter(Boolean).join(" "))
       await loadBoard(true)
     } catch (error) {
       setStatus(error instanceof Error ? error.message : "Could not publish.")
@@ -629,668 +591,324 @@ export default function RankingBoardPage() {
     }
   }
 
+  const pill = (active: boolean) =>
+    `rounded-full px-3 py-1.5 text-sm font-semibold transition ${active ? "bg-[#d6b75d] text-slate-950" : "text-slate-300 hover:bg-slate-800 hover:text-white"}`
+
+  const row = (athlete: BoardAthlete, dragHandle?: Record<string, unknown>) => {
+    const rank = athlete.final_rank ?? 0
+    const isPublic = rank <= publicCap
+    const flags = reviewFlags.get(athlete.id) ?? []
+    const state1 = bestState(athlete.state_placements)
+    const isOpen = open === athlete.id
+    return (
+      <div className={`rounded-lg border ${isOpen ? "border-[#d6b75d]/60" : "border-slate-800"} bg-slate-900`}>
+        <div className="flex items-center gap-2 p-2 sm:gap-3 sm:p-2.5">
+          {canDrag ? (
+            <span {...(dragHandle ?? {})} className="cursor-grab text-slate-500 hover:text-white active:cursor-grabbing" aria-label="Drag to reorder">
+              <GripVertical className="h-4 w-4" />
+            </span>
+          ) : null}
+          <span
+            className={`flex h-9 w-10 shrink-0 items-center justify-center rounded-md text-sm font-black ${
+              isPublic ? "bg-[#d6b75d] text-slate-950" : "bg-slate-800 text-slate-300"
+            }`}
+          >
+            {rank}
+          </span>
+          <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setOpen(isOpen ? null : athlete.id)}>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              <span className="truncate font-bold text-white">{athlete.name}</span>
+              {athlete.locked ? <Lock className="h-3 w-3 text-[#d6b75d]" aria-label="Locked" /> : null}
+              {stars[athlete.id] ? <span className="text-xs font-bold text-[#d6b75d]">{stars[athlete.id]!.stars}★</span> : null}
+            </div>
+            <div className="truncate text-xs text-slate-400">
+              {[athlete.highschool, athlete.last_competed ? `last: ${athlete.last_competed}` : null].filter(Boolean).join(" · ")}
+            </div>
+            <div className="mt-1 flex flex-wrap gap-1">
+              {athlete.national_rankings?.slice(0, 1).map((r) => (
+                <span key={r} className="rounded bg-white px-1.5 py-0.5 text-[10px] font-bold text-slate-950">{r}</span>
+              ))}
+              {athlete.all_american.slice(0, 2).map((f) => (
+                <span key={f} className="rounded bg-[#CC0000] px-1.5 py-0.5 text-[10px] font-bold text-white">{f}</span>
+              ))}
+              {state1 ? (
+                <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${/champion/i.test(state1) ? "bg-[#d6b75d] text-slate-950" : "bg-sky-700 text-white"}`}>
+                  {state1}
+                  {athlete.state_placements.length > 1 ? ` +${athlete.state_placements.length - 1}` : ""}
+                </span>
+              ) : null}
+              {athlete.toc_result ? <span className="rounded bg-emerald-800 px-1.5 py-0.5 text-[10px] font-bold text-white">TOC {athlete.toc_result}</span> : null}
+              {athlete.super32_record ? <span className="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] text-white">S32 {athlete.super32_record}</span> : null}
+              {athlete.nhsca_record ? <span className="rounded bg-slate-700 px-1.5 py-0.5 text-[10px] text-white">NHSCA {athlete.nhsca_record}</span> : null}
+              {athlete.match_count === 0 ? <span className="rounded bg-red-900 px-1.5 py-0.5 text-[10px] text-red-100">No season matches</span> : null}
+            </div>
+          </button>
+          <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-2">
+            <FormulaChip aiRank={athlete.ai_rank} working={rank} />
+            {flags.length ? (
+              <span
+                className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-bold ${
+                  flags.some((f) => f.severity === "high") ? "bg-red-600 text-white" : "bg-amber-500 text-slate-950"
+                }`}
+                title={flags.map((f) => f.message).join("\n")}
+              >
+                <Flag className="h-3 w-3" aria-hidden />
+                {flags.length}
+              </span>
+            ) : null}
+          </div>
+          {canEdit ? (
+            <div className="hidden shrink-0 items-center gap-0.5 md:flex">
+              <button className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-white" title="Up one" onClick={() => change((p) => moveTo(p, athlete.id, rank - 2))}>
+                <ArrowUp className="h-4 w-4" />
+              </button>
+              <button className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-white" title="Down one" onClick={() => change((p) => moveTo(p, athlete.id, rank))}>
+                <ArrowDown className="h-4 w-4" />
+              </button>
+              <button
+                className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
+                title={`Move to the formula's place, #${athlete.ai_rank}`}
+                onClick={() => change((p) => moveTo(p, athlete.id, athlete.ai_rank - 1))}
+              >
+                <Sparkles className="h-4 w-4" />
+              </button>
+              <button
+                className={`rounded p-1 hover:bg-slate-800 ${athlete.locked ? "text-[#d6b75d]" : "text-slate-400 hover:text-white"}`}
+                title={athlete.locked ? "Unlock (Use formula order will move him)" : "Lock here (Use formula order will not move him)"}
+                onClick={() => setAthletes((p) => p.map((r) => (r.id === athlete.id ? { ...r, locked: !r.locked } : r)))}
+              >
+                {athlete.locked ? <Lock className="h-4 w-4" /> : <Unlock className="h-4 w-4" />}
+              </button>
+            </div>
+          ) : null}
+          <button className="shrink-0 rounded p-1 text-slate-400 hover:text-white" onClick={() => setOpen(isOpen ? null : athlete.id)} aria-label="Details">
+            {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </button>
+        </div>
+        {isOpen ? (
+          <Details
+            athlete={athlete}
+            flags={flags}
+            stars={stars[athlete.id]}
+            canOverrideStars={canPublish}
+            onStarsSaved={(rating) => setStars((prev) => ({ ...prev, [athlete.id]: rating }))}
+          />
+        ) : null}
+      </div>
+    )
+  }
+
+  const stateLabel = STATES.find((s) => s.code === state)?.label ?? state
+
   return (
     <>
       <AdminHeader />
-      <main className="min-h-screen bg-slate-950 px-4 py-8 text-white">
-        <div className="mx-auto max-w-7xl space-y-6">
-          {/*
-            * The header was four lines naming every data source the formula reads — NCHSAA, NHSCA,
-            * Super32, Fargo, duals, RankWrestler, college opens — on a screen whose whole job is the
-            * order below it. Nobody reading this page needs the source list; the one thing that is
-            * actually worth saying is the rule, so that is all that is left.
-            */}
-          <section className="rounded-2xl border border-blue-800/60 bg-gradient-to-br from-[#041532] via-[#071f4a] to-[#010817] p-5 shadow-xl">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <Badge className="mb-2 bg-[#d6b75d] text-slate-950">TOC résumé formula · v2</Badge>
-                <h1 className="text-2xl font-black tracking-tight md:text-3xl">Formula Recommendation Board</h1>
-                <p className="mt-2 max-w-2xl text-sm text-blue-200">
-                  Résumé plus head-to-head. A direct win breaks comparable résumés; you make the final call.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <Select value={year} onValueChange={setYear}>
-                  <SelectTrigger className="w-40 border-blue-700 bg-slate-900 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {years.map((y) => (
-                      <SelectItem key={y} value={y}>
-                        Class of {y}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={gender} onValueChange={setGender}>
-                  <SelectTrigger className="w-32 border-blue-700 bg-slate-900 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {genders.map((g) => (
-                      <SelectItem key={g} value={g}>
-                        {g}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  onClick={() => { void loadBoard(true) }}
-                  variant="outline"
-                  className="border-blue-700 bg-slate-900 text-white hover:bg-blue-950"
-                  title="Rebuild from current data, skipping the ten-minute cache"
-                >
-                  Refresh
-                </Button>
-                {/* The cross-class view of the same wrestlers; it has no other way in. */}
-                <Button asChild variant="outline" className="border-blue-700 bg-slate-900 text-white hover:bg-blue-950">
-                  <Link href="/admin/rankings/p4p">Pound for pound</Link>
-                </Button>
-              </div>
+      <main className="min-h-screen bg-slate-950 text-white">
+        {/* One bar: whose board, and what has happened to it. */}
+        <div className="sticky top-0 z-20 border-b border-slate-800 bg-slate-950/95 backdrop-blur">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-3">
+            <div className="flex rounded-full bg-slate-900 p-1">
+              {STATES.map((s) => (
+                <button key={s.code} className={pill(state === s.code)} onClick={() => setState(s.code)} title={s.label}>
+                  {s.code}
+                </button>
+              ))}
             </div>
-          </section>
-
-          {/*
-            * Five separate cards, each with its own border and a 30px number, took a full band of the
-            * screen to say five small things. One strip says them in a third of the height and reads
-            * left to right as a sentence: how many candidates, how many published, how the formula
-            * feels about them, and what is missing. The gaps cell stays a button — it is the only one
-            * that goes anywhere.
-            */}
-          <section className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-blue-900 bg-blue-900 md:grid-cols-5">
-            <div className="bg-slate-900 p-4">
-              <p className="text-xs uppercase tracking-wide text-blue-300">Candidates</p>
-              <p className="text-2xl font-black">{athletes.length}</p>
+            <div className="flex rounded-full bg-slate-900 p-1">
+              {(["Male", "Female"] as const).map((g) => (
+                <button key={g} className={pill(gender === g)} onClick={() => setGender(g)}>
+                  {g === "Male" ? "Men" : "Women"}
+                </button>
+              ))}
             </div>
-            <div className="bg-slate-900 p-4">
-              <p className="text-xs uppercase tracking-wide text-blue-300">Published</p>
-              <p className="text-2xl font-black">{currentlyPublished}/{publicCap}</p>
-            </div>
-            <div className="bg-slate-900 p-4">
-              <p className="text-xs uppercase tracking-wide text-blue-300">High confidence</p>
-              <p className="text-2xl font-black">{highConfidence}</p>
-            </div>
-            <div className="bg-slate-900 p-4">
-              <p className="text-xs uppercase tracking-wide text-blue-300">Needs review</p>
-              <p className="text-2xl font-black">{needsReview}</p>
+            <div className="flex flex-wrap rounded-full bg-slate-900 p-1">
+              {YEARS.map((y) => (
+                <button key={y} className={pill(year === y)} onClick={() => setYear(y)}>
+                  {y}
+                </button>
+              ))}
             </div>
             <button
-              type="button"
-              onClick={() => setView("gaps")}
-              className="bg-red-950/60 p-4 text-left transition hover:bg-red-950"
+              className="rounded-full p-2 text-slate-400 hover:bg-slate-800 hover:text-white"
+              onClick={() => void loadBoard(true)}
+              title="Rebuild from current data"
             >
-              <p className="text-xs uppercase tracking-wide text-red-200">Match data gaps</p>
-              <p className="text-2xl font-black">{missingMatches + thinMatches}</p>
-              <p className="text-xs text-red-200/80">{missingMatches} missing · {thinMatches} thin</p>
+              <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             </button>
-          </section>
 
-          <Card className="border-blue-900 bg-slate-900 text-white">
-            <CardContent className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex flex-wrap gap-2">
-                <Button onClick={() => setView("final")} variant={view === "final" ? "default" : "outline"} className={view === "final" ? activeGoldButton : darkOutlineButton}>
-                  <Eye className="mr-2 h-4 w-4" />
-                  Final order
-                </Button>
-                <Button onClick={() => setView("recommendation")} variant={view === "recommendation" ? "default" : "outline"} className={view === "recommendation" ? activeGoldButton : darkOutlineButton}>
-                  <Bot className="mr-2 h-4 w-4" />
-                  Formula recommendations
-                </Button>
-                <Button onClick={() => setView("review")} variant={view === "review" ? "default" : "outline"} className={view === "review" ? activeGoldButton : darkOutlineButton}>
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Needs review
-                </Button>
-                <Button onClick={() => setView("gaps")} variant={view === "gaps" ? "default" : "outline"} className={view === "gaps" ? activeGoldButton : darkOutlineButton}>
-                  <UploadCloud className="mr-2 h-4 w-4" />
-                  Match gaps
-                </Button>
-              </div>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <div className="relative">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-                  <Input
-                    value={query}
-                    onChange={(event) => setQuery(event.target.value)}
-                    placeholder="Search athlete, school, weight"
-                    className="w-full border-blue-800 bg-slate-950 pl-9 text-white placeholder:text-slate-500 sm:w-72"
-                  />
-                </div>
-                {canEdit ? (
-                <Button onClick={applyRecommendationOrder} className="bg-purple-600 hover:bg-purple-700">
-                  Preview formula order
-                </Button>
-                ) : null}
-                {canEdit ? (
-                <Button
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              <span className="text-xs text-slate-400">
+                Saved <b className="text-white">{timeAgo(draftSavedAt)}</b>
+                {state === "NC" ? (
+                  <>
+                    {" · "}Published <b className="text-white">{timeAgo(publishedAt)}</b>
+                  </>
+                ) : (
+                  <> · <b className="text-amber-200">review only, not published</b></>
+                )}
+                {dirty ? <span className="ml-2 rounded bg-amber-500/20 px-1.5 py-0.5 font-semibold text-amber-200">Unsaved moves</span> : null}
+              </span>
+              {canEdit ? (
+                <button
                   onClick={saveDraft}
                   disabled={saving || loading || !boardIsCurrent}
-                  variant="outline"
-                  className={darkOutlineButton}
+                  className="rounded-full border border-slate-600 px-4 py-1.5 text-sm font-bold text-white hover:bg-slate-800 disabled:opacity-40"
                 >
-                  <Save className="mr-2 h-4 w-4" />
-                  {saving ? "Saving..." : "Save order"}
-                </Button>
-                ) : null}
-                {canPublish ? (
-                <Button
+                  {saving ? "Saving…" : "Save"}
+                </button>
+              ) : (
+                boardIsCurrent && <span className="rounded-full border border-slate-700 px-3 py-1 text-xs text-slate-300">Read only</span>
+              )}
+              {canPublish ? (
+                <button
                   onClick={publishDraft}
                   disabled={publishing || loading || !boardIsCurrent || !draftSavedAt}
-                  title={draftSavedAt ? undefined : "Save the order before publishing it"}
-                  className="bg-[#d6b75d] text-slate-950 hover:bg-[#e6c86b]"
+                  className="rounded-full bg-[#d6b75d] px-4 py-1.5 text-sm font-bold text-slate-950 hover:bg-[#e6c86b] disabled:opacity-40"
                 >
-                  <Save className="mr-2 h-4 w-4" />
-                  {publishing ? "Publishing..." : `Publish top ${publicCap}`}
-                </Button>
-                ) : null}
-                {!canEdit && boardIsCurrent ? (
-                  <Badge className="border border-blue-700 bg-slate-900 text-blue-100">Read-only board</Badge>
-                ) : null}
-                {/*
-                  Both times, always. Whether the order on screen has been saved, and whether what
-                  was saved has been published, are two different questions and a reviewer needs
-                  both before they touch anything.
-                */}
-                <p className="w-full text-xs text-blue-200/70">
-                  Saved <span className="font-semibold text-white">{timeAgo(draftSavedAt)}</span>
-                  {" · "}
-                  Published <span className="font-semibold text-white">{timeAgo(publishedAt)}</span>
-                  {draftSavedAt && publishedAt && new Date(draftSavedAt) > new Date(publishedAt) ? (
-                    <span className="ml-2 rounded bg-amber-500/20 px-1.5 py-0.5 font-semibold text-amber-200">
-                      Unpublished changes
-                    </span>
-                  ) : null}
-                </p>
+                  {publishing ? "Publishing…" : `Publish top ${publicCap}`}
+                </button>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-auto max-w-7xl px-4 py-5">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-black tracking-tight">
+                {stateLabel} · {gender === "Male" ? "Men" : "Women"} · Class of {year}
+              </h1>
+              <p className="text-sm text-slate-400">
+                {athletes.length} wrestlers · top {publicCap} {state === "NC" ? "go public" : "would be the board"} · the formula agrees with{" "}
+                <b className="text-white">{agreeing}</b> of your top {publicCap}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex rounded-full bg-slate-900 p-1 text-sm">
+                <button className={pill(filter === "all")} onClick={() => setFilter("all")}>All</button>
+                <button className={pill(filter === "review")} onClick={() => setFilter("review")}>
+                  Needs review {reviewSummary.contested ? `· ${reviewSummary.contested}` : ""}
+                </button>
+                <button className={pill(filter === "gaps")} onClick={() => setFilter("gaps")}>
+                  Thin match data {gaps ? `· ${gaps}` : ""}
+                </button>
               </div>
-            </CardContent>
-          </Card>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Find a wrestler or school"
+                  className="w-56 rounded-full border border-slate-700 bg-slate-900 py-2 pl-8 pr-3 text-sm text-white placeholder:text-slate-500"
+                />
+              </div>
+            </div>
+          </div>
 
-          {/*
-            A class that is quietly short looks exactly like a class that is complete.
-
-            The board filters on gender and a null never matches, so an athlete with that one
-            field unset dropped out of every board with nothing saying so — seven were missing
-            this way, one of them 30th in his class on RankWrestler with sixty-three matches on
-            file. They are named rather than counted, because a name is what makes somebody go
-            and fix the record.
-          */}
-          {/*
-            Opaque colours, not a tint. This was `bg-amber-500/10` with `text-amber-100` — a
-            ten-percent wash under near-white text, which is legible on the dark cards above
-            and invisible on the light background it actually renders against. A warning
-            nobody can read is worse than no warning, because it looks like nothing is wrong.
-          */}
+          {status ? <div className="mb-4 rounded-lg border border-sky-800 bg-sky-950/60 p-3 text-sm text-sky-100">{status}</div> : null}
           {excluded.length ? (
-            <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
-              <p className="font-semibold">
-                {excluded.length} {excluded.length === 1 ? "athlete is" : "athletes are"} missing from this class
-              </p>
-              <p className="mt-1 text-amber-900">
-                Their gender is not set, and the board cannot place them. This is a missing field, not a
-                judgement about the wrestler.
-              </p>
-              <ul className="mt-2 space-y-0.5 font-medium">
-                {excluded.map((athlete) => (
-                  <li key={athlete.id}>
-                    {athlete.name}
-                    {athlete.highschool ? ` — ${athlete.highschool}` : ""}
-                  </li>
-                ))}
-              </ul>
+            <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+              <b>{excluded.length} missing from this class</b> — gender not set: {excluded.map((a) => a.name).join(", ")}
             </div>
           ) : null}
 
-          {status ? (
-            <div className="rounded-2xl border border-blue-800 bg-blue-950/60 p-4 text-sm text-blue-100">{status}</div>
-          ) : null}
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+            {/* Your order. */}
+            <section>
+              <div className="mb-2 flex items-center justify-between">
+                <h2 className="text-sm font-bold uppercase tracking-wide text-slate-400">Your order</h2>
+                <span className="text-xs text-slate-500">
+                  {canDrag ? "Drag to reorder · tap a row for the details" : canEdit ? "Clear the filter to drag" : "Tap a row for the details"}
+                </span>
+              </div>
+              {loading && !athletes.length ? (
+                <div className="rounded-lg border border-slate-800 bg-slate-900 p-10 text-center text-slate-400">Building the board…</div>
+              ) : (
+                <DragDropContext onDragEnd={onDragEnd}>
+                  <Droppable droppableId="board" isDropDisabled={!canDrag}>
+                    {(drop) => (
+                      <div ref={drop.innerRef} {...drop.droppableProps} className="space-y-1.5">
+                        {visible.map((athlete, index) => (
+                          <Draggable key={athlete.id} draggableId={athlete.id} index={index} isDragDisabled={!canDrag}>
+                            {(drag) => (
+                              <div ref={drag.innerRef} {...drag.draggableProps}>
+                                {filter === "all" && !query && (athlete.final_rank ?? 0) === publicCap + 1 ? (
+                                  <div className="my-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.2em] text-[#d6b75d]">
+                                    <span className="h-px flex-1 bg-[#d6b75d]/40" />
+                                    {state === "NC" ? `Public cut · below #${publicCap} stays private` : `Cut · #${publicCap}`}
+                                    <span className="h-px flex-1 bg-[#d6b75d]/40" />
+                                  </div>
+                                ) : null}
+                                {row(athlete, drag.dragHandleProps as unknown as Record<string, unknown>)}
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
+                        {drop.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                </DragDropContext>
+              )}
+            </section>
 
-          {view === "gaps" && !loading ? (
-            <Card className="border-red-900 bg-gradient-to-br from-red-950/70 to-slate-950 text-white">
-              <CardContent className="space-y-3 p-5">
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            {/* The formula, always in view. */}
+            <aside className="lg:sticky lg:top-20 lg:self-start">
+              <div className="rounded-xl border border-violet-500/30 bg-violet-950/30">
+                <div className="flex items-center justify-between gap-2 border-b border-violet-500/20 p-3">
                   <div>
-                    <p className="text-sm font-bold uppercase tracking-[0.2em] text-red-100">Upload queue</p>
-                    <h2 className="text-2xl font-black">Ranked candidates missing match history</h2>
-                    <p className="mt-1 max-w-3xl text-sm text-red-50/80">
-                      Direct wins and quality wins need match history. Start with the athletes at the top of this list, then sync or paste their RankWrestler match data in Match Manager.
+                    <p className="flex items-center gap-1.5 text-sm font-black text-violet-100">
+                      <Sparkles className="h-4 w-4" /> Formula suggests
                     </p>
+                    <p className="text-[11px] text-violet-200/60">State, national, season, ranked wins, head-to-head</p>
                   </div>
-                  <Button asChild className="bg-[#d6b75d] text-slate-950 hover:bg-[#e6c86b]">
-                    <Link href="/admin/match-manager">
-                      <UploadCloud className="mr-2 h-4 w-4" />
-                      Open Match Manager
-                    </Link>
-                  </Button>
+                  {canEdit ? (
+                    <button
+                      onClick={useFormulaOrder}
+                      className="rounded-full bg-violet-500 px-3 py-1.5 text-xs font-bold text-white hover:bg-violet-400"
+                      title="Reorder your list to the formula's order. Locked wrestlers stay where they are. Not saved until you press Save."
+                    >
+                      Use this order
+                    </button>
+                  ) : null}
                 </div>
-              </CardContent>
-            </Card>
-          ) : null}
-
-          {loading ? (
-            <div className="rounded-2xl border border-blue-900 bg-slate-900 p-12 text-center text-blue-100">
-              Building ranking evidence...
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {filtered.map((athlete) => {
-                const finalRank = athlete.final_rank || 999
-                const aiDelta = athlete.prospect_ranking ? athlete.prospect_ranking - athlete.ai_rank : null
-                const sameClassWins = (athlete.head_to_head || []).reduce((sum, record) => sum + record.wins, 0)
-                const isPublicSlot = finalRank <= publicCap
-                return (
-                  <div key={athlete.id} className="space-y-4">
-                    {finalRank === publicCap + 1 ? (
-                      <div className="rounded-2xl border border-dashed border-blue-700 bg-blue-950/40 px-5 py-4">
-                        <p className="text-sm font-black uppercase tracking-[0.2em] text-[#d6b75d]">Private watchlist</p>
-                        <p className="mt-1 text-sm text-blue-100">
-                          Candidates below this line stay private. The formula continues ranking the full pool so you can identify who deserves top-{publicCap} consideration.
-                        </p>
-                      </div>
-                    ) : null}
-                    <Card className="overflow-hidden border-blue-900 bg-slate-900 text-white">
-                    <CardHeader className="border-b border-blue-950 bg-slate-950/70 p-4">
-                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="flex gap-4">
-                          <div className={`flex min-w-16 flex-col items-center rounded-2xl p-3 ${isPublicSlot ? "bg-[#d6b75d] text-slate-950" : "bg-slate-800 text-blue-100"}`}>
-                            <span className="text-xs font-bold uppercase">Working</span>
-                            <span className="text-3xl font-black">#{finalRank}</span>
-                          </div>
-                          <StarCell
-                            canOverride={canPublish}
-                            rating={stars[athlete.id]}
-                            editing={starEdit?.id === athlete.id ? starEdit : null}
-                            error={starEdit?.id === athlete.id ? starError : null}
-                            onEdit={() => {
-                              setStarError(null)
-                              setStarEdit({
-                                id: athlete.id,
-                                stars: String(stars[athlete.id]?.override?.stars ?? ""),
-                                reason: stars[athlete.id]?.override?.reason ?? "",
-                              })
-                            }}
-                            onChange={(patch) => setStarEdit((prev) => (prev ? { ...prev, ...patch } : prev))}
-                            onCancel={() => { setStarEdit(null); setStarError(null) }}
-                            onSave={async () => {
-                              const edit = starEdit!
-                              const res = await fetch("/api/admin/rankings/stars", {
-                                method: "PATCH",
-                                headers: { "Content-Type": "application/json" },
-                                body: JSON.stringify({
-                                  athleteId: edit.id,
-                                  stars: edit.stars === "" ? null : Number(edit.stars),
-                                  reason: edit.reason,
-                                }),
-                              })
-                              const body = await res.json().catch(() => ({}))
-                              if (!res.ok) { setStarError(body.error ?? "Could not save that."); return }
-                              // Reflect the override locally; the board reloads it on the next fetch.
-                              setStars((prev) => {
-                                const current = prev[edit.id]
-                                if (!current) return prev
-                                const stars = edit.stars === "" ? current.override?.computedStars ?? current.stars : Number(edit.stars)
-                                return { ...prev, [edit.id]: { ...current, stars, override: edit.stars === "" ? undefined : { stars, computedStars: current.override?.computedStars ?? current.stars, reason: edit.reason } } }
-                              })
-                              setStarEdit(null); setStarError(null)
-                            }}
-                          />
-                          <div>
-                            <CardTitle className="text-2xl">
-                              <Link href={`/view-profile?id=${athlete.id}`} className="hover:text-[#d6b75d]">
-                                {athlete.name}
-                              </Link>
-                            </CardTitle>
-                            <p className="mt-1 text-sm text-blue-100">
-                              {athlete.highschool || "School TBD"} · {athlete.weightclass || "TBD"} lbs · Class of {athlete.graduationyear}
-                            </p>
-                            {/* Whether a ranking rests on results that have stopped. */}
-                            <p className="text-xs text-blue-200/50">
-                              Last competed: {athlete.last_competed ?? "no dated result on file"}
-                            </p>
-                            {/*
-                              The badges that say where a wrestler stands, and nothing else.
-                              Everything explaining *why* now lives behind "See evidence", the way
-                              the Tournament of Champions field board does it — a reviewer scanning
-                              thirty athletes needs the order first and the argument on demand.
-                            */}
-                            {/*
-                              Four facts, in the order they get asked about: where the outside
-                              service has them, whether they are an All-American, what they have
-                              done at the state tournament, and their record at the two national
-                              events. Everything else moved into the evidence drawer.
-                            */}
-                            <div className="mt-2 flex flex-wrap items-center gap-2">
-                              {athlete.rankwrestler_rank ? (
-                                <Badge className="bg-slate-200 text-slate-900">RankWrestler #{athlete.rankwrestler_rank}</Badge>
-                              ) : null}
-                              {/*
-                                The loudest thing on a card, and deliberately first. If this
-                                wrestler is ranked above somebody who beat them, one of the two
-                                numbers is wrong — that is the reviewer's job, and it should not
-                                need a drawer opened to find it.
-                              */}
-                              {upsetCount(athlete) ? (
-                                <Badge
-                                  className="animate-none bg-red-600 text-white"
-                                  title={athlete.significant_losses
-                                    .filter((loss) => loss.upset)
-                                    .map((loss) => `Lost to ${loss.opponent} (${loss.standing})`)
-                                    .join(" · ")}
-                                >
-                                  ⚑ Lost to lower-ranked · {upsetCount(athlete)}
-                                </Badge>
-                              ) : null}
-                              {athlete.competes_styles ? (
-                                <Badge
-                                  className={
-                                    athlete.competes_styles === "Folkstyle + Freestyle"
-                                      ? "border border-emerald-400 bg-transparent text-emerald-200"
-                                      : "border border-amber-400 bg-transparent text-amber-200"
-                                  }
-                                  title="Styles on file: NCHSAA, NHSCA and in-season matches are folkstyle; Fargo, Spokane, the US Open, Super 32, the regionals, Journeymen and the club duals are freestyle."
-                                >
-                                  {athlete.competes_styles}
-                                </Badge>
-                              ) : null}
-                              {athlete.national_rankings?.map((ranking) => (
-                                <Badge key={ranking} className="bg-slate-100 text-slate-950" title={`Nationally ranked — ${ranking}`}>
-                                  ★ {ranking}
-                                </Badge>
-                              ))}
-                              {athlete.all_american?.map((finish) => (
-                                <Badge key={finish} className="bg-[#CC0000] text-white" title={`${finish} — All-American`}>
-                                  {finish}
-                                </Badge>
-                              ))}
-                              {athlete.state_placements.length ? (
-                                <Badge
-                                  className={
-                                    athlete.state_placements.some((p) => /champion/i.test(p))
-                                      ? "bg-[#d6b75d] text-slate-950"
-                                      : "bg-sky-600 text-white"
-                                  }
-                                  title={athlete.state_placements.join(" · ")}
-                                >
-                                  {athlete.state_placements[0]}
-                                  {athlete.state_placements.length > 1 ? ` +${athlete.state_placements.length - 1}` : ""}
-                                </Badge>
-                              ) : null}
-                              {/*
-                                TOC sits ahead of NHSCA and Super 32 because it is the deepest
-                                field in the state and the one event where this class wrestles
-                                each other. A title here was previously visible only inside the
-                                evidence drawer.
-                              */}
-                              {athlete.toc_result ? (
-                                <Badge
-                                  className={
-                                    /champion/i.test(athlete.toc_result)
-                                      ? "bg-[#d6b75d] text-slate-950"
-                                      : "bg-emerald-700 text-white"
-                                  }
-                                  title={`Tournament of Champions — ${athlete.toc_result}`}
-                                >
-                                  TOC {athlete.toc_result}
-                                </Badge>
-                              ) : null}
-                              {athlete.nhsca_record ? (
-                                <Badge className="bg-slate-700 text-white">NHSCA {athlete.nhsca_record}</Badge>
-                              ) : null}
-                              {athlete.super32_record ? (
-                                <Badge className="bg-slate-700 text-white">Super 32 {athlete.super32_record}</Badge>
-                              ) : null}
-                              {athlete.match_count === 0 ? (
-                                <Badge className="bg-red-700 text-white">No match data</Badge>
-                              ) : null}
-                              <button
-                                type="button"
-                                className="inline-flex shrink-0 items-center gap-1 rounded-md border border-[#d6b75d]/35 bg-[#d6b75d]/10 px-2 py-1 text-[10px] font-semibold text-[#d6b75d] hover:bg-[#d6b75d]/20"
-                                onClick={() => setExpandedEvidenceId((id) => (id === athlete.id ? null : athlete.id))}
-                                aria-expanded={expandedEvidenceId === athlete.id}
-                              >
-                                See evidence
-                                {expandedEvidenceId === athlete.id ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                              </button>
-                            </div>
-                            <ReviewFlags flags={reviewFlags.get(athlete.id) ?? []} />
-                          </div>
-                        </div>
-                        {canEdit ? (
-                        <div className="flex flex-wrap gap-2">
-                          <Button size="sm" variant="outline" className={darkOutlineButton} onClick={() => reorderAthlete(athlete.id, "up")}>
-                            <ArrowUp className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" className={darkOutlineButton} onClick={() => reorderAthlete(athlete.id, "down")}>
-                            <ArrowDown className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant={athlete.locked ? "default" : "outline"}
-                            className={athlete.locked ? activeGoldButton : darkOutlineButton}
-                            onClick={() =>
-                              setAthletes((prev) =>
-                                prev.map((row) => (row.id === athlete.id ? { ...row, locked: !row.locked } : row)),
-                              )
-                            }
+                <ol className="max-h-[70vh] overflow-y-auto p-1.5">
+                  {formulaOrder.slice(0, Math.max(publicCap + 10, 40)).map((a) => {
+                    const delta = (a.final_rank ?? 0) - a.ai_rank
+                    return (
+                      <li key={a.id}>
+                        <button
+                          className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-violet-500/10"
+                          onClick={() => {
+                            setFilter("all")
+                            setQuery("")
+                            setOpen(a.id)
+                          }}
+                          title={`Score ${Math.round(a.ai_score)} · you have him #${a.final_rank}`}
+                        >
+                          <span className="w-6 text-right text-xs font-black text-violet-200">{a.ai_rank}</span>
+                          <span className="min-w-0 flex-1 truncate text-sm text-white">{a.name}</span>
+                          <span className="text-[11px] tabular-nums text-violet-200/60">{Math.round(a.ai_score)}</span>
+                          <span
+                            className={`w-12 text-right text-[11px] font-bold ${
+                              delta === 0 ? "text-emerald-300" : Math.abs(delta) <= 3 ? "text-slate-400" : "text-amber-300"
+                            }`}
                           >
-                            <Lock className="mr-2 h-4 w-4" />
-                            {athlete.locked ? "Locked" : "Lock"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() =>
-                              setAthletes((prev) => {
-                                const without = prev.filter((row) => row.id !== athlete.id)
-                                const target = Math.max(0, Math.min(athlete.ai_rank - 1, without.length))
-                                without.splice(target, 0, athlete)
-                                return without.map((row, index) => ({ ...row, final_rank: index + 1 }))
-                              })
-                            }
-                            className="bg-purple-600 hover:bg-purple-700"
-                          >
-                            Use recommendation
-                          </Button>
-                          {canPublish && athlete.match_count < 20 ? (
-                            <Button size="sm" asChild className="bg-[#d6b75d] text-slate-950 hover:bg-[#e6c86b]">
-                              <Link href={`/admin/match-manager?athleteId=${athlete.id}`}>
-                                <UploadCloud className="mr-2 h-4 w-4" />
-                                Upload matches
-                              </Link>
-                            </Button>
-                          ) : null}
-                        </div>
-                        ) : null}
-                      </div>
-                    </CardHeader>
-                    {expandedEvidenceId === athlete.id ? (
-                      <CardContent className="space-y-3 p-4">
-                        {/*
-                          A bar, not seven boxes. Every component used to render its own tile,
-                          including the ones that always score zero — college opens and profile text
-                          no longer score at all, and RankWrestler has no column to read — so four of
-                          the seven tiles on every card read "0" and one athlete filled the screen.
-                        */}
-                        <ScoreBar breakdown={athlete.score_breakdown} total={athlete.ai_score} />
-
-                        {/* What the formula thinks, and how far it is from where you have them. */}
-                        <div className="rounded-md border border-violet-400/25 bg-violet-400/10 p-2.5">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-violet-200">
-                                <Sparkles className="h-3 w-3" aria-hidden="true" />
-                                Formula recommendation
-                              </span>
-                              <span className="rounded bg-violet-300 px-1.5 py-0.5 text-xs font-black text-[#160d2b]">
-                                #{athlete.ai_rank}
-                              </span>
-                              <span className="text-[10px] font-semibold text-violet-100/70">
-                                score {athlete.ai_score} · {athlete.confidence.toLowerCase()} confidence
-                              </span>
-                            </div>
-                            <span className="text-[9px] font-semibold uppercase tracking-wide text-white/35">
-                              Advisory only
-                            </span>
-                          </div>
-                          {aiDelta ? (
-                            <p className="mt-2 text-[10px] font-semibold text-amber-200">
-                              Review: working rank is #{finalRank}, formula says {aiDelta > 0 ? `+${aiDelta}` : aiDelta}.
-                            </p>
-                          ) : (
-                            <p className="mt-2 text-[10px] font-semibold text-emerald-200">Matches the working rank.</p>
-                          )}
-                          <p className="mt-2 flex items-center gap-1.5 text-[10px] leading-snug text-violet-50/70">
-                            <CheckCircle2 className="h-3 w-3 shrink-0" />
-                            {athlete.confidence_reason}
-                          </p>
-                          {athlete.data_gaps?.length ? (
-                            <p className="mt-2 border-t border-violet-200/10 pt-2 text-[10px] leading-snug text-amber-100/70">
-                              Data note: {athlete.data_gaps.join(" · ")}
-                            </p>
-                          ) : null}
-                        </div>
-
-                        {/* Direct results inside this class decide ties, so they lead. */}
-                        {athlete.head_to_head?.length ? (
-                          <div className="rounded-md border border-emerald-400/25 bg-emerald-400/10 p-2.5">
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-300">
-                              Same-class head-to-head, last 12 months
-                              {athlete.win_loss ? ` · season ${athlete.win_loss}` : ""}
-                            </p>
-                            <ul className="mt-1 grid gap-1 text-xs text-emerald-100 sm:grid-cols-2">
-                              {athlete.head_to_head.map((row) => (
-                                <li key={row.opponent}>
-                                  vs {row.opponent}: <strong>{row.wins}-{row.losses}</strong>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        ) : (
-                          <p className="rounded-md border border-white/10 bg-slate-950 p-2.5 text-xs text-white/35">
-                            No direct result against another ranked wrestler in this class.
-                          </p>
-                        )}
-
-                        {/*
-                          Wins that mean something, named. A ranking argument is won or lost on who
-                          a wrestler beat, and "quality win over X (99.6%)" buried in a badge wall
-                          was the wrong place for it.
-                        */}
-                        {athlete.significant_wins?.length ? (
-                          <div className="rounded-md border border-[#d6b75d]/25 bg-[#d6b75d]/10 p-2.5">
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-[#d6b75d]">
-                              Wins over ranked opponents · {athlete.significant_wins.length}
-                            </p>
-                            <ul className="mt-1 space-y-1 text-xs leading-snug text-white/80">
-                              {athlete.significant_wins.map((win, i) => (
-                                <li key={`${win.opponent}-${i}`}>
-                                  <span className="font-semibold text-white">{win.opponent}</span>
-                                  <span className="text-white/45"> ({win.standing})</span>
-                                  {win.result ? <span className="font-mono text-emerald-200"> {win.result}</span> : null}
-                                  {win.event ? <span className="text-white/40"> · {win.event}</span> : null}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        ) : (
-                          <p className="rounded-md border border-white/10 bg-slate-950 p-2.5 text-xs text-white/35">
-                            No wins on file over a ranked, nationally ranked or TOC-field wrestler.
-                          </p>
-                        )}
-
-                        {/*
-                          And who beat them. A résumé is not a highlight reel: a one-point loss to
-                          the top wrestler in the country is evidence, and reading a wins list
-                          without it is reading half the argument. Red to separate it at a glance,
-                          not to mark it bad — every name here is a good opponent.
-                        */}
-                        {athlete.significant_losses?.length ? (
-                          <div className="rounded-md border border-red-400/25 bg-red-500/10 p-2.5">
-                            <p className="text-[10px] font-bold uppercase tracking-wide text-red-300">
-                              Losses to ranked opponents · {athlete.significant_losses.length}
-                            </p>
-                            <ul className="mt-1 space-y-1 text-xs leading-snug text-white/80">
-                              {athlete.significant_losses.map((loss, i) => (
-                                <li key={`${loss.opponent}-${i}`}>
-                                  {/* The order says this wrestler is better; the mat said otherwise. */}
-                                  {loss.upset ? (
-                                    <span
-                                      className="mr-1 rounded bg-red-500 px-1 text-[9px] font-black uppercase text-white"
-                                      title="Lost to a wrestler ranked below them in this class"
-                                    >
-                                      ⚑ Upset
-                                    </span>
-                                  ) : null}
-                                  <span className="font-semibold text-white">{loss.opponent}</span>
-                                  <span className="text-white/45"> ({loss.standing})</span>
-                                  {loss.result ? <span className="font-mono text-red-200"> {loss.result}</span> : null}
-                                  {loss.event ? <span className="text-white/40"> · {loss.event}</span> : null}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        ) : (
-                          <p className="rounded-md border border-white/10 bg-slate-950 p-2.5 text-xs text-white/35">
-                            No losses on file to a ranked, nationally ranked or TOC-field wrestler.
-                          </p>
-                        )}
-
-                        {/* Every trip to a national event, newest first — what the badge summarises. */}
-                        {(athlete.nhsca_by_year?.length || athlete.super32_by_year?.length || athlete.fargo_by_year?.length) ? (
-                          <div className="grid gap-3 sm:grid-cols-3">
-                            {([
-                              ["NHSCA", athlete.nhsca_by_year],
-                              ["Super 32", athlete.super32_by_year],
-                              ["Fargo", athlete.fargo_by_year],
-                            ] as const).map(([label, lines]) => (
-                              <div key={label}>
-                                <p className="text-[10px] font-bold uppercase tracking-wide text-[#d6b75d]">{label}</p>
-                                {lines?.length ? (
-                                  <ul className="mt-1 space-y-1 text-xs leading-snug text-white/75">
-                                    {lines.map((line) => <li key={line}>{line}</li>)}
-                                  </ul>
-                                ) : (
-                                  <p className="mt-1 text-xs text-white/30">Never entered</p>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        ) : null}
-
-                        {/* Every line the formula counted, grouped the way the TOC board groups them. */}
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          {EVIDENCE_GROUPS.map(({ label, match }) => {
-                            const lines = athlete.evidence.filter((e) => match.test(e.label))
-                            return (
-                              <div key={label}>
-                                <p className="text-[10px] font-bold uppercase tracking-wide text-[#d6b75d]">{label}</p>
-                                {lines.length ? (
-                                  <ul className="mt-1 space-y-1 text-xs leading-snug text-white/75">
-                                    {lines.map((item, i) => (
-                                      <li key={`${item.label}-${i}`}>
-                                        {item.points ? <span className="text-emerald-300">+{item.points} · </span> : null}
-                                        {item.label}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                ) : (
-                                  <p className="mt-1 text-xs text-white/30">No result on file</p>
-                                )}
-                              </div>
-                            )
-                          })}
-                        </div>
-
-                        {athlete.college_opens_experience ? (
-                          <p className="text-xs text-emerald-100">
-                            <strong>College opens:</strong> {athlete.college_opens_experience}
-                          </p>
-                        ) : null}
-                      </CardContent>
-                    ) : null}
-                    </Card>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+                            {delta === 0 ? "✓" : `you #${a.final_rank}`}
+                          </span>
+                        </button>
+                        {a.ai_rank === publicCap ? <div className="mx-2 my-1 h-px bg-violet-400/30" /> : null}
+                      </li>
+                    )
+                  })}
+                </ol>
+              </div>
+              <p className="mt-2 px-1 text-[11px] text-slate-500">
+                Advisory. The formula never moves your list unless you press “Use this order” or the ✦ on a row.{" "}
+                <Link href="/admin/rankings/board/classic" className="underline">Classic board</Link>
+              </p>
+            </aside>
+          </div>
         </div>
       </main>
     </>

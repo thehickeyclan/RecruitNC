@@ -157,6 +157,8 @@ export async function buildPoundForPoundBoard(options: {
         .select("athlete_id, rank, class_year")
         .in("class_year", classes)
         .eq("gender", gender)
+        // North Carolina's boards: pound for pound is an NC list, and SC drafts share the table.
+        .eq("state", "NC")
         .lte("rank", Math.max(depth, ...Object.values(options.classDepths ?? {}), 0))
         .range(from, to),
   )

@@ -271,6 +271,7 @@ async function buildPublicClassRanking(
     .select("published_at")
     .eq("class_year", year)
     .eq("gender", gender)
+    .eq("state", "NC")
     .maybeSingle()
 
   return { year, gender, published: true, cap, publishedAt: (edition?.published_at as string) ?? null, athletes }
