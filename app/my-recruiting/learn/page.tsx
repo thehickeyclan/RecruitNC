@@ -9,6 +9,7 @@
  */
 import type { LucideIcon } from "lucide-react"
 import {
+  ArrowLeftRight,
   ArrowRight,
   BarChart3,
   BookOpen,
@@ -74,6 +75,7 @@ const TOPICS: Array<{ icon: LucideIcon; label: string; href: string }> = [
   { icon: Target, label: "What college coaches look at", href: "/recruiting/learn/what-coaches-look-for" },
   { icon: ListChecks, label: "Getting recruited", href: "/recruiting/learn/working-the-process" },
   { icon: Trophy, label: "Tournaments coaches watch", href: "/recruiting/learn/tournaments" },
+  { icon: ArrowLeftRight, label: "The transfer portal", href: "/recruiting/learn/transfer-portal" },
   { icon: ShieldAlert, label: "Staying eligible in NC", href: "/recruiting/learn/staying-eligible-in-north-carolina" },
 ]
 
@@ -88,6 +90,7 @@ const DO_NEXT: Array<{ icon: LucideIcon; label: string; text: string; href: stri
 const RESOURCES: Array<{ label: string; href: string }> = [
   { label: "Does my wrestler need to be a state champion?", href: "/recruiting/learn/what-coaches-look-for" },
   { label: "How to write to a coach", href: "/recruiting/learn/working-the-process" },
+  { label: "How the transfer portal affects recruiting", href: "/recruiting/learn/transfer-portal" },
   { label: "Questions to ask a coach", href: "/recruiting/learn/working-the-process" },
   { label: "Who pays for a visit", href: `/recruiting/learn/questions-families-ask#${sectionId("Who pays for a recruiting visit?")}` },
   { label: "Registering with the Eligibility Center", href: "/recruiting/learn/eligibility-center" },

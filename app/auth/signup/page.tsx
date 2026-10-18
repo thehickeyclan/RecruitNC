@@ -366,7 +366,7 @@ function SignUpWizard() {
                 <CardTitle>{isCollegeCoach ? "Get your free coach access" : "Create your account"}</CardTitle>
                 <CardDescription>
                   {isCollegeCoach
-                    ? "No email to confirm. You'll go straight to the rankings."
+                    ? "No email to confirm. You'll go straight to your Coach Home."
                     : "We'll email you a link to confirm your address."}
                 </CardDescription>
               </CardHeader>

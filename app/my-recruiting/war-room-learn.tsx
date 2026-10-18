@@ -134,7 +134,10 @@ export function WarRoomLearn({ wrestlers, showYear = true }: { wrestlers: Array<
 
       <p className="flex items-start gap-2 text-xs leading-5 text-white/45">
         <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#D3B574]" aria-hidden />
-        Ask Data Dawg about programs: &quot;How many D2 programs are in Pennsylvania?&quot; &quot;Who is the head coach at Campbell?&quot; Tap the dog, bottom right.
+        Ask Scout about colleges: &quot;Which D2 programs in Virginia have room at my weight?&quot; &quot;Who coaches at Campbell?&quot;{" "}
+        <a href="/my-recruiting/scout" className="font-semibold text-[#D3B574] hover:underline">
+          Open Scout
+        </a>
       </p>
     </div>
   )
