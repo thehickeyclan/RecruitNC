@@ -109,6 +109,7 @@ function otherClasses(now: Date): string {
 
 export async function buildScoutContext(admin: SupabaseClient, userId: string): Promise<ScoutContext> {
   const links: Record<string, ScoutLink> = { ...BASE_LINKS }
+  links["learn:eligibility-clock"] = { label: "Work out the eligibility clock", href: "/recruiting/learn/eligibility-clock", kind: "tool" }
   links["learn:transfer-portal"] = { label: "The transfer portal guide", href: "/recruiting/learn/transfer-portal", kind: "rule" }
   for (const p of LEARN_PAGES) links[`learn:${p.slug}`] = { label: `View the ${p.title.replace(/^The /, "")} rules`, href: `/recruiting/learn/${p.slug}`, kind: "rule" }
 
