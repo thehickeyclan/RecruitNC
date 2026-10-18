@@ -186,7 +186,7 @@ export default async function CommandCenterSalesPage() {
             Explore {d.mapPreview?.total ?? "every"} college wrestling programs across NCAA Division I, II, III, NAIA and junior college, men&apos;s and women&apos;s. Tap any college to see its coaching staff, its recruiting questionnaire and the wrestlers from your state who went there, then save it to your list and compare.
           </p>
           <div className="mt-6">
-            <CollegeProgramMap accessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? ""} upsellHref={d.onSale ? BUY : "/plans"} heightClass="h-[460px] sm:h-[560px]" />
+            <CollegeProgramMap accessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? ""} upsellHref={d.onSale ? BUY : "/plans"} heightClass="h-[460px] sm:h-[560px]" showList={false} />
           </div>
         </section>
 

@@ -251,11 +251,14 @@ export function CollegeProgramMap({
   accessToken,
   upsellHref = "/command-center",
   heightClass = "h-[520px] sm:h-[620px]",
+  showList = true,
 }: {
   accessToken: string
   /** Where the Subscribe actions on a locked college card go. */
   upsellHref?: string
   heightClass?: string
+  /** The list of every college under the map. Off on the sales page, where the map is the demo (Matt, 17 Oct 2026). */
+  showList?: boolean
 }) {
   const [response, setResponse] = useState<CollegeMapResponse | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -801,7 +804,7 @@ export function CollegeProgramMap({
         </p>
       ) : null}
 
-      {full ? (
+      {full && showList ? (
         <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {visible.map((school) => (
             <li key={school.id}>
