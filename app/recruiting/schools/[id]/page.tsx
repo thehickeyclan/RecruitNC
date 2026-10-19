@@ -22,6 +22,7 @@ import {
   BookOpen,
   Building2,
   ChevronRight,
+  ClipboardList,
   DollarSign,
   ExternalLink,
   GraduationCap,
@@ -47,6 +48,7 @@ import { schoolLogoUrl } from "@/lib/college-programs/logo"
 import majorsData from "@/lib/college-programs/majors.json"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { depthFor } from "@/lib/college-programs/roster-depth"
+import { questionnairesForSchool } from "@/lib/college-programs/questionnaires"
 import { rosterForSchool } from "@/lib/college-programs/rosters"
 import { STATE_NAMES } from "@/lib/college-programs/states"
 import { costLines, tuitionFacts } from "@/lib/college-programs/tuition"
@@ -207,12 +209,16 @@ export default async function SchoolPage({ params }: Params) {
   const majors = new Set(MAJORS[school.id] ?? [])
   const majorLabels = MAJOR_FAMILIES.filter((m) => majors.has(m.code)).map((m) => m.label)
   const teamWord = team === "womens" ? "Women's" : "Men's"
-  const tabs = [
-    { href: "#overview", label: "Overview" },
-    { href: "#cost", label: "Cost & aid" },
-    ...(full ? [{ href: "#staff", label: "Coaching staff" }, { href: "#roster", label: "Roster" }] : []),
-    { href: "#academics", label: "Academics" },
-  ]
+  /*
+   * The recruiting questionnaire, up top beside Map and Athletics (Matt, 19 Oct 2026): it was only in
+   * the staff list near the bottom, where nobody found it. The team the family follows first, else the
+   * other one. Same access as the staff list: portal, Blue, coaches and staff; everyone else sees it locked.
+   */
+  const questionnaires = questionnairesForSchool(school.id)
+  const questionnaire =
+    questionnaires.map((q) => q[team]).find(Boolean) ??
+    questionnaires.map((q) => q[team === "mens" ? "womens" : "mens"]).find(Boolean) ??
+    null
   const button = "inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-bold transition sm:px-4 sm:py-2.5"
 
   const page = (
@@ -282,6 +288,17 @@ export default async function SchoolPage({ params }: Params) {
               <a href={`/recruiting/college-map?school=${school.id}`} className={`${button} border border-white/20 hover:bg-white/10`}>
                 <MapIcon className="h-4 w-4" aria-hidden /> Map
               </a>
+              {questionnaire ? (
+                full ? (
+                  <a href={questionnaire} target="_blank" rel="noopener noreferrer" className={`${button} bg-[#D3B574] text-[#0A1628] hover:bg-[#e2c98a]`}>
+                    <ClipboardList className="h-4 w-4" aria-hidden /> Recruiting questionnaire <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                  </a>
+                ) : (
+                  <a href="/command-center" className={`${button} border border-[#D3B574]/50 text-[#D3B574] hover:bg-[#D3B574]/10`}>
+                    <Lock className="h-4 w-4" aria-hidden /> Recruiting questionnaire
+                  </a>
+                )
+              ) : null}
               {school.website ? (
                 <a href={school.website} target="_blank" rel="noopener noreferrer" className={`${button} border border-white/20 hover:bg-white/10`}>
                   Athletics <ExternalLink className="h-3.5 w-3.5" aria-hidden />
@@ -306,18 +323,6 @@ export default async function SchoolPage({ params }: Params) {
         </p>
       ) : null}
 
-      {/* Section tabs */}
-      <nav aria-label="On this page" className="sticky top-0 z-10 -mx-4 mt-4 overflow-x-auto border-b border-white/10 bg-[#060f1f]/90 px-4 backdrop-blur sm:mx-0 sm:px-0">
-        <ul className="flex gap-6 whitespace-nowrap text-sm font-semibold">
-          {tabs.map((t, i) => (
-            <li key={t.href}>
-              <a href={t.href} className={`block border-b-2 py-3 ${i === 0 ? "border-[#D3B574] text-[#D3B574]" : "border-transparent text-white/65 hover:text-white"}`}>
-                {t.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
 
       <div className="mt-6 grid gap-5 lg:grid-cols-3">
         {/* Column one */}
