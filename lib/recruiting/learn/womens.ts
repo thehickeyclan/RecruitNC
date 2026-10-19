@@ -1,3 +1,5 @@
+import programData from "@/lib/college-programs/programs-2026-27.json"
+import { COLLEGE_DIVISIONS, type CollegeDivision, type CollegeMapSchool } from "@/lib/college-programs/types"
 /**
  * Women's wrestling: the college pathway (Matt, 19 Oct 2026). One guide, not a second Command
  * Center: the Command Center already follows the wrestler (women's map, dates, tournaments,
@@ -105,13 +107,43 @@ export const NEW_PROGRAM_QUESTIONS = [
 
 export const STATES_NOTE = { text: "40 state associations now hold girls' high school state championships, and 8,853 high schools sponsor the sport (NFHS, 2025-26).", sources: [S.nfhs26] }
 
-/** For Scout and search; the computed numbers are Scout's own tools' to give. */
+/**
+ * Colleges with a women's team this season, from the map's program list: the count by level and
+ * every Division I school by name. Scout was handed the guide with its numbers replaced by the word
+ * "several", and told a family "several Division I colleges have women's wrestling" when the list
+ * holds seven, by name (19 Oct 2026). The page and Scout fill from this one function.
+ */
+export function womensProgramFacts(): { total: number; byLevel: Array<{ level: CollegeDivision; count: number }>; divisionOne: string[] } {
+  const schools = (programData.schools as CollegeMapSchool[]).filter((s) => s.programs.some((p) => p.womens))
+  const count = new Map<CollegeDivision, number>()
+  for (const s of schools) for (const p of s.programs) if (p.womens) count.set(p.division, (count.get(p.division) ?? 0) + 1)
+  return {
+    total: schools.length,
+    byLevel: COLLEGE_DIVISIONS.map((level) => ({ level, count: count.get(level) ?? 0 })),
+    divisionOne: schools
+      .filter((s) => s.programs.some((p) => p.womens && p.division === "NCAA Division I"))
+      .map((s) => `${s.name} (${s.city}, ${s.state})`)
+      .sort(),
+  }
+}
+
+/** "{total}" and "{d1}" in the guide's sentences, filled with the real counts. */
+export function fillWomensCounts(text: string): string {
+  const f = womensProgramFacts()
+  const d1 = f.byLevel.find((l) => l.level === "NCAA Division I")?.count ?? 0
+  return text.replace(/\{total\}/g, String(f.total)).replace(/\{d1\}/g, String(d1))
+}
+
+/** For Scout and search. */
 export function womensText(): string {
+  const f = womensProgramFacts()
   return [
     "## Women's wrestling: the college pathway [link: learn:womens-wrestling]",
+    `Colleges with women's wrestling in 2026-27 (our college map): ${f.total} in all. ${f.byLevel.map((l) => `${l.level}: ${l.count}`).join("; ")}.`,
+    `The ${f.divisionOne.length} NCAA Division I women's programs: ${f.divisionOne.join("; ")}. Name them when asked; never say "several".`,
     `High school girls wrestling (NFHS): ${PARTICIPATION.map((p) => `${p.year} ${p.girls.toLocaleString("en-US")}`).join(", ")}.`,
     "History: " + WOMENS_HISTORY.map((h) => `${h.when}: ${h.what}`).join(" "),
-    "What families hear, and what is true: " + WOMENS_MYTHS.map((m) => `"${m.heard}" ${m.truth.replace(/\{[a-z0-9]+\}/g, "several")}`).join(" "),
+    "What families hear, and what is true: " + WOMENS_MYTHS.map((m) => `"${m.heard}" ${fillWomensCounts(m.truth)}`).join(" "),
     "Aid by level: " + WOMENS_MONEY.map((m) => `${m.level}: ${m.aid}`).join(" "),
     "Recruiting playbook: " + WOMENS_PLAYBOOK.join(" "),
     "Questions for a new program: " + NEW_PROGRAM_QUESTIONS.join(" "),
