@@ -25,6 +25,9 @@ export function answerProblems(text: string): string[] {
     const before = text.slice(Math.max(0, m.index! - 14), m.index!)
     if (!/NCAA|NAIA/.test(before)) out.push('The GPA minimum is the NCAA\'s (or NAIA\'s), not the college\'s: write "the NCAA requires", never "<college> requires".')
   }
+  // Scout never knows a birth date, so it cannot say whether a year is lost; the calculator can.
+  if (/\b(won'?t|will not|doesn'?t|does not|will|would)\s+(lose|cost|use up)\s+(a|any|one|him|her)?\s*(year|season)/i.test(text))
+    out.push("We do not know the wrestler's birth date, so whether a year is lost depends on it: give the rule, say it depends on when the 19th birthday falls, and point to the eligibility clock calculator (learn:eligibility-clock).")
   if (/\bis (safer|better|nicer|cheaper to live)\b/i.test(text)) out.push('Say which college has the higher grade ("Mount Olive has the higher safety grade"), not that it "is safer" or "is better".')
   return [...new Set(out)]
 }

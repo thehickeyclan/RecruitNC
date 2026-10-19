@@ -45,5 +45,7 @@ describe("answerProblems", () => {
     expect(answerProblems("The NCAA requires a 2.2 GPA in 16 core courses.")).toEqual([])
     expect(answerProblems("Mount Olive is safer than Campbell.")).toHaveLength(1)
     expect(answerProblems("Mount Olive has the higher safety grade: A+ to Campbell's B+.")).toEqual([])
+    expect(answerProblems("Shane won't lose a year of eligibility if he takes a gap year.")).toHaveLength(1)
+    expect(answerProblems("It depends on when his 19th birthday falls.")).toEqual([])
   })
 })

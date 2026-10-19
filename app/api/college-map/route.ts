@@ -10,8 +10,8 @@ import { hasPortalAccess } from "@/lib/ranking-visibility"
 export const dynamic = "force-dynamic"
 
 /**
- * Every school is public. The filters and the On RecruitNC flag are the Recruiting Portal, which
- * is a Blue benefit (PRD, 9 Oct 2026); admins and verified coaches see them too.
+ * Every school and its On RecruitNC flag are public. The other filters are the Recruiting Portal,
+ * a Blue benefit (PRD, 9 Oct 2026); admins and verified coaches see them too.
  */
 export async function GET() {
   const admin = createAdminClient()

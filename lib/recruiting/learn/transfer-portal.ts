@@ -177,7 +177,7 @@ export function transferPortalText(): string {
     "How it works: " + PORTAL_STEPS.join(" "),
     "Rules by level (checked " + TRANSFER_CHECKED + "):",
     ...TRANSFER_RULES.map((r) => `- ${r.level}: ${r.how}. ${r.point}`),
-    ELIGIBILITY_CLOCK.text,
+    ELIGIBILITY_CLOCK.text + " The clock starts at the earlier of first full-time college enrollment (junior college included) and the academic year after the 19th birthday. Scout does not know a wrestler's birth date; for one wrestler's seasons, point to the calculator [link: learn:eligibility-clock].",
     "Junior college to NCAA, questions to ask: " + JUCO_QUESTIONS.join(" "),
     "Examples: " + CASE_STUDIES.map((c) => `${c.name} (${c.move}): ${c.story}`).join(" "),
     "Women's wrestling: " + WOMENS.text,

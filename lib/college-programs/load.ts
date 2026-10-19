@@ -60,14 +60,46 @@ async function schoolsWithApprovedCoaches(admin: SupabaseClient): Promise<Set<st
   return matched
 }
 
+const INTERNAL_EMAIL = /ncwrestlingunited|thehickeyclan|testcoach|@example\.com$/i
+
+/**
+ * The numbers on the map's share image: approved coaches (staff and test accounts left out),
+ * the map schools they coach at, and how many states those schools are in.
+ */
+export async function recruitNCMapStats(admin: SupabaseClient): Promise<{
+  coaches: number
+  schools: CollegeMapSchool[]
+  onRecruitNC: CollegeMapSchool[]
+  states: number
+}> {
+  const [onRecruitNC, { data, error }] = await Promise.all([
+    schoolsWithApprovedCoaches(admin),
+    admin
+      .from("user_profiles")
+      .select("role, email, is_admin, verified_coach, verification_status")
+      .eq("verified_coach", true),
+  ])
+  if (error) throw new Error(`college map: coach count failed: ${error.message}`)
+  const coaches = (data ?? []).filter(
+    (c) =>
+      isCollegeCoachRole(c.role) &&
+      String(c.verification_status ?? "").toLowerCase() === "approved" &&
+      c.is_admin !== true &&
+      !INTERNAL_EMAIL.test(String(c.email ?? "")),
+  ).length
+  const on = SCHOOLS.filter((school) => onRecruitNC.has(school.id))
+  return { coaches, schools: SCHOOLS, onRecruitNC: on, states: new Set(on.map((school) => school.state)).size }
+}
+
+/**
+ * Which programs are On RecruitNC is public: it is what the map is shared for (Matt, 18 Oct 2026).
+ * The other filters, staff and My List stay with full access.
+ */
 export async function loadCollegeMap(admin: SupabaseClient, full: boolean): Promise<CollegeMapResponse> {
-  if (!full) {
-    return { season: "2026-27", access: "preview", schools: SCHOOLS }
-  }
   const onRecruitNC = await schoolsWithApprovedCoaches(admin)
   return {
     season: "2026-27",
-    access: "full",
+    access: full ? "full" : "preview",
     schools: SCHOOLS.map((school) => ({ ...school, onRecruitNC: onRecruitNC.has(school.id) })),
   }
 }

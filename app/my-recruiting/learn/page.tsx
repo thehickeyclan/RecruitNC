@@ -76,6 +76,7 @@ const TOPICS: Array<{ icon: LucideIcon; label: string; href: string }> = [
   { icon: ListChecks, label: "Getting recruited", href: "/recruiting/learn/working-the-process" },
   { icon: Trophy, label: "Tournaments coaches watch", href: "/recruiting/learn/tournaments" },
   { icon: ArrowLeftRight, label: "The transfer portal", href: "/recruiting/learn/transfer-portal" },
+  { icon: CalendarDays, label: "Eligibility clock calculator", href: "/recruiting/learn/eligibility-clock" },
   { icon: ShieldAlert, label: "Staying eligible in NC", href: "/recruiting/learn/staying-eligible-in-north-carolina" },
 ]
 
