@@ -360,7 +360,7 @@ export function PerfectRecruitWizard({
                   </div>
                 </div>
               ))}
-              {!c.priorities.length ? <p className="text-xs text-white/40">Pick none and the comparison uses its standard rows.</p> : null}
+              {!c.priorities.length ? <p className="text-xs text-white/40">Your picks are added to the comparison's standard rows and decide who leads. Nothing is ever removed.</p> : null}
             </>
           ) : null}
 
@@ -389,7 +389,7 @@ export function PerfectRecruitWizard({
                 <div>
                   <span className={label}>Which are must-haves?</span>
                   <p className="-mt-1 mb-3 text-sm text-white/50">
-                    Missing a must-have rules a wrestler out. We&apos;ll warn you even when that wrestler leads on edges.
+                    Missing a must-have is flagged on the wrestler&apos;s profile, your board and comparisons, even when he leads on edges. Nobody is hidden.
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {needs.map((k) => {
