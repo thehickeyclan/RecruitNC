@@ -88,6 +88,16 @@ const DO_NEXT: Array<{ icon: LucideIcon; label: string; text: string; href: stri
   { icon: Target, label: "Your next steps", text: "The plan for this year", href: "/my-recruiting/plan" },
 ]
 
+/** Whole guides (Matt, 19 Oct 2026): the pages a family reads start to finish, beside the quick answers. */
+const GUIDES: Array<{ icon: LucideIcon; title: string; text: string; href: string }> = [
+  { icon: ArrowLeftRight, title: "The transfer portal", text: "How transfers change recruiting, and the rules at every level.", href: "/recruiting/learn/transfer-portal" },
+  { icon: CalendarDays, title: "The eligibility clock", text: "Work out how many college seasons your wrestler has.", href: "/recruiting/learn/eligibility-clock" },
+  { icon: Target, title: "What college coaches look at", text: "And whether a wrestler needs to be a state champion.", href: "/recruiting/learn/what-coaches-look-for" },
+  { icon: ListChecks, title: "Getting recruited", text: "Lists, questionnaires, emails, camps and calls, in order.", href: "/recruiting/learn/working-the-process" },
+  { icon: Trophy, title: "Tournaments coaches watch", text: "Where college staffs go to see wrestlers, men's and women's.", href: "/recruiting/learn/tournaments" },
+  { icon: GraduationCap, title: "The NCAA Eligibility Center", text: "What it does, which account you need and when.", href: "/recruiting/learn/eligibility-center" },
+]
+
 const RESOURCES: Array<{ label: string; href: string }> = [
   { label: "Does my wrestler need to be a state champion?", href: "/recruiting/learn/what-coaches-look-for" },
   { label: "How to write to a coach", href: "/recruiting/learn/working-the-process#write-to-coaches" },
@@ -216,6 +226,27 @@ export default async function CommandCenterLearn() {
             </li>
           ))}
         </ul>
+
+        {/* Popular guides: whole guides, as cards */}
+        <section className="mt-6">
+          <h2 className="text-base font-bold">Popular guides</h2>
+          <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {GUIDES.map(({ icon: Icon, title, text, href }) => (
+              <li key={href}>
+                <a href={href} className="group flex h-full items-start gap-3 rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-4 transition hover:-translate-y-0.5 hover:border-[#D3B574]/60">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.06]">
+                    <Icon className="h-5 w-5" style={{ color: GOLD }} aria-hidden />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-bold">{title}</span>
+                    <span className="mt-0.5 block text-xs leading-5 text-white/55">{text}</span>
+                  </span>
+                  <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-white/35 transition group-hover:text-white/70" aria-hidden />
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
 
         <div className="mt-6 grid gap-5 lg:grid-cols-3">
           {/* Browse by topic */}
