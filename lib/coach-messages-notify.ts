@@ -162,6 +162,68 @@ export async function notifyNewMessage(
   }
 }
 
+/**
+ * A family claimed (or a parent linked to) a profile that college coaches had already written to.
+ * The conversations are theirs at once - threads hang off the profile - but nothing would tell
+ * them, so they get a push or an email naming the programs, and each coach is told the family is
+ * now there to read it (19 Oct 2026, after the first message ever sent went to an unclaimed girl).
+ */
+export async function notifyWaitingMessagesOnClaim(admin: SupabaseClient, input: { athleteId: string; userId: string }): Promise<void> {
+  try {
+    const { data: threads } = await admin
+      .from("coach_threads")
+      .select("id, coach_user_id, program, created_at")
+      .eq("athlete_id", input.athleteId)
+      .is("stopped_at", null)
+      .order("created_at")
+    if (!threads?.length) return
+    const { data: athlete } = await admin.from("athletes").select("name").eq("id", input.athleteId).maybeSingle()
+    const wrestler = firstName(athlete?.name as string | null)
+    const programs = [...new Set(threads.map((t) => String(t.program ?? "").trim()).filter(Boolean))]
+    const who =
+      programs.length === 0
+        ? threads.length === 1 ? "A college coach has" : `${threads.length} college coaches have`
+        : programs.length === 1
+          ? `A coach from ${programs[0]} has`
+          : `Coaches from ${programs.slice(0, -1).join(", ")} and ${programs[programs.length - 1]} have`
+    const first = threads[0]!
+    const familyUrl = `${getAppBaseUrl()}/view-profile?id=${input.athleteId}&thread=${first.id}`
+
+    const pushed = await pushTo(admin, [input.userId], { title: "A college coach messaged you", body: `${who} messaged ${wrestler}.`, threadId: first.id })
+    if (!pushed.has(input.userId)) {
+      for (const r of await emailsFor(admin, [input.userId])) {
+        await sendEmail(r.email, `${who} messaged ${wrestler}`, {
+          headline: `${who} messaged ${wrestler}`,
+          detail: `The message was waiting on ${wrestler}'s profile. Now that you've claimed it, you can read it and reply. ${wrestler} and every parent linked to the profile see the same conversation.`,
+          url: familyUrl,
+          cta: "Read the message",
+          footer: "Get these on your phone: download the NC United app and sign in with this email.",
+        })
+      }
+    }
+
+    // The coach hears it once: when the first member of the family arrives, not with every parent after.
+    const family = await familyOf(admin, input.athleteId)
+    const members = [family.athleteUserId, ...family.parentUserIds].filter(Boolean)
+    if (members.length > 1) return
+
+    for (const t of threads) {
+      const url = `${getAppBaseUrl()}/inbox/${t.id}`
+      await pushTo(admin, [String(t.coach_user_id)], { title: "Family joined", body: `${wrestler}'s family joined RecruitNC and can now read your message.`, threadId: t.id })
+      for (const r of await emailsFor(admin, [String(t.coach_user_id)])) {
+        await sendEmail(r.email, `${athlete?.name ?? wrestler}'s family can now read your message`, {
+          headline: `${athlete?.name ?? wrestler}'s family joined RecruitNC`,
+          detail: `They claimed the profile, so the message you sent is in front of them now. Replies come to your inbox.`,
+          url,
+          cta: "Open the conversation",
+        })
+      }
+    }
+  } catch (e) {
+    console.error("[coach-messages] waiting-on-claim", e instanceof Error ? e.message : e)
+  }
+}
+
 /** A report was filed: staff get a text, because the clock is 24 hours. */
 export async function notifyReport(admin: SupabaseClient, input: { reportId: string; threadId: string }): Promise<void> {
   try {
