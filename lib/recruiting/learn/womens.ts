@@ -6,7 +6,9 @@
  * on the page (app/recruiting/learn/womens-wrestling), so they never go stale.
  *
  * Left out as unconfirmed: a 30-wrestler roster cap for women's wrestling (no source applies the
- * men's figure to women), the "46 states" count (an advocacy group's 2024 figure; we say about 45),
+ * men's figure to women), the "46 states" count (an advocacy group's 2024 figure; the NFHS's own
+ * 2025-26 count, 40 state associations holding championships, replaced it 19 Oct 2026), the
+ * 1,738 NCAA participants a statistics page attributes to the NCAA (not found in its report),
  * NJCAA's first championship year, and Title IX claims about why colleges add the sport.
  */
 
@@ -25,7 +27,6 @@ const S = {
   iowa: { label: "Just Women's Sports: Iowa becomes the first Power 5 school to add women's wrestling", url: "https://justwomenssports.com/reads/iowa-becomes-first-power-5-school-to-add-womens-wrestling" },
   nchsaa: { label: "NCHSAA: the 2024 championships and the first women's champion", url: "https://www.nchsaa.org/2024-individual-wrestling-championships/" },
   fitch: { label: "WBTV: the first girl to win a North Carolina state title, 2020", url: "https://www.wbtv.com/2020/02/27/watch-crowd-chant-wrestlers-name-she-becomes-first-girl-win-state-title-nc/" },
-  wlag: { label: "Wrestle Like A Girl: states with girls' state championships", url: "https://wrestlelikeagirl.org/girls-high-school-wrestling" },
 } satisfies Record<string, WSource>
 
 /** High school girls wrestling, NFHS. The ten-years-earlier figure is the NFHS's own comparison. */
@@ -102,7 +103,7 @@ export const NEW_PROGRAM_QUESTIONS = [
   "Where have its wrestlers placed, and how many stay all four years?",
 ]
 
-export const STATES_NOTE = { text: "About 45 states now hold girls' high school state championships, up from a handful a decade ago.", sources: [S.wlag] }
+export const STATES_NOTE = { text: "40 state associations now hold girls' high school state championships, and 8,853 high schools sponsor the sport (NFHS, 2025-26).", sources: [S.nfhs26] }
 
 /** For Scout and search; the computed numbers are Scout's own tools' to give. */
 export function womensText(): string {
