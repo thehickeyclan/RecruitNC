@@ -11,7 +11,7 @@ export const FAMILY_FEATURES: FeatureItem[] = [
   { icon: ListChecks, title: "A plan for every month", body: "What to do now for your grade: profile, college list, questionnaires, emails." },
   { icon: ClipboardList, title: "Your college list", body: "Every school you're considering, with cost, fit, your stage and the next step." },
   { icon: Map, title: "Every program on one map", body: "D1, D2, D3, NAIA and junior college, men's and women's." },
-  { icon: GitCompareArrows, title: "Compare colleges", body: "Your scores against admitted students, real cost at your income, rosters." },
+  { icon: GitCompareArrows, title: "Compare colleges", body: "Your scores against admitted students, real cost after aid, rosters." },
   { icon: Mail, title: "Email coaches, ready to send", body: "Drafts built from your verified results, plus the info every questionnaire asks." },
   { icon: Eye, title: "See who's looking", body: "Which college programs viewed your profile, and when." },
   { icon: MessageSquare, title: "Messages from coaches", body: "College coaches write to you here. Parents see every message." },

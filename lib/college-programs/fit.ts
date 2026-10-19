@@ -67,7 +67,7 @@ export function netPriceFor(fit: CollegeFit, schoolState: string, bracket: numbe
   }
   if (bracket == null) {
     return fit.netPriceAverage != null
-      ? { amount: fit.netPriceAverage, note: "Average for all aided students. Choose your income for a closer figure." }
+      ? { amount: fit.netPriceAverage, note: "The average for all aided first-year students, before any athletic scholarship." }
       : { amount: null, note: "Not published." }
   }
   const amount = fit.netPriceByIncome?.[bracket] ?? null

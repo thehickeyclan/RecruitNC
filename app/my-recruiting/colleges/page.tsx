@@ -145,7 +145,7 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
             <CollegeListTable rows={rows} readOnly={viewerId !== cc.authUserId} wrestlerId={wrestlers[0]?.id ?? null} />
             <p className="mt-3 text-xs text-white/40">
               Your status is yours to set. Coach activity is verified from RecruitNC: a program&apos;s coaches viewing the profile or writing to you. Published cost is the
-              college&apos;s full price before aid; what families like yours paid is in Compare.
+              college&apos;s full price before aid; what families paid after aid is in Compare.
             </p>
           </div>
 
