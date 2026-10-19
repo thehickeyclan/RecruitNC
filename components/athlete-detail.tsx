@@ -252,6 +252,10 @@ function CompetitionBox({ competition }: { competition: CompetitionSummary }) {
   )
 }
 
+/** Call and Text in the banner's action row: the same outline as the Message button beside them. */
+const BANNER_CONTACT_ACTION =
+  "inline-flex min-h-[40px] items-center justify-center gap-2 rounded-lg border border-[#D3B574] bg-[#D3B574]/10 px-4 py-2 text-xs font-extrabold uppercase tracking-[0.14em] text-[#D3B574] transition-colors hover:bg-[#D3B574]/20"
+
 export function AthleteDetail({
   athlete,
   nchsaaResults = [],
@@ -1535,11 +1539,24 @@ export function AthleteDetail({
         </div>
       </dl>
 
-      {/* A recruiter's actions: the report, the comparison, a message. Nothing renders for most viewers. */}
-      <div className="mt-3 flex flex-wrap items-center gap-2 empty:hidden">
+      {/* A recruiter's actions: the report, the comparison, a message, a call or text. Nothing renders for
+          most viewers. Call and Text sit up here as well as in Contact Information (Matt, 19 Oct 2026). */}
+      <div className="mt-3 flex flex-wrap items-center gap-2 empty:hidden" data-contact-athlete={String(athlete.id)}>
         {canSeeScoutingReport ? <ScoutingReportAction href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`} /> : null}
         {mayCompare ? <CompareAction athleteId={String(athlete.id)} /> : null}
         {!isViewingOwnProfile ? <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="action" /> : null}
+        {canSeePrivateInfo && !isViewingOwnProfile && !canEdit && cellPhone ? (
+          <>
+            <a href={`tel:${cellPhone.replace(/[^\d+]/g, "")}`} aria-label={`Call ${athleteName}`} className={BANNER_CONTACT_ACTION}>
+              <Phone className="h-4 w-4" aria-hidden />
+              Call
+            </a>
+            <a href={`sms:${cellPhone.replace(/[^\d+]/g, "")}`} aria-label={`Text ${athleteName}`} className={BANNER_CONTACT_ACTION}>
+              <MessageSquare className="h-4 w-4" aria-hidden />
+              Text
+            </a>
+          </>
+        ) : null}
         {mayCompare ? <ProfileFitFlag athleteId={String(athlete.id)} className="inline-flex items-center" /> : null}
       </div>
     </div>
