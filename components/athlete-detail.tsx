@@ -1545,7 +1545,8 @@ export function AthleteDetail({
         {canSeeScoutingReport ? <ScoutingReportAction href={`/athletes/${encodeURIComponent(String(athlete.id))}/scouting-report`} /> : null}
         {mayCompare ? <CompareAction athleteId={String(athlete.id)} /> : null}
         {!isViewingOwnProfile ? <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="action" /> : null}
-        {canSeePrivateInfo && !isViewingOwnProfile && !canEdit && cellPhone ? (
+        {/* Coaches and staff; never the family looking at its own wrestler (admins edit every profile, so canEdit alone hid them from staff). */}
+        {canSeePrivateInfo && !isViewingOwnProfile && !isParentLinkedEditor && !isLinkedParentProfile && (isAdmin || !canEdit) && cellPhone ? (
           <>
             <a href={`tel:${cellPhone.replace(/[^\d+]/g, "")}`} aria-label={`Call ${athleteName}`} className={BANNER_CONTACT_ACTION}>
               <Phone className="h-4 w-4" aria-hidden />
