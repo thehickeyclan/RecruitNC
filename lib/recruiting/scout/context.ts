@@ -21,6 +21,7 @@ import { buildInfoSheet } from "@/app/my-recruiting/info-sheet"
 import { collegeKey } from "@/lib/recruiting/roadmap-adapt"
 import { WORKING_STEPS } from "@/lib/recruiting/learn/working"
 import { transferPortalText } from "@/lib/recruiting/learn/transfer-portal"
+import { nilText } from "@/lib/recruiting/learn/nil"
 
 /**
  * Everything Scout knows when a family asks a question (17 Oct 2026). Built fresh for each
@@ -72,7 +73,7 @@ function libraryText(track: keyof typeof D1_CONTACT): string {
       .filter(Boolean)
       .join("\n")
   const contact = `## Division I contact dates for ${D1_TRACK_LABEL[track]} [link: learn:division-1]\n${section(D1_CONTACT[track])}`
-  const pages = [transferPortalText(), ...LEARN_PAGES.map((p) => `## ${p.title} [link: learn:${p.slug}]\n${p.summary}\n${p.sections.map(section).join("\n")}`)]
+  const pages = [transferPortalText(), nilText(), ...LEARN_PAGES.map((p) => `## ${p.title} [link: learn:${p.slug}]\n${p.summary}\n${p.sections.map(section).join("\n")}`)]
   return [contact, ...pages].join("\n\n")
 }
 
@@ -109,9 +110,10 @@ function otherClasses(now: Date): string {
 
 export async function buildScoutContext(admin: SupabaseClient, userId: string): Promise<ScoutContext> {
   const links: Record<string, ScoutLink> = { ...BASE_LINKS }
+  links["learn:nil"] = { label: "NIL in wrestling", href: "/recruiting/learn/nil", kind: "rule" }
   links["learn:eligibility-clock"] = { label: "Work out the eligibility clock", href: "/recruiting/learn/eligibility-clock", kind: "tool" }
   links["learn:transfer-portal"] = { label: "The transfer portal guide", href: "/recruiting/learn/transfer-portal", kind: "rule" }
-  for (const p of LEARN_PAGES) links[`learn:${p.slug}`] = { label: `View the ${p.title.replace(/^The /, "")} rules`, href: `/recruiting/learn/${p.slug}`, kind: "rule" }
+  for (const p of LEARN_PAGES) links[`learn:${p.slug}`] = { label: /Division|NAIA|NJCAA/.test(p.title) ? `View the ${p.title.replace(/^The /, "")} rules` : p.title, href: `/recruiting/learn/${p.slug}`, kind: "rule" }
 
   const ids = await familyAthleteIds(admin, userId).catch(() => [] as string[])
   const { data: rows } = ids.length ? await admin.from("athletes").select('id, "firstName", name, gender, graduationyear, highschool').in("id", ids) : { data: [] }

@@ -76,6 +76,7 @@ const TOPICS: Array<{ icon: LucideIcon; label: string; href: string }> = [
   { icon: ListChecks, label: "Getting recruited", href: "/recruiting/learn/working-the-process" },
   { icon: Trophy, label: "Tournaments coaches watch", href: "/recruiting/learn/tournaments" },
   { icon: ArrowLeftRight, label: "The transfer portal", href: "/recruiting/learn/transfer-portal" },
+  { icon: DollarSign, label: "NIL and revenue sharing", href: "/recruiting/learn/nil" },
   { icon: CalendarDays, label: "Eligibility clock calculator", href: "/recruiting/learn/eligibility-clock" },
   { icon: ShieldAlert, label: "Staying eligible in NC", href: "/recruiting/learn/staying-eligible-in-north-carolina" },
 ]
@@ -90,12 +91,12 @@ const DO_NEXT: Array<{ icon: LucideIcon; label: string; text: string; href: stri
 
 /** Whole guides (Matt, 19 Oct 2026): the pages a family reads start to finish, beside the quick answers. */
 const GUIDES: Array<{ icon: LucideIcon; title: string; text: string; href: string }> = [
+  { icon: DollarSign, title: "NIL in wrestling", text: "What it is, what wrestlers really earn, and what's just rumour.", href: "/recruiting/learn/nil" },
   { icon: ArrowLeftRight, title: "The transfer portal", text: "How transfers change recruiting, and the rules at every level.", href: "/recruiting/learn/transfer-portal" },
   { icon: CalendarDays, title: "The eligibility clock", text: "Work out how many college seasons your wrestler has.", href: "/recruiting/learn/eligibility-clock" },
   { icon: Target, title: "What college coaches look at", text: "And whether a wrestler needs to be a state champion.", href: "/recruiting/learn/what-coaches-look-for" },
   { icon: ListChecks, title: "Getting recruited", text: "Lists, questionnaires, emails, camps and calls, in order.", href: "/recruiting/learn/working-the-process" },
   { icon: Trophy, title: "Tournaments coaches watch", text: "Where college staffs go to see wrestlers, men's and women's.", href: "/recruiting/learn/tournaments" },
-  { icon: GraduationCap, title: "The NCAA Eligibility Center", text: "What it does, which account you need and when.", href: "/recruiting/learn/eligibility-center" },
 ]
 
 const RESOURCES: Array<{ label: string; href: string }> = [
@@ -105,7 +106,7 @@ const RESOURCES: Array<{ label: string; href: string }> = [
   { label: "Who pays for a visit", href: `/recruiting/learn/questions-families-ask#${sectionId("Who pays for a recruiting visit?")}` },
   { label: "Which Eligibility Center account you need", href: `/recruiting/learn/eligibility-center#${sectionId("Which account")}` },
   { label: "Grants vs. scholarships", href: `/recruiting/learn/questions-families-ask#${sectionId("What is the difference between a grant and a scholarship?")}` },
-  { label: "NIL and revenue sharing", href: `/recruiting/learn/questions-families-ask#${sectionId("What is NIL?")}` },
+  { label: "Will my wrestler get NIL money?", href: "/recruiting/learn/nil" },
   { label: "Prize money and NIL in NC high school", href: "/recruiting/learn/staying-eligible-in-north-carolina" },
 ]
 
