@@ -1,6 +1,13 @@
 import { StorePageClient } from "@/components/store-page-client"
 import { createClient } from "@/lib/supabase/server"
 import { Suspense } from "react"
+import { shareMetadata } from "@/lib/share-metadata"
+
+export const metadata = shareMetadata({
+  title: "NC United Store",
+  description: "Gear and apparel from NC United Wrestling.",
+  path: "/store-app",
+})
 
 export const dynamic = "force-dynamic"
 

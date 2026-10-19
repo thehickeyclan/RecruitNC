@@ -3,11 +3,13 @@ import Image from "next/image"
 import { getAllNews } from "@/lib/news"
 import { ArrowLeft, ArrowRight, Calendar } from "lucide-react"
 import { UnitedAscentEmailSubscribeForm } from "@/components/news/united-ascent-email-subscribe-form"
+import { shareMetadata } from "@/lib/share-metadata"
 
-export const metadata = {
-  title: "News & Updates | NC United Wrestling",
-  description: "News, announcements, and updates from NC United Wrestling.",
-}
+export const metadata = shareMetadata({
+  title: "News & Updates",
+  description: "News, announcements and updates from NC United Wrestling.",
+  path: "/news",
+})
 
 export default function NewsPage() {
   const items = getAllNews()

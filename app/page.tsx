@@ -22,6 +22,14 @@ import {
 } from "@/lib/home-data"
 import { TOC_2026_AWARDS, TOC_FLO_URL, TOC_GOFAN_TICKETS_URL } from "@/lib/toc/constants"
 import { tocEventIsOver, tocTicketsOnSale } from "@/lib/toc/ticket-sale"
+import { shareMetadata } from "@/lib/share-metadata"
+
+export const metadata = shareMetadata({
+  title: "NC United Wrestling",
+  description: "North Carolina wrestling news, rankings, events, athlete profiles, clubs and college recruiting.",
+  path: "/",
+  pageTitle: "NC United Wrestling",
+})
 
 export const revalidate = 120
 

@@ -8,6 +8,14 @@ import {
 import { withCompetedWeights } from "@/lib/commitments-competed-weight"
 import { AthletesCommitmentsClient } from "@/components/athletes-commitments-client"
 import { AthletesPageSkeleton } from "@/components/athletes-page-skeleton"
+import { shareMetadata } from "@/lib/share-metadata"
+
+export const metadata = shareMetadata({
+  title: "College Commitments",
+  description: "North Carolina wrestlers committed to college: DI, DII, DIII, NAIA and NJCAA.",
+  path: "/athletes",
+  kicker: "RecruitNC",
+})
 
 export const revalidate = 120
 

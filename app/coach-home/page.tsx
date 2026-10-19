@@ -15,10 +15,17 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import CoachHomeClient from "./coach-home-client"
 import { loadCoachHome } from "./load-coach-home"
+import { shareMetadata } from "@/lib/share-metadata"
 
 export const dynamic = "force-dynamic"
 
-export const metadata = { title: "Coach Home | RecruitNC" }
+export const metadata = shareMetadata({
+  title: "Coach Home",
+  description: "Recruit North Carolina wrestlers: results, academics and contact info. Free for college coaches.",
+  path: "/coach-home",
+  kicker: "RecruitNC · For college coaches",
+  pageTitle: "Coach Home | RecruitNC",
+})
 
 export default async function CoachHomePage() {
   const supabase = await createClient()

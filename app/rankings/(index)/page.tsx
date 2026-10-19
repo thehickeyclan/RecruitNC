@@ -6,6 +6,14 @@ import { loadSalesData } from "@/lib/recruiting/sales-data"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { shareMetadata } from "@/lib/share-metadata"
+
+export const metadata = shareMetadata({
+  title: "North Carolina Wrestling Rankings",
+  description: "Statewide rankings by class and weight, boys and girls.",
+  path: "/rankings",
+  kicker: "NC United · Rankings",
+})
 
 // Per viewer: which of the two things this route does depends entirely on who is asking.
 export const dynamic = "force-dynamic"

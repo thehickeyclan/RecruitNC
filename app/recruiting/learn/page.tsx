@@ -11,12 +11,15 @@ import { ChevronRight, Lock } from "lucide-react"
 import { LearnDisclaimer } from "@/components/recruiting/learn/learn-disclaimer"
 import { CHECKED, LEARN_PAGES } from "@/lib/recruiting/learn/content"
 import { BrandName } from "@/components/recruiting/brand-name"
+import { shareMetadata } from "@/lib/share-metadata"
 
-export const metadata: Metadata = {
-  title: "College Wrestling Recruiting Rules | RecruitNC",
-  description:
-    "When college wrestling coaches can contact you, the 2026-27 recruiting calendar, signing, scholarships and eligibility for NCAA Division I, II and III, NAIA and NJCAA, with sources.",
-}
+export const metadata = shareMetadata({
+  title: "College Wrestling Recruiting Rules",
+  description: "When coaches can contact you, the recruiting calendar, signing, scholarships and eligibility, with sources.",
+  path: "/recruiting/learn",
+  kicker: "RecruitNC · Learn",
+  pageTitle: "College Wrestling Recruiting Rules | RecruitNC",
+})
 
 const checkedLabel = new Date(`${CHECKED}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
 
