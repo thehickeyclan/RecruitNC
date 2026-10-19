@@ -14,6 +14,8 @@ export const metadata: Metadata = {
     url: "/recruiting/college-map",
     type: "website",
   },
+  // The share image is opengraph-image.tsx beside this page: the map with the programs on RecruitNC.
+  twitter: { card: "summary_large_image" },
 }
 
 export default function CollegeMapPage() {
