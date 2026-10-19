@@ -1,3 +1,5 @@
+import { blockedCoachMatch } from "@/lib/coach-blocklist"
+import { notifyStaffBlockedCoachSignup } from "@/lib/staff-alerts-sms"
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -154,7 +156,18 @@ export async function POST(request: NextRequest) {
 
       // A college coach on a .edu address skips the manual approval queue. Only this exact
       // combination does — see lib/coach-auto-approve.ts for why the rule is kept narrow.
-      if (shouldAutoApproveCoach({ role: profileType, email: data.user.email })) {
+      const blockedOn = blockedCoachMatch({ firstName, lastName, email: data.user.email, phone: cellPhone })
+      if (blockedOn && shouldAutoApproveCoach({ role: profileType, email: data.user.email })) {
+        // A coach staff removed (lib/coach-blocklist.ts): no access, and staff are told.
+        profilePayload.verified_coach = false
+        profilePayload.verification_status = "rejected"
+        await notifyStaffBlockedCoachSignup({
+          name: finalFullName,
+          email: String(data.user.email ?? ""),
+          college: String(college ?? ""),
+          matchedOn: blockedOn,
+        }).catch(() => 0)
+      } else if (shouldAutoApproveCoach({ role: profileType, email: data.user.email })) {
         profilePayload.verified_coach = true
         // Let in by the rule, not by a person. Stays on the review list until one looks.
         profilePayload.verification_status = "pending"
