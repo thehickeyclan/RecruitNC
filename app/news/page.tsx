@@ -185,7 +185,7 @@ export default function NewsPage() {
                     </p>
                     <div className="mt-4 flex items-center justify-between text-xs text-white/40">
                       <span>
-                        {new Date(item.date).toLocaleDateString("en-US", {
+                        {new Date(`${item.date}T12:00:00`).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
                           year: "numeric",
