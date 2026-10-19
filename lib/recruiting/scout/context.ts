@@ -86,7 +86,7 @@ const BASE_LINKS: Record<string, ScoutLink> = {
   plan: { label: "Your schedule", href: "/my-recruiting/plan", kind: "tool" },
   profile: { label: "Update the profile", href: "/my-recruiting", kind: "tool" },
   tournaments: { label: "Events coaches watch", href: "/recruiting/learn/tournaments", kind: "rule" },
-  templates: { label: "Email templates", href: "/recruiting/learn/working-the-process", kind: "tool" },
+  templates: { label: "How to write to a coach", href: "/recruiting/learn/working-the-process#write-to-coaches", kind: "rule" },
 }
 
 /** The Division I opening dates for each class still in school, boys and girls, as calendar dates. */

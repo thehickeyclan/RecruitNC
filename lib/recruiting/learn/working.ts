@@ -43,7 +43,7 @@ export const WORKING_STEPS: WorkingStep[] = [
       "Ask for one thing: a call, or what the coach would want to see from you this season.",
       "Follow up once, after a new result. If there is still no reply, that is usually the answer. Coaches also go quiet in the middle of a conversation; it is rarely personal.",
     ],
-    tool: { label: "Email a coach", href: "/my-recruiting" },
+    tool: { label: "Have Scout draft your email", href: "/my-recruiting/scout" },
   },
   {
     heading: "Keep track of everything",
@@ -80,6 +80,11 @@ export const WORKING_STEPS: WorkingStep[] = [
     ],
   },
 ]
+
+/** The page's address for each part, so a link opens on the part it names. */
+export const QUESTIONS_ID = "questions-to-ask-a-coach"
+export const WORKING_PAGE = "/recruiting/learn/working-the-process"
+export const workingLink = (heading: string) => `${WORKING_PAGE}#${heading.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`
 
 /** Good questions to ask a college coach. */
 export const COACH_QUESTIONS = [

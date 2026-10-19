@@ -47,7 +47,7 @@ export const ROADMAP: RoadmapYear[] = [
       { id: "g10-questionnaires", text: "Fill out each program's recruiting questionnaire", href: "/my-recruiting/colleges" },
       { id: "g10-email", text: "Email coaches an introduction", href: "/my-recruiting/colleges" },
       { id: "g10-video", text: "Make a short highlight video" },
-      { id: "g10-camps", text: "Choose summer camps at colleges on the list", href: "/recruiting/learn/working-the-process" },
+      { id: "g10-camps", text: "Choose summer camps at colleges on the list", href: "/recruiting/learn/working-the-process#camps" },
       { id: "g10-grades", text: "Keep the grades up", href: "/recruiting/learn/eligibility-center" },
     ],
   },

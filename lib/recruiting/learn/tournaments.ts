@@ -60,6 +60,16 @@ export const TOURNAMENT_LISTS: TournamentList[] = [
         tier: "national",
       },
       {
+        // Matt, 19 Oct 2026: the inaugural event drew more than 38 college coaches from more than 23 programs.
+        name: "NC United Tournament of Champions",
+        style: "Folkstyle",
+        when: "September (the inaugural was September 18–19, 2026)",
+        where: "Apex, North Carolina",
+        who: "Invited high school wrestlers, at college weights",
+        why: "Built for recruiting: small invite-only brackets at college weights, true double elimination, and a College Recruiting Expo in the same building. More than 38 college coaches from more than 23 programs came to the first one.",
+        tier: "state",
+      },
+      {
         name: "NHSCA High School Nationals",
         style: "Folkstyle",
         when: "Mid-March",

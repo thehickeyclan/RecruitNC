@@ -90,11 +90,10 @@ const DO_NEXT: Array<{ icon: LucideIcon; label: string; text: string; href: stri
 
 const RESOURCES: Array<{ label: string; href: string }> = [
   { label: "Does my wrestler need to be a state champion?", href: "/recruiting/learn/what-coaches-look-for" },
-  { label: "How to write to a coach", href: "/recruiting/learn/working-the-process" },
-  { label: "How the transfer portal affects recruiting", href: "/recruiting/learn/transfer-portal" },
-  { label: "Questions to ask a coach", href: "/recruiting/learn/working-the-process" },
+  { label: "How to write to a coach", href: "/recruiting/learn/working-the-process#write-to-coaches" },
+  { label: "Questions to ask a coach", href: "/recruiting/learn/working-the-process#questions-to-ask-a-coach" },
   { label: "Who pays for a visit", href: `/recruiting/learn/questions-families-ask#${sectionId("Who pays for a recruiting visit?")}` },
-  { label: "Registering with the Eligibility Center", href: "/recruiting/learn/eligibility-center" },
+  { label: "Which Eligibility Center account you need", href: `/recruiting/learn/eligibility-center#${sectionId("Which account")}` },
   { label: "Grants vs. scholarships", href: `/recruiting/learn/questions-families-ask#${sectionId("What is the difference between a grant and a scholarship?")}` },
   { label: "NIL and revenue sharing", href: `/recruiting/learn/questions-families-ask#${sectionId("What is NIL?")}` },
   { label: "Prize money and NIL in NC high school", href: "/recruiting/learn/staying-eligible-in-north-carolina" },
@@ -275,7 +274,7 @@ export default async function CommandCenterLearn() {
 
           <div className="space-y-5">
             <section className={card}>
-              <h2 className="text-base font-bold">Popular guides</h2>
+              <h2 className="text-base font-bold">Quick answers</h2>
               <ul className="mt-2 divide-y divide-white/5">
                 {RESOURCES.map((r) => (
                   <li key={r.label}>

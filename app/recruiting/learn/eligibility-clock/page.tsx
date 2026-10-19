@@ -17,7 +17,7 @@ import { ClockCalculator } from "./clock-calculator"
 
 export const dynamic = "force-dynamic"
 export const metadata: Metadata = {
-  title: "Division I eligibility clock calculator | RecruitNC",
+  title: "Division I and II eligibility clock calculator | RecruitNC",
   description: "How many seasons of Division I eligibility your wrestler has under the NCAA's five-year, age-based model, from birth month, class and plans after high school.",
 }
 
@@ -26,6 +26,7 @@ const card = "rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-5"
 const SOURCES = [
   { label: "NCAA: Division I adopts age-based eligibility model, June 23, 2026", url: "https://www.ncaa.org/news/2026/6/23/media-center-division-i-adopts-age-based-eligibility-model.aspx" },
   { label: "NCAA: DI Cabinet modifies age-based eligibility concept, June 5, 2026", url: "https://www.ncaa.org/news/2026/6/5/media-center-di-cabinet-modifies-age-based-eligibility-concept.aspx" },
+  { label: "NCAA: Division II adopts age-based eligibility model", url: "https://www.ncaa.org/news/division-ii-adopts-age-based-eligibility-model/" },
 ]
 
 export default async function EligibilityClockPage() {
@@ -54,13 +55,13 @@ export default async function EligibilityClockPage() {
           <a href="/my-recruiting/learn" className="hover:underline">Learn</a> › Eligibility clock
         </p>
         <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-5xl">The eligibility clock</h1>
-        <p className="mt-2 max-w-2xl text-sm text-white/65 sm:text-base">How many Division I seasons {firstName ?? "your wrestler"} has under the NCAA&apos;s five-year rule, and what changes it.</p>
+        <p className="mt-2 max-w-2xl text-sm text-white/65 sm:text-base">How many Division I or II seasons {firstName ?? "your wrestler"} has under the NCAA&apos;s five-year rule, and what changes it.</p>
 
         <section className={`${card} mt-6`}>
           <p className="text-[15px] leading-6 text-white/85">
             The five years start at <b>first full-time enrollment in college</b> or the <b>academic year after the 19th birthday</b>, whichever comes first. Junior college is college: the clock starts there. A year off or a prep year doesn&apos;t stop the age trigger.
           </p>
-          <p className="mt-2 text-xs text-white/50">For wrestlers first enrolling full time in fall 2027 or later. Division I; the other levels have their own rules.</p>
+          <p className="mt-2 text-xs text-white/50">Division I and Division II use the same clock: Division I for wrestlers first enrolling full time in fall 2027 or later, Division II from 2026-27. Division III, the NAIA and junior college have their own rules.</p>
         </section>
 
         <div className="mt-4">
