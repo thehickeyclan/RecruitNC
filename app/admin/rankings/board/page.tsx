@@ -254,7 +254,7 @@ function FlagBadge({ flags, athlete }: { flags: ReviewFlag[]; athlete: BoardAthl
         <Flag className="h-3 w-3" aria-hidden />
         {flags.length}
       </span>
-      <span className="pointer-events-none invisible absolute right-0 top-full z-30 mt-1.5 w-80 rounded-lg border border-slate-700 bg-slate-900 p-2.5 text-left opacity-0 shadow-2xl transition group-hover:visible group-hover:opacity-100 group-focus:visible group-focus:opacity-100">
+      <span className="pointer-events-none invisible absolute right-0 top-full z-30 mt-1.5 w-80 rounded-lg border border-slate-700 bg-slate-900 p-2.5 text-left shadow-2xl group-hover:visible group-focus:visible">
         <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-slate-400">
           Review alerts · {athlete.name}
         </span>
