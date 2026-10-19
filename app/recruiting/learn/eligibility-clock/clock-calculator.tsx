@@ -75,7 +75,7 @@ export function ClockCalculator({ firstName, defaultClass, classes }: { firstNam
           </p>
         ) : (
           <>
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-white/50">Seasons at a Division I college</p>
+            <p className="text-xs font-black uppercase tracking-[0.25em] text-white/50">Seasons at a Division I or II college</p>
             <p className="mt-1 text-6xl font-black tracking-tight">
               {fewest === most ? fewest : `${fewest}–${most}`}
               <span className="ml-2 text-xl font-semibold text-white/45">of 5</span>

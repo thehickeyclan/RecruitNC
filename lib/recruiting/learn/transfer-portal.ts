@@ -2,7 +2,8 @@
  * The transfer portal, for a high school family (Matt, 18 Oct 2026, from a draft guide cleaned up
  * and checked). Every rule here was read against its official source on October 18, 2026, and
  * links to it; anything that could not be confirmed was left out rather than hedged (Division II's
- * eligibility model, the women's-programs percentages, a second women's champion's transfer).
+ * eligibility model at first - since confirmed and added - the women's-programs percentages, a second
+ * women's champion's transfer).
  * Advice is marked as ours. The Division I women's window is the rules library's, not repeated
  * from memory (content.ts, Division I page).
  */
@@ -18,6 +19,7 @@ const S = {
   d2Football: { label: "NCAA: Division II adopts a transfer window for football, April 29, 2026", url: "https://www.ncaa.org/news/2026/4/29/media-center-division-ii-executive-board-adopts-transfer-window-legislation-for-football.aspx" },
   d3Webinar: { label: "NCAA Division III: Proposal 2026-9, the transfer portal (April 2026)", url: "https://ncaaorg.s3.amazonaws.com/governance/d3/webinar/Apr2026D3Gov_webinar.pdf" },
   d1Eligibility: { label: "NCAA: Division I adopts age-based eligibility model, June 23, 2026", url: "https://www.ncaa.org/news/2026/6/23/media-center-division-i-adopts-age-based-eligibility-model.aspx" },
+  d2Eligibility: { label: "NCAA: Division II adopts age-based eligibility model", url: "https://www.ncaa.org/news/division-ii-adopts-age-based-eligibility-model/" },
   transferHub: { label: "NCAA: transfer rules and eligibility", url: "https://www.ncaa.org/eligibility-center/transfer-rules-and-eligibility/" },
   twoYearGuide: { label: "NCAA Guide for Two-Year Transfers, 2025-26", url: "http://fs.ncaa.org/Docs/eligibility_center/Transfer/TwoYearGuide.pdf" },
   cardenasBigTen: { label: "Michigan Athletics: Cardenas wins the 197-pound Big Ten title", url: "https://mgoblue.com/news/2025/3/9/wrestling-cardenas-wins-197-pound-big-ten-title-wolverines-earn-seven-automatic-ncaa-bids" },
@@ -160,8 +162,8 @@ export const JUCO_QUESTIONS = [
 ]
 
 export const ELIGIBILITY_CLOCK = {
-  text: "Division I adopted an age-based model on June 23, 2026: up to five years of eligibility for athletes who enroll no later than the academic year after their 19th birthday. It applies to athletes first enrolling full time in fall 2027 or later; current athletes and fall 2026 freshmen get whichever is more favourable, the old rules or the new. Junior college is not a free pass: time and seasons there can count toward a wrestler's NCAA eligibility and never reset it. How much remains depends on the full history, and the NCAA college's compliance office decides.",
-  sources: [S.d1Eligibility],
+  text: "Division I adopted an age-based model on June 23, 2026, and Division II the same model for 2026-27: up to five years of eligibility for athletes who enroll no later than the academic year after their 19th birthday. It applies to athletes first enrolling full time in fall 2027 or later; current athletes and fall 2026 freshmen get whichever is more favourable, the old rules or the new. Junior college is not a free pass: time and seasons there can count toward a wrestler's NCAA eligibility and never reset it. How much remains depends on the full history, and the NCAA college's compliance office decides.",
+  sources: [S.d1Eligibility, S.d2Eligibility],
 }
 
 export const WOMENS = {

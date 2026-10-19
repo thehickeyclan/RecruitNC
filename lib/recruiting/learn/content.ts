@@ -470,6 +470,17 @@ export const LEARN_PAGES: LearnPage[] = [
     free: false,
     sections: [
       {
+        // Matt, 19 Oct 2026: the page started on accounts without saying what the Eligibility Center is.
+        heading: "What the Eligibility Center is",
+        intro:
+          "The NCAA Eligibility Center is the NCAA office that decides whether a high school student can compete as a college freshman at a Division I or Division II school. It checks two things: academics, from the core courses and core-course GPA on the official transcripts your high school sends, and amateurism, that the wrestler has not been paid to compete or signed with an agent or a professional team. Until a wrestler has the right account, a Division I or II college cannot host an official visit, sign them or let them compete, and the final decision comes after high school graduation, once the final transcript and proof of graduation arrive.",
+        bullets: [
+          "Division III does not certify academics: a US student headed there needs only the free Profile Page.",
+          "The NAIA has its own eligibility center, with its own rule. Junior colleges do not use one.",
+        ],
+        sources: ["cbsa", "ecFaq"],
+      },
+      {
         heading: "Which account",
         rows: [
           { label: "Profile Page (no fee)", value: "If you are undecided, or a US student headed to a Division III school" },

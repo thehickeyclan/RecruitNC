@@ -16,11 +16,11 @@
 export type AfterHighSchool = "college" | "gap" | "prep" | "juco1" | "juco2"
 
 export const AFTER_HIGH_SCHOOL: Record<AfterHighSchool, string> = {
-  college: "Straight to a Division I college",
+  college: "Straight to college",
   gap: "A year off, then college",
   prep: "A postgraduate year at a prep school, then college",
-  juco1: "One year of junior college, then Division I",
-  juco2: "Two years of junior college, then Division I",
+  juco1: "One year of junior college, then Division I or II",
+  juco2: "Two years of junior college, then Division I or II",
 }
 
 export type ClockInput = { birthYear: number; birthMonth: number; classYear: number; plan: AfterHighSchool }
