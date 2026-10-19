@@ -72,8 +72,15 @@ export function suggestColleges<T extends CollegeLike>(
     // The same name once spacing and "&"/"and" are ignored.
     if (typedAll && typedAll === allWords.join("")) score += 20
 
-    // The email domain spells the name: averett.edu, campbell.edu, appstate.edu.
-    if (domain) {
+    /*
+     * The email domain spells the name: averett.edu, campbell.edu, appstate.edu. Never against what
+     * the coach typed, though: a university system shares one domain across campuses, and
+     * mark.paradine@mail.wvu.edu typed "WVU Potomac State College" and was filed under WVU Tech
+     * because "wvu" starts "wvutech" (19 Oct 2026). A college word the coach did not type - "Tech" -
+     * rules the domain out; the word the domain itself spells ("unc", "wvu") does not.
+     */
+    const conflictsWithTyped = typed.length > 0 && words.some((w) => !typed.includes(w) && w !== domain)
+    if (domain && !conflictsWithTyped) {
       const squashed = allWords.join("")
       const keySquashed = words.join("")
       if (domain === squashed || domain === keySquashed) score += 15
