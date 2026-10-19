@@ -46,7 +46,7 @@ export type ProgramFitCriteria = {
   stateFinish: StateFinishLevel
   /** Wants a published RecruitNC rank or a national ranking. */
   requireRanked: boolean
-  /** Needs that rule a wrestler out when missed, not just count against him. */
+  /** Needs whose miss is flagged loudly (never hidden), not just counted against him. */
   mustHaves: FitKey[]
   /** Comparison rows that decide it for this program; empty = the tool's defaults. */
   priorities: string[]

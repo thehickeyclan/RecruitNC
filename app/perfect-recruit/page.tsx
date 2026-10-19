@@ -35,6 +35,7 @@ export default async function PerfectRecruitPage() {
   const classYears = currentClassYears()
   let matches: PerfectRecruitMatch[] = []
   let checked = 0
+  let missed = 0
   let failed = false
   if (viewer.hasStandard) {
     try {
@@ -45,6 +46,7 @@ export default async function PerfectRecruitPage() {
       })
       checked = athletes.length
       const flags = await loadFitFlags(admin, athletes.map((a) => a.id), viewer.saved!.criteria, { personal: viewer.personal })
+      missed = athletes.filter((a) => flags.get(a.id)?.verdict === "misses").length
       matches = athletes
         .map((a) => ({ athlete: a, flag: flags.get(a.id) }))
         // The page lists who meets it and who might; a miss is flagged on the wrestler's own profile.
@@ -77,6 +79,7 @@ export default async function PerfectRecruitPage() {
       classYearOptions={classYears}
       matches={matches}
       checked={checked}
+      missed={missed}
       failed={failed}
     />
   )

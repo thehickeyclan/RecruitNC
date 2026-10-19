@@ -95,6 +95,7 @@ export default function PerfectRecruitClient({
   classYearOptions = [],
   matches = [],
   checked = 0,
+  missed = 0,
   failed = false,
   team = "mens",
 }: {
@@ -105,6 +106,8 @@ export default function PerfectRecruitClient({
   matches?: PerfectRecruitMatch[]
   /** How many wrestlers were checked, so "12 meet it" has a denominator. */
   checked?: number
+  /** Wrestlers who miss a must-have: not listed here, still everywhere else. */
+  missed?: number
   failed?: boolean
   team?: "mens" | "womens" | "both"
 }) {
@@ -216,6 +219,12 @@ export default function PerfectRecruitClient({
                   </p>
                 )}
                 {listed.length > 150 ? <p className="mt-3 text-xs text-white/40">Showing the first 150 of {listed.length}. Tighten a need to narrow it.</p> : null}
+                {missed > 0 ? (
+                  <p className="mt-3 text-xs text-white/50">
+                    {missed.toLocaleString()} other wrestler{missed === 1 ? "" : "s"} miss a must-have and {missed === 1 ? "isn't" : "aren't"} listed on this page. Your needs only
+                    flag wrestlers: every one of them is still on Athletes, the rankings and their own profile.
+                  </p>
+                ) : null}
               </>
             )}
           </section>

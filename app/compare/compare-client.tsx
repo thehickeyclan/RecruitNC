@@ -694,16 +694,16 @@ export default function CompareClient({
   }
 
   /*
-   * Which rows show: the coach's own choice on this page, else the categories the program saved in
-   * its perfect recruit (plus the profile facts and weight, which never carry an edge), else the
-   * tool's defaults.
+   * Which rows show: the coach's own choice on this page, else the tool's defaults plus whatever the
+   * program saved in its perfect recruit. Saved choices add rows and never take one away: a staff that
+   * set them weeks ago and forgot must not lose notable losses or academics without knowing (Matt,
+   * 19 Oct 2026 - the perfect recruit is guidance, never a filter).
    */
   const savedPriorities = data?.programFit?.saved?.criteria.priorities ?? []
   const isOn = useCallback(
     (row: ComparisonRow) => {
       if (enabled) return enabled.has(row.key)
-      if (savedPriorities.length) return savedPriorities.includes(row.key) || row.group === "profile" || row.key === "weight" || row.key === "activity"
-      return row.defaultOn
+      return row.defaultOn || savedPriorities.includes(row.key)
     },
     [enabled, savedPriorities],
   )
