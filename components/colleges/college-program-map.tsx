@@ -279,6 +279,21 @@ export function CollegeProgramMap({
     query: "",
   })
   const [listAvailable, setListAvailable] = useState(false)
+  /** Each college's logo for the list under the map (not the map): { schoolId: url }. */
+  const [logos, setLogos] = useState<Record<string, string>>({})
+  useEffect(() => {
+    if (!showList) return
+    let cancelled = false
+    fetch("/api/college-map/logos")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j: { logos?: Record<string, string> } | null) => {
+        if (!cancelled && j?.logos) setLogos(j.logos)
+      })
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [showList])
   const [saved, setSaved] = useState<SavedList>(new Map())
   const [listBusy, setListBusy] = useState(false)
   const [listError, setListError] = useState<string | null>(null)
@@ -825,21 +840,28 @@ export function CollegeProgramMap({
                   selectedId === school.id ? "border-[#D7B968]" : "border-white/10"
                 }`}
               >
-                <span className="flex items-center gap-2">
-                  <span
-                    className="h-2.5 w-2.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: DIVISION_COLOR[shownDivision(school, filters)] }}
-                  />
+                <span className="flex items-center gap-2.5">
+                  {/* The college's logo, with its level as a dot on the corner; the dot alone when there is no logo. */}
+                  <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/[0.06]">
+                    {logos[school.id] ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={logos[school.id]} alt="" loading="lazy" className="h-7 w-7 object-contain" onError={(e) => (e.currentTarget.style.display = "none")} />
+                    ) : null}
+                    <span
+                      className={logos[school.id] ? "absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-[#0A1628]" : "h-2.5 w-2.5 rounded-full"}
+                      style={{ backgroundColor: DIVISION_COLOR[shownDivision(school, filters)] }}
+                    />
+                  </span>
                   <span className="truncate text-sm font-semibold text-white">{school.name}</span>
                   {school.onRecruitNC ? <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-[#D7B968]" /> : null}
                   {saved.has(school.id) ? <Star className="h-3.5 w-3.5 shrink-0 fill-[#F5D985] text-[#F5D985]" /> : null}
                 </span>
-                <span className="mt-0.5 block pl-[18px] text-xs text-white/50">
+                <span className="mt-0.5 block pl-[42px] text-xs text-white/50">
                   {school.city}, {school.state} · {school.programs.map((p) => DIVISION_SHORT[p.division]).join(" / ")}
                   {school.firstSeason ? ` · starts ${school.firstSeason}` : ""}
                 </span>
                 {saved.has(school.id) ? (
-                  <span className="mt-0.5 block pl-[18px] text-xs font-semibold text-[#F5D985]">
+                  <span className="mt-0.5 block pl-[42px] text-xs font-semibold text-[#F5D985]">
                     {COLLEGE_LIST_STATUS_LABEL[saved.get(school.id)!.status]}
                   </span>
                 ) : null}
