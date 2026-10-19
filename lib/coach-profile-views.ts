@@ -78,12 +78,30 @@ export async function getCoachViewsForAthlete(
     .contains("event_data", { athlete_id: athleteId })
     .order("created_at", { ascending: false })
     .limit(2000)
-  if (error || !data?.length) return empty
+  if (error) return empty
+
+  /*
+   * A star is interest too. Coaches mostly star from a list - Coach Home's top uncommitted, a
+   * rankings board - without opening the profile, so McKendree put Addison Gore on its board and
+   * her family saw nothing (19 Oct 2026). A coach who starred and never opened the profile counts
+   * once, at the time of the star, so it reads as interest without saying it was a star: a staff's
+   * board stays private, and a coach who did both is not counted twice.
+   */
+  const viewedBy = new Set((data ?? []).map((row) => String(row.user_id)))
+  const { data: stars } = await supabase
+    .from("college_coach_stars")
+    .select("coach_user_id, starred_at")
+    .eq("athlete_id", athleteId)
+  const starRows = (stars ?? [])
+    .filter((star) => star.coach_user_id && !viewedBy.has(String(star.coach_user_id)))
+    .map((star) => ({ user_id: String(star.coach_user_id), created_at: String(star.starred_at), event_data: null }))
+  const rows = [...(data ?? []), ...starRows].sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)))
+  if (!rows.length) return empty
 
   /* Signed-out views carry a null user_id, and String(null) is "null" - a truthy string that
      filter(Boolean) keeps and Postgres rejects as a uuid, failing the whole lookup. */
   const viewerIds = [
-    ...new Set(data.map((row) => row.user_id).filter((id): id is string => typeof id === "string" && id.length > 0)),
+    ...new Set(rows.map((row) => row.user_id).filter((id): id is string => typeof id === "string" && id.length > 0)),
   ]
   const schoolByCoach = new Map<string, string | null>()
   const isCoach = new Set<string>()
@@ -119,7 +137,7 @@ export async function getCoachViewsForAthlete(
     }
   }
 
-  const coachRows = data.filter((row) => isCoach.has(String(row.user_id)))
+  const coachRows = rows.filter((row) => isCoach.has(String(row.user_id)))
   if (!coachRows.length) return empty
   const coachIds = [...new Set(coachRows.map((row) => String(row.user_id)))]
 
