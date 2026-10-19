@@ -12,6 +12,7 @@
  * verified coaches see the read-only parts too). A college coach never gets the family's shell.
  */
 import type { Metadata } from "next"
+import { shareMetadata } from "@/lib/share-metadata"
 import { notFound } from "next/navigation"
 import type { LucideIcon } from "lucide-react"
 import {
@@ -93,7 +94,13 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const name = spoken(school.name)
   const levels = school.programs.map((p) => DIVISION_SHORT[p.division]).join(" / ")
   return {
-    title: `${name} wrestling | RecruitNC`,
+    ...shareMetadata({
+      title: `${name} Wrestling`,
+      description: `${levels} · ${school.city}, ${STATE_NAMES[school.state] ?? school.state}`,
+      path: `/recruiting/schools/${school.id}`,
+      kicker: "RecruitNC · College program",
+      pageTitle: `${name} wrestling | RecruitNC`,
+    }),
     description: `${name} wrestling (${levels}) in ${school.city}, ${STATE_NAMES[school.state] ?? school.state}: programs, conference, cost and recruiting information for wrestlers and families.`,
   }
 }

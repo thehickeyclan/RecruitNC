@@ -1,5 +1,6 @@
 import { Suspense } from "react"
 import type { Metadata } from "next"
+import { shareMetadata } from "@/lib/share-metadata"
 import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
 import { stripPrivateAthleteFields, stripRankFields, viewerMaySeeAthletePrivateInfo } from "@/lib/athlete-private-fields"
 import { resolveRankingViewerForUser } from "@/lib/ranking-access"
@@ -47,33 +48,25 @@ export async function generateMetadata({ searchParams }: ViewProfilePageProps): 
   const a = result.athlete as Record<string, unknown>
   const name = typeof a.name === "string" && a.name.trim() ? a.name.trim() : "Athlete"
   const school = typeof a.highschool === "string" ? a.highschool.trim() : ""
-  const weight = a.weightclass != null ? String(a.weightclass).trim() : ""
   const gradYear = a.graduationyear != null ? String(a.graduationyear) : ""
   const photo = [a.photourl, a.photo_url, a.image_url].find(
     (v): v is string => typeof v === "string" && v.startsWith("http"),
   )
 
-  // "Cardinal Gibbons · 132 lbs · Class of 2027" — skip whatever's missing.
-  const description =
-    [school, weight && `${weight} lbs`, gradYear && `Class of ${gradYear}`].filter(Boolean).join(" · ") ||
-    "NC wrestling recruiting profile"
+  // "Cardinal Gibbons · Class of 2027". No weight: athletes.weightclass is not the weight he last
+  // wrestled, and the card is cached by every phone it reaches.
+  const description = [school, gradYear && `Class of ${gradYear}`].filter(Boolean).join(" · ") || "NC wrestling recruiting profile"
 
   return {
-    title: `${name} | RecruitNC`,
-    description,
+    ...shareMetadata({
+      title: name,
+      description,
+      path: `/athletes/${id}`,
+      kicker: "RecruitNC · Athlete profile",
+      image: photo ?? null,
+      pageTitle: `${name} | RecruitNC`,
+    }),
     robots: noIndex,
-    openGraph: {
-      title: name,
-      description,
-      type: "profile",
-      images: photo ? [{ url: photo }] : undefined,
-    },
-    twitter: {
-      card: photo ? "summary_large_image" : "summary",
-      title: name,
-      description,
-      images: photo ? [photo] : undefined,
-    },
   }
 }
 

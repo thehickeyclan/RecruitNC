@@ -20,7 +20,8 @@ import { ContactTapTracker } from "@/components/contact-tap-tracker"
 const defaultTitle = "NC United Wrestling"
 const defaultDescription =
   "North Carolina wrestling news, rankings, events, athlete profiles, clubs, and college recruiting coverage."
-const defaultShareImage = "/images/nc-united-logo-official.png"
+// Any page without its own card still gets a full-width one instead of the bare logo.
+const defaultShareImage = "/api/share-card?t=NC%20United%20Wrestling&s=Rankings%2C%20athlete%20profiles%2C%20events%20and%20college%20recruiting%20for%20North%20Carolina%20wrestlers."
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://app.ncwrestlingunited.com"),
@@ -39,14 +40,14 @@ export const metadata: Metadata = {
     images: [
       {
         url: defaultShareImage,
-        width: 512,
-        height: 512,
-        alt: "NC United Wrestling logo",
+        width: 1200,
+        height: 630,
+        alt: "NC United Wrestling",
       },
     ],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: defaultTitle,
     description: defaultDescription,
     images: [defaultShareImage],
