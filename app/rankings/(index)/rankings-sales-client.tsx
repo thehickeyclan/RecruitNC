@@ -459,6 +459,7 @@ export function RankingsSalesClient({
                       {checkingOut === "command_center" ? "Starting…" : "Get the Recruiting Command Center →"}
                     </button>
                     <p className="mt-2 text-center text-xs text-white/45">On Rankings already? It replaces your $9.99 plan.</p>
+                    <p className="mt-1 text-center text-[11px] text-white/40"><a href="/auth/signin?returnTo=%2Fmy-recruiting" className="underline hover:text-white/80">NC United Blue members: sign in for free access</a></p>
                   </>
                 ) : (
                   <p className="mt-6 rounded-xl border border-white/15 px-4 py-3 text-center text-sm font-semibold text-white/60">Coming soon · included in Blue today</p>

@@ -122,13 +122,14 @@ export default async function CommandCenterSalesPage() {
           </div>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href={d.onSale ? BUY : "/plans"} className="rounded-xl px-7 py-3.5 text-base font-black text-[#0A1628] shadow-lg transition hover:brightness-110" style={{ backgroundColor: SKY }}>
-              {d.onSale ? "Take control of recruiting →" : "See plans →"}
+              {d.onSale ? "Sign up now →" : "See plans →"}
             </Link>
             <a href="#find-your-colleges" className="rounded-xl border border-white/25 bg-[#060f1f]/40 px-7 py-3.5 text-base font-bold transition hover:bg-white/10">
               Try the college map
             </a>
           </div>
-          <p className="mt-3 text-sm text-white/50">Cancel anytime · Includes Rankings · Included with NC United Blue</p>
+          <p className="mt-3 text-sm text-white/50">Cancel anytime · Includes Rankings</p>
+          <p className="mt-1 text-xs text-white/40"><a href="/auth/signin?returnTo=%2Fmy-recruiting" className="underline hover:text-white/80">NC United Blue members: sign in for free access</a></p>
         </div>
       </section>
 
@@ -373,12 +374,13 @@ export default async function CommandCenterSalesPage() {
               ))}
             </ul>
             <Link href={d.onSale ? BUY : "/plans"} className="mt-8 block rounded-xl px-6 py-4 text-base font-black text-[#0A1628] hover:brightness-110" style={{ backgroundColor: SKY }}>
-              {d.onSale ? "Take control of recruiting →" : "See plans →"}
+              {d.onSale ? "Sign up now →" : "See plans →"}
             </Link>
-            <p className="mt-3 text-xs text-white/50">Cancel anytime · Includes Rankings · Included with NC United Blue</p>
+            <p className="mt-3 text-xs text-white/50">Cancel anytime · Includes Rankings</p>
+            <p className="mt-1 text-[11px] text-white/40"><a href="/auth/signin?returnTo=%2Fmy-recruiting" className="underline hover:text-white/80">NC United Blue members: sign in for free access</a></p>
           </div>
           <p className="mt-6 text-center text-sm text-white/55">
-            Just the rankings? <Link href="/plans" className="underline" style={{ color: GOLD }}>Rankings is {formatPrice(SCOUTING_REPORT_PRICES.subscription)}/month</Link>. Training too? <Link href="/blue" className="underline" style={{ color: GOLD }}>NC United Blue</Link> includes the Command Center. Or <Link href="/create-profile" className="underline" style={{ color: GOLD }}>claim your free profile</Link>.
+            Just the rankings? <Link href="/plans" className="underline" style={{ color: GOLD }}>Rankings is {formatPrice(SCOUTING_REPORT_PRICES.subscription)}/month</Link>. Or <Link href="/create-profile" className="underline" style={{ color: GOLD }}>claim your free profile</Link>.
           </p>
         </section>
 
@@ -406,7 +408,7 @@ export default async function CommandCenterSalesPage() {
           </div>
           <div className="mt-10 text-center">
             <Link href={d.onSale ? BUY : "/plans"} className="inline-block rounded-xl px-8 py-4 text-base font-black text-[#0A1628] hover:brightness-110" style={{ backgroundColor: SKY }}>
-              {d.onSale ? `Take control of recruiting, ${price}/month →` : "See plans →"}
+              {d.onSale ? `Sign up now, ${price}/month →` : "See plans →"}
             </Link>
           </div>
         </section>

@@ -478,10 +478,7 @@ export default async function HomePage() {
               </ul>
               <div className="mt-5 flex flex-col gap-2 sm:flex-row">
                 <Link href="/command-center" className="rounded-lg bg-rnc-gold px-5 py-2.5 text-center text-sm font-bold text-rnc-ink hover:opacity-90">
-                  See the Command Center
-                </Link>
-                <Link href="/plans" className="rounded-lg border border-white/20 px-5 py-2.5 text-center text-sm font-semibold text-white hover:bg-white/5">
-                  Compare plans
+                  Learn more
                 </Link>
               </div>
             </div>
