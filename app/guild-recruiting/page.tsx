@@ -210,7 +210,7 @@ export default async function GuildRecruitingHome() {
               </div>
               <div>
                 <p className="text-xl font-bold">Every college program on one map.</p>
-                <p className="mt-2 text-white/60">D1, D2, D3, NAIA and junior college, men&apos;s and women&apos;s, with the full yearly cost and what families like yours actually paid.</p>
+                <p className="mt-2 text-white/60">D1, D2, D3, NAIA and junior college, men&apos;s and women&apos;s, with the full yearly cost and what families actually paid after aid.</p>
               </div>
             </div>
           </div>

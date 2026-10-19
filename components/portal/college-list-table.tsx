@@ -253,7 +253,7 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
         <BarChart3 className="h-8 w-8 shrink-0 text-[#D3B574]" aria-hidden />
         <div className="min-w-0 flex-1">
           <p className="text-base font-bold">Compare colleges</p>
-          <p className="text-sm text-white/60">Tick up to {MAX_COMPARE} to see fit, full cost and what families like yours paid, side by side.</p>
+          <p className="text-sm text-white/60">Tick up to {MAX_COMPARE} to see fit, full cost and what families paid after aid, side by side.</p>
         </div>
         <a
           href={picked.length >= 2 ? `/recruiting/compare?s=${picked.join(",")}&step=results` : undefined}

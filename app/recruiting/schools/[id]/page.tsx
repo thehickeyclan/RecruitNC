@@ -423,7 +423,10 @@ export default async function SchoolPage({ params }: Params) {
 
           {fit ? (
             <section className={card}>
-              <h2 className={cardTitle}>What families paid</h2>
+              <h2 className={cardTitle}>What families paid, by income</h2>
+              <p className="mt-1 text-xs leading-5 text-white/55">
+                The average a year after the grants and scholarships the college gave, before loans. It is every aided student, not your wrestler: any athletic scholarship offered would lower it.
+              </p>
               {fit.netPriceInStateOnly && school.state !== "NC" ? (
                 <p className="mt-2 text-sm text-white/65">
                   Published for in-state families only.{" "}

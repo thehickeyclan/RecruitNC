@@ -150,18 +150,18 @@ export function academicFit(input: {
   return { status, text: `${parts.join("; ")}.` }
 }
 
-/** What families at their income paid, against their budget. */
+/** What aided students paid on average, against the family's budget. Family income is never asked. */
 export function costFit(input: { netPrice: number | null; netNote: string; published: number | null; budget: number | null }): FitLine {
   const { netPrice, published, budget } = input
   const money = (n: number) => `$${n.toLocaleString("en-US")}`
   if (budget == null) {
     return netPrice != null
-      ? { status: "unknown", text: `Families at your income paid about ${money(netPrice)} a year. Add a budget to compare.` }
+      ? { status: "unknown", text: `Aided students paid about ${money(netPrice)} a year on average, before any athletic scholarship. Add a budget to compare.` }
       : { status: "unknown", text: `${input.netNote} Add a budget to compare.` }
   }
   const figure = netPrice ?? published
   if (figure == null) return { status: "unknown", text: "No price published." }
-  const basis = netPrice != null ? "families at your income paid" : "the published price, before any aid, is"
+  const basis = netPrice != null ? "aided students paid on average" : "the published price, before any aid, is"
   const gap = figure - budget
   if (gap <= 0) return { status: "fit", text: `Within your ${money(budget)} budget: ${basis} ${money(figure)}.` }
   if (gap <= Math.max(5_000, budget * 0.15)) return { status: "stretch", text: `${money(gap)} over your budget: ${basis} ${money(figure)}.` }

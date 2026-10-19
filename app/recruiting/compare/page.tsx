@@ -3,9 +3,9 @@
  *
  * The family picks two to four colleges from My List. Each row is a fact about the college; where
  * the wrestler's own record makes a comparison mechanical (test scores against the middle half of
- * admitted students, cost for the family's income) it is marked, and nothing is said beyond it.
- * Part of NC United Blue. The wrestler's grades and the family's income are read for this page
- * only: income is never stored, and none of it is shown to a coach.
+ * admitted students, cost after aid) it is marked, and nothing is said beyond it.
+ * Part of NC United Blue. The wrestler's grades are read for this page only, none of it is shown to
+ * a coach, and family income is never asked (Matt, 19 Oct 2026): cost is the average after aid.
  */
 import type { Metadata } from "next"
 import { PortalShell } from "@/components/portal/portal-shell"
@@ -14,7 +14,7 @@ import { redirect } from "next/navigation"
 
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
-import { INCOME_BRACKETS, satTotalRange, scorePlacement, type Placement } from "@/lib/college-programs/fit"
+import { satTotalRange, scorePlacement, type Placement } from "@/lib/college-programs/fit"
 import { rosterForSchool } from "@/lib/college-programs/rosters"
 import { fitScore, type FitLine, type FitStatus } from "@/lib/recruiting/family-fit"
 import { collegeFitFor, loadFamilyFitContext } from "@/lib/recruiting/college-fit"
@@ -89,7 +89,8 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
   const saved = (list ?? []).map((r) => SCHOOLS.get(String(r.school_id))).filter((s): s is CollegeMapSchool => Boolean(s))
   const asked = String(params.s ?? "").split(",").filter(Boolean)
   const chosen = (asked.length ? asked.map((id) => SCHOOLS.get(id)).filter((s): s is CollegeMapSchool => Boolean(s)) : saved).slice(0, MAX)
-  const income = params.income != null && /^[0-4]$/.test(params.income) ? Number(params.income) : null
+  // Family income is never asked (Matt, 19 Oct 2026): the cost row is the average for aided students.
+  const income = null
   const askedStep = params.step === "colleges" || params.step === "matters" || params.step === "results" ? params.step : null
 
   // The wrestler being compared and the family's own fit profile (the previewed family's, on a developer's machine).
@@ -138,7 +139,7 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
         where: { main: `${school.city}, ${school.state}`, sub: fit?.setting ?? undefined },
         students: fit?.undergrads ? { main: `${fit.undergrads.toLocaleString("en-US")} undergraduates` } : { main: "Not published" },
         cost: cost ? { main: dollars(cost.amount), sub: `Tuition, fees, housing, food and books, ${cost.year}, before aid` } : { main: "Not published" },
-        net: net?.amount != null ? { main: dollars(net.amount), sub: net.note } : { main: "No published figure", sub: net?.note ?? undefined },
+        net: net?.amount != null ? { main: dollars(net.amount), sub: "All aided first-year students, before any athletic scholarship" } : { main: "No published figure", sub: net?.note ?? undefined },
         admit: fit?.admitRate != null ? { main: `${fit.admitRate}% admitted` } : { main: "Admits most applicants or does not report" },
         sat: satRange[0] != null ? { main: `${satRange[0]} to ${satRange[1]}`, sub: satMark ? `${sat}: ${MARK[satMark].text}` : undefined, className: satMark ? MARK[satMark].className : undefined } : { main: "Not reported" },
         act: fit && fit.act[0] != null ? { main: `${fit.act[0]} to ${fit.act[1]}`, sub: actMark ? `${act}: ${MARK[actMark].text}` : undefined, className: actMark ? MARK[actMark].className : undefined } : { main: "Not reported" },
@@ -160,7 +161,7 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
     { key: "depth", label: weight ? `At the weights near ${first}'s ${weight}` : "At your weight", group: "The program" },
     { key: "nc", label: "North Carolina wrestlers", group: "The program" },
     { key: "cost", label: "Published yearly cost", group: "Cost" },
-    { key: "net", label: "What families like yours paid", group: "Cost" },
+    { key: "net", label: "Average paid after aid", group: "Cost" },
     { key: "admit", label: "Acceptance rate", group: "Academics" },
     { key: "sat", label: "SAT, middle half admitted", group: "Academics" },
     { key: "act", label: "ACT, middle half admitted", group: "Academics" },
@@ -188,11 +189,9 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
   const link = (next: Record<string, string | null>) => {
     const q = new URLSearchParams()
     const sv = next.s !== undefined ? next.s : chosen.map((c) => c.id).join(",")
-    const inc = next.income !== undefined ? next.income : income != null ? String(income) : null
     const st = next.step !== undefined ? next.step : step
     const so = next.sort !== undefined ? next.sort : sort !== "overall" ? sort : null
     if (sv) q.set("s", sv)
-    if (inc != null) q.set("income", inc)
     if (st) q.set("step", st)
     if (so) q.set("sort", so)
     return `/recruiting/compare?${q.toString()}`
@@ -303,15 +302,6 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
               <section className="mt-6 rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-5 sm:p-6">
                 <h2 className="text-xl font-black">What matters to your family?</h2>
                 <p className="mt-1 text-sm text-white/60">All optional. A coach never sees it.</p>
-                <p className="mt-5 text-sm font-semibold text-white">Your family&apos;s income</p>
-                <p className="text-xs text-white/50">To show what families like yours actually paid. Not saved anywhere.</p>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {INCOME_BRACKETS.map((label, i) => (
-                    <a key={label} href={link({ income: income === i ? null : String(i), step: "matters" })} aria-pressed={income === i} className={chip(income === i)}>
-                      {label}
-                    </a>
-                  ))}
-                </div>
                 <FamilyFitForm initial={profile} open embedded afterSave={link({ step: "results" })} />
                 <div className="mt-4 flex justify-between">
                   <a href={link({ step: "colleges" })} className="text-sm font-semibold text-white/60 hover:text-white">
@@ -520,7 +510,7 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
                   College figures are from the US Department of Education: costs for 2024-25 or 2023-24; admissions and test scores for students entering in fall
                   2023; what families paid is the 2022-23 average for first-year students receiving federal aid, and a public college reports it for its own
                   state&apos;s students only. Rosters are each program&apos;s published roster, read in October 2026; a count at a weight shows how crowded it is,
-                  not whether a spot is open. Your profile is saved on your account only, your income is not saved, and a coach never sees any of it.
+                  not whether a spot is open. Your profile is saved on your account only, and a coach never sees any of it.
                 </p>
               </section>
             )}

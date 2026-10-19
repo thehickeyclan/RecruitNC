@@ -203,7 +203,7 @@ export default async function CommandCenterSalesPage() {
           eyebrow="Compare"
           title="The real cost, and the right fit"
           phoneVisual={false}
-          points={["Athletic, academic, financial and personal fit, side by side", "The full yearly cost, not tuition alone", "What families at your income actually paid, where it's published"]}
+          points={["Athletic, academic, financial and personal fit, side by side", "The full yearly cost, not tuition alone", "What families actually paid after aid, where it's published"]}
           visual={
             <Example>
               <div className="space-y-3 pt-5">
