@@ -60,14 +60,15 @@ async function schoolsWithApprovedCoaches(admin: SupabaseClient): Promise<Set<st
   return matched
 }
 
+/**
+ * Which programs are On RecruitNC is public: it is what the map is shared for (Matt, 18 Oct 2026).
+ * The other filters, staff and My List stay with full access.
+ */
 export async function loadCollegeMap(admin: SupabaseClient, full: boolean): Promise<CollegeMapResponse> {
-  if (!full) {
-    return { season: "2026-27", access: "preview", schools: SCHOOLS }
-  }
   const onRecruitNC = await schoolsWithApprovedCoaches(admin)
   return {
     season: "2026-27",
-    access: "full",
+    access: full ? "full" : "preview",
     schools: SCHOOLS.map((school) => ({ ...school, onRecruitNC: onRecruitNC.has(school.id) })),
   }
 }

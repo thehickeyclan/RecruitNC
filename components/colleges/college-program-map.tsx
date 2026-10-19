@@ -312,6 +312,8 @@ export function CollegeProgramMap({
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get("list") === "1") setFilters((f) => ({ ...f, myListOnly: true }))
+    // ?on=recruitnc opens on the programs with a coach here: the link we share with the map graphic.
+    if (params.get("on") === "recruitnc") setFilters((f) => ({ ...f, onRecruitNCOnly: true }))
     if (params.get("from") === "compare") setFromCompare(true)
     const school = params.get("school")
     if (school) setSelectedId(school)
@@ -368,12 +370,12 @@ export function CollegeProgramMap({
     }
   }
 
-  // Preview viewers see every school; the filters are what Blue unlocks.
+  // Preview viewers see every school and may narrow to On RecruitNC; the other filters are what Blue unlocks.
   const visible = useMemo(
     () =>
       full
         ? schools.filter((school) => matchesFilters(school, filters) && (!filters.myListOnly || saved.has(school.id)))
-        : schools,
+        : schools.filter((school) => !filters.onRecruitNCOnly || school.onRecruitNC),
     [full, schools, filters, saved],
   )
 
@@ -620,7 +622,7 @@ export function CollegeProgramMap({
             </button>
           )
         })}
-        {full ? (
+        {recruitNCCount > 0 ? (
           // A button like the levels, not a checkbox off to the side: one tap shows every program
           // with a coach on RecruitNC, at every level. Levels can then narrow it.
           <button
@@ -659,7 +661,7 @@ export function CollegeProgramMap({
             My List ({saved.size})
           </button>
         ) : null}
-        {full && filtersActive ? (
+        {(full && filtersActive) || filters.onRecruitNCOnly ? (
           <button
             type="button"
             onClick={resetFilters}
@@ -731,7 +733,7 @@ export function CollegeProgramMap({
           <p className="flex items-start gap-2 text-sm leading-6 text-white/80">
             <Lock className="mt-1 h-4 w-4 shrink-0 text-[#F5D985]" />
             <span>
-              Filter by level, men&apos;s or women&apos;s, state, and see which programs have coaches on <BrandName /> — part of the{" "}
+              Filter by level, men&apos;s or women&apos;s and state, see coaching staff and save your own college list — part of the{" "}
               <BrandName ncu="Recruiting Command Center." guild="full Command Center, coming soon." />
             </span>
           </p>
