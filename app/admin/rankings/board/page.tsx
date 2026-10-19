@@ -207,6 +207,75 @@ function FlagList({ flags }: { flags: ReviewFlag[] }) {
   )
 }
 
+/** Where each alert comes from, so a hover says what to go and check. */
+const FLAG_SOURCE: Record<ReviewFlag["kind"], string> = {
+  beaten_by_lower: "Head-to-head",
+  beaten_by_unranked: "Head-to-head",
+  beat_higher: "Head-to-head",
+  formula_gap: "Formula",
+  outside_gap: "RankWrestler",
+  rating_conflict: "Star rating",
+  no_match_data: "Season matches",
+  stale: "Activity",
+}
+
+/** The specific number behind an alert, from this wrestler's own row. */
+function flagSourceDetail(flag: ReviewFlag, athlete: BoardAthlete): string | null {
+  switch (flag.kind) {
+    case "formula_gap":
+      return `Formula #${athlete.ai_rank} · score ${Math.round(athlete.ai_score)}`
+    case "stale":
+      return athlete.last_competed ? `Last bout: ${athlete.last_competed}` : null
+    case "rating_conflict":
+      return athlete.star_rating ? `${athlete.star_rating.stars}★ · ${athlete.star_rating.score}/100` : null
+    case "outside_gap":
+      return athlete.rankwrestler_rank ? `RankWrestler #${athlete.rankwrestler_rank}` : null
+    case "no_match_data":
+      return "No in-season matches imported"
+    default:
+      return "Same class, last 12 months: season matches and national bouts"
+  }
+}
+
+/**
+ * The flag, and on hover what raised it (Matt, 19 October 2026: "on hover i should see what the
+ * source of the alert is"). Red when any alert is high; yellow when all are worth a look only.
+ */
+function FlagBadge({ flags, athlete }: { flags: ReviewFlag[]; athlete: BoardAthlete }) {
+  const high = flags.some((f) => f.severity === "high")
+  return (
+    <span className="group relative inline-flex" tabIndex={0}>
+      <span
+        className={`inline-flex cursor-help items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-bold ${
+          high ? "bg-red-600 text-white" : "bg-amber-500 text-slate-950"
+        }`}
+        aria-label={`${flags.length} review alert${flags.length === 1 ? "" : "s"}`}
+      >
+        <Flag className="h-3 w-3" aria-hidden />
+        {flags.length}
+      </span>
+      <span className="pointer-events-none invisible absolute right-0 top-full z-30 mt-1.5 w-80 rounded-lg border border-slate-700 bg-slate-900 p-2.5 text-left opacity-0 shadow-2xl transition group-hover:visible group-hover:opacity-100 group-focus:visible group-focus:opacity-100">
+        <span className="mb-1.5 block text-[10px] font-bold uppercase tracking-wide text-slate-400">
+          Review alerts · {athlete.name}
+        </span>
+        {flags.map((flag, i) => {
+          const detail = flagSourceDetail(flag, athlete)
+          return (
+            <span key={`${flag.kind}-${i}`} className="mb-1.5 block border-l-2 pl-2 last:mb-0" style={{ borderColor: flag.severity === "high" ? "#dc2626" : flag.severity === "medium" ? "#f59e0b" : "#64748b" }}>
+              <span className="block text-[10px] font-bold uppercase tracking-wide text-[#d6b75d]">
+                {FLAG_SOURCE[flag.kind]}
+                <span className="ml-1.5 font-semibold normal-case text-slate-500">{flag.severity === "high" ? "fix or have a reason" : "worth a look"}</span>
+              </span>
+              <span className="block text-xs leading-snug text-slate-100">{flag.message}</span>
+              {detail ? <span className="block text-[11px] text-slate-400">{detail}</span> : null}
+            </span>
+          )
+        })}
+      </span>
+    </span>
+  )
+}
+
 /** What opens under a row: the reasons for the formula's number, and the results behind them. */
 function Details({
   athlete,
@@ -645,17 +714,7 @@ export default function RankingBoardPage() {
           </button>
           <div className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-2">
             <FormulaChip aiRank={athlete.ai_rank} working={rank} />
-            {flags.length ? (
-              <span
-                className={`inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-bold ${
-                  flags.some((f) => f.severity === "high") ? "bg-red-600 text-white" : "bg-amber-500 text-slate-950"
-                }`}
-                title={flags.map((f) => f.message).join("\n")}
-              >
-                <Flag className="h-3 w-3" aria-hidden />
-                {flags.length}
-              </span>
-            ) : null}
+            {flags.length ? <FlagBadge flags={flags} athlete={athlete} /> : null}
           </div>
           {canEdit ? (
             <div className="hidden shrink-0 items-center gap-0.5 md:flex">
