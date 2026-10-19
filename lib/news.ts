@@ -100,6 +100,30 @@ export function newsShareUsesHeroCropOnly(
  */
 const ALL_NEWS: NewsItem[] = [
   {
+    id: "recruiting-command-center-launch",
+    slug: "recruiting-command-center-launch",
+    title: "The Recruiting Command Center Is Here",
+    subtitle: "One place for NC wrestling families to plan college recruiting, from 8th grade to signing day, on the same platform college coaches use to recruit.",
+    summary:
+      "Every college wrestling program on one map, a roadmap that adapts to your wrestler, college comparisons built around your wrestler, and Scout, a personal assistant for your athlete's recruiting journey.",
+    href: "/news/recruiting-command-center-launch",
+    date: "2026-10-19",
+    image: "/images/command-center-share.jpg",
+    homeImage: "/images/command-center-share.jpg",
+    imagePosition: "center",
+    // The share card is designed art with its own headline: shown whole, not faded behind the title.
+    imageFit: "contain",
+    imageBannerBgClass: "bg-[#060f1f]",
+    newsListBanner: true,
+    category: "RECRUITNC",
+    categoryBadgeClass: "bg-[#003366]",
+    readTime: "2 min read",
+    author: "NC United Wrestling",
+    shareHeroCropOnly: true,
+    isAnnouncement: true,
+    pinToTop: true,
+  },
+  {
     id: "journeymen-fall-classic-2026-recap",
     slug: "journeymen-fall-classic-2026-recap",
     title: "NC Made Noise at the Journeymen Fall Classic",
