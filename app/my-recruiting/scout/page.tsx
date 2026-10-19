@@ -6,6 +6,7 @@ import { familyAthleteIds } from "@/lib/coach-messages"
 import { mostRecentGraduatedClassYear } from "@/lib/class-years"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
+import { sendCollegeCoachesToTheirPortal } from "@/lib/recruiting/families-only"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { ScoutChat } from "./scout-chat"
@@ -16,7 +17,10 @@ export const metadata: Metadata = { title: "Scout | Recruiting Command Center" }
 /** Scout, the recruiting assistant (Matt's mock-up, 17 Oct 2026). Command Center families only. */
 export default async function ScoutPage() {
   const admin = createAdminClient()
-  const { viewer, userId } = await resolvePortalViewer({ supabase: await createClient(), admin })
+  const supabase = await createClient()
+  const { data: auth } = await supabase.auth.getUser()
+  if (auth.user) await sendCollegeCoachesToTheirPortal(admin, auth.user.id)
+  const { viewer, userId } = await resolvePortalViewer({ supabase, admin })
   const open = hasPortalAccess(viewer)
 
   let firstName: string | null = null

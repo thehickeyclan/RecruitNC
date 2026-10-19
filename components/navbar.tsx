@@ -10,7 +10,6 @@ import {
   Menu,
   User,
   LogOut,
-  Star,
   ChevronDown,
   Users,
   MessageSquare,
@@ -102,6 +101,9 @@ export function Navbar() {
   const mobileSubLinkClass = (href: string) =>
     `py-2 rounded-md text-base font-normal transition-colors mobile-optimized min-h-[44px] flex items-center block pl-4 ${isActive(href) ? "text-red-600" : "text-gray-600 hover:text-red-600"}`
 
+  // Coaches and admins get the account-menu section (Coach Home, admin links). "My Recruits" left
+  // the menu on 19 Oct 2026 (Matt): it led to the admin schools page and the old /my-recruits table,
+  // and 14 high school and club coaches with the "coach" role were seeing a college coach tool.
   const showMyRecruits =
     profile?.role === "admin" ||
     profile?.role === "college_coach" ||
@@ -109,20 +111,6 @@ export function Navbar() {
     profile?.is_admin === true
 
 
-  const getRecruitingPortalUrl = () => {
-    // Admins go to schools admin page to choose which portal to preview
-    if (profile?.is_admin) {
-      return "/admin/schools"
-    }
-    // A coach with a program goes to its portal - the funnel by stage, notes, activity and the
-    // staff's shared board, which is what coaches have always used. Sending everyone to the plain
-    // /my-recruits table (4 Oct 2026) took that away from the 58 coaches who have one.
-    if (profile?.school_id) {
-      return `/schools/${profile.school_id}/portal`
-    }
-    // No program yet: the simple starred list, rather than the dead end at /contact it replaced.
-    return "/my-recruits"
-  }
 
   const handleSignOut = async () => {
     try {
@@ -294,17 +282,19 @@ export function Navbar() {
   const fundraisingNavActiveRefs = [{ href: "/fundraising" }]
 
   /** College coaches and admins: the one page with everything a coach uses (app/coach-home). */
-  const showCoachHome =
-    profile?.role === "admin" || profile?.role === "college_coach" || profile?.is_admin === true
+  // A college coach's one way in is the coach portal, named "MyRecruits" for now (Matt, 19 Oct 2026);
+  // families see the Recruiting Command Center. A college-coach profile counts whatever its role says.
+  const isCollegeCoachAccount = profile?.role === "college_coach" || (profile as { profile_type?: string } | null)?.profile_type === "college-coach"
+  const showCoachHome = isCollegeCoachAccount || profile?.role === "admin" || profile?.is_admin === true
+  const coachHomeLabel = isCollegeCoachAccount ? "MyRecruits" : "Coach Home"
   // Everyone else who is signed in: the family's own recruiting page (app/my-recruiting).
   // Admins see it too: they are the ones who have to check it, and most are wrestling parents.
-  const showMyRecruiting = Boolean(user) && profile?.role !== "college_coach"
+  const showMyRecruiting = Boolean(user) && !isCollegeCoachAccount
   const highlightNavItems = [
     ...(showMyRecruiting ? [{ href: "/my-recruiting", label: "Command Center" }] : []),
     // Signed out, the same slot is the way in: what the Command Center is and what it costs.
     ...(!user ? [{ href: "/command-center", label: "Command Center" }] : []),
-    ...(showCoachHome ? [{ href: "/coach-home", label: "Coach Home" }] : []),
-    ...(showMyRecruits ? [{ href: getRecruitingPortalUrl(), label: "My Recruits" }] : []),
+    ...(showCoachHome ? [{ href: "/coach-home", label: coachHomeLabel }] : []),
   ]
 
   return (
@@ -702,16 +692,10 @@ export function Navbar() {
                         <DropdownMenuItem asChild>
                           <a href="/coach-home" className="flex items-center">
                             <Users className="h-4 w-4 mr-2" />
-                            Coach Home
+                            {coachHomeLabel}
                           </a>
                         </DropdownMenuItem>
                       )}
-                      <DropdownMenuItem asChild>
-                        <a href={getRecruitingPortalUrl()} className="flex items-center">
-                          <Star className="h-4 w-4 mr-2" />
-                          My Recruits
-                        </a>
-                      </DropdownMenuItem>
                       {(profile?.is_admin === true || profile?.role === "admin") && (
                         <DropdownMenuItem asChild>
                           <a href="/coach-home?view=coach" className="flex items-center">
@@ -899,18 +883,6 @@ export function Navbar() {
                       <p className="px-1 text-xs text-gray-500 truncate" title={user.email ?? ""}>
                         Signed in as {user.email}
                       </p>
-                      {showMyRecruits && (
-                        <Button
-                          asChild
-                          variant="outline"
-                          className="w-full bg-transparent mobile-optimized min-h-[44px]"
-                        >
-                          <a href={getRecruitingPortalUrl()} onClick={() => setIsOpen(false)}>
-                            <Star className="h-4 w-4 mr-2" />
-                            My Recruits
-                          </a>
-                        </Button>
-                      )}
                       <Button
                         onClick={() => {
                           handleSignOut()
