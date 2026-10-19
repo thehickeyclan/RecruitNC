@@ -77,6 +77,7 @@ const TOPICS: Array<{ icon: LucideIcon; label: string; href: string }> = [
   { icon: Trophy, label: "Tournaments coaches watch", href: "/recruiting/learn/tournaments" },
   { icon: ArrowLeftRight, label: "The transfer portal", href: "/recruiting/learn/transfer-portal" },
   { icon: DollarSign, label: "NIL and revenue sharing", href: "/recruiting/learn/nil" },
+  { icon: Users, label: "Women's wrestling", href: "/recruiting/learn/womens-wrestling" },
   { icon: CalendarDays, label: "Eligibility clock calculator", href: "/recruiting/learn/eligibility-clock" },
   { icon: ShieldAlert, label: "Staying eligible in NC", href: "/recruiting/learn/staying-eligible-in-north-carolina" },
 ]
@@ -99,6 +100,8 @@ const GUIDES: Array<{ icon: LucideIcon; title: string; text: string; href: strin
   { icon: Trophy, title: "Tournaments coaches watch", text: "Where college staffs go to see wrestlers, men's and women's.", href: "/recruiting/learn/tournaments" },
 ]
 
+const WOMENS_GUIDE = { icon: Users, title: "Women's wrestling", text: "The fastest-growing path in college wrestling, and where NC girls went.", href: "/recruiting/learn/womens-wrestling" }
+
 const RESOURCES: Array<{ label: string; href: string }> = [
   { label: "Does my wrestler need to be a state champion?", href: "/recruiting/learn/what-coaches-look-for" },
   { label: "How to write to a coach", href: "/recruiting/learn/working-the-process#write-to-coaches" },
@@ -111,7 +114,14 @@ const RESOURCES: Array<{ label: string; href: string }> = [
 ]
 
 export default async function CommandCenterLearn() {
-  const { wrestlers, athletes } = await loadCommandCenter("/my-recruiting/learn")
+  const { wrestlers, athletes, focus } = await loadCommandCenter("/my-recruiting/learn")
+  // A family with a daughter sees the women's guide first; one with a son sees tournaments in its place.
+  const guides =
+    focus?.gender === "womens"
+      ? [WOMENS_GUIDE, ...GUIDES.filter((g) => g.href !== "/recruiting/learn/tournaments")]
+      : focus?.gender === "mens"
+        ? GUIDES
+        : [...GUIDES.filter((g) => g.href !== "/recruiting/learn/tournaments"), WOMENS_GUIDE]
   const w = wrestlers[0] ?? null
   const grade = gradeFromLabel(w?.grade ?? null)
   const year = grade ? timelineFor(grade) : null
@@ -232,7 +242,7 @@ export default async function CommandCenterLearn() {
         <section className="mt-6">
           <h2 className="text-base font-bold">Popular guides</h2>
           <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {GUIDES.map(({ icon: Icon, title, text, href }) => (
+            {guides.map(({ icon: Icon, title, text, href }) => (
               <li key={href}>
                 <a href={href} className="group flex h-full items-start gap-3 rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-4 transition hover:-translate-y-0.5 hover:border-[#D3B574]/60">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.06]">

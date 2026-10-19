@@ -22,6 +22,7 @@ import { collegeKey } from "@/lib/recruiting/roadmap-adapt"
 import { WORKING_STEPS } from "@/lib/recruiting/learn/working"
 import { transferPortalText } from "@/lib/recruiting/learn/transfer-portal"
 import { nilText } from "@/lib/recruiting/learn/nil"
+import { womensText } from "@/lib/recruiting/learn/womens"
 
 /**
  * Everything Scout knows when a family asks a question (17 Oct 2026). Built fresh for each
@@ -73,7 +74,7 @@ function libraryText(track: keyof typeof D1_CONTACT): string {
       .filter(Boolean)
       .join("\n")
   const contact = `## Division I contact dates for ${D1_TRACK_LABEL[track]} [link: learn:division-1]\n${section(D1_CONTACT[track])}`
-  const pages = [transferPortalText(), nilText(), ...LEARN_PAGES.map((p) => `## ${p.title} [link: learn:${p.slug}]\n${p.summary}\n${p.sections.map(section).join("\n")}`)]
+  const pages = [transferPortalText(), nilText(), womensText(), ...LEARN_PAGES.map((p) => `## ${p.title} [link: learn:${p.slug}]\n${p.summary}\n${p.sections.map(section).join("\n")}`)]
   return [contact, ...pages].join("\n\n")
 }
 
@@ -110,6 +111,7 @@ function otherClasses(now: Date): string {
 
 export async function buildScoutContext(admin: SupabaseClient, userId: string): Promise<ScoutContext> {
   const links: Record<string, ScoutLink> = { ...BASE_LINKS }
+  links["learn:womens-wrestling"] = { label: "Women's wrestling: the college pathway", href: "/recruiting/learn/womens-wrestling", kind: "rule" }
   links["learn:nil"] = { label: "NIL in wrestling", href: "/recruiting/learn/nil", kind: "rule" }
   links["learn:eligibility-clock"] = { label: "Work out the eligibility clock", href: "/recruiting/learn/eligibility-clock", kind: "tool" }
   links["learn:transfer-portal"] = { label: "The transfer portal guide", href: "/recruiting/learn/transfer-portal", kind: "rule" }

@@ -9,6 +9,7 @@ import { GRADE_NAME, TIMELINE } from "./timeline"
 import { TOURNAMENT_LISTS } from "./tournaments"
 import { FAMILY_CHECKLIST, JUCO_QUESTIONS, TRANSFER_RULES, TRANSFER_SUMMARY } from "./transfer-portal"
 import { ASK_A_COLLEGE, MYTHS, NIL_SUMMARY } from "./nil"
+import { NEW_PROGRAM_QUESTIONS, WOMENS_MYTHS, WOMENS_PLAYBOOK } from "./womens"
 import { COACH_QUESTIONS, QUESTIONS_ID, WORKING_PAGE, workingLink, WORKING_STEPS } from "./working"
 import { LOOK_POINTS } from "./coaches-look-for"
 
@@ -62,6 +63,8 @@ export function buildSearchIndex(): SearchEntry[] {
   entries.push({ title: "Does my wrestler need to be a state champion?", where: "What college coaches look at", href: "/recruiting/learn/what-coaches-look-for", text: "state champion placer qualifier division level where NC wrestlers went" })
   for (const r of TRANSFER_RULES) entries.push({ title: `Transfer rules: ${r.level}`, where: "The transfer portal", href: "/recruiting/learn/transfer-portal", text: `${r.how} ${r.point} transfer portal window` })
   for (const m of MYTHS) entries.push({ title: m.heard, where: "NIL in wrestling", href: "/recruiting/learn/nil", text: `${m.truth} NIL name image likeness revenue sharing money paid` })
+  for (const m of WOMENS_MYTHS) entries.push({ title: m.heard, where: "Women's wrestling", href: "/recruiting/learn/womens-wrestling", text: `${m.truth} women's wrestling girls college` })
+  entries.push({ title: "Women's wrestling: the college pathway", where: "Women's wrestling", href: "/recruiting/learn/womens-wrestling", text: [...WOMENS_PLAYBOOK, ...NEW_PROGRAM_QUESTIONS].join(" ") + " women girls female wrestling college programs scholarships freestyle" })
   entries.push({ title: "NIL in wrestling", where: "NIL in wrestling", href: "/recruiting/learn/nil", text: [...NIL_SUMMARY, ...ASK_A_COLLEGE].join(" ") + " NIL name image likeness revenue sharing collective House settlement" })
   entries.push({ title: "The transfer portal", where: "The transfer portal", href: "/recruiting/learn/transfer-portal", text: [...TRANSFER_SUMMARY, ...FAMILY_CHECKLIST, ...JUCO_QUESTIONS].join(" ") + " transfer portal junior college eligibility roster weight" })
   entries.push({ title: "Questions to ask a college coach", where: "Working the process", href: `${WORKING_PAGE}#${QUESTIONS_ID}`, text: COACH_QUESTIONS.join(" ") })
