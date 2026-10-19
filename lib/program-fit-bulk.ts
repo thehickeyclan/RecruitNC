@@ -158,6 +158,7 @@ export async function loadFitSubjects(
     out.set(a.id, {
       graduationYear: classYear,
       collegeWeightClass: text(a.college_weight_class),
+      gender: text(a.gender),
       // The weight he last competed at, as the comparison uses; the listed one only as a fallback.
       currentWeight: lastCompeted.get(a.id)?.weight ?? text(a.weightclass),
       gpa: options.personal ? text(a.academic_gpa) : null,

@@ -157,7 +157,8 @@ export async function loadCoachHome(
     program: school?.name ?? null,
     programLogo,
     schoolId: (profile?.school_id as string | null) ?? null,
-    athletes: roster as CoachHomeData["athletes"],
+    // The view's gender only: a women's coach searching "Smith" should not get the boys (19 Oct 2026).
+    athletes: (roster as Array<{ gender?: string | null }>).filter((a) => sameGender(a.gender, viewGender)) as CoachHomeData["athletes"],
     recruits: {
       loaded: board != null,
       total: recruits.length,
@@ -199,4 +200,10 @@ export async function loadCoachHome(
     top75: PUBLIC_TOP_75_COLLEGE_RELEASED,
   }
   return { access: "ok", data }
+}
+
+/** "F", "female" and "Female" are one gender; a row with none is shown on the men's side, as the boards do. */
+function sameGender(stored: string | null | undefined, view: string): boolean {
+  const isGirl = /^f/i.test(String(stored ?? "").trim())
+  return view === "Female" ? isGirl : !isGirl
 }

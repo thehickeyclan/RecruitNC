@@ -121,7 +121,7 @@ function RecruitsCard({ total, children }: { total: number; children: React.Reac
  * times and opened eight profiles - three from the rankings, four from the athlete list, none from
  * here. A list a coach can see is a list he clicks.
  */
-function TopUncommitted({ wrestlers, poolSize }: { wrestlers: CoachHomeData["suggested"]; poolSize: number }) {
+function TopUncommitted({ wrestlers, poolSize, womens }: { wrestlers: CoachHomeData["suggested"]; poolSize: number; womens: boolean }) {
   const years = [...new Set(wrestlers.map((w) => w.classYear))].sort((x, y) => x - y)
   return (
     <section className={`${PANEL} mt-4 p-4 sm:p-5`} aria-labelledby="ch-top">
@@ -129,7 +129,7 @@ function TopUncommitted({ wrestlers, poolSize }: { wrestlers: CoachHomeData["sug
         <h2 id="ch-top" className={TITLE}>
           <BarChart3 className={`h-3.5 w-3.5 ${GOLD}`} /> Top uncommitted · Classes of {years.join(" and ")}
         </h2>
-        <Link href="/prospects/all" className={MORE}>
+        <Link href={womens ? "/prospects/all?gender=female" : "/prospects/all"} className={MORE}>
           All {poolSize.toLocaleString()} athletes <ArrowRight className="h-3 w-3" />
         </Link>
       </div>
@@ -141,7 +141,8 @@ function TopUncommitted({ wrestlers, poolSize }: { wrestlers: CoachHomeData["sug
           <div key={year}>
             <div className="mt-3 flex items-center justify-between gap-2 border-b border-white/10 pb-1">
               <p className="text-xs font-black uppercase tracking-widest text-white/70">Class of {year}</p>
-              <Link href={`/public-rankings/${year}`} className={MORE}>
+              {/* The women's lists link to the women's boards, not the men's of the same class (19 Oct 2026). */}
+              <Link href={womens ? `/public-rankings/women/${year}` : `/public-rankings/${year}`} className={MORE}>
                 Full {year} rankings <ArrowRight className="h-3 w-3" />
               </Link>
             </div>
@@ -343,7 +344,7 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
          * list of who to look at leads (Matt, 14 October 2026). In the two weeks before, 26 of 93
          * coaches had starred anyone.
          */}
-        {data.suggested?.length && !hasWork ? <TopUncommitted wrestlers={data.suggested} poolSize={data.athletes.length} /> : null}
+        {data.suggested?.length && !hasWork ? <TopUncommitted wrestlers={data.suggested} poolSize={data.athletes.length} womens={womens} /> : null}
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <RecruitsCard total={recruits.total}>
@@ -432,7 +433,7 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
           </section>
         </div>
 
-        {data.suggested?.length && hasWork ? <TopUncommitted wrestlers={data.suggested} poolSize={data.athletes.length} /> : null}
+        {data.suggested?.length && hasWork ? <TopUncommitted wrestlers={data.suggested} poolSize={data.athletes.length} womens={womens} /> : null}
 
         {(data.competingNext ?? []).length ? (
           <section className={`${PANEL} mt-4 p-4 sm:p-5`} aria-labelledby="ch-next">

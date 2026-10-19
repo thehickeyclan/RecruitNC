@@ -32,6 +32,10 @@ describe("projected college weights", () => {
   })
   it("has nothing to say without a weight", () => {
     expect(projectedCollegeWeights({ collegeWeightClass: null, currentWeight: null })).toBeNull()
+    // A girl lands on the women's classes, not the men's (19 Oct 2026).
+    expect(projectedCollegeWeights({ collegeWeightClass: null, currentWeight: "110", gender: "Female" })!.weights).toEqual([110, 117])
+    expect(projectedCollegeWeights({ collegeWeightClass: null, currentWeight: "235", gender: "Female" })!.weights).toEqual([207])
+    expect(projectedCollegeWeights({ collegeWeightClass: "124", currentWeight: "120", gender: "F" })!.weights).toEqual([124])
   })
 })
 

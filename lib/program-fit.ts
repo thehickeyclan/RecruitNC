@@ -21,6 +21,13 @@
  */
 
 export const COLLEGE_WEIGHTS = [125, 133, 141, 149, 157, 165, 174, 184, 197, 285] as const
+/** Women's college weights, 2026-27. No number is in both lists, so one saved list can hold either. */
+export const WOMENS_COLLEGE_WEIGHTS = [103, 110, 117, 124, 131, 138, 145, 160, 180, 207] as const
+
+/** The college weights a wrestler of this gender is projected onto. */
+export function collegeWeightsFor(gender: string | null | undefined): readonly number[] {
+  return /^f/i.test(String(gender ?? "").trim()) ? WOMENS_COLLEGE_WEIGHTS : COLLEGE_WEIGHTS
+}
 
 export type ProgramFitCriteria = {
   /** College weights the program is recruiting. Empty = any. */
@@ -117,6 +124,8 @@ export type FitSubject = {
   graduationYear: number | null
   /** Athlete-stated projected college weight, e.g. "141". */
   collegeWeightClass: string | null
+  /** A girl is projected onto the women's college weights (19 Oct 2026). */
+  gender?: string | null
   /** Most recent competed weight, else the listed one. */
   currentWeight: string | null
   gpa: string | null
@@ -160,20 +169,22 @@ export function hasPerfectRecruit(c: ProgramFitCriteria): boolean {
  * The college weights a wrestler is a candidate for: their own projection, else the class at or
  * above their current weight and the next one up.
  */
-export function projectedCollegeWeights(subject: Pick<FitSubject, "collegeWeightClass" | "currentWeight">): {
+export function projectedCollegeWeights(subject: Pick<FitSubject, "collegeWeightClass" | "currentWeight" | "gender">): {
   weights: number[]
   basis: string
 } | null {
+  const classes = collegeWeightsFor(subject.gender)
+  const top = classes[classes.length - 1]!
   const stated = num(subject.collegeWeightClass)
   if (stated != null) {
-    const nearest = COLLEGE_WEIGHTS.find((w) => w >= stated) ?? 285
+    const nearest = classes.find((w) => w >= stated) ?? top
     return { weights: [nearest], basis: `projects ${nearest} (athlete-stated)` }
   }
   const current = num(subject.currentWeight)
   if (current == null) return null
-  const i = COLLEGE_WEIGHTS.findIndex((w) => w >= current)
-  const at = i === -1 ? COLLEGE_WEIGHTS.length - 1 : i
-  const weights = [COLLEGE_WEIGHTS[at]!, COLLEGE_WEIGHTS[Math.min(at + 1, COLLEGE_WEIGHTS.length - 1)]!]
+  const i = classes.findIndex((w) => w >= current)
+  const at = i === -1 ? classes.length - 1 : i
+  const weights = [classes[at]!, classes[Math.min(at + 1, classes.length - 1)]!]
   const unique = [...new Set(weights)]
   return { weights: unique, basis: `wrestles ${current}, so ${unique.join(" or ")} in college` }
 }

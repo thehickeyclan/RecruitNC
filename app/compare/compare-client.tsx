@@ -1057,6 +1057,8 @@ export default function CompareClient({
         <PerfectRecruitWizard
           initial={data.programFit.saved?.criteria ?? EMPTY_CRITERIA}
           classYearOptions={classYearOptions}
+          // Comparing girls: offer the women's college weights.
+          team={athletes.some((a) => (a.id === leftId || a.id === rightId) && /^f/i.test(String((a as { gender?: string | null }).gender ?? ""))) ? "womens" : "mens"}
           onClose={() => setWizardOpen(false)}
           onSaved={(saved) => {
             setWizardOpen(false)

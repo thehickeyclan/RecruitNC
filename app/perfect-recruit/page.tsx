@@ -10,6 +10,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { currentClassYears } from "@/lib/class-years"
 import { loadCoachRoster } from "@/lib/coach-roster"
+import { coachProgramOf } from "@/lib/recruiting/coach-program"
 import { loadFitFlags } from "@/lib/program-fit-bulk"
 import { resolveFitViewer } from "@/lib/program-fit-viewer"
 import PerfectRecruitClient, { type PerfectRecruitMatch } from "./perfect-recruit-client"
@@ -28,6 +29,7 @@ export default async function PerfectRecruitPage() {
 
   const admin = createAdminClient()
   const viewer = await resolveFitViewer(admin, user.id)
+  const program = coachProgramOf(user)
   if (!viewer.allowed) return <PerfectRecruitClient access="not-coach" />
 
   const classYears = currentClassYears()
@@ -36,7 +38,11 @@ export default async function PerfectRecruitPage() {
   let failed = false
   if (viewer.hasStandard) {
     try {
-      const athletes = await loadCoachRoster()
+      // A men's or women's staff is matched against its own side; "both" or not yet chosen, everyone.
+      const athletes = (await loadCoachRoster()).filter((a) => {
+        const girl = /^f/i.test(String(a.gender ?? "").trim())
+        return program === "womens" ? girl : program === "mens" ? !girl : true
+      })
       checked = athletes.length
       const flags = await loadFitFlags(admin, athletes.map((a) => a.id), viewer.saved!.criteria, { personal: viewer.personal })
       matches = athletes
@@ -64,6 +70,7 @@ export default async function PerfectRecruitPage() {
 
   return (
     <PerfectRecruitClient
+      team={program ?? "mens"}
       access="ok"
       saved={viewer.saved}
       hasStandard={viewer.hasStandard}
