@@ -77,3 +77,12 @@ describe("searchColleges", () => {
     expect(searchColleges(colleges, "")).toHaveLength(colleges.length)
   })
 })
+
+describe("a shared system domain", () => {
+  it("does not file a campus under its sibling", () => {
+    const colleges = [{ id: "tech", name: "WVU Tech" }, { id: "wvu", name: "West Virginia University" }]
+    expect(suggestColleges(colleges, { institution: "WVU Potomac State College", email: "mark.paradine@mail.wvu.edu" })).toEqual([])
+    expect(suggestColleges(colleges, { institution: "WVU Tech", email: "joel.harris1@mail.wvu.edu" })[0]?.id).toBe("tech")
+  })
+})
+

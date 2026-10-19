@@ -22,4 +22,18 @@ export const ANNOUNCED_PROGRAMS: CollegeMapSchool[] = [
     programs: [{ division: "NCAA Division II", mens: true, womens: false, conference: null }],
     firstSeason: "2027-28",
   },
+  {
+    // A new NJCAA team in its first season, 2026-27, after the program list was compiled. Head coach
+    // Mark Paradine told us himself (email to Matt, 19 October 2026). Move into the season file when
+    // the list is next rebuilt from the source spreadsheet.
+    id: "wvu-potomac-state-college",
+    name: "WVU Potomac State College",
+    city: "Keyser",
+    state: "WV",
+    latitude: 39.4404,
+    longitude: -78.9798,
+    website: "https://www.potomacstatecollege.edu",
+    programs: [{ division: "NJCAA", mens: true, womens: false, conference: null }],
+    firstSeason: "2026-27",
+  },
 ]
