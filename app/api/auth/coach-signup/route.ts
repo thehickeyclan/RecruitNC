@@ -4,7 +4,8 @@ import { COACH_PROGRAM_KEY, parseCoachProgram, programPhrase } from "@/lib/recru
 import { createAdminClient } from "@/lib/supabase/admin"
 import { canonicalRole } from "@/lib/coach-auto-approve"
 import { normalizePhoneForStorage } from "@/lib/phone-format"
-import { notifyStaffCoachSignup } from "@/lib/staff-alerts-sms"
+import { notifyStaffBlockedCoachSignup, notifyStaffCoachSignup } from "@/lib/staff-alerts-sms"
+import { blockedCoachMatch } from "@/lib/coach-blocklist"
 import { assignCoachCollege, collegeResultNote } from "@/lib/coach-college"
 
 export const dynamic = "force-dynamic"
@@ -67,6 +68,9 @@ export async function POST(request: NextRequest) {
 
   const fullName = `${firstName} ${lastName}`
   const cellPhone = normalizePhoneForStorage(cellRaw)
+  // A coach staff removed is not let in by access-first; the account is still made so the attempt
+  // is on the dashboard, and staff are told.
+  const blockedOn = blockedCoachMatch({ firstName, lastName, email, phone: cellRaw })
   const admin = createAdminClient()
 
   const { data: created, error: createError } = await admin.auth.admin.createUser({
@@ -110,9 +114,9 @@ export async function POST(request: NextRequest) {
       profile_type: "college-coach",
       institution: college,
       is_admin: false,
-      verified_coach: true,
+      verified_coach: !blockedOn,
       verified_method: "coach_signup_form",
-      verification_status: "pending",
+      verification_status: blockedOn ? "rejected" : "pending",
       verification_requested_at: new Date().toISOString(),
     },
     { onConflict: "user_id" },
@@ -128,6 +132,10 @@ export async function POST(request: NextRequest) {
 
   // Settle their college from what they typed and their email, so nobody has to afterwards.
   const assigned = await assignCoachCollege(admin, { userId: created.user.id, institution: college, email })
+  if (blockedOn) {
+    await notifyStaffBlockedCoachSignup({ name: fullName, email, college, matchedOn: blockedOn }).catch(() => 0)
+    return NextResponse.json({ success: true })
+  }
   await notifyStaffCoachSignup({
     name: fullName,
     college,

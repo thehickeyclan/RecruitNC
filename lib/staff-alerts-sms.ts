@@ -125,6 +125,14 @@ export async function notifyStaffCoachSignup(input: {
   )
 }
 
+/** A sign-up matched a coach staff removed (lib/coach-blocklist.ts); it was kept out. */
+export async function notifyStaffBlockedCoachSignup(input: { name: string; email: string; college: string; matchedOn: string }): Promise<number> {
+  return send(
+    `BLOCKED coach sign-up (no access given): ${input.name} — ${input.college} (${input.email}), matched removed coach on ${input.matchedOn}. Review: /admin/users-dashboard`,
+    "coach-signup-blocked",
+  )
+}
+
 /**
  * A family (or coach) reported a recruiting conversation. App Store guideline 1.2 gives us 24
  * hours to act, so this is a text, not a dashboard badge somebody may not open.
