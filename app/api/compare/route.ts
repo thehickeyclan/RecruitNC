@@ -143,6 +143,7 @@ export async function GET(request: NextRequest) {
   const fitSubject = (report: ComparisonReport) => ({
     graduationYear: report.identity.graduationYear,
     collegeWeightClass: report.identity.collegeWeightClass,
+    gender: report.identity.gender,
     currentWeight: report.identity.lastCompetedWeight ?? report.identity.weightClass,
     gpa: report.academics.gpa,
     sat: report.academics.sat,

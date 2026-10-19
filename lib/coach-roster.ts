@@ -25,13 +25,15 @@ export type CoachRosterAthlete = {
   graduationyear: number | null
   /** Last competed weight; the listed weight only when nothing is on file. */
   weightclass: string | null
+  /** "Male" / "Female" as stored, so a women's coach's search holds girls only. */
+  gender: string | null
 }
 
 /** One state's wrestlers; North Carolina, as before, when none is named (lib/recruiting/states.ts). */
 async function build(state: string = HOME_STATE): Promise<CoachRosterAthlete[]> {
   const admin = createAdminClient()
   const active = currentClassYears()
-  const { data, error } = await inState(admin.from("athletes").select("id,name,highschool,graduationyear,weightclass"), state)
+  const { data, error } = await inState(admin.from("athletes").select("id,name,highschool,graduationyear,weightclass,gender"), state)
     .gte("graduationyear", active[0]!)
     .lte("graduationyear", active[active.length - 1]!)
     .order("name")
@@ -46,7 +48,7 @@ async function build(state: string = HOME_STATE): Promise<CoachRosterAthlete[]> 
   return rows.map((r) => ({ ...r, weightclass: last.get(r.id)?.weight ?? (r.weightclass ? String(r.weightclass) : null) }))
 }
 
-export const loadCoachRoster = unstable_cache(build, ["coach-roster", "v1"], { revalidate: 3600, tags: ["coach-roster"] })
+export const loadCoachRoster = unstable_cache(build, ["coach-roster", "v2"], { revalidate: 3600, tags: ["coach-roster"] })
 
 /**
  * Every live state's wrestlers (lib/recruiting/brand.ts), for the searches a coach uses to find

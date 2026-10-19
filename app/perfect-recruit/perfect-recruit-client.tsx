@@ -96,6 +96,7 @@ export default function PerfectRecruitClient({
   matches = [],
   checked = 0,
   failed = false,
+  team = "mens",
 }: {
   access: "ok" | "signed-out" | "not-coach"
   saved?: SavedPerfectRecruit | null
@@ -105,6 +106,7 @@ export default function PerfectRecruitClient({
   /** How many wrestlers were checked, so "12 meet it" has a denominator. */
   checked?: number
   failed?: boolean
+  team?: "mens" | "womens" | "both"
 }) {
   const router = useRouter()
   const [wizardOpen, setWizardOpen] = useState(false)
@@ -224,6 +226,7 @@ export default function PerfectRecruitClient({
         <PerfectRecruitWizard
           initial={criteria}
           classYearOptions={classYearOptions}
+          team={team}
           onClose={() => setWizardOpen(false)}
           onSaved={() => {
             setWizardOpen(false)

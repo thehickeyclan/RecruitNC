@@ -17,6 +17,7 @@ import { ArrowLeft, ArrowRight, Check, HelpCircle, Pencil, Sparkles, Star, Targe
 import { ACADEMIC_MAJOR_OPTIONS } from "@/lib/academic-majors"
 import {
   COLLEGE_WEIGHTS,
+  WOMENS_COLLEGE_WEIGHTS,
   EMPTY_CRITERIA,
   PRIORITY_OPTIONS,
   STATE_FINISH_OPTIONS,
@@ -164,11 +165,14 @@ export function PerfectRecruitWizard({
   classYearOptions,
   onClose,
   onSaved,
+  team = "mens",
 }: {
   initial: ProgramFitCriteria
   classYearOptions: number[]
   onClose: () => void
   onSaved: (saved: SavedPerfectRecruit) => void
+  /** Which college weights to offer: a women's staff recruits 103-207, not 125-285. */
+  team?: "mens" | "womens" | "both"
 }) {
   const [step, setStep] = useState(0)
   const [c, setC] = useState<ProgramFitCriteria>(initial)
@@ -244,13 +248,21 @@ export function PerfectRecruitWizard({
             <>
               <div>
                 <span className={label}>Weights you&apos;re recruiting</span>
-                <div className="flex flex-wrap gap-2">
-                  {COLLEGE_WEIGHTS.map((w) => (
-                    <Chip key={w} on={c.targetWeights.includes(w)} onClick={() => update((p) => ({ targetWeights: toggle(p.targetWeights, w) }))}>
-                      {w}
-                    </Chip>
-                  ))}
-                </div>
+                {(team === "both"
+                  ? ([["Men's", COLLEGE_WEIGHTS], ["Women's", WOMENS_COLLEGE_WEIGHTS]] as const)
+                  : ([[null, team === "womens" ? WOMENS_COLLEGE_WEIGHTS : COLLEGE_WEIGHTS]] as const)
+                ).map(([heading, list]) => (
+                  <div key={heading ?? "weights"} className="mb-2">
+                    {heading ? <p className="mb-1 text-xs text-white/50">{heading}</p> : null}
+                    <div className="flex flex-wrap gap-2">
+                      {list.map((w) => (
+                        <Chip key={w} on={c.targetWeights.includes(w)} onClick={() => update((p) => ({ targetWeights: toggle(p.targetWeights, w) }))}>
+                          {w}
+                        </Chip>
+                      ))}
+                    </div>
+                  </div>
+                ))}
                 <p className="mt-2 text-xs text-white/40">
                   We use the wrestler&apos;s own college projection, or the weight at or just above what they last wrestled
                   and the next one up.
