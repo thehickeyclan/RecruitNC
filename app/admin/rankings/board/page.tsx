@@ -703,7 +703,8 @@ export default function RankingBoardPage() {
   return (
     <>
       <AdminHeader />
-      <main className="min-h-screen bg-slate-950 text-white">
+      {/* admin-dark-page: the admin layout paints every min-h-screen page light unless told not to. */}
+      <main className="admin-dark-page min-h-screen bg-slate-950 text-white">
         {/* One bar: whose board, and what has happened to it. */}
         <div className="sticky top-0 z-20 border-b border-slate-800 bg-slate-950/95 backdrop-blur">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-3">
