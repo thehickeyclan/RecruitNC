@@ -24,6 +24,7 @@ import { listUpcomingEvents, type UpcomingEvent } from "@/lib/college-programs/s
 import { DIVISION_SHORT, primaryDivision, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { completenessFromRow } from "@/lib/profile-completeness"
 import { familyFocus } from "@/lib/recruiting/family-focus"
+import { sendCollegeCoachesToTheirPortal } from "@/lib/recruiting/families-only"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
@@ -41,6 +42,7 @@ export async function loadCommandCenter(returnTo: string) {
   if (!user) redirect(`/auth/signin?returnTo=${encodeURIComponent(returnTo)}`)
 
   const admin = createAdminClient()
+  await sendCollegeCoachesToTheirPortal(admin, user.id)
   // The signed-in viewer - or, on a developer's machine, the family an admin is previewing.
   const portal = await resolvePortalViewer({ supabase, admin })
   const viewerId = portal.userId ?? user.id
