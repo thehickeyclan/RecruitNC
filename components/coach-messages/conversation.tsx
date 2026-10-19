@@ -41,6 +41,8 @@ type Thread = {
   college?: ThreadCollege | null
   firstMessageAt?: string | null
   extras?: boolean
+  /** For a coach only: false while nobody in the family has an account to read it. */
+  familyJoined?: boolean | null
   /** For a coach only: their level may not recruit this wrestler yet (lib/coach-messages-compliance.ts). */
   compliance?: { status: string; title: string; detail: string; allowed: string; href: string } | null
 }
@@ -457,6 +459,13 @@ export function Conversation({
         })}
         <li ref={endRef} aria-hidden />
       </ol>
+
+      {thread.viewerRole === "coach" && thread.familyJoined === false && !thread.stopped ? (
+        <p className="rounded-lg border border-[#D3B574]/30 bg-[#D3B574]/10 p-3 text-sm text-white/80">
+          This family hasn&apos;t joined RecruitNC yet. Your message is saved on the profile and they&apos;ll see it the
+          moment they claim it. We&apos;re reaching out to them, and we&apos;ll email you when they join.
+        </p>
+      ) : null}
 
       {thread.stopped && thread.viewerRole === "coach" ? (
         <p className="rounded-lg border border-white/10 bg-white/[0.04] p-4 text-sm text-white/60">

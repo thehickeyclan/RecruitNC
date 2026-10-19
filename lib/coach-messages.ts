@@ -469,6 +469,11 @@ export type ThreadDetail = {
   firstMessageAt: string | null
   /** Whether edit, unsend, reactions, replies and attachments are switched on (the SQL has been run). */
   extras: boolean
+  /**
+   * For the coach: false while nobody in the family has an account, so the message waits on the
+   * profile. Null for everyone else.
+   */
+  familyJoined: boolean | null
 }
 
 /** One conversation with every message, marked read for this account. */
@@ -534,6 +539,12 @@ export async function getThread(admin: SupabaseClient, threadId: string, userId:
     program: t.program,
     programLogo: (await loadProgramLogos(admin, [{ coachUserId: t.coach_user_id, program: t.program }])).get(t.coach_user_id) ?? null,
     stopped: Boolean(t.stopped_at),
+    familyJoined:
+      role === "coach"
+        ? await familyOf(admin, t.athlete_id)
+            .then((f) => Boolean(f.athleteUserId || f.parentUserIds.length))
+            .catch(() => null)
+        : null,
     viewerRole: role,
     canReply: role === "athlete" || role === "parent" || (role === "coach" && !t.stopped_at),
     wrestler:

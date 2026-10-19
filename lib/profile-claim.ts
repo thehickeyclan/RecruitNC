@@ -181,5 +181,10 @@ export async function claimProfile(admin: SupabaseClient, input: ClaimInput): Pr
   })
   if (consentError) console.error("[profile-claim] consent row failed:", consentError.message)
 
+  // Coaches may have written before anyone in the family had an account: tell both sides now.
+  await import("@/lib/coach-messages-notify")
+    .then(({ notifyWaitingMessagesOnClaim }) => notifyWaitingMessagesOnClaim(admin, { athleteId: input.athleteId, userId: input.userId }))
+    .catch((e) => console.error("[profile-claim] waiting messages:", e instanceof Error ? e.message : e))
+
   return { ok: true, athleteName, needsReview: reasons.length > 0, reviewReason: reasons.join("; ") || null }
 }
