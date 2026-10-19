@@ -23,6 +23,12 @@ import {
 import { TOC_2026_AWARDS, TOC_FLO_URL, TOC_GOFAN_TICKETS_URL } from "@/lib/toc/constants"
 import { tocEventIsOver, tocTicketsOnSale } from "@/lib/toc/ticket-sale"
 import { shareMetadata } from "@/lib/share-metadata"
+import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
+import { PREVIEW, buildMapPreview } from "@/lib/college-programs/map-preview"
+import collegeMapData from "@/lib/college-programs/programs-2026-27.json"
+import type { CollegeMapSchool } from "@/lib/college-programs/types"
+import { loadPlatformStats } from "@/lib/platform-stats"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export const metadata = shareMetadata({
   title: "NC United Wrestling",
@@ -99,11 +105,21 @@ function SectionHeader({
 export default async function HomePage() {
   // One parallel server-side load instead of six client round-trips. Each loader degrades to
   // an empty result rather than throwing, so a slow table can't take down the front door.
-  const [commitsByClass, latestCommitsRaw, storeProducts] = await Promise.all([
+  const [commitsByClass, latestCommitsRaw, storeProducts, platform] = await Promise.all([
     loadCommitCountsByClass(STATS_CLASS_YEARS),
     loadLatestCommits(3),
     loadFeaturedStoreProducts(6),
+    // The Command Center announcement's proof: coaches and programs on the platform (cached an hour).
+    loadPlatformStats(createAdminClient()).catch(() => null),
   ])
+  // A picture of the college map, not the live map: the front page stays fast (Matt, 19 Oct 2026).
+  const mapPreview = (() => {
+    try {
+      return buildMapPreview([...(collegeMapData.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS], { accessToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN })
+    } catch {
+      return null
+    }
+  })()
 
   /*
    * Commitment cards carry the athlete's whole record, including their ranking, and the card
@@ -431,32 +447,63 @@ export default async function HomePage() {
           </div>
         </section>
 
-        {/* The Recruiting Command Center, sold where families land (17 Oct 2026). */}
-        <section>
-          <SectionHeader
-            title="Recruiting Command Center"
-            href="/command-center"
-            linkLabel="See what it does"
-            icon={<TrendingUp className="h-5 w-5 text-rnc-gold" />}
-          />
-          <div className="grid gap-6 rounded-xl border border-rnc-gold/30 bg-rnc-raised p-6 md:grid-cols-[1fr_auto] md:items-center">
-            <div>
-              <p className="text-lg font-semibold text-white">Your recruiting assistant, from 8th grade through signing day.</p>
-              <ul className="mt-3 grid gap-1.5 text-sm text-white/70 sm:grid-cols-2">
-                <li>Every college wrestling program, on one map</li>
-                <li>Each college&apos;s coaches, full cost and roster</li>
-                <li>Your plan for every grade, with the rules</li>
-                <li>Which college programs viewed your profile</li>
+        {/* The Recruiting Command Center, announced where families land (Matt, 19 Oct 2026): proof,
+            Scout and a picture of the college map, all leading to the sales page. */}
+        <section className="overflow-hidden rounded-2xl border border-rnc-gold/40 bg-gradient-to-br from-[#13294B] to-rnc-raised">
+          <div className="grid gap-0 md:grid-cols-[1.05fr_1fr]">
+            <div className="p-6 sm:p-8">
+              <span className="inline-flex items-center rounded-full bg-rnc-gold px-2.5 py-0.5 text-[11px] font-black uppercase tracking-widest text-rnc-ink">New</span>
+              <h2 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">The Recruiting Command Center</h2>
+              <p className="mt-2 text-sm text-white/75 sm:text-base">Your family&apos;s recruiting plan, from 8th grade through signing day, on the same platform college coaches use to recruit.</p>
+              <div className="mt-5 grid grid-cols-3 gap-2">
+                {[
+                  { n: mapPreview?.total ?? null, label: "colleges on the map" },
+                  { n: platform?.coaches ?? null, label: "college coaches on it" },
+                  { n: platform?.programs ?? null, label: "college programs" },
+                ]
+                  .filter((t) => t.n != null && t.n > 0)
+                  .map((t) => (
+                    <div key={t.label} className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
+                      <p className="text-2xl font-black text-white sm:text-3xl">{t.n}</p>
+                      <p className="text-[11px] leading-4 text-white/60">{t.label}</p>
+                    </div>
+                  ))}
+              </div>
+              <ul className="mt-4 space-y-1.5 text-sm text-white/80">
+                <li>Every college: coaches, full cost after aid, roster and alumni</li>
+                <li>A roadmap that adapts to your wrestler, and every recruiting rule</li>
+                <li>
+                  <span className="font-semibold text-rnc-gold">Scout</span>, your AI recruiting assistant
+                </li>
               </ul>
+              <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+                <Link href="/command-center" className="rounded-lg bg-rnc-gold px-5 py-2.5 text-center text-sm font-bold text-rnc-ink hover:opacity-90">
+                  See the Command Center
+                </Link>
+                <Link href="/plans" className="rounded-lg border border-white/20 px-5 py-2.5 text-center text-sm font-semibold text-white hover:bg-white/5">
+                  Compare plans
+                </Link>
+              </div>
             </div>
-            <div className="flex flex-col gap-2 sm:flex-row md:flex-col">
-              <Link href="/command-center" className="rounded-lg bg-rnc-gold px-5 py-2.5 text-center text-sm font-semibold text-rnc-ink hover:opacity-90">
-                See the Command Center
+            {mapPreview ? (
+              <Link href="/command-center#find-your-colleges" aria-label="See the college map on the Command Center page" className="group relative flex items-center bg-[#0a1528]">
+                {/* The map at its own shape, so the whole country shows - the East Coast is where most colleges are. */}
+                <div className="relative w-full" style={{ aspectRatio: `${PREVIEW.width} / ${PREVIEW.height}` }}>
+                  {mapPreview.backdropUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={mapPreview.backdropUrl} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover brightness-150" />
+                  ) : null}
+                  <svg viewBox={`0 0 ${PREVIEW.width} ${PREVIEW.height}`} className="absolute inset-0 h-full w-full" role="img" aria-label={`Map of ${mapPreview.total} college wrestling programs`}>
+                    {mapPreview.dots.map((d) => (
+                      <circle key={d.id} cx={d.x} cy={d.y} r={3.4} fill={d.color} stroke="#0a1528" strokeWidth={0.8} opacity={0.95} />
+                    ))}
+                  </svg>
+                </div>
+                <span className="absolute bottom-3 right-3 rounded-lg bg-rnc-gold px-3 py-1.5 text-xs font-bold text-rnc-ink shadow-lg transition group-hover:opacity-90">
+                  Explore the map →
+                </span>
               </Link>
-              <Link href="/plans" className="rounded-lg border border-white/20 px-5 py-2.5 text-center text-sm font-semibold text-white hover:bg-white/5">
-                Compare plans
-              </Link>
-            </div>
+            ) : null}
           </div>
         </section>
 
