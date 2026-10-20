@@ -2,7 +2,7 @@ import "server-only"
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 
-import { coachLabel, displayName, familyOf, firstName, unreadCount } from "@/lib/coach-messages"
+import { coachLabel, displayName, familyOf, firstName, messagingStaffIds, unreadCount } from "@/lib/coach-messages"
 import { getAppBaseUrl } from "@/lib/news-share-formats"
 import { sendToTokens } from "@/lib/push-send"
 import { notifyStaffMessageReport, notifyStaffUnclaimedMessage } from "@/lib/staff-alerts-sms"
@@ -147,9 +147,11 @@ export async function notifyNewMessage(
 
     // The family replied: tell the coach.
     const who = input.senderRole === "athlete" ? wrestler : `${wrestler}'s parent`
-    await pushTo(admin, [thread.coach_user_id], { title: "Reply from a recruit", body: `${who} replied to your message.`, threadId: thread.id })
+    // Every coach on the program's staff: it is the program's conversation.
+    const staff = await messagingStaffIds(admin, String(thread.coach_user_id)).catch(() => [String(thread.coach_user_id)])
+    await pushTo(admin, staff, { title: "Reply from a recruit", body: `${who} replied to your message.`, threadId: thread.id })
     // Coaches work on the web; they always get the email.
-    for (const r of await emailsFor(admin, [thread.coach_user_id])) {
+    for (const r of await emailsFor(admin, staff)) {
       await sendEmail(r.email, `${who} replied to your message`, {
         headline: `${who} replied`,
         detail: `Your conversation about ${athlete?.name ?? "this wrestler"} has a new reply.`,
@@ -209,8 +211,9 @@ export async function notifyWaitingMessagesOnClaim(admin: SupabaseClient, input:
 
     for (const t of threads) {
       const url = `${getAppBaseUrl()}/inbox/${t.id}`
-      await pushTo(admin, [String(t.coach_user_id)], { title: "Family joined", body: `${wrestler}'s family joined RecruitNC and can now read your message.`, threadId: t.id })
-      for (const r of await emailsFor(admin, [String(t.coach_user_id)])) {
+      const staff = await messagingStaffIds(admin, String(t.coach_user_id)).catch(() => [String(t.coach_user_id)])
+      await pushTo(admin, staff, { title: "Family joined", body: `${wrestler}'s family joined RecruitNC and can now read your message.`, threadId: t.id })
+      for (const r of await emailsFor(admin, staff)) {
         await sendEmail(r.email, `${athlete?.name ?? wrestler}'s family can now read your message`, {
           headline: `${athlete?.name ?? wrestler}'s family joined RecruitNC`,
           detail: `They claimed the profile, so the message you sent is in front of them now. Replies come to your inbox.`,

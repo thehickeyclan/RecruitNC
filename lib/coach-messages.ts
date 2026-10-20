@@ -70,7 +70,7 @@ export function coachLabel(name: string): string {
   return parts.length ? `Coach ${parts[parts.length - 1]}` : "A coach"
 }
 
-const PROFILE_COLUMNS = "user_id, role, verified_coach, verification_status, institution, email, full_name, first_name, last_name, is_admin"
+const PROFILE_COLUMNS = "user_id, role, verified_coach, verification_status, institution, email, full_name, first_name, last_name, is_admin, school_id"
 
 type ProfileRow = CoachProfile & {
   user_id: string
@@ -85,6 +85,24 @@ type ProfileRow = CoachProfile & {
 async function loadProfile(admin: SupabaseClient, userId: string): Promise<ProfileRow | null> {
   const { data } = await admin.from("user_profiles").select(PROFILE_COLUMNS).eq("user_id", userId).maybeSingle()
   return (data as ProfileRow | null) ?? null
+}
+
+/**
+ * The approved college coaches at this coach's school, this coach included: the people who share a
+ * program's conversations (Matt, 20 Oct 2026: "each coach conversation is that program's thread").
+ * A family talks to Brewton-Parker, not to whichever Brewton-Parker coach wrote first; a second
+ * coach writes into the same conversation, and every coach there sees replies.
+ *
+ * Approved college coaches only. A school on someone's account is not a coaching post: Jim
+ * Giannotti was turned into a fan and still carries Greensboro on his profile.
+ */
+export async function messagingStaffIds(admin: SupabaseClient, coachUserId: string): Promise<string[]> {
+  const me = await loadProfile(admin, coachUserId)
+  const schoolId = (me as { school_id?: string | null } | null)?.school_id ?? null
+  if (!schoolId) return [coachUserId]
+  const { data } = await admin.from("user_profiles").select(PROFILE_COLUMNS).eq("school_id", schoolId)
+  const staff = ((data ?? []) as ProfileRow[]).filter((p) => isApprovedCoach(p)).map((p) => String(p.user_id))
+  return [...new Set([coachUserId, ...staff])]
 }
 
 /** The wrestler's own account and every linked parent - the people a thread belongs to. */
@@ -140,6 +158,9 @@ export async function roleInThread(
   userId: string,
 ): Promise<ThreadRole | null> {
   if (thread.coach_user_id === userId) return "coach"
+  // Another approved coach on the same program's staff: it is their program's conversation too.
+  const viewer = await loadProfile(admin, userId)
+  if (viewer && isApprovedCoach(viewer) && (await messagingStaffIds(admin, thread.coach_user_id)).includes(userId)) return "coach"
   const family = await familyOf(admin, thread.athlete_id)
   if (family.athleteUserId === userId) return "athlete"
   if (family.parentUserIds.includes(userId)) return "parent"
@@ -169,11 +190,15 @@ export async function canMessage(admin: SupabaseClient, userId: string, athleteI
   if (!athlete) return { ok: false, reason: "no_athlete", message: "That profile does not exist." }
   if (athlete.claimed_by_user_id === userId) return { ok: false, reason: "self", message: "This is your own profile." }
 
+  // The program's conversation with this wrestler, whichever of its coaches opened it.
+  const staff = await messagingStaffIds(admin, userId)
   const { data: thread } = await admin
     .from("coach_threads")
     .select("id, stopped_at")
-    .eq("coach_user_id", userId)
+    .in("coach_user_id", staff)
     .eq("athlete_id", athleteId)
+    .order("created_at", { ascending: true })
+    .limit(1)
     .maybeSingle()
   if (thread?.stopped_at) {
     return { ok: false, reason: "stopped", threadId: thread.id as string, message: "This family has turned off messages from you." }
@@ -221,8 +246,10 @@ export async function coachSend(admin: SupabaseClient, coachUserId: string, athl
       const { data: existing } = await admin
         .from("coach_threads")
         .select("id")
-        .eq("coach_user_id", coachUserId)
+        .in("coach_user_id", await messagingStaffIds(admin, coachUserId))
         .eq("athlete_id", athleteId)
+        .order("created_at", { ascending: true })
+        .limit(1)
         .maybeSingle()
       if (!existing) return { ok: false, status: 500, error: "Could not start the conversation." }
       threadId = existing.id as string
@@ -392,7 +419,11 @@ export type ThreadSummary = {
 export async function listThreads(admin: SupabaseClient, userId: string, opts: { athleteId?: string } = {}): Promise<ThreadSummary[]> {
   const athleteIds = await familyAthleteIds(admin, userId)
 
-  const queries = [admin.from("coach_threads").select(THREAD_COLUMNS).eq("coach_user_id", userId)]
+  // A coach sees every conversation their program's staff has with a wrestler.
+  const viewer = await loadProfile(admin, userId)
+  const staff = viewer && isApprovedCoach(viewer) ? await messagingStaffIds(admin, userId) : [userId]
+  const staffSet = new Set(staff)
+  const queries = [admin.from("coach_threads").select(THREAD_COLUMNS).in("coach_user_id", staff)]
   if (athleteIds.length) queries.push(admin.from("coach_threads").select(THREAD_COLUMNS).in("athlete_id", athleteIds))
   const results = await Promise.all(queries.map((q) => (opts.athleteId ? q.eq("athlete_id", opts.athleteId) : q)))
 
@@ -424,7 +455,7 @@ export async function listThreads(admin: SupabaseClient, userId: string, opts: {
   return threads.map((t) => {
     const last = latest.get(t.id)
     const viewerRole: ThreadSummary["viewerRole"] =
-      t.coach_user_id === userId ? "coach" : identities.get(t.athlete_id)?.claimedBy === userId ? "athlete" : "parent"
+      staffSet.has(t.coach_user_id) ? "coach" : identities.get(t.athlete_id)?.claimedBy === userId ? "athlete" : "parent"
     const read = readAt.get(t.id)
     const a = identities.get(t.athlete_id)
     const lastRole = last?.sender_role ?? null
