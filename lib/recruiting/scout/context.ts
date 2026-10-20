@@ -28,7 +28,10 @@ import { rateOneAthlete } from "@/lib/athlete-star-rating-load"
 import { loadNationallyRankedIds } from "@/lib/national-rankings"
 import { loadOpponentIndex } from "@/lib/scouting-report"
 import { loadStatePlacerIndex } from "@/lib/state-placers"
-import { projectedLevelFacts } from "@/lib/recruiting/scout/projected-level"
+import { d1TierFacts, projectedLevelFacts } from "@/lib/recruiting/scout/projected-level"
+import { loadD1Tiers } from "@/lib/college-programs/d1-tiers"
+import { familyState } from "@/lib/recruiting/family-state"
+import { STATE_NAMES } from "@/lib/college-programs/states"
 
 /**
  * The family's own wrestler's star, rated the way the ranking board rates it (same indexes), for
@@ -144,7 +147,7 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
   for (const p of LEARN_PAGES) links[`learn:${p.slug}`] = { label: /Division|NAIA|NJCAA/.test(p.title) ? `View the ${p.title.replace(/^The /, "")} rules` : p.title, href: `/recruiting/learn/${p.slug}`, kind: "rule" }
 
   const ids = await familyAthleteIds(admin, userId).catch(() => [] as string[])
-  const { data: rows } = ids.length ? await admin.from("athletes").select('id, "firstName", name, gender, graduationyear, highschool').in("id", ids) : { data: [] }
+  const { data: rows } = ids.length ? await admin.from("athletes").select('id, "firstName", name, gender, graduationyear, highschool, college').in("id", ids) : { data: [] }
   const graduated = mostRecentGraduatedClassYear()
   const wrestler = (rows ?? [])
     .filter((a) => a.graduationyear && Number(a.graduationyear) > graduated)
@@ -171,13 +174,15 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
   const focus = await familyFocus(admin, userId).catch(() => null)
   const team = focus?.gender ?? (wrestler.gender ? (female ? "womens" : "mens") : null)
 
-  const [signals, fitCtx, views, list, infoSheet, star] = await Promise.all([
+  const [signals, fitCtx, views, list, infoSheet, star, tiers, homeState] = await Promise.all([
     grade ? loadRoadmapSignals(admin, { athleteId: String(wrestler.id), userId, grade }).catch(() => null) : Promise.resolve(null),
     loadFamilyFitContext(admin, userId, team).catch(() => null),
     getCoachViewsForAthlete(admin, String(wrestler.id)).catch(() => null),
     admin.from("college_list_items").select("school_id, status").eq("user_id", userId).then((r) => r.data ?? []),
     buildInfoSheet(admin, String(wrestler.id)).catch(() => null),
     familyStar(admin, String(wrestler.id), (wrestler.gender as string | null) ?? null, classYear),
+    loadD1Tiers(),
+    familyState(admin, userId).catch(() => "NC"),
   ])
   const { data: account } = await admin.auth.admin.getUserById(userId)
   const ticked = Array.isArray(account?.user?.user_metadata?.roadmap_done) ? (account!.user!.user_metadata!.roadmap_done as string[]) : []
@@ -202,8 +207,13 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
     )
   }
 
+  // A commitment on file changes every "is X realistic" answer.
+  if (wrestler.college && String(wrestler.college).trim()) out.push(`# Commitment\n${firstName} is committed to ${String(wrestler.college).trim()} (our records). Answer level and "realistic" questions knowing that; never question the commitment.`)
+
   // The projected college level: our honest read, computed from the star (Matt, 20 Oct 2026).
-  out.push(`# ${firstName}'s projected college level (computed; for "what division should we consider")\n${projectedLevelFacts(firstName, star, { female })}`)
+  const tier1Schools = tiers.tier1.map((t) => SCHOOLS.get(t.schoolId)).filter((x): x is CollegeMapSchool => Boolean(x))
+  const tierFacts = female ? "" : `\n${d1TierFacts(tier1Schools.map((x) => spoken(x.name)), tiers.pollDate, tier1Schools.filter((x) => x.state === homeState).map((x) => spoken(x.name)), STATE_NAMES[homeState] ?? homeState, star?.stars ?? null)}`
+  out.push(`# ${firstName}'s projected college level (computed; for "what division should we consider")\n${projectedLevelFacts(firstName, star, { female })}${tierFacts}`)
 
   // The contact and visit dates, as calendar dates for this class.
   const dated = allDatedRules(track).map((r) => {
@@ -283,6 +293,9 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
     fit: fitCtx,
     list: new Map(list.map((r) => [String(r.school_id), listStage(r.status)])),
     viewed: new Set((views?.schools ?? []).map((v) => collegeKey(v.school))),
+    homeState,
+    tiers,
+    stars: star?.stars ?? null,
     links,
   }
   return { firstName, classYear, links, session, facts: out.join("\n\n") }
