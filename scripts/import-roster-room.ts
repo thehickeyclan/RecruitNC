@@ -11,6 +11,7 @@
  */
 import { readFileSync, writeFileSync } from "fs"
 
+import { namesLikelySamePerson } from "@/lib/athlete-name-match"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { buildSchoolIndex, matchSchool, nameKey } from "@/lib/college-programs/match"
 import data from "@/lib/college-programs/programs-2026-27.json"
@@ -36,6 +37,47 @@ const rows = book["Roster Dataset v3"]
 const head = rows[0] as string[]
 const at = (r: Row, c: string) => r[head.indexOf(c)] ?? null
 
+/*
+ * Muse matched WrestleStat weights on the exact first and last name, so a nickname left the
+ * weight blank: UNC's "Matthew Botello" has none, while the Depth Charts tab holds "Matt Botello"
+ * at 133 from WrestleStat (Matt, 19 Oct 2026: "why don't you have Botello at 133?"). Fill a blank
+ * weight from a WrestleStat-only depth row on the same team when the names are the same person by
+ * the site's own matcher, exactly one row matches on each side, and the classes agree.
+ */
+const depthRows = book["Depth Charts"] ?? []
+const dHead = (depthRows[0] ?? []) as string[]
+const dAt = (r: Row, c: string) => r[dHead.indexOf(c)] ?? null
+const cls = (c: unknown) => String(c ?? "").toUpperCase().replace(/^RS/, "") || null
+const teamKey = (r: Row, get: (r: Row, c: string) => string | null) => `${get(r, "school")}|${get(r, "gender")}`
+const wsOnly = new Map<string, Row[]>()
+for (const r of depthRows.slice(1)) {
+  if (!/not in school-roster/i.test(String(dAt(r, "weight_source") ?? ""))) continue
+  const k = teamKey(r, dAt)
+  wsOnly.set(k, [...(wsOnly.get(k) ?? []), r])
+}
+const rosterByTeam = new Map<string, Row[]>()
+for (const r of rows.slice(1)) {
+  if (!r?.length) continue
+  const k = teamKey(r, at)
+  rosterByTeam.set(k, [...(rosterByTeam.get(k) ?? []), r])
+}
+const filled = new Map<Row, number>()
+for (const [k, roster] of rosterByTeam) {
+  const extra = wsOnly.get(k) ?? []
+  for (const r of roster) {
+    if (Number(at(r, "weight_used")) > 0) continue
+    const name = String(at(r, "name"))
+    const hits = extra.filter((d) => namesLikelySamePerson(name, String(dAt(d, "wrestler"))))
+    if (hits.length !== 1) continue
+    const d = hits[0]
+    if (roster.filter((x) => namesLikelySamePerson(String(at(x, "name")), String(dAt(d, "wrestler")))).length !== 1) continue
+    const a = cls(at(r, "class_canonical")), b = cls(dAt(d, "class"))
+    if (a && b && a !== b) continue
+    const w = Number(dAt(d, "weight"))
+    if (w > 0) filled.set(r, w)
+  }
+}
+
 /** [name, weight, class, final season, redshirt, home state, high school] */
 type Wrestler = [string, number | null, string | null, number | null, 1 | 0, string | null, string | null]
 const room: Record<string, Partial<Record<"mens" | "womens", { season: string; wrestlers: Wrestler[] }>>> = {}
@@ -50,7 +92,7 @@ for (const r of rows.slice(1)) {
     continue
   }
   const team = /^w/i.test(String(at(r, "gender"))) ? "womens" : "mens"
-  const w = Number(at(r, "weight_used"))
+  const w = Number(at(r, "weight_used")) || filled.get(r) || 0
   const final = Number(at(r, "projected_final_season"))
   const entry = ((room[id] ??= {})[team] ??= { season: String(at(r, "season") ?? "2026-27"), wrestlers: [] })
   entry.wrestlers.push([
@@ -93,5 +135,7 @@ const source = "Muse, college roster pull v3 (2026-10-19): each school's 2026-27
 writeFileSync("lib/college-programs/roster-room.json", JSON.stringify({ source, teams: room }) + "\n")
 writeFileSync("lib/college-programs/roster-depth.json", JSON.stringify({ source, teams: depth }) + "\n")
 const wrestlers = Object.values(room).flatMap((t) => Object.values(t)).reduce((n, t) => n + (t?.wrestlers.length ?? 0), 0)
+console.log(`filled ${filled.size} blank weights from WrestleStat by nickname`)
+for (const [r, w] of [...filled].slice(0, 40)) console.log(" ~", at(r, "school"), at(r, "name"), w)
 console.log(`placed ${Object.keys(room).length} colleges, ${wrestlers} wrestlers; could not place ${unplaced.size} schools (${[...unplaced.values()].reduce((a, b) => a + b, 0)} wrestlers)`)
 for (const [s, n] of unplaced) console.log(" -", s, n)
