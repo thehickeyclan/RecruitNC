@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { ContactEmail } from "@/components/recruiting/contact-email"
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -236,9 +237,7 @@ export default function PrivacyPolicyPage() {
             <p className="mt-2">
               NC United Wrestling
               <br />
-              <a className="text-rnc-gold underline" href="mailto:info@ncwrestlingunited.com">
-                info@ncwrestlingunited.com
-              </a>
+              <ContactEmail link className="text-rnc-gold underline" />
             </p>
           </section>
         </div>

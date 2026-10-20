@@ -18,6 +18,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { HOME_STATE, US_STATES } from "@/lib/athlete-state"
 import { BlobImageUpload } from "@/components/blob-image-upload"
 import { AuthGuard } from "@/components/auth-guard"
+import { ContactEmail } from "@/components/recruiting/contact-email"
 
 const HS_WEIGHT_CLASSES = {
   Male: ["106", "113", "120", "126", "132", "138", "144", "150", "157", "165", "175", "190", "215", "285"],
@@ -1122,7 +1123,7 @@ export default function SubmitProfilePage() {
 
                 <p className="text-xs text-gray-600 mt-4">
                   <strong>Photos:</strong> All athlete photos are sourced from publicly available Instagram accounts. 
-                  You may request profile removal anytime by contacting info@ncwrestlingunited.com
+                  You may request profile removal anytime by contacting <ContactEmail />
                 </p>
               </div>
             </div>
