@@ -25,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: null,
     twitter: null,
     manifest: null,
-    ...(rw ? { icons: { icon: [{ url: "/recruitwrestlers/icon-192.png", type: "image/png" }], apple: [{ url: "/recruitwrestlers/apple-icon.png" }] } } : {}),
+    ...(rw ? { icons: { icon: [{ url: "/recruitwrestlers/favicon-32.png", sizes: "32x32", type: "image/png" }, { url: "/recruitwrestlers/icon-192.png", sizes: "192x192", type: "image/png" }], apple: [{ url: "/recruitwrestlers/apple-icon.png" }] } } : {}),
   }
 }
 
