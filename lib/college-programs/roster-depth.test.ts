@@ -20,8 +20,9 @@ describe("how deep a roster is at a wrestler's weight", () => {
   })
 
   it("says nothing at a weight for a team that publishes no weights", () => {
-    const ncState = depthFor("north-carolina-state-university-nc-state", "mens")!
-    expect(ncState.withWeight).toBe(0)
-    expect(depthAtWeights(ncState, [157])).toBeNull()
+    // NC State's weights were found in the v3 pull (19 Oct 2026); Cornell's men still publish none.
+    const cornell = depthFor("cornell-university", "mens")!
+    expect(cornell.withWeight).toBe(0)
+    expect(depthAtWeights(cornell, [157])).toBeNull()
   })
 })

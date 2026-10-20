@@ -17,6 +17,7 @@ import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { satTotalRange, scorePlacement, type Placement } from "@/lib/college-programs/fit"
 import { rosterForSchool } from "@/lib/college-programs/rosters"
 import { fitScore, type FitLine, type FitStatus } from "@/lib/recruiting/family-fit"
+import { NEED_LABEL } from "@/lib/college-programs/roster-room"
 import { collegeFitFor, loadFamilyFitContext } from "@/lib/recruiting/college-fit"
 import { collegeViewsFor } from "@/lib/recruiting/college-views"
 import { familyAthleteIds } from "@/lib/coach-messages"
@@ -104,7 +105,7 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
 
   const columns = await Promise.all(
     chosen.map(async (school) => {
-      const { fit, cost, net, depth, atWeight, lines: fitLines } = collegeFitFor(ctx, school, income)
+      const { fit, cost, net, depth, room, lines: fitLines } = collegeFitFor(ctx, school, income)
       const rankings = (await teamRankingsForSchool(school.id)).filter((r) => !team || r.gender === team)
       const roster = rosterForSchool(school.id)
       const ncOnRoster = roster.wrestlers.filter((w) => !team || w.team === team).length
@@ -125,11 +126,12 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
           ? { main: "No recent weight on file" }
           : !depth
             ? { main: "Roster not read" }
-            : !atWeight
-              ? { main: "The roster lists no weights" }
+            : !room
+              ? { main: "The roster lists few weights" }
               : {
-                  main: atWeight.map((l) => `${l.weight}: ${l.wrestlers}`).join(" · "),
-                  sub: `${atWeight.map((l) => `${l.finalYear} in their final year at ${l.weight}`).join(", ")}. ${depth.season ?? "Current"} roster; redshirts and transfers change it.`,
+                  main: room.rows.map((r) => `${r.weight}: ${NEED_LABEL[r.need]}`).join(" · "),
+                  sub: `${room.rows.map((r) => `${r.staying} still at ${r.weight} in fall ${room.arrival}`).join(", ")}. ${depth.season ?? "Current"} roster; redshirts, transfers and new signings change it.`,
+                  className: room.rows.some((r) => r.need === "likely") ? "text-emerald-300" : room.rows.every((r) => r.need === "crowded") ? "text-amber-200" : undefined,
                 },
         level: programs.length
           ? { main: programs.map((p) => DIVISION_SHORT[p.division]).join(", "), sub: programs.map((p) => p.conference).filter(Boolean).join(", ") || undefined }
