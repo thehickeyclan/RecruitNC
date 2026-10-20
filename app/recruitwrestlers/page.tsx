@@ -1,45 +1,22 @@
 /**
- * recruitwrestlers.com - the national recruiting product's front door (Matt, 15 October 2026).
- *
- * Two doors, families and college coaches, and nothing of NC United: its own frame
- * (components/app-chrome.tsx) and served at "/" only on the national domain (middleware.ts).
- * Accounts, sign-in and the Command Center still live on the app's domain, so every button goes
- * there (NATIONAL_BRAND.appOrigin).
- *
- * Only what exists is claimed, from an inventory of the code on 15 October 2026. Every number is
- * counted (lib/recruiting/national-stats.ts). Not advertised on purpose: prices (the Command
- * Center's full tools are NC United Blue in North Carolina; no national price yet), message
- * volume, and states that are not live.
+ * www.recruitwrestlers.com's front door (middleware rewrites "/" here). Rebuilt on 20 Oct 2026 on
+ * the layout of NC United's own homepage, which Matt pointed to as "what we had": a hero with a
+ * door for the college coach and one for the family, the Command Center with live numbers and the
+ * college map, the coaches' tools beside a real scouting report, and the states. Navy and lime
+ * with Scout's head (components/recruiting/rw-mark.tsx). NC United's news, store and events are
+ * NC United's and stay on app.ncwrestlingunited.com.
  */
 import type { Metadata } from "next"
-import {
-  ArrowRight,
-  BarChart3,
-  CalendarCheck,
-  ClipboardList,
-  Eye,
-  PhoneCall,
-  FileText,
-  GitCompareArrows,
-  GraduationCap,
-  Inbox,
-  ListChecks,
-  Mail,
-  Map,
-  MessageSquare,
-  Search,
-  ShieldCheck,
-  Star,
-  Target,
-  Trophy,
-  Users,
-  type LucideIcon,
-} from "lucide-react"
-import { Saira } from "next/font/google"
+import Image from "next/image"
+import { ArrowLeftRight, ArrowRight, FileText, Map as MapIcon, Star, Target, TrendingUp, UserRound } from "lucide-react"
 import { RwLogo } from "@/components/recruiting/rw-mark"
-import { NATIONAL_BRAND, RECRUITING_BRAND, stateBrand } from "@/lib/recruiting/brand"
-import { loadNationalStats, type NationalStats } from "@/lib/recruiting/national-stats"
-import { COACH_FEATURES, EVENTS, FAMILY_FEATURES } from "@/lib/recruiting/national-content"
+import { NATIONAL_BRAND, RECRUITING_BRAND } from "@/lib/recruiting/brand"
+import { loadPlatformStats } from "@/lib/platform-stats"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
+import { PREVIEW, buildMapPreview } from "@/lib/college-programs/map-preview"
+import collegeMapData from "@/lib/college-programs/programs-2026-27.json"
+import type { CollegeMapSchool } from "@/lib/college-programs/types"
 
 export const revalidate = 3600
 
@@ -85,419 +62,256 @@ export const metadata: Metadata = {
   },
 }
 
-const saira = Saira({ subsets: ["latin"], style: ["italic"], axes: ["wdth"], display: "swap" })
+const LIME = "#A3E635"
+const BTN = "inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-extrabold transition-colors"
+const PRIMARY = `${BTN} bg-[#A3E635] text-[#0A1628] hover:bg-[#BEF264]`
+const OUTLINE = `${BTN} border-2 border-[#A3E635] text-[#A3E635] hover:bg-[#A3E635]/10`
 
-// Every page lives on this address now (lib/recruiting/national-paths.ts), so links stay here.
-const APP = ""
-const GOLD = "text-[#A3E635]" // the accent: RecruitWrestlers lime on navy (Matt, 20 Oct 2026)
-const PANEL = "rounded-2xl border border-white/10 bg-[#0f1c2e]"
-const BUTTON = "inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition-colors"
-const PRIMARY = `${BUTTON} bg-[#A3E635] text-[#0A1628] hover:bg-[#BEF264]`
-const SECONDARY = `${BUTTON} border border-white/20 text-white hover:border-white/50`
-
-/** The brand lettering (Saira, italic, set wide): RECRUIT in white, the second word in lime. */
-function Wordmark({ second, className = "" }: { second: string; className?: string }) {
-  return (
-    <span className={`${saira.className} font-bold uppercase italic leading-none ${className}`} style={{ fontStretch: "118%" }}>
-      <span className="text-white">Recruit</span>
-      <span className="text-[#A3E635]">{second}</span>
-    </span>
-  )
-}
-
-/** The full logo: Scout in headgear and the wordmark (components/recruiting/rw-mark.tsx). */
-function Lockup({ className = "" }: { className?: string }) {
-  return (
-    <span className={`flex items-center ${className}`}>
-      <RwLogo className="h-8 w-auto sm:h-9" />
-    </span>
-  )
-}
-
-function Eyebrow({ children }: { children: React.ReactNode }) {
-  return <p className={`text-xs font-black uppercase tracking-[0.25em] ${GOLD}`}>{children}</p>
-}
-
-function Feature({ icon: Icon, title, body }: { icon: LucideIcon; title: string; body: string }) {
-  return (
-    <div className={`${PANEL} p-5`}>
-      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#A3E635]/15">
-        <Icon className={`h-5 w-5 ${GOLD}`} aria-hidden />
-      </span>
-      <p className="mt-4 text-base font-bold text-white">{title}</p>
-      <p className="mt-1 text-sm text-white/60">{body}</p>
-    </div>
-  )
-}
-
-const fmt = (n: number) => n.toLocaleString("en-US")
-
-/** An illustration of the Command Center home, drawn rather than screenshotted: no real family's data. */
-function CommandCenterPreview() {
-  const tiles = [
-    { label: "Profile", value: "100%", sub: "complete" },
-    { label: "My list", value: "8", sub: "colleges" },
-    { label: "Programs viewed", value: "5", sub: "this season" },
-  ]
-  const steps = ["Finish your highlight reel", "Send your info to 3 colleges", "Add your next tournament"]
-  return (
-    <div className={`${PANEL} relative overflow-hidden p-5 shadow-2xl shadow-black/40`} aria-label="Illustration of the Command Center">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${GOLD}`}>Command Center</p>
-          <p className="mt-0.5 text-lg font-black text-white">Your recruiting, in one place</p>
-        </div>
-        <span className="rounded-full bg-emerald-400/15 px-2.5 py-1 text-[10px] font-black uppercase text-emerald-300">Example</span>
-      </div>
-      <div className="mt-4 grid grid-cols-3 gap-2">
-        {tiles.map((t) => (
-          <div key={t.label} className="rounded-xl border border-white/10 bg-[#0A1628] p-3">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">{t.label}</p>
-            <p className="mt-1 text-2xl font-black text-white">{t.value}</p>
-            <p className="text-[11px] text-white/45">{t.sub}</p>
-          </div>
-        ))}
-      </div>
-      <div className="mt-3 rounded-xl border border-white/10 bg-[#0A1628] p-3">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-white/40">Next steps</p>
-        <ul className="mt-2 space-y-1.5">
-          {steps.map((s, i) => (
-            <li key={s} className="flex items-center gap-2 text-sm text-white/80">
-              <span className={`flex h-4 w-4 items-center justify-center rounded-full border ${i === 0 ? "border-emerald-300 bg-emerald-300/20" : "border-white/25"}`} />
-              {s}
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="mt-3 flex items-center gap-3 rounded-xl border border-[#A3E635]/40 bg-[#A3E635]/10 p-3">
-        <Eye className={`h-5 w-5 shrink-0 ${GOLD}`} aria-hidden />
-        <p className="text-sm text-white/85">
-          <span className="font-bold text-white">A Division I program</span> viewed your profile
-        </p>
-      </div>
-    </div>
-  )
-}
-
-function StatsBand({ stats }: { stats: NationalStats | null }) {
-  if (!stats) return null
-  const items = [
-    { value: fmt(stats.coaches), label: "college coaches on the platform" },
-    { value: fmt(stats.programsViewing), label: "college programs viewing wrestlers" },
-    { value: fmt(stats.wrestlers), label: "high school wrestler profiles" },
-    { value: fmt(stats.collegePrograms), label: "college programs on the map" },
-  ]
-  return (
-    <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-      {items.map((i) => (
-        <div key={i.label} className={`${PANEL} px-5 py-4`}>
-          <p className="text-3xl font-black text-white sm:text-4xl">{i.value}</p>
-          <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-white/45">{i.label}</p>
-        </div>
-      ))}
-    </div>
-  )
-}
+const COACH_TOOLS = [
+  { icon: FileText, title: "Scouting reports", body: "One page per athlete: evaluation, academics, best wins. PDF-ready." },
+  { icon: ArrowLeftRight, title: "Compare wrestlers", body: "Head to head, common opponents, best wins, national results, and our read." },
+  { icon: TrendingUp, title: "Prospect rankings", body: "Every published class, ranked on results." },
+  { icon: UserRound, title: "Full athlete profiles", body: "Results, academics, contact details and film." },
+  { icon: Star, title: "My Recruits", body: "A watch list your whole staff shares, with who's gone quiet." },
+  { icon: Target, title: "Your perfect recruit", body: "Set your needs once; every comparison reads against them." },
+]
 
 export default async function RecruitWrestlersHome() {
-  const stats = await loadNationalStats().catch(() => null)
-  const live = RECRUITING_BRAND.states.filter((s) => s.live)
-  const coming = RECRUITING_BRAND.states.filter((s) => !s.live)
+  const platform = await loadPlatformStats(createAdminClient()).catch(() => null)
+  // A picture of the college map, not the live map: the front page stays fast.
+  const mapPreview = (() => {
+    try {
+      return buildMapPreview([...(collegeMapData.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS], { accessToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN })
+    } catch {
+      return null
+    }
+  })()
+  const proof = [
+    { n: mapPreview?.dots.length ?? null, label: "colleges on the map" },
+    { n: platform?.coaches ?? null, label: "college coaches on it" },
+    { n: platform?.programs ?? null, label: "college programs" },
+  ].filter((t) => t.n != null && t.n > 0)
 
   return (
     <div className="min-h-screen bg-[#0A1628] text-white">
-      {/* Top bar */}
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0A1628]/90 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-          <a href="#top" className="text-xl sm:text-2xl" aria-label={NATIONAL_BRAND.name}>
-            <Lockup />
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0A1628]/95 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
+          <a href="/" aria-label={NATIONAL_BRAND.name}>
+            <RwLogo className="h-8 w-auto sm:h-9" />
           </a>
-          <nav className="hidden items-center gap-6 text-sm font-semibold text-white/70 md:flex">
-            <a href="#families" className="hover:text-white">Families</a>
-            <a href="#coaches" className="hover:text-white">College coaches</a>
-            <a href="#states" className="hover:text-white">States</a>
-            <a href={`${APP}/recruiting/learn`} className="hover:text-white">Learn</a>
+          <nav className="hidden items-center gap-6 text-sm font-semibold text-white/75 lg:flex">
+            <a href="/prospects/all" className="hover:text-white">Athletes</a>
+            <a href="/public-rankings" className="hover:text-white">Rankings</a>
+            <a href="/recruiting/college-map" className="hover:text-white">Colleges</a>
+            <a href="/command-center" className="hover:text-white">Command Center</a>
+            <a href="/recruiting/learn" className="hover:text-white">Learn</a>
           </nav>
-          <div className="flex items-center gap-2">
-            <a href={`${APP}/auth/signin`} className="hidden text-sm font-semibold text-white/80 hover:text-white sm:inline">
-              Sign in
-            </a>
-            <a href={`${APP}/create-profile`} className={`${PRIMARY} px-4 py-2`}>
-              Get started
-            </a>
+          <div className="flex items-center gap-3">
+            <a href="/auth/signin" className="hidden text-sm font-semibold text-white/80 hover:text-white sm:inline">Sign in</a>
+            <a href="/create-profile" className={`${PRIMARY} px-4 py-2`}>Get started</a>
           </div>
         </div>
       </header>
 
-      <main id="top">
-        {/* Hero */}
-        <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 pb-12 pt-12 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:pt-20">
-          <div>
-            <Eyebrow>College wrestling recruiting</Eyebrow>
-            <h1 className="mt-4 text-4xl font-black leading-[1.05] tracking-tight sm:text-6xl">
-              Get recruited on <span className={GOLD}>verified results.</span>
-            </h1>
-            <p className="mt-5 max-w-xl text-lg text-white/70">
-              Where college coaches find wrestlers, and families run the recruiting process.
+      <main>
+        {/* Hero: a recruiting site, said in the first line, with a door for each of the two people it serves. */}
+        <section className="relative overflow-hidden border-b border-white/10">
+          {mapPreview ? (
+            <svg viewBox={`0 0 ${PREVIEW.width} ${PREVIEW.height}`} className="pointer-events-none absolute -right-24 top-6 hidden h-[115%] opacity-35 lg:block" aria-hidden>
+              {mapPreview.dots.map((d) => (
+                <circle key={d.id} cx={d.x} cy={d.y} r={3} fill={LIME} opacity={0.55} />
+              ))}
+            </svg>
+          ) : null}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628] via-[#0A1628]/90 to-transparent" />
+          <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 md:py-20">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#A3E635]">
+              Recruit<span className="text-white">Wrestlers</span> · College wrestling recruiting
             </p>
-            <div className="mt-8 grid gap-3 sm:grid-cols-2">
-              <a href={`${APP}/create-profile`} className={`${PANEL} group block p-5 hover:border-[#A3E635]/60`}>
-                <Users className={`h-6 w-6 ${GOLD}`} aria-hidden />
-                <p className="mt-3 text-lg font-black">I&apos;m a wrestler or parent</p>
-                <p className="mt-1 text-sm text-white/60">Find your profile and open your Command Center.</p>
-                <span className={`mt-3 inline-flex items-center gap-1 text-sm font-bold ${GOLD}`}>
-                  Find your profile <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </span>
-              </a>
-              <a href={`${APP}/auth/signup?type=college-coach`} className={`${PANEL} group block p-5 hover:border-[#A3E635]/60`}>
-                <ShieldCheck className={`h-6 w-6 ${GOLD}`} aria-hidden />
-                <p className="mt-3 text-lg font-black">I&apos;m a college coach</p>
-                <p className="mt-1 text-sm text-white/60">Free for college staff. Access the moment you sign up.</p>
-                <span className={`mt-3 inline-flex items-center gap-1 text-sm font-bold ${GOLD}`}>
-                  Create a coach account <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                </span>
-              </a>
-            </div>
-          </div>
-          <CommandCenterPreview />
-        </section>
-
-        <section className="mx-auto max-w-6xl px-4 sm:px-6" aria-label="By the numbers">
-          <StatsBand stats={stats} />
-        </section>
-
-        {/* The difference */}
-        <section className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
-          <div className="max-w-2xl">
-            <Eyebrow>The difference</Eyebrow>
-            <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">College coaches are already here.</h2>
-            <p className="mt-3 text-white/65">Not a profile you email out and hope. The coaches search, track and write to wrestlers on the same platform.</p>
-          </div>
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            <Feature icon={Search} title="Coaches search here" body="Every profile is in the search college staff use, with the weight each wrestler last competed at." />
-            <Feature icon={PhoneCall} title="Track who reached out" body="Calls, texts, visits and offers, logged in one place with every coach message." />
-            <Feature icon={MessageSquare} title="They write to you here" body="Coaches message the wrestler and parents directly, and you reply in one place." />
-          </div>
-        </section>
-
-        {/* Families */}
-        <section id="families" className="border-y border-white/10 bg-[#0c1a2c] py-20">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-2xl">
-                <Eyebrow>For families</Eyebrow>
-                <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">The Command Center.</h2>
-                <p className="mt-3 text-white/65">Everything in the recruiting process, from freshman year to signing day, in one place.</p>
-              </div>
-              <a href={`${APP}/create-profile`} className={PRIMARY}>
-                Find your profile <ArrowRight className="h-4 w-4" />
-              </a>
-            </div>
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {FAMILY_FEATURES.map((f) => (
-                <Feature key={f.title} {...f} />
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* The product, as it looks: real screens of public pages, no wrestler's data on them. */}
-        <section className="py-20" aria-label="Inside the Command Center">
-          <div className="mx-auto max-w-6xl space-y-16 px-4 sm:px-6">
-            <div>
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                <div className="max-w-2xl">
-                  <Eyebrow>College map</Eyebrow>
-                  <h3 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl">Every college wrestling program on one map.</h3>
-                  <p className="mt-2 text-white/65">D1, D2, D3, NAIA and junior college, men&apos;s and women&apos;s. Most wrestlers who keep competing do it outside D1.</p>
-                </div>
-                <a href={`${APP}/recruiting/college-map`} className={`inline-flex items-center gap-1 text-sm font-bold ${GOLD}`}>
-                  Open the map <ArrowRight className="h-4 w-4" />
+            <h1 className="mt-3 max-w-3xl text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl md:text-6xl">
+              Where wrestlers get <span className="text-[#A3E635]">recruited.</span>
+            </h1>
+            <p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/80">
+              Verified results, rankings and commitments in one place, built for the college coaches looking and the families
+              who want to be found.
+            </p>
+            <div className="mt-8 grid max-w-3xl gap-4 sm:grid-cols-2">
+              <div className="rounded-xl border border-[#A3E635]/50 bg-[#0A1628]/80 p-5 backdrop-blur-sm">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-[#A3E635]">College coaches</p>
+                <p className="mt-1.5 text-sm text-white/75">Scouting reports, rankings and side-by-side comparisons. Free.</p>
+                <a href="/auth/signup?type=college-coach" className={`mt-4 ${PRIMARY}`}>
+                  Get free access <ArrowRight className="h-4 w-4" />
                 </a>
               </div>
-              <a href={`${APP}/recruiting/college-map`} className="mt-6 block overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/40">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/recruitwrestlers/college-map.jpg"
-                  alt="Map of every college wrestling program in the United States, colored by division"
-                  width={1600}
-                  height={818}
-                  loading="lazy"
-                  className="h-auto w-full"
-                />
-              </a>
-            </div>
-
-            <div className="grid items-center gap-8 lg:grid-cols-[1fr_1.3fr]">
-              <div>
-                <Eyebrow>College pages</Eyebrow>
-                <h3 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl">Know what a college really costs.</h3>
-                <p className="mt-2 text-white/65">The full yearly cost, what families at each income actually paid, admissions, roster size and team ranking. Not just tuition.</p>
-                <ul className="mt-5 space-y-2 text-sm text-white/80">
-                  {["Full cost of a year, in state and out", "What families paid, by income", "Test scores of admitted students", "Team ranking and roster size"].map((t) => (
-                    <li key={t} className="flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#A3E635]" aria-hidden /> {t}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="overflow-hidden rounded-2xl border border-white/10 shadow-2xl shadow-black/40">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/recruitwrestlers/college-page.jpg"
-                  alt="A college page: program snapshot, the full cost of a year and what families paid by income"
-                  width={1200}
-                  height={1119}
-                  loading="lazy"
-                  className="h-auto w-full"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Coaches */}
-        <section id="coaches" className="border-y border-white/10 bg-[#0c1a2c] py-20">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div className="max-w-2xl">
-                <Eyebrow>For college coaches</Eyebrow>
-                <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Recruit on results, not highlight tapes.</h2>
-                <p className="mt-3 text-white/65">Free for college coaching staff. One account, every state we cover, your whole staff on one board.</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <a href={`${APP}/auth/signup?type=college-coach`} className={PRIMARY}>
-                  Create a free account <ArrowRight className="h-4 w-4" />
-                </a>
-                <a href={`${APP}/auth/signin`} className={SECONDARY}>
-                  Sign in
+              <div className="rounded-xl border border-white/15 bg-[#0A1628]/80 p-5 backdrop-blur-sm">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-white/60">Athletes &amp; families</p>
+                <p className="mt-1.5 text-sm text-white/75">Your results are probably already here. Claim your profile and get seen.</p>
+                {/* /create-profile searches for the existing profile first and only creates one when there is no match. */}
+                <a href="/create-profile" className={`mt-4 ${OUTLINE} py-2`}>
+                  Claim your profile <ArrowRight className="h-4 w-4" />
                 </a>
               </div>
             </div>
-            <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {COACH_FEATURES.map((f) => (
-                <Feature key={f.title} {...f} />
-              ))}
+            <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold">
+              <a href="/public-rankings" className="text-white/70 hover:text-[#A3E635]">Prospect rankings <ArrowRight className="inline h-3.5 w-3.5" /></a>
+              <a href="/recruiting/college-map" className="inline-flex items-center gap-1 text-white/70 hover:text-[#A3E635]">
+                <MapIcon className="h-3.5 w-3.5" aria-hidden /> College map
+              </a>
+              <a href="/recruiting/learn" className="text-white/70 hover:text-[#A3E635]">How recruiting works <ArrowRight className="inline h-3.5 w-3.5" /></a>
             </div>
           </div>
         </section>
 
-        {/* Verified results */}
-        <section className="border-y border-white/10 bg-[#0c1a2c] py-16">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <div className="flex flex-col gap-8 lg:flex-row lg:items-center">
-              <div className="max-w-md">
-                <Eyebrow>Built on verified results</Eyebrow>
-                <h2 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl">Real results, matched to real wrestlers.</h2>
-                <p className="mt-3 text-white/65">Tournament results are imported from the events themselves, not typed in by families.</p>
-              </div>
-              <ul className="flex flex-1 flex-wrap gap-2">
-                {EVENTS.map((e) => (
-                  <li key={e} className="flex items-center gap-2 rounded-full border border-white/15 bg-[#0A1628] px-4 py-2 text-sm font-semibold text-white/85">
-                    <Trophy className={`h-4 w-4 ${GOLD}`} aria-hidden /> {e}
+        <div className="mx-auto max-w-7xl space-y-12 px-4 py-10 sm:px-6">
+          {/* The Recruiting Command Center: proof, Scout and a picture of the college map. */}
+          <section className="overflow-hidden rounded-2xl border border-[#A3E635]/40 bg-gradient-to-br from-[#13294B] to-[#0f1c2e]">
+            <div className="grid gap-0 md:grid-cols-[1.05fr_1fr]">
+              <div className="p-6 sm:p-8">
+                <span className="inline-flex items-center rounded-full bg-[#A3E635] px-2.5 py-0.5 text-[11px] font-black uppercase tracking-widest text-[#0A1628]">For families</span>
+                <h2 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl">The Recruiting Command Center</h2>
+                <p className="mt-2 text-sm text-white/75 sm:text-base">
+                  Your family&apos;s recruiting plan, from 8th grade through signing day, on the same platform college coaches use to recruit.
+                </p>
+                {proof.length ? (
+                  <div className="mt-5 grid grid-cols-3 gap-2">
+                    {proof.map((t) => (
+                      <div key={t.label} className="rounded-xl border border-white/10 bg-white/[0.04] p-3">
+                        <p className="text-2xl font-black sm:text-3xl">{t.n}</p>
+                        <p className="text-[11px] leading-4 text-white/60">{t.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+                <ul className="mt-4 space-y-1.5 text-sm text-white/80">
+                  <li>Every college: coaches, full cost after aid, roster and alumni</li>
+                  <li>A roadmap that adapts to your wrestler, and every recruiting rule</li>
+                  <li>See which college programs viewed your profile, and log who reached out</li>
+                  <li>
+                    <span className="font-semibold text-[#A3E635]">Scout</span>, your AI recruiting assistant
                   </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </section>
-
-        {/* States */}
-        <section id="states" className="py-20">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <Eyebrow>State by state</Eyebrow>
-            <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Your state. One national platform.</h2>
-            <p className="mt-3 max-w-2xl text-white/65">Each state has its own rankings and results. Coaches see every state from one account.</p>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {live.map((s) => (
-                <a key={s.code} href={`${APP}/prospects/all`} className={`${PANEL} group block p-6 hover:border-[#A3E635]/60`}>
-                  <div className="flex items-center justify-between">
-                    <Wordmark second={s.code} className="text-3xl" />
-                    <span className="rounded-full bg-emerald-400/15 px-2.5 py-1 text-[10px] font-black uppercase text-emerald-300">Live</span>
-                  </div>
-                  <p className="mt-3 text-sm text-white/60">{s.name}: rankings, results and every wrestler&apos;s profile.</p>
-                  <span className={`mt-4 inline-flex items-center gap-1 text-sm font-bold ${GOLD}`}>
-                    Open {stateBrand(s.code)} <ArrowRight className="h-4 w-4" />
-                  </span>
-                </a>
-              ))}
-              {coming.map((s) => (
-                <div key={s.code} className={`${PANEL} p-6 opacity-80`}>
-                  <div className="flex items-center justify-between">
-                    <Wordmark second={s.code} className="text-3xl" />
-                    <span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-black uppercase text-white/60">Coming soon</span>
-                  </div>
-                  <p className="mt-3 text-sm text-white/60">{s.name}</p>
+                </ul>
+                <div className="mt-5">
+                  <a href="/command-center" className={PRIMARY}>Learn more</a>
                 </div>
-              ))}
-              <div className={`${PANEL} flex flex-col justify-center border-dashed p-6`}>
-                <p className="text-lg font-black">More states next</p>
-                <p className="mt-1 text-sm text-white/60">We open a state once its results are checked.</p>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Learn */}
-        <section className="border-t border-white/10 bg-[#0c1a2c] py-20">
-          <div className="mx-auto max-w-6xl px-4 sm:px-6">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <Eyebrow>Learn</Eyebrow>
-                <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Know how recruiting works.</h2>
-              </div>
-              <a href={`${APP}/recruiting/learn`} className={`hidden items-center gap-1 text-sm font-bold sm:inline-flex ${GOLD}`}>
-                All guides <ArrowRight className="h-4 w-4" />
-              </a>
-            </div>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {[
-                { href: "/recruiting/learn/what-coaches-look-for", title: "What college coaches look for", body: "Where wrestlers who went on to college stood in high school, level by level." },
-                { href: "/recruiting/learn/working-the-process", title: "Working the process", body: "Lists, questionnaires, emails and visits, in the order that works." },
-                { href: "/recruiting/learn/tournaments", title: "Tournaments coaches want to see", body: "The events where college staff actually watch." },
-              ].map((g) => (
-                <a key={g.href} href={`${APP}${g.href}`} className={`${PANEL} group block p-5 hover:border-[#A3E635]/60`}>
-                  <p className="text-base font-bold">{g.title}</p>
-                  <p className="mt-1 text-sm text-white/60">{g.body}</p>
-                  <span className={`mt-3 inline-flex items-center gap-1 text-sm font-bold ${GOLD}`}>
-                    Read <ArrowRight className="h-4 w-4" />
+              {mapPreview ? (
+                <a href="/recruiting/college-map" aria-label="Open the college map" className="group relative flex items-center bg-[#0a1528]">
+                  <div className="relative w-full" style={{ aspectRatio: `${PREVIEW.width} / ${PREVIEW.height}` }}>
+                    {mapPreview.backdropUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={mapPreview.backdropUrl} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover brightness-150" />
+                    ) : null}
+                    <svg viewBox={`0 0 ${PREVIEW.width} ${PREVIEW.height}`} className="absolute inset-0 h-full w-full" role="img" aria-label={`Map of ${mapPreview.dots.length} college wrestling programs`}>
+                      {mapPreview.dots.map((d) => (
+                        <circle key={d.id} cx={d.x} cy={d.y} r={3.4} fill={d.color} stroke="#0a1528" strokeWidth={0.8} opacity={0.95} />
+                      ))}
+                    </svg>
+                  </div>
+                  <span className="absolute bottom-3 right-3 rounded-lg bg-[#A3E635] px-3 py-1.5 text-xs font-bold text-[#0A1628] shadow-lg group-hover:opacity-90">
+                    Explore the map →
                   </span>
                 </a>
-              ))}
+              ) : null}
+            </div>
+          </section>
+
+          {/* Every college, one page: what a family sees when they open a program. */}
+          <section className="grid items-center gap-8 lg:grid-cols-[1fr_1.15fr]">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#A3E635]">Every college program</p>
+              <h2 className="mt-2 text-3xl font-extrabold">One page per college, everything a family needs.</h2>
+              <p className="mt-3 text-white/70">
+                Division, conference, team ranking and roster; what a year really costs and what families like yours paid after
+                aid; the coaching staff; and whether the program&apos;s coaches are already on RecruitWrestlers.
+              </p>
+              <a href="/recruiting/college-map" className={`mt-5 ${OUTLINE} py-2`}>
+                Browse the colleges <ArrowRight className="h-4 w-4" />
+              </a>
+            </div>
+            <Image
+              src="/recruitwrestlers/college-page-lime.jpg"
+              alt="A college page on RecruitWrestlers: North Carolina State University's program snapshot, costs and coaching staff"
+              width={928}
+              height={780}
+              sizes="(min-width: 1024px) 55vw, 100vw"
+              className="h-auto w-full rounded-xl border border-white/10 shadow-2xl"
+            />
+          </section>
+        </div>
+
+        {/* Built for college coaches: every tool a coach gets. */}
+        <section className="border-y border-[#A3E635]/25 bg-gradient-to-b from-[#0B1D3A] to-[#0A1628]">
+          <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
+            <div>
+              <div>
+                <p className="inline-flex items-center gap-2 rounded-full border border-[#A3E635]/50 bg-[#A3E635]/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#A3E635]">
+                  Free for college coaches
+                </p>
+                <h2 className="mt-3 text-3xl font-extrabold leading-tight sm:text-4xl">Built for college coaches</h2>
+                <p className="mt-3 text-base leading-relaxed text-white/70 sm:text-lg">
+                  A complete, objective look at the wrestlers you recruit, from first look to the staff meeting.
+                </p>
+                <div className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {COACH_TOOLS.map(({ icon: Icon, title, body }) => (
+                    <div key={title} className="flex gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
+                      <Icon className="mt-0.5 h-5 w-5 shrink-0 text-[#A3E635]" aria-hidden />
+                      <div>
+                        <p className="font-bold">{title}</p>
+                        <p className="mt-0.5 text-sm leading-snug text-white/60">{body}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row">
+                  <a href="/auth/signup?type=college-coach" className="inline-flex items-center gap-2 rounded-xl bg-[#A3E635] px-8 py-4 text-base font-extrabold text-[#0A1628] hover:bg-[#BEF264] sm:text-lg">
+                    College coaches: get free access <ArrowRight className="h-5 w-5" />
+                  </a>
+                  <a href="/compare" className="text-sm font-semibold text-white/70 hover:text-white">See the comparison tool</a>
+                </div>
+                <p className="mt-3 text-center text-xs text-white/45 sm:text-left">Name, email, cell and college. Access is immediate.</p>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Closing */}
-        <section className="py-20">
-          <div className="mx-auto max-w-4xl px-4 text-center sm:px-6">
-            <h2 className="text-3xl font-black tracking-tight sm:text-5xl">
-              Be seen by the coaches who <span className={GOLD}>are already looking.</span>
-            </h2>
-            <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <a href={`${APP}/create-profile`} className={PRIMARY}>
-                Find your profile <ArrowRight className="h-4 w-4" />
+        {/* State by state: every state is a RecruitWrestlers state, under its own name. */}
+        <section id="states" className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#A3E635]">State by state</p>
+          <h2 className="mt-2 text-3xl font-extrabold">Opening one state at a time, done right.</h2>
+          <p className="mt-2 max-w-2xl text-white/65">Every state placer gets a profile before a state opens, built from verified results.</p>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {RECRUITING_BRAND.states.map((s) => (
+              <a
+                key={s.code}
+                href={s.live ? `/prospects/all?state=${s.code}` : undefined}
+                className={`rounded-2xl border p-5 ${s.live ? "border-[#A3E635]/40 bg-white/[0.03] hover:border-[#A3E635]" : "border-white/10 bg-white/[0.02]"}`}
+              >
+                <p className="text-2xl font-black tracking-tight">
+                  RECRUIT<span className="text-[#A3E635]">{s.code}</span>
+                </p>
+                <p className="mt-1 text-sm text-white/65">{s.name}</p>
+                <p className={`mt-3 text-xs font-bold uppercase tracking-widest ${s.live ? "text-[#A3E635]" : "text-white/40"}`}>
+                  {s.live ? "Live · browse athletes →" : "Coming soon"}
+                </p>
               </a>
-              <a href={`${APP}/auth/signup?type=college-coach`} className={SECONDARY}>
-                I&apos;m a college coach
-              </a>
-            </div>
+            ))}
           </div>
         </section>
       </main>
 
       <footer className="border-t border-white/10">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div>
-            <Lockup />
-            <p className="mt-1 text-sm text-white/45">College wrestling recruiting, built on verified results.</p>
+            <RwLogo className="h-8 w-auto" />
+            <p className="mt-2 text-sm text-white/45">The future of college wrestling recruiting.</p>
           </div>
           <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/60">
-            <a href="#families" className="hover:text-white">Families</a>
-            <a href="#coaches" className="hover:text-white">College coaches</a>
-            <a href={`${APP}/recruiting/college-map`} className="hover:text-white">College map</a>
-            <a href={`${APP}/recruiting/learn`} className="hover:text-white">Learn</a>
-            <a href={`${APP}/privacy`} className="hover:text-white">Privacy</a>
+            <a href="/prospects/all" className="hover:text-white">Athletes</a>
+            <a href="/public-rankings" className="hover:text-white">Rankings</a>
+            <a href="/recruiting/college-map" className="hover:text-white">Colleges</a>
+            <a href="/recruiting/learn" className="hover:text-white">Learn</a>
+            <a href="/privacy" className="hover:text-white">Privacy</a>
+            <a href="mailto:info@recruitwrestlers.com" className="hover:text-white">info@recruitwrestlers.com</a>
           </nav>
         </div>
         <p className="pb-8 text-center text-xs text-white/35">© {new Date().getFullYear()} {NATIONAL_BRAND.name} · A Guild Ventures company</p>
