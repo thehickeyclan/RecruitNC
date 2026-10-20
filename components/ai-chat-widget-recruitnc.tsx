@@ -512,6 +512,7 @@ export function AIChatWidget() {
 
       {/* Floating launcher with glow effect */}
       <div
+        data-assistant-launcher
         className={cn(
           // Never on paper. It is a screen affordance, and it was printing in the bottom corner of
           // every page of the recruiting guide.

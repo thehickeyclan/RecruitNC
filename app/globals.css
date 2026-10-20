@@ -311,3 +311,9 @@
 .guild-only {
   display: none !important;
 }
+
+/* A floating assistant button sat on top of the message Send button. While someone is typing a
+   message, it steps aside (components/coach-messages/conversation.tsx, 20 Oct 2026). */
+body:has([data-composer]:focus) [data-assistant-launcher] {
+  display: none;
+}

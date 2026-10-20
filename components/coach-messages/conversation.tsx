@@ -276,27 +276,6 @@ export function Conversation({
             <a href={`/compare?left=${thread.athleteId}&src=inbox`} className={action}>Compare</a>
           </div>
         ) : null}
-        {family ? (
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={toggleStop}
-              disabled={busy}
-              className={cn("inline-flex items-center gap-1.5 rounded-lg border border-white/20 px-3 font-semibold text-white/80 hover:bg-white/10", compact ? "min-h-[34px] text-xs" : "min-h-[40px] text-sm")}
-            >
-              {thread.stopped ? <ShieldCheck className="h-4 w-4" /> : <ShieldOff className="h-4 w-4" />}
-              {thread.stopped ? "Allow this coach again" : "Stop messages from this coach"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setReporting((v) => !v)}
-              className={cn("inline-flex items-center gap-1.5 rounded-lg border border-white/20 px-3 font-semibold text-white/80 hover:bg-white/10", compact ? "min-h-[34px] text-xs" : "min-h-[40px] text-sm")}
-            >
-              <Flag className="h-4 w-4" />
-              Report
-            </button>
-          </div>
-        ) : null}
       </div>
 
       {reporting ? (
@@ -395,7 +374,7 @@ export function Conversation({
                     )}
                   </div>
                   {canAct ? (
-                    <span className={cn("flex shrink-0 items-center gap-0.5 transition", actionsFor === m.id ? "opacity-100" : "opacity-0 group-hover:opacity-100")}>
+                    <span className={cn("shrink-0 items-center gap-0.5", actionsFor === m.id ? "flex" : "hidden lg:group-hover:flex")}>
                       <button type="button" aria-label="React" onClick={() => setPicking((cur) => (cur === m.id ? null : m.id))} className="rounded-full p-1.5 text-white/50 hover:bg-white/10 hover:text-white">
                         <SmilePlus className="h-4 w-4" />
                       </button>
@@ -526,6 +505,7 @@ export function Conversation({
               rows={1}
               maxLength={4000}
               placeholder={editing ? "Edit your message…" : "Type a message…"}
+              data-composer
               className="min-h-[48px] flex-1 resize-y rounded-lg border border-white/15 bg-white/5 p-3 text-[15px] text-white placeholder:text-white/40 focus:border-[#D3B574] focus:outline-none"
             />
             <button
@@ -538,6 +518,20 @@ export function Conversation({
               {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : editing ? "Save" : <><span className="hidden sm:inline">Send</span><Send className="h-5 w-5" /></>}
             </button>
           </div>
+        </div>
+      ) : null}
+      {/* Below the conversation, not above it: a family's first college message should open on the
+          coach's words, not on "Stop messages" and "Report" (Matt, 20 Oct 2026). */}
+      {family ? (
+        <div className="flex flex-wrap gap-x-4 gap-y-1 pt-1 text-xs text-white/45">
+          <button type="button" onClick={toggleStop} disabled={busy} className="inline-flex items-center gap-1 hover:text-white">
+            {thread.stopped ? <ShieldCheck className="h-3.5 w-3.5" /> : <ShieldOff className="h-3.5 w-3.5" />}
+            {thread.stopped ? "Allow this coach again" : "Stop messages from this coach"}
+          </button>
+          <button type="button" onClick={() => setReporting((v) => !v)} className="inline-flex items-center gap-1 hover:text-white">
+            <Flag className="h-3.5 w-3.5" />
+            Report
+          </button>
         </div>
       ) : null}
     </div>

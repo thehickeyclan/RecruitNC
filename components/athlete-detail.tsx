@@ -97,7 +97,10 @@ const ROW_ORDER: Record<RowKey, string> = {
   // The approved mock-up's order (11 October 2026). Views and messages are the family's; the
   // rest is the same list for everyone.
   views: "order-[3]",
-  messages: "order-[4]",
+  // A coach's message is the first thing under the header, not three screens down below the view
+  // counts: Yaleen Khang's first college message sat there (Matt, 20 Oct 2026). Renders nothing
+  // until a coach has written, so it costs every other profile nothing.
+  messages: "order-[1]",
   results: "order-[5]",
   wins: "order-[6]",
   losses: "order-[7]",
