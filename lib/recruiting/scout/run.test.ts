@@ -49,3 +49,12 @@ describe("answerProblems", () => {
     expect(answerProblems("It depends on when his 19th birthday falls.")).toEqual([])
   })
 })
+
+describe("honest level and admission checks (20 Oct 2026)", () => {
+  it("rewrites a star count and an out-of-range verdict", () => {
+    expect(answerProblems("Shane is a 3-star wrestler.").join(" ")).toMatch(/never give a star count/)
+    expect(answerProblems("With a 3.3 he is out of range for UNC.").join(" ")).toMatch(/athletic admissions/)
+    expect(answerProblems("A 3.3 GPA is below UNC's typical admission range.").join(" ")).toMatch(/athletic admissions/)
+    expect(answerProblems("Recruited athletes are admitted with a 3.0 or higher with the coach's support.")).toEqual([])
+  })
+})

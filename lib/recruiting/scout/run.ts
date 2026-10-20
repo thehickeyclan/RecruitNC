@@ -29,6 +29,12 @@ export function answerProblems(text: string): string[] {
   if (/\b(won'?t|will not|doesn'?t|does not|will|would)\s+(lose|cost|use up)\s+(a|any|one|him|her)?\s*(year|season)/i.test(text))
     out.push("We do not know the wrestler's birth date, so whether a year is lost depends on it: give the rule, say it depends on when the 19th birthday falls, and point to the eligibility clock calculator (learn:eligibility-clock).")
   if (/\bis (safer|better|nicer|cheaper to live)\b/i.test(text)) out.push('Say which college has the higher grade ("Mount Olive has the higher safety grade"), not that it "is safer" or "is better".')
+  // The projection is said as a level, in words; the star itself is never given to a family.
+  if (/\b[1-5][ -]?stars?\b|★|\b(one|two|three|four|five)[ -]star\b/i.test(text))
+    out.push('Say the projected college level in words ("Division II and the top Division III programs"); never give a star count.')
+  // The published figures are for all applicants; a recruited wrestler goes through the coach.
+  if (/\b(won'?t|will not|can'?t|cannot|unlikely to|not likely to)\s+(get in|be admitted|get admitted|qualify for admission)|\bout of (range|reach)\b|\b(too low|below what) .{0,30}(admi|get in)|\bbelow\b.{0,25}\b(typical|usual|admission|admitted)\b.{0,15}\b(range|students|average)/i.test(text))
+    out.push("Never say a wrestler cannot get in or is out of range from the published figures: they describe all applicants, and a recruited wrestler is admitted through athletic admissions with the coach's support (give the athletic admission line).")
   return [...new Set(out)]
 }
 
