@@ -1,3 +1,4 @@
+import { ContactEmail } from "@/components/recruiting/contact-email"
 import { RECRUITING_BRAND, recruitingCoverage } from "@/lib/recruiting/brand"
 import { BrandLockup } from "@/components/recruiting/brand-frames"
 import { BrandName } from "@/components/recruiting/brand-name"
@@ -38,9 +39,7 @@ export function RecruitingFooter() {
           </ul>
           <div className="text-sm">
             <p className="text-[11px] font-black uppercase tracking-widest text-[#D3B574]">Help</p>
-            <a href={`mailto:${RECRUITING_BRAND.supportEmail}`} className="mt-3 block text-white/70 transition-colors hover:text-white">
-              {RECRUITING_BRAND.supportEmail}
-            </a>
+            <ContactEmail link className="mt-3 block text-white/70 transition-colors hover:text-white" />
             <a href="/contact" className="mt-2 block text-white/70 transition-colors hover:text-white">Contact form</a>
             <a href="/privacy" className="mt-2 block text-white/70 transition-colors hover:text-white">Privacy</a>
           </div>

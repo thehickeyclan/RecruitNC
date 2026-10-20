@@ -1,5 +1,6 @@
 "use client"
 
+import { BrandText } from "@/components/recruiting/brand-name"
 import { CoachProgramField } from "@/components/recruiting/coach-program-field"
 import type { CoachProgram } from "@/lib/recruiting/coach-program"
 import type React from "react"
@@ -310,7 +311,7 @@ function SignUpWizard() {
       <div className="w-full max-w-xl space-y-5">
         <div className="text-center">
           <Badge className="mb-3 bg-[#D3B574] px-3 py-1 text-xs font-bold text-[#03154C]">{authIntent.badge}</Badge>
-          <h1 className="text-2xl font-bold text-[#03154C] md:text-3xl">{authIntent.title}</h1>
+          <h1 className="text-2xl font-bold text-[#03154C] md:text-3xl"><BrandText text={authIntent.title} /></h1>
         </div>
 
         <Card className="w-full shadow-lg">

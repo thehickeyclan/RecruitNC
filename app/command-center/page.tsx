@@ -18,6 +18,7 @@ import { loadSalesData } from "@/lib/recruiting/sales-data"
 import { approvedTestimonials } from "@/lib/recruiting/testimonials"
 import { SCOUTING_REPORT_PRICES, formatPrice } from "@/lib/scouting-report-entitlement"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { BrandName } from "@/components/recruiting/brand-name"
 
 export const dynamic = "force-dynamic"
 const SHARE_TITLE = "Recruiting Command Center | RecruitNC"
@@ -88,11 +89,11 @@ export default async function CommandCenterSalesPage() {
   const price = formatPrice(SCOUTING_REPORT_PRICES.command_center)
   const stats = d.platform
     ? ([
-        [d.platform.coaches, "College coaches on RecruitNC"],
+        [d.platform.coaches, <>College coaches on <BrandName /></>],
         [d.platform.programs, "College programs"],
         [d.platform.profilesViewed, "NC wrestlers viewed by coaches"],
         [d.platform.coachViews, "Profile views by coaches"],
-      ] as Array<[number, string]>).filter(([n]) => Number(n) > 0)
+      ] as Array<[number, React.ReactNode]>).filter(([n]) => Number(n) > 0)
     : []
 
   return (
@@ -105,7 +106,7 @@ export default async function CommandCenterSalesPage() {
         <img src="/toc-finals-looking-ahead-bw.jpg" alt="" aria-hidden className="absolute inset-y-0 right-0 hidden h-full w-[48%] object-cover object-[50%_30%] opacity-90 lg:block" style={{ maskImage: "linear-gradient(to right, transparent, black 35%)", WebkitMaskImage: "linear-gradient(to right, transparent, black 35%)" }} />
         <div className="absolute inset-0 bg-gradient-to-r from-[#060f1f] via-[#060f1f]/90 to-[#060f1f]/10" aria-hidden />
         <div className="relative mx-auto max-w-6xl px-4 pb-14 pt-12 sm:pt-16">
-          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-white/70">RecruitNC · Recruiting Command Center</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-white/70"><BrandName /> · Recruiting Command Center</p>
           <h1 className={`mt-5 text-6xl leading-[0.9] sm:text-8xl ${tocDisplayClass()}`}>
             College recruiting is complicated.
             <span className="block" style={{ color: SKY }}>
@@ -116,11 +117,16 @@ export default async function CommandCenterSalesPage() {
             <span className="sm:hidden">One place to plan, find colleges, compare them and hear from coaches. Men&apos;s and women&apos;s wrestling, every division.</span>
             <span className="hidden sm:inline">Hundreds of college wrestling programs, each with its own rules, costs, roster and expectations, and most families are left to figure it out alone. Now there&apos;s one place to manage it: build your plan, discover colleges, compare your options, track coach interest and know what to do next. Men&apos;s and women&apos;s wrestling, every division.</span>
           </p>
-          <div className="mt-6 flex items-baseline gap-2">
+          {/* On recruitwrestlers.com there is no national price yet (Matt, 20 Oct 2026): NC United's offer stays NC United's. */}
+          <p className="national-only">
+            <span className="mt-6 block text-lg font-bold text-white">Membership opens at launch.</span>
+            <a href="/create-profile" className="mt-4 inline-block rounded-xl bg-[#A3E635] px-7 py-3.5 text-base font-black text-[#0B1426] hover:bg-[#BEF264]">Claim your free profile →</a>
+          </p>
+          <div className="ncu-only mt-6 flex items-baseline gap-2">
             <span className="text-5xl font-black">{price}</span>
             <span className="text-lg text-white/60">/ month · cancel anytime</span>
           </div>
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="ncu-only mt-6 flex flex-wrap gap-3">
             <Link href={d.onSale ? BUY : "/plans"} className="rounded-xl px-7 py-3.5 text-base font-black text-[#0A1628] shadow-lg transition hover:brightness-110" style={{ backgroundColor: SKY }}>
               {d.onSale ? "Sign up now →" : "See plans →"}
             </Link>
@@ -128,8 +134,8 @@ export default async function CommandCenterSalesPage() {
               Try the college map
             </a>
           </div>
-          <p className="mt-3 text-sm text-white/50">Cancel anytime · Includes Rankings</p>
-          <p className="mt-1 text-xs text-white/40"><a href="/auth/signin?returnTo=%2Fmy-recruiting" className="underline hover:text-white/80">NC United Blue members: sign in for free access</a></p>
+          <p className="ncu-only mt-3 text-sm text-white/50">Cancel anytime · Includes Rankings</p>
+          <p className="ncu-only mt-1 text-xs text-white/40"><a href="/auth/signin?returnTo=%2Fmy-recruiting" className="underline hover:text-white/80">NC United Blue members: sign in for free access</a></p>
         </div>
       </section>
 
@@ -142,14 +148,14 @@ export default async function CommandCenterSalesPage() {
           {stats.length ? (
             <div className="mt-6 grid grid-cols-2 gap-y-6 lg:grid-cols-4">
               {stats.map(([n, label], i) => (
-                <div key={label} className={`px-4 text-center ${i > 0 ? "lg:border-l lg:border-white/10" : ""}`}>
+                <div key={i} className={`px-4 text-center ${i > 0 ? "lg:border-l lg:border-white/10" : ""}`}>
                   <p className={`text-5xl ${tocDisplayClass()}`} style={{ color: GOLD }}>{Number(n).toLocaleString()}</p>
                   <p className="mt-1 text-xs font-semibold uppercase tracking-wider text-white/60">{label}</p>
                 </div>
               ))}
             </div>
           ) : null}
-          <p className="mt-6 text-center text-xs text-white/45">Counted live from real activity on RecruitNC. A profile view means a college coach looked; it is not an offer or a promise of interest.</p>
+          <p className="mt-6 text-center text-xs text-white/45">Counted live from real activity on <BrandName />. A profile view means a college coach looked; it is not an offer or a promise of interest.</p>
         </div>
       </section>
 
@@ -362,7 +368,15 @@ export default async function CommandCenterSalesPage() {
 
         {/* One offer: the Command Center. The other plans are a link, not a second decision. */}
         <section className="py-10 sm:py-16">
-          <div className="mx-auto max-w-xl rounded-3xl border-2 p-6 text-center sm:p-8" style={{ borderColor: SKY, backgroundColor: "#0b1a33" }}>
+          <div className="national-only">
+            <div className="mx-auto block max-w-xl rounded-3xl border-2 border-[#A3E635] bg-[#15243B] p-6 text-center sm:p-8">
+              <p className="text-xs font-black uppercase tracking-[0.3em] text-[#A3E635]">Recruiting Command Center</p>
+              <p className="mt-3 text-2xl font-black">Membership opens at launch.</p>
+              <p className="mt-2 text-sm text-white/70">Claim your free profile now: college coaches can already find it.</p>
+              <a href="/create-profile" className="mt-6 block rounded-xl bg-[#A3E635] px-6 py-4 text-base font-black text-[#0B1426] hover:bg-[#BEF264]">Claim your free profile →</a>
+            </div>
+          </div>
+          <div className="ncu-only mx-auto max-w-xl rounded-3xl border-2 p-6 text-center sm:p-8" style={{ borderColor: SKY, backgroundColor: "#0b1a33" }}>
             <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: SKY }}>Recruiting Command Center</p>
             <p className="mt-3 text-5xl font-black sm:text-6xl">
               {price}
@@ -379,7 +393,7 @@ export default async function CommandCenterSalesPage() {
             <p className="mt-3 text-xs text-white/50">Cancel anytime · Includes Rankings</p>
             <p className="mt-1 text-[11px] text-white/40"><a href="/auth/signin?returnTo=%2Fmy-recruiting" className="underline hover:text-white/80">NC United Blue members: sign in for free access</a></p>
           </div>
-          <p className="mt-6 text-center text-sm text-white/55">
+          <p className="ncu-only mt-6 text-center text-sm text-white/55">
             Just the rankings? <Link href="/plans" className="underline" style={{ color: GOLD }}>Rankings is {formatPrice(SCOUTING_REPORT_PRICES.subscription)}/month</Link>. Or <Link href="/create-profile" className="underline" style={{ color: GOLD }}>claim your free profile</Link>.
           </p>
         </section>
@@ -406,7 +420,12 @@ export default async function CommandCenterSalesPage() {
               </details>
             ))}
           </div>
-          <div className="mt-10 text-center">
+          <div className="national-only">
+            <div className="mt-10 block text-center">
+              <a href="/create-profile" className="inline-block rounded-xl bg-[#A3E635] px-8 py-4 text-base font-black text-[#0B1426] hover:bg-[#BEF264]">Claim your free profile →</a>
+            </div>
+          </div>
+          <div className="ncu-only mt-10 text-center">
             <Link href={d.onSale ? BUY : "/plans"} className="inline-block rounded-xl px-8 py-4 text-base font-black text-[#0A1628] hover:brightness-110" style={{ backgroundColor: SKY }}>
               {d.onSale ? `Sign up now, ${price}/month →` : "See plans →"}
             </Link>

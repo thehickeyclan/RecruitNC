@@ -1,5 +1,6 @@
 "use client"
 
+import { BrandName } from "@/components/recruiting/brand-name"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -993,7 +994,7 @@ export default function RecruitingPage() {
             Ready to Start Your Recruiting Journey?
           </h2>
           <p className="text-xl text-white/80 mb-8 max-w-2xl mx-auto">
-            Create your free RecruitNC profile to get discovered by college coaches, 
+            Create your free <BrandName /> profile to get discovered by college coaches, 
             track your tournament results, and manage your recruiting process.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

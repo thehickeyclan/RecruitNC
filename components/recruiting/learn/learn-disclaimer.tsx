@@ -1,3 +1,4 @@
+import { BrandName } from "@/components/recruiting/brand-name"
 import { ShieldAlert } from "lucide-react"
 
 /**
@@ -19,7 +20,8 @@ export function LearnDisclaimer({ checkedLabel }: { checkedLabel: string }) {
       </p>
       <p className="mt-2">
         This library is general education for wrestling families. It is not legal, eligibility or compliance advice,
-        and RecruitNC and NC Wrestling United are not a governing body and do not speak for one.
+        and <BrandName ncu="RecruitNC and NC Wrestling United are" national="RecruitWrestlers is" /> not a governing body and{" "}
+        <BrandName ncu="do" national="does" /> not speak for one.
       </p>
       <p className="mt-2">
         The rules are written, interpreted and changed by the NCAA, the NAIA, the NJCAA, the NCHSAA and each college,
@@ -34,7 +36,8 @@ export function LearnDisclaimer({ checkedLabel }: { checkedLabel: string }) {
         how a rule applies.
       </p>
       <p className="mt-2 text-white/60">
-        RecruitNC and NC Wrestling United make no guarantee that this information is complete or current and are not
+        <BrandName ncu="RecruitNC and NC Wrestling United make" national="RecruitWrestlers makes" /> no guarantee that this information is complete or current and{" "}
+        <BrandName ncu="are" national="is" /> not
         responsible for decisions made in reliance on it. If something looks out of date,{" "}
         <a href="/contact" className="underline hover:text-white">
           tell us

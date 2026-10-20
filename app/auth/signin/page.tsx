@@ -1,5 +1,6 @@
 "use client"
 
+import { BrandText } from "@/components/recruiting/brand-name"
 import type React from "react"
 
 import { useState, useEffect, useRef } from "react"
@@ -320,10 +321,10 @@ export default function SignInPage() {
                   {authIntent.badge}
                 </Badge>
                 <h2 className="text-2xl md:text-3xl font-bold mb-3">
-                  {authIntent.title}
+                  <BrandText text={authIntent.title} />
                 </h2>
                 <p className="text-lg md:text-xl text-blue-100 mb-6">
-                  {authIntent.description}
+                  <BrandText text={authIntent.description} />
                 </p>
               </div>
               

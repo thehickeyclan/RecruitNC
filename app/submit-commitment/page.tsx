@@ -1,3 +1,4 @@
+import { BrandName } from "@/components/recruiting/brand-name"
 import type { Metadata } from "next"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { CommitmentForm, type CollegeOption } from "@/components/commitments/commitment-form"
@@ -25,7 +26,7 @@ export default async function SubmitCommitmentPage() {
     <div className="min-h-screen bg-[#0A1628] px-4 py-14 text-white sm:py-20">
       <div className="mx-auto max-w-3xl">
         <header className="mb-10 text-center">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#D3B574]">NC United Wrestling</p>
+          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-[#D3B574]"><BrandName ncu="NC United Wrestling" /></p>
           <h1 className="text-3xl font-black sm:text-4xl">Announce your commitment</h1>
           <p className="mx-auto mt-4 max-w-lg text-white/70">
             You put in the work. Tell North Carolina where you are going — it takes about a minute.
