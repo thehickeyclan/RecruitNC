@@ -182,6 +182,19 @@ export async function GET() {
           if (Number.isNaN(createdDate.getTime())) continue
 
           const rollup = activityByUser.get(userId) ?? emptyActivity()
+          /*
+           * "/view-profile" alone does not say whose profile. Its profile_view, logged within a
+           * second, carries /athletes/<id>: take that, so the dashboard link opens the wrestler.
+           */
+          const pageUrl = (row as { page_url?: string | null }).page_url ?? null
+          if (
+            rollup.last_activity_path === "/view-profile" &&
+            pageUrl?.startsWith("/athletes/") &&
+            rollup.last_activity_at &&
+            Math.abs(new Date(rollup.last_activity_at).getTime() - createdDate.getTime()) < 10_000
+          ) {
+            rollup.last_activity_path = pageUrl
+          }
           if (!rollup.last_activity_at) {
             rollup.last_activity_at = createdAt
             rollup.last_activity_path = (row as { page_url?: string | null }).page_url ?? null
