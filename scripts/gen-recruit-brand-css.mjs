@@ -27,7 +27,7 @@ export const OUT = join(ROOT, "app", "recruit-brand.css")
 /**
  * One theme per brand address. `fill` colours buttons, borders and bars; `line` is text and thin
  * lines on a dark page, a step lighter so it reads; `onAccent` is lettering on a solid accent.
- * `surfaces` re-colours NC United's navy panels (Guild is black, not navy).
+ * `surfaces` re-colours NC United's navy panels: Guild's black, RecruitWrestlers' own navies.
  */
 const THEMES = [
   {
@@ -35,8 +35,28 @@ const THEMES = [
     fill: [163, 230, 53], // #A3E635 - RecruitWrestlers lime
     line: [190, 242, 100], // #BEF264
     lightFill: [190, 242, 100],
-    onAccent: "#0A1628",
-    surfaces: null,
+    onAccent: "#0B1426",
+    // Matt's RecruitWrestlers palette (20 Oct 2026): Midnight Navy page, Secondary Navy cards.
+    surfaces: {
+      "0a1628": "#0B1426",
+      "061224": "#0B1426",
+      "060f1f": "#0B1426",
+      "020b18": "#0B1426",
+      "071427": "#0B1426",
+      "061427": "#0B1426",
+      "061426": "#0B1426",
+      "07182e": "#0B1426",
+      "0b1d3a": "#15243B",
+      "0f1c2e": "#15243B",
+      "0f1e32": "#15243B",
+      "0d1d36": "#15243B",
+      "0a1d37": "#15243B",
+      "0c1a2c": "#15243B",
+      "0a2040": "#15243B",
+      "0b2545": "#1A2B45",
+      "13294b": "#15243B",
+      "1a3a5f": "#22324D",
+    },
   },
   {
     scope: 'html[data-host="guild"]',
@@ -75,7 +95,7 @@ const GOLDS = { d3b574: "base", d7b968: "base", e2c98d: "light", f5d985: "light"
 const RNC_TOKENS = { ink: "0a1628", surface: "0f1c2e", raised: "13294b", line: "1a3a5f" }
 
 const GOLD_TOKEN = /(?<![\w-])((?:[a-z-]+:)*)([a-z-]+)-\[#(d3b574|d7b968|e2c98d|f5d985)\](?:\/(\d+))?/gi
-const SURFACE_HEXES = Object.keys(THEMES.find((t) => t.surfaces).surfaces)
+const SURFACE_HEXES = [...new Set(THEMES.flatMap((t) => Object.keys(t.surfaces ?? {})))]
 const SURFACE_TOKEN = new RegExp(`(?<![\\w-])((?:[a-z-]+:)*)(bg|from|via|to|border|border-t|border-b|border-l|border-r|divide|ring)-\\[#(${SURFACE_HEXES.join("|")})\\](?:\\/(\\d+))?`, "gi")
 const RNC_TOKEN = /(?<![\w-])((?:[a-z-]+:)*)(bg|from|via|to|border|border-t|border-b|ring|text)-rnc-(ink|surface|raised|line|gold)(?:-hover)?(?:\/(\d+))?/gi
 
@@ -250,6 +270,9 @@ export function buildCss() {
     `html[data-host="national"] .national-only,\nhtml[data-host="guild"] .guild-only {\n  display: contents !important;\n}`,
     `html[data-host="national"] .ncu-only,\nhtml[data-host="guild"] .ncu-only {\n  display: none !important;\n}`,
     `html[data-host="guild"] body,\nhtml[data-host="guild"] .auth-surface {\n  background: #0A0A0B !important;\n}`,
+    // RecruitWrestlers: Midnight Navy page, Muted Gray for secondary text (Matt's palette, 20 Oct 2026).
+    `html[data-host="national"] body,\nhtml[data-host="national"] .auth-surface {\n  background: #0B1426 !important;\n}`,
+    `html[data-host="national"] .text-white\\/50,\nhtml[data-host="national"] .text-white\\/55,\nhtml[data-host="national"] .text-white\\/60,\nhtml[data-host="national"] .text-white\\/65,\nhtml[data-host="national"] .text-white\\/70 {\n  color: #A8B3C5 !important;\n}`,
   ].join("\n\n")
   // For colours written as inline styles: var(--recruit-accent) is gold on NC United, the brand accent on a brand address.
   const vars = [
