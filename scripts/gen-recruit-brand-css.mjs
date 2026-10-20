@@ -7,8 +7,8 @@
  *
  *   html[data-host="guild"]     recruit.wrestlingguild.com - Guild Recruiting: Guild gold on black
  *                               (Matt approved Phase 1, 16 October 2026)
- *   html[data-host="national"]  recruitwrestlers.com - RecruitWrestlers, navy and gold (Matt's final
- *                               decision, 19 October 2026: owned by Guild Ventures, NC United's colours)
+ *   html[data-host="national"]  recruitwrestlers.com - RecruitWrestlers, navy and lime (Matt, 20 October
+ *                               2026: owned by Guild Ventures; lime, not gold, to stay clear of RankWrestlers)
  *
  * Gold and navy are written into thousands of class names on pages both sides share, so colour
  * cannot be changed in the pages. This stylesheet re-colours every gold utility, and for Guild
@@ -32,9 +32,9 @@ export const OUT = join(ROOT, "app", "recruit-brand.css")
 const THEMES = [
   {
     scope: 'html[data-host="national"]',
-    fill: [211, 181, 116], // #D3B574 - the product's own gold, so nothing is recoloured
-    line: [211, 181, 116],
-    lightFill: [226, 201, 141], // #E2C98D
+    fill: [163, 230, 53], // #A3E635 - RecruitWrestlers lime
+    line: [190, 242, 100], // #BEF264
+    lightFill: [190, 242, 100],
     onAccent: "#0A1628",
     surfaces: null,
   },

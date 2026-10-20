@@ -36,7 +36,7 @@ import {
   type LucideIcon,
 } from "lucide-react"
 import { Saira } from "next/font/google"
-import { RwMark } from "@/components/recruiting/rw-mark"
+import { RwLogo } from "@/components/recruiting/rw-mark"
 import { NATIONAL_BRAND, RECRUITING_BRAND, stateBrand } from "@/lib/recruiting/brand"
 import { loadNationalStats, type NationalStats } from "@/lib/recruiting/national-stats"
 import { COACH_FEATURES, EVENTS, FAMILY_FEATURES } from "@/lib/recruiting/national-content"
@@ -88,29 +88,27 @@ const saira = Saira({ subsets: ["latin"], style: ["italic"], axes: ["wdth"], dis
 
 // Every page lives on this address now (lib/recruiting/national-paths.ts), so links stay here.
 const APP = ""
-const GOLD = "text-[#D3B574]" // the accent: RecruitWrestlers gold on navy (Matt, 19 Oct 2026)
+const GOLD = "text-[#A3E635]" // the accent: RecruitWrestlers lime on navy (Matt, 20 Oct 2026)
 const PANEL = "rounded-2xl border border-white/10 bg-[#0f1c2e]"
 const BUTTON = "inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold transition-colors"
-const PRIMARY = `${BUTTON} bg-[#D3B574] text-[#0A1628] hover:bg-[#E2C98D]`
+const PRIMARY = `${BUTTON} bg-[#A3E635] text-[#0A1628] hover:bg-[#BEF264]`
 const SECONDARY = `${BUTTON} border border-white/20 text-white hover:border-white/50`
 
-/** The brand lettering (Saira, italic, set wide): RECRUIT in white, the second word in gold. */
+/** The brand lettering (Saira, italic, set wide): RECRUIT in white, the second word in lime. */
 function Wordmark({ second, className = "" }: { second: string; className?: string }) {
   return (
     <span className={`${saira.className} font-bold uppercase italic leading-none ${className}`} style={{ fontStretch: "118%" }}>
       <span className="text-white">Recruit</span>
-      <span className="text-[#D3B574]">{second}</span>
+      <span className="text-[#A3E635]">{second}</span>
     </span>
   )
 }
 
-/** Monogram, rule, wordmark: the full lockup. */
+/** The full logo: Scout in headgear and the wordmark (components/recruiting/rw-mark.tsx). */
 function Lockup({ className = "" }: { className?: string }) {
   return (
-    <span className={`flex items-center gap-3 ${className}`}>
-      <RwMark className="h-7 w-auto sm:h-8" />
-      <span className="h-6 w-px bg-white/25" aria-hidden />
-      <Wordmark second="Wrestlers" className="text-lg sm:text-xl" />
+    <span className={`flex items-center ${className}`}>
+      <RwLogo className="h-8 w-auto sm:h-9" />
     </span>
   )
 }
@@ -122,7 +120,7 @@ function Eyebrow({ children }: { children: React.ReactNode }) {
 function Feature({ icon: Icon, title, body }: { icon: LucideIcon; title: string; body: string }) {
   return (
     <div className={`${PANEL} p-5`}>
-      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#D3B574]/15">
+      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#A3E635]/15">
         <Icon className={`h-5 w-5 ${GOLD}`} aria-hidden />
       </span>
       <p className="mt-4 text-base font-bold text-white">{title}</p>
@@ -170,7 +168,7 @@ function CommandCenterPreview() {
           ))}
         </ul>
       </div>
-      <div className="mt-3 flex items-center gap-3 rounded-xl border border-[#D3B574]/40 bg-[#D3B574]/10 p-3">
+      <div className="mt-3 flex items-center gap-3 rounded-xl border border-[#A3E635]/40 bg-[#A3E635]/10 p-3">
         <Eye className={`h-5 w-5 shrink-0 ${GOLD}`} aria-hidden />
         <p className="text-sm text-white/85">
           <span className="font-bold text-white">A Division I program</span> viewed your profile
@@ -242,7 +240,7 @@ export default async function RecruitWrestlersHome() {
               Where college coaches find wrestlers, and families run the recruiting process.
             </p>
             <div className="mt-8 grid gap-3 sm:grid-cols-2">
-              <a href={`${APP}/create-profile`} className={`${PANEL} group block p-5 hover:border-[#D3B574]/60`}>
+              <a href={`${APP}/create-profile`} className={`${PANEL} group block p-5 hover:border-[#A3E635]/60`}>
                 <Users className={`h-6 w-6 ${GOLD}`} aria-hidden />
                 <p className="mt-3 text-lg font-black">I&apos;m a wrestler or parent</p>
                 <p className="mt-1 text-sm text-white/60">Find your profile and open your Command Center.</p>
@@ -250,7 +248,7 @@ export default async function RecruitWrestlersHome() {
                   Find your profile <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </span>
               </a>
-              <a href={`${APP}/auth/signup?type=college-coach`} className={`${PANEL} group block p-5 hover:border-[#D3B574]/60`}>
+              <a href={`${APP}/auth/signup?type=college-coach`} className={`${PANEL} group block p-5 hover:border-[#A3E635]/60`}>
                 <ShieldCheck className={`h-6 w-6 ${GOLD}`} aria-hidden />
                 <p className="mt-3 text-lg font-black">I&apos;m a college coach</p>
                 <p className="mt-1 text-sm text-white/60">Free for college staff. Access the moment you sign up.</p>
@@ -337,7 +335,7 @@ export default async function RecruitWrestlersHome() {
                 <ul className="mt-5 space-y-2 text-sm text-white/80">
                   {["Full cost of a year, in state and out", "What families paid, by income", "Test scores of admitted students", "Team ranking and roster size"].map((t) => (
                     <li key={t} className="flex items-center gap-2">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#D3B574]" aria-hidden /> {t}
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#A3E635]" aria-hidden /> {t}
                     </li>
                   ))}
                 </ul>
@@ -411,7 +409,7 @@ export default async function RecruitWrestlersHome() {
             <p className="mt-3 max-w-2xl text-white/65">Each state has its own rankings and results. Coaches see every state from one account.</p>
             <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {live.map((s) => (
-                <a key={s.code} href={`${APP}/prospects/all`} className={`${PANEL} group block p-6 hover:border-[#D3B574]/60`}>
+                <a key={s.code} href={`${APP}/prospects/all`} className={`${PANEL} group block p-6 hover:border-[#A3E635]/60`}>
                   <div className="flex items-center justify-between">
                     <Wordmark second={s.code} className="text-3xl" />
                     <span className="rounded-full bg-emerald-400/15 px-2.5 py-1 text-[10px] font-black uppercase text-emerald-300">Live</span>
@@ -457,7 +455,7 @@ export default async function RecruitWrestlersHome() {
                 { href: "/recruiting/learn/working-the-process", title: "Working the process", body: "Lists, questionnaires, emails and visits, in the order that works." },
                 { href: "/recruiting/learn/tournaments", title: "Tournaments coaches want to see", body: "The events where college staff actually watch." },
               ].map((g) => (
-                <a key={g.href} href={`${APP}${g.href}`} className={`${PANEL} group block p-5 hover:border-[#D3B574]/60`}>
+                <a key={g.href} href={`${APP}${g.href}`} className={`${PANEL} group block p-5 hover:border-[#A3E635]/60`}>
                   <p className="text-base font-bold">{g.title}</p>
                   <p className="mt-1 text-sm text-white/60">{g.body}</p>
                   <span className={`mt-3 inline-flex items-center gap-1 text-sm font-bold ${GOLD}`}>
