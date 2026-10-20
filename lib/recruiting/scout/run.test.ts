@@ -28,7 +28,9 @@ describe("collegesNamedIn", () => {
     expect(collegesNamedIn("Which is the better campus, NC State or UNC?")).toEqual(expect.arrayContaining(["north-carolina-state-university-nc-state", "university-of-north-carolina-at-chapel-hill-north-carolina"]))
     expect(collegesNamedIn("How many wrestlers from North Carolina went D1?")).toEqual([])
     expect(collegesNamedIn("Is App State a good fit?")).toEqual(["appalachian-state-university"])
-  })
+    // The real tools module loads every college data file (rosters, staff, Niche) on first import:
+    // 3-5 seconds cold since the 20 Oct roster pull, which tipped the 5-second default.
+  }, 20_000)
 })
 
 describe("compareNiche", () => {
