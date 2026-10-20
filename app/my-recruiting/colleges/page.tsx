@@ -6,6 +6,7 @@
  * done (viewed the profile, written), and the next step. The map feeds it; Compare, Messages and
  * Learn hang off it. The drag board with notes is one tap away (?view=board).
  */
+import { BrandName } from "@/components/recruiting/brand-name"
 import Link from "next/link"
 import { LayoutGrid, MapPin, Plus, Table2 } from "lucide-react"
 
@@ -144,7 +145,7 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
           <div className="min-w-0">
             <CollegeListTable rows={rows} readOnly={viewerId !== cc.authUserId} wrestlerId={wrestlers[0]?.id ?? null} />
             <p className="mt-3 text-xs text-white/40">
-              Your status is yours to set. Coach activity is verified from RecruitNC: a program&apos;s coaches viewing the profile or writing to you. Published cost is the
+              Your status is yours to set. Coach activity is verified from <BrandName />: a program&apos;s coaches viewing the profile or writing to you. Published cost is the
               college&apos;s full price before aid; what families paid after aid is in Compare.
             </p>
           </div>

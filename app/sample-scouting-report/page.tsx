@@ -1,3 +1,4 @@
+import { BrandName } from "@/components/recruiting/brand-name"
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
 
@@ -71,7 +72,7 @@ export default async function SampleScoutingReportPage() {
             Sample scouting report
           </p>
           <p className="mt-2 text-sm leading-relaxed text-white/70">
-            This is a real RecruitNC scouting report, shared with the wrestler&apos;s family&apos;s
+            This is a real <BrandName /> scouting report, shared with the wrestler&apos;s family&apos;s
             permission. College coaches get one of these on any North Carolina wrestler, free.{" "}
             <a
               href="/auth/coach-signup"

@@ -1,5 +1,6 @@
 "use client"
 
+import { useBrandHost } from "@/components/recruiting/brand-host"
 import { rankingLabel } from "@/lib/public-rankings-cap"
 import { Fragment, useEffect, useState } from "react"
 import Image from "next/image"
@@ -108,6 +109,7 @@ export function ScoutingReportDocument({
   athleteId: string
 }) {
   const [copied, setCopied] = useState(false)
+  const brandHost = useBrandHost()
 
   // Share is a link to this same gated page, never a public snapshot. The report carries a
   // minor's cell number and academics; a token anyone could open would defeat the gate.
@@ -146,7 +148,9 @@ export function ScoutingReportDocument({
 
   const { identity, academics, membership, contact } = report
   const generated = new Date(report.generatedAt)
-  const fileNumber = `NCU-${athleteId.slice(0, 8).toUpperCase()}`
+  // On recruitwrestlers.com the report is RecruitWrestlers' document, not NC United's (Matt's brand review, 20 Oct 2026).
+  const rw = brandHost === "national"
+  const fileNumber = `${rw ? "RW" : "NCU"}-${athleteId.slice(0, 8).toUpperCase()}`
   let section = 0
   const n = () => String(++section).padStart(2, "0")
   // Folkstyle and Olympic styles never share a section: the NCHSAA State Championships and the NC
@@ -241,7 +245,7 @@ export function ScoutingReportDocument({
             @top-left { content: none; }
             @top-right { content: none; }
             @bottom-left {
-              content: "NC UNITED · RECRUITNC · CONFIDENTIAL";
+              content: "${rw ? "RECRUITWRESTLERS · CONFIDENTIAL" : "NC UNITED · RECRUITNC · CONFIDENTIAL"}";
               font: 700 7.5pt/1 system-ui, sans-serif; letter-spacing: 0.12em; color: #4b5563;
             }
             @bottom-right {
@@ -311,22 +315,29 @@ export function ScoutingReportDocument({
 
       <div
         id="scouting-report"
-        data-watermark={report.watermark ?? undefined}
+        data-watermark={report.watermark ? (rw ? report.watermark.replace(/NC United \/ RecruitNC/g, "RecruitWrestlers") : report.watermark) : undefined}
         className="mx-auto max-w-[8.5in] bg-white px-4 py-5 sm:my-6 sm:border sm:border-gray-300 sm:px-10 sm:py-8 sm:shadow-sm print:my-0 print:border-0 print:px-0 print:shadow-none"
       >
         {/* Masthead: small and professional - a scouting document, not an advertisement. */}
         <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1.5 border-b-2 border-[#03154C] pb-2.5">
           <div className="flex items-center gap-2.5">
-            <Image
-              src="/nc-united-logo.png"
-              alt="NC United Wrestling"
-              width={36}
-              height={36}
-              className="h-9 w-9 object-contain"
-              unoptimized
-            />
+            {rw ? (
+              <span className="flex h-9 w-9 items-center justify-center rounded-md bg-[#0B1426] p-1">
+                {/* eslint-disable-next-line @next/next/no-img-element -- small static mark */}
+                <img src="/recruitwrestlers/mark.png" alt="RecruitWrestlers" className="h-full w-full object-contain" />
+              </span>
+            ) : (
+              <Image
+                src="/nc-united-logo.png"
+                alt="NC United Wrestling"
+                width={36}
+                height={36}
+                className="h-9 w-9 object-contain"
+                unoptimized
+              />
+            )}
             <div className="leading-tight">
-              <div className="text-[12px] font-black uppercase tracking-[0.2em] text-[#03154C]">NC United</div>
+              <div className="text-[12px] font-black uppercase tracking-[0.2em] text-[#03154C]">{rw ? "RecruitWrestlers" : "NC United"}</div>
               <div className="text-[9.5px] font-bold uppercase tracking-[0.22em] text-gray-600">Prospect scouting report</div>
             </div>
           </div>
@@ -712,7 +723,7 @@ export function ScoutingReportDocument({
             <span className="font-bold uppercase tracking-wider text-[#B31B1B]">Confidential.</span>{" "}
             {report.watermark ? (
               <>
-                {report.watermark}. Contains contact information for a prospective student-athlete; do not
+                {rw ? report.watermark.replace(/NC United \/ RecruitNC/g, "RecruitWrestlers") : report.watermark}. Contains contact information for a prospective student-athlete; do not
                 redistribute. This copy is traceable to the recipient named above.
               </>
             ) : (
@@ -721,7 +732,7 @@ export function ScoutingReportDocument({
                 college coaching staff.
               </>
             )}{" "}
-            File {fileNumber} · issued {generated.toLocaleString()} · NC United Wrestling / RecruitNC.
+            File {fileNumber} · issued {generated.toLocaleString()} · {rw ? "RecruitWrestlers, a Guild Ventures company." : "NC United Wrestling / RecruitNC."}
           </p>
         </footer>
       </div>

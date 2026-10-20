@@ -11,3 +11,11 @@ export function BrandName({ ncu = "RecruitNC", guild = "Guild Recruiting", natio
   const host = useBrandHost()
   return <>{host === "guild" ? guild : host === "national" ? national : ncu}</>
 }
+
+/** A sentence written for NC United, with the product's name swapped on a brand address. */
+export function BrandText({ text }: { text: string }) {
+  const host = useBrandHost()
+  if (host !== "national" && host !== "guild") return <>{text}</>
+  const name = host === "guild" ? "Guild Recruiting" : "RecruitWrestlers"
+  return <>{text.replace(/RecruitNC/g, name).replace(/NC United Wrestling|NC United/g, name)}</>
+}

@@ -11,7 +11,13 @@ function useBrandTitle(host: BrandHost) {
     const name = host === "guild" ? "Guild Recruiting" : "RecruitWrestlers"
     const fix = () => {
       const t = document.title
-      if (t.includes("NC United Wrestling")) document.title = t.replace(/ \| RecruitNC(?= \|)/g, "").replace(/NC United Wrestling/g, name)
+      // "Cobin Rabon | RecruitNC", "Coach Home | RecruitNC | NC United Wrestling": the brand's name,
+      // once. The state name stays on pages about a state (the NC rankings), never as the site name.
+      const next = t
+        .replace(/ \| RecruitNC(?= \||$)/g, ` | ${name}`)
+        .replace(/NC United Wrestling/g, name)
+        .replace(new RegExp(`( \\| ${name})+`, "g"), ` | ${name}`)
+      if (next !== t) document.title = next
     }
     fix()
     const observer = new MutationObserver(fix)

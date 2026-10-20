@@ -1,3 +1,4 @@
+import { BrandName } from "@/components/recruiting/brand-name"
 import Link from "next/link"
 import { isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { publishedDateLabel } from "@/lib/rankings/published-date"
@@ -142,7 +143,7 @@ export async function ClassRankingPage({ year, gender = "Male" }: { year: number
           <RankingsWatermark userId={userId} />
 
           <p className="mx-auto mt-10 max-w-2xl text-center text-[11px] leading-relaxed text-white/35">
-            Rankings are reviewed by NC United staff before publication. A direct win between two ranked
+            Rankings are reviewed by <BrandName ncu="NC United" /> staff before publication. A direct win between two ranked
             wrestlers in the last twelve months carries the most weight, with the most recent meeting
             counting highest.
           </p>

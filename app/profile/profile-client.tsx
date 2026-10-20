@@ -1,5 +1,6 @@
 "use client"
 
+import { BrandName } from "@/components/recruiting/brand-name"
 import { CoachProgramSetting } from "@/components/recruiting/coach-program-setting"
 import type React from "react"
 
@@ -858,7 +859,7 @@ export function ProfileClient() {
                   Message notifications
                 </CardTitle>
                 <CardDescription className="text-muted-foreground">
-                  Get notified when someone messages you in RecruitNC Messages. Save your profile after changing these.
+                  Get notified when someone messages you in <BrandName /> Messages. Save your profile after changing these.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
