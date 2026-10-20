@@ -32,7 +32,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function ComingSoon() {
   const rw = await isRecruitWrestlers()
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center bg-[#0A1628] px-6 text-center text-white">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-[#0B1426] px-6 text-center text-white">
       {rw ? (
         <>
           <RwLogo className="h-12 w-auto sm:h-16" />

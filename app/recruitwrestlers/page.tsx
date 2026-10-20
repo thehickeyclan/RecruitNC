@@ -64,7 +64,7 @@ export const metadata: Metadata = {
 
 const LIME = "#A3E635"
 const BTN = "inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-extrabold transition-colors"
-const PRIMARY = `${BTN} bg-[#A3E635] text-[#0A1628] hover:bg-[#BEF264]`
+const PRIMARY = `${BTN} bg-[#A3E635] text-[#0B1426] hover:bg-[#BEF264]`
 const OUTLINE = `${BTN} border-2 border-[#A3E635] text-[#A3E635] hover:bg-[#A3E635]/10`
 
 const COACH_TOOLS = [
@@ -93,8 +93,8 @@ export default async function RecruitWrestlersHome() {
   ].filter((t) => t.n != null && t.n > 0)
 
   return (
-    <div className="min-h-screen bg-[#0A1628] text-white">
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0A1628]/95 backdrop-blur">
+    <div className="min-h-screen bg-[#0B1426] text-white">
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0B1426]/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
           <a href="/" aria-label={NATIONAL_BRAND.name}>
             <RwLogo className="h-8 w-auto sm:h-9" />
@@ -123,7 +123,7 @@ export default async function RecruitWrestlersHome() {
               ))}
             </svg>
           ) : null}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628] via-[#0A1628]/90 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#0B1426] via-[#0B1426]/90 to-transparent" />
           <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 md:py-20">
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#A3E635]">
               Recruit<span className="text-white">Wrestlers</span> · College wrestling recruiting
@@ -136,14 +136,14 @@ export default async function RecruitWrestlersHome() {
               who want to be found.
             </p>
             <div className="mt-8 grid max-w-3xl gap-4 sm:grid-cols-2">
-              <div className="rounded-xl border border-[#A3E635]/50 bg-[#0A1628]/80 p-5 backdrop-blur-sm">
+              <div className="rounded-xl border border-[#A3E635]/50 bg-[#0B1426]/80 p-5 backdrop-blur-sm">
                 <p className="text-[11px] font-bold uppercase tracking-widest text-[#A3E635]">College coaches</p>
                 <p className="mt-1.5 text-sm text-white/75">Scouting reports, rankings and side-by-side comparisons. Free.</p>
                 <a href="/auth/signup?type=college-coach" className={`mt-4 ${PRIMARY}`}>
                   Get free access <ArrowRight className="h-4 w-4" />
                 </a>
               </div>
-              <div className="rounded-xl border border-white/15 bg-[#0A1628]/80 p-5 backdrop-blur-sm">
+              <div className="rounded-xl border border-white/15 bg-[#0B1426]/80 p-5 backdrop-blur-sm">
                 <p className="text-[11px] font-bold uppercase tracking-widest text-white/60">Athletes &amp; families</p>
                 <p className="mt-1.5 text-sm text-white/75">Your results are probably already here. Claim your profile and get seen.</p>
                 {/* /create-profile searches for the existing profile first and only creates one when there is no match. */}
@@ -164,10 +164,10 @@ export default async function RecruitWrestlersHome() {
 
         <div className="mx-auto max-w-7xl space-y-12 px-4 py-10 sm:px-6">
           {/* The Recruiting Command Center: proof, Scout and a picture of the college map. */}
-          <section className="overflow-hidden rounded-2xl border border-[#A3E635]/40 bg-gradient-to-br from-[#13294B] to-[#0f1c2e]">
+          <section className="overflow-hidden rounded-2xl border border-[#A3E635]/40 bg-gradient-to-br from-[#15243B] to-[#15243B]">
             <div className="grid gap-0 md:grid-cols-[1.05fr_1fr]">
               <div className="p-6 sm:p-8">
-                <span className="inline-flex items-center rounded-full bg-[#A3E635] px-2.5 py-0.5 text-[11px] font-black uppercase tracking-widest text-[#0A1628]">For families</span>
+                <span className="inline-flex items-center rounded-full bg-[#A3E635] px-2.5 py-0.5 text-[11px] font-black uppercase tracking-widest text-[#0B1426]">For families</span>
                 <h2 className="mt-3 text-2xl font-black tracking-tight sm:text-3xl">The Recruiting Command Center</h2>
                 <p className="mt-2 text-sm text-white/75 sm:text-base">
                   Your family&apos;s recruiting plan, from 8th grade through signing day, on the same platform college coaches use to recruit.
@@ -195,7 +195,7 @@ export default async function RecruitWrestlersHome() {
                 </div>
               </div>
               {mapPreview ? (
-                <a href="/recruiting/college-map" aria-label="Open the college map" className="group relative flex items-center bg-[#0a1528]">
+                <a href="/recruiting/college-map" aria-label="Open the college map" className="group relative flex items-center bg-[#0B1426]">
                   <div className="relative w-full" style={{ aspectRatio: `${PREVIEW.width} / ${PREVIEW.height}` }}>
                     {mapPreview.backdropUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -203,11 +203,11 @@ export default async function RecruitWrestlersHome() {
                     ) : null}
                     <svg viewBox={`0 0 ${PREVIEW.width} ${PREVIEW.height}`} className="absolute inset-0 h-full w-full" role="img" aria-label={`Map of ${mapPreview.dots.length} college wrestling programs`}>
                       {mapPreview.dots.map((d) => (
-                        <circle key={d.id} cx={d.x} cy={d.y} r={3.4} fill={d.color} stroke="#0a1528" strokeWidth={0.8} opacity={0.95} />
+                        <circle key={d.id} cx={d.x} cy={d.y} r={3.4} fill={d.color} stroke="#0B1426" strokeWidth={0.8} opacity={0.95} />
                       ))}
                     </svg>
                   </div>
-                  <span className="absolute bottom-3 right-3 rounded-lg bg-[#A3E635] px-3 py-1.5 text-xs font-bold text-[#0A1628] shadow-lg group-hover:opacity-90">
+                  <span className="absolute bottom-3 right-3 rounded-lg bg-[#A3E635] px-3 py-1.5 text-xs font-bold text-[#0B1426] shadow-lg group-hover:opacity-90">
                     Explore the map →
                   </span>
                 </a>
@@ -240,7 +240,7 @@ export default async function RecruitWrestlersHome() {
         </div>
 
         {/* Built for college coaches: every tool a coach gets. */}
-        <section className="border-y border-[#A3E635]/25 bg-gradient-to-b from-[#0B1D3A] to-[#0A1628]">
+        <section className="border-y border-[#A3E635]/25 bg-gradient-to-b from-[#15243B] to-[#0B1426]">
           <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
             <div>
               <div>
@@ -263,7 +263,7 @@ export default async function RecruitWrestlersHome() {
                   ))}
                 </div>
                 <div className="mt-7 flex flex-col items-center gap-3 sm:flex-row">
-                  <a href="/auth/signup?type=college-coach" className="inline-flex items-center gap-2 rounded-xl bg-[#A3E635] px-8 py-4 text-base font-extrabold text-[#0A1628] hover:bg-[#BEF264] sm:text-lg">
+                  <a href="/auth/signup?type=college-coach" className="inline-flex items-center gap-2 rounded-xl bg-[#A3E635] px-8 py-4 text-base font-extrabold text-[#0B1426] hover:bg-[#BEF264] sm:text-lg">
                     College coaches: get free access <ArrowRight className="h-5 w-5" />
                   </a>
                   <a href="/compare" className="text-sm font-semibold text-white/70 hover:text-white">See the comparison tool</a>

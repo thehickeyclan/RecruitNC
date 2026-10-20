@@ -32,7 +32,7 @@ export function NationalHeader() {
   const [open, setOpen] = useState(false)
   const links = user ? [{ href: "/my-recruiting", label: "Command Center" }, ...LINKS, { href: "/inbox", label: "Messages" }] : LINKS
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0A1628]/95 text-white backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0B1426]/95 text-white backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
         <a href="/" aria-label="RecruitWrestlers home">
           <NationalLockup />
@@ -59,7 +59,7 @@ export function NationalHeader() {
               <a href="/auth/signin" className="hidden text-sm font-semibold text-white/80 hover:text-white sm:inline">
                 Sign in
               </a>
-              <a href="/create-profile" className="rounded-xl bg-[#A3E635] px-4 py-2 text-sm font-bold text-[#0A1628] hover:bg-[#BEF264]">
+              <a href="/create-profile" className="rounded-xl bg-[#A3E635] px-4 py-2 text-sm font-bold text-[#0B1426] hover:bg-[#BEF264]">
                 Get started
               </a>
             </>
@@ -89,7 +89,7 @@ export function NationalHeader() {
 
 export function NationalFooter() {
   return (
-    <footer className="border-t border-white/10 bg-[#0A1628] text-white">
+    <footer className="border-t border-white/10 bg-[#0B1426] text-white">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-10 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div>
           <NationalLockup />
