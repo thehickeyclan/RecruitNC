@@ -500,7 +500,7 @@ export default async function RecruitWrestlersHome() {
             <a href={`${APP}/privacy`} className="hover:text-white">Privacy</a>
           </nav>
         </div>
-        <p className="pb-8 text-center text-xs text-white/35">© {new Date().getFullYear()} {NATIONAL_BRAND.name}</p>
+        <p className="pb-8 text-center text-xs text-white/35">© {new Date().getFullYear()} {NATIONAL_BRAND.name} · A Guild Ventures company</p>
       </footer>
     </div>
   )

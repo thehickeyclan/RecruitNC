@@ -106,7 +106,8 @@ export function NationalFooter() {
           </a>
         </nav>
       </div>
-      <p className="pb-8 text-center text-xs text-white/35">© {new Date().getFullYear()} RecruitWrestlers</p>
+      {/* Ownership line, Matt 20 Oct 2026: RecruitWrestlers is a Guild Ventures company. */}
+      <p className="pb-8 text-center text-xs text-white/35">© {new Date().getFullYear()} RecruitWrestlers · A Guild Ventures company</p>
     </footer>
   )
 }
