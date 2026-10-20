@@ -33,7 +33,8 @@ function place(name: string, division: string): string | null {
 
 type Row = Array<string | null>
 const book = JSON.parse(readFileSync(process.argv[2], "utf8")) as Record<string, Row[]>
-const rows = book["Roster Dataset v3"]
+// The roster sheet is renamed each version ("Roster Dataset v3", "Roster Dataset v3.2").
+const rows = book[Object.keys(book).find((k) => k.startsWith("Roster Dataset"))!]
 const head = rows[0] as string[]
 const at = (r: Row, c: string) => r[head.indexOf(c)] ?? null
 
@@ -83,6 +84,18 @@ type Wrestler = [string, number | null, string | null, number | null, 1 | 0, str
 const room: Record<string, Partial<Record<"mens" | "womens", { season: string; wrestlers: Wrestler[] }>>> = {}
 const unplaced = new Map<string, number>()
 
+/*
+ * Many schools have not posted 2026-27 yet, so a third of the rows are a 2025-26 (or older) page,
+ * but Muse projected every final season as if the class were this season's (SR -> 2027). On a
+ * 2025-26 roster that keeps last year's seniors on the team and everyone else a year too long.
+ * Here a roster's classes move forward by its age, and anyone whose eligibility ran out before
+ * this season is dropped. The team keeps its real season label, so the page says how old it is.
+ */
+const CURRENT_END = 2027
+const CLASSES = ["FR", "SO", "JR", "SR", "GR"]
+let aged = 0
+let dropped = 0
+
 for (const r of rows.slice(1)) {
   if (!r?.length || !at(r, "school")) continue
   const school = String(at(r, "school"))
@@ -93,13 +106,23 @@ for (const r of rows.slice(1)) {
   }
   const team = /^w/i.test(String(at(r, "gender"))) ? "womens" : "mens"
   const w = Number(at(r, "weight_used")) || filled.get(r) || 0
-  const final = Number(at(r, "projected_final_season"))
-  const entry = ((room[id] ??= {})[team] ??= { season: String(at(r, "season") ?? "2026-27"), wrestlers: [] })
+  const season = String(at(r, "season") ?? "2026-27")
+  const age = Math.max(0, CURRENT_END - (Number(season.slice(0, 4)) + 1))
+  const projected = Number(at(r, "projected_final_season"))
+  const final = Number.isFinite(projected) && projected > 2000 ? projected - age : null
+  if (final != null && final < CURRENT_END) {
+    dropped++
+    continue
+  }
+  if (age) aged++
+  const rawCls = (at(r, "class_canonical") as string | null) ?? null
+  const cls = rawCls && age && CLASSES.includes(rawCls) ? CLASSES[Math.min(CLASSES.length - 1, CLASSES.indexOf(rawCls) + age)] : rawCls
+  const entry = ((room[id] ??= {})[team] ??= { season, wrestlers: [] })
   entry.wrestlers.push([
     String(at(r, "name")).trim(),
     Number.isFinite(w) && w > 0 ? w : null,
-    (at(r, "class_canonical") as string | null) ?? null,
-    Number.isFinite(final) && final > 2000 ? final : null,
+    cls,
+    final,
     String(at(r, "redshirt") ?? "").toUpperCase() === "Y" ? 1 : 0,
     (at(r, "home_state") as string | null) ?? null,
     (at(r, "high_school") as string | null) ?? null,
@@ -110,7 +133,8 @@ for (const r of rows.slice(1)) {
 const depth: Record<string, Partial<Record<"mens" | "womens", unknown>>> = {}
 for (const [id, teams] of Object.entries(room)) {
   for (const [team, t] of Object.entries(teams) as Array<["mens" | "womens", { season: string; wrestlers: Wrestler[] }]>) {
-    const end = Number(t.season.slice(0, 4)) + 1
+    // "In their final year" means this season (2026-27), whatever season the page was.
+    const end = CURRENT_END
     const byWeight: Record<string, { n: number; final: number; Fr: number; So: number; Jr: number }> = {}
     for (const [, weight, cls, final] of t.wrestlers) {
       if (weight == null) continue
@@ -131,10 +155,11 @@ for (const [id, teams] of Object.entries(room)) {
   }
 }
 
-const source = "Muse, college roster pull v3 (2026-10-19): each school's 2026-27 roster, weights from the roster or WrestleStat"
+const source = "Muse, college roster pull v3.2 (2026-10-20, audited): each school's 2026-27 roster, weights from the roster or WrestleStat"
 writeFileSync("lib/college-programs/roster-room.json", JSON.stringify({ source, teams: room }) + "\n")
 writeFileSync("lib/college-programs/roster-depth.json", JSON.stringify({ source, teams: depth }) + "\n")
 const wrestlers = Object.values(room).flatMap((t) => Object.values(t)).reduce((n, t) => n + (t?.wrestlers.length ?? 0), 0)
+console.log(`older rosters: ${aged} wrestlers moved up a class, ${dropped} whose eligibility had run out left off`)
 console.log(`filled ${filled.size} blank weights from WrestleStat by nickname`)
 for (const [r, w] of [...filled].slice(0, 40)) console.log(" ~", at(r, "school"), at(r, "name"), w)
 console.log(`placed ${Object.keys(room).length} colleges, ${wrestlers} wrestlers; could not place ${unplaced.size} schools (${[...unplaced.values()].reduce((a, b) => a + b, 0)} wrestlers)`)

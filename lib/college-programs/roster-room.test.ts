@@ -36,6 +36,6 @@ describe("room by weight", () => {
     const ncState = roomFor("north-carolina-state-university-nc-state", "mens")
     expect(ncState?.season).toBe("2026-27")
     expect(ncState && weightsPublished(ncState)).toBe(true)
-    expect(roomFor("cornell-university", "mens") && weightsPublished(roomFor("cornell-university", "mens")!)).toBe(false)
+    expect(roomFor("virginia-tech", "mens") && weightsPublished(roomFor("virginia-tech", "mens")!)).toBe(false)
   })
 })
