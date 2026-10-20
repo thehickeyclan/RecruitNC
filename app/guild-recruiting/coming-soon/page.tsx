@@ -48,6 +48,7 @@ export default async function ComingSoon() {
       <a href="/auth/signin" className="mt-10 text-xs text-white/35 hover:text-white/60">
         Staff sign in
       </a>
+      {rw ? <p className="mt-6 text-xs text-white/30">A Guild Ventures company</p> : null}
     </main>
   )
 }
