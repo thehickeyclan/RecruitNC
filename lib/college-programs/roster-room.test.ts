@@ -34,8 +34,8 @@ describe("room by weight", () => {
 
   it("reads the real v3 pull", () => {
     const ncState = roomFor("north-carolina-state-university-nc-state", "mens")
-    // NC State's pull carries no season (v3.2): "Current", the page the school published in October.
-    expect(ncState?.season).toBe("Current")
+    // Undated in v3.2 ("Current"); Muse's v3.3 sweep read the page's season.
+    expect(ncState?.season).toBe("2026-27")
     expect(ncState && weightsPublished(ncState)).toBe(true)
     expect(roomFor("virginia-tech", "mens") && weightsPublished(roomFor("virginia-tech", "mens")!)).toBe(false)
   })
