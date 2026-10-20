@@ -27,9 +27,9 @@ html[data-host="guild"] .auth-surface {
 }
 
 html[data-host="national"] {
-  --recruit-accent: rgb(75 139 255);
-  --recruit-on-accent: #fff;
-  --recruit-fill-rgb: 31, 107, 255;
+  --recruit-accent: rgb(211 181 116);
+  --recruit-on-accent: #0A1628;
+  --recruit-fill-rgb: 211, 181, 116;
 }
 
 html[data-host="guild"] {
@@ -39,7 +39,7 @@ html[data-host="guild"] {
 }
 
 html[data-host="national"] .accent-\[\#D3B574\] {
-  accent-color: rgb(31 107 255);
+  accent-color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .accent-\[\#D3B574\] {
@@ -47,7 +47,7 @@ html[data-host="guild"] .accent-\[\#D3B574\] {
 }
 
 html[data-host="national"] .before\:from-\[\#D3B574\]::before {
-  --tw-gradient-from: rgb(31 107 255) var(--tw-gradient-from-position); --tw-gradient-to: rgb(31 107 255 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  --tw-gradient-from: rgb(211 181 116) var(--tw-gradient-from-position); --tw-gradient-to: rgb(211 181 116 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 
 html[data-host="guild"] .before\:from-\[\#D3B574\]::before {
@@ -55,7 +55,7 @@ html[data-host="guild"] .before\:from-\[\#D3B574\]::before {
 }
 
 html[data-host="national"] .bg-\[\#D3B574\] {
-  background-color: rgb(31 107 255); color: #fff;
+  background-color: rgb(211 181 116); color: #0A1628;
 }
 
 html[data-host="guild"] .bg-\[\#D3B574\] {
@@ -63,7 +63,7 @@ html[data-host="guild"] .bg-\[\#D3B574\] {
 }
 
 html[data-host="national"] .bg-\[\#D3B574\]\/10 {
-  background-color: rgb(31 107 255 / 0.1);
+  background-color: rgb(211 181 116 / 0.1);
 }
 
 html[data-host="guild"] .bg-\[\#D3B574\]\/10 {
@@ -71,7 +71,7 @@ html[data-host="guild"] .bg-\[\#D3B574\]\/10 {
 }
 
 html[data-host="national"] .bg-\[\#D3B574\]\/15 {
-  background-color: rgb(31 107 255 / 0.15);
+  background-color: rgb(211 181 116 / 0.15);
 }
 
 html[data-host="guild"] .bg-\[\#D3B574\]\/15 {
@@ -79,7 +79,7 @@ html[data-host="guild"] .bg-\[\#D3B574\]\/15 {
 }
 
 html[data-host="national"] .bg-\[\#D3B574\]\/20 {
-  background-color: rgb(31 107 255 / 0.2);
+  background-color: rgb(211 181 116 / 0.2);
 }
 
 html[data-host="guild"] .bg-\[\#D3B574\]\/20 {
@@ -87,7 +87,7 @@ html[data-host="guild"] .bg-\[\#D3B574\]\/20 {
 }
 
 html[data-host="national"] .bg-\[\#D3B574\]\/30 {
-  background-color: rgb(31 107 255 / 0.3);
+  background-color: rgb(211 181 116 / 0.3);
 }
 
 html[data-host="guild"] .bg-\[\#D3B574\]\/30 {
@@ -95,7 +95,7 @@ html[data-host="guild"] .bg-\[\#D3B574\]\/30 {
 }
 
 html[data-host="national"] .bg-\[\#D3B574\]\/5 {
-  background-color: rgb(31 107 255 / 0.05);
+  background-color: rgb(211 181 116 / 0.05);
 }
 
 html[data-host="guild"] .bg-\[\#D3B574\]\/5 {
@@ -103,7 +103,7 @@ html[data-host="guild"] .bg-\[\#D3B574\]\/5 {
 }
 
 html[data-host="national"] .bg-\[\#D3B574\]\/60 {
-  background-color: rgb(31 107 255 / 0.6);
+  background-color: rgb(211 181 116 / 0.6);
 }
 
 html[data-host="guild"] .bg-\[\#D3B574\]\/60 {
@@ -111,7 +111,7 @@ html[data-host="guild"] .bg-\[\#D3B574\]\/60 {
 }
 
 html[data-host="national"] .bg-\[\#D3B574\]\/8 {
-  background-color: rgb(31 107 255 / 0.08);
+  background-color: rgb(211 181 116 / 0.08);
 }
 
 html[data-host="guild"] .bg-\[\#D3B574\]\/8 {
@@ -119,7 +119,7 @@ html[data-host="guild"] .bg-\[\#D3B574\]\/8 {
 }
 
 html[data-host="national"] .bg-\[\#D3b574\] {
-  background-color: rgb(31 107 255); color: #fff;
+  background-color: rgb(211 181 116); color: #0A1628;
 }
 
 html[data-host="guild"] .bg-\[\#D3b574\] {
@@ -127,7 +127,7 @@ html[data-host="guild"] .bg-\[\#D3b574\] {
 }
 
 html[data-host="national"] .bg-\[\#D7B968\] {
-  background-color: rgb(31 107 255); color: #fff;
+  background-color: rgb(211 181 116); color: #0A1628;
 }
 
 html[data-host="guild"] .bg-\[\#D7B968\] {
@@ -135,7 +135,7 @@ html[data-host="guild"] .bg-\[\#D7B968\] {
 }
 
 html[data-host="national"] .bg-\[\#D7B968\]\/10 {
-  background-color: rgb(31 107 255 / 0.1);
+  background-color: rgb(211 181 116 / 0.1);
 }
 
 html[data-host="guild"] .bg-\[\#D7B968\]\/10 {
@@ -143,7 +143,7 @@ html[data-host="guild"] .bg-\[\#D7B968\]\/10 {
 }
 
 html[data-host="national"] .bg-\[\#D7B968\]\/15 {
-  background-color: rgb(31 107 255 / 0.15);
+  background-color: rgb(211 181 116 / 0.15);
 }
 
 html[data-host="guild"] .bg-\[\#D7B968\]\/15 {
@@ -151,7 +151,7 @@ html[data-host="guild"] .bg-\[\#D7B968\]\/15 {
 }
 
 html[data-host="national"] .bg-\[\#D7B968\]\/5 {
-  background-color: rgb(31 107 255 / 0.05);
+  background-color: rgb(211 181 116 / 0.05);
 }
 
 html[data-host="guild"] .bg-\[\#D7B968\]\/5 {
@@ -159,7 +159,7 @@ html[data-host="guild"] .bg-\[\#D7B968\]\/5 {
 }
 
 html[data-host="national"] .bg-\[\#d7b968\] {
-  background-color: rgb(31 107 255); color: #fff;
+  background-color: rgb(211 181 116); color: #0A1628;
 }
 
 html[data-host="guild"] .bg-\[\#d7b968\] {
@@ -167,7 +167,7 @@ html[data-host="guild"] .bg-\[\#d7b968\] {
 }
 
 html[data-host="national"] .bg-\[\#d7b968\]\/10 {
-  background-color: rgb(31 107 255 / 0.1);
+  background-color: rgb(211 181 116 / 0.1);
 }
 
 html[data-host="guild"] .bg-\[\#d7b968\]\/10 {
@@ -175,7 +175,7 @@ html[data-host="guild"] .bg-\[\#d7b968\]\/10 {
 }
 
 html[data-host="national"] .bg-\[\#d7b968\]\/5 {
-  background-color: rgb(31 107 255 / 0.05);
+  background-color: rgb(211 181 116 / 0.05);
 }
 
 html[data-host="guild"] .bg-\[\#d7b968\]\/5 {
@@ -183,7 +183,7 @@ html[data-host="guild"] .bg-\[\#d7b968\]\/5 {
 }
 
 html[data-host="national"] .border-\[\#D3B574\] {
-  border-color: rgb(31 107 255);
+  border-color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .border-\[\#D3B574\] {
@@ -191,7 +191,7 @@ html[data-host="guild"] .border-\[\#D3B574\] {
 }
 
 html[data-host="national"] .border-\[\#D3B574\]\/20 {
-  border-color: rgb(31 107 255 / 0.2);
+  border-color: rgb(211 181 116 / 0.2);
 }
 
 html[data-host="guild"] .border-\[\#D3B574\]\/20 {
@@ -199,7 +199,7 @@ html[data-host="guild"] .border-\[\#D3B574\]\/20 {
 }
 
 html[data-host="national"] .border-\[\#D3B574\]\/25 {
-  border-color: rgb(31 107 255 / 0.25);
+  border-color: rgb(211 181 116 / 0.25);
 }
 
 html[data-host="guild"] .border-\[\#D3B574\]\/25 {
@@ -207,7 +207,7 @@ html[data-host="guild"] .border-\[\#D3B574\]\/25 {
 }
 
 html[data-host="national"] .border-\[\#D3B574\]\/30 {
-  border-color: rgb(31 107 255 / 0.3);
+  border-color: rgb(211 181 116 / 0.3);
 }
 
 html[data-host="guild"] .border-\[\#D3B574\]\/30 {
@@ -215,7 +215,7 @@ html[data-host="guild"] .border-\[\#D3B574\]\/30 {
 }
 
 html[data-host="national"] .border-\[\#D3B574\]\/35 {
-  border-color: rgb(31 107 255 / 0.35);
+  border-color: rgb(211 181 116 / 0.35);
 }
 
 html[data-host="guild"] .border-\[\#D3B574\]\/35 {
@@ -223,7 +223,7 @@ html[data-host="guild"] .border-\[\#D3B574\]\/35 {
 }
 
 html[data-host="national"] .border-\[\#D3B574\]\/40 {
-  border-color: rgb(31 107 255 / 0.4);
+  border-color: rgb(211 181 116 / 0.4);
 }
 
 html[data-host="guild"] .border-\[\#D3B574\]\/40 {
@@ -231,7 +231,7 @@ html[data-host="guild"] .border-\[\#D3B574\]\/40 {
 }
 
 html[data-host="national"] .border-\[\#D3B574\]\/45 {
-  border-color: rgb(31 107 255 / 0.45);
+  border-color: rgb(211 181 116 / 0.45);
 }
 
 html[data-host="guild"] .border-\[\#D3B574\]\/45 {
@@ -239,7 +239,7 @@ html[data-host="guild"] .border-\[\#D3B574\]\/45 {
 }
 
 html[data-host="national"] .border-\[\#D3B574\]\/50 {
-  border-color: rgb(31 107 255 / 0.5);
+  border-color: rgb(211 181 116 / 0.5);
 }
 
 html[data-host="guild"] .border-\[\#D3B574\]\/50 {
@@ -247,7 +247,7 @@ html[data-host="guild"] .border-\[\#D3B574\]\/50 {
 }
 
 html[data-host="national"] .border-\[\#D3B574\]\/60 {
-  border-color: rgb(31 107 255 / 0.6);
+  border-color: rgb(211 181 116 / 0.6);
 }
 
 html[data-host="guild"] .border-\[\#D3B574\]\/60 {
@@ -255,7 +255,7 @@ html[data-host="guild"] .border-\[\#D3B574\]\/60 {
 }
 
 html[data-host="national"] .border-\[\#D3B574\]\/70 {
-  border-color: rgb(31 107 255 / 0.7);
+  border-color: rgb(211 181 116 / 0.7);
 }
 
 html[data-host="guild"] .border-\[\#D3B574\]\/70 {
@@ -263,7 +263,7 @@ html[data-host="guild"] .border-\[\#D3B574\]\/70 {
 }
 
 html[data-host="national"] .border-\[\#D7B968\] {
-  border-color: rgb(31 107 255);
+  border-color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .border-\[\#D7B968\] {
@@ -271,7 +271,7 @@ html[data-host="guild"] .border-\[\#D7B968\] {
 }
 
 html[data-host="national"] .border-\[\#D7B968\]\/20 {
-  border-color: rgb(31 107 255 / 0.2);
+  border-color: rgb(211 181 116 / 0.2);
 }
 
 html[data-host="guild"] .border-\[\#D7B968\]\/20 {
@@ -279,7 +279,7 @@ html[data-host="guild"] .border-\[\#D7B968\]\/20 {
 }
 
 html[data-host="national"] .border-\[\#D7B968\]\/30 {
-  border-color: rgb(31 107 255 / 0.3);
+  border-color: rgb(211 181 116 / 0.3);
 }
 
 html[data-host="guild"] .border-\[\#D7B968\]\/30 {
@@ -287,7 +287,7 @@ html[data-host="guild"] .border-\[\#D7B968\]\/30 {
 }
 
 html[data-host="national"] .border-\[\#D7B968\]\/35 {
-  border-color: rgb(31 107 255 / 0.35);
+  border-color: rgb(211 181 116 / 0.35);
 }
 
 html[data-host="guild"] .border-\[\#D7B968\]\/35 {
@@ -295,7 +295,7 @@ html[data-host="guild"] .border-\[\#D7B968\]\/35 {
 }
 
 html[data-host="national"] .border-\[\#D7B968\]\/40 {
-  border-color: rgb(31 107 255 / 0.4);
+  border-color: rgb(211 181 116 / 0.4);
 }
 
 html[data-host="guild"] .border-\[\#D7B968\]\/40 {
@@ -303,7 +303,7 @@ html[data-host="guild"] .border-\[\#D7B968\]\/40 {
 }
 
 html[data-host="national"] .border-\[\#D7B968\]\/50 {
-  border-color: rgb(31 107 255 / 0.5);
+  border-color: rgb(211 181 116 / 0.5);
 }
 
 html[data-host="guild"] .border-\[\#D7B968\]\/50 {
@@ -311,7 +311,7 @@ html[data-host="guild"] .border-\[\#D7B968\]\/50 {
 }
 
 html[data-host="national"] .border-\[\#d7b968\]\/25 {
-  border-color: rgb(31 107 255 / 0.25);
+  border-color: rgb(211 181 116 / 0.25);
 }
 
 html[data-host="guild"] .border-\[\#d7b968\]\/25 {
@@ -319,7 +319,7 @@ html[data-host="guild"] .border-\[\#d7b968\]\/25 {
 }
 
 html[data-host="national"] .border-\[\#d7b968\]\/30 {
-  border-color: rgb(31 107 255 / 0.3);
+  border-color: rgb(211 181 116 / 0.3);
 }
 
 html[data-host="guild"] .border-\[\#d7b968\]\/30 {
@@ -327,7 +327,7 @@ html[data-host="guild"] .border-\[\#d7b968\]\/30 {
 }
 
 html[data-host="national"] .border-\[\#d7b968\]\/35 {
-  border-color: rgb(31 107 255 / 0.35);
+  border-color: rgb(211 181 116 / 0.35);
 }
 
 html[data-host="guild"] .border-\[\#d7b968\]\/35 {
@@ -335,7 +335,7 @@ html[data-host="guild"] .border-\[\#d7b968\]\/35 {
 }
 
 html[data-host="national"] .border-\[\#d7b968\]\/40 {
-  border-color: rgb(31 107 255 / 0.4);
+  border-color: rgb(211 181 116 / 0.4);
 }
 
 html[data-host="guild"] .border-\[\#d7b968\]\/40 {
@@ -343,7 +343,7 @@ html[data-host="guild"] .border-\[\#d7b968\]\/40 {
 }
 
 html[data-host="national"] .border-\[\#d7b968\]\/45 {
-  border-color: rgb(31 107 255 / 0.45);
+  border-color: rgb(211 181 116 / 0.45);
 }
 
 html[data-host="guild"] .border-\[\#d7b968\]\/45 {
@@ -351,7 +351,7 @@ html[data-host="guild"] .border-\[\#d7b968\]\/45 {
 }
 
 html[data-host="national"] .border-\[\#d7b968\]\/70 {
-  border-color: rgb(31 107 255 / 0.7);
+  border-color: rgb(211 181 116 / 0.7);
 }
 
 html[data-host="guild"] .border-\[\#d7b968\]\/70 {
@@ -359,7 +359,7 @@ html[data-host="guild"] .border-\[\#d7b968\]\/70 {
 }
 
 html[data-host="national"] .border-t-\[\#D3B574\] {
-  border-top-color: rgb(31 107 255);
+  border-top-color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .border-t-\[\#D3B574\] {
@@ -367,7 +367,7 @@ html[data-host="guild"] .border-t-\[\#D3B574\] {
 }
 
 html[data-host="national"] .decoration-\[\#D3B574\] {
-  text-decoration-color: rgb(75 139 255);
+  text-decoration-color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .decoration-\[\#D3B574\] {
@@ -375,7 +375,7 @@ html[data-host="guild"] .decoration-\[\#D3B574\] {
 }
 
 html[data-host="national"] .divide-\[\#D3B574\]\/20 > :not([hidden]) ~ :not([hidden]) {
-  border-color: rgb(31 107 255 / 0.2);
+  border-color: rgb(211 181 116 / 0.2);
 }
 
 html[data-host="guild"] .divide-\[\#D3B574\]\/20 > :not([hidden]) ~ :not([hidden]) {
@@ -383,7 +383,7 @@ html[data-host="guild"] .divide-\[\#D3B574\]\/20 > :not([hidden]) ~ :not([hidden
 }
 
 html[data-host="national"] .fill-\[\#D3B574\] {
-  fill: rgb(31 107 255);
+  fill: rgb(211 181 116);
 }
 
 html[data-host="guild"] .fill-\[\#D3B574\] {
@@ -391,7 +391,7 @@ html[data-host="guild"] .fill-\[\#D3B574\] {
 }
 
 html[data-host="national"] .fill-\[\#F5D985\] {
-  fill: rgb(75 139 255);
+  fill: rgb(226 201 141);
 }
 
 html[data-host="guild"] .fill-\[\#F5D985\] {
@@ -399,7 +399,7 @@ html[data-host="guild"] .fill-\[\#F5D985\] {
 }
 
 html[data-host="national"] .focus-visible\:outline-\[\#D3B574\]:focus-visible {
-  outline-color: rgb(31 107 255);
+  outline-color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .focus-visible\:outline-\[\#D3B574\]:focus-visible {
@@ -407,7 +407,7 @@ html[data-host="guild"] .focus-visible\:outline-\[\#D3B574\]:focus-visible {
 }
 
 html[data-host="national"] .focus-visible\:ring-\[\#D3B574\]\/50:focus-visible {
-  --tw-ring-color: rgb(31 107 255 / 0.5);
+  --tw-ring-color: rgb(211 181 116 / 0.5);
 }
 
 html[data-host="guild"] .focus-visible\:ring-\[\#D3B574\]\/50:focus-visible {
@@ -415,7 +415,7 @@ html[data-host="guild"] .focus-visible\:ring-\[\#D3B574\]\/50:focus-visible {
 }
 
 html[data-host="national"] .focus-within\:border-\[\#D3B574\]:focus-within {
-  border-color: rgb(31 107 255);
+  border-color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .focus-within\:border-\[\#D3B574\]:focus-within {
@@ -423,7 +423,7 @@ html[data-host="guild"] .focus-within\:border-\[\#D3B574\]:focus-within {
 }
 
 html[data-host="national"] .focus\:border-\[\#D3B574\]:focus {
-  border-color: rgb(31 107 255);
+  border-color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .focus\:border-\[\#D3B574\]:focus {
@@ -431,7 +431,7 @@ html[data-host="guild"] .focus\:border-\[\#D3B574\]:focus {
 }
 
 html[data-host="national"] .focus\:border-\[\#D3B574\]\/50:focus {
-  border-color: rgb(31 107 255 / 0.5);
+  border-color: rgb(211 181 116 / 0.5);
 }
 
 html[data-host="guild"] .focus\:border-\[\#D3B574\]\/50:focus {
@@ -439,7 +439,7 @@ html[data-host="guild"] .focus\:border-\[\#D3B574\]\/50:focus {
 }
 
 html[data-host="national"] .focus\:border-\[\#D3B574\]\/60:focus {
-  border-color: rgb(31 107 255 / 0.6);
+  border-color: rgb(211 181 116 / 0.6);
 }
 
 html[data-host="guild"] .focus\:border-\[\#D3B574\]\/60:focus {
@@ -447,7 +447,7 @@ html[data-host="guild"] .focus\:border-\[\#D3B574\]\/60:focus {
 }
 
 html[data-host="national"] .focus\:border-\[\#D7B968\]:focus {
-  border-color: rgb(31 107 255);
+  border-color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .focus\:border-\[\#D7B968\]:focus {
@@ -455,7 +455,7 @@ html[data-host="guild"] .focus\:border-\[\#D7B968\]:focus {
 }
 
 html[data-host="national"] .focus\:ring-\[\#D3B574\]:focus {
-  --tw-ring-color: rgb(31 107 255);
+  --tw-ring-color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .focus\:ring-\[\#D3B574\]:focus {
@@ -463,7 +463,7 @@ html[data-host="guild"] .focus\:ring-\[\#D3B574\]:focus {
 }
 
 html[data-host="national"] .focus\:ring-\[\#D3B574\]\/20:focus {
-  --tw-ring-color: rgb(31 107 255 / 0.2);
+  --tw-ring-color: rgb(211 181 116 / 0.2);
 }
 
 html[data-host="guild"] .focus\:ring-\[\#D3B574\]\/20:focus {
@@ -471,7 +471,7 @@ html[data-host="guild"] .focus\:ring-\[\#D3B574\]\/20:focus {
 }
 
 html[data-host="national"] .focus\:ring-\[\#D3B574\]\/50:focus {
-  --tw-ring-color: rgb(31 107 255 / 0.5);
+  --tw-ring-color: rgb(211 181 116 / 0.5);
 }
 
 html[data-host="guild"] .focus\:ring-\[\#D3B574\]\/50:focus {
@@ -479,7 +479,7 @@ html[data-host="guild"] .focus\:ring-\[\#D3B574\]\/50:focus {
 }
 
 html[data-host="national"] .from-\[\#D3B574\] {
-  --tw-gradient-from: rgb(31 107 255) var(--tw-gradient-from-position); --tw-gradient-to: rgb(31 107 255 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  --tw-gradient-from: rgb(211 181 116) var(--tw-gradient-from-position); --tw-gradient-to: rgb(211 181 116 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 
 html[data-host="guild"] .from-\[\#D3B574\] {
@@ -487,7 +487,7 @@ html[data-host="guild"] .from-\[\#D3B574\] {
 }
 
 html[data-host="national"] .from-\[\#D3B574\]\/15 {
-  --tw-gradient-from: rgb(31 107 255 / 0.15) var(--tw-gradient-from-position); --tw-gradient-to: rgb(31 107 255 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  --tw-gradient-from: rgb(211 181 116 / 0.15) var(--tw-gradient-from-position); --tw-gradient-to: rgb(211 181 116 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 
 html[data-host="guild"] .from-\[\#D3B574\]\/15 {
@@ -495,7 +495,7 @@ html[data-host="guild"] .from-\[\#D3B574\]\/15 {
 }
 
 html[data-host="national"] .from-\[\#D3B574\]\/20 {
-  --tw-gradient-from: rgb(31 107 255 / 0.2) var(--tw-gradient-from-position); --tw-gradient-to: rgb(31 107 255 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+  --tw-gradient-from: rgb(211 181 116 / 0.2) var(--tw-gradient-from-position); --tw-gradient-to: rgb(211 181 116 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 
 html[data-host="guild"] .from-\[\#D3B574\]\/20 {
@@ -503,7 +503,7 @@ html[data-host="guild"] .from-\[\#D3B574\]\/20 {
 }
 
 html[data-host="national"] .group:hover .group-hover\:bg-\[\#D3B574\] {
-  background-color: rgb(31 107 255); color: #fff;
+  background-color: rgb(211 181 116); color: #0A1628;
 }
 
 html[data-host="guild"] .group:hover .group-hover\:bg-\[\#D3B574\] {
@@ -511,7 +511,7 @@ html[data-host="guild"] .group:hover .group-hover\:bg-\[\#D3B574\] {
 }
 
 html[data-host="national"] .group:hover .group-hover\:bg-\[\#D7B968\] {
-  background-color: rgb(31 107 255); color: #fff;
+  background-color: rgb(211 181 116); color: #0A1628;
 }
 
 html[data-host="guild"] .group:hover .group-hover\:bg-\[\#D7B968\] {
@@ -519,7 +519,7 @@ html[data-host="guild"] .group:hover .group-hover\:bg-\[\#D7B968\] {
 }
 
 html[data-host="national"] .group:hover .group-hover\:bg-\[\#e2c98d\] {
-  background-color: rgb(75 139 255); color: #fff;
+  background-color: rgb(226 201 141); color: #0A1628;
 }
 
 html[data-host="guild"] .group:hover .group-hover\:bg-\[\#e2c98d\] {
@@ -527,7 +527,7 @@ html[data-host="guild"] .group:hover .group-hover\:bg-\[\#e2c98d\] {
 }
 
 html[data-host="national"] .group:hover .group-hover\:text-\[\#D3B574\] {
-  color: rgb(75 139 255);
+  color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .group:hover .group-hover\:text-\[\#D3B574\] {
@@ -535,7 +535,7 @@ html[data-host="guild"] .group:hover .group-hover\:text-\[\#D3B574\] {
 }
 
 html[data-host="national"] .hover\:bg-\[\#D3B574\]:hover {
-  background-color: rgb(31 107 255); color: #fff;
+  background-color: rgb(211 181 116); color: #0A1628;
 }
 
 html[data-host="guild"] .hover\:bg-\[\#D3B574\]:hover {
@@ -543,7 +543,7 @@ html[data-host="guild"] .hover\:bg-\[\#D3B574\]:hover {
 }
 
 html[data-host="national"] .hover\:bg-\[\#D3B574\]\/10:hover {
-  background-color: rgb(31 107 255 / 0.1);
+  background-color: rgb(211 181 116 / 0.1);
 }
 
 html[data-host="guild"] .hover\:bg-\[\#D3B574\]\/10:hover {
@@ -551,7 +551,7 @@ html[data-host="guild"] .hover\:bg-\[\#D3B574\]\/10:hover {
 }
 
 html[data-host="national"] .hover\:bg-\[\#D3B574\]\/15:hover {
-  background-color: rgb(31 107 255 / 0.15);
+  background-color: rgb(211 181 116 / 0.15);
 }
 
 html[data-host="guild"] .hover\:bg-\[\#D3B574\]\/15:hover {
@@ -559,7 +559,7 @@ html[data-host="guild"] .hover\:bg-\[\#D3B574\]\/15:hover {
 }
 
 html[data-host="national"] .hover\:bg-\[\#D3B574\]\/20:hover {
-  background-color: rgb(31 107 255 / 0.2);
+  background-color: rgb(211 181 116 / 0.2);
 }
 
 html[data-host="guild"] .hover\:bg-\[\#D3B574\]\/20:hover {
@@ -567,7 +567,7 @@ html[data-host="guild"] .hover\:bg-\[\#D3B574\]\/20:hover {
 }
 
 html[data-host="national"] .hover\:bg-\[\#D3B574\]\/30:hover {
-  background-color: rgb(31 107 255 / 0.3);
+  background-color: rgb(211 181 116 / 0.3);
 }
 
 html[data-host="guild"] .hover\:bg-\[\#D3B574\]\/30:hover {
@@ -575,7 +575,7 @@ html[data-host="guild"] .hover\:bg-\[\#D3B574\]\/30:hover {
 }
 
 html[data-host="national"] .hover\:bg-\[\#D3B574\]\/90:hover {
-  background-color: rgb(31 107 255 / 0.9);
+  background-color: rgb(211 181 116 / 0.9);
 }
 
 html[data-host="guild"] .hover\:bg-\[\#D3B574\]\/90:hover {
@@ -583,7 +583,7 @@ html[data-host="guild"] .hover\:bg-\[\#D3B574\]\/90:hover {
 }
 
 html[data-host="national"] .hover\:bg-\[\#D7B968\]\/10:hover {
-  background-color: rgb(31 107 255 / 0.1);
+  background-color: rgb(211 181 116 / 0.1);
 }
 
 html[data-host="guild"] .hover\:bg-\[\#D7B968\]\/10:hover {
@@ -591,15 +591,23 @@ html[data-host="guild"] .hover\:bg-\[\#D7B968\]\/10:hover {
 }
 
 html[data-host="national"] .hover\:bg-\[\#D7B968\]\/15:hover {
-  background-color: rgb(31 107 255 / 0.15);
+  background-color: rgb(211 181 116 / 0.15);
 }
 
 html[data-host="guild"] .hover\:bg-\[\#D7B968\]\/15:hover {
   background-color: rgb(184 157 96 / 0.15);
 }
 
+html[data-host="national"] .hover\:bg-\[\#E2C98D\]:hover {
+  background-color: rgb(226 201 141); color: #0A1628;
+}
+
+html[data-host="guild"] .hover\:bg-\[\#E2C98D\]:hover {
+  background-color: rgb(201 176 120); color: #0A0A0B;
+}
+
 html[data-host="national"] .hover\:bg-\[\#F5D985\]:hover {
-  background-color: rgb(75 139 255); color: #fff;
+  background-color: rgb(226 201 141); color: #0A1628;
 }
 
 html[data-host="guild"] .hover\:bg-\[\#F5D985\]:hover {
@@ -607,7 +615,7 @@ html[data-host="guild"] .hover\:bg-\[\#F5D985\]:hover {
 }
 
 html[data-host="national"] .hover\:bg-\[\#e2c98d\]:hover {
-  background-color: rgb(75 139 255); color: #fff;
+  background-color: rgb(226 201 141); color: #0A1628;
 }
 
 html[data-host="guild"] .hover\:bg-\[\#e2c98d\]:hover {
@@ -615,7 +623,7 @@ html[data-host="guild"] .hover\:bg-\[\#e2c98d\]:hover {
 }
 
 html[data-host="national"] .hover\:border-\[\#D3B574\]:hover {
-  border-color: rgb(31 107 255);
+  border-color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .hover\:border-\[\#D3B574\]:hover {
@@ -623,7 +631,7 @@ html[data-host="guild"] .hover\:border-\[\#D3B574\]:hover {
 }
 
 html[data-host="national"] .hover\:border-\[\#D3B574\]\/30:hover {
-  border-color: rgb(31 107 255 / 0.3);
+  border-color: rgb(211 181 116 / 0.3);
 }
 
 html[data-host="guild"] .hover\:border-\[\#D3B574\]\/30:hover {
@@ -631,7 +639,7 @@ html[data-host="guild"] .hover\:border-\[\#D3B574\]\/30:hover {
 }
 
 html[data-host="national"] .hover\:border-\[\#D3B574\]\/40:hover {
-  border-color: rgb(31 107 255 / 0.4);
+  border-color: rgb(211 181 116 / 0.4);
 }
 
 html[data-host="guild"] .hover\:border-\[\#D3B574\]\/40:hover {
@@ -639,7 +647,7 @@ html[data-host="guild"] .hover\:border-\[\#D3B574\]\/40:hover {
 }
 
 html[data-host="national"] .hover\:border-\[\#D3B574\]\/45:hover {
-  border-color: rgb(31 107 255 / 0.45);
+  border-color: rgb(211 181 116 / 0.45);
 }
 
 html[data-host="guild"] .hover\:border-\[\#D3B574\]\/45:hover {
@@ -647,7 +655,7 @@ html[data-host="guild"] .hover\:border-\[\#D3B574\]\/45:hover {
 }
 
 html[data-host="national"] .hover\:border-\[\#D3B574\]\/50:hover {
-  border-color: rgb(31 107 255 / 0.5);
+  border-color: rgb(211 181 116 / 0.5);
 }
 
 html[data-host="guild"] .hover\:border-\[\#D3B574\]\/50:hover {
@@ -655,7 +663,7 @@ html[data-host="guild"] .hover\:border-\[\#D3B574\]\/50:hover {
 }
 
 html[data-host="national"] .hover\:border-\[\#D3B574\]\/60:hover {
-  border-color: rgb(31 107 255 / 0.6);
+  border-color: rgb(211 181 116 / 0.6);
 }
 
 html[data-host="guild"] .hover\:border-\[\#D3B574\]\/60:hover {
@@ -663,7 +671,7 @@ html[data-host="guild"] .hover\:border-\[\#D3B574\]\/60:hover {
 }
 
 html[data-host="national"] .hover\:border-\[\#D3B574\]\/70:hover {
-  border-color: rgb(31 107 255 / 0.7);
+  border-color: rgb(211 181 116 / 0.7);
 }
 
 html[data-host="guild"] .hover\:border-\[\#D3B574\]\/70:hover {
@@ -671,7 +679,7 @@ html[data-host="guild"] .hover\:border-\[\#D3B574\]\/70:hover {
 }
 
 html[data-host="national"] .hover\:shadow-\[\#D3B574\]\/5:hover {
-  --tw-shadow-color: rgb(31 107 255 / 0.05); --tw-shadow: var(--tw-shadow-colored);
+  --tw-shadow-color: rgb(211 181 116 / 0.05); --tw-shadow: var(--tw-shadow-colored);
 }
 
 html[data-host="guild"] .hover\:shadow-\[\#D3B574\]\/5:hover {
@@ -679,7 +687,7 @@ html[data-host="guild"] .hover\:shadow-\[\#D3B574\]\/5:hover {
 }
 
 html[data-host="national"] .hover\:text-\[\#D3B574\]:hover {
-  color: rgb(75 139 255);
+  color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .hover\:text-\[\#D3B574\]:hover {
@@ -687,7 +695,7 @@ html[data-host="guild"] .hover\:text-\[\#D3B574\]:hover {
 }
 
 html[data-host="national"] .hover\:text-\[\#D7B968\]:hover {
-  color: rgb(75 139 255);
+  color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .hover\:text-\[\#D7B968\]:hover {
@@ -695,7 +703,7 @@ html[data-host="guild"] .hover\:text-\[\#D7B968\]:hover {
 }
 
 html[data-host="national"] .hover\:text-\[\#d7b968\]:hover {
-  color: rgb(75 139 255);
+  color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .hover\:text-\[\#d7b968\]:hover {
@@ -703,7 +711,7 @@ html[data-host="guild"] .hover\:text-\[\#d7b968\]:hover {
 }
 
 html[data-host="national"] .hover\:text-\[\#e2c98d\]:hover {
-  color: rgb(75 139 255);
+  color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .hover\:text-\[\#e2c98d\]:hover {
@@ -711,7 +719,7 @@ html[data-host="guild"] .hover\:text-\[\#e2c98d\]:hover {
 }
 
 html[data-host="national"] .hover\:to-\[\#D3B574\]:hover {
-  --tw-gradient-to: rgb(31 107 255) var(--tw-gradient-to-position);
+  --tw-gradient-to: rgb(211 181 116) var(--tw-gradient-to-position);
 }
 
 html[data-host="guild"] .hover\:to-\[\#D3B574\]:hover {
@@ -720,7 +728,7 @@ html[data-host="guild"] .hover\:to-\[\#D3B574\]:hover {
 
 html[data-host="national"] .marker\:text-\[\#D3B574\] *::marker,
 html[data-host="national"] .marker\:text-\[\#D3B574\]::marker {
-  color: rgb(75 139 255);
+  color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .marker\:text-\[\#D3B574\] *::marker,
@@ -730,7 +738,7 @@ html[data-host="guild"] .marker\:text-\[\#D3B574\]::marker {
 
 html[data-host="national"] .marker\:text-\[\#D3B574\]\/70 *::marker,
 html[data-host="national"] .marker\:text-\[\#D3B574\]\/70::marker {
-  color: rgb(75 139 255 / 0.7);
+  color: rgb(211 181 116 / 0.7);
 }
 
 html[data-host="guild"] .marker\:text-\[\#D3B574\]\/70 *::marker,
@@ -739,7 +747,7 @@ html[data-host="guild"] .marker\:text-\[\#D3B574\]\/70::marker {
 }
 
 html[data-host="national"] .outline-\[\#D3B574\] {
-  outline-color: rgb(31 107 255);
+  outline-color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .outline-\[\#D3B574\] {
@@ -747,7 +755,7 @@ html[data-host="guild"] .outline-\[\#D3B574\] {
 }
 
 html[data-host="national"] .ring-\[\#D3B574\] {
-  --tw-ring-color: rgb(31 107 255);
+  --tw-ring-color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .ring-\[\#D3B574\] {
@@ -755,7 +763,7 @@ html[data-host="guild"] .ring-\[\#D3B574\] {
 }
 
 html[data-host="national"] .ring-\[\#D3B574\]\/40 {
-  --tw-ring-color: rgb(31 107 255 / 0.4);
+  --tw-ring-color: rgb(211 181 116 / 0.4);
 }
 
 html[data-host="guild"] .ring-\[\#D3B574\]\/40 {
@@ -763,7 +771,7 @@ html[data-host="guild"] .ring-\[\#D3B574\]\/40 {
 }
 
 html[data-host="national"] .ring-\[\#D3B574\]\/50 {
-  --tw-ring-color: rgb(31 107 255 / 0.5);
+  --tw-ring-color: rgb(211 181 116 / 0.5);
 }
 
 html[data-host="guild"] .ring-\[\#D3B574\]\/50 {
@@ -771,7 +779,7 @@ html[data-host="guild"] .ring-\[\#D3B574\]\/50 {
 }
 
 html[data-host="national"] .ring-\[\#D3B574\]\/60 {
-  --tw-ring-color: rgb(31 107 255 / 0.6);
+  --tw-ring-color: rgb(211 181 116 / 0.6);
 }
 
 html[data-host="guild"] .ring-\[\#D3B574\]\/60 {
@@ -779,7 +787,7 @@ html[data-host="guild"] .ring-\[\#D3B574\]\/60 {
 }
 
 html[data-host="national"] .shadow-\[\#D3B574\]\/20 {
-  --tw-shadow-color: rgb(31 107 255 / 0.2); --tw-shadow: var(--tw-shadow-colored);
+  --tw-shadow-color: rgb(211 181 116 / 0.2); --tw-shadow: var(--tw-shadow-colored);
 }
 
 html[data-host="guild"] .shadow-\[\#D3B574\]\/20 {
@@ -787,7 +795,7 @@ html[data-host="guild"] .shadow-\[\#D3B574\]\/20 {
 }
 
 html[data-host="national"] .text-\[\#D3B574\] {
-  color: rgb(75 139 255);
+  color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .text-\[\#D3B574\] {
@@ -795,7 +803,7 @@ html[data-host="guild"] .text-\[\#D3B574\] {
 }
 
 html[data-host="national"] .text-\[\#D3B574\]\/70 {
-  color: rgb(75 139 255 / 0.7);
+  color: rgb(211 181 116 / 0.7);
 }
 
 html[data-host="guild"] .text-\[\#D3B574\]\/70 {
@@ -803,7 +811,7 @@ html[data-host="guild"] .text-\[\#D3B574\]\/70 {
 }
 
 html[data-host="national"] .text-\[\#D3B574\]\/80 {
-  color: rgb(75 139 255 / 0.8);
+  color: rgb(211 181 116 / 0.8);
 }
 
 html[data-host="guild"] .text-\[\#D3B574\]\/80 {
@@ -811,7 +819,7 @@ html[data-host="guild"] .text-\[\#D3B574\]\/80 {
 }
 
 html[data-host="national"] .text-\[\#D3B574\]\/90 {
-  color: rgb(75 139 255 / 0.9);
+  color: rgb(211 181 116 / 0.9);
 }
 
 html[data-host="guild"] .text-\[\#D3B574\]\/90 {
@@ -819,7 +827,7 @@ html[data-host="guild"] .text-\[\#D3B574\]\/90 {
 }
 
 html[data-host="national"] .text-\[\#D3b574\] {
-  color: rgb(75 139 255);
+  color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .text-\[\#D3b574\] {
@@ -827,7 +835,7 @@ html[data-host="guild"] .text-\[\#D3b574\] {
 }
 
 html[data-host="national"] .text-\[\#D7B968\] {
-  color: rgb(75 139 255);
+  color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .text-\[\#D7B968\] {
@@ -835,7 +843,7 @@ html[data-host="guild"] .text-\[\#D7B968\] {
 }
 
 html[data-host="national"] .text-\[\#F5D985\] {
-  color: rgb(75 139 255);
+  color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .text-\[\#F5D985\] {
@@ -843,7 +851,7 @@ html[data-host="guild"] .text-\[\#F5D985\] {
 }
 
 html[data-host="national"] .text-\[\#d7b968\] {
-  color: rgb(75 139 255);
+  color: rgb(211 181 116);
 }
 
 html[data-host="guild"] .text-\[\#d7b968\] {
@@ -851,7 +859,7 @@ html[data-host="guild"] .text-\[\#d7b968\] {
 }
 
 html[data-host="national"] .to-\[\#D3B574\] {
-  --tw-gradient-to: rgb(31 107 255) var(--tw-gradient-to-position);
+  --tw-gradient-to: rgb(211 181 116) var(--tw-gradient-to-position);
 }
 
 html[data-host="guild"] .to-\[\#D3B574\] {
@@ -859,7 +867,7 @@ html[data-host="guild"] .to-\[\#D3B574\] {
 }
 
 html[data-host="national"] .to-\[\#D3B574\]\/5 {
-  --tw-gradient-to: rgb(31 107 255 / 0.05) var(--tw-gradient-to-position);
+  --tw-gradient-to: rgb(211 181 116 / 0.05) var(--tw-gradient-to-position);
 }
 
 html[data-host="guild"] .to-\[\#D3B574\]\/5 {

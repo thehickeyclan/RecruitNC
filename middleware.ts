@@ -47,6 +47,15 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
   const brand = stagedBrandForHost(request.headers.get("host"))
   // Guild Recruiting's own pages exist only on its address.
   if (!brand && pathname.startsWith("/guild-recruiting")) return NextResponse.redirect(new URL("/", request.url), 307)
+  /*
+   * Guild Recruiting was retired as a brand on 19 October 2026 (Matt's final decision: the product
+   * is RecruitWrestlers at www.recruitwrestlers.com, owned by Guild Ventures, in navy and gold).
+   * Anything already pointing at recruit.wrestlingguild.com - sign-in links, bookmarks - lands on
+   * the same page there. 307 while the product is unlaunched, so nothing caches a permanent move.
+   */
+  if (brand === "guild") {
+    return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, "https://www.recruitwrestlers.com"), 307)
+  }
   if (brand) {
     if (pathname === "/robots.txt") {
       return new NextResponse("User-agent: *\nDisallow: /\n", { headers: { "Content-Type": "text/plain", "X-Robots-Tag": "noindex, nofollow" } })
@@ -59,7 +68,7 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
       holding.headers.set("Cache-Control", "private, no-store")
       return holding
     }
-    if (pathname === "/") return NextResponse.rewrite(new URL(brand === "guild" ? "/guild-recruiting" : "/recruitwrestlers", request.url))
+    if (pathname === "/") return NextResponse.rewrite(new URL("/recruitwrestlers", request.url))
     if (!isNationalPath(pathname) && !isOpenWhileStaged(pathname) && !pathname.startsWith("/guild-recruiting")) {
       return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, APP_ORIGIN), 307)
     }
