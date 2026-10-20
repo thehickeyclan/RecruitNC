@@ -8,6 +8,7 @@ import data from "@/lib/college-programs/programs-2026-27.json"
 import { questionnairesForSchool } from "@/lib/college-programs/questionnaires"
 import { seniorClassYear } from "@/lib/class-years"
 import { depthFor, nearestCollegeWeights } from "@/lib/college-programs/roster-depth"
+import { athleticAdmissionFacts } from "@/lib/recruiting/scout/projected-level"
 import { needSentence, roomByWeight, roomFor, weightsPublished } from "@/lib/college-programs/roster-room"
 import { isHeadCoach, staffForSchool } from "@/lib/college-programs/staff"
 import { yearlyCostFor } from "@/lib/college-programs/tuition"
@@ -200,6 +201,8 @@ async function collegeDetails(s: ScoutSession, a: Record<string, unknown>): Prom
         .join("; ") || "none published"}.${facts.admissionsUrl ? ` Admissions: ${facts.admissionsUrl}` : ""}`,
     )
   }
+  // Athletic admission: what the published figures mean for a recruited wrestler.
+  lines.push(athleticAdmissionFacts(school.id, spoken(school.name)))
   // Campus life: Niche's report-card grades, as published on the college's Niche profile.
   const niche = nicheFor(school.id)
   if (niche && Object.keys(niche.grades).length) {
@@ -248,7 +251,8 @@ async function collegeDetails(s: ScoutSession, a: Record<string, unknown>): Prom
       `it is in ${school.city}, ${school.state}`,
     ].filter(Boolean)
     lines.push(`Facts a wrestler can give for why this college, in an email: ${hooks.join("; ")}.`)
-    if (went.gpa) lines.push(`GPA of ${went.gpa.label}: average ${went.gpa.average.toFixed(2)} (${went.gpa.count} wrestlers)`)
+    // Our wrestlers' GPA, never the college's: Scout once called this "UNC's admitted students' GPA".
+    if (went.gpa) lines.push(`GPA of ${went.gpa.label}: average ${went.gpa.average.toFixed(2)} (${went.gpa.count} wrestlers, from our profiles). This is our wrestlers' GPA, not the college's admitted students' GPA: the college publishes none; say whose average it is.`)
   }
   return lines.join("\n")
 }

@@ -23,6 +23,32 @@ import { WORKING_STEPS } from "@/lib/recruiting/learn/working"
 import { transferPortalText } from "@/lib/recruiting/learn/transfer-portal"
 import { nilText } from "@/lib/recruiting/learn/nil"
 import { womensText } from "@/lib/recruiting/learn/womens"
+import { isRatedAthlete, type StarRating } from "@/lib/athlete-star-rating"
+import { rateOneAthlete } from "@/lib/athlete-star-rating-load"
+import { loadNationallyRankedIds } from "@/lib/national-rankings"
+import { loadOpponentIndex } from "@/lib/scouting-report"
+import { loadStatePlacerIndex } from "@/lib/state-placers"
+import { projectedLevelFacts } from "@/lib/recruiting/scout/projected-level"
+
+/**
+ * The family's own wrestler's star, rated the way the ranking board rates it (same indexes), for
+ * the projected college level. Only the rated classes; capped at 8 seconds so a slow rating never
+ * holds up an answer (Scout then says nothing about the level rather than guess).
+ */
+async function familyStar(admin: SupabaseClient, athleteId: string, gender: string | null, classYear: number): Promise<StarRating | null> {
+  if (!isRatedAthlete({ gender, graduationYear: classYear })) return null
+  const work = (async () => {
+    const [{ data: athlete }, rankedIds, baseIndex, stateIndex] = await Promise.all([
+      admin.from("athletes").select("*").eq("id", athleteId).maybeSingle(),
+      loadNationallyRankedIds(admin),
+      loadOpponentIndex(admin),
+      loadStatePlacerIndex(admin).catch(() => ({ statePlacers: [], stateSchools: [], fargoAllAmericans: [] })),
+    ])
+    if (!athlete) return null
+    return (await rateOneAthlete(admin, athlete as Record<string, unknown>, rankedIds, { ...baseIndex, ...stateIndex })).rating
+  })()
+  return Promise.race([work.catch(() => null), new Promise<null>((r) => setTimeout(() => r(null), 8000))])
+}
 
 /**
  * Everything Scout knows when a family asks a question (17 Oct 2026). Built fresh for each
@@ -145,12 +171,13 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
   const focus = await familyFocus(admin, userId).catch(() => null)
   const team = focus?.gender ?? (wrestler.gender ? (female ? "womens" : "mens") : null)
 
-  const [signals, fitCtx, views, list, infoSheet] = await Promise.all([
+  const [signals, fitCtx, views, list, infoSheet, star] = await Promise.all([
     grade ? loadRoadmapSignals(admin, { athleteId: String(wrestler.id), userId, grade }).catch(() => null) : Promise.resolve(null),
     loadFamilyFitContext(admin, userId, team).catch(() => null),
     getCoachViewsForAthlete(admin, String(wrestler.id)).catch(() => null),
     admin.from("college_list_items").select("school_id, status").eq("user_id", userId).then((r) => r.data ?? []),
     buildInfoSheet(admin, String(wrestler.id)).catch(() => null),
+    familyStar(admin, String(wrestler.id), (wrestler.gender as string | null) ?? null, classYear),
   ])
   const { data: account } = await admin.auth.admin.getUserById(userId)
   const ticked = Array.isArray(account?.user?.user_metadata?.roadmap_done) ? (account!.user!.user_metadata!.roadmap_done as string[]) : []
@@ -174,6 +201,9 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
         .join("\n"),
     )
   }
+
+  // The projected college level: our honest read, computed from the star (Matt, 20 Oct 2026).
+  out.push(`# ${firstName}'s projected college level (computed; for "what division should we consider")\n${projectedLevelFacts(firstName, star, { female })}`)
 
   // The contact and visit dates, as calendar dates for this class.
   const dated = allDatedRules(track).map((r) => {
