@@ -115,6 +115,10 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
       })
     }
     await fillBlanks()
+    // Coaches may have written before anyone in the family had an account (lib/coach-messages-notify.ts).
+    await import("@/lib/coach-messages-notify")
+      .then(({ notifyWaitingMessagesOnClaim }) => notifyWaitingMessagesOnClaim(admin, { athleteId, userId: viewerId }))
+      .catch((e) => console.error("[mobile claim] waiting messages:", e instanceof Error ? e.message : e))
     return NextResponse.json({
       ok: true,
       relationship,
@@ -165,5 +169,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     userAgent: request.headers.get("user-agent"),
   })
 
+  // Coaches may have written before anyone in the family had an account (lib/coach-messages-notify.ts).
+  await import("@/lib/coach-messages-notify")
+    .then(({ notifyWaitingMessagesOnClaim }) => notifyWaitingMessagesOnClaim(admin, { athleteId, userId: viewerId }))
+    .catch((e) => console.error("[mobile claim] waiting messages:", e instanceof Error ? e.message : e))
   return NextResponse.json({ ok: true, relationship, athleteName: athlete.name ?? null })
 }

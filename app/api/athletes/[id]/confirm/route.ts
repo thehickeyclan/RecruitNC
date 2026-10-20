@@ -70,6 +70,10 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
   }
 
   if (updated) {
+    // Coaches may have written before anyone in the family had an account (lib/coach-messages-notify.ts).
+    await import("@/lib/coach-messages-notify")
+      .then(({ notifyWaitingMessagesOnClaim }) => notifyWaitingMessagesOnClaim(admin, { athleteId, userId: user.id }))
+      .catch((e) => console.error("[confirm] waiting messages:", e instanceof Error ? e.message : e))
     return NextResponse.json(
       { success: true, details: { logging: logError ? safeErr(logError) : "ok" } },
       { status: 200 },
