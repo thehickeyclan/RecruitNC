@@ -9,6 +9,7 @@ import { questionnairesForSchool } from "@/lib/college-programs/questionnaires"
 import { seniorClassYear } from "@/lib/class-years"
 import { depthFor, nearestCollegeWeights } from "@/lib/college-programs/roster-depth"
 import { d1TierOf, type D1Tiers } from "@/lib/college-programs/d1-tiers"
+import { readGuide, type Guide } from "@/lib/recruiting/scout/guides"
 import { athleticAdmissionFacts, inStateLine } from "@/lib/recruiting/scout/projected-level"
 import { needSentence, roomByWeight, roomFor, weightsPublished } from "@/lib/college-programs/roster-room"
 import { isHeadCoach, staffForSchool } from "@/lib/college-programs/staff"
@@ -45,6 +46,8 @@ export type ScoutSession = {
   list: Map<string, CollegeListStatus>
   /** Names of programs that viewed the wrestler, reduced for matching. */
   viewed: Set<string>
+  /** The rules library by the piece (guides.ts), for read_guide. */
+  guides?: Guide[]
   /** The family's state ("NC"), for in-state programs. */
   homeState?: string
   /** Division I Tier 1 from the latest poll. */
@@ -71,6 +74,15 @@ export const ELIGIBILITY_MINIMUM: Record<CollegeDivision, string> = {
 }
 
 export const SCOUT_TOOLS = [
+  {
+    type: "function",
+    function: {
+      name: "read_guide",
+      description:
+        "Read one guide from the rules library in full (key from the library index in the facts, e.g. learn:nil, learn:division-2, guide:other-classes). Use when the question needs a rule or guide whose sections were not given with it.",
+      parameters: { type: "object", properties: { key: { type: "string" } }, required: ["key"] },
+    },
+  },
   {
     type: "function",
     function: {
@@ -365,6 +377,7 @@ export function compareNiche(ids: string[]): string | null {
 }
 
 export async function runScoutTool(s: ScoutSession, name: string, args: Record<string, unknown>): Promise<string> {
+  if (name === "read_guide") return readGuide(s.guides ?? [], String(args.key ?? ""))
   if (name === "find_colleges") return findColleges(s, args)
   if (name === "college_details") return collegeDetails(s, args)
   if (name === "college_commits") return collegeCommits(s, args)
