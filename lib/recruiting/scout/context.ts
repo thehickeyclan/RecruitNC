@@ -16,7 +16,7 @@ import { GRADE_NAME, allDatedRules, gradeForClass, type Grade } from "@/lib/recr
 import { adaptRoadmap } from "@/lib/recruiting/roadmap-adapt"
 import { loadRoadmapSignals } from "@/lib/recruiting/roadmap-signals"
 import { resolveRuleDate } from "@/lib/recruiting/scout/dates"
-import { listStage, type ScoutSession } from "@/lib/recruiting/scout/tools"
+import { collegesNamedIn, listStage, type ScoutSession } from "@/lib/recruiting/scout/tools"
 import { buildInfoSheet } from "@/app/my-recruiting/info-sheet"
 import { collegeKey } from "@/lib/recruiting/roadmap-adapt"
 import { WORKING_STEPS } from "@/lib/recruiting/learn/working"
@@ -296,6 +296,7 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
     homeState,
     tiers,
     stars: star?.stars ?? null,
+    commitment: wrestler.college && String(wrestler.college).trim() ? { name: String(wrestler.college).trim(), schoolId: collegesNamedIn(String(wrestler.college))[0] ?? null } : null,
     links,
   }
   return { firstName, classYear, links, session, facts: out.join("\n\n") }

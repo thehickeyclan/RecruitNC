@@ -49,6 +49,8 @@ export type ScoutSession = {
   homeState?: string
   /** Division I Tier 1 from the latest poll. */
   tiers?: D1Tiers
+  /** The college the wrestler is committed to in our records, resolved to a map id when we can. */
+  commitment?: { name: string; schoolId: string | null } | null
   /** The wrestler's star, for the in-state line (never said to the family). */
   stars?: number | null
   /** Links Scout may offer; tools add the colleges they return. */

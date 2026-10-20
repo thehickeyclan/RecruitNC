@@ -38,6 +38,17 @@ export function answerProblems(text: string): string[] {
   return [...new Set(out)]
 }
 
+/**
+ * A question about the college the wrestler is committed to is answered from the commitment: the
+ * headline says so (Matt, 20 Oct 2026). Scout had answered "Is NC State realistic?" for a wrestler
+ * committed to NC State with the in-state reasoning and the commitment second.
+ */
+export function commitmentProblem(headline: string, namedIds: string[], commitment: { name: string; schoolId: string | null } | null | undefined): string | null {
+  if (!commitment?.schoolId || !namedIds.includes(commitment.schoolId)) return null
+  if (/\bcommit/i.test(headline)) return null
+  return `The wrestler is already committed to ${commitment.name}: the headline must say so first ("He is already committed to ${commitment.name}"), then answer.`
+}
+
 export function draftProblems(body: string, questionnaireNotDone: boolean): string[] {
   const out: string[] = []
   if (/\b(strong|great|excellent|prestigious|renowned|elite|top-notch|storied|rich|impressive|successful|outstanding|proud|tradition)\b/i.test(body))
@@ -140,6 +151,7 @@ export async function askScout(context: ScoutContext, question: string, history:
       // The family's income is never known: a net price is an average, not theirs.
       ...(answer && /\byour income\b/i.test(`${answer.headline} ${answer.body}`) ? ["We do not know the family's income: call the net price an average for aided students."] : []),
       ...(answer ? answerProblems(`${answer.headline} ${answer.body}`) : []),
+      ...(answer ? [commitmentProblem(answer.headline, named, context.session.commitment)].filter((p): p is string => Boolean(p)) : []),
     ]
     if (answer && problems.length && !retried && round < MAX_ROUNDS - 1) {
       // One rewrite, told exactly what to fix.
