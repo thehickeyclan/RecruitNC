@@ -28,8 +28,8 @@ describe("which addresses are pre-launch brands", () => {
   })
 
   it("keeps only sign-in and the holding page open while the gate is closed", () => {
-    for (const open of ["/auth/signin", "/auth/callback", "/api/auth/landing", "/guild-recruiting/coming-soon", "/robots.txt", "/guild/guild-mark.png"]) expect(isOpenWhileStaged(open)).toBe(true)
-    for (const closed of ["/", "/prospects/all", "/athletes/abc", "/api/prospects", "/api/coach-messages", "/my-recruiting", "/coach-home", "/guild-recruiting"]) expect(isOpenWhileStaged(closed)).toBe(false)
+    for (const open of ["/", "/auth/signin", "/auth/callback", "/api/auth/landing", "/guild-recruiting/coming-soon", "/robots.txt", "/guild/guild-mark.png"]) expect(isOpenWhileStaged(open)).toBe(true)
+    for (const closed of ["/prospects/all", "/athletes/abc", "/api/prospects", "/api/coach-messages", "/my-recruiting", "/coach-home", "/guild-recruiting"]) expect(isOpenWhileStaged(closed)).toBe(false)
   })
 })
 
