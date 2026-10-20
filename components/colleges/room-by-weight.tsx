@@ -70,6 +70,7 @@ export function RoomByWeight({
                   </summary>
                   {r.wrestlers.length ? (
                     <ul className="space-y-1.5 border-t border-white/10 px-3 py-2.5">
+                      {r.leaving ? <li className="text-[11px] text-white/40">Crossed out: last season ends before fall {arrival}</li> : null}
                       {r.wrestlers.map((w, i) => {
                         const done = w.finalSeason != null && w.finalSeason <= arrival
                         return (
