@@ -37,17 +37,20 @@ import {
   Users,
 } from "lucide-react"
 
+import { currentClassYears } from "@/lib/class-years"
 import { PortalShell } from "@/components/portal/portal-shell"
 import { SchoolActions } from "@/components/colleges/school-actions"
 import { StaffList } from "@/components/colleges/staff-list"
 import { WentHereSection } from "@/components/colleges/went-here-section"
+import { RoomByWeight } from "@/components/colleges/room-by-weight"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { INCOME_BRACKETS, fitForSchool, satTotalRange } from "@/lib/college-programs/fit"
 import { loadCollegeMap } from "@/lib/college-programs/load"
 import { schoolLogoUrl } from "@/lib/college-programs/logo"
 import majorsData from "@/lib/college-programs/majors.json"
 import data from "@/lib/college-programs/programs-2026-27.json"
-import { depthFor } from "@/lib/college-programs/roster-depth"
+import { depthFor, nearestCollegeWeights } from "@/lib/college-programs/roster-depth"
+import { roomByWeight, roomFor, weightsPublished } from "@/lib/college-programs/roster-room"
 import { questionnairesForSchool } from "@/lib/college-programs/questionnaires"
 import { rosterForSchool } from "@/lib/college-programs/rosters"
 import { STATE_NAMES } from "@/lib/college-programs/states"
@@ -88,7 +91,7 @@ const FIT_LABEL: Record<"athletic" | "other", Record<FitStatus, string>> = {
 const DOT: Record<FitStatus, string> = { fit: "bg-emerald-400", stretch: "bg-amber-300", concern: "bg-red-400", unknown: "bg-white/30" }
 const DOT_ATHLETIC: Record<FitStatus, string> = { ...DOT, concern: "bg-sky-300" }
 
-type Params = { params: Promise<{ id: string }> }
+type Params = { params: Promise<{ id: string }>; searchParams?: Promise<{ fall?: string }> }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const school = SCHOOLS.get((await params).id)
@@ -148,8 +151,9 @@ function Stat({ value, label, sub }: { value: string; label: string; sub?: strin
   )
 }
 
-export default async function SchoolPage({ params }: Params) {
+export default async function SchoolPage({ params, searchParams }: Params) {
   const { id } = await params
+  const fallParam = Number((await searchParams)?.fall) || null
   const school = SCHOOLS.get(id)
   const niche = school ? nicheFor(school.id) : null
   if (!school) notFound()
@@ -191,6 +195,11 @@ export default async function SchoolPage({ params }: Params) {
   const fit = fitForSchool(school.id)
   const depth = depthFor(school.id, team)
   const roster = rosterForSchool(school.id)
+  // The room by weight for the fall the wrestler would arrive (their class), or the senior class for anyone else.
+  const room = roomFor(school.id, team)
+  const falls = currentClassYears()
+  const arrival = fallParam && falls.includes(fallParam) ? fallParam : ctx?.classYear && falls.includes(ctx.classYear) ? ctx.classYear : falls[0]
+  const myWeights = ctx?.weight ? nearestCollegeWeights(ctx.weight, team) : []
   // The roster file lists North Carolina wrestlers only, so it speaks to an NC family alone.
   const ncNow = homeState === "NC" ? roster.wrestlers.filter((w) => w.team === team) : []
   const rosterRead = homeState === "NC" && roster.anyReviewed
@@ -519,6 +528,21 @@ export default async function SchoolPage({ params }: Params) {
         <section id="roster" className={`${card} mt-5 scroll-mt-16`}>
           <h2 className={cardTitle}>Where you stand</h2>
           <WentHereSection schoolId={school.id} schoolName={name} focus={theirs} />
+        </section>
+      ) : null}
+
+      {full && room ? (
+        <section id="room" className={`${card} mt-5 scroll-mt-16`}>
+          <h2 className={cardTitle}>{teamWord} room by weight</h2>
+          <RoomByWeight
+            rows={roomByWeight(room, team, arrival)}
+            arrival={arrival}
+            falls={falls}
+            season={room.season}
+            mine={myWeights}
+            first={ctx?.first ?? null}
+            published={weightsPublished(room)}
+          />
         </section>
       ) : null}
 

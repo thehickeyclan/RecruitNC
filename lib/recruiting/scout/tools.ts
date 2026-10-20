@@ -6,7 +6,9 @@ import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { COLLEGE_LIST_STATUS_LABEL, isCollegeListStatus, type CollegeListStatus } from "@/lib/college-programs/list"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { questionnairesForSchool } from "@/lib/college-programs/questionnaires"
-import { depthAtWeights, depthFor, nearestCollegeWeights } from "@/lib/college-programs/roster-depth"
+import { seniorClassYear } from "@/lib/class-years"
+import { depthFor, nearestCollegeWeights } from "@/lib/college-programs/roster-depth"
+import { needSentence, roomByWeight, roomFor, weightsPublished } from "@/lib/college-programs/roster-room"
 import { isHeadCoach, staffForSchool } from "@/lib/college-programs/staff"
 import { yearlyCostFor } from "@/lib/college-programs/tuition"
 import { DIVISION_SHORT, type CollegeDivision, type CollegeMapSchool } from "@/lib/college-programs/types"
@@ -73,7 +75,7 @@ export const SCOUT_TOOLS = [
           state: { type: "string", description: "Two-letter state, e.g. NC." },
           conference: { type: "string" },
           max_cost: { type: "number", description: "Most the full published yearly cost may be, in dollars." },
-          room_at_weight: { type: "boolean", description: "Only colleges with two or fewer wrestlers at the wrestler's college weight, or one in his final year." },
+          room_at_weight: { type: "boolean", description: "Only colleges where two or fewer wrestlers will still be at the wrestler's college weight the fall he would arrive." },
           grade_category: { type: "string", enum: NICHE_CATEGORIES.map((c) => c.key), description: "A Niche campus-life grade to filter on, with min_grade." },
           min_grade: { type: "string", description: "Lowest Niche grade to accept in grade_category, e.g. 'B+'." },
         },
@@ -106,18 +108,26 @@ function lineup(s: ScoutSession, schoolId: string): string | null {
   const team = s.team ?? (BY_ID.get(schoolId)?.programs.some((p) => p.mens) ? "mens" : "womens")
   const depth = depthFor(schoolId, team)
   if (!depth) return null
+  const room = roomFor(schoolId, team)
   const weights = s.fit?.weight ? nearestCollegeWeights(s.fit.weight, team) : []
-  const at = weights.length ? depthAtWeights(depth, weights) : null
-  const atText = at ? at.map((l) => `${l.weight}: ${l.wrestlers} on the roster${l.finalYear ? ` (${l.finalYear} in their final year)` : ""}`).join("; ") : null
-  return `${depth.season ?? "Current"} roster (for the family's planning; never put it in an email): ${depth.size} wrestlers${atText ? `. At the wrestler's college weights: ${atText}` : ""}`
+  const arrival = s.fit?.classYear ?? seniorClassYear()
+  const atText =
+    room && weights.length && weightsPublished(room)
+      ? `. At the wrestler's college weights, for the fall ${arrival} the wrestler would arrive: ${needSentence(roomByWeight(room, team, arrival), weights, arrival)}. A direction, never an open spot: redshirts, transfers and new signings change it`
+      : room && weights.length
+        ? ". The roster lists too few weights to say who is at the wrestler's weight"
+        : ""
+  return `${depth.season ?? "Current"} roster (for the family's planning; never put it in an email): ${depth.size} wrestlers${atText}`
 }
 
+/** "Room at his weight": the nearest college weight is a likely need or has some room in the arrival fall. */
 function roomAtWeight(s: ScoutSession, schoolId: string): boolean {
   const team = s.team ?? "mens"
-  const depth = depthFor(schoolId, team)
-  if (!depth || !s.fit?.weight) return false
-  const at = depthAtWeights(depth, nearestCollegeWeights(s.fit.weight, team).slice(0, 1))
-  return Boolean(at?.[0] && (at[0].wrestlers <= 2 || at[0].finalYear > 0))
+  const room = roomFor(schoolId, team)
+  if (!room || !s.fit?.weight || !weightsPublished(room)) return false
+  const w = nearestCollegeWeights(s.fit.weight, team)[0]
+  const row = roomByWeight(room, team, s.fit.classYear ?? seniorClassYear()).find((r) => r.weight === w)
+  return Boolean(row && row.need !== "crowded")
 }
 
 function short(s: ScoutSession, school: CollegeMapSchool): string {

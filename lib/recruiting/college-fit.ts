@@ -7,11 +7,12 @@ import "server-only"
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 
-import { mostRecentGraduatedClassYear } from "@/lib/class-years"
+import { mostRecentGraduatedClassYear, seniorClassYear } from "@/lib/class-years"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import majorsData from "@/lib/college-programs/majors.json"
 import { fitForSchool, netPriceFor, satTotalRange, type CollegeFit, type NetPrice } from "@/lib/college-programs/fit"
 import { depthAtWeights, depthFor, nearestCollegeWeights, type TeamDepth, type WeightLine } from "@/lib/college-programs/roster-depth"
+import { roomByWeight, roomFor, weightsPublished, type WeightRow } from "@/lib/college-programs/roster-room"
 import { yearlyCostFor } from "@/lib/college-programs/tuition"
 import { DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { readWentHereSnapshot, snapshotForState } from "@/lib/college-programs/went-here-snapshot"
@@ -34,6 +35,8 @@ export type FamilyFitContext = {
   act: number | null
   /** The weight the wrestler last competed at, never the profile's listed one. */
   weight: number | null
+  /** The wrestler's high school class: the fall they would arrive at college. */
+  classYear: number | null
   profile: FamilyFitProfile
   profileSet: boolean
   home: [number, number] | null
@@ -70,6 +73,7 @@ export async function loadFamilyFitContext(admin: SupabaseClient, userId: string
     sat: Number(String(wrestler?.academic_sat ?? "").replace(/[^0-9]/g, "")) || null,
     act: Number(String(wrestler?.academic_act ?? "").replace(/[^0-9]/g, "")) || null,
     weight: Number(String(last?.weight ?? "").replace(/[^0-9]/g, "")) || null,
+    classYear: Number(wrestler?.graduationyear) || null,
     profile,
     profileSet: Boolean(profile.majors.length || profile.budget || profile.maxMiles || profile.size || profile.settings.length),
     home: profile.homeZip ? ((NC_ZIPS[profile.homeZip] as [number, number] | undefined) ?? null) : null,
@@ -85,6 +89,8 @@ export type CollegeFitResult = {
   cost: { amount: number; year: string } | null
   depth: TeamDepth | null
   atWeight: WeightLine[] | null
+  /** The room at the wrestler's college weights in the fall they would arrive; null when the team prints too few weights. */
+  room: { arrival: number; rows: WeightRow[] } | null
   lines: { athletic: FitLine; academic: FitLine; cost: FitLine; goals: FitLine }
 }
 
@@ -98,6 +104,9 @@ export function collegeFitFor(ctx: FamilyFitContext, school: CollegeMapSchool, i
   const depth = depthFor(school.id, rosterTeam)
   const near = ctx.weight ? nearestCollegeWeights(ctx.weight, rosterTeam) : []
   const atWeight = depth && near.length ? depthAtWeights(depth, near) : null
+  const arrival = ctx.classYear ?? seniorClassYear()
+  const teamRoom = roomFor(school.id, rosterTeam)
+  const room = teamRoom && near.length && weightsPublished(teamRoom) ? { arrival, rows: roomByWeight(teamRoom, rosterTeam, arrival).filter((r) => near.includes(r.weight)) } : null
   const division = (team ? school.programs.find((p) => p[team])?.division : null) ?? school.programs[0]?.division
   const group = (ctx.snapshot?.commits ?? []).filter((c) => c.division === division && (!team || c.gender === team)).map((c) => c.standing)
   const schoolGpa = (team ? ctx.snapshot?.gpaBySchoolGender?.[`${school.id}|${team}`] : ctx.snapshot?.gpaBySchool[school.id]) ?? null
@@ -115,6 +124,7 @@ export function collegeFitFor(ctx: FamilyFitContext, school: CollegeMapSchool, i
     cost,
     depth,
     atWeight,
+    room,
     lines: {
       athletic: division
         ? athleticFit(ctx.mine, group, DIVISION_SHORT[division], among, ctx.first ?? "Your wrestler")
