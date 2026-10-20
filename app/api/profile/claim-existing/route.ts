@@ -92,6 +92,11 @@ export async function POST(request: NextRequest) {
         previousOwnerUserId: null,
       })
 
+      // Coaches may have written before anyone in the family had an account (lib/coach-messages-notify.ts).
+      await import("@/lib/coach-messages-notify")
+        .then(({ notifyWaitingMessagesOnClaim }) => notifyWaitingMessagesOnClaim(adminSupabase, { athleteId, userId: user.id }))
+        .catch((e) => console.error("[claim-existing] waiting messages:", e instanceof Error ? e.message : e))
+
       return NextResponse.json({
         success: true,
         relationship,
@@ -126,11 +131,29 @@ export async function POST(request: NextRequest) {
       )
     }
     if (!updated) {
-      console.error("[claim-existing] No user_profiles row found for user:", user.id)
-      return NextResponse.json(
-        { error: "Account profile not found; please refresh and try again." },
-        { status: 404 }
+      /*
+       * A Google sign-up that skipped "complete your profile" has no user_profiles row. This used to
+       * fail here - after the athlete row was already claimed - so the wrestler saw an error, and
+       * the audit, consent, staff text and waiting-message alerts never ran (Yaleen Khang, 20 Oct
+       * 2026). Make the row instead; the claim itself is already done.
+       */
+      const meta = (user.user_metadata ?? {}) as Record<string, unknown>
+      const fullName = String(meta.full_name ?? meta.name ?? "").trim() || null
+      const { error: createError } = await adminSupabase.from("user_profiles").upsert(
+        {
+          user_id: user.id,
+          email: user.email ?? null,
+          full_name: fullName,
+          first_name: fullName ? fullName.split(/\s+/)[0] : null,
+          last_name: fullName && fullName.includes(" ") ? fullName.split(/\s+/).slice(1).join(" ") : null,
+          role: "athlete",
+          profile_type: "athlete",
+          athlete_id: athleteId,
+          is_admin: false,
+        },
+        { onConflict: "user_id" },
       )
+      if (createError) console.error("[claim-existing] could not create the missing profile row:", createError.message)
     }
 
     // Ownership is the event most likely to be queried later, and it was recorded nowhere.
@@ -146,6 +169,17 @@ export async function POST(request: NextRequest) {
     // A claim is immediate and unreviewed, so staff hear about it. Never awaited into the
     // response path in a way that could fail the claim — notifyProfileClaim swallows its own
     // errors.
+    await recordClaimConsent(adminSupabase, {
+      userId: user.id,
+      athleteId,
+      relationship: "self",
+      signedName: typeof body?.signedName === "string" ? body.signedName : null,
+      athleteName: (athlete as { name?: string }).name ?? null,
+      viewerName: user.user_metadata?.full_name ?? user.email ?? null,
+      ip: auditIpFrom(request),
+      userAgent: request.headers.get("user-agent"),
+    })
+
     await notifyProfileClaim({
       athleteId,
       athleteName: String(athlete.name ?? "Athlete"),
@@ -154,6 +188,11 @@ export async function POST(request: NextRequest) {
       claimantEmail: user.email ?? null,
       previousOwnerUserId: previousOwner,
     })
+
+    // Coaches may have written before anyone in the family had an account (lib/coach-messages-notify.ts).
+    await import("@/lib/coach-messages-notify")
+      .then(({ notifyWaitingMessagesOnClaim }) => notifyWaitingMessagesOnClaim(adminSupabase, { athleteId, userId: user.id }))
+      .catch((e) => console.error("[claim-existing] waiting messages:", e instanceof Error ? e.message : e))
 
     return NextResponse.json({
       success: true,
