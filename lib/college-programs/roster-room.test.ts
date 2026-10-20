@@ -37,6 +37,6 @@ describe("room by weight", () => {
     // Undated in v3.2 ("Current"); Muse's v3.3 sweep read the page's season.
     expect(ncState?.season).toBe("2026-27")
     expect(ncState && weightsPublished(ncState)).toBe(true)
-    expect(roomFor("virginia-tech", "mens") && weightsPublished(roomFor("virginia-tech", "mens")!)).toBe(false)
+    expect(roomFor("wittenberg-university", "mens") && weightsPublished(roomFor("wittenberg-university", "mens")!)).toBe(false)
   })
 })
