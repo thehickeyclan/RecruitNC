@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest"
 vi.mock("server-only", () => ({}))
 vi.mock("@/lib/recruiting/scout/tools", () => ({ SCOUT_TOOLS: [], runScoutTool: vi.fn() }))
 
-import { answerProblems, draftProblems } from "@/lib/recruiting/scout/run"
+import { answerProblems, commitmentProblem, draftProblems } from "@/lib/recruiting/scout/run"
 
 describe("draftProblems", () => {
   it("catches praise, roster talk and a questionnaire not done", () => {
@@ -56,5 +56,15 @@ describe("honest level and admission checks (20 Oct 2026)", () => {
     expect(answerProblems("With a 3.3 he is out of range for UNC.").join(" ")).toMatch(/athletic admissions/)
     expect(answerProblems("A 3.3 GPA is below UNC's typical admission range.").join(" ")).toMatch(/athletic admissions/)
     expect(answerProblems("Recruited athletes are admitted with a 3.0 or higher with the coach's support.")).toEqual([])
+  })
+})
+
+describe("a committed wrestler's college", () => {
+  const c = { name: "NC State", schoolId: "north-carolina-state-university-nc-state" }
+  it("leads with the commitment when the question names that college", () => {
+    expect(commitmentProblem("NC State is realistic for Brieon.", ["north-carolina-state-university-nc-state"], c)).toMatch(/already committed to NC State/)
+    expect(commitmentProblem("Brieon is already committed to NC State.", ["north-carolina-state-university-nc-state"], c)).toBeNull()
+    expect(commitmentProblem("Penn State is not realistic now.", ["pennsylvania-state-university-penn-state"], c)).toBeNull()
+    expect(commitmentProblem("Anything.", ["x"], null)).toBeNull()
   })
 })
