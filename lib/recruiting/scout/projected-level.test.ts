@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { athleticAdmissionFacts, projectedLevelFacts } from "./projected-level"
+import { athleticAdmissionFacts, d1TierFacts, projectedLevelFacts } from "./projected-level"
 
 const rating = (stars: number) => ({ stars, score: 60, components: [], provisional: false })
 
@@ -21,5 +21,15 @@ describe("projected college level", () => {
     expect(athleticAdmissionFacts("university-of-north-carolina-at-chapel-hill-north-carolina", "UNC")).toMatch(/at UNC, recruited athletes are admitted with a 3\.0 GPA or higher/)
     expect(athleticAdmissionFacts("north-carolina-state-university-nc-state", "NC State")).toMatch(/3\.0 GPA or higher/)
     expect(athleticAdmissionFacts("campbell-university", "Campbell")).not.toMatch(/3\.0/)
+  })
+})
+
+describe("Division I tiers", () => {
+  it("names Tier 1 from the poll and says the in-state point", () => {
+    const t = d1TierFacts(["Penn State", "Ohio State", "NC State"], "2026-02-24", ["NC State"], "North Carolina", 4)
+    expect(t).toMatch(/top 3 of the NWCA Division I coaches poll \(2026-02-24\): Penn State, Ohio State, NC State\. Every other Division I program is Tier 2/)
+    expect(t).toMatch(/In-state: NC State is Tier 1 and in North Carolina.*makes NC State realistic/)
+    expect(d1TierFacts(["NC State"], null, ["NC State"], "North Carolina", 2)).toMatch(/does not make NC State realistic now/)
+    expect(d1TierFacts(["Penn State"], null, [], "Virginia", 4)).not.toMatch(/In-state/)
   })
 })

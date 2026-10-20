@@ -8,7 +8,8 @@ import data from "@/lib/college-programs/programs-2026-27.json"
 import { questionnairesForSchool } from "@/lib/college-programs/questionnaires"
 import { seniorClassYear } from "@/lib/class-years"
 import { depthFor, nearestCollegeWeights } from "@/lib/college-programs/roster-depth"
-import { athleticAdmissionFacts } from "@/lib/recruiting/scout/projected-level"
+import { d1TierOf, type D1Tiers } from "@/lib/college-programs/d1-tiers"
+import { athleticAdmissionFacts, inStateLine } from "@/lib/recruiting/scout/projected-level"
 import { needSentence, roomByWeight, roomFor, weightsPublished } from "@/lib/college-programs/roster-room"
 import { isHeadCoach, staffForSchool } from "@/lib/college-programs/staff"
 import { yearlyCostFor } from "@/lib/college-programs/tuition"
@@ -44,6 +45,12 @@ export type ScoutSession = {
   list: Map<string, CollegeListStatus>
   /** Names of programs that viewed the wrestler, reduced for matching. */
   viewed: Set<string>
+  /** The family's state ("NC"), for in-state programs. */
+  homeState?: string
+  /** Division I Tier 1 from the latest poll. */
+  tiers?: D1Tiers
+  /** The wrestler's star, for the in-state line (never said to the family). */
+  stars?: number | null
   /** Links Scout may offer; tools add the colleges they return. */
   links: Record<string, { label: string; href: string; kind: "rule" | "timeline" | "college" | "tool" | "source" }>
 }
@@ -199,6 +206,19 @@ async function collegeDetails(s: ScoutSession, a: Record<string, unknown>): Prom
       ]
         .filter(Boolean)
         .join("; ") || "none published"}.${facts.admissionsUrl ? ` Admissions: ${facts.admissionsUrl}` : ""}`,
+    )
+  }
+  // Division I tier, and the in-state point (Matt, 20 Oct 2026).
+  if (division === "NCAA Division I" && s.tiers && s.team !== "womens") {
+    const t = d1TierOf(s.tiers, school.id)
+    lines.push(`Division I tier: ${t.tier === 1 ? `Tier 1 (No. ${t.rank} in the NWCA Division I coaches poll)` : "Tier 2 (outside the top 10 of the NWCA Division I coaches poll)"}.`)
+  }
+  if (s.homeState && school.state === s.homeState) {
+    const t = division === "NCAA Division I" && s.tiers && s.team !== "womens" ? d1TierOf(s.tiers, school.id) : null
+    lines.push(
+      t?.tier === 1
+        ? inStateLine([spoken(school.name)], STATE_NAMES[s.homeState] ?? s.homeState, s.stars ?? null)
+        : "In-state program for this family: programs often recruit wrestlers from their own state a level below their usual recruit.",
     )
   }
   // Athletic admission: what the published figures mean for a recruited wrestler.

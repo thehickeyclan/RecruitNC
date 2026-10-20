@@ -63,3 +63,33 @@ export function athleticAdmissionFacts(schoolId: string, schoolName: string): st
     ` Without a coach's support, the published figures are what an applicant is measured against. The coach decides whether to support an applicant, so the way in is through the coach.`
   )
 }
+
+/**
+ * What Tier 1 means, by name, and the in-state point (Matt, 20 Oct 2026: "NC State being an
+ * in-state school will often lower the bar for in-state kids"). Names come from the latest poll.
+ */
+export function d1TierFacts(tier1Names: string[], pollDate: string | null, inStateTier1: string[], stateName: string, stars: number | null): string {
+  const lines = [
+    tier1Names.length
+      ? `Division I Tier 1 means the top ${tier1Names.length} of the NWCA Division I coaches poll${pollDate ? ` (${pollDate})` : ""}: ${tier1Names.join(", ")}. Every other Division I program is Tier 2.`
+      : "Division I Tier 1 means the top programs in the NWCA Division I coaches poll; every other Division I program is Tier 2.",
+  ]
+  lines.push(inStateLine(inStateTier1, stateName, stars))
+  return lines.filter(Boolean).join("\n")
+}
+
+/**
+ * The in-state lift is one level: it brings a Division I Tier 2 projection (4 stars) within reach
+ * of an in-state Tier 1 program, not a wrestler projected two levels below. Scout once called NC
+ * State "a possibility" for a wrestler projected Division III.
+ */
+export function inStateLine(inStateTier1: string[], stateName: string, stars: number | null): string {
+  if (!inStateTier1.length) return ""
+  const names = inStateTier1.join(" and ")
+  const is = inStateTier1.length === 1 ? "is" : "are"
+  const base = `In-state: ${names} ${is} Tier 1 and in ${stateName}. A program often recruits wrestlers from its own state a level below its usual recruit.`
+  if (stars === 5) return `${base} The wrestler's projection is already Tier 1.`
+  if (stars === 4) return `${base} For this wrestler (projected Division I Tier 2) that makes ${names} realistic: say so, as "often", never as a promise.`
+  if (stars != null) return `${base} This wrestler is projected more than one level below Tier 1, so the in-state lift does not make ${names} realistic now; say what would raise the projection.`
+  return `${base} There is no projection for this wrestler yet, so do not say whether it applies.`
+}
