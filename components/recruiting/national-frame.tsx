@@ -104,6 +104,9 @@ export function NationalFooter() {
           <a href="/privacy" className="hover:text-white">
             Privacy
           </a>
+          <a href="mailto:info@recruitwrestlers.com" className="hover:text-white">
+            info@recruitwrestlers.com
+          </a>
         </nav>
       </div>
       {/* Ownership line, Matt 20 Oct 2026: RecruitWrestlers is a Guild Ventures company. */}
