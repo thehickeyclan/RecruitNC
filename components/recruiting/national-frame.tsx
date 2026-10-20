@@ -3,8 +3,7 @@
 import { useState } from "react"
 import { LogOut, Menu, X } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
-import { RwMark } from "@/components/recruiting/rw-mark"
-import { brandFont } from "@/components/recruiting/brand-font"
+import { RwLogo } from "@/components/recruiting/rw-mark"
 
 /**
  * RecruitWrestlers' own header and footer, for families and visitors on recruitwrestlers.com
@@ -22,13 +21,8 @@ const LINKS = [
 
 export function NationalLockup({ className = "" }: { className?: string }) {
   return (
-    <span className={`flex items-center gap-3 ${className}`}>
-      <RwMark className="h-7 w-auto" />
-      <span className="h-6 w-px bg-white/25" aria-hidden />
-      <span className={`${brandFont.className} text-lg font-bold uppercase italic leading-none`} style={{ fontStretch: "118%" }}>
-        <span className="text-white">Recruit</span>
-        <span className="text-[#D3B574]">Wrestlers</span>
-      </span>
+    <span className={`flex items-center ${className}`}>
+      <RwLogo className="h-7 w-auto sm:h-8" />
     </span>
   )
 }
@@ -65,7 +59,7 @@ export function NationalHeader() {
               <a href="/auth/signin" className="hidden text-sm font-semibold text-white/80 hover:text-white sm:inline">
                 Sign in
               </a>
-              <a href="/create-profile" className="rounded-xl bg-[#D3B574] px-4 py-2 text-sm font-bold text-[#0A1628] hover:bg-[#E2C98D]">
+              <a href="/create-profile" className="rounded-xl bg-[#A3E635] px-4 py-2 text-sm font-bold text-[#0A1628] hover:bg-[#BEF264]">
                 Get started
               </a>
             </>

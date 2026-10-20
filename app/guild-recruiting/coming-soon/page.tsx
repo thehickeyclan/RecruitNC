@@ -2,13 +2,13 @@
  * What everyone except staff sees on the pre-launch brand address (middleware.ts, lib/staging-gate.ts).
  * No athlete data, no links into the product, not indexed.
  *
- * recruitwrestlers.com shows the RecruitWrestlers mark in navy and gold (Matt's final brand decision,
- * 19 Oct 2026). Any other gated address shows a plain holding page. The route keeps its old path
+ * recruitwrestlers.com shows the RecruitWrestlers logo in navy and lime (Matt's final design,
+ * 20 Oct 2026). Any other gated address shows a plain holding page. The route keeps its old path
  * because middleware rewrites to it; recruit.wrestlingguild.com now forwards to recruitwrestlers.com.
  */
 import type { Metadata } from "next"
 import { headers } from "next/headers"
-import { RwMark } from "@/components/recruiting/rw-mark"
+import { RwLogo } from "@/components/recruiting/rw-mark"
 
 export const dynamic = "force-dynamic"
 
@@ -35,11 +35,10 @@ export default async function ComingSoon() {
     <main className="flex min-h-screen flex-col items-center justify-center bg-[#0A1628] px-6 text-center text-white">
       {rw ? (
         <>
-          <RwMark className="h-20 w-auto sm:h-24" />
-          <p className="mt-6 text-xs font-bold uppercase tracking-[0.4em] text-[#D3B574]">RecruitWrestlers</p>
+          <RwLogo className="h-12 w-auto sm:h-16" />
         </>
       ) : null}
-      <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Coming soon.</h1>
+      <h1 className={`${rw ? "mt-10" : "mt-3"} text-3xl font-black tracking-tight sm:text-4xl`}>Coming soon.</h1>
       {rw ? <p className="mt-3 max-w-md text-white/60">College wrestling recruiting, built on verified results.</p> : null}
       <a href="/auth/signin" className="mt-10 text-xs text-white/35 hover:text-white/60">
         Staff sign in
