@@ -163,7 +163,7 @@ for (const [id, teams] of Object.entries(room)) {
   }
 }
 
-const source = "Muse, college roster pull v3.2 (2026-10-20, audited): each school's 2026-27 roster, weights from the roster or WrestleStat"
+const source = "Muse, college roster pull v3.3 (2026-10-20, audited and swept): each school's 2026-27 roster, weights from the roster or WrestleStat"
 writeFileSync("lib/college-programs/roster-room.json", JSON.stringify({ source, teams: room }) + "\n")
 writeFileSync("lib/college-programs/roster-depth.json", JSON.stringify({ source, teams: depth }) + "\n")
 const wrestlers = Object.values(room).flatMap((t) => Object.values(t)).reduce((n, t) => n + (t?.wrestlers.length ?? 0), 0)
