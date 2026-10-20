@@ -10,7 +10,7 @@ import { Sparkles } from "lucide-react"
  */
 export function ScoutLauncher() {
   return (
-    <div className="fixed bottom-20 right-4 z-50 flex items-center gap-3 print:hidden sm:bottom-4">
+    <div data-assistant-launcher className="fixed bottom-20 right-4 z-50 flex items-center gap-3 print:hidden sm:bottom-4">
       <Link
         href="/my-recruiting/scout"
         aria-label="Ask Scout, your recruiting assistant"
