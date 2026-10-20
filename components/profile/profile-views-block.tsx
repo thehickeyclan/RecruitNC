@@ -185,7 +185,7 @@ export function ProfileViewsBlock({ athleteId, athleteFirstName, className }: { 
             </button>
           ) : null}
           <p className="mt-2 text-xs text-[#A8BBD1]">Programs only; a coach&apos;s name is never shown.</p>
-          <p className="mt-1 text-xs text-[#A8BBD1]">A view means a program looked, not an offer. A short note to the coach works; chasing doesn't.</p>
+          <p className="mt-1 text-xs text-[#A8BBD1]">A view means a program looked, not an offer.</p>
         </div>
       ) : (
         <p className="mt-4 text-sm text-[#A8BBD1]">
