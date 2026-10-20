@@ -2,6 +2,7 @@ import "server-only"
 
 import type { ScoutContext, ScoutLink } from "@/lib/recruiting/scout/context"
 import { SCOUT_SYSTEM } from "@/lib/recruiting/scout/prompt"
+import { pickSections } from "@/lib/recruiting/scout/guides"
 import { SCOUT_TOOLS, collegesNamedIn, compareNiche, runScoutTool } from "@/lib/recruiting/scout/tools"
 
 export type ScoutDraft = { to: string[]; subject: string; body: string }
@@ -78,6 +79,8 @@ export async function askScout(context: ScoutContext, question: string, history:
   const messages: Message[] = [
     { role: "system", content: SCOUT_SYSTEM },
     { role: "system", content: `# Facts\n${context.facts}` },
+    // The library sections that match this question (and the one before it), from guides.ts.
+    { role: "system", content: `# Library sections for this question\n${pickSections(context.session.guides ?? [], [history.filter((t) => t.role === "user").slice(-1)[0]?.content ?? "", question].join(" ")) || "None matched: use the library index and read_guide."}` },
     ...history,
     { role: "user", content: question },
   ]

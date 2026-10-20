@@ -28,6 +28,7 @@ import { rateOneAthlete } from "@/lib/athlete-star-rating-load"
 import { loadNationallyRankedIds } from "@/lib/national-rankings"
 import { loadOpponentIndex } from "@/lib/scouting-report"
 import { loadStatePlacerIndex } from "@/lib/state-placers"
+import { guideIndex, parseGuides, type Guide } from "@/lib/recruiting/scout/guides"
 import { d1TierFacts, projectedLevelFacts } from "@/lib/recruiting/scout/projected-level"
 import { loadD1Tiers } from "@/lib/college-programs/d1-tiers"
 import { familyState } from "@/lib/recruiting/family-state"
@@ -107,6 +108,21 @@ function libraryText(track: keyof typeof D1_CONTACT): string {
   return [contact, ...pages].join("\n\n")
 }
 
+/**
+ * The facts carry this wrestler's contact dates and an index of the library; the rest of the
+ * library goes with each question by the piece (guides.ts), so a question pays only for its topic.
+ */
+function libraryParts(track: keyof typeof D1_CONTACT, now: Date): { inFacts: string; guides: Guide[] } {
+  const all = libraryText(track)
+  const [contact, ...pages] = all.split(/\n\n(?=## )/)
+  const guides = parseGuides([...pages, `## Division I first contact for every class in school (computed; for questions about another class) [link: guide:other-classes]\n${otherClasses(now)}`].join("\n\n"))
+  for (const g of guides) if (g.key === "[link: guide:other-classes]" || g.title.startsWith("Division I first contact")) g.key = "guide:other-classes"
+  return {
+    inFacts: `${contact}\n\n## The rest of the library (verified, with sources)\nThe sections that match each question are given with it. For anything else, call read_guide with a key below; never answer a rule from memory.\n${guideIndex(guides)}`,
+    guides,
+  }
+}
+
 const BASE_LINKS: Record<string, ScoutLink> = {
   timeline: { label: "See the roadmap for your class", href: "/recruiting/learn/timeline", kind: "timeline" },
   map: { label: "Open the college map", href: "/recruiting/college-map", kind: "tool" },
@@ -156,12 +172,13 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
   const now = new Date()
   const today = now.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "America/New_York" })
   if (!wrestler) {
+    const noWrestler = libraryParts("men-2028", now)
     return {
       firstName: null,
       classYear: null,
       links,
-      session: { admin, userId, team: null, highSchool: null, fit: null, list: new Map(), viewed: new Set(), links },
-      facts: `Today is ${today}.\nNo wrestler in school is linked to this account, so you know nothing about the family's wrestler. Ask for the class year when a date depends on it.\n\n# Rules library\n${libraryText("men-2028")}`,
+      session: { admin, userId, team: null, highSchool: null, fit: null, list: new Map(), viewed: new Set(), links, guides: noWrestler.guides },
+      facts: `Today is ${today}.\nNo wrestler in school is linked to this account, so you know nothing about the family's wrestler. Ask for the class year when a date depends on it.\n\n# Rules library\n${noWrestler.inFacts}`,
     }
   }
 
@@ -221,7 +238,6 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
     return `- ${r.level}: ${r.what}: ${r.when}${at ? ` = ${at.label} for the Class of ${classYear} (${at.open ? "already open" : "not yet"})` : ""}`
   })
   out.push(`# When colleges may contact and host ${firstName} (computed; quote these dates exactly)\n${dated.join("\n")}`)
-  out.push(`# Division I first contact for every class in school (computed; for questions about another class)\n${otherClasses(now)}`)
 
   if (signals && grade) {
     const adapted = adaptRoadmap(signals, ticked)
@@ -283,7 +299,8 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
   if (writing) out.push(`# How to write to a college coach (our advice)\n${writing.points.map((p) => `- ${p}`).join("\n")}`)
 
   out.push(`# What college coaches look at (our advice from working with college coaches)\n${LOOK_POINTS.map((p) => `- ${p.title}: ${p.text}`).join("\n")}`)
-  out.push(`# Rules library (verified, with sources)\n${libraryText(track)}`)
+  const library = libraryParts(track, now)
+  out.push(`# Rules library (verified, with sources)\n${library.inFacts}`)
 
   const session: ScoutSession = {
     admin,
@@ -295,6 +312,7 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
     viewed: new Set((views?.schools ?? []).map((v) => collegeKey(v.school))),
     homeState,
     tiers,
+    guides: library.guides,
     stars: star?.stars ?? null,
     commitment: wrestler.college && String(wrestler.college).trim() ? { name: String(wrestler.college).trim(), schoolId: collegesNamedIn(String(wrestler.college))[0] ?? null } : null,
     links,
