@@ -1,11 +1,11 @@
 /**
- * The RecruitWrestlers monogram: a white R and a blue W (Matt's brand board, 15 October 2026),
+ * The RecruitWrestlers monogram: a white R and a gold W (Matt's brand board, 15 October 2026; navy and gold by his decision of 19 October),
  * redrawn as vector paths so it is sharp at any size. `tone="mono"` draws both letters in the
  * current text colour, for a one-colour use (an icon on gold, a light background).
  */
 export function RwMark({ className = "", tone = "brand", title = "RecruitWrestlers" }: { className?: string; tone?: "brand" | "mono"; title?: string }) {
   const r = tone === "mono" ? "currentColor" : "#FFFFFF"
-  const w = tone === "mono" ? "currentColor" : "var(--rw-blue, #1F6BFF)"
+  const w = tone === "mono" ? "currentColor" : "var(--rw-gold, #D3B574)"
   return (
     <svg viewBox="0 0 1180 400" className={className} role="img" aria-label={title}>
       <path

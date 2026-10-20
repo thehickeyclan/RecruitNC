@@ -87,7 +87,7 @@ export default function RootLayout({
           Apple PWA / home-screen title & capable flags come from export const metadata.appleWebApp
           so /spartan can override. Keep generic mobile cap flags here. */}
         {/*
-          recruit.wrestlingguild.com (data-host=guild) and recruitwrestlers.com (data-host=national): mark the page before it paints, so its blue (app/recruit-brand.css) and
+          recruit.wrestlingguild.com (data-host=guild) and recruitwrestlers.com (data-host=national): mark the page before it paints, so its brand (app/recruit-brand.css) and
           its frame (components/app-chrome.tsx) show from the first frame with no NC United gold, and
           the tab says RecruitWrestlers. Same pages, two addresses; this is the one switch.
         */}

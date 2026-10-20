@@ -27,7 +27,7 @@ export function NationalLockup({ className = "" }: { className?: string }) {
       <span className="h-6 w-px bg-white/25" aria-hidden />
       <span className={`${brandFont.className} text-lg font-bold uppercase italic leading-none`} style={{ fontStretch: "118%" }}>
         <span className="text-white">Recruit</span>
-        <span className="text-[#1F6BFF]">Wrestlers</span>
+        <span className="text-[#D3B574]">Wrestlers</span>
       </span>
     </span>
   )
@@ -65,7 +65,7 @@ export function NationalHeader() {
               <a href="/auth/signin" className="hidden text-sm font-semibold text-white/80 hover:text-white sm:inline">
                 Sign in
               </a>
-              <a href="/create-profile" className="rounded-xl bg-[#1F6BFF] px-4 py-2 text-sm font-bold text-white hover:bg-[#4B8BFF]">
+              <a href="/create-profile" className="rounded-xl bg-[#D3B574] px-4 py-2 text-sm font-bold text-[#0A1628] hover:bg-[#E2C98D]">
                 Get started
               </a>
             </>
