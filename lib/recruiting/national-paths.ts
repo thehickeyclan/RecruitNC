@@ -62,6 +62,9 @@ export function stagedBrandForHost(host: string | null | undefined): StagedBrand
 /** Paths a visitor must reach to sign in, or that carry no athlete data, while the gate is closed. */
 export function isOpenWhileStaged(pathname: string): boolean {
   return (
+    // The RecruitWrestlers home page is public (Matt, 20 Oct 2026): it carries live counts and no
+    // athlete data. Every page behind it stays staff-only until launch.
+    pathname === "/" ||
     pathname === "/robots.txt" ||
     pathname === "/guild-recruiting/coming-soon" ||
     pathname.startsWith("/auth/") ||
