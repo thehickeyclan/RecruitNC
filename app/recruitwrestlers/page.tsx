@@ -77,6 +77,7 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, statusBarStyle: "default", title: NATIONAL_BRAND.name },
   icons: {
     icon: [
+      { url: "/recruitwrestlers/favicon-32.png", sizes: "32x32", type: "image/png" },
       { url: "/recruitwrestlers/icon-192.png", sizes: "192x192", type: "image/png" },
       { url: "/recruitwrestlers/icon-512.png", sizes: "512x512", type: "image/png" },
     ],
