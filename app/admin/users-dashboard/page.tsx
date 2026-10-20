@@ -149,6 +149,16 @@ function uniqueMarketingEmails(rows: { email: string }[]): string[] {
   return out
 }
 
+/** The page they were last on, opened in a new tab (Matt, 20 Oct 2026). Only our own paths link. */
+function LastSeenLink({ path }: { path: string }) {
+  if (!path.startsWith("/")) return <>{path}</>
+  return (
+    <a href={path} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline-offset-2 hover:underline" title={`Open ${path}`}>
+      {path}
+    </a>
+  )
+}
+
 function effectiveLastActiveAt(user: Pick<UserProfile, "last_activity_at" | "last_sign_in_at">): string | null {
   if (!user.last_activity_at) return user.last_sign_in_at
   if (!user.last_sign_in_at) return user.last_activity_at
@@ -864,7 +874,7 @@ export default function UsersDashboardPage() {
           <div>{getRelativeTime(lastActiveAt)}</div>
           {user.last_activity_path && (
             <div className="max-w-[220px] truncate text-xs text-gray-400">
-              {user.last_activity_path} · {user.activity_count_7d || 0} in 7d
+              <LastSeenLink path={user.last_activity_path} /> · {user.activity_count_7d || 0} in 7d
             </div>
           )}
         </td>
@@ -1491,7 +1501,7 @@ export default function UsersDashboardPage() {
                           <div>{getRelativeTime(effectiveLastActiveAt(user))}</div>
                           {user.last_activity_path && (
                             <div className="max-w-[220px] truncate text-xs text-gray-400">
-                              {user.last_activity_path} · {user.activity_count_7d || 0} in 7d
+                              <LastSeenLink path={user.last_activity_path} /> · {user.activity_count_7d || 0} in 7d
                             </div>
                           )}
                         </td>
