@@ -85,14 +85,19 @@ const room: Record<string, Partial<Record<"mens" | "womens", { season: string; w
 const unplaced = new Map<string, number>()
 
 /*
- * Many schools have not posted 2026-27 yet, so a third of the rows are a 2025-26 (or older) page,
- * but Muse projected every final season as if the class were this season's (SR -> 2027). On a
- * 2025-26 roster that keeps last year's seniors on the team and everyone else a year too long.
- * Here a roster's classes move forward by its age, and anyone whose eligibility ran out before
- * this season is dropped. The team keeps its real season label, so the page says how old it is.
+ * Many schools have not posted 2026-27 yet, so a third of the rows are a 2025-26 (or older) page.
+ * v3 projected every final season as if the page were this season's (SR -> 2027); Muse fixed that
+ * from v3.3. So the final season is worked out here from the page's own season and class, never
+ * read from the sheet: right whichever way the sheet projected it, and never moved twice. A page's
+ * classes move forward by its age, and anyone whose eligibility ran out before this season is left
+ * off. The team keeps its real season label, so the page says how old it is. A season the source
+ * does not state ("unknown") is taken as this season's and labelled "Current" (the page the school published at the October pull; pages read "Current roster").
  */
 const CURRENT_END = 2027
 const CLASSES = ["FR", "SO", "JR", "SR", "GR"]
+const YEARS_LEFT: Record<string, number> = { FR: 3, SO: 2, JR: 1, SR: 0, GR: 0 }
+const seasonEnd = (season: string) => (/^\d{4}-\d{2}$/.test(season) ? Number(season.slice(0, 4)) + 1 : null)
+let disagree = 0
 let aged = 0
 let dropped = 0
 
@@ -106,16 +111,19 @@ for (const r of rows.slice(1)) {
   }
   const team = /^w/i.test(String(at(r, "gender"))) ? "womens" : "mens"
   const w = Number(at(r, "weight_used")) || filled.get(r) || 0
-  const season = String(at(r, "season") ?? "2026-27")
-  const age = Math.max(0, CURRENT_END - (Number(season.slice(0, 4)) + 1))
+  const rawSeason = String(at(r, "season") ?? "").trim()
+  const end = seasonEnd(rawSeason)
+  const season = end ? rawSeason : "Current"
+  const age = end ? Math.max(0, CURRENT_END - end) : 0
+  const rawCls = (at(r, "class_canonical") as string | null) ?? null
   const projected = Number(at(r, "projected_final_season"))
-  const final = Number.isFinite(projected) && projected > 2000 ? projected - age : null
+  const final = rawCls && rawCls in YEARS_LEFT ? (end ?? CURRENT_END) + YEARS_LEFT[rawCls] : Number.isFinite(projected) && projected > 2000 ? projected : null
+  if (final != null && Number.isFinite(projected) && projected > 2000 && projected !== final) disagree++
   if (final != null && final < CURRENT_END) {
     dropped++
     continue
   }
   if (age) aged++
-  const rawCls = (at(r, "class_canonical") as string | null) ?? null
   const cls = rawCls && age && CLASSES.includes(rawCls) ? CLASSES[Math.min(CLASSES.length - 1, CLASSES.indexOf(rawCls) + age)] : rawCls
   const entry = ((room[id] ??= {})[team] ??= { season, wrestlers: [] })
   entry.wrestlers.push([
@@ -159,6 +167,7 @@ const source = "Muse, college roster pull v3.2 (2026-10-20, audited): each schoo
 writeFileSync("lib/college-programs/roster-room.json", JSON.stringify({ source, teams: room }) + "\n")
 writeFileSync("lib/college-programs/roster-depth.json", JSON.stringify({ source, teams: depth }) + "\n")
 const wrestlers = Object.values(room).flatMap((t) => Object.values(t)).reduce((n, t) => n + (t?.wrestlers.length ?? 0), 0)
+console.log(`final seasons: ${disagree} differ from the sheet's own projection (expected on v3.2; about 0 from v3.3)`)
 console.log(`older rosters: ${aged} wrestlers moved up a class, ${dropped} whose eligibility had run out left off`)
 console.log(`filled ${filled.size} blank weights from WrestleStat by nickname`)
 for (const [r, w] of [...filled].slice(0, 40)) console.log(" ~", at(r, "school"), at(r, "name"), w)
