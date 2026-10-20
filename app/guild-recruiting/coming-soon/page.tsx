@@ -39,7 +39,12 @@ export default async function ComingSoon() {
         </>
       ) : null}
       <h1 className={`${rw ? "mt-10" : "mt-3"} text-3xl font-black tracking-tight sm:text-4xl`}>Coming soon.</h1>
-      {rw ? <p className="mt-3 max-w-md text-white/60">College wrestling recruiting, built on verified results.</p> : null}
+      {rw ? (
+        <p className="mt-4 max-w-xl text-lg text-white/70">
+          The future of college wrestling recruiting.
+          <span className="mt-1 block text-base text-white/55">Powered by verified results, real recruiting intelligence, and AI.</span>
+        </p>
+      ) : null}
       <a href="/auth/signin" className="mt-10 text-xs text-white/35 hover:text-white/60">
         Staff sign in
       </a>
