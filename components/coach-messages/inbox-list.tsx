@@ -74,7 +74,17 @@ export function StageChip({ stage, className }: { stage?: string | null; classNa
   )
 }
 
-const day = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" })
+/** "2:14 PM" today, "Yesterday", the weekday this week, else "Oct 20". */
+const day = (iso: string) => {
+  const d = new Date(iso)
+  const now = new Date()
+  const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime()
+  const days = Math.round((startOf(now) - startOf(d)) / 86_400_000)
+  if (days <= 0) return d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
+  if (days === 1) return "Yesterday"
+  if (days < 7) return d.toLocaleDateString(undefined, { weekday: "short" })
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" })
+}
 
 /**
  * Conversations, newest first. A coach sees the wrestlers they wrote to; a family sees the
@@ -175,11 +185,12 @@ export function InboxList({
     {header}
     <ul className={listClassName ?? "divide-y divide-white/10 overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]"}>
       {rows.map((t) => {
-        const who = t.viewerRole === "coach" ? t.athleteName || "Wrestler" : t.coachName
+        // A family's row is the program's conversation: the school is the title, the coach under it.
+        const who = t.viewerRole === "coach" ? t.athleteName || "Wrestler" : t.program || t.coachName
         const sub =
           t.viewerRole === "coach"
             ? wrestlerLine(t)
-            : [t.program, t.viewerRole === "parent" ? `about ${t.athleteName}` : null].filter(Boolean).join(" · ")
+            : [t.program ? t.coachName : null, t.viewerRole === "parent" ? `about ${t.athleteName}` : null].filter(Boolean).join(" · ")
         const lastBy =
           t.lastSenderRole === "coach"
             ? t.viewerRole === "coach" ? "You: " : ""
@@ -215,13 +226,18 @@ export function InboxList({
                   <span className="ml-auto shrink-0 text-xs text-white/45">{day(t.lastMessageAt)}</span>
                 </span>
                 {sub ? <span className="block text-xs text-[#D3B574]/90">{sub}</span> : null}
-                {t.unread || t.yourTurn || (t.viewerRole === "coach" && t.stage) ? (
+                {/* Every row says where it stands: new, your turn, or waiting on the other side. */}
+                {!t.stopped ? (
                   <span className="mt-1 flex flex-wrap items-center gap-1.5">
                     {t.unread ? (
                       <span className="shrink-0 rounded-full bg-[#D3B574] px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-[#0A1628]">New</span>
                     ) : t.yourTurn ? (
                       <span className="shrink-0 rounded-full border border-[#D3B574]/50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#D3B574]">
                         Needs your reply
+                      </span>
+                    ) : t.lastMessagePreview ? (
+                      <span className="shrink-0 rounded-full border border-white/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white/50">
+                        {t.viewerRole === "coach" ? "Waiting on family" : "Waiting on coach"}
                       </span>
                     ) : null}
                     <StageChip stage={t.viewerRole === "coach" ? t.stage : null} />
