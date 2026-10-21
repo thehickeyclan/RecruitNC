@@ -94,6 +94,40 @@ export function applyStarOverride(rating: StarRating, override: StarOverride | n
 }
 
 /**
+ * Where the formula has a wrestler in his class, as a floor on his stars (Matt, 21 October 2026).
+ *
+ * A star is the college level a wrestler projects to: 5 Division I tier 1, 4 Division I tier 2,
+ * 3 Division II and top-ranked Division III, 2 NAIA and the rest of Division III. Rated against
+ * the 131 NC boys of the 2025-2028 classes who committed, the stars missed most below the
+ * published 30: thirteen Division II signees showed one star, because nothing past #30 earned
+ * ranking credit. Class position was the best single predictor of the level signed (median
+ * formula rank: Division I #12, Division II #36, Division III #43, NAIA and NJCAA ~#51). With this
+ * floor exact matches went from 53 to 67 and within-one-star from 107 to 124.
+ *
+ * Top 10 at least four, 11-45 at least three, 46-75 at least two. Only ever raises a star, never
+ * past four, and a star set by hand wins over it. scripts/calibrate-stars-vs-commitments.ts reruns
+ * the check.
+ */
+export function classPositionFloor(position: number | null | undefined): number {
+  const k = Number(position)
+  if (!Number.isFinite(k) || k < 1) return 1
+  return k <= 10 ? 4 : k <= 45 ? 3 : k <= 75 ? 2 : 1
+}
+
+const CLASS_POSITION_REASON: Record<number, string> = {
+  4: "in the formula's top 10 of the class",
+  3: "in the formula's top 45 of the class",
+  2: "in the formula's top 75 of the class",
+}
+
+/** Raise a computed rating to its class-position floor. Apply before any hand-set override. */
+export function applyClassPositionFloor(rating: StarRating, floorStars: number | null | undefined): StarRating {
+  const floor = Math.min(4, Number(floorStars) || 1)
+  if (rating.override || rating.stars >= 5 || rating.stars >= floor || floor <= 1) return rating
+  return { ...rating, stars: floor, floor: `${floor} stars: ${CLASS_POSITION_REASON[floor]}` }
+}
+
+/**
  * Three equal parts, a third of the score each.
  *
  * Matt, 29 September 2026: in-state performance, nationals and the ranking, weighted alike, and

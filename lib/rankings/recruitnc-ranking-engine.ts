@@ -6,6 +6,8 @@ import {
   applyStarOverride,
   isRatedAthlete,
   rateAthlete,
+  applyClassPositionFloor,
+  classPositionFloor,
   type StarRating,
 } from "@/lib/athlete-star-rating"
 import { nationalEventRows, starOverrideOf, statePlaces as statePlacesOf } from "@/lib/athlete-star-rating-load"
@@ -1889,5 +1891,10 @@ export async function buildRecruitNcRankingBoard({
     }
   })
 
-  return orderProspectsByHeadToHead(adjusted, { winnerNeedsScore: womens, maxGap: womens ? WOMENS_HEAD_TO_HEAD_MAX_GAP : undefined }).map((athlete, index) => ({ ...athlete, ai_rank: index + 1 }))
+  // The class-position floor on stars needs the final order, so it is applied here, after it.
+  return orderProspectsByHeadToHead(adjusted, { winnerNeedsScore: womens, maxGap: womens ? WOMENS_HEAD_TO_HEAD_MAX_GAP : undefined }).map((athlete, index) => ({
+    ...athlete,
+    ai_rank: index + 1,
+    star_rating: athlete.star_rating ? applyClassPositionFloor(athlete.star_rating, classPositionFloor(index + 1)) : null,
+  }))
 }

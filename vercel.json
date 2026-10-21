@@ -55,6 +55,10 @@
       "schedule": "40 */6 * * *"
     },
     {
+      "path": "/api/cron/class-position-floors",
+      "schedule": "20 9 * * *"
+    },
+    {
       "path": "/api/cron/college-went-here",
       "schedule": "50 */6 * * *"
     },
