@@ -193,8 +193,8 @@ export function Super32WhatGoodLooksLikeContent() {
       <p>
         North Carolina&apos;s entry is the biggest of the last three years: 176 wrestlers, 131 boys and 45 girls. On the
         boys&apos; side, 33 are reigning state champions (NCHSAA or NCISAA), more than half placed at states last winter,
-        and 61 are seniors. At least 16 North Carolina entrants are NHSCA or Fargo All-Americans, and nine of
-        the ten champions from last month&apos;s NC United Tournament of Champions are entered. Last year&apos;s top North Carolina finishers, Bentley Sly (fourth) and Faith Bane (sixth),
+        and 61 are seniors. At least 16 North Carolina entrants are NHSCA or Fargo All-Americans, and all ten
+        champions from last month&apos;s NC United Tournament of Champions are entered. Last year&apos;s top North Carolina finishers, Bentley Sly (fourth) and Faith Bane (sixth),
         have graduated, so the boys&apos; podium hopes rest on a new group.
       </p>
       <p>
