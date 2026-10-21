@@ -342,7 +342,19 @@ export function CollegeProgramMap({
   const mapRef = useRef<MapLike | null>(null)
 
   const full = response?.access === "full"
-  const schools = useMemo(() => response?.schools ?? [], [response])
+  /*
+   * "From North Carolina" follows the men's / women's setting (Matt, 21 Oct 2026): with Men's
+   * picked, Greensboro counts its 26 men, not its 35 men and women, and a college whose only NC
+   * wrestlers are women drops out of the men's list. With both picked, the count is both.
+   */
+  const schools = useMemo(() => {
+    const all = response?.schools ?? []
+    const gender = response?.access === "full" ? filters.gender : "all"
+    if (gender === "all") return all
+    return all.map((s) =>
+      s.fromState ? { ...s, fromState: { ...s.fromState, wrestlers: s.fromState.wrestlers.filter((w) => w.team === gender) } } : s,
+    )
+  }, [response, filters.gender])
 
   useEffect(() => {
     fetch("/api/college-map", { cache: "no-store" })
