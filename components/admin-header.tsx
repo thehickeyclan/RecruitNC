@@ -1,6 +1,5 @@
 "use client"
 
-import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 
@@ -122,53 +121,42 @@ const adminNavItems: {
 export function AdminHeader() {
   const pathname = usePathname()
 
+  /*
+   * A slim sub-bar, not a second main menu (Matt, 21 Oct 2026: "2 blue bars"). It sits under the
+   * site's own navigation, so it is shorter, a darker navy, carries no second logo, and keeps its
+   * links on one line that scrolls sideways rather than wrapping or running off the edge.
+   */
   return (
-    <header className="bg-[#003366] shadow-md border-b border-white/10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center py-3">
-          <div className="flex items-center space-x-8">
-            <a href="/" className="flex items-center space-x-3">
-              <Image
-                src="/images/nc-united-logo-white.png"
-                alt="NC United"
-                width={120}
-                height={44}
-                className="h-9 w-auto object-contain mix-blend-screen"
-                priority
-              />
-              <span className="text-lg font-bold text-white hidden sm:inline">Admin</span>
-            </a>
-
-            <nav className="hidden md:flex space-x-1">
-              {adminNavItems.map((item) => {
-                const isActive =
-                  pathname === item.href ||
-                  (item.activePrefix != null && pathname.startsWith(item.activePrefix))
-                return (
-                <button
-                  key={item.href}
-                  type="button"
-                  onClick={() => { window.location.href = item.href }}
-                  className={cn(
-                    "flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors bg-transparent border-0 cursor-pointer",
-                    isActive
-                      ? "bg-white/20 text-white"
-                      : "text-white hover:bg-white/10",
-                  )}
-                >
-                  <span>{item.icon}</span>
-                  <span>{item.title}</span>
-                </button>
-              )})}
-            </nav>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <a href="/" className="text-sm text-white hover:bg-white/10 px-3 py-2 rounded-md transition-colors">
-              View Site
-            </a>
-          </div>
-        </div>
+    <header className="border-b border-white/10 bg-[#071427] shadow-sm print:hidden">
+      <div className="mx-auto flex h-11 max-w-7xl items-center gap-3 px-4 sm:px-6 lg:px-8">
+        <a
+          href="/admin"
+          className="shrink-0 rounded bg-[#D3B574] px-2 py-0.5 text-[11px] font-black uppercase tracking-widest text-[#0A1628] hover:opacity-90"
+        >
+          Admin
+        </a>
+        <nav className="flex min-w-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex-1 items-center gap-0.5 overflow-x-auto [mask-image:linear-gradient(to_right,black_92%,transparent)]" aria-label="Admin">
+          {adminNavItems.map((item) => {
+            const isActive =
+              pathname === item.href ||
+              (item.activePrefix != null && pathname.startsWith(item.activePrefix))
+            return (
+              <button
+                key={item.href}
+                type="button"
+                onClick={() => { window.location.href = item.href }}
+                aria-current={isActive ? "page" : undefined}
+                className={cn(
+                  "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border-0 px-2.5 py-1.5 text-[13px] font-medium transition-colors cursor-pointer",
+                  isActive ? "bg-white/15 text-white" : "bg-transparent text-white/70 hover:bg-white/10 hover:text-white",
+                )}
+              >
+                <span className="text-[12px] leading-none">{item.icon}</span>
+                <span>{item.title}</span>
+              </button>
+            )
+          })}
+        </nav>
       </div>
     </header>
   )
