@@ -37,9 +37,10 @@ describe("NC wrestlers on college rosters", () => {
     expect(lines.join(" ")).toMatch(/women's roster/)
   })
 
-  it("holds every wrestler in the workbook", () => {
+  it("holds every wrestler in the workbook, plus UNC Pembroke's refresh", () => {
     const all = require("./nc-rosters-2026-27.json") as { schools: Record<string, { wrestlers: unknown[] }> }
-    expect(Object.values(all.schools).reduce((n, s) => n + s.wrestlers.length, 0)).toBe(326)
+    // 326 in the 12 Oct workbook; Pembroke refreshed from its live roster on 20 Oct: 21 became 27.
+    expect(Object.values(all.schools).reduce((n, s) => n + s.wrestlers.length, 0)).toBe(332)
   })
 
   it("matches names across punctuation and case", () => {
