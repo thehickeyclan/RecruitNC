@@ -3,8 +3,16 @@ import { NextResponse, type NextRequest } from "next/server"
 import { cleanDone } from "@/lib/recruiting/learn/roadmap"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { hasPortalAccess } from "@/lib/ranking-visibility"
+import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 
 export const dynamic = "force-dynamic"
+
+/** Part of the Recruiting Command Center: Blue, a Command Center plan, or staff. */
+async function commandCenterRefusal(): Promise<NextResponse | null> {
+  const { viewer } = await resolvePortalViewer({ supabase: await createClient(), admin: createAdminClient() })
+  return hasPortalAccess(viewer) ? null : NextResponse.json({ error: "Part of the Recruiting Command Center.", upgrade: "/command-center" }, { status: 403 })
+}
 
 /**
  * The Recruiting Roadmap items a family has ticked. Kept in the account's own auth user_metadata,
@@ -13,6 +21,8 @@ export const dynamic = "force-dynamic"
 export async function POST(request: NextRequest) {
   const { data } = await (await createClient()).auth.getUser()
   if (!data.user) return NextResponse.json({ error: "Sign in" }, { status: 401 })
+  const refused = await commandCenterRefusal()
+  if (refused) return refused
   const body = (await request.json().catch(() => ({}))) as { id?: unknown; done?: unknown }
   const [id] = cleanDone([body.id])
   if (!id) return NextResponse.json({ error: "Unknown item" }, { status: 400 })
