@@ -285,7 +285,7 @@ export function WarRoomPlan({
           </ol>
         </div>
 
-        <div ref={scheduleRef} className={`${PANEL} p-5 ${show.includes("schedule") ? "" : "hidden"}`}>
+        <div ref={scheduleRef} id="schedule" className={`${PANEL} scroll-mt-20 p-5 ${show.includes("schedule") ? "" : "hidden"}`}>
           <p className={TITLE}>
             <CalendarDays className="h-4 w-4 text-[#D3B574]" aria-hidden /> Where {wrestler.firstName} is wrestling next
           </p>

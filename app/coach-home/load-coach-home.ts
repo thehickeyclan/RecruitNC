@@ -14,6 +14,7 @@ import { coachProgramOf, viewGenderFor } from "@/lib/recruiting/coach-program"
 import { currentClassYears } from "@/lib/class-years"
 import { groupRecruitsByEvent } from "@/lib/college-programs/competing-next"
 import { listUpcomingEventsForAthletes } from "@/lib/college-programs/schedule"
+import { loadCompetingAlerts } from "@/lib/college-programs/competing-alerts"
 import type { CoachHomeData } from "./coach-home-client"
 import { inState } from "@/lib/recruiting/states"
 
@@ -140,6 +141,9 @@ export async function loadCoachHome(
    * schedule. An extra, so a failure shows nothing rather than failing the page.
    */
   const maySeeSchedules = isAdmin || isApprovedCoach(profile ?? null)
+  const recruitMap = new Map(recruits.map((r) => [r.athleteId, { id: r.athleteId, name: r.name, classYear: r.classYear, weight: r.weight, highSchool: r.highSchool }]))
+  // Alerts: events just added and this weekend's, for the same approved coaches (Matt, 20 Oct 2026).
+  const alerts = maySeeSchedules ? await loadCompetingAlerts(admin, recruitMap).catch(() => ({ added: [], weekend: [] })) : { added: [], weekend: [] }
   const competingNext = maySeeSchedules
     ? await listUpcomingEventsForAthletes(admin, recruits.map((r) => r.athleteId)).then(
         (rows) =>
@@ -192,6 +196,7 @@ export async function loadCoachHome(
       })),
     },
     competingNext,
+    alerts,
     suggested,
     activity: await loadStaffActivity(admin, userId, 6).catch(() => []),
     rankingYears: [...releasedClassYears(viewGender)],
