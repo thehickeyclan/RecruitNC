@@ -81,3 +81,19 @@ export function useNavNotifications(signedIn: boolean, open: boolean) {
 
   return { notifications, unread: notifications.filter((n) => !n.read_at).length, markRead, markAllRead }
 }
+
+/** Wrestlers newly interested in the coach's program, beside Interested in the menu (Matt, 21 Oct 2026). */
+export function useInterestBadge(signedIn: boolean, pathname: string) {
+  const [count, setCount] = useState(0)
+  useEffect(() => {
+    if (!signedIn) {
+      setCount(0)
+      return
+    }
+    fetch("/api/college-interest/new", { credentials: "include" })
+      .then((r) => r.json())
+      .then((d) => setCount(Number(d?.count) || 0))
+      .catch(() => {})
+  }, [signedIn, pathname])
+  return count
+}
