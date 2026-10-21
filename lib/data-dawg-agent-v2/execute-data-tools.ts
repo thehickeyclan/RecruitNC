@@ -2034,8 +2034,20 @@ export async function toolSuper32ResultsByYear(args: { year?: number | string | 
   const { data: placed } = await admin.from("super32_results").select("athlete_name, placement").eq("year", year)
   const placeOf = new Map((placed ?? []).map((r) => [String(r.athlete_name), Number(r.placement) || null]))
   const ids = [...by.values()].map((e) => e.athlete_id).filter((id): id is string => Boolean(id))
-  const { data: ath } = ids.length ? await admin.from("athletes").select("id, highschool, graduationyear").in("id", ids) : { data: [] }
+  const { data: ath } = ids.length ? await admin.from("athletes").select("id, highschool, graduationyear, state").in("id", ids) : { data: [] }
   const athOf = new Map((ath ?? []).map((a) => [String(a.id), a]))
+  /*
+   * Registered NC is not a North Carolina wrestler: a profile that says another state (Jaclyn
+   * Bouzakis, Wyoming Seminary, PA) keeps its record but is not counted or listed as NC's.
+   */
+  const registeredNotNc: string[] = []
+  for (const [name, e] of [...by]) {
+    const st = e.athlete_id ? String(athOf.get(e.athlete_id)?.state ?? "") : ""
+    if (st && st !== "NC") {
+      registeredNotNc.push(`${name} (registered NC; ${athOf.get(e.athlete_id!)?.highschool ?? st})`)
+      by.delete(name)
+    }
+  }
 
   let rows = [...by.values()].map((e) => {
     const a = e.athlete_id ? athOf.get(e.athlete_id) : null
@@ -2064,7 +2076,8 @@ export async function toolSuper32ResultsByYear(args: { year?: number | string | 
     filter: { gender: gender === "F" ? "girls" : gender === "M" ? "boys" : "all", winning_only: Boolean(args.winning_only) },
     totals: { ...total, winning_records_in_filter: winningCount },
     wrestlers: rows,
-    note: "Records are counted from every bout, byes excluded. Placement is listed only where one was earned. Quote these numbers; do not recount.",
+    registered_nc_not_counted: registeredNotNc,
+    note: "Records are counted from every bout, byes excluded. Placement is listed only where one was earned. Quote these numbers; do not recount. `registered_nc_not_counted` registered as NC but do not attend school in North Carolina: never count or present them as North Carolina wrestlers; mention the registration only if asked about them by name.",
   }
 }
 

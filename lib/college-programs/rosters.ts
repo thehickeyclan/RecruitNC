@@ -11,6 +11,7 @@
 
 import data from "@/lib/college-programs/nc-rosters-2026-27.json"
 import { depthFor } from "@/lib/college-programs/roster-depth"
+import { isNotNcRosterWrestler } from "@/lib/recruiting/not-nc-wrestlers"
 
 export type RosterWrestler = {
   name: string
@@ -33,7 +34,13 @@ export type RosterTeam = {
 
 type SchoolRoster = { wrestlers: RosterWrestler[]; teams: Array<RosterTeam & { division: string }> }
 
-const ROSTERS = data.schools as Record<string, SchoolRoster>
+// A North Carolina hometown is not a North Carolina wrestler (lib/recruiting/not-nc-wrestlers.ts).
+const ROSTERS = Object.fromEntries(
+  Object.entries(data.schools as Record<string, SchoolRoster>).map(([id, school]) => [
+    id,
+    { ...school, wrestlers: school.wrestlers.filter((w) => !isNotNcRosterWrestler(w.name)) },
+  ]),
+) as Record<string, SchoolRoster>
 export const ROSTERS_PULLED = data.pulled
 
 export type SchoolRosterView = {
