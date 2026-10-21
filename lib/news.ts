@@ -102,7 +102,7 @@ const ALL_NEWS: NewsItem[] = [
   {
     id: "super32-2026-what-good-looks-like",
     slug: "super32-2026-what-good-looks-like",
-    title: "What Does Good Look Like for North Carolina at Super 32?",
+    title: "What Will It Take? Defining Success for North Carolina at Super 32",
     subtitle: "How North Carolina has done at Super 32 the last three years, and what a strong weekend in Greensboro would look like.",
     summary:
       "North Carolina wins about three of every ten matches at Super 32, and one North Carolina wrestler has reached the boys' podium in three years. Here is the baseline, this year's 176-wrestler field and what good, great and historic look like in Greensboro.",
