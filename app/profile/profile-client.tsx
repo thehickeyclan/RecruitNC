@@ -1067,7 +1067,7 @@ function MembershipStrip({
 
   const tiles = [
     {
-      title: "RecruitNC Rankings",
+      title: <BrandName ncu="RecruitNC Rankings" national="Insider" />,
       icon: Trophy,
       status: rankingsStatus,
       detail: rankings.loading
@@ -1083,9 +1083,9 @@ function MembershipStrip({
 
   return (
     <div className="mt-6 grid gap-3 sm:grid-cols-2">
-      {tiles.map((tile) => (
+      {tiles.map((tile, i) => (
         <button
-          key={tile.title}
+          key={i}
           type="button"
           onClick={onOpen}
           className="group flex items-center gap-3 rounded-xl border border-[#1e3a5f] bg-[#0F1E32]/80 px-4 py-3 text-left transition-colors hover:border-[#D3B574]/50"
