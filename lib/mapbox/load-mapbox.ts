@@ -24,6 +24,7 @@ export type MapLike = {
   getSource: (id: string) => { setData?: (data: unknown) => void; getClusterExpansionZoom?: (clusterId: number, callback: (error: Error | null, zoom: number) => void) => void } | undefined
   getLayer: (id: string) => unknown
   setFilter: (layerId: string, filter: unknown[]) => void
+  setPaintProperty?: (layerId: string, name: string, value: unknown) => void
   fitBounds: (bounds: [[number, number], [number, number]], options?: Record<string, unknown>) => void
   easeTo: (options: Record<string, unknown>) => void
   getZoom: () => number

@@ -41,6 +41,15 @@ export type CollegeMapSchool = {
   onRecruitNC?: boolean
   /** Set on a program that has been announced but has not wrestled yet, e.g. "2027-28" (announced.ts). */
   firstSeason?: string
+  /**
+   * Wrestlers on this college's current roster from one state, read from the school's published
+   * roster (lib/college-programs/rosters.ts). North Carolina only until the roster pull keeps every
+   * hometown; the map's "From North Carolina" filter and dot sizes read it (Matt, 20 Oct 2026).
+   */
+  fromState?: {
+    state: string
+    wrestlers: Array<{ name: string; team: "mens" | "womens"; weight: string | null; class: string | null; highSchool: string | null; hometown: string | null }>
+  }
 }
 
 export type CollegeMapResponse = {
