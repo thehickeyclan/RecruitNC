@@ -158,15 +158,23 @@ const nameKey = (n: string) => n.toLowerCase().replace(/[^a-z]/g, "")
  * six. Unlisted associations use 6 until the source manifest says otherwise.
  */
 const PLACING_DEPTH: Record<string, number> = { NCHSAA: 4, NCISA: 6 }
-const depthOf = (association: string | null) => PLACING_DEPTH[String(association ?? "").toUpperCase()] ?? 6
+/** Other states: the division's own places_awarded (SCHSL and SCISA award 4), else 6. */
+const awarded = new Map<string, number>()
+async function loadAwarded(state: string) {
+  const { data } = await sb.from("state_tournament_divisions").select("season, association, places_awarded").eq("state", state)
+  for (const d of data ?? []) if (d.places_awarded) awarded.set(`${d.season}|${String(d.association).toUpperCase()}`, Math.max(awarded.get(`${d.season}|${String(d.association).toUpperCase()}`) ?? 0, Number(d.places_awarded)))
+}
+const depthOf = (association: string | null, season?: number) =>
+  PLACING_DEPTH[String(association ?? "").toUpperCase()] ?? awarded.get(`${season}|${String(association ?? "").toUpperCase()}`) ?? 6
 
 async function measure(state: string) {
   const athletes = await athletesOf(state)
   const current = athletes.filter((a) => CURRENT.includes(Number(a.graduationyear)))
+  await loadAwarded(state)
   const placements = await placementsOf(state)
   const latest = Math.max(0, ...placements.map((p) => p.season))
   // Placers only: NC records qualifiers as place 0 and SC's file lists every entrant with no place.
-  const latestPlacers = placements.filter((p) => p.season === latest && p.place != null && p.place >= 1 && p.place <= depthOf(p.association) && (p.grad_year == null || p.grad_year >= SENIORS))
+  const latestPlacers = placements.filter((p) => p.season === latest && p.place != null && p.place >= 1 && p.place <= depthOf(p.association, p.season) && (p.grad_year == null || p.grad_year >= SENIORS))
   const acct = accountedFor(state)
   const byId = new Map(athletes.map((a) => [a.id, a]))
 
