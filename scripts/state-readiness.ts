@@ -1,6 +1,7 @@
 #!/usr/bin/env npx tsx
 /**
- * Go / no-go for opening a state to college coaches. Read-only.
+ * Go / no-go for opening a state to college coaches. Read-only. Every official placer must be
+ * accounted for (Muse, 20 Oct 2026): a profile or a reason in docs/state-launch/<STATE>-accounted.json.
  *
  *   npx tsx scripts/state-readiness.ts --state SC
  *
@@ -52,7 +53,7 @@ type Athlete = {
   photourl: string | null
 }
 /** One placement, from whichever table holds the state's championship. */
-type Placement = { id: string; season: number; place: number | null; name: string; school: string | null; athlete_id: string | null; grad_year: number | null; weight: string | null }
+type Placement = { id: string; season: number; place: number | null; name: string; school: string | null; athlete_id: string | null; grad_year: number | null; weight: string | null; association: string | null }
 
 async function all<T>(build: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>): Promise<T[]> {
   const out: T[] = []
@@ -74,7 +75,7 @@ async function athletesOf(state: string): Promise<Athlete[]> {
 async function placementsOf(state: string): Promise<Placement[]> {
   if (state === HOME_STATE) {
     const rows = await all<Record<string, unknown>>((f, t) =>
-      sb.from("wrestling_nchsaa_results").select("id,year,place,wrestler_name,school,athlete_id,weight_class").not("place", "is", null).range(f, t),
+      sb.from("wrestling_nchsaa_results").select("id,year,place,wrestler_name,school,athlete_id,weight_class,classification").not("place", "is", null).range(f, t),
     )
     return rows.map((r) => ({
       id: String(r.id),
@@ -85,10 +86,11 @@ async function placementsOf(state: string): Promise<Placement[]> {
       athlete_id: (r.athlete_id as string) ?? null,
       grad_year: null,
       weight: (r.weight_class as string) ?? null,
+      association: r.classification === "NCISA" ? "NCISA" : "NCHSAA",
     }))
   }
   const rows = await all<Record<string, unknown>>((f, t) =>
-    sb.from("state_tournament_placers").select("id,season,place,wrestler_name,school_clean,school_raw,athlete_id,grad_year,weight").eq("state", state).range(f, t),
+    sb.from("state_tournament_placers").select("id,season,place,wrestler_name,school_clean,school_raw,athlete_id,grad_year,weight,association").eq("state", state).range(f, t),
   )
   return rows.map((r) => ({
     id: String(r.id),
@@ -99,6 +101,7 @@ async function placementsOf(state: string): Promise<Placement[]> {
     athlete_id: (r.athlete_id as string) ?? null,
     grad_year: r.grad_year == null ? null : Number(r.grad_year),
     weight: (r.weight as string) ?? null,
+    association: (r.association as string | null) ?? null,
   }))
 }
 
@@ -126,13 +129,45 @@ const pct = (n: number, d: number) => (d ? Math.round((n / d) * 1000) / 10 : 100
 
 type Row = { check: string; kind: "GATE" | "INFO"; value: string; baseline?: string; pass: boolean; detail?: string[] }
 
+/*
+ * Every official placer accounted for (Muse's review, 20 Oct 2026): the launch line says "every
+ * state placer has a profile", so the gate is 100%, not 90%. A placer without a profile passes only
+ * when docs/state-launch/<STATE>-accounted.json names him with a reason: graduated (no class year
+ * on the placer row), duplicate, namesake, source-conflict or approved (a Matt-approved exception).
+ * The same file names each class year left unresolved (at most 5%, each named) and each
+ * pre-freshman result verified as a real 7th or 8th grade varsity result.
+ */
+type Accounted = {
+  placers?: Array<{ name: string; school?: string; season?: number; reason: "graduated" | "duplicate" | "namesake" | "source-conflict" | "approved"; note?: string }>
+  classYearUnresolved?: Array<{ athleteId: string; note?: string }>
+  preFreshmanVerified?: Array<{ athleteId: string; note?: string }>
+}
+function accountedFor(state: string): Accounted {
+  const file = path.join(process.cwd(), "docs", "state-launch", `${state}-accounted.json`)
+  try {
+    return JSON.parse(fs.readFileSync(file, "utf8")) as Accounted
+  } catch {
+    return {}
+  }
+}
+const nameKey = (n: string) => n.toLowerCase().replace(/[^a-z]/g, "")
+
+/**
+ * Each association's official placing depth (Muse: "the association's official placing depth, not
+ * a universal 1st-6th"). NC's NCHSAA podium is four deep here (the profile scope Matt set), NCISA
+ * six. Unlisted associations use 6 until the source manifest says otherwise.
+ */
+const PLACING_DEPTH: Record<string, number> = { NCHSAA: 4, NCISA: 6 }
+const depthOf = (association: string | null) => PLACING_DEPTH[String(association ?? "").toUpperCase()] ?? 6
+
 async function measure(state: string) {
   const athletes = await athletesOf(state)
   const current = athletes.filter((a) => CURRENT.includes(Number(a.graduationyear)))
   const placements = await placementsOf(state)
   const latest = Math.max(0, ...placements.map((p) => p.season))
   // Placers only: NC records qualifiers as place 0 and SC's file lists every entrant with no place.
-  const latestPlacers = placements.filter((p) => p.season === latest && p.place != null && p.place >= 1 && p.place <= 6 && (p.grad_year == null || p.grad_year >= SENIORS))
+  const latestPlacers = placements.filter((p) => p.season === latest && p.place != null && p.place >= 1 && p.place <= depthOf(p.association) && (p.grad_year == null || p.grad_year >= SENIORS))
+  const acct = accountedFor(state)
   const byId = new Map(athletes.map((a) => [a.id, a]))
 
   // Profiles a coach should reach: linked to a placement in the last two seasons.
@@ -159,7 +194,8 @@ async function measure(state: string) {
   const links = await linkedPlacements(current.map((a) => a.id))
   const line = (l: Link) => `${byId.get(l.athlete_id)?.name} (class ${byId.get(l.athlete_id)?.graduationyear}) carries ${l.label} · ${l.athlete_id}`
   const yearsEarly = (l: Link) => Number(byId.get(l.athlete_id)?.graduationyear) - 3 - l.season
-  const namesakes = links.filter((l) => yearsEarly(l) > (l.independent ? 2 : 0)).map(line)
+  const verifiedEarly = new Set((acct.preFreshmanVerified ?? []).map((v) => v.athleteId))
+  const namesakes = links.filter((l) => yearsEarly(l) > (l.independent ? 2 : 0) && !verifiedEarly.has(l.athlete_id)).map(line)
   const middleSchool = links.filter((l) => l.independent && yearsEarly(l) > 0 && yearsEarly(l) <= 2).map(line)
   // Out of state NC results on a non-NC profile: possible (a move), never assumed.
   const crossState =
@@ -172,28 +208,76 @@ async function measure(state: string) {
   const dups = [...dupCount.values()].filter((v) => v.length > 1).map((v) => `${v[0].name} (${v[0].graduationyear}) × ${v.length}: ${v.map((a) => a.id).join(", ")}`)
 
   const recentNoClass = athletes.filter((a) => recentIds.has(a.id) && !a.graduationyear)
+  const namedUnresolved = new Set((acct.classYearUnresolved ?? []).map((u) => u.athleteId))
+  const unnamedNoClass = recentNoClass.filter((a) => !namedUnresolved.has(a.id))
   const unlinked = latestPlacers.filter((p) => !p.athlete_id)
+  /*
+   * A placer's class year often lives in the identity registry, not on the placer row (the
+   * RankWrestlers import fills athlete_identities). A registry year before this year's seniors is
+   * a graduate: accounted for. Same name and state, and the school must agree when the name is
+   * shared, so a namesake's year is never borrowed.
+   */
+  const registryGrad = new Map<string, number>()
+  const names = [...new Set(unlinked.map((p) => p.name.toLowerCase().replace(/\s+/g, " ").trim()))]
+  for (let i = 0; i < names.length; i += 100) {
+    const { data } = await sb.from("athlete_identities").select("normalized_name,primary_school,graduation_year").eq("state", state).in("normalized_name", names.slice(i, i + 100))
+    const byName = new Map<string, Array<{ school: string | null; year: number | null }>>()
+    for (const r of data ?? []) byName.set(r.normalized_name, [...(byName.get(r.normalized_name) ?? []), { school: r.primary_school, year: r.graduation_year }])
+    for (const p of unlinked) {
+      const hits = (byName.get(p.name.toLowerCase().replace(/\s+/g, " ").trim()) ?? []).filter((h) => h.year)
+      const pick = hits.length === 1 ? hits[0] : hits.find((h) => h.school && p.school && nameKey(h.school) === nameKey(p.school))
+      if (pick?.year) registryGrad.set(p.id, pick.year)
+    }
+  }
+  /*
+   * Graduates whose profiles were pruned (scripts/prune-graduated-profiles.ts exports each one,
+   * with its class year, to ranking-snapshots/ before deleting it). Name and school must both agree.
+   */
+  const pruned = new Set<string>()
+  for (const dir of [path.join(process.cwd(), "ranking-snapshots"), process.env.PRUNE_EXPORTS_DIR].filter(Boolean) as string[]) {
+    let files: string[] = []
+    try {
+      files = fs.readdirSync(dir).filter((f) => /^graduated-profiles-export-.*\.json$/.test(f))
+    } catch {
+      continue
+    }
+    for (const f of files) {
+      try {
+        const d = JSON.parse(fs.readFileSync(path.join(dir, f), "utf8")) as { profiles?: Array<{ name?: string; highschool?: string; graduationyear?: number }> }
+        for (const x of d.profiles ?? []) if (x.name && Number(x.graduationyear) < SENIORS) pruned.add(`${nameKey(x.name)}|${nameKey(x.highschool ?? "")}`)
+      } catch {}
+    }
+  }
+  const graduatedByRegistry = (p: Placement) => (registryGrad.get(p.id) ?? 9999) < SENIORS || pruned.has(`${nameKey(p.name)}|${nameKey(p.school ?? "")}`)
+  const accountedPlacer = (p: Placement) =>
+    (acct.placers ?? []).find((x) => nameKey(x.name) === nameKey(p.name) && (!x.season || x.season === p.season) && (!x.school || !p.school || nameKey(x.school) === nameKey(p.school)))
+  const unaccounted = unlinked.filter((p) => !accountedPlacer(p) && !graduatedByRegistry(p))
+  const reasons = new Map<string, number>()
+  for (const p of unlinked) {
+    const r = accountedPlacer(p)?.reason ?? (graduatedByRegistry(p) ? "graduated" : undefined)
+    if (r) reasons.set(r, (reasons.get(r) ?? 0) + 1)
+  }
 
   return {
     state,
     latest,
     rows: [
       {
-        check: `${latest} placers (not graduated) with a profile`,
+        check: `${latest} official placers accounted for (profile or a named reason)`,
         kind: "GATE",
-        value: `${pct(latestPlacers.length - unlinked.length, latestPlacers.length)}% (${latestPlacers.length - unlinked.length}/${latestPlacers.length})`,
-        pass: pct(latestPlacers.length - unlinked.length, latestPlacers.length) >= 90,
-        detail: unlinked.map((p) => `${p.name}, ${p.school ?? "?"}, ${p.weight ?? "?"} #${p.place ?? "?"}`),
+        value: `${latestPlacers.length - unaccounted.length}/${latestPlacers.length} · ${latestPlacers.length - unlinked.length} profiled${[...reasons].map(([r, n]) => `, ${n} ${r}`).join("")}`,
+        pass: unaccounted.length === 0,
+        detail: unaccounted.map((p) => `${p.name}, ${p.school ?? "?"}, ${p.weight ?? "?"} #${p.place ?? "?"}${p.association ? ` (${p.association})` : ""}`),
       },
       {
-        check: "Recent placers' profiles missing a class year",
+        check: "Recent placers' class years accounted for (≤ 5% unresolved, each named)",
         kind: "GATE",
-        value: `${recentNoClass.length} of ${recentIds.size}`,
-        pass: pct(recentNoClass.length, recentIds.size) <= 5,
-        detail: recentNoClass.map((a) => `${a.name}, ${a.highschool ?? "?"} · ${a.id}`),
+        value: `${recentIds.size - unnamedNoClass.length}/${recentIds.size} · ${recentNoClass.length} unresolved (${pct(recentNoClass.length, recentIds.size)}%)`,
+        pass: unnamedNoClass.length === 0 && pct(recentNoClass.length, recentIds.size) <= 5,
+        detail: unnamedNoClass.map((a) => `${a.name}, ${a.highschool ?? "?"} · ${a.id}`),
       },
       { check: "Championship-linked profiles with no state", kind: "GATE", value: String(wrongState.length), pass: wrongState.length === 0, detail: wrongState },
-      { check: "Results too early for the class year (namesake or wrong class)", kind: "GATE", value: String(namesakes.length), pass: namesakes.length === 0, detail: namesakes },
+      { check: "Unexplained results before freshman year (namesake or wrong class)", kind: "GATE", value: String(namesakes.length), pass: namesakes.length === 0, detail: namesakes },
       { check: "Independent-school results from 7th/8th grade (check class year)", kind: "INFO", value: String(middleSchool.length), pass: true, detail: middleSchool },
       { check: "NC results on this state's profiles (review each)", kind: "GATE", value: String(crossState.length), pass: crossState.length === 0, detail: crossState },
       { check: "Duplicate profiles (same name and class)", kind: "GATE", value: String(dups.length), pass: dups.length === 0, detail: dups },
