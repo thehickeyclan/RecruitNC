@@ -17,7 +17,6 @@ import { loadReportSignificantWins } from "@/lib/report-significant-wins"
 import type { OpponentIndex } from "@/lib/significant-wins"
 import {
   applyStarOverride,
-  applyClassPositionFloor,
   isRatedAthlete,
   rateAthlete,
   type StarRating,
@@ -25,7 +24,6 @@ import {
 } from "@/lib/athlete-star-rating"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
-import { classPositionFloorFor } from "@/lib/rankings/class-position-floors-read"
 import type { HeadToHeadBout } from "@/lib/head-to-head"
 
 /** The hand-set rating on an athlete row, if there is one. */
@@ -188,7 +186,7 @@ export async function rateOneAthlete(
   }
 
   const input = await loadStarRatingInput(supabase, athlete, nationallyRankedIds, opponentIndex)
-  // Class-position floor (from the daily saved file), then a hand-set star over everything.
-  const floor = await classPositionFloorFor(identity.athleteId).catch(() => 1)
-  return { ...identity, rating: applyStarOverride(applyClassPositionFloor(rateAthlete(input), floor), starOverrideOf(athlete)) }
+  // The class-position floor is applied by server callers (lib/rankings/report-star-floor.ts):
+  // this file is bundled into the scouting report's browser component and cannot read it.
+  return { ...identity, rating: applyStarOverride(rateAthlete(input), starOverrideOf(athlete)) }
 }

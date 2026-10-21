@@ -15,8 +15,7 @@ import { formatPhoneForDisplay } from "@/lib/phone-format"
 import { loadNationallyRanked } from "@/lib/state-placers"
 import { competitionLine, stylesLine, styleOfEvent, STYLE_LABEL, summarizeCompetition, type CompetitionSummary, styleOfEventForAthlete } from "@/lib/wrestling-style"
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { applyClassPositionFloor, applyStarOverride, isRatedAthlete, rateAthlete, type StarRating } from "@/lib/athlete-star-rating"
-import { classPositionFloorFor } from "@/lib/rankings/class-position-floors-read"
+import { applyStarOverride, isRatedAthlete, rateAthlete, type StarRating } from "@/lib/athlete-star-rating"
 import { nationalEventRows, starOverrideOf, statePlaces } from "@/lib/athlete-star-rating-load"
 import { summarizeSeasonStrength, type SeasonStrength } from "@/lib/competition-strength"
 import {
@@ -764,7 +763,7 @@ export async function buildScoutingReport(
      */
     starRating: personal && isRatedAthlete({ gender: athlete.gender as string, graduationYear: gradYear })
       ? applyStarOverride(
-          applyClassPositionFloor(rateAthlete({
+          rateAthlete({
           nationalRows: nationalEventRows(bundle as never),
           significantWins: rankedWins,
           prospectRanking: ranking,
@@ -774,7 +773,7 @@ export async function buildScoutingReport(
             ranking <= getPublicRankingsMax(gradYear, athlete.gender),
           statePlaces: statePlaces(bundle as never),
             nationallyRanked: rankings.length > 0,
-          }), await classPositionFloorFor(String(athlete.id)).catch(() => 1)),
+          }),
           starOverrideOf(athlete),
         )
       : null,

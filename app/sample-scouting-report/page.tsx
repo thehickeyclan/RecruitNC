@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
 import { loadStatePlacerIndex } from "@/lib/state-placers"
 import { buildScoutingReport, loadOpponentIndex } from "@/lib/scouting-report"
+import { withClassPositionFloor } from "@/lib/rankings/report-star-floor"
 import { writeSummary } from "@/lib/scouting-report-summary"
 import { scoutingReportAvailable } from "@/lib/scouting-report-access"
 import { ScoutingReportDocument } from "@/app/athletes/[id]/scouting-report/scouting-report-client"
@@ -54,12 +55,15 @@ export default async function SampleScoutingReportPage() {
     })),
   ])
 
-  const report = await buildScoutingReport(
-    admin,
-    loaded.athlete as Record<string, unknown>,
-    { ...baseIndex, ...stateIndex },
-    "full",
-    "Sample copy · NC United / RecruitNC",
+  const report = await withClassPositionFloor(
+    await buildScoutingReport(
+      admin,
+      loaded.athlete as Record<string, unknown>,
+      { ...baseIndex, ...stateIndex },
+      "full",
+      "Sample copy · NC United / RecruitNC",
+    ),
+    String((loaded.athlete as Record<string, unknown>).id),
   )
   const summary = await writeSummary(report)
 

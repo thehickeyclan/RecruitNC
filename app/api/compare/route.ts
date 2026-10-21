@@ -21,6 +21,7 @@ import { loadActivity } from "@/lib/activity-load"
 import { classifyViewer } from "@/lib/viewer-role"
 import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
 import { buildScoutingReport, loadOpponentIndex } from "@/lib/scouting-report"
+import { withClassPositionFloor } from "@/lib/rankings/report-star-floor"
 import { loadStatePlacerIndex } from "@/lib/state-placers"
 import { releasesPersonalData, scoutingAccessTier } from "@/lib/scouting-report-access"
 
@@ -117,8 +118,8 @@ export async function GET(request: NextRequest) {
 
   const side = (athlete: Record<string, unknown>) => ({ id: String(athlete.id), name: String(athlete.name ?? "") })
   const [leftReport, rightReport, leftBouts, rightBouts] = await Promise.all([
-    buildScoutingReport(admin, leftAthlete, opponentIndex, personal ? "full" : tier, null),
-    buildScoutingReport(admin, rightAthlete, opponentIndex, personal ? "full" : tier, null),
+    buildScoutingReport(admin, leftAthlete, opponentIndex, personal ? "full" : tier, null).then((r) => withClassPositionFloor(r, String(leftAthlete.id))),
+    buildScoutingReport(admin, rightAthlete, opponentIndex, personal ? "full" : tier, null).then((r) => withClassPositionFloor(r, String(rightAthlete.id))),
     loadComparisonBouts(admin, side(leftAthlete)),
     loadComparisonBouts(admin, side(rightAthlete)),
   ])

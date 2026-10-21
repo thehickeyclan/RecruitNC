@@ -25,6 +25,7 @@ import { nilText } from "@/lib/recruiting/learn/nil"
 import { womensText } from "@/lib/recruiting/learn/womens"
 import { isRatedAthlete, type StarRating } from "@/lib/athlete-star-rating"
 import { rateOneAthlete } from "@/lib/athlete-star-rating-load"
+import { ratingWithClassPositionFloor } from "@/lib/rankings/report-star-floor"
 import { loadNationallyRankedIds } from "@/lib/national-rankings"
 import { loadOpponentIndex } from "@/lib/scouting-report"
 import { loadStatePlacerIndex } from "@/lib/state-placers"
@@ -51,7 +52,8 @@ async function familyStar(admin: SupabaseClient, athleteId: string, gender: stri
       loadStatePlacerIndex(admin).catch(() => ({ statePlacers: [], stateSchools: [], fargoAllAmericans: [] })),
     ])
     if (!athlete) return null
-    return (await rateOneAthlete(admin, athlete as Record<string, unknown>, rankedIds, { ...baseIndex, ...stateIndex })).rating
+    const rated = await rateOneAthlete(admin, athlete as Record<string, unknown>, rankedIds, { ...baseIndex, ...stateIndex })
+    return ratingWithClassPositionFloor(rated.rating, athleteId)
   })()
   return Promise.race([work.catch(() => null), new Promise<null>((r) => setTimeout(() => r(null), 8000))])
 }

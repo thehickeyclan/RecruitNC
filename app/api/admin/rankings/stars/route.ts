@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/server"
 import { requireAdmin } from "@/lib/admin-auth"
 import { loadNationallyRankedIds } from "@/lib/national-rankings"
 import { rateOneAthlete } from "@/lib/athlete-star-rating-load"
+import { ratingWithClassPositionFloor } from "@/lib/rankings/report-star-floor"
 import { loadOpponentIndex } from "@/lib/scouting-report"
 import { loadStatePlacerIndex } from "@/lib/state-placers"
 import { isRatedClass } from "@/lib/athlete-star-rating"
@@ -38,7 +39,8 @@ export async function GET(request: NextRequest) {
   const ratings: Record<string, unknown> = {}
   for (const athlete of athletes ?? []) {
     const rated = await rateOneAthlete(admin, athlete as Record<string, unknown>, rankedIds, opponentIndex)
-    if (rated.rating) ratings[rated.athleteId] = rated.rating
+    const rating = await ratingWithClassPositionFloor(rated.rating, rated.athleteId)
+    if (rating) ratings[rated.athleteId] = rating
   }
   return NextResponse.json({ ratings, ratedClass: true })
 }

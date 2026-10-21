@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { classifyViewer } from "@/lib/viewer-role"
 import { loadPublicAthleteProfile } from "@/lib/load-public-athlete-profile"
 import { buildScoutingReport, loadOpponentIndex } from "@/lib/scouting-report"
+import { withClassPositionFloor } from "@/lib/rankings/report-star-floor"
 import { writeSummary } from "@/lib/scouting-report-summary"
 import { scoutingAccessTier, scoutingReportAvailable, watermarkLine } from "@/lib/scouting-report-access"
 import { loadScoutingEntitlement } from "@/lib/scouting-report-entitlement-db"
@@ -118,12 +119,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     })),
   ])
   const opponentIndex = { ...baseIndex, ...stateIndex }
-  const report = await buildScoutingReport(
-    admin,
-    loaded.athlete as Record<string, unknown>,
-    opponentIndex,
-    tier,
-    watermark,
+  const report = await withClassPositionFloor(
+    await buildScoutingReport(admin, loaded.athlete as Record<string, unknown>, opponentIndex, tier, watermark),
+    String((loaded.athlete as Record<string, unknown>).id),
   )
   const summary = await writeSummary(report)
 
