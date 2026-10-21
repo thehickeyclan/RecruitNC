@@ -158,7 +158,7 @@ export default async function CommandCenterSalesPage() {
               ))}
             </div>
           ) : null}
-          <p className="mt-6 text-center text-xs text-white/45">Counted live from real activity on <BrandName />. A profile view means a college coach looked; it is not an offer or a promise of interest.</p>
+          <p className="mt-6 text-center text-xs text-white/45">Counted live from real activity on <BrandName />.</p>
         </div>
       </section>
 

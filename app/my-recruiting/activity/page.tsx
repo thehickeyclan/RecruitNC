@@ -339,9 +339,7 @@ export default async function CommandCenterActivity({ searchParams }: { searchPa
                   ))}
                 </ul>
               ) : null}
-              {recent.length ? (
-                <p className="mt-3 text-xs text-white/45">A view means a program looked, not an offer.</p>
-              ) : cc.premium ? (
+              {recent.length ? null : cc.premium ? (
                 <p className="mt-2 text-sm text-white/55">No college program has viewed the profile yet.</p>
               ) : (
                 <p className="mt-2 text-sm text-white/55">
