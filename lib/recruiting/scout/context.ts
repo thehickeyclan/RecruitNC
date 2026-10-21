@@ -31,6 +31,8 @@ import { loadStatePlacerIndex } from "@/lib/state-placers"
 import { guideIndex, parseGuides, type Guide } from "@/lib/recruiting/scout/guides"
 import { d1TierFacts, projectedLevelFacts } from "@/lib/recruiting/scout/projected-level"
 import { loadD1Tiers } from "@/lib/college-programs/d1-tiers"
+import { programsFollowing } from "@/lib/college-programs/competing-alerts"
+import { listUpcomingEvents } from "@/lib/college-programs/schedule"
 import { familyState } from "@/lib/recruiting/family-state"
 import { STATE_NAMES } from "@/lib/college-programs/states"
 
@@ -191,7 +193,7 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
   const focus = await familyFocus(admin, userId).catch(() => null)
   const team = focus?.gender ?? (wrestler.gender ? (female ? "womens" : "mens") : null)
 
-  const [signals, fitCtx, views, list, infoSheet, star, tiers, homeState] = await Promise.all([
+  const [signals, fitCtx, views, list, infoSheet, star, tiers, homeState, upcoming, following] = await Promise.all([
     grade ? loadRoadmapSignals(admin, { athleteId: String(wrestler.id), userId, grade }).catch(() => null) : Promise.resolve(null),
     loadFamilyFitContext(admin, userId, team).catch(() => null),
     getCoachViewsForAthlete(admin, String(wrestler.id)).catch(() => null),
@@ -200,6 +202,8 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
     familyStar(admin, String(wrestler.id), (wrestler.gender as string | null) ?? null, classYear),
     loadD1Tiers(),
     familyState(admin, userId).catch(() => "NC"),
+    listUpcomingEvents(admin, String(wrestler.id)).then((r) => r.events).catch(() => []),
+    programsFollowing(admin, String(wrestler.id)).catch(() => 0),
   ])
   const { data: account } = await admin.auth.admin.getUserById(userId)
   const ticked = Array.isArray(account?.user?.user_metadata?.roadmap_done) ? (account!.user!.user_metadata!.roadmap_done as string[]) : []
@@ -223,6 +227,14 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
         .join("\n"),
     )
   }
+
+  // Where he competes next: approved coaches following him see it (Matt, 20 Oct 2026).
+  out.push(
+    `# ${firstName}'s schedule [link: plan]\n` +
+      (upcoming.length
+        ? upcoming.slice(0, 5).map((e) => `- ${e.title}, ${e.startDate}${e.endDate && e.endDate !== e.startDate ? ` to ${e.endDate}` : ""}${e.location ? `, ${e.location}` : ""}`).join("\n")
+        : `- No upcoming event entered.${following ? ` College coaches from ${following} program${following === 1 ? "" : "s"} follow ${firstName} and would see it.` : ""} When the answer is about being seen by coaches, tournaments or what to do next, suggest adding where ${firstName} competes next (link: plan).`),
+  )
 
   // A commitment on file changes every "is X realistic" answer.
   if (wrestler.college && String(wrestler.college).trim()) out.push(`# Commitment\n${firstName} is committed to ${String(wrestler.college).trim()} (our records). Answer level and "realistic" questions knowing that; never question the commitment.`)

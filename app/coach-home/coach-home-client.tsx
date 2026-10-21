@@ -12,7 +12,7 @@ import type { StaffActivityItem } from "@/lib/recruiting/staff-activity"
 import type { EventWithRecruits } from "@/lib/college-programs/competing-next"
 import { eventDates } from "@/lib/college-programs/outreach-results"
 import { SUPER32_2026, super32Dates, super32NoticeActive, super32ReportPromise } from "@/lib/recruiting/super32-report"
-import { ArrowRight, BarChart3, CalendarDays, History, FileText, GitCompareArrows, Lock, MessageSquare, Search, Star, Target, Users } from "lucide-react"
+import { ArrowRight, BarChart3, Bell, CalendarDays, History, FileText, GitCompareArrows, Lock, MessageSquare, Search, Star, Target, Users } from "lucide-react"
 import { BrandName } from "@/components/recruiting/brand-name"
 
 export type CoachHomeData = {
@@ -41,6 +41,8 @@ export type CoachHomeData = {
    * Empty for a coach staff have not approved yet: a minor's schedule is for reviewed coaches only.
    */
   competingNext: EventWithRecruits[]
+  /** Events families just added, and who competes this weekend (approved coaches only). */
+  alerts?: { added: Array<{ athleteId: string; name: string; title: string; startDate: string; endDate: string | null; location: string | null; addedAt: string }>; weekend: EventWithRecruits[] }
   /** Top-ranked uncommitted wrestlers not on the board yet, to star from here. */
   suggested: Array<{ id: string; name: string; classYear: number; rank: number; weight: string | null; highSchool: string | null }>
   /** The latest changes on the staff's shared board, and who made them. */
@@ -337,6 +339,37 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
         </div>
 
         <Super32Notice womens={womens} />
+        {data.alerts && (data.alerts.weekend.length || data.alerts.added.length) ? (
+          <section className={`${PANEL} mb-4 mt-4 border-[#D3B574]/30 p-4 sm:p-5`} aria-labelledby="ch-alerts">
+            <h2 id="ch-alerts" className={TITLE}>
+              <Bell className={`h-3.5 w-3.5 ${GOLD}`} /> Alerts
+            </h2>
+            <ul className="mt-2 space-y-1">
+              {data.alerts.weekend.length ? (
+                <li className="rounded-lg bg-[#D3B574]/10 px-3 py-2.5 text-sm">
+                  <span className="font-bold text-white">
+                    This weekend: {new Set(data.alerts.weekend.flatMap((e) => e.recruits.map((r) => r.id))).size} of your recruits competing
+                  </span>
+                  <span className="text-white/60"> · {data.alerts.weekend.map((e) => `${e.title} (${e.recruits.length})`).join(" · ")}</span>
+                </li>
+              ) : null}
+              {data.alerts.added.map((a) => (
+                <li key={`${a.athleteId}-${a.title}-${a.startDate}`}>
+                  <Link href={`/athletes/${a.athleteId}`} className={ROW}>
+                    <span className="min-w-0 truncate">
+                      <span className="font-bold text-white">{a.name}</span> added {a.title}
+                    </span>
+                    <span className="shrink-0 text-xs text-white/45">
+                      {eventDates(a.startDate, a.endDate)}
+                      {a.location ? ` · ${a.location}` : ""}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ) : null}
+
 
         {/*
          * A coach with recruits on the board or messages waiting comes back to that work, so it leads

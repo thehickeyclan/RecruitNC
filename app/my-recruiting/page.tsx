@@ -24,6 +24,7 @@ import data from "@/lib/college-programs/programs-2026-27.json"
 import { listTarget, planSteps } from "@/lib/college-programs/roadmap"
 import type { CollegeMapSchool } from "@/lib/college-programs/types"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
+import { programsFollowing } from "@/lib/college-programs/competing-alerts"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { isPlaceholderAthletePhoto } from "@/lib/recruiting-profile-photo"
 import { buildInfoSheet } from "./info-sheet"
@@ -59,11 +60,13 @@ export default async function CommandCenterHome() {
   const first = athletes[0] ?? null
   const w = wrestlers[0] ?? null
 
-  const [lastCompeted, unread, sheet, contacts] = await Promise.all([
+  const [lastCompeted, unread, sheet, contacts, following] = await Promise.all([
     first ? loadLastCompeted(admin, [first.id], new Map([[first.id, first.classYear]])).then((m) => m.get(first.id) ?? null).catch(() => null) : null,
     unreadCount(admin, viewerId).catch(() => 0),
     blue && first ? buildInfoSheet(admin, first.id).catch(() => null) : null,
     loadCollegeContacts(admin, athletes.map((a) => a.id)),
+    // College programs following the wrestler: a count for the "where he competes next" reminder, never names.
+    first ? programsFollowing(admin, first.id).catch(() => 0) : 0,
   ])
   // Who has reached out: what the family logged (calls, visits, offers happen off the platform).
   const reach = summarizeContacts(contacts)
@@ -170,6 +173,25 @@ export default async function CommandCenterHome() {
         </div>
       ) : (
         <>
+          {/*
+           * Where he competes next (Matt, 20 Oct 2026): approved coaches following him see it on
+           * Coach Home and in a Thursday alert, so the Command Center asks for it whenever none is on.
+           */}
+          {blue && w && w.events.length === 0 ? (
+            <Link href="/my-recruiting/plan#schedule" className={`${card} mt-6 flex items-center gap-4 border-[#D3B574]/40 p-4 hover:border-[#D3B574]`}>
+              <CalendarDays className="h-8 w-8 shrink-0 text-[#D3B574]" aria-hidden />
+              <span className="min-w-0 flex-1">
+                <span className="block font-bold">Where does {w.firstName} compete next?</span>
+                <span className="block text-sm text-white/65">
+                  {following > 0
+                    ? `Coaches from ${following} college program${following === 1 ? "" : "s"} follow ${w.firstName}. Add the next event so they can come watch.`
+                    : `Add the next event: college coaches who follow ${w.firstName} see it and can come watch.`}
+                </span>
+              </span>
+              <span className="shrink-0 text-sm font-bold text-[#D3B574]">Add it →</span>
+            </Link>
+          ) : null}
+
           {/* Who's reaching out: the family's side of the coach funnel (Matt, 16 Oct 2026). */}
           <section className={`${card} mt-6 p-5`} aria-labelledby="cc-reach">
             <div className="flex flex-wrap items-center justify-between gap-3">

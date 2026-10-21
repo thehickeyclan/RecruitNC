@@ -65,6 +65,10 @@
     {
       "path": "/api/cron/family-digest",
       "schedule": "0 13 * * 1"
+    },
+    {
+      "path": "/api/cron/competing-next",
+      "schedule": "0 12 * * *"
     }
   ]
 }
