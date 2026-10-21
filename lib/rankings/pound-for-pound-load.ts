@@ -12,6 +12,7 @@
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { loadAthleteCredentialsBatch } from "@/lib/credentials/athlete-credentials"
 import {
   buildPoundForPound,
   type PoundForPoundEntry,
@@ -176,30 +177,30 @@ export async function buildPoundForPoundBoard(options: {
     }
   }
 
-  const [athletes, stateRows, tournamentRows, matchRows, nhscaRows] = await Promise.all([
-    (async () => {
-      const out: Array<{ id: string; name: string; graduationyear: number; highschool: string | null; weightclass: string | null }> = []
-      for (const part of chunk(ids, 100)) {
-        const { data } = await supabase
-          .from("athletes")
-          .select("id, name, graduationyear, highschool, weightclass")
-          .in("id", part)
-        out.push(...((data ?? []) as typeof out))
-      }
-      return out
-    })(),
-    (async () => {
-      const out: Array<{ athlete_id: string; place: number | null }> = []
-      for (const part of chunk(ids, 100)) {
-        const { data } = await supabase
-          .from("wrestling_nchsaa_results")
-          .select("athlete_id, place")
-          .eq("year", P4P_SEASON)
-          .in("athlete_id", part)
-        out.push(...((data ?? []) as typeof out))
-      }
-      return out
-    })(),
+  const athletesLoad = (async () => {
+    const out: Array<{ id: string; name: string; graduationyear: number; highschool: string | null; weightclass: string | null }> = []
+    for (const part of chunk(ids, 100)) {
+      const { data } = await supabase
+        .from("athletes")
+        // The identity columns the credential engine reconciles on, beside what the list shows.
+        .select("id, name, wrestling_name, firstName, lastName, graduationyear, highschool, weightclass, state, nhsca_results, super32_results")
+        .in("id", part)
+      out.push(...((data ?? []) as typeof out))
+    }
+    return out
+  })()
+
+  /*
+   * State and NHSCA placings come from the credential engine, not from `wrestling_nchsaa_results`
+   * and `nhsca_placements` keyed on `athlete_id`. A third of the 2026 rows in each have no
+   * `athlete_id` (439 of 1,350 and 147 of 436 on 21 Oct 2026), so the direct read scored any
+   * wrestler whose row was never linked as if he had not placed. Nobody on the board was hit
+   * that day; the next wrestler ranked from an unlinked placing would have been, silently.
+   * See lib/credentials/credential-engine-boundary.test.ts.
+   */
+  const [athletes, credentials, tournamentRows, matchRows] = await Promise.all([
+    athletesLoad,
+    athletesLoad.then((rows) => loadAthleteCredentialsBatch(supabase, rows)),
     (async () => {
       const out: Array<{ athlete_id: string; event_short_name: string | null; placement: number | null }> = []
       for (const part of chunk(ids, 100)) {
@@ -225,18 +226,6 @@ export async function buildPoundForPoundBoard(options: {
       }
       return out
     })(),
-    (async () => {
-      const out: Array<{ athlete_id: string; placement: number | null; division: string | null }> = []
-      for (const part of chunk(ids, 100)) {
-        const { data } = await supabase
-          .from("nhsca_placements")
-          .select("athlete_id, placement, division")
-          .eq("year", P4P_SEASON)
-          .in("athlete_id", part)
-        out.push(...((data ?? []) as typeof out))
-      }
-      return out
-    })(),
   ])
 
   const group = <T extends { athlete_id: string }>(rows: T[]): Map<string, T[]> => {
@@ -249,31 +238,30 @@ export async function buildPoundForPoundBoard(options: {
     }
     return map
   }
-  const stateBy = group(stateRows)
   const tournamentBy = group(tournamentRows)
   const matchBy = group(matchRows)
-  const nhscaBy = group(nhscaRows)
 
   const inputs: PoundForPoundInput[] = athletes.map((athlete) => {
     const id = String(athlete.id)
     const tournaments = tournamentBy.get(id) ?? []
-    const nhsca = nhscaBy.get(id) ?? []
+    const held = credentials.get(id)
+    const nhsca = (held?.national ?? []).filter((row) => row.event === "NHSCA" && row.year === P4P_SEASON)
     const record = (matchBy.get(id) ?? [])[0]
     /*
      * The division of their *best* NHSCA finish, because that is the finish being scored. Taking
      * any division would let a deep run in one bracket be discounted by an entry in another.
      */
     const bestNhsca = nhsca
-      .filter((row) => Number(row.placement) >= 1)
-      .sort((a, b) => Number(a.placement) - Number(b.placement))[0]
+      .filter((row) => Number(row.place) >= 1)
+      .sort((a, b) => Number(a.place) - Number(b.place))[0]
     return {
       id,
       name: String(athlete.name ?? "Unnamed"),
       graduationYear: Number(athlete.graduationyear),
       classRank: classRankOf.get(id) ?? null,
-      statePlace: bestPlace((stateBy.get(id) ?? []).map((row) => row.place)),
+      statePlace: bestPlace((held?.state ?? []).filter((row) => row.year === P4P_SEASON).map((row) => row.place)),
       nationalPlace: bestPlace([
-        ...nhsca.map((row) => row.placement),
+        ...nhsca.map((row) => row.place),
         ...tournaments.filter((row) => isNationalEvent(String(row.event_short_name ?? ""))).map((row) => row.placement),
       ]),
       nationalDivision: (bestNhsca?.division as PoundForPoundInput["nationalDivision"]) ?? null,

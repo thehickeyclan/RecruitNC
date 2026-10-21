@@ -93,11 +93,13 @@ describe("getSuggestedPrompts", () => {
     expect(getRouteForSuggestedPrompt("What are the top reasons NC tournaments fail?")).toBeTruthy()
   })
 
-  it("keeps rankings chips on rankings pages (both path spellings)", () => {
+  it("offers record-book chips on rankings pages, never a ranking question (both path spellings)", () => {
+    // Data Dawg refuses every ranking question by design, so a ranking chip beside the board
+    // is a promise it will not keep (28 Sept 2026).
     for (const page of ["/rankings", "/public-rankings"]) {
-      expect(getSuggestedPrompts(page)).toContain("Show me all Class of 2027 rankings")
-      expect(getSuggestedPrompts(page)).toContain("Show me all Class of 2028 rankings")
-      expect(getSuggestedPrompts(page)).not.toContain("Show me all Class of 2026 rankings")
+      const chips = getSuggestedPrompts(page)
+      expect(chips).toContain("Who are our 4x state champions?")
+      expect(chips.filter((chip) => /rank/i.test(chip))).toEqual([])
     }
   })
 

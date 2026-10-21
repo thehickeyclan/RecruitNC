@@ -66,8 +66,8 @@ export async function getWiqSubscriptionsForParent(
      * Including ended subscriptions filled the panel with history — one test account showed two
      * cancelled 2025 rows for the same wrestler above the one that matters. A panel headed
      * "Subscription" should show the subscription, not every subscription there has ever been.
-     * `isWiqCurrent` keeps a cancelled one while its paid window is still open, which is the
-     * case a parent does need to see.
+     * Since 7 Oct 2026 access ends the day a family cancels (no grace window), so `isWiqCurrent`
+     * drops a cancelled one at once, paid-through date or not.
      */
     .filter((row) => isWiqCurrent(row))
     .map((row) => ({

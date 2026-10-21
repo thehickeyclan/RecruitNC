@@ -29,6 +29,9 @@ const CLASS_DEPTHS: Readonly<Record<number, number>> = { 2027: 75, 2028: 60, 202
 
 export const dynamic = "force-dynamic"
 
+/** 170 credential reconciliations plus the bouts; about 23 seconds measured on 21 Oct 2026. */
+export const maxDuration = 60
+
 export async function GET(request: Request) {
   try {
     const gate = await requireAdmin()

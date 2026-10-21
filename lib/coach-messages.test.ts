@@ -70,6 +70,12 @@ function fakeDb(seed: Record<string, Array<Record<string, unknown>>>) {
       eq: (c: string, v: unknown) => (filters.push((r) => r[c] === v), b),
       in: (c: string, v: unknown[]) => (filters.push((r) => v.includes(r[c])), b),
       gte: (c: string, v: string) => (filters.push((r) => String(r[c]) >= v), b),
+      // Only the `.not(col, "is", null)` form the extras use; anything else should fail loudly.
+      not: (c: string, operator: string, v: unknown) => {
+        if (operator !== "is" || v !== null) throw new Error(`fakeDb: .not(${c}, ${operator}, ${String(v)}) is not modelled`)
+        filters.push((r) => r[c] != null)
+        return b
+      },
       order: (col: string, o?: { ascending?: boolean }) => ((order = { col, asc: o?.ascending !== false }), b),
       limit: (k: number) => ((limitN = k), b),
       maybeSingle: async () => {
