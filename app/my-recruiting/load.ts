@@ -49,6 +49,13 @@ export async function loadCommandCenter(returnTo: string) {
   const viewer = portal.viewer
   const [ids, focus] = await Promise.all([familyAthleteIds(admin, viewerId), familyFocus(admin, viewerId)])
   const blue = hasPortalAccess(viewer)
+  /*
+   * The Command Center is the subscription: Blue, a Command Center plan, or staff. Everyone else is
+   * sent to the plans page from every /my-recruiting page, here in the one loader they all share, so
+   * a new page cannot be left open by forgetting its own lock (Matt, 21 Oct 2026: the home, Activity
+   * and Learn pages were open to non-subscribers).
+   */
+  if (!blue) redirect(`/command-center?from=${encodeURIComponent(returnTo)}`)
 
   const { data: rows } = ids.length
     ? await admin
