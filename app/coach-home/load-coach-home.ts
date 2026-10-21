@@ -15,11 +15,8 @@ import { currentClassYears } from "@/lib/class-years"
 import { groupRecruitsByEvent } from "@/lib/college-programs/competing-next"
 import { listUpcomingEventsForAthletes } from "@/lib/college-programs/schedule"
 import { loadCompetingAlerts } from "@/lib/college-programs/competing-alerts"
-import { interestedInProgram } from "@/lib/college-programs/college-interest"
+import { loadInterested } from "@/lib/college-programs/interested-for-coach"
 import { mapSchoolIdFor } from "@/lib/college-programs/load"
-import { nearestCollegeWeights } from "@/lib/college-programs/roster-depth"
-import { NEED_LABEL, roomByWeight, roomFor, weightsPublished } from "@/lib/college-programs/roster-room"
-import { loadLastCompeted } from "@/lib/prospect-last-competed"
 import type { CoachHomeData } from "./coach-home-client"
 import { inState } from "@/lib/recruiting/states"
 
@@ -151,7 +148,7 @@ export async function loadCoachHome(
    * he would arrive. Approved coaches only, like every family-shared detail. An extra: never fails the page.
    */
   const mapSchoolId = school?.name ? mapSchoolIdFor(school.name) : null
-  const interested = maySeeSchedules && mapSchoolId ? await loadInterested(admin, mapSchoolId, viewGender, onBoard, fitViewer).catch(() => []) : []
+  const interested = maySeeSchedules && mapSchoolId ? (await loadInterested(admin, mapSchoolId, viewGender, onBoard, fitViewer).catch(() => [])).slice(0, 12) : []
   const recruitMap = new Map(recruits.map((r) => [r.athleteId, { id: r.athleteId, name: r.name, classYear: r.classYear, weight: r.weight, highSchool: r.highSchool }]))
   // Alerts: events just added and this weekend's, for the same approved coaches (Matt, 20 Oct 2026).
   const alerts = maySeeSchedules ? await loadCompetingAlerts(admin, recruitMap).catch(() => ({ added: [], weekend: [] })) : { added: [], weekend: [] }
@@ -225,34 +222,3 @@ function sameGender(stored: string | null | undefined, view: string): boolean {
   return view === "Female" ? isGirl : !isGirl
 }
 
-/** The interested wrestlers for one program, each with its two fit signals. */
-async function loadInterested(
-  admin: ReturnType<typeof createAdminClient>,
-  schoolId: string,
-  gender: "Male" | "Female",
-  onBoard: Set<string>,
-  fitViewer: Awaited<ReturnType<typeof resolveFitViewer>> | null,
-) {
-  const rows = (await interestedInProgram(admin, schoolId, gender)).slice(0, 12)
-  if (!rows.length) return []
-  const ids = rows.map((r) => r.id)
-  const [last, flags] = await Promise.all([
-    loadLastCompeted(admin, ids, new Map(rows.map((r) => [r.id, r.classYear]))).catch(() => new Map()),
-    fitViewer?.allowed && fitViewer.hasStandard ? loadFitFlags(admin, ids, fitViewer.saved!.criteria, { personal: fitViewer.personal }).catch(() => null) : Promise.resolve(null),
-  ])
-  const team = gender === "Female" ? "womens" : "mens"
-  const room = roomFor(schoolId, team)
-  return rows.map((r) => {
-    const weight = Number(String(last.get(r.id)?.weight ?? "").replace(/[^0-9]/g, "")) || null
-    const at = weight && room && weightsPublished(room) && r.classYear ? nearestCollegeWeights(weight, team)[0] : null
-    const row = at ? roomByWeight(room!, team, r.classYear!).find((x) => x.weight === at) : null
-    const flag = flags?.get(r.id)
-    return {
-      ...r,
-      weight: weight ? String(weight) : null,
-      onBoard: onBoard.has(r.id),
-      fit: flag ? { verdict: flag.verdict, summary: flag.summary } : null,
-      room: row ? { weight: row.weight, need: row.need, label: NEED_LABEL[row.need], staying: row.staying, fall: r.classYear! } : null,
-    }
-  })
-}

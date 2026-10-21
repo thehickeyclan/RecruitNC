@@ -619,7 +619,12 @@ function InterestedPanel({ wrestlers, program }: { wrestlers: NonNullable<CoachH
       <h2 id="ch-interested" className="text-base font-black uppercase tracking-wide text-white">
         {fresh ? `${fresh} new wrestler${fresh === 1 ? " is" : "s are"} interested in ${program ?? "your program"}` : `Wrestlers interested in ${program ?? "your program"}`}
       </h2>
-      <p className="text-xs text-white/45">Their families told you, from the Command Center.</p>
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <p className="text-xs text-white/45">Their families told you, from the Command Center.</p>
+        <Link href="/interested" className={MORE}>
+          View all →
+        </Link>
+      </div>
       <ul className="mt-3 grid gap-2 lg:grid-cols-2">
         {wrestlers.map((w) => (
           <li key={w.id}>

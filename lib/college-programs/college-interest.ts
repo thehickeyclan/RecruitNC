@@ -46,7 +46,7 @@ export async function setInterest(admin: SupabaseClient, userId: string, athlete
   return !error
 }
 
-export type InterestedWrestler = { id: string; name: string; classYear: number | null; weight: string | null; highSchool: string | null; photo: string | null; at: string }
+export type InterestedWrestler = { id: string; name: string; gender: string | null; classYear: number | null; weight: string | null; highSchool: string | null; photo: string | null; at: string }
 
 /**
  * The wrestlers interested in one program, newest first, for its coaches' dashboard. Only the
@@ -64,6 +64,7 @@ export async function interestedInProgram(admin: SupabaseClient, schoolId: strin
     .map((a) => ({
       id: String(a.id),
       name: String(a.name ?? ""),
+      gender: (a.gender as string | null) ?? null,
       classYear: a.graduationyear ? Number(a.graduationyear) : null,
       weight: null,
       highSchool: (a.highschool as string | null) ?? null,

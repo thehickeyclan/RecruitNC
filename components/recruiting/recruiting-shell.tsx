@@ -12,6 +12,7 @@ import {
   ChevronDown,
   GitCompareArrows,
   GraduationCap,
+  HeartHandshake,
   Home,
   LogOut,
   Menu,
@@ -22,7 +23,7 @@ import {
   Users,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
-import { useCoachMessageBadge, useNavNotifications } from "@/hooks/use-nav-badges"
+import { useCoachMessageBadge, useInterestBadge, useNavNotifications } from "@/hooks/use-nav-badges"
 import { COACH_PREVIEW_KEY, COMMUNITY_PARTNER_LINKS, RECRUITING_BRAND, hasCommunityAccess, recruitingCoverage, usesRecruitingShell } from "@/lib/recruiting/brand"
 import { RecruitingFooter } from "@/components/recruiting/recruiting-footer"
 import { RecruitingWordmark } from "@/components/recruiting/recruiting-wordmark"
@@ -98,6 +99,7 @@ export function RecruitingShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? ""
   const { user, profile, signOut } = useAuth()
   const messages = useCoachMessageBadge(!!user, pathname)
+  const interestNew = useInterestBadge(!!user, pathname)
   const bell = useNavNotifications(!!user, notificationsOpen)
 
   /**
@@ -128,6 +130,7 @@ export function RecruitingShell({ children }: { children: React.ReactNode }) {
     athletes,
     ...rankings,
     recruits,
+    { href: "/interested", label: "Interested", icon: HeartHandshake, badge: interestNew },
     inbox,
     { href: "/compare?src=nav", label: "Compare", icon: GitCompareArrows },
     { href: "/perfect-recruit", label: "Perfect Recruit", icon: Target },
