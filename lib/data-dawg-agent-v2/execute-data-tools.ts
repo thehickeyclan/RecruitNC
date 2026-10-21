@@ -1987,6 +1987,87 @@ export async function toolNchsaaStateTournamentByYear(args: {
 }
 
 /** Same rule as NCHSAA: a missing year resolves to the newest Fargo on file, not a guess. */
+/**
+ * Every North Carolina wrestler at one Super 32, with the record each one wrestled, computed from
+ * the bouts (byes are not matches) and the placement where one was earned. "Which men had a
+ * winning record at Super 32 in 2025" was answered "none" because no tool could list an event's
+ * records - only look up a named wrestler (21 Oct 2026). The record is counted here, in code; the
+ * model only reads it out.
+ */
+export async function toolSuper32ResultsByYear(args: { year?: number | string | null; gender?: string | null; winning_only?: boolean | null }) {
+  const admin = getSupabaseAdmin()
+  let year = Number(args.year) || null
+  let yearInferred = false
+  if (!year) {
+    const { data } = await admin.from("other_tournament_bouts").select("year").like("event_key", "super32-20%").order("year", { ascending: false }).limit(1)
+    year = Number(data?.[0]?.year) || null
+    yearInferred = true
+  }
+  if (!year) return { year: null, wrestlers: [], note: "No Super 32 bouts are on file." }
+  const g = String(args.gender ?? "").toLowerCase()
+  const gender = /^(f|w|girl)/.test(g) ? "F" : /^(m|b|boy)/.test(g) ? "M" : null
+
+  const bouts: Array<{ athlete_name: string; athlete_id: string | null; weight_class: string | null; win: boolean | null; is_bye: boolean | null; gender: string | null }> = []
+  for (let page = 0; page < 20; page++) {
+    const { data, error } = await admin
+      .from("other_tournament_bouts")
+      .select("athlete_name, athlete_id, weight_class, win, is_bye, gender")
+      .eq("event_key", `super32-${year}`)
+      .eq("athlete_club", "NC")
+      .range(page * 1000, page * 1000 + 999)
+    if (error) return { year, error: error.message }
+    bouts.push(...((data ?? []) as typeof bouts))
+    if ((data ?? []).length < 1000) break
+  }
+  if (!bouts.length) return { year, year_inferred: yearInferred, wrestlers: [], note: `No North Carolina bouts from the ${year} Super 32 are on file.` }
+
+  const by = new Map<string, { name: string; athlete_id: string | null; weight: string | null; gender: "M" | "F"; wins: number; losses: number }>()
+  for (const b of bouts) {
+    if (b.is_bye) continue
+    const sex = String(b.gender ?? "").toUpperCase().startsWith("F") ? "F" : "M"
+    const e = by.get(b.athlete_name) ?? { name: b.athlete_name, athlete_id: b.athlete_id, weight: b.weight_class, gender: sex, wins: 0, losses: 0 }
+    if (b.win) e.wins++
+    else e.losses++
+    if (!e.athlete_id && b.athlete_id) e.athlete_id = b.athlete_id
+    by.set(b.athlete_name, e)
+  }
+  const { data: placed } = await admin.from("super32_results").select("athlete_name, placement").eq("year", year)
+  const placeOf = new Map((placed ?? []).map((r) => [String(r.athlete_name), Number(r.placement) || null]))
+  const ids = [...by.values()].map((e) => e.athlete_id).filter((id): id is string => Boolean(id))
+  const { data: ath } = ids.length ? await admin.from("athletes").select("id, highschool, graduationyear").in("id", ids) : { data: [] }
+  const athOf = new Map((ath ?? []).map((a) => [String(a.id), a]))
+
+  let rows = [...by.values()].map((e) => {
+    const a = e.athlete_id ? athOf.get(e.athlete_id) : null
+    return {
+      name: e.name,
+      gender: e.gender === "F" ? "girls" : "boys",
+      weight: e.weight,
+      record: `${e.wins}-${e.losses}`,
+      wins: e.wins,
+      losses: e.losses,
+      winning_record: e.wins > e.losses,
+      placement: placeOf.get(e.name) ?? null,
+      high_school: (a?.highschool as string | null) ?? null,
+      class_of: (a?.graduationyear as number | null) ?? null,
+      profile_url: e.athlete_id ? `/athletes/${e.athlete_id}` : null,
+    }
+  })
+  const total = { wrestlers: rows.length, boys: rows.filter((r) => r.gender === "boys").length, girls: rows.filter((r) => r.gender === "girls").length }
+  if (gender) rows = rows.filter((r) => r.gender === (gender === "F" ? "girls" : "boys"))
+  const winningCount = rows.filter((r) => r.winning_record).length
+  if (args.winning_only) rows = rows.filter((r) => r.winning_record)
+  rows.sort((x, y) => (x.placement ?? 99) - (y.placement ?? 99) || y.wins - x.wins || x.losses - y.losses || x.name.localeCompare(y.name))
+  return {
+    year,
+    year_inferred: yearInferred,
+    filter: { gender: gender === "F" ? "girls" : gender === "M" ? "boys" : "all", winning_only: Boolean(args.winning_only) },
+    totals: { ...total, winning_records_in_filter: winningCount },
+    wrestlers: rows,
+    note: "Records are counted from every bout, byes excluded. Placement is listed only where one was earned. Quote these numbers; do not recount.",
+  }
+}
+
 export async function toolFargoResultsByYear(args: { year?: number | string | null }) {
   const requested = args.year == null || args.year === "" ? Number.NaN : Number(args.year)
   const yearInferred = !Number.isFinite(requested)
@@ -2040,6 +2121,7 @@ export type DataToolName =
   | "nhsca_all_americans_by_year"
   | "nchsaa_state_tournament_by_year"
   | "fargo_results_by_year"
+  | "super32_results_by_year"
   | "college_commits_search"
   | "college_programs_search"
   | "get_athlete_full_dossier"
@@ -2158,6 +2240,8 @@ export async function executeDataTool(name: string, rawArgs: unknown): Promise<s
             },
           ),
         )
+      case "super32_results_by_year":
+        return JSON.stringify(await toolSuper32ResultsByYear(args as { year?: number; gender?: string; winning_only?: boolean }))
       case "fargo_results_by_year":
         return JSON.stringify(await toolFargoResultsByYear(args as { year: number | string }))
       case "college_commits_search":

@@ -386,6 +386,24 @@ export const DATA_DAWG_AGENT_TOOLS: Array<{
   {
     type: "function",
     function: {
+      name: "super32_results_by_year",
+      description:
+        "Every North Carolina wrestler at one Super 32 (boys and girls), each with the record wrestled there (wins-losses counted from the bouts, byes excluded), placement if earned, weight, high school, class and profile link. Use for 'Super 32 results 2025', 'who placed at Super 32', 'which NC wrestlers had a winning record at Super 32', 'how did NC do at Super 32'. Pass `gender` ('boys'/'men' or 'girls'/'women') when the question names one, and `winning_only: true` for winning records. Omit `year` when none is given (latest on file, `year_inferred: true`). Quote `totals` and each `record` exactly; never say there are none when `wrestlers` has rows. Not for one named wrestler (use wrestling_cross_store_search).",
+      parameters: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          year: { type: "integer", description: "Super 32 year (e.g. 2025). OMIT when the user gave no year." },
+          gender: { type: "string", enum: ["boys", "girls"], description: "boys for men/boys, girls for women/girls. Omit for everyone." },
+          winning_only: { type: "boolean", description: "true to list only wrestlers who won more than they lost." },
+        },
+        required: [],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "fargo_results_by_year",
       description:
         "All NC wrestlers at Fargo Nationals (US Marine Corps Nationals) from `fargo_results`. Freestyle and Greco-Roman are separate rows/careers — do not merge styles. Use for 'show Fargo results 2026', 'who wrestled at Fargo in 2024', 'NC Fargo nationals 2023', and **also when no year is given** ('who wrestled at Fargo?') — **omit `year`** and the tool returns the most recent Fargo on file with `year_inferred: true`. **Never invent a year.** Returns athlete name, school, division (16U/Junior), style when present, weight, and record. Not for a single wrestler (use wrestling_cross_store_search or get_athlete_full_dossier).",
