@@ -43,6 +43,7 @@ import { SchoolActions } from "@/components/colleges/school-actions"
 import { StaffList } from "@/components/colleges/staff-list"
 import { WentHereSection } from "@/components/colleges/went-here-section"
 import { RoomByWeight } from "@/components/colleges/room-by-weight"
+import { InterestButton } from "@/components/colleges/interest-button"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { INCOME_BRACKETS, fitForSchool, satTotalRange } from "@/lib/college-programs/fit"
 import { loadCollegeMap } from "@/lib/college-programs/load"
@@ -175,11 +176,12 @@ export default async function SchoolPage({ params, searchParams }: Params) {
   // The family's own state: a RecruitSC family sees South Carolina's alumni, not North Carolina's.
   const homeState = familySide ? await familyState(admin, userId).catch(() => "NC") : "NC"
   const homeStateName = STATE_NAMES[homeState] ?? homeState
-  const [rankingsAll, logo, onRecruitNC, ctx, snapshot] = await Promise.all([
+  const [rankingsAll, logo, onPlatform, ctx, snapshot] = await Promise.all([
     teamRankingsForSchool(school.id),
     schoolLogoUrl(school),
-    // "On RecruitNC" is part of the portal; a map that will not load must not take the page down.
-    full
+    // Whether this program's coaches are on the platform: the portal shows it, and the interest button needs it.
+    // A map that will not load must not take the page down.
+    userId
       ? loadCollegeMap(admin, true)
           .then((map) => map.schools.find((s) => s.id === id)?.onRecruitNC === true)
           .catch(() => false)
@@ -187,6 +189,8 @@ export default async function SchoolPage({ params, searchParams }: Params) {
     familySide && userId ? loadFamilyFitContext(admin, userId, theirs).catch(() => null) : Promise.resolve(null),
     full ? readWentHereSnapshot().then((s) => snapshotForState(s, homeState)).catch(() => null) : Promise.resolve(null),
   ])
+  // The "On RecruitNC" mark stays a portal feature.
+  const onRecruitNC = full && onPlatform
   const rankings = rankingsAll.sort((a, b) => Number(b.gender === team) - Number(a.gender === team))
   const ranking = rankings[0] ?? null
 
@@ -319,6 +323,12 @@ export default async function SchoolPage({ params, searchParams }: Params) {
         {familySide ? (
           <div className="relative border-t border-white/10 px-5 py-4 sm:px-8">
             <SchoolActions schoolId={school.id} schoolName={name} />
+          </div>
+        ) : null}
+        {/* "Tell the coaches you're interested": every family, free, when this program's coaches are here to see it (Matt, 21 Oct 2026). */}
+        {userId && onPlatform && !viewer.isVerifiedCoach ? (
+          <div className="relative border-t border-white/10 px-5 py-4 sm:px-8">
+            <InterestButton schoolId={school.id} schoolName={name} />
           </div>
         ) : null}
       </section>
