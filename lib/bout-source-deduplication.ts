@@ -13,7 +13,28 @@ function eventIdentity(value: unknown): string {
   if (!event) return ""
   if (/^(?:interstate)?i?64/.test(event) || event.includes("i64springduals")) return "i64"
   if (event.includes("nchsaa") && event.includes("statechampionship") && !event.includes("dual")) return "nchsaa-states"
+  /*
+   * The other states' championships (21 Oct 2026): Muse's bracket import names them "SCHSL State
+   * Championships"; RankWrestlers' season history says "2026 SCHSL (SC) State Championships" or
+   * "SCHSL AA State Indy". One event, so one copy of each bout.
+   */
+  const assoc = event.match(/schsl|scisa|vhsl|visaa/)?.[0]
+  if (assoc && /statechampionship|stateindy|statetournament/.test(event) && !event.includes("dual")) return `${assoc}-states`
   return event
+}
+
+function opponentKey(value: unknown): string {
+  const words = String(value ?? "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\b(jr|sr|ii|iii|iv)\b\.?/g, "")
+    .split(/[^a-z']+/)
+    .map((w) => w.replace(/'/g, ""))
+    .filter(Boolean)
+  if (!words.length) return ""
+  if (words.length === 1) return words[0]
+  return `${words[0][0]}${words[words.length - 1]}`
 }
 
 function outcomeIdentity(bout: Bout): string {
@@ -33,7 +54,13 @@ function outcomeIdentity(bout: Bout): string {
 export function mergeBoutSources(preferred: readonly Bout[], fallback: readonly Bout[]): Bout[] {
   const keyOf = (bout: Bout) => {
     const event = eventIdentity(bout.venue)
-    const opponent = normalized(bout.opponent ?? bout.opponent_name)
+    /*
+     * The opponent as first initial + surname: the two sources spell the same boy "William" and
+     * "Will" Edwards, "Andrew P Lawson" and "Andrew Lawson", "Sidhanth" and "Sidanth" Omraju
+     * (SC, 21 Oct 2026). Event, weight and outcome must still agree, and repeat meetings stay a
+     * multiset, so two genuine bouts are never folded into one.
+     */
+    const opponent = opponentKey(bout.opponent ?? bout.opponent_name)
     const outcome = outcomeIdentity(bout)
     const weight = normalized(bout.weight)
     if (!event || !opponent || !outcome) return ""
