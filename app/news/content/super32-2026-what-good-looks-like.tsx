@@ -30,6 +30,12 @@ const KHIRY_REESE = profile("ec8ad14e-8d5e-4717-8fd3-147adc697af7")
 const TAYLOR = profile("6020b56d-982d-48db-b191-c737388094fb")
 const PARDO = profile("d1b5dca0-2b62-4247-96d1-81a8a609f352")
 const PADEN = profile("571ec1bb-173a-48c8-bea7-7162a803530a")
+const HORD = profile("ac3fe9c1-d404-4d86-b379-70ecb5604166")
+const CAM_JOHNSON = profile("bd029099-2487-4c18-8c8c-fd5b6e05e3e7")
+const CONNOR_REECE_NHSCA = REECE
+const RUIZ_ANGEL = profile("a045087f-22be-466d-a4f5-81fc8d5cdd5c")
+const PERRY = profile("ddea34af-ae6a-4880-8a1c-687576bef1fe")
+const BRINKLEY = profile("eb3ce001-65a2-4335-8b58-a83c6aed6be5")
 
 function P({ href, children }: { href: string; children: React.ReactNode }) {
   return (
@@ -212,7 +218,11 @@ export function Super32WhatGoodLooksLikeContent() {
         junior, and finished runner-up at the Journeymen Fall Classic this month. <P href={WORRICK}>Carson Worrick</P>{" "}
         (Davie), <P href={TEETER}>Drew Teeter</P> (Mooresville) and <P href={RAPER}>Carson Raper</P> (South Rowan) each
         placed fourth at NHSCA Nationals last spring; <P href={MCNAIR}>Tobin McNair</P> (Wakefield) was fifth. Aaron
-        Ellison and <P href={AMIOTT}>Jake Amiott</P> (Topsail) are Fargo placers.
+        Ellison and <P href={AMIOTT}>Jake Amiott</P> (Topsail) are Fargo placers. <P href={HORD}>Devin Hord</P> (Kings Mountain) placed fifth at Fargo in 16U
+        freestyle, and <P href={CAM_JOHNSON}>Cam Johnson</P> (Cape Fear) was a 16U Greco-Roman All-American.{" "}
+        <P href={CONNOR_REECE_NHSCA}>Connor Reece</P>, <P href={RUIZ_ANGEL}>Aaron Ruiz-Angel</P> (Mount Airy),{" "}
+        <P href={PERRY}>Jacob Perry</P> (New Bern) and <P href={BRINKLEY}>Connor Brinkley</P> (Newton-Conover) are
+        NHSCA All-Americans.
       </p>
       <p>
         <strong>Girls.</strong> Two of last year&apos;s three North Carolina placers are back: Lauren Samuel, seventh at
