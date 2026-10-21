@@ -25,6 +25,8 @@ export const RECRUITING_BRAND = {
   states: [
     { code: "NC", name: "North Carolina", live: true },
     { code: "SC", name: "South Carolina", live: false },
+    // Being built (Matt, 21 Oct 2026): profiles first, not open to coaches until he says go.
+    { code: "VA", name: "Virginia", live: false },
   ],
 } as const
 

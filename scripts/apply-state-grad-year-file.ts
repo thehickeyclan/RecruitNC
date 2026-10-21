@@ -16,6 +16,10 @@
  *   - --write saves every row it changes to ranking-snapshots/ first (the undo log).
  *
  *   npx tsx scripts/apply-state-grad-year-file.ts --state SC --file a.csv [--file b.csv] [--write]
+ *   npx tsx scripts/apply-state-grad-year-file.ts --state VA --from-registry [--write]
+ *
+ * --from-registry reads the identity registry instead (athlete_identities: the state's
+ * RankWrestlers import, 21 Oct 2026 for Virginia), with the same rules.
  */
 import fs from "fs"
 import path from "path"
@@ -34,7 +38,8 @@ const args = process.argv.slice(2)
 const STATE = (args[args.indexOf("--state") + 1] ?? "").toUpperCase()
 const FILES = args.flatMap((a, i) => (a === "--file" ? [args[i + 1]] : []))
 const WRITE = args.includes("--write")
-if (!STATE || !FILES.length) throw new Error("--state XX --file path [--file path]")
+const FROM_REGISTRY = args.includes("--from-registry")
+if (!STATE || (!FILES.length && !FROM_REGISTRY)) throw new Error("--state XX --file path [--file path] | --from-registry")
 
 const norm = (s: unknown) => String(s ?? "").toLowerCase().replace(/[^a-z ]/g, "").replace(/\s+/g, " ").trim()
 const schoolKey = (s: unknown) => norm(s).replace(/\b(high school|hs|high|school|schools|charter|academy|comprehensive|sr)\b/g, "").replace(/\s+/g, "")
@@ -86,10 +91,24 @@ for (const file of FILES) {
   }
 }
 
+/** The registry's class years for the state, as claims (a ranking's grade, not a tournament's). */
+async function registryClaims() {
+  for (let f = 0; ; f += 1000) {
+    const { data, error } = await sb.from("athlete_identities").select("canonical_name, primary_school, graduation_year, source_athlete_id_source").eq("state", STATE).not("graduation_year", "is", null).order("id").range(f, f + 999)
+    if (error) throw error
+    for (const r of data ?? []) {
+      const k = norm(r.canonical_name)
+      claims.set(k, [...(claims.get(k) ?? []), { year: Number(r.graduation_year), tournament: false, evidence: `identity registry (${r.source_athlete_id_source ?? "registry"})`, file: "athlete_identities", school: r.primary_school ?? "" }])
+    }
+    if (!data || data.length < 1000) break
+  }
+}
+
 async function main() {
+  if (FROM_REGISTRY) await registryClaims()
   const rows: Array<{ id: string; wrestler_name: string; school_clean: string | null; school_raw: string | null; season: number; association: string | null; place: number | null }> = []
   for (let f = 0; ; f += 1000) {
-    const { data, error } = await sb.from("state_tournament_placers").select("id, wrestler_name, school_clean, school_raw, season, association, place").eq("state", STATE).is("grad_year", null).range(f, f + 999)
+    const { data, error } = await sb.from("state_tournament_placers").select("id, wrestler_name, school_clean, school_raw, season, association, place").eq("state", STATE).is("grad_year", null).order("id").range(f, f + 999)
     if (error) throw error
     rows.push(...((data ?? []) as never[]))
     if (!data || data.length < 1000) break
