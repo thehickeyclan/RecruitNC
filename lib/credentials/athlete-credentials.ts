@@ -60,6 +60,8 @@ export type NationalResult = {
   /** The placement as written when it is not a number, e.g. "Round of 16". */
   placementText: string | null
   record: string | null
+  /** The division as recorded, e.g. "Junior". Never published; the pound-for-pound score weighs it. */
+  division?: string | null
 }
 
 /** A placing at the NC United Tournament of Champions. Top four; the field is eight a weight. */
@@ -197,6 +199,7 @@ export async function loadAthleteCredentials(
           // Keep the words when the finish is not a number: "Round of 16" is a real result.
           placementText: place == null && raw ? raw : null,
           record: String(row.record ?? "").trim() || null,
+          division: typeof row.division === "string" && row.division.trim() ? row.division.trim() : null,
         }
       }),
     )
