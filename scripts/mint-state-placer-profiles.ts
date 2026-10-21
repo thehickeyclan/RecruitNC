@@ -52,6 +52,11 @@ const arg = (n: string, d?: string) => {
 }
 const WRITE = process.argv.includes("--write")
 const INCLUDE_GRADUATED = process.argv.includes("--include-graduated")
+/**
+ * Skip placers with no class year (21 Oct 2026, VISAA 2026: 62 of 92 had none, and most of a
+ * podium with no year are seniors who have left). Hold them until the year is known.
+ */
+const ONLY_KNOWN = process.argv.includes("--only-with-class-year")
 const STATE = normalizeState(arg("state"))
 const SEASON = Number(arg("season", "2026"))
 const MAX_PLACE = Number(arg("max-place", "8"))
@@ -123,6 +128,7 @@ async function main() {
   const toLink: Array<{ ids: string[]; athleteId: string; label: string }> = []
   const toCreate: Array<{ row: Record<string, unknown>; label: string; ids: string[] }> = []
   const graduated: string[] = []
+  const heldNoYear: string[] = []
   const ambiguous: string[] = []
 
   for (const [, rows] of groups) {
@@ -131,6 +137,10 @@ async function main() {
     const gradYear = r.grad_year == null ? null : Number(r.grad_year)
     if (!INCLUDE_GRADUATED && gradYear != null && !inSchool(gradYear)) {
       graduated.push(`${r.wrestler_name} (${school}) class of ${gradYear}`)
+      continue
+    }
+    if (ONLY_KNOWN && gradYear == null) {
+      heldNoYear.push(`${r.wrestler_name} (${school})`)
       continue
     }
     const sameName = athletes.filter((a) => nn(a.name) === nn(r.wrestler_name))
@@ -182,6 +192,7 @@ async function main() {
   console.log(`   already have a profile, to LINK           : ${toLink.length}`)
   console.log(`   need a profile created                    : ${toCreate.length}`)
   console.log(`      of those, class year known             : ${toCreate.filter((c) => c.row.graduationyear).length}`)
+  if (ONLY_KNOWN) console.log(`   no class year, held (--only-with-class-year): ${heldNoYear.length}`)
   console.log(`   graduated, skipped${INCLUDE_GRADUATED ? " (OVERRIDDEN)" : "                      "}: ${graduated.length}`)
   console.log(`   name matches a profile elsewhere, skipped : ${ambiguous.length}`)
   for (const a of ambiguous) console.log(`      ${a}`)
