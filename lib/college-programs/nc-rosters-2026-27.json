@@ -1,5 +1,5 @@
 {
- "source": "NC-Wrestlers-on-College-Rosters-2026.xlsx: rosters pulled 12 Oct 2026 from each school's published roster; 544 of 626 team rosters reviewed",
+ "source": "NC-Wrestlers-on-College-Rosters-2026.xlsx: rosters pulled 12 Oct 2026 from each school's published roster; 544 of 626 team rosters reviewed; UNC Pembroke refreshed from its live roster 20 Oct 2026 (27 from NC)",
  "pulled": "2026-10-12",
  "schools": {
   "american-university": {
@@ -1959,12 +1959,12 @@
      "highSchool": "Hoke County"
     },
     {
-     "name": "Clif Bakhsh",
+     "name": "Cam Massey",
      "team": "mens",
-     "weight": "133",
+     "weight": "149",
      "class": "Fr.",
-     "hometown": "Durham, NC",
-     "highSchool": "Hillside"
+     "hometown": "Charlotte, NC",
+     "highSchool": "North Gaston"
     },
     {
      "name": "Cooper Davis",
@@ -1991,12 +1991,36 @@
      "highSchool": "Lumberton"
     },
     {
+     "name": "David Coptsias",
+     "team": "mens",
+     "weight": "149",
+     "class": "Sr.",
+     "hometown": "Fayetteville, NC",
+     "highSchool": "Hoke County"
+    },
+    {
+     "name": "Deyari EL-Amin",
+     "team": "mens",
+     "weight": "184",
+     "class": "Fr.",
+     "hometown": "Durham, NC",
+     "highSchool": "Hillside"
+    },
+    {
      "name": "Don Edwards",
      "team": "mens",
      "weight": "141",
      "class": "So.",
      "hometown": "High Point, NC",
      "highSchool": "Southwest Guilford"
+    },
+    {
+     "name": "Gavin Yow",
+     "team": "mens",
+     "weight": "197",
+     "class": "Fr.",
+     "hometown": "Kannapolis, NC",
+     "highSchool": "A.L. Brown"
     },
     {
      "name": "Gus Elliott",
@@ -2013,6 +2037,14 @@
      "class": "Jr.",
      "hometown": "Greensboro, NC",
      "highSchool": "Dudley"
+    },
+    {
+     "name": "Imon Freeman",
+     "team": "mens",
+     "weight": "174",
+     "class": "Fr.",
+     "hometown": "Mount Gilead, NC",
+     "highSchool": "Montgomery Central"
     },
     {
      "name": "Jackson Buck",
@@ -2042,7 +2074,7 @@
      "name": "Joey Bruscino",
      "team": "mens",
      "weight": "125",
-     "class": "Jr.",
+     "class": "Sr.",
      "hometown": "Greensboro, NC",
      "highSchool": "Southeast Guilford"
     },
@@ -2055,12 +2087,28 @@
      "highSchool": "West Carteret"
     },
     {
-     "name": "Max Davis",
+     "name": "Joram Gnamien",
      "team": "mens",
-     "weight": "149",
+     "weight": "174",
      "class": "Fr.",
-     "hometown": "Jacksonville, NC",
-     "highSchool": "Jacksonville"
+     "hometown": "Walkertown, NC",
+     "highSchool": "Walkertown"
+    },
+    {
+     "name": "Kaulton Kuddie",
+     "team": "mens",
+     "weight": "197",
+     "class": "Fr.",
+     "hometown": "Kannapolis, NC",
+     "highSchool": "A.L. Brown"
+    },
+    {
+     "name": "Kene Black",
+     "team": "mens",
+     "weight": "165",
+     "class": "Fr.",
+     "hometown": "Lumberton, NC",
+     "highSchool": "Lumberton"
     },
     {
      "name": "Nick Williams",
@@ -2093,8 +2141,9 @@
      "division": "NCAA Division II",
      "reviewed": true,
      "season": "2026-27",
-     "rosterSize": 35,
-     "url": "https://uncpbraves.com/sports/wrestling/roster"
+     "rosterSize": 48,
+     "url": "https://uncpbraves.com/sports/wrestling/roster",
+     "refreshed": "2026-10-20"
     }
    ]
   },
@@ -2581,7 +2630,7 @@
      "highSchool": "Cary"
     },
     {
-     "name": "Ta\u2019zion Williams",
+     "name": "Ta’zion Williams",
      "team": "mens",
      "weight": null,
      "class": "Fr.",
