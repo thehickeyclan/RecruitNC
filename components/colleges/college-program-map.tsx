@@ -447,6 +447,13 @@ export function CollegeProgramMap({
     [schools],
   )
   const fromStateName = STATE_NAMES[fromStateSchools[0]?.fromState?.state ?? ""] ?? "your state"
+  /** The same programs grouped by the college's state, most of the state's wrestlers first. */
+  const fromStateByState = useMemo(() => {
+    const by = new Map<string, typeof fromStateSchools>()
+    for (const sc of fromStateSchools) by.set(sc.state, [...(by.get(sc.state) ?? []), sc])
+    const total = (l: typeof fromStateSchools) => l.reduce((n, sc) => n + (sc.fromState?.wrestlers.length ?? 0), 0)
+    return [...by].sort((a, b) => total(b[1]) - total(a[1]) || (STATE_NAMES[a[0]] ?? a[0]).localeCompare(STATE_NAMES[b[0]] ?? b[0]))
+  }, [fromStateSchools])
 
   useEffect(() => {
     if (!response || mapRef.current || !containerRef.current) return
@@ -873,23 +880,34 @@ export function CollegeProgramMap({
 
       {filters.fromState && fromStateSchools.length > 0 ? (
         // The question the filter answers, as a list: where this state's wrestlers are wrestling now.
-        <section className="mt-4 rounded-sm border border-white/10 bg-[#071427] p-4" aria-label={`Top programs for ${fromStateName} wrestlers`}>
-          <p className="text-sm font-bold text-white">Top programs for {fromStateName} wrestlers</p>
+        <section className="mt-4 rounded-sm border border-white/10 bg-[#071427] p-4" aria-label={`Programs with ${fromStateName} wrestlers, by state`}>
+          <p className="text-sm font-bold text-white">Where {fromStateName} wrestlers are wrestling, by state</p>
           <p className="mt-0.5 text-xs text-white/55">
             {fromStateSchools.reduce((n, s) => n + (s.fromState?.wrestlers.length ?? 0), 0)} {fromStateName} wrestlers on {fromStateSchools.length} current college rosters, read from each school&apos;s published 2026-27 roster.
           </p>
-          <ol className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
-            {fromStateSchools.slice(0, 12).map((s, i) => (
-              <li key={s.id}>
-                <button type="button" onClick={() => setSelectedId(s.id)} className="flex w-full items-center gap-2 text-left text-sm hover:text-white">
-                  <span className="w-5 text-right text-xs text-white/40">{i + 1}</span>
-                  <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: DIVISION_COLOR[primaryDivision(s)] }} aria-hidden />
-                  <span className="min-w-0 flex-1 truncate text-white/85">{s.name}</span>
-                  <span className="font-bold text-white">{s.fromState!.wrestlers.length}</span>
-                </button>
-              </li>
+          {/* Every program, by state (Matt, 21 Oct 2026): a top 12 hid 76 of the 88, Carson Floyd's
+              Iowa State among them. States with the most of the state's wrestlers first. */}
+          <div className="mt-3 grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+            {fromStateByState.map(([st, list]) => (
+              <div key={st}>
+                <p className="flex items-baseline justify-between border-b border-white/10 pb-1 text-xs font-black uppercase tracking-widest text-[#D7B968]">
+                  <span>{STATE_NAMES[st] ?? st}</span>
+                  <span className="text-white/50">{list.reduce((n, s) => n + (s.fromState?.wrestlers.length ?? 0), 0)}</span>
+                </p>
+                <ul className="mt-1.5 space-y-1">
+                  {list.map((s) => (
+                    <li key={s.id}>
+                      <button type="button" onClick={() => setSelectedId(s.id)} className="flex w-full items-center gap-2 text-left text-sm hover:text-white">
+                        <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: DIVISION_COLOR[primaryDivision(s)] }} aria-hidden />
+                        <span className="min-w-0 flex-1 truncate text-white/85">{s.name}</span>
+                        <span className="font-bold text-white">{s.fromState!.wrestlers.length}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ol>
+          </div>
         </section>
       ) : null}
 
