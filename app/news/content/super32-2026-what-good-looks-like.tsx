@@ -175,7 +175,7 @@ export function Super32WhatGoodLooksLikeContent() {
       </figure>
 
       <p>
-        <strong>3. The podium has been hard to reach.</strong> In three years, one North Carolina boy has placed:{" "}
+        <strong>3. The podium has been hard to reach.</strong> In three years, one North Carolina wrestler has placed in the boys&apos; tournament:{" "}
         <P href={SLY}>Bentley Sly</P> (Stuart Cramer), fourth at 150 last year, going 8-2. In 2023 and 2024, North
         Carolina boys reached the round of 12, one win from the podium, but none placed. The girls have placed one, two
         and three: <P href={EDWARDS}>Leah Edwards</P> (fifth at 106) in 2023, <P href={EVANS}>Kaylah Evans</P> (seventh
@@ -241,7 +241,7 @@ export function Super32WhatGoodLooksLikeContent() {
           <strong>Great:</strong> three or more placers, and a team winning percentage above a third.
         </li>
         <li>
-          <strong>Historic:</strong> a North Carolina boy in a Super 32 final.
+          <strong>Historic:</strong> a North Carolina wrestler in a boys&apos; Super 32 final.
         </li>
       </ul>
       <h3>For the girls</h3>
