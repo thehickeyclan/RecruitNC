@@ -100,6 +100,25 @@ export function newsShareUsesHeroCropOnly(
  */
 const ALL_NEWS: NewsItem[] = [
   {
+    id: "super32-2026-what-good-looks-like",
+    slug: "super32-2026-what-good-looks-like",
+    title: "What Does Good Look Like for North Carolina at Super 32?",
+    subtitle: "Three years of every North Carolina bout, and the marks that would make this weekend a good one.",
+    summary:
+      "North Carolina wins about three of every ten matches at Super 32, and one boy has placed in three years. Here is the baseline, this year's 176-wrestler field and what good, great and historic look like in Greensboro.",
+    href: "/news/super32-2026-what-good-looks-like",
+    date: "2026-10-21",
+    image: "/images/news/super32-2026-preview/featured-mat.jpg",
+    homeImage: "/images/news/super32-2026-preview/featured-mat.jpg",
+    imagePosition: "center",
+    category: "SUPER 32 PREVIEW",
+    categoryBadgeClass: "bg-[#003366]",
+    readTime: "5 min read",
+    author: "NC United Wrestling",
+    isAnnouncement: true,
+    pinToTop: true,
+  },
+  {
     id: "recruiting-command-center-launch",
     slug: "recruiting-command-center-launch",
     title: "The Recruiting Command Center Is Here",
