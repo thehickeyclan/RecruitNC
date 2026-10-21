@@ -6,6 +6,7 @@ import { isCollegeCoachRole } from "@/lib/coach-auto-approve"
 import { buildSchoolIndex, matchSchool } from "@/lib/college-programs/match"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
+import { rosterForSchool } from "@/lib/college-programs/rosters"
 import type { CollegeMapResponse, CollegeMapSchool } from "@/lib/college-programs/types"
 
 /**
@@ -100,7 +101,11 @@ export async function loadCollegeMap(admin: SupabaseClient, full: boolean): Prom
   return {
     season: "2026-27",
     access: full ? "full" : "preview",
-    schools: SCHOOLS.map((school) => ({ ...school, onRecruitNC: onRecruitNC.has(school.id) })),
+    schools: SCHOOLS.map((school) => {
+      // Published roster names, so they are shown to every viewer, like the roster on the school's own site.
+      const wrestlers = rosterForSchool(school.id).wrestlers
+      return { ...school, onRecruitNC: onRecruitNC.has(school.id), ...(wrestlers.length ? { fromState: { state: "NC", wrestlers } } : {}) }
+    }),
   }
 }
 

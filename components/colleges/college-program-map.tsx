@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react"
-import { BarChart3, Bookmark, ChevronRight, ClipboardList, GraduationCap, Lock, Search, ShieldCheck, Star, Users, X } from "lucide-react"
+import { BarChart3, Bookmark, ChevronRight, ClipboardList, GraduationCap, Lock, MapPin, Search, ShieldCheck, Star, Users, X } from "lucide-react"
 
 import { CoachEmailComposer } from "@/components/colleges/coach-email-composer"
 import { ListControls } from "@/components/colleges/list-controls"
@@ -42,6 +42,8 @@ type Filters = {
   state: string
   onRecruitNCOnly: boolean
   myListOnly: boolean
+  /** Only colleges with wrestlers from the state on their current roster (school.fromState). */
+  fromState: boolean
   query: string
 }
 
@@ -61,6 +63,7 @@ function matchesFilters(school: CollegeMapSchool, filters: Filters): boolean {
   if (matchingPrograms(school, filters).length === 0) return false
   if (filters.state && school.state !== filters.state) return false
   if (filters.onRecruitNCOnly && !school.onRecruitNC) return false
+  if (filters.fromState && !school.fromState?.wrestlers.length) return false
   const q = filters.query.trim().toLowerCase()
   if (q && !`${school.name} ${school.city} ${school.state} ${STATE_NAMES[school.state] ?? ""}`.toLowerCase().includes(q))
     return false
@@ -88,6 +91,7 @@ function toGeoJson(schools: CollegeMapSchool[], filters: Filters | null, saved: 
         color: DIVISION_COLOR[shownDivision(school, filters)],
         onRecruitNC: school.onRecruitNC === true,
         saved: saved.has(school.id),
+        fromCount: school.fromState?.wrestlers.length ?? 0,
       },
     })),
   }
@@ -169,6 +173,37 @@ function LockedActions({ schoolId, href }: { schoolId: string; href: string }) {
   )
 }
 
+/** The state's wrestlers on this college's current roster, from its published roster. */
+function FromStateRoster({ school }: { school: CollegeMapSchool }) {
+  const from = school.fromState!
+  const [all, setAll] = useState(false)
+  const shown = all ? from.wrestlers : from.wrestlers.slice(0, 5)
+  const stateName = STATE_NAMES[from.state] ?? from.state
+  return (
+    <div className="mt-3 rounded-sm border border-white/10 bg-white/[0.04] p-2.5">
+      <p className="text-xs font-bold uppercase tracking-wider text-[#D7B968]">
+        {from.wrestlers.length} from {stateName} on the roster
+      </p>
+      <ul className="mt-1.5 space-y-1 text-sm">
+        {shown.map((w) => (
+          <li key={`${w.name}-${w.team}`} className="leading-tight text-white/85">
+            <span className="font-semibold text-white">{w.name}</span>
+            <span className="text-white/55">
+              {[w.weight ? `${w.weight} lbs` : null, w.class, w.highSchool].filter(Boolean).length ? " · " : ""}
+              {[w.weight ? `${w.weight} lbs` : null, w.class, w.highSchool].filter(Boolean).join(" · ")}
+            </span>
+          </li>
+        ))}
+      </ul>
+      {from.wrestlers.length > 5 ? (
+        <button type="button" onClick={() => setAll((v) => !v)} className="mt-1 text-xs font-semibold text-[#D7B968] hover:underline">
+          {all ? "Show fewer" : `Show all ${from.wrestlers.length}`}
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
 function SchoolCard({
   school,
   filters,
@@ -232,6 +267,8 @@ function SchoolCard({
         </p>
       ) : null}
 
+      {school.fromState?.wrestlers.length ? <FromStateRoster school={school} /> : null}
+
       {list}
 
       {upsellHref ? <LockedActions schoolId={school.id} href={upsellHref} /> : null}
@@ -276,6 +313,7 @@ export function CollegeProgramMap({
     state: "",
     onRecruitNCOnly: false,
     myListOnly: false,
+    fromState: false,
     query: "",
   })
   const [listAvailable, setListAvailable] = useState(false)
@@ -390,7 +428,7 @@ export function CollegeProgramMap({
     () =>
       full
         ? schools.filter((school) => matchesFilters(school, filters) && (!filters.myListOnly || saved.has(school.id)))
-        : schools.filter((school) => !filters.onRecruitNCOnly || school.onRecruitNC),
+        : schools.filter((school) => (!filters.onRecruitNCOnly || school.onRecruitNC) && (!filters.fromState || (school.fromState?.wrestlers.length ?? 0) > 0)),
     [full, schools, filters, saved],
   )
 
@@ -403,6 +441,12 @@ export function CollegeProgramMap({
   )
   const selected = useMemo(() => schools.find((s) => s.id === selectedId) ?? null, [schools, selectedId])
   const recruitNCCount = useMemo(() => schools.filter((s) => s.onRecruitNC).length, [schools])
+  /** Colleges with wrestlers from the state on the roster, most first: the "From North Carolina" list. */
+  const fromStateSchools = useMemo(
+    () => schools.filter((s) => (s.fromState?.wrestlers.length ?? 0) > 0).sort((a, b) => b.fromState!.wrestlers.length - a.fromState!.wrestlers.length || a.name.localeCompare(b.name)),
+    [schools],
+  )
+  const fromStateName = STATE_NAMES[fromStateSchools[0]?.fromState?.state ?? ""] ?? "your state"
 
   useEffect(() => {
     if (!response || mapRef.current || !containerRef.current) return
@@ -542,6 +586,19 @@ export function CollegeProgramMap({
     mapRef.current?.getSource("colleges")?.setData?.(toGeoJson(visible, full ? filters : null, saved))
   }, [mapReady, visible, full, filters, saved])
 
+  // From North Carolina: a dot's size is how many of the state's wrestlers are on that roster.
+  useEffect(() => {
+    const map = mapRef.current
+    if (!mapReady || !map?.getLayer?.("college-dots")) return
+    map.setPaintProperty?.(
+      "college-dots",
+      "circle-radius",
+      filters.fromState
+        ? ["interpolate", ["linear"], ["get", "fromCount"], 1, 6, 3, 9, 6, 13, 10, 18, 16, 24]
+        : ["interpolate", ["linear"], ["zoom"], 3, 4, 8, 7.5, 12, 11],
+    )
+  }, [mapReady, filters.fromState])
+
   // Picking a state frames that state; clearing it goes back to the whole country.
   useEffect(() => {
     const map = mapRef.current
@@ -596,6 +653,7 @@ export function CollegeProgramMap({
     filters.state !== "" ||
     filters.onRecruitNCOnly ||
     filters.myListOnly ||
+    filters.fromState ||
     filters.query.trim() !== ""
 
   const resetFilters = () =>
@@ -604,6 +662,7 @@ export function CollegeProgramMap({
       gender: "all",
       state: "",
       onRecruitNCOnly: false,
+      fromState: false,
       myListOnly: false,
       query: "",
     })
@@ -658,6 +717,22 @@ export function CollegeProgramMap({
             On <BrandName /> ({recruitNCCount})
           </button>
         ) : null}
+        {fromStateSchools.length > 0 ? (
+          // Where wrestlers from the state go: every level, sized by how many are on each roster.
+          <button
+            type="button"
+            onClick={() =>
+              setFilters((f) => (f.fromState ? { ...f, fromState: false } : { ...f, fromState: true, divisions: new Set(COLLEGE_DIVISIONS) }))
+            }
+            aria-pressed={filters.fromState}
+            className={`inline-flex items-center gap-2 rounded-sm border px-3 py-1.5 text-sm font-semibold transition hover:bg-white/10 ${
+              filters.fromState ? "border-[#D7B968] bg-[#D7B968]/15 text-white" : "border-white/20 text-white"
+            }`}
+          >
+            <MapPin className="h-3.5 w-3.5" aria-hidden />
+            From {fromStateName} ({fromStateSchools.length})
+          </button>
+        ) : null}
         {full && listAvailable ? (
           // Same behaviour as On RecruitNC: one tap is the whole list, at every level.
           <button
@@ -676,7 +751,7 @@ export function CollegeProgramMap({
             My List ({saved.size})
           </button>
         ) : null}
-        {(full && filtersActive) || filters.onRecruitNCOnly ? (
+        {(full && filtersActive) || filters.onRecruitNCOnly || filters.fromState ? (
           <button
             type="button"
             onClick={resetFilters}
@@ -795,6 +870,28 @@ export function CollegeProgramMap({
           </div>
         ) : null}
       </div>
+
+      {filters.fromState && fromStateSchools.length > 0 ? (
+        // The question the filter answers, as a list: where this state's wrestlers are wrestling now.
+        <section className="mt-4 rounded-sm border border-white/10 bg-[#071427] p-4" aria-label={`Top programs for ${fromStateName} wrestlers`}>
+          <p className="text-sm font-bold text-white">Top programs for {fromStateName} wrestlers</p>
+          <p className="mt-0.5 text-xs text-white/55">
+            {fromStateSchools.reduce((n, s) => n + (s.fromState?.wrestlers.length ?? 0), 0)} {fromStateName} wrestlers on {fromStateSchools.length} current college rosters, read from each school&apos;s published 2026-27 roster.
+          </p>
+          <ol className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+            {fromStateSchools.slice(0, 12).map((s, i) => (
+              <li key={s.id}>
+                <button type="button" onClick={() => setSelectedId(s.id)} className="flex w-full items-center gap-2 text-left text-sm hover:text-white">
+                  <span className="w-5 text-right text-xs text-white/40">{i + 1}</span>
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: DIVISION_COLOR[primaryDivision(s)] }} aria-hidden />
+                  <span className="min-w-0 flex-1 truncate text-white/85">{s.name}</span>
+                  <span className="font-bold text-white">{s.fromState!.wrestlers.length}</span>
+                </button>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ) : null}
 
       {emailSchool ? (
         <CoachEmailComposer
