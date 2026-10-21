@@ -31,6 +31,10 @@ export async function POST(request: NextRequest) {
   const { supabase, user } = await familyUser()
   if (!user) return NextResponse.json({ error: "Sign in first." }, { status: 401 })
   const admin = createAdminClient()
+  // The "A college reached out" log is part of the Recruiting Command Center (Matt, 21 Oct 2026).
+  if (!hasPortalAccess((await resolveRankingViewer({ supabase, admin })).viewer)) {
+    return NextResponse.json({ error: "Part of the Recruiting Command Center.", upgrade: "/command-center" }, { status: 403 })
+  }
 
   const body = (await request.json().catch(() => null)) as Record<string, unknown> | null
   const athleteId = typeof body?.athleteId === "string" ? body.athleteId : ""
