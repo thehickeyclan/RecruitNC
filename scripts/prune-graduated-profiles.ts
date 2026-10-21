@@ -20,11 +20,15 @@
  *
  *   npx tsx scripts/prune-graduated-profiles.ts            dry run, writes the export
  *   npx tsx scripts/prune-graduated-profiles.ts --write    deletes, after exporting
+ *
+ * --state XX --outside-classes (Matt, 21 Oct 2026: "only profiles for 2027-2030"): instead of
+ * graduates, one state's profiles with no class year or a class outside the four in high school.
+ * Same export, same keep rules. A held wrestler comes back once a class year is known.
  */
 import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
-import { mostRecentGraduatedClassYear } from "@/lib/class-years"
+import { currentClassYears, mostRecentGraduatedClassYear } from "@/lib/class-years"
 
 for (const f of [".env.local", ".env"]) {
   const p = path.join(process.cwd(), f)
@@ -37,13 +41,17 @@ for (const f of [".env.local", ".env"]) {
 const WRITE = process.argv.includes("--write")
 /** Every table that points at a profile, so the export can carry the whole picture. */
 const LINKED: Array<[string, string]> = [
+  ["state_tournament_placers", "athlete_id"],
+  ["national_rankings", "athlete_id"],
+  // matches links by athlete_id (wrestler_id is a "name_season" key, not a profile). Each table
+  // once: linkedRows is keyed by table, so a second entry overwrote the first and left a link.
+  ["matches", "athlete_id"],
   ["wrestling_nchsaa_results", "athlete_id"],
   ["other_tournament_results", "athlete_id"],
   ["other_tournament_bouts", "athlete_id"],
   ["nhsca_placements", "athlete_id"],
   ["super32_results", "athlete_id"],
   ["fargo_results", "athlete_id"],
-  ["matches", "wrestler_id"],
   ["result_athlete_links", "athlete_id"],
 ]
 
@@ -54,17 +62,23 @@ async function main() {
 
   const ath: any[] = []
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await sb.from("athletes").select("*").range(from, from + 999)
+    const { data, error } = await sb.from("athletes").select("*").order("id").range(from, from + 999)
     if (error) throw new Error(error.message)
     ath.push(...(data ?? []))
     if (!data || data.length < 1000) break
   }
-  const graduated = ath.filter((a) => a.graduationyear && Number(a.graduationyear) <= cutoff)
+  const PRUNE_STATE = process.argv.includes("--state") ? String(process.argv[process.argv.indexOf("--state") + 1]).toUpperCase() : null
+  const OUTSIDE = process.argv.includes("--outside-classes")
+  const classes = currentClassYears()
+  const graduated = OUTSIDE
+    ? ath.filter((a) => PRUNE_STATE && String(a.state ?? "").toUpperCase() === PRUNE_STATE && !a.is_nc_athlete && !classes.includes(Number(a.graduationyear)))
+    : ath.filter((a) => a.graduationyear && Number(a.graduationyear) <= cutoff)
+  if (OUTSIDE && !PRUNE_STATE) throw new Error("--outside-classes needs --state XX")
   const claimed = graduated.filter((a) => a.claimed_at || a.claimed_by_user_id)
   const committed = graduated.filter((a) => String(a.college ?? "").trim())
   const starRows: any[] = []
   for (let from = 0; ; from += 1000) {
-    const { data, error } = await sb.from("college_coach_stars").select("athlete_id").range(from, from + 999)
+    const { data, error } = await sb.from("college_coach_stars").select("athlete_id").order("athlete_id").range(from, from + 999)
     if (error) { console.log(`   (college_coach_stars: ${error.message})`); break }
     starRows.push(...(data ?? []))
     if (!data || data.length < 1000) break
@@ -74,7 +88,7 @@ async function main() {
   const keepIds = new Set([...claimed, ...committed, ...starred].map((a) => String(a.id)))
   const toRemove = graduated.filter((a) => !keepIds.has(String(a.id)))
   console.log(`profiles: ${ath.length}`)
-  console.log(`   graduated (${cutoff} or earlier): ${graduated.length}`)
+  console.log(OUTSIDE ? `   ${PRUNE_STATE} outside ${classes.join(", ")} (or no class year): ${graduated.length}` : `   graduated (${cutoff} or earlier): ${graduated.length}`)
   console.log(`   kept — claimed by a family:       ${claimed.length}`)
   console.log(`   kept — carries a commitment:      ${committed.length}`)
   console.log(`   kept — starred by a college coach:${String(starred.length).padStart(3)}`)
@@ -85,7 +99,8 @@ async function main() {
   for (const [table, col] of LINKED) {
     const rows: any[] = []
     for (let from = 0; ; from += 1000) {
-      const { data, error } = await sb.from(table).select("*").range(from, from + 999)
+      // A fixed order: unordered pages overlap and a linked row could be missed.
+      const { data, error } = await sb.from(table).select("*").order("id").range(from, from + 999)
       if (error) { console.log(`   (${table}: ${error.message})`); break }
       rows.push(...(data ?? []).filter((r: any) => ids.has(String(r[col]))))
       if (!data || data.length < 1000) break
