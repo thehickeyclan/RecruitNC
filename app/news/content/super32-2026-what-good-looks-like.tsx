@@ -165,6 +165,12 @@ export function Super32WhatGoodLooksLikeContent() {
         />
         <figcaption className="mt-2 text-center text-sm italic text-slate-500">
           Bentley Sly (Stuart Cramer): four-time state champion and Super 32 All-American.
+          <span className="mt-1 block text-xs not-italic text-slate-400">
+            Photo:{" "}
+            <a href="https://www.instagram.com/rhetthoy_photography/" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 hover:text-slate-600">
+              @rhetthoy_photography
+            </a>
+          </span>
         </figcaption>
       </figure>
 
