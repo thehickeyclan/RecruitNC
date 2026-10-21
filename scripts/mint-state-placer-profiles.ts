@@ -62,7 +62,8 @@ const title = (s: string) =>
 async function page<T>(table: string, select: string, filt?: (q: never) => never): Promise<T[]> {
   const out: T[] = []
   for (let from = 0; ; from += 1000) {
-    let q = sb.from(table).select(select) as never
+    // A fixed order, or pages overlap and rows go missing (VA 2026: 504 boys and 72 girls read as 473 boys).
+    let q = (sb.from(table).select(select) as unknown as { order: (c: string) => never }).order("id")
     if (filt) q = filt(q)
     const { data, error } = await (q as { range: (a: number, b: number) => Promise<{ data: unknown[] | null; error: { message: string } | null }> }).range(from, from + 999)
     if (error) throw new Error(`${table}: ${error.message}`)

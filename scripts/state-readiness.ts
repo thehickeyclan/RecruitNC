@@ -55,6 +55,7 @@ type Athlete = {
 /** One placement, from whichever table holds the state's championship. */
 type Placement = { id: string; season: number; place: number | null; name: string; school: string | null; athlete_id: string | null; grad_year: number | null; weight: string | null; association: string | null }
 
+/** Callers order by id: unordered pages overlap and drop rows. */
 async function all<T>(build: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>): Promise<T[]> {
   const out: T[] = []
   for (let from = 0; ; from += 1000) {
@@ -68,14 +69,14 @@ async function all<T>(build: (from: number, to: number) => PromiseLike<{ data: T
 const ATHLETE_COLS = "id,name,graduationyear,gender,highschool,state,is_nc_athlete,claimed_by_user_id,photourl"
 
 async function athletesOf(state: string): Promise<Athlete[]> {
-  return all<Athlete>((f, t) => inState(sb.from("athletes").select(ATHLETE_COLS), state).range(f, t) as never)
+  return all<Athlete>((f, t) => inState(sb.from("athletes").select(ATHLETE_COLS), state).order("id").range(f, t) as never)
 }
 
 /** NC's championship lives in wrestling_nchsaa_results; every other state's in state_tournament_placers. */
 async function placementsOf(state: string): Promise<Placement[]> {
   if (state === HOME_STATE) {
     const rows = await all<Record<string, unknown>>((f, t) =>
-      sb.from("wrestling_nchsaa_results").select("id,year,place,wrestler_name,school,athlete_id,weight_class,classification").not("place", "is", null).range(f, t),
+      sb.from("wrestling_nchsaa_results").select("id,year,place,wrestler_name,school,athlete_id,weight_class,classification").not("place", "is", null).order("id").range(f, t),
     )
     return rows.map((r) => ({
       id: String(r.id),
@@ -90,7 +91,7 @@ async function placementsOf(state: string): Promise<Placement[]> {
     }))
   }
   const rows = await all<Record<string, unknown>>((f, t) =>
-    sb.from("state_tournament_placers").select("id,season,place,wrestler_name,school_clean,school_raw,athlete_id,grad_year,weight,association").eq("state", state).range(f, t),
+    sb.from("state_tournament_placers").select("id,season,place,wrestler_name,school_clean,school_raw,athlete_id,grad_year,weight,association").eq("state", state).order("id").range(f, t),
   )
   return rows.map((r) => ({
     id: String(r.id),

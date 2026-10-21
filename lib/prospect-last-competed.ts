@@ -118,6 +118,8 @@ const CANONICAL: Array<[RegExp, string]> = [
   // Championships", "SCHSL AA State Indy").
   [/\bschsl\b/i, "SCHSL State Championships"],
   [/\bscisa\b/i, "SCISA State Championships"],
+  [/\bvhsl\b/i, "VHSL State Championships"],
+  [/\bvisaa\b/i, "VISAA State Championships"],
   [/(i-64|interstate 64).*fall/i, "I-64 Fall Duals"],
   [/(i-64|interstate 64).*spring/i, "I-64 Spring Duals"],
   [/i-64|interstate 64/i, "I-64 Duals"],
