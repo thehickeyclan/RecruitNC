@@ -41,6 +41,19 @@ export type CoachHomeData = {
    * Empty for a coach staff have not approved yet: a minor's schedule is for reviewed coaches only.
    */
   competingNext: EventWithRecruits[]
+  /** Wrestlers whose families told this program they are interested, with how each may fit (approved coaches only). */
+  interested?: Array<{
+    id: string
+    name: string
+    classYear: number | null
+    weight: string | null
+    highSchool: string | null
+    photo: string | null
+    at: string
+    onBoard: boolean
+    fit: FitBadgeFlag | null
+    room: { weight: number; need: "likely" | "some" | "crowded"; label: string; staying: number; fall: number } | null
+  }>
   /** Events families just added, and who competes this weekend (approved coaches only). */
   alerts?: { added: Array<{ athleteId: string; name: string; title: string; startDate: string; endDate: string | null; location: string | null; addedAt: string }>; weekend: EventWithRecruits[] }
   /** Top-ranked uncommitted wrestlers not on the board yet, to star from here. */
@@ -339,6 +352,7 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
         </div>
 
         <Super32Notice womens={womens} />
+        {(data.interested ?? []).length ? <InterestedPanel wrestlers={data.interested!} program={data.program} /> : null}
         {data.alerts && (data.alerts.weekend.length || data.alerts.added.length) ? (
           <section className={`${PANEL} mb-4 mt-4 border-[#D3B574]/30 p-4 sm:p-5`} aria-labelledby="ch-alerts">
             <h2 id="ch-alerts" className={TITLE}>
@@ -587,5 +601,53 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
         </p>
       </div>
     </main>
+  )
+}
+
+const ROOM_TONE = { likely: "bg-emerald-400/15 text-emerald-300 ring-emerald-400/30", some: "bg-sky-400/15 text-sky-200 ring-sky-400/30", crowded: "bg-amber-400/15 text-amber-200 ring-amber-400/30" } as const
+
+/** "Wrestlers interested in your program" (Matt, 21 Oct 2026): families chose to tell this program. */
+function InterestedPanel({ wrestlers, program }: { wrestlers: NonNullable<CoachHomeData["interested"]>; program: string | null }) {
+  const week = Date.now() - 7 * 864e5
+  const fresh = wrestlers.filter((w) => Date.parse(w.at) >= week).length
+  const ago = (iso: string) => {
+    const d = Math.floor((Date.now() - Date.parse(iso)) / 864e5)
+    return d <= 0 ? "today" : d === 1 ? "yesterday" : `${d} days ago`
+  }
+  return (
+    <section className={`${PANEL} mt-4 border-[#D3B574]/40 p-4 sm:p-5`} aria-labelledby="ch-interested">
+      <h2 id="ch-interested" className="text-base font-black uppercase tracking-wide text-white">
+        {fresh ? `${fresh} new wrestler${fresh === 1 ? " is" : "s are"} interested in ${program ?? "your program"}` : `Wrestlers interested in ${program ?? "your program"}`}
+      </h2>
+      <p className="text-xs text-white/45">Their families told you, from the Command Center.</p>
+      <ul className="mt-3 grid gap-2 lg:grid-cols-2">
+        {wrestlers.map((w) => (
+          <li key={w.id}>
+            <Link href={`/athletes/${w.id}`} className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 hover:border-[#D3B574]/50 hover:bg-white/[0.06]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={w.photo || "/wrestler-silhouette.png"} alt="" className="h-14 w-14 shrink-0 rounded-full bg-[#13294B] object-cover" />
+              <span className="min-w-0 flex-1">
+                <span className="flex flex-wrap items-center gap-2">
+                  <span className="truncate font-black text-white">{w.name}</span>
+                  {w.classYear ? <span className="rounded bg-white/90 px-1.5 py-0.5 text-[11px] font-black text-[#0A1628]">{w.classYear}</span> : null}
+                  {w.onBoard ? <Star className={`h-3.5 w-3.5 fill-current ${GOLD}`} aria-label="On your board" /> : null}
+                </span>
+                <span className="block truncate text-xs text-white/55">{[w.weight ? `${w.weight} lbs` : null, w.highSchool].filter(Boolean).join(" · ")}</span>
+                <span className="mt-1 flex flex-wrap items-center gap-1.5">
+                  <span className="text-[11px] font-bold text-emerald-300">✓ Interested in you · {ago(w.at)}</span>
+                  {w.room ? (
+                    <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ring-1 ${ROOM_TONE[w.room.need]}`} title={`${w.room.staying} on your roster at ${w.room.weight} in fall ${w.room.fall}`}>
+                      {w.room.weight}: {w.room.label}
+                    </span>
+                  ) : null}
+                </span>
+                {w.fit ? <FitBadge flag={w.fit} className="mt-1" /> : null}
+              </span>
+              <ArrowRight className="h-4 w-4 shrink-0 text-white/30" aria-hidden />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }

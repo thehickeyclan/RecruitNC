@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { BadgeCheck, GripVertical, Mail, Sparkles } from "lucide-react"
+import { BadgeCheck, GripVertical, Mail, Send, Sparkles } from "lucide-react"
 
 import { COLLEGE_LIST_STATUSES, COLLEGE_LIST_STATUS_LABEL, type CollegeListStatus } from "@/lib/college-programs/list"
 import { BrandName } from "@/components/recruiting/brand-name"
@@ -28,6 +28,8 @@ export type BoardCollege = {
   memo: string | null
   /** The college's coaches are on RecruitNC: they can see the profile and write in the app. */
   onRecruitNC: boolean
+  /** Told this program's coaches the wrestler is interested; null when it cannot be offered. */
+  interest?: boolean | null
 }
 
 const STAGE_HINT: Record<CollegeListStatus, string> = {
@@ -51,8 +53,12 @@ export function CollegeBoard({
   onMove,
   onEmail,
   onMemo,
+  onInterest,
+  interestName,
 }: {
   colleges: BoardCollege[]
+  onInterest?: (id: string) => void
+  interestName?: string
   onMove: (id: string, status: CollegeListStatus) => void
   onEmail: (id: string) => void
   onMemo: (id: string, memo: string) => void
@@ -171,6 +177,17 @@ export function CollegeBoard({
                       <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#D3B574]/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-[#D3B574]">
                         <BadgeCheck className="h-3 w-3" aria-hidden /> Coaches on <BrandName />
                       </p>
+                    ) : null}
+                    {c.interest != null && onInterest ? (
+                      c.interest ? (
+                        <button type="button" onClick={() => onInterest(c.id)} title="Undo" className="mt-2 flex items-center gap-1 text-[11px] font-bold text-emerald-300 hover:underline">
+                          <BadgeCheck className="h-3.5 w-3.5" aria-hidden /> Coaches know {interestName ?? "you"} {interestName ? "is" : "are"} interested
+                        </button>
+                      ) : (
+                        <button type="button" onClick={() => onInterest(c.id)} className="mt-2 inline-flex h-7 items-center gap-1 rounded-md border border-[#D3B574]/60 px-2 text-[11px] font-bold text-[#D3B574] hover:bg-[#D3B574]/10">
+                          <Send className="h-3.5 w-3.5" aria-hidden /> Tell the coaches you&apos;re interested
+                        </button>
+                      )
                     ) : null}
                     {c.cost ? <p className="mt-2 text-[11px] leading-4 text-white/55">{c.cost}</p> : null}
                     {c.note ? <p className="mt-1 text-[11px] font-semibold text-amber-200">{c.note}</p> : null}

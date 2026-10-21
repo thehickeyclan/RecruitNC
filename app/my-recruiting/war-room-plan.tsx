@@ -74,6 +74,27 @@ export function WarRoomPlan({
     Object.fromEntries(wrestlers.map((w) => [w.id, w.events])),
   )
   const [emailSchool, setEmailSchool] = useState<WarRoomSchool | null>(null)
+  // Which colleges each wrestler has told "we're interested" (Matt, 21 Oct 2026): athlete id -> school ids.
+  const [interest, setInterest] = useState<Record<string, string[]> | null>(null)
+  useEffect(() => {
+    fetch("/api/college-list/interest", { cache: "no-store" })
+      .then(async (res) => {
+        if (!res.ok) return
+        const body = (await res.json()) as { available: boolean; sent: Array<{ athleteId: string; schoolId: string }> }
+        if (!body.available) return
+        const by: Record<string, string[]> = {}
+        for (const x of body.sent) (by[x.athleteId] ??= []).push(x.schoolId)
+        setInterest(by)
+      })
+      .catch(() => {})
+  }, [])
+  const toggleInterest = async (schoolId: string) => {
+    const mine = interest?.[wrestler.id] ?? []
+    const on = !mine.includes(schoolId)
+    const res = await fetch("/api/college-list/interest", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ athleteId: wrestler.id, schoolId, interested: on }) }).catch(() => null)
+    if (!res?.ok) return
+    setInterest((cur) => ({ ...(cur ?? {}), [wrestler.id]: on ? [...mine, schoolId] : mine.filter((x) => x !== schoolId) }))
+  }
   const [draft, setDraft] = useState({ title: "", startDate: "", endDate: "", location: "" })
   const [error, setError] = useState<string | null>(null)
   const scheduleRef = useRef<HTMLDivElement | null>(null)
@@ -360,7 +381,10 @@ export function WarRoomPlan({
                   note: s.noTeam ? `${s.noTeam} in 2026-27` : s.hasQuestionnaire && s.status === "interested" ? "Questionnaire to fill out" : null,
                   memo: s.memo ?? null,
                   onRecruitNC: Boolean(s.onRecruitNC),
+                  interest: interest && s.onRecruitNC ? (interest[wrestler.id] ?? []).includes(s.id) : null,
                 }))}
+                interestName={wrestler.firstName}
+                onInterest={(id) => void toggleInterest(id)}
                 onMove={(id, status) => {
                   const school = schools.find((s) => s.id === id)
                   if (school) void setStatus(school, status)
