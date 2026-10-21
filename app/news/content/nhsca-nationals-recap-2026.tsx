@@ -14,7 +14,7 @@ export function NhscaNationalsRecap2026Content() {
       </p>
       <h2 className="!mt-2 !mb-2 text-[#003366]">NHSCA Nationals 2026 Recap</h2>
       <p className="text-base font-medium text-slate-600">
-        Virginia Beach, Va. | March 2026 | By NC United Wrestling
+        Virginia Beach, Va. | March 2026 | By NC United
       </p>
 
       <div className="my-6">

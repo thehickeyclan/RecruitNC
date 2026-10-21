@@ -69,8 +69,8 @@ function ProfileAd() {
 export function JourneymenFallClassic2026RecapContent() {
   return (
     <article className="max-w-none text-slate-700 [&_h2]:text-xl [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:font-bold [&_h2]:text-[#003366] [&_h3]:text-lg [&_h3]:mt-6 [&_h3]:mb-3 [&_h3]:font-bold [&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-6 [&_li]:my-1 [&_hr]:my-8 [&_hr]:border-slate-200">
-      <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">NC United Wrestling</p>
-      <p className="text-base font-medium text-slate-600">Schenectady, N.Y. | October 2–4, 2026 | By NC United Wrestling</p>
+      <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">NC United</p>
+      <p className="text-base font-medium text-slate-600">Schenectady, N.Y. | October 2–4, 2026 | By NC United</p>
 
 
       <p>
