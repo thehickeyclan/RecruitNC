@@ -33,6 +33,9 @@ export const NATIONAL_PATH_PREFIXES = [
   "/unsubscribe",
   "/api",
   "/dev",
+  // One admin, here (Matt, 22 Oct 2026). Community tools in it (Blue, store, TOC) still work; their
+  // public pages are NC United's and open on its address.
+  "/admin",
 ] as const
 
 export function isNationalPath(pathname: string): boolean {

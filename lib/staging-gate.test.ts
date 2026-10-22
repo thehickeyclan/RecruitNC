@@ -70,4 +70,24 @@ describe("the staging gate", () => {
     expect(await stagingGateAllows(bearer(await token({ sub: "u-admin", role: "authenticated", exp: future, email: "director@wrestlingclub.org" })), [])).toBe(true)
     expect(await stagingGateAllows(bearer(await token({ sub: "u-family", role: "authenticated", exp: future, email: "parent@gmail.com" })), [])).toBe(false)
   })
+
+  it("lets a scoped ranker reach the ranking board and nothing else", async () => {
+    vi.stubEnv("SUPABASE_JWT_SECRET", SECRET)
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co")
+    vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service")
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([{ is_admin: false, role: "parent" }]), { status: 200 })))
+    const ranker = bearer(
+      await token({
+        sub: "u-alan",
+        role: "authenticated",
+        exp: future,
+        email: "alan.ranker@gmail.com",
+        app_metadata: { ranking_board_access: [{ gender: "Male", years: "all", access: "edit", states: ["SC"] }] },
+      }),
+    )
+    for (const p of ["/admin/rankings/board", "/api/admin/rankings/board", "/api/admin/rankings/save"]) expect(await stagingGateAllows(ranker, [], p)).toBe(true)
+    for (const p of ["/admin", "/admin/users-dashboard", "/api/admin/rankings/stars", "/athletes/abc", "/api/prospects"]) expect(await stagingGateAllows(ranker, [], p), p).toBe(false)
+    const noGrant = bearer(await token({ sub: "u-family", role: "authenticated", exp: future, app_metadata: { ranking_board_access: [] } }))
+    expect(await stagingGateAllows(noGrant, [], "/admin/rankings/board")).toBe(false)
+  })
 })

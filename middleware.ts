@@ -60,7 +60,7 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
     if (pathname === "/robots.txt") {
       return new NextResponse("User-agent: *\nDisallow: /\n", { headers: { "Content-Type": "text/plain", "X-Robots-Tag": "noindex, nofollow" } })
     }
-    if (!isOpenWhileStaged(pathname) && !(await stagingGateAllows(request.headers, request.cookies.getAll()))) {
+    if (!isOpenWhileStaged(pathname) && !(await stagingGateAllows(request.headers, request.cookies.getAll(), pathname))) {
       if (pathname.startsWith("/api/")) {
         return NextResponse.json({ error: "Not available yet." }, { status: 403, headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" } })
       }
