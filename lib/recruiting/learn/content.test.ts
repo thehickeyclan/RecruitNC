@@ -14,7 +14,7 @@ describe("the rules library", () => {
 
   it("cites only the governing bodies, never a recruiting service", () => {
     for (const source of Object.values(SOURCES)) {
-      expect(source.url).toMatch(/ncaa\.org|ncaaorg\.s3|fs\.ncaa\.org|naia\.org|njcaa\.org|ardor-prod-media|ardorsportshub\.com|nchsaa\.org|ncisaa\.org|ivyleague\.com|ed\.gov|studentaid\.gov|oah\.state\.nc\.us|nwcaonline\.com/)
+      expect(source.url).toMatch(/ncaa\.org|ncaaorg\.s3|fs\.ncaa\.org|naia\.org|njcaa\.org|ardor-prod-media|ardorsportshub\.com|nchsaa\.org|ncisaa\.org|vhsl\.org|ivyleague\.com|ed\.gov|studentaid\.gov|oah\.state\.nc\.us|nwcaonline\.com/)
       expect(source.url).not.toMatch(/ncsasports|flowrestling|wikipedia/)
     }
   })
@@ -96,7 +96,14 @@ describe("the rules library", () => {
     }
   })
 
-  it("keeps the North Carolina page open to everyone", () => {
-    expect(LEARN_PAGES.filter((p) => p.free).map((p) => p.slug)).toEqual(["staying-eligible-in-north-carolina"])
+  it("keeps every state's own eligibility page open to everyone", () => {
+    /*
+     * The state pages are what a family needs before they need anything else, and the rules on
+     * them decide whether there is a season at all. The rest of the library is NC United Blue.
+     */
+    expect(LEARN_PAGES.filter((p) => p.free).map((p) => p.slug)).toEqual([
+      "staying-eligible-in-north-carolina",
+      "staying-eligible-in-virginia",
+    ])
   })
 })
