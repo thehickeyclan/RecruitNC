@@ -55,7 +55,7 @@ export async function ClassRankingPage({ year, gender = "Male" }: { year: number
       <div className="flex min-h-screen items-center justify-center bg-[#061224] px-4">
         <div className="max-w-md text-center">
           <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#CC0000]">
-            RecruitNC · North Carolina prospect rankings
+            <BrandName /> · North Carolina prospect rankings
           </p>
           <h1 className="mt-3 text-3xl font-light uppercase tracking-tight text-white">
             {board}Class of {year}
@@ -91,7 +91,7 @@ export async function ClassRankingPage({ year, gender = "Male" }: { year: number
       <section className="px-4 py-12 sm:py-16">
         <div className="mx-auto max-w-6xl">
           <p className="text-center text-[11px] font-bold uppercase tracking-[0.22em] text-[#CC0000]">
-            RecruitNC · North Carolina {womens ? "women's " : ""}prospect rankings
+            <BrandName /> · North Carolina {womens ? "women's " : ""}prospect rankings
           </p>
           <h1 className="mt-3 text-center text-4xl font-black uppercase tracking-tight text-white sm:text-5xl">
             {board}Class of {year}

@@ -25,6 +25,26 @@ html[data-host="national"] .auth-surface {
   background: #0B1426 !important;
 }
 
+html[data-host="national"] .admin-layout [class*="bg-gradient-to"]:is([class*="text-white"], [class*="text-[#"]) {
+  background-image: none !important;
+  background-color: #15243B !important;
+  color: #FFFFFF !important;
+  border: 1px solid #22324D !important;
+}
+
+html[data-host="national"] .admin-layout [class*="bg-gradient-to"]:is([class*="text-white"], [class*="text-[#"]):hover {
+  background-color: #22324D !important;
+  border-color: #A3E635 !important;
+}
+
+html[data-host="national"] .admin-layout [class*="bg-gradient-to"]:is([class*="text-white"], [class*="text-[#"]) svg {
+  color: #A3E635 !important;
+}
+
+html[data-host="national"] .admin-layout [class*="bg-gradient-to"] .text-blue-200 {
+  color: #A8B3C5 !important;
+}
+
 html[data-host="national"] .text-white\/50,
 html[data-host="national"] .text-white\/55,
 html[data-host="national"] .text-white\/60,

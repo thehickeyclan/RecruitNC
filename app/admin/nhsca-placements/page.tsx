@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, type DragEvent } from "react"
+import { BrandName } from "@/components/recruiting/brand-name"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -956,7 +957,7 @@ export default function NHSCAPlacementsPage() {
                     <tr className="border-b">
                       <th className="text-left p-2">Year</th>
                       <th className="text-left p-2">Athlete</th>
-                      <th className="text-left p-2">RecruitNC profile</th>
+                      <th className="text-left p-2"><BrandName /> profile</th>
                       <th className="text-left p-2">School</th>
                       <th className="text-left p-2">Division</th>
                       <th className="text-left p-2">Weight</th>
@@ -1035,7 +1036,7 @@ export default function NHSCAPlacementsPage() {
         >
           <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Link NHSCA row to RecruitNC profile</DialogTitle>
+              <DialogTitle>Link NHSCA row to <BrandName /> profile</DialogTitle>
               <DialogDescription>
                 Search athletes and choose the profile that matches{" "}
                 <span className="font-medium text-foreground">{linkPlacement?.athlete_name}</span>

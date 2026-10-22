@@ -327,6 +327,13 @@ export function buildCss() {
     `html[data-host="guild"] body,\nhtml[data-host="guild"] .auth-surface {\n  background: #0A0A0B !important;\n}`,
     // RecruitWrestlers: Midnight Navy page, Muted Gray for secondary text (Matt's palette, 20 Oct 2026).
     `html[data-host="national"] body,\nhtml[data-host="national"] .auth-surface {\n  background: #0B1426 !important;\n}`,
+    // RecruitWrestlers admin (Matt, 22 Oct 2026: one admin on recruitwrestlers.com, lime). Work
+    // areas stay light for tables and forms; NC United's rainbow of gradient tiles and its blue hero
+    // become Secondary Navy with lime icons. Light gradients (from-white cards) are untouched.
+    `html[data-host="national"] .admin-layout [class*="bg-gradient-to"]:is([class*="text-white"], [class*="text-[#"]) {\n  background-image: none !important;\n  background-color: #15243B !important;\n  color: #FFFFFF !important;\n  border: 1px solid #22324D !important;\n}`,
+    `html[data-host="national"] .admin-layout [class*="bg-gradient-to"]:is([class*="text-white"], [class*="text-[#"]):hover {\n  background-color: #22324D !important;\n  border-color: #A3E635 !important;\n}`,
+    `html[data-host="national"] .admin-layout [class*="bg-gradient-to"]:is([class*="text-white"], [class*="text-[#"]) svg {\n  color: #A3E635 !important;\n}`,
+    `html[data-host="national"] .admin-layout [class*="bg-gradient-to"] .text-blue-200 {\n  color: #A8B3C5 !important;\n}`,
     `html[data-host="national"] .text-white\\/50,\nhtml[data-host="national"] .text-white\\/55,\nhtml[data-host="national"] .text-white\\/60,\nhtml[data-host="national"] .text-white\\/65,\nhtml[data-host="national"] .text-white\\/70 {\n  color: #A8B3C5 !important;\n}`,
   ].join("\n\n")
   // For colours written as inline styles: var(--recruit-accent) is gold on NC United, the brand accent on a brand address.

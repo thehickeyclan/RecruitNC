@@ -1,3 +1,4 @@
+import { BrandName } from "@/components/recruiting/brand-name"
 /**
  * Why claim, above the name search on /create-profile.
  *
@@ -65,10 +66,10 @@ export function ClaimExplainer() {
   const video = CLAIM_VIDEO_URL ? embedUrl(CLAIM_VIDEO_URL) : null
   return (
     <section className="mx-auto mb-6 w-full max-w-xl text-white">
-      <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D3B574]">RecruitNC · Free for every wrestler</p>
+      <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D3B574]"><BrandName /> · Free for every wrestler</p>
       <h1 className="mt-2 text-2xl font-black leading-tight sm:text-3xl">College coaches recruit North Carolina wrestlers here.</h1>
       <p className="mt-3 text-white/75">
-        Men&apos;s and women&apos;s college programs use RecruitNC to find wrestlers. Claim your profile so they can reach
+        Men&apos;s and women&apos;s college programs use <BrandName /> to find wrestlers. Claim your profile so they can reach
         you, and see when they look.
       </p>
 
