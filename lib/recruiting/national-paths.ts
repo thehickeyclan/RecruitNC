@@ -73,6 +73,8 @@ export function isOpenWhileStaged(pathname: string): boolean {
     pathname === "/guild-recruiting/coming-soon" ||
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/api/auth/") ||
+    // Guild Ventures' Stripe webhook: Stripe has no session; the route verifies its signature.
+    pathname === "/api/webhooks/stripe-guild" ||
     pathname.startsWith("/_next/") ||
     pathname.startsWith("/guild/") ||
     (pathname.startsWith("/recruitwrestlers/") && /\.(png|jpe?g|svg|webp)$/.test(pathname))

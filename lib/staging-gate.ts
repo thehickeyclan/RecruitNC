@@ -42,3 +42,20 @@ export async function stagingGateAllows(
   if (isRankerPath(pathname) && Array.isArray(claims.appMetadata.ranking_board_access) && claims.appMetadata.ranking_board_access.length > 0) return true
   return isAdminUser(claims.sub)
 }
+
+/**
+ * A scoped ranker who is not an admin (Alan Faponte, SC). Their board lives on recruitwrestlers.com
+ * (Matt, 22 Oct 2026: "move alan over to the rankings portal in admin recruitwrestlers"), so the
+ * board on NC United's address forwards them there. Admins keep both addresses.
+ */
+export async function isRankerOnly(headers: Headers, cookies: Array<{ name: string; value: string }>): Promise<boolean> {
+  const secret = process.env.SUPABASE_JWT_SECRET
+  if (!secret) return false
+  const token = accessTokenFrom(headers, cookies)
+  if (!token) return false
+  const claims = await verifiedClaims(token, secret)
+  if (!claims) return false
+  const grants = claims.appMetadata.ranking_board_access
+  if (!Array.isArray(grants) || grants.length === 0) return false
+  return !(await isAdminUser(claims.sub))
+}
