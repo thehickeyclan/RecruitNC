@@ -92,11 +92,11 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
   ])
   const reach = summarizeContacts(contacts)
   const { data: threadRows } = threads.length ? await admin.from("coach_threads").select("id, coach_user_id, program").in("id", threads.map((t) => t.id)) : { data: [] }
-  const threadCollege = new Map<string, { threadId: string; yourTurn: boolean }>()
+  const threadCollege = new Map<string, { threadId: string; yourTurn: boolean; at: string | null }>()
   for (const row of threadRows ?? []) {
     const collegeId = await collegeIdForCoach(admin, String(row.coach_user_id), (row.program as string | null) ?? null).catch(() => null)
     const t = threads.find((x) => x.id === row.id)
-    if (collegeId && t && (!threadCollege.has(collegeId) || t.yourTurn)) threadCollege.set(collegeId, { threadId: t.id, yourTurn: t.yourTurn })
+    if (collegeId && t && (!threadCollege.has(collegeId) || t.yourTurn)) threadCollege.set(collegeId, { threadId: t.id, yourTurn: t.yourTurn, at: t.lastMessageAt ?? null })
   }
 
   if (board) {
@@ -108,7 +108,7 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
         inbound: {
           views: v ? { count: v.views, last: v.lastViewedAt } : null,
           message: threadCollege.get(s.id) ?? null,
-          contact: r ? { label: CONTACT_LABEL[r.latest.kind], date: new Date(`${r.latest.happenedOn}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }) } : null,
+          contact: r ? { label: CONTACT_LABEL[r.latest.kind], date: new Date(`${r.latest.happenedOn}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }), on: r.latest.happenedOn } : null,
         },
       }
     })
@@ -146,12 +146,14 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
           const r = reach.bySchool.get(s.id)
           if (!r) return null
           const label = r.stage === "offer" ? "Offer" : r.stage === "visit" ? "Visit" : CONTACT_LABEL[r.latest.kind]
-          return { label, date: new Date(`${r.latest.happenedOn}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }) }
+          return { label, on: r.latest.happenedOn, date: new Date(`${r.latest.happenedOn}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }) }
         })(),
         hasQuestionnaire: s.hasQuestionnaire,
         questionnaireDone: Boolean(s.questionnaireDone),
         admissions: s.admissions ?? NO_ADMISSIONS,
         admissionInfo: s.admissionInfo ?? null,
+        stageSince: s.stageSince ?? null,
+        questionnaireDoneAt: s.questionnaireDoneAt ?? null,
         note: s.memo ?? null,
       },
     ]

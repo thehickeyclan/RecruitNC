@@ -10,10 +10,10 @@ import { BOARD_STAGES, boardStage, type Admissions, type BoardStage, type Colleg
 export type Inbound = {
   /** Program views of the profile, and the latest. */
   views?: { count: number; last: string } | null
-  /** A coach conversation; yourTurn when the coach wrote last. */
-  message?: { threadId: string; yourTurn: boolean } | null
-  /** The latest contact the family logged from the coach (call, text, camp invite...). */
-  contact?: { label: string; date: string } | null
+  /** A coach conversation; yourTurn when the coach wrote last; at, the last message. */
+  message?: { threadId: string; yourTurn: boolean; at?: string | null } | null
+  /** The latest contact the family logged from the coach (call, text, camp invite...); on, its day. */
+  contact?: { label: string; date: string; on?: string | null } | null
 }
 
 export type ActivityCollege = {
@@ -63,6 +63,38 @@ export function activitiesFor(c: ActivityCollege, today: string): Activity[] {
     action: !applied && c.admissionInfo?.applyUrl ? { kind: "apply", href: c.admissionInfo.applyUrl } : null,
   })
   return out
+}
+
+export type LastActivity = { text: string; at: string; inbound: boolean }
+
+/**
+ * The newest thing that happened with this college, from either side (Matt, 22 Oct 2026: "make it
+ * easy to see last activity"). Null when nothing is dated.
+ */
+export function lastActivity(c: ActivityCollege & { questionnaireDoneAt?: string | null }): LastActivity | null {
+  const stageName: Record<BoardStage, string> = { interested: "Saved to the list", contacted: "Moved to Reached out", talking: "Moved to Talking", visited: "Moved to Visited", offer: "Moved to Offer" }
+  const events: LastActivity[] = []
+  if (c.stageSince) events.push({ text: stageName[boardStage(c.status)], at: c.stageSince, inbound: false })
+  if (c.questionnaireDoneAt) events.push({ text: "Interest form submitted", at: c.questionnaireDoneAt, inbound: false })
+  if (c.admissions?.submittedOn) events.push({ text: "Application submitted", at: `${c.admissions.submittedOn}T12:00:00Z`, inbound: false })
+  if (c.inbound?.views?.last) events.push({ text: "Coaches viewed the profile", at: c.inbound.views.last, inbound: true })
+  if (c.inbound?.message?.at) events.push({ text: c.inbound.message.yourTurn ? "The coach messaged" : "You messaged the coach", at: c.inbound.message.at, inbound: c.inbound.message.yourTurn })
+  if (c.inbound?.contact?.on) events.push({ text: `${c.inbound.contact.label} from the coach`, at: `${c.inbound.contact.on}T12:00:00Z`, inbound: true })
+  const ok = events.filter((e) => Number.isFinite(Date.parse(e.at)))
+  ok.sort((a, b) => Date.parse(b.at) - Date.parse(a.at))
+  return ok[0] ?? null
+}
+
+/** "today", "yesterday", "5 days ago", "3 weeks ago". */
+export function agoText(at: string, today: string): string {
+  // Calendar days in Eastern time: last night at 11pm is "yesterday", not "today".
+  const day = new Date(at).toLocaleDateString("en-CA", { timeZone: "America/New_York" })
+  const d = Math.max(0, Math.round((Date.parse(`${today}T12:00:00Z`) - Date.parse(`${day}T12:00:00Z`)) / 864e5))
+  if (d === 0) return "today"
+  if (d === 1) return "yesterday"
+  if (d < 14) return `${d} days ago`
+  if (d < 60) return `${Math.floor(d / 7)} weeks ago`
+  return `${Math.floor(d / 30)} months ago`
 }
 
 /** Days in a stage before a college reads as stale - a deal going cold. No clock on an offer. */

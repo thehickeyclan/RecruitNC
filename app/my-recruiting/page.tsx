@@ -7,6 +7,9 @@
  * ./load.ts, shared with the other portal pages.
  */
 import Link from "next/link"
+import { easternToday } from "@/lib/college-programs/admissions-format"
+import { nextStep, type ActivityAction } from "@/lib/college-programs/board-activities"
+import { loadListInbound } from "@/lib/college-programs/list-signals"
 import { ArrowRight, CalendarDays, Check, Circle, ClipboardList, DollarSign, HelpCircle, ListChecks, Mail, Scale } from "lucide-react"
 
 import { InfoSheetCard } from "@/components/portal/info-sheet-card"
@@ -60,14 +63,34 @@ export default async function CommandCenterHome() {
   const first = athletes[0] ?? null
   const w = wrestlers[0] ?? null
 
-  const [lastCompeted, unread, sheet, contacts, following] = await Promise.all([
+  const [lastCompeted, unread, sheet, contacts, following, inbound] = await Promise.all([
     first ? loadLastCompeted(admin, [first.id], new Map([[first.id, first.classYear]])).then((m) => m.get(first.id) ?? null).catch(() => null) : null,
     unreadCount(admin, viewerId).catch(() => 0),
     blue && first ? buildInfoSheet(admin, first.id).catch(() => null) : null,
     loadCollegeContacts(admin, athletes.map((a) => a.id)),
     // College programs following the wrestler: a count for the "where he competes next" reminder, never names.
     first ? programsFollowing(admin, first.id).catch(() => 0) : 0,
+    blue ? loadListInbound(admin, viewerId, athletes.map((a) => a.id)).catch(() => new Map()) : new Map(),
   ])
+  // Today's moves: the steps across the whole list that advance it most (lib/college-programs/board-activities.ts).
+  const todayET = easternToday()
+  const moves = blue
+    ? schools
+        .map((s) => ({ s, step: nextStep({ ...s, inbound: inbound.get(s.id) }, todayET) }))
+        .filter((m): m is { s: (typeof schools)[number]; step: NonNullable<ReturnType<typeof nextStep>> } => Boolean(m.step) && m.step!.rank < 4)
+        .sort((a, b) => a.step.rank - b.step.rank)
+        .slice(0, 5)
+    : []
+  const moveHref = (s: (typeof schools)[number], a: ActivityAction): { href: string; external?: boolean } =>
+    a.kind === "reply"
+      ? { href: `/inbox/${a.threadId}` }
+      : a.kind === "forms"
+        ? { href: "/my-recruiting/questionnaires" }
+        : a.kind === "apply"
+          ? { href: a.href, external: true }
+          : a.kind === "scout"
+            ? { href: "/my-recruiting/scout" }
+            : { href: "/my-recruiting/colleges?view=board" }
   // Who has reached out: what the family logged (calls, visits, offers happen off the platform).
   const reach = summarizeContacts(contacts)
   const viewedPrograms = athletes.reduce((n, a) => n + (views.get(a.id)?.programs ?? 0), 0)
@@ -249,6 +272,44 @@ export default async function CommandCenterHome() {
               <p className="mt-4 text-sm text-white/55">Nothing logged yet. When a coach calls, texts, invites you to camp, or you visit, tap the button.</p>
             )}
           </section>
+
+          {moves.length ? (
+            <section className={`${card} mt-6 p-5`} aria-labelledby="cc-moves">
+              <div className="flex items-baseline justify-between">
+                <h2 id="cc-moves" className={title}>
+                  Today&apos;s moves
+                </h2>
+                <Link href="/my-recruiting/colleges?view=board" className="text-xs font-semibold text-[#D3B574] hover:underline">
+                  Open the pipeline
+                </Link>
+              </div>
+              <ul className="mt-3 divide-y divide-white/5">
+                {moves.map(({ s, step }) => {
+                  const go = moveHref(s, step.action)
+                  return (
+                    <li key={s.id} className="flex items-center gap-3 py-2.5">
+                      <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${step.tone === "urgent" ? "bg-rose-400" : step.rank <= 2 ? "bg-sky-400" : "bg-amber-300"}`} aria-hidden />
+                      {s.logo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={s.logo} alt="" className="h-8 w-8 shrink-0 rounded bg-white object-contain p-0.5" />
+                      ) : null}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-bold">{s.name}</span>
+                        {step.why ? <span className="block text-xs text-white/50">{step.why}</span> : null}
+                      </span>
+                      <a
+                        href={go.href}
+                        {...(go.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                        className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-black text-[#0A1628] ${step.tone === "urgent" ? "bg-rose-400" : "bg-[#D3B574] hover:bg-[#e2c98d]"}`}
+                      >
+                        {step.label}
+                      </a>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          ) : null}
 
           {blue && formsWaiting > 0 ? (
             <Link
