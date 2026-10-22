@@ -98,7 +98,7 @@ export function QuestionnairePack({
 
         <div className={`${card} p-5`}>
           <h2 className="text-lg font-black">To do</h2>
-          <p className="mt-1 text-sm text-white/60">Open the form, copy each answer across, check it, and press Submit on their page. Then tap Submitted here.</p>
+          <p className="mt-1 text-sm text-white/60">Open the form, fill it in, check it and press Submit on the college&apos;s page. Then come back and tap Mark as submitted.</p>
           {forms.length === 0 ? (
             <p className="mt-4 text-sm text-white/60">
               None of the colleges on your list has a form on file yet. <a className="font-semibold text-[#D3B574]" href="/my-recruiting/colleges">Add colleges</a>
@@ -124,7 +124,7 @@ export function QuestionnairePack({
                 <li key={f.schoolId} className="flex items-center gap-3 py-2.5">
                   <Logo src={f.logo} />
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-bold">{f.name}</p>
+                    <p className="line-clamp-2 font-bold leading-5">{f.name}</p>
                     <p className="text-xs text-emerald-300">{f.doneAt ? `Submitted ${stamp(f.doneAt)}` : "Submitted"}</p>
                   </div>
                   {!readOnly ? (
@@ -272,16 +272,21 @@ function FormRow({ form, readOnly, onMark }: { form: PackForm; readOnly: boolean
   return (
     <li className="flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-3">
       <Logo src={form.logo} />
-      <div className="min-w-0 flex-1 basis-40">
-        <p className="truncate font-bold">{form.name}</p>
-        <p className="text-xs text-white/50">{form.level}</p>
+      <div className="min-w-0 flex-1 basis-48">
+        <p className="line-clamp-2 font-bold leading-5">{form.name}</p>
+        <p className="mt-0.5 flex items-center gap-2 text-xs">
+          <span className="text-white/50">{form.level}</span>
+          <span className="inline-flex items-center gap-1 font-semibold text-amber-200">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-300" aria-hidden /> Not submitted yet
+          </span>
+        </p>
       </div>
-      <div className="flex w-full gap-2 sm:w-auto">
+      <div className="flex w-full items-center gap-3 sm:w-auto">
         <a href={form.url} data-ncu-form={form.schoolId} target="_blank" rel="noopener noreferrer" className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#D3B574] px-3 py-1.5 text-sm font-black text-[#0A1628] sm:flex-none">
           Open form <ExternalLink className="h-3.5 w-3.5" aria-hidden />
         </a>
-        <button type="button" onClick={onMark} disabled={readOnly} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-white/20 px-3 py-1.5 text-sm font-bold hover:border-emerald-400 disabled:opacity-50 sm:flex-none">
-          <Check className="h-3.5 w-3.5" aria-hidden /> Submitted
+        <button type="button" onClick={onMark} disabled={readOnly} className="shrink-0 text-sm font-semibold text-white/60 underline-offset-2 hover:text-white hover:underline disabled:opacity-50">
+          Mark as submitted
         </button>
       </div>
     </li>
