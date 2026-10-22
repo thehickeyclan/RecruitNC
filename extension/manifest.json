@@ -1,14 +1,15 @@
 {
   "manifest_version": 3,
-  "name": "NC United Interest Form Helper",
-  "version": "0.1.0",
-  "description": "Fills college wrestling interest forms with your NC United answers. You check each one and press Submit.",
+  "name": "RecruitWrestlers Interest Form Helper",
+  "version": "0.2.0",
+  "description": "Fills college wrestling interest forms with your RecruitWrestlers answers. You check each one and press Submit.",
   "permissions": [
     "storage",
     "activeTab",
     "scripting"
   ],
   "host_permissions": [
+    "https://www.recruitwrestlers.com/*",
     "https://app.ncwrestlingunited.com/*"
   ],
   "background": {
@@ -16,7 +17,11 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "NC United Interest forms"
+    "default_title": "RecruitWrestlers interest forms",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "48": "icons/icon-48.png"
+    }
   },
   "content_scripts": [
     {
@@ -28,6 +33,7 @@
         "https://app.spry.so/*",
         "https://*/sb_output.aspx*",
         "https://*/form/*",
+        "https://www.recruitwrestlers.com/my-recruiting/*",
         "https://app.ncwrestlingunited.com/my-recruiting/*"
       ],
       "js": [
@@ -46,5 +52,10 @@
         "https://*/*"
       ]
     }
-  ]
+  ],
+  "icons": {
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
 }

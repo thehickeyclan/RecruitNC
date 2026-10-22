@@ -10,7 +10,7 @@ const send = (msg: Record<string, unknown>) => new Promise<any>((resolve) => chr
 void (async () => {
   const data = await send({ type: "load", fresh: true })
   if (!data?.signedIn) {
-    statusEl.innerHTML = `Not signed in. <a href="#" id="signin">Sign in to NC United</a>`
+    statusEl.innerHTML = `Not signed in. <a href="#" id="signin">Sign in to RecruitWrestlers</a>`
     document.getElementById("signin")!.addEventListener("click", () => void send({ type: "open", path: "/auth/signin?returnTo=/my-recruiting/questionnaires" }))
     fill.disabled = true
     return

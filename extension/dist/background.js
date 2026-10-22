@@ -1,19 +1,33 @@
 "use strict";
 (() => {
   // extension/src/background.ts
-  var DEFAULT_BASE = "https://app.ncwrestlingunited.com";
+  var BASES = ["https://www.recruitwrestlers.com", "https://app.ncwrestlingunited.com"];
   var CACHE_MS = 2 * 60 * 1e3;
   var cache = null;
-  async function base() {
+  async function bases() {
     const { base: base2 } = await chrome.storage.local.get("base");
-    return typeof base2 === "string" && /^https?:\/\//.test(base2) ? base2.replace(/\/$/, "") : DEFAULT_BASE;
+    const pinned = typeof base2 === "string" && /^https?:\/\//.test(base2) ? [base2.replace(/\/$/, "")] : [];
+    return [...pinned, ...BASES.filter((b) => !pinned.includes(b))];
+  }
+  async function base() {
+    return cache?.base ?? (await bases())[0];
   }
   async function load(fresh = false) {
     if (!fresh && cache && Date.now() - cache.at < CACHE_MS) return cache.data;
-    const res = await fetch(`${await base()}/api/questionnaire/helper`, { credentials: "include", cache: "no-store" }).catch(() => null);
-    const data = res ? await res.json().catch(() => ({ signedIn: false })) : { signedIn: false, offline: true };
-    cache = { at: Date.now(), data };
-    return data;
+    let first = null;
+    for (const b of await bases()) {
+      const res = await fetch(`${b}/api/questionnaire/helper`, { credentials: "include", cache: "no-store" }).catch(() => null);
+      const data = res ? await res.json().catch(() => ({ signedIn: false })) : { signedIn: false, offline: true };
+      if (res?.status === 403 && data.signedIn === void 0) continue;
+      first ??= { data, base: b };
+      if (data.signedIn) {
+        cache = { at: Date.now(), data, base: b };
+        return data;
+      }
+    }
+    first ??= { data: { signedIn: false }, base: BASES[BASES.length - 1] };
+    cache = { at: Date.now(), ...first };
+    return first.data;
   }
   chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
     void (async () => {
