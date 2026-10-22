@@ -13,7 +13,7 @@ import { hasPremiumAccess } from "@/lib/ranking-visibility"
 import { mostRecentGraduatedClassYear, seniorClassYear } from "@/lib/class-years"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
-import { isCollegeListStatus, questionnaireDone, type CollegeListStatus } from "@/lib/college-programs/list"
+import { admissionsOf, isCollegeListStatus, questionnaireDone, type CollegeListStatus } from "@/lib/college-programs/list"
 import { loadCollegeMap } from "@/lib/college-programs/load"
 import { schoolLogoUrl } from "@/lib/college-programs/logo"
 import { gradeLabel } from "@/lib/college-programs/outreach-results"
@@ -89,10 +89,14 @@ export async function loadCommandCenter(returnTo: string) {
       // The interest-form column may not exist yet (scripts/add-college-list-questionnaire-done.sql): fall back.
       admin
         .from("college_list_items")
-        .select("school_id, status, note, updated_at, questionnaire_done_at")
+        .select("school_id, status, note, updated_at, questionnaire_done_at, app_plan, app_status, app_submitted_on, preread")
         .eq("user_id", viewerId)
         .order("updated_at", { ascending: false })
-        .then((r) => (r.error?.code === "42703" ? admin.from("college_list_items").select("school_id, status, note, updated_at").eq("user_id", viewerId).order("updated_at", { ascending: false }) : r)),
+        .then(async (r) => {
+          if (r.error?.code !== "42703") return r
+          const q = await admin.from("college_list_items").select("school_id, status, note, updated_at, questionnaire_done_at").eq("user_id", viewerId).order("updated_at", { ascending: false })
+          return q.error?.code === "42703" ? admin.from("college_list_items").select("school_id, status, note, updated_at").eq("user_id", viewerId).order("updated_at", { ascending: false }) : q
+        }),
       ...athletes.map((a) => listUpcomingEvents(admin, a.id).catch(() => ({ available: false, events: [] as UpcomingEvent[] }))),
     ])
     schools = (list.data ?? []).flatMap((row) => {
@@ -108,6 +112,7 @@ export async function loadCommandCenter(returnTo: string) {
           status,
           logo: null as string | null,
           hasQuestionnaire: questionnairesForSchool(school.id).length > 0,
+          admissions: admissionsOf(row as Record<string, unknown>),
           questionnaireDone: questionnaireDone({ status, questionnaireDoneAt: (row as { questionnaire_done_at?: string | null }).questionnaire_done_at ?? null }),
           savedAt: row.updated_at ? String(row.updated_at) : null,
           memo: row.note ? String(row.note) : null,

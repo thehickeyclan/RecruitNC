@@ -15,7 +15,7 @@ import { PortalShell } from "@/components/portal/portal-shell"
 import { collegeIdForCoach } from "@/lib/coach-messages-extras"
 import { listThreads } from "@/lib/coach-messages"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
-import { COLLEGE_LIST_STATUSES, COLLEGE_LIST_STATUS_LABEL } from "@/lib/college-programs/list"
+import { COLLEGE_LIST_STATUSES, COLLEGE_LIST_STATUS_LABEL, NO_ADMISSIONS } from "@/lib/college-programs/list"
 import { buildMapPreview } from "@/lib/college-programs/map-preview"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { yearlyCostFor } from "@/lib/college-programs/tuition"
@@ -128,6 +128,7 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
         })(),
         hasQuestionnaire: s.hasQuestionnaire,
         questionnaireDone: Boolean(s.questionnaireDone),
+        admissions: s.admissions ?? NO_ADMISSIONS,
         note: s.memo ?? null,
       },
     ]
