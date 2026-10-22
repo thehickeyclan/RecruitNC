@@ -1,6 +1,7 @@
 "use client"
 
 import type { AdmissionsSummary } from "@/lib/college-programs/admissions-format"
+import type { Inbound } from "@/lib/college-programs/board-activities"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { CalendarDays, Check, ChevronRight, Circle, ListChecks, Lock, Mail, MapPin, X } from "lucide-react"
 
@@ -32,6 +33,10 @@ export type WarRoomSchool = {
   admissions?: Admissions
   /** The college's own deadlines and basics for this cycle (lib/college-programs/admissions.ts). */
   admissionInfo?: AdmissionsSummary | null
+  /** When it entered its stage (or its last change, before that is stored). */
+  stageSince?: string | null
+  /** What came in from the college: views, messages, contacts (the college list page adds these). */
+  inbound?: Inbound
   /** "$31,450 tuition" for a North Carolina family (2023-24, tuition only), or null. */
   tuition: string | null
   /** The family's own note on the college: calls, what the coach said, next steps. */
@@ -405,10 +410,14 @@ export function WarRoomPlan({
                   status: s.status,
                   logo: s.logo,
                   cost: s.tuition,
-                  note: s.noTeam ? `${s.noTeam} in 2026-27` : s.hasQuestionnaire && !s.questionnaireDone ? "Interest form to fill out" : null,
+                  note: s.noTeam ? `${s.noTeam} in 2026-27` : null,
+                  hasQuestionnaire: s.hasQuestionnaire,
                   questionnaireDone: Boolean(s.questionnaireDone),
                   admissions: s.admissions ?? NO_ADMISSIONS,
                   admissionInfo: s.admissionInfo ?? null,
+                  stageSince: s.stageSince ?? null,
+                  questionnaireDoneAt: s.questionnaireDoneAt ?? null,
+                  inbound: s.inbound,
                   memo: s.memo ?? null,
                   onRecruitNC: Boolean(s.onRecruitNC),
                   interest: interest && s.onRecruitNC ? (interest[wrestler.id] ?? []).includes(s.id) : null,

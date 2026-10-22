@@ -71,10 +71,7 @@ export async function PUT(request: NextRequest) {
   }
   const note = typeof body?.note === "string" ? body.note.trim().slice(0, 2000) || null : undefined
 
-  const { data: row, error } = await admin
-    .from("college_list_items")
-    .upsert(
-      {
+  const payload = {
         user_id: userId,
         school_id: schoolId,
         ...(body?.status !== undefined ? { status: body.status } : {}),
@@ -102,11 +99,17 @@ export async function PUT(request: NextRequest) {
             )
           : {}),
         updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id,school_id" },
-    )
-    .select(typeof body?.questionnaireDone === "boolean" || body?.admissions ? COLUMNS : OLD_COLUMNS)
-    .single()
+      }
+  const save = (extra: Record<string, unknown>) =>
+    admin
+      .from("college_list_items")
+      .upsert({ ...payload, ...extra }, { onConflict: "user_id,school_id" })
+      .select(typeof body?.questionnaireDone === "boolean" || body?.admissions ? COLUMNS : OLD_COLUMNS)
+      .single()
+  // A stage move starts the days-in-stage clock (scripts/add-college-list-stage-changed.sql); before
+  // that column exists the save goes through without it.
+  let { data: row, error } = await save(body?.status !== undefined ? { stage_changed_at: new Date().toISOString() } : {})
+  if (error?.code === COLUMN_MISSING && body?.status !== undefined) ({ data: row, error } = await save({}))
   if (error || !row) {
     console.error("[college-list] save failed", error)
     return NextResponse.json({ error: "Could not save. Try again." }, { status: 500 })

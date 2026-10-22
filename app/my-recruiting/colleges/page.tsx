@@ -72,7 +72,7 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
     </div>
   )
 
-  if (!wrestlers.length || !blue || board) {
+  if (!wrestlers.length || !blue) {
     return (
       <PortalShell active="colleges">
         {header}
@@ -81,10 +81,11 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
     )
   }
 
-  // Fit, verified coach activity and cost for every college on the list.
+  // Fit, verified coach activity and cost for every college on the list. The board reads the same
+  // inbound signals (views, coach messages, logged contacts) as the list.
   const ids = athletes.map((a) => a.id)
   const [ctx, views, threads, contacts] = await Promise.all([
-    loadFamilyFitContext(admin, viewerId, focus?.gender ?? null).catch(() => null),
+    board ? null : loadFamilyFitContext(admin, viewerId, focus?.gender ?? null).catch(() => null),
     collegeViewsFor(admin, ids).catch(() => new Map()),
     listThreads(admin, viewerId).catch(() => []),
     loadCollegeContacts(admin, ids),
@@ -96,6 +97,27 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
     const collegeId = await collegeIdForCoach(admin, String(row.coach_user_id), (row.program as string | null) ?? null).catch(() => null)
     const t = threads.find((x) => x.id === row.id)
     if (collegeId && t && (!threadCollege.has(collegeId) || t.yourTurn)) threadCollege.set(collegeId, { threadId: t.id, yourTurn: t.yourTurn })
+  }
+
+  if (board) {
+    const withSignals = schools.map((s) => {
+      const v = views.get(s.id)
+      const r = reach.bySchool.get(s.id)
+      return {
+        ...s,
+        inbound: {
+          views: v ? { count: v.views, last: v.lastViewedAt } : null,
+          message: threadCollege.get(s.id) ?? null,
+          contact: r ? { label: CONTACT_LABEL[r.latest.kind], date: new Date(`${r.latest.happenedOn}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }) } : null,
+        },
+      }
+    })
+    return (
+      <PortalShell active="colleges">
+        {header}
+        <WarRoomPlan blue={blue} wrestlers={wrestlers} schools={withSignals} show={["list"]} />
+      </PortalShell>
+    )
   }
 
   const rows: ListRow[] = schools.flatMap((s) => {
