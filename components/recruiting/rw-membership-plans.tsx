@@ -33,6 +33,19 @@ export function RwMembershipPlans({ returnTo = "/membership" }: { returnTo?: str
   const [busy, setBusy] = useState<Kind | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [purchased, setPurchased] = useState(false)
+  const [status, setStatus] = useState<{ insider: boolean; commandCenter: boolean; via: string | null; email: string | null } | null>(null)
+
+  // Say what the account already has before anyone clicks: a refusal after the click read as a dead button.
+  useEffect(() => {
+    if (!user) return
+    void fetch("/api/membership/status", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s) => s && setStatus(s))
+      .catch(() => {})
+  }, [user])
+  const has = (kind: Kind) => (kind === "command_center" ? status?.commandCenter : status?.insider) === true
+  const viaText =
+    status?.via === "staff" ? "as staff" : status?.via === "blue" ? "through NC United Blue" : status?.via === "coach" ? "as a college coach" : "with your membership"
 
   useEffect(() => {
     const q = new URLSearchParams(window.location.search)
@@ -74,13 +87,39 @@ export function RwMembershipPlans({ returnTo = "/membership" }: { returnTo?: str
   }
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto max-w-5xl">
+      {status && (status.insider || status.commandCenter) && !purchased ? (
+        <p className="mb-5 rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 text-center text-sm text-[#D6DEEA]">
+          {status.email ? <span className="font-semibold text-white">{status.email}</span> : "This account"} already has{" "}
+          {status.commandCenter ? "the Recruiting Command Center" : "Insider"} {viaText}. Nothing to buy here; to test a purchase, sign in with an account that has no plan.
+        </p>
+      ) : null}
       {purchased ? (
         <p className="mb-5 rounded-xl border border-[#A3E635]/50 bg-[#A3E635]/10 px-4 py-3 text-center text-sm font-semibold text-[#A3E635]">
           You&apos;re in. Your membership is active; it can take a minute to show everywhere.
         </p>
       ) : null}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-3">
+        {/* Free first (Matt, 22 Oct 2026): the profile, claiming it and coach messages cost nothing. */}
+        <div className="flex flex-col rounded-2xl border border-white/10 bg-[#15243B]/40 p-6 text-left">
+          <p className="text-sm font-black uppercase tracking-wider text-white">Free</p>
+          <p className="mt-2 text-4xl font-black text-white">
+            $0<span className="text-base font-semibold text-[#A8B3C5]"> / always</span>
+          </p>
+          <ul className="mt-4 flex-1 space-y-2 text-sm text-white/85">
+            {["Your free account", "Claim your wrestler's profile", "Results, highlights and academics in one place", "College coaches can find and message you"].map((l) => (
+              <li key={l} className="flex gap-2">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#A3E635]" aria-hidden /> {l}
+              </li>
+            ))}
+          </ul>
+          <a
+            href={user ? "/create-profile" : "/auth/signup"}
+            className="mt-6 flex items-center justify-center rounded-xl border border-white/25 px-5 py-3.5 text-base font-black text-white hover:bg-white/5"
+          >
+            {user ? "Claim your profile" : "Create free account"}
+          </a>
+        </div>
         {PLANS.map((plan) => (
           <div
             key={plan.kind}
@@ -101,11 +140,11 @@ export function RwMembershipPlans({ returnTo = "/membership" }: { returnTo?: str
             <button
               type="button"
               onClick={() => void start(plan.kind)}
-              disabled={busy !== null}
+              disabled={busy !== null || has(plan.kind)}
               className={`mt-6 flex items-center justify-center gap-2 rounded-xl px-5 py-3.5 text-base font-black disabled:opacity-60 ${plan.featured ? "bg-[#A3E635] text-[#0B1426] hover:bg-[#BEF264]" : "border border-[#A3E635] text-[#A3E635] hover:bg-[#A3E635]/10"}`}
             >
               {busy === plan.kind ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
-              {user ? `Join ${plan.name === "Insider" ? "Insider" : "the Command Center"}` : "Sign in to join"}
+              {has(plan.kind) ? "Included in your account" : user ? `Join ${plan.name === "Insider" ? "Insider" : "the Command Center"}` : "Sign in to join"}
             </button>
           </div>
         ))}
