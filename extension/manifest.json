@@ -1,0 +1,49 @@
+{
+  "manifest_version": 3,
+  "name": "NC United Interest Form Helper",
+  "version": "0.1.0",
+  "description": "Fills college wrestling interest forms with your NC United answers. You check each one and press Submit.",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://app.ncwrestlingunited.com/*"
+  ],
+  "background": {
+    "service_worker": "dist/background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "NC United Interest forms"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.armssoftware.com/*",
+        "https://*.frontrush.com/*",
+        "https://*.jumpforward.com/*",
+        "https://*.arirecruiting.com/*",
+        "https://*/sb_output.aspx*",
+        "https://*/form/*",
+        "https://app.ncwrestlingunited.com/my-recruiting/*"
+      ],
+      "js": [
+        "dist/content.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "dist/page.js"
+      ],
+      "matches": [
+        "https://*/*"
+      ]
+    }
+  ]
+}

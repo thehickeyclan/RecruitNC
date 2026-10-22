@@ -74,7 +74,7 @@ export const ANSWER_FIELDS: AnswerField[] = [
   { key: "sat", label: "SAT total", group: "school", source: "profile", match: [/^sat( total| score)?$/] },
   { key: "act", label: "ACT", group: "school", source: "profile", match: [/^act( composite| score)?$/] },
   { key: "classRank", label: "Class rank", group: "school", source: "family", hint: "e.g. 24 of 410, if the school ranks", match: [/class rank/] },
-  { key: "major", label: "Intended major", group: "school", source: "profile", match: [/major|academic interest|field of study/] },
+  { key: "major", label: "Intended major", group: "school", source: "profile", match: [/^(?!graduate).*(major|academic interest|field of study)/] },
   { key: "academicHonors", label: "Academic honors", group: "school", source: "family", match: [/academic honou?rs|academic awards/] },
   { key: "ncaaId", label: "NCAA Eligibility Center ID", group: "school", source: "family", hint: "10 digits, from the NCAA Eligibility Center", match: [/ncaa.*(id|number)|eligibility center/] },
 

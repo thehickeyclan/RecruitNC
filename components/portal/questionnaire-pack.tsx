@@ -277,7 +277,7 @@ function FormRow({ form, readOnly, onMark }: { form: PackForm; readOnly: boolean
         <p className="text-xs text-white/50">{form.level}</p>
       </div>
       <div className="flex w-full gap-2 sm:w-auto">
-        <a href={form.url} target="_blank" rel="noopener noreferrer" className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#D3B574] px-3 py-1.5 text-sm font-black text-[#0A1628] sm:flex-none">
+        <a href={form.url} data-ncu-form={form.schoolId} target="_blank" rel="noopener noreferrer" className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#D3B574] px-3 py-1.5 text-sm font-black text-[#0A1628] sm:flex-none">
           Open form <ExternalLink className="h-3.5 w-3.5" aria-hidden />
         </a>
         <button type="button" onClick={onMark} disabled={readOnly} className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-white/20 px-3 py-1.5 text-sm font-bold hover:border-emerald-400 disabled:opacity-50 sm:flex-none">

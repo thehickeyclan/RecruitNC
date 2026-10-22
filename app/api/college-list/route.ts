@@ -63,7 +63,7 @@ export async function PUT(request: NextRequest) {
   const { admin, userId } = await listOwner()
   if (!userId) return NextResponse.json({ error: "My List is part of NC United Blue." }, { status: 403 })
 
-  const body = (await request.json().catch(() => null)) as { schoolId?: unknown; status?: unknown; note?: unknown; questionnaireDone?: unknown; admissions?: Record<string, unknown> } | null
+  const body = (await request.json().catch(() => null)) as { schoolId?: unknown; status?: unknown; note?: unknown; questionnaireDone?: unknown; via?: unknown; admissions?: Record<string, unknown> } | null
   const schoolId = typeof body?.schoolId === "string" ? body.schoolId : ""
   if (!SCHOOL_IDS.has(schoolId)) return NextResponse.json({ error: "Unknown school." }, { status: 400 })
   if (body?.status !== undefined && !isCollegeListStatus(body.status)) {
@@ -79,7 +79,13 @@ export async function PUT(request: NextRequest) {
         school_id: schoolId,
         ...(body?.status !== undefined ? { status: body.status } : {}),
         ...(note !== undefined ? { note } : {}),
-        ...(typeof body?.questionnaireDone === "boolean" ? { questionnaire_done_at: body.questionnaireDone ? new Date().toISOString() : null } : {}),
+        ...(typeof body?.questionnaireDone === "boolean"
+          ? {
+              questionnaire_done_at: body.questionnaireDone ? new Date().toISOString() : null,
+              // "helper": the autofill helper saw the college's thank-you page; else the family ticked it.
+              questionnaire_done_via: body.questionnaireDone ? (body.via === "helper" ? "helper" : "family") : null,
+            }
+          : {}),
         // Each admissions field the request names; null clears it.
         ...(body?.admissions && typeof body.admissions === "object"
           ? Object.fromEntries(
