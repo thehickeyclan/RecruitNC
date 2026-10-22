@@ -136,10 +136,22 @@ async function main() {
   const active = currentClassYears()
   const inSchool = (y: number | null) => y != null && y >= active[0]! && y <= active[active.length - 1]!
 
-  const athletes = await page<{ id: string; name: string; highschool: string | null; state: string | null }>(
+  /*
+   * Only this state's profiles can be the wrestler in front of us.
+   *
+   * The candidate list was every profile in the country, so a namesake in another state blocked
+   * minting: Noah Tucker of Bullis School, Maryland - three MIS seasons, 2026 champion at 175 -
+   * went unminted because Noah Tucker of Union County, South Carolina already existed, a
+   * different boy at a different weight in a different state. Profiles carry a state now, so
+   * that is answerable. A profile with no state is still considered, since it cannot disagree.
+   */
+  const athletes = (await page<{ id: string; name: string; highschool: string | null; state: string | null }>(
     "athletes",
     "id, name, highschool, state",
-  )
+  )).filter((a) => {
+    const s = String(a.state ?? "").trim().toUpperCase()
+    return !s || s === STATE
+  })
 
   const toLink: Array<{ ids: string[]; athleteId: string; label: string }> = []
   const toCreate: Array<{ row: Record<string, unknown>; label: string; ids: string[] }> = []

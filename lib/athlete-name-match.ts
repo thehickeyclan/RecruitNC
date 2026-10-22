@@ -256,6 +256,9 @@ export function schoolsLikelySame(a?: string | null, b?: string | null): boolean
   const fold = (v?: string | null) =>
     normalizeApostrophes((v ?? "").trim().toLowerCase().replace(/`/g, "'"))
       .replace(/\bhigh school\b|\bhigh\b|\bh\.?s\.?\b|\bschool\b/g, " ")
+      /* "Saint" and "St." are the same word, and brackets use both: Virginia's 2026 field has
+         "Saint John Paul the Great Catholic High School" and "St. John Paul the Great Catholic". */
+      .replace(/\bsaint\b/g, "st")
       .replace(/[^a-z0-9]+/g, " ")
       .split(" ")
       .filter((w) => w.length > 1)
