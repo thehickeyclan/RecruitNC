@@ -25,7 +25,8 @@ if (!w.__ncuHelper) {
 
 /** The page-world helper (page.ts), for date pickers only the page's own code can set. */
 function injectPageHelper() {
-  if (document.getElementById("ncu-page-helper")) return
+  // Only Front Rush's date picker needs it, and only Front Rush may load it (manifest).
+  if (!/(^|\.)frontrush\.com$/.test(location.hostname) || document.getElementById("ncu-page-helper")) return
   const script = document.createElement("script")
   script.id = "ncu-page-helper"
   script.src = chrome.runtime.getURL("dist/page.js")
