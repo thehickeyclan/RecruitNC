@@ -7,6 +7,7 @@
 import { notFound } from "next/navigation"
 
 import { CollegeListTable, type ListRow } from "@/components/portal/college-list-table"
+import { QuestionnairePack } from "@/components/portal/questionnaire-pack"
 import { RoadmapBoard } from "@/components/portal/roadmap-board"
 import { schoolLogoUrl } from "@/lib/college-programs/logo"
 import data from "@/lib/college-programs/programs-2026-27.json"
@@ -83,7 +84,24 @@ export default async function Screens({ searchParams }: { searchParams?: Promise
     <div className="admin-dark-page min-h-screen bg-[#060f1f] p-8 text-white">
       {/* A screenshot shows the product only: no site menu, assistant bubble or dev badge. */}
       <style>{shot === "coach-warning" ? "nav[aria-label='Main navigation'],nextjs-portal,footer{display:none!important}" : "nav[aria-label='Main navigation'],nextjs-portal,.fixed,footer{display:none!important}"}</style>
-      {shot === "coach-warning" ? (
+      {shot === "forms" ? (
+        <div className="mx-auto max-w-7xl">
+          <QuestionnairePack
+            athleteId="example"
+            firstName="Jordan"
+            readOnly={false}
+            forms={rows.slice(0, 5).map((r, i) => ({ schoolId: r.id, name: r.name, level: r.level, logo: r.logo, url: "https://example.com", done: i === 2, doneAt: i === 2 ? "2026-10-20T19:14:00Z" : null }))}
+            noForm={[{ id: "belmont-abbey-college", name: "Belmont Abbey College" }]}
+            answers={{
+              available: true,
+              updatedAt: null,
+              own: ["dob", "street", "city", "state", "zip", "parent1Name", "parent1Phone", "parent1Email", "heightFt", "heightIn"],
+              profile: { firstName: "Jordan", lastName: "Example", gradYear: "2028", highSchool: "Example High School", gpa: "3.7", weight: "150", club: "Example Wrestling Club" },
+              values: { firstName: "Jordan", lastName: "Example", gradYear: "2028", highSchool: "Example High School", gpa: "3.7", weight: "150", club: "Example Wrestling Club", dob: "2010-03-14", street: "100 Example St", city: "Raleigh", state: "NC", zip: "27601", parent1Name: "Pat Example", parent1Phone: "(919) 555-0100", parent1Email: "pat@example.com", heightFt: "5", heightIn: "8" },
+            }}
+          />
+        </div>
+      ) : shot === "coach-warning" ? (
         <CoachWarningPreview />
       ) : shot === "scout-email" ? (
         <div className="mx-auto max-w-3xl">

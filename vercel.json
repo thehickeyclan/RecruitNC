@@ -71,6 +71,10 @@
       "schedule": "0 13 * * 1"
     },
     {
+      "path": "/api/cron/questionnaire-reminders",
+      "schedule": "0 23 * * 0"
+    },
+    {
       "path": "/api/cron/competing-next",
       "schedule": "0 12 * * *"
     },
