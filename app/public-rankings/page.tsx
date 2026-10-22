@@ -63,7 +63,7 @@ export default async function PublicRankingsHomepage({
   // Somebody who ranks a board for us reads the boards, subscriber or not.
   const { data: session } = await (await createClient()).auth.getUser()
   const grants = session.user?.app_metadata?.ranking_board_access
-  if (!canSeeProspectRanking(viewer) && !hasAnyRankingBoardGrant(grants)) {
+  if (!canSeeProspectRanking(viewer) && !hasAnyRankingBoardGrant(grants, "NC")) {
     /*
      * Stripe sends a paying customer here, and the webhook that grants access may not have
      * landed yet. Carrying the flag back means they see "payment received, access activating"
