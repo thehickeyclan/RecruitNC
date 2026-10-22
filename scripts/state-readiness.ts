@@ -14,6 +14,7 @@
  * state and a namesake's 2021 NC result on his profile (Alex Johnson, Catawba Ridge).
  */
 import fs from "fs"
+import { execSync } from "child_process"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
 import { HOME_STATE, inState, normalizeStateCode } from "../lib/recruiting/states"
@@ -119,7 +120,7 @@ async function linkedPlacements(ids: string[]): Promise<Link[]> {
     ])
     for (const r of nc.data ?? []) out.push({ athlete_id: r.athlete_id, season: Number(r.year), source: "NC", independent: r.classification === "NCISA", label: `NC ${r.year} ${r.classification ?? ""} #${r.place ?? "?"} ${r.school ?? ""}`.trim() })
     for (const r of other.data ?? [])
-      out.push({ athlete_id: r.athlete_id, season: Number(r.season), source: r.state, independent: /ISA$/i.test(r.association ?? ""), label: `${r.state} ${r.season} #${r.place ?? "?"} ${r.school_clean ?? r.school_raw ?? ""}`.trim() })
+      out.push({ athlete_id: r.athlete_id, season: Number(r.season), source: r.state, independent: /(ISA|VISAA)$/i.test(r.association ?? ""), label: `${r.state} ${r.season} #${r.place ?? "?"} ${r.school_clean ?? r.school_raw ?? ""}`.trim() })
   }
   // The same placement can sit in a table twice; report it once.
   return [...new Map(out.map((l) => [`${l.athlete_id}|${l.label}`, l])).values()]
@@ -138,18 +139,29 @@ type Row = { check: string; kind: "GATE" | "INFO"; value: string; baseline?: str
  * The same file names each class year left unresolved (at most 5%, each named) and each
  * pre-freshman result verified as a real 7th or 8th grade varsity result.
  */
+/** The main checkout's ranking-snapshots/ when run from a git worktree (exports are untracked). */
+function mainCheckoutSnapshots(): string | null {
+  try {
+    const common = execSync("git rev-parse --git-common-dir", { cwd: __dirname, encoding: "utf8" }).trim()
+    return path.join(path.resolve(__dirname, common), "..", "ranking-snapshots")
+  } catch {
+    return null
+  }
+}
+
 type Accounted = {
   placers?: Array<{ name: string; school?: string; season?: number; reason: "graduated" | "duplicate" | "namesake" | "source-conflict" | "approved"; note?: string }>
   classYearUnresolved?: Array<{ athleteId: string; note?: string }>
   preFreshmanVerified?: Array<{ athleteId: string; note?: string }>
 }
 function accountedFor(state: string): Accounted {
-  const file = path.join(process.cwd(), "docs", "state-launch", `${state}-accounted.json`)
-  try {
-    return JSON.parse(fs.readFileSync(file, "utf8")) as Accounted
-  } catch {
-    return {}
+  // The repo this script lives in, then the working folder: the same answer wherever it is run.
+  for (const root of [path.resolve(__dirname, ".."), process.cwd()]) {
+    try {
+      return JSON.parse(fs.readFileSync(path.join(root, "docs", "state-launch", `${state}-accounted.json`), "utf8")) as Accounted
+    } catch {}
   }
+  return {}
 }
 const nameKey = (n: string) => n.toLowerCase().replace(/[^a-z]/g, "")
 
@@ -243,7 +255,8 @@ async function measure(state: string) {
    * with its class year, to ranking-snapshots/ before deleting it). Name and school must both agree.
    */
   const pruned = new Set<string>()
-  for (const dir of [path.join(process.cwd(), "ranking-snapshots"), process.env.PRUNE_EXPORTS_DIR].filter(Boolean) as string[]) {
+  // Pruned-profile exports are untracked, so they live in whichever checkout ran the prune: read both.
+  for (const dir of [...new Set([path.join(process.cwd(), "ranking-snapshots"), path.resolve(__dirname, "..", "ranking-snapshots"), mainCheckoutSnapshots(), process.env.PRUNE_EXPORTS_DIR].filter(Boolean) as string[])]) {
     let files: string[] = []
     try {
       files = fs.readdirSync(dir).filter((f) => /^graduated-profiles-export-.*\.json$/.test(f))
