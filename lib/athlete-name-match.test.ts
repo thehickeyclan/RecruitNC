@@ -185,6 +185,8 @@ describe("one school, two spellings", () => {
     ["North East", "Northeast"],
     ["Saint John Paul the Great Catholic High School", "St. John Paul the Great Catholic"],
     ["St. Paul`s School for Boys", "Saint Paul's School for Boys"],
+    ["Our Lady of Mt. Carmel", "Our Lady of Mount Carmel"],
+    ["Ft. Hill", "Fort Hill"],
   ])("joins %s and %s", (a, b) => {
     expect(schoolsLikelySame(a, b)).toBe(true)
   })
@@ -194,5 +196,6 @@ describe("one school, two spellings", () => {
     expect(schoolsLikelySame("Loyola Blakefield", "Loyola Academy")).toBe(false)
     expect(schoolsLikelySame("Northeast", "North Hagerstown")).toBe(false)
     expect(schoolsLikelySame("St. John Paul the Great Catholic", "St. Mary's")).toBe(false)
+    expect(schoolsLikelySame("Mount Carmel", "Mount Hebron")).toBe(false)
   })
 })

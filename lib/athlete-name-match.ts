@@ -257,8 +257,13 @@ export function schoolsLikelySame(a?: string | null, b?: string | null): boolean
     normalizeApostrophes((v ?? "").trim().toLowerCase().replace(/`/g, "'"))
       .replace(/\bhigh school\b|\bhigh\b|\bh\.?s\.?\b|\bschool\b/g, " ")
       /* "Saint" and "St." are the same word, and brackets use both: Virginia's 2026 field has
-         "Saint John Paul the Great Catholic High School" and "St. John Paul the Great Catholic". */
+         "Saint John Paul the Great Catholic High School" and "St. John Paul the Great Catholic".
+         So are "Mount" and "Mt." - Maryland's MIS bracket writes "Our Lady of Mount Carmel" where
+         its MIAA bracket writes "Our Lady of Mt. Carmel", and three wrestlers' 2026 placements
+         reached nobody because of it - and "Fort" and "Ft.", which the same files mix. */
       .replace(/\bsaint\b/g, "st")
+      .replace(/\bmount\b/g, "mt")
+      .replace(/\bfort\b/g, "ft")
       .replace(/[^a-z0-9]+/g, " ")
       .split(" ")
       .filter((w) => w.length > 1)

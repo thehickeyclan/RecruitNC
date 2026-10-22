@@ -145,9 +145,9 @@ async function main() {
    * different boy at a different weight in a different state. Profiles carry a state now, so
    * that is answerable. A profile with no state is still considered, since it cannot disagree.
    */
-  const athletes = (await page<{ id: string; name: string; highschool: string | null; state: string | null }>(
+  const athletes = (await page<{ id: string; name: string; highschool: string | null; state: string | null; graduationyear: number | null }>(
     "athletes",
-    "id, name, highschool, state",
+    "id, name, highschool, state, graduationyear",
   )).filter((a) => {
     const s = String(a.state ?? "").trim().toUpperCase()
     return !s || s === STATE
@@ -171,7 +171,19 @@ async function main() {
       heldNoYear.push(`${r.wrestler_name} (${school})`)
       continue
     }
-    const sameName = athletes.filter((a) => nn(a.name) === nn(r.wrestler_name))
+    /*
+     * A profile whose class year contradicts this placer's is a different wrestler, not an
+     * ambiguity to hold. Maryland has two Logan Browns: Northwest's, class of 2027, a 2026
+     * champion at 165, and McDonogh's, class of 2028, a heavyweight. The first went unminted
+     * because the second existed and shared his name. Where either year is unknown the name
+     * still holds, which is the cautious half of the rule.
+     */
+    const placerYear = rows.map((x) => Number(x.grad_year)).find((y) => y > 0) ?? null
+    const sameName = athletes.filter((a) => {
+      if (nn(a.name) !== nn(r.wrestler_name)) return false
+      const theirs = Number((a as { graduationyear?: unknown }).graduationyear)
+      return !(placerYear && theirs > 0 && theirs !== placerYear)
+    })
     const sameSchool = sameName.filter((a) => schoolsLikelySame(a.highschool, school))
     if (sameSchool.length === 1) {
       toLink.push({ ids: rows.map((x) => x.id), athleteId: sameSchool[0]!.id, label: `${r.wrestler_name} -> ${sameSchool[0]!.name} (${sameSchool[0]!.highschool ?? "no school"})` })
