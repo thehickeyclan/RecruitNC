@@ -129,6 +129,7 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
         hasQuestionnaire: s.hasQuestionnaire,
         questionnaireDone: Boolean(s.questionnaireDone),
         admissions: s.admissions ?? NO_ADMISSIONS,
+        admissionInfo: s.admissionInfo ?? null,
         note: s.memo ?? null,
       },
     ]
