@@ -1,6 +1,9 @@
 "use client"
 
 import { useMemo, useState } from "react"
+
+import { AdmissionsControls } from "@/components/portal/admissions-controls"
+import type { Admissions } from "@/lib/college-programs/list"
 import { BarChart3, Eye, Mail, MessageSquare, MoreVertical, PhoneCall } from "lucide-react"
 
 import { CoachEmailComposer } from "@/components/colleges/coach-email-composer"
@@ -29,6 +32,8 @@ export type ListRow = {
   hasQuestionnaire: boolean
   /** The interest form is done: its own check, whatever the stage (22 Oct 2026). */
   questionnaireDone?: boolean
+  /** The admissions track, beside the stage. */
+  admissions?: Admissions
   note: string | null
 }
 
@@ -133,7 +138,7 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
                 Coach activity
                 <span className="block font-normal text-white/35">verified</span>
               </th>
-              <th className="p-3">Your status</th>
+              <th className="p-3">Your status · admissions</th>
               <th className="p-3">Next step</th>
               <th className="w-10 p-3" />
             </tr>
@@ -211,9 +216,10 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
                       {!r.viewed && !r.messaged && !r.reached ? <span className="text-xs text-white/30">None yet</span> : null}
                     </span>
                   </td>
-                  <td className="w-44 p-3">
+                  <td className="w-56 p-3">
                     <StageSelect schoolId={r.id} status={r.status} readOnly={readOnly} />
                     <InterestFormCheck schoolId={r.id} done={Boolean(r.questionnaireDone)} readOnly={readOnly} />
+                    {r.admissions ? <AdmissionsControls schoolId={r.id} value={r.admissions} readOnly={readOnly} /> : null}
                   </td>
                   <td className="p-3">
                     {next.email ? (

@@ -1,6 +1,8 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { AdmissionsControls } from "@/components/portal/admissions-controls"
+import type { Admissions } from "@/lib/college-programs/list"
 import { BadgeCheck, GripVertical, Mail, Send, Sparkles } from "lucide-react"
 
 import { COLLEGE_LIST_STATUSES, COLLEGE_LIST_STATUS_LABEL, type CollegeListStatus } from "@/lib/college-programs/list"
@@ -30,6 +32,8 @@ export type BoardCollege = {
   onRecruitNC: boolean
   /** The interest form is done (its own check, any stage). */
   questionnaireDone?: boolean
+  /** The admissions track, shown under the stage. */
+  admissions?: Admissions
   /** Told this program's coaches the wrestler is interested; null when it cannot be offered. */
   interest?: boolean | null
 }
@@ -182,6 +186,7 @@ export function CollegeBoard({
                         <BadgeCheck className="h-3 w-3" aria-hidden /> Coaches on <BrandName />
                       </p>
                     ) : null}
+                    {c.admissions ? <AdmissionsControls schoolId={c.id} value={c.admissions} readOnly={false} /> : null}
                     {onQuestionnaire ? (
                       <label className="mt-2 flex cursor-pointer items-center gap-2 text-[11px] font-bold text-white/80">
                         <input

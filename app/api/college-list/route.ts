@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import data from "@/lib/college-programs/programs-2026-27.json"
-import { isCollegeListStatus, type CollegeListItem, type CollegeListResponse } from "@/lib/college-programs/list"
+import { APP_PLANS, APP_STATUSES, PREREADS, admissionsOf, isCollegeListStatus, type CollegeListItem, type CollegeListResponse } from "@/lib/college-programs/list"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
@@ -32,12 +32,13 @@ function toItem(row: Record<string, unknown>): CollegeListItem {
     note: row.note == null ? null : String(row.note),
     updatedAt: String(row.updated_at),
     questionnaireDoneAt: row.questionnaire_done_at ? String(row.questionnaire_done_at) : null,
+    admissions: admissionsOf(row),
   }
 }
 
 /** Postgres "column does not exist": the interest-form column's SQL has not been run yet. */
 const COLUMN_MISSING = "42703"
-const COLUMNS = "school_id, status, note, updated_at, questionnaire_done_at"
+const COLUMNS = "school_id, status, note, updated_at, questionnaire_done_at, app_plan, app_status, app_submitted_on, preread"
 const OLD_COLUMNS = "school_id, status, note, updated_at"
 
 export async function GET() {
@@ -47,6 +48,7 @@ export async function GET() {
 
   const read = (cols: string) => admin.from("college_list_items").select(cols).eq("user_id", userId).order("updated_at", { ascending: false })
   let { data: rows, error } = await read(COLUMNS)
+  if (error?.code === COLUMN_MISSING) ({ data: rows, error } = await read("school_id, status, note, updated_at, questionnaire_done_at"))
   if (error?.code === COLUMN_MISSING) ({ data: rows, error } = await read(OLD_COLUMNS))
   if (error) {
     // Before the table exists the map simply has no Save button, rather than an error on every load.
@@ -61,7 +63,7 @@ export async function PUT(request: NextRequest) {
   const { admin, userId } = await listOwner()
   if (!userId) return NextResponse.json({ error: "My List is part of NC United Blue." }, { status: 403 })
 
-  const body = (await request.json().catch(() => null)) as { schoolId?: unknown; status?: unknown; note?: unknown; questionnaireDone?: unknown } | null
+  const body = (await request.json().catch(() => null)) as { schoolId?: unknown; status?: unknown; note?: unknown; questionnaireDone?: unknown; admissions?: Record<string, unknown> } | null
   const schoolId = typeof body?.schoolId === "string" ? body.schoolId : ""
   if (!SCHOOL_IDS.has(schoolId)) return NextResponse.json({ error: "Unknown school." }, { status: 400 })
   if (body?.status !== undefined && !isCollegeListStatus(body.status)) {
@@ -78,11 +80,26 @@ export async function PUT(request: NextRequest) {
         ...(body?.status !== undefined ? { status: body.status } : {}),
         ...(note !== undefined ? { note } : {}),
         ...(typeof body?.questionnaireDone === "boolean" ? { questionnaire_done_at: body.questionnaireDone ? new Date().toISOString() : null } : {}),
+        // Each admissions field the request names; null clears it.
+        ...(body?.admissions && typeof body.admissions === "object"
+          ? Object.fromEntries(
+              (
+                [
+                  ["plan", "app_plan", APP_PLANS],
+                  ["status", "app_status", APP_STATUSES],
+                  ["preread", "preread", PREREADS],
+                ] as const
+              )
+                .filter(([k]) => k in body.admissions!)
+                .map(([k, col, list]) => [col, (list as readonly string[]).includes(String(body.admissions![k])) ? body.admissions![k] : null])
+                .concat("submittedOn" in body.admissions ? [["app_submitted_on", /^\d{4}-\d{2}-\d{2}$/.test(String(body.admissions.submittedOn)) ? body.admissions.submittedOn : null]] : []),
+            )
+          : {}),
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id,school_id" },
     )
-    .select(typeof body?.questionnaireDone === "boolean" ? COLUMNS : OLD_COLUMNS)
+    .select(typeof body?.questionnaireDone === "boolean" || body?.admissions ? COLUMNS : OLD_COLUMNS)
     .single()
   if (error || !row) {
     console.error("[college-list] save failed", error)

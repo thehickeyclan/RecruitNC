@@ -8,6 +8,8 @@ import { CoachEmailComposer } from "@/components/colleges/coach-email-composer"
 import {
   COLLEGE_LIST_STATUSES,
   COLLEGE_LIST_STATUS_LABEL,
+  NO_ADMISSIONS,
+  type Admissions,
   type CollegeListStatus,
 } from "@/lib/college-programs/list"
 import { eventDates } from "@/lib/college-programs/outreach-results"
@@ -23,6 +25,8 @@ export type WarRoomSchool = {
   hasQuestionnaire: boolean
   /** The interest form (recruiting questionnaire) is done, whatever the stage. */
   questionnaireDone?: boolean
+  /** The admissions track (application status, plan, date, pre-read). */
+  admissions?: Admissions
   /** "$31,450 tuition" for a North Carolina family (2023-24, tuition only), or null. */
   tuition: string | null
   /** The family's own note on the college: calls, what the coach said, next steps. */
@@ -398,6 +402,7 @@ export function WarRoomPlan({
                   cost: s.tuition,
                   note: s.noTeam ? `${s.noTeam} in 2026-27` : s.hasQuestionnaire && !s.questionnaireDone ? "Interest form to fill out" : null,
                   questionnaireDone: Boolean(s.questionnaireDone),
+                  admissions: s.admissions ?? NO_ADMISSIONS,
                   memo: s.memo ?? null,
                   onRecruitNC: Boolean(s.onRecruitNC),
                   interest: interest && s.onRecruitNC ? (interest[wrestler.id] ?? []).includes(s.id) : null,

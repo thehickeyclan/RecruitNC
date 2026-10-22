@@ -24,6 +24,29 @@ export type CollegeListItem = {
   updatedAt: string
   /** When the family recorded the interest form (recruiting questionnaire) as done; any stage. */
   questionnaireDoneAt: string | null
+  admissions: Admissions
+}
+
+/** The admissions track, beside the recruiting stage (22 Oct 2026). */
+export const APP_PLANS = ["ed1", "ed2", "ea", "rea", "rd", "rolling"] as const
+export type AppPlan = (typeof APP_PLANS)[number]
+export const APP_PLAN_LABEL: Record<AppPlan, string> = { ed1: "Early Decision", ed2: "Early Decision II", ea: "Early Action", rea: "Restrictive Early Action", rd: "Regular Decision", rolling: "Rolling" }
+export const APP_STATUSES = ["planning", "submitted", "admitted", "deferred", "waitlisted", "denied", "withdrawn"] as const
+export type AppStatus = (typeof APP_STATUSES)[number]
+export const APP_STATUS_LABEL: Record<AppStatus, string> = { planning: "Applying", submitted: "Submitted", admitted: "Admitted", deferred: "Deferred", waitlisted: "Waitlisted", denied: "Denied", withdrawn: "Withdrawn" }
+export const PREREADS = ["requested", "likely", "possible", "unlikely"] as const
+export type Preread = (typeof PREREADS)[number]
+export const PREREAD_LABEL: Record<Preread, string> = { requested: "Pre-read requested", likely: "Pre-read: likely", possible: "Pre-read: possible", unlikely: "Pre-read: unlikely" }
+export type Admissions = { plan: AppPlan | null; status: AppStatus | null; submittedOn: string | null; preread: Preread | null }
+export const NO_ADMISSIONS: Admissions = { plan: null, status: null, submittedOn: null, preread: null }
+const oneOf = <T extends string>(list: readonly T[], v: unknown): T | null => (typeof v === "string" && (list as readonly string[]).includes(v) ? (v as T) : null)
+export function admissionsOf(row: Record<string, unknown>): Admissions {
+  return {
+    plan: oneOf(APP_PLANS, row.app_plan),
+    status: oneOf(APP_STATUSES, row.app_status),
+    submittedOn: typeof row.app_submitted_on === "string" ? row.app_submitted_on : null,
+    preread: oneOf(PREREADS, row.preread),
+  }
 }
 
 /** Done, whatever the stage: the check, or the old "Questionnaire sent" stage it replaced. */
