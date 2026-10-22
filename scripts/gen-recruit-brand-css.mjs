@@ -270,7 +270,7 @@ export function buildCss() {
    * and the green "good" marks are data, not brand, and are left alone.
    */
   const national = THEMES.find((t) => t.scope.includes('"national"'))
-  const EXTRA_ACCENTS = ["d7b95a", "d6b75d", "c5a84d", "cbaf5d", "d3b573", "c4a665", "c8a94a", "9c7a2e", "cc0000", "bc0b03", "b31b1b", "38bdf8", "7dd3fc", "bae6fd", "1f5fbf"]
+  const EXTRA_ACCENTS = ["d7b95a", "d6b75d", "c5a84d", "cbaf5d", "d3b573", "c4a665", "c8a94a", "9c7a2e", "cc0000", "bc0b03", "b31b1b", "38bdf8", "7dd3fc", "bae6fd", "1f5fbf", "c8102e", "a00d25"]
   const EXTRA_NAVIES = { "003366": "#15243B", "03154c": "#0B1426", "1e3a5f": "#22324D", "031a3f": "#0B1426", "0d1a4d": "#15243B", "0b1a33": "#15243B", "002147": "#0B1426" }
   const EXTRA_TOKEN = new RegExp(`(?<![\\w-])((?:[a-z-]+:)*)([a-z-]+)-\\[#(${EXTRA_ACCENTS.join("|")})\\](?:\\/(\\d+))?`, "gi")
   const SKY_TOKEN = /(?<![\w-])((?:[a-z-]+:)*)(text|bg|border|from|to|via|ring|fill|stroke)-sky-(\d{2,3})(?:\/(\d+))?/gi
@@ -290,8 +290,9 @@ export function buildCss() {
     NAVY_TOKEN.lastIndex = 0
     const m = NAVY_TOKEN.exec(cls)
     const parts = variantParts((m[1] ?? "").split(":").filter(Boolean))
-    if (!parts || m[2].toLowerCase() === "text") continue
-    const color = hex3(EXTRA_NAVIES[m[3].toLowerCase()])
+    if (!parts) continue
+    // Navy text sits on white (forms, the printed report): it takes Midnight Navy, never a surface shade.
+    const color = hex3(m[2].toLowerCase() === "text" ? "#0B1426" : EXTRA_NAVIES[m[3].toLowerCase()])
     const alpha = m[4] != null ? Number(m[4]) : null
     const body = declarations(m[2].toLowerCase(), color, color, alpha, null)
     if (body) rules.push(`${targetsFor(cls, m[2].toLowerCase(), parts).map((x) => `${national.scope} ${x}`).join(",\n")} {\n  ${body}\n}`)
@@ -334,6 +335,10 @@ export function buildCss() {
     `html[data-host="national"] .admin-layout [class*="bg-gradient-to"]:is([class*="text-white"], [class*="text-[#"]):hover {\n  background-color: #22324D !important;\n  border-color: #A3E635 !important;\n}`,
     `html[data-host="national"] .admin-layout [class*="bg-gradient-to"]:is([class*="text-white"], [class*="text-[#"]) svg {\n  color: #A3E635 !important;\n}`,
     `html[data-host="national"] .admin-layout [class*="bg-gradient-to"] .text-blue-200 {\n  color: #A8B3C5 !important;\n}`,
+    // NC United's red as an admin accent on a light work area: Midnight Navy, since lime text on
+    // white cannot be read. Its pale card gradients (from-white to-red-50) become plain white.
+    `html[data-host="national"] .admin-layout :is(.text-\\[\\#C8102E\\], .text-\\[\\#c8102e\\]) {\n  color: #0B1426 !important;\n}`,
+    `html[data-host="national"] .admin-layout [class*="bg-gradient-to"][class*="from-white"] {\n  background-image: none !important;\n  background-color: #FFFFFF !important;\n}`,
     `html[data-host="national"] .text-white\\/50,\nhtml[data-host="national"] .text-white\\/55,\nhtml[data-host="national"] .text-white\\/60,\nhtml[data-host="national"] .text-white\\/65,\nhtml[data-host="national"] .text-white\\/70 {\n  color: #A8B3C5 !important;\n}`,
   ].join("\n\n")
   // For colours written as inline styles: var(--recruit-accent) is gold on NC United, the brand accent on a brand address.

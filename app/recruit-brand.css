@@ -45,6 +45,15 @@ html[data-host="national"] .admin-layout [class*="bg-gradient-to"] .text-blue-20
   color: #A8B3C5 !important;
 }
 
+html[data-host="national"] .admin-layout :is(.text-\[\#C8102E\], .text-\[\#c8102e\]) {
+  color: #0B1426 !important;
+}
+
+html[data-host="national"] .admin-layout [class*="bg-gradient-to"][class*="from-white"] {
+  background-image: none !important;
+  background-color: #FFFFFF !important;
+}
+
 html[data-host="national"] .text-white\/50,
 html[data-host="national"] .text-white\/55,
 html[data-host="national"] .text-white\/60,
@@ -2775,6 +2784,10 @@ html[data-host="national"] .bg-\[\#BC0B03\]\/20 {
   background-color: rgb(163 230 53 / 0.2);
 }
 
+html[data-host="national"] .bg-\[\#C8102E\] {
+  background-color: rgb(163 230 53); color: #0B1426;
+}
+
 html[data-host="national"] .bg-\[\#C8A94A\] {
   background-color: rgb(163 230 53); color: #0B1426;
 }
@@ -2875,6 +2888,10 @@ html[data-host="national"] .bg-\[\#D7B95A\]\/5 {
   background-color: rgb(163 230 53 / 0.05);
 }
 
+html[data-host="national"] .bg-\[\#c8102e\] {
+  background-color: rgb(163 230 53); color: #0B1426;
+}
+
 html[data-host="national"] .bg-\[\#cc0000\] {
   background-color: rgb(163 230 53); color: #0B1426;
 }
@@ -2925,6 +2942,14 @@ html[data-host="national"] .border-\[\#B31B1B\]\/50 {
 
 html[data-host="national"] .border-\[\#BC0B03\]\/40 {
   border-color: rgb(163 230 53 / 0.4);
+}
+
+html[data-host="national"] .border-\[\#C8102E\] {
+  border-color: rgb(163 230 53);
+}
+
+html[data-host="national"] .border-\[\#C8102E\]\/25 {
+  border-color: rgb(163 230 53 / 0.25);
 }
 
 html[data-host="national"] .border-\[\#C8A94A\] {
@@ -3083,6 +3108,10 @@ html[data-host="national"] .border-\[\#D7B95A\]\/70 {
   border-color: rgb(163 230 53 / 0.7);
 }
 
+html[data-host="national"] .border-\[\#c8102e\] {
+  border-color: rgb(163 230 53);
+}
+
 html[data-host="national"] .border-\[\#d6b75d\]\/25 {
   border-color: rgb(163 230 53 / 0.25);
 }
@@ -3103,6 +3132,10 @@ html[data-host="national"] .border-l-\[\#B31B1B\] {
   border-left-color: rgb(163 230 53);
 }
 
+html[data-host="national"] .border-l-\[\#C8102E\] {
+  border-left-color: rgb(163 230 53);
+}
+
 html[data-host="national"] .border-l-\[\#C8A94A\] {
   border-left-color: rgb(163 230 53);
 }
@@ -3112,6 +3145,10 @@ html[data-host="national"] .border-l-\[\#CC0000\] {
 }
 
 html[data-host="national"] .border-t-\[\#B31B1B\] {
+  border-top-color: rgb(163 230 53);
+}
+
+html[data-host="national"] .border-t-\[\#C8102E\] {
   border-top-color: rgb(163 230 53);
 }
 
@@ -3129,6 +3166,10 @@ html[data-host="national"] .decoration-\[\#C8A94A\] {
 
 html[data-host="national"] .divide-\[\#B31B1B\]\/15 > :not([hidden]) ~ :not([hidden]) {
   border-color: rgb(163 230 53 / 0.15);
+}
+
+html[data-host="national"] .fill-\[\#C8102E\] {
+  fill: rgb(163 230 53);
 }
 
 html[data-host="national"] .fill-\[\#C8A94A\] {
@@ -3229,6 +3270,10 @@ html[data-host="national"] .from-\[\#B31B1B\]\/20 {
 
 html[data-host="national"] .from-\[\#B31B1B\]\/5 {
   --tw-gradient-from: rgb(163 230 53 / 0.05) var(--tw-gradient-from-position); --tw-gradient-to: rgb(163 230 53 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+html[data-host="national"] .from-\[\#C8102E\] {
+  --tw-gradient-from: rgb(163 230 53) var(--tw-gradient-from-position); --tw-gradient-to: rgb(163 230 53 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 
 html[data-host="national"] .from-\[\#C8A94A\] {
@@ -3347,6 +3392,10 @@ html[data-host="national"] .hover\:bg-\[\#D7B95A\]\/20:hover {
   background-color: rgb(163 230 53 / 0.2);
 }
 
+html[data-host="national"] .hover\:bg-\[\#a00d25\]:hover {
+  background-color: rgb(163 230 53); color: #0B1426;
+}
+
 html[data-host="national"] .hover\:bg-\[\#c4a665\]:hover {
   background-color: rgb(163 230 53); color: #0B1426;
 }
@@ -3427,6 +3476,10 @@ html[data-host="national"] .hover\:border-\[\#D7B95A\]\/40:hover {
   border-color: rgb(163 230 53 / 0.4);
 }
 
+html[data-host="national"] .hover\:from-\[\#a00d25\]:hover {
+  --tw-gradient-from: rgb(163 230 53) var(--tw-gradient-from-position); --tw-gradient-to: rgb(163 230 53 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
 html[data-host="national"] .hover\:shadow-\[\#CC0000\]\/10:hover {
   --tw-shadow-color: rgb(163 230 53 / 0.1); --tw-shadow: var(--tw-shadow-colored);
 }
@@ -3457,6 +3510,10 @@ html[data-host="national"] .hover\:text-\[\#c4a665\]:hover {
 
 html[data-host="national"] .hover\:text-\[\#d6b75d\]:hover {
   color: rgb(163 230 53);
+}
+
+html[data-host="national"] .hover\:to-\[\#C8102E\]:hover {
+  --tw-gradient-to: rgb(163 230 53) var(--tw-gradient-to-position);
 }
 
 html[data-host="national"] .marker\:text-\[\#C8A94A\] *::marker,
@@ -3490,6 +3547,10 @@ html[data-host="national"] .text-\[\#B31B1B\] {
 }
 
 html[data-host="national"] .text-\[\#BC0B03\] {
+  color: rgb(163 230 53);
+}
+
+html[data-host="national"] .text-\[\#C8102E\] {
   color: rgb(163 230 53);
 }
 
@@ -3577,6 +3638,10 @@ html[data-host="national"] .text-\[\#D7B95A\] {
   color: rgb(163 230 53);
 }
 
+html[data-host="national"] .text-\[\#c8102e\] {
+  color: rgb(163 230 53);
+}
+
 html[data-host="national"] .text-\[\#d6b75d\] {
   color: rgb(163 230 53);
 }
@@ -3607,6 +3672,10 @@ html[data-host="national"] .to-\[\#CBAF5D\]\/10 {
 
 html[data-host="national"] .to-\[\#CBAF5D\]\/5 {
   --tw-gradient-to: rgb(163 230 53 / 0.05) var(--tw-gradient-to-position);
+}
+
+html[data-host="national"] .to-\[\#a00d25\] {
+  --tw-gradient-to: rgb(163 230 53) var(--tw-gradient-to-position);
 }
 
 html[data-host="national"] .to-\[\#c4a665\] {
@@ -4181,12 +4250,29 @@ html[data-host="national"] .hover\:from-\[\#1e3a5f\]:hover {
   --tw-gradient-from: rgb(34 50 77) var(--tw-gradient-from-position); --tw-gradient-to: rgb(34 50 77 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
 
+html[data-host="national"] .hover\:text-\[\#003366\]:hover {
+  color: rgb(11 20 38);
+}
+
+html[data-host="national"] .hover\:text-\[\#03154C\]:hover {
+  color: rgb(11 20 38);
+}
+
 html[data-host="national"] .hover\:to-\[\#003366\]:hover {
   --tw-gradient-to: rgb(21 36 59) var(--tw-gradient-to-position);
 }
 
 html[data-host="national"] .hover\:to-\[\#1e3a5f\]:hover {
   --tw-gradient-to: rgb(34 50 77) var(--tw-gradient-to-position);
+}
+
+html[data-host="national"] .marker\:text-\[\#003366\] *::marker,
+html[data-host="national"] .marker\:text-\[\#003366\]::marker {
+  color: rgb(11 20 38);
+}
+
+html[data-host="national"] .placeholder\:text-\[\#003366\]\/50::placeholder {
+  color: rgb(11 20 38 / 0.5);
 }
 
 html[data-host="national"] .ring-\[\#002147\]\/10 {
@@ -4199,6 +4285,102 @@ html[data-host="national"] .ring-\[\#002147\]\/20 {
 
 html[data-host="national"] .ring-\[\#003366\]\/20 {
   --tw-ring-color: rgb(21 36 59 / 0.2);
+}
+
+html[data-host="national"] .text-\[\#002147\] {
+  color: rgb(11 20 38);
+}
+
+html[data-host="national"] .text-\[\#002147\]\/50 {
+  color: rgb(11 20 38 / 0.5);
+}
+
+html[data-host="national"] .text-\[\#002147\]\/55 {
+  color: rgb(11 20 38 / 0.55);
+}
+
+html[data-host="national"] .text-\[\#002147\]\/60 {
+  color: rgb(11 20 38 / 0.6);
+}
+
+html[data-host="national"] .text-\[\#002147\]\/65 {
+  color: rgb(11 20 38 / 0.65);
+}
+
+html[data-host="national"] .text-\[\#002147\]\/70 {
+  color: rgb(11 20 38 / 0.7);
+}
+
+html[data-host="national"] .text-\[\#002147\]\/75 {
+  color: rgb(11 20 38 / 0.75);
+}
+
+html[data-host="national"] .text-\[\#002147\]\/80 {
+  color: rgb(11 20 38 / 0.8);
+}
+
+html[data-host="national"] .text-\[\#002147\]\/90 {
+  color: rgb(11 20 38 / 0.9);
+}
+
+html[data-host="national"] .text-\[\#003366\] {
+  color: rgb(11 20 38);
+}
+
+html[data-host="national"] .text-\[\#003366\]\/40 {
+  color: rgb(11 20 38 / 0.4);
+}
+
+html[data-host="national"] .text-\[\#003366\]\/60 {
+  color: rgb(11 20 38 / 0.6);
+}
+
+html[data-host="national"] .text-\[\#003366\]\/70 {
+  color: rgb(11 20 38 / 0.7);
+}
+
+html[data-host="national"] .text-\[\#003366\]\/75 {
+  color: rgb(11 20 38 / 0.75);
+}
+
+html[data-host="national"] .text-\[\#003366\]\/80 {
+  color: rgb(11 20 38 / 0.8);
+}
+
+html[data-host="national"] .text-\[\#003366\]\/85 {
+  color: rgb(11 20 38 / 0.85);
+}
+
+html[data-host="national"] .text-\[\#003366\]\/90 {
+  color: rgb(11 20 38 / 0.9);
+}
+
+html[data-host="national"] .text-\[\#03154C\] {
+  color: rgb(11 20 38);
+}
+
+html[data-host="national"] .text-\[\#03154C\]\/70 {
+  color: rgb(11 20 38 / 0.7);
+}
+
+html[data-host="national"] .text-\[\#03154C\]\/80 {
+  color: rgb(11 20 38 / 0.8);
+}
+
+html[data-host="national"] .text-\[\#03154C\]\/90 {
+  color: rgb(11 20 38 / 0.9);
+}
+
+html[data-host="national"] .text-\[\#0D1A4D\] {
+  color: rgb(11 20 38);
+}
+
+html[data-host="national"] .text-\[\#0D1A4D\]\/40 {
+  color: rgb(11 20 38 / 0.4);
+}
+
+html[data-host="national"] .text-\[\#0D1A4D\]\/60 {
+  color: rgb(11 20 38 / 0.6);
 }
 
 html[data-host="national"] .to-\[\#002147\] {
@@ -4918,5 +5100,77 @@ html[data-host="national"] [fill="#1f5fbf" i] {
   fill: rgb(163 230 53);
 }
 html[data-host="national"] [stroke="#1f5fbf" i] {
+  stroke: rgb(163 230 53);
+}
+
+html[data-host="national"] [style*=";color:#c8102e" i],
+html[data-host="national"] [style*="; color: rgb(200, 16, 46)" i],
+html[data-host="national"] [style^="color:#c8102e" i],
+html[data-host="national"] [style^="color: rgb(200, 16, 46)"] {
+  color: rgb(163 230 53) !important;
+}
+
+html[data-host="national"] [style*="background-color:#c8102e" i],
+html[data-host="national"] [style*="background:#c8102e" i],
+html[data-host="national"] [style*="background-color: rgba(200, 16, 46," i],
+html[data-host="national"] [style*="background: rgba(200, 16, 46," i] {
+  background-color: rgb(163 230 53 / 0.15) !important;
+}
+
+html[data-host="national"] [style*="background-color:#c8102e;" i],
+html[data-host="national"] [style*="background:#c8102e;" i],
+html[data-host="national"] [style*="background-color: rgb(200, 16, 46)" i],
+html[data-host="national"] [style*="background: rgb(200, 16, 46)" i],
+html[data-host="national"] [style$="background-color:#c8102e" i],
+html[data-host="national"] [style$="background:#c8102e" i] {
+  background-color: rgb(163 230 53) !important;
+}
+
+html[data-host="national"] [style*="border-color:#c8102e" i],
+html[data-host="national"] [style*="border-color: rgb(200, 16, 46)" i],
+html[data-host="national"] [style*="border-color: rgba(200, 16, 46," i] {
+  border-color: rgb(163 230 53) !important;
+}
+
+html[data-host="national"] [fill="#c8102e" i] {
+  fill: rgb(163 230 53);
+}
+html[data-host="national"] [stroke="#c8102e" i] {
+  stroke: rgb(163 230 53);
+}
+
+html[data-host="national"] [style*=";color:#a00d25" i],
+html[data-host="national"] [style*="; color: rgb(160, 13, 37)" i],
+html[data-host="national"] [style^="color:#a00d25" i],
+html[data-host="national"] [style^="color: rgb(160, 13, 37)"] {
+  color: rgb(163 230 53) !important;
+}
+
+html[data-host="national"] [style*="background-color:#a00d25" i],
+html[data-host="national"] [style*="background:#a00d25" i],
+html[data-host="national"] [style*="background-color: rgba(160, 13, 37," i],
+html[data-host="national"] [style*="background: rgba(160, 13, 37," i] {
+  background-color: rgb(163 230 53 / 0.15) !important;
+}
+
+html[data-host="national"] [style*="background-color:#a00d25;" i],
+html[data-host="national"] [style*="background:#a00d25;" i],
+html[data-host="national"] [style*="background-color: rgb(160, 13, 37)" i],
+html[data-host="national"] [style*="background: rgb(160, 13, 37)" i],
+html[data-host="national"] [style$="background-color:#a00d25" i],
+html[data-host="national"] [style$="background:#a00d25" i] {
+  background-color: rgb(163 230 53) !important;
+}
+
+html[data-host="national"] [style*="border-color:#a00d25" i],
+html[data-host="national"] [style*="border-color: rgb(160, 13, 37)" i],
+html[data-host="national"] [style*="border-color: rgba(160, 13, 37," i] {
+  border-color: rgb(163 230 53) !important;
+}
+
+html[data-host="national"] [fill="#a00d25" i] {
+  fill: rgb(163 230 53);
+}
+html[data-host="national"] [stroke="#a00d25" i] {
   stroke: rgb(163 230 53);
 }

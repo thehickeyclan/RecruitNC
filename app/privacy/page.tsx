@@ -1,20 +1,38 @@
 import type { Metadata } from "next"
+import { headers } from "next/headers"
 import { ContactEmail } from "@/components/recruiting/contact-email"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { RecruitWrestlersPolicy } from "./recruitwrestlers-policy"
 
-export const metadata: Metadata = {
-  title: "Privacy Policy",
-  description:
-    "How NC United Wrestling collects, uses and protects information in the NC United app and on ncwrestlingunited.com.",
+export const dynamic = "force-dynamic"
+
+async function onRecruitWrestlers() {
+  return stagedBrandForHost((await headers()).get("host")) === "national"
 }
 
-/** Public and unauthenticated on purpose: Apple requires App Review to reach this without an account. */
-export default function PrivacyPolicyPage() {
+export async function generateMetadata(): Promise<Metadata> {
+  if (await onRecruitWrestlers()) {
+    return { title: "Privacy Policy", description: "How RecruitWrestlers collects, uses and protects information on recruitwrestlers.com." }
+  }
+  return {
+    title: "Privacy Policy",
+    description:
+      "How NC United Wrestling collects, uses and protects information in the NC United app and on ncwrestlingunited.com.",
+  }
+}
+
+/**
+ * Public and unauthenticated on purpose: Apple requires App Review to reach this without an account.
+ * recruitwrestlers.com has its own policy (./recruitwrestlers-policy.tsx), chosen on the server.
+ */
+export default async function PrivacyPolicyPage() {
+  if (await onRecruitWrestlers()) return <RecruitWrestlersPolicy />
   return (
     <main className="min-h-screen bg-rnc-ink px-6 py-16 text-white">
       <div className="mx-auto max-w-3xl">
         <p className="text-xs font-bold tracking-[0.2em] text-rnc-gold">NC UNITED WRESTLING</p>
         <h1 className="mt-2 text-4xl font-extrabold tracking-tight">Privacy Policy</h1>
-        <p className="mt-3 text-sm text-[#A8BBD1]">Last updated 8 October 2026</p>
+        <p className="mt-3 text-sm text-[#A8BBD1]">Last updated 22 October 2026</p>
 
         <div className="mt-10 space-y-10 text-[15px] leading-relaxed text-[#D6E1EE]">
           <section>
@@ -157,6 +175,10 @@ export default function PrivacyPolicyPage() {
               directly to Stripe and never reach our servers. We keep a record of what was paid for and
               by whom so we can honour the registration. Stripe&apos;s own privacy policy governs the
               payment itself.
+            </p>
+            <p className="mt-2">
+              Recruiting memberships (RecruitNC Rankings and the Recruiting Command Center) are billed
+              by Guild Ventures, which operates the recruiting platform behind RecruitNC.
             </p>
           </section>
 
