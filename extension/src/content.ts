@@ -53,8 +53,19 @@ async function start() {
   await checkSubmitted()
   new MutationObserver(() => void checkSubmitted()).observe(document.body, { childList: true, subtree: true, characterData: true })
 
-  if (!looksLikeForm() && !(await chrome.storage.local.get("forceOpen")).forceOpen) return
+  const { forceOpen } = await chrome.storage.local.get("forceOpen")
   void chrome.storage.local.remove("forceOpen")
+  // ARMS opens on a welcome screen with no boxes; the form appears after "Continue". Wait for it.
+  if (!forceOpen && !looksLikeForm()) {
+    await new Promise<void>((resolve) => {
+      const watch = new MutationObserver(() => {
+        if (!looksLikeForm()) return
+        watch.disconnect()
+        resolve()
+      })
+      watch.observe(document.body, { childList: true, subtree: true })
+    })
+  }
   injectPageHelper()
   panel(data, form)
 

@@ -343,8 +343,18 @@
     const form = forms.find((f) => f.schoolId === schoolId) ?? null;
     await checkSubmitted();
     new MutationObserver(() => void checkSubmitted()).observe(document.body, { childList: true, subtree: true, characterData: true });
-    if (!looksLikeForm() && !(await chrome.storage.local.get("forceOpen")).forceOpen) return;
+    const { forceOpen } = await chrome.storage.local.get("forceOpen");
     void chrome.storage.local.remove("forceOpen");
+    if (!forceOpen && !looksLikeForm()) {
+      await new Promise((resolve) => {
+        const watch = new MutationObserver(() => {
+          if (!looksLikeForm()) return;
+          watch.disconnect();
+          resolve();
+        });
+        watch.observe(document.body, { childList: true, subtree: true });
+      });
+    }
     injectPageHelper();
     panel(data, form);
     async function checkSubmitted() {
