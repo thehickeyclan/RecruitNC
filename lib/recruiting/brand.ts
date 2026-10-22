@@ -27,6 +27,13 @@ export const RECRUITING_BRAND = {
     { code: "SC", name: "South Carolina", live: false },
     // Being built (Matt, 21 Oct 2026): profiles first, not open to coaches until he says go.
     { code: "VA", name: "Virginia", live: false },
+    /*
+     * Maryland's data went in on 22 Oct and passes every readiness gate, but the state was
+     * missing from this list entirely - and a state that is not here does not exist to the
+     * product: /api/prospects answers "That state is not open yet" for it, to admins too. So
+     * 224 Maryland profiles were unreachable by anybody, including the people checking them.
+     */
+    { code: "MD", name: "Maryland", live: false },
   ],
 } as const
 
