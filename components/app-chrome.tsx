@@ -28,7 +28,7 @@ const SHELL_HINT_KEY = "recruiting-shell"
  * 2026: "you changed nc united website our front end"). A real coach still gets the portal frame
  * everywhere; this is only the staff preview.
  */
-const COACH_PORTAL_PATHS = ["/coach-home", "/my-recruits", "/prospects", "/athletes", "/view-profile", "/inbox", "/public-rankings", "/compare", "/perfect-recruit", "/interested", "/coach-reports", "/scouting-report"]
+const COACH_PORTAL_PATHS = ["/coach-home", "/my-recruits", "/prospects", "/athletes", "/view-profile", "/inbox", "/public-rankings", "/compare", "/perfect-recruit", "/interested", "/scouting-report"]
 /**
  * Pages with no Data Dawg launcher whoever is looking: the inbox (it covers the send button) and
  * the pages that exist only for coaches.
@@ -128,7 +128,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
    * the community frame - top menu, chat launcher - around a coach's content. A coach never sees
    * that combination, and a preview that is wrong about the frame is wrong about the page.
    */
-  const devCoachPreview = process.env.NODE_ENV !== "production" && (path.startsWith("/dev/coach-preview") || path.startsWith("/dev/coach-report-preview"))
+  const devCoachPreview = process.env.NODE_ENV !== "production" && path.startsWith("/dev/coach-preview")
   const recruitingShell = useRecruitingShell() || devCoachPreview
   /*
    * A coach who opens the site at its front door is at work, not shopping for an account: the
