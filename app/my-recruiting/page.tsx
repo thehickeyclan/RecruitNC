@@ -7,7 +7,7 @@
  * ./load.ts, shared with the other portal pages.
  */
 import Link from "next/link"
-import { ArrowRight, CalendarDays, Check, Circle, DollarSign, HelpCircle, ListChecks, Mail, Scale } from "lucide-react"
+import { ArrowRight, CalendarDays, Check, Circle, ClipboardList, DollarSign, HelpCircle, ListChecks, Mail, Scale } from "lucide-react"
 
 import { InfoSheetCard } from "@/components/portal/info-sheet-card"
 import { StageSelect } from "@/components/portal/stage-select"
@@ -88,6 +88,7 @@ export default async function CommandCenterHome() {
       })
     : []
   const open = steps.filter((s) => !s.done).length
+  const formsWaiting = schools.filter((s) => s.hasQuestionnaire && !s.questionnaireDone && !s.noTeam).length
   const seen = first ? views.get(first.id) : null
   const target = listTarget(w?.grade ?? null)
   const percent = first?.completeness.percent ?? 0
@@ -248,6 +249,24 @@ export default async function CommandCenterHome() {
               <p className="mt-4 text-sm text-white/55">Nothing logged yet. When a coach calls, texts, invites you to camp, or you visit, tap the button.</p>
             )}
           </section>
+
+          {blue && formsWaiting > 0 ? (
+            <Link
+              href="/my-recruiting/questionnaires"
+              className="mt-6 flex items-center gap-4 rounded-2xl border border-[#D3B574]/50 bg-[#D3B574]/10 p-4 hover:bg-[#D3B574]/15 sm:p-5"
+            >
+              <ClipboardList className="h-8 w-8 shrink-0 text-[#D3B574]" aria-hidden />
+              <span className="min-w-0 flex-1">
+                <span className="block text-base font-black text-white sm:text-lg">
+                  {formsWaiting === 1 ? "1 interest form to fill" : `${formsWaiting} interest forms to fill`}
+                </span>
+                <span className="block text-sm text-white/65">Each one puts {w?.firstName ?? "your wrestler"} in that college&apos;s recruiting database. Your answers are ready to copy.</span>
+              </span>
+              <span className="hidden shrink-0 items-center gap-1 rounded-lg bg-[#D3B574] px-3 py-2 text-sm font-black text-[#0A1628] sm:inline-flex">
+                Fill them now <ArrowRight className="h-4 w-4" aria-hidden />
+              </span>
+            </Link>
+          ) : null}
 
           <div className="mt-6 grid gap-4 lg:grid-cols-3">
             {/* Next steps */}

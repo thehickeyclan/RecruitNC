@@ -25,6 +25,8 @@ export type WarRoomSchool = {
   hasQuestionnaire: boolean
   /** The interest form (recruiting questionnaire) is done, whatever the stage. */
   questionnaireDone?: boolean
+  /** When it was marked done, if it was ticked rather than implied by the stage. */
+  questionnaireDoneAt?: string | null
   /** The admissions track (application status, plan, date, pre-read). */
   admissions?: Admissions
   /** "$31,450 tuition" for a North Carolina family (2023-24, tuition only), or null. */

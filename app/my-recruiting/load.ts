@@ -114,6 +114,7 @@ export async function loadCommandCenter(returnTo: string) {
           hasQuestionnaire: questionnairesForSchool(school.id).length > 0,
           admissions: admissionsOf(row as Record<string, unknown>),
           questionnaireDone: questionnaireDone({ status, questionnaireDoneAt: (row as { questionnaire_done_at?: string | null }).questionnaire_done_at ?? null }),
+          questionnaireDoneAt: (row as { questionnaire_done_at?: string | null }).questionnaire_done_at ?? null,
           savedAt: row.updated_at ? String(row.updated_at) : null,
           memo: row.note ? String(row.note) : null,
           onRecruitNC: false,
