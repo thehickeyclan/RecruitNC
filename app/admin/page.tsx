@@ -6,6 +6,7 @@ import { HardLink } from "@/components/hard-link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { AdminHeader } from "@/components/admin-header"
+import { BrandName } from "@/components/recruiting/brand-name"
 import { 
   Users, Trophy, Target, UserCheck, Clock, Calendar,
   School, Pencil, BarChart3, Settings, FileText,
@@ -125,7 +126,7 @@ export default function AdminDashboard() {
                 <BarChart3 className="h-10 w-10 text-[#C8102E]" />
                 <h1 className="text-4xl font-bold">Admin Dashboard</h1>
               </div>
-              <p className="text-blue-200 text-lg">NC Wrestling United - Portal Management & Analytics</p>
+              <p className="text-blue-200 text-lg"><BrandName ncu="NC Wrestling United" national="RecruitWrestlers" /> - Portal Management & Analytics</p>
             </div>
             <Link href="/">
               <Button className="bg-white text-[#003366] hover:bg-gray-100">

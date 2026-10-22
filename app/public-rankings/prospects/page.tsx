@@ -12,6 +12,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { hasPremiumAccess } from "@/lib/ranking-visibility"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { PUBLIC_TOP_PROSPECTS_RELEASED } from "@/lib/public-rankings-cap"
+import { BrandName } from "@/components/recruiting/brand-name"
 
 // Per-viewer: the board is gated, so it cannot be one static document for everybody.
 export const dynamic = "force-dynamic"
@@ -87,7 +88,7 @@ export default async function TopProspectsPage() {
       <section className="px-4 py-12 sm:py-16">
         <div className="mx-auto max-w-6xl">
           <p className="text-center text-[11px] font-bold uppercase tracking-[0.22em] text-[#CC0000]">
-            RecruitNC · North Carolina prospect rankings
+            <BrandName /> · North Carolina prospect rankings
           </p>
           {/*
             * "Ranked" carries the whole caveat in one word.

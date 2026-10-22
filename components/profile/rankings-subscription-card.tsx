@@ -5,6 +5,7 @@ import Link from "next/link"
 import { Loader2, Trophy } from "lucide-react"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { BrandName } from "@/components/recruiting/brand-name"
 
 type Subscription = {
   status: string
@@ -93,7 +94,7 @@ export function RankingsSubscriptionCard({ access }: { access: RankingsAccess })
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Trophy className="h-5 w-5 text-[#D3B574]" />
-          RecruitNC Rankings
+          <BrandName ncu="RecruitNC Rankings" national="Insider" />
         </CardTitle>
         <CardDescription className="text-muted-foreground">
           Every published class ranking, the Top 75 College Ready Prospects board, and which college programs viewed your profile.

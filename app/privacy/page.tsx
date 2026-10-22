@@ -175,6 +175,10 @@ export default function PrivacyPolicyPage() {
               by whom so we can honour the registration. Stripe&apos;s own privacy policy governs the
               payment itself.
             </p>
+            <p className="mt-2">
+              Recruiting memberships (RecruitNC Rankings and the Recruiting Command Center) are billed
+              by Guild Ventures, which operates the recruiting platform behind RecruitNC.
+            </p>
           </section>
 
           <section>

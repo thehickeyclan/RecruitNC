@@ -79,7 +79,7 @@ describe("fulfilScoutingReportCheckout", () => {
       metadata: { source: "scouting_report", kind: "subscription", user_id: "u1" },
       stripeSubscriptionId: "sub_1",
     })
-    expect(result).toEqual({ ok: true, granted: "subscription", replacedSubscriptionId: null })
+    expect(result).toEqual({ ok: true, granted: "subscription", replacedSubscriptionId: null, replacedAccount: "ncu" })
     expect(calls[0]!.table).toBe("recruitnc_subscriptions")
     expect(calls[0]!.onConflict).toBe("user_id")
     expect(calls[0]!.row).toMatchObject({ user_id: "u1", status: "active", stripe_subscription_id: "sub_1" })
@@ -93,7 +93,7 @@ describe("fulfilScoutingReportCheckout", () => {
       metadata: { source: "scouting_report", kind: "subscription_annual", user_id: "u1" },
       stripeSubscriptionId: "sub_annual",
     })
-    expect(result).toEqual({ ok: true, granted: "subscription", replacedSubscriptionId: null })
+    expect(result).toEqual({ ok: true, granted: "subscription", replacedSubscriptionId: null, replacedAccount: "ncu" })
     expect(calls[0]!.table).toBe("recruitnc_subscriptions")
     expect(calls[0]!.row).toMatchObject({ user_id: "u1", status: "active", stripe_subscription_id: "sub_annual" })
   })
@@ -128,12 +128,19 @@ describe("fulfilScoutingReportCheckout", () => {
   it("hands back a live Rankings subscription replaced by an upgrade, so it can be cancelled", async () => {
     const fake = fakeSupabase({ email: "buyer@example.com", stripe_subscription_id: "sub_old", status: "active", current_period_end: null })
     const result = await fulfilScoutingReportCheckout(fake.client, { ...base, stripeSubscriptionId: "sub_cc", metadata: { source: "scouting_report", kind: "command_center", user_id: "u1" } })
-    expect(result).toEqual({ ok: true, granted: "subscription", replacedSubscriptionId: "sub_old" })
+    expect(result).toEqual({ ok: true, granted: "subscription", replacedSubscriptionId: "sub_old", replacedAccount: "ncu" })
+  })
+
+  it("records which Stripe account bills a subscription, and which bills the one it replaces", async () => {
+    const fake = fakeSupabase({ email: "buyer@example.com", stripe_subscription_id: "sub_rw", status: "active", current_period_end: null, stripe_account: "guild" })
+    const result = await fulfilScoutingReportCheckout(fake.client, { ...base, stripeSubscriptionId: "sub_cc", stripeAccount: "guild", metadata: { source: "scouting_report", kind: "command_center", user_id: "u1" } })
+    expect(result).toEqual({ ok: true, granted: "subscription", replacedSubscriptionId: "sub_rw", replacedAccount: "guild" })
+    expect(fake.calls.find((c) => c.table === "recruitnc_subscriptions")?.row.stripe_account).toBe("guild")
   })
 
   it("does not cancel anything when the same subscription is redelivered", async () => {
     const fake = fakeSupabase({ email: "buyer@example.com", stripe_subscription_id: "sub_cc", status: "active", current_period_end: null })
     const result = await fulfilScoutingReportCheckout(fake.client, { ...base, stripeSubscriptionId: "sub_cc", metadata: { source: "scouting_report", kind: "command_center", user_id: "u1" } })
-    expect(result).toEqual({ ok: true, granted: "subscription", replacedSubscriptionId: null })
+    expect(result).toEqual({ ok: true, granted: "subscription", replacedSubscriptionId: null, replacedAccount: "ncu" })
   })
 })

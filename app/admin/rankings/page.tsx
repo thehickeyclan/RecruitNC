@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect } from "react"
+import { BrandName } from "@/components/recruiting/brand-name"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -59,7 +60,7 @@ export default function RankingsIndexPage() {
         {/* Quick Access Card */}
         <Card className="mb-6 border-[#D3B574]">
           <CardHeader>
-            <CardTitle className="text-xl">RecruitNC AI Ranking Board</CardTitle>
+            <CardTitle className="text-xl"><BrandName /> AI Ranking Board</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="mb-4 text-sm text-gray-600">

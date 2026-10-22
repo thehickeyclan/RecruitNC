@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { isNationalPath, isOpenWhileStaged, stagedBrandForHost } from "@/lib/recruiting/national-paths"
-import { stagingGateAllows } from "@/lib/staging-gate"
+import { isRankerOnly, stagingGateAllows } from "@/lib/staging-gate"
 import { FUNDRAISING_AUTH_RETURN_COOKIE } from "@/lib/fundraising/fundraising-auth-return-cookie"
 import { adminGateApplies, adminGateRefusal } from "@/lib/admin-api-gate"
 import { COACH_HOME_PATH, PORTAL_HINT_COOKIE, coachFrontDoor } from "@/lib/coach-front-door"
@@ -53,6 +53,10 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
    * Anything already pointing at recruit.wrestlingguild.com - sign-in links, bookmarks - lands on
    * the same page there. 307 while the product is unlaunched, so nothing caches a permanent move.
    */
+  // State rankers work on recruitwrestlers.com; NC United's copy of the board forwards them.
+  if (!brand && pathname === "/admin/rankings/board" && request.method === "GET" && (await isRankerOnly(request.headers, request.cookies.getAll()))) {
+    return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, "https://www.recruitwrestlers.com"), 307)
+  }
   if (brand === "guild") {
     return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, "https://www.recruitwrestlers.com"), 307)
   }
@@ -60,7 +64,7 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
     if (pathname === "/robots.txt") {
       return new NextResponse("User-agent: *\nDisallow: /\n", { headers: { "Content-Type": "text/plain", "X-Robots-Tag": "noindex, nofollow" } })
     }
-    if (!isOpenWhileStaged(pathname) && !(await stagingGateAllows(request.headers, request.cookies.getAll()))) {
+    if (!isOpenWhileStaged(pathname) && !(await stagingGateAllows(request.headers, request.cookies.getAll(), pathname))) {
       if (pathname.startsWith("/api/")) {
         return NextResponse.json({ error: "Not available yet." }, { status: 403, headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" } })
       }

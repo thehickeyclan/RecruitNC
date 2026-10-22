@@ -6,6 +6,7 @@ import {
   syncScoutingSubscriptionStatus,
 } from "@/lib/scouting-report-fulfil"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { stripeSecretFor } from "@/lib/stripe-accounts"
 import { sendNationalTeamFeeReceiptAutoIfEligible } from "@/lib/national-team-auto-fee-receipt"
 import { sendOrderReceiptIfEligible } from "@/lib/order-auto-receipt"
 import { sendPurchaseReceiptForEvent } from "@/lib/purchase-receipt"
@@ -978,7 +979,9 @@ export async function POST(request: NextRequest) {
       } else if (result.replacedSubscriptionId) {
         // An upgrade to the Command Center: stop the Rankings plan it replaces, so nobody pays twice.
         try {
-          await getStripe().subscriptions.cancel(result.replacedSubscriptionId)
+          // The replaced plan may bill on Guild Ventures' account (lib/stripe-accounts.ts).
+          const replacedKey = stripeSecretFor(result.replacedAccount ?? "ncu")
+          if (replacedKey) await new Stripe(replacedKey).subscriptions.cancel(result.replacedSubscriptionId)
         } catch (cancelErr) {
           console.error("[stripe webhook] could not cancel the replaced subscription:", result.replacedSubscriptionId, cancelErr)
         }

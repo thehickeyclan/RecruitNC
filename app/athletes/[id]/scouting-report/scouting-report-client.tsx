@@ -14,6 +14,11 @@ import { RETAINED_EDITIONS } from "@/lib/national-rankings"
 import { keyFacts, snapshotFigures, starPart } from "@/lib/scouting-report-snapshot"
 import { ELITE_OPPONENT_PERCENTILE } from "@/lib/competition-strength"
 
+/** The product's name in computed text ("RecruitNC #6"): RecruitWrestlers on its own address. */
+function brandSwap(text: string, rw: boolean): string {
+  return rw ? text.replace(/RecruitNC/g, "RecruitWrestlers") : text
+}
+
 /**
  * The printable scouting report.
  *
@@ -387,7 +392,7 @@ export function ScoutingReportDocument({
             ) : null}
             <div className="mt-2 text-[13px] font-bold text-[#03154C]">
               {[
-                report.rankingPublished && report.prospectRanking ? rankingLabel(report.prospectRanking, identity.gender) : null,
+                report.rankingPublished && report.prospectRanking ? brandSwap(rankingLabel(report.prospectRanking, identity.gender), rw) : null,
                 identity.graduationYear ? `Class of ${identity.graduationYear}` : null,
               ]
                 .filter(Boolean)
@@ -527,9 +532,9 @@ export function ScoutingReportDocument({
                 {starRows(report).map((row) => (
                   <tr key={row.label} className="border-t border-gray-300">
                     <td className="w-[7.5rem] py-1.5 pr-3 align-top text-[9.5px] font-black uppercase tracking-[0.14em] text-[#03154C] sm:w-[12rem]">
-                      {row.label}
+                      {brandSwap(row.label, rw)}
                     </td>
-                    <td className="py-1.5 align-top text-gray-900">{row.value}</td>
+                    <td className="py-1.5 align-top text-gray-900">{brandSwap(row.value, rw)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -713,9 +718,9 @@ export function ScoutingReportDocument({
               <span className="font-bold uppercase tracking-wider text-[#B31B1B]">Star rating.</span> Built only from
               results on file, never a projection of college ceiling. Three equal parts: in-state performance (best
               Tournament of Champions or NCHSAA finish, plus significant wins), nationals (NHSCA, Super 32 and Fargo
-              placing weigh most), and the RecruitNC class ranking. A top-10 ranking holds a wrestler at four stars and
+              placing weigh most), and the {rw ? "RecruitWrestlers" : "RecruitNC"} class ranking. A top-10 ranking holds a wrestler at four stars and
               any other ranking at three; some credentials also set a minimum, named beside the stars. Five stars
-              requires a current national ranking and a top-eight finish at Super 32. Rated for the classes RecruitNC
+              requires a current national ranking and a top-eight finish at Super 32. Rated for the classes {rw ? "RecruitWrestlers" : "RecruitNC"}
               ranks.
             </p>
           ) : null}
