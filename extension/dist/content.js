@@ -338,7 +338,7 @@
     void start();
   }
   function injectPageHelper() {
-    if (document.getElementById("ncu-page-helper")) return;
+    if (!/(^|\.)frontrush\.com$/.test(location.hostname) || document.getElementById("ncu-page-helper")) return;
     const script = document.createElement("script");
     script.id = "ncu-page-helper";
     script.src = chrome.runtime.getURL("dist/page.js");
