@@ -60,6 +60,7 @@ type BoardAthlete = {
   head_to_head: Array<{ opponentId: string; opponent: string; wins: number; losses: number }>
   match_count: number
   win_loss?: string | null
+  tournament_record?: string | null
   college?: string | null
   college_opens_experience?: string | null
   final_rank?: number
@@ -377,8 +378,11 @@ function Details({
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Season</p>
           <p className="mt-0.5 text-slate-200">
-            {athlete.match_count ? `${athlete.match_count} matches${athlete.win_loss ? ` · ${athlete.win_loss}` : ""}` : "No match data"}
+            {athlete.match_count ? `${athlete.match_count} matches${athlete.win_loss ? ` · ${athlete.win_loss}` : ""}` : "No season data"}
           </p>
+          {athlete.tournament_record ? (
+            <p className="mt-0.5 text-slate-300">Tournaments · {athlete.tournament_record}</p>
+          ) : null}
         </div>
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Stars</p>
