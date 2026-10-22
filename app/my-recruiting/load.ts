@@ -90,11 +90,14 @@ export async function loadCommandCenter(returnTo: string) {
       // The interest-form column may not exist yet (scripts/add-college-list-questionnaire-done.sql): fall back.
       admin
         .from("college_list_items")
-        .select("school_id, status, note, updated_at, questionnaire_done_at, app_plan, app_status, app_submitted_on, preread")
+        .select("school_id, status, note, updated_at, questionnaire_done_at, app_plan, app_status, app_submitted_on, preread, stage_changed_at")
         .eq("user_id", viewerId)
         .order("updated_at", { ascending: false })
         .then(async (r) => {
           if (r.error?.code !== "42703") return r
+          // Before the days-in-stage column (scripts/add-college-list-stage-changed.sql).
+          const s = await admin.from("college_list_items").select("school_id, status, note, updated_at, questionnaire_done_at, app_plan, app_status, app_submitted_on, preread").eq("user_id", viewerId).order("updated_at", { ascending: false })
+          if (s.error?.code !== "42703") return s
           const q = await admin.from("college_list_items").select("school_id, status, note, updated_at, questionnaire_done_at").eq("user_id", viewerId).order("updated_at", { ascending: false })
           return q.error?.code === "42703" ? admin.from("college_list_items").select("school_id, status, note, updated_at").eq("user_id", viewerId).order("updated_at", { ascending: false }) : q
         }),
@@ -115,6 +118,7 @@ export async function loadCommandCenter(returnTo: string) {
           hasQuestionnaire: questionnairesForSchool(school.id).length > 0,
           admissions: admissionsOf(row as Record<string, unknown>),
           admissionInfo: admissionsSummary(school.id),
+          stageSince: ((row as { stage_changed_at?: string | null }).stage_changed_at ?? (row.updated_at ? String(row.updated_at) : null)) as string | null,
           questionnaireDone: questionnaireDone({ status, questionnaireDoneAt: (row as { questionnaire_done_at?: string | null }).questionnaire_done_at ?? null }),
           questionnaireDoneAt: (row as { questionnaire_done_at?: string | null }).questionnaire_done_at ?? null,
           savedAt: row.updated_at ? String(row.updated_at) : null,
