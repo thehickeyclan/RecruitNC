@@ -6,7 +6,6 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
 import { buildRecruitNcRankingBoard } from "@/lib/rankings/recruitnc-ranking-engine"
 import { HOME_STATE, inState, normalizeStateCode } from "@/lib/recruiting/states"
-import { requireAdmin } from "@/lib/admin-auth"
 
 export const dynamic = "force-dynamic"
 
@@ -46,17 +45,12 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const year = searchParams.get("year") || "2027"
   const gender = searchParams.get("gender") || "Male"
-  // Whose board. North Carolina unless asked; ranker grants cover NC boards only, so any other
-  // state's board is for full admins until it has rankers of its own.
+  // Whose board. North Carolina unless asked; a ranker's grant names the states it covers.
   const state = normalizeStateCode(searchParams.get("state")) ?? HOME_STATE
-  // Admins, and people granted this board (see ranking-board-access). Middleware lets this path
-  // through to here for that reason.
-  const auth = await requireRankingBoardAccess(gender, Number(year), "read")
+  // Admins, and people granted this state's board (see ranking-board-access). Middleware lets this
+  // path through to here for that reason.
+  const auth = await requireRankingBoardAccess(gender, Number(year), "read", state)
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
-  if (state !== HOME_STATE) {
-    const adminOnly = await requireAdmin()
-    if (!adminOnly.ok) return NextResponse.json({ error: adminOnly.error }, { status: adminOnly.status })
-  }
 
   try {
     const fresh = searchParams.get("refresh") === "1"
