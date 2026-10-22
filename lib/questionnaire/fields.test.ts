@@ -37,6 +37,7 @@ describe("fieldForLabel", () => {
     ["Club Coach’s Name", "clubCoachName"],
     ["Club Team Coach Phone Number", "clubCoachPhone"],
     ["Club Coach’s Email Address", "clubCoachEmail"],
+    ["Graduate Academic Interest", null],
     ["Father's Occupation", null],
     ["Siblings", null],
   ]
