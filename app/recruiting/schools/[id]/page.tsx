@@ -43,6 +43,8 @@ import { SchoolActions } from "@/components/colleges/school-actions"
 import { StaffList } from "@/components/colleges/staff-list"
 import { WentHereSection } from "@/components/colleges/went-here-section"
 import { RoomByWeight } from "@/components/colleges/room-by-weight"
+import { AdmissionsCard } from "@/components/colleges/admissions-card"
+import { collegeAdmissions } from "@/lib/college-programs/admissions"
 import { InterestButton } from "@/components/colleges/interest-button"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { INCOME_BRACKETS, fitForSchool, satTotalRange } from "@/lib/college-programs/fit"
@@ -196,6 +198,7 @@ export default async function SchoolPage({ params, searchParams }: Params) {
 
   const cost = costLines(school.id, school.state)
   const tuition = cost ? null : tuitionFacts(school.id, school.state)
+  const admissions = collegeAdmissions(school.id)
   const fit = fitForSchool(school.id)
   const depth = depthFor(school.id, team)
   const roster = rosterForSchool(school.id)
@@ -427,6 +430,8 @@ export default async function SchoolPage({ params, searchParams }: Params) {
               <p className="mt-2 text-sm text-white/55">Not published.</p>
             )}
           </section>
+
+          {admissions ? <AdmissionsCard a={admissions} card={card} cardTitle={cardTitle} /> : null}
 
           {fitResult && ctx ? (
             <section className={card}>

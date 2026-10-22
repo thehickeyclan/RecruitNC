@@ -245,11 +245,11 @@ export function Super32WhatGoodLooksLikeContent() {
       <h3>For the boys</h3>
       <ul>
         <li>
-          <strong>Good:</strong> two or more placers, and more than 14 wrestlers with winning records (beating the best
+          <strong>Good:</strong> one or more placers, and more than 14 wrestlers with winning records (beating the best
           of the last three years).
         </li>
         <li>
-          <strong>Great:</strong> three or more placers, and a team winning percentage above a third.
+          <strong>Great:</strong> two or more placers, and a team winning percentage above a third.
         </li>
         <li>
           <strong>Historic:</strong> a North Carolina wrestler in a boys&apos; Super 32 final.

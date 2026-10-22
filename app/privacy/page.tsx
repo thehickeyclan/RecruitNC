@@ -1,32 +1,14 @@
 import type { Metadata } from "next"
-import { headers } from "next/headers"
 import { ContactEmail } from "@/components/recruiting/contact-email"
-import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
-import { RecruitWrestlersPolicy } from "./recruitwrestlers-policy"
 
-export const dynamic = "force-dynamic"
-
-async function onRecruitWrestlers() {
-  return stagedBrandForHost((await headers()).get("host")) === "national"
+export const metadata: Metadata = {
+  title: "Privacy Policy",
+  description:
+    "How NC United Wrestling collects, uses and protects information in the NC United app and on ncwrestlingunited.com.",
 }
 
-export async function generateMetadata(): Promise<Metadata> {
-  if (await onRecruitWrestlers()) {
-    return { title: "Privacy Policy", description: "How RecruitWrestlers collects, uses and protects information on recruitwrestlers.com." }
-  }
-  return {
-    title: "Privacy Policy",
-    description:
-      "How NC United Wrestling collects, uses and protects information in the NC United app and on ncwrestlingunited.com.",
-  }
-}
-
-/**
- * Public and unauthenticated on purpose: Apple requires App Review to reach this without an account.
- * recruitwrestlers.com has its own policy (./recruitwrestlers-policy.tsx), chosen on the server.
- */
-export default async function PrivacyPolicyPage() {
-  if (await onRecruitWrestlers()) return <RecruitWrestlersPolicy />
+/** Public and unauthenticated on purpose: Apple requires App Review to reach this without an account. */
+export default function PrivacyPolicyPage() {
   return (
     <main className="min-h-screen bg-rnc-ink px-6 py-16 text-white">
       <div className="mx-auto max-w-3xl">
@@ -98,6 +80,23 @@ export default async function PrivacyPolicyPage() {
               administration. Athletes and families can add a cell number, GPA and test scores
               themselves on their own profile. These fields are never public, and are not collected or
               shown anywhere in the app.
+            </p>
+
+            <h3 className="mt-5 font-semibold text-rnc-gold">College interest forms (website and the Interest Form Helper)</h3>
+            <p className="mt-2">
+              In the Recruiting Command Center, a family can save the answers college recruiting questionnaires ask for, so they are
+              typed once: the wrestler&apos;s date of birth, home address and height; parent or guardian names and contact details; high
+              school and club coach contacts; class rank; and NCAA Eligibility Center ID. Only the wrestler&apos;s own family and NC
+              United staff can read these answers. They are never public, never shown to college coaches, and never sent to a college by
+              us.
+            </p>
+            <p className="mt-2">
+              The Interest Form Helper is an optional Chrome extension. When a family clicks Fill on a college&apos;s questionnaire, it
+              reads their saved answers from us using their own signed-in session and types them into that page in their browser. The
+              family checks the form and presses the college&apos;s Submit button themselves; what they submit goes to that college under
+              the college&apos;s own privacy policy. The helper tells us only that a college&apos;s form was submitted, so it can be marked
+              with the date and time on the family&apos;s list. It reads nothing else from the pages you visit, and nothing it handles is
+              used for advertising.
             </p>
 
             <h3 className="mt-5 font-semibold text-rnc-gold">Scouting reports for college coaches</h3>

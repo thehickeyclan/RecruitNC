@@ -1,6 +1,10 @@
 "use client"
 
 import { useMemo, useState } from "react"
+
+import { AdmissionsControls } from "@/components/portal/admissions-controls"
+import type { AdmissionsSummary } from "@/lib/college-programs/admissions-format"
+import type { Admissions } from "@/lib/college-programs/list"
 import { BarChart3, Eye, Mail, MessageSquare, MoreVertical, PhoneCall } from "lucide-react"
 
 import { CoachEmailComposer } from "@/components/colleges/coach-email-composer"
@@ -27,6 +31,12 @@ export type ListRow = {
   /** What the family logged: the furthest step (reached out, visit, offer) and the latest contact. */
   reached?: { label: string; date: string } | null
   hasQuestionnaire: boolean
+  /** The interest form is done: its own check, whatever the stage (22 Oct 2026). */
+  questionnaireDone?: boolean
+  /** The admissions track, beside the stage. */
+  admissions?: Admissions
+  /** The college's own deadlines for this cycle. */
+  admissionInfo?: AdmissionsSummary | null
   note: string | null
 }
 
@@ -45,6 +55,8 @@ const MAX_COMPARE = 4
 /** What to do next with one college, from where it stands. A coach waiting on a reply comes first. */
 function nextStep(r: ListRow): { label: string; href?: string; email?: boolean } {
   if (r.messaged?.yourTurn) return { label: "Reply", href: `/inbox/${r.messaged.threadId}` }
+  // A family often emails the coach before the interest form: the form is still the next step.
+  if (r.hasQuestionnaire && !r.questionnaireDone && (r.status === "interested" || r.status === "contacted")) return { label: "Interest form", href: `/recruiting/schools/${r.id}#staff` }
   switch (r.status) {
     case "interested":
       return r.hasQuestionnaire ? { label: "Questionnaire", href: `/recruiting/schools/${r.id}#staff` } : { label: "Send intro", email: true }
@@ -129,7 +141,7 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
                 Coach activity
                 <span className="block font-normal text-white/35">verified</span>
               </th>
-              <th className="p-3">Your status</th>
+              <th className="p-3">Your status · admissions</th>
               <th className="p-3">Next step</th>
               <th className="w-10 p-3" />
             </tr>
@@ -207,8 +219,10 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
                       {!r.viewed && !r.messaged && !r.reached ? <span className="text-xs text-white/30">None yet</span> : null}
                     </span>
                   </td>
-                  <td className="w-44 p-3">
+                  <td className="w-56 p-3">
                     <StageSelect schoolId={r.id} status={r.status} readOnly={readOnly} />
+                    <InterestFormCheck schoolId={r.id} done={Boolean(r.questionnaireDone)} readOnly={readOnly} />
+                    {r.admissions ? <AdmissionsControls schoolId={r.id} value={r.admissions} info={r.admissionInfo} readOnly={readOnly} /> : null}
                   </td>
                   <td className="p-3">
                     {next.email ? (
@@ -283,5 +297,28 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
         />
       ) : null}
     </div>
+  )
+}
+
+/** The interest form, checked off on its own (Matt, 22 Oct 2026): it was a stage, and families who
+ *  emailed a coach first kept it in the note instead ("Need to fill out interest form"). */
+function InterestFormCheck({ schoolId, done, readOnly }: { schoolId: string; done: boolean; readOnly: boolean }) {
+  const [on, setOn] = useState(done)
+  const [failed, setFailed] = useState(false)
+  const toggle = async (next: boolean) => {
+    setOn(next)
+    setFailed(false)
+    const res = await fetch("/api/college-list", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ schoolId, questionnaireDone: next }) }).catch(() => null)
+    if (!res?.ok) {
+      setOn(!next)
+      setFailed(true)
+    }
+  }
+  return (
+    <label className="mt-1.5 flex cursor-pointer items-center gap-1.5 text-[11px] font-semibold text-white/70">
+      <input type="checkbox" checked={on} disabled={readOnly} onChange={(e) => void toggle(e.target.checked)} className="h-3.5 w-3.5 accent-[#D3B574]" />
+      <span className={on ? "text-emerald-300" : ""}>{on ? "Interest form done" : "Interest form done?"}</span>
+      {failed ? <span className="text-amber-200">not saved</span> : null}
+    </label>
   )
 }

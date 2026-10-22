@@ -17,6 +17,7 @@
  * coach (classifyViewer), never to an address that unsubscribed, and only notable losses the
  * profile would show that coach.
  *
+ * --no-ai leaves out the written summaries (each is checked against the report's facts).
  * Other options: --athletes-file <ids.txt> (comma or newline separated), --no-profile-check (skip the profile cross-check, faster),
  * --no-strength (skip each wrestler's Strength of Competition grade), --concurrency N.
  */
@@ -164,8 +165,20 @@ async function main() {
       programLogo = (school?.logo_url as string | null) ?? null
     }
   }
+  // A short written summary per competed wrestler, checked against the report's facts (--no-ai skips).
+  const summaries = new Map<string, string>()
+  if (!flag("no-ai")) {
+    const { writeReportSummary } = await import("../lib/coach-event-report-summary")
+    const competed = reports.filter((r) => r.competed)
+    for (let i = 0; i < competed.length; i += 4) {
+      const done = await Promise.all(competed.slice(i, i + 4).map(async (r) => [r.athleteId, await writeReportSummary(r, event!.name, lossesVisible)] as const))
+      for (const [id, text] of done) if (text) summaries.set(id, text)
+    }
+    console.log(`\nwritten summaries: ${summaries.size} of ${competed.length} competed`)
+    for (const r of competed) console.log(`  ${r.name}: ${summaries.get(r.athleteId) ?? "(none: computed card only)"}`)
+  }
   const renderFor = (unsubscribeUrl: string | null) =>
-    renderCoachReportEmailHtml({ event: event!, coachName: coach?.name ?? null, program, programLogo, reports, photos, lossesVisible, unsubscribeUrl })
+    renderCoachReportEmailHtml({ event: event!, coachName: coach?.name ?? null, program, programLogo, reports, photos, lossesVisible, unsubscribeUrl, summaries })
   const email = renderFor(null)
   fs.mkdirSync(path.dirname(path.resolve(out)), { recursive: true })
   fs.writeFileSync(out, email.html)

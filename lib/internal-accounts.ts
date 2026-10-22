@@ -23,9 +23,11 @@ const INTERNAL_DOMAINS = ["ncwrestlingunited.com", "example.com", "example.org"]
 /**
  * App Store review logins, held for as long as Apple needs them, and our own test coach - the
  * account staff sign in with to see the coach portal as a coach sees it. Its views of a profile
- * are ours looking at our own site.
+ * are ours looking at our own site. matt@recruitwrestlers.com is the Chrome Web Store reviewer's
+ * login for the Interest Form Helper (22 Oct 2026): a parent account with a made-up wrestler,
+ * Jordan Example, let through the recruitwrestlers.com launch gate so Google can test there.
  */
-const INTERNAL_ADDRESSES = ["thehickeyclan+applereview@gmail.com", "testcoach.thehickeyclan@gmail.com"]
+const INTERNAL_ADDRESSES = ["thehickeyclan+applereview@gmail.com", "testcoach.thehickeyclan@gmail.com", "matt@recruitwrestlers.com"]
 
 export function isInternalAccount(email: string | null | undefined): boolean {
   const address = String(email ?? "").trim().toLowerCase()

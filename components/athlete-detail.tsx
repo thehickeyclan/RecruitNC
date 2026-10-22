@@ -243,7 +243,7 @@ function CompetitionBox({ competition }: { competition: CompetitionSummary }) {
     <div className="rounded-lg border border-white/20 bg-white/10 p-3 backdrop-blur-sm">
       <p className="text-xs font-semibold uppercase tracking-wider text-white/70">Competes</p>
       <p className="text-sm font-bold text-white">
-        {competition.scope === "national" ? "Nationally" : "North Carolina only"}
+        {competition.scope === "national" ? "Nationally" : "In-state only"}
         {competition.styles.length ? (
           <span className="font-semibold text-[#D3B574]"> · {competition.styles.map((st) => STYLE_LABEL[st]).join(" · ")}</span>
         ) : null}

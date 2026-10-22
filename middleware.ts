@@ -73,6 +73,8 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
       return holding
     }
     if (pathname === "/") return NextResponse.rewrite(new URL("/recruitwrestlers", request.url))
+    // RecruitWrestlers' own policy, not NC United's (app/recruitwrestlers/privacy).
+    if (pathname === "/privacy") return NextResponse.rewrite(new URL("/recruitwrestlers/privacy", request.url))
     if (!isNationalPath(pathname) && !isOpenWhileStaged(pathname) && !pathname.startsWith("/guild-recruiting")) {
       return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, APP_ORIGIN), 307)
     }

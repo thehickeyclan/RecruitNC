@@ -71,8 +71,10 @@ export function isOpenWhileStaged(pathname: string): boolean {
     // athlete data. Every page behind it stays staff-only until launch.
     pathname === "/" ||
     pathname === "/robots.txt" ||
-    // The privacy policy is public: the public home page links to it and it carries no athlete data.
+    // The privacy policy is public: the home page links to it, the Chrome Web Store listing needs it
+    // (Matt, 22 Oct 2026), and it carries no athlete data.
     pathname === "/privacy" ||
+    pathname === "/recruitwrestlers/privacy" ||
     pathname === "/guild-recruiting/coming-soon" ||
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/api/auth/") ||

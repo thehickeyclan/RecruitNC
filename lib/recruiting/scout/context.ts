@@ -5,7 +5,9 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { mostRecentGraduatedClassYear, seniorClassYear } from "@/lib/class-years"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { getCoachViewsForAthlete } from "@/lib/coach-profile-views"
-import { COLLEGE_LIST_STATUS_LABEL, isCollegeListStatus } from "@/lib/college-programs/list"
+import { admissionsSummary } from "@/lib/college-programs/admissions"
+import { daysUntil, easternToday } from "@/lib/college-programs/admissions-format"
+import { APP_PLAN_LABEL, APP_STATUS_LABEL, COLLEGE_LIST_STATUS_LABEL, PREREAD_LABEL, admissionsOf, isCollegeListStatus } from "@/lib/college-programs/list"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { collegeFitFor, loadFamilyFitContext } from "@/lib/recruiting/college-fit"
@@ -199,7 +201,17 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
     grade ? loadRoadmapSignals(admin, { athleteId: String(wrestler.id), userId, grade }).catch(() => null) : Promise.resolve(null),
     loadFamilyFitContext(admin, userId, team).catch(() => null),
     getCoachViewsForAthlete(admin, String(wrestler.id)).catch(() => null),
-    admin.from("college_list_items").select("school_id, status").eq("user_id", userId).then((r) => r.data ?? []),
+    // questionnaire_done_at may not exist yet: fall back to the stage alone.
+    admin
+      .from("college_list_items")
+      .select("school_id, status, questionnaire_done_at, app_plan, app_status, app_submitted_on, preread")
+      .eq("user_id", userId)
+      .then(async (r) => {
+        if (!r.error) return (r.data ?? []) as Array<Record<string, unknown> & { school_id: string; status: string; questionnaire_done_at?: string | null }>
+        const q = await admin.from("college_list_items").select("school_id, status, questionnaire_done_at").eq("user_id", userId)
+        if (!q.error) return (q.data ?? []) as Array<Record<string, unknown> & { school_id: string; status: string; questionnaire_done_at?: string | null }>
+        return ((await admin.from("college_list_items").select("school_id, status").eq("user_id", userId)).data ?? []) as Array<Record<string, unknown> & { school_id: string; status: string; questionnaire_done_at?: string | null }>
+      }),
     buildInfoSheet(admin, String(wrestler.id)).catch(() => null),
     familyStar(admin, String(wrestler.id), (wrestler.gender as string | null) ?? null, classYear),
     loadD1Tiers(),
@@ -273,6 +285,36 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
     const fit = fitCtx ? collegeFitFor(fitCtx, school, null) : null
     listLines.push(
       `- ${spoken(school.name)} (${division}, ${school.city}, ${school.state}) [link: school:${school.id}]: stage ${stage}.` +
+        // The interest form and the admissions track, as the family recorded them (22 Oct 2026).
+        ` Interest form: ${row.questionnaire_done_at || row.status === "questionnaire" ? "done" : "not recorded as done"}.` +
+        (() => {
+          const a = admissionsOf(row as Record<string, unknown>)
+          const parts = [a.status ? `application ${APP_STATUS_LABEL[a.status].toLowerCase()}` : "no application recorded", a.plan ? APP_PLAN_LABEL[a.plan] : null, a.submittedOn ? `submitted ${a.submittedOn}` : null, a.preread ? PREREAD_LABEL[a.preread].toLowerCase() : null].filter(Boolean)
+          return ` Admissions: ${parts.join(", ")}.`
+        })() +
+        // The college's own deadlines (Muse's pull of its admissions pages), days counted here.
+        (() => {
+          const info = admissionsSummary(school.id)
+          if (!info) return ""
+          const today = easternToday()
+          const dated = info.deadlines
+            .filter((d) => d.date)
+            .map((d) => {
+              const days = daysUntil(d.date!, today)
+              return `${d.label ?? APP_PLAN_LABEL[d.plan]} ${d.date} (${days < 0 ? "passed" : days === 0 ? "today" : `${days} days from today`})`
+            })
+          const undated = info.deadlines.filter((d) => !d.date && d.raw).map((d) => `${APP_PLAN_LABEL[d.plan]}: ${d.raw}`)
+          const off = info.notOffered.map((p) => APP_PLAN_LABEL[p])
+          const bits = [
+            dated.length || undated.length ? `deadlines for fall 2027 entry: ${[...dated, ...undated].join("; ")}` : "deadlines not found",
+            off.length ? `not offered: ${off.join(", ")}` : null,
+            info.rolling ? "rolling admission" : null,
+            info.testPolicy ? `testing ${info.testPolicy}` : null,
+            info.fee != null ? (info.fee === 0 ? "no application fee" : `application fee $${info.fee}`) : null,
+            info.aidForm ? `aid forms ${info.aidForm}` : null,
+          ].filter(Boolean)
+          return ` College admissions: ${bits.join("; ")}.`
+        })() +
         (fit?.cost ? ` Full yearly cost ${money(fit.cost.amount)} (${fit.cost.year}).` : "") +
         (fit?.net?.amount != null ? ` Net price ${money(fit.net.amount)}, the average for all aided students.` : "") +
         (fit ? ` Athletic: ${fit.lines.athletic.text} Academic: ${fit.lines.academic.text}` : ""),
@@ -323,6 +365,7 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
     highSchool: wrestler.highschool && wrestler.highschool !== "Not specified" ? String(wrestler.highschool) : null,
     fit: fitCtx,
     list: new Map(list.map((r) => [String(r.school_id), listStage(r.status)])),
+    questionnaireDone: new Set(list.filter((r) => r.questionnaire_done_at || r.status === "questionnaire").map((r) => String(r.school_id))),
     viewed: new Set((views?.schools ?? []).map((v) => collegeKey(v.school))),
     homeState,
     tiers,

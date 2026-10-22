@@ -102,7 +102,7 @@ export function planSteps(input: PlanInput): PlanStep[] {
           : "Questionnaires are sent",
       detail: "It puts the wrestler in the program's own database. Do it before you email, so you can say you have.",
       done: input.questionnairesWaiting === 0,
-      action: input.questionnairesWaiting > 0 ? { kind: "link", href: "/recruiting/college-map?list=1" } : null,
+      action: input.questionnairesWaiting > 0 ? { kind: "link", href: "/my-recruiting/questionnaires" } : null,
     })
     steps.push({
       key: "email",

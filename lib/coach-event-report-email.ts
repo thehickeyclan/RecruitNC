@@ -33,6 +33,8 @@ export type CoachReportEmailInput = {
   /** Notable losses are shown to verified college coaches only. */
   lossesVisible: boolean
   unsubscribeUrl?: string | null
+  /** A short written summary per athlete id (lib/coach-event-report-summary.ts), when one passed its checks. */
+  summaries?: ReadonlyMap<string, string>
 }
 
 function esc(s: unknown): string {
@@ -87,7 +89,7 @@ function strengthRow(strength: AthleteEventReport["strength"]): string {
 </tr></table>`
 }
 
-function competedCard(r: AthleteEventReport, photo: string | undefined, lossesVisible: boolean): string {
+function competedCard(r: AthleteEventReport, photo: string | undefined, lossesVisible: boolean, summaries?: ReadonlyMap<string, string>): string {
   const facts = [r.classYear ? `Class of ${r.classYear}` : null, r.school, r.weight ? `${r.weight} lb` : null].filter(Boolean).map(esc).join(" · ")
   const bouts = r.bouts
     .map((b) => `<span style="white-space:nowrap;"><span style="color:${b.outcome === "W" ? WIN : LOSS};font-weight:800;">${b.outcome}</span> ${esc(b.opponent)}${b.score || b.method ? ` <span style="color:#94a3b8;">${esc([b.method, b.score].filter(Boolean).join(" "))}</span>` : ""}</span>`)
@@ -104,6 +106,7 @@ function competedCard(r: AthleteEventReport, photo: string | undefined, lossesVi
     </td>
   </tr></table>
   ${r.placementNote ? `<div style="font-family:${FONT};font-size:12px;color:${MUTED};margin-top:8px;">${esc(r.placementNote)}.</div>` : ""}
+  ${summaries?.get(r.athleteId) ? `<div style="font-family:${FONT};font-size:14px;line-height:1.55;color:${INK};margin-top:10px;">${esc(summaries.get(r.athleteId)!)}</div>` : ""}
   ${strengthRow(r.strength)}
   ${r.significantWins.length ? `${sectionLabel(`Significant wins · ${r.significantWins.length}`)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${r.significantWins.map((w) => resultRow(w, "W")).join("")}</table>` : ""}
   ${lossesVisible && r.notableLosses.length ? `${sectionLabel(`Notable losses · ${r.notableLosses.length}`)}<table role="presentation" width="100%" cellpadding="0" cellspacing="0">${r.notableLosses.map((l) => resultRow(l, "L")).join("")}</table>` : ""}
@@ -169,7 +172,7 @@ export function renderCoachReportEmailHtml(input: CoachReportEmailInput): { subj
 
 <tr><td style="background:#f8fafc;padding:22px 16px 6px;border-left:1px solid ${LINE};border-right:1px solid ${LINE};">
   ${competed.length ? `<div style="font-family:${FONT};font-size:13px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:${NAVY};margin:0 4px 12px;">Results · best finishes first</div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${competed.map((r) => competedCard(r, input.photos?.get(r.athleteId), input.lossesVisible)).join("")}</table>` : `<div style="font-family:${FONT};font-size:15px;color:${INK};margin:0 4px 16px;">None of your starred wrestlers competed at ${esc(event.name)}.</div>`}
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${competed.map((r) => competedCard(r, input.photos?.get(r.athleteId), input.lossesVisible, input.summaries)).join("")}</table>` : `<div style="font-family:${FONT};font-size:15px;color:${INK};margin:0 4px 16px;">None of your starred wrestlers competed at ${esc(event.name)}.</div>`}
   ${notCompeted.length ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid ${LINE};border-radius:14px;margin-bottom:16px;"><tr><td style="padding:16px 18px;">
     <div style="font-family:${FONT};font-size:13px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:${NAVY};">Did not compete · ${notCompeted.length}</div>
     <div style="font-family:${FONT};font-size:12px;color:${MUTED};margin:4px 0 8px;">Starred, but not in the ${esc(event.name)} brackets.</div>
