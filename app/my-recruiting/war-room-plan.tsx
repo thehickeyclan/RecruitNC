@@ -1,5 +1,6 @@
 "use client"
 
+import type { AdmissionsSummary } from "@/lib/college-programs/admissions-format"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { CalendarDays, Check, ChevronRight, Circle, ListChecks, Lock, Mail, MapPin, X } from "lucide-react"
 
@@ -29,6 +30,8 @@ export type WarRoomSchool = {
   questionnaireDoneAt?: string | null
   /** The admissions track (application status, plan, date, pre-read). */
   admissions?: Admissions
+  /** The college's own deadlines and basics for this cycle (lib/college-programs/admissions.ts). */
+  admissionInfo?: AdmissionsSummary | null
   /** "$31,450 tuition" for a North Carolina family (2023-24, tuition only), or null. */
   tuition: string | null
   /** The family's own note on the college: calls, what the coach said, next steps. */
@@ -405,6 +408,7 @@ export function WarRoomPlan({
                   note: s.noTeam ? `${s.noTeam} in 2026-27` : s.hasQuestionnaire && !s.questionnaireDone ? "Interest form to fill out" : null,
                   questionnaireDone: Boolean(s.questionnaireDone),
                   admissions: s.admissions ?? NO_ADMISSIONS,
+                  admissionInfo: s.admissionInfo ?? null,
                   memo: s.memo ?? null,
                   onRecruitNC: Boolean(s.onRecruitNC),
                   interest: interest && s.onRecruitNC ? (interest[wrestler.id] ?? []).includes(s.id) : null,

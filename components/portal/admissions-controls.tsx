@@ -4,20 +4,20 @@ import { useState } from "react"
 
 import {
   APP_PLANS,
-  APP_PLAN_LABEL,
   APP_STATUSES,
   APP_STATUS_LABEL,
   PREREADS,
   PREREAD_LABEL,
   type Admissions,
 } from "@/lib/college-programs/list"
+import { deadlineLine, easternToday, nextDeadline, planOptionLabel, type AdmissionsSummary } from "@/lib/college-programs/admissions-format"
 
 /**
  * The admissions track on one college (Matt, 22 Oct 2026: "did I apply and what is the status?"):
  * the application's status and plan, the day it went in, and the coach's pre-read. Beside the
  * recruiting stage, never instead of it. Saves each change on its own.
  */
-export function AdmissionsControls({ schoolId, value, readOnly }: { schoolId: string; value: Admissions; readOnly: boolean }) {
+export function AdmissionsControls({ schoolId, value, info, readOnly }: { schoolId: string; value: Admissions; info?: AdmissionsSummary | null; readOnly: boolean }) {
   const [a, setA] = useState<Admissions>(value)
   const [failed, setFailed] = useState(false)
   const save = async (patch: Partial<Admissions>) => {
@@ -34,7 +34,11 @@ export function AdmissionsControls({ schoolId, value, readOnly }: { schoolId: st
   const select = "h-7 min-w-0 rounded-md border border-white/15 bg-[#0A1628] px-1 text-[11px] text-white/80 disabled:opacity-50"
   const today = new Date().toISOString().slice(0, 10)
   const tone = a.status === "admitted" ? "text-emerald-300" : a.status === "denied" ? "text-white/40" : a.status === "deferred" || a.status === "waitlisted" ? "text-amber-200" : ""
+  // The college's next deadline, until the application is in. Counted from Eastern time.
+  const next = !a.status || a.status === "planning" ? nextDeadline(info, a.plan, easternToday()) : null
+  const urgency = next ? (next.days <= 7 ? "text-rose-300" : next.days <= 21 ? "text-amber-200" : "text-white/55") : ""
   return (
+    <>
     <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
       <select
         aria-label="Application status"
@@ -58,7 +62,7 @@ export function AdmissionsControls({ schoolId, value, readOnly }: { schoolId: st
           <option value="">Plan?</option>
           {APP_PLANS.map((p) => (
             <option key={p} value={p}>
-              {APP_PLAN_LABEL[p]}
+              {planOptionLabel(info, p)}
             </option>
           ))}
         </select>
@@ -84,5 +88,16 @@ export function AdmissionsControls({ schoolId, value, readOnly }: { schoolId: st
       </select>
       {failed ? <span className="text-[11px] text-amber-200">not saved</span> : null}
     </div>
+    {next || (info?.applyUrl && (!a.status || a.status === "planning")) ? (
+      <p className="mt-1 flex flex-wrap items-center gap-x-2 text-[11px] font-semibold">
+        {next ? <span className={urgency}>{deadlineLine(next)}</span> : null}
+        {info?.applyUrl ? (
+          <a href={info.applyUrl} target="_blank" rel="noopener noreferrer" className="text-[#D3B574] hover:underline">
+            Apply ↗
+          </a>
+        ) : null}
+      </p>
+    ) : null}
+    </>
   )
 }

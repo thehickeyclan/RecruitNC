@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 
 import { AdmissionsControls } from "@/components/portal/admissions-controls"
+import type { AdmissionsSummary } from "@/lib/college-programs/admissions-format"
 import type { Admissions } from "@/lib/college-programs/list"
 import { BarChart3, Eye, Mail, MessageSquare, MoreVertical, PhoneCall } from "lucide-react"
 
@@ -34,6 +35,8 @@ export type ListRow = {
   questionnaireDone?: boolean
   /** The admissions track, beside the stage. */
   admissions?: Admissions
+  /** The college's own deadlines for this cycle. */
+  admissionInfo?: AdmissionsSummary | null
   note: string | null
 }
 
@@ -219,7 +222,7 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
                   <td className="w-56 p-3">
                     <StageSelect schoolId={r.id} status={r.status} readOnly={readOnly} />
                     <InterestFormCheck schoolId={r.id} done={Boolean(r.questionnaireDone)} readOnly={readOnly} />
-                    {r.admissions ? <AdmissionsControls schoolId={r.id} value={r.admissions} readOnly={readOnly} /> : null}
+                    {r.admissions ? <AdmissionsControls schoolId={r.id} value={r.admissions} info={r.admissionInfo} readOnly={readOnly} /> : null}
                   </td>
                   <td className="p-3">
                     {next.email ? (

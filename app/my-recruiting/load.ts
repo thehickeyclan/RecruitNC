@@ -19,6 +19,7 @@ import { schoolLogoUrl } from "@/lib/college-programs/logo"
 import { gradeLabel } from "@/lib/college-programs/outreach-results"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { questionnairesForSchool } from "@/lib/college-programs/questionnaires"
+import { admissionsSummary } from "@/lib/college-programs/admissions"
 import { costShort } from "@/lib/college-programs/tuition"
 import { listUpcomingEvents, type UpcomingEvent } from "@/lib/college-programs/schedule"
 import { DIVISION_SHORT, primaryDivision, type CollegeMapSchool } from "@/lib/college-programs/types"
@@ -113,6 +114,7 @@ export async function loadCommandCenter(returnTo: string) {
           logo: null as string | null,
           hasQuestionnaire: questionnairesForSchool(school.id).length > 0,
           admissions: admissionsOf(row as Record<string, unknown>),
+          admissionInfo: admissionsSummary(school.id),
           questionnaireDone: questionnaireDone({ status, questionnaireDoneAt: (row as { questionnaire_done_at?: string | null }).questionnaire_done_at ?? null }),
           questionnaireDoneAt: (row as { questionnaire_done_at?: string | null }).questionnaire_done_at ?? null,
           savedAt: row.updated_at ? String(row.updated_at) : null,

@@ -5,6 +5,8 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { mostRecentGraduatedClassYear, seniorClassYear } from "@/lib/class-years"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { getCoachViewsForAthlete } from "@/lib/coach-profile-views"
+import { admissionsSummary } from "@/lib/college-programs/admissions"
+import { daysUntil, easternToday } from "@/lib/college-programs/admissions-format"
 import { APP_PLAN_LABEL, APP_STATUS_LABEL, COLLEGE_LIST_STATUS_LABEL, PREREAD_LABEL, admissionsOf, isCollegeListStatus } from "@/lib/college-programs/list"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { DIVISION_SHORT, type CollegeMapSchool } from "@/lib/college-programs/types"
@@ -289,6 +291,29 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
           const a = admissionsOf(row as Record<string, unknown>)
           const parts = [a.status ? `application ${APP_STATUS_LABEL[a.status].toLowerCase()}` : "no application recorded", a.plan ? APP_PLAN_LABEL[a.plan] : null, a.submittedOn ? `submitted ${a.submittedOn}` : null, a.preread ? PREREAD_LABEL[a.preread].toLowerCase() : null].filter(Boolean)
           return ` Admissions: ${parts.join(", ")}.`
+        })() +
+        // The college's own deadlines (Muse's pull of its admissions pages), days counted here.
+        (() => {
+          const info = admissionsSummary(school.id)
+          if (!info) return ""
+          const today = easternToday()
+          const dated = info.deadlines
+            .filter((d) => d.date)
+            .map((d) => {
+              const days = daysUntil(d.date!, today)
+              return `${d.label ?? APP_PLAN_LABEL[d.plan]} ${d.date} (${days < 0 ? "passed" : days === 0 ? "today" : `${days} days from today`})`
+            })
+          const undated = info.deadlines.filter((d) => !d.date && d.raw).map((d) => `${APP_PLAN_LABEL[d.plan]}: ${d.raw}`)
+          const off = info.notOffered.map((p) => APP_PLAN_LABEL[p])
+          const bits = [
+            dated.length || undated.length ? `deadlines for fall 2027 entry: ${[...dated, ...undated].join("; ")}` : "deadlines not found",
+            off.length ? `not offered: ${off.join(", ")}` : null,
+            info.rolling ? "rolling admission" : null,
+            info.testPolicy ? `testing ${info.testPolicy}` : null,
+            info.fee != null ? (info.fee === 0 ? "no application fee" : `application fee $${info.fee}`) : null,
+            info.aidForm ? `aid forms ${info.aidForm}` : null,
+          ].filter(Boolean)
+          return ` College admissions: ${bits.join("; ")}.`
         })() +
         (fit?.cost ? ` Full yearly cost ${money(fit.cost.amount)} (${fit.cost.year}).` : "") +
         (fit?.net?.amount != null ? ` Net price ${money(fit.net.amount)}, the average for all aided students.` : "") +
