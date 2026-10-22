@@ -13,7 +13,7 @@ import { hasPremiumAccess } from "@/lib/ranking-visibility"
 import { mostRecentGraduatedClassYear, seniorClassYear } from "@/lib/class-years"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
-import { isCollegeListStatus, type CollegeListStatus } from "@/lib/college-programs/list"
+import { isCollegeListStatus, questionnaireDone, type CollegeListStatus } from "@/lib/college-programs/list"
 import { loadCollegeMap } from "@/lib/college-programs/load"
 import { schoolLogoUrl } from "@/lib/college-programs/logo"
 import { gradeLabel } from "@/lib/college-programs/outreach-results"
@@ -86,7 +86,13 @@ export async function loadCommandCenter(returnTo: string) {
   const schedules = new Map<string, UpcomingEvent[]>()
   if (blue) {
     const [list, ...events] = await Promise.all([
-      admin.from("college_list_items").select("school_id, status, note, updated_at").eq("user_id", viewerId).order("updated_at", { ascending: false }),
+      // The interest-form column may not exist yet (scripts/add-college-list-questionnaire-done.sql): fall back.
+      admin
+        .from("college_list_items")
+        .select("school_id, status, note, updated_at, questionnaire_done_at")
+        .eq("user_id", viewerId)
+        .order("updated_at", { ascending: false })
+        .then((r) => (r.error?.code === "42703" ? admin.from("college_list_items").select("school_id, status, note, updated_at").eq("user_id", viewerId).order("updated_at", { ascending: false }) : r)),
       ...athletes.map((a) => listUpcomingEvents(admin, a.id).catch(() => ({ available: false, events: [] as UpcomingEvent[] }))),
     ])
     schools = (list.data ?? []).flatMap((row) => {
@@ -102,6 +108,7 @@ export async function loadCommandCenter(returnTo: string) {
           status,
           logo: null as string | null,
           hasQuestionnaire: questionnairesForSchool(school.id).length > 0,
+          questionnaireDone: questionnaireDone({ status, questionnaireDoneAt: (row as { questionnaire_done_at?: string | null }).questionnaire_done_at ?? null }),
           savedAt: row.updated_at ? String(row.updated_at) : null,
           memo: row.note ? String(row.note) : null,
           onRecruitNC: false,

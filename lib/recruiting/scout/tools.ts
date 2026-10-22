@@ -42,6 +42,8 @@ export type ScoutSession = {
   /** The wrestler's high school, to find alumni from the same school. */
   highSchool: string | null
   fit: FamilyFitContext | null
+  /** Colleges whose interest form the family has checked off. */
+  questionnaireDone?: Set<string>
   /** The family's college list: school id to stage. */
   list: Map<string, CollegeListStatus>
   /** Names of programs that viewed the wrestler, reduced for matching. */
@@ -262,8 +264,8 @@ async function collegeDetails(s: ScoutSession, a: Record<string, unknown>): Prom
   const qUrl = q.map((x) => (s.team === "womens" ? x.womens : s.team === "mens" ? x.mens : x.mens ?? x.womens)).find(Boolean)
   lines.push(qUrl ? `Recruiting questionnaire: ${qUrl}` : "Recruiting questionnaire: none on file; check the athletics website.")
   // Whether the family has done it, from their own list: an email may only claim it when this says so.
-  const stage = s.list.get(school.id)
-  const done = stage != null && ["questionnaire", "contacted", "talking", "visited", "offer"].includes(stage)
+  // The interest form is its own check (22 Oct 2026): emailing a coach first no longer counts as done.
+  const done = Boolean(s.questionnaireDone?.has(school.id)) || s.list.get(school.id) === "questionnaire"
   lines.push(done ? "The family's list records the questionnaire as done." : "The family has NOT recorded the questionnaire as done: an email must not say it is; suggest filling it out first.")
   const went = await loadWentHere(s.admin, school.id, s.userId, s.team).catch(() => null)
   if (went) {

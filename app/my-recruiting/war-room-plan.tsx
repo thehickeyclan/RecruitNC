@@ -21,6 +21,8 @@ export type WarRoomSchool = {
   status: CollegeListStatus
   logo: string | null
   hasQuestionnaire: boolean
+  /** The interest form (recruiting questionnaire) is done, whatever the stage. */
+  questionnaireDone?: boolean
   /** "$31,450 tuition" for a North Carolina family (2023-24, tuition only), or null. */
   tuition: string | null
   /** The family's own note on the college: calls, what the coach said, next steps. */
@@ -121,7 +123,7 @@ export function WarRoomPlan({
             profileTodo: wrestler.profileTodo,
             listStatuses: schools.map((s) => s.status),
             listLevels: schools.map((s) => s.level),
-            questionnairesWaiting: schools.filter((s) => s.hasQuestionnaire && s.status === "interested").length,
+            questionnairesWaiting: schools.filter((s) => s.hasQuestionnaire && !s.questionnaireDone).length,
             scheduleCount: events.length,
           })
         : [],
@@ -164,6 +166,22 @@ export function WarRoomPlan({
     if (!res.ok) {
       setSchools(before)
       setError("Could not save that change. Try again.")
+    }
+  }
+
+  /** The interest form, checked off on its own: a family often emails the coach first (Matt, 22 Oct 2026). */
+  const setQuestionnaire = async (school: WarRoomSchool, done: boolean) => {
+    const before = schools
+    setError(null)
+    setSchools((current) => current.map((s) => (s.id === school.id ? { ...s, questionnaireDone: done } : s)))
+    const res = await fetch("/api/college-list", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ schoolId: school.id, questionnaireDone: done }),
+    })
+    if (!res.ok) {
+      setSchools(before)
+      setError("Could not save that. Try again.")
     }
   }
 
@@ -378,7 +396,8 @@ export function WarRoomPlan({
                   status: s.status,
                   logo: s.logo,
                   cost: s.tuition,
-                  note: s.noTeam ? `${s.noTeam} in 2026-27` : s.hasQuestionnaire && s.status === "interested" ? "Questionnaire to fill out" : null,
+                  note: s.noTeam ? `${s.noTeam} in 2026-27` : s.hasQuestionnaire && !s.questionnaireDone ? "Interest form to fill out" : null,
+                  questionnaireDone: Boolean(s.questionnaireDone),
                   memo: s.memo ?? null,
                   onRecruitNC: Boolean(s.onRecruitNC),
                   interest: interest && s.onRecruitNC ? (interest[wrestler.id] ?? []).includes(s.id) : null,
@@ -388,6 +407,10 @@ export function WarRoomPlan({
                 onMove={(id, status) => {
                   const school = schools.find((s) => s.id === id)
                   if (school) void setStatus(school, status)
+                }}
+                onQuestionnaire={(id, done) => {
+                  const school = schools.find((s) => s.id === id)
+                  if (school) void setQuestionnaire(school, done)
                 }}
                 onMemo={(id, memo) => {
                   const school = schools.find((s) => s.id === id)

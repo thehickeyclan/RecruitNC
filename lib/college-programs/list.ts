@@ -17,7 +17,17 @@ export const COLLEGE_LIST_STATUS_LABEL: Record<CollegeListStatus, string> = {
   offer: "Offer",
 }
 
-export type CollegeListItem = { schoolId: string; status: CollegeListStatus; note: string | null; updatedAt: string }
+export type CollegeListItem = {
+  schoolId: string
+  status: CollegeListStatus
+  note: string | null
+  updatedAt: string
+  /** When the family recorded the interest form (recruiting questionnaire) as done; any stage. */
+  questionnaireDoneAt: string | null
+}
+
+/** Done, whatever the stage: the check, or the old "Questionnaire sent" stage it replaced. */
+export const questionnaireDone = (item: { status: string; questionnaireDoneAt?: string | null }) => Boolean(item.questionnaireDoneAt) || item.status === "questionnaire"
 
 export type CollegeListResponse = {
   /** False when the list cannot be used: signed out, not Blue, or the table is not there yet. */
