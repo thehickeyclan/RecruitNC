@@ -19,7 +19,6 @@ export const NATIONAL_PATH_PREFIXES = [
   "/compare",
   "/perfect-recruit",
   "/interested",
-  "/coach-reports",
   "/recruiting",
   "/colleges",
   "/schools",
