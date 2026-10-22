@@ -347,7 +347,7 @@
   var hooks = { setDate: (id, iso) => window.postMessage({ ncu: "set-date", id, iso }, location.origin) };
   async function start() {
     const looksLikeForm = () => document.querySelectorAll("input:not([type=hidden]), select, textarea").length >= 3;
-    if (/ncwrestlingunited\.com|localhost/.test(location.hostname)) {
+    if (/recruitwrestlers\.com|ncwrestlingunited\.com|localhost/.test(location.hostname)) {
       document.addEventListener("click", (e) => {
         const a = e.target.closest?.("a[data-ncu-form]");
         if (a) void chrome.storage.local.set({ lastOpened: { schoolId: a.dataset.ncuForm, at: Date.now() } });
@@ -390,22 +390,22 @@
     const root = host.attachShadow({ mode: "open" });
     root.innerHTML = `
     <style>
-      .box{font:14px/1.4 -apple-system,system-ui,sans-serif;background:#0B1D3A;color:#fff;border:1px solid #D3B574;border-radius:14px;padding:12px 14px;width:280px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
-      .top{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#D3B574}
+      .box{font:14px/1.4 -apple-system,system-ui,sans-serif;background:#0B1426;color:#fff;border:1px solid #A3E635;border-radius:14px;padding:12px 14px;width:280px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+      .top{display:flex;justify-content:space-between;align-items:center;font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#A3E635}
       .x{background:none;border:0;color:#fff9;font-size:18px;cursor:pointer}
       p{margin:6px 0 0;color:#ffffffc0;font-size:13px}
-      button.go{margin-top:10px;width:100%;background:#D3B574;color:#0A1628;border:0;border-radius:9px;padding:9px;font-weight:900;font-size:14px;cursor:pointer}
+      button.go{margin-top:10px;width:100%;background:#A3E635;color:#0A1628;border:0;border-radius:9px;padding:9px;font-weight:900;font-size:14px;cursor:pointer}
       select{margin-top:8px;width:100%;padding:6px;border-radius:8px}
-      a{color:#D3B574}
+      a{color:#A3E635}
       .warn{color:#fcd34d}
       .left{color:#ffffff99;font-size:12px}
     </style>
-    <div class="box"><div class="top"><span>NC United</span><button class="x" aria-label="Close">\xD7</button></div><div class="body"></div></div>`;
+    <div class="box"><div class="top"><span>RecruitWrestlers</span><button class="x" aria-label="Close">\xD7</button></div><div class="body"></div></div>`;
     root.querySelector(".x").addEventListener("click", () => host.remove());
     const body = root.querySelector(".body");
     document.documentElement.appendChild(host);
     if (!data?.signedIn) {
-      body.innerHTML = `<p>Sign in to NC United to fill this form with your answers.</p><button class="go">Sign in</button>`;
+      body.innerHTML = `<p>Sign in to RecruitWrestlers to fill this form with your answers.</p><button class="go">Sign in</button>`;
       body.querySelector("button").addEventListener("click", () => void send({ type: "open", path: "/auth/signin?returnTo=/my-recruiting/questionnaires" }));
       return;
     }
@@ -464,7 +464,7 @@
   function toast(text) {
     const el = document.createElement("div");
     el.textContent = text;
-    el.style.cssText = "position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:2147483647;background:#0B1D3A;color:#fff;border:1px solid #22c55e;border-radius:12px;padding:10px 16px;font:600 14px -apple-system,system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.35)";
+    el.style.cssText = "position:fixed;left:50%;top:16px;transform:translateX(-50%);z-index:2147483647;background:#0B1426;color:#fff;border:1px solid #22c55e;border-radius:12px;padding:10px 16px;font:600 14px -apple-system,system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.35)";
     document.documentElement.appendChild(el);
     setTimeout(() => el.remove(), 8e3);
   }
