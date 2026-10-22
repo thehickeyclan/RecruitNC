@@ -224,7 +224,7 @@ export function CompetesBar({
             <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/60 lg:text-xs">Competes</span>
             <span className="hidden h-4 w-px bg-[#D3B574]/60 sm:block" aria-hidden />
             <span className="text-sm font-extrabold uppercase tracking-[0.12em] text-white lg:text-base">
-              {competition.scope === "national" ? "Nationally" : "North Carolina only"}
+              {competition.scope === "national" ? "Nationally" : "In-state only"}
             </span>
             {competition.styles.map((st) => (
               <span key={st} className="flex items-center gap-2 text-sm font-extrabold uppercase tracking-[0.12em] text-[#D3B574] lg:text-base">
