@@ -1,14 +1,12 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import { AdmissionsControls } from "@/components/portal/admissions-controls"
-import { activitiesFor, daysInStage, isStale, nextStep, recentView, type Activity, type ActivityAction, type Inbound } from "@/lib/college-programs/board-activities"
-import { easternToday, type AdmissionsSummary } from "@/lib/college-programs/admissions-format"
-import type { Admissions } from "@/lib/college-programs/list"
-import { ArrowRight, BadgeCheck, Check, Circle, Eye, ExternalLink, GripVertical, MessageSquare, MoreHorizontal, PhoneCall, Sparkles, X } from "lucide-react"
+import { activitiesFor, isStale, nextStep, recentView, type ActivityAction } from "@/lib/college-programs/board-activities"
+import { easternToday } from "@/lib/college-programs/admissions-format"
+import { ArrowRight, BadgeCheck, ExternalLink, GripVertical, MoreHorizontal, Sparkles } from "lucide-react"
 
 import { BOARD_STAGES, COLLEGE_LIST_STATUS_LABEL, boardStage, type BoardStage, type CollegeListStatus } from "@/lib/college-programs/list"
-import { BrandName } from "@/components/recruiting/brand-name"
+import { ACTION_LABEL, Chip, CollegePanel, Signals, type PipelineCollege as BoardCollege } from "@/components/portal/college-pipeline"
 
 /**
  * The college list as a board (Command Center Phase 1, 14 Oct 2026; rebuilt 22 Oct as stages with
@@ -21,36 +19,7 @@ import { BrandName } from "@/components/recruiting/brand-name"
  * has a "Move to" menu, which is how a keyboard or screen reader moves it. The page saves the
  * move (onMove) and puts it back if the save fails.
  */
-export type BoardCollege = {
-  id: string
-  name: string
-  level: string
-  place: string
-  status: CollegeListStatus
-  logo: string | null
-  cost: string | null
-  note: string | null
-  /** The family's own note: calls, what the coach said, next steps. */
-  memo: string | null
-  /** The college's coaches are on RecruitNC: they can see the profile and write in the app. */
-  onRecruitNC: boolean
-  /** The interest form is done (its own check, any stage). */
-  questionnaireDone?: boolean
-  /** The admissions track, shown under the stage. */
-  admissions?: Admissions
-  /** The college's own deadlines for this cycle. */
-  admissionInfo?: AdmissionsSummary | null
-  /** Told this program's coaches the wrestler is interested; null when it cannot be offered. */
-  interest?: boolean | null
-  /** We hold a link to its recruiting questionnaire. */
-  hasQuestionnaire?: boolean
-  /** When it entered its stage (days in stage; a stale deal). */
-  stageSince?: string | null
-  /** What came in from the college: profile views, a coach's message, a logged contact. */
-  inbound?: Inbound
-  /** When the interest form was marked done. */
-  questionnaireDoneAt?: string | null
-}
+export type { PipelineCollege as BoardCollege } from "@/components/portal/college-pipeline"
 
 const STAGE_HINT: Record<BoardStage, string> = {
   interested: "Saved, nothing sent yet",
@@ -84,7 +53,6 @@ export function CollegeBoard({
   onEmail: (id: string) => void
   onMemo: (id: string, memo: string) => void
 }) {
-  const [editing, setEditing] = useState<{ id: string; text: string } | null>(null)
   const [drag, setDrag] = useState<Drag | null>(null)
   const [celebrate, setCelebrate] = useState<{ id: string; text: string } | null>(null)
   const [open, setOpen] = useState<string | null>(null)
@@ -326,221 +294,18 @@ export function CollegeBoard({
       ) : null}
 
       {opened ? (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/50" onClick={() => setOpen(null)}>
-          <aside
-            role="dialog"
-            aria-label={opened.name}
-            onClick={(e) => e.stopPropagation()}
-            className="flex h-full w-full max-w-md flex-col overflow-y-auto border-l border-white/10 bg-[#0B1D3A] p-5 text-white shadow-2xl"
-          >
-            <div className="flex items-start gap-3">
-              {opened.logo ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={opened.logo} alt="" className="h-11 w-11 shrink-0 rounded-lg bg-white object-contain p-1" />
-              ) : null}
-              <div className="min-w-0 flex-1">
-                <a href={`/recruiting/schools/${opened.id}`} className="text-lg font-black leading-6 hover:underline">
-                  {opened.name}
-                </a>
-                <p className="text-xs text-white/55">
-                  {opened.level} · {opened.place}
-                  {opened.onRecruitNC ? (
-                    <span className="ml-1 text-[#D3B574]">
-                      · Coaches on <BrandName />
-                    </span>
-                  ) : null}
-                </p>
-              </div>
-              <button type="button" onClick={() => setOpen(null)} aria-label="Close" className="rounded p-1 text-white/60 hover:bg-white/10 hover:text-white">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <p className="mt-5 text-[11px] font-black uppercase tracking-widest text-white/45">Stage</p>
-            <div className="mt-2 grid grid-cols-5 gap-1">
-              {BOARD_STAGES.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => move(opened.id, s)}
-                  aria-pressed={boardStage(opened.status) === s}
-                  className={`rounded-md px-1 py-1.5 text-[11px] font-bold ${boardStage(opened.status) === s ? "bg-[#D3B574] text-[#0A1628]" : "border border-white/15 text-white/70 hover:text-white"}`}
-                >
-                  {COLLEGE_LIST_STATUS_LABEL[s]}
-                </button>
-              ))}
-            </div>
-
-            <p className="mt-5 text-[11px] font-black uppercase tracking-widest text-white/45">Activities</p>
-            <ul className="mt-2 divide-y divide-white/5">
-              {activitiesFor(opened, today).map((a) => (
-                <li key={a.key} className="flex items-center gap-3 py-2">
-                  {a.key === "form" && onQuestionnaire ? (
-                    <input
-                      type="checkbox"
-                      checked={a.done}
-                      onChange={(e) => onQuestionnaire(opened.id, e.target.checked)}
-                      aria-label="Interest form done"
-                      className="h-4 w-4 shrink-0 accent-[#D3B574]"
-                    />
-                  ) : a.done ? (
-                    <Check className="h-4 w-4 shrink-0 rounded-full bg-emerald-500 p-0.5 text-[#0A1628]" aria-label="Done" />
-                  ) : (
-                    <Circle className="h-4 w-4 shrink-0 text-white/30" aria-label="Not yet" />
-                  )}
-                  <span className="min-w-0 flex-1">
-                    <span className={`block text-sm font-semibold ${a.done ? "text-white/60" : ""}`}>
-                      {a.key === "interest" && a.done ? `Coaches know ${interestName ?? "you"} ${interestName ? "is" : "are"} interested` : a.label}
-                    </span>
-                    {a.detail ? <span className={`block text-xs ${a.tone === "urgent" ? "text-rose-300" : a.tone === "soon" ? "text-amber-200" : "text-white/50"}`}>{a.detail}</span> : null}
-                  </span>
-                  {a.action && !(a.key === "interest" && a.done) ? (
-                    <button type="button" onClick={() => act(opened, a.action!)} className="shrink-0 rounded-md border border-white/20 px-2 py-1 text-xs font-bold hover:border-[#D3B574]">
-                      {ACTION_LABEL[a.action.kind]}
-                    </button>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-
-            <p className="mt-5 text-[11px] font-black uppercase tracking-widest text-white/45">Timeline</p>
-            <Timeline c={opened} />
-
-            {opened.admissions ? (
-              <>
-                <p className="mt-5 text-[11px] font-black uppercase tracking-widest text-white/45">Application</p>
-                <AdmissionsControls schoolId={opened.id} value={opened.admissions} info={opened.admissionInfo} readOnly={false} />
-              </>
-            ) : null}
-
-            {opened.cost ? (
-              <>
-                <p className="mt-5 text-[11px] font-black uppercase tracking-widest text-white/45">Cost</p>
-                <p className="mt-1 text-xs leading-5 text-white/65">{opened.cost}</p>
-              </>
-            ) : null}
-
-            <p className="mt-5 text-[11px] font-black uppercase tracking-widest text-white/45">Notes</p>
-            {editing?.id === opened.id ? (
-              <div className="mt-2">
-                <textarea
-                  value={editing.text}
-                  onChange={(e) => setEditing({ id: opened.id, text: e.target.value })}
-                  rows={4}
-                  maxLength={2000}
-                  placeholder="Calls, what the coach said, next steps…"
-                  aria-label={`Note on ${opened.name}`}
-                  className="w-full rounded-md border border-white/15 bg-[#0A1628] p-2 text-sm text-white placeholder:text-white/35"
-                />
-                <div className="mt-1 flex gap-2">
-                  <button type="button" onClick={() => { onMemo(opened.id, editing.text); setEditing(null) }} className="rounded-md bg-[#D3B574] px-3 py-1.5 text-xs font-bold text-[#0A1628]">
-                    Save note
-                  </button>
-                  <button type="button" onClick={() => setEditing(null)} className="text-xs font-semibold text-white/55 hover:text-white">
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <button type="button" onClick={() => setEditing({ id: opened.id, text: opened.memo ?? "" })} className="mt-2 block w-full rounded-md border border-white/10 bg-[#0A1628]/60 p-2 text-left text-sm leading-5 text-white/75 hover:border-white/30">
-                {opened.memo || <span className="text-white/40">+ Add a note</span>}
-              </button>
-            )}
-          </aside>
-        </div>
+        <CollegePanel
+          c={opened}
+          today={today}
+          interestName={interestName}
+          onClose={() => setOpen(null)}
+          onStage={(st) => move(opened.id, st)}
+          onAct={(a) => act(opened, a)}
+          onQuestionnaire={onQuestionnaire ? (done) => onQuestionnaire(opened.id, done) : undefined}
+          onMemo={(memo) => onMemo(opened.id, memo)}
+        />
       ) : null}
     </div>
   )
 }
 
-const ACTION_LABEL: Record<ActivityAction["kind"], string> = {
-  reply: "Reply",
-  forms: "Fill it",
-  email: "Email",
-  interest: "Tell them",
-  apply: "Apply",
-  stage: "Mark done",
-  scout: "Ask Scout",
-}
-
-/** A small progress mark: done in green, to do in grey, a near deadline in amber or rose. */
-function Chip({ a }: { a: Activity }) {
-  const short = a.key === "form" ? "Interest form" : a.key === "email" ? "Emailed coach" : a.done ? "Applied" : a.detail ? a.detail.replace(/ closes /, " ").replace(/^Early Decision/, "ED").replace(/^Early Action/, "EA").replace(/^Regular Decision/, "RD").replace(/^Restrictive Early Action/, "REA") : "Apply"
-  const tone = a.done
-    ? "border-emerald-400/40 text-emerald-300"
-    : a.tone === "urgent"
-      ? "border-rose-400/50 text-rose-300"
-      : a.tone === "soon"
-        ? "border-amber-300/50 text-amber-200"
-        : "border-white/15 text-white/50"
-  return (
-    <span className={`inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-bold ${tone}`}>
-      {a.done ? <Check className="h-3 w-3" aria-hidden /> : <Circle className="h-2.5 w-2.5" aria-hidden />}
-      {short}
-    </span>
-  )
-}
-
-const dayShort = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" })
-
-/** Days in stage, and what came in from the college: the CRM's inbound side. */
-function Signals({ c, today }: { c: BoardCollege; today: string }) {
-  const days = daysInStage(c, today)
-  const stale = isStale(c, today)
-  const v = c.inbound?.views
-  const m = c.inbound?.message
-  const k = c.inbound?.contact
-  if (days == null && !v && !m && !k) return null
-  return (
-    <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px] font-semibold">
-      {days != null && boardStage(c.status) !== "offer" ? (
-        <span className={stale ? "text-amber-200" : "text-white/40"} title="Days in this stage">
-          {days === 0 ? "New today" : `${days} day${days === 1 ? "" : "s"} here`}
-          {stale ? " · stale" : ""}
-        </span>
-      ) : null}
-      {v ? (
-        <span className={`inline-flex items-center gap-0.5 ${recentView(c, today) ? "text-sky-300" : "text-white/45"}`} title={`Profile viewed ${v.count} time${v.count === 1 ? "" : "s"}, last ${dayShort(v.last)}`}>
-          <Eye className="h-3 w-3" aria-hidden /> {v.count}
-        </span>
-      ) : null}
-      {m ? (
-        <a href={`/inbox/${m.threadId}`} className={`inline-flex items-center gap-0.5 hover:underline ${m.yourTurn ? "text-sky-300" : "text-white/45"}`} draggable={false}>
-          <MessageSquare className="h-3 w-3" aria-hidden /> {m.yourTurn ? "Your turn" : "Messages"}
-        </a>
-      ) : null}
-      {k ? (
-        <span className="inline-flex items-center gap-0.5 text-white/45" title="Latest contact from the coach">
-          <PhoneCall className="h-3 w-3" aria-hidden /> {k.label} {k.date}
-        </span>
-      ) : null}
-    </div>
-  )
-}
-
-/** Inbound and outbound on one line each, newest first, from what we hold. */
-function Timeline({ c }: { c: BoardCollege }) {
-  const events: Array<{ at: string; text: string; inbound: boolean }> = []
-  if (c.stageSince) events.push({ at: c.stageSince, text: `Moved to ${COLLEGE_LIST_STATUS_LABEL[boardStage(c.status)]}`, inbound: false })
-  if (c.questionnaireDoneAt) events.push({ at: c.questionnaireDoneAt, text: "Interest form submitted", inbound: false })
-  if (c.admissions?.submittedOn) events.push({ at: `${c.admissions.submittedOn}T12:00:00Z`, text: "Application submitted", inbound: false })
-  if (c.inbound?.views) events.push({ at: c.inbound.views.last, text: `Coaches viewed the profile (${c.inbound.views.count} view${c.inbound.views.count === 1 ? "" : "s"})`, inbound: true })
-  if (c.inbound?.message) events.push({ at: "", text: c.inbound.message.yourTurn ? "The coach wrote: your turn to reply" : "In a conversation with the coach", inbound: true })
-  if (c.inbound?.contact) events.push({ at: "", text: `${c.inbound.contact.label} from the coach, ${c.inbound.contact.date}`, inbound: true })
-  events.sort((a, b) => (b.at || "9").localeCompare(a.at || "9"))
-  if (!events.length) return <p className="mt-2 text-sm text-white/45">Nothing yet.</p>
-  return (
-    <ol className="mt-2 space-y-1.5">
-      {events.map((e, i) => (
-        <li key={i} className="flex gap-2 text-sm">
-          <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${e.inbound ? "bg-sky-400" : "bg-emerald-400"}`} aria-hidden />
-          <span className="min-w-0 flex-1 text-white/80">{e.text}</span>
-          {e.at ? <span className="shrink-0 text-xs text-white/40">{dayShort(e.at)}</span> : null}
-        </li>
-      ))}
-      <li className="pt-1 text-[11px] text-white/35">
-        <span className="mr-1 inline-block h-2 w-2 rounded-full bg-sky-400" aria-hidden /> from the college · <span className="mx-1 inline-block h-2 w-2 rounded-full bg-emerald-400" aria-hidden /> your moves
-      </li>
-    </ol>
-  )
-}
