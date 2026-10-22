@@ -36,7 +36,7 @@ export default function RecruitWrestlersPrivacy() {
         <p className="mt-2 text-sm text-[#A8B3C5]">Last updated 22 October 2026</p>
         <div className="mt-6 space-y-3 text-[15px] leading-relaxed text-[#D6DEEA]">
           <p>
-            RecruitWrestlers is a college wrestling recruiting service from Guild Ventures. In North Carolina it is offered through NC United, whose families use it at
+            RecruitWrestlers is a college wrestling recruiting service from Guild Ventures LLC. In North Carolina it is offered through NC United, whose families use it at
             app.ncwrestlingunited.com. We collect as little as we can, we do not sell personal information, and we do not use advertising or tracking software.
           </p>
 
