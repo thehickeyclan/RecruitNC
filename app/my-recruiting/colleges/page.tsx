@@ -127,6 +127,7 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
           return { label, date: new Date(`${r.latest.happenedOn}T12:00:00Z`).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }) }
         })(),
         hasQuestionnaire: s.hasQuestionnaire,
+        questionnaireDone: Boolean(s.questionnaireDone),
         note: s.memo ?? null,
       },
     ]

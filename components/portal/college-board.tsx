@@ -28,6 +28,8 @@ export type BoardCollege = {
   memo: string | null
   /** The college's coaches are on RecruitNC: they can see the profile and write in the app. */
   onRecruitNC: boolean
+  /** The interest form is done (its own check, any stage). */
+  questionnaireDone?: boolean
   /** Told this program's coaches the wrestler is interested; null when it cannot be offered. */
   interest?: boolean | null
 }
@@ -55,9 +57,11 @@ export function CollegeBoard({
   onMemo,
   onInterest,
   interestName,
+  onQuestionnaire,
 }: {
   colleges: BoardCollege[]
   onInterest?: (id: string) => void
+  onQuestionnaire?: (id: string, done: boolean) => void
   interestName?: string
   onMove: (id: string, status: CollegeListStatus) => void
   onEmail: (id: string) => void
@@ -177,6 +181,18 @@ export function CollegeBoard({
                       <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-[#D3B574]/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-[#D3B574]">
                         <BadgeCheck className="h-3 w-3" aria-hidden /> Coaches on <BrandName />
                       </p>
+                    ) : null}
+                    {onQuestionnaire ? (
+                      <label className="mt-2 flex cursor-pointer items-center gap-2 text-[11px] font-bold text-white/80">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(c.questionnaireDone)}
+                          onChange={(e) => onQuestionnaire(c.id, e.target.checked)}
+                          className="h-4 w-4 accent-[#D3B574]"
+                          aria-label={`Interest form done for ${c.name}`}
+                        />
+                        <span className={c.questionnaireDone ? "text-emerald-300" : ""}>{c.questionnaireDone ? "Interest form done" : "Interest form done?"}</span>
+                      </label>
                     ) : null}
                     {c.interest != null && onInterest ? (
                       c.interest ? (

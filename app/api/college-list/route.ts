@@ -31,19 +31,23 @@ function toItem(row: Record<string, unknown>): CollegeListItem {
     status: isCollegeListStatus(row.status) ? row.status : "interested",
     note: row.note == null ? null : String(row.note),
     updatedAt: String(row.updated_at),
+    questionnaireDoneAt: row.questionnaire_done_at ? String(row.questionnaire_done_at) : null,
   }
 }
+
+/** Postgres "column does not exist": the interest-form column's SQL has not been run yet. */
+const COLUMN_MISSING = "42703"
+const COLUMNS = "school_id, status, note, updated_at, questionnaire_done_at"
+const OLD_COLUMNS = "school_id, status, note, updated_at"
 
 export async function GET() {
   const { admin, userId } = await listOwner()
   const empty: CollegeListResponse = { available: false, items: [] }
   if (!userId) return NextResponse.json(empty)
 
-  const { data: rows, error } = await admin
-    .from("college_list_items")
-    .select("school_id, status, note, updated_at")
-    .eq("user_id", userId)
-    .order("updated_at", { ascending: false })
+  const read = (cols: string) => admin.from("college_list_items").select(cols).eq("user_id", userId).order("updated_at", { ascending: false })
+  let { data: rows, error } = await read(COLUMNS)
+  if (error?.code === COLUMN_MISSING) ({ data: rows, error } = await read(OLD_COLUMNS))
   if (error) {
     // Before the table exists the map simply has no Save button, rather than an error on every load.
     if (error.code !== TABLE_MISSING) console.error("[college-list] read failed", error)
@@ -57,7 +61,7 @@ export async function PUT(request: NextRequest) {
   const { admin, userId } = await listOwner()
   if (!userId) return NextResponse.json({ error: "My List is part of NC United Blue." }, { status: 403 })
 
-  const body = (await request.json().catch(() => null)) as { schoolId?: unknown; status?: unknown; note?: unknown } | null
+  const body = (await request.json().catch(() => null)) as { schoolId?: unknown; status?: unknown; note?: unknown; questionnaireDone?: unknown } | null
   const schoolId = typeof body?.schoolId === "string" ? body.schoolId : ""
   if (!SCHOOL_IDS.has(schoolId)) return NextResponse.json({ error: "Unknown school." }, { status: 400 })
   if (body?.status !== undefined && !isCollegeListStatus(body.status)) {
@@ -73,11 +77,12 @@ export async function PUT(request: NextRequest) {
         school_id: schoolId,
         ...(body?.status !== undefined ? { status: body.status } : {}),
         ...(note !== undefined ? { note } : {}),
+        ...(typeof body?.questionnaireDone === "boolean" ? { questionnaire_done_at: body.questionnaireDone ? new Date().toISOString() : null } : {}),
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id,school_id" },
     )
-    .select("school_id, status, note, updated_at")
+    .select(typeof body?.questionnaireDone === "boolean" ? COLUMNS : OLD_COLUMNS)
     .single()
   if (error || !row) {
     console.error("[college-list] save failed", error)

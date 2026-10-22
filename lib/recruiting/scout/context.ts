@@ -199,7 +199,12 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
     grade ? loadRoadmapSignals(admin, { athleteId: String(wrestler.id), userId, grade }).catch(() => null) : Promise.resolve(null),
     loadFamilyFitContext(admin, userId, team).catch(() => null),
     getCoachViewsForAthlete(admin, String(wrestler.id)).catch(() => null),
-    admin.from("college_list_items").select("school_id, status").eq("user_id", userId).then((r) => r.data ?? []),
+    // questionnaire_done_at may not exist yet: fall back to the stage alone.
+    admin
+      .from("college_list_items")
+      .select("school_id, status, questionnaire_done_at")
+      .eq("user_id", userId)
+      .then(async (r) => (r.error ? ((await admin.from("college_list_items").select("school_id, status").eq("user_id", userId)).data ?? []) : (r.data ?? [])) as Array<{ school_id: string; status: string; questionnaire_done_at?: string | null }>),
     buildInfoSheet(admin, String(wrestler.id)).catch(() => null),
     familyStar(admin, String(wrestler.id), (wrestler.gender as string | null) ?? null, classYear),
     loadD1Tiers(),
@@ -323,6 +328,7 @@ export async function buildScoutContext(admin: SupabaseClient, userId: string): 
     highSchool: wrestler.highschool && wrestler.highschool !== "Not specified" ? String(wrestler.highschool) : null,
     fit: fitCtx,
     list: new Map(list.map((r) => [String(r.school_id), listStage(r.status)])),
+    questionnaireDone: new Set(list.filter((r) => r.questionnaire_done_at || r.status === "questionnaire").map((r) => String(r.school_id))),
     viewed: new Set((views?.schools ?? []).map((v) => collegeKey(v.school))),
     homeState,
     tiers,

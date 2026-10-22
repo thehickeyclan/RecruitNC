@@ -83,7 +83,7 @@ export default async function CommandCenterHome() {
         profileTodo: w.profileTodo,
         listStatuses: schools.map((s) => s.status),
         listLevels: schools.map((s) => s.level),
-        questionnairesWaiting: schools.filter((s) => s.hasQuestionnaire && s.status === "interested").length,
+        questionnairesWaiting: schools.filter((s) => s.hasQuestionnaire && !s.questionnaireDone).length,
         scheduleCount: w.events.length,
       })
     : []
