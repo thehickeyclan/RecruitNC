@@ -53,7 +53,7 @@ export async function GET() {
     if (error.code !== TABLE_MISSING) console.error("[college-list] read failed", error)
     return NextResponse.json(empty)
   }
-  return NextResponse.json({ available: true, items: (rows ?? []).map(toItem) } satisfies CollegeListResponse)
+  return NextResponse.json({ available: true, items: ((rows ?? []) as unknown as Array<Record<string, unknown>>).map(toItem) } satisfies CollegeListResponse)
 }
 
 /** Save a school, or change its status or note. */
@@ -88,7 +88,7 @@ export async function PUT(request: NextRequest) {
     console.error("[college-list] save failed", error)
     return NextResponse.json({ error: "Could not save. Try again." }, { status: 500 })
   }
-  return NextResponse.json({ item: toItem(row) })
+  return NextResponse.json({ item: toItem(row as unknown as Record<string, unknown>) })
 }
 
 export async function DELETE(request: NextRequest) {
