@@ -8,7 +8,13 @@ import { fieldForLabel, normalizeLabel, type Answers } from "../../lib/questionn
 
 type Box = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
 
-export type FillResult = { filled: number; needYou: string[] }
+export type FillResult = {
+  filled: number
+  /** Answers the form asks for that the family has not given us yet. */
+  needYou: string[]
+  /** Empty boxes the helper could not match to any answer, by their label on the page. */
+  unmatched: string[]
+}
 
 const FILLED = "data-ncu-filled"
 const OK = "0 0 0 2px #22c55e"
@@ -153,6 +159,7 @@ export function fillPage(answers: Answers, root: ParentNode = document, hooks: F
   )
   let filled = 0
   const needYou: string[] = []
+  const unmatched: string[] = []
   const dob = answers.dob ? answers.dob.split("-") : null
   const seenRadio = new Set<string>()
 
@@ -186,6 +193,22 @@ export function fillPage(answers: Answers, root: ParentNode = document, hooks: F
       if (isMonthList(el)) ok = pickOption(el, [MONTHS[Number(dob[1]) - 1], dob[1], String(Number(dob[1])), new Date(Number(dob[0]), Number(dob[1]) - 1, 1).toLocaleString("en-US", { month: "long" })])
       else if (isDayList(el)) ok = pickOption(el, [dob[2], String(Number(dob[2]))])
       else if (isYearList(el) && /birth|year/.test(norm) && !/grad/.test(norm)) ok = pickOption(el, [dob[0]])
+    } else if (/^((full|your|athlete'?s?|student'?s?|prospect'?s?) )?name$/.test(norm)) {
+      // One box for the whole name (Ferrum).
+      const full = [answers.firstName, answers.lastName].filter(Boolean).join(" ")
+      if (full && !(el instanceof HTMLSelectElement)) (setValue(el, full), (ok = true))
+    } else if (/^parents'? names?$|^parent\/guardian names?$/.test(norm)) {
+      const both = [answers.parent1Name, answers.parent2Name].filter(Boolean).join(" and ")
+      if (both && !(el instanceof HTMLSelectElement)) (setValue(el, both), (ok = true))
+    } else if (el instanceof HTMLSelectElement && /sport/.test(norm) && [...el.options].some((o) => /wrestling/i.test(o.text))) {
+      // "Primary sport you are interested in": wrestling, women's if the list splits them and so do we.
+      const opts = [...el.options].filter((o) => /wrestling/i.test(o.text))
+      const pick = opts.find((o) => (answers.side === "womens" ? /women/i : /^(?!.*women).*/i).test(o.text)) ?? opts[0]
+      if (el.multiple) {
+        pick.selected = true
+        for (const type of ["input", "change"]) el.dispatchEvent(new Event(type, { bubbles: true }))
+      } else setValue(el, pick.value)
+      ok = true
     } else if (/^height$/.test(norm) && answers.heightFt) {
       const ft = answers.heightFt
       const inch = answers.heightIn ?? "0"
@@ -203,7 +226,10 @@ export function fillPage(answers: Answers, root: ParentNode = document, hooks: F
         }
         continue
       }
-      if (!field) continue
+      if (!field) {
+        if (label && isEmpty(el)) unmatched.push(label)
+        continue
+      }
       if (["street", "city", "state", "zip"].includes(field.key) && inSchoolBlock(el)) continue
       let value = answers[field.key]
       if (!value) {
@@ -244,7 +270,7 @@ export function fillPage(answers: Answers, root: ParentNode = document, hooks: F
   for (const el of boxes) {
     if ((el as HTMLInputElement).required && isEmpty(el) && (el as HTMLInputElement).type !== "radio") el.style.boxShadow = TODO
   }
-  return { filled, needYou: [...new Set(needYou)] }
+  return { filled, needYou: [...new Set(needYou)], unmatched: [...new Set(unmatched)].slice(0, 15) }
 }
 
 /** The page now says the form went through. */

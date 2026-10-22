@@ -93,6 +93,7 @@ function panel(data: Data, form: Form | null) {
       select{margin-top:8px;width:100%;padding:6px;border-radius:8px}
       a{color:#D3B574}
       .warn{color:#fcd34d}
+      .left{color:#ffffff99;font-size:12px}
     </style>
     <div class="box"><div class="top"><span>NC United</span><button class="x" aria-label="Close">×</button></div><div class="body"></div></div>`
   root.querySelector(".x")!.addEventListener("click", () => host.remove())
@@ -123,10 +124,11 @@ function panel(data: Data, form: Form | null) {
   const out = body.querySelector(".out") as HTMLElement
 
   const run = () => {
-    const r = fillPage(who.answers, document, hooks)
+    const r = fillPage({ ...who.answers, side: who.side }, document, hooks)
     out.innerHTML =
       `Filled ${r.filled} box${r.filled === 1 ? "" : "es"} (green). Check them, finish any in amber, then press <b>Submit</b> on this page.` +
-      (r.needYou.length ? `<br><span class="warn">Not in your answers yet: ${escape(r.needYou.join(", "))}. <a href="#" class="edit">Add them</a></span>` : "")
+      (r.needYou.length ? `<br><span class="warn">Not in your answers yet: ${escape(r.needYou.join(", "))}. <a href="#" class="edit">Add them</a></span>` : "") +
+      (r.unmatched.length ? `<br><span class="left">Left for you: ${escape(r.unmatched.join(", "))}</span>` : "")
     out.querySelector(".edit")?.addEventListener("click", (e) => {
       e.preventDefault()
       void send({ type: "open", path: "/my-recruiting/questionnaires" })
@@ -143,7 +145,7 @@ function panel(data: Data, form: Form | null) {
     let t: ReturnType<typeof setTimeout> | undefined
     new MutationObserver(() => {
       clearTimeout(t)
-      t = setTimeout(() => fillPage(who.answers, document, hooks), 400)
+      t = setTimeout(() => fillPage({ ...who.answers, side: who.side }, document, hooks), 400)
     }).observe(document.body, { childList: true, subtree: true })
     watchSubmit(form)
   })

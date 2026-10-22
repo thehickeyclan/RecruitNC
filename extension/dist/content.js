@@ -8,11 +8,11 @@
     { key: "preferredName", label: "Preferred name", group: "wrestler", source: "family", hint: "Only if he or she goes by another name", match: [/preferred name|nickname/] },
     { key: "dob", label: "Date of birth", group: "wrestler", source: "family", input: "date", core: true, match: [/date of birth|birth ?date|^dob\b/] },
     { key: "email", label: "Wrestler's email", group: "wrestler", source: "profile", input: "email", core: true, match: [/^(e-?mail|email address|your e-?mail)$/, /^(athlete|student|recruit)('s)? e-?mail/] },
-    { key: "cell", label: "Wrestler's cell", group: "wrestler", source: "profile", input: "tel", core: true, match: [/^(cell|mobile)( phone)?( number| #)?$/, /^(athlete|student)('s)? (cell|phone)/, /^contact number$/] },
+    { key: "cell", label: "Wrestler's cell", group: "wrestler", source: "profile", input: "tel", core: true, match: [/^(cell|mobile)( phone)?( number| #)?$/, /^(athlete|student)('s)? (cell|phone)/, /^contact number$/, /^(tele)?phone( number)?$/] },
     { key: "street", label: "Street address", group: "home", source: "family", core: true, match: [/^(home )?(street )?address ?(1|line 1)?$/, /^street address$/] },
     { key: "city", label: "City", group: "home", source: "family", core: true, match: [/^(home )?city$/] },
     { key: "state", label: "State", group: "home", source: "family", core: true, match: [/^(home )?state$/] },
-    { key: "zip", label: "ZIP code", group: "home", source: "family", core: true, match: [/^(home )?(zip|postal)( code)?$/] },
+    { key: "zip", label: "ZIP code", group: "home", source: "family", core: true, match: [/^(home )?(zip|postal)( code)?( \/ postal)?$/] },
     { key: "parent1Name", label: "Parent 1 name", group: "parents", source: "family", core: true, match: [/parent.*(1|one|#1).*name|^(mother|father|parent|guardian)('s)? name$/] },
     { key: "parent1Relation", label: "Parent 1 relationship", group: "parents", source: "family", hint: "Mother, Father, Guardian", match: [/^relationship$/] },
     { key: "parent1Phone", label: "Parent 1 phone", group: "parents", source: "family", input: "tel", core: true, match: [/parent.*(1|one|#1).*(phone|cell)/] },
@@ -20,11 +20,11 @@
     { key: "parent2Name", label: "Parent 2 name", group: "parents", source: "family", match: [/parent.*(2|two|#2).*name/] },
     { key: "parent2Phone", label: "Parent 2 phone", group: "parents", source: "family", input: "tel", match: [/parent.*(2|two|#2).*(phone|cell)/] },
     { key: "parent2Email", label: "Parent 2 email", group: "parents", source: "family", input: "email", match: [/parent.*(2|two|#2).*e-?mail/] },
-    { key: "highSchool", label: "High school", group: "school", source: "profile", core: true, match: [/^(high school|school name|high school information|current school)$/] },
+    { key: "highSchool", label: "High school", group: "school", source: "profile", core: true, match: [/^(high school|school name|high school( name| information)|current school)$/] },
     { key: "gradYear", label: "Graduation year", group: "school", source: "profile", core: true, match: [/grad(uation)? year|class of|hs graduation/] },
-    { key: "gpa", label: "GPA", group: "school", source: "profile", core: true, hint: "As on the transcript, e.g. 3.8 unweighted", match: [/\bgpa\b/] },
-    { key: "sat", label: "SAT total", group: "school", source: "profile", match: [/^sat( total| score)?$/] },
-    { key: "act", label: "ACT", group: "school", source: "profile", match: [/^act( composite| score)?$/] },
+    { key: "gpa", label: "GPA", group: "school", source: "profile", core: true, hint: "As on the transcript, e.g. 3.8 unweighted", match: [/^(?!college).*(\bgpa\b|grade.?point average)/] },
+    { key: "sat", label: "SAT total", group: "school", source: "profile", match: [/^sat( total| score| composite)?( \(.*\))?$/] },
+    { key: "act", label: "ACT", group: "school", source: "profile", match: [/^act( composite| score)?( \(.*\))?$/] },
     { key: "classRank", label: "Class rank", group: "school", source: "family", hint: "e.g. 24 of 410, if the school ranks", match: [/class rank/] },
     { key: "major", label: "Intended major", group: "school", source: "profile", match: [/^(?!graduate).*(major|academic interest|field of study)/] },
     { key: "academicHonors", label: "Academic honors", group: "school", source: "family", match: [/academic honou?rs|academic awards/] },
@@ -32,14 +32,14 @@
     { key: "heightFt", label: "Height (feet)", group: "wrestling", source: "family", core: true, match: [/^feet$/] },
     { key: "heightIn", label: "Height (inches)", group: "wrestling", source: "family", core: true, match: [/^inch(es)?$/] },
     { key: "weight", label: "Weight", group: "wrestling", source: "profile", core: true, hint: "Filled from where he or she last competed", match: [/^(current )?weight( class)?$/] },
-    { key: "club", label: "Club", group: "wrestling", source: "profile", match: [/^(name of )?club( team)?$/] },
-    { key: "record", label: "Career record", group: "wrestling", source: "profile", match: [/career record|^record$/] },
+    { key: "club", label: "Club", group: "wrestling", source: "profile", match: [/^(name of )?club( team)?$/, /^current team/] },
+    { key: "record", label: "Career record", group: "wrestling", source: "profile", match: [/career record|^record$|^career statistics/] },
     { key: "accolades", label: "Results and honors", group: "wrestling", source: "profile", match: [/accomplishment|accolade|athletic honou?rs|awards/] },
     { key: "video", label: "Highlight video", group: "wrestling", source: "profile", input: "url", match: [/video|highlight|film/] },
     { key: "profileUrl", label: "Recruiting profile", group: "wrestling", source: "profile", input: "url", match: [/recruiting (website|profile)|profile link|website/] },
-    { key: "hsCoachName", label: "High school coach", group: "coaches", source: "family", core: true, match: [/high school coach('s)?( name)?$/, /^hs coach( name)?$/] },
-    { key: "hsCoachPhone", label: "High school coach phone", group: "coaches", source: "family", input: "tel", match: [/high school coach.*phone/] },
-    { key: "hsCoachEmail", label: "High school coach email", group: "coaches", source: "family", input: "email", match: [/high school coach.*e-?mail/] },
+    { key: "hsCoachName", label: "High school coach", group: "coaches", source: "family", core: true, match: [/high school coach('s)?( name)?$/, /^hs coach( name)?$/, /^(head )?coach('s)? name$/] },
+    { key: "hsCoachPhone", label: "High school coach phone", group: "coaches", source: "family", input: "tel", match: [/high school coach.*phone/, /^(head )?coach('s)? phone/] },
+    { key: "hsCoachEmail", label: "High school coach email", group: "coaches", source: "family", input: "email", match: [/high school coach.*e-?mail/, /^(head )?coach('s)? e-?mail/] },
     { key: "clubCoachName", label: "Club coach", group: "coaches", source: "family", match: [/club (team )?coach('s)?( name)?$/] },
     { key: "clubCoachPhone", label: "Club coach phone", group: "coaches", source: "family", input: "tel", match: [/club (team )?coach.*phone/] },
     { key: "clubCoachEmail", label: "Club coach email", group: "coaches", source: "family", input: "email", match: [/club (team )?coach.*e-?mail/] }
@@ -210,6 +210,7 @@
     );
     let filled = 0;
     const needYou = [];
+    const unmatched = [];
     const dob = answers.dob ? answers.dob.split("-") : null;
     const seenRadio = /* @__PURE__ */ new Set();
     for (const el of boxes) {
@@ -236,6 +237,20 @@
         if (isMonthList(el)) ok = pickOption(el, [MONTHS[Number(dob[1]) - 1], dob[1], String(Number(dob[1])), new Date(Number(dob[0]), Number(dob[1]) - 1, 1).toLocaleString("en-US", { month: "long" })]);
         else if (isDayList(el)) ok = pickOption(el, [dob[2], String(Number(dob[2]))]);
         else if (isYearList(el) && /birth|year/.test(norm) && !/grad/.test(norm)) ok = pickOption(el, [dob[0]]);
+      } else if (/^((full|your|athlete'?s?|student'?s?|prospect'?s?) )?name$/.test(norm)) {
+        const full = [answers.firstName, answers.lastName].filter(Boolean).join(" ");
+        if (full && !(el instanceof HTMLSelectElement)) setValue(el, full), ok = true;
+      } else if (/^parents'? names?$|^parent\/guardian names?$/.test(norm)) {
+        const both = [answers.parent1Name, answers.parent2Name].filter(Boolean).join(" and ");
+        if (both && !(el instanceof HTMLSelectElement)) setValue(el, both), ok = true;
+      } else if (el instanceof HTMLSelectElement && /sport/.test(norm) && [...el.options].some((o) => /wrestling/i.test(o.text))) {
+        const opts = [...el.options].filter((o) => /wrestling/i.test(o.text));
+        const pick = opts.find((o) => (answers.side === "womens" ? /women/i : /^(?!.*women).*/i).test(o.text)) ?? opts[0];
+        if (el.multiple) {
+          pick.selected = true;
+          for (const type of ["input", "change"]) el.dispatchEvent(new Event(type, { bubbles: true }));
+        } else setValue(el, pick.value);
+        ok = true;
       } else if (/^height$/.test(norm) && answers.heightFt) {
         const ft = answers.heightFt;
         const inch = answers.heightIn ?? "0";
@@ -253,7 +268,10 @@
           }
           continue;
         }
-        if (!field) continue;
+        if (!field) {
+          if (label && isEmpty(el)) unmatched.push(label);
+          continue;
+        }
         if (["street", "city", "state", "zip"].includes(field.key) && inSchoolBlock(el)) continue;
         let value = answers[field.key];
         if (!value) {
@@ -290,7 +308,7 @@
     for (const el of boxes) {
       if (el.required && isEmpty(el) && el.type !== "radio") el.style.boxShadow = TODO;
     }
-    return { filled, needYou: [...new Set(needYou)] };
+    return { filled, needYou: [...new Set(needYou)], unmatched: [...new Set(unmatched)].slice(0, 15) };
   }
   function looksSubmitted(text) {
     return /thank you for (your|submitting|completing|filling)|thanks for (your|submitting)|successfully (submitted|received|saved)|has been (submitted|received)|submission (was |has been )?(received|complete)|we('ve| have) received your|questionnaire (is )?complete/i.test(text);
@@ -380,6 +398,7 @@
       select{margin-top:8px;width:100%;padding:6px;border-radius:8px}
       a{color:#D3B574}
       .warn{color:#fcd34d}
+      .left{color:#ffffff99;font-size:12px}
     </style>
     <div class="box"><div class="top"><span>NC United</span><button class="x" aria-label="Close">\xD7</button></div><div class="body"></div></div>`;
     root.querySelector(".x").addEventListener("click", () => host.remove());
@@ -408,8 +427,8 @@
     });
     const out = body.querySelector(".out");
     const run = () => {
-      const r = fillPage(who.answers, document, hooks);
-      out.innerHTML = `Filled ${r.filled} box${r.filled === 1 ? "" : "es"} (green). Check them, finish any in amber, then press <b>Submit</b> on this page.` + (r.needYou.length ? `<br><span class="warn">Not in your answers yet: ${escape(r.needYou.join(", "))}. <a href="#" class="edit">Add them</a></span>` : "");
+      const r = fillPage({ ...who.answers, side: who.side }, document, hooks);
+      out.innerHTML = `Filled ${r.filled} box${r.filled === 1 ? "" : "es"} (green). Check them, finish any in amber, then press <b>Submit</b> on this page.` + (r.needYou.length ? `<br><span class="warn">Not in your answers yet: ${escape(r.needYou.join(", "))}. <a href="#" class="edit">Add them</a></span>` : "") + (r.unmatched.length ? `<br><span class="left">Left for you: ${escape(r.unmatched.join(", "))}</span>` : "");
       out.querySelector(".edit")?.addEventListener("click", (e) => {
         e.preventDefault();
         void send({ type: "open", path: "/my-recruiting/questionnaires" });
@@ -423,7 +442,7 @@
       let t;
       new MutationObserver(() => {
         clearTimeout(t);
-        t = setTimeout(() => fillPage(who.answers, document, hooks), 400);
+        t = setTimeout(() => fillPage({ ...who.answers, side: who.side }, document, hooks), 400);
       }).observe(document.body, { childList: true, subtree: true });
       watchSubmit(form);
     });
