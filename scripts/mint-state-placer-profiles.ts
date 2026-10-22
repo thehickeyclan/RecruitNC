@@ -107,14 +107,30 @@ async function main() {
   const unlinked = placers.filter((r) => !r.athlete_id)
   console.log(`${STATE} ${SEASON} placers (top ${MAX_PLACE}): ${placers.length}, ${unlinked.length} reaching no profile`)
 
-  /* One person per name+school: two placements for the same wrestler make one profile. */
+  /*
+   * One person per name+school: two placements for the same wrestler make one profile.
+   *
+   * Grouped by name first and then clustered with `schoolsLikelySame`, not by a normalised school
+   * string. A string key splits on spellings that the matcher itself treats as one school:
+   * Maryland's MIS file writes "Loyola Blakefield" and its MIAA file "Loyola-Blakefield", and
+   * five boys who entered both tournaments were each created twice in a single run - the one
+   * thing the claim flow asks people to avoid, done by us.
+   */
   const schoolOf = (r: Placer) => String(r.school_clean ?? r.school_raw ?? "").trim()
-  const groups = new Map<string, Placer[]>()
+  const byName = new Map<string, Placer[]>()
   for (const r of unlinked) {
-    const k = `${nn(r.wrestler_name)}|${nn(schoolOf(r))}`
-    const held = groups.get(k) ?? []
-    held.push(r)
-    groups.set(k, held)
+    const k = nn(r.wrestler_name)
+    byName.set(k, [...(byName.get(k) ?? []), r])
+  }
+  const groups = new Map<string, Placer[]>()
+  for (const [name, rows] of byName) {
+    const clusters: Placer[][] = []
+    for (const r of rows) {
+      const fit = clusters.find((c) => schoolsLikelySame(schoolOf(c[0]!), schoolOf(r)))
+      if (fit) fit.push(r)
+      else clusters.push([r])
+    }
+    clusters.forEach((c, i) => groups.set(`${name}|${nn(schoolOf(c[0]!))}|${i}`, c))
   }
 
   const active = currentClassYears()
