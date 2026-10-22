@@ -8,6 +8,7 @@ import { AuthGuard } from "@/components/auth-guard"
 import { CreateProfileForm } from "@/components/create-profile-form"
 import { FindExistingStep, type ExistingMatch } from "@/components/profile-wizard/find-existing-step"
 import { RevealStep } from "@/components/profile-wizard/reveal-step"
+import { ClaimDetails, ClaimExplainer } from "@/components/profile-wizard/claim-explainer"
 
 /**
  * Creating a profile starts by looking for the one that already exists.
@@ -47,6 +48,7 @@ export default function CreateProfilePage() {
   if (step === "find") {
     return (
       <div className="min-h-screen bg-[#0A1628] px-4 py-12">
+        <ClaimExplainer />
         <FindExistingStep
           onClaim={(match: ExistingMatch) => {
             setMatchedId(match.id)
@@ -57,6 +59,7 @@ export default function CreateProfilePage() {
             setStep("create")
           }}
         />
+        <ClaimDetails />
       </div>
     )
   }
