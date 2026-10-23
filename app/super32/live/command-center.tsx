@@ -175,6 +175,21 @@ function WinRow({ f, onOpen }: { f: FeedItem; onOpen: () => void }) {
   )
 }
 
+/** The wrestler's best win and the credential that made it one: Huge before Big, then the stronger rank or seed. */
+function BestWin({ e }: { e: SnapshotEntrant }) {
+  const strength = (r: string[]) => Number(r[0]?.match(/#(\d+)/)?.[1] ?? 99)
+  const best = e.bouts
+    .filter((b) => b.win && (b.tier === "huge" || b.tier === "big") && b.reasons.length)
+    .sort((a, b) => (a.tier === b.tier ? strength(a.reasons) - strength(b.reasons) : a.tier === "huge" ? -1 : 1))[0]
+  if (!best) return null
+  return (
+    <div className="mt-0.5 truncate text-[11px]">
+      <span className={`font-bold ${best.tier === "huge" ? "text-[#e5372c]" : "text-[#d4af55]"}`}>{best.tier === "huge" ? "HUGE" : "BIG"}:</span>{" "}
+      <span className="text-[#c9d4ea]">def. {best.opponent} ({best.opponentTeam}), {best.reasons[0]}</span>
+    </div>
+  )
+}
+
 function WatchCard({ e, onOpen }: { e: SnapshotEntrant; onOpen: () => void }) {
   const badge = e.chips.find((c) => !/seed$/.test(c)) ?? e.chips[0]
   return (
@@ -377,7 +392,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
             <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
               <Section title="NC Wrestlers to Watch" right={watch.length > 8 ? <button onClick={() => setAllWatch(!allWatch)} className="text-xs text-[#d4af55]">{allWatch ? "Show less" : `View all ${watch.length}`}</button> : null}>
                 {watch.length ? (
-                  <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-4 md:px-0">
+                  <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-3 md:px-0 xl:grid-cols-4">
                     {watch.slice(0, allWatch ? undefined : 8).map((e) => <WatchCard key={`${e.gender}${e.weight}${e.name}`} e={e} onOpen={() => setOpen(e)} />)}
                   </div>
                 ) : <Empty>Wrestlers to watch appear once seeds are set.</Empty>}
@@ -401,6 +416,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                             <div className="min-w-0 flex-1">
                               <div className="truncate text-sm font-medium text-white">{e.name}{e.seed !== null && <span className="ml-1.5 text-xs font-bold text-[#d4af55]">#{e.seed}</span>}{e.hotStreak && " 🔥"}</div>
                               <div className="truncate text-xs text-[#8195bd]">{e.school ?? ""}</div>
+                              <BestWin e={e} />
                             </div>
                             <div className="shrink-0 text-right">
                               <div className="text-sm font-semibold text-white">{e.wins}-{e.losses}</div>
