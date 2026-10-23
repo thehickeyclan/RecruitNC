@@ -46,7 +46,7 @@ const H = "font-[family-name:var(--font-cc)] uppercase tracking-wide"
 function Photo({ e, className, big }: { e: { name: string; photo: string | null } | null; className: string; big?: boolean }) {
   if (e?.photo) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={e.photo} alt="" className={`object-cover ${className}`} />
+    return <img src={e.photo} alt="" className={`object-cover object-[50%_18%] ${className}`} />
   }
   return (
     <div className={`flex items-center justify-center bg-gradient-to-br from-[#1b2d57] to-[#13294b] ${className}`}>
@@ -180,13 +180,13 @@ function WatchCard({ e, onOpen }: { e: SnapshotEntrant; onOpen: () => void }) {
   return (
     <button onClick={onOpen} className="w-40 shrink-0 overflow-hidden rounded-lg border border-[#1f3360] bg-[#0b1730] text-left hover:border-[#d4af55]/60 md:w-auto">
       <div className="relative">
-        <Photo e={e} big className="aspect-[4/3] w-full" />
+        <Photo e={e} big className="aspect-[4/5] w-full" />
         {e.seed !== null && <span className={`${H} absolute left-2 top-2 rounded bg-[#d4af55] px-1.5 text-sm text-[#0b1730]`}>#{e.seed}</span>}
       </div>
       <div className="space-y-1.5 p-2.5">
         <div className="truncate font-semibold text-white">{e.name}</div>
         <div className="truncate text-xs text-[#8195bd]">{e.gender === "girls" ? "Girls " : ""}{e.weight} lbs{e.school ? ` · ${e.school}` : ""}</div>
-        {badge && <div className="truncate"><span className="rounded-sm bg-[#e5372c]/90 px-1.5 py-0.5 text-[10px] font-bold text-white">{badge}</span></div>}
+        {badge && <div><span className="inline-block rounded-sm bg-[#e5372c]/90 px-1.5 py-0.5 text-[10px] font-bold leading-tight text-white">{badge}</span></div>}
         <div className="text-xs"><span className="text-white">{e.wins}-{e.losses}</span> · <span className={statusColor(e)}>{statusText(e)}</span>{e.hotStreak && " 🔥"}</div>
       </div>
     </button>
