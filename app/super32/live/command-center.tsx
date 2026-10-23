@@ -200,7 +200,7 @@ function WatchCard({ e, onOpen }: { e: SnapshotEntrant; onOpen: () => void }) {
       </div>
       <div className="space-y-1.5 p-2.5">
         <div className="truncate font-semibold text-white">{e.name}</div>
-        <div className="truncate text-xs text-[#8195bd]">{e.gender === "girls" ? "Girls " : ""}{e.weight} lbs{e.school ? ` · ${e.school}` : ""}</div>
+        <div className="truncate text-xs text-[#8195bd]">{[e.weight ? `${e.gender === "girls" ? "Girls " : ""}${e.weight} lbs` : e.gender === "girls" ? "Girls" : e.classYear ? `Class of ${e.classYear}` : "", e.school].filter(Boolean).join(" · ")}</div>
         {badge && <div><span className="inline-block rounded-sm bg-[#e5372c]/90 px-1.5 py-0.5 text-[10px] font-bold leading-tight text-white">{badge}</span></div>}
         <div className="text-xs"><span className="text-white">{e.wins}-{e.losses}</span> · <span className={statusColor(e)}>{statusText(e)}</span>{e.hotStreak && " 🔥"}</div>
       </div>
@@ -234,7 +234,7 @@ function WrestlerSheet({ e, onClose }: { e: SnapshotEntrant; onClose: () => void
                 <span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-bold ${b.win ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>{b.win ? "W" : "L"}</span>
                 <div className="min-w-0 flex-1 text-sm">
                   <div className="flex flex-wrap items-center gap-1.5 text-white">{b.win ? "def." : "lost to"} {b.opponent} ({b.opponentTeam}) {b.win && b.tier && b.tier !== "win" && <Tag kind={b.tier === "huge" ? "Huge win" : "Big win"} />}{b.win && b.upset && <Tag kind="Upset" />}</div>
-                  <div className="text-xs text-[#8195bd]">{[b.round, b.winType, b.result].filter(Boolean).join(" · ")}{b.win && b.reasons.length ? ` · ${b.reasons.join(", ")}` : ""}</div>
+                  <div className="text-xs text-[#8195bd]">{[b.round, b.winType, b.result].filter(Boolean).join(" · ")}{b.reasons.length ? ` · ${b.reasons.slice(0, 3).join(", ")}` : ""}</div>
                 </div>
               </li>
             ))}
@@ -274,10 +274,12 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
 
   const entrants = useMemo(() => (snap?.entrants ?? []).filter((e) => g === "all" || e.gender === g), [snap, g])
   const recaps = useMemo(() => (snap?.recaps ?? []).filter((r) => r.gender === g), [snap, g])
-  const stories = useMemo(() => buildStories(entrants, recaps, !!snap?.hasResults), [entrants, recaps, snap])
+  const stories = useMemo(() => buildStories(snap?.hasResults ? entrants : [...entrants, ...(snap?.watchPreview ?? []).filter((e) => g === "all" || e.gender === g)], recaps, !!snap?.hasResults), [entrants, recaps, snap, g])
   const feed = useMemo(() => (snap?.feed ?? []).filter((f) => g === "all" || f.gender === g).sort((a, b) => (a.tier === b.tier ? 0 : a.tier === "huge" ? -1 : 1)), [snap, g])
-  const watch = useMemo(() => entrants.filter((e) => e.watch !== null || e.aaClinched || e.bouts.some((b) => b.win && b.tier === "huge"))
-    .sort((a, b) => (a.watch ?? 9) - (b.watch ?? 9) || (a.seed ?? 99) - (b.seed ?? 99) || b.wins - a.wins), [entrants])
+  // Before results, ranked and named watch candidates not yet seen in a bracket join the strip.
+  const preview = useMemo(() => (snap?.hasResults ? [] : (snap?.watchPreview ?? []).filter((e) => g === "all" || e.gender === g)), [snap, g])
+  const watch = useMemo(() => [...entrants.filter((e) => e.watch !== null || e.aaClinched || e.bouts.some((b) => b.win && b.tier === "huge")), ...preview]
+    .sort((a, b) => (a.watch ?? 9) - (b.watch ?? 9) || (a.seed ?? 99) - (b.seed ?? 99) || b.wins - a.wins), [entrants, preview])
   const weights = useMemo(() => [...new Set(entrants.map((e) => e.weight))].sort((a, b) => Number(a) - Number(b)), [entrants])
   const list = useMemo(() => {
     const order: Record<string, number> = { placed: 0, alive: 1, not_started: 1, alive_consis: 2, eliminated: 3 }
