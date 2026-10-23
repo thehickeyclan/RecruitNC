@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { isNationalPath, isOpenWhileStaged, stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { isCommunityAdminPath } from "@/lib/recruiting/admin-scope"
 import { isRankerOnly, stagingGateAllows } from "@/lib/staging-gate"
 import { FUNDRAISING_AUTH_RETURN_COOKIE } from "@/lib/fundraising/fundraising-auth-return-cookie"
 import { adminGateApplies, adminGateRefusal } from "@/lib/admin-api-gate"
@@ -73,6 +74,10 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
       return holding
     }
     if (pathname === "/") return NextResponse.rewrite(new URL("/recruitwrestlers", request.url))
+    // NC United's community admin tools stay on NC United's address (lib/recruiting/admin-scope.ts).
+    if (isCommunityAdminPath(pathname)) {
+      return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, APP_ORIGIN), 307)
+    }
     // RecruitWrestlers' own policy, not NC United's (app/recruitwrestlers/privacy).
     if (pathname === "/privacy") return NextResponse.rewrite(new URL("/recruitwrestlers/privacy", request.url))
     if (!isNationalPath(pathname) && !isOpenWhileStaged(pathname) && !pathname.startsWith("/guild-recruiting")) {

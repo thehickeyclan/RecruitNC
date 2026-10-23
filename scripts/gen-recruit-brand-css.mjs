@@ -22,6 +22,13 @@ import { join } from "node:path"
 import { fileURLToPath } from "node:url"
 
 const ROOT = join(fileURLToPath(new URL(".", import.meta.url)), "..")
+// NC United's community admin tools (lib/recruiting/admin-scope.ts), read as text: this script runs on plain Node.
+const COMMUNITY_ADMIN_PREFIXES = [
+  ...readFileSync(join(ROOT, "lib/recruiting/admin-scope.ts"), "utf8")
+    .split("COMMUNITY_ADMIN_PREFIXES = [")[1]
+    .split("]")[0]
+    .matchAll(/"(\/admin\/[^"]+)"/g),
+].map((m) => m[1])
 export const OUT = join(ROOT, "app", "recruit-brand.css")
 
 /**
@@ -331,6 +338,9 @@ export function buildCss() {
     // RecruitWrestlers admin (Matt, 22 Oct 2026: one admin on recruitwrestlers.com, lime). Work
     // areas stay light for tables and forms; NC United's rainbow of gradient tiles and its blue hero
     // become Secondary Navy with lime icons. Light gradients (from-white cards) are untouched.
+    // NC United's community admin tools are not part of the RecruitWrestlers admin (lib/recruiting/admin-scope.ts):
+    // their dashboard tiles and links are hidden there, and middleware forwards their addresses.
+    `html[data-host="national"] .admin-layout :is(${COMMUNITY_ADMIN_PREFIXES.flatMap((p) => [`a[href="${p}"]`, `a[href^="${p}/"]`, `a[href^="${p}?"]`]).join(", ")}) {\n  display: none !important;\n}`,
     `html[data-host="national"] .admin-layout [class*="bg-gradient-to"]:is([class*="text-white"], [class*="text-[#"]) {\n  background-image: none !important;\n  background-color: #15243B !important;\n  color: #FFFFFF !important;\n  border: 1px solid #22324D !important;\n}`,
     `html[data-host="national"] .admin-layout [class*="bg-gradient-to"]:is([class*="text-white"], [class*="text-[#"]):hover {\n  background-color: #22324D !important;\n  border-color: #A3E635 !important;\n}`,
     `html[data-host="national"] .admin-layout [class*="bg-gradient-to"]:is([class*="text-white"], [class*="text-[#"]) svg {\n  color: #A3E635 !important;\n}`,
