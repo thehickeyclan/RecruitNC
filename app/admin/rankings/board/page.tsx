@@ -87,6 +87,8 @@ const YEARS = ["2027", "2028", "2029", "2030", "2026"]
 const STATES: Array<{ code: string; label: string }> = [
   { code: "NC", label: "North Carolina" },
   { code: "SC", label: "South Carolina" },
+  { code: "VA", label: "Virginia" },
+  { code: "MD", label: "Maryland" },
 ]
 
 const SCORE_SEGMENTS: Array<{ key: string; label: string; className: string }> = [
