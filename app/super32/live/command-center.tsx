@@ -24,8 +24,9 @@ type G = "all" | "boys" | "girls"
 
 /** A designed banner per division replaces the header when that tab is on. Add "all"/"boys" when they exist. */
 const BANNERS: Partial<Record<G, { src: string; alt: string }>> = {
-  boys: { src: "/images/super32/command-center-boys.jpg", alt: "NC United Super 32 HQ: Boys" },
-  girls: { src: "/images/super32/command-center-girls.jpg", alt: "NC United Super 32 HQ: Girls" },
+  all: { src: "/images/super32/super32-hq-news.jpg", alt: "North Carolina Super 32 HQ, October 24-25, 2026" },
+  boys: { src: "/images/super32/hq-2026-boys.jpg", alt: "North Carolina Super 32 HQ 2026: Boys" },
+  girls: { src: "/images/super32/hq-2026-girls.jpg", alt: "North Carolina Super 32 HQ 2026: Girls" },
 }
 
 /** 2025 finals from the 2025 Flo export, same engine and NC rule as 2026 (Bouzakis out). */
@@ -363,7 +364,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
 
   return (
     <div className="min-h-screen bg-[#0a1630] text-white">
-      {BANNERS[g] ? (
+      {BANNERS[g] && year === "2026" ? (
         <header className="border-b border-[#1f3360] bg-[#0a1630]">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={BANNERS[g]!.src} alt={BANNERS[g]!.alt} className="mx-auto block aspect-[2000/733] w-full max-w-7xl object-cover" />
@@ -372,7 +373,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
       <header className="border-b border-[#1f3360] bg-[radial-gradient(ellipse_at_70%_0%,#1d3a78_0%,#0a1630_60%)]">
         <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-4 px-4 pb-5 pt-6 md:pt-10">
           <div>
-            <div className={`${H} text-lg text-[#e5372c] md:text-2xl`}>North Carolina</div>
+            <div className={`${H} text-lg text-[#e5372c] md:text-2xl`}>North Carolina · {year}</div>
             <h1 className={`${H} text-5xl leading-none text-white md:text-7xl`}>Super 32 HQ</h1>
             <div className={`${H} mt-2 text-sm text-[#c9d4ea] md:text-base`}>North Carolina wrestling. All of it.</div>
           </div>
