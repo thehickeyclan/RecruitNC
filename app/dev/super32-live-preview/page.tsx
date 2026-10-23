@@ -28,7 +28,7 @@ export default async function Super32LivePreview({ searchParams }: { searchParam
   const everyone = summarizeEntrants(split.bouts, { seeds: [], credentials: [], seedsFinal: false }, () => true)
   const seeds: SeedRow[] = everyone.filter((e) => e.placement).map((e) => ({ gender: e.gender, weight: e.weight, seed: e.placement!, name: e.name, state: e.team }))
 
-  const { data } = await computeSnapshot(supabase, "super32-2025-rehearsal", { floContent: empty ? null : csv, seeds, seedsFinal: true, prev: null, hints })
+  const { data } = await computeSnapshot(supabase, "super32-2025-rehearsal", { floContent: empty ? null : csv, seeds, seedsFinal: true, prev: null, hints, eventYear: 2025 })
   const { boutSeenAt: _a, unresolved: _b, unmatched: _c, brackets: _d, ...pub } = data
   return (
     <div className={commandCenterFont.variable}>

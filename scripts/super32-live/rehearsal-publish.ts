@@ -23,7 +23,7 @@ async function main() {
   const split = splitDivisions(parseFloExport(csv), hints)
   const everyone = summarizeEntrants(split.bouts, { seeds: [], credentials: [], seedsFinal: false }, () => true)
   const seeds: SeedRow[] = everyone.filter((e) => e.placement).map((e) => ({ gender: e.gender, weight: e.weight, seed: e.placement!, name: e.name, state: e.team }))
-  const { data } = await computeSnapshot(c, SUPER32_EVENT_KEY, { floContent: csv, seeds, seedsFinal: true, prev: null, hints })
+  const { data } = await computeSnapshot(c, SUPER32_EVENT_KEY, { floContent: csv, seeds, seedsFinal: true, prev: null, hints, eventYear: 2025 })
   await c.from("super32_live_snapshots").update({ published: false }).eq("event_key", SUPER32_EVENT_KEY).eq("published", true)
   const { data: row, error } = await c.from("super32_live_snapshots")
     .insert({ event_key: SUPER32_EVENT_KEY, data: { ...data, rehearsal: MARK }, published: true, published_at: new Date().toISOString() })
