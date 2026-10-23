@@ -1600,6 +1600,10 @@ html[data-host="national"] .to-\[\#13294B\] {
   --tw-gradient-to: rgb(21 36 59) var(--tw-gradient-to-position);
 }
 
+html[data-host="national"] .to-\[\#13294b\] {
+  --tw-gradient-to: rgb(21 36 59) var(--tw-gradient-to-position);
+}
+
 html[data-host="national"] .via-\[\#060f1f\] {
   --tw-gradient-to: rgb(11 20 38 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), rgb(11 20 38) var(--tw-gradient-via-position), var(--tw-gradient-to);
 }
@@ -2501,6 +2505,10 @@ html[data-host="guild"] .to-\[\#0f1c2e\] {
 }
 
 html[data-host="guild"] .to-\[\#13294B\] {
+  --tw-gradient-to: rgb(26 26 30) var(--tw-gradient-to-position);
+}
+
+html[data-host="guild"] .to-\[\#13294b\] {
   --tw-gradient-to: rgb(26 26 30) var(--tw-gradient-to-position);
 }
 

@@ -11,6 +11,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { parseFloExport, splitDivisions, summarizeEntrants, type SeedRow } from "@/lib/super32-live/engine"
 import { computeSnapshot } from "@/lib/super32-live/snapshot"
 import { CommandCenter } from "@/app/super32/live/command-center"
+import { commandCenterFont } from "@/app/super32/live/font"
 
 export const dynamic = "force-dynamic"
 
@@ -29,5 +30,9 @@ export default async function Super32LivePreview({ searchParams }: { searchParam
 
   const { data } = await computeSnapshot(supabase, "super32-2025-rehearsal", { floContent: empty ? null : csv, seeds, seedsFinal: true, prev: null, hints })
   const { boutSeenAt: _a, unresolved: _b, unmatched: _c, brackets: _d, ...pub } = data
-  return <CommandCenter initial={{ ...pub, publishedAt: data.generatedAt }} />
+  return (
+    <div className={commandCenterFont.variable}>
+      <CommandCenter initial={{ ...pub, publishedAt: data.generatedAt }} rehearsalLabel="2025 rehearsal data" />
+    </div>
+  )
 }
