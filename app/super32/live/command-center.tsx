@@ -22,6 +22,11 @@ const ARTICLE = {
 }
 type G = "all" | "boys" | "girls"
 
+/** A designed banner per division replaces the header when that tab is on. Add "all"/"boys" when they exist. */
+const BANNERS: Partial<Record<G, { src: string; alt: string }>> = {
+  girls: { src: "/images/super32/command-center-girls.webp", alt: "NC United Super 32 Command Center: Girls" },
+}
+
 /** 2025 finals from the 2025 Flo export, same engine and NC rule as 2026 (Bouzakis out). */
 const Y2025: Record<G, { record: string; winning: number; aa: number }> = {
   all: { record: "103-264", winning: 11, aa: 4 },
@@ -275,6 +280,12 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
 
   return (
     <div className="min-h-screen bg-[#0a1630] text-white">
+      {BANNERS[g] ? (
+        <header className="border-b border-[#1f3360] bg-[#0a1630]">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={BANNERS[g]!.src} alt={BANNERS[g]!.alt} className="mx-auto block aspect-[2000/733] w-full max-w-7xl object-cover" />
+        </header>
+      ) : (
       <header className="border-b border-[#1f3360] bg-[radial-gradient(ellipse_at_70%_0%,#1d3a78_0%,#0a1630_60%)]">
         <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-4 px-4 pb-5 pt-6 md:pt-10">
           <div>
@@ -288,6 +299,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
           </div>
         </div>
       </header>
+      )}
 
       <div className="sticky top-0 z-30 border-b border-[#1f3360] bg-[#0a1630]/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2.5">
