@@ -25,7 +25,7 @@ type G = "all" | "boys" | "girls"
 /** A designed banner per division replaces the header when that tab is on. Add "all"/"boys" when they exist. */
 const BANNERS: Partial<Record<G, { src: string; alt: string }>> = {
   boys: { src: "/images/super32/command-center-men.jpg", alt: "NC United Super 32 Command Center: Men" },
-  girls: { src: "/images/super32/command-center-girls.webp", alt: "NC United Super 32 Command Center: Girls" },
+  girls: { src: "/images/super32/command-center-girls.jpg", alt: "NC United Super 32 Command Center: Girls" },
 }
 
 /** 2025 finals from the 2025 Flo export, same engine and NC rule as 2026 (Bouzakis out). */
