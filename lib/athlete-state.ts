@@ -106,6 +106,7 @@ const ASSOCIATIONS: Record<string, { public: string; independent?: string[] }> =
   VA: { public: "VHSL", independent: ["VISAA"] },
   MD: { public: "MPSSAA", independent: ["MIS", "MIAA"] },
   WV: { public: "WVSSAC" },
+  DE: { public: "DIAA" },
 }
 
 /**

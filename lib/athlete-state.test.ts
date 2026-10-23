@@ -90,6 +90,11 @@ describe("states with more than one association, and events that are not champio
     expect(stateChampionshipName("MD", "MIAA")).toBe("MIAA")
   })
 
+  it("names Delaware's", () => {
+    expect(stateChampionshipName("DE", "DIAA")).toBe("DIAA")
+    expect(stateChampionshipName("DE", "")).toBe("DIAA")
+  })
+
   it("names West Virginia's, which has no separate private championship", () => {
     expect(stateChampionshipName("WV", "AAA")).toBe("WVSSAC")
     expect(stateChampionshipName("WV", "Division 1")).toBe("WVSSAC")
