@@ -34,6 +34,7 @@ export const RECRUITING_BRAND = {
      * 224 Maryland profiles were unreachable by anybody, including the people checking them.
      */
     { code: "MD", name: "Maryland", live: false },
+    { code: "WV", name: "West Virginia", live: false },
   ],
 } as const
 

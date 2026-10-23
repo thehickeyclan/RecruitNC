@@ -93,12 +93,39 @@ export function isHomeState(state: string | null | undefined): boolean {
  * has to appear.
  *
  * Independent schools wrestle their own championship, named separately, because that is the
- * credential: NCISA in North Carolina, SCISA in South Carolina.
+ * credential: NCISA in North Carolina, SCISA in South Carolina. A state can run more than one -
+ * Maryland has both the MIS state tournament and the MIAA league - so they are a list, and the
+ * classification on the result says which one he was at.
+ *
+ * West Virginia has none: the WVSSAC has included private schools in its own brackets since
+ * 1979, so there is no separate championship to name.
  */
-const ASSOCIATIONS: Record<string, { public: string; independent?: string }> = {
-  NC: { public: "NCHSAA", independent: "NCISA" },
-  SC: { public: "SCHSL", independent: "SCISA" },
-  VA: { public: "VHSL", independent: "VISAA" },
+const ASSOCIATIONS: Record<string, { public: string; independent?: string[] }> = {
+  NC: { public: "NCHSAA", independent: ["NCISA"] },
+  SC: { public: "SCHSL", independent: ["SCISA"] },
+  VA: { public: "VHSL", independent: ["VISAA"] },
+  MD: { public: "MPSSAA", independent: ["MIS", "MIAA"] },
+  WV: { public: "WVSSAC" },
+}
+
+/**
+ * Events that are NOT a state championship, however they are stored.
+ *
+ * West Virginia's girls wrestled a state INVITATIONAL in 2024, 2025 and 2026: the WVSSAC does
+ * not sanction girls' wrestling until 2026-27, so calling one of those titles a WVSSAC state
+ * championship would credit a girl with something her state did not award. The event is real and
+ * worth showing - it is simply not a championship, and the card has to say so.
+ */
+const NOT_A_CHAMPIONSHIP: Record<string, RegExp> = {
+  WV: /girls\s*invitational/i,
+}
+
+/** "WV Girls State Invitational" — the event's own name, where it is not a championship. */
+export function invitationalName(state: string | null | undefined, classification?: string | null): string | null {
+  const code = String(state ?? "").trim().toUpperCase()
+  const pattern = NOT_A_CHAMPIONSHIP[code]
+  if (!pattern || !pattern.test(String(classification ?? ""))) return null
+  return `${code} Girls State Invitational`
 }
 
 /**
@@ -116,8 +143,7 @@ export function stateChampionshipName(
   const code = String(state ?? "").trim().toUpperCase()
   const assoc = ASSOCIATIONS[code]
   const cls = String(classification ?? "")
-  if (assoc?.independent && new RegExp(`^${assoc.independent}`, "i").test(cls.trim())) {
-    return assoc.independent
-  }
+  const own = assoc?.independent?.find((name) => new RegExp(`^${name}`, "i").test(cls.trim()))
+  if (own) return own
   return assoc?.public ?? (stateName(code) || code)
 }

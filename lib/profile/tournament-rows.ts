@@ -11,7 +11,7 @@ import type { NhscaNationalBout } from "@/lib/nhsca-national-bouts"
  */
 import { displayName, placementLabel, type OtherTournamentProfileBlock } from "@/lib/other-tournaments"
 import { parseFargoDivisionString } from "@/lib/fargo-division"
-import { HOME_STATE, stateChampionshipName } from "@/lib/athlete-state"
+import { HOME_STATE, invitationalName, stateChampionshipName } from "@/lib/athlete-state"
 import type { NchsaaStateBout } from "@/lib/nchsaa-state-bouts"
 import {
   fargoEventKey,
@@ -133,6 +133,21 @@ export function buildNchsaaStateRows(
   state: string = HOME_STATE,
 ): TournamentRow[] {
   const body = (classification: string) => stateChampionshipName(state, classification)
+  /*
+   * An event the state does not sanction is not a championship, whatever table it sits in.
+   * West Virginia's girls wrestled an invitational in 2024-2026; naming it a WVSSAC state
+   * championship would credit a girl with a title her state did not award.
+   */
+  const eventNameFor = (classification: string) => {
+    const invitational = invitationalName(state, classification)
+    if (invitational) return invitational
+    const named = body(classification)
+    const suffix = classification && !classification.toUpperCase().startsWith(named.toUpperCase()) ? ` ${classification}` : ""
+    return `${named}${suffix} State Championships`
+  }
+  /* The bouts under a row name the tournament without his class, as they always have. */
+  const boutEventNameFor = (classification: string) =>
+    invitationalName(state, classification) ?? `${body(classification)} State Championships`
   return results
     .map((result, index) => {
       const bouts = stateBouts.filter((bout) => bout.year === result.year)
@@ -140,11 +155,7 @@ export function buildNchsaaStateRows(
       const wins = bouts.filter((bout) => bout.outcome === "W").length
       return {
         id: `state-tournament-${result.year}-${result.classification}-${result.weight_class}-${index}`,
-        event: `${body(result.classification)}${
-          result.classification && !result.classification.toUpperCase().startsWith(body(result.classification).toUpperCase())
-            ? ` ${result.classification}`
-            : ""
-        } State Championships`,
+        event: eventNameFor(result.classification),
         team: null,
         isDuals: false,
         year: result.year,
@@ -155,7 +166,7 @@ export function buildNchsaaStateRows(
         entrants: null,
         bouts: bouts.map((bout, boutOrder) => ({
           eventKey: `state-tournament-${result.year}`,
-          eventName: `${body(result.classification)} State Championships`,
+          eventName: boutEventNameFor(result.classification),
           year: result.year,
           weight: bout.weight ?? result.weight_class,
           round: bout.round || rounds[boutOrder] || "State Championships",
