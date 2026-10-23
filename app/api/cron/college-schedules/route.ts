@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { importCollegeSchedules } from "@/lib/college-schedules/import"
 import { currentSeason } from "@/lib/college-schedules/season"
+import { scheduledJobsOff, skippedJob } from "@/lib/scheduled-jobs"
 
 export const dynamic = "force-dynamic"
 
@@ -30,6 +31,7 @@ function authorizeCron(request: NextRequest): boolean {
  * that is the one thing here worth a person looking at.
  */
 export async function GET(request: NextRequest) {
+  if (scheduledJobsOff()) return skippedJob()
   if (!authorizeCron(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }

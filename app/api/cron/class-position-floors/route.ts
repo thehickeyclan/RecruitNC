@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { buildClassPositionFloors, saveClassPositionFloors } from "@/lib/rankings/class-position-floors"
+import { scheduledJobsOff, skippedJob } from "@/lib/scheduled-jobs"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 300
@@ -17,6 +18,7 @@ function authorizeCron(request: NextRequest): boolean {
  * star floor (lib/rankings/class-position-floors.ts), so profiles and reports can read it.
  */
 export async function GET(request: NextRequest) {
+  if (scheduledJobsOff()) return skippedJob()
   if (!authorizeCron(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const started = Date.now()
   try {

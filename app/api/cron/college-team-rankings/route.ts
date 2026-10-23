@@ -4,6 +4,7 @@ import data from "@/lib/college-programs/programs-2026-27.json"
 import type { PollSchool } from "@/lib/college-programs/team-rankings"
 import { buildTeamRankings } from "@/lib/college-programs/team-rankings-build"
 import { saveTeamRankings } from "@/lib/college-programs/team-rankings-snapshot"
+import { scheduledJobsOff, skippedJob } from "@/lib/scheduled-jobs"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 300
@@ -27,6 +28,7 @@ function authorizeCron(request: NextRequest): boolean {
  * a college's ranking is missing.
  */
 export async function GET(request: NextRequest) {
+  if (scheduledJobsOff()) return skippedJob()
   if (!authorizeCron(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   try {
     const since = new Date(Date.now() - 400 * 86_400_000).toISOString().slice(0, 10)

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { sendQuestionnaireReminders } from "@/lib/recruiting/questionnaire-reminders"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { scheduledJobsOff, skippedJob } from "@/lib/scheduled-jobs"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 300
@@ -18,6 +19,7 @@ function authorizeCron(request: NextRequest): boolean {
  * counts until QUESTIONNAIRE_REMINDER_SEND=1 is set, Matt's go-ahead on the wording.
  */
 export async function GET(request: NextRequest) {
+  if (scheduledJobsOff()) return skippedJob()
   if (!authorizeCron(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const dryRun = process.env.QUESTIONNAIRE_REMINDER_SEND !== "1"
   try {

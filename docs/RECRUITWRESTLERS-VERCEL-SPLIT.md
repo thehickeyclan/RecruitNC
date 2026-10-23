@@ -33,22 +33,17 @@ NC United's, for now.
 
 ---
 
-## Phase 1: code (Claude, one PR, no change to NC United)
+## Phase 1: code (Claude) — DONE 23 Oct 2026
 
-1. **Job guard.**
-   - A setting `SCHEDULED_JOBS=off` makes every `/api/cron/*` route return "skipped" without
-     doing anything.
-   - It is set only on the new project.
-   - A test lists every cron in `vercel.json` and fails if any route lacks the guard, so a future
-     job can't slip through.
-2. **A test address.**
-   - `next.recruitwrestlers.com` is treated as RecruitWrestlers, so the new project can be tested
-     fully before www moves.
-   - It sits behind the same pre-launch gate and is never indexed.
-3. **"Which project served this?"** A staff-only endpoint reports the serving project and
-   deployment, so the switch can be confirmed, not assumed.
-4. **Site on every tracking event.** Our own sign-up, checkout and funnel events record which
-   address they came from, so RecruitWrestlers numbers exist even before the move.
+1. **Job guard.** `lib/scheduled-jobs.ts`. With `SCHEDULED_JOBS=off`, every `/api/cron/*` route
+   returns "skipped" before doing anything. `lib/scheduled-jobs.test.ts` fails if any job in
+   `vercel.json` lacks the check.
+2. **Test address.** `next.recruitwrestlers.com` is treated as RecruitWrestlers: same brand, same
+   pre-launch gate, never indexed.
+3. **"Which project served this?"** `/api/admin/deployment` (admins only) reports the deployment
+   URL, commit and whether scheduled jobs are on or off.
+4. *Dropped:* tagging our own events with the site. Separate projects give separate Vercel
+   analytics, which covers it.
 
 ## Phase 2: create the project (Matt, about 20 minutes)
 
