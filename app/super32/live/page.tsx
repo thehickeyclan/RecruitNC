@@ -1,4 +1,5 @@
 import { CommandCenter } from "./command-center"
+import { commandCenterFont } from "./font"
 
 export const metadata = {
   title: "Super 32 Command Center | NC United",
@@ -6,5 +7,9 @@ export const metadata = {
 }
 
 export default function Super32LivePage() {
-  return <CommandCenter />
+  return (
+    <div className={commandCenterFont.variable}>
+      <CommandCenter />
+    </div>
+  )
 }
