@@ -100,6 +100,31 @@ export function newsShareUsesHeroCropOnly(
  */
 const ALL_NEWS: NewsItem[] = [
   {
+    // Super 32 HQ as the top story (Matt, 23 Oct 2026): the app's Home leads with the top news
+    // item, so this is how the app shows it without a new build. The app opens /news/<slug>, which
+    // middleware sends to /super32/live. Not an article (isAnnouncement false): no /news page.
+    id: "super32-live",
+    slug: "super32-live",
+    title: "Super 32 HQ: Follow Every North Carolina Wrestler",
+    subtitle: "NC's record, Huge and Big wins, round recaps and who's still alive, updated after every round.",
+    summary:
+      "Follow every North Carolina wrestler at Super 32 in one place: NC's record, Huge and Big wins, round recaps and who's still alive, updated after every round. Star your wrestlers to follow them all weekend.",
+    href: "/news/super32-live",
+    date: "2026-10-23",
+    image: "/images/super32/super32-hq-news.jpg",
+    homeImage: "/images/super32/super32-hq-news.jpg",
+    imagePosition: "center",
+    imageFit: "contain",
+    imageBannerBgClass: "bg-[#0A1628]",
+    newsListBanner: true,
+    shareHeroCropOnly: true,
+    category: "SUPER 32 HQ",
+    categoryBadgeClass: "bg-[#CC0000]",
+    author: "NC United",
+    isAnnouncement: false,
+    pinToTop: true,
+  },
+  {
     id: "super32-2026-what-good-looks-like",
     slug: "super32-2026-what-good-looks-like",
     title: "What Will It Take? Defining Success for North Carolina at Super 32",
