@@ -24,7 +24,7 @@ export type Story = {
 const ORD = (n: number) => (n === 1 ? "1st" : n === 2 ? "2nd" : n === 3 ? "3rd" : `${n}th`)
 const WORD: Record<number, string> = { 1: "first", 2: "second", 3: "third", 4: "fourth", 5: "fifth", 6: "sixth", 7: "seventh", 8: "eighth" }
 const wt = (e: SnapshotEntrant) => `${e.gender === "girls" ? "girls' " : ""}${e.weight}`
-const lbs = (e: SnapshotEntrant) => `${e.gender === "girls" ? "Girls " : ""}${e.weight} lbs`
+const lbs = (e: SnapshotEntrant) => (e.weight ? `${e.gender === "girls" ? "Girls " : ""}${e.weight} lbs` : e.gender === "girls" ? "Girls" : e.classYear ? `Class of ${e.classYear}` : "NC")
 
 export function buildStories(entrants: SnapshotEntrant[], recaps: SnapshotRecap[], hasResults: boolean): Story[] {
   const out: Story[] = []
@@ -33,9 +33,9 @@ export function buildStories(entrants: SnapshotEntrant[], recaps: SnapshotRecap[
     for (const e of watch.slice(0, 6)) {
       out.push({
         id: `preview:${e.gender}${e.weight}${e.name}`, kind: "preview", label: "Wrestler to watch",
-        headline: e.seed !== null ? `${e.name} enters as the #${e.seed} seed` : `${e.name} headlines NC at ${e.weight}`,
+        headline: e.seed !== null ? `${e.name} enters as the #${e.seed} seed` : e.weight ? `${e.name} headlines NC at ${e.weight}` : `${e.name} is one to watch`,
         dek: [e.chips.slice(0, 3).join(" · "), e.school].filter(Boolean).join(" — "),
-        entrant: e, meta: `${lbs(e)}${e.school ? ` · ${e.school}` : ""}`, rank: 50 + (e.watch ?? 9),
+        entrant: e, meta: [lbs(e), e.school].filter(Boolean).join(" · "), rank: 50 + (e.watch ?? 9) + (e.seed ?? 50) / 100,
       })
     }
     return out

@@ -78,7 +78,7 @@ export type EntrantSummary = {
   hotStreak: boolean
   onFire: boolean
   consiRun: boolean
-  bouts: Array<{ bout: LiveBout; win: boolean; opponent: string; opponentTeam: string; tiered: TieredWin | null }>
+  bouts: Array<{ bout: LiveBout; win: boolean; opponent: string; opponentTeam: string; tiered: TieredWin | null; opponentReasons?: string[] }>
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -307,7 +307,9 @@ export function summarizeEntrants(bouts: LiveBout[], ctx: TierContext, isNc: NcF
     }
     if (b.loser && isNc(b.loser, b.loserTeam, b.gender)) {
       const e = get(b.loser, b.loserTeam, b)
-      e.bouts.push({ bout: b, win: false, opponent: b.winner, opponentTeam: b.winnerTeam, tiered: null })
+      // A loss is never tiered, but who beat him is context: the same credentials, read for the winner.
+      const asIfWon = tierWin({ ...b, winner: b.loser, winnerTeam: b.loserTeam, loser: b.winner, loserTeam: b.winnerTeam, winType: "DEC" }, ctx)
+      e.bouts.push({ bout: b, win: false, opponent: b.winner, opponentTeam: b.winnerTeam, tiered: null, opponentReasons: asIfWon.reasons })
     }
   }
   for (const e of by.values()) {

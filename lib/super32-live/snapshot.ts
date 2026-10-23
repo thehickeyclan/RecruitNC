@@ -33,6 +33,19 @@ export const LIVE_PATH = "/news/super32-live"
  * both attend school out of state. They are left off the page, the totals and the alerts.
  */
 export const NOT_NC = ["Jaclyn Bouzakis", "Jack Harty"]
+
+/**
+ * Wrestlers to Watch for 2026 (Matt, 23 Oct 2026): the top of our NC class rankings plus three he
+ * named. The rankings choose who appears; the rank itself is never shown, because class ranks are
+ * for members and coaches only. Ethan Halstead is class of 2031, below the usual window, so the
+ * named ids are also loaded for profile matching.
+ */
+export const WATCH_NAMED_IDS = [
+  "f67d8f9f-fa06-4a73-b0fd-7dee5fc6433b", // Mason Brown, South Rowan
+  "ac3fe9c1-d404-4d86-b379-70ecb5604166", // Devin Hord, Kings Mountain
+  "d4845492-c991-4c7d-9a3e-39afa1c1f5e7", // Ethan Halstead
+]
+export const WATCH_TOP_PER_CLASS = 5
 const isNcEntrant: NcFilter = (name, team, gender) => teamIsNc(name, team, gender) && !NOT_NC.some((n) => samePerson({ name: n }, { name }))
 
 export type SnapshotBout = {
@@ -94,6 +107,8 @@ export type SnapshotRecap = Omit<Recap, "topPerformance" | "biggestUpset" | "lon
 }
 
 export type SnapshotData = {
+  /** Watch candidates not yet seen in a bracket. Shown only before results; never counted. */
+  watchPreview?: SnapshotEntrant[]
   eventKey: string
   generatedAt: string
   seedsFinal: boolean
@@ -142,6 +157,22 @@ async function loadNcAthletes(supabase: SupabaseClient, eventYear: number): Prom
     if (data.length < 1000) break
   }
   return out
+}
+
+type WatchCandidate = AthleteRow & { prospect_ranking: number | null; named: boolean }
+
+async function loadWatchCandidates(supabase: SupabaseClient, eventYear: number): Promise<WatchCandidate[]> {
+  const cols = "id, name, wrestling_name, photourl, highschool, graduationyear, gender, prospect_ranking"
+  const [ranked, named] = await Promise.all([
+    supabase.from("athletes").select(cols).eq("is_nc_athlete", true)
+      .gte("graduationyear", eventYear + 1).lte("graduationyear", eventYear + 4)
+      .not("prospect_ranking", "is", null).lte("prospect_ranking", WATCH_TOP_PER_CLASS).limit(200),
+    supabase.from("athletes").select(cols).in("id", WATCH_NAMED_IDS),
+  ])
+  const out = new Map<string, WatchCandidate>()
+  for (const r of (ranked.data ?? []) as WatchCandidate[]) out.set(r.id, { ...r, named: false })
+  for (const r of (named.data ?? []) as WatchCandidate[]) out.set(r.id, { ...r, named: true })
+  return [...out.values()]
 }
 
 const isFemale = (g: string | null) => /^f/i.test(g ?? "")
@@ -239,7 +270,9 @@ export type SnapshotInputs = {
 
 /** Everything the page shows, computed from one export and one seed list. Reads profiles; writes nothing. */
 export async function computeSnapshot(supabase: SupabaseClient, eventKey: string, input: SnapshotInputs, now = new Date().toISOString()) {
-  const [credentials, athletes] = await Promise.all([loadCredentials(supabase), loadNcAthletes(supabase, input.eventYear ?? 2026)])
+  const eventYear = input.eventYear ?? 2026
+  const [credentials, windowAthletes, candidates] = await Promise.all([loadCredentials(supabase), loadNcAthletes(supabase, eventYear), loadWatchCandidates(supabase, eventYear)])
+  const athletes = [...windowAthletes, ...candidates.filter((c) => !windowAthletes.some((a) => a.id === c.id))]
   const { seeds, seedsFinal } = input
   const ctx = { seeds, credentials, seedsFinal }
 
@@ -271,11 +304,34 @@ export async function computeSnapshot(supabase: SupabaseClient, eventKey: string
       bouts: e.bouts.map((b) => ({
         round: b.bout.round, win: b.win, opponent: b.opponent, opponentTeam: b.opponentTeam,
         winType: b.bout.winType, result: b.bout.result,
-        tier: b.tiered?.tier ?? null, upset: b.tiered?.upset ?? false, reasons: b.tiered?.reasons ?? [],
+        tier: b.tiered?.tier ?? null, upset: b.tiered?.upset ?? false, reasons: b.tiered?.reasons ?? b.opponentReasons ?? [],
         opponentSeed: b.tiered?.opponentSeed ?? null, key: b.bout.key,
       })),
     }
   })
+
+  // Curated watch: a ranked or named wrestler found in the brackets joins at level 2 (ranked).
+  const byId = new Map(candidates.map((c) => [c.id, c]))
+  for (const e of entrants) {
+    if (e.athleteId && byId.has(e.athleteId)) e.watch = Math.min(e.watch ?? 9, 2)
+  }
+  const seen = new Set(entrants.map((e) => e.athleteId).filter(Boolean))
+  const previewHist = await loadNcHistory(supabase, candidates.filter((c) => !seen.has(c.id)).map((c) => c.id))
+  const watchPreview: SnapshotEntrant[] = candidates
+    .filter((c) => !seen.has(c.id))
+    .sort((a, b) => Number(b.named) - Number(a.named) || (a.prospect_ranking ?? 99) - (b.prospect_ranking ?? 99) || (a.graduationyear ?? 0) - (b.graduationyear ?? 0))
+    .map((c) => {
+      const gender: Gender = isFemale(c.gender) ? "girls" : "boys"
+      const name = c.name ?? ""
+      return {
+        ...chipsFor({ name, gender, seed: null, athleteId: c.id }, credentials, previewHist),
+        // Weight is left blank: athletes.weightclass is not where they will wrestle.
+        name, team: "NC", gender, weight: "", seed: null, wins: 0, losses: 0, status: "not_started" as const, placement: null,
+        aaClinched: false, finalist: false, streak: 0, hotStreak: false, onFire: false, consiRun: false,
+        athleteId: c.id, school: c.highschool && c.highschool !== "NA" ? c.highschool : null, photo: c.photourl ?? null, classYear: c.graduationyear ?? null,
+        bouts: [], watch: 2,
+      }
+    })
 
   const feed: FeedItem[] = entrants
     .flatMap((e) => e.bouts.filter((b) => b.win && (b.tier === "huge" || b.tier === "big")).map((b) => ({
@@ -298,7 +354,7 @@ export async function computeSnapshot(supabase: SupabaseClient, eventKey: string
   const data: SnapshotData = {
     eventKey, generatedAt: now, seedsFinal, hasResults: split.bouts.some((b) => !!b.loser),
     scoreboards: { all: scoreboard(summaries), boys: scoreboard(summaries, "boys"), girls: scoreboard(summaries, "girls") },
-    entrants, feed, recaps, boutSeenAt,
+    entrants, feed, recaps, boutSeenAt, watchPreview,
     unresolved: split.unresolved, unmatched, brackets: split.brackets,
   }
   return { data, latestRecap, newKeys }
