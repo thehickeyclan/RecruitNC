@@ -13,6 +13,9 @@ type StaffRow = {
   teams: Array<"mens" | "womens">
   email: string | null
   head: boolean
+  /** Tenure, where the coach wrestled, previous jobs: from the coach's own bio page. */
+  background?: string | null
+  bio?: string | null
 }
 
 /**
@@ -132,6 +135,19 @@ export function StaffList({ school, focus }: { school: Pick<CollegeMapSchool, "i
               <a href={`mailto:${m.email}`} className="block truncate text-xs text-[#F5D985] hover:underline">
                 {m.email}
               </a>
+            ) : null}
+            {m.background ? (
+              <span className="mt-0.5 block text-xs leading-5 text-white/60">
+                {m.background}
+                {m.bio ? (
+                  <>
+                    {" "}
+                    <a href={m.bio} target="_blank" rel="noopener noreferrer" className="text-white/40 underline-offset-2 hover:underline">
+                      Bio
+                    </a>
+                  </>
+                ) : null}
+              </span>
             ) : null}
           </li>
         ))}

@@ -13,6 +13,7 @@ import { readGuide, type Guide } from "@/lib/recruiting/scout/guides"
 import { athleticAdmissionFacts, inStateLine } from "@/lib/recruiting/scout/projected-level"
 import { needSentence, roomByWeight, roomFor, weightsPublished } from "@/lib/college-programs/roster-room"
 import { isHeadCoach, staffForSchool } from "@/lib/college-programs/staff"
+import { backgroundFor, backgroundLine } from "@/lib/college-programs/coach-backgrounds"
 import { schoolsWithApprovedCoaches } from "@/lib/college-programs/load"
 import { rosterForSchool } from "@/lib/college-programs/rosters"
 import { rankingSentence } from "@/lib/college-programs/team-rankings"
@@ -283,9 +284,15 @@ async function collegeDetails(s: ScoutSession, a: Record<string, unknown>): Prom
   const others = staff.filter((m) => support(m.title))
   lines.push(
     staff.length
-      ? `Coaching staff (from the school's site):\n${coaches.map((m) => `- ${m.name}, ${m.title}${isHeadCoach(m) ? " (head coach)" : ""}${m.email ? `, ${m.email}` : ", no email published"}`).join("\n")}` +
+      ? `Coaching staff (from the school's site; background from each coach's own bio page, counted here):\n${coaches
+          .map((m) => {
+            const b = backgroundFor(school.id, m.name)
+            const line = b ? backgroundLine(b, spoken(school.name)) : null
+            return `- ${m.name}, ${m.title}${m.email ? ` (${m.email})` : " (no email published)"}${line ? `. ${line}` : `. We don't have ${m.name}'s background.`}`
+          })
+          .join("\n")}\nFor a question about the staff or reaching out, give the coach lines above as written, every coach, each on its own line.` +
           (others.length ? `\nSupport staff (not recruiting contacts): ${others.map((m) => `${m.name} (${m.title})`).join("; ")}` : "") +
-          "\nAdvice: email the whole coaching staff together; a family rarely knows which coach runs recruiting. We do not hold the coaches' tenure, records or backgrounds: say so if asked."
+          "\nAdvice: email the whole coaching staff together; a family rarely knows which coach runs recruiting. Use a coach's background only as written here; where it says not on the bio page, say we don't have it."
       : "Coaching staff: not on file yet; the athletics website lists it.",
   )
   // Who from North Carolina is on the roster now (Muse's roster pull, the school's own roster page).
