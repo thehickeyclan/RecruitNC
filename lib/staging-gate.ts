@@ -11,26 +11,22 @@
  * college coach and the App Store review login) so family and coach flows can be tested as a
  * non-admin. No real user is in either group.
  *
- * And scoped rankers, for the ranking board only (Matt, 22 Oct 2026: "all admin from
- * recruitwrestlers and give role based rights to state ambassadors"). Alan Faponte ranks South
- * Carolina; his grant lives in Supabase Auth app_metadata, which only the service role can write,
- * and it rides in the signed session token. The gate only checks a grant exists: the board and save
- * APIs check which boards it covers (lib/rankings/ranking-board-access.ts).
+ * And scoped rankers (Matt, 22 Oct 2026: "give role based rights to state ambassadors"). Alan Faponte
+ * ranks South Carolina, Dilberth Jimenez Maryland; the grant lives in Supabase Auth app_metadata,
+ * which only the service role can write, and rides in the signed session token. A ranker passes the
+ * gate for the whole site, as a signed-in visitor will after launch (23 Oct: rankers open profiles
+ * from the board). That exposes nothing new: profiles are public on app.ncwrestlingunited.com,
+ * admin pages still require an admin, the admin APIs refuse them at the server
+ * (lib/admin-api-gate.ts), and the board and save APIs check which boards a grant covers.
  */
 import { accessTokenFrom, isAdminUser, verifiedClaims } from "@/lib/admin-api-gate"
 import { isInternalAccount } from "@/lib/internal-accounts"
 
-/** The board page and the two APIs it needs. Every other admin tool stays admin-only. */
-const RANKER_PATHS = new Set(["/admin/rankings/board", "/api/admin/rankings/board", "/api/admin/rankings/save"])
-
-export function isRankerPath(pathname: string): boolean {
-  return RANKER_PATHS.has(pathname.replace(/\/$/, ""))
-}
-
 export async function stagingGateAllows(
   headers: Headers,
   cookies: Array<{ name: string; value: string }>,
-  pathname = "",
+  // Kept for callers; the gate no longer varies by path.
+  _pathname = "",
 ): Promise<boolean> {
   const secret = process.env.SUPABASE_JWT_SECRET
   if (!secret) return false // fail closed
@@ -39,7 +35,7 @@ export async function stagingGateAllows(
   const claims = await verifiedClaims(token, secret)
   if (!claims) return false
   if (isInternalAccount(claims.email)) return true
-  if (isRankerPath(pathname) && Array.isArray(claims.appMetadata.ranking_board_access) && claims.appMetadata.ranking_board_access.length > 0) return true
+  if (Array.isArray(claims.appMetadata.ranking_board_access) && claims.appMetadata.ranking_board_access.length > 0) return true
   return isAdminUser(claims.sub)
 }
 
