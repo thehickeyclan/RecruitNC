@@ -36,6 +36,14 @@ export async function middleware(request: NextRequest) {
 async function routeRequest(request: NextRequest): Promise<NextResponse> {
   const pathname = request.nextUrl.pathname
 
+  // App alerts open /news/super32-live (a route every shipped app has); send it straight to the
+  // Command Center with a real redirect rather than one the page performs after loading.
+  if (pathname === "/news/super32-live") {
+    const url = request.nextUrl.clone()
+    url.pathname = "/super32/live"
+    return NextResponse.redirect(url, 307)
+  }
+
   /*
    * Recruiting under another brand, before public launch: recruit.wrestlingguild.com (Guild
    * Recruiting) and recruitwrestlers.com. Same pages as the app's own address, drawn in that brand
