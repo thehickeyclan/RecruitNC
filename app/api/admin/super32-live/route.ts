@@ -9,7 +9,8 @@ import { revalidateTag } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/admin-auth"
 import { sendToSubscribers } from "@/lib/push-send"
-import { buildSnapshot, latestSnapshot, SUPER32_EVENT_KEY } from "@/lib/super32-live/snapshot"
+import { buildSnapshot, latestSnapshot, latestUpload, parseSeedsCsv, SUPER32_EVENT_KEY, type SnapshotData } from "@/lib/super32-live/snapshot"
+import { syncResults } from "@/lib/super32-live/sync"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -72,7 +73,19 @@ export async function POST(request: NextRequest) {
     const { error } = await admin.from("super32_live_snapshots").update({ published: true, published_at: new Date().toISOString() }).eq("id", body.snapshotId)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     revalidateTag("super32-live")
-    return NextResponse.json({ ok: true })
+    // Profiles, rankings and the coach reports read the published results from the usual tables.
+    const [flo, seedsUp, snap] = await Promise.all([
+      latestUpload(admin, SUPER32_EVENT_KEY, "flo"),
+      latestUpload(admin, SUPER32_EVENT_KEY, "seeds"),
+      admin.from("super32_live_snapshots").select("data").eq("id", body.snapshotId).single(),
+    ])
+    if (!flo || !snap.data) return NextResponse.json({ ok: true, synced: null })
+    try {
+      const synced = await syncResults(admin, SUPER32_EVENT_KEY, flo.content, seedsUp ? parseSeedsCsv(seedsUp.content) : [], snap.data.data as SnapshotData)
+      return NextResponse.json({ ok: true, synced })
+    } catch (e) {
+      return NextResponse.json({ ok: true, synced: null, syncError: e instanceof Error ? e.message : String(e) })
+    }
   }
 
   if (body.action === "dismiss" || body.action === "hold" || body.action === "restore") {

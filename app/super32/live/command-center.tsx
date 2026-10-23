@@ -15,11 +15,14 @@ const APP_STORE_URL = "https://apps.apple.com/app/id6803202791"
 type G = "all" | "boys" | "girls"
 type Tab = "home" | "watch" | "wrestlers" | "recap" | "alerts"
 
-/** 2025 finals from the 2025 Flo export, same engine (boys 91, girls 41). */
+/**
+ * 2025 finals from the 2025 Flo export, same engine and same NC rule as 2026: Jaclyn Bouzakis
+ * (NOT_NC) is left out, as she is this year. Boys 91, girls 40.
+ */
 const Y2025: Record<G, { record: string; winning: number; aa: number }> = {
-  all: { record: "108-264", winning: 12, aa: 5 },
+  all: { record: "103-264", winning: 11, aa: 4 },
   boys: { record: "76-182", winning: 7, aa: 1 },
-  girls: { record: "32-82", winning: 5, aa: 4 },
+  girls: { record: "27-82", winning: 4, aa: 3 },
 }
 const GOALS = { boysAA: 2, winning: 14 }
 
