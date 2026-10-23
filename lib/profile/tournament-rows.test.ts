@@ -167,12 +167,32 @@ describe("the state names the state tournament", () => {
 
 describe("an event the state does not sanction", () => {
   it("names West Virginia's girls invitational as one, not a WVSSAC championship", () => {
+    /* The flag decides it, not the division's name — sanctioned: false comes from the event. */
     const rows = buildNchsaaStateRows(
-      [{ year: 2026, place: 1, classification: "Girls Invitational", weight_class: "130" }],
+      [{ year: 2026, place: 1, classification: "Girls Invitational", weight_class: "130", sanctioned: false, gender: "Girls" }],
       [],
       "WV",
     )
     expect(rows[0]!.event).toBe("WV Girls State Invitational")
+  })
+
+  it("calls an unsanctioned event an invitational even if its division is named like a championship", () => {
+    const rows = buildNchsaaStateRows(
+      [{ year: 2026, place: 1, classification: "Girls", weight_class: "130", sanctioned: false, gender: "Girls" }],
+      [],
+      "WV",
+    )
+    expect(rows[0]!.event).toBe("WV Girls State Invitational")
+  })
+
+  it("calls a sanctioned event a championship even if its division is named 'Invitational'", () => {
+    /* The reverse of the trap: a label is not a fact, and the state sanctions the event. */
+    const rows = buildNchsaaStateRows(
+      [{ year: 2027, place: 1, classification: "Girls Invitational", weight_class: "130", sanctioned: true }],
+      [],
+      "WV",
+    )
+    expect(rows[0]!.event).toBe("WVSSAC Girls Invitational State Championships")
   })
 
   it("still names West Virginia's boys championship normally", () => {
