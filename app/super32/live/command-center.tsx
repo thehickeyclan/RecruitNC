@@ -3,7 +3,7 @@
 /**
  * Super 32 Command Center, laid out as a sports front page (Matt's mock, 23 Oct 2026):
  * header, statewide scoreboard, Top Stories + Latest Headlines, Round Recap + Biggest Wins,
- * Wrestlers to Watch + All NC Wrestlers, app band. One long page on a phone, two columns on desktop.
+ * My Wrestlers (starred) + All NC Wrestlers, app band. One long page on a phone, two columns on desktop.
  *
  * Every number comes from the published 2026 snapshot; before results it reads 0 or "Not started",
  * and 2025 appears only labelled as 2025. Stories are templates filled from results (stories.ts).
@@ -13,7 +13,6 @@ import Link from "next/link"
 import type { PublicSnapshot } from "@/app/api/super32-live/route"
 import type { FeedItem, SnapshotEntrant, SnapshotRecap } from "@/lib/super32-live/snapshot"
 import { buildStories, type Story } from "@/lib/super32-live/stories"
-import { WATCH_NAMED_IDS } from "@/lib/super32-live/watch-named"
 
 const APP_STORE_URL = "https://apps.apple.com/app/id6803202791"
 const ARTICLE = {
@@ -59,7 +58,7 @@ function Photo({ e, className, big }: { e: { name: string; photo: string | null 
 const TAG: Record<string, string> = {
   "Huge win": "bg-[#e5372c] text-white", "Big win": "bg-[#d4af55] text-[#0b1730]", Upset: "bg-[#7c5cff] text-white",
   "All-American": "bg-[#d4af55] text-[#0b1730]", Champion: "bg-[#d4af55] text-[#0b1730]", "Round recap": "bg-[#3b5ba5] text-white",
-  "Hot streak": "bg-[#e5372c]/80 text-white", "Consolation run": "bg-[#3b5ba5] text-white", "Wrestler to watch": "bg-[#1b2d57] text-[#d4af55]",
+  "Hot streak": "bg-[#e5372c]/80 text-white", "Consolation run": "bg-[#3b5ba5] text-white", Seeded: "bg-[#1b2d57] text-[#d4af55]",
   Preview: "bg-[#3b5ba5] text-white",
 }
 function Tag({ kind }: { kind: string }) {
@@ -303,7 +302,6 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
   const [q, setQ] = useState("")
   const [weight, setWeight] = useState("")
   const [status, setStatus] = useState("")
-  const [allWatch, setAllWatch] = useState(false)
   const [allWins, setAllWins] = useState(false)
   const [allList, setAllList] = useState(false)
   // 2026 is the live event; 2025 is last year's, kept for comparison.
@@ -341,20 +339,10 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
 
   const entrants = useMemo(() => (snap?.entrants ?? []).filter((e) => g === "all" || e.gender === g), [snap, g])
   const recaps = useMemo(() => (snap?.recaps ?? []).filter((r) => r.gender === g), [snap, g])
-  // The three named Watch wrestlers are in the strip, never in stories or headlines (Matt, 23 Oct).
-  const stories = useMemo(() => buildStories(
-    (snap?.hasResults ? entrants : [...entrants, ...(snap?.watchPreview ?? []).filter((e) => g === "all" || e.gender === g)])
-      .filter((e) => !e.athleteId || !WATCH_NAMED_IDS.includes(e.athleteId)),
-    recaps, !!snap?.hasResults), [entrants, recaps, snap, g])
+  const stories = useMemo(() => buildStories(entrants, recaps, !!snap?.hasResults), [entrants, recaps, snap])
   const feed = useMemo(() => (snap?.feed ?? []).filter((f) => g === "all" || f.gender === g).sort((a, b) => (a.tier === b.tier ? 0 : a.tier === "huge" ? -1 : 1)), [snap, g])
-  // Before results, ranked and named watch candidates not yet seen in a bracket join the strip.
-  const preview = useMemo(() => (snap?.hasResults ? [] : (snap?.watchPreview ?? []).filter((e) => g === "all" || e.gender === g)), [snap, g])
-  const watch = useMemo(() => [...entrants.filter((e) => e.watch !== null || e.aaClinched || e.bouts.some((b) => b.win && b.tier === "huge")), ...preview]
-    .sort((a, b) => (a.watch ?? 9) - (b.watch ?? 9) || (a.seed ?? 99) - (b.seed ?? 99) || b.wins - a.wins), [entrants, preview])
-  const mine = useMemo(() => {
-    const pool = [...entrants, ...preview]
-    return pool.filter((e) => e.athleteId && stars.ids.has(e.athleteId))
-  }, [entrants, preview, stars.ids])
+  // My Wrestlers replaces our Wrestlers to Watch (Matt, 23 Oct): the families pick, by starring.
+  const mine = useMemo(() => entrants.filter((e) => e.athleteId && stars.ids.has(e.athleteId)), [entrants, stars.ids])
   const weights = useMemo(() => [...new Set(entrants.map((e) => e.weight))].sort((a, b) => Number(a) - Number(b)), [entrants])
   const list = useMemo(() => {
     const order: Record<string, number> = { placed: 0, alive: 1, not_started: 1, alive_consis: 2, eliminated: 3 }
@@ -443,16 +431,6 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
               </div>
             </Section>
 
-            <Section title={`My Wrestlers${mine.length ? ` (${mine.length})` : ""}`} right={stars.signedIn === false && mine.length ? <a href="/auth/signin?returnTo=%2Fsuper32%2Flive" className="shrink-0 text-xs text-[#d4af55]">Sign in to save</a> : null}>
-              {mine.length ? (
-                <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-4 md:px-0 xl:grid-cols-6">
-                  {mine.map((e) => <WatchCard key={`m${e.gender}${e.weight}${e.name}`} e={e} onOpen={() => setOpen(e)} starred onStar={() => void stars.toggle(e.athleteId!)} />)}
-                </div>
-              ) : (
-                <p className="text-sm text-[#9fb0cf]">Tap <span className="text-[#d4af55]">☆</span> on any NC wrestler to follow them here all weekend.{stars.signedIn ? " They are saved to your NC United follows." : " Sign in or use the NC United app to keep them and get alerts."}</p>
-              )}
-            </Section>
-
             <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
               <Section title={started ? "Top Stories" : "Super 32 Preview"}>
                 <LeadStory stories={stories} onOpen={setOpen} />
@@ -484,12 +462,19 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
             </div>
 
             <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
-              <Section title="NC Wrestlers to Watch" right={watch.length > 8 ? <button onClick={() => setAllWatch(!allWatch)} className="text-xs text-[#d4af55]">{allWatch ? "Show less" : `View all ${watch.length}`}</button> : null}>
-                {watch.length ? (
+              <Section title={`My Wrestlers${mine.length ? ` (${mine.length})` : ""}`} right={stars.signedIn === false && mine.length ? <a href="/auth/signin?returnTo=%2Fsuper32%2Flive" className="shrink-0 text-xs text-[#d4af55]">Sign in to save</a> : null}>
+                {mine.length ? (
                   <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-3 md:px-0 xl:grid-cols-4">
-                    {watch.slice(0, allWatch ? undefined : 8).map((e) => <WatchCard key={`${e.gender}${e.weight}${e.name}`} e={e} onOpen={() => setOpen(e)} starred={!!e.athleteId && stars.ids.has(e.athleteId)} onStar={() => e.athleteId && void stars.toggle(e.athleteId)} />)}
+                    {mine.map((e) => <WatchCard key={`m${e.gender}${e.weight}${e.name}`} e={e} onOpen={() => setOpen(e)} starred onStar={() => void stars.toggle(e.athleteId!)} />)}
                   </div>
-                ) : <Empty>Wrestlers to watch appear once seeds are set.</Empty>}
+                ) : (
+                  <div className="rounded-lg border border-dashed border-[#2c4170] px-5 py-8 text-center">
+                    <div className="text-4xl text-[#d4af55]">☆</div>
+                    <div className={`${H} mt-2 text-2xl text-white`}>Build your Super 32 list</div>
+                    <p className="mx-auto mt-2 max-w-sm text-sm text-[#c9d4ea]">Tap the <span className="text-[#d4af55]">☆</span> next to any NC wrestler in the list to follow them here, with their record and results all weekend.</p>
+                    <p className="mx-auto mt-2 max-w-sm text-xs text-[#8195bd]">{stars.signedIn ? "Your stars are saved to your NC United follows." : "Sign in or use the NC United app to keep your list and get alerts."}</p>
+                  </div>
+                )}
               </Section>
               <Section title={`All NC Wrestlers (${entrants.length})`}>
                 <div className="mb-3 grid grid-cols-2 gap-2">
