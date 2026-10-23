@@ -256,16 +256,32 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
   const [allWatch, setAllWatch] = useState(false)
   const [allWins, setAllWins] = useState(false)
   const [allList, setAllList] = useState(false)
+  // 2026 is the live event; 2025 is last year's, kept for comparison.
+  const [year, setYear] = useState<"2025" | "2026">("2026")
 
   useEffect(() => {
-    try { const p = new URLSearchParams(location.search).get("g"); if (p === "m") setG("boys"); if (p === "w") setG("girls") } catch { /* ignore */ }
+    try {
+      const q = new URLSearchParams(location.search)
+      const p = q.get("g"); if (p === "m") setG("boys"); if (p === "w") setG("girls")
+      if (q.get("y") === "2025") setYear("2025")
+    } catch { /* ignore */ }
+  }, [])
+
+  useEffect(() => {
     if (initial) return
     let alive = true
-    const load = () => fetch("/api/super32-live", { cache: "no-store" }).then((r) => r.json()).then((j) => alive && setSnap(j.snapshot ?? null)).catch(() => alive && setSnap((s) => s ?? null))
+    setSnap(undefined)
+    const load = () => fetch(`/api/super32-live?year=${year}`, { cache: "no-store" }).then((r) => r.json()).then((j) => alive && setSnap(j.snapshot ?? null)).catch(() => alive && setSnap((s) => s ?? null))
     void load()
-    const id = setInterval(load, 60_000)
-    return () => { alive = false; clearInterval(id) }
-  }, [initial])
+    // Last year's view never changes; only the live year polls.
+    const id = year === "2026" ? setInterval(load, 60_000) : undefined
+    return () => { alive = false; if (id) clearInterval(id) }
+  }, [initial, year])
+
+  const pickYear = (next: "2025" | "2026") => {
+    setYear(next)
+    try { const u = new URL(location.href); if (next === "2026") u.searchParams.delete("y"); else u.searchParams.set("y", next); history.replaceState(null, "", u) } catch { /* ignore */ }
+  }
 
   const pickG = (next: G) => {
     setG(next)
@@ -312,7 +328,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
             <div className={`${H} mt-2 text-sm text-[#c9d4ea] md:text-base`}>North Carolina wrestling. All of it.</div>
           </div>
           <div className="text-xs uppercase tracking-wider text-[#c9d4ea] md:text-right">
-            <div className="text-sm font-semibold text-white">October 24–25, 2026</div>
+            <div className="text-sm font-semibold text-white">{year === "2025" ? "October 18, 2025" : "October 24–25, 2026"}</div>
             <div>Greensboro Coliseum · Greensboro, NC</div>
           </div>
         </div>
@@ -321,6 +337,13 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
 
       <div className="sticky top-0 z-30 border-b border-[#1f3360] bg-[#0a1630]/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2.5">
+          {!initial && (
+            <div className="grid w-full grid-cols-2 gap-1.5 sm:w-auto sm:min-w-[200px]">
+              {(["2025", "2026"] as const).map((y) => (
+                <button key={y} onClick={() => pickYear(y)} className={`${H} rounded-md px-4 py-2 text-base ${year === y ? "bg-[#d4af55] text-[#0b1730]" : "bg-[#13244a] text-[#c9d4ea]"}`}>{y}</button>
+              ))}
+            </div>
+          )}
           <div className="grid min-w-[260px] flex-1 grid-cols-3 gap-1.5">
             {(["all", "boys", "girls"] as const).map((k) => (
               <button key={k} onClick={() => pickG(k)} className={`rounded-md py-2 text-sm font-semibold ${g === k ? "bg-[#d4af55] text-[#0b1730]" : "bg-[#13244a] text-[#c9d4ea]"}`}>
@@ -330,7 +353,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
           </div>
           <div className="text-[11px] leading-tight text-[#8195bd] md:text-right">
             {rehearsalLabel && <div className="font-semibold text-[#d4af55]">{rehearsalLabel}</div>}
-            {snap?.publishedAt ? <>Updated{snap.recaps[0] ? ` after ${snap.recaps[0].label}` : ""} · {new Date(snap.publishedAt).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}</> : "Results post after every round"}
+            {year === "2025" && !initial ? "2025 final results" : snap?.publishedAt ? <>Updated{snap.recaps[0] ? ` after ${snap.recaps[0].label}` : ""} · {new Date(snap.publishedAt).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}</> : "Results post after every round"}
           </div>
         </div>
       </div>
@@ -347,10 +370,10 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                   ["Still alive", sb.stillAlive, sb.aliveConsi ? `${sb.aliveChamp} champ · ${sb.aliveConsi} consi` : started ? "" : `${sb.wrestlers} entered`, "text-white"],
                   ["Huge wins", sb.huge, "", "text-[#e5372c]"],
                   ["Big wins", sb.big, "", "text-[#d4af55]"],
-                  ["All-Americans", sb.allAmericans, `2025: ${Y2025[g].aa}`, "text-white"],
-                  ["Winning records", sb.winningRecords, `2025: ${Y2025[g].winning}`, "text-white"],
+                  ["All-Americans", sb.allAmericans, year === "2026" ? `2025: ${Y2025[g].aa}` : "", "text-white"],
+                  ["Winning records", sb.winningRecords, year === "2026" ? `2025: ${Y2025[g].winning}` : "", "text-white"],
                   ["Seeded wins", sb.seededWins, "", "text-white"],
-                  ["NC placers", placed, `2025 record ${Y2025[g].record}`, "text-white"],
+                  ["NC placers", placed, year === "2026" ? `2025 record ${Y2025[g].record}` : "", "text-white"],
                 ] as const).map(([label, v, sub, color]) => (
                   <div key={label} className="min-w-[118px] shrink-0 rounded-lg border border-[#1f3360] bg-[#0b1730] px-3 py-3 text-center lg:min-w-0">
                     <div className={`${H} whitespace-nowrap text-3xl leading-none md:text-4xl ${color}`}>{v}</div>
