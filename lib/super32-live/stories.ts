@@ -32,7 +32,7 @@ export function buildStories(entrants: SnapshotEntrant[], recaps: SnapshotRecap[
     const watch = entrants.filter((e) => e.watch !== null).sort((a, b) => (a.watch ?? 9) - (b.watch ?? 9) || (a.seed ?? 99) - (b.seed ?? 99))
     for (const e of watch.slice(0, 6)) {
       out.push({
-        id: `preview:${e.gender}${e.weight}${e.name}`, kind: "preview", label: "Wrestler to watch",
+        id: `preview:${e.gender}${e.weight}${e.name}`, kind: "preview", label: "Seeded",
         headline: e.seed !== null ? `${e.name} enters as the #${e.seed} seed` : e.weight ? `${e.name} headlines NC at ${e.weight}` : `${e.name} is one to watch`,
         dek: [e.chips.slice(0, 3).join(" · "), e.school].filter(Boolean).join(" — "),
         entrant: e, meta: [lbs(e), e.school].filter(Boolean).join(" · "), rank: 50 + (e.watch ?? 9) + (e.seed ?? 50) / 100,
