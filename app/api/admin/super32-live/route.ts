@@ -3,12 +3,14 @@
  *
  * Every statewide alert is sent by Matt from the admin page, one tap each; nothing sends on its
  * own. Sends are also gated by SUPER32_LIVE_PUSH=1 and capped at one per 20 minutes.
+ * A test goes to the signed-in admin's own phones only, so it works before push is switched on.
  */
 import { NextResponse, type NextRequest } from "next/server"
 import { revalidateTag } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { requireAdmin } from "@/lib/admin-auth"
-import { sendToSubscribers } from "@/lib/push-send"
+import { createClient } from "@/lib/supabase/server"
+import { sendToSubscribers, sendToTokens } from "@/lib/push-send"
 import { buildSnapshot, latestSnapshot, latestUpload, parseSeedsCsv, SUPER32_EVENT_KEY, type SnapshotData } from "@/lib/super32-live/snapshot"
 import { syncResults } from "@/lib/super32-live/sync"
 
@@ -21,11 +23,14 @@ export async function GET() {
   const auth = await requireAdmin()
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
   const admin = createAdminClient()
-  const [snap, published, uploads, alerts] = await Promise.all([
+  const me = await currentUserId()
+  const [snap, published, uploads, alerts, audience, mine] = await Promise.all([
     latestSnapshot(admin),
     latestSnapshot(admin, SUPER32_EVENT_KEY, true),
     admin.from("super32_live_uploads").select("id, kind, file_name, seeds_final, created_at").eq("event_key", SUPER32_EVENT_KEY).order("created_at", { ascending: false }).limit(30),
     admin.from("super32_live_alerts").select("*").eq("event_key", SUPER32_EVENT_KEY).order("created_at", { ascending: false }).limit(200),
+    admin.from("push_devices").select("expo_push_token", { count: "exact", head: true }).eq("alert_results", true),
+    me ? admin.from("push_devices").select("expo_push_token", { count: "exact", head: true }).eq("user_id", me) : Promise.resolve({ count: 0 }),
   ])
   return NextResponse.json({
     snapshot: snap,
@@ -33,6 +38,9 @@ export async function GET() {
     uploads: uploads.data ?? [],
     alerts: alerts.data ?? [],
     pushEnabled: process.env.SUPER32_LIVE_PUSH === "1",
+    audience: audience.count ?? null,
+    myDevices: mine.count ?? 0,
+    capMinutes: CAP_MINUTES,
   })
 }
 
@@ -42,6 +50,14 @@ type Body =
   | { action: "publish"; snapshotId: string }
   | { action: "send"; alertId: string; override?: boolean }
   | { action: "dismiss" | "hold" | "restore"; alertId: string }
+  | { action: "custom"; title: string; body: string; override?: boolean }
+  | { action: "test"; title: string; body: string }
+
+async function currentUserId(): Promise<string | null> {
+  const supabase = await createClient()
+  const { data } = await supabase.auth.getUser()
+  return data.user?.id ?? null
+}
 
 export async function POST(request: NextRequest) {
   const auth = await requireAdmin()
@@ -94,15 +110,44 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
-  if (body.action === "send") {
+  if (body.action === "test") {
+    const title = body.title?.trim(), text = body.body?.trim()
+    if (!title || !text) return NextResponse.json({ error: "A test needs a title and a message." }, { status: 400 })
+    const me = await currentUserId()
+    const { data: devices } = me ? await admin.from("push_devices").select("expo_push_token").eq("user_id", me) : { data: [] }
+    const tokens = (devices ?? []).map((d: { expo_push_token: string }) => d.expo_push_token).filter(Boolean)
+    if (!tokens.length) return NextResponse.json({ error: "No phone is registered to your account. Open the NC United app signed in as you, allow notifications, then try again." }, { status: 409 })
+    const r = await sendToTokens("alert_results", tokens, { title, body: text, data: { kind: "super32-live", path: "/news/super32-live" } })
+    await admin.from("super32_live_alerts").insert({ event_key: SUPER32_EVENT_KEY, dedupe_key: `test:${crypto.randomUUID()}`, kind: "test", title, body: text, status: "sent", sent_at: new Date().toISOString(), sent_count: r.sent })
+    return NextResponse.json({ ok: true, sent: r.sent, failed: r.failed })
+  }
+
+  let alertId: string | null = null
+  if (body.action === "custom") {
+    const title = body.title?.trim(), text = body.body?.trim()
+    if (!title || !text) return NextResponse.json({ error: "An alert needs a title and a message." }, { status: 400 })
     if (process.env.SUPER32_LIVE_PUSH !== "1") return NextResponse.json({ error: "Push is off (SUPER32_LIVE_PUSH is not 1)." }, { status: 409 })
-    const { data: alert } = await admin.from("super32_live_alerts").select("*").eq("id", body.alertId).single()
+    const { data: row, error } = await admin.from("super32_live_alerts")
+      .insert({ event_key: SUPER32_EVENT_KEY, dedupe_key: `custom:${crypto.randomUUID()}`, kind: "custom", title, body: text, status: "pending" })
+      .select("id").single()
+    if (error || !row) return NextResponse.json({ error: error?.message ?? "Could not save the alert" }, { status: 500 })
+    alertId = row.id
+  } else if (body.action === "send") {
+    alertId = body.alertId
+  }
+
+  if (alertId && (body.action === "send" || body.action === "custom")) {
+    if (process.env.SUPER32_LIVE_PUSH !== "1") return NextResponse.json({ error: "Push is off (SUPER32_LIVE_PUSH is not 1)." }, { status: 409 })
+    const { data: alert } = await admin.from("super32_live_alerts").select("*").eq("id", alertId).single()
     if (!alert) return NextResponse.json({ error: "No such alert" }, { status: 404 })
     if (alert.status === "sent") return NextResponse.json({ error: "Already sent" }, { status: 409 })
     if (!body.override) {
       const since = new Date(Date.now() - CAP_MINUTES * 60_000).toISOString()
-      const { data: recent } = await admin.from("super32_live_alerts").select("sent_at").eq("event_key", SUPER32_EVENT_KEY).eq("status", "sent").gte("sent_at", since).limit(1)
-      if (recent?.length) return NextResponse.json({ error: `An alert went out in the last ${CAP_MINUTES} minutes. Fold this into the next recap, or override.` }, { status: 409 })
+      const { data: recent } = await admin.from("super32_live_alerts").select("sent_at").eq("event_key", SUPER32_EVENT_KEY).eq("status", "sent").neq("kind", "test").gte("sent_at", since).limit(1)
+      if (recent?.length) {
+        // A custom alert that cannot go yet waits in the queue instead of vanishing.
+        return NextResponse.json({ error: `An alert went out in the last ${CAP_MINUTES} minutes. It is waiting in the queue; send it later or override.`, queued: body.action === "custom" }, { status: 409 })
+      }
     }
     // Claim it first so a double tap cannot send twice.
     const { data: claimed } = await admin.from("super32_live_alerts").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", alert.id).neq("status", "sent").select("id")
