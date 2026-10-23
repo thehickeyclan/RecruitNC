@@ -408,9 +408,14 @@ export type Recap = {
   sentence: string
 }
 
-const ROUND_LABEL = (rounds: string[]) => {
-  const champ = rounds.filter((r) => /^(round of|quarter|semi|finals?$)/i.test(r)).sort((a, b) => roundOrder(b) - roundOrder(a))[0]
-  return champ ?? rounds.sort((a, b) => roundOrder(b) - roundOrder(a))[0] ?? "this round"
+/**
+ * An export arrives after a round, not after each match, and sometimes covers two: the label names
+ * the championship rounds it holds ("Round of 64", or "Round of 64 – Round of 32").
+ */
+export const ROUND_LABEL = (rounds: string[]) => {
+  const champ = [...new Set(rounds.filter((r) => /^(round of|quarter|semi|finals?$)/i.test(r)))].sort((a, b) => roundOrder(a) - roundOrder(b))
+  if (champ.length > 1) return `${champ[0]} \u2013 ${champ[champ.length - 1]}`
+  return champ[0] ?? [...rounds].sort((a, b) => roundOrder(b) - roundOrder(a))[0] ?? "this round"
 }
 
 /**
