@@ -298,7 +298,7 @@ export async function computeSnapshot(supabase: SupabaseClient, eventKey: string
     entrants, feed, recaps, boutSeenAt,
     unresolved: split.unresolved, unmatched, brackets: split.brackets,
   }
-  return { data, latestRecap }
+  return { data, latestRecap, newKeys }
 }
 
 export async function buildSnapshot(supabase: SupabaseClient, eventKey = SUPER32_EVENT_KEY): Promise<{ id: string; data: SnapshotData; alertsQueued: number }> {
@@ -307,7 +307,7 @@ export async function buildSnapshot(supabase: SupabaseClient, eventKey = SUPER32
     latestUpload(supabase, eventKey, "seeds"),
     latestSnapshot(supabase, eventKey),
   ])
-  const { data, latestRecap } = await computeSnapshot(supabase, eventKey, {
+  const { data, latestRecap, newKeys } = await computeSnapshot(supabase, eventKey, {
     floContent: flo?.content ?? null,
     seeds: seedsUp ? parseSeedsCsv(seedsUp.content) : [],
     seedsFinal: !!seedsUp?.seeds_final,
@@ -321,7 +321,7 @@ export async function buildSnapshot(supabase: SupabaseClient, eventKey = SUPER32
   if (error || !inserted) throw new Error(`snapshot insert failed: ${error?.message}`)
 
   // Alerts only once seeds are final: a preliminary list must never put a push in the queue.
-  const alerts = data.seedsFinal ? queueAlerts(data.entrants, latestRecap, flo?.id ?? "none", eventKey, inserted.id) : []
+  const alerts = data.seedsFinal ? queueAlerts(data.entrants, prev?.data.entrants ?? [], newKeys, latestRecap, flo?.id ?? "none", eventKey, inserted.id) : []
   let alertsQueued = 0
   if (alerts.length) {
     const { data: rowsIn } = await supabase.from("super32_live_alerts").upsert(alerts, { onConflict: "dedupe_key", ignoreDuplicates: true }).select("id")
@@ -330,28 +330,51 @@ export async function buildSnapshot(supabase: SupabaseClient, eventKey = SUPER32
   return { id: inserted.id, data, alertsQueued }
 }
 
-const who = (e: SnapshotEntrant) => `${e.name} (${[e.school, e.weight].filter(Boolean).join(", ")})`
+/**
+ * One alert per uploaded export. Results arrive after each round, not each match, so a round's
+ * Huge wins, new All-Americans, finalists and champions go out together in one push that Matt
+ * approves; one at a time they would be stale, and the 20-minute cap would hold most of them.
+ * Only wrestlers linked to an NC profile are named.
+ */
+export function queueAlerts(
+  entrants: SnapshotEntrant[],
+  prevEntrants: SnapshotEntrant[],
+  newKeys: Set<string>,
+  latestRecap: SnapshotRecap | null,
+  floId: string,
+  eventKey: string,
+  snapshotId: string,
+) {
+  if (!latestRecap) return []
+  const id = (e: { gender: string; weight: string; name: string }) => `${e.gender}|${e.weight}|${e.name}`
+  const before = new Map(prevEntrants.map((e) => [id(e), e]))
+  const named = entrants.filter((e) => e.athleteId)
+  const huge = named.flatMap((e) => e.bouts.filter((b) => b.win && b.tier === "huge" && newKeys.has(b.key)).map((b) => ({ e, b })))
+  const champs = named.filter((e) => e.placement === 1 && before.get(id(e))?.placement !== 1)
+  const finalists = named.filter((e) => e.bouts.some((b) => b.win && /^semi/i.test(b.round) && newKeys.has(b.key)))
+  const aa = named.filter((e) => e.aaClinched && !before.get(id(e))?.aaClinched && !champs.includes(e))
 
-export function queueAlerts(entrants: SnapshotEntrant[], latestRecap: SnapshotRecap | null, floId: string, eventKey: string, snapshotId: string) {
-  const out: Array<{ event_key: string; dedupe_key: string; kind: string; title: string; body: string; path: string; status: string; snapshot_id: string }> = []
-  const push = (key: string, kind: string, title: string, body: string, matched: boolean) =>
-    out.push({ event_key: eventKey, dedupe_key: key, kind, title, body, path: LIVE_PATH, status: matched ? "pending" : "held", snapshot_id: snapshotId })
-  for (const e of entrants) {
-    const matched = !!e.athleteId
-    for (const b of e.bouts) {
-      if (b.win && b.tier === "huge") {
-        push(`huge:${b.key}`, "huge", "HUGE WIN — North Carolina!",
-          `${who(e)} beats ${b.opponent} of ${b.opponentTeam}, ${b.reasons[0]}${b.result ? `, ${b.result}` : ""}, ${b.round}.`, matched)
-      }
-      if (b.win && /^semi/i.test(b.round)) {
-        push(`finals:${e.gender}:${e.weight}:${e.name}`, "finals", "NC finalist at Super 32!", `${who(e)} is in the ${e.gender === "girls" ? "girls' " : ""}finals at ${e.weight}.`, matched)
-      }
-    }
-    if (e.aaClinched) push(`aa:${e.gender}:${e.weight}:${e.name}`, "aa", "Super 32 All-American!", `${who(e)} has clinched All-American at Super 32.`, matched)
-    if (e.placement === 1) push(`champ:${e.gender}:${e.weight}:${e.name}`, "champion", "SUPER 32 CHAMPION — North Carolina!", `${who(e)} wins the Super 32 title at ${e.weight}.`, matched)
+  const short = (e: SnapshotEntrant) => `${e.name} (${e.weight})`
+  const lines: string[] = []
+  for (const e of champs) lines.push(`CHAMPION: ${short(e)}`)
+  for (const { e, b } of huge) lines.push(`HUGE: ${short(e)} def. ${b.reasons[0]} ${b.opponent} (${b.opponentTeam})`)
+  if (finalists.length) lines.push(`Finals: ${finalists.map(short).join(", ")}`)
+  if (aa.length) lines.push(`All-American: ${aa.map(short).join(", ")}`)
+
+  const head = `NC went ${latestRecap.wins}-${latestRecap.losses}. ${latestRecap.stillAlive} still alive.`
+  let body = head
+  let shown = 0
+  for (const l of lines) {
+    if ((body + " " + l).length > 230) break
+    body += ` ${l}.`
+    shown += 1
   }
-  if (latestRecap) {
-    push(`recap:${floId}`, "recap", `Super 32: ${latestRecap.label} recap`, latestRecap.sentence, true)
-  }
-  return out
+  if (shown < lines.length) body += ` +${lines.length - shown} more in the Command Center.`
+
+  const title = champs.length
+    ? `Super 32 ${champs.length === 1 ? "CHAMPION" : "CHAMPIONS"} for North Carolina!`
+    : huge.length
+      ? `Super 32 \u00b7 ${latestRecap.label}: ${huge.length} HUGE ${huge.length === 1 ? "WIN" : "WINS"} for NC`
+      : `Super 32 \u00b7 ${latestRecap.label} recap`
+  return [{ event_key: eventKey, dedupe_key: `round:${floId}`, kind: "recap", title, body, path: LIVE_PATH, status: "pending", snapshot_id: snapshotId }]
 }

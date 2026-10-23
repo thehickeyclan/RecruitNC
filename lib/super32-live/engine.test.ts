@@ -106,3 +106,11 @@ describe("recap", () => {
     expect(r.topPerformance?.win.tier).toBe("huge")
   })
 })
+
+describe("round label", () => {
+  it("names the championship rounds an export covers", async () => {
+    const { ROUND_LABEL } = await import("./engine")
+    expect(ROUND_LABEL(["Round of 32", "Consi of 64 #2"])).toBe("Round of 32")
+    expect(ROUND_LABEL(["Round of 32", "Round of 64", "Consi of 64 #1"])).toBe("Round of 64 – Round of 32")
+  })
+})

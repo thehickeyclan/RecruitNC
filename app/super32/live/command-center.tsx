@@ -31,10 +31,6 @@ const STATUS: Record<SnapshotEntrant["status"], string> = {
 }
 const ord = (n: number) => (n === 1 ? "1st" : n === 2 ? "2nd" : n === 3 ? "3rd" : `${n}th`)
 const statusText = (e: SnapshotEntrant) => (e.status === "placed" && e.placement ? `Placed ${ord(e.placement)}` : STATUS[e.status])
-const ago = (iso: string) => {
-  const m = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000))
-  return m < 1 ? "now" : m < 60 ? `${m}m ago` : `${Math.round(m / 60)}h ago`
-}
 const initials = (n: string) => n.split(/\s+/).map((p) => p[0]).slice(0, 2).join("").toUpperCase()
 
 function Avatar({ e, size = 44 }: { e: { name: string; photo: string | null }; size?: number }) {
@@ -117,7 +113,6 @@ function FeedList({ items, limit }: { items: FeedItem[]; limit?: number }) {
             <div className="text-sm text-[#c9d4ea]">def. {f.opponent} ({f.opponentTeam}){f.reasons[0] ? `, ${f.reasons[0]}` : ""}</div>
             <div className="text-xs text-[#8195bd]">{[f.winType, f.result, f.round].filter(Boolean).join(" · ")}</div>
           </div>
-          <span className="shrink-0 text-xs text-[#6f83ab]">{ago(f.seenAt)}</span>
         </li>
       ))}
     </ul>
@@ -278,7 +273,7 @@ export function CommandCenter({ initial }: { initial?: PublicSnapshot } = {}) {
     </Panel>
   )
   const recapPanel = (
-    <Panel title="Round recap" right={recaps[0] ? <span className="text-xs text-[#8195bd]">{recaps[0].label} · {ago(recaps[0].at)}</span> : null}>
+    <Panel title="Round recap" right={recaps[0] ? <span className="text-xs text-[#8195bd]">After {recaps[0].label}</span> : null}>
       {recaps[0] ? <RecapCard r={recaps[0]} /> : <Empty>The first recap posts after the opening round.</Empty>}
     </Panel>
   )
@@ -334,7 +329,7 @@ export function CommandCenter({ initial }: { initial?: PublicSnapshot } = {}) {
               <div className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#d4af55]">NC United · Super 32</div>
               <h1 className="font-sans text-2xl font-bold uppercase leading-tight">Command Center</h1>
             </div>
-            <div className="text-right text-[11px] text-[#8195bd]">{snap?.publishedAt ? <>Updated<br />{new Date(snap.publishedAt).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}</> : "Sat & Sun · Oct 24–25"}</div>
+            <div className="text-right text-[11px] text-[#8195bd]">{snap?.publishedAt ? <>{snap.recaps[0] ? `Updated after ${snap.recaps[0].label}` : "Updated"}<br />{new Date(snap.publishedAt).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}</> : "Sat & Sun · Oct 24–25"}</div>
           </div>
           <div className="mt-3">{toggle}</div>
         </div>
@@ -361,7 +356,7 @@ export function CommandCenter({ initial }: { initial?: PublicSnapshot } = {}) {
             </div>
             <div className={tab === "home" || tab === "watch" ? "" : "hidden lg:block"}>{watchPanel}</div>
             {tab === "recap" && recaps.length > 1 && (
-              <div className="space-y-4 lg:hidden">{recaps.slice(1).map((r) => <Panel key={r.at + r.gender} title={`${r.label} recap`} right={<span className="text-xs text-[#8195bd]">{ago(r.at)}</span>}><RecapCard r={r} /></Panel>)}</div>
+              <div className="space-y-4 lg:hidden">{recaps.slice(1).map((r) => <Panel key={r.at + r.gender} title={`${r.label} recap`} right={<span className="text-xs text-[#8195bd]">{new Date(r.at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span>}><RecapCard r={r} /></Panel>)}</div>
             )}
             <div className={tab === "wrestlers" ? "" : "hidden lg:block"}>{listPanel}</div>
             <AppBar />
