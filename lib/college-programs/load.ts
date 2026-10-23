@@ -31,7 +31,7 @@ export function mapSchoolIdFor(coachSchoolName: string): string | null {
  * (lib/coach-messages isApprovedCoach), so a dot marked On RecruitNC is a school whose coach
  * can actually see the profile and write to the family.
  */
-async function schoolsWithApprovedCoaches(admin: SupabaseClient): Promise<Set<string>> {
+export async function schoolsWithApprovedCoaches(admin: SupabaseClient): Promise<Set<string>> {
   const { data: coaches, error } = await admin
     .from("user_profiles")
     .select("role, verified_coach, verification_status, school_id")
