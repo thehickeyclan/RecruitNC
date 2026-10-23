@@ -11,6 +11,7 @@
 import { PortalShell } from "@/components/portal/portal-shell"
 import { QuestionnairePack, type PackForm } from "@/components/portal/questionnaire-pack"
 import { questionnairesForSchool } from "@/lib/college-programs/questionnaires"
+import data from "@/lib/college-programs/programs-2026-27.json"
 import { loadAnswers } from "@/lib/questionnaire/answers"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { loadCommandCenter } from "../load"
@@ -19,6 +20,7 @@ export const dynamic = "force-dynamic"
 export const metadata = { title: "Interest forms | Recruiting Command Center" }
 
 const GOLD = "var(--recruit-accent)"
+const SITES = new Map((data.schools as Array<{ id: string; website: string | null }>).map((s) => [s.id, s.website]))
 
 export default async function QuestionnairesPage({ searchParams }: { searchParams: Promise<{ w?: string }> }) {
   const { w } = await searchParams
@@ -26,16 +28,14 @@ export default async function QuestionnairesPage({ searchParams }: { searchParam
   const wrestler = cc.athletes.find((a) => a.id === w) ?? cc.athletes[0] ?? null
   const side = wrestler?.gender && /^f/i.test(wrestler.gender) ? "womens" : cc.focus?.gender === "womens" ? "womens" : "mens"
 
+  // Every college on the list is a form to do. Without a link on file, the button goes to the
+  // college's wrestling site to find it - and the family can still mark it submitted.
   const forms: PackForm[] = []
-  const noForm: Array<{ id: string; name: string }> = []
   for (const s of cc.schools) {
     if (s.noTeam) continue
     const url = questionnairesForSchool(s.id).map((q) => q[side]).find(Boolean) ?? null
-    if (!url) {
-      noForm.push({ id: s.id, name: s.name })
-      continue
-    }
-    forms.push({ schoolId: s.id, name: s.name, level: s.level, logo: s.logo, url, done: Boolean(s.questionnaireDone), doneAt: s.questionnaireDoneAt ?? null })
+    const site = SITES.get(s.id) ?? null
+    forms.push({ schoolId: s.id, name: s.name, level: s.level, logo: s.logo, url: url ?? site ?? `/recruiting/schools/${s.id}`, onFile: Boolean(url), done: Boolean(s.questionnaireDone), doneAt: s.questionnaireDoneAt ?? null })
   }
 
   const answers = wrestler ? await loadAnswers(createAdminClient(), wrestler.id) : null
@@ -75,7 +75,7 @@ export default async function QuestionnairesPage({ searchParams }: { searchParam
             athleteId={wrestler.id}
             firstName={wrestler.firstName}
             forms={forms}
-            noForm={noForm}
+
             answers={answers}
             readOnly={cc.viewerId !== cc.authUserId}
           />

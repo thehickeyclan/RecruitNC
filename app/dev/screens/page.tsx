@@ -104,7 +104,6 @@ export default async function Screens({ searchParams }: { searchParams?: Promise
             firstName="Jordan"
             readOnly={false}
             forms={rows.slice(0, 5).map((r, i) => ({ schoolId: r.id, name: r.name, level: r.level, logo: r.logo, url: "https://example.com", done: i === 2, doneAt: i === 2 ? "2026-10-20T19:14:00Z" : null }))}
-            noForm={[{ id: "belmont-abbey-college", name: "Belmont Abbey College" }]}
             answers={{
               available: true,
               updatedAt: null,

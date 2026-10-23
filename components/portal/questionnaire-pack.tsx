@@ -11,6 +11,8 @@ export type PackForm = {
   level: string
   logo: string | null
   url: string
+  /** We hold the form's own link; otherwise url is the college's site, where the family finds it. */
+  onFile?: boolean
   done: boolean
   doneAt: string | null
 }
@@ -29,14 +31,12 @@ export function QuestionnairePack({
   athleteId,
   firstName,
   forms: initialForms,
-  noForm,
   answers: initial,
   readOnly,
 }: {
   athleteId: string
   firstName: string
   forms: PackForm[]
-  noForm: Array<{ id: string; name: string }>
   answers: Loaded
   readOnly: boolean
 }) {
@@ -138,22 +138,6 @@ export function QuestionnairePack({
           </div>
         ) : null}
 
-        {noForm.length ? (
-          <div className={`${card} p-5`}>
-            <h2 className="text-sm font-black uppercase tracking-wider text-white/60">No form on file</h2>
-            <p className="mt-1 text-sm text-white/55">We have not found an interest form for these. Their wrestling page may have one, or email the coach.</p>
-            <p className="mt-2 text-sm">
-              {noForm.map((s, i) => (
-                <span key={s.id}>
-                  {i ? ", " : ""}
-                  <a className="font-semibold text-white/85 hover:text-[#D3B574]" href={`/recruiting/schools/${s.id}`}>
-                    {s.name}
-                  </a>
-                </span>
-              ))}
-            </p>
-          </div>
-        ) : null}
       </section>
 
       <aside className={`${card} h-fit p-5 lg:sticky lg:top-4`}>
@@ -282,8 +266,14 @@ function FormRow({ form, readOnly, onMark }: { form: PackForm; readOnly: boolean
         </p>
       </div>
       <div className="flex w-full items-center gap-3 sm:w-auto">
-        <a href={form.url} data-ncu-form={form.schoolId} target="_blank" rel="noopener noreferrer" className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-[#D3B574] px-3 py-1.5 text-sm font-black text-[#0A1628] sm:flex-none">
-          Open form <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+        <a
+          href={form.url}
+          data-ncu-form={form.schoolId}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-black sm:flex-none ${form.onFile === false ? "border border-[#D3B574]/60 text-[#D3B574]" : "bg-[#D3B574] text-[#0A1628]"}`}
+        >
+          {form.onFile === false ? "Find it on their site" : "Open form"} <ExternalLink className="h-3.5 w-3.5" aria-hidden />
         </a>
         <button type="button" onClick={onMark} disabled={readOnly} className="shrink-0 text-sm font-semibold text-white/60 underline-offset-2 hover:text-white hover:underline disabled:opacity-50">
           Mark as submitted

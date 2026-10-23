@@ -137,7 +137,8 @@ export function WarRoomPlan({
             profileTodo: wrestler.profileTodo,
             listStatuses: schools.map((s) => s.status),
             listLevels: schools.map((s) => s.level),
-            questionnairesWaiting: schools.filter((s) => s.hasQuestionnaire && !s.questionnaireDone).length,
+            // Every college whose form is not done, link on file or not (the Amiotts' 7 read as 3, 23 Oct 2026).
+            questionnairesWaiting: schools.filter((s) => !s.questionnaireDone && !s.noTeam).length,
             scheduleCount: events.length,
           })
         : [],
