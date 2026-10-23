@@ -13,6 +13,11 @@ import { readGuide, type Guide } from "@/lib/recruiting/scout/guides"
 import { athleticAdmissionFacts, inStateLine } from "@/lib/recruiting/scout/projected-level"
 import { needSentence, roomByWeight, roomFor, weightsPublished } from "@/lib/college-programs/roster-room"
 import { isHeadCoach, staffForSchool } from "@/lib/college-programs/staff"
+import { schoolsWithApprovedCoaches } from "@/lib/college-programs/load"
+import { rosterForSchool } from "@/lib/college-programs/rosters"
+import { rankingSentence } from "@/lib/college-programs/team-rankings"
+import { teamRankingsForSchool } from "@/lib/college-programs/team-rankings-snapshot"
+import { RECRUITING_BRAND } from "@/lib/recruiting/brand"
 import { yearlyCostFor } from "@/lib/college-programs/tuition"
 import { DIVISION_SHORT, type CollegeDivision, type CollegeMapSchool } from "@/lib/college-programs/types"
 import { loadWentHere } from "@/lib/college-programs/went-here"
@@ -58,6 +63,8 @@ export type ScoutSession = {
   commitment?: { name: string; schoolId: string | null } | null
   /** The wrestler's star, for the in-state line (never said to the family). */
   stars?: number | null
+  /** Colleges whose coaches are on the platform (approved accounts), loaded once per question. */
+  onPlatform?: Set<string>
   /** Links Scout may offer; tools add the colleges they return. */
   links: Record<string, { label: string; href: string; kind: "rule" | "timeline" | "college" | "tool" | "source" }>
 }
@@ -111,7 +118,7 @@ export const SCOUT_TOOLS = [
     function: {
       name: "college_details",
       description:
-        "Everything about one college for this family: programs, conference, full cost and net price, coaching staff (names, titles, published emails), recruiting questionnaire, the lineup at the wrestler's weight, the NC wrestlers who went there and their results, how the wrestler fits (athletic, academic, cost), whether it is on the family's list and whether its coaches viewed the profile.",
+        "Everything about one college for this family: programs, conference, whether its coaches are on the platform, national team ranking, coaching staff (names, titles, published emails) and support staff, the North Carolina wrestlers on its current roster, full cost and net price, recruiting questionnaire, the lineup at the wrestler's weight, the NC wrestlers who went there and their results, how the wrestler fits (athletic, academic, cost), whether it is on the family's list and whether its coaches viewed the profile.",
       parameters: { type: "object", properties: { school_id: { type: "string" } }, required: ["school_id"] },
     },
   },
@@ -254,12 +261,40 @@ async function collegeDetails(s: ScoutSession, a: Record<string, unknown>): Prom
     if (fit.net?.amount != null) lines.push(`Net price: ${money(fit.net.amount)}, the average paid after aid by all aided students (not this family's income)`)
     lines.push(`Fit: athletic: ${fit.lines.athletic.text} Academic: ${fit.lines.academic.text} Cost: ${fit.lines.cost.text}`)
   }
+  // Coaches on the platform: they can see the profile, the Command Center and write in the app.
+  s.onPlatform ??= await schoolsWithApprovedCoaches(s.admin).catch(() => new Set<string>())
+  lines.push(
+    s.onPlatform.has(school.id)
+      ? `This program's coaches are on ${RECRUITING_BRAND.name}: they can see the wrestler's profile and verified results here, and the family can tell them the wrestler is interested from the college list.`
+      : `This program's coaches are not on ${RECRUITING_BRAND.name} yet: reach them by email.`,
+  )
+  // National team ranking, the latest coaches' poll that lists it.
+  const ranks = await teamRankingsForSchool(school.id).catch(() => [])
+  const rank = ranks.find((r) => !s.team || r.gender === s.team) ?? null
+  lines.push(rank ? `Team ranking: ${rankingSentence(rank)}.` : "Team ranking: not in the latest coaches' poll we hold.")
+  // Coaches first, with emails; support staff apart (Matt, 23 Oct 2026: a strength coach is not who a
+  // family emails). Tenure and background are not held: say so rather than guess.
   const staff = staffForSchool(school.id).filter((m) => !s.team || m.teams.includes(s.team))
+  const support = (t: string) => /strength|conditioning|trainer|operations|video|manager|administrat|sport science|nutrition|academic/i.test(t)
+  const coaches = staff.filter((m) => !support(m.title))
+  const others = staff.filter((m) => support(m.title))
   lines.push(
     staff.length
-      ? `Coaching staff (from the school's site):\n${staff.map((m) => `- ${m.name}, ${m.title}${isHeadCoach(m) ? " (head coach)" : ""}${m.email ? `, ${m.email}` : ""}`).join("\n")}`
+      ? `Coaching staff (from the school's site):\n${coaches.map((m) => `- ${m.name}, ${m.title}${isHeadCoach(m) ? " (head coach)" : ""}${m.email ? `, ${m.email}` : ", no email published"}`).join("\n")}` +
+          (others.length ? `\nSupport staff (not recruiting contacts): ${others.map((m) => `${m.name} (${m.title})`).join("; ")}` : "") +
+          "\nAdvice: email the whole coaching staff together; a family rarely knows which coach runs recruiting. We do not hold the coaches' tenure, records or backgrounds: say so if asked."
       : "Coaching staff: not on file yet; the athletics website lists it.",
   )
+  // Who from North Carolina is on the roster now (Muse's roster pull, the school's own roster page).
+  if ((s.homeState ?? "NC") === "NC") {
+    const roster = rosterForSchool(school.id)
+    const mine = roster.wrestlers.filter((w) => !s.team || w.team === s.team)
+    lines.push(
+      roster.anyReviewed
+        ? `North Carolina wrestlers on the current roster: ${roster.teamLines.join(" ")}${mine.length ? `\nSay this line as written, every name: "North Carolina wrestlers on the roster now: ${mine.slice(0, 8).map((w) => `${w.name} (${[w.weight, w.class, w.highSchool].filter(Boolean).join(", ")})`).join("; ")}${mine.length > 8 ? `; and ${mine.length - 8} more` : ""}."` : ""}`
+        : "North Carolina wrestlers on the current roster: we could not read this roster.",
+    )
+  }
   const q = questionnairesForSchool(school.id)
   const qUrl = q.map((x) => (s.team === "womens" ? x.womens : s.team === "mens" ? x.mens : x.mens ?? x.womens)).find(Boolean)
   lines.push(qUrl ? `Recruiting questionnaire: ${qUrl}` : "Recruiting questionnaire: none on file; check the athletics website.")
