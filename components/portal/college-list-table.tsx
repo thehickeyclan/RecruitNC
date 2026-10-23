@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react"
 
-import { CollegePanel, Chip, LastLine, Signals, type PipelineCollege } from "@/components/portal/college-pipeline"
+import { CollegePanel, Chip, LastLine, NotePreview, Signals, type PipelineCollege } from "@/components/portal/college-pipeline"
 import { easternToday, type AdmissionsSummary } from "@/lib/college-programs/admissions-format"
 import { activitiesFor, lastActivity, nextStep as pipelineStep, type ActivityAction } from "@/lib/college-programs/board-activities"
 import type { Admissions } from "@/lib/college-programs/list"
@@ -100,6 +100,13 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
   const [stages, setStages] = useState<Record<string, CollegeListStatus>>({})
   const today = easternToday()
   const statusOf = (r: ListRow) => stages[r.id] ?? r.status
+  // Interest-form ticks made here, shown at once.
+  const [formDone, setFormDone] = useState<Record<string, boolean>>({})
+  const toggleForm = async (r: ListRow, done: boolean) => {
+    setFormDone((m) => ({ ...m, [r.id]: done }))
+    const res = await fetch("/api/college-list", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ schoolId: r.id, questionnaireDone: done }) }).catch(() => null)
+    if (!res?.ok) setFormDone((m) => ({ ...m, [r.id]: !done }))
+  }
 
   const live = rows.filter((r) => !removed.has(r.id))
   const levels = [...new Set(live.map((r) => r.level))]
@@ -184,7 +191,7 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
           </thead>
           <tbody>
             {shown.map((r) => {
-              const pc = asPipeline(r, statusOf(r))
+              const pc = { ...asPipeline(r, statusOf(r)), ...(r.id in formDone ? { questionnaireDone: formDone[r.id] } : {}) }
               const chips = activitiesFor(pc, today).filter((x) => x.key === "form" || x.key === "email" || (x.key === "apply" && (x.done || x.detail)))
               const step = pipelineStep(pc, today)
               const on = picked.includes(r.id)
@@ -242,11 +249,12 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
                   </td>
                   <td className="w-48 p-3">
                     <LastLine last={lastActivity(pc)} today={today} />
+                    <NotePreview memo={r.note} onOpen={() => setPanel(r.id)} />
                   </td>
                   <td className="p-3">
                     <div className="flex max-w-[15rem] flex-wrap gap-1">
                       {chips.map((x) => (
-                        <Chip key={x.key} a={x} />
+                        <Chip key={x.key} a={x} onToggle={x.key === "form" && !readOnly ? () => void toggleForm(r, !x.done) : undefined} />
                       ))}
                     </div>
                     <Signals c={pc} today={today} hideLast />
@@ -326,7 +334,7 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
             onClose={() => setPanel(null)}
             onStage={(st) => void setStage(r, st)}
             onAct={(a) => act(r, a)}
-            onQuestionnaire={readOnly ? undefined : (done) => void fetch("/api/college-list", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ schoolId: r.id, questionnaireDone: done }) }).then(() => window.location.reload())}
+            onQuestionnaire={readOnly ? undefined : (done) => void toggleForm(r, done)}
             onMemo={(memo) => void fetch("/api/college-list", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ schoolId: r.id, note: memo }) }).then(() => window.location.reload())}
           />
         )

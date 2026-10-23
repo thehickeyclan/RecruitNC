@@ -197,7 +197,7 @@ export const ACTION_LABEL: Record<ActivityAction["kind"], string> = {
 }
 
 /** A small progress mark: done in green, to do in grey, a near deadline in amber or rose. */
-export function Chip({ a }: { a: Activity }) {
+export function Chip({ a, onToggle }: { a: Activity; onToggle?: () => void }) {
   const short = a.key === "form" ? "Interest form" : a.key === "email" ? "Emailed coach" : a.done ? "Applied" : a.detail ? a.detail.replace(/ closes /, " ").replace(/^Early Decision/, "ED").replace(/^Early Action/, "EA").replace(/^Regular Decision/, "RD").replace(/^Restrictive Early Action/, "REA") : "Apply"
   const tone = a.done
     ? "border-emerald-400/40 text-emerald-300"
@@ -206,12 +206,26 @@ export function Chip({ a }: { a: Activity }) {
       : a.tone === "soon"
         ? "border-amber-300/50 text-amber-200"
         : "border-white/15 text-white/50"
-  return (
-    <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-1.5 py-0.5 text-[10px] font-bold ${tone}`}>
+  const inner = (
+    <>
       {a.done ? <Check className="h-3 w-3" aria-hidden /> : <Circle className="h-2.5 w-2.5" aria-hidden />}
       {short}
-    </span>
+    </>
   )
+  const cls = `inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-1.5 py-0.5 text-[10px] font-bold ${tone}`
+  // The interest form chip is a one-tap tick (a done one asks first, so a stray tap never clears it).
+  if (onToggle)
+    return (
+      <button
+        type="button"
+        onClick={() => (a.done ? window.confirm("Mark the interest form as not done?") && onToggle() : onToggle())}
+        title={a.done ? "Interest form done - tap to undo" : "Tap when you have submitted it"}
+        className={`${cls} hover:border-[#D3B574]`}
+      >
+        {inner}
+      </button>
+    )
+  return <span className={cls}>{inner}</span>
 }
 
 const dayShort = (iso: string) => new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" })
@@ -293,5 +307,15 @@ export function LastLine({ last, today, className = "" }: { last: ReturnType<typ
       <span className="font-semibold text-white">{last.text}</span>
       <span className="text-white/55"> · {agoText(last.at, today)}</span>
     </p>
+  )
+}
+
+/** The family's own note, shown on the card or row (Gemma Amiott keeps her log here); tap to edit. */
+export function NotePreview({ memo, onOpen }: { memo: string | null | undefined; onOpen: () => void }) {
+  if (!memo) return null
+  return (
+    <button type="button" onClick={onOpen} className="mt-1.5 block w-full rounded-md border border-white/10 bg-[#0A1628]/60 px-2 py-1 text-left text-[11px] leading-4 text-white/75 hover:border-white/30">
+      <span className="line-clamp-2">📝 {memo}</span>
+    </button>
   )
 }
