@@ -425,7 +425,7 @@ export function queueAlerts(
     body += ` ${l}.`
     shown += 1
   }
-  if (shown < lines.length) body += ` +${lines.length - shown} more in the Command Center.`
+  if (shown < lines.length) body += ` +${lines.length - shown} more in Super 32 HQ.`
 
   const title = champs.length
     ? `Super 32 ${champs.length === 1 ? "CHAMPION" : "CHAMPIONS"} for North Carolina!`
