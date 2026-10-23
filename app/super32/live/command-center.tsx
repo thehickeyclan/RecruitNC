@@ -13,6 +13,7 @@ import Link from "next/link"
 import type { PublicSnapshot } from "@/app/api/super32-live/route"
 import type { FeedItem, SnapshotEntrant, SnapshotRecap } from "@/lib/super32-live/snapshot"
 import { buildStories, type Story } from "@/lib/super32-live/stories"
+import { WATCH_NAMED_IDS } from "@/lib/super32-live/watch-named"
 
 const APP_STORE_URL = "https://apps.apple.com/app/id6803202791"
 const ARTICLE = {
@@ -290,7 +291,11 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
 
   const entrants = useMemo(() => (snap?.entrants ?? []).filter((e) => g === "all" || e.gender === g), [snap, g])
   const recaps = useMemo(() => (snap?.recaps ?? []).filter((r) => r.gender === g), [snap, g])
-  const stories = useMemo(() => buildStories(snap?.hasResults ? entrants : [...entrants, ...(snap?.watchPreview ?? []).filter((e) => g === "all" || e.gender === g)], recaps, !!snap?.hasResults), [entrants, recaps, snap, g])
+  // The three named Watch wrestlers are in the strip, never in stories or headlines (Matt, 23 Oct).
+  const stories = useMemo(() => buildStories(
+    (snap?.hasResults ? entrants : [...entrants, ...(snap?.watchPreview ?? []).filter((e) => g === "all" || e.gender === g)])
+      .filter((e) => !e.athleteId || !WATCH_NAMED_IDS.includes(e.athleteId)),
+    recaps, !!snap?.hasResults), [entrants, recaps, snap, g])
   const feed = useMemo(() => (snap?.feed ?? []).filter((f) => g === "all" || f.gender === g).sort((a, b) => (a.tier === b.tier ? 0 : a.tier === "huge" ? -1 : 1)), [snap, g])
   // Before results, ranked and named watch candidates not yet seen in a bracket join the strip.
   const preview = useMemo(() => (snap?.hasResults ? [] : (snap?.watchPreview ?? []).filter((e) => g === "all" || e.gender === g)), [snap, g])
