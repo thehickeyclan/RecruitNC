@@ -141,6 +141,12 @@ export async function GET(request: NextRequest) {
   const announced: Array<Record<string, unknown>> = []
   let eventsHandled = 0
 
+  /*
+   * Super 32 2026 is published round by round from the Command Center, so its rows land all
+   * weekend. Followers get one digest, once the finals are over, not one off the first round.
+   */
+  if (Date.now() < Date.parse("2026-10-26T00:00:00-04:00")) events.delete("super32-2026")
+
   for (const batch of events.values()) {
     if (eventsHandled >= MAX_EVENTS_PER_RUN) break
 
