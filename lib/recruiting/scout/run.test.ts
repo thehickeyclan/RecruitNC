@@ -6,6 +6,11 @@ vi.mock("@/lib/recruiting/scout/tools", () => ({ SCOUT_TOOLS: [], runScoutTool: 
 import { answerProblems, commitmentProblem, draftProblems } from "@/lib/recruiting/scout/run"
 
 describe("draftProblems", () => {
+  it("never asks the coach what he wants to see", () => {
+    expect(draftProblems("What would you like to see from me this season?", false)).toHaveLength(1)
+    expect(draftProblems("What do you want to see from me?", false)).toHaveLength(1)
+    expect(draftProblems("Thank you for your time.", false)).toHaveLength(0)
+  })
   it("catches praise, roster talk and a questionnaire not done", () => {
     expect(draftProblems("I'm interested because of its strong wrestling program.", false)).toHaveLength(1)
     expect(draftProblems("I noticed there might be room at my weight class soon.", false)).toHaveLength(1)
