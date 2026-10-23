@@ -24,6 +24,7 @@ type G = "all" | "boys" | "girls"
 
 /** A designed banner per division replaces the header when that tab is on. Add "all"/"boys" when they exist. */
 const BANNERS: Partial<Record<G, { src: string; alt: string }>> = {
+  boys: { src: "/images/super32/command-center-men.jpg", alt: "NC United Super 32 Command Center: Men" },
   girls: { src: "/images/super32/command-center-girls.webp", alt: "NC United Super 32 Command Center: Girls" },
 }
 
