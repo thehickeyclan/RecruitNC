@@ -59,6 +59,9 @@ export function draftProblems(body: string, questionnaireNotDone: boolean): stri
   if (/\b(close to home|near(by)? (to )?(my )?home|short drive|not far from)\b/i.test(body)) out.push("We do not know where the family lives: do not say the college is close to home.")
   if (questionnaireNotDone && /\b(completed|filled out|filled in|submitted|done)\b.{0,40}questionnaire|questionnaire.{0,20}\b(completed|done|submitted)\b/i.test(body))
     out.push("The questionnaire is not recorded as done: do not say it is.")
+  // Never ask the coach what he wants to see (Matt, 23 Oct 2026).
+  if (/\bwhat (would|do|does|will) (you|your staff|the staff) (like|want|need|hope) to see\b|\bwant(s)? to see from me\b|\blike to see from me\b/i.test(body))
+    out.push('Do not ask the coach what he would like or want to see from the wrestler; close with the next fact or a plain thank-you.')
   return out
 }
 const EMAIL = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi

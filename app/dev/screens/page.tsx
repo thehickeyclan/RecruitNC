@@ -129,7 +129,7 @@ export default async function Screens({ searchParams }: { searchParams?: Promise
                 draft: {
                   to: ["coach.one@example.edu", "coach.two@example.edu", "coach.three@example.edu"],
                   subject: "Jordan Example, Class of 2028, 152 lbs",
-                  body: "Hi Coach,\n\nMy name is Jordan Example, a junior at Example High School wrestling at 152 lbs. I placed 3rd at the 2026 NCHSAA state tournament. I'm interested in Campbell because two wrestlers from my school went there and it wrestles in the Southern Conference.\n\nWhat would you want to see from me this season?\n\nThank you,\nJordan Example\nClass of 2028, Example High School\n[phone]\n[email]",
+                  body: "Hi Coach,\n\nMy name is Jordan Example, a junior at Example High School wrestling at 152 lbs. I placed 3rd at the 2026 NCHSAA state tournament. I'm interested in Campbell because two wrestlers from my school went there and it wrestles in the Southern Conference.\n\nThank you,\nJordan Example\nClass of 2028, Example High School\n[phone]\n[email]",
                 },
               },
             ]}
