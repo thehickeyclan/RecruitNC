@@ -20,11 +20,20 @@ import {
   type Scoreboard,
   type SeedRow,
   type Tier,
+  type NcFilter,
+  teamIsNc,
 } from "./engine"
 import { loadCredentials } from "./credentials"
 
 export const SUPER32_EVENT_KEY = "super32-2026"
 export const LIVE_PATH = "/news/super32-live"
+
+/**
+ * Entrants on an NC club who are not counted as North Carolina wrestlers (Matt, 22 Oct 2026):
+ * both attend school out of state. They are left off the page, the totals and the alerts.
+ */
+export const NOT_NC = ["Jaclyn Bouzakis", "Jack Harty"]
+const isNcEntrant: NcFilter = (name, team, gender) => teamIsNc(name, team, gender) && !NOT_NC.some((n) => samePerson({ name: n }, { name }))
 
 export type SnapshotBout = {
   round: string
@@ -233,7 +242,7 @@ export async function computeSnapshot(supabase: SupabaseClient, eventKey: string
 
   const rows = input.floContent ? parseFloExport(input.floContent) : []
   const split = splitDivisions(rows, [...seeds.map((s) => ({ gender: s.gender, weight: s.weight, name: s.name, state: s.state })), ...(input.hints ?? [])])
-  const summaries = addUnstartedSeeds(summarizeEntrants(split.bouts, ctx), seeds)
+  const summaries = addUnstartedSeeds(summarizeEntrants(split.bouts, ctx, isNcEntrant), seeds, isNcEntrant)
 
   const boutSeenAt: Record<string, string> = { ...(input.prev?.boutSeenAt ?? {}) }
   const newKeys = new Set<string>()
