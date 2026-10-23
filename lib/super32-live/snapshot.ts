@@ -125,15 +125,16 @@ export function parseSeedsCsv(text: string): SeedRow[] {
 
 type AthleteRow = { id: string; name: string | null; wrestling_name: string | null; photourl: string | null; highschool: string | null; graduationyear: number | null; gender: string | null }
 
-async function loadNcAthletes(supabase: SupabaseClient): Promise<AthleteRow[]> {
+async function loadNcAthletes(supabase: SupabaseClient, eventYear: number): Promise<AthleteRow[]> {
   const out: AthleteRow[] = []
   for (let from = 0; ; from += 1000) {
     const { data, error } = await supabase
       .from("athletes")
       .select("id, name, wrestling_name, photourl, highschool, graduationyear, gender")
       .eq("is_nc_athlete", true)
-      .gte("graduationyear", 2027)
-      .lte("graduationyear", 2030)
+      // Super 32 opens a season: seniors are the class of year+1, freshmen year+4.
+      .gte("graduationyear", eventYear + 1)
+      .lte("graduationyear", eventYear + 4)
       .order("id")
       .range(from, from + 999)
     if (error || !data?.length) break
@@ -232,11 +233,13 @@ export type SnapshotInputs = {
   prev: SnapshotData | null
   /** Extra division hints for a rehearsal on a year without seeds. */
   hints?: Array<{ gender: Gender; weight: string; name: string; state?: string | null }>
+  /** The year the event is wrestled; picks which class years can be linked. 2026 unless rehearsing. */
+  eventYear?: number
 }
 
 /** Everything the page shows, computed from one export and one seed list. Reads profiles; writes nothing. */
 export async function computeSnapshot(supabase: SupabaseClient, eventKey: string, input: SnapshotInputs, now = new Date().toISOString()) {
-  const [credentials, athletes] = await Promise.all([loadCredentials(supabase), loadNcAthletes(supabase)])
+  const [credentials, athletes] = await Promise.all([loadCredentials(supabase), loadNcAthletes(supabase, input.eventYear ?? 2026)])
   const { seeds, seedsFinal } = input
   const ctx = { seeds, credentials, seedsFinal }
 
@@ -256,7 +259,7 @@ export async function computeSnapshot(supabase: SupabaseClient, eventKey: string
   const entrants: SnapshotEntrant[] = summaries.map((e, i) => {
     const m = matches[i]!
     if (m === "ambiguous") unmatched.push(`${e.name} (${e.gender} ${e.weight}): more than one NC profile matches`)
-    else if (!m) unmatched.push(`${e.name} (${e.gender} ${e.weight}): no NC profile in classes 2027-2030`)
+    else if (!m) unmatched.push(`${e.name} (${e.gender} ${e.weight}): no NC profile in a current class`)
     const a = m && m !== "ambiguous" ? m : null
     return {
       ...chipsFor({ name: e.name, gender: e.gender, seed: e.seed, athleteId: a?.id ?? null }, credentials, hist),
