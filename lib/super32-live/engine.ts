@@ -204,21 +204,8 @@ export function splitDivisions(rows: Super32Row[], hints: Array<{ gender: Gender
 const UNTIERED_TYPES = /^(FOR|M ?FOR|MFF|FF|DEF|DQ|INJ|BYE|VFO|VFA|VIN)$/i
 const BONUS_TYPES = /^(MD|TF|F|FALL|VSU1?|VPO1?|VFA|VSU|VFO)$/i
 
-/** Bout order for one wrestler: championship rounds by depth, then consolation, then placement. */
-export function roundOrder(round: string): number {
-  const r = round.toLowerCase()
-  const placement = r.match(/^(\d)(st|nd|rd|th) place/)
-  if (/^finals?$/.test(r) || placement) return 3000 + (placement ? Number(placement[1]) : 1)
-  const champ = r.match(/^round of (\d+)/)
-  if (champ) return 1000 + (512 - Number(champ[1]))
-  if (/quarter/.test(r)) return 1000 + 504
-  if (/^semi/.test(r)) return 1000 + 508
-  // Consi of 8 #1, #2, Consi of 4, then Consi-Semis: deeper rounds later, #1 before #2.
-  const consi = r.match(/^consi of (\d+)(?: #(\d))?/)
-  if (consi) return 2000 + (512 - Number(consi[1])) + Number(consi[2] ?? 1) / 10
-  if (/consi-?semi/.test(r)) return 2000 + 509
-  return 2500
-}
+export { roundOrder } from "./rounds"
+import { roundOrder } from "./rounds"
 
 const PLACEMENT: Array<[RegExp, number, number]> = [
   [/^(1st place( match)?|finals?|championship( final)?)$/i, 1, 2],
