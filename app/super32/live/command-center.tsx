@@ -191,13 +191,61 @@ function BestWin({ e }: { e: SnapshotEntrant }) {
   )
 }
 
-function WatchCard({ e, onOpen }: { e: SnapshotEntrant; onOpen: () => void }) {
+/**
+ * Stars are the app's follows (athlete_follows via /api/mobile/v1/follows): signed in on the web
+ * or in the app's web sheet, a star is the same follow the app shows and the results digest uses.
+ * Signed out, stars live on this device only.
+ */
+const LOCAL_STARS = "s32-stars"
+function useStars() {
+  const [ids, setIds] = useState<Set<string>>(new Set())
+  const [signedIn, setSignedIn] = useState<boolean | null>(null)
+  useEffect(() => {
+    let local: string[] = []
+    try { local = JSON.parse(localStorage.getItem(LOCAL_STARS) ?? "[]") } catch { /* private mode */ }
+    fetch("/api/mobile/v1/follows", { cache: "no-store" })
+      .then(async (r) => {
+        if (r.status === 401) { setSignedIn(false); setIds(new Set(local)); return }
+        const j = await r.json()
+        setSignedIn(true)
+        setIds(new Set((j.athletes ?? []).map((a: { id: string }) => a.id)))
+      })
+      .catch(() => { setSignedIn(false); setIds(new Set(local)) })
+  }, [])
+  const toggle = async (athleteId: string) => {
+    const on = !ids.has(athleteId)
+    const next = new Set(ids)
+    if (on) next.add(athleteId); else next.delete(athleteId)
+    setIds(next)
+    if (signedIn) {
+      const r = await fetch("/api/mobile/v1/follows", { method: on ? "POST" : "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ athleteId }) }).catch(() => null)
+      if (!r || !r.ok) setIds(ids)
+    } else {
+      try { localStorage.setItem(LOCAL_STARS, JSON.stringify([...next])) } catch { /* private mode */ }
+    }
+  }
+  return { ids, signedIn, toggle }
+}
+
+function Star({ on, onToggle, className = "" }: { on: boolean; onToggle: () => void; className?: string }) {
+  return (
+    <span role="button" tabIndex={0} aria-label={on ? "Remove from My Wrestlers" : "Add to My Wrestlers"} aria-pressed={on}
+      onClick={(x) => { x.stopPropagation(); onToggle() }}
+      onKeyDown={(x) => { if (x.key === "Enter" || x.key === " ") { x.preventDefault(); x.stopPropagation(); onToggle() } }}
+      className={`inline-flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-lg leading-none ${on ? "bg-[#d4af55] text-[#0b1730]" : "bg-black/40 text-white/80 hover:text-[#d4af55]"} ${className}`}>
+      {on ? "★" : "☆"}
+    </span>
+  )
+}
+
+function WatchCard({ e, onOpen, starred, onStar }: { e: SnapshotEntrant; onOpen: () => void; starred?: boolean; onStar?: () => void }) {
   const badge = e.chips.find((c) => !/seed$/.test(c)) ?? e.chips[0]
   return (
     <button onClick={onOpen} className="w-40 shrink-0 overflow-hidden rounded-lg border border-[#1f3360] bg-[#0b1730] text-left hover:border-[#d4af55]/60 md:w-auto">
       <div className="relative">
         <Photo e={e} big className="aspect-[4/5] w-full" />
         {e.seed !== null && <span className={`${H} absolute left-2 top-2 rounded bg-[#d4af55] px-1.5 text-sm text-[#0b1730]`}>#{e.seed}</span>}
+        {onStar && e.athleteId && <Star on={!!starred} onToggle={onStar} className="absolute right-2 top-2" />}
       </div>
       <div className="space-y-1.5 p-2.5">
         <div className="truncate font-semibold text-white">{e.name}</div>
@@ -209,7 +257,7 @@ function WatchCard({ e, onOpen }: { e: SnapshotEntrant; onOpen: () => void }) {
   )
 }
 
-function WrestlerSheet({ e, onClose }: { e: SnapshotEntrant; onClose: () => void }) {
+function WrestlerSheet({ e, onClose, starred, onStar }: { e: SnapshotEntrant; onClose: () => void; starred?: boolean; onStar?: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 sm:items-center" onClick={onClose}>
       <div className="max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-t-2xl border border-[#1f3360] bg-[#0d1d3d] p-5 sm:rounded-2xl" onClick={(x) => x.stopPropagation()}>
@@ -219,6 +267,7 @@ function WrestlerSheet({ e, onClose }: { e: SnapshotEntrant; onClose: () => void
             <div className={`${H} text-2xl text-white`}>{e.name}</div>
             <div className="text-sm text-[#8195bd]">{e.gender === "girls" ? "Girls " : ""}{e.weight} lbs{e.school ? ` · ${e.school}` : ""}{e.classYear ? ` · ${e.classYear}` : ""}{e.seed !== null ? ` · #${e.seed} seed` : ""}</div>
           </div>
+          {onStar && e.athleteId && <Star on={!!starred} onToggle={onStar} />}
           <button onClick={onClose} className="text-sm text-[#9fb0cf]">Close</button>
         </div>
         <div className="mt-4 grid grid-cols-3 gap-2 text-center">
@@ -259,6 +308,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
   const [allList, setAllList] = useState(false)
   // 2026 is the live event; 2025 is last year's, kept for comparison.
   const [year, setYear] = useState<"2025" | "2026">("2026")
+  const stars = useStars()
 
   useEffect(() => {
     try {
@@ -301,6 +351,10 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
   const preview = useMemo(() => (snap?.hasResults ? [] : (snap?.watchPreview ?? []).filter((e) => g === "all" || e.gender === g)), [snap, g])
   const watch = useMemo(() => [...entrants.filter((e) => e.watch !== null || e.aaClinched || e.bouts.some((b) => b.win && b.tier === "huge")), ...preview]
     .sort((a, b) => (a.watch ?? 9) - (b.watch ?? 9) || (a.seed ?? 99) - (b.seed ?? 99) || b.wins - a.wins), [entrants, preview])
+  const mine = useMemo(() => {
+    const pool = [...entrants, ...preview]
+    return pool.filter((e) => e.athleteId && stars.ids.has(e.athleteId))
+  }, [entrants, preview, stars.ids])
   const weights = useMemo(() => [...new Set(entrants.map((e) => e.weight))].sort((a, b) => Number(a) - Number(b)), [entrants])
   const list = useMemo(() => {
     const order: Record<string, number> = { placed: 0, alive: 1, not_started: 1, alive_consis: 2, eliminated: 3 }
@@ -389,6 +443,16 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
               </div>
             </Section>
 
+            <Section title={`My Wrestlers${mine.length ? ` (${mine.length})` : ""}`} right={stars.signedIn === false && mine.length ? <a href="/auth/signin?returnTo=%2Fsuper32%2Flive" className="shrink-0 text-xs text-[#d4af55]">Sign in to save</a> : null}>
+              {mine.length ? (
+                <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-4 md:px-0 xl:grid-cols-6">
+                  {mine.map((e) => <WatchCard key={`m${e.gender}${e.weight}${e.name}`} e={e} onOpen={() => setOpen(e)} starred onStar={() => void stars.toggle(e.athleteId!)} />)}
+                </div>
+              ) : (
+                <p className="text-sm text-[#9fb0cf]">Tap <span className="text-[#d4af55]">☆</span> on any NC wrestler to follow them here all weekend.{stars.signedIn ? " They are saved to your NC United follows." : " Sign in or use the NC United app to keep them and get alerts."}</p>
+              )}
+            </Section>
+
             <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
               <Section title={started ? "Top Stories" : "Super 32 Preview"}>
                 <LeadStory stories={stories} onOpen={setOpen} />
@@ -423,7 +487,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
               <Section title="NC Wrestlers to Watch" right={watch.length > 8 ? <button onClick={() => setAllWatch(!allWatch)} className="text-xs text-[#d4af55]">{allWatch ? "Show less" : `View all ${watch.length}`}</button> : null}>
                 {watch.length ? (
                   <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-3 md:px-0 xl:grid-cols-4">
-                    {watch.slice(0, allWatch ? undefined : 8).map((e) => <WatchCard key={`${e.gender}${e.weight}${e.name}`} e={e} onOpen={() => setOpen(e)} />)}
+                    {watch.slice(0, allWatch ? undefined : 8).map((e) => <WatchCard key={`${e.gender}${e.weight}${e.name}`} e={e} onOpen={() => setOpen(e)} starred={!!e.athleteId && stars.ids.has(e.athleteId)} onStar={() => e.athleteId && void stars.toggle(e.athleteId)} />)}
                   </div>
                 ) : <Empty>Wrestlers to watch appear once seeds are set.</Empty>}
               </Section>
@@ -448,6 +512,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                               <div className="truncate text-xs text-[#8195bd]">{e.school ?? ""}</div>
                               <BestWin e={e} />
                             </div>
+                            {e.athleteId && <Star on={stars.ids.has(e.athleteId)} onToggle={() => void stars.toggle(e.athleteId!)} />}
                             <div className="shrink-0 text-right">
                               <div className="text-sm font-semibold text-white">{e.wins}-{e.losses}</div>
                               <div className={`text-[11px] ${statusColor(e)}`}>{statusText(e)}</div>
@@ -474,7 +539,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
         </a>
       </main>
 
-      {open && <WrestlerSheet e={open} onClose={() => setOpen(null)} />}
+      {open && <WrestlerSheet e={open} onClose={() => setOpen(null)} starred={!!open.athleteId && stars.ids.has(open.athleteId)} onStar={() => open.athleteId && void stars.toggle(open.athleteId)} />}
     </div>
   )
 }
