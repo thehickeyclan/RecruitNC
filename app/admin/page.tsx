@@ -399,8 +399,8 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Tournament of Champions */}
-        <div className="mb-8">
+        {/* Tournament of Champions: NC United's event, not on recruitwrestlers.com (lib/recruiting/admin-scope.ts) */}
+        <div className="ncu-only mb-8">
           <h2 className="text-2xl font-bold text-[#003366] mb-4 flex items-center gap-2">
             <Trophy className="h-6 w-6 text-[#CC0000]" />
             Tournament of Champions

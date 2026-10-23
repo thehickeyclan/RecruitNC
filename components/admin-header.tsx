@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { NCU_ADMIN_URL, isCommunityAdminPath } from "@/lib/recruiting/admin-scope"
 
 const adminNavItems: {
   title: string
@@ -147,6 +148,8 @@ export function AdminHeader() {
                 onClick={() => { window.location.href = item.href }}
                 aria-current={isActive ? "page" : undefined}
                 className={cn(
+                  // NC United's community tools: not on recruitwrestlers.com (lib/recruiting/admin-scope.ts).
+                  isCommunityAdminPath(item.href) && "ncu-only",
                   "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border-0 px-2.5 py-1.5 text-[13px] font-medium transition-colors cursor-pointer",
                   isActive ? "bg-white/15 text-white" : "bg-transparent text-white/70 hover:bg-white/10 hover:text-white",
                 )}
@@ -156,6 +159,14 @@ export function AdminHeader() {
               </button>
             )
           })}
+          <span className="national-only">
+            <a
+              href={NCU_ADMIN_URL}
+              className="flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1.5 text-[13px] font-medium text-white/70 hover:bg-white/10 hover:text-white"
+            >
+              NC United admin ↗
+            </a>
+          </span>
         </nav>
       </div>
     </header>
