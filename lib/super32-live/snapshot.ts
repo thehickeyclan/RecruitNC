@@ -40,11 +40,8 @@ export const NOT_NC = ["Jaclyn Bouzakis", "Jack Harty"]
  * for members and coaches only. Ethan Halstead is class of 2031, below the usual window, so the
  * named ids are also loaded for profile matching.
  */
-export const WATCH_NAMED_IDS = [
-  "f67d8f9f-fa06-4a73-b0fd-7dee5fc6433b", // Mason Brown, South Rowan
-  "ac3fe9c1-d404-4d86-b379-70ecb5604166", // Devin Hord, Kings Mountain
-  "d4845492-c991-4c7d-9a3e-39afa1c1f5e7", // Ethan Halstead
-]
+export { WATCH_NAMED_IDS } from "./watch-named"
+import { WATCH_NAMED_IDS } from "./watch-named"
 export const WATCH_TOP_PER_CLASS = 5
 const isNcEntrant: NcFilter = (name, team, gender) => teamIsNc(name, team, gender) && !NOT_NC.some((n) => samePerson({ name: n }, { name }))
 
