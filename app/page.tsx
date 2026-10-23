@@ -20,8 +20,6 @@ import {
   loadCommitCountsByClass,
   loadLatestCommits,
 } from "@/lib/home-data"
-import { TOC_2026_AWARDS, TOC_FLO_URL, TOC_GOFAN_TICKETS_URL } from "@/lib/toc/constants"
-import { tocEventIsOver, tocTicketsOnSale } from "@/lib/toc/ticket-sale"
 import { shareMetadata } from "@/lib/share-metadata"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { PREVIEW, buildMapPreview } from "@/lib/college-programs/map-preview"
@@ -136,89 +134,35 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-rnc-ink">
-      {/* Super 32 HQ (Matt, 23 Oct 2026): leads the homepage through the weekend, a
-          results line for three days after, then gone (lib/super32-live/home-banner.ts). */}
+      {/* Super 32 HQ (Matt, 23 Oct 2026): the homepage lead for the weekend, replacing the TOC strip.
+          A results feature for three days after the finals, then gone (lib/super32-live/home-banner.ts). */}
       {super32HomeBanner() && (
-        <section className="border-b-2 border-[#D3B574] bg-gradient-to-r from-[#0B1D3A] via-[#13294B] to-[#0B1D3A]">
-          <div className="container mx-auto px-4">
-            <Link href="/super32/live" className="group flex items-center justify-between gap-3 py-3 sm:py-4">
-              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-                <span className="inline-flex shrink-0 items-center rounded-full bg-[#CC0000] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white sm:px-2.5 sm:py-1 sm:text-[11px]">
-                  {super32HomeBanner() === "live" ? "Oct 24–25" : "Final"}
-                </span>
-                <p className="min-w-0 text-sm text-white sm:text-base">
-                  <span className="font-extrabold">Super 32 HQ</span>
-                  <span className="hidden text-white/75 sm:inline">
-                    {super32HomeBanner() === "live" ? " · every NC wrestler, Huge & Big wins, round recaps" : " · how North Carolina did in Greensboro"}
-                  </span>
-                </p>
-              </div>
-              <span className="flex shrink-0 items-center gap-1 text-sm font-semibold text-[#D3B574] transition-colors group-hover:text-white">
-                {super32HomeBanner() === "live" ? "Follow NC" : "Results"} <ArrowRight className="h-4 w-4" />
-              </span>
-            </Link>
-          </div>
-        </section>
-      )}
-
-      {/* The Tournament of Champions. On sale it leads - a ticket is on a clock. Once wrestled, it
-          is one line: the results are worth a link, not the top of a recruiting homepage weeks
-          later (Matt, 9 October 2026). Before sales open, the field announcement strip. */}
-      {tocEventIsOver() ? (
-        <section className="border-b border-rnc-gold/25 bg-[#0B1D3A]">
-          <div className="container mx-auto px-4">
-            <Link href="/tournament-of-champions/results" className="group flex items-center justify-between gap-3 py-2.5">
-              <p className="min-w-0 truncate text-sm text-white/80">
-                <span className="font-bold text-rnc-gold">Tournament of Champions 2026</span>
-                <span className="hidden sm:inline"> · ten champions crowned · {TOC_2026_AWARDS.mostOutstandingWrestler.name}, Most Outstanding Wrestler</span>
-              </p>
-              <span className="flex shrink-0 items-center gap-1 text-sm font-semibold text-white/70 transition-colors group-hover:text-rnc-gold">
-                Results <ArrowRight className="h-4 w-4" />
-              </span>
-            </Link>
-          </div>
-        </section>
-      ) : tocTicketsOnSale() ? (
-        <section className="border-b-2 border-[#D3B574] bg-gradient-to-r from-[#0B1D3A] via-[#13294B] to-[#0B1D3A]">
-          <div className="container mx-auto px-4 py-5 sm:py-6">
-            <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-between sm:text-left">
+        <section className="relative overflow-hidden border-b-2 border-[#D3B574] bg-[radial-gradient(ellipse_at_80%_0%,#1d3a78_0%,#0B1D3A_55%,#08142b_100%)]">
+          <div className="container mx-auto px-4 py-7 sm:py-10">
+            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
               <div className="min-w-0">
                 <p className="inline-flex items-center gap-2 rounded-full bg-[#CC0000] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">
-                  Tickets on sale now
+                  {super32HomeBanner() === "live" ? "Super 32 · Oct 24–25 · Greensboro" : "Super 32 · Final results"}
                 </p>
-                <h2 className="mt-2 text-2xl font-extrabold leading-tight text-white sm:text-3xl">Tournament of Champions</h2>
-                <p className="mt-1 text-sm text-white/75 sm:text-base">September 18–19 · Hope Community Church, Apex · limited seating</p>
-                <a href={TOC_FLO_URL} target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-white hover:text-[#D3B574]">
-                  <Image src="/images/flo-logo.png" alt="FloWrestling" width={20} height={20} className="h-5 w-5 rounded" />
-                  <span>Streaming live on FloWrestling · commentary by Ryan Mitchell, The NC Mat</span>
-                </a>
+                <h2 className="mt-3 text-4xl font-black uppercase leading-none tracking-tight text-white sm:text-6xl">
+                  Super 32 <span className="text-[#D3B574]">HQ</span>
+                </h2>
+                <p className="mt-3 max-w-xl text-base text-white/80 sm:text-lg">
+                  {super32HomeBanner() === "live"
+                    ? "Follow every North Carolina wrestler all weekend: NC's record, Huge and Big wins, round recaps and who's still alive."
+                    : "How North Carolina did in Greensboro: every NC wrestler, every Huge and Big win, and the All-Americans."}
+                </p>
               </div>
-              <div className="flex shrink-0 flex-col items-center gap-2 sm:items-end">
-                <a href={TOC_GOFAN_TICKETS_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-xl bg-[#D3B574] px-7 py-4 text-base font-extrabold text-[#0A1628] transition-colors hover:bg-[#c4a665] sm:text-lg">
-                  Buy tickets
+              <div className="flex shrink-0 flex-col gap-2.5 sm:flex-row md:flex-col">
+                <Link href="/super32/live" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#D3B574] px-7 py-4 text-base font-extrabold text-[#0A1628] transition-colors hover:bg-[#c4a665] sm:text-lg">
+                  {super32HomeBanner() === "live" ? "Follow NC at Super 32" : "See the results"}
                   <ArrowRight className="h-5 w-5" />
+                </Link>
+                <a href="https://apps.apple.com/app/id6803202791" className="inline-flex items-center justify-center rounded-xl border border-white/30 px-6 py-3 text-sm font-semibold text-white hover:border-[#D3B574] hover:text-[#D3B574]">
+                  Get alerts in the iPhone app
                 </a>
-                <Link href="/tournament-of-champions" className="text-xs font-semibold text-white/70 hover:text-white">About the tournament</Link>
               </div>
             </div>
-          </div>
-        </section>
-      ) : (
-        <section className="border-b border-[#CC0000]/60 bg-[#0B1D3A]">
-          <div className="container mx-auto px-4">
-            <Link href="/tournament-of-champions/field" className="group flex items-center justify-between gap-3 py-3">
-              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-                <span className="inline-flex shrink-0 items-center rounded-full bg-[#CC0000] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white sm:px-2.5 sm:py-1 sm:text-[11px]">Live</span>
-                <p className="min-w-0 text-sm text-white sm:text-base">
-                  <span className="hidden font-bold sm:inline">Tournament of Champions · </span>
-                  <span className="font-bold">Athlete announcements</span>
-                </p>
-              </div>
-              <span className="flex shrink-0 items-center gap-1 text-sm font-semibold text-[#CC0000] transition-colors group-hover:text-white">
-                <span className="hidden sm:inline">View the field</span>
-                <ArrowRight className="h-4 w-4" />
-              </span>
-            </Link>
           </div>
         </section>
       )}
