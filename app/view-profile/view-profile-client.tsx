@@ -76,6 +76,12 @@ export function ViewProfileClient({
     athleteState,
     nchsaaResults.find((r) => String(r?.classification ?? "").trim())?.classification ?? null,
   )
+  /*
+   * The section is named from the rows themselves, so an event the state did not sanction keeps
+   * its own name here too — "WV Girls State Invitational", never a WVSSAC championship.
+   */
+  const unsanctionedRow = stateTournamentRows.find((r) => !/state championships$/i.test(r.event))
+  const stateSectionTitle = unsanctionedRow ? unsanctionedRow.event : `${stateChampionshipBody} State Championships`
   const athleteName = String(athlete.name ?? "Athlete")
   // Freestyle and Greco-Roman go in their own section, last on the page; folkstyle keeps the rest.
   // The Ultimate Club Duals are folkstyle for the boys and freestyle for the girls (Matt), so the
@@ -164,7 +170,7 @@ export function ViewProfileClient({
                    * the rows below the heading already said SCHSL and the heading contradicted
                    * them.
                    */
-                  title={`${stateChampionshipBody} State Championships`}
+                  title={stateSectionTitle}
                   subtitle={`Folkstyle — the ${stateName(athleteState) || "North Carolina"} high school state tournament`}
                   emptyText={`No ${stateChampionshipBody} state results recorded`}
                 />

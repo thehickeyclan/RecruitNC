@@ -36,6 +36,9 @@ export type PublicAthleteProfile = Record<string, unknown> & {
     place: number | null
     classification: string
     weight_class: string
+    gender?: string | null
+    /** Undefined means the state sanctioned it — see lib/recruiting/state-events.ts. */
+    sanctioned?: boolean
   }>
   /** Bout-level state championship history when it exists in the athlete's match import. */
   nchsaa_state_bouts: NchsaaStateBout[]
@@ -148,6 +151,13 @@ export async function loadPublicAthleteProfile(
     place: r.place,
     classification: r.classification,
     weight_class: r.weight_class,
+    /*
+     * Carried so the page can name the event correctly. Dropping these made every West Virginia
+     * girl read "WVSSAC State Champion" for a title the WVSSAC did not award: the sanctioned
+     * flag reached this function and stopped here.
+     */
+    gender: (r as { gender?: string | null }).gender ?? null,
+    sanctioned: (r as { sanctioned?: boolean }).sanctioned,
   }))
   const profile_quality_wins = nationalTeamData.qualityWins
   const national_team_results = nationalTeamData.nationalTeamResults

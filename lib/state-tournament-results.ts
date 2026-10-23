@@ -52,7 +52,7 @@ export async function getStateTournamentResultsForAthlete(
 
   const { data, error } = await client
     .from("state_tournament_placers")
-    .select("season, state, classification, association, weight, place, wrestler_name, school_clean, school_raw")
+    .select("season, state, classification, association, gender, weight, place, wrestler_name, school_clean, school_raw")
     .eq("athlete_id", id)
     .eq("state", state)
   if (error || !data) return []
