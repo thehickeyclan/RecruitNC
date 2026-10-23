@@ -71,7 +71,7 @@ describe("the staging gate", () => {
     expect(await stagingGateAllows(bearer(await token({ sub: "u-family", role: "authenticated", exp: future, email: "parent@gmail.com" })), [])).toBe(false)
   })
 
-  it("lets a scoped ranker reach the ranking board and nothing else", async () => {
+  it("lets a scoped ranker through, as a signed-in visitor after launch", async () => {
     vi.stubEnv("SUPABASE_JWT_SECRET", SECRET)
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co")
     vi.stubEnv("SUPABASE_SERVICE_ROLE_KEY", "service")
@@ -86,7 +86,9 @@ describe("the staging gate", () => {
       }),
     )
     for (const p of ["/admin/rankings/board", "/api/admin/rankings/board", "/api/admin/rankings/save"]) expect(await stagingGateAllows(ranker, [], p)).toBe(true)
-    for (const p of ["/admin", "/admin/users-dashboard", "/api/admin/rankings/stars", "/athletes/abc", "/api/prospects"]) expect(await stagingGateAllows(ranker, [], p), p).toBe(false)
+    // Profiles and the public APIs behind them. Admin pages and admin APIs refuse a ranker elsewhere
+    // (AuthGuard, lib/admin-api-gate.ts); this gate is only the pre-launch door.
+    for (const p of ["/view-profile", "/athletes/abc", "/api/athletes/abc", "/api/prospects"]) expect(await stagingGateAllows(ranker, [], p), p).toBe(true)
     const noGrant = bearer(await token({ sub: "u-family", role: "authenticated", exp: future, app_metadata: { ranking_board_access: [] } }))
     expect(await stagingGateAllows(noGrant, [], "/admin/rankings/board")).toBe(false)
   })

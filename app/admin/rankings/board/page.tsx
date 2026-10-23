@@ -302,6 +302,15 @@ function Details({
   ]
   return (
     <div className="space-y-3 border-t border-slate-800 bg-slate-950/60 p-3 text-xs sm:p-4">
+      {/* Rankers check a wrestler's full profile from here (Matt, 23 Oct 2026). New tab: the board keeps its place. */}
+      <a
+        href={`/view-profile?id=${encodeURIComponent(athlete.id)}`}
+        target="_blank"
+        rel="noopener"
+        className="inline-flex items-center gap-1 rounded-md border border-slate-700 px-2.5 py-1 font-semibold text-slate-200 hover:border-[#A3E635] hover:text-white"
+      >
+        Open profile ↗
+      </a>
       <FlagList flags={flags} />
       <ScoreBar breakdown={athlete.score_breakdown} total={athlete.ai_score} />
 
