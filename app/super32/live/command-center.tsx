@@ -13,6 +13,7 @@ import Link from "next/link"
 import type { PublicSnapshot } from "@/app/api/super32-live/route"
 import type { FeedItem, SnapshotEntrant, SnapshotRecap } from "@/lib/super32-live/snapshot"
 import { buildStories, type Story } from "@/lib/super32-live/stories"
+import { roundProgress } from "@/lib/super32-live/rounds"
 
 const APP_STORE_URL = "https://apps.apple.com/app/id6803202791"
 const ARTICLE = {
@@ -155,6 +156,47 @@ function RecapBlock({ r }: { r: SnapshotRecap }) {
       <dl className="grid gap-2 text-sm sm:grid-cols-2">
         {lines.filter(([, v]) => v).map(([k, v]) => (<div key={k}><dt className="text-[11px] font-semibold uppercase tracking-wider text-[#d4af55]">{k}</dt><dd className="text-[#c9d4ea]">{v}</dd></div>))}
       </dl>
+    </div>
+  )
+}
+
+/**
+ * The scrolling results bar, as last year's dashboard had it: every NC result, latest rounds
+ * first, with the Huge/Big tag. Results arrive after each round, so the label says so.
+ */
+function ResultsTicker({ entrants }: { entrants: SnapshotEntrant[] }) {
+  const items = entrants
+    .flatMap((e) => e.bouts.filter((b) => b.opponent && !/^bye$/i.test(b.winType)).map((b) => ({ e, b })))
+    .sort((x, y) => roundProgress(y.b.round) - roundProgress(x.b.round))
+    .slice(0, 60)
+  if (!items.length) return null
+  const loop = [...items, ...items]
+  const seconds = Math.max(40, items.length * 6)
+  return (
+    <div className="relative overflow-hidden border-b-2 border-[#D3B574] bg-[#0D1A4D]">
+      <div className={`${H} absolute inset-y-0 left-0 z-10 flex items-center bg-[#B31B1B] px-3 text-xs text-white md:px-5 md:text-sm`}>Results</div>
+      <div className="s32-ticker ml-[76px] flex overflow-hidden py-2 md:ml-[104px] md:py-2.5">
+        <div className="s32-ticker-track flex" style={{ animationDuration: `${seconds}s` }}>
+          {loop.map(({ e, b }, i) => (
+            <div key={`${b.key}-${i}`} className="inline-flex items-center gap-2 whitespace-nowrap px-4 text-xs md:px-6 md:text-sm">
+              <span className="font-bold text-white">{e.name}</span>
+              <span className="text-[#8195bd]">{e.gender === "girls" ? "G" : ""}{e.weight}</span>
+              <span className={`rounded px-1.5 py-0.5 text-[11px] font-bold text-white ${b.win ? "bg-emerald-600" : "bg-red-600"}`}>{b.win ? "W" : "L"}</span>
+              <span className="text-white/90">{[b.winType, b.result].filter(Boolean).join(" ")}</span>
+              <span className="text-white/70">{b.win ? "over" : "to"} {b.opponent} ({b.opponentTeam})</span>
+              {b.win && b.tier === "huge" && <span className="rounded-sm bg-[#e5372c] px-1 text-[10px] font-bold text-white">HUGE</span>}
+              {b.win && b.tier === "big" && <span className="rounded-sm bg-[#d4af55] px-1 text-[10px] font-bold text-[#0b1730]">BIG</span>}
+              <span className="text-[#6f83ab]">· {b.round}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <style jsx>{`
+        .s32-ticker-track { animation-name: s32-scroll; animation-timing-function: linear; animation-iteration-count: infinite; }
+        .s32-ticker:hover .s32-ticker-track, .s32-ticker:active .s32-ticker-track { animation-play-state: paused; }
+        @keyframes s32-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        @media (prefers-reduced-motion: reduce) { .s32-ticker-track { animation: none; } }
+      `}</style>
     </div>
   )
 }
@@ -407,6 +449,8 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
           </div>
         </div>
       </div>
+
+      {year === "2026" && started && <ResultsTicker entrants={entrants} />}
 
       <main className="mx-auto max-w-7xl space-y-5 px-4 py-5">
         {!snap || !sb ? (
