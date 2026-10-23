@@ -1,0 +1,108 @@
+import fs from "node:fs"
+import path from "node:path"
+import { describe, expect, it } from "vitest"
+import {
+  parseFloExport,
+  recap,
+  roundOrder,
+  scoreboard,
+  splitDivisions,
+  summarizeEntrants,
+  tierWin,
+  type Credential,
+  type LiveBout,
+  type SeedRow,
+  type TierContext,
+} from "./engine"
+
+const FILE = path.join(process.cwd(), "scripts/data/super32-2025-flo-export.csv")
+const rows = parseFloExport(fs.readFileSync(FILE, "utf8"))
+const NO_TIERS: TierContext = { seeds: [], credentials: [], seedsFinal: false }
+
+describe("2025 Flo export", () => {
+  it("finds the verified 2025 NC boys' field: 91 wrestlers, 76-182, 7 winning records, 1 All-American", () => {
+    const split = splitDivisions(rows, [])
+    const s = scoreboard(summarizeEntrants(split.bouts, NO_TIERS), "boys")
+    expect(s.wrestlers).toBe(91)
+    expect([s.wins, s.losses]).toEqual([76, 182])
+    expect(s.winningRecords).toBe(7)
+    expect(s.allAmericans).toBe(1)
+  })
+
+  it("leaves a girls' weight out rather than guess when nothing identifies its bracket", () => {
+    const split = splitDivisions(rows, [])
+    expect(split.bouts.some((b) => b.gender === "girls")).toBe(false)
+    expect(split.unresolved.some((u) => u.startsWith("girls 100"))).toBe(true)
+  })
+
+  it("picks the girls' bracket at a weight shared with middle school from a known name", () => {
+    const split = splitDivisions(rows, [{ gender: "girls", weight: "100", name: "Jaclyn Bouzakis", state: "NC" }])
+    const jac = summarizeEntrants(split.bouts, NO_TIERS).find((e) => e.name === "Jaclyn Bouzakis")!
+    expect(jac.gender).toBe("girls")
+    expect([jac.wins, jac.losses, jac.placement, jac.finalist]).toEqual([5, 0, 1, true])
+  })
+
+  it("clinches All-American on a Consi of 8 #2 win: Bentley Sly, 4th at 150", () => {
+    const sly = summarizeEntrants(splitDivisions(rows, []).bouts, NO_TIERS).find((e) => e.name === "Bentley Sly")!
+    expect([sly.wins, sly.losses, sly.placement, sly.aaClinched]).toEqual([8, 2, 4, true])
+    expect(sly.bouts.map((b) => b.bout.round).at(-1)).toBe("3rd Place")
+  })
+})
+
+describe("round order", () => {
+  it("runs championship, then consolation from the deepest field, then placement", () => {
+    const rounds = ["3rd Place", "Consi-Semis", "Consi of 4", "Consi of 8 #2", "Consi of 8 #1", "Round of 16", "Round of 128"]
+    expect([...rounds].sort((a, b) => roundOrder(a) - roundOrder(b))).toEqual([
+      "Round of 128", "Round of 16", "Consi of 8 #1", "Consi of 8 #2", "Consi of 4", "Consi-Semis", "3rd Place",
+    ])
+  })
+})
+
+const bout = (over: Partial<LiveBout> = {}): LiveBout => ({
+  date: "", weight: "144", round: "Round of 32", winner: "Nc Kid", winnerTeam: "NC", result: "7-4", winType: "DEC",
+  loser: "Jake Opp", loserTeam: "PA", gender: "boys", key: "k", ...over,
+})
+const seeds = (seed: number, name = "Jake Opp", state = "PA"): SeedRow[] => [{ gender: "boys", weight: "144", seed, name, state }]
+const ctx = (s: SeedRow[] = [], credentials: Credential[] = []): TierContext => ({ seeds: s, credentials, seedsFinal: true })
+
+describe("win tiers", () => {
+  it("a #1-4 seed is HUGE, #5-16 BIG, #17-32 a plain win that still counts as seeded", () => {
+    expect(tierWin(bout(), ctx(seeds(4))).tier).toBe("huge")
+    expect(tierWin(bout(), ctx(seeds(9))).tier).toBe("big")
+    const deep = tierWin(bout(), ctx(seeds(24)))
+    expect(deep.tier).toBe("win")
+    expect(deep.opponentSeed).toBe(24)
+  })
+
+  it("an unseeded NC kid over a #9 seed is an upset BIG win, never HUGE", () => {
+    const w = tierWin(bout(), ctx(seeds(9)))
+    expect([w.tier, w.upset]).toEqual(["big", true])
+  })
+
+  it("top 10 nationally is HUGE, 11-30 BIG, 31+ nothing", () => {
+    const cred = (rank: number): Credential => ({ name: "Jake Opp", state: "PA", gender: "boys", kind: "national_rank", rank, label: `#${rank} nationally (SI)` })
+    expect(tierWin(bout(), ctx([], [cred(4)])).reasons).toEqual(["#4 nationally (SI)"])
+    expect(tierWin(bout(), ctx([], [cred(4)])).tier).toBe("huge")
+    expect(tierWin(bout(), ctx([], [cred(22)])).tier).toBe("big")
+    expect(tierWin(bout(), ctx([], [cred(38)])).tier).toBe("win")
+  })
+
+  it("never tiers a forfeit, and ignores a credential held by someone in another state", () => {
+    expect(tierWin(bout({ winType: "M FOR" }), ctx(seeds(1))).tier).toBe("win")
+    expect(tierWin(bout(), ctx(seeds(1, "Jake Opp", "NJ"))).tier).toBe("win")
+  })
+
+  it("preliminary seeds tier nothing", () => {
+    expect(tierWin(bout(), { ...ctx(seeds(1)), seedsFinal: false }).tier).toBe("win")
+  })
+})
+
+describe("recap", () => {
+  it("is a template filled from the import's new bouts", () => {
+    const b = bout({ key: "new" })
+    const es = summarizeEntrants([b], ctx(seeds(3)))
+    const r = recap(es, new Set(["new"]))
+    expect(r.sentence).toBe("North Carolina went 1-0 in the Round of 32 with 1 seeded win. 1 NC wrestler remains alive. Nc Kid (144) beat #3 seed.")
+    expect(r.topPerformance?.win.tier).toBe("huge")
+  })
+})
