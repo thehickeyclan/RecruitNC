@@ -353,6 +353,8 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
   }, [entrants, q, weight, status])
 
   if (snap === undefined) return <div className="min-h-screen bg-[#0a1630]" />
+  // 2025 had no seed list: records, finishes and All-Americans only, no tiers (Matt, 23 Oct).
+  const past = year === "2025" && !initial
   const sb = snap?.scoreboards[g]
   const started = !!snap?.hasResults
   const pct = sb && sb.wins + sb.losses ? Math.round((100 * sb.wins) / (sb.wins + sb.losses)) : 0
@@ -411,8 +413,14 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
         ) : (
           <>
             <Section title="NC State Scoreboard">
-              <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:grid lg:grid-cols-[1.6fr_repeat(7,1fr)] lg:px-0">
-                {([
+              <div className={`-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:grid lg:px-0 ${past ? "lg:grid-cols-[1.6fr_repeat(4,1fr)]" : "lg:grid-cols-[1.6fr_repeat(7,1fr)]"}`}>
+                {(past ? ([
+                  ["Overall record", `${sb.wins}-${sb.losses}`, `${pct}% win rate`, "text-white"],
+                  ["NC wrestlers", sb.wrestlers, "", "text-white"],
+                  ["All-Americans", sb.allAmericans, "", "text-[#d4af55]"],
+                  ["Winning records", sb.winningRecords, "", "text-white"],
+                  ["NC placers", placed, "", "text-white"],
+                ] as const) : ([
                   ["Overall record", `${sb.wins}-${sb.losses}`, started ? `${pct}% win rate` : "Not started", "text-white"],
                   ["Still alive", sb.stillAlive, sb.aliveConsi ? `${sb.aliveChamp} champ · ${sb.aliveConsi} consi` : started ? "" : `${sb.wrestlers} entered`, "text-white"],
                   ["Huge wins", sb.huge, "", "text-[#e5372c]"],
@@ -421,7 +429,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                   ["Winning records", sb.winningRecords, year === "2026" ? `2025: ${Y2025[g].winning}` : "", "text-white"],
                   ["Seeded wins", sb.seededWins, "", "text-white"],
                   ["NC placers", placed, year === "2026" ? `2025 record ${Y2025[g].record}` : "", "text-white"],
-                ] as const).map(([label, v, sub, color]) => (
+                ] as const)).map(([label, v, sub, color]) => (
                   <div key={label} className="min-w-[118px] shrink-0 rounded-lg border border-[#1f3360] bg-[#0b1730] px-3 py-3 text-center lg:min-w-0">
                     <div className={`${H} whitespace-nowrap text-3xl leading-none md:text-4xl ${color}`}>{v}</div>
                     <div className="mt-1.5 text-xs text-[#c9d4ea]">{label}</div>
@@ -432,8 +440,8 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
             </Section>
 
             <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
-              <Section title={started ? "Top Stories" : "Super 32 Preview"}>
-                <LeadStory stories={stories} onOpen={setOpen} />
+              <Section title={past ? "2025 All-Americans" : started ? "Top Stories" : "Super 32 Preview"}>
+                <LeadStory stories={past ? stories.filter((x) => x.kind === "champion" || x.kind === "all_american") : stories} onOpen={setOpen} />
               </Section>
               <Section title="Latest Headlines">
                 <div className="divide-y divide-[#1f3360]">
@@ -443,12 +451,12 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                     <div className="min-w-0 flex-1"><Tag kind="Preview" /><div className="mt-1 line-clamp-2 text-sm font-semibold leading-snug text-white">{ARTICLE.title}</div><div className="text-xs text-[#8195bd]">NC United · 5 min read</div></div>
                     <span className="text-[#6f83ab]">›</span>
                   </Link>
-                  {stories.slice(1, 5).map((s) => <Headline key={s.id} s={s} onOpen={setOpen} />)}
+                  {(past ? stories.filter((x) => x.kind === "champion" || x.kind === "all_american") : stories).slice(1, 5).map((s) => <Headline key={s.id} s={s} onOpen={setOpen} />)}
                 </div>
               </Section>
             </div>
 
-            <div className="grid gap-5 lg:grid-cols-[1.3fr_1fr]">
+            {!past && <div className="grid gap-5 lg:grid-cols-[1.3fr_1fr]">
               <Section title="Round Recap" right={recaps[0] ? <span className="text-xs text-[#8195bd]">After {recaps[0].label}</span> : null}>
                 {recaps[0] ? <RecapBlock r={recaps[0]} /> : <Empty>The first recap posts after the opening round.</Empty>}
               </Section>
@@ -459,10 +467,10 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                   </div>
                 ) : <Empty>Huge and Big wins appear here after each round.</Empty>}
               </Section>
-            </div>
+            </div>}
 
-            <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
-              <Section title={`My Wrestlers${mine.length ? ` (${mine.length})` : ""}`} right={stars.signedIn === false && mine.length ? <a href="/auth/signin?returnTo=%2Fsuper32%2Flive" className="shrink-0 text-xs text-[#d4af55]">Sign in to save</a> : null}>
+            <div className={`grid gap-5 ${past ? "" : "lg:grid-cols-[1.6fr_1fr]"}`}>
+              {!past && <Section title={`My Wrestlers${mine.length ? ` (${mine.length})` : ""}`} right={stars.signedIn === false && mine.length ? <a href="/auth/signin?returnTo=%2Fsuper32%2Flive" className="shrink-0 text-xs text-[#d4af55]">Sign in to save</a> : null}>
                 {mine.length ? (
                   <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-3 md:px-0 xl:grid-cols-4">
                     {mine.map((e) => <WatchCard key={`m${e.gender}${e.weight}${e.name}`} e={e} onOpen={() => setOpen(e)} starred onStar={() => void stars.toggle(e.athleteId!)} />)}
@@ -475,8 +483,8 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                     <p className="mx-auto mt-2 max-w-sm text-xs text-[#8195bd]">{stars.signedIn ? "Your stars are saved to your NC United follows." : "Sign in or use the NC United app to keep your list and get alerts."}</p>
                   </div>
                 )}
-              </Section>
-              <Section title={`All NC Wrestlers (${entrants.length})`}>
+              </Section>}
+              <Section title={past ? `2025 Results · ${entrants.length} NC wrestlers` : `All NC Wrestlers (${entrants.length})`}>
                 <div className="mb-3 grid grid-cols-2 gap-2">
                   <input value={q} onChange={(x) => setQ(x.target.value)} placeholder="Search wrestler or school" className="col-span-2 rounded-md border border-[#1f3360] bg-[#0b1730] px-3 py-2 text-sm text-white placeholder:text-[#6f83ab]" />
                   <select value={weight} onChange={(x) => setWeight(x.target.value)} className="rounded-md border border-[#1f3360] bg-[#0b1730] px-2 py-2 text-sm text-white"><option value="">All weights</option>{weights.map((w) => <option key={w} value={w}>{w}</option>)}</select>
@@ -497,7 +505,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                               <div className="truncate text-xs text-[#8195bd]">{e.school ?? ""}</div>
                               <BestWin e={e} />
                             </div>
-                            {e.athleteId && <Star on={stars.ids.has(e.athleteId)} onToggle={() => void stars.toggle(e.athleteId!)} />}
+                            {!past && e.athleteId && <Star on={stars.ids.has(e.athleteId)} onToggle={() => void stars.toggle(e.athleteId!)} />}
                             <div className="shrink-0 text-right">
                               <div className="text-sm font-semibold text-white">{e.wins}-{e.losses}</div>
                               <div className={`text-[11px] ${statusColor(e)}`}>{statusText(e)}</div>
@@ -524,7 +532,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
         </a>
       </main>
 
-      {open && <WrestlerSheet e={open} onClose={() => setOpen(null)} starred={!!open.athleteId && stars.ids.has(open.athleteId)} onStar={() => open.athleteId && void stars.toggle(open.athleteId)} />}
+      {open && <WrestlerSheet e={open} onClose={() => setOpen(null)} starred={!!open.athleteId && stars.ids.has(open.athleteId)} onStar={past ? undefined : () => open.athleteId && void stars.toggle(open.athleteId)} />}
     </div>
   )
 }

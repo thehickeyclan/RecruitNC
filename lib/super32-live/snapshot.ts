@@ -263,12 +263,17 @@ export type SnapshotInputs = {
   hints?: Array<{ gender: Gender; weight: string; name: string; state?: string | null }>
   /** The year the event is wrestled; picks which class years can be linked. 2026 unless rehearsing. */
   eventYear?: number
+  /**
+   * False for a past year: today's rankings and titles would label 2025 opponents with honours
+   * they won later, so a past event carries no opponent credentials at all.
+   */
+  credentials?: boolean
 }
 
 /** Everything the page shows, computed from one export and one seed list. Reads profiles; writes nothing. */
 export async function computeSnapshot(supabase: SupabaseClient, eventKey: string, input: SnapshotInputs, now = new Date().toISOString()) {
   const eventYear = input.eventYear ?? 2026
-  const [credentials, windowAthletes, candidates] = await Promise.all([loadCredentials(supabase), loadNcAthletes(supabase, eventYear), loadWatchCandidates(supabase, eventYear)])
+  const [credentials, windowAthletes, candidates] = await Promise.all([input.credentials === false ? Promise.resolve([]) : loadCredentials(supabase), loadNcAthletes(supabase, eventYear), loadWatchCandidates(supabase, eventYear)])
   const athletes = [...windowAthletes, ...candidates.filter((c) => !windowAthletes.some((a) => a.id === c.id))]
   const { seeds, seedsFinal } = input
   const ctx = { seeds, credentials, seedsFinal }
