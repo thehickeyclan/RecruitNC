@@ -6,7 +6,7 @@ import { easternToday } from "@/lib/college-programs/admissions-format"
 import { ArrowRight, BadgeCheck, ExternalLink, GripVertical, MoreHorizontal, Sparkles } from "lucide-react"
 
 import { BOARD_STAGES, COLLEGE_LIST_STATUS_LABEL, boardStage, type BoardStage, type CollegeListStatus } from "@/lib/college-programs/list"
-import { ACTION_LABEL, Chip, CollegePanel, Signals, type PipelineCollege as BoardCollege } from "@/components/portal/college-pipeline"
+import { ACTION_LABEL, Chip, CollegePanel, NotePreview, Signals, type PipelineCollege as BoardCollege } from "@/components/portal/college-pipeline"
 
 /**
  * The college list as a board (Command Center Phase 1, 14 Oct 2026; rebuilt 22 Oct as stages with
@@ -249,10 +249,11 @@ export function CollegeBoard({
 
                       <div className="mt-2 flex flex-wrap gap-1">
                         {chips.map((a) => (
-                          <Chip key={a.key} a={a} />
+                          <Chip key={a.key} a={a} onToggle={a.key === "form" && onQuestionnaire ? () => onQuestionnaire(c.id, !a.done) : undefined} />
                         ))}
                       </div>
                       <Signals c={c} today={today} />
+                      <NotePreview memo={c.memo} onOpen={() => setOpen(c.id)} />
                       {c.note ? <p className="mt-1.5 text-[11px] font-semibold text-amber-200">{c.note}</p> : null}
                       {celebrate?.id === c.id ? (
                         <p className="mt-2 flex items-center gap-1 text-xs font-bold text-[#D3B574]">

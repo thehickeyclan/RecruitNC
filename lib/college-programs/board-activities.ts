@@ -45,9 +45,9 @@ const APPLIED = new Set(["submitted", "admitted", "deferred", "waitlisted", "den
 
 export function activitiesFor(c: ActivityCollege, today: string): Activity[] {
   const out: Activity[] = []
-  if (c.hasQuestionnaire || c.questionnaireDone) {
-    out.push({ key: "form", label: "Interest form", done: Boolean(c.questionnaireDone), action: c.questionnaireDone ? null : { kind: "forms" } })
-  }
+  // Every college, link on file or not (Gemma Amiott, 22 Oct 2026: "not all the schools will let you
+  // mark that you filled out the interest form"). Without a link the family finds it on their site.
+  out.push({ key: "form", label: "Interest form", done: Boolean(c.questionnaireDone), action: c.questionnaireDone ? null : { kind: "forms" } })
   out.push({ key: "email", label: "Email the coach", done: reached(c.status, "contacted"), action: reached(c.status, "contacted") ? null : { kind: "email" } })
   if (c.interest != null) out.push({ key: "interest", label: "Tell the coaches you're interested", done: Boolean(c.interest), action: { kind: "interest" } })
   out.push({ key: "reply", label: "Coach writes back", done: reached(c.status, "talking"), action: reached(c.status, "talking") ? null : { kind: "stage", to: "talking" } })
@@ -146,8 +146,9 @@ function baseStep(c: ActivityCollege, today: string): Omit<NextStep, "rank"> | n
   const apply = find("apply")!
   // A deadline within three weeks the family is planning for comes first, whatever the stage.
   if (c.admissions?.status === "planning" && apply.action && apply.tone) return { label: apply.detail ? `Apply · ${apply.detail.replace(/ closes /, " ")}` : "Apply", action: apply.action, tone: apply.tone }
-  if (form && !form.done) return { label: "Fill the interest form", action: { kind: "forms" } }
   const stage = boardStage(c.status)
+  // The next step only while it is early and we hold the link; otherwise it stays a chip to tick.
+  if (form && !form.done && c.hasQuestionnaire && (stage === "interested" || stage === "contacted")) return { label: "Fill the interest form", action: { kind: "forms" } }
   if (stage === "interested") {
     const interest = find("interest")
     if (interest && !interest.done) return { label: "Tell the coaches you're interested", action: { kind: "interest" } }

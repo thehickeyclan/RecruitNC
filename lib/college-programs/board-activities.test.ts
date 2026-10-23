@@ -39,6 +39,7 @@ describe("nextStep", () => {
 describe("activitiesFor", () => {
   it("marks what the stage implies as done", () => {
     const acts = activitiesFor({ status: "visited", questionnaireDone: true, admissions: none }, today)
+    expect(acts.find((a) => a.key === "form")).toBeTruthy()
     expect(acts.filter((a) => a.done).map((a) => a.key)).toEqual(["form", "email", "reply", "visit"])
   })
 })
@@ -80,5 +81,11 @@ describe("lastActivity", () => {
   })
   it("is null when nothing is dated", () => {
     expect(lastActivity({ status: "interested" })).toBeNull()
+  })
+})
+
+describe("interest form without a link", () => {
+  it("is still an activity the family can tick", () => {
+    expect(activitiesFor({ status: "contacted", hasQuestionnaire: false }, today).find((a) => a.key === "form")?.done).toBe(false)
   })
 })
