@@ -95,6 +95,9 @@ export function ConditionalAuthGuard({
     // what it holds rather than a sign-in wall.
     "/recruiting/learn",
     "/news",
+    // Super 32 Command Center, public; its rehearsal page is notFound() in production.
+    "/super32/live",
+    "/dev/super32-live-preview",
     "/nchsaa",
     "/nhsca",
     "/fargo",

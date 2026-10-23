@@ -223,6 +223,11 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
     '/recruiting/learn',
     '/api/college-map',
     '/news',
+    // Super 32 Command Center: public, and opened from app alerts via /news/super32-live.
+    '/super32/live',
+    '/api/super32-live',
+    // Its rehearsal page; notFound() in production.
+    '/dev/super32-live-preview',
     '/blue',
     '/go',
     '/store',
