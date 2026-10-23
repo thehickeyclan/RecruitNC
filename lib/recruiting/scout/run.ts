@@ -36,6 +36,9 @@ export function answerProblems(text: string): string[] {
   // The published figures are for all applicants; a recruited wrestler goes through the coach.
   if (/\b(won'?t|will not|can'?t|cannot|unlikely to|not likely to)\s+(get in|be admitted|get admitted|qualify for admission)|\bout of (range|reach)\b|\b(too low|below what) .{0,30}(admi|get in)|\bbelow\b.{0,25}\b(typical|usual|admission|admitted)\b.{0,15}\b(range|students|average)/i.test(text))
     out.push("Never say a wrestler cannot get in or is out of range from the published figures: they describe all applicants, and a recruited wrestler is admitted through athletic admissions with the coach's support (give the athletic admission line).")
+  // A family's question goes to the coaches, never to a college office (Scout sent a transfer question to compliance).
+  if (/\bcompliance (office|department|staff)\b|\bcontact (the |their |its )?compliance\b/i.test(text))
+    out.push("Never send the family to a compliance office. If we do not hold something, say so, and say the coaching staff can answer it on a call.")
   return [...new Set(out)]
 }
 

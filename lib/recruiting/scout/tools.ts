@@ -144,7 +144,10 @@ function lineup(s: ScoutSession, schoolId: string): string | null {
   const arrival = s.fit?.classYear ?? seniorClassYear()
   const atText =
     room && weights.length && weightsPublished(room)
-      ? `. At the wrestler's college weights, for the fall ${arrival} the wrestler would arrive: ${needSentence(roomByWeight(room, team, arrival), weights, arrival)}. A direction, never an open spot: redshirts, transfers and new signings change it`
+      ? `. At the wrestler's college weights, for the fall ${arrival} the wrestler would arrive: ${needSentence(roomByWeight(room, team, arrival), weights, arrival)}. A direction, never an open spot: redshirts, transfers and new signings change it.\nWho is at those weights now (name, class, final season, from the school's roster):\n${roomByWeight(room, team, arrival)
+          .filter((r) => weights.includes(r.weight))
+          .map((r) => `- ${r.weight}: ${r.wrestlers.length ? r.wrestlers.map((w) => `${w.name} (${[w.cls, w.redshirt ? "redshirt" : null, w.finalSeason ? `last season ${w.finalSeason - 1}-${String(w.finalSeason).slice(2)}` : null, w.homeState].filter(Boolean).join(", ")})`).join("; ") : "nobody listed"}`)
+          .join("\n")}\nWe do not hold where any wrestler came from (high school recruit or transfer): the roster pull has no previous college. Say so if asked; never suggest the compliance office`
       : room && weights.length
         ? ". The roster lists too few weights to say who is at the wrestler's weight"
         : ""
