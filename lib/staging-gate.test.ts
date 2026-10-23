@@ -22,6 +22,8 @@ describe("which addresses are pre-launch brands", () => {
     expect(stagedBrandForHost("recruit.wrestlingguild.com")).toBe("guild")
     expect(stagedBrandForHost("recruit.wrestlingguild.com:443")).toBe("guild")
     expect(stagedBrandForHost("www.recruitwrestlers.com")).toBe("national")
+    expect(stagedBrandForHost("next.recruitwrestlers.com")).toBe("national")
+    expect(stagedBrandForHost("evil.recruitwrestlers.com")).toBeNull()
     expect(stagedBrandForHost("app.ncwrestlingunited.com")).toBeNull()
     expect(stagedBrandForHost("www.wrestlingguild.com")).toBeNull()
     expect(stagedBrandForHost("localhost")).toBeNull()

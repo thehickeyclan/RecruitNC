@@ -6,6 +6,7 @@ import { nudgeAbandonedBlueSignups } from "@/lib/blue-abandoned-signup-nudge"
 import { linkBlueMembershipsByCustomer } from "@/lib/blue-stripe-subscription-status"
 import { isBlueStripeSubscription } from "@/lib/blue-stripe-subscription-stats"
 import { getStripe, readStripeSecretKey } from "@/lib/stripe"
+import { scheduledJobsOff, skippedJob } from "@/lib/scheduled-jobs"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 120
@@ -20,6 +21,7 @@ function authorizeCron(request: NextRequest): boolean {
 
 /** Daily: resume paused subs due today + backfill missed Blue checkout sessions (last 7 days) + nudge abandoned checkouts. */
 export async function GET(request: NextRequest) {
+  if (scheduledJobsOff()) return skippedJob()
   if (!authorizeCron(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }

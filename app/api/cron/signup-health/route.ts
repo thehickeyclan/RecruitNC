@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { Resend } from "resend"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { scheduledJobsOff, skippedJob } from "@/lib/scheduled-jobs"
 
 /**
  * Hourly: are people able to sign up?
@@ -27,6 +28,7 @@ function authorizeCron(request: NextRequest): boolean {
 }
 
 export async function GET(request: NextRequest) {
+  if (scheduledJobsOff()) return skippedJob()
   if (!authorizeCron(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const admin = createAdminClient()
   const since = new Date(Date.now() - WINDOW_MINUTES * 60_000).toISOString()

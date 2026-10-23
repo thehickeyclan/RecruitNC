@@ -60,7 +60,9 @@ export type StagedBrand = "guild" | "national"
 export function stagedBrandForHost(host: string | null | undefined): StagedBrand | null {
   const h = String(host ?? "").toLowerCase().split(":")[0]
   if (h === GUILD_RECRUITING_HOST) return "guild"
-  if (h === "recruitwrestlers.com" || h === "www.recruitwrestlers.com") return "national"
+  // next.recruitwrestlers.com: the new Vercel project's test address before www moves to it
+  // (docs/RECRUITWRESTLERS-VERCEL-SPLIT.md). Same brand, same pre-launch gate, never indexed.
+  if (h === "recruitwrestlers.com" || h === "www.recruitwrestlers.com" || h === "next.recruitwrestlers.com") return "national"
   return null
 }
 

@@ -3,6 +3,7 @@ import { Resend } from "resend"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { NATIONAL_RANKING_SOURCES } from "@/lib/national-rankings"
 import { freshnessProblem, listLabel, type WatchedList } from "@/lib/rankings/freshness"
+import { scheduledJobsOff, skippedJob } from "@/lib/scheduled-jobs"
 
 export const dynamic = "force-dynamic"
 
@@ -22,6 +23,7 @@ const FROM = "NC Wrestling United <info@ncwrestlingunited.com>"
  * by Muse's posts to /api/rankings/ingest) and emails RANKINGS_ALERT_TO only when something is off.
  */
 export async function GET(request: NextRequest) {
+  if (scheduledJobsOff()) return skippedJob()
   if (!authorizeCron(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const admin = createAdminClient()
   const { data, error } = await admin.from("ranking_source_status").select("*")
