@@ -1,0 +1,17 @@
+{
+  "placers": [],
+  "preFreshmanVerified": [
+    {
+      "athleteId": "44db1990-e5fe-4e99-a136-7172ff93955e",
+      "note": "Jaedon Wells, Caravel Academy, class of 2030. 5th at 113 in the 2026 DIAA Open as an eighth grader, which Delaware allows: the DIAA Open bracket admits 8th graders and FloArena printed his grade as '8th' (8 entrant-seasons across the three years carry that grade). The result is real and stays. Unlike Virginia, where VHSL 28-2-1 puts eighth graders on junior varsity only, and Maryland, where COMAR 13A.06.03.02 allows grades 9-12 only - in both of those a pre-freshman placement meant the class year was wrong (23 Oct 2026)."
+    },
+    {
+      "athleteId": "5b6b6862-a689-45f0-ad0e-5e15fedc4006",
+      "note": "Nathan Moore, Laurel, class of 2029. 2nd at 113 in the 2025 DIAA Open with a printed bracket grade of '8th', then 5th at 120 in 2026 printed 'HS Freshman'. The two seasons corroborate 2029 exactly, and Delaware allows eighth graders in the Open bracket (23 Oct 2026)."
+    },
+    {
+      "athleteId": "a8f0ef8c-bcd5-42da-bd25-cd9733ee6243",
+      "note": "Ryan Farissier, Milford, class of 2029. 7th at 106 in the 2025 DIAA Open printed '8th', then 5th at 106 in 2026 printed 'HS Freshman'. Same shape as Nathan Moore: two tournament-printed grades a year apart agreeing on 2029 (23 Oct 2026)."
+    }
+  ]
+}
