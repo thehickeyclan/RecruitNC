@@ -42,14 +42,15 @@ describe("mapAcademics", () => {
     })
   })
 
-  it("withholds records on the intelligence tier but keeps the intended major", () => {
+  it("withholds all academics on the intelligence tier, the intended major included", () => {
     const withheld = mapAcademics(ATHLETE_ROW, false)
     expect(withheld.gpa).toBeNull()
     expect(withheld.sat).toBeNull()
     expect(withheld.act).toBeNull()
     expect(withheld.academicSummary).toBeNull()
-    // A major is what a wrestler publishes to be recruited; it is not a private record.
-    expect(withheld.academicInterest).toBe("Pre-Med")
+    // Coaches only, like the rest: a non-coach has no business reading what somebody else's
+    // child intends to study, so the major is withheld with the records.
+    expect(withheld.academicInterest).toBeNull()
   })
 })
 

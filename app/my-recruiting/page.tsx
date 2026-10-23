@@ -7,7 +7,10 @@
  * ./load.ts, shared with the other portal pages.
  */
 import Link from "next/link"
-import { ArrowRight, CalendarDays, Check, Circle, DollarSign, HelpCircle, ListChecks, Mail, Scale } from "lucide-react"
+import { easternToday } from "@/lib/college-programs/admissions-format"
+import { nextStep, type ActivityAction } from "@/lib/college-programs/board-activities"
+import { loadListInbound } from "@/lib/college-programs/list-signals"
+import { ArrowRight, CalendarDays, Check, Circle, ClipboardList, DollarSign, HelpCircle, ListChecks, Mail, Scale } from "lucide-react"
 
 import { InfoSheetCard } from "@/components/portal/info-sheet-card"
 import { StageSelect } from "@/components/portal/stage-select"
@@ -60,14 +63,34 @@ export default async function CommandCenterHome() {
   const first = athletes[0] ?? null
   const w = wrestlers[0] ?? null
 
-  const [lastCompeted, unread, sheet, contacts, following] = await Promise.all([
+  const [lastCompeted, unread, sheet, contacts, following, inbound] = await Promise.all([
     first ? loadLastCompeted(admin, [first.id], new Map([[first.id, first.classYear]])).then((m) => m.get(first.id) ?? null).catch(() => null) : null,
     unreadCount(admin, viewerId).catch(() => 0),
     blue && first ? buildInfoSheet(admin, first.id).catch(() => null) : null,
     loadCollegeContacts(admin, athletes.map((a) => a.id)),
     // College programs following the wrestler: a count for the "where he competes next" reminder, never names.
     first ? programsFollowing(admin, first.id).catch(() => 0) : 0,
+    blue ? loadListInbound(admin, viewerId, athletes.map((a) => a.id)).catch(() => new Map()) : new Map(),
   ])
+  // Today's moves: the steps across the whole list that advance it most (lib/college-programs/board-activities.ts).
+  const todayET = easternToday()
+  const moves = blue
+    ? schools
+        .map((s) => ({ s, step: nextStep({ ...s, inbound: inbound.get(s.id) }, todayET) }))
+        .filter((m): m is { s: (typeof schools)[number]; step: NonNullable<ReturnType<typeof nextStep>> } => Boolean(m.step) && m.step!.rank < 4)
+        .sort((a, b) => a.step.rank - b.step.rank)
+        .slice(0, 5)
+    : []
+  const moveHref = (s: (typeof schools)[number], a: ActivityAction): { href: string; external?: boolean } =>
+    a.kind === "reply"
+      ? { href: `/inbox/${a.threadId}` }
+      : a.kind === "forms"
+        ? { href: "/my-recruiting/questionnaires" }
+        : a.kind === "apply"
+          ? { href: a.href, external: true }
+          : a.kind === "scout"
+            ? { href: "/my-recruiting/scout" }
+            : { href: "/my-recruiting/colleges?view=board" }
   // Who has reached out: what the family logged (calls, visits, offers happen off the platform).
   const reach = summarizeContacts(contacts)
   const viewedPrograms = athletes.reduce((n, a) => n + (views.get(a.id)?.programs ?? 0), 0)
@@ -83,11 +106,13 @@ export default async function CommandCenterHome() {
         profileTodo: w.profileTodo,
         listStatuses: schools.map((s) => s.status),
         listLevels: schools.map((s) => s.level),
-        questionnairesWaiting: schools.filter((s) => s.hasQuestionnaire && s.status === "interested").length,
+        questionnairesWaiting: schools.filter((s) => !s.questionnaireDone && !s.noTeam).length,
         scheduleCount: w.events.length,
       })
     : []
   const open = steps.filter((s) => !s.done).length
+  // Every college whose form is not done, link on file or not.
+  const formsWaiting = schools.filter((s) => !s.questionnaireDone && !s.noTeam).length
   const seen = first ? views.get(first.id) : null
   const target = listTarget(w?.grade ?? null)
   const percent = first?.completeness.percent ?? 0
@@ -248,6 +273,62 @@ export default async function CommandCenterHome() {
               <p className="mt-4 text-sm text-white/55">Nothing logged yet. When a coach calls, texts, invites you to camp, or you visit, tap the button.</p>
             )}
           </section>
+
+          {moves.length ? (
+            <section className={`${card} mt-6 p-5`} aria-labelledby="cc-moves">
+              <div className="flex items-baseline justify-between">
+                <h2 id="cc-moves" className={title}>
+                  Today&apos;s moves
+                </h2>
+                <Link href="/my-recruiting/colleges?view=board" className="text-xs font-semibold text-[#D3B574] hover:underline">
+                  Open the pipeline
+                </Link>
+              </div>
+              <ul className="mt-3 divide-y divide-white/5">
+                {moves.map(({ s, step }) => {
+                  const go = moveHref(s, step.action)
+                  return (
+                    <li key={s.id} className="flex items-center gap-3 py-2.5">
+                      <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${step.tone === "urgent" ? "bg-rose-400" : step.rank <= 2 ? "bg-sky-400" : "bg-amber-300"}`} aria-hidden />
+                      {s.logo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={s.logo} alt="" className="h-8 w-8 shrink-0 rounded bg-white object-contain p-0.5" />
+                      ) : null}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-bold">{s.name}</span>
+                        {step.why ? <span className="block text-xs text-white/50">{step.why}</span> : null}
+                      </span>
+                      <a
+                        href={go.href}
+                        {...(go.external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                        className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-black text-[#0A1628] ${step.tone === "urgent" ? "bg-rose-400" : "bg-[#D3B574] hover:bg-[#e2c98d]"}`}
+                      >
+                        {step.label}
+                      </a>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          ) : null}
+
+          {blue && formsWaiting > 0 ? (
+            <Link
+              href="/my-recruiting/questionnaires"
+              className="mt-6 flex items-center gap-4 rounded-2xl border border-[#D3B574]/50 bg-[#D3B574]/10 p-4 hover:bg-[#D3B574]/15 sm:p-5"
+            >
+              <ClipboardList className="h-8 w-8 shrink-0 text-[#D3B574]" aria-hidden />
+              <span className="min-w-0 flex-1">
+                <span className="block text-base font-black text-white sm:text-lg">
+                  {formsWaiting === 1 ? "1 interest form to fill" : `${formsWaiting} interest forms to fill`}
+                </span>
+                <span className="block text-sm text-white/65">Each one puts {w?.firstName ?? "your wrestler"} in that college&apos;s recruiting database. Your answers are ready to copy.</span>
+              </span>
+              <span className="hidden shrink-0 items-center gap-1 rounded-lg bg-[#D3B574] px-3 py-2 text-sm font-black text-[#0A1628] sm:inline-flex">
+                Fill them now <ArrowRight className="h-4 w-4" aria-hidden />
+              </span>
+            </Link>
+          ) : null}
 
           <div className="mt-6 grid gap-4 lg:grid-cols-3">
             {/* Next steps */}

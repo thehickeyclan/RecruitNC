@@ -2,6 +2,10 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { questionnairesForSchool } from "@/lib/college-programs/questionnaires"
 import { isHeadCoach, staffForSchool } from "@/lib/college-programs/staff"
+import { backgroundFor, backgroundLine } from "@/lib/college-programs/coach-backgrounds"
+import programs from "@/lib/college-programs/programs-2026-27.json"
+
+const SHORT = new Map((programs.schools as Array<{ id: string; name: string }>).map((s) => [s.id, s.name.replace(/\s*\([^)]*\)\s*/g, " ").trim()]))
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
@@ -37,6 +41,11 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  const staff = staffForSchool(schoolId).map((member) => ({ ...member, head: isHeadCoach(member) }))
+  // Each coach's background, from the coach's own bio page (lib/college-programs/coach-backgrounds.ts).
+  const schoolName = SHORT.get(schoolId) ?? "the school"
+  const staff = staffForSchool(schoolId).map((member) => {
+    const b = backgroundFor(schoolId, member.name)
+    return { ...member, head: isHeadCoach(member), background: b ? backgroundLine(b, schoolName) : null, bio: b?.source ?? null }
+  })
   return NextResponse.json({ staff, questionnaires: questionnairesForSchool(schoolId), locked: false })
 }

@@ -110,6 +110,13 @@ export type RankingBoardAthlete = {
   national_count: number
   match_count: number
   win_loss?: string | null
+  /**
+   * Wins and losses at the tournaments we hold bout-by-bout (state championships, NHSCA, Fargo,
+   * Super 32 and the rest), inside the ranking window. A South Carolina wrestler has no season
+   * record on file, so without this the board said "No match data" over a 9-0 SCISA run (Matt,
+   * 21 October 2026). Shown only; it does not change the score.
+   */
+  tournament_record?: string | null
   college?: string | null
   college_opens_experience?: string | null
   achievements?: unknown
@@ -1611,6 +1618,10 @@ export async function buildRecruitNcRankingBoard({
         ),
       ) as never
 
+      const tournamentBouts = withinRankingWindow(qualifierBoutsByAthleteId.get(id) ?? []) as MatchBout[]
+      const tournamentWins = tournamentBouts.filter((b) => String(b.win_loss ?? "").toUpperCase() === "W").length
+      const tournamentRecord = tournamentBouts.length ? `${tournamentWins}-${tournamentBouts.length - tournamentWins}` : null
+
       const topSignificantWins = findSignificantWins(boutsForSignificance, winsIndex).slice(0, 8)
       const significantWins = topSignificantWins.map(significantBoutRow)
 
@@ -1793,6 +1804,7 @@ export async function buildRecruitNcRankingBoard({
         national_count: nationalRows.length,
         match_count: matchScore.totalMatches,
         win_loss: matchScore.totalMatches > 0 ? `${matchScore.wins}-${matchScore.losses}` : null,
+        tournament_record: tournamentRecord,
         college: (athlete.college as string) || null,
         college_opens_experience: (athlete.college_opens_experience as string) || null,
         achievements: athlete.achievements,

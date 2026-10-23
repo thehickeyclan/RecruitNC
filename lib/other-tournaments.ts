@@ -603,7 +603,8 @@ export type AttachedEventBout = OtherTournamentBout & { team: "national" | "sele
  * rows by year), plus Fargo, the Ultimate Club Duals and NC United's team duals (handled below).
  */
 function hasOwnLoader(eventKey: string): boolean {
-  return /^nhsca-nationals-|^super32-\d{4}$|^nchsaa-states-|^fargo-|^ucd-/.test(eventKey) ||
+  // Other states' championships are their profile's state section (state_tournament_placers), not a second row.
+  return /^nhsca-nationals-|^super32-\d{4}$|^nchsaa-states-|^(schsl|scisa|vhsl|visaa)-states-|^fargo-|^ucd-/.test(eventKey) ||
     eventKey === NC_UNITED_DUALS_EVENT_KEY || eventKey === NC_UNITED_AAU_DUALS_EVENT_KEY
 }
 

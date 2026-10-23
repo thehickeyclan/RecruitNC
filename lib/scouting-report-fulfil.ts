@@ -9,6 +9,7 @@
  * double-grant anything.
  */
 
+import { accountOfRow, type StripeAccount } from "@/lib/stripe-accounts"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { isSubscriptionKind, isSubscriptionLive, planTierForKind } from "@/lib/scouting-report-entitlement"
 import {
@@ -29,7 +30,7 @@ export function isScoutingReportSession(metadata: ScoutingCheckoutMetadata | nul
 }
 
 export type FulfilResult =
-  | { ok: true; granted: "purchase" | "subscription"; replacedSubscriptionId?: string | null }
+  | { ok: true; granted: "purchase" | "subscription"; replacedSubscriptionId?: string | null; replacedAccount?: StripeAccount }
   | { ok: false; reason: string }
 
 /**
@@ -47,6 +48,8 @@ export async function fulfilScoutingReportCheckout(
     stripeCustomerId: string | null
     stripeSubscriptionId: string | null
     currentPeriodEnd: string | null
+    /** The Stripe account the checkout ran on (lib/stripe-accounts.ts). */
+    stripeAccount?: StripeAccount
   },
 ): Promise<FulfilResult> {
   const userId = String(params.metadata.user_id ?? "").trim()
@@ -57,11 +60,20 @@ export async function fulfilScoutingReportCheckout(
   if (isSubscriptionKind(kind)) {
     // An upgrade (Rankings to Command Center) replaces the row; the old Stripe subscription is
     // handed back so the webhook can cancel it, and nobody is billed for both.
-    const { data: before } = await supabase
+    // stripe_account says which Stripe bills the old subscription; until the column exists every
+    // row is NC United's, and asking for a missing column fails the whole select.
+    let { data: before, error: beforeError } = await supabase
       .from("recruitnc_subscriptions")
-      .select("stripe_subscription_id, status, current_period_end")
+      .select("stripe_subscription_id, status, current_period_end, stripe_account")
       .eq("user_id", userId)
       .maybeSingle()
+    if (beforeError) {
+      ;({ data: before } = await supabase
+        .from("recruitnc_subscriptions")
+        .select("stripe_subscription_id, status, current_period_end")
+        .eq("user_id", userId)
+        .maybeSingle())
+    }
     const row = {
       user_id: userId,
       stripe_customer_id: params.stripeCustomerId,
@@ -70,7 +82,17 @@ export async function fulfilScoutingReportCheckout(
       current_period_end: params.currentPeriodEnd,
       updated_at: new Date().toISOString(),
     }
-    let { error } = await supabase.from("recruitnc_subscriptions").upsert({ ...row, plan: planTierForKind(kind) }, { onConflict: "user_id" })
+    const account = params.stripeAccount ?? "ncu"
+    let { error } = await supabase
+      .from("recruitnc_subscriptions")
+      .upsert({ ...row, plan: planTierForKind(kind), stripe_account: account }, { onConflict: "user_id" })
+    if (error && /stripe_account/i.test(error.message)) {
+      // Column not added yet: the row still records the payment. A Guild Ventures subscription
+      // stored this way is looked up on both accounts (accountOfRow falls back to NC United, and
+      // the portal and status routes try Guild Ventures when NC United does not know it).
+      console.error("[scouting-report] recruitnc_subscriptions.stripe_account missing; recorded without it:", error.message)
+      ;({ error } = await supabase.from("recruitnc_subscriptions").upsert({ ...row, plan: planTierForKind(kind) }, { onConflict: "user_id" }))
+    }
     if (error && /plan/i.test(error.message)) {
       // The plan column is not there yet: never lose the payment over it. Logged loudly, because a
       // Command Center buyer recorded this way only gets the rankings until the column exists.
@@ -95,7 +117,7 @@ export async function fulfilScoutingReportCheckout(
       amountCents: params.amountTotal,
       interval,
     })
-    return { ok: true, granted: "subscription", replacedSubscriptionId: previous }
+    return { ok: true, granted: "subscription", replacedSubscriptionId: previous, replacedAccount: accountOfRow(before as { stripe_account?: string | null } | null) }
   }
 
   const athleteId = String(params.metadata.athlete_id ?? "").trim()

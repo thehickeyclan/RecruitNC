@@ -17,6 +17,7 @@ import {
   releasedClassYears,
 } from "@/lib/public-rankings-cap"
 import { resolveViewGender } from "@/lib/recruiting/coach-program-server"
+import { BrandName } from "@/components/recruiting/brand-name"
 
 export const dynamic = "force-dynamic"
 
@@ -63,7 +64,7 @@ export default async function PublicRankingsHomepage({
   // Somebody who ranks a board for us reads the boards, subscriber or not.
   const { data: session } = await (await createClient()).auth.getUser()
   const grants = session.user?.app_metadata?.ranking_board_access
-  if (!canSeeProspectRanking(viewer) && !hasAnyRankingBoardGrant(grants)) {
+  if (!canSeeProspectRanking(viewer) && !hasAnyRankingBoardGrant(grants, "NC")) {
     /*
      * Stripe sends a paying customer here, and the webhook that grants access may not have
      * landed yet. Carrying the flag back means they see "payment received, access activating"
@@ -136,7 +137,7 @@ export default async function PublicRankingsHomepage({
       <section className="border-b border-white/10">
         <div className="mx-auto max-w-5xl px-4 py-16 text-center sm:py-20">
           <p className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-[#D3B574]">
-            RecruitNC Rankings
+            <BrandName ncu="RecruitNC Rankings" national="RecruitWrestlers Rankings" />
           </p>
           <h1 className="text-balance text-4xl font-black tracking-tight text-white sm:text-6xl">
             College Prospect Rankings

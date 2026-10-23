@@ -14,7 +14,7 @@ export default function PrivacyPolicyPage() {
       <div className="mx-auto max-w-3xl">
         <p className="text-xs font-bold tracking-[0.2em] text-rnc-gold">NC UNITED WRESTLING</p>
         <h1 className="mt-2 text-4xl font-extrabold tracking-tight">Privacy Policy</h1>
-        <p className="mt-3 text-sm text-[#A8BBD1]">Last updated 8 October 2026</p>
+        <p className="mt-3 text-sm text-[#A8BBD1]">Last updated 22 October 2026</p>
 
         <div className="mt-10 space-y-10 text-[15px] leading-relaxed text-[#D6E1EE]">
           <section>
@@ -80,6 +80,23 @@ export default function PrivacyPolicyPage() {
               administration. Athletes and families can add a cell number, GPA and test scores
               themselves on their own profile. These fields are never public, and are not collected or
               shown anywhere in the app.
+            </p>
+
+            <h3 className="mt-5 font-semibold text-rnc-gold">College interest forms (website and the Interest Form Helper)</h3>
+            <p className="mt-2">
+              In the Recruiting Command Center, a family can save the answers college recruiting questionnaires ask for, so they are
+              typed once: the wrestler&apos;s date of birth, home address and height; parent or guardian names and contact details; high
+              school and club coach contacts; class rank; and NCAA Eligibility Center ID. Only the wrestler&apos;s own family and NC
+              United staff can read these answers. They are never public, never shown to college coaches, and never sent to a college by
+              us.
+            </p>
+            <p className="mt-2">
+              The Interest Form Helper is an optional Chrome extension. When a family clicks Fill on a college&apos;s questionnaire, it
+              reads their saved answers from us using their own signed-in session and types them into that page in their browser. The
+              family checks the form and presses the college&apos;s Submit button themselves; what they submit goes to that college under
+              the college&apos;s own privacy policy. The helper tells us only that a college&apos;s form was submitted, so it can be marked
+              with the date and time on the family&apos;s list. It reads nothing else from the pages you visit, and nothing it handles is
+              used for advertising.
             </p>
 
             <h3 className="mt-5 font-semibold text-rnc-gold">Scouting reports for college coaches</h3>
@@ -157,6 +174,10 @@ export default function PrivacyPolicyPage() {
               directly to Stripe and never reach our servers. We keep a record of what was paid for and
               by whom so we can honour the registration. Stripe&apos;s own privacy policy governs the
               payment itself.
+            </p>
+            <p className="mt-2">
+              Recruiting memberships (RecruitNC Rankings and the Recruiting Command Center) are billed
+              by Guild Ventures, which operates the recruiting platform behind RecruitNC.
             </p>
           </section>
 

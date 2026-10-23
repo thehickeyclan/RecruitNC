@@ -35,4 +35,22 @@ describe("ranking board access", () => {
     expect(hasAnyRankingBoardGrant({ gender: "Male" })).toBe(false)
     expect(hasAnyRankingBoardGrant(BRANDON)).toBe(true)
   })
+
+  it("keeps a grant without states on North Carolina", () => {
+    expect(rankingBoardAccessFor(BRANDON, "Female", 2027, "SC")).toBeNull()
+    expect(rankingBoardAccessFor(BRANDON, "Female", 2027, "NC")).toBe("edit")
+  })
+
+  it("scopes a South Carolina ranker to South Carolina (Alan Faponte, 21 Oct 2026)", () => {
+    const ALAN = [
+      { gender: "Male", years: "all", access: "edit", states: ["SC"] },
+      { gender: "Female", years: "all", access: "edit", states: ["SC"] },
+    ]
+    expect(rankingBoardAccessFor(ALAN, "Male", 2027, "SC")).toBe("edit")
+    expect(rankingBoardAccessFor(ALAN, "Female", 2028, "sc")).toBe("edit")
+    expect(rankingBoardAccessFor(ALAN, "Male", 2027, "NC")).toBeNull()
+    expect(rankingBoardAccessFor(ALAN, "Male", 2027)).toBeNull()
+    expect(hasAnyRankingBoardGrant(ALAN, "NC")).toBe(false)
+    expect(hasAnyRankingBoardGrant(ALAN, "SC")).toBe(true)
+  })
 })

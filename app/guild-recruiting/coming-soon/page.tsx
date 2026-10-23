@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic"
 
 async function isRecruitWrestlers() {
   const host = ((await headers()).get("host") ?? "").toLowerCase().split(":")[0]
-  return host === "recruitwrestlers.com" || host === "www.recruitwrestlers.com"
+  return host === "recruitwrestlers.com" || host === "www.recruitwrestlers.com" || host === "next.recruitwrestlers.com"
 }
 
 export async function generateMetadata(): Promise<Metadata> {

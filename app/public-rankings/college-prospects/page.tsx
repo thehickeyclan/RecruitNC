@@ -65,7 +65,7 @@ export default async function TopHundredPage() {
       <section className="px-4 py-12 sm:py-16">
         <div className="mx-auto max-w-6xl">
           <p className="text-center text-[11px] font-bold uppercase tracking-[0.22em] text-[#CC0000]">
-            RecruitNC · North Carolina prospect rankings
+            <BrandName /> · North Carolina prospect rankings
           </p>
           <h1 className="mt-3 text-center text-4xl font-light uppercase tracking-tight text-white sm:text-5xl">
             Top {board.cap} College Prospects

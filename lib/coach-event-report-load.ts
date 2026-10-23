@@ -74,9 +74,19 @@ export async function loadCoachByEmail(admin: SupabaseClient, email: string): Pr
   }
 }
 
-/** The athletes a coach has starred. Only the ids: the star rows carry the coach's private notes. */
+/**
+ * The athletes on a coach's board. Only the ids: the star rows carry the coaches' private notes.
+ * The board is the program's (every coach on the staff), the same My Recruits shows: Washington and
+ * Lee's head coach starred nobody himself and his staff starred 15 (22 Oct 2026).
+ */
 export async function loadStarredAthleteIds(admin: SupabaseClient, coachUserId: string): Promise<string[]> {
-  const { data, error } = await admin.from("college_coach_stars").select("athlete_id").eq("coach_user_id", coachUserId)
+  const { data: me } = await admin.from("user_profiles").select("school_id").eq("user_id", coachUserId).maybeSingle()
+  let staff = [coachUserId]
+  if (me?.school_id) {
+    const { data: rows } = await admin.from("user_profiles").select("user_id").eq("school_id", me.school_id)
+    if (rows?.length) staff = [...new Set([coachUserId, ...rows.map((r) => String(r.user_id))])]
+  }
+  const { data, error } = await admin.from("college_coach_stars").select("athlete_id").in("coach_user_id", staff)
   if (error) throw new Error(`college_coach_stars: ${error.message}`)
   return [...new Set((data ?? []).map((r) => String(r.athlete_id)).filter(Boolean))]
 }

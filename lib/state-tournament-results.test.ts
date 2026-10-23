@@ -28,8 +28,13 @@ describe("getStateTournamentResultsForAthlete", () => {
   it("reads a South Carolina wrestler's placements into the shape the profile already renders", async () => {
     const out = await getStateTournamentResultsForAthlete(clientReturning([row]), { id: "a1", state: "SC" })
     expect(out).toEqual([
-      { year: 2026, classification: "4A", weight_class: "132", place: 2, school: "Fort Dorchester", wrestler_name: "Sample Wrestler" },
+      { year: 2026, classification: "4A", association: null, weight_class: "132", place: 2, school: "Fort Dorchester", wrestler_name: "Sample Wrestler" },
     ])
+  })
+
+  it("carries the association, so a SCISA title is not printed as an SCHSL one", async () => {
+    const out = await getStateTournamentResultsForAthlete(clientReturning([{ ...row, association: " scisa " }]), { id: "a1", state: "SC" })
+    expect(out[0]?.association).toBe("SCISA")
   })
 
   it("matches on the linked profile id and the state, never on a name", async () => {

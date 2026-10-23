@@ -24,9 +24,11 @@ describe("NHSCA school leaderboard suggested prompt", () => {
     expect(text?.toLowerCase()).not.toContain("no records")
   })
 
-  it("routes default ranking and 4x chips", () => {
-    expect(getRouteForSuggestedPrompt("Show me all Class of 2027 rankings")?.handler).toBe("prospect_rankings")
-    expect(getRouteForSuggestedPrompt("Show me all Class of 2028 rankings")?.handler).toBe("prospect_rankings")
+  it("routes the 4x chip, and no longer routes ranking questions anywhere", () => {
+    // Rankings are a paid product and Data Dawg declines them (27 Sept 2026), so their
+    // suggested-prompt routes were removed rather than left pointing at a refusal.
+    expect(getRouteForSuggestedPrompt("Show me all Class of 2027 rankings")).toBeNull()
+    expect(getRouteForSuggestedPrompt("Show me all Class of 2028 rankings")).toBeNull()
     expect(getRouteForSuggestedPrompt("Show me all Class of 2029 rankings")).toBeNull()
     expect(getRouteForSuggestedPrompt("Who are our 4x state champions?")?.handler).toBe("state_champion_records")
   })

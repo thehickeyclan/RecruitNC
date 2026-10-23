@@ -986,6 +986,7 @@ export function ProfileClient() {
                     already pay for. */}
                 <WiqSubscriptionPanel subscriptions={wiqSubscriptions} />
                 {blueLoading || blueMemberships.length > 0 ? (
+                  <div className="ncu-only">
                   <NcUnitedBlueSection
                     memberships={blueMemberships}
                     loading={blueLoading}
@@ -994,8 +995,9 @@ export function ProfileClient() {
                     onRefresh={fetchBlueMemberships}
                     billingPortalError={blueBillingPortalError || undefined}
                   />
+                  </div>
                 ) : wiqSubscriptions.length > 0 ? null : (
-                  <Card className="bg-[#0F1E32] border-[#1e3a5f] shadow-md overflow-hidden">
+                  <Card className="ncu-only bg-[#0F1E32] border-[#1e3a5f] shadow-md overflow-hidden">
                     <div className="h-1 w-full bg-gradient-to-r from-[#D3B574] to-[#c4a665]" aria-hidden />
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-white">
@@ -1075,10 +1077,11 @@ function MembershipStrip({
         : isLiveSubscription(rankings.subscription)
           ? "Paid subscription"
           : rankings.hasAccess
-            ? "Through Blue, a coach account or staff"
+            ? <BrandName ncu="Through Blue, a coach account or staff" national="Through a coach account or staff" />
             : "Class rankings and the College Prospects board",
     },
-    { title: "NC United Blue", icon: CreditCard, status: blueStatus, detail: blueLoading ? "Checking…" : blueDetail },
+    // NC United's program: never shown on RecruitWrestlers (Matt, 21 Oct 2026).
+    { title: "NC United Blue", icon: CreditCard, status: blueStatus, detail: blueLoading ? "Checking…" : blueDetail, ncuOnly: true },
   ]
 
   return (
@@ -1088,7 +1091,7 @@ function MembershipStrip({
           key={i}
           type="button"
           onClick={onOpen}
-          className="group flex items-center gap-3 rounded-xl border border-[#1e3a5f] bg-[#0F1E32]/80 px-4 py-3 text-left transition-colors hover:border-[#D3B574]/50"
+          className={`${"ncuOnly" in tile && tile.ncuOnly ? "ncu-only " : ""}group flex items-center gap-3 rounded-xl border border-[#1e3a5f] bg-[#0F1E32]/80 px-4 py-3 text-left transition-colors hover:border-[#D3B574]/50`}
         >
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#1e3a5f] text-[#D3B574]">
             <tile.icon className="h-5 w-5" />

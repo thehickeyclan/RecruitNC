@@ -31,7 +31,11 @@ export async function loadRoadmapSignals(admin: SupabaseClient, input: { athlete
   const latest = seniorClassYear() - 1
 
   const [list, events, views, bundle] = await Promise.all([
-    admin.from("college_list_items").select("school_id, status").eq("user_id", input.userId).then((r) => r.data ?? []),
+    admin
+      .from("college_list_items")
+      .select("school_id, status, questionnaire_done_at")
+      .eq("user_id", input.userId)
+      .then(async (r) => (r.error ? ((await admin.from("college_list_items").select("school_id, status").eq("user_id", input.userId)).data ?? []) : (r.data ?? [])) as Array<{ school_id: string; status: string; questionnaire_done_at?: string | null }>),
     listUpcomingEvents(admin, input.athleteId).then((r) => r.events.length).catch(() => 0),
     getCoachViewsForAthlete(admin, input.athleteId).catch(() => null),
     loadAthleteTournamentBundle(admin, a).catch(() => null),
@@ -53,7 +57,8 @@ export async function loadRoadmapSignals(admin: SupabaseClient, input: { athlete
     hasVideo: Boolean(String(a.highlight_video_url ?? "").trim()),
     profilePercent: athlete ? completenessFromRow(a).percent : null,
     listCount: list.length,
-    questionnaireOrBeyond: list.filter((r) => stage(r.status) >= COLLEGE_LIST_STATUSES.indexOf("questionnaire")).length,
+    // The interest form is its own check now (22 Oct 2026), not a stage a family passes by emailing.
+    questionnaireOrBeyond: list.filter((r) => r.questionnaire_done_at || r.status === "questionnaire").length,
     contactedOrBeyond: list.filter((r) => stage(r.status) >= COLLEGE_LIST_STATUSES.indexOf("contacted")).length,
     upcomingEvents: events,
     viewedNotListed,

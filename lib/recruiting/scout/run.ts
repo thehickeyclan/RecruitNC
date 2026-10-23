@@ -36,6 +36,9 @@ export function answerProblems(text: string): string[] {
   // The published figures are for all applicants; a recruited wrestler goes through the coach.
   if (/\b(won'?t|will not|can'?t|cannot|unlikely to|not likely to)\s+(get in|be admitted|get admitted|qualify for admission)|\bout of (range|reach)\b|\b(too low|below what) .{0,30}(admi|get in)|\bbelow\b.{0,25}\b(typical|usual|admission|admitted)\b.{0,15}\b(range|students|average)/i.test(text))
     out.push("Never say a wrestler cannot get in or is out of range from the published figures: they describe all applicants, and a recruited wrestler is admitted through athletic admissions with the coach's support (give the athletic admission line).")
+  // A family's question goes to the coaches, never to a college office (Scout sent a transfer question to compliance).
+  if (/\bcompliance (office|department|staff)\b|\bcontact (the |their |its )?compliance\b/i.test(text))
+    out.push("Never send the family to a compliance office. If we do not hold something, say so, and say the coaching staff can answer it on a call.")
   return [...new Set(out)]
 }
 
@@ -59,6 +62,9 @@ export function draftProblems(body: string, questionnaireNotDone: boolean): stri
   if (/\b(close to home|near(by)? (to )?(my )?home|short drive|not far from)\b/i.test(body)) out.push("We do not know where the family lives: do not say the college is close to home.")
   if (questionnaireNotDone && /\b(completed|filled out|filled in|submitted|done)\b.{0,40}questionnaire|questionnaire.{0,20}\b(completed|done|submitted)\b/i.test(body))
     out.push("The questionnaire is not recorded as done: do not say it is.")
+  // Never ask the coach what he wants to see (Matt, 23 Oct 2026).
+  if (/\bwhat (would|do|does|will) (you|your staff|the staff) (like|want|need|hope) to see\b|\bwant(s)? to see from me\b|\blike to see from me\b/i.test(body))
+    out.push('Do not ask the coach what he would like or want to see from the wrestler; close with the next fact or a plain thank-you.')
   return out
 }
 const EMAIL = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi

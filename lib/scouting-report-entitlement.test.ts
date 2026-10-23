@@ -4,6 +4,7 @@ import {
   isSubscriptionLive,
   resolveEntitlement,
   SCOUTING_REPORT_PRICES,
+  SCOUTING_REPORTS_ARE_SOLD,
   type EntitlementInput,
 } from "@/lib/scouting-report-entitlement"
 
@@ -68,7 +69,22 @@ describe("free access", () => {
   })
 })
 
-describe("paid access", () => {
+describe("while the report is not on sale", () => {
+  // A college-coach product, free to coaches (Matt, 13 Oct 2026): a subscription, a past
+  // purchase or a Blue membership does not include it, and a refusal is not a paywall.
+  it.runIf(!SCOUTING_REPORTS_ARE_SOLD)("a subscription, a purchase or Blue does not open it", () => {
+    for (const grant of ["hasActiveSubscription", "hasPurchasedThisAthlete", "isBlueMember"] as const) {
+      expect(resolveEntitlement({ ...base, [grant]: true }), grant).toMatchObject({ canAccess: false, reason: "none" })
+    }
+  })
+
+  it.runIf(!SCOUTING_REPORTS_ARE_SOLD)("offers nobody a paywall", () => {
+    expect(resolveEntitlement(base)).toMatchObject({ canAccess: false, reason: "none", purchasable: false })
+  })
+})
+
+// The rules for when it goes on sale. Kept, and switched on by the same flag that sells it.
+describe.runIf(SCOUTING_REPORTS_ARE_SOLD)("paid access", () => {
   it("grants unlimited access on a live subscription", () => {
     expect(resolveEntitlement({ ...base, hasActiveSubscription: true })).toMatchObject({
       canAccess: true,

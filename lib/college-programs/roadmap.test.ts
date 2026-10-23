@@ -24,7 +24,7 @@ describe("this month", () => {
   it("adds questionnaires and the first email once there is a list", () => {
     const steps = planSteps({ ...base, listStatuses: ["interested", "interested", "questionnaire"], questionnairesWaiting: 2 })
     expect(steps.map((s) => s.key)).toEqual(["profile", "list", "questionnaires", "email", "schedule"])
-    expect(steps[2].title).toBe("Fill out 2 recruiting questionnaires")
+    expect(steps[2].title).toBe("Fill out 2 interest forms")
     expect(steps[3]).toMatchObject({ title: "Email your first coach", done: false, action: { kind: "email" } })
   })
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { revalidateTag } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { syncSiNationalRankings } from "@/lib/rankings/si-national"
+import { scheduledJobsOff, skippedJob } from "@/lib/scheduled-jobs"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 120
@@ -20,6 +21,7 @@ function authorizeCron(request: NextRequest): boolean {
  * A failure returns 500 so it shows in Vercel's cron log rather than passing silently.
  */
 export async function GET(request: NextRequest) {
+  if (scheduledJobsOff()) return skippedJob()
   if (!authorizeCron(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   try {
     const result = await syncSiNationalRankings(createAdminClient(), {

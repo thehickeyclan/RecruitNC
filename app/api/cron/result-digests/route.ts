@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { sendToTokens } from "@/lib/push-send"
 import { followersOfAthletes } from "@/lib/athlete-follows"
 import { digestBody, digestTitle } from "@/lib/result-digest-message"
+import { scheduledJobsOff, skippedJob } from "@/lib/scheduled-jobs"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -90,6 +91,7 @@ type EventBatch = {
 }
 
 export async function GET(request: NextRequest) {
+  if (scheduledJobsOff()) return skippedJob()
   if (!authorizeCron(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }

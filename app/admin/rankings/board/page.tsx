@@ -35,7 +35,7 @@ import { reviewBoard, summariseReview, type ReviewAthlete, type ReviewFlag } fro
 import { getPublicRankingsMax } from "@/lib/public-rankings-cap"
 import type { StarRating } from "@/lib/athlete-star-rating"
 import { normalizeBoardAthlete } from "@/lib/rankings/board-athlete"
-import { rankingBoardDefault } from "@/lib/rankings/ranking-board-home"
+import { rankingBoardDefault, rankingBoardStates } from "@/lib/rankings/ranking-board-home"
 import { createClient } from "@/lib/supabase/client"
 
 type Evidence = { kind: string; label: string; points?: number; tone?: string }
@@ -60,6 +60,7 @@ type BoardAthlete = {
   head_to_head: Array<{ opponentId: string; opponent: string; wins: number; losses: number }>
   match_count: number
   win_loss?: string | null
+  tournament_record?: string | null
   college?: string | null
   college_opens_experience?: string | null
   final_rank?: number
@@ -86,6 +87,8 @@ const YEARS = ["2027", "2028", "2029", "2030", "2026"]
 const STATES: Array<{ code: string; label: string }> = [
   { code: "NC", label: "North Carolina" },
   { code: "SC", label: "South Carolina" },
+  { code: "VA", label: "Virginia" },
+  { code: "MD", label: "Maryland" },
 ]
 
 const SCORE_SEGMENTS: Array<{ key: string; label: string; className: string }> = [
@@ -299,6 +302,15 @@ function Details({
   ]
   return (
     <div className="space-y-3 border-t border-slate-800 bg-slate-950/60 p-3 text-xs sm:p-4">
+      {/* Rankers check a wrestler's full profile from here (Matt, 23 Oct 2026). New tab: the board keeps its place. */}
+      <a
+        href={`/view-profile?id=${encodeURIComponent(athlete.id)}`}
+        target="_blank"
+        rel="noopener"
+        className="inline-flex items-center gap-1 rounded-md border border-slate-700 px-2.5 py-1 font-semibold text-slate-200 hover:border-[#A3E635] hover:text-white"
+      >
+        Open profile ↗
+      </a>
       <FlagList flags={flags} />
       <ScoreBar breakdown={athlete.score_breakdown} total={athlete.ai_score} />
 
@@ -377,8 +389,11 @@ function Details({
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Season</p>
           <p className="mt-0.5 text-slate-200">
-            {athlete.match_count ? `${athlete.match_count} matches${athlete.win_loss ? ` · ${athlete.win_loss}` : ""}` : "No match data"}
+            {athlete.match_count ? `${athlete.match_count} matches${athlete.win_loss ? ` · ${athlete.win_loss}` : ""}` : "No season data"}
           </p>
+          {athlete.tournament_record ? (
+            <p className="mt-0.5 text-slate-300">Tournaments · {athlete.tournament_record}</p>
+          ) : null}
         </div>
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Stars</p>
@@ -451,6 +466,8 @@ export default function RankingBoardPage() {
   const [year, setYear] = useState(requestedYear && YEARS.includes(requestedYear) ? requestedYear : "2027")
   const [gender, setGender] = useState(requestedGender === "Female" ? "Female" : "Male")
   const [state, setState] = useState(STATES.some((s) => s.code === requestedState) ? requestedState : "NC")
+  const [myStates, setMyStates] = useState<string[] | null>(null)
+  const shownStates = myStates ? STATES.filter((s) => myStates.includes(s.code)) : STATES
   const [athletes, setAthletes] = useState<BoardAthlete[]>([])
   const [stars, setStars] = useState<Record<string, StarRating>>({})
   const [excluded, setExcluded] = useState<Array<{ id: string; name: string; highschool: string | null }>>([])
@@ -475,16 +492,22 @@ export default function RankingBoardPage() {
   const showing = `${state}|${year}|${gender}`
   const boardIsCurrent = loadedFor === showing
 
-  // A link with no class on it opens a scoped ranker's own board.
+  // A link with no class on it opens a scoped ranker's own board. Whatever the link, a ranker sees
+  // only the states their grant opens and never lands on one they cannot read.
   const cameWithoutBoard = useRef(!requestedYear && !requestedGender)
   useEffect(() => {
-    if (!cameWithoutBoard.current) return
+    const withoutBoard = cameWithoutBoard.current
     cameWithoutBoard.current = false
     void createClient()
       .auth.getSession()
       .then(({ data }) => {
-        const board = rankingBoardDefault(data.session?.user?.app_metadata)
-        if (!board || !YEARS.includes(String(board.year))) return
+        const meta = data.session?.user?.app_metadata
+        const allowed = rankingBoardStates(meta)
+        if (allowed) setMyStates(allowed)
+        const board = rankingBoardDefault(meta)
+        if (!board) return
+        if (allowed && !allowed.includes(requestedState)) setState(board.state)
+        if (!withoutBoard || !YEARS.includes(String(board.year))) return
         setYear(String(board.year))
         setGender(board.gender)
       })
@@ -768,7 +791,7 @@ export default function RankingBoardPage() {
         <div className="sticky top-0 z-20 border-b border-slate-800 bg-slate-950/95 backdrop-blur">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-2 px-4 py-3">
             <div className="flex rounded-full bg-slate-900 p-1">
-              {STATES.map((s) => (
+              {shownStates.map((s) => (
                 <button key={s.code} className={pill(state === s.code)} onClick={() => setState(s.code)} title={s.label}>
                   {s.code}
                 </button>

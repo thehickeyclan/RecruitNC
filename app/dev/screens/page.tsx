@@ -7,6 +7,8 @@
 import { notFound } from "next/navigation"
 
 import { CollegeListTable, type ListRow } from "@/components/portal/college-list-table"
+import { QuestionnairePack } from "@/components/portal/questionnaire-pack"
+import { BoardPreview } from "./board-preview"
 import { RoadmapBoard } from "@/components/portal/roadmap-board"
 import { schoolLogoUrl } from "@/lib/college-programs/logo"
 import data from "@/lib/college-programs/programs-2026-27.json"
@@ -83,7 +85,35 @@ export default async function Screens({ searchParams }: { searchParams?: Promise
     <div className="admin-dark-page min-h-screen bg-[#060f1f] p-8 text-white">
       {/* A screenshot shows the product only: no site menu, assistant bubble or dev badge. */}
       <style>{shot === "coach-warning" ? "nav[aria-label='Main navigation'],nextjs-portal,footer{display:none!important}" : "nav[aria-label='Main navigation'],nextjs-portal,.fixed,footer{display:none!important}"}</style>
-      {shot === "coach-warning" ? (
+      {shot === "board" ? (
+        <div className="mx-auto max-w-[1400px]">
+          <BoardPreview
+            colleges={[
+              { id: rows[0]?.id ?? "a", name: rows[0]?.name ?? "College A", level: rows[0]?.level ?? "D1", place: rows[0]?.place ?? "", logo: rows[0]?.logo ?? null, status: "talking", cost: "$31,450 a year in-state (2024-25, before aid)", note: null, memo: "Coach called Tuesday. Wants Super 32 results.", onRecruitNC: true, questionnaireDone: true, hasQuestionnaire: true, interest: true, stageSince: "2026-10-12T12:00:00Z", inbound: { views: { count: 4, last: "2026-10-20T15:00:00Z" }, message: { threadId: "x", yourTurn: true, at: "2026-10-21T19:00:00Z" }, contact: { label: "Phone call", date: "Oct 20", on: "2026-10-20" } }, admissions: { status: "planning", plan: "ea", submittedOn: null, preread: null }, admissionInfo: { deadlines: [{ plan: "ea", date: "2026-11-01", label: null, raw: null }, { plan: "rd", date: "2027-01-15", label: null, raw: null }], notOffered: ["ed1"], rolling: false, applyUrl: "https://example.com", testPolicy: "Test-Optional", fee: 85, feeWaiver: true, aidForm: "FAFSA" } },
+              { id: rows[1]?.id ?? "b", name: rows[1]?.name ?? "College B", level: rows[1]?.level ?? "D1", place: rows[1]?.place ?? "", logo: rows[1]?.logo ?? null, status: "contacted", cost: null, note: null, memo: "Filled out interest form 10/20. Emailed results after Ironman.", onRecruitNC: false, questionnaireDone: true, hasQuestionnaire: true, interest: null, stageSince: "2026-09-29T12:00:00Z", inbound: {}, admissions: { status: null, plan: null, submittedOn: null, preread: null }, admissionInfo: null },
+              { id: rows[2]?.id ?? "c", name: rows[2]?.name ?? "College C", level: rows[2]?.level ?? "D1", place: rows[2]?.place ?? "", logo: rows[2]?.logo ?? null, status: "interested", cost: null, note: null, memo: null, onRecruitNC: true, questionnaireDone: false, hasQuestionnaire: true, interest: false, stageSince: "2026-10-18T12:00:00Z", inbound: { views: { count: 1, last: "2026-10-21T15:00:00Z" } }, admissions: { status: null, plan: null, submittedOn: null, preread: null }, admissionInfo: null },
+              { id: rows[3]?.id ?? "d", name: rows[3]?.name ?? "College D", level: rows[3]?.level ?? "D3", place: rows[3]?.place ?? "", logo: rows[3]?.logo ?? null, status: "interested", cost: null, note: null, memo: null, onRecruitNC: false, questionnaireDone: false, hasQuestionnaire: true, interest: null, stageSince: "2026-10-21T12:00:00Z", inbound: {}, admissions: { status: null, plan: null, submittedOn: null, preread: null }, admissionInfo: null },
+              { id: rows[4]?.id ?? "e", name: rows[4]?.name ?? "College E", level: rows[4]?.level ?? "D2", place: rows[4]?.place ?? "", logo: rows[4]?.logo ?? null, status: "visited", cost: null, note: null, memo: null, onRecruitNC: false, questionnaireDone: true, hasQuestionnaire: true, interest: null, stageSince: "2026-10-05T12:00:00Z", inbound: { views: { count: 2, last: "2026-09-30T15:00:00Z" } }, admissions: { status: "submitted", plan: "rolling", submittedOn: "2026-10-10", preread: null }, admissionInfo: null },
+            ]}
+          />
+        </div>
+      ) : shot === "forms" ? (
+        <div className="mx-auto max-w-7xl">
+          <QuestionnairePack
+            athleteId="example"
+            firstName="Jordan"
+            readOnly={false}
+            forms={rows.slice(0, 5).map((r, i) => ({ schoolId: r.id, name: r.name, level: r.level, logo: r.logo, url: "https://example.com", done: i === 2, doneAt: i === 2 ? "2026-10-20T19:14:00Z" : null }))}
+            answers={{
+              available: true,
+              updatedAt: null,
+              own: ["dob", "street", "city", "state", "zip", "parent1Name", "parent1Phone", "parent1Email", "heightFt", "heightIn"],
+              profile: { firstName: "Jordan", lastName: "Example", gradYear: "2028", highSchool: "Example High School", gpa: "3.7", weight: "150", club: "Example Wrestling Club" },
+              values: { firstName: "Jordan", lastName: "Example", gradYear: "2028", highSchool: "Example High School", gpa: "3.7", weight: "150", club: "Example Wrestling Club", dob: "2010-03-14", street: "100 Example St", city: "Raleigh", state: "NC", zip: "27601", parent1Name: "Pat Example", parent1Phone: "(919) 555-0100", parent1Email: "pat@example.com", heightFt: "5", heightIn: "8" },
+            }}
+          />
+        </div>
+      ) : shot === "coach-warning" ? (
         <CoachWarningPreview />
       ) : shot === "scout-email" ? (
         <div className="mx-auto max-w-3xl">
@@ -99,7 +129,7 @@ export default async function Screens({ searchParams }: { searchParams?: Promise
                 draft: {
                   to: ["coach.one@example.edu", "coach.two@example.edu", "coach.three@example.edu"],
                   subject: "Jordan Example, Class of 2028, 152 lbs",
-                  body: "Hi Coach,\n\nMy name is Jordan Example, a junior at Example High School wrestling at 152 lbs. I placed 3rd at the 2026 NCHSAA state tournament. I'm interested in Campbell because two wrestlers from my school went there and it wrestles in the Southern Conference.\n\nWhat would you want to see from me this season?\n\nThank you,\nJordan Example\nClass of 2028, Example High School\n[phone]\n[email]",
+                  body: "Hi Coach,\n\nMy name is Jordan Example, a junior at Example High School wrestling at 152 lbs. I placed 3rd at the 2026 NCHSAA state tournament. I'm interested in Campbell because two wrestlers from my school went there and it wrestles in the Southern Conference.\n\nThank you,\nJordan Example\nClass of 2028, Example High School\n[phone]\n[email]",
                 },
               },
             ]}

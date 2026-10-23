@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server"
 
 import { sendFamilyDigests } from "@/lib/recruiting/family-digest"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { scheduledJobsOff, skippedJob } from "@/lib/scheduled-jobs"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 300
@@ -18,6 +19,7 @@ function authorizeCron(request: NextRequest): boolean {
  * FAMILY_DIGEST_SEND=1 is set, which is Matt's go-ahead after reviewing /admin/family-digest.
  */
 export async function GET(request: NextRequest) {
+  if (scheduledJobsOff()) return skippedJob()
   if (!authorizeCron(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   const dryRun = process.env.FAMILY_DIGEST_SEND !== "1"
   try {

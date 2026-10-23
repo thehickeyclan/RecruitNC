@@ -25,6 +25,8 @@ export const RECRUITING_BRAND = {
   states: [
     { code: "NC", name: "North Carolina", live: true },
     { code: "SC", name: "South Carolina", live: false },
+    // Being built (Matt, 21 Oct 2026): profiles first, not open to coaches until he says go.
+    { code: "VA", name: "Virginia", live: false },
   ],
 } as const
 
@@ -47,7 +49,8 @@ export { NATIONAL_PATH_PREFIXES, isNationalPath } from "@/lib/recruiting/nationa
 /** recruitwrestlers.com or www.recruitwrestlers.com. */
 export function isNationalHost(hostname: string | null | undefined): boolean {
   const h = String(hostname ?? "").toLowerCase()
-  return h === NATIONAL_BRAND.domain || h === `www.${NATIONAL_BRAND.domain}`
+  // next.: the new Vercel project's test address (docs/RECRUITWRESTLERS-VERCEL-SPLIT.md).
+  return h === NATIONAL_BRAND.domain || h === `www.${NATIONAL_BRAND.domain}` || h === `next.${NATIONAL_BRAND.domain}`
 }
 
 /** "RecruitNC", "RecruitSC": a state's own brand to families. */

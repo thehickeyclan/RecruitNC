@@ -54,7 +54,8 @@ type Row = {
 async function page<T>(table: string, select: string, state?: string): Promise<T[]> {
   const out: T[] = []
   for (let from = 0; ; from += 1000) {
-    let q = sb.from(table).select(select) as never
+    // A fixed order, or pages overlap and rows go missing.
+    let q = (sb.from(table).select(select) as unknown as { order: (c: string) => never }).order("id")
     if (state) q = (q as { eq: (c: string, v: string) => never }).eq("state", state)
     const { data, error } = await (q as { range: (a: number, b: number) => Promise<{ data: unknown[] | null; error: { message: string } | null }> }).range(from, from + 999)
     if (error) throw new Error(`${table}: ${error.message}`)

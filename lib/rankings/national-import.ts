@@ -150,7 +150,9 @@ async function loadRoster(admin: SupabaseClient, gender: RankingGender): Promise
   for (let from = 0; ; from += 1000) {
     const { data, error } = await admin
       .from("athletes")
-      .select('id, name, wrestling_name, highschool, "wrestlingClub", graduationyear, gender')
+      .select('id, name, wrestling_name, highschool, "wrestlingClub", graduationyear, gender, state, is_nc_athlete')
+      // A fixed order, or pages overlap and wrestlers go missing from the match.
+      .order("id")
       .range(from, from + 999)
     if (error) throw new Error(`Loading athletes: ${error.message}`)
     for (const a of data ?? []) {
@@ -253,12 +255,21 @@ export async function importNationalEdition(admin: SupabaseClient, input: Import
     const year = Number((a as { graduationyear?: unknown }).graduationyear)
     return !Number.isFinite(year) || year === 0 || year >= currentSeason
   })
-  const index = buildAthleteIndex(roster)
+  /*
+   * Each list row is matched only against profiles of its own state (21 Oct 2026: SC and VA have
+   * profiles now, and their ranked wrestlers were never linked). A row with no state is matched
+   * against North Carolina, as before. Never across states: every state has its own namesakes.
+   */
+  const stateOf = (a: MatchableAthlete) => ((a as { is_nc_athlete?: boolean }).is_nc_athlete ? "NC" : String((a as { state?: string | null }).state ?? "").toUpperCase() || "NC")
+  const indexes = new Map<string, ReturnType<typeof buildAthleteIndex>>()
+  const indexFor = (st: string) => {
+    if (!indexes.has(st)) indexes.set(st, buildAthleteIndex(roster.filter((a) => stateOf(a) === st)))
+    return indexes.get(st)!
+  }
   const ncMatched: string[] = []
   const payload = rows.map((row) => {
     const state = String(row.state ?? "").trim().toUpperCase() || null
-    const isNc = state === "NC" || !state
-    const outcome = isNc ? matchAthlete(row.name.trim(), row.school ?? "", index) : ({ status: "unmatched" } as const)
+    const outcome = matchAthlete(row.name.trim(), row.school ?? "", indexFor(state ?? "NC"))
     const athleteId = outcome.status === "matched" ? outcome.athlete.id : null
     if (athleteId) ncMatched.push(`#${row.rank} ${row.name.trim()}${row.weight ? ` (${row.weight})` : ""}`)
     return {

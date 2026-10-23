@@ -55,13 +55,9 @@ export async function POST(request: NextRequest) {
     const auth = await requireAdmin()
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
   } else {
-    const auth = await requireRankingBoardAccess(gender, year, "edit")
+    // A ranker's grant names the states it covers (North Carolina when it names none).
+    const auth = await requireRankingBoardAccess(gender, year, "edit", state)
     if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
-    // Ranker grants cover North Carolina's boards; another state's is for full admins.
-    if (state !== HOME_STATE) {
-      const adminOnly = await requireAdmin()
-      if (!adminOnly.ok) return NextResponse.json({ error: adminOnly.error }, { status: adminOnly.status })
-    }
   }
 
   const admin = createAdminClient()

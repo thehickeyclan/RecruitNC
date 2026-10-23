@@ -2,7 +2,9 @@ import { NextResponse } from "next/server"
 import Stripe from "stripe"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
-import { readStripeSecretKey, stripeKeyMissingPayload } from "@/lib/stripe"
+import { stripeKeyMissingPayload } from "@/lib/stripe"
+import { recruitingSalesAccount, stripeSecretFor } from "@/lib/stripe-accounts"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 import {
   SCOUTING_REPORT_PRICES,
   SUBSCRIPTION_PLANS,
@@ -32,8 +34,17 @@ const BASE = (
 ).replace(/\/$/, "")
 
 export async function POST(request: Request) {
-  const secret = readStripeSecretKey()
-  if (!secret) return NextResponse.json(stripeKeyMissingPayload(), { status: 500 })
+  // Recruiting memberships are Guild Ventures' (lib/stripe-accounts.ts). On recruitwrestlers.com
+  // nothing is sold until its account is set up, and only Insider and the Command Center.
+  const onRw = stagedBrandForHost(request.headers.get("host")) === "national"
+  const account = recruitingSalesAccount(onRw)
+  if (!account) {
+    return onRw
+      ? NextResponse.json({ error: "Memberships open at launch.", reason: "not_open" }, { status: 503 })
+      : NextResponse.json(stripeKeyMissingPayload(), { status: 500 })
+  }
+  const secret = stripeSecretFor(account)
+  const base = onRw ? "https://www.recruitwrestlers.com" : BASE
 
   const supabase = await createClient()
   const {
@@ -55,6 +66,9 @@ export async function POST(request: Request) {
     ? (body.kind as ScoutingPurchaseKind)
     : "single"
   const plan = isSubscriptionKind(kind) ? SUBSCRIPTION_PLANS[kind] : null
+  if (onRw && kind !== "subscription" && kind !== "command_center") {
+    return NextResponse.json({ error: "Not sold here." }, { status: 400 })
+  }
   const athleteId = String(body.athleteId ?? "").trim()
   if (kind === "single" && !athleteId) {
     return NextResponse.json({ error: "Missing athleteId" }, { status: 400 })
@@ -124,7 +138,7 @@ export async function POST(request: Request) {
       ? String((body as { returnTo?: string }).returnTo)
       : "/prospects/all"
   // A return page may carry its own query (/view-profile?id=...): add to it, never a second "?".
-  const back = (flag: string) => `${BASE}${returnTo}${returnTo.includes("?") ? "&" : "?"}${flag}`
+  const back = (flag: string) => `${base}${returnTo}${returnTo.includes("?") ? "&" : "?"}${flag}`
 
   try {
     const session = await stripe.checkout.sessions.create({
@@ -139,9 +153,9 @@ export async function POST(request: Request) {
             ...(plan ? { recurring: { interval: plan.interval } } : {}),
             product_data: {
               name: kind === "command_center"
-                ? "RecruitNC Command Center — monthly"
+                ? `${onRw ? "Recruiting" : "RecruitNC"} Command Center — monthly`
                 : plan
-                  ? `RecruitNC Rankings — ${plan.label.toLowerCase()}`
+                  ? `${onRw ? "Insider" : "RecruitNC Rankings"} — ${plan.label.toLowerCase()}`
                   : `Scouting report — ${athleteName || "athlete"}`,
               description: kind === "command_center"
                 ? "The Recruiting Command Center: plan, college list, compare, coach messages and Learn, with full rankings and profile views."
@@ -159,9 +173,10 @@ export async function POST(request: Request) {
         kind,
         user_id: user.id,
         athlete_id: athleteId,
+        stripe_account: account,
       },
       ...(plan
-        ? { subscription_data: { metadata: { source: "scouting_report", kind, user_id: user.id } } }
+        ? { subscription_data: { metadata: { source: "scouting_report", kind, user_id: user.id, stripe_account: account } } }
         : {}),
       success_url: back("purchased=1"),
       cancel_url: back("canceled=1"),

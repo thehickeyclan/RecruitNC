@@ -13,12 +13,13 @@ import { hasPremiumAccess } from "@/lib/ranking-visibility"
 import { mostRecentGraduatedClassYear, seniorClassYear } from "@/lib/class-years"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
-import { isCollegeListStatus, type CollegeListStatus } from "@/lib/college-programs/list"
+import { admissionsOf, isCollegeListStatus, questionnaireDone, type CollegeListStatus } from "@/lib/college-programs/list"
 import { loadCollegeMap } from "@/lib/college-programs/load"
 import { schoolLogoUrl } from "@/lib/college-programs/logo"
 import { gradeLabel } from "@/lib/college-programs/outreach-results"
 import data from "@/lib/college-programs/programs-2026-27.json"
 import { questionnairesForSchool } from "@/lib/college-programs/questionnaires"
+import { admissionsSummary } from "@/lib/college-programs/admissions"
 import { costShort } from "@/lib/college-programs/tuition"
 import { listUpcomingEvents, type UpcomingEvent } from "@/lib/college-programs/schedule"
 import { DIVISION_SHORT, primaryDivision, type CollegeMapSchool } from "@/lib/college-programs/types"
@@ -86,7 +87,20 @@ export async function loadCommandCenter(returnTo: string) {
   const schedules = new Map<string, UpcomingEvent[]>()
   if (blue) {
     const [list, ...events] = await Promise.all([
-      admin.from("college_list_items").select("school_id, status, note, updated_at").eq("user_id", viewerId).order("updated_at", { ascending: false }),
+      // The interest-form column may not exist yet (scripts/add-college-list-questionnaire-done.sql): fall back.
+      admin
+        .from("college_list_items")
+        .select("school_id, status, note, updated_at, questionnaire_done_at, app_plan, app_status, app_submitted_on, preread, stage_changed_at")
+        .eq("user_id", viewerId)
+        .order("updated_at", { ascending: false })
+        .then(async (r) => {
+          if (r.error?.code !== "42703") return r
+          // Before the days-in-stage column (scripts/add-college-list-stage-changed.sql).
+          const s = await admin.from("college_list_items").select("school_id, status, note, updated_at, questionnaire_done_at, app_plan, app_status, app_submitted_on, preread").eq("user_id", viewerId).order("updated_at", { ascending: false })
+          if (s.error?.code !== "42703") return s
+          const q = await admin.from("college_list_items").select("school_id, status, note, updated_at, questionnaire_done_at").eq("user_id", viewerId).order("updated_at", { ascending: false })
+          return q.error?.code === "42703" ? admin.from("college_list_items").select("school_id, status, note, updated_at").eq("user_id", viewerId).order("updated_at", { ascending: false }) : q
+        }),
       ...athletes.map((a) => listUpcomingEvents(admin, a.id).catch(() => ({ available: false, events: [] as UpcomingEvent[] }))),
     ])
     schools = (list.data ?? []).flatMap((row) => {
@@ -102,6 +116,11 @@ export async function loadCommandCenter(returnTo: string) {
           status,
           logo: null as string | null,
           hasQuestionnaire: questionnairesForSchool(school.id).length > 0,
+          admissions: admissionsOf(row as Record<string, unknown>),
+          admissionInfo: admissionsSummary(school.id),
+          stageSince: ((row as { stage_changed_at?: string | null }).stage_changed_at ?? (row.updated_at ? String(row.updated_at) : null)) as string | null,
+          questionnaireDone: questionnaireDone({ status, questionnaireDoneAt: (row as { questionnaire_done_at?: string | null }).questionnaire_done_at ?? null }),
+          questionnaireDoneAt: (row as { questionnaire_done_at?: string | null }).questionnaire_done_at ?? null,
           savedAt: row.updated_at ? String(row.updated_at) : null,
           memo: row.note ? String(row.note) : null,
           onRecruitNC: false,

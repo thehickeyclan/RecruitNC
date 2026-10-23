@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { isNationalPath, isOpenWhileStaged, stagedBrandForHost } from "@/lib/recruiting/national-paths"
-import { stagingGateAllows } from "@/lib/staging-gate"
+import { isCommunityAdminPath } from "@/lib/recruiting/admin-scope"
+import { isRankerOnly, stagingGateAllows } from "@/lib/staging-gate"
 import { FUNDRAISING_AUTH_RETURN_COOKIE } from "@/lib/fundraising/fundraising-auth-return-cookie"
 import { adminGateApplies, adminGateRefusal } from "@/lib/admin-api-gate"
 import { COACH_HOME_PATH, PORTAL_HINT_COOKIE, coachFrontDoor } from "@/lib/coach-front-door"
@@ -35,6 +36,14 @@ export async function middleware(request: NextRequest) {
 async function routeRequest(request: NextRequest): Promise<NextResponse> {
   const pathname = request.nextUrl.pathname
 
+  // App alerts open /news/super32-live (a route every shipped app has); send it straight to the
+  // Command Center with a real redirect rather than one the page performs after loading.
+  if (pathname === "/news/super32-live") {
+    const url = request.nextUrl.clone()
+    url.pathname = "/super32/live"
+    return NextResponse.redirect(url, 307)
+  }
+
   /*
    * Recruiting under another brand, before public launch: recruit.wrestlingguild.com (Guild
    * Recruiting) and recruitwrestlers.com. Same pages as the app's own address, drawn in that brand
@@ -53,6 +62,10 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
    * Anything already pointing at recruit.wrestlingguild.com - sign-in links, bookmarks - lands on
    * the same page there. 307 while the product is unlaunched, so nothing caches a permanent move.
    */
+  // State rankers work on recruitwrestlers.com; NC United's copy of the board forwards them.
+  if (!brand && pathname === "/admin/rankings/board" && request.method === "GET" && (await isRankerOnly(request.headers, request.cookies.getAll()))) {
+    return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, "https://www.recruitwrestlers.com"), 307)
+  }
   if (brand === "guild") {
     return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, "https://www.recruitwrestlers.com"), 307)
   }
@@ -60,7 +73,7 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
     if (pathname === "/robots.txt") {
       return new NextResponse("User-agent: *\nDisallow: /\n", { headers: { "Content-Type": "text/plain", "X-Robots-Tag": "noindex, nofollow" } })
     }
-    if (!isOpenWhileStaged(pathname) && !(await stagingGateAllows(request.headers, request.cookies.getAll()))) {
+    if (!isOpenWhileStaged(pathname) && !(await stagingGateAllows(request.headers, request.cookies.getAll(), pathname))) {
       if (pathname.startsWith("/api/")) {
         return NextResponse.json({ error: "Not available yet." }, { status: 403, headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" } })
       }
@@ -69,6 +82,12 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
       return holding
     }
     if (pathname === "/") return NextResponse.rewrite(new URL("/recruitwrestlers", request.url))
+    // NC United's community admin tools stay on NC United's address (lib/recruiting/admin-scope.ts).
+    if (isCommunityAdminPath(pathname)) {
+      return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, APP_ORIGIN), 307)
+    }
+    // RecruitWrestlers' own policy, not NC United's (app/recruitwrestlers/privacy).
+    if (pathname === "/privacy") return NextResponse.rewrite(new URL("/recruitwrestlers/privacy", request.url))
     if (!isNationalPath(pathname) && !isOpenWhileStaged(pathname) && !pathname.startsWith("/guild-recruiting")) {
       return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, APP_ORIGIN), 307)
     }
@@ -217,6 +236,11 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
     '/recruiting/learn',
     '/api/college-map',
     '/news',
+    // Super 32 Command Center: public, and opened from app alerts via /news/super32-live.
+    '/super32/live',
+    '/api/super32-live',
+    // Its rehearsal page; notFound() in production.
+    '/dev/super32-live-preview',
     '/blue',
     '/go',
     '/store',

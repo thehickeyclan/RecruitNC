@@ -98,6 +98,7 @@ export function isHomeState(state: string | null | undefined): boolean {
 const ASSOCIATIONS: Record<string, { public: string; independent?: string }> = {
   NC: { public: "NCHSAA", independent: "NCISA" },
   SC: { public: "SCHSL", independent: "SCISA" },
+  VA: { public: "VHSL", independent: "VISAA" },
 }
 
 /**

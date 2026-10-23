@@ -17,6 +17,7 @@ import { tocDisplayClass } from "@/components/toc/toc-theme"
 import { loadSalesData } from "@/lib/recruiting/sales-data"
 import { approvedTestimonials } from "@/lib/recruiting/testimonials"
 import { SCOUTING_REPORT_PRICES, formatPrice } from "@/lib/scouting-report-entitlement"
+import { RwMembershipPlans } from "@/components/recruiting/rw-membership-plans"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { BrandName } from "@/components/recruiting/brand-name"
 
@@ -117,13 +118,13 @@ export default async function CommandCenterSalesPage() {
             <span className="sm:hidden">One place to plan, find colleges, compare them and hear from coaches. Men&apos;s and women&apos;s wrestling, every division.</span>
             <span className="hidden sm:inline">Hundreds of college wrestling programs, each with its own rules, costs, roster and expectations, and most families are left to figure it out alone. Now there&apos;s one place to manage it: build your plan, discover colleges, compare your options, track coach interest and know what to do next. Men&apos;s and women&apos;s wrestling, every division.</span>
           </p>
-          {/* On recruitwrestlers.com there is no national price yet (Matt, 20 Oct 2026): NC United's offer stays NC United's. */}
+          {/* recruitwrestlers.com sells its own two memberships, billed by Guild Ventures (Matt, 22 Oct 2026). */}
           <p className="national-only">
             <span className="mt-6 flex items-baseline gap-2">
               <span className="text-5xl font-black">{price}</span>
-              <span className="text-lg text-white/60">/ month · memberships open at launch</span>
+              <span className="text-lg text-white/60">/ month · cancel anytime</span>
             </span>
-            <a href="/create-profile" className="mt-4 inline-block rounded-xl bg-[#A3E635] px-7 py-3.5 text-base font-black text-[#0B1426] hover:bg-[#BEF264]">Claim your free profile →</a>
+            <a href="/membership" className="mt-4 inline-block rounded-xl bg-[#A3E635] px-7 py-3.5 text-base font-black text-[#0B1426] hover:bg-[#BEF264]">Join the Command Center →</a>
           </p>
           <div className="ncu-only mt-6 flex items-baseline gap-2">
             <span className="text-5xl font-black">{price}</span>
@@ -372,22 +373,11 @@ export default async function CommandCenterSalesPage() {
         {/* One offer: the Command Center. The other plans are a link, not a second decision. */}
         <section className="py-10 sm:py-16">
           <div className="national-only">
-            <div className="mx-auto block max-w-xl rounded-3xl border-2 border-[#A3E635] bg-[#15243B] p-6 text-center sm:p-8">
-              <p className="text-xs font-black uppercase tracking-[0.3em] text-[#A3E635]">Two memberships</p>
-              <div className="mt-5 grid gap-3 text-left sm:grid-cols-2">
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-sm font-black uppercase tracking-wider text-white">Insider</p>
-                  <p className="mt-1 text-3xl font-black">{formatPrice(SCOUTING_REPORT_PRICES.subscription)}<span className="text-base font-semibold text-white/55"> / month</span></p>
-                  <p className="mt-2 text-sm text-white/70">Every class ranking, and which college programs viewed your profile.</p>
-                </div>
-                <div className="rounded-2xl border border-[#A3E635]/60 bg-[#A3E635]/[0.06] p-4">
-                  <p className="text-sm font-black uppercase tracking-wider text-[#A3E635]">Recruiting Command Center</p>
-                  <p className="mt-1 text-3xl font-black">{price}<span className="text-base font-semibold text-white/55"> / month</span></p>
-                  <p className="mt-2 text-sm text-white/70">Everything in Insider, plus the plan, every college, your list, coach messages and Scout.</p>
-                </div>
-              </div>
-              <p className="mt-5 text-sm text-white/70">Memberships open at launch. Claim your free profile now: college coaches can already find it.</p>
-              <a href="/create-profile" className="mt-6 block rounded-xl bg-[#A3E635] px-6 py-4 text-base font-black text-[#0B1426] hover:bg-[#BEF264]">Claim your free profile →</a>
+            <div className="block">
+              <RwMembershipPlans returnTo="/command-center" />
+              <p className="mt-6 text-center text-sm text-[#A8B3C5]">
+                Or <a href="/create-profile" className="text-[#A3E635] underline">claim your free profile</a>: college coaches can already find it.
+              </p>
             </div>
           </div>
           <div className="ncu-only mx-auto max-w-xl rounded-3xl border-2 p-6 text-center sm:p-8" style={{ borderColor: SKY, backgroundColor: "#0b1a33" }}>

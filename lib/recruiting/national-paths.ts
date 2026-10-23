@@ -11,6 +11,7 @@ export const NATIONAL_PATH_PREFIXES = [
   "/my-recruits",
   "/my-recruiting",
   "/command-center",
+  "/membership",
   "/prospects",
   "/athletes",
   "/view-profile",
@@ -33,6 +34,9 @@ export const NATIONAL_PATH_PREFIXES = [
   "/unsubscribe",
   "/api",
   "/dev",
+  // One admin, here (Matt, 22 Oct 2026). Community tools in it (Blue, store, TOC) still work; their
+  // public pages are NC United's and open on its address.
+  "/admin",
 ] as const
 
 export function isNationalPath(pathname: string): boolean {
@@ -56,7 +60,9 @@ export type StagedBrand = "guild" | "national"
 export function stagedBrandForHost(host: string | null | undefined): StagedBrand | null {
   const h = String(host ?? "").toLowerCase().split(":")[0]
   if (h === GUILD_RECRUITING_HOST) return "guild"
-  if (h === "recruitwrestlers.com" || h === "www.recruitwrestlers.com") return "national"
+  // next.recruitwrestlers.com: the new Vercel project's test address before www moves to it
+  // (docs/RECRUITWRESTLERS-VERCEL-SPLIT.md). Same brand, same pre-launch gate, never indexed.
+  if (h === "recruitwrestlers.com" || h === "www.recruitwrestlers.com" || h === "next.recruitwrestlers.com") return "national"
   return null
 }
 
@@ -67,9 +73,15 @@ export function isOpenWhileStaged(pathname: string): boolean {
     // athlete data. Every page behind it stays staff-only until launch.
     pathname === "/" ||
     pathname === "/robots.txt" ||
+    // The privacy policy is public: the home page links to it, the Chrome Web Store listing needs it
+    // (Matt, 22 Oct 2026), and it carries no athlete data.
+    pathname === "/privacy" ||
+    pathname === "/recruitwrestlers/privacy" ||
     pathname === "/guild-recruiting/coming-soon" ||
     pathname.startsWith("/auth/") ||
     pathname.startsWith("/api/auth/") ||
+    // Guild Ventures' Stripe webhook: Stripe has no session; the route verifies its signature.
+    pathname === "/api/webhooks/stripe-guild" ||
     pathname.startsWith("/_next/") ||
     pathname.startsWith("/guild/") ||
     (pathname.startsWith("/recruitwrestlers/") && /\.(png|jpe?g|svg|webp)$/.test(pathname))
