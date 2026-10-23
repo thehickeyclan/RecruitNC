@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { isVisibleState } from "@/lib/recruiting/brand"
+import { previewStatesForUser } from "@/lib/recruiting/state-preview"
 import { HOME_STATE, normalizeStateCode } from "@/lib/recruiting/states"
 import { fetchProspectDirectoryPage } from "@/lib/prospects-directory"
 import { lastCompetedLabel, loadLastCompeted } from "@/lib/prospect-last-competed"
@@ -29,13 +30,16 @@ export async function GET(request: NextRequest) {
      */
     const state = normalizeStateCode(searchParams.get("state")) ?? HOME_STATE
     let isAdmin = false
+    let preview: string[] = []
     if (state !== HOME_STATE) {
       const { data: auth } = await (await createClient()).auth.getUser()
       if (auth.user) {
         const { data: me } = await supabase.from("user_profiles").select("is_admin, role").eq("user_id", auth.user.id).maybeSingle()
         isAdmin = me?.is_admin === true || me?.role === "admin"
+        /* A coach invited to look at a state before it opens — see lib/recruiting/state-preview.ts. */
+        if (!isAdmin) preview = await previewStatesForUser(supabase, auth.user.id)
       }
-      if (!isVisibleState(state, isAdmin)) return NextResponse.json({ error: "That state is not open yet." }, { status: 404 })
+      if (!isVisibleState(state, isAdmin, preview)) return NextResponse.json({ error: "That state is not open yet." }, { status: 404 })
     }
 
     const minYear = minYearParam ? Number.parseInt(minYearParam, 10) : null

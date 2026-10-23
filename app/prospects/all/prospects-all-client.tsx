@@ -267,7 +267,32 @@ export default function ProspectsAllClient({
   // On a brand address (Guild Recruiting) the picker names states plainly; RecruitNC is NC United's name.
   const [brandHost, setBrandHost] = useState(false)
   useEffect(() => setBrandHost(document.documentElement.hasAttribute("data-host")), [])
-  const stateChoices = visibleStates(viewerProfile?.is_admin === true || viewerProfile?.role === "admin")
+  /*
+   * States this viewer was invited to look at before they open, fetched on their own because the
+   * column is new - see app/api/recruiting/preview-states. An empty list is what everybody had
+   * before, so the picker is unchanged for them.
+   */
+  const [previewStates, setPreviewStates] = useState<string[]>([])
+  useEffect(() => {
+    if (!viewerId) {
+      setPreviewStates([])
+      return
+    }
+    let cancelled = false
+    fetch("/api/recruiting/preview-states", { credentials: "include", cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled && Array.isArray(d?.states)) setPreviewStates(d.states as string[])
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [viewerId])
+  const stateChoices = visibleStates(
+    viewerProfile?.is_admin === true || viewerProfile?.role === "admin",
+    previewStates,
+  )
   /*
    * A link can open the list on a state (?state=SC, from a state page such as wrestlingguild.com/recruit/sc).
    * Only a state this viewer may open is honoured; anything else stays on North Carolina.
