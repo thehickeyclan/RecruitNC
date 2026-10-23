@@ -29,6 +29,7 @@ import collegeMapData from "@/lib/college-programs/programs-2026-27.json"
 import type { CollegeMapSchool } from "@/lib/college-programs/types"
 import { loadPlatformStats } from "@/lib/platform-stats"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { super32HomeBanner } from "@/lib/super32-live/home-banner"
 
 export const metadata = shareMetadata({
   title: "NC United Wrestling",
@@ -135,6 +136,31 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-rnc-ink">
+      {/* Super 32 Command Center (Matt, 23 Oct 2026): leads the homepage through the weekend, a
+          results line for three days after, then gone (lib/super32-live/home-banner.ts). */}
+      {super32HomeBanner() && (
+        <section className="border-b-2 border-[#D3B574] bg-gradient-to-r from-[#0B1D3A] via-[#13294B] to-[#0B1D3A]">
+          <div className="container mx-auto px-4">
+            <Link href="/super32/live" className="group flex items-center justify-between gap-3 py-3 sm:py-4">
+              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                <span className="inline-flex shrink-0 items-center rounded-full bg-[#CC0000] px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white sm:px-2.5 sm:py-1 sm:text-[11px]">
+                  {super32HomeBanner() === "live" ? "Oct 24–25" : "Final"}
+                </span>
+                <p className="min-w-0 text-sm text-white sm:text-base">
+                  <span className="font-extrabold">Super 32 Command Center</span>
+                  <span className="hidden text-white/75 sm:inline">
+                    {super32HomeBanner() === "live" ? " · every NC wrestler, Huge & Big wins, round recaps" : " · how North Carolina did in Greensboro"}
+                  </span>
+                </p>
+              </div>
+              <span className="flex shrink-0 items-center gap-1 text-sm font-semibold text-[#D3B574] transition-colors group-hover:text-white">
+                {super32HomeBanner() === "live" ? "Follow NC" : "Results"} <ArrowRight className="h-4 w-4" />
+              </span>
+            </Link>
+          </div>
+        </section>
+      )}
+
       {/* The Tournament of Champions. On sale it leads - a ticket is on a clock. Once wrestled, it
           is one line: the results are worth a link, not the top of a recruiting homepage weeks
           later (Matt, 9 October 2026). Before sales open, the field announcement strip. */}

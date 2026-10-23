@@ -66,25 +66,25 @@ const seeds = (seed: number, name = "Jake Opp", state = "PA"): SeedRow[] => [{ g
 const ctx = (s: SeedRow[] = [], credentials: Credential[] = []): TierContext => ({ seeds: s, credentials, seedsFinal: true })
 
 describe("win tiers", () => {
-  it("a #1-4 seed is HUGE, #5-16 BIG, #17-32 a plain win that still counts as seeded", () => {
-    expect(tierWin(bout(), ctx(seeds(4))).tier).toBe("huge")
-    expect(tierWin(bout(), ctx(seeds(9))).tier).toBe("big")
-    const deep = tierWin(bout(), ctx(seeds(24)))
-    expect(deep.tier).toBe("win")
-    expect(deep.opponentSeed).toBe(24)
+  it("a #1-12 seed is HUGE, #13-32 BIG (Matt, 23 Oct)", () => {
+    expect(tierWin(bout(), ctx(seeds(1))).tier).toBe("huge")
+    expect(tierWin(bout(), ctx(seeds(12))).tier).toBe("huge")
+    expect(tierWin(bout(), ctx(seeds(13))).tier).toBe("big")
+    const deep = tierWin(bout(), ctx(seeds(32)))
+    expect([deep.tier, deep.opponentSeed]).toEqual(["big", 32])
   })
 
-  it("an unseeded NC kid over a #9 seed is an upset BIG win, never HUGE", () => {
+  it("an unseeded NC kid over a #9 seed is an upset HUGE win", () => {
     const w = tierWin(bout(), ctx(seeds(9)))
-    expect([w.tier, w.upset]).toEqual(["big", true])
+    expect([w.tier, w.upset]).toEqual(["huge", true])
   })
 
-  it("top 10 nationally is HUGE, 11-30 BIG, 31+ nothing", () => {
+  it("only seeds tier a win; an unseeded opponent's rank is listed as context", () => {
     const cred = (rank: number): Credential => ({ name: "Jake Opp", state: "PA", gender: "boys", kind: "national_rank", rank, label: `#${rank} nationally (SI)` })
-    expect(tierWin(bout(), ctx([], [cred(4)])).reasons).toEqual(["#4 nationally (SI)"])
-    expect(tierWin(bout(), ctx([], [cred(4)])).tier).toBe("huge")
-    expect(tierWin(bout(), ctx([], [cred(22)])).tier).toBe("big")
-    expect(tierWin(bout(), ctx([], [cred(38)])).tier).toBe("win")
+    const w = tierWin(bout(), ctx([], [cred(4)]))
+    expect([w.tier, w.reasons]).toEqual(["win", ["#4 nationally (SI)"]])
+    expect(tierWin(bout(), ctx(seeds(20), [cred(4)])).reasons).toEqual(["#20 seed", "#4 nationally (SI)"])
+    expect(tierWin(bout(), ctx([], [cred(38)])).reasons).toEqual([])
   })
 
   it("never tiers a forfeit, and ignores a credential held by someone in another state", () => {

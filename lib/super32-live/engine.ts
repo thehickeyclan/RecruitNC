@@ -9,11 +9,11 @@
  * bracket is the largest at a boys' weight, and a girls' weight with no seeds is left out rather
  * than guessed (it surfaces in `unresolved`).
  *
- * Tiers follow the PRD exactly (Matt, 22 Oct 2026):
- * - HUGE: opponent top 10 nationally at a weight, top 50 on a Big Board / P4P list, a #1-4 seed,
- *   or a 2025 Super 32, NHSCA or Fargo champion.
- * - BIG: a #5-16 seed, nationally ranked 11-30, a 2025 Super 32 / NHSCA / Fargo All-American, or
- *   a 2026 state champion from another state.
+ * Tiers (Matt, 23 Oct 2026, replacing the 22 Oct draft):
+ * - HUGE: a win over a #1-12 seed.
+ * - BIG: a win over any other seed (#13-32).
+ * Seeds alone decide. An unseeded opponent's rankings and titles are still listed beside the
+ * match as context, but they never tier the win.
  * - A forfeit, medical forfeit, default or DQ is never tiered. Ranks past 30 are not ranks.
  * - Upset is a tag, never a tier: an unseeded wrestler beats a seed, or a seed beats one at
  *   least 4 places higher.
@@ -254,26 +254,26 @@ export function tierWin(bout: LiveBout, ctx: TierContext): TieredWin {
   const huge: string[] = []
   const big: string[] = []
   if (opponentSeed !== null) {
-    if (opponentSeed <= 4) huge.push(`#${opponentSeed} seed`)
-    else if (opponentSeed <= 16) big.push(`#${opponentSeed} seed`)
+    if (opponentSeed <= 12) huge.push(`#${opponentSeed} seed`)
+    else big.push(`#${opponentSeed} seed`)
   }
   const creds = ctx.credentials.filter(
     (c) => (!c.gender || c.gender === bout.gender) && samePerson({ name: bout.loser, state: bout.loserTeam }, { name: c.name, state: c.state }),
   )
+  // Context only: listed after the seed, never a tier.
+  const context: string[] = []
   for (const c of creds) {
-    if (c.kind === "national_rank" && c.rank) {
-      if (c.rank <= 10) huge.push(c.label)
-      else if (c.rank <= 30) big.push(c.label)
-    } else if (c.kind === "board_rank" && c.rank && c.rank <= 50) huge.push(c.label)
-    else if (c.kind === "event_champion") huge.push(c.label)
-    else if (c.kind === "event_all_american" || c.kind === "state_champion") big.push(c.label)
+    if (c.kind === "national_rank" && c.rank && c.rank <= 30) context.push(c.label)
+    else if (c.kind === "board_rank" && c.rank && c.rank <= 50) context.push(c.label)
+    else if (c.kind === "event_champion" || c.kind === "event_all_american" || c.kind === "state_champion") context.push(c.label)
   }
   const rankOf = (s: string) => Number(s.match(/#(\d+)/)?.[1] ?? 99)
   huge.sort((a, b) => rankOf(a) - rankOf(b))
   big.sort((a, b) => rankOf(a) - rankOf(b))
   const tier: Tier = huge.length ? "huge" : big.length ? "big" : "win"
   const upset = opponentSeed !== null && (winnerSeed === null || winnerSeed - opponentSeed >= 4)
-  return { ...base, tier, upset, reasons: [...huge, ...big] }
+  context.sort((a, b) => rankOf(a) - rankOf(b))
+  return { ...base, tier, upset, reasons: [...huge, ...big, ...context] }
 }
 
 // ---------------------------------------------------------------------------------------------
