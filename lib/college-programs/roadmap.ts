@@ -31,7 +31,7 @@ export type PlanInput = {
   listStatuses: CollegeListStatus[]
   /** The level of each saved school ("D1", "NAIA"), so a list that is all one level can be named. */
   listLevels?: string[]
-  /** Saved schools that have a questionnaire and are still only "interested". */
+  /** Saved colleges whose interest form is not marked done, whether or not we hold its link. */
   questionnairesWaiting: number
   scheduleCount: number
 }
@@ -98,9 +98,9 @@ export function planSteps(input: PlanInput): PlanStep[] {
       key: "questionnaires",
       title:
         input.questionnairesWaiting > 0
-          ? `Fill out ${input.questionnairesWaiting} recruiting questionnaire${input.questionnairesWaiting === 1 ? "" : "s"}`
-          : "Questionnaires are sent",
-      detail: "It puts the wrestler in the program's own database. Do it before you email, so you can say you have.",
+          ? `Fill out ${input.questionnairesWaiting} interest form${input.questionnairesWaiting === 1 ? "" : "s"}`
+          : "Interest forms are in",
+      detail: "Each one puts the wrestler in that program's recruiting database. Mark each one when it is in.",
       done: input.questionnairesWaiting === 0,
       action: input.questionnairesWaiting > 0 ? { kind: "link", href: "/my-recruiting/questionnaires" } : null,
     })
