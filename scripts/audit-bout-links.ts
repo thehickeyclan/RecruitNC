@@ -36,7 +36,13 @@ const UNLINK = process.argv.includes("--unlink")
 const GENDER = process.argv.find((a) => a.startsWith("--gender="))?.split("=")[1] // limit to "Female" or "Male"
 
 /** "athlete name|state": a person has confirmed this out-of-state entrant is our wrestler. */
-const REVIEWED = new Set<string>([])
+const REVIEWED = new Set<string>([
+  // 23 Oct 2026. A national entry's state is the club or registration choice, not the wrestler's
+  // identity ([[school-state-is-platform-state]]): these are our wrestlers, weights checked.
+  "Jackson D'Ettore|SC", // Charlotte Catholic, wrestles for an SC club; weights 106-120 match
+  "Joshua Brown|SC", // Jesse Carson, Charlotte-area kid on an SC club
+  "Brieon Mayfield|NA", // "NA" is not a state; 215 matches him
+])
 
 /** Waiting on a person's call (8 October 2026): rare names at the weight they wrestle here. Reported, never unlinked. */
 const HELD = new Set<string>([
