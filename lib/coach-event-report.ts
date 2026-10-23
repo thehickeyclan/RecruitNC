@@ -113,6 +113,15 @@ export const REPORT_EVENTS: Record<string, ReportEvent> = {
     ],
     profileSection: { table: "super32", year: 2025 },
   },
+  // Written by the Command Center on every publish (lib/super32-live/sync.ts).
+  "super32-2026": {
+    key: "super32-2026",
+    name: "2026 Super 32",
+    date: "2026-10-24",
+    format: "single-bracket",
+    sources: [{ eventKey: "super32-2026", sourceFiles: ["super32-2026-live.csv"], placementsCount: true }],
+    profileSection: { table: "super32", year: 2026 },
+  },
 }
 
 /* ------------------------------------------------------------------ *

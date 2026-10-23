@@ -211,7 +211,7 @@ function recapForStore(r: Recap, at: string, gender: Gender | "all"): SnapshotRe
 
 type Upload = { id: string; content: string; seeds_final: boolean; created_at: string }
 
-async function latestUpload(supabase: SupabaseClient, eventKey: string, kind: "flo" | "seeds"): Promise<Upload | null> {
+export async function latestUpload(supabase: SupabaseClient, eventKey: string, kind: "flo" | "seeds"): Promise<Upload | null> {
   const { data } = await supabase
     .from("super32_live_uploads").select("id, content, seeds_final, created_at")
     .eq("event_key", eventKey).eq("kind", kind).order("created_at", { ascending: false }).limit(1)

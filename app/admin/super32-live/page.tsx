@@ -39,7 +39,7 @@ export default function Super32LiveAdmin() {
     const j = await r.json().catch(() => ({}))
     setBusy(null)
     if (!r.ok) setMsg(j.error ?? "Failed")
-    else setMsg(body.action === "upload" || body.action === "rebuild" ? `Snapshot built. ${j.alertsQueued ?? 0} new alerts queued.` : body.action === "send" ? `Sent to ${j.sent} devices.` : "Done.")
+    else setMsg(body.action === "upload" || body.action === "rebuild" ? `Snapshot built. ${j.alertsQueued ?? 0} new alerts queued.` : body.action === "send" ? `Sent to ${j.sent} devices.` : body.action === "publish" ? (j.syncError ? `Published. Profiles not updated: ${j.syncError}` : j.synced ? `Published. Profiles updated: ${j.synced.results} NC records, ${j.synced.bouts} bout rows.` : "Published.") : "Done.")
     await load()
   }
 
