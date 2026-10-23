@@ -144,9 +144,10 @@ async function loadNcAthletes(supabase: SupabaseClient, eventYear: number): Prom
       .from("athletes")
       .select("id, name, wrestling_name, photourl, highschool, graduationyear, gender")
       .eq("is_nc_athlete", true)
-      // Super 32 opens a season: seniors are the class of year+1, freshmen year+4.
-      .gte("graduationyear", eventYear + 1)
-      .lte("graduationyear", eventYear + 4)
+      // Super 32 opens a season: seniors are the class of year+1, freshmen year+4. A profile with
+      // no class year at all (Lauren Samuel, 2025 Super 32 7th) can still be the wrestler; it
+      // links only when it is the single exact name-and-gender match, like any other.
+      .or(`graduationyear.is.null,and(graduationyear.gte.${eventYear + 1},graduationyear.lte.${eventYear + 4})`)
       .order("id")
       .range(from, from + 999)
     if (error || !data?.length) break
