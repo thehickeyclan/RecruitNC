@@ -136,7 +136,7 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-rnc-ink">
-      {/* Super 32 Command Center (Matt, 23 Oct 2026): leads the homepage through the weekend, a
+      {/* Super 32 HQ (Matt, 23 Oct 2026): leads the homepage through the weekend, a
           results line for three days after, then gone (lib/super32-live/home-banner.ts). */}
       {super32HomeBanner() && (
         <section className="border-b-2 border-[#D3B574] bg-gradient-to-r from-[#0B1D3A] via-[#13294B] to-[#0B1D3A]">
@@ -147,7 +147,7 @@ export default async function HomePage() {
                   {super32HomeBanner() === "live" ? "Oct 24–25" : "Final"}
                 </span>
                 <p className="min-w-0 text-sm text-white sm:text-base">
-                  <span className="font-extrabold">Super 32 Command Center</span>
+                  <span className="font-extrabold">Super 32 HQ</span>
                   <span className="hidden text-white/75 sm:inline">
                     {super32HomeBanner() === "live" ? " · every NC wrestler, Huge & Big wins, round recaps" : " · how North Carolina did in Greensboro"}
                   </span>

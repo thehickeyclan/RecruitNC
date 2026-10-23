@@ -181,8 +181,8 @@ export default function Super32LiveAdmin() {
       <header className="border-b border-[#1f3360] bg-[radial-gradient(ellipse_at_70%_0%,#1d3a78_0%,#0a1630_60%)]">
         <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-3 px-4 py-5">
           <div>
-            <div className={`${H} text-sm text-[#e5372c]`}>Super 32 · Admin</div>
-            <h1 className={`${H} text-4xl leading-none md:text-5xl`}>Command Center</h1>
+            <div className={`${H} text-sm text-[#e5372c]`}>Admin</div>
+            <h1 className={`${H} text-4xl leading-none md:text-5xl`}>Super 32 HQ</h1>
           </div>
           <div className="flex items-center gap-2">
             <Btn tone="ghost" onClick={() => void load()}>Refresh</Btn>
@@ -314,7 +314,7 @@ export default function Super32LiveAdmin() {
                 <Btn tone="ghost" disabled={!!busy || !title.trim() || !body.trim()} onClick={() => void post({ action: "test", title, body }, "test")}>Send test to my phone</Btn>
                 <Btn disabled={!!busy || !title.trim() || !body.trim() || !s?.pushEnabled} onClick={() => void sendCustom()}>Send to everyone</Btn>
               </div>
-              <p className="text-xs text-[#8195bd]">Taps open the Command Center. Everyone = {s?.audience ?? "?"} phones with Results alerts on. The test goes to your phone only and works even with push off.</p>
+              <p className="text-xs text-[#8195bd]">Taps open Super 32 HQ. Everyone = {s?.audience ?? "?"} phones with Results alerts on. The test goes to your phone only and works even with push off.</p>
             </div>
           </Card>
         </div>

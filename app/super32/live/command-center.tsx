@@ -25,8 +25,8 @@ type G = "all" | "boys" | "girls"
 
 /** A designed banner per division replaces the header when that tab is on. Add "all"/"boys" when they exist. */
 const BANNERS: Partial<Record<G, { src: string; alt: string }>> = {
-  boys: { src: "/images/super32/command-center-boys.jpg", alt: "NC United Super 32 Command Center: Boys" },
-  girls: { src: "/images/super32/command-center-girls.jpg", alt: "NC United Super 32 Command Center: Girls" },
+  boys: { src: "/images/super32/command-center-boys.jpg", alt: "NC United Super 32 HQ: Boys" },
+  girls: { src: "/images/super32/command-center-girls.jpg", alt: "NC United Super 32 HQ: Girls" },
 }
 
 /** 2025 finals from the 2025 Flo export, same engine and NC rule as 2026 (Bouzakis out). */
@@ -382,8 +382,8 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
       <header className="border-b border-[#1f3360] bg-[radial-gradient(ellipse_at_70%_0%,#1d3a78_0%,#0a1630_60%)]">
         <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-4 px-4 pb-5 pt-6 md:pt-10">
           <div>
-            <div className={`${H} text-lg text-[#e5372c] md:text-2xl`}>Super 32</div>
-            <h1 className={`${H} text-5xl leading-none text-white md:text-7xl`}>Command Center</h1>
+            <div className={`${H} text-lg text-[#e5372c] md:text-2xl`}>North Carolina</div>
+            <h1 className={`${H} text-5xl leading-none text-white md:text-7xl`}>Super 32 HQ</h1>
             <div className={`${H} mt-2 text-sm text-[#c9d4ea] md:text-base`}>North Carolina wrestling. All of it.</div>
           </div>
           <div className="text-xs uppercase tracking-wider text-[#c9d4ea] md:text-right">
@@ -419,7 +419,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
 
       <main className="mx-auto max-w-7xl space-y-5 px-4 py-5">
         {!snap || !sb ? (
-          <Empty>The Command Center opens when Super 32 brackets are set. Results post after every round.</Empty>
+          <Empty>Super 32 HQ opens when the brackets are set. Results post after every round.</Empty>
         ) : (
           <>
             <Section title="NC State Scoreboard">
