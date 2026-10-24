@@ -57,6 +57,16 @@ const INCLUDE_GRADUATED = process.argv.includes("--include-graduated")
  * podium with no year are seniors who have left). Hold them until the year is known.
  */
 const ONLY_KNOWN = process.argv.includes("--only-with-class-year")
+/*
+ * --link-only attaches placements to profiles that already exist and creates nothing.
+ *
+ * Re-importing a slice gives its rows new ids with a null `athlete_id`, so wrestlers who already
+ * had profiles stop reaching them: reloading Virginia's 2026 girls with their 110 non-placing
+ * entrants dropped 46 placers out of the readiness gate, none of whom had changed. Re-linking is
+ * not minting, and `--only-with-class-year` cannot do it — it reads the year on the placer ROW,
+ * which a fresh import often leaves blank even when the profile has carried one for days.
+ */
+const LINK_ONLY = process.argv.includes("--link-only")
 const STATE = normalizeState(arg("state"))
 const SEASON = Number(arg("season", "2026"))
 const MAX_PLACE = Number(arg("max-place", "8"))
@@ -169,6 +179,7 @@ async function main() {
       ambiguous.push(`${r.wrestler_name} (${school}) vs ${sameName.map((a) => `${a.name} (${a.highschool ?? "no school"}, ${a.state ?? "no state"})`).join(" / ")}`)
       continue
     }
+    if (LINK_ONLY) continue
     const name = title(String(r.wrestler_name).trim())
     const parts = name.split(/\s+/)
     toCreate.push({
