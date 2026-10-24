@@ -16,6 +16,8 @@ import { buildStories, type Story } from "@/lib/super32-live/stories"
 import { roundProgress } from "@/lib/super32-live/rounds"
 
 const APP_STORE_URL = "https://apps.apple.com/app/id6803202791"
+/** Official brackets live on Flo; linked, never copied, so they are always current. */
+const FLO_BRACKETS_URL = "https://www.flowrestling.org/nextgen/events/15966539/brackets"
 const ARTICLE = {
   href: "/news/super32-2026-what-good-looks-like",
   title: "What Will It Take? Defining Success for North Carolina at Super 32",
@@ -356,7 +358,10 @@ function WrestlerSheet({ e, onClose, starred, onStar }: { e: SnapshotEntrant; on
             ))}
           </ul>
         )}
-        {e.athleteId && <Link href={`/athletes/${e.athleteId}`} className="mt-5 block rounded-lg bg-[#d4af55] py-2.5 text-center font-semibold text-[#0b1730]">Full profile</Link>}
+        <div className="mt-5 grid gap-2 sm:grid-cols-2">
+          {e.athleteId && <Link href={`/athletes/${e.athleteId}`} className="block rounded-lg bg-[#d4af55] py-2.5 text-center font-semibold text-[#0b1730]">Full profile</Link>}
+          <a href={FLO_BRACKETS_URL} target="_blank" rel="noopener noreferrer" className="block rounded-lg border border-[#d4af55]/60 py-2.5 text-center font-semibold text-[#d4af55]">{e.weight ? `${e.gender === "girls" ? "Girls " : ""}${e.weight} bracket on Flo ↗` : "Brackets on Flo ↗"}</a>
+        </div>
       </div>
     </div>
   )
@@ -476,6 +481,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                 <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />{watching.toLocaleString()} watching now
               </span>
             )}
+            {year === "2026" && <a href={FLO_BRACKETS_URL} target="_blank" rel="noopener noreferrer" className="rounded-full border border-[#d4af55]/50 px-2.5 py-1 font-semibold text-[#d4af55] hover:bg-[#d4af55]/10">Brackets on Flo ↗</a>}
             <span className="rounded-full bg-[#13244a] px-2.5 py-1 font-medium text-[#c9d4ea]">
               {year === "2025" && !initial ? "2025 final results" : snap?.publishedAt ? <>Updated {new Date(snap.publishedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}{updatedAgo ? <span className="text-[#8195bd]"> · {updatedAgo}</span> : null}</> : "Results post as matches finish"}
             </span>
