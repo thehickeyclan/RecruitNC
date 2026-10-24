@@ -1,4 +1,4 @@
-/** Super 32 HQ auto-update: pulls Flo's results feed every 2 minutes during the event. */
+/** Super 32 HQ auto-update: pulls Flo's results feed every 5 minutes during the event. */
 import { NextResponse, type NextRequest } from "next/server"
 import { revalidateTag } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -18,9 +18,8 @@ export async function GET(request: NextRequest) {
   if (scheduledJobsOff()) return skippedJob()
   if (!authorized(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   if (!pullWindowOpen()) return NextResponse.json({ status: "outside the event window" })
-  // Paused 24 Oct 5:20pm ET: rebuilds every 2 minutes overloaded the Nano database. Resumes once
-  // credentials are cached instead of re-read on every build.
-  if (process.env.SUPER32_AUTO_PULL !== "1") return NextResponse.json({ status: "paused" })
+  // Kill switch: SUPER32_AUTO_PULL=off stops it without a code change (24 Oct overload).
+  if (process.env.SUPER32_AUTO_PULL === "off") return NextResponse.json({ status: "paused" })
   try {
     const out = await pullAndPublish(createAdminClient())
     if (out.status === "published") revalidateTag("super32-live")
