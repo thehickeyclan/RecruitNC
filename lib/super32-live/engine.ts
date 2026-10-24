@@ -105,7 +105,24 @@ export function boutKey(r: Pick<Super32Row, "weight" | "round" | "winner" | "win
 }
 
 export function parseFloExport(text: string): Super32Row[] {
-  return parseSuper32Csv(text).filter((r) => r.winner)
+  return dedupeBouts(parseSuper32Csv(text).filter((r) => r.winner))
+}
+
+/**
+ * One row per bout. Flo exports can repeat a match (re-exports, a corrected score posted as a new
+ * row), and a repeated row would count a win twice and fire a second alert. Same weight, same round
+ * and the same two wrestlers (either way round) is the same bout; the last row wins, since Flo
+ * appends corrections, including a reversed result.
+ */
+export function dedupeBouts(rows: Super32Row[]): Super32Row[] {
+  const byKey = new Map<string, Super32Row>()
+  for (const r of rows) {
+    const pair = [norm(r.winner), norm(r.loser || "")].sort().join("~")
+    const key = `${r.weight.trim()}|${r.round.trim().toLowerCase()}|${pair}`
+    byKey.delete(key)
+    byKey.set(key, r)
+  }
+  return [...byKey.values()]
 }
 
 /** Same person: names agree (aliases, nicknames, initials handled) and states agree when both are known. */

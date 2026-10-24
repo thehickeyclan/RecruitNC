@@ -291,14 +291,36 @@ function useAgo(iso: string | null | undefined) {
 
 function useStars() {
   const [ids, setIds] = useState<Set<string>>(new Set())
+  const [signedIn, setSignedIn] = useState<boolean | null>(null)
+  const sync = (body: { add?: string[]; remove?: string[] }) => {
+    fetch("/api/super32-live/stars", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }).catch(() => {})
+  }
   useEffect(() => {
-    try { setIds(new Set(JSON.parse(localStorage.getItem(LOCAL_STARS) ?? "[]"))) } catch { /* private mode */ }
+    let local: string[] = []
+    try { local = JSON.parse(localStorage.getItem(LOCAL_STARS) ?? "[]") } catch { /* private mode */ }
+    setIds(new Set(local))
+    // Signed in: the account's list, with this device's stars merged in, so desktop and app match.
+    fetch("/api/super32-live/stars", { cache: "no-store" })
+      .then(async (r) => {
+        if (r.status === 401) { setSignedIn(false); return }
+        const j = (await r.json()) as { keys?: string[] }
+        const server = new Set(j.keys ?? [])
+        const missing = local.filter((k) => !server.has(k))
+        if (missing.length) sync({ add: missing })
+        const all = new Set([...server, ...local])
+        setSignedIn(true)
+        setIds(all)
+        try { localStorage.setItem(LOCAL_STARS, JSON.stringify([...all])) } catch { /* private mode */ }
+      })
+      .catch(() => setSignedIn(false))
   }, [])
   const toggle = (key: string) => {
     setIds((cur) => {
       const next = new Set(cur)
-      if (next.has(key)) next.delete(key); else next.add(key)
+      const on = !next.has(key)
+      if (on) next.add(key); else next.delete(key)
       try { localStorage.setItem(LOCAL_STARS, JSON.stringify([...next])) } catch { /* private mode */ }
+      if (signedIn) sync(on ? { add: [key] } : { remove: [key] })
       return next
     })
   }
@@ -308,10 +330,11 @@ function useStars() {
     setIds((cur) => {
       const next = new Set([...cur, ...keys])
       try { localStorage.setItem(LOCAL_STARS, JSON.stringify([...next])) } catch { /* private mode */ }
+      if (signedIn) sync({ add: keys })
       return next
     })
   }
-  return { ids, toggle, addMany }
+  return { ids, toggle, addMany, signedIn }
 }
 
 /** A star's key: the wrestler's bracket line (division, weight, name), the same on every upload. */
@@ -614,7 +637,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                     <div className="text-4xl text-[#d4af55]">☆</div>
                     <div className={`${H} mt-2 text-2xl text-white`}>Build your Super 32 list</div>
                     <p className="mx-auto mt-2 max-w-sm text-sm text-[#c9d4ea]">Tap the <span className="text-[#d4af55]">☆</span> next to any NC wrestler in the list to follow them here, with their record and results all weekend.</p>
-                    <p className="mx-auto mt-2 max-w-sm text-xs text-[#8195bd]">Your list is saved on this phone or computer for the weekend.</p>
+                    <p className="mx-auto mt-2 max-w-sm text-xs text-[#8195bd]">{stars.signedIn ? "Saved to your NC United account, so it is the same on your phone, computer and in the app." : "Saved on this device. Sign in to see your list everywhere, including the app."}</p>
                   </div>
                 )}
               </Section>}
