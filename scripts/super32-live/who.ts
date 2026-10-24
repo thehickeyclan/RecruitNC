@@ -22,9 +22,14 @@ async function main() {
   const nat = await c.query(`select year, event_name, weight_class, round, athlete_name, athlete_club, win, opponent_name, opponent_club, win_type, score from other_tournament_bouts
     where (athlete_name ilike any($1)) and not coalesce(is_bye,false) and source_file is distinct from 'super32-2026-live.csv' order by event_date nulls last, year`, [pats])
   for (const r of nat.rows) console.log("NAT", r.year, r.event_name, r.weight_class, r.round, r.athlete_club ?? "", r.win ? "W" : "L", r.opponent_name, r.opponent_club ?? "", r.win_type ?? "", r.score ?? "")
-  const pl = await c.query(`select season, state, association, classification, weight, place, school_raw, grade, grad_year from state_tournament_placers
-    where wrestler_name ilike any($1) ${st ? "and state = $2" : ""} order by season`, st ? [pats, st] : [pats])
-  for (const r of pl.rows) console.log("STATE", r.season, r.state, r.association, r.classification, r.weight, r.place ? `place ${r.place}` : "qualified", r.school_raw ?? "", r.grade ? `gr ${r.grade}` : "", r.grad_year ?? "")
+  // State rows spell first names loosely ("Vlad", "Vladmimir"), so with a state given, match the surname alone.
+  const surname = `%${parts.at(-1)} %`, surnameLast = `% ${parts.at(-1)}`
+  const pl = st
+    ? await c.query(`select season, state, association, classification, weight, place, school_raw, grade, grad_year, wrestler_name from state_tournament_placers
+        where state = $1 and (wrestler_name ilike $2 or wrestler_name ilike $3 or wrestler_name ilike any($4)) order by season`, [st, surnameLast, surname, pats])
+    : await c.query(`select season, state, association, classification, weight, place, school_raw, grade, grad_year, wrestler_name from state_tournament_placers
+        where wrestler_name ilike any($1) order by season`, [pats])
+  for (const r of pl.rows) console.log("STATE", r.wrestler_name, "·", r.season, r.state, r.association, r.classification, r.weight, r.place ? `place ${r.place}` : "qualified", r.school_raw ?? "", r.grade ? `gr ${r.grade}` : "", r.grad_year ?? "")
   const ath = await c.query(`select id, name, highschool, graduationyear from athletes where name ilike any($1)`, [pats])
   for (const r of ath.rows) console.log("PROFILE", r.id, r.name, r.highschool ?? "", r.graduationyear ?? "")
   await c.end()

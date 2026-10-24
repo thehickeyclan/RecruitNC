@@ -29,7 +29,7 @@ async function main() {
   }
   console.log(lines.join("\n"))
   // Raw cross-check: NC on either side of a real bout, straight from the file.
-  const ncRaw = real.filter((r) => r.winnerTeam.trim() === "NC" || r.loserTeam.trim() === "NC").length
-  console.log(`raw NC bouts in file ${ncRaw} · engine NC bouts ${lines.length}${ncRaw !== lines.length ? "  <-- MISMATCH (excluded or unmatched NC names)" : ""}`)
+  const ncRaw = real.reduce((n, r) => n + (r.winnerTeam.trim() === "NC" ? 1 : 0) + (r.loserTeam.trim() === "NC" ? 1 : 0), 0)
+  console.log(`raw NC sides in file (NC v NC counts twice) ${ncRaw} · engine NC bouts ${lines.length}${ncRaw !== lines.length ? "  <-- MISMATCH (excluded or unmatched NC names)" : ""}`)
 }
 main().catch((e) => { console.error(e); process.exit(1) })
