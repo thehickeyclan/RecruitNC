@@ -39,8 +39,8 @@ export type Credential = {
   name: string
   state: string | null
   gender: Gender | null
-  kind: "national_rank" | "board_rank" | "event_champion" | "event_all_american" | "state_champion"
-  /** National rank (weight lists) or board position (Big Board / P4P). */
+  kind: "national_rank" | "board_rank" | "event_champion" | "event_all_american" | "state_champion" | "state_placer"
+  /** National rank (weight lists), board position (Big Board / P4P) or state place. */
   rank?: number
   /** Shown in copy: "#4 nationally (SI)", "2025 Fargo champion". */
   label: string
@@ -281,19 +281,22 @@ export function tierWin(bout: LiveBout, ctx: TierContext): TieredWin {
     (c) => (!c.gender || c.gender === bout.gender) && samePerson({ name: bout.loser, state: bout.loserTeam }, { name: c.name, state: c.state }),
   )
   // Context only: listed after the seed, never a tier.
-  const context: string[] = []
+  const context: Array<{ label: string; w: number }> = []
   for (const c of creds) {
-    if (c.kind === "national_rank" && c.rank && c.rank <= 30) context.push(c.label)
-    else if (c.kind === "board_rank" && c.rank && c.rank <= 50) context.push(c.label)
-    else if (c.kind === "event_champion" || c.kind === "event_all_american" || c.kind === "state_champion") context.push(c.label)
+    if (c.kind === "national_rank" && c.rank && c.rank <= 30) context.push({ label: c.label, w: c.rank })
+    else if (c.kind === "board_rank" && c.rank && c.rank <= 50) context.push({ label: c.label, w: 30 + c.rank })
+    else if (c.kind === "event_champion") context.push({ label: c.label, w: 100 })
+    else if (c.kind === "state_champion") context.push({ label: c.label, w: 110 })
+    else if (c.kind === "event_all_american") context.push({ label: c.label, w: 120 })
+    else if (c.kind === "state_placer") context.push({ label: c.label, w: 130 + (c.rank ?? 8) })
   }
   const rankOf = (s: string) => Number(s.match(/#(\d+)/)?.[1] ?? 99)
   huge.sort((a, b) => rankOf(a) - rankOf(b))
   big.sort((a, b) => rankOf(a) - rankOf(b))
   const tier: Tier = huge.length ? "huge" : big.length ? "big" : "win"
   const upset = opponentSeed !== null && (winnerSeed === null || winnerSeed - opponentSeed >= 4)
-  context.sort((a, b) => rankOf(a) - rankOf(b))
-  return { ...base, tier, upset, reasons: [...huge, ...big, ...context] }
+  const ctxLabels = [...new Set(context.sort((a, b) => a.w - b.w).map((x) => x.label))]
+  return { ...base, tier, upset, reasons: [...huge, ...big, ...ctxLabels] }
 }
 
 // ---------------------------------------------------------------------------------------------

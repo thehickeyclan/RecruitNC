@@ -235,16 +235,18 @@ function WinRow({ f, onOpen }: { f: FeedItem; onOpen: () => void }) {
   )
 }
 
-/** The wrestler's best win and the credential that made it one: Huge before Big, then the stronger rank or seed. */
+/** The wrestler's best win: Huge before Big, then the stronger seed; else the win over the opponent with the best résumé. */
 function BestWin({ e }: { e: SnapshotEntrant }) {
   const strength = (r: string[]) => Number(r[0]?.match(/#(\d+)/)?.[1] ?? 99)
+  const tierRank = (t: string | null) => (t === "huge" ? 0 : t === "big" ? 1 : 2)
   const best = e.bouts
-    .filter((b) => b.win && (b.tier === "huge" || b.tier === "big") && b.reasons.length)
-    .sort((a, b) => (a.tier === b.tier ? strength(a.reasons) - strength(b.reasons) : a.tier === "huge" ? -1 : 1))[0]
+    .filter((b) => b.win && b.reasons.length)
+    .sort((a, b) => tierRank(a.tier) - tierRank(b.tier) || strength(a.reasons) - strength(b.reasons))[0]
   if (!best) return null
+  const tag = best.tier === "huge" ? "HUGE" : best.tier === "big" ? "BIG" : "BEST WIN"
   return (
     <div className="mt-0.5 truncate text-[11px]">
-      <span className={`font-bold ${best.tier === "huge" ? "text-[#e5372c]" : "text-[#d4af55]"}`}>{best.tier === "huge" ? "HUGE" : "BIG"}:</span>{" "}
+      <span className={`font-bold ${best.tier === "huge" ? "text-[#e5372c]" : best.tier === "big" ? "text-[#d4af55]" : "text-emerald-400"}`}>{tag}:</span>{" "}
       <span className="text-[#c9d4ea]">def. {best.opponent} ({best.opponentTeam}), {best.reasons[0]}</span>
     </div>
   )

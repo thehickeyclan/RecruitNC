@@ -5,7 +5,8 @@
  *   lists count to 30; a Big Board or P4P rank counts to 50.
  * - Super 32 2025 placers (boys; the national girls' bracket is not held) and NHSCA 2026 placers:
  *   the champion is a HUGE credential, places 2-8 a BIG one.
- * - 2026 state champions from every state but North Carolina: BIG.
+ * - 2025-26 state placers from every state but North Carolina (newest season, best place).
+ * All of these are context on a win; only seeds tier one.
  *
  * Fargo is left out on purpose: `fargo_results` has no state column, so a Fargo name could only
  * be matched on the name alone, which is how namesakes get credited.
@@ -82,20 +83,33 @@ async function eventPlacers(supabase: SupabaseClient): Promise<Credential[]> {
   return out
 }
 
-async function stateChampions(supabase: SupabaseClient): Promise<Credential[]> {
-  const rows = await pageAll<{ wrestler_name: string; state: string; gender: string | null }>((from) =>
-    supabase.from("state_tournament_placers").select("wrestler_name, state, gender")
-      .eq("season", 2026).eq("place", 1).neq("state", "NC").order("id").range(from, from + 999),
+/**
+ * State placers 1-8 from every state but North Carolina, 2026 and 2025: context on a win ("2026 VA 6A
+ * state runner-up"). One line per wrestler, the newest season, best place. Never a tier.
+ */
+async function statePlacers(supabase: SupabaseClient): Promise<Credential[]> {
+  const rows = await pageAll<{ wrestler_name: string; state: string; gender: string | null; season: number; place: number; classification: string | null }>((from) =>
+    supabase.from("state_tournament_placers").select("wrestler_name, state, gender, season, place, classification")
+      .in("season", [2025, 2026]).gte("place", 1).lte("place", 8).neq("state", "NC").order("id").range(from, from + 999),
   )
-  return rows.map((r) => ({
+  const best = new Map<string, (typeof rows)[number]>()
+  for (const r of rows) {
+    const k = `${r.wrestler_name.toLowerCase()}|${r.state}|${r.gender ?? ""}`
+    const cur = best.get(k)
+    if (!cur || r.season > cur.season || (r.season === cur.season && r.place < cur.place)) best.set(k, r)
+  }
+  // "Boys", "Girls" and "Open" are how some states name a single class; they add nothing to the line.
+  const cls = (c: string | null) => (c ?? "").replace(/\b(boys|girls|open)\b/gi, "").replace(/\s+/g, " ").trim()
+  return [...best.values()].map((r) => ({
     name: r.wrestler_name, state: r.state,
     gender: /^g/i.test(r.gender ?? "") ? "girls" : /^b/i.test(r.gender ?? "") ? "boys" : null,
-    kind: "state_champion",
-    label: `2026 ${r.state} state champion`,
+    kind: r.place === 1 ? "state_champion" : "state_placer",
+    rank: r.place,
+    label: `${r.season} ${r.state}${cls(r.classification) ? ` ${cls(r.classification)}` : ""} state ${r.place === 1 ? "champion" : r.place === 2 ? "runner-up" : ORD(r.place)}`,
   }))
 }
 
 export async function loadCredentials(supabase: SupabaseClient): Promise<Credential[]> {
-  const [a, b, c] = await Promise.all([nationalRankings(supabase), eventPlacers(supabase), stateChampions(supabase)])
+  const [a, b, c] = await Promise.all([nationalRankings(supabase), eventPlacers(supabase), statePlacers(supabase)])
   return [...a, ...b, ...c]
 }
