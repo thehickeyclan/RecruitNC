@@ -310,7 +310,7 @@ export async function computeSnapshot(supabase: SupabaseClient, eventKey: string
         round: b.bout.round, win: b.win, opponent: b.opponent, opponentTeam: b.opponentTeam,
         winType: b.bout.winType, result: b.bout.result,
         tier: b.tiered?.tier ?? null, upset: b.tiered?.upset ?? false, reasons: b.tiered?.reasons ?? b.opponentReasons ?? [],
-        opponentSeed: b.tiered?.opponentSeed ?? null, key: b.bout.key,
+        opponentSeed: b.tiered?.opponentSeed ?? b.lossToSeed ?? null, key: b.bout.key,
       })),
     }
   })

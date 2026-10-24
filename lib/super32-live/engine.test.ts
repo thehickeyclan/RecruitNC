@@ -126,3 +126,13 @@ describe("official field", () => {
     expect(es.map((e) => [e.name, e.seed, e.status])).toEqual([["Nc Kid", null, "not_started"]])
   })
 })
+
+describe("record against seeds", () => {
+  it("counts wins and losses against seeded opponents", () => {
+    const field: SeedRow[] = [{ gender: "boys", weight: "144", seed: 5, name: "Jake Opp", state: "PA" }, { gender: "boys", weight: "144", seed: 20, name: "Sam Seed", state: "OH" }]
+    const won = bout({ key: "a" })
+    const lost = bout({ key: "b", round: "Round of 16", winner: "Sam Seed", winnerTeam: "OH", loser: "Nc Kid", loserTeam: "NC" })
+    const sb = scoreboard(summarizeEntrants([won, lost], ctx(field)))
+    expect([sb.seededWins, sb.seededLosses]).toEqual([1, 1])
+  })
+})

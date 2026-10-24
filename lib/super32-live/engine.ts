@@ -83,7 +83,7 @@ export type EntrantSummary = {
   hotStreak: boolean
   onFire: boolean
   consiRun: boolean
-  bouts: Array<{ bout: LiveBout; win: boolean; opponent: string; opponentTeam: string; tiered: TieredWin | null; opponentReasons?: string[] }>
+  bouts: Array<{ bout: LiveBout; win: boolean; opponent: string; opponentTeam: string; tiered: TieredWin | null; opponentReasons?: string[]; lossToSeed?: number | null }>
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -301,7 +301,7 @@ export function summarizeEntrants(bouts: LiveBout[], ctx: TierContext, isNc: NcF
       const e = get(b.loser, b.loserTeam, b)
       // A loss is never tiered, but who beat him is context: the same credentials, read for the winner.
       const asIfWon = tierWin({ ...b, winner: b.loser, winnerTeam: b.loserTeam, loser: b.winner, loserTeam: b.winnerTeam, winType: "DEC" }, ctx)
-      e.bouts.push({ bout: b, win: false, opponent: b.winner, opponentTeam: b.winnerTeam, tiered: null, opponentReasons: asIfWon.reasons })
+      e.bouts.push({ bout: b, win: false, opponent: b.winner, opponentTeam: b.winnerTeam, tiered: null, opponentReasons: asIfWon.reasons, lossToSeed: asIfWon.opponentSeed })
     }
   }
   for (const e of by.values()) {
@@ -360,6 +360,8 @@ export type Scoreboard = {
   huge: number
   big: number
   seededWins: number
+  /** Losses to seeded opponents: with seededWins, NC's record against the seeds. */
+  seededLosses: number
   allAmericans: number
   finalists: number
   winningRecords: number
@@ -381,6 +383,7 @@ export function scoreboard(entrants: EntrantSummary[], gender?: Gender): Scorebo
     huge: tiered.filter((t) => t.tier === "huge").length,
     big: tiered.filter((t) => t.tier === "big").length,
     seededWins: tiered.filter((t) => t.opponentSeed !== null).length,
+    seededLosses: es.reduce((n, e) => n + e.bouts.filter((b) => !b.win && b.lossToSeed != null).length, 0),
     allAmericans: es.filter((e) => e.aaClinched).length,
     finalists: es.filter((e) => e.finalist).length,
     winningRecords: es.filter((e) => e.wins > e.losses).length,
