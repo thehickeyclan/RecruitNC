@@ -55,6 +55,8 @@ const SCOUT_PATHS = ["/my-recruiting", "/recruiting", "/command-center", "/plans
 const onScoutPage = (path: string) => SCOUT_PATHS.some((p) => path === p || path.startsWith(`${p}/`))
 
 const NO_CHAT_PATHS = [
+  // Super 32 HQ: the chat bubble covered the scoreboard on phones (Matt, 24 Oct 2026).
+  "/super32/live",
   "/inbox",
   "/coach-home",
   "/my-recruits",
