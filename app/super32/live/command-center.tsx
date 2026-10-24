@@ -238,6 +238,40 @@ function BestWin({ e }: { e: SnapshotEntrant }) {
  * athletes in the app. Saved on this device, every NC wrestler can be starred, linked or not.
  */
 const LOCAL_STARS = "s32-hq-stars-2026"
+/** Checks in every 45 seconds; returns how many pages have Super 32 HQ open. */
+function useWatching(enabled: boolean) {
+  const [n, setN] = useState<number | null>(null)
+  useEffect(() => {
+    if (!enabled) return
+    let sid = ""
+    try { sid = sessionStorage.getItem("s32-sid") ?? "" } catch { /* private mode */ }
+    if (!sid) {
+      sid = (globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`).replace(/[^a-z0-9-]/gi, "")
+      try { sessionStorage.setItem("s32-sid", sid) } catch { /* private mode */ }
+    }
+    let alive = true
+    const ping = () => {
+      if (document.visibilityState === "hidden") return
+      fetch("/api/super32-live/presence", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sid }) })
+        .then((r) => r.json()).then((j) => alive && typeof j.watching === "number" && setN(j.watching)).catch(() => {})
+    }
+    ping()
+    const id = setInterval(ping, 45_000)
+    document.addEventListener("visibilitychange", ping)
+    return () => { alive = false; clearInterval(id); document.removeEventListener("visibilitychange", ping) }
+  }, [enabled])
+  return n
+}
+
+/** "6 min ago", refreshed every 30 seconds. */
+function useAgo(iso: string | null | undefined) {
+  const [, tick] = useState(0)
+  useEffect(() => { const id = setInterval(() => tick((x) => x + 1), 30_000); return () => clearInterval(id) }, [])
+  if (!iso) return null
+  const m = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000))
+  return m < 1 ? "just now" : m < 60 ? `${m} min ago` : `${Math.floor(m / 60)}h ${m % 60}m ago`
+}
+
 function useStars() {
   const [ids, setIds] = useState<Set<string>>(new Set())
   useEffect(() => {
@@ -340,6 +374,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
   // 2026 is the live event; 2025 is last year's, kept for comparison.
   const [year, setYear] = useState<"2025" | "2026">("2026")
   const stars = useStars()
+  const watching = useWatching(!initial && year === "2026")
 
   useEffect(() => {
     try {
@@ -385,6 +420,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
       .sort((a, b) => order[a.status]! - order[b.status]! || (a.placement ?? 9) - (b.placement ?? 9) || b.wins - a.wins || Number(a.weight) - Number(b.weight))
   }, [entrants, q, weight, status])
 
+  const updatedAgo = useAgo(snap?.publishedAt)
   if (snap === undefined) return <div className="min-h-screen bg-[#0a1630]" />
   // 2025 had no seed list: records, finishes and All-Americans only, no tiers (Matt, 23 Oct).
   const past = year === "2025" && !initial
@@ -433,9 +469,16 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
               </button>
             ))}
           </div>
-          <div className="text-[11px] leading-tight text-[#8195bd] md:text-right">
-            {rehearsalLabel && <div className="font-semibold text-[#d4af55]">{rehearsalLabel}</div>}
-            {year === "2025" && !initial ? "2025 final results" : snap?.publishedAt ? <>Updated{snap.recaps[0] ? ` after ${snap.recaps[0].label}` : ""} · {new Date(snap.publishedAt).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}</> : "Results post after every round"}
+          <div className="flex flex-wrap items-center gap-2 text-xs md:justify-end">
+            {rehearsalLabel && <span className="font-semibold text-[#d4af55]">{rehearsalLabel}</span>}
+            {year === "2026" && !initial && watching !== null && watching >= 10 && (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 font-semibold text-emerald-300">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />{watching.toLocaleString()} watching now
+              </span>
+            )}
+            <span className="rounded-full bg-[#13244a] px-2.5 py-1 font-medium text-[#c9d4ea]">
+              {year === "2025" && !initial ? "2025 final results" : snap?.publishedAt ? <>Updated {new Date(snap.publishedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}{updatedAgo ? <span className="text-[#8195bd]"> · {updatedAgo}</span> : null}</> : "Results post as matches finish"}
+            </span>
           </div>
         </div>
       </div>

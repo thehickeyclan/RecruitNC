@@ -46,3 +46,11 @@ create index if not exists super32_live_alerts_event on super32_live_alerts (eve
 alter table super32_live_uploads enable row level security;
 alter table super32_live_snapshots enable row level security;
 alter table super32_live_alerts enable row level security;
+
+-- Who has Super 32 HQ open: one row per browser session, refreshed every 45 seconds.
+create table if not exists super32_live_presence (
+  session_id text primary key,
+  last_seen timestamptz not null default now()
+);
+create index if not exists super32_live_presence_seen on super32_live_presence (last_seen desc);
+alter table super32_live_presence enable row level security;
