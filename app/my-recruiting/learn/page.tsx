@@ -32,7 +32,7 @@ import {
 import { LearnSearch } from "@/components/portal/learn-search"
 import { PortalShell } from "@/components/portal/portal-shell"
 import { RulesTimeline, type TrackTimeline } from "@/components/portal/rules-timeline"
-import { D1_TRACK_LABEL, d1TrackFor, learnPage, sectionId, type D1Track } from "@/lib/recruiting/learn/content"
+import { D1_TRACK_LABEL, d1TrackFor, learnPage, sectionId, stateEligibilityPage, type D1Track } from "@/lib/recruiting/learn/content"
 import { buildSearchIndex } from "@/lib/recruiting/learn/search-index"
 import { GRADE_NAME, alwaysOpen, gradeFromLabel, openingsFor, timelineFor } from "@/lib/recruiting/learn/timeline"
 import { loadCommandCenter } from "../load"
@@ -79,7 +79,6 @@ const TOPICS: Array<{ icon: LucideIcon; label: string; href: string }> = [
   { icon: DollarSign, label: "NIL and revenue sharing", href: "/recruiting/learn/nil" },
   { icon: Users, label: "Women's wrestling", href: "/recruiting/learn/womens-wrestling" },
   { icon: CalendarDays, label: "Eligibility clock calculator", href: "/recruiting/learn/eligibility-clock" },
-  { icon: ShieldAlert, label: "Staying eligible in NC", href: "/recruiting/learn/staying-eligible-in-north-carolina" },
 ]
 
 /** Learn connects to action: every guide has a next step in the Command Center. */
@@ -110,22 +109,38 @@ const RESOURCES: Array<{ label: string; href: string }> = [
   { label: "Which Eligibility Center account you need", href: `/recruiting/learn/eligibility-center#${sectionId("Which account")}` },
   { label: "Grants vs. scholarships", href: `/recruiting/learn/questions-families-ask#${sectionId("What is the difference between a grant and a scholarship?")}` },
   { label: "Will my wrestler get NIL money?", href: "/recruiting/learn/nil" },
-  { label: "Prize money and NIL in NC high school", href: "/recruiting/learn/staying-eligible-in-north-carolina" },
 ]
 
 export default async function CommandCenterLearn() {
   const { wrestlers, athletes, focus } = await loadCommandCenter("/my-recruiting/learn")
+  const first = athletes[0] ?? null
+  /*
+   * The family's own state's eligibility rules, not North Carolina's by default. The link was
+   * hardcoded to NC while NC was the only state in the product; a Virginia family reading NCHSAA's
+   * $250 prize limit would be reading a rule that does not apply to them.
+   */
+  const stateGuide = stateEligibilityPage(first?.state ?? null)
+  const stateGuideEntry = stateGuide
+    ? [{
+        icon: ShieldAlert,
+        title: stateGuide.label,
+        text: "Eligibility, transfers and NIL where your wrestler actually competes.",
+        href: `/recruiting/learn/${stateGuide.slug}`,
+      }]
+    : []
+  const topics = stateGuide
+    ? [...TOPICS, { icon: ShieldAlert, label: stateGuide.label, href: `/recruiting/learn/${stateGuide.slug}` }]
+    : TOPICS
   // A family with a daughter sees the women's guide first; one with a son sees tournaments in its place.
   const guides =
     focus?.gender === "womens"
-      ? [WOMENS_GUIDE, ...GUIDES.filter((g) => g.href !== "/recruiting/learn/tournaments")]
+      ? [WOMENS_GUIDE, ...GUIDES.filter((g) => g.href !== "/recruiting/learn/tournaments"), ...stateGuideEntry]
       : focus?.gender === "mens"
-        ? GUIDES
-        : [...GUIDES.filter((g) => g.href !== "/recruiting/learn/tournaments"), WOMENS_GUIDE]
+        ? [...GUIDES, ...stateGuideEntry]
+        : [...GUIDES.filter((g) => g.href !== "/recruiting/learn/tournaments"), WOMENS_GUIDE, ...stateGuideEntry]
   const w = wrestlers[0] ?? null
   const grade = gradeFromLabel(w?.grade ?? null)
   const year = grade ? timelineFor(grade) : null
-  const first = athletes[0] ?? null
   const track: D1Track = first ? d1TrackFor(first.gender, first.classYear) : "men-2028"
   const team = first?.gender && /^f/i.test(first.gender) ? "Women's wrestling" : first?.gender ? "Men's wrestling" : null
   const questions = (learnPage("questions-families-ask")?.sections ?? []).map((s) => s.heading)
@@ -264,7 +279,7 @@ export default async function CommandCenterLearn() {
           <section className={card}>
             <h2 className="text-base font-bold">Browse by topic</h2>
             <ul className="mt-2 divide-y divide-white/5">
-              {TOPICS.map(({ icon: Icon, label, href }) => (
+              {topics.map(({ icon: Icon, label, href }) => (
                 <li key={label}>
                   <a href={href} className="flex items-center gap-3 py-2.5 text-sm text-white/85 hover:text-white">
                     <Icon className="h-4 w-4 shrink-0 text-white/45" aria-hidden />
