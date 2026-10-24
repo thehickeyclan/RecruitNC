@@ -102,16 +102,18 @@ describe("recap", () => {
     const b = bout({ key: "new" })
     const es = summarizeEntrants([b], ctx(seeds(3)))
     const r = recap(es, new Set(["new"]))
-    expect(r.sentence).toBe("North Carolina went 1-0 in the Round of 32 with 1 seeded win. 1 NC wrestler remains alive. Nc Kid (144) beat #3 seed.")
+    expect(r.sentence).toBe("North Carolina went 1-0 since the last update, mostly in the Round of 32, with 1 seeded win. 1 NC wrestler remains alive. Nc Kid (144) beat #3 seed.")
     expect(r.topPerformance?.win.tier).toBe("huge")
   })
 })
 
 describe("round label", () => {
-  it("names the championship rounds an export covers", async () => {
+  it("names an upload by the championship round most of its matches came from", async () => {
     const { ROUND_LABEL } = await import("./engine")
-    expect(ROUND_LABEL(["Round of 32", "Consi of 64 #2"])).toBe("Round of 32")
-    expect(ROUND_LABEL(["Round of 32", "Round of 64", "Consi of 64 #1"])).toBe("Round of 64 – Round of 32")
+    expect(ROUND_LABEL(["Round of 32", "Consi of 64 #2", "Consi of 64 #2"])).toBe("Round of 32")
+    expect(ROUND_LABEL(["Round of 64", "Round of 64", "Round of 32", "Round of 256"])).toBe("Round of 64")
+    expect(ROUND_LABEL(["Round of 64", "Round of 32"])).toBe("Round of 32")
+    expect(ROUND_LABEL(["Consi of 32 #1", "Consi of 32 #1", "Consi of 16 #2"])).toBe("Consi of 32 #1")
   })
 })
 

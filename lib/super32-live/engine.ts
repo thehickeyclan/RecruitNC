@@ -403,13 +403,18 @@ export type Recap = {
 }
 
 /**
- * An export arrives after a round, not after each match, and sometimes covers two: the label names
- * the championship rounds it holds ("Round of 64", or "Round of 64 – Round of 32").
+ * Uploads come every 30 minutes and weights run at different speeds (a 256 bracket is a round
+ * behind a 128), so one upload spans several rounds. The label is the championship round most of
+ * the upload's NC matches came from (consolation if none), never a range like "Round of 256 -
+ * Round of 16"; ties go to the later round.
  */
 export const ROUND_LABEL = (rounds: string[]) => {
-  const champ = [...new Set(rounds.filter((r) => /^(round of|quarter|semi|finals?$)/i.test(r)))].sort((a, b) => roundOrder(a) - roundOrder(b))
-  if (champ.length > 1) return `${champ[0]} \u2013 ${champ[champ.length - 1]}`
-  return champ[0] ?? [...rounds].sort((a, b) => roundOrder(b) - roundOrder(a))[0] ?? "this round"
+  if (!rounds.length) return "this update"
+  const count = new Map<string, number>()
+  for (const r of rounds) count.set(r, (count.get(r) ?? 0) + 1)
+  const pick = (pool: string[]) => [...new Set(pool)].sort((a, b) => (count.get(b)! - count.get(a)!) || roundOrder(b) - roundOrder(a))[0]
+  const champ = rounds.filter((r) => /^(round of|quarter|semi|finals?$)/i.test(r))
+  return pick(champ.length ? champ : rounds) ?? "this update"
 }
 
 /**
@@ -429,11 +434,11 @@ export function recap(entrants: EntrantSummary[], newBoutKeys: Set<string>, gend
   const longest = [...touched].filter((e) => e.streak >= 2).sort((a, b) => b.streak - a.streak)[0] ?? null
   const eliminated = [...touched].filter((e) => e.status === "eliminated" && e.seed !== null && fresh.some((x) => x.e === e && !x.b.win))
   const sb = scoreboard(es)
-  const label = ROUND_LABEL([...new Set(fresh.map((x) => x.b.bout.round))])
+  const label = ROUND_LABEL(fresh.map((x) => x.b.bout.round))
   const seededWins = tw.filter((x) => x.win.opponentSeed !== null).length
   const huge = tw.filter((x) => x.win.tier === "huge").length
   const big = tw.filter((x) => x.win.tier === "big").length
-  let sentence = `North Carolina went ${wins.length}-${fresh.length - wins.length} in the ${label} with ${seededWins} seeded ${seededWins === 1 ? "win" : "wins"}. ${sb.stillAlive} NC ${sb.stillAlive === 1 ? "wrestler remains" : "wrestlers remain"} alive.`
+  let sentence = `North Carolina went ${wins.length}-${fresh.length - wins.length} since the last update, mostly in the ${label}, with ${seededWins} seeded ${seededWins === 1 ? "win" : "wins"}. ${sb.stillAlive} NC ${sb.stillAlive === 1 ? "wrestler remains" : "wrestlers remain"} alive.`
   if (top && top.win.tier === "huge") sentence += ` ${top.entrant.name} (${top.entrant.weight}) beat ${top.win.reasons[0]}.`
   return {
     label, wins: wins.length, losses: fresh.length - wins.length, seededWins, huge, big, stillAlive: sb.stillAlive,
