@@ -248,8 +248,28 @@ async function main() {
      */
     const seen = new Map<string, number>()
     for (const e of placed) { const k = `${e.association}|${e.classification}|${e.weight}|${e.place}`; seen.set(k, (seen.get(k) ?? 0) + 1) }
+    /*
+     * Two wrestlers in one place stops the slice, and this guard must NOT be bypassable.
+     *
+     * `state_tournament_placers` carries a unique index over
+     * (season, state, association, gender, classification, weight, place), so a shared place
+     * cannot be stored however true it is. A flag to skip the check was added on 24 Oct and
+     * removed the same hour: it let the delete run and then the insert failed on that index,
+     * emptying Georgia's 2025 boys - 1,538 rows - which is precisely the failure the block
+     * below exists to prevent.
+     *
+     * A genuine tie does happen. Georgia's 2025 GHSA 1A 144 awarded two sixths and no fifth
+     * because one semi-finalist was disqualified and the other took a medical forfeit, so the
+     * fifth-place match was never wrestled. Reconcile the FILE before importing - blank the
+     * place on the rows that cannot be stored and name them in the state's accounted file - or
+     * relax the index first. Do not make this guard optional.
+     */
     const clash = [...seen.entries()].filter(([, n]) => n > 1)
-    if (clash.length) { console.log(`   TWO WRESTLERS IN ONE PLACE — not written: ${clash.slice(0, 5).map(([k]) => k).join(" ")}`); continue }
+    if (clash.length) {
+      console.log(`   TWO WRESTLERS IN ONE PLACE — nothing deleted, nothing written: ${clash.slice(0, 5).map(([k]) => k).join(" ")}`)
+      console.log(`      the unique index cannot hold a shared place: check it against the bouts, then reconcile the file`)
+      continue
+    }
 
 
     /*

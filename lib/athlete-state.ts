@@ -107,6 +107,13 @@ const ASSOCIATIONS: Record<string, { public: string; independent?: string[] }> =
   MD: { public: "MPSSAA", independent: ["MIS", "MIAA"] },
   WV: { public: "WVSSAC" },
   DE: { public: "DIAA" },
+  /*
+   * Georgia's private association is GIAA, not GISA: it renamed in 2022, and every 2024-26 event
+   * we hold ran under the new name (Muse, 24 Oct 2026). Using the old one would mislabel every
+   * Georgia private-school title.
+   */
+  GA: { public: "GHSA", independent: ["GIAA"] },
+  TN: { public: "TSSAA" },
 }
 
 /**

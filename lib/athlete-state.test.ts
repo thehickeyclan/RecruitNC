@@ -75,7 +75,7 @@ describe("stateChampionshipName", () => {
 
   it("names the state itself where we hold no association, rather than inventing one", () => {
     /* "Georgia State Champion" is unambiguous; a made-up acronym would not be. */
-    expect(stateChampionshipName("GA", "6A")).toBe("Georgia")
+    expect(stateChampionshipName("TX", "6A")).toBe("Texas")
   })
 
   it("both states have a 4A, which is why the state must appear at all", () => {
@@ -88,6 +88,17 @@ describe("states with more than one association, and events that are not champio
     expect(stateChampionshipName("MD", "2A/1A")).toBe("MPSSAA")
     expect(stateChampionshipName("MD", "MIS")).toBe("MIS")
     expect(stateChampionshipName("MD", "MIAA")).toBe("MIAA")
+  })
+
+  it("names Georgia's private association GIAA, which it renamed to in 2022", () => {
+    /* GISA is the old name; every event we hold ran under GIAA, so using GISA mislabels them. */
+    expect(stateChampionshipName("GA", "6A")).toBe("GHSA")
+    expect(stateChampionshipName("GA", "GIAA")).toBe("GIAA")
+    expect(stateChampionshipName("GA", "GISA")).toBe("GHSA")
+  })
+
+  it("names Tennessee's", () => {
+    expect(stateChampionshipName("TN", "A-AA")).toBe("TSSAA")
   })
 
   it("names Delaware's", () => {

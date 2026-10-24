@@ -1,0 +1,18 @@
+{
+  "placers": [
+    {
+      "name": "Coleman Lee",
+      "school": "Trion",
+      "season": 2025,
+      "reason": "source-conflict",
+      "note": "GHSA 1A 144, 2025. Georgia awarded TWO sixth places at this weight and no fifth: Coleman Lee took a medical forfeit and Hogan Sims was disqualified, both marked as such in the brackets ('MFF-' and 'DQ-' name prefixes), so the fifth-place match was never wrestled. The state published the tie, but state_tournament_placers carries a unique index over (season, state, association, gender, classification, weight, place) and cannot store two wrestlers at one place. Both men's placements are blanked rather than one of them arbitrarily keeping sixth; their entries, schools and 2-2 records are on file. Restore both to 6th if the index is ever relaxed (24 Oct 2026)."
+    },
+    {
+      "name": "Hogan Sims",
+      "school": "Commerce Hs",
+      "season": 2025,
+      "reason": "source-conflict",
+      "note": "GHSA 1A 144, 2025 \u2014 the other half of the tie described under Coleman Lee. Disqualified in the consolation round; Georgia still listed him sixth. Placement blanked for the same index reason, not because the result is doubted (24 Oct 2026)."
+    }
+  ]
+}
