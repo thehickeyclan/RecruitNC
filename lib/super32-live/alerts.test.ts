@@ -23,9 +23,11 @@ describe("alerts: wins and the championship side only", () => {
     expect(wins[0]!.body).toBe("HUGE: Other Kid (144) def. #3 seed Jake Opp (PA). BIG: Nc Kid (144) def. #20 seed Sam Big (PA).")
   })
 
-  it("never names a wrestler without a linked NC profile, and skips wins from earlier uploads", () => {
-    const out = queueAlerts([entrant({ athleteId: null, bouts: [hugeBout] }), entrant({ name: "Old", athleteId: "a3", bouts: [{ ...hugeBout, key: "old" }] })], [], new Set(["b1"]), recap, "u", "e", "s")
-    expect(byName(out, "wins")).toHaveLength(0)
+  it("names an NC wrestler with no profile too, and skips wins from earlier uploads", () => {
+    const out = queueAlerts([entrant({ athleteId: null, name: "Ellis Chia", weight: "285", bouts: [hugeBout] }), entrant({ name: "Old", athleteId: "a3", bouts: [{ ...hugeBout, key: "old" }] })], [], new Set(["b1"]), recap, "u", "e", "s")
+    const wins = byName(out, "wins")
+    expect(wins).toHaveLength(1)
+    expect(wins[0]!.body).toBe("HUGE: Ellis Chia (285) def. #3 seed Jake Opp (PA).")
   })
 
   it("lists who is unbeaten on the championship side only when that list changed", () => {
