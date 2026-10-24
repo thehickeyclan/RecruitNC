@@ -121,7 +121,12 @@ async function main() {
     if (!b.Winner || !b.Loser) continue
     const season = Number(b.Season)
     const assoc = String(b.Association).toUpperCase()
-    const eventKey = `${assoc.toLowerCase()}-states-${season}`
+    /*
+     * A slug, not the association verbatim: Delaware's girls championship is run by the "Girls
+     * Wrestling Committee", which made the key "girls wrestling committee-states-2026" - spaces
+     * and all - in a column every other key is dash-separated in.
+     */
+    const eventKey = `${assoc.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}-states-${season}`
     const rt = String(b["Result Type"] ?? "").toUpperCase()
     // Muse's Result starts with the type ("F 1:11", "TF 17-2"): the score is what follows it.
     const rest = String(b.Result ?? "").replace(new RegExp(`^${rt}\\b\\s*`, "i"), "").trim()
@@ -140,7 +145,19 @@ async function main() {
         : `${STATE} ${b.Gender ?? ""} State Invitational`.replace(/\s+/g, " ").trim(),
       year: season,
       weight_class: b["Weight Class"],
-      round: [b.Classification && b.Classification !== assoc && !/^girls$/i.test(b.Classification) ? b.Classification : null, b.Round || "State Championships"].filter(Boolean).join(" · "),
+      /*
+       * The bout number stands in where the source prints no round. Delaware's girls results
+       * publish a bout number and no round for 276 of 294 bouts, so every one of them collapsed
+       * to the same round string and the unique key (event, weight, round, wrestler, opponent)
+       * rejected the import. "Bout 7" is what the source actually says; inventing a round name
+       * would not be.
+       */
+      round: [
+        b.Classification && b.Classification !== assoc && !/^girls$/i.test(b.Classification) ? b.Classification : null,
+        b.Round || (b.Bout ? `Bout ${b.Bout}` : "State Championships"),
+      ]
+        .filter(Boolean)
+        .join(" · "),
       source_round: b.Round || null,
       is_bye: false,
       win_type: rt || null,
