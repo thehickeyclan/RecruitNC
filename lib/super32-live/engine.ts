@@ -27,7 +27,12 @@ export const BOYS_WEIGHTS = ["106", "113", "120", "126", "132", "138", "144", "1
 /** Girls' weights seen at Super 32 in 2025 and on the 2026 seed board. */
 export const GIRLS_WEIGHTS = ["95", "100", "106", "112", "118", "124", "132", "138", "148", "160", "175", "200"]
 
-export type SeedRow = { gender: Gender; weight: string; seed: number; name: string; state: string }
+/**
+ * One wrestler from the official field. `seed` is null for an unseeded entrant: the bracket PDFs
+ * list the whole field, so every NC wrestler is on the page before the first match, and the
+ * names also tell the division split which bracket is which.
+ */
+export type SeedRow = { gender: Gender; weight: string; seed: number | null; name: string; state: string }
 
 /** An opponent's credential that can tier a win. Built by the loader from tables we hold. */
 export type Credential = {

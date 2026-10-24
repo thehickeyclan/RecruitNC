@@ -129,8 +129,10 @@ export function parseSeedsCsv(text: string): SeedRow[] {
   return lines.slice(1).map((l) => l.split(",")).flatMap((c) => {
     const g = (c[ig] ?? "").trim().toLowerCase()
     const gender: Gender | null = /^(b|m)/.test(g) ? "boys" : /^(g|w|f)/.test(g) ? "girls" : null
-    const seed = Number(c[is])
-    if (!gender || !Number.isFinite(seed) || !(c[inm] ?? "").trim()) return []
+    // A blank seed is an unseeded entrant from the official field, not a bad row.
+    const rawSeed = (c[is] ?? "").trim()
+    const seed = rawSeed ? Number(rawSeed) : null
+    if (!gender || (seed !== null && !Number.isFinite(seed)) || !(c[inm] ?? "").trim()) return []
     return [{ gender, weight: (c[iw] ?? "").trim(), seed, name: (c[inm] ?? "").trim(), state: (c[ist] ?? "").trim().toUpperCase() }]
   })
 }

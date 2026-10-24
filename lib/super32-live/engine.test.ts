@@ -114,3 +114,13 @@ describe("round label", () => {
     expect(ROUND_LABEL(["Round of 32", "Round of 64", "Consi of 64 #1"])).toBe("Round of 64 – Round of 32")
   })
 })
+
+describe("official field", () => {
+  it("an unseeded entrant never tiers a win and joins the page before the first match", async () => {
+    const { addUnstartedSeeds } = await import("./engine")
+    const field: SeedRow[] = [{ gender: "boys", weight: "144", seed: null, name: "Jake Opp", state: "PA" }, { gender: "boys", weight: "150", seed: null, name: "Nc Kid", state: "NC" }]
+    expect(tierWin(bout(), ctx(field)).tier).toBe("win")
+    const es = addUnstartedSeeds([], field)
+    expect(es.map((e) => [e.name, e.seed, e.status])).toEqual([["Nc Kid", null, "not_started"]])
+  })
+})
