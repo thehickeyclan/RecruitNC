@@ -253,7 +253,7 @@ export default function Super32LiveAdmin() {
               <Stat label="Still alive" value={sb.stillAlive} sub={`${sb.aliveChamp} champ · ${sb.aliveConsi} consi`} />
               <Stat label="Huge wins" value={sb.huge} tone="red" />
               <Stat label="Big wins" value={sb.big} tone="gold" />
-              <Stat label="Seeded wins" value={sb.seededWins} />
+              <Stat label="Vs seeded" value={`${sb.seededWins}-${sb.seededLosses ?? 0}`} sub="wins-losses" />
               <Stat label="All-Americans" value={sb.allAmericans} />
               <Stat label="Finalists" value={sb.finalists} />
               <Stat label="Winning records" value={sb.winningRecords} />

@@ -304,7 +304,7 @@ function WrestlerSheet({ e, onClose, starred, onStar }: { e: SnapshotEntrant; on
         </div>
         <div className="mt-4 grid grid-cols-3 gap-2 text-center">
           <div className="rounded-lg bg-[#0f1f3f] py-2"><div className={`${H} text-3xl text-white`}>{e.wins}-{e.losses}</div><div className="text-[11px] text-[#9fb0cf]">Record</div></div>
-          <div className="rounded-lg bg-[#0f1f3f] py-2"><div className={`${H} text-3xl text-white`}>{e.bouts.filter((b) => b.win && (b.tier === "huge" || b.tier === "big")).length}</div><div className="text-[11px] text-[#9fb0cf]">Huge/Big wins</div></div>
+          <div className="rounded-lg bg-[#0f1f3f] py-2"><div className={`${H} text-3xl text-white`}>{e.bouts.filter((b) => b.win && b.opponentSeed != null).length}-{e.bouts.filter((b) => !b.win && b.opponentSeed != null).length}</div><div className="text-[11px] text-[#9fb0cf]">Vs seeded</div></div>
           <div className="rounded-lg bg-[#0f1f3f] py-2"><div className={`text-base font-bold leading-9 ${statusColor(e)}`}>{statusText(e)}</div><div className="text-[11px] text-[#9fb0cf]">Status</div></div>
         </div>
         {e.chips.length > 0 && <div className="mt-4 flex flex-wrap gap-1.5">{e.chips.map((c) => <span key={c} className="rounded bg-[#1b2d57] px-2 py-1 text-xs text-[#c9d4ea]">{c}</span>)}</div>}
@@ -462,7 +462,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                   ["Big wins", sb.big, "", "text-[#d4af55]"],
                   ["All-Americans", sb.allAmericans, year === "2026" ? `2025: ${Y2025[g].aa}` : "", "text-white"],
                   ["Winning records", sb.winningRecords, year === "2026" ? `2025: ${Y2025[g].winning}` : "", "text-white"],
-                  ["Seeded wins", sb.seededWins, "", "text-white"],
+                  ["Vs seeded", `${sb.seededWins}-${sb.seededLosses ?? 0}`, "wins-losses", "text-white"],
                   ["NC placers", placed, year === "2026" ? `2025 record ${Y2025[g].record}` : "", "text-white"],
                 ] as const)).map(([label, v, sub, color]) => (
                   <div key={label} className="min-w-[118px] shrink-0 rounded-lg border border-[#1f3360] bg-[#0b1730] px-3 py-3 text-center lg:min-w-0">
