@@ -38,9 +38,13 @@ export function boutToCsvLine(b: Bout, date: string): string | null {
 export async function fetchFloResultsCsv(eventId = FLO_EVENT_ID, date = "10/24/2026"): Promise<{ csv: string; bouts: number; weights: number }> {
   const base = `${API}/${eventId}/results`
   const divs = await get<{ data: { options: Array<{ value: string; label: string }> } }>(`${base}/filters/event-division`)
+  // The results filter lists a division only once it has results; the girls' division is added by
+  // id so their first finished match is never missed (HS Girls, from the posted brackets, 24 Oct).
+  const KNOWN = eventId === FLO_EVENT_ID ? [{ value: "12RYea13jWFoxLwxk", label: "High School Girls" }] : []
+  const options = [...divs.data.options, ...KNOWN.filter((k) => !divs.data.options.some((o) => o.value === k.value))]
   const lines = new Set<string>()
   let weights = 0
-  for (const d of divs.data.options) {
+  for (const d of options) {
     const filters = encodeURIComponent(JSON.stringify([{ id: "event-division", type: "string", value: d.value, sport: "wrestling" }]))
     const wcs = await get<{ data: { options: Array<{ value: string; label: string }> } }>(`${base}/filters/event-weight-class?filters=${filters}`)
     for (const wc of wcs.data.options) {
