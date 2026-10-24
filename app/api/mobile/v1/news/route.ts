@@ -24,6 +24,7 @@ export async function GET() {
       // Internal articles open at /news/<slug>; a few entries link elsewhere on the site.
       path: item.isAnnouncement ? `/news/${item.slug}` : item.href.startsWith("/") ? item.href : null,
       url: item.isAnnouncement ? `${site}/news/${item.slug}` : absolute(item.href),
+      actionLabel: item.actionLabel ?? null,
     }))
   return NextResponse.json({ items }, { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" } })
 }
