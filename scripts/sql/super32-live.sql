@@ -54,3 +54,12 @@ create table if not exists super32_live_presence (
 );
 create index if not exists super32_live_presence_seen on super32_live_presence (last_seen desc);
 alter table super32_live_presence enable row level security;
+
+-- My Wrestlers on Super 32 HQ for signed-in users: their own list, separate from app follows.
+create table if not exists super32_live_stars (
+  user_id uuid not null,
+  star_key text not null,
+  created_at timestamptz not null default now(),
+  primary key (user_id, star_key)
+);
+alter table super32_live_stars enable row level security;

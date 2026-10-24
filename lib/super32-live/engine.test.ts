@@ -1,7 +1,7 @@
 import fs from "node:fs"
 import path from "node:path"
 import { describe, expect, it } from "vitest"
-import {
+import { dedupeBouts,
   parseFloExport,
   recap,
   roundOrder,
@@ -142,5 +142,21 @@ describe("finalists", () => {
     const semi = bout({ key: "s", round: "Semi-Finals" })
     const sb = scoreboard(summarizeEntrants([semi], ctx()))
     expect(sb.finalists).toBe(1)
+  })
+})
+
+describe("dedupeBouts", () => {
+  const row = (winner: string, loser: string, result = "Dec 3-1", round = "Champ. Round 1") =>
+    ({ date: "", weight: "138", round, winner, winnerTeam: "A", result, winType: "Dec", loser, loserTeam: "B" })
+  it("keeps one row for a repeated bout", () => {
+    expect(dedupeBouts([row("Al Smith", "Bo Jones"), row("Al Smith", "Bo Jones")])).toHaveLength(1)
+  })
+  it("treats a reversed result as a correction and keeps the later row", () => {
+    const out = dedupeBouts([row("Al Smith", "Bo Jones"), row("Bo Jones", "Al Smith", "Dec 4-2")])
+    expect(out).toHaveLength(1)
+    expect(out[0].winner).toBe("Bo Jones")
+  })
+  it("keeps a rematch in a different round", () => {
+    expect(dedupeBouts([row("Al Smith", "Bo Jones"), row("Al Smith", "Bo Jones", "Dec 2-0", "Cons. Round 4")])).toHaveLength(2)
   })
 })
