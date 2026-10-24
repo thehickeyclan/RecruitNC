@@ -13,7 +13,7 @@ import Link from "next/link"
 import type { PublicSnapshot } from "@/app/api/super32-live/route"
 import type { FeedItem, SnapshotEntrant, SnapshotRecap } from "@/lib/super32-live/snapshot"
 import { buildStories, type Story } from "@/lib/super32-live/stories"
-import { roundProgress } from "@/lib/super32-live/rounds"
+import { roundOrder, roundProgress } from "@/lib/super32-live/rounds"
 
 const APP_STORE_URL = "https://apps.apple.com/app/id6803202791"
 /** Official brackets live on Flo; linked, never copied, so they are always current. */
@@ -182,6 +182,65 @@ function LastHour({ recaps, feed }: { recaps: SnapshotRecap[]; feed: FeedItem[] 
         {out.length > 0 && <div><dt className="text-[11px] font-semibold uppercase tracking-wider text-[#d4af55]">Seeded wrestlers eliminated</dt><dd className="text-[#c9d4ea]">{out.map((e) => `${e.name}${e.seed ? ` (#${e.seed})` : ""}`).join(", ")}</dd></div>}
       </dl>
     </div>
+  )
+}
+
+/**
+ * Every NC bout, newest first, each with the wrestler's record and standing right after it, so
+ * "who just lost" and "who is still rolling" read at a glance.
+ */
+type ResultRow = { e: SnapshotEntrant; b: SnapshotEntrant["bouts"][number]; w: number; l: number; standing: string; out: boolean; at: string; order: number }
+function resultRows(entrants: SnapshotEntrant[]): ResultRow[] {
+  const rows: ResultRow[] = []
+  for (const e of entrants) {
+    const bouts = e.bouts.filter((b) => !/^bye$/i.test(b.winType) && b.opponent).slice().sort((a, b) => roundOrder(a.round) - roundOrder(b.round))
+    let w = 0, l = 0
+    bouts.forEach((b, i) => {
+      if (b.win) w += 1; else l += 1
+      const last = i === bouts.length - 1
+      const standing = last && e.placement ? `placed ${e.placement === 1 ? "1st" : e.placement === 2 ? "2nd" : e.placement === 3 ? "3rd" : `${e.placement}th`}`
+        : l >= 2 ? `out at ${w}-${l}` : l === 1 ? `now ${w}-${l} · alive in consolations` : `now ${w}-0 · unbeaten`
+      rows.push({ e, b, w, l, standing, out: l >= 2 && !(last && e.placement), at: b.seenAt ?? "", order: roundOrder(b.round) })
+    })
+  }
+  return rows.sort((a, b) => b.at.localeCompare(a.at) || b.order - a.order || Number(a.e.weight) - Number(b.e.weight))
+}
+
+function LatestResults({ entrants, onOpen }: { entrants: SnapshotEntrant[]; onOpen: (e: SnapshotEntrant) => void }) {
+  const [f, setF] = useState<"all" | "wins" | "losses" | "out">("all")
+  const [all, setAll] = useState(false)
+  const rows = useMemo(() => resultRows(entrants), [entrants])
+  const shown = rows.filter((r) => f === "all" || (f === "wins" ? r.b.win : f === "losses" ? !r.b.win : r.out))
+  const chip = (k: typeof f, label: string) => (
+    <button onClick={() => { setF(k); setAll(false) }} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${f === k ? "bg-[#d4af55] text-[#0b1730]" : "border border-[#2c4170] text-[#c9d4ea]"}`}>{label}</button>
+  )
+  return (
+    <Section title="Latest Results" right={<span className="text-xs text-[#8195bd]">{rows.length} NC bouts</span>}>
+      <div className="mb-2 flex flex-wrap gap-1.5">{chip("all", "All")}{chip("wins", "Wins")}{chip("losses", "Losses")}{chip("out", "Eliminated")}</div>
+      {shown.length === 0 ? <Empty>No results here yet.</Empty> : (
+        <div className="divide-y divide-[#1f3360]">
+          {shown.slice(0, all ? undefined : 20).map((r) => (
+            <button key={`${r.b.key}|${r.e.name}`} onClick={() => onOpen(r.e)} className="flex w-full items-start gap-3 py-2 text-left">
+              <span className={`${H} mt-0.5 w-5 shrink-0 text-center text-base ${r.b.win ? "text-emerald-400" : "text-[#e5372c]"}`}>{r.b.win ? "W" : "L"}</span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5 text-sm">
+                  <span className="font-semibold text-white">{r.e.name}</span>
+                  <span className="text-xs text-[#8195bd]">{r.e.gender === "girls" ? "G" : ""}{r.e.weight}</span>
+                  {r.b.win && r.b.tier && r.b.tier !== "win" && <Tag kind={r.b.tier === "huge" ? "Huge win" : r.b.tier === "big" ? "Big win" : "Significant"} />}
+                </div>
+                <div className="truncate text-xs text-[#c9d4ea]">{r.b.win ? "def." : "lost to"} {r.b.opponentSeed ? `#${r.b.opponentSeed} ` : ""}{r.b.opponent} ({r.b.opponentTeam}){r.b.reasons.find((x) => !/seed$/.test(x)) ? ` · ${r.b.reasons.find((x) => !/seed$/.test(x))}` : ""}</div>
+                <div className={`text-[11px] ${r.out ? "text-[#e5372c]" : r.l === 0 ? "text-emerald-400" : "text-[#9fb0cf]"}`}>{r.standing}</div>
+              </div>
+              <div className="shrink-0 text-right">
+                <div className="text-xs font-semibold text-white">{[r.b.winType, r.b.result].filter(Boolean).join(" ")}</div>
+                <div className="text-[11px] text-[#8195bd]">{r.b.round}</div>
+              </div>
+            </button>
+          ))}
+          {shown.length > 20 && <button onClick={() => setAll(!all)} className="w-full pt-2.5 text-center text-xs text-[#d4af55]">{all ? "Show less" : `Show all ${shown.length}`}</button>}
+        </div>
+      )}
+    </Section>
   )
 }
 
@@ -473,7 +532,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
   const entrants = useMemo(() => (snap?.entrants ?? []).filter((e) => g === "all" || e.gender === g), [snap, g])
   const recaps = useMemo(() => (snap?.recaps ?? []).filter((r) => r.gender === g), [snap, g])
   const stories = useMemo(() => buildStories(entrants, recaps, !!snap?.hasResults), [entrants, recaps, snap])
-  const feed = useMemo(() => (snap?.feed ?? []).filter((f) => g === "all" || f.gender === g).sort((a, b) => (a.tier === b.tier ? 0 : a.tier === "huge" ? -1 : 1)), [snap, g])
+  const feed = useMemo(() => (snap?.feed ?? []).filter((f) => g === "all" || f.gender === g).sort((a, b) => ({ huge: 0, big: 1, significant: 2 } as Record<string, number>)[a.tier]! - ({ huge: 0, big: 1, significant: 2 } as Record<string, number>)[b.tier]!), [snap, g])
   // My Wrestlers replaces our Wrestlers to Watch (Matt, 23 Oct): the families pick, by starring.
   const mine = useMemo(() => entrants.filter((e) => stars.ids.has(starKey(e))), [entrants, stars.ids])
   // One-time carry-over of stars saved under the earlier key (profile ids, or "x:" bracket keys).
@@ -608,6 +667,8 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                 ))}
               </div>
             </Section>
+
+            {!past && started && <LatestResults entrants={entrants} onOpen={setOpen} />}
 
             <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
               <Section title={past ? "2025 All-Americans" : started ? "Top Stories" : "Super 32 Preview"}>
