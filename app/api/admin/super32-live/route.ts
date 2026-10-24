@@ -26,7 +26,8 @@ export async function GET() {
   const me = await currentUserId()
   const [snap, published, uploads, alerts, audience, mine] = await Promise.all([
     latestSnapshot(admin),
-    latestSnapshot(admin, SUPER32_EVENT_KEY, true),
+    // Only the id is needed to tell whether the latest build is published; the full snapshot is heavy.
+    admin.from("super32_live_snapshots").select("id").eq("event_key", SUPER32_EVENT_KEY).eq("published", true).order("created_at", { ascending: false }).limit(1).maybeSingle().then((r) => r.data),
     admin.from("super32_live_uploads").select("id, kind, file_name, seeds_final, created_at").eq("event_key", SUPER32_EVENT_KEY).order("created_at", { ascending: false }).limit(30),
     admin.from("super32_live_alerts").select("*").eq("event_key", SUPER32_EVENT_KEY).order("created_at", { ascending: false }).limit(200),
     admin.from("push_devices").select("expo_push_token", { count: "exact", head: true }).eq("alert_results", true),
