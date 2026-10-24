@@ -136,3 +136,11 @@ describe("record against seeds", () => {
     expect([sb.seededWins, sb.seededLosses]).toEqual([1, 1])
   })
 })
+
+describe("finalists", () => {
+  it("counts a finalist as soon as he wins his semifinal", () => {
+    const semi = bout({ key: "s", round: "Semi-Finals" })
+    const sb = scoreboard(summarizeEntrants([semi], ctx()))
+    expect(sb.finalists).toBe(1)
+  })
+})

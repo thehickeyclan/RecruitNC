@@ -33,10 +33,24 @@ const BANNERS: Partial<Record<G, { src: string; alt: string }>> = {
 }
 
 /** 2025 finals from the 2025 Flo export, same engine and NC rule as 2026 (Bouzakis out). */
-const Y2025: Record<G, { record: string; winning: number; aa: number }> = {
-  all: { record: "103-264", winning: 11, aa: 4 },
-  boys: { record: "76-182", winning: 7, aa: 1 },
-  girls: { record: "27-82", winning: 4, aa: 3 },
+const Y2025: Record<G, { record: string; winning: number; aa: number; pct: number }> = {
+  all: { record: "103-264", winning: 11, aa: 4, pct: 103 / 367 },
+  boys: { record: "76-182", winning: 7, aa: 1, pct: 76 / 258 },
+  girls: { record: "27-82", winning: 4, aa: 3, pct: 27 / 109 },
+}
+
+/** Win rate against last year's final: green up, red down, by percentage points. */
+function VsLastYear({ wins, losses, g }: { wins: number; losses: number; g: G }) {
+  const last = Math.round(Y2025[g].pct * 100)
+  if (!wins && !losses) return <span className="text-white">—</span>
+  const now = Math.round((100 * wins) / (wins + losses))
+  const d = now - last
+  return (
+    <span className="whitespace-nowrap">
+      <span className="text-white">{now}%</span>{" "}
+      <span className={d > 0 ? "text-emerald-400" : d < 0 ? "text-[#ff5a4f]" : "text-[#9fb0cf]"}>{d > 0 ? `▲${d}` : d < 0 ? `▼${-d}` : "="}</span>
+    </span>
+  )
 }
 
 const ord = (n: number) => (n === 1 ? "1st" : n === 2 ? "2nd" : n === 3 ? "3rd" : `${n}th`)
@@ -452,7 +466,6 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
   const sb = snap?.scoreboards[g]
   const started = !!snap?.hasResults
   const pct = sb && sb.wins + sb.losses ? Math.round((100 * sb.wins) / (sb.wins + sb.losses)) : 0
-  const placed = entrants.filter((e) => e.placement).length
   const filtered = !!(q || weight || status)
 
   return (
@@ -525,7 +538,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                   ["NC wrestlers", sb.wrestlers, "", "text-white"],
                   ["All-Americans", sb.allAmericans, "", "text-[#d4af55]"],
                   ["Winning records", sb.winningRecords, "", "text-white"],
-                  ["NC placers", placed, "", "text-white"],
+                  ["Finalists", sb.finalists, "", "text-white"],
                 ] as const) : ([
                   ["Overall record", `${sb.wins}-${sb.losses}`, started ? `${pct}% win rate` : "Not started", "text-white"],
                   ["Still alive", sb.stillAlive, sb.aliveConsi ? `${sb.aliveChamp} champ · ${sb.aliveConsi} consi` : started ? "" : `${sb.wrestlers} entered`, "text-white"],
@@ -534,7 +547,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                   ["All-Americans", sb.allAmericans, year === "2026" ? `2025: ${Y2025[g].aa}` : "", "text-white"],
                   ["Winning records", sb.winningRecords, year === "2026" ? `2025: ${Y2025[g].winning}` : "", "text-white"],
                   ["Vs seeded", `${sb.seededWins}-${sb.seededLosses ?? 0}`, "wins-losses", "text-white"],
-                  ["NC placers", placed, year === "2026" ? `2025 record ${Y2025[g].record}` : "", "text-white"],
+                  ["Win % vs 2025", <VsLastYear key="vs" wins={sb.wins} losses={sb.losses} g={g} />, `2025: ${Math.round(Y2025[g].pct * 100)}% (${Y2025[g].record})`, "text-white"],
                 ] as const)).map(([label, v, sub, color]) => (
                   <div key={label} className="min-w-[118px] shrink-0 rounded-lg border border-[#1f3360] bg-[#0b1730] px-3 py-3 text-center lg:min-w-0">
                     <div className={`${H} whitespace-nowrap text-3xl leading-none md:text-4xl ${color}`}>{v}</div>
