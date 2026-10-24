@@ -18,6 +18,7 @@ import { roundProgress } from "@/lib/super32-live/rounds"
 const APP_STORE_URL = "https://apps.apple.com/app/id6803202791"
 /** Official brackets live on Flo; linked, never copied, so they are always current. */
 const FLO_BRACKETS_URL = "https://www.flowrestling.org/nextgen/events/15966539/brackets"
+const FLO_LIVE_URL = "https://www.flowrestling.org/live/251027"
 const ARTICLE = {
   href: "/news/super32-2026-what-good-looks-like",
   title: "What Will It Take? Defining Success for North Carolina at Super 32",
@@ -515,6 +516,14 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                 <span className="text-[10px] font-semibold uppercase tracking-wider text-[#9fb0cf]">Watching now</span>
                 <span className={`${H} text-lg leading-none text-white`}>{watching.toLocaleString()}</span>
               </span>
+            )}
+            {year === "2026" && (
+              <a href={FLO_LIVE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 font-bold text-[#0b1730] hover:bg-[#f0f0f0]">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/images/flo-logo.png" alt="" className="h-4 w-4 rounded-sm" />
+                Watch live on Flo
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#e5372c]" />
+              </a>
             )}
             {year === "2026" && <a href={FLO_BRACKETS_URL} target="_blank" rel="noopener noreferrer" className="rounded-full border border-[#d4af55]/50 px-2.5 py-1 font-semibold text-[#d4af55] hover:bg-[#d4af55]/10">Brackets on Flo ↗</a>}
             <span className="rounded-full bg-[#13244a] px-2.5 py-1 font-medium text-[#c9d4ea]">
