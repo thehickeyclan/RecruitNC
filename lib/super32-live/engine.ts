@@ -181,40 +181,51 @@ export function splitDivisions(rows: Super32Row[], hints: Array<{ gender: Gender
     if (BOYS_WEIGHTS.includes(weight)) wanted.push("boys")
     if (GIRLS_WEIGHTS.includes(weight)) wanted.push("girls")
     if (!wanted.length) continue
-    const comps = componentsAt(weightRows).filter((c) => c.entrants.size >= 4)
+    // Early in the day each bracket is still dozens of unconnected pairs and byes, so a division is
+    // every piece holding its own known names, not one connected bracket (the 8:14 AM export on
+    // 24 Oct 2026 had 38 bouts and no piece bigger than two wrestlers).
+    const comps = componentsAt(weightRows)
+    const namesOf = (c: Component) => [...c.entrants].map((k) => { const [n, t] = k.split("|"); return { name: n!, state: t! } })
+    const hitsFor = (c: Component, g: Gender) => {
+      const hs = hints.filter((h) => h.gender === g && h.weight === weight)
+      const names = namesOf(c)
+      return hs.filter((h) => names.some((n) => samePerson(n, { name: h.name, state: h.state }))).length
+    }
     const taken = new Set<string>()
     for (const gender of wanted) {
+      const other: Gender = gender === "boys" ? "girls" : "boys"
+      const shared = wanted.length > 1
       const hs = hints.filter((h) => h.gender === gender && h.weight === weight)
-      let pick: Component | undefined
+      let picks: Component[] = []
       let matched = 0
       let how: "seeds" | "largest" = "seeds"
       if (hs.length) {
         for (const c of comps) {
           if (taken.has(c.root)) continue
-          const names = [...c.entrants].map((k) => { const [n, t] = k.split("|"); return { name: n!, state: t! } })
-          const hits = hs.filter((h) => names.some((n) => samePerson(n, { name: h.name, state: h.state }))).length
-          if (hits > matched) { matched = hits; pick = c }
+          const mine = hitsFor(c, gender)
+          if (mine > 0 && (!shared || mine >= hitsFor(c, other))) { picks.push(c); matched += mine }
         }
-        if (pick && matched < Math.min(3, hs.length)) {
+        const decided = weightRows.some((r) => r.loser)
+        if (decided && matched < Math.min(3, hs.length)) {
           out.unresolved.push(`${gender} ${weight}: only ${matched} of ${hs.length} known names found in any bracket`)
         }
       }
-      if (!pick) {
-        // Boys at a boys-only weight: the boys' field dwarfs anything else under that label.
-        const boysOnly = gender === "boys" && !GIRLS_WEIGHTS.includes(weight)
+      if (!picks.length) {
+        const boysOnly = gender === "boys" && !shared
         if (gender === "boys" && (boysOnly || !hs.length)) {
-          pick = comps.find((c) => !taken.has(c.root))
+          const largest = comps.find((c) => !taken.has(c.root) && c.entrants.size >= 4)
+          picks = largest ? [largest] : []
           how = "largest"
-          if (pick && !boysOnly) out.unresolved.push(`boys ${weight}: no seeds, took the largest bracket (${pick.entrants.size})`)
+          if (largest && !boysOnly) out.unresolved.push(`boys ${weight}: no seeds, took the largest bracket (${largest.entrants.size})`)
         } else {
-          if (comps.length) out.unresolved.push(`${gender} ${weight}: no seeds to tell its bracket apart; left out`)
+          if (comps.some((c) => c.entrants.size >= 4)) out.unresolved.push(`${gender} ${weight}: no seeds to tell its bracket apart; left out`)
           continue
         }
       }
-      if (!pick) continue
-      taken.add(pick.root)
-      out.brackets.push({ gender, weight, entrants: pick.entrants.size, seedsMatched: matched, how })
-      for (const r of pick.rows) out.bouts.push({ ...r, gender, key: boutKey(r, gender) })
+      if (!picks.length) continue
+      for (const c of picks) taken.add(c.root)
+      out.brackets.push({ gender, weight, entrants: picks.reduce((n, c) => n + c.entrants.size, 0), seedsMatched: matched, how })
+      for (const c of picks) for (const r of c.rows) out.bouts.push({ ...r, gender, key: boutKey(r, gender) })
     }
   }
   return out
