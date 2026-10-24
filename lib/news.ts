@@ -114,7 +114,7 @@ const ALL_NEWS: NewsItem[] = [
     href: "/news/super32-live",
     date: "2026-10-23",
     image: "/images/super32/super32-hq-2026-mcnair.jpg",
-    homeImage: "/images/super32/super32-hq-2026-mcnair.jpg",
+    homeImage: "/images/super32/super32-hq-2026-home.jpg",
     imagePosition: "center",
     imageFit: "contain",
     imageBannerBgClass: "bg-[#0A1628]",

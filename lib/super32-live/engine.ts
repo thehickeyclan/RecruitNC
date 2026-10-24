@@ -471,7 +471,7 @@ export function recap(entrants: EntrantSummary[], newBoutKeys: Set<string>, gend
   const seededWins = tw.filter((x) => x.win.opponentSeed !== null).length
   const huge = tw.filter((x) => x.win.tier === "huge").length
   const big = tw.filter((x) => x.win.tier === "big").length
-  let sentence = `North Carolina went ${wins.length}-${fresh.length - wins.length} since the last update, mostly in the ${label}, with ${seededWins} seeded ${seededWins === 1 ? "win" : "wins"}. ${sb.stillAlive} NC ${sb.stillAlive === 1 ? "wrestler remains" : "wrestlers remain"} alive.`
+  let sentence = `North Carolina went ${wins.length}-${fresh.length - wins.length} since the last update, with ${seededWins} seeded ${seededWins === 1 ? "win" : "wins"}. ${sb.stillAlive} NC ${sb.stillAlive === 1 ? "wrestler remains" : "wrestlers remain"} alive.`
   if (top && top.win.tier === "huge") sentence += ` ${top.entrant.name} (${top.entrant.weight}) beat ${top.win.reasons[0]}.`
   return {
     label, wins: wins.length, losses: fresh.length - wins.length, seededWins, huge, big, stillAlive: sb.stillAlive,

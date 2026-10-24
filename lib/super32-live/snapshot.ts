@@ -425,7 +425,7 @@ export function queueAlerts(
   if (finalists.length) lines.push(`Finals: ${finalists.map(short).join(", ")}`)
   if (aa.length) lines.push(`All-American: ${aa.map(short).join(", ")}`)
 
-  const head = `NC went ${latestRecap.wins}-${latestRecap.losses}. ${latestRecap.stillAlive} still alive.`
+  const head = `NC went ${latestRecap.wins}-${latestRecap.losses} since the last update. ${latestRecap.stillAlive} still alive.`
   let body = head
   let shown = 0
   for (const l of lines) {
@@ -438,7 +438,7 @@ export function queueAlerts(
   const title = champs.length
     ? `Super 32 ${champs.length === 1 ? "CHAMPION" : "CHAMPIONS"} for North Carolina!`
     : huge.length
-      ? `Super 32 \u00b7 ${latestRecap.label}: ${huge.length} HUGE ${huge.length === 1 ? "WIN" : "WINS"} for NC`
-      : `Super 32 \u00b7 ${latestRecap.label} recap`
+      ? `Super 32: ${huge.length} HUGE ${huge.length === 1 ? "WIN" : "WINS"} for NC`
+      : `Super 32 \u00b7 NC update`
   return [{ event_key: eventKey, dedupe_key: `round:${floId}`, kind: "recap", title, body, path: LIVE_PATH, status: "pending", snapshot_id: snapshotId }]
 }

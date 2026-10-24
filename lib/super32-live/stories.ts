@@ -79,7 +79,7 @@ export function buildStories(entrants: SnapshotEntrant[], recaps: SnapshotRecap[
   }
   const r = recaps[0]
   if (r) {
-    out.push({ id: `recap:${r.at}`, kind: "recap", label: "Round recap", headline: `North Carolina goes ${r.wins}-${r.losses} in the ${r.label}`,
+    out.push({ id: `recap:${r.at}`, kind: "recap", label: "Latest update", headline: `North Carolina goes ${r.wins}-${r.losses} since the last update`,
       dek: r.sentence, entrant: null, meta: `${r.seededWins} seeded wins · ${r.stillAlive} still alive`, rank: 8 })
   }
   return out.sort((a, b) => a.rank - b.rank)

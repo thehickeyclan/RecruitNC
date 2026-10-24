@@ -76,7 +76,7 @@ function Photo({ e, className, big }: { e: { name: string; photo: string | null 
 
 const TAG: Record<string, string> = {
   "Huge win": "bg-[#e5372c] text-white", "Big win": "bg-[#d4af55] text-[#0b1730]", Upset: "bg-[#7c5cff] text-white",
-  "All-American": "bg-[#d4af55] text-[#0b1730]", Champion: "bg-[#d4af55] text-[#0b1730]", "Round recap": "bg-[#3b5ba5] text-white",
+  "All-American": "bg-[#d4af55] text-[#0b1730]", Champion: "bg-[#d4af55] text-[#0b1730]", "Latest update": "bg-[#3b5ba5] text-white",
   "Hot streak": "bg-[#e5372c]/80 text-white", "Consolation run": "bg-[#3b5ba5] text-white", Seeded: "bg-[#1b2d57] text-[#d4af55]",
   Preview: "bg-[#3b5ba5] text-white",
 }
@@ -188,7 +188,7 @@ function ResultsTicker({ entrants }: { entrants: SnapshotEntrant[] }) {
     .slice(0, 60)
   if (!items.length) return null
   const loop = [...items, ...items]
-  const seconds = Math.max(40, items.length * 6)
+  const seconds = Math.max(55, items.length * 8)
   return (
     <div className="relative overflow-hidden border-b-2 border-[#D3B574] bg-[#0D1A4D]">
       <div className={`${H} absolute inset-y-0 left-0 z-10 flex items-center bg-[#B31B1B] px-3 text-xs text-white md:px-5 md:text-sm`}>Results</div>

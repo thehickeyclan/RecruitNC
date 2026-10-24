@@ -14,14 +14,14 @@ describe("round alert", () => {
     const out = queueAlerts([entrant({ bouts: [hugeBout] }), entrant({ name: "Other Kid", athleteId: "a2", bouts: [{ ...hugeBout, key: "b2" }] })], [], new Set(["b1", "b2"]), recap, "upload-1", "super32-2026", "snap")
     expect(out).toHaveLength(1)
     expect(out[0]!.dedupe_key).toBe("round:upload-1")
-    expect(out[0]!.title).toBe("Super 32 · Round of 32: 2 HUGE WINS for NC")
-    expect(out[0]!.body).toContain("NC went 24-18. 42 still alive. HUGE: Nc Kid (144) def. #3 seed Jake Opp (PA).")
+    expect(out[0]!.title).toBe("Super 32: 2 HUGE WINS for NC")
+    expect(out[0]!.body).toContain("NC went 24-18 since the last update. 42 still alive. HUGE: Nc Kid (144) def. #3 seed Jake Opp (PA).")
   })
 
   it("never names a wrestler without a linked NC profile, and skips wins from earlier uploads", () => {
     const out = queueAlerts([entrant({ athleteId: null, bouts: [hugeBout] }), entrant({ name: "Old", athleteId: "a3", bouts: [{ ...hugeBout, key: "old" }] })], [], new Set(["b1"]), recap, "u", "e", "s")
     expect(out[0]!.body).not.toContain("HUGE")
-    expect(out[0]!.title).toBe("Super 32 · Round of 32 recap")
+    expect(out[0]!.title).toBe("Super 32 · NC update")
   })
 
   it("announces an All-American only once, in the upload that clinched it", () => {
