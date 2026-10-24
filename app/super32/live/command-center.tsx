@@ -81,7 +81,7 @@ const TAG: Record<string, string> = {
   Preview: "bg-[#3b5ba5] text-white",
 }
 function Tag({ kind }: { kind: string }) {
-  return <span className={`inline-block rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${TAG[kind] ?? "bg-[#1b2d57] text-white"}`}>{kind}</span>
+  return <span className={`inline-block rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${TAG[kind] ?? (/seeded wins$/.test(kind) ? "bg-[#e5372c] text-white" : "bg-[#1b2d57] text-white")}`}>{kind}</span>
 }
 
 function Section({ title, right, children }: { title: string; right?: React.ReactNode; children: React.ReactNode }) {

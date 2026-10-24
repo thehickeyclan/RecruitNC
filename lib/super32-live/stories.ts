@@ -19,6 +19,8 @@ export type Story = {
   entrant: SnapshotEntrant | null
   meta: string
   rank: number
+  /** When the story's newest result arrived; newer leads among equal ranks. */
+  at?: string
 }
 
 const ORD = (n: number) => (n === 1 ? "1st" : n === 2 ? "2nd" : n === 3 ? "3rd" : `${n}th`)
@@ -54,20 +56,23 @@ export function buildStories(entrants: SnapshotEntrant[], recaps: SnapshotRecap[
       out.push({ id: `aa:${key}`, kind: "all_american", label: "All-American", headline: `${e.name} clinches All-American`,
         dek: `${e.wins}-${e.losses} so far at ${wt(e)}, guaranteed a top-eight finish.`, entrant: e, meta: `${lbs(e)}`, rank: 3 })
     }
-    for (const b of e.bouts) {
-      if (!b.win || (b.tier !== "huge" && b.tier !== "big")) continue
+    // One story per wrestler with seeded wins, led by the newest. A second or third seeded win
+    // updates that story instead of sitting under the first one (Matt, 24 Oct).
+    const seeded = e.bouts.filter((b) => b.win && (b.tier === "huge" || b.tier === "big")).sort((x, y) => (y.seenAt ?? "").localeCompare(x.seenAt ?? ""))
+    const b = seeded[0]
+    if (b) {
       const how = [b.winType, b.result].filter(Boolean).join(" ")
-      const dek = `Beat ${b.opponent} (${b.opponentTeam}), ${b.reasons.join(", ")}${how ? `, ${how}` : ""}, ${b.round}.`
-      if (b.tier === "huge") {
-        out.push({ id: `huge:${b.key}`, kind: "huge", label: "Huge win", headline: `${e.name} defeats ${b.reasons[0]}`, dek, entrant: e,
-          meta: `${how} · ${b.round} · ${lbs(e)}`, rank: 4 + (b.opponentSeed ?? 9) / 100 })
-      } else if (b.upset) {
-        out.push({ id: `upset:${b.key}`, kind: "upset", label: "Upset", headline: `${e.name} upsets ${b.reasons[0]}`, dek, entrant: e,
-          meta: `${how} · ${b.round} · ${lbs(e)}`, rank: 5 + (b.opponentSeed ?? 30) / 100 })
-      } else {
-        out.push({ id: `big:${b.key}`, kind: "big", label: "Big win", headline: `${e.name} beats ${b.reasons[0]}`, dek, entrant: e,
-          meta: `${how} · ${b.round} · ${lbs(e)}`, rank: 7 + (b.opponentSeed ?? 30) / 100 })
-      }
+      const standing = e.status === "eliminated" ? `finished ${e.wins}-${e.losses}`
+        : e.aaClinched ? `now ${e.wins}-${e.losses} and an All-American`
+        : e.status === "alive" ? `now ${e.wins}-0 and unbeaten on the championship side`
+        : `now ${e.wins}-${e.losses} and alive in the consolations`
+      const earlier = seeded.slice(1).map((x) => `${x.reasons[0]} ${x.opponent}`)
+      const n = seeded.length
+      const headline = n > 1 ? `${e.name} picks up ${e.gender === "girls" ? "her" : "his"} ${ORD(n)} seeded win at Super 32` : b.tier === "huge" ? `${e.name} defeats ${b.reasons[0]}` : b.upset ? `${e.name} upsets ${b.reasons[0]}` : `${e.name} beats ${b.reasons[0]}`
+      const dek = `Beat ${b.opponent} (${b.opponentTeam}), ${b.reasons.join(", ")}${how ? `, ${how}` : ""}, ${b.round}${earlier.length ? `, after beating ${earlier.join(" and ")} earlier` : ""}. ${standing[0]!.toUpperCase()}${standing.slice(1)}.`
+      const anyHuge = seeded.some((x) => x.tier === "huge")
+      out.push({ id: `seeded:${key}:${n}`, kind: anyHuge ? "huge" : b.upset ? "upset" : "big", label: n > 1 ? `${n} seeded wins` : b.tier === "huge" ? "Huge win" : "Big win",
+        headline, dek, entrant: e, meta: `${how} · ${b.round} · ${lbs(e)}`, rank: 4, at: b.seenAt ?? "" })
     }
   }
   // Headlines are Huge and Big wins (and placings), plus who is still unbeaten on the
@@ -79,5 +84,5 @@ export function buildStories(entrants: SnapshotEntrant[], recaps: SnapshotRecap[
       dek: unbeaten.map((e) => `${e.name} (${e.gender === "girls" ? "G" : ""}${e.weight}, ${e.wins}-0)`).join(" · "),
       entrant: null, meta: "Championship side", rank: 8 })
   }
-  return out.sort((a, b) => a.rank - b.rank)
+  return out.sort((a, b) => a.rank - b.rank || (b.at ?? "").localeCompare(a.at ?? ""))
 }
