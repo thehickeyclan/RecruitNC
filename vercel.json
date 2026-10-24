@@ -84,7 +84,7 @@
     },
     {
       "path": "/api/cron/super32-flo",
-      "schedule": "*/5 * * * *"
+      "schedule": "*/2 * * * *"
     }
   ]
 }

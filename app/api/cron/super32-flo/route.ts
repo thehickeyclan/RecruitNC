@@ -1,4 +1,4 @@
-/** Super 32 HQ auto-update: pulls Flo's results feed every 5 minutes during the event. */
+/** Super 32 HQ auto-update: pulls Flo's results feed every 2 minutes during the event. */
 import { NextResponse, type NextRequest } from "next/server"
 import { revalidateTag } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
