@@ -316,6 +316,8 @@ export function summarizeEntrants(bouts: LiveBout[], ctx: TierContext, isNc: NcF
         if (p[1] === 1) e.finalist = true
       }
       if (x.win && AA_CLINCH.test(x.bout.round.trim())) e.aaClinched = true
+      // A finalist from the moment he wins his semifinal, not only once the final is wrestled.
+      if (x.win && /^semi-?finals?$/i.test(x.bout.round.trim())) e.finalist = true
     }
     if (e.placement) e.aaClinched = true
     let streak = 0
