@@ -102,7 +102,7 @@ describe("recap", () => {
     const b = bout({ key: "new" })
     const es = summarizeEntrants([b], ctx(seeds(3)))
     const r = recap(es, new Set(["new"]))
-    expect(r.sentence).toBe("North Carolina went 1-0 since the last update, mostly in the Round of 32, with 1 seeded win. 1 NC wrestler remains alive. Nc Kid (144) beat #3 seed.")
+    expect(r.sentence).toBe("North Carolina went 1-0 since the last update, with 1 seeded win. 1 NC wrestler remains alive. Nc Kid (144) beat #3 seed.")
     expect(r.topPerformance?.win.tier).toBe("huge")
   })
 })
