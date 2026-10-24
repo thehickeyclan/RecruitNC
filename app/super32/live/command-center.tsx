@@ -287,7 +287,16 @@ function useStars() {
       return next
     })
   }
-  return { ids, toggle }
+  /** Adds keys without toggling (for carrying over older stars). */
+  const addMany = (keys: string[]) => {
+    if (!keys.length) return
+    setIds((cur) => {
+      const next = new Set([...cur, ...keys])
+      try { localStorage.setItem(LOCAL_STARS, JSON.stringify([...next])) } catch { /* private mode */ }
+      return next
+    })
+  }
+  return { ids, toggle, addMany }
 }
 
 /** A star's key: the wrestler's bracket line (division, weight, name), the same on every upload. */
@@ -416,6 +425,17 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
   const feed = useMemo(() => (snap?.feed ?? []).filter((f) => g === "all" || f.gender === g).sort((a, b) => (a.tier === b.tier ? 0 : a.tier === "huge" ? -1 : 1)), [snap, g])
   // My Wrestlers replaces our Wrestlers to Watch (Matt, 23 Oct): the families pick, by starring.
   const mine = useMemo(() => entrants.filter((e) => stars.ids.has(starKey(e))), [entrants, stars.ids])
+  // One-time carry-over of stars saved under the earlier key (profile ids, or "x:" bracket keys).
+  useEffect(() => {
+    if (!snap?.entrants?.length) return
+    let old: string[] = []
+    try { old = JSON.parse(localStorage.getItem("s32-stars") ?? "[]") } catch { return }
+    if (!old.length) return
+    const keys = snap.entrants.filter((e) => (e.athleteId && old.includes(e.athleteId)) || old.includes(`x:${starKey(e)}`)).map(starKey)
+    stars.addMany(keys)
+    try { localStorage.removeItem("s32-stars") } catch { /* private mode */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snap])
   const weights = useMemo(() => [...new Set(entrants.map((e) => e.weight))].sort((a, b) => Number(a) - Number(b)), [entrants])
   const list = useMemo(() => {
     const order: Record<string, number> = { placed: 0, alive: 1, not_started: 1, alive_consis: 2, eliminated: 3 }
@@ -476,9 +496,11 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
           </div>
           <div className="flex flex-wrap items-center gap-2 text-xs md:justify-end">
             {rehearsalLabel && <span className="font-semibold text-[#d4af55]">{rehearsalLabel}</span>}
-            {year === "2026" && !initial && watching !== null && watching >= 10 && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 px-2.5 py-1 font-semibold text-emerald-300">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />{watching.toLocaleString()} watching now
+            {year === "2026" && !initial && watching !== null && (
+              <span className="inline-flex items-center gap-2 rounded-md border border-emerald-500/40 bg-[#0b1730] px-2.5 py-1">
+                <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-[#9fb0cf]">Watching now</span>
+                <span className={`${H} text-lg leading-none text-white`}>{watching.toLocaleString()}</span>
               </span>
             )}
             {year === "2026" && <a href={FLO_BRACKETS_URL} target="_blank" rel="noopener noreferrer" className="rounded-full border border-[#d4af55]/50 px-2.5 py-1 font-semibold text-[#d4af55] hover:bg-[#d4af55]/10">Brackets on Flo ↗</a>}
