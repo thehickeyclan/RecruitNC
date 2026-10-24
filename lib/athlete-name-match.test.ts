@@ -170,3 +170,32 @@ describe("a mangled apostrophe", () => {
     expect(namesLikelySamePerson("Jackson Smith?", "Jackson Jones")).toBe(false)
   })
 })
+
+describe("one school, two spellings", () => {
+  /*
+   * Every pair here is one Maryland school as two of its own brackets spell it. Each one that
+   * fails mints a second profile for a wrestler who entered both his state's tournaments —
+   * five boys at Loyola Blakefield, before the grouping was fixed to ask this function.
+   */
+  it.each([
+    ["Loyola Blakefield", "Loyola-Blakefield"],
+    ["Cambridge-South Dorchester", "Cambridge/South Dorchester"],
+    ["DeMatha Catholic", "Dematha Catholic"],
+    ["Dr. Henry A. Wise Jr.", "Dr. Henry A. Wise, Jr."],
+    ["North East", "Northeast"],
+    ["Saint John Paul the Great Catholic High School", "St. John Paul the Great Catholic"],
+    ["St. Paul`s School for Boys", "Saint Paul's School for Boys"],
+    ["Our Lady of Mt. Carmel", "Our Lady of Mount Carmel"],
+    ["Ft. Hill", "Fort Hill"],
+  ])("joins %s and %s", (a, b) => {
+    expect(schoolsLikelySame(a, b)).toBe(true)
+  })
+
+  it("still keeps different schools apart", () => {
+    expect(schoolsLikelySame("North East", "North Point")).toBe(false)
+    expect(schoolsLikelySame("Loyola Blakefield", "Loyola Academy")).toBe(false)
+    expect(schoolsLikelySame("Northeast", "North Hagerstown")).toBe(false)
+    expect(schoolsLikelySame("St. John Paul the Great Catholic", "St. Mary's")).toBe(false)
+    expect(schoolsLikelySame("Mount Carmel", "Mount Hebron")).toBe(false)
+  })
+})

@@ -339,8 +339,13 @@ async function main() {
   const listed = process.argv.includes("--all") ? target.rows.filter((r) => !r.pass || r.detail?.length) : failed
   for (const r of listed) {
     console.log(`\n${r.check}:`)
-    for (const d of (r.detail ?? []).slice(0, 40)) console.log(`  - ${d}`)
-    if ((r.detail?.length ?? 0) > 40) console.log(`  … and ${r.detail!.length - 40} more`)
+    /*
+     * The point of printing the rows is that a fix starts from names; forty of a hundred and
+     * thirteen is a percentage again. --all prints them, which is what gets sent to Muse.
+     */
+    const limit = process.argv.includes("--all") ? Number.POSITIVE_INFINITY : 40
+    for (const d of (r.detail ?? []).slice(0, limit)) console.log(`  - ${d}`)
+    if ((r.detail?.length ?? 0) > limit) console.log(`  … and ${r.detail!.length - limit} more (--all to list them)`)
   }
   console.log(
     failed.length

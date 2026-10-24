@@ -141,7 +141,14 @@ export function buildProfileWeightDisplay(
 
 /** Build candidates from public profile tournament payload fields. */
 export function candidatesFromPublicProfilePayload(athlete: {
-  nchsaa_profile?: Array<{ year?: number; weight_class?: string | null; classification?: string | null }>
+  nchsaa_profile?: Array<{
+    year?: number
+    weight_class?: string | null
+    classification?: string | null
+    gender?: string | null
+    /** Undefined means the state sanctioned it — see lib/recruiting/state-events.ts. */
+    sanctioned?: boolean
+  }>
   /** The wrestler's state, which names his state tournament on the "last competed" line. */
   state?: string | null
   other_tournament_results?: Array<{
@@ -215,7 +222,11 @@ export function candidatesFromPublicProfilePayload(athlete: {
        * His state's tournament. "Last competed: 106 lbs — NCHSAA States 2026" on a South
        * Carolina wrestler names a tournament he was never at; the SCHSL and SCISA run his.
        */
-      event: `${stateChampionshipName(athlete.state, r.classification)} States`,
+      /* An unsanctioned event keeps its own name here too, not the association's. */
+      event:
+        r.sanctioned === false
+          ? `${String(athlete.state ?? "").toUpperCase()} ${r.gender ?? ""} State Invitational`.replace(/\s+/g, " ").trim()
+          : `${stateChampionshipName(athlete.state, r.classification)} States`,
       priority: 10,
       month: 2,
     })

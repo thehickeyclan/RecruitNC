@@ -27,6 +27,15 @@ export const RECRUITING_BRAND = {
     { code: "SC", name: "South Carolina", live: false },
     // Being built (Matt, 21 Oct 2026): profiles first, not open to coaches until he says go.
     { code: "VA", name: "Virginia", live: false },
+    /*
+     * Maryland's data went in on 22 Oct and passes every readiness gate, but the state was
+     * missing from this list entirely - and a state that is not here does not exist to the
+     * product: /api/prospects answers "That state is not open yet" for it, to admins too. So
+     * 224 Maryland profiles were unreachable by anybody, including the people checking them.
+     */
+    { code: "MD", name: "Maryland", live: false },
+    { code: "WV", name: "West Virginia", live: false },
+    { code: "DE", name: "Delaware", live: false },
   ],
 } as const
 
@@ -58,13 +67,27 @@ export const stateBrand = (code: string) => `Recruit${code.toUpperCase()}`
 
 export type RecruitingState = (typeof RECRUITING_BRAND.states)[number]
 
-/** States a viewer may open: the live ones, and the ones still being checked for an admin. */
-export function visibleStates(isAdmin: boolean): RecruitingState[] {
-  return RECRUITING_BRAND.states.filter((s) => s.live || isAdmin)
+/**
+ * States a viewer may open: the live ones, the ones being checked if an admin, and any named
+ * for this viewer by `preview`.
+ *
+ * `preview` exists because the launch checklist asks for a real in-state coach session and a real
+ * family claim BEFORE a state goes live, and until now the only account that could see a
+ * not-yet-live state was an admin. That is circular - to launch we need a coach to look, and to
+ * let a coach look we had to launch - and the only way through it was handing a college coach the
+ * admin surface. A named account previewing a named state is the smaller permission.
+ */
+export function visibleStates(isAdmin: boolean, preview: readonly string[] = []): RecruitingState[] {
+  const named = new Set(preview.map((c) => String(c).trim().toUpperCase()).filter(Boolean))
+  return RECRUITING_BRAND.states.filter((s) => s.live || isAdmin || named.has(s.code))
 }
 
-export function isVisibleState(code: string | null | undefined, isAdmin: boolean): boolean {
-  return visibleStates(isAdmin).some((s) => s.code === String(code ?? "").toUpperCase())
+export function isVisibleState(
+  code: string | null | undefined,
+  isAdmin: boolean,
+  preview: readonly string[] = [],
+): boolean {
+  return visibleStates(isAdmin, preview).some((s) => s.code === String(code ?? "").toUpperCase())
 }
 
 /** "North Carolina", "North Carolina and South Carolina", "North Carolina, South Carolina, and Virginia". */

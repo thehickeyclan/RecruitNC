@@ -256,6 +256,14 @@ export function schoolsLikelySame(a?: string | null, b?: string | null): boolean
   const fold = (v?: string | null) =>
     normalizeApostrophes((v ?? "").trim().toLowerCase().replace(/`/g, "'"))
       .replace(/\bhigh school\b|\bhigh\b|\bh\.?s\.?\b|\bschool\b/g, " ")
+      /* "Saint" and "St." are the same word, and brackets use both: Virginia's 2026 field has
+         "Saint John Paul the Great Catholic High School" and "St. John Paul the Great Catholic".
+         So are "Mount" and "Mt." - Maryland's MIS bracket writes "Our Lady of Mount Carmel" where
+         its MIAA bracket writes "Our Lady of Mt. Carmel", and three wrestlers' 2026 placements
+         reached nobody because of it - and "Fort" and "Ft.", which the same files mix. */
+      .replace(/\bsaint\b/g, "st")
+      .replace(/\bmount\b/g, "mt")
+      .replace(/\bfort\b/g, "ft")
       .replace(/[^a-z0-9]+/g, " ")
       .split(" ")
       .filter((w) => w.length > 1)
@@ -264,6 +272,14 @@ export function schoolsLikelySame(a?: string | null, b?: string | null): boolean
   const x = fold(a)
   const y = fold(b)
   if (!x || !y) return false
+  /*
+   * A word break is not a school either. Maryland's brackets write both "North East" and
+   * "Northeast" for one school, and folding punctuation does not reach that: "north east" and
+   * "northeast" share no token, so the substring test below misses them and the wrestler is
+   * minted twice. Compared with the spaces closed up, and only for equality - the substring
+   * rule is deliberately loose and does not need to be looser.
+   */
+  if (x.replace(/ /g, "") === y.replace(/ /g, "")) return true
   return x.includes(y) || y.includes(x)
 }
 

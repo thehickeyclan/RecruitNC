@@ -107,23 +107,51 @@ async function main() {
   const unlinked = placers.filter((r) => !r.athlete_id)
   console.log(`${STATE} ${SEASON} placers (top ${MAX_PLACE}): ${placers.length}, ${unlinked.length} reaching no profile`)
 
-  /* One person per name+school: two placements for the same wrestler make one profile. */
+  /*
+   * One person per name+school: two placements for the same wrestler make one profile.
+   *
+   * Grouped by name first and then clustered with `schoolsLikelySame`, not by a normalised school
+   * string. A string key splits on spellings that the matcher itself treats as one school:
+   * Maryland's MIS file writes "Loyola Blakefield" and its MIAA file "Loyola-Blakefield", and
+   * five boys who entered both tournaments were each created twice in a single run - the one
+   * thing the claim flow asks people to avoid, done by us.
+   */
   const schoolOf = (r: Placer) => String(r.school_clean ?? r.school_raw ?? "").trim()
-  const groups = new Map<string, Placer[]>()
+  const byName = new Map<string, Placer[]>()
   for (const r of unlinked) {
-    const k = `${nn(r.wrestler_name)}|${nn(schoolOf(r))}`
-    const held = groups.get(k) ?? []
-    held.push(r)
-    groups.set(k, held)
+    const k = nn(r.wrestler_name)
+    byName.set(k, [...(byName.get(k) ?? []), r])
+  }
+  const groups = new Map<string, Placer[]>()
+  for (const [name, rows] of byName) {
+    const clusters: Placer[][] = []
+    for (const r of rows) {
+      const fit = clusters.find((c) => schoolsLikelySame(schoolOf(c[0]!), schoolOf(r)))
+      if (fit) fit.push(r)
+      else clusters.push([r])
+    }
+    clusters.forEach((c, i) => groups.set(`${name}|${nn(schoolOf(c[0]!))}|${i}`, c))
   }
 
   const active = currentClassYears()
   const inSchool = (y: number | null) => y != null && y >= active[0]! && y <= active[active.length - 1]!
 
-  const athletes = await page<{ id: string; name: string; highschool: string | null; state: string | null }>(
+  /*
+   * Only this state's profiles can be the wrestler in front of us.
+   *
+   * The candidate list was every profile in the country, so a namesake in another state blocked
+   * minting: Noah Tucker of Bullis School, Maryland - three MIS seasons, 2026 champion at 175 -
+   * went unminted because Noah Tucker of Union County, South Carolina already existed, a
+   * different boy at a different weight in a different state. Profiles carry a state now, so
+   * that is answerable. A profile with no state is still considered, since it cannot disagree.
+   */
+  const athletes = (await page<{ id: string; name: string; highschool: string | null; state: string | null; graduationyear: number | null }>(
     "athletes",
-    "id, name, highschool, state",
-  )
+    "id, name, highschool, state, graduationyear",
+  )).filter((a) => {
+    const s = String(a.state ?? "").trim().toUpperCase()
+    return !s || s === STATE
+  })
 
   const toLink: Array<{ ids: string[]; athleteId: string; label: string }> = []
   const toCreate: Array<{ row: Record<string, unknown>; label: string; ids: string[] }> = []
@@ -143,7 +171,19 @@ async function main() {
       heldNoYear.push(`${r.wrestler_name} (${school})`)
       continue
     }
-    const sameName = athletes.filter((a) => nn(a.name) === nn(r.wrestler_name))
+    /*
+     * A profile whose class year contradicts this placer's is a different wrestler, not an
+     * ambiguity to hold. Maryland has two Logan Browns: Northwest's, class of 2027, a 2026
+     * champion at 165, and McDonogh's, class of 2028, a heavyweight. The first went unminted
+     * because the second existed and shared his name. Where either year is unknown the name
+     * still holds, which is the cautious half of the rule.
+     */
+    const placerYear = rows.map((x) => Number(x.grad_year)).find((y) => y > 0) ?? null
+    const sameName = athletes.filter((a) => {
+      if (nn(a.name) !== nn(r.wrestler_name)) return false
+      const theirs = Number((a as { graduationyear?: unknown }).graduationyear)
+      return !(placerYear && theirs > 0 && theirs !== placerYear)
+    })
     const sameSchool = sameName.filter((a) => schoolsLikelySame(a.highschool, school))
     if (sameSchool.length === 1) {
       toLink.push({ ids: rows.map((x) => x.id), athleteId: sameSchool[0]!.id, label: `${r.wrestler_name} -> ${sameSchool[0]!.name} (${sameSchool[0]!.highschool ?? "no school"})` })

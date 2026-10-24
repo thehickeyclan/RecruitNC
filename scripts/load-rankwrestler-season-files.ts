@@ -76,12 +76,41 @@ async function main() {
     if (!sameName.length) { say("SKIPPED — no profile of that name"); continue }
     const schoolOk = sameName.filter((a) => schoolsLikelySame(a.highschool, wi.high_school))
     let pick = schoolOk.length === 1 ? schoolOk[0] : null
+    /*
+     * A wrestler's old school is not a mismatch, and we already hold the proof.
+     *
+     * The profile carries the school he is at now; a season file carries the school he wrestled
+     * that season at. Seven of Maryland's seasons were refused for this - Ethan Valdisera's
+     * 2023-24 at St. Mary's Ryken against a profile reading Calvert - and every one of them had
+     * placements on file at BOTH schools, which is the transfer, recorded by the state itself.
+     * So the file's school is accepted when it matches a school this athlete placed at.
+     */
+    if (!pick && sameName.length === 1) {
+      /*
+       * Looked up by NAME, not by athlete_id: the placement at the old school is usually not
+       * linked to him yet, and for the same reason the season file was refused - the linker
+       * matches on the school too. Safe because this branch only runs when exactly one profile
+       * in this state carries the name, which the state filter above already guarantees.
+       */
+      const { data: theirPlacements } = await sb
+        .from("state_tournament_placers")
+        .select("school_raw, school_clean, season")
+        .eq("state", STATE ?? "")
+        .ilike("wrestler_name", full)
+      const formerly = (theirPlacements ?? []).find((r) =>
+        schoolsLikelySame(String((r as { school_clean?: string; school_raw?: string }).school_clean ?? (r as { school_raw?: string }).school_raw ?? ""), wi.high_school),
+      )
+      if (formerly) {
+        pick = sameName[0]
+        say(`school changed — "${wi.high_school}" is where he placed in ${(formerly as { season?: number }).season}, profile now reads "${sameName[0]!.highschool}"`)
+      }
+    }
     if (!pick && sameName.length === 1 && ALLOW.some((n) => nn(n) === nn(full))) pick = sameName[0]
     if (!pick) {
       say(
         sameName.length > 1
           ? `SKIPPED — ${sameName.length} profiles of that name, none school-confirmed`
-          : `SKIPPED — the file says "${wi.high_school}" and the profile says "${sameName[0]!.highschool}"; pass --allow-school-mismatch "${full}" if she transferred`,
+          : `SKIPPED — the file says "${wi.high_school}" and the profile says "${sameName[0]!.highschool}", and he has no placement at the first; pass --allow-school-mismatch "${full}" if he transferred`,
       )
       continue
     }

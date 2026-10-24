@@ -21,6 +21,7 @@
 import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
+import { isSanctioned, loadStateSanctioning } from "@/lib/recruiting/state-events"
 
 for (const f of [".env.local", ".env"]) {
   const p = path.join(process.cwd(), f)
@@ -114,6 +115,8 @@ async function main() {
   type Row = Record<string, unknown> & { athlete_id: string; event_key: string; _rank: number }
   const rows: Row[] = []
   let sides = 0, linked = 0
+  /* Which of this state's events it actually sanctioned — the same column the profile reads. */
+  const sanctioning = await loadStateSanctioning(sb, STATE)
   for (const b of unique) {
     if (!b.Winner || !b.Loser) continue
     const season = Number(b.Season)
@@ -125,7 +128,16 @@ async function main() {
     const score = rest ? rest : b["Winner Score"] && (b["Winner Score"] !== "0" || b["Loser Score"] !== "0") ? `${b["Winner Score"]}-${b["Loser Score"]}` : null
     const base = {
       event_key: eventKey,
-      event_name: `${assoc} State Championships`,
+      /*
+       * An event the state did not sanction is not named as its championship, here either. The
+       * bout rows carry the event's name into the profile payload, so West Virginia's girls'
+       * invitational read "WVSSAC State Championships" on every bout of a title the WVSSAC did
+       * not award. Driven by the same `sanctioned` column as the profile — see
+       * lib/recruiting/state-events.ts.
+       */
+      event_name: isSanctioned(sanctioning, season, assoc, b.Gender, b.Classification)
+        ? `${assoc} State Championships`
+        : `${STATE} ${b.Gender ?? ""} State Invitational`.replace(/\s+/g, " ").trim(),
       year: season,
       weight_class: b["Weight Class"],
       round: [b.Classification && b.Classification !== assoc && !/^girls$/i.test(b.Classification) ? b.Classification : null, b.Round || "State Championships"].filter(Boolean).join(" · "),
