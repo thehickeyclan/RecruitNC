@@ -25,7 +25,7 @@ async function main() {
   const lines: string[] = []
   for (const e of data.entrants) for (const b of e.bouts) {
     if (b.winType === "BYE") continue
-    lines.push(`${e.gender === "girls" ? "G" : ""}${e.weight}\t${e.name}${e.seed ? ` (#${e.seed})` : ""}\t${b.win ? "W" : "L"} ${b.winType} ${b.result}\t${b.opponent} (${b.opponentTeam})${b.opponentSeed ? ` #${b.opponentSeed}` : ""}\t${b.round}${b.win && b.tier !== "win" ? `\t${String(b.tier).toUpperCase()}` : ""}`)
+    lines.push(`${e.gender === "girls" ? "G" : ""}${e.weight}\t${e.name}${e.seed ? ` (#${e.seed})` : ""}\t${b.win ? "W" : "L"} ${b.winType} ${b.result}\t${b.opponent} (${b.opponentTeam})${b.opponentSeed ? ` #${b.opponentSeed}` : ""}\t${b.round}${b.win && b.tier !== "win" ? `\t${String(b.tier).toUpperCase()}` : ""}${b.reasons?.length ? `\t[${b.reasons.join("; ")}]` : ""}`)
   }
   console.log(lines.join("\n"))
   // Raw cross-check: NC on either side of a real bout, straight from the file.
