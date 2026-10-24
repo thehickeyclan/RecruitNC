@@ -548,7 +548,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
   }, [snap])
   const weights = useMemo(() => [...new Set(entrants.map((e) => e.weight))].sort((a, b) => Number(a) - Number(b)), [entrants])
   const list = useMemo(() => {
-    const order: Record<string, number> = { placed: 0, alive: 1, not_started: 1, alive_consis: 2, eliminated: 3 }
+    const order: Record<string, number> = { placed: 0, alive: 1, alive_consis: 2, not_started: 3, eliminated: 4 }
     return entrants
       .filter((e) => (!q || `${e.name} ${e.school ?? ""}`.toLowerCase().includes(q.toLowerCase())) && (!weight || e.weight === weight) &&
         (!status || (status === "seeded" ? e.seed !== null : status === "winning" ? e.wins > e.losses : status === "alive" ? e.status === "alive" || e.status === "alive_consis" || e.status === "not_started" : e.status === status)))
