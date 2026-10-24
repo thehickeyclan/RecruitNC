@@ -84,19 +84,25 @@ async function eventPlacers(supabase: SupabaseClient): Promise<Credential[]> {
 }
 
 /**
- * State placers 1-8 from every state but North Carolina, 2026 and 2025: context on a win ("2026 VA 6A
- * state runner-up"). One line per wrestler, the newest season, best place. Never a tier.
+ * State placers 1-8 from every state (NC too, for NC-vs-NC bouts), 2026 and 2025: context on a win ("2026 VA 6A
+ * state runner-up"). One line per wrestler: the best place across both seasons, the newer season on a tie. Never a tier.
  */
 async function statePlacers(supabase: SupabaseClient): Promise<Credential[]> {
   const rows = await pageAll<{ wrestler_name: string; state: string; gender: string | null; season: number; place: number; classification: string | null }>((from) =>
     supabase.from("state_tournament_placers").select("wrestler_name, state, gender, season, place, classification")
-      .in("season", [2025, 2026]).gte("place", 1).lte("place", 8).neq("state", "NC").order("id").range(from, from + 999),
+      .in("season", [2025, 2026]).gte("place", 1).lte("place", 8).order("id").range(from, from + 999),
   )
+  // North Carolina's own results live in wrestling_nchsaa_results (NCHSAA and NCISAA), for NC-vs-NC bouts.
+  const nc = await pageAll<{ wrestler_name: string; year: number; place: number | null; classification: string | null }>((from) =>
+    supabase.from("wrestling_nchsaa_results").select("wrestler_name, year, place, classification")
+      .in("year", [2025, 2026]).gte("place", 1).lte("place", 8).order("id").range(from, from + 999),
+  )
+  for (const r of nc) if (r.wrestler_name && r.place) rows.push({ wrestler_name: r.wrestler_name, state: "NC", gender: null, season: r.year, place: r.place, classification: r.classification })
   const best = new Map<string, (typeof rows)[number]>()
   for (const r of rows) {
     const k = `${r.wrestler_name.toLowerCase()}|${r.state}|${r.gender ?? ""}`
     const cur = best.get(k)
-    if (!cur || r.season > cur.season || (r.season === cur.season && r.place < cur.place)) best.set(k, r)
+    if (!cur || r.place < cur.place || (r.place === cur.place && r.season > cur.season)) best.set(k, r)
   }
   // "Boys", "Girls" and "Open" are how some states name a single class; they add nothing to the line.
   const cls = (c: string | null) => (c ?? "").replace(/\b(boys|girls|open)\b/gi, "").replace(/\s+/g, " ").trim()

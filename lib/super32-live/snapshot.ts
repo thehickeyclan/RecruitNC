@@ -339,12 +339,12 @@ export async function computeSnapshot(supabase: SupabaseClient, eventKey: string
     })
 
   const feed: FeedItem[] = entrants
-    .flatMap((e) => e.bouts.filter((b) => b.win && (b.tier === "huge" || b.tier === "big")).map((b) => ({
+    .flatMap((e) => e.bouts.filter((b) => b.win && (b.tier === "huge" || b.tier === "big" || b.tier === "significant")).map((b) => ({
       key: b.key, seenAt: boutSeenAt[b.key] ?? now, tier: b.tier as Tier, upset: b.upset,
       name: e.name, athleteId: e.athleteId, photo: e.photo, school: e.school, gender: e.gender, weight: e.weight,
       opponent: b.opponent, opponentTeam: b.opponentTeam, reasons: b.reasons, winType: b.winType, result: b.result, round: b.round,
     })))
-    .sort((a, b) => b.seenAt.localeCompare(a.seenAt) || (a.tier === "huge" ? -1 : 1))
+    .sort((a, b) => b.seenAt.localeCompare(a.seenAt) || ({ huge: 0, big: 1, significant: 2 } as Record<string, number>)[a.tier]! - ({ huge: 0, big: 1, significant: 2 } as Record<string, number>)[b.tier]!)
 
   const recaps = [...(input.prev?.recaps ?? [])]
   let latestRecap: SnapshotRecap | null = null

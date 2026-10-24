@@ -52,7 +52,12 @@ export type LiveBout = Super32Row & {
   key: string
 }
 
-export type Tier = "huge" | "big" | "win"
+/**
+ * Huge: beat a #1-12 seed. Big: beat a #13-32 seed. Significant: beat an unseeded wrestler who is
+ * nationally ranked, a Super 32 / NHSCA top-8, or a state champion or runner-up. Only seeds make
+ * Huge or Big; Significant never sends a push on its own.
+ */
+export type Tier = "huge" | "big" | "significant" | "win"
 
 export type TieredWin = {
   bout: LiveBout
@@ -290,10 +295,14 @@ export function tierWin(bout: LiveBout, ctx: TierContext): TieredWin {
     else if (c.kind === "event_all_american") context.push({ label: c.label, w: 120 })
     else if (c.kind === "state_placer") context.push({ label: c.label, w: 130 + (c.rank ?? 8) })
   }
+  const significant = creds.some((c) =>
+    (c.kind === "national_rank" && (c.rank ?? 99) <= 30) || (c.kind === "board_rank" && (c.rank ?? 99) <= 50) ||
+    c.kind === "event_champion" || c.kind === "event_all_american" || c.kind === "state_champion" ||
+    (c.kind === "state_placer" && c.rank === 2))
   const rankOf = (s: string) => Number(s.match(/#(\d+)/)?.[1] ?? 99)
   huge.sort((a, b) => rankOf(a) - rankOf(b))
   big.sort((a, b) => rankOf(a) - rankOf(b))
-  const tier: Tier = huge.length ? "huge" : big.length ? "big" : "win"
+  const tier: Tier = huge.length ? "huge" : big.length ? "big" : significant ? "significant" : "win"
   const upset = opponentSeed !== null && (winnerSeed === null || winnerSeed - opponentSeed >= 4)
   const ctxLabels = [...new Set(context.sort((a, b) => a.w - b.w).map((x) => x.label))]
   return { ...base, tier, upset, reasons: [...huge, ...big, ...ctxLabels] }
@@ -392,6 +401,7 @@ export type Scoreboard = {
   aliveConsi: number
   huge: number
   big: number
+  significant: number
   seededWins: number
   /** Losses to seeded opponents: with seededWins, NC's record against the seeds. */
   seededLosses: number
@@ -415,6 +425,7 @@ export function scoreboard(entrants: EntrantSummary[], gender?: Gender): Scorebo
     aliveConsi: es.filter((e) => e.status === "alive_consis").length,
     huge: tiered.filter((t) => t.tier === "huge").length,
     big: tiered.filter((t) => t.tier === "big").length,
+    significant: tiered.filter((t) => t.tier === "significant").length,
     seededWins: tiered.filter((t) => t.opponentSeed !== null).length,
     seededLosses: es.reduce((n, e) => n + e.bouts.filter((b) => !b.win && b.lossToSeed != null).length, 0),
     allAmericans: es.filter((e) => e.aaClinched).length,
@@ -462,7 +473,7 @@ export function recap(entrants: EntrantSummary[], newBoutKeys: Set<string>, gend
   const fresh = es.flatMap((e) => e.bouts.filter((b) => newBoutKeys.has(b.bout.key) && b.bout.loser && !/^bye$/i.test(b.bout.winType)).map((b) => ({ e, b })))
   const wins = fresh.filter((x) => x.b.win)
   const tw = wins.map((x) => ({ entrant: x.e, win: x.b.tiered })).filter((x): x is { entrant: EntrantSummary; win: TieredWin } => !!x.win)
-  const tierRank = (t: Tier) => (t === "huge" ? 0 : t === "big" ? 1 : 2)
+  const tierRank = (t: Tier) => (t === "huge" ? 0 : t === "big" ? 1 : t === "significant" ? 2 : 3)
   const strength = (w: TieredWin) => Number(w.reasons[0]?.match(/#(\d+)/)?.[1] ?? w.opponentSeed ?? 99)
   const top = [...tw].filter((x) => x.win.tier !== "win").sort((a, b) => tierRank(a.win.tier) - tierRank(b.win.tier) || strength(a.win) - strength(b.win))[0] ?? null
   const upsets = tw.filter((x) => x.win.upset).sort((a, b) => ((b.win.winnerSeed ?? 40) - (b.win.opponentSeed ?? 0)) - ((a.win.winnerSeed ?? 40) - (a.win.opponentSeed ?? 0)))
