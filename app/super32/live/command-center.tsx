@@ -151,27 +151,35 @@ function Headline({ s, onOpen }: { s: Story; onOpen: (e: SnapshotEntrant) => voi
   )
 }
 
-function RecapBlock({ r }: { r: SnapshotRecap }) {
-  const pct = r.wins + r.losses ? Math.round((100 * r.wins) / (r.wins + r.losses)) : 0
-  const lines: Array<[string, string | null]> = [
-    ["Top performance", r.topPerformance ? `${r.topPerformance.name} (${r.topPerformance.weight}) ${r.topPerformance.line}` : null],
-    ["Biggest upset", r.biggestUpset ? `${r.biggestUpset.name} (${r.biggestUpset.weight}) ${r.biggestUpset.line}` : null],
-    ["Longest streak", r.longestStreak ? `${r.longestStreak.name} (${r.longestStreak.weight}), ${r.longestStreak.streak} straight` : null],
-    ["Eliminated", r.notableEliminations.length ? r.notableEliminations.map((e) => `${e.name}${e.seed ? ` (#${e.seed})` : ""}`).join(", ") : null],
-  ]
+/**
+ * The last hour, added up from every update in it. Results now arrive every few minutes, so a
+ * single update (or a round name) says nothing; an hour of them does.
+ */
+function LastHour({ recaps, feed }: { recaps: SnapshotRecap[]; feed: FeedItem[] }) {
+  const latest = recaps[0]
+  if (!latest) return null
+  const since = new Date(new Date(latest.at).getTime() - 60 * 60_000).toISOString()
+  const inHour = recaps.filter((r) => r.at > since)
+  const sum = (k: "wins" | "losses" | "seededWins" | "huge" | "big") => inHour.reduce((n, r) => n + r[k], 0)
+  const wins = sum("wins"), losses = sum("losses")
+  const sig = feed.filter((f) => f.tier === "significant" && f.seenAt > since).length
+  const pct = wins + losses ? Math.round((100 * wins) / (wins + losses)) : 0
+  const out = inHour.flatMap((r) => r.notableEliminations)
+  const top = inHour.map((r) => r.topPerformance).find(Boolean)
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-[1.5fr_repeat(5,1fr)]">
-        {([["Round record", `${r.wins}-${r.losses}`], ["Win rate", `${pct}%`], ["Seeded wins", r.seededWins], ["Huge wins", r.huge], ["Big wins", r.big], ["Still alive", r.stillAlive]] as const).map(([k, v]) => (
+        {([["Record", `${wins}-${losses}`], ["Win rate", `${pct}%`], ["Huge wins", sum("huge")], ["Big wins", sum("big")], ["Significant", sig], ["Still alive", latest.stillAlive]] as const).map(([k, v]) => (
           <div key={k} className="rounded-lg border border-[#1f3360] bg-[#0b1730] px-2 py-3 text-center">
-            <div className={`${H} whitespace-nowrap text-2xl md:text-3xl ${k === "Huge wins" ? "text-[#e5372c]" : k === "Big wins" ? "text-[#d4af55]" : "text-white"}`}>{v}</div>
+            <div className={`${H} whitespace-nowrap text-2xl md:text-3xl ${k === "Huge wins" ? "text-[#e5372c]" : k === "Big wins" ? "text-[#d4af55]" : k === "Significant" ? "text-emerald-400" : "text-white"}`}>{v}</div>
             <div className="text-[11px] text-[#9fb0cf]">{k}</div>
           </div>
         ))}
       </div>
-      <p className="text-sm leading-relaxed text-[#c9d4ea]">{r.sentence}</p>
+      <p className="text-sm leading-relaxed text-[#c9d4ea]">North Carolina went {wins}-{losses} in the last hour, with {sum("seededWins")} seeded {sum("seededWins") === 1 ? "win" : "wins"} and {sig} significant {sig === 1 ? "win" : "wins"}. {latest.stillAlive} NC {latest.stillAlive === 1 ? "wrestler remains" : "wrestlers remain"} alive.</p>
       <dl className="grid gap-2 text-sm sm:grid-cols-2">
-        {lines.filter(([, v]) => v).map(([k, v]) => (<div key={k}><dt className="text-[11px] font-semibold uppercase tracking-wider text-[#d4af55]">{k}</dt><dd className="text-[#c9d4ea]">{v}</dd></div>))}
+        {top && <div><dt className="text-[11px] font-semibold uppercase tracking-wider text-[#d4af55]">Top performance</dt><dd className="text-[#c9d4ea]">{top.name} ({top.weight}) {top.line}</dd></div>}
+        {out.length > 0 && <div><dt className="text-[11px] font-semibold uppercase tracking-wider text-[#d4af55]">Seeded wrestlers eliminated</dt><dd className="text-[#c9d4ea]">{out.map((e) => `${e.name}${e.seed ? ` (#${e.seed})` : ""}`).join(", ")}</dd></div>}
       </dl>
     </div>
   )
@@ -619,8 +627,8 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
             </div>
 
             {!past && <div className="grid gap-5 lg:grid-cols-[1.3fr_1fr]">
-              <Section title="Round Recap" right={recaps[0] ? <span className="text-xs text-[#8195bd]">After {recaps[0].label}</span> : null}>
-                {recaps[0] ? <RecapBlock r={recaps[0]} /> : <Empty>The first recap posts after the opening round.</Empty>}
+              <Section title="Last Hour" right={recaps[0] ? <span className="text-xs text-[#8195bd]">To {new Date(recaps[0].at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</span> : null}>
+                {recaps[0] ? <LastHour recaps={recaps} feed={feed} /> : <Empty>Results add up here as matches finish.</Empty>}
               </Section>
               {(() => {
                 const topWins = feed.filter((f) => f.tier === "huge" || f.tier === "big")

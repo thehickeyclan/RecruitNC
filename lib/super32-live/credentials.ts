@@ -8,8 +8,9 @@
  * - 2025-26 state placers from every state but North Carolina (newest season, best place).
  * All of these are context on a win; only seeds tier one.
  *
- * Fargo is left out on purpose: `fargo_results` has no state column, so a Fargo name could only
- * be matched on the name alone, which is how namesakes get credited.
+ * - Fargo 2025-26 top-8 (16U and Junior, freestyle, Greco, women's), read from the placement
+ *   matches in other_tournament_bouts, which carry each wrestler's state. (`fargo_results` has no
+ *   state column, so it is still not used: name-only matching credits namesakes.)
  */
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { Credential, Gender } from "./engine"
@@ -115,7 +116,29 @@ async function statePlacers(supabase: SupabaseClient): Promise<Credential[]> {
   }))
 }
 
+async function fargoPlacers(supabase: SupabaseClient): Promise<Credential[]> {
+  const PLACE: Record<string, [number, number]> = { "1st Place Match": [1, 2], "3rd Place Match": [3, 4], "5th Place Match": [5, 6], "7th Place Match": [7, 8] }
+  const rows = await pageAll<{ event_name: string; year: number; round: string; athlete_name: string; athlete_club: string | null; win: boolean }>((from) =>
+    supabase.from("other_tournament_bouts").select("event_name, year, round, athlete_name, athlete_club, win")
+      .like("event_key", "fargo-%").in("year", [2025, 2026]).in("round", Object.keys(PLACE)).order("id").range(from, from + 999),
+  )
+  const best = new Map<string, Credential & { place: number }>()
+  for (const r of rows) {
+    const pl = PLACE[r.round]
+    if (!pl || !r.athlete_name) continue
+    const place = r.win ? pl[0] : pl[1]
+    const girls = /women/i.test(r.event_name)
+    const style = girls ? "women's freestyle" : /greco/i.test(r.event_name) ? "Greco" : "freestyle"
+    const age = /16u/i.test(r.event_name) ? "16U" : "Junior"
+    const label = `${r.year} Fargo ${age} ${style} ${place === 1 ? "champion" : place === 2 ? "runner-up" : ORD(place)}`
+    const k = `${r.athlete_name.toLowerCase()}|${r.athlete_club ?? ""}|${r.event_name}`
+    const cur = best.get(k)
+    if (!cur || place < cur.place) best.set(k, { name: r.athlete_name, state: r.athlete_club, gender: girls ? "girls" : "boys", kind: place === 1 ? "event_champion" : "event_all_american", label, place })
+  }
+  return [...best.values()].map(({ place: _p, ...c }) => c)
+}
+
 export async function loadCredentials(supabase: SupabaseClient): Promise<Credential[]> {
-  const [a, b, c] = await Promise.all([nationalRankings(supabase), eventPlacers(supabase), statePlacers(supabase)])
-  return [...a, ...b, ...c]
+  const [a, b, c, d] = await Promise.all([nationalRankings(supabase), eventPlacers(supabase), statePlacers(supabase), fargoPlacers(supabase)])
+  return [...a, ...b, ...c, ...d]
 }
