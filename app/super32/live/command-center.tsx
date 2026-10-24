@@ -219,7 +219,7 @@ function LatestResults({ entrants, onOpen }: { entrants: SnapshotEntrant[]; onOp
       <div className="mb-2 flex flex-wrap gap-1.5">{chip("all", "All")}{chip("wins", "Wins")}{chip("losses", "Losses")}{chip("out", "Eliminated")}</div>
       {shown.length === 0 ? <Empty>No results here yet.</Empty> : (
         <div className="divide-y divide-[#1f3360]">
-          {shown.slice(0, all ? undefined : 20).map((r) => (
+          {shown.slice(0, all ? undefined : 5).map((r) => (
             <button key={`${r.b.key}|${r.e.name}`} onClick={() => onOpen(r.e)} className="flex w-full items-start gap-3 py-2 text-left">
               <span className={`${H} mt-0.5 w-5 shrink-0 text-center text-base ${r.b.win ? "text-emerald-400" : "text-[#e5372c]"}`}>{r.b.win ? "W" : "L"}</span>
               <div className="min-w-0 flex-1">
@@ -237,7 +237,7 @@ function LatestResults({ entrants, onOpen }: { entrants: SnapshotEntrant[]; onOp
               </div>
             </button>
           ))}
-          {shown.length > 20 && <button onClick={() => setAll(!all)} className="w-full pt-2.5 text-center text-xs text-[#d4af55]">{all ? "Show less" : `Show all ${shown.length}`}</button>}
+          {shown.length > 5 && <button onClick={() => setAll(!all)} className="w-full pt-2.5 text-center text-xs font-semibold text-[#d4af55]">{all ? "Show less" : `Show all ${shown.length} results`}</button>}
         </div>
       )}
     </Section>
