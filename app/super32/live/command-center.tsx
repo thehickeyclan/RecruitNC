@@ -234,39 +234,29 @@ function BestWin({ e }: { e: SnapshotEntrant }) {
 }
 
 /**
- * Stars are the app's follows (athlete_follows via /api/mobile/v1/follows): signed in on the web
- * or in the app's web sheet, a star is the same follow the app shows and the results digest uses.
- * Signed out, stars live on this device only.
+ * Stars on Super 32 HQ are their own weekend list (Matt, 24 Oct): nothing to do with following
+ * athletes in the app. Saved on this device, every NC wrestler can be starred, linked or not.
  */
-const LOCAL_STARS = "s32-stars"
+const LOCAL_STARS = "s32-hq-stars-2026"
 function useStars() {
   const [ids, setIds] = useState<Set<string>>(new Set())
-  const [signedIn, setSignedIn] = useState<boolean | null>(null)
   useEffect(() => {
-    let local: string[] = []
-    try { local = JSON.parse(localStorage.getItem(LOCAL_STARS) ?? "[]") } catch { /* private mode */ }
-    fetch("/api/mobile/v1/follows", { cache: "no-store" })
-      .then(async (r) => {
-        if (r.status === 401) { setSignedIn(false); setIds(new Set(local)); return }
-        const j = await r.json()
-        setSignedIn(true)
-        setIds(new Set((j.athletes ?? []).map((a: { id: string }) => a.id)))
-      })
-      .catch(() => { setSignedIn(false); setIds(new Set(local)) })
+    try { setIds(new Set(JSON.parse(localStorage.getItem(LOCAL_STARS) ?? "[]"))) } catch { /* private mode */ }
   }, [])
-  const toggle = async (athleteId: string) => {
-    const on = !ids.has(athleteId)
-    const next = new Set(ids)
-    if (on) next.add(athleteId); else next.delete(athleteId)
-    setIds(next)
-    if (signedIn) {
-      const r = await fetch("/api/mobile/v1/follows", { method: on ? "POST" : "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ athleteId }) }).catch(() => null)
-      if (!r || !r.ok) setIds(ids)
-    } else {
+  const toggle = (key: string) => {
+    setIds((cur) => {
+      const next = new Set(cur)
+      if (next.has(key)) next.delete(key); else next.add(key)
       try { localStorage.setItem(LOCAL_STARS, JSON.stringify([...next])) } catch { /* private mode */ }
-    }
+      return next
+    })
   }
-  return { ids, signedIn, toggle }
+  return { ids, toggle }
+}
+
+/** A star's key: the wrestler's bracket line (division, weight, name), the same on every upload. */
+function starKey(e: { gender: string; weight: string; name: string }): string {
+  return `${e.gender}|${e.weight}|${e.name.toLowerCase()}`
 }
 
 function Star({ on, onToggle, className = "" }: { on: boolean; onToggle: () => void; className?: string }) {
@@ -287,7 +277,7 @@ function WatchCard({ e, onOpen, starred, onStar }: { e: SnapshotEntrant; onOpen:
       <div className="relative">
         <Photo e={e} big className="aspect-[4/5] w-full" />
         {e.seed !== null && <span className={`${H} absolute left-2 top-2 rounded bg-[#d4af55] px-1.5 text-sm text-[#0b1730]`}>#{e.seed}</span>}
-        {onStar && e.athleteId && <Star on={!!starred} onToggle={onStar} className="absolute right-2 top-2" />}
+        {onStar && <Star on={!!starred} onToggle={onStar} className="absolute right-2 top-2" />}
       </div>
       <div className="space-y-1.5 p-2.5">
         <div className="truncate font-semibold text-white">{e.name}</div>
@@ -309,7 +299,7 @@ function WrestlerSheet({ e, onClose, starred, onStar }: { e: SnapshotEntrant; on
             <div className={`${H} text-2xl text-white`}>{e.name}</div>
             <div className="text-sm text-[#8195bd]">{e.gender === "girls" ? "Girls " : ""}{e.weight} lbs{e.school ? ` · ${e.school}` : ""}{e.classYear ? ` · ${e.classYear}` : ""}{e.seed !== null ? ` · #${e.seed} seed` : ""}</div>
           </div>
-          {onStar && e.athleteId && <Star on={!!starred} onToggle={onStar} />}
+          {onStar && <Star on={!!starred} onToggle={onStar} />}
           <button onClick={onClose} className="text-sm text-[#9fb0cf]">Close</button>
         </div>
         <div className="mt-4 grid grid-cols-3 gap-2 text-center">
@@ -385,7 +375,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
   const stories = useMemo(() => buildStories(entrants, recaps, !!snap?.hasResults), [entrants, recaps, snap])
   const feed = useMemo(() => (snap?.feed ?? []).filter((f) => g === "all" || f.gender === g).sort((a, b) => (a.tier === b.tier ? 0 : a.tier === "huge" ? -1 : 1)), [snap, g])
   // My Wrestlers replaces our Wrestlers to Watch (Matt, 23 Oct): the families pick, by starring.
-  const mine = useMemo(() => entrants.filter((e) => e.athleteId && stars.ids.has(e.athleteId)), [entrants, stars.ids])
+  const mine = useMemo(() => entrants.filter((e) => stars.ids.has(starKey(e))), [entrants, stars.ids])
   const weights = useMemo(() => [...new Set(entrants.map((e) => e.weight))].sort((a, b) => Number(a) - Number(b)), [entrants])
   const list = useMemo(() => {
     const order: Record<string, number> = { placed: 0, alive: 1, not_started: 1, alive_consis: 2, eliminated: 3 }
@@ -515,17 +505,17 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
             </div>}
 
             <div className={`grid gap-5 ${past ? "" : "lg:grid-cols-[1.6fr_1fr]"}`}>
-              {!past && <Section title={`My Wrestlers${mine.length ? ` (${mine.length})` : ""}`} right={stars.signedIn === false && mine.length ? <a href="/auth/signin?returnTo=%2Fsuper32%2Flive" className="shrink-0 text-xs text-[#d4af55]">Sign in to save</a> : null}>
+              {!past && <Section title={`My Wrestlers${mine.length ? ` (${mine.length})` : ""}`}>
                 {mine.length ? (
                   <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-3 md:px-0 xl:grid-cols-4">
-                    {mine.map((e) => <WatchCard key={`m${e.gender}${e.weight}${e.name}`} e={e} onOpen={() => setOpen(e)} starred onStar={() => void stars.toggle(e.athleteId!)} />)}
+                    {mine.map((e) => <WatchCard key={`m${e.gender}${e.weight}${e.name}`} e={e} onOpen={() => setOpen(e)} starred onStar={() => stars.toggle(starKey(e))} />)}
                   </div>
                 ) : (
                   <div className="rounded-lg border border-dashed border-[#2c4170] px-5 py-8 text-center">
                     <div className="text-4xl text-[#d4af55]">☆</div>
                     <div className={`${H} mt-2 text-2xl text-white`}>Build your Super 32 list</div>
                     <p className="mx-auto mt-2 max-w-sm text-sm text-[#c9d4ea]">Tap the <span className="text-[#d4af55]">☆</span> next to any NC wrestler in the list to follow them here, with their record and results all weekend.</p>
-                    <p className="mx-auto mt-2 max-w-sm text-xs text-[#8195bd]">{stars.signedIn ? "Your stars are saved to your NC United follows." : "Sign in or use the NC United app to keep your list and get alerts."}</p>
+                    <p className="mx-auto mt-2 max-w-sm text-xs text-[#8195bd]">Your list is saved on this phone or computer for the weekend.</p>
                   </div>
                 )}
               </Section>}
@@ -550,7 +540,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                               <div className="truncate text-xs text-[#8195bd]">{e.school ?? ""}</div>
                               <BestWin e={e} />
                             </div>
-                            {!past && e.athleteId && <Star on={stars.ids.has(e.athleteId)} onToggle={() => void stars.toggle(e.athleteId!)} />}
+                            {!past && <Star on={stars.ids.has(starKey(e))} onToggle={() => stars.toggle(starKey(e))} />}
                             <div className="shrink-0 text-right">
                               <div className="text-sm font-semibold text-white">{e.wins}-{e.losses}</div>
                               <div className={`text-[11px] ${statusColor(e)}`}>{statusText(e)}</div>
@@ -577,7 +567,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
         </a>
       </main>
 
-      {open && <WrestlerSheet e={open} onClose={() => setOpen(null)} starred={!!open.athleteId && stars.ids.has(open.athleteId)} onStar={past ? undefined : () => open.athleteId && void stars.toggle(open.athleteId)} />}
+      {open && <WrestlerSheet e={open} onClose={() => setOpen(null)} starred={stars.ids.has(starKey(open))} onStar={past ? undefined : () => stars.toggle(starKey(open))} />}
     </div>
   )
 }
