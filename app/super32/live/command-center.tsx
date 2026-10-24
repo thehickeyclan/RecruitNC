@@ -76,7 +76,7 @@ function Photo({ e, className, big }: { e: { name: string; photo: string | null 
 
 const TAG: Record<string, string> = {
   "Huge win": "bg-[#e5372c] text-white", "Big win": "bg-[#d4af55] text-[#0b1730]", Upset: "bg-[#7c5cff] text-white",
-  "All-American": "bg-[#d4af55] text-[#0b1730]", Champion: "bg-[#d4af55] text-[#0b1730]", "Latest update": "bg-[#3b5ba5] text-white",
+  "All-American": "bg-[#d4af55] text-[#0b1730]", Champion: "bg-[#d4af55] text-[#0b1730]", "Latest update": "bg-[#3b5ba5] text-white", "Championship bracket": "bg-[#3b5ba5] text-white",
   "Hot streak": "bg-[#e5372c]/80 text-white", "Consolation run": "bg-[#3b5ba5] text-white", Seeded: "bg-[#1b2d57] text-[#d4af55]",
   Preview: "bg-[#3b5ba5] text-white",
 }
