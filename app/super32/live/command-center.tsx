@@ -548,11 +548,12 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
   }, [snap])
   const weights = useMemo(() => [...new Set(entrants.map((e) => e.weight))].sort((a, b) => Number(a) - Number(b)), [entrants])
   const list = useMemo(() => {
-    const order: Record<string, number> = { placed: 0, alive: 1, alive_consis: 2, not_started: 3, eliminated: 4 }
+    // Placed, then everyone still alive by record (best first, unbeaten or not), then not yet wrestled, then out.
+    const order: Record<string, number> = { placed: 0, alive: 1, alive_consis: 1, not_started: 2, eliminated: 3 }
     return entrants
       .filter((e) => (!q || `${e.name} ${e.school ?? ""}`.toLowerCase().includes(q.toLowerCase())) && (!weight || e.weight === weight) &&
         (!status || (status === "seeded" ? e.seed !== null : status === "winning" ? e.wins > e.losses : status === "alive" ? e.status === "alive" || e.status === "alive_consis" || e.status === "not_started" : e.status === status)))
-      .sort((a, b) => order[a.status]! - order[b.status]! || (a.placement ?? 9) - (b.placement ?? 9) || b.wins - a.wins || Number(a.weight) - Number(b.weight))
+      .sort((a, b) => order[a.status]! - order[b.status]! || (a.placement ?? 9) - (b.placement ?? 9) || (b.wins - b.losses) - (a.wins - a.losses) || b.wins - a.wins || Number(a.weight) - Number(b.weight))
   }, [entrants, q, weight, status])
 
   const updatedAgo = useAgo(snap?.publishedAt)
