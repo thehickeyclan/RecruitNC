@@ -21,6 +21,8 @@ type State = {
   audience: number | null
   myDevices: number
   capMinutes: number
+  viewing: number
+  views: number
 }
 type G = "all" | "boys" | "girls"
 
@@ -196,7 +198,8 @@ export default function Super32LiveAdmin() {
         {busy && <div className="rounded-lg border border-[#2c4170] bg-[#13244a] px-4 py-3 text-sm text-[#c9d4ea]">Working on {busy}…</div>}
 
         {/* Status strip */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-7">
+          <Stat label="Viewing now" value={(s?.viewing ?? 0).toLocaleString()} tone="green" sub={`${(s?.views ?? 0).toLocaleString()} total views`} />
           <Stat label="Last results upload" value={ago(lastFlo?.created_at)} sub={lastFlo ? `${time(lastFlo.created_at)}${round ? ` · ${round}` : ""}` : "No Flo export yet"} />
           <Stat label="Seeds" value={lastSeeds ? (lastSeeds.seeds_final ? "Final" : "Preliminary") : "None"} tone={lastSeeds?.seeds_final ? "green" : "gold"} sub={lastSeeds ? `${time(lastSeeds.created_at)} · tiers ${lastSeeds.seeds_final ? "on" : "wait for final"}` : "Upload seeds"} />
           <Stat label="Live page" value={unpublished ? "Unpublished" : s?.publishedId ? "Up to date" : "Not live"} tone={unpublished ? "gold" : s?.publishedId ? "green" : "red"} sub={unpublished ? "Newer results waiting · Publish" : d ? `Built ${time(s?.snapshot?.created_at)}` : ""} />
