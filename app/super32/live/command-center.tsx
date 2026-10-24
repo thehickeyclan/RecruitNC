@@ -255,7 +255,7 @@ function BestWin({ e }: { e: SnapshotEntrant }) {
  * athletes in the app. Saved on this device, every NC wrestler can be starred, linked or not.
  */
 const LOCAL_STARS = "s32-hq-stars-2026"
-/** Checks in every 45 seconds; returns how many pages have Super 32 HQ open. */
+/** Counts this page open once, checks in every 45 seconds; returns total views of Super 32 HQ. */
 function useWatching(enabled: boolean) {
   const [n, setN] = useState<number | null>(null)
   useEffect(() => {
@@ -267,10 +267,12 @@ function useWatching(enabled: boolean) {
       try { sessionStorage.setItem("s32-sid", sid) } catch { /* private mode */ }
     }
     let alive = true
+    let open = true
     const ping = () => {
       if (document.visibilityState === "hidden") return
-      fetch("/api/super32-live/presence", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sid }) })
-        .then((r) => r.json()).then((j) => alive && typeof j.watching === "number" && setN(j.watching)).catch(() => {})
+      fetch("/api/super32-live/presence", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sid, open }) })
+        .then((r) => r.json()).then((j) => alive && typeof j.views === "number" && setN(j.views)).catch(() => {})
+      open = false
     }
     ping()
     const id = setInterval(ping, 45_000)
@@ -549,8 +551,8 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
           )}
           {year === "2026" && !initial && watching !== null && (
             <span className="inline-flex shrink-0 items-center gap-2 rounded-md border border-emerald-500/40 bg-[#0b1730] px-2.5 py-1">
-              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#9fb0cf]">Watching</span>
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#9fb0cf]">Views</span>
               <span className={`${H} text-base leading-none text-white`}>{watching.toLocaleString()}</span>
             </span>
           )}

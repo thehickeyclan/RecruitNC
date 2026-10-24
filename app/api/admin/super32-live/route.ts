@@ -24,7 +24,7 @@ export async function GET() {
   if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
   const admin = createAdminClient()
   const me = await currentUserId()
-  const [snap, published, uploads, alerts, audience, mine] = await Promise.all([
+  const [snap, published, uploads, alerts, audience, mine, viewing, views] = await Promise.all([
     latestSnapshot(admin),
     // Only the id is needed to tell whether the latest build is published; the full snapshot is heavy.
     admin.from("super32_live_snapshots").select("id").eq("event_key", SUPER32_EVENT_KEY).eq("published", true).order("created_at", { ascending: false }).limit(1).maybeSingle().then((r) => r.data),
@@ -32,6 +32,9 @@ export async function GET() {
     admin.from("super32_live_alerts").select("*").eq("event_key", SUPER32_EVENT_KEY).order("created_at", { ascending: false }).limit(200),
     admin.from("push_devices").select("expo_push_token", { count: "exact", head: true }).eq("alert_results", true),
     me ? admin.from("push_devices").select("expo_push_token", { count: "exact", head: true }).eq("user_id", me) : Promise.resolve({ count: 0 }),
+    // Same 2-minute window the page's check-ins use.
+    admin.from("super32_live_presence").select("session_id", { count: "exact", head: true }).gte("last_seen", new Date(Date.now() - 120_000).toISOString()),
+    admin.from("super32_live_views").select("id", { count: "exact", head: true }),
   ])
   return NextResponse.json({
     snapshot: snap,
@@ -42,6 +45,8 @@ export async function GET() {
     audience: audience.count ?? null,
     myDevices: mine.count ?? 0,
     capMinutes: CAP_MINUTES,
+    viewing: viewing.count ?? 0,
+    views: views.count ?? 0,
   })
 }
 

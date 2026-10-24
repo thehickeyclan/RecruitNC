@@ -63,3 +63,11 @@ create table if not exists super32_live_stars (
   primary key (user_id, star_key)
 );
 alter table super32_live_stars enable row level security;
+
+-- One row per page open of Super 32 HQ (2026 view), for the "Views" total.
+create table if not exists super32_live_views (
+  id bigserial primary key,
+  session_id text not null,
+  created_at timestamptz not null default now()
+);
+alter table super32_live_views enable row level security;

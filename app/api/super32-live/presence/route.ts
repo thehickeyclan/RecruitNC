@@ -1,5 +1,8 @@
 /**
- * "Watching now" on Super 32 HQ. Each open page checks in every 45 seconds with a random session id
+ * "Views" on Super 32 HQ: every page open of the 2026 view counts once (a reload is a new open).
+ * The live "watching now" count is still worked out here and returned, though the page shows views.
+ *
+ * Presence: Each open page checks in every 45 seconds with a random session id
  * (no account, no personal data); a session counts while it checked in within the last 2 minutes.
  */
 import { NextResponse, type NextRequest } from "next/server"
@@ -18,14 +21,19 @@ async function watching(admin: ReturnType<typeof createAdminClient>): Promise<nu
 }
 
 export async function POST(request: NextRequest) {
-  const body = (await request.json().catch(() => null)) as { sid?: string } | null
+  const body = (await request.json().catch(() => null)) as { sid?: string; open?: boolean } | null
   const sid = String(body?.sid ?? "").trim()
   if (!/^[a-z0-9-]{8,64}$/i.test(sid)) return NextResponse.json({ watching: null }, { status: 400 })
   const admin = createAdminClient()
+  if (body?.open === true) await admin.from("super32_live_views").insert({ session_id: sid })
   await admin.from("super32_live_presence").upsert({ session_id: sid, last_seen: new Date().toISOString() }, { onConflict: "session_id" })
   // Keep the table small: now and then, drop sessions gone for a day.
   if (Math.random() < 0.02) {
     await admin.from("super32_live_presence").delete().lt("last_seen", new Date(Date.now() - 86_400_000).toISOString())
   }
-  return NextResponse.json({ watching: await watching(admin) }, { headers: { "Cache-Control": "no-store" } })
+  const [now, views] = await Promise.all([
+    watching(admin),
+    admin.from("super32_live_views").select("id", { count: "exact", head: true }).then((r) => r.count ?? 0),
+  ])
+  return NextResponse.json({ watching: now, views }, { headers: { "Cache-Control": "no-store" } })
 }
