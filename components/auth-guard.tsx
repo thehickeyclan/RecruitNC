@@ -86,11 +86,9 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
       setSessionCheckComplete(true)
     }
 
-    // Initial wait for auth context and cookies after redirect (mobile needs more time)
-    const timer = setTimeout(() => {
-      checkDirectSessionWithRetries()
-    }, 1200)
-    return () => clearTimeout(timer)
+    // Check at once: a signed-in visitor should not wait. The retries above, with their delays,
+    // only run when no session turns up yet (cookies still settling after a redirect on mobile).
+    void checkDirectSessionWithRetries()
   }, [])
 
   useEffect(() => {
@@ -142,6 +140,10 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
     }
   }, [mounted, isLoading, sessionCheckComplete, directSessionCheck, user, requireAdmin, isAdmin, pathname, redirecting, profile])
 
+  // Fast path: the auth context already has a signed-in user (and admin status when required).
+  const confirmed = mounted && !isLoading && !!user && (!requireAdmin || isAdmin)
+  if (confirmed) return <>{children}</>
+
   if (!mounted || isLoading || !sessionCheckComplete) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -192,8 +194,8 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
             <CardDescription>You don't have admin privileges</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-600 mb-2">Signed in as: {user.email}</p>
-            <p className="text-sm text-gray-600 mb-2">User ID: {user.id}</p>
+            <p className="text-sm text-gray-600 mb-2">Signed in as: {user?.email}</p>
+            <p className="text-sm text-gray-600 mb-2">User ID: {user?.id}</p>
             <p className="text-sm text-gray-600 mb-2">Profile is_admin: {profile?.is_admin ? "true" : "false"}</p>
             <p className="text-xs text-gray-500 mb-4">
               If you should have admin access, please check your user profile in the database (user_profiles.is_admin
