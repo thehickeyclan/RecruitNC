@@ -69,18 +69,15 @@ export function buildStories(entrants: SnapshotEntrant[], recaps: SnapshotRecap[
           meta: `${how} · ${b.round} · ${lbs(e)}`, rank: 7 + (b.opponentSeed ?? 30) / 100 })
       }
     }
-    if (e.consiRun && e.status !== "eliminated" && !e.placement) {
-      out.push({ id: `run:${key}`, kind: "streak", label: "Consolation run", headline: `${e.name} wins ${e.streak} straight on the back side`,
-        dek: `${e.wins}-${e.losses} at ${wt(e)} and still alive.`, entrant: e, meta: `${lbs(e)}`, rank: 6 })
-    } else if (e.hotStreak && e.status === "alive") {
-      out.push({ id: `streak:${key}`, kind: "streak", label: "Hot streak", headline: `${e.name} is ${e.wins}-0`,
-        dek: `Unbeaten at ${wt(e)} and alive on the championship side.`, entrant: e, meta: `${lbs(e)}`, rank: 6.5 })
-    }
   }
-  const r = recaps[0]
-  if (r) {
-    out.push({ id: `recap:${r.at}`, kind: "recap", label: "Latest update", headline: `North Carolina goes ${r.wins}-${r.losses} since the last update`,
-      dek: r.sentence, entrant: null, meta: `${r.seededWins} seeded wins · ${r.stillAlive} still alive`, rank: 8 })
+  // Headlines are Huge and Big wins (and placings), plus who is still unbeaten on the
+  // championship side. No round recaps or streaks (Matt, 24 Oct).
+  const unbeaten = entrants.filter((e) => e.status === "alive" && e.bouts.some((b) => b.winType !== "BYE"))
+  if (unbeaten.length) {
+    out.push({ id: `champside:${unbeaten.map((e) => e.name).join(",")}`, kind: "recap", label: "Championship bracket",
+      headline: `${unbeaten.length} NC ${unbeaten.length === 1 ? "wrestler is" : "wrestlers are"} still unbeaten`,
+      dek: unbeaten.map((e) => `${e.name} (${e.gender === "girls" ? "G" : ""}${e.weight}, ${e.wins}-0)`).join(" · "),
+      entrant: null, meta: "Championship side", rank: 8 })
   }
   return out.sort((a, b) => a.rank - b.rank)
 }

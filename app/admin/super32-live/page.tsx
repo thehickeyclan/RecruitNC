@@ -33,7 +33,7 @@ const ago = (iso: string | null | undefined) => {
   const m = Math.round((Date.now() - new Date(iso).getTime()) / 60000)
   return m < 1 ? "just now" : m < 60 ? `${m} min ago` : `${Math.floor(m / 60)}h ${m % 60}m ago`
 }
-const KIND: Record<string, string> = { recap: "Round alert", custom: "Custom", test: "Test", huge: "Huge win", aa: "All-American", finals: "Finals", champion: "Champion" }
+const KIND: Record<string, string> = { big: "Big win", champ_side: "Championship side", recap: "Round alert", custom: "Custom", test: "Test", huge: "Huge win", aa: "All-American", finals: "Finals", champion: "Champion" }
 
 function Card({ title, right, children, className = "" }: { title: string; right?: React.ReactNode; children: React.ReactNode; className?: string }) {
   return (

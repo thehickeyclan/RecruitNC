@@ -391,54 +391,71 @@ export async function buildSnapshot(supabase: SupabaseClient, eventKey = SUPER32
     const { data: rowsIn } = await supabase.from("super32_live_alerts").upsert(alerts, { onConflict: "dedupe_key", ignoreDuplicates: true }).select("id")
     alertsQueued = rowsIn?.length ?? 0
   }
+  // One championship-side list waits at a time: a newer one replaces any older one not yet sent.
+  if (alerts.some((a) => a.kind === "champ_side")) {
+    await supabase.from("super32_live_alerts").update({ status: "dismissed" })
+      .eq("event_key", eventKey).eq("kind", "champ_side").in("status", ["pending", "held"]).neq("snapshot_id", inserted.id)
+  }
   return { id: inserted.id, data, alertsQueued }
 }
 
 /**
- * One alert per uploaded export. Results arrive after each round, not each match, so a round's
- * Huge wins, new All-Americans, finalists and champions go out together in one push that Matt
- * approves; one at a time they would be stale, and the 20-minute cap would hold most of them.
+ * Two alerts, nothing else (Matt, 24 Oct):
+ * - Huge and Big wins new in this update, one push for the lot. Sent automatically.
+ * - Who is still unbeaten on the championship side (wrestled, no loss), when that list changed.
+ *   Waits for Matt to send; a newer one replaces an older one still waiting.
  * Only wrestlers linked to an NC profile are named.
  */
 export function queueAlerts(
   entrants: SnapshotEntrant[],
   prevEntrants: SnapshotEntrant[],
   newKeys: Set<string>,
-  latestRecap: SnapshotRecap | null,
+  _latestRecap: SnapshotRecap | null,
   floId: string,
   eventKey: string,
   snapshotId: string,
 ) {
-  if (!latestRecap) return []
   const id = (e: { gender: string; weight: string; name: string }) => `${e.gender}|${e.weight}|${e.name}`
-  const before = new Map(prevEntrants.map((e) => [id(e), e]))
   const named = entrants.filter((e) => e.athleteId)
-  const huge = named.flatMap((e) => e.bouts.filter((b) => b.win && b.tier === "huge" && newKeys.has(b.key)).map((b) => ({ e, b })))
-  const champs = named.filter((e) => e.placement === 1 && before.get(id(e))?.placement !== 1)
-  const finalists = named.filter((e) => e.bouts.some((b) => b.win && /^semi/i.test(b.round) && newKeys.has(b.key)))
-  const aa = named.filter((e) => e.aaClinched && !before.get(id(e))?.aaClinched && !champs.includes(e))
+  const short = (e: SnapshotEntrant) => `${e.name} (${e.gender === "girls" ? "G" : ""}${e.weight})`
+  const out: Array<Record<string, unknown>> = []
 
-  const short = (e: SnapshotEntrant) => `${e.name} (${e.weight})`
-  const lines: string[] = []
-  for (const e of champs) lines.push(`CHAMPION: ${short(e)}`)
-  for (const { e, b } of huge) lines.push(`HUGE: ${short(e)} def. ${b.reasons[0]} ${b.opponent} (${b.opponentTeam})`)
-  if (finalists.length) lines.push(`Finals: ${finalists.map(short).join(", ")}`)
-  if (aa.length) lines.push(`All-American: ${aa.map(short).join(", ")}`)
-
-  const head = `NC went ${latestRecap.wins}-${latestRecap.losses} since the last update. ${latestRecap.stillAlive} still alive.`
-  let body = head
-  let shown = 0
-  for (const l of lines) {
-    if ((body + " " + l).length > 230) break
-    body += ` ${l}.`
-    shown += 1
+  const wins = named.flatMap((e) => e.bouts.filter((b) => b.win && (b.tier === "huge" || b.tier === "big") && newKeys.has(b.key)).map((b) => ({ e, b })))
+  wins.sort((x, y) => (x.b.tier === y.b.tier ? 0 : x.b.tier === "huge" ? -1 : 1))
+  if (wins.length) {
+    const nHuge = wins.filter((w) => w.b.tier === "huge").length
+    const nBig = wins.length - nHuge
+    const title = wins.length === 1
+      ? `${nHuge ? "HUGE" : "BIG"} WIN for North Carolina at Super 32`
+      : `Super 32: ${[nHuge ? `${nHuge} HUGE` : "", nBig ? `${nBig} BIG` : ""].filter(Boolean).join(" + ")} wins for NC`
+    let body = ""
+    let shown = 0
+    for (const { e, b } of wins) {
+      const line = `${b.tier === "huge" ? "HUGE" : "BIG"}: ${short(e)} def. ${b.reasons[0]} ${b.opponent} (${b.opponentTeam}).`
+      if ((body + " " + line).length > 230) break
+      body = body ? `${body} ${line}` : line
+      shown += 1
+    }
+    if (shown < wins.length) body += ` +${wins.length - shown} more in Super 32 HQ.`
+    out.push({ event_key: eventKey, dedupe_key: `wins:${floId}`, kind: nHuge ? "huge" : "big", title, body, path: LIVE_PATH, status: "pending", snapshot_id: snapshotId })
   }
-  if (shown < lines.length) body += ` +${lines.length - shown} more in Super 32 HQ.`
 
-  const title = champs.length
-    ? `Super 32 ${champs.length === 1 ? "CHAMPION" : "CHAMPIONS"} for North Carolina!`
-    : huge.length
-      ? `Super 32: ${huge.length} HUGE ${huge.length === 1 ? "WIN" : "WINS"} for NC`
-      : `Super 32 \u00b7 NC update`
-  return [{ event_key: eventKey, dedupe_key: `round:${floId}`, kind: "recap", title, body, path: LIVE_PATH, status: "pending", snapshot_id: snapshotId }]
+  const unbeaten = (list: SnapshotEntrant[]) => list.filter((e) => e.athleteId && e.status === "alive" && e.bouts.some((b) => b.winType !== "BYE"))
+  const now = unbeaten(entrants)
+  const was = new Set(unbeaten(prevEntrants).map(id))
+  const changed = now.length !== was.size || now.some((e) => !was.has(id(e)))
+  if (changed && now.length) {
+    const title = `Super 32: ${now.length} NC ${now.length === 1 ? "wrestler" : "wrestlers"} still in the championship bracket`
+    let body = ""
+    const names = now.map(short)
+    let i = 0
+    for (; i < names.length; i++) {
+      const next = body ? `${body}, ${names[i]}` : names[i]!
+      if (next.length > 210) break
+      body = next
+    }
+    if (i < names.length) body += ` +${names.length - i} more`
+    out.push({ event_key: eventKey, dedupe_key: `champ:${floId}`, kind: "champ_side", title, body: `Unbeaten so far: ${body}.`, path: LIVE_PATH, status: "pending", snapshot_id: snapshotId })
+  }
+  return out
 }

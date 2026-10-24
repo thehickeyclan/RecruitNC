@@ -1,12 +1,14 @@
 /**
  * Every few minutes during Super 32: pull Flo's results feed, and when it changed, upload, build
- * and publish exactly as the admin page would. Push alerts still only queue for Matt to send.
+ * and publish exactly as the admin page would. Huge and Big win alerts then go out on their own
+ * (Matt, 24 Oct); every other alert waits in the admin queue.
  * A build that would lose NC bouts against the published one is left unpublished for a look.
  */
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { fetchFloResultsCsv } from "./flo-feed"
 import { buildSnapshot, latestSnapshot, latestUpload, parseSeedsCsv, SUPER32_EVENT_KEY, type SnapshotData } from "./snapshot"
 import { syncResults } from "./sync"
+import { sendToSubscribers } from "@/lib/push-send"
 
 /** Fri 24 Oct 7am ET to Sun 26 Oct 1am ET: the job does nothing outside the event. */
 export function pullWindowOpen(now = new Date()): boolean {
@@ -36,5 +38,28 @@ export async function pullAndPublish(admin: SupabaseClient) {
   const seedsUp = await latestUpload(admin, SUPER32_EVENT_KEY, "seeds")
   const synced = await syncResults(admin, SUPER32_EVENT_KEY, feed.csv, seedsUp ? parseSeedsCsv(seedsUp.content) : [], snap.data).catch((e) => ({ error: String(e) }))
   const s = snap.data.scoreboards.all
-  return { status: "published" as const, bouts: feed.bouts, nc: `${s.wins}-${s.losses}`, ncBouts: after, alertsQueued: snap.alertsQueued, synced }
+  const pushed = await sendWinAlerts(admin)
+  return { status: "published" as const, bouts: feed.bouts, nc: `${s.wins}-${s.losses}`, ncBouts: after, alertsQueued: snap.alertsQueued, pushed, synced }
+}
+
+/** Sends every waiting Huge/Big win alert. Only after a publish, so the tap lands on the result. */
+export async function sendWinAlerts(admin: SupabaseClient) {
+  if (process.env.SUPER32_LIVE_PUSH !== "1") return { skipped: "push off" }
+  const { data: waiting } = await admin.from("super32_live_alerts").select("id, title, body, path")
+    .eq("event_key", SUPER32_EVENT_KEY).in("kind", ["huge", "big"]).eq("status", "pending").order("created_at")
+  let sent = 0
+  for (const a of waiting ?? []) {
+    // Claim first so two overlapping runs cannot both send it.
+    const { data: claimed } = await admin.from("super32_live_alerts").update({ status: "sent", sent_at: new Date().toISOString() }).eq("id", a.id).eq("status", "pending").select("id")
+    if (!claimed?.length) continue
+    try {
+      const r = await sendToSubscribers("alert_results", { title: a.title, body: a.body, data: { kind: "super32-live", path: a.path } })
+      await admin.from("super32_live_alerts").update({ sent_count: r.sent }).eq("id", a.id)
+      sent += 1
+    } catch (e) {
+      await admin.from("super32_live_alerts").update({ status: "pending", sent_at: null }).eq("id", a.id)
+      console.error("[super32-flo] win alert failed", e)
+    }
+  }
+  return { sent }
 }

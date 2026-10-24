@@ -31,7 +31,7 @@ create table if not exists super32_live_alerts (
   event_key text not null,
   -- One alert per bout or milestone, ever, however many times an export is re-uploaded.
   dedupe_key text not null unique,
-  kind text not null check (kind in ('huge', 'aa', 'finals', 'champion', 'recap', 'custom', 'test')),
+  kind text not null check (kind in ('huge', 'big', 'champ_side', 'aa', 'finals', 'champion', 'recap', 'custom', 'test')),
   title text not null,
   body text not null,
   path text not null default '/news/super32-live',
