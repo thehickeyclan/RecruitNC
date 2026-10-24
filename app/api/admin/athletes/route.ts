@@ -16,7 +16,23 @@ export async function GET(request: NextRequest) {
 
     console.log("[v0] Admin Athletes API: Querying database for all athletes")
 
-    const { data: athletes, error } = await supabase.from("athletes").select("*").order("name", { ascending: true })
+    /*
+     * Every athlete, a page at a time. One query returns at most 1,000 rows, so once the table
+     * passed that (2,403 with the Virginia and South Carolina profiles, 22 October 2026) everyone
+     * after about "J" never reached the page and the search could not find Tobin McNair.
+     */
+    const PAGE = 1000
+    const athletes: any[] = []
+    let error: unknown = null
+    for (let from = 0; ; from += PAGE) {
+      const page = await supabase.from("athletes").select("*").order("name", { ascending: true }).order("id").range(from, from + PAGE - 1)
+      if (page.error) {
+        error = page.error
+        break
+      }
+      athletes.push(...(page.data ?? []))
+      if ((page.data ?? []).length < PAGE) break
+    }
 
     if (error) {
       console.error("[v0] Admin Athletes API: Database error:", error)
