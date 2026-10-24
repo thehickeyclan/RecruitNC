@@ -86,7 +86,7 @@ function Tag({ kind }: { kind: string }) {
 
 function Section({ title, right, children }: { title: string; right?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-[#1f3360] bg-[#0f1f3f]">
+    <section className="min-w-0 rounded-xl border border-[#1f3360] bg-[#0f1f3f]">
       <div className="flex items-center justify-between gap-3 border-b border-[#1f3360] px-4 py-3">
         <h2 className={`${H} flex items-center gap-2 text-xl text-white`}><span className="h-5 w-1 rounded bg-[#d4af55]" />{title}</h2>
         {right}
@@ -108,7 +108,7 @@ function LeadStory({ stories, onOpen }: { stories: Story[]; onOpen: (e: Snapshot
   return (
     <div className="overflow-hidden rounded-lg bg-[#0b1730]">
       <div className="grid md:min-h-[320px] md:grid-cols-[1.1fr_1fr]">
-        <div className="relative h-56 md:order-2 md:h-auto">
+        <div className={`relative h-56 md:order-2 md:h-auto ${s.entrant?.photo ? "" : "hidden md:block"}`}>
           <Photo e={s.entrant} big className="absolute inset-0 h-full w-full" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0b1730] via-transparent to-transparent md:bg-gradient-to-r md:from-[#0b1730] md:via-transparent" />
         </div>
@@ -492,44 +492,49 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
       </header>
       )}
 
+      {/* Sticky: one compact row on a phone, divisions plus a small year switch. */}
       <div className="sticky top-0 z-30 border-b border-[#1f3360] bg-[#0a1630]/95 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2.5">
-          {!initial && (
-            <div className="grid w-full grid-cols-2 gap-1.5 sm:w-auto sm:min-w-[200px]">
-              {(["2025", "2026"] as const).map((y) => (
-                <button key={y} onClick={() => pickYear(y)} className={`${H} rounded-md px-4 py-2 text-base ${year === y ? "bg-[#d4af55] text-[#0b1730]" : "bg-[#13244a] text-[#c9d4ea]"}`}>{y}</button>
-              ))}
-            </div>
-          )}
-          <div className="grid min-w-[260px] flex-1 grid-cols-3 gap-1.5">
+        <div className="mx-auto flex max-w-7xl items-center gap-2 px-3 py-2 md:px-4 md:py-2.5">
+          <div className="grid flex-1 grid-cols-3 gap-1.5">
             {(["all", "boys", "girls"] as const).map((k) => (
-              <button key={k} onClick={() => pickG(k)} className={`rounded-md py-2 text-sm font-semibold ${g === k ? "bg-[#d4af55] text-[#0b1730]" : "bg-[#13244a] text-[#c9d4ea]"}`}>
-                {k === "all" ? "All NC" : k === "boys" ? "Men" : "Women"}{snap ? ` (${snap.scoreboards[k].wrestlers})` : ""}
+              <button key={k} onClick={() => pickG(k)} className={`whitespace-nowrap rounded-md px-1 py-2 text-[13px] font-semibold md:text-sm ${g === k ? "bg-[#d4af55] text-[#0b1730]" : "bg-[#13244a] text-[#c9d4ea]"}`}>
+                {k === "all" ? "All NC" : k === "boys" ? "Men" : "Women"}{snap ? <span className="opacity-70"> {snap.scoreboards[k].wrestlers}</span> : null}
               </button>
             ))}
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs md:justify-end">
-            {rehearsalLabel && <span className="font-semibold text-[#d4af55]">{rehearsalLabel}</span>}
-            {year === "2026" && !initial && watching !== null && (
-              <span className="inline-flex items-center gap-2 rounded-md border border-emerald-500/40 bg-[#0b1730] px-2.5 py-1">
-                <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-[#9fb0cf]">Watching now</span>
-                <span className={`${H} text-lg leading-none text-white`}>{watching.toLocaleString()}</span>
-              </span>
-            )}
-            {year === "2026" && (
-              <a href={FLO_LIVE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 rounded-full bg-white px-2.5 py-1 font-bold text-[#0b1730] hover:bg-[#f0f0f0]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/images/flo-logo.png" alt="" className="h-4 w-4 rounded-sm" />
-                Watch live on Flo
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#e5372c]" />
-              </a>
-            )}
-            {year === "2026" && <a href={FLO_BRACKETS_URL} target="_blank" rel="noopener noreferrer" className="rounded-full border border-[#d4af55]/50 px-2.5 py-1 font-semibold text-[#d4af55] hover:bg-[#d4af55]/10">Brackets on Flo ↗</a>}
-            <span className="rounded-full bg-[#13244a] px-2.5 py-1 font-medium text-[#c9d4ea]">
-              {year === "2025" && !initial ? "2025 final results" : snap?.publishedAt ? <>Updated {new Date(snap.publishedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}{updatedAgo ? <span className="text-[#8195bd]"> · {updatedAgo}</span> : null}</> : "Results post as matches finish"}
+          {!initial && (
+            <div className="flex shrink-0 overflow-hidden rounded-md border border-[#2c4170]">
+              {(["2026", "2025"] as const).map((y) => (
+                <button key={y} onClick={() => pickYear(y)} className={`${H} px-2.5 py-1.5 text-sm md:px-3.5 md:text-base ${year === y ? "bg-[#d4af55] text-[#0b1730]" : "bg-[#13244a] text-[#9fb0cf]"}`}>{y}</button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Info strip: one line that scrolls sideways on a phone instead of wrapping. */}
+      <div className="border-b border-[#1f3360] bg-[#0a1630]">
+        <div className="mx-auto flex max-w-7xl items-center gap-2 overflow-x-auto whitespace-nowrap px-3 py-2 text-xs md:px-4">
+          {rehearsalLabel && <span className="font-semibold text-[#d4af55]">{rehearsalLabel}</span>}
+          {year === "2026" && (
+            <a href={FLO_LIVE_URL} target="_blank" rel="noopener noreferrer" className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-2.5 py-1 font-bold text-[#0b1730]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images/flo-logo.png" alt="" className="h-4 w-4 rounded-sm" />
+              Watch live on Flo
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#e5372c]" />
+            </a>
+          )}
+          {year === "2026" && !initial && watching !== null && (
+            <span className="inline-flex shrink-0 items-center gap-2 rounded-md border border-emerald-500/40 bg-[#0b1730] px-2.5 py-1">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-[#9fb0cf]">Watching</span>
+              <span className={`${H} text-base leading-none text-white`}>{watching.toLocaleString()}</span>
             </span>
-          </div>
+          )}
+          <span className="shrink-0 rounded-full bg-[#13244a] px-2.5 py-1 font-medium text-[#c9d4ea]">
+            {year === "2025" && !initial ? "2025 final results" : snap?.publishedAt ? <>Updated {new Date(snap.publishedAt).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}{updatedAgo ? <span className="text-[#8195bd]"> · {updatedAgo}</span> : null}</> : "Results post as matches finish"}
+          </span>
+          {year === "2026" && <a href={FLO_BRACKETS_URL} target="_blank" rel="noopener noreferrer" className="shrink-0 rounded-full border border-[#d4af55]/50 px-2.5 py-1 font-semibold text-[#d4af55]">Brackets on Flo ↗</a>}
         </div>
       </div>
 
@@ -541,7 +546,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
         ) : (
           <>
             <Section title="NC State Scoreboard">
-              <div className={`-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 lg:mx-0 lg:grid lg:px-0 ${past ? "lg:grid-cols-[1.6fr_repeat(4,1fr)]" : "lg:grid-cols-[1.6fr_repeat(7,1fr)]"}`}>
+              <div className={`grid grid-cols-3 gap-2 ${past ? "lg:grid-cols-[1.6fr_repeat(4,1fr)]" : "lg:grid-cols-[1.6fr_repeat(7,1fr)]"}`}>
                 {(past ? ([
                   ["Overall record", `${sb.wins}-${sb.losses}`, `${pct}% win rate`, "text-white"],
                   ["NC wrestlers", sb.wrestlers, "", "text-white"],
@@ -558,10 +563,11 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                   ["Vs seeded", `${sb.seededWins}-${sb.seededLosses ?? 0}`, "wins-losses", "text-white"],
                   ["Win % vs 2025", <VsLastYear key="vs" wins={sb.wins} losses={sb.losses} g={g} />, `2025: ${Math.round(Y2025[g].pct * 100)}% (${Y2025[g].record})`, "text-white"],
                 ] as const)).map(([label, v, sub, color]) => (
-                  <div key={label} className="min-w-[118px] shrink-0 rounded-lg border border-[#1f3360] bg-[#0b1730] px-3 py-3 text-center lg:min-w-0">
-                    <div className={`${H} whitespace-nowrap text-3xl leading-none md:text-4xl ${color}`}>{v}</div>
-                    <div className="mt-1.5 text-xs text-[#c9d4ea]">{label}</div>
-                    {sub && <div className="text-[10px] text-[#6f83ab]">{sub}</div>}
+                  <div key={label} className={`rounded-lg border border-[#1f3360] bg-[#0b1730] px-2 py-2.5 text-center md:px-3 md:py-3 ${label === "Overall record" ? "col-span-3 lg:col-span-1" : ""} ${label === "Win % vs 2025" ? "hidden lg:block" : ""}`}>
+                    <div className={`${H} whitespace-nowrap leading-none ${label === "Overall record" ? "text-4xl" : "text-2xl"} md:text-4xl ${color}`}>{v}</div>
+                    <div className="mt-1 text-[11px] leading-tight text-[#c9d4ea] md:text-xs">{label}</div>
+                    {sub && <div className="text-[10px] leading-tight text-[#6f83ab]">{sub}</div>}
+                    {label === "Overall record" && !past && <div className="mt-1 text-xs lg:hidden"><VsLastYear wins={sb.wins} losses={sb.losses} g={g} /> <span className="text-[#6f83ab]">vs 2025 ({Math.round(Y2025[g].pct * 100)}%)</span></div>}
                   </div>
                 ))}
               </div>
