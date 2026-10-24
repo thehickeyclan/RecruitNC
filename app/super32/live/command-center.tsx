@@ -84,9 +84,9 @@ function Tag({ kind }: { kind: string }) {
   return <span className={`inline-block rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${TAG[kind] ?? (/seeded wins$/.test(kind) ? "bg-[#e5372c] text-white" : "bg-[#1b2d57] text-white")}`}>{kind}</span>
 }
 
-function Section({ title, right, children }: { title: string; right?: React.ReactNode; children: React.ReactNode }) {
+function Section({ id, title, right, children }: { id?: string; title: string; right?: React.ReactNode; children: React.ReactNode }) {
   return (
-    <section className="min-w-0 rounded-xl border border-[#1f3360] bg-[#0f1f3f]">
+    <section id={id} className="min-w-0 scroll-mt-28 rounded-xl border border-[#1f3360] bg-[#0f1f3f]">
       <div className="flex items-center justify-between gap-3 border-b border-[#1f3360] px-4 py-3">
         <h2 className={`${H} flex items-center gap-2 text-xl text-white`}><span className="h-5 w-1 rounded bg-[#d4af55]" />{title}</h2>
         {right}
@@ -215,7 +215,7 @@ function LatestResults({ entrants, onOpen }: { entrants: SnapshotEntrant[]; onOp
     <button onClick={() => { setF(k); setAll(false) }} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${f === k ? "bg-[#d4af55] text-[#0b1730]" : "border border-[#2c4170] text-[#c9d4ea]"}`}>{label}</button>
   )
   return (
-    <Section title="Latest Results" right={<span className="text-xs text-[#8195bd]">{rows.length} NC bouts</span>}>
+    <Section id="s32-results" title="Latest Results" right={all ? <button onClick={() => collapseTo("s32-results", () => setAll(false))} className="text-xs font-semibold text-[#d4af55]">Show less</button> : <span className="text-xs text-[#8195bd]">{rows.length} NC bouts</span>}>
       <div className="mb-2 flex flex-wrap gap-1.5">{chip("all", "All")}{chip("wins", "Wins")}{chip("losses", "Losses")}{chip("out", "Eliminated")}</div>
       {shown.length === 0 ? <Empty>No results here yet.</Empty> : (
         <div className="divide-y divide-[#1f3360]">
@@ -237,7 +237,7 @@ function LatestResults({ entrants, onOpen }: { entrants: SnapshotEntrant[]; onOp
               </div>
             </button>
           ))}
-          {shown.length > 5 && <button onClick={() => setAll(!all)} className="w-full pt-2.5 text-center text-xs font-semibold text-[#d4af55]">{all ? "Show less" : `Show all ${shown.length} results`}</button>}
+          {shown.length > 5 && <button onClick={() => (all ? collapseTo("s32-results", () => setAll(false)) : setAll(true))} className="w-full pt-2.5 text-center text-xs font-semibold text-[#d4af55]">{all ? "Show less" : `Show all ${shown.length} results`}</button>}
         </div>
       )}
     </Section>
@@ -324,6 +324,12 @@ function BestWin({ e }: { e: SnapshotEntrant }) {
  * athletes in the app. Saved on this device, every NC wrestler can be starred, linked or not.
  */
 const LOCAL_STARS = "s32-hq-stars-2026"
+/** Collapses a list and brings its section back into view, so nobody scrolls back up by hand. */
+function collapseTo(id: string, collapse: () => void) {
+  collapse()
+  requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }))
+}
+
 /** Counts this page open once, checks in every 45 seconds; returns total views of Super 32 HQ. */
 function useWatching(enabled: boolean) {
   const [n, setN] = useState<number | null>(null)
@@ -606,6 +612,13 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
             </div>
           )}
         </div>
+        {year === "2026" && started && (
+          <nav className="mx-auto flex max-w-7xl gap-1.5 overflow-x-auto whitespace-nowrap px-3 pb-2 text-xs md:px-4">
+            {([["s32-results", "Latest results"], ["s32-wins", "Biggest wins"], ["s32-mine", "My wrestlers"], ["s32-all", "All NC wrestlers"]] as const).map(([id, label]) => (
+              <a key={id} href={`#${id}`} onClick={(ev) => { ev.preventDefault(); document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" }) }} className="shrink-0 rounded-full border border-[#2c4170] px-2.5 py-1 font-semibold text-[#c9d4ea]">{label}</a>
+            ))}
+          </nav>
+        )}
       </div>
 
       {/* Info strip: one line that scrolls sideways on a phone instead of wrapping. */}
@@ -700,11 +713,11 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                   <button onClick={() => { setWinTab(k); setAllWins(false) }} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${winTab === k ? "bg-[#d4af55] text-[#0b1730]" : "border border-[#2c4170] text-[#c9d4ea]"}`}>{label} {n}</button>
                 )
                 return (
-                  <Section title="Biggest Wins" right={<div className="flex items-center gap-1.5">{tab("top", "Huge & Big", topWins.length)}{tab("significant", "Significant", sigWins.length)}</div>}>
+                  <Section id="s32-wins" title="Biggest Wins" right={<div className="flex items-center gap-1.5">{allWins && <button onClick={() => collapseTo("s32-wins", () => setAllWins(false))} className="mr-1 text-xs font-semibold text-[#d4af55]">Less</button>}{tab("top", "Huge & Big", topWins.length)}{tab("significant", "Significant", sigWins.length)}</div>}>
                     {list.length ? (
                       <div className="divide-y divide-[#1f3360]">
                         {list.slice(0, allWins ? undefined : 5).map((f) => <WinRow key={f.key} f={f} onOpen={() => { const e = entrants.find((x) => x.name === f.name && x.weight === f.weight && x.gender === f.gender); if (e) setOpen(e) }} />)}
-                        {list.length > 5 && <button onClick={() => setAllWins(!allWins)} className="w-full pt-2.5 text-center text-xs text-[#d4af55]">{allWins ? "Show less" : `View all ${list.length}`}</button>}
+                        {list.length > 5 && <button onClick={() => (allWins ? collapseTo("s32-wins", () => setAllWins(false)) : setAllWins(true))} className="w-full pt-2.5 text-center text-xs text-[#d4af55]">{allWins ? "Show less" : `View all ${list.length}`}</button>}
                       </div>
                     ) : <Empty>{winTab === "top" ? "Wins over seeded wrestlers appear here." : "Wins over unseeded state champions, state finalists, NHSCA and Super 32 All-Americans and nationally ranked wrestlers appear here."}</Empty>}
                   </Section>
@@ -713,7 +726,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
             </div>}
 
             <div className={`grid gap-5 ${past ? "" : "lg:grid-cols-[1.6fr_1fr]"}`}>
-              {!past && <Section title={`My Wrestlers${mine.length ? ` (${mine.length})` : ""}`}>
+              {!past && <Section id="s32-mine" title={`My Wrestlers${mine.length ? ` (${mine.length})` : ""}`}>
                 {mine.length ? (
                   <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 md:mx-0 md:grid md:grid-cols-3 md:px-0 xl:grid-cols-4">
                     {mine.map((e) => <WatchCard key={`m${e.gender}${e.weight}${e.name}`} e={e} onOpen={() => setOpen(e)} starred onStar={() => stars.toggle(starKey(e))} />)}
@@ -727,7 +740,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                   </div>
                 )}
               </Section>}
-              <Section title={past ? `2025 Results · ${entrants.length} NC wrestlers` : `All NC Wrestlers (${entrants.length})`}>
+              <Section id="s32-all" title={past ? `2025 Results · ${entrants.length} NC wrestlers` : `All NC Wrestlers (${entrants.length})`} right={allList && !filtered ? <button onClick={() => collapseTo("s32-all", () => setAllList(false))} className="text-xs font-semibold text-[#d4af55]">Show less</button> : undefined}>
                 <div className="mb-3 grid grid-cols-2 gap-2">
                   <input value={q} onChange={(x) => setQ(x.target.value)} placeholder="Search wrestler or school" className="col-span-2 rounded-md border border-[#1f3360] bg-[#0b1730] px-3 py-2 text-sm text-white placeholder:text-[#6f83ab]" />
                   <select value={weight} onChange={(x) => setWeight(x.target.value)} className="rounded-md border border-[#1f3360] bg-[#0b1730] px-2 py-2 text-sm text-white"><option value="">All weights</option>{weights.map((w) => <option key={w} value={w}>{w}</option>)}</select>
@@ -757,7 +770,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                         </li>
                       ))}
                     </ul>
-                    {list.length > 12 && !filtered && <button onClick={() => setAllList(!allList)} className="mt-2 w-full rounded-md border border-[#1f3360] py-2 text-sm text-[#d4af55]">{allList ? "Show less" : `View all ${list.length}`}</button>}
+                    {list.length > 12 && !filtered && <button onClick={() => (allList ? collapseTo("s32-all", () => setAllList(false)) : setAllList(true))} className="mt-2 w-full rounded-md border border-[#1f3360] py-2 text-sm text-[#d4af55]">{allList ? "Show less" : `View all ${list.length}`}</button>}
                   </>
                 )}
               </Section>
