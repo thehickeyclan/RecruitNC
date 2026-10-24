@@ -75,7 +75,7 @@ function Photo({ e, className, big }: { e: { name: string; photo: string | null 
 }
 
 const TAG: Record<string, string> = {
-  "Huge win": "bg-[#e5372c] text-white", "Big win": "bg-[#d4af55] text-[#0b1730]", Upset: "bg-[#7c5cff] text-white",
+  "Huge win": "bg-[#e5372c] text-white", "Big win": "bg-[#d4af55] text-[#0b1730]", Significant: "bg-emerald-500 text-[#0b1730]", Upset: "bg-[#7c5cff] text-white",
   "All-American": "bg-[#d4af55] text-[#0b1730]", Champion: "bg-[#d4af55] text-[#0b1730]", "Latest update": "bg-[#3b5ba5] text-white", "Championship bracket": "bg-[#3b5ba5] text-white",
   "Hot streak": "bg-[#e5372c]/80 text-white", "Consolation run": "bg-[#3b5ba5] text-white", Seeded: "bg-[#1b2d57] text-[#d4af55]",
   Preview: "bg-[#3b5ba5] text-white",
@@ -223,7 +223,7 @@ function WinRow({ f, onOpen }: { f: FeedItem; onOpen: () => void }) {
     <button onClick={onOpen} className="flex w-full items-center gap-3 py-2.5 text-left">
       <Photo e={f} className="h-11 w-11 shrink-0 rounded-full" />
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-1.5"><Tag kind={f.tier === "huge" ? "Huge win" : "Big win"} />{f.upset && <Tag kind="Upset" />}<span className="font-semibold text-white">{f.name}</span></div>
+        <div className="flex flex-wrap items-center gap-1.5"><Tag kind={f.tier === "huge" ? "Huge win" : f.tier === "big" ? "Big win" : "Significant"} />{f.upset && <Tag kind="Upset" />}<span className="font-semibold text-white">{f.name}</span></div>
         <div className="truncate text-xs text-[#8195bd]">{f.gender === "girls" ? "Girls " : ""}{f.weight} lbs{f.school ? ` · ${f.school}` : ""}</div>
         <div className="truncate text-xs text-[#c9d4ea]">def. {f.opponent} ({f.opponentTeam}), {f.reasons[0]}</div>
       </div>
@@ -238,12 +238,12 @@ function WinRow({ f, onOpen }: { f: FeedItem; onOpen: () => void }) {
 /** The wrestler's best win: Huge before Big, then the stronger seed; else the win over the opponent with the best résumé. */
 function BestWin({ e }: { e: SnapshotEntrant }) {
   const strength = (r: string[]) => Number(r[0]?.match(/#(\d+)/)?.[1] ?? 99)
-  const tierRank = (t: string | null) => (t === "huge" ? 0 : t === "big" ? 1 : 2)
+  const tierRank = (t: string | null) => (t === "huge" ? 0 : t === "big" ? 1 : t === "significant" ? 2 : 3)
   const best = e.bouts
     .filter((b) => b.win && b.reasons.length)
     .sort((a, b) => tierRank(a.tier) - tierRank(b.tier) || strength(a.reasons) - strength(b.reasons))[0]
   if (!best) return null
-  const tag = best.tier === "huge" ? "HUGE" : best.tier === "big" ? "BIG" : "BEST WIN"
+  const tag = best.tier === "huge" ? "HUGE" : best.tier === "big" ? "BIG" : best.tier === "significant" ? "SIGNIFICANT" : "BEST WIN"
   return (
     <div className="mt-0.5 truncate text-[11px]">
       <span className={`font-bold ${best.tier === "huge" ? "text-[#e5372c]" : best.tier === "big" ? "text-[#d4af55]" : "text-emerald-400"}`}>{tag}:</span>{" "}
@@ -402,7 +402,7 @@ function WrestlerSheet({ e, onClose, starred, onStar }: { e: SnapshotEntrant; on
               <li key={b.key} className="flex items-start gap-3 py-2">
                 <span className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded text-xs font-bold ${b.win ? "bg-emerald-500/20 text-emerald-400" : "bg-red-500/20 text-red-400"}`}>{b.win ? "W" : "L"}</span>
                 <div className="min-w-0 flex-1 text-sm">
-                  <div className="flex flex-wrap items-center gap-1.5 text-white">{b.win ? "def." : "lost to"} {b.opponent} ({b.opponentTeam}) {b.win && b.tier && b.tier !== "win" && <Tag kind={b.tier === "huge" ? "Huge win" : "Big win"} />}{b.win && b.upset && <Tag kind="Upset" />}</div>
+                  <div className="flex flex-wrap items-center gap-1.5 text-white">{b.win ? "def." : "lost to"} {b.opponent} ({b.opponentTeam}) {b.win && b.tier && b.tier !== "win" && <Tag kind={b.tier === "huge" ? "Huge win" : b.tier === "big" ? "Big win" : "Significant"} />}{b.win && b.upset && <Tag kind="Upset" />}</div>
                   <div className="text-xs text-[#8195bd]">{[b.round, b.winType, b.result].filter(Boolean).join(" · ")}{b.reasons.length ? ` · ${b.reasons.slice(0, 3).join(", ")}` : ""}</div>
                 </div>
               </li>
@@ -426,6 +426,7 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
   const [weight, setWeight] = useState("")
   const [status, setStatus] = useState("")
   const [allWins, setAllWins] = useState(false)
+  const [winTab, setWinTab] = useState<"top" | "significant">("top")
   const [allList, setAllList] = useState(false)
   // 2026 is the live event; 2025 is last year's, kept for comparison.
   const [year, setYear] = useState<"2025" | "2026">("2026")
@@ -621,13 +622,24 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
               <Section title="Round Recap" right={recaps[0] ? <span className="text-xs text-[#8195bd]">After {recaps[0].label}</span> : null}>
                 {recaps[0] ? <RecapBlock r={recaps[0]} /> : <Empty>The first recap posts after the opening round.</Empty>}
               </Section>
-              <Section title="Biggest Wins" right={feed.length > 5 ? <button onClick={() => setAllWins(!allWins)} className="text-xs text-[#d4af55]">{allWins ? "Show less" : `View all ${feed.length}`}</button> : null}>
-                {feed.length ? (
-                  <div className="divide-y divide-[#1f3360]">
-                    {feed.slice(0, allWins ? undefined : 5).map((f) => <WinRow key={f.key} f={f} onOpen={() => { const e = entrants.find((x) => x.name === f.name && x.weight === f.weight && x.gender === f.gender); if (e) setOpen(e) }} />)}
-                  </div>
-                ) : <Empty>Huge and Big wins appear here after each round.</Empty>}
-              </Section>
+              {(() => {
+                const topWins = feed.filter((f) => f.tier === "huge" || f.tier === "big")
+                const sigWins = feed.filter((f) => f.tier === "significant")
+                const list = winTab === "top" ? topWins : sigWins
+                const tab = (k: "top" | "significant", label: string, n: number) => (
+                  <button onClick={() => { setWinTab(k); setAllWins(false) }} className={`rounded-full px-2.5 py-1 text-xs font-semibold ${winTab === k ? "bg-[#d4af55] text-[#0b1730]" : "border border-[#2c4170] text-[#c9d4ea]"}`}>{label} {n}</button>
+                )
+                return (
+                  <Section title="Biggest Wins" right={<div className="flex items-center gap-1.5">{tab("top", "Huge & Big", topWins.length)}{tab("significant", "Significant", sigWins.length)}</div>}>
+                    {list.length ? (
+                      <div className="divide-y divide-[#1f3360]">
+                        {list.slice(0, allWins ? undefined : 5).map((f) => <WinRow key={f.key} f={f} onOpen={() => { const e = entrants.find((x) => x.name === f.name && x.weight === f.weight && x.gender === f.gender); if (e) setOpen(e) }} />)}
+                        {list.length > 5 && <button onClick={() => setAllWins(!allWins)} className="w-full pt-2.5 text-center text-xs text-[#d4af55]">{allWins ? "Show less" : `View all ${list.length}`}</button>}
+                      </div>
+                    ) : <Empty>{winTab === "top" ? "Wins over seeded wrestlers appear here." : "Wins over unseeded state champions, state finalists, NHSCA and Super 32 All-Americans and nationally ranked wrestlers appear here."}</Empty>}
+                  </Section>
+                )
+              })()}
             </div>}
 
             <div className={`grid gap-5 ${past ? "" : "lg:grid-cols-[1.6fr_1fr]"}`}>

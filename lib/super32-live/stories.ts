@@ -55,7 +55,7 @@ export function buildStories(entrants: SnapshotEntrant[], recaps: SnapshotRecap[
         dek: `${e.wins}-${e.losses} so far at ${wt(e)}, guaranteed a top-eight finish.`, entrant: e, meta: `${lbs(e)}`, rank: 3 })
     }
     for (const b of e.bouts) {
-      if (!b.win || !b.tier || b.tier === "win") continue
+      if (!b.win || (b.tier !== "huge" && b.tier !== "big")) continue
       const how = [b.winType, b.result].filter(Boolean).join(" ")
       const dek = `Beat ${b.opponent} (${b.opponentTeam}), ${b.reasons.join(", ")}${how ? `, ${how}` : ""}, ${b.round}.`
       if (b.tier === "huge") {

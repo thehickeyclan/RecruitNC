@@ -79,12 +79,16 @@ describe("win tiers", () => {
     expect([w.tier, w.upset]).toEqual(["huge", true])
   })
 
-  it("only seeds tier a win; an unseeded opponent's rank is listed as context", () => {
+  it("only seeds make Huge or Big; an unseeded ranked opponent is a Significant win", () => {
     const cred = (rank: number): Credential => ({ name: "Jake Opp", state: "PA", gender: "boys", kind: "national_rank", rank, label: `#${rank} nationally (SI)` })
     const w = tierWin(bout(), ctx([], [cred(4)]))
-    expect([w.tier, w.reasons]).toEqual(["win", ["#4 nationally (SI)"]])
+    expect([w.tier, w.reasons]).toEqual(["significant", ["#4 nationally (SI)"]])
     expect(tierWin(bout(), ctx(seeds(20), [cred(4)])).reasons).toEqual(["#20 seed", "#4 nationally (SI)"])
     expect(tierWin(bout(), ctx([], [cred(38)])).reasons).toEqual([])
+    expect(tierWin(bout(), ctx([], [cred(38)])).tier).toBe("win")
+    const placer = (rank: number): Credential => ({ name: "Jake Opp", state: "PA", gender: "boys", kind: "state_placer", rank, label: `2026 PA AAA state ${rank}` })
+    expect(tierWin(bout(), ctx([], [placer(2)])).tier).toBe("significant")
+    expect(tierWin(bout(), ctx([], [placer(3)])).tier).toBe("win")
   })
 
   it("never tiers a forfeit, and ignores a credential held by someone in another state", () => {
