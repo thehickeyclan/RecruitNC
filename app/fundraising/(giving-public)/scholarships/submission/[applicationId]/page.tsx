@@ -7,7 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "View or edit your nomination | NC United",
+  title: "View or edit your nomination",
   robots: { index: false, follow: false },
 }
 

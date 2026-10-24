@@ -7,7 +7,7 @@ import { FundraisingFooter } from "@/app/fundraising/components/FundraisingFoote
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "Give | NC United Wrestling",
+  title: "Give",
   description:
     "Support NC United Wrestling or a named scholarship fund. NC United is a 501(c)(3), EIN 99-3757238.",
 }

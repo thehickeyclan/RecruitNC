@@ -30,10 +30,10 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { super32HomeBanner } from "@/lib/super32-live/home-banner"
 
 export const metadata = shareMetadata({
-  title: "NC United Wrestling",
+  title: "NC United",
   description: "North Carolina wrestling news, rankings, events, athlete profiles, clubs and college recruiting.",
   path: "/",
-  pageTitle: "NC United Wrestling",
+  pageTitle: "NC United",
 })
 
 export const revalidate = 120

@@ -5,7 +5,7 @@ import { WeekendWarsRsvpForm } from "@/components/weekend-wars-rsvp-form"
 import { WEEKEND_WARS_EVENT } from "@/lib/weekend-wars"
 
 export const metadata: Metadata = {
-  title: "Weekend Wars RSVP | NC United Wrestling",
+  title: "Weekend Wars RSVP",
   description: "RecruitNC athletes can RSVP for the August 29–30 Weekend Wars and Super 32 Prep Series at Darkhorse Wrestling.",
 }
 
