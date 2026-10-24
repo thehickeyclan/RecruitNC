@@ -60,6 +60,8 @@ export interface NewsItem {
   shareStoryImage?: string
   /** Force important launch news above newer items on /news and the homepage carousel. */
   pinToTop?: boolean
+  /** The tap line on the app's Home top-story card (default there: "Read the story"). */
+  actionLabel?: string
 }
 
 import type { NewsShareFormatId } from "@/lib/news-share-formats"
@@ -123,6 +125,7 @@ const ALL_NEWS: NewsItem[] = [
     author: "NC United",
     isAnnouncement: false,
     pinToTop: true,
+    actionLabel: "Follow NC live at Super 32 HQ",
   },
   {
     id: "super32-2026-what-good-looks-like",
