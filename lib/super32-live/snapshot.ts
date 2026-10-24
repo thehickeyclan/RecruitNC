@@ -393,8 +393,10 @@ export async function buildSnapshot(supabase: SupabaseClient, eventKey = SUPER32
     const { data: rowsIn } = await supabase.from("super32_live_alerts").upsert(alerts, { onConflict: "dedupe_key", ignoreDuplicates: true }).select("id")
     alertsQueued = rowsIn?.length ?? 0
   }
-  // One championship-side list waits at a time: a newer one replaces any older one not yet sent.
-  if (alerts.some((a) => a.kind === "champ_side")) {
+  // One championship-side list waits at a time: a newer one replaces any older one not yet sent,
+  // and when nobody linked is unbeaten any more, a waiting list is untrue and goes too.
+  const unbeatenNow = data.entrants.some((e) => e.athleteId && e.status === "alive" && e.bouts.some((b) => b.winType !== "BYE"))
+  if (alerts.some((a) => a.kind === "champ_side") || !unbeatenNow) {
     await supabase.from("super32_live_alerts").update({ status: "dismissed" })
       .eq("event_key", eventKey).eq("kind", "champ_side").in("status", ["pending", "held"]).neq("snapshot_id", inserted.id)
   }
