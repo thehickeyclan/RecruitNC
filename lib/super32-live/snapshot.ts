@@ -395,7 +395,7 @@ export async function buildSnapshot(supabase: SupabaseClient, eventKey = SUPER32
   }
   // One championship-side list waits at a time: a newer one replaces any older one not yet sent,
   // and when nobody linked is unbeaten any more, a waiting list is untrue and goes too.
-  const unbeatenNow = data.entrants.some((e) => e.athleteId && e.status === "alive" && e.bouts.some((b) => b.winType !== "BYE"))
+  const unbeatenNow = data.entrants.some((e) => e.status === "alive" && e.bouts.some((b) => b.winType !== "BYE"))
   if (alerts.some((a) => a.kind === "champ_side") || !unbeatenNow) {
     await supabase.from("super32_live_alerts").update({ status: "dismissed" })
       .eq("event_key", eventKey).eq("kind", "champ_side").in("status", ["pending", "held"]).neq("snapshot_id", inserted.id)
@@ -408,7 +408,8 @@ export async function buildSnapshot(supabase: SupabaseClient, eventKey = SUPER32
  * - Huge and Big wins new in this update, one push for the lot. Sent automatically.
  * - Who is still unbeaten on the championship side (wrestled, no loss), when that list changed.
  *   Waits for Matt to send; a newer one replaces an older one still waiting.
- * Only wrestlers linked to an NC profile are named.
+ * Every NC entrant counts, linked to a profile or not: Ellis Chia's Huge win had no push because
+ * he has no profile (24 Oct). The NC test (team code, NOT_NC) already ran on the entrant list.
  */
 export function queueAlerts(
   entrants: SnapshotEntrant[],
@@ -420,7 +421,7 @@ export function queueAlerts(
   snapshotId: string,
 ) {
   const id = (e: { gender: string; weight: string; name: string }) => `${e.gender}|${e.weight}|${e.name}`
-  const named = entrants.filter((e) => e.athleteId)
+  const named = entrants
   const short = (e: SnapshotEntrant) => `${e.name} (${e.gender === "girls" ? "G" : ""}${e.weight})`
   const out: Array<Record<string, unknown>> = []
 
@@ -444,7 +445,7 @@ export function queueAlerts(
     out.push({ event_key: eventKey, dedupe_key: `wins:${floId}`, kind: nHuge ? "huge" : "big", title, body, path: LIVE_PATH, status: "pending", snapshot_id: snapshotId })
   }
 
-  const unbeaten = (list: SnapshotEntrant[]) => list.filter((e) => e.athleteId && e.status === "alive" && e.bouts.some((b) => b.winType !== "BYE"))
+  const unbeaten = (list: SnapshotEntrant[]) => list.filter((e) => e.status === "alive" && e.bouts.some((b) => b.winType !== "BYE"))
   const now = unbeaten(entrants)
   const was = new Set(unbeaten(prevEntrants).map(id))
   const changed = now.length !== was.size || now.some((e) => !was.has(id(e)))
