@@ -160,3 +160,16 @@ describe("dedupeBouts", () => {
     expect(dedupeBouts([row("Al Smith", "Bo Jones"), row("Al Smith", "Bo Jones", "Dec 2-0", "Cons. Round 4")])).toHaveLength(2)
   })
 })
+
+describe("splitDivisions early in the day", () => {
+  it("keeps first-round bouts while each bracket is still unconnected pairs", () => {
+    const r = (w: string, wt: string, l: string, lt: string, weight = "113") =>
+      ({ date: "", weight, round: "Round of 256", winner: w, winnerTeam: wt, result: "Dec 3-1", winType: "DEC", loser: l, loserTeam: lt })
+    const rows = [r("Jha'kai Roller", "TN", "Benjamin Ellison", "NC"), r("Gabe Benyo", "PA", "Colton Farmer", "NC", "126")]
+    const hints = [
+      { gender: "boys" as const, weight: "113", name: "Benjamin Ellison", state: "NC" },
+      { gender: "boys" as const, weight: "126", name: "Colton Farmer", state: "NC" },
+    ]
+    expect(splitDivisions(rows, hints).bouts).toHaveLength(2)
+  })
+})
