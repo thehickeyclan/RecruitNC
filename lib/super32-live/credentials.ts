@@ -13,6 +13,8 @@
  *   state column, so it is still not used: name-only matching credits namesakes.)
  */
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { gunzipSync, gzipSync } from "node:zlib"
+import { list, put } from "@vercel/blob"
 import type { Credential, Gender } from "./engine"
 
 const SOURCE_LABEL: Record<string, string> = { sports_illustrated: "SI", flowrestling: "Flo", matscouts: "MatScouts" }
@@ -138,7 +140,41 @@ async function fargoPlacers(supabase: SupabaseClient): Promise<Credential[]> {
   return [...best.values()].map(({ place: _p, ...c }) => c)
 }
 
-export async function loadCredentials(supabase: SupabaseClient): Promise<Credential[]> {
+async function computeCredentials(supabase: SupabaseClient): Promise<Credential[]> {
   const [a, b, c, d] = await Promise.all([nationalRankings(supabase), eventPlacers(supabase), statePlacers(supabase), fargoPlacers(supabase)])
   return [...a, ...b, ...c, ...d]
+}
+
+/**
+ * Credentials do not change during the event, and reading them is tens of thousands of rows: doing
+ * that on every 2-minute rebuild took the Nano database down on 24 Oct. They are built once and
+ * kept in Blob for 12 hours; every rebuild reads that one file.
+ */
+const CACHE_PATH = "snapshots/super32-credentials.json.gz"
+const CACHE_HOURS = 12
+
+export async function loadCredentials(supabase: SupabaseClient, opts: { refresh?: boolean } = {}): Promise<Credential[]> {
+  if (!opts.refresh) {
+    try {
+      const { blobs } = await list({ prefix: CACHE_PATH, limit: 1 })
+      const url = blobs[0]?.url
+      if (url) {
+        const r = await fetch(`${url}?v=${Date.now()}`, { cache: "no-store" })
+        if (r.ok) {
+          const parsed = JSON.parse(gunzipSync(Buffer.from(await r.arrayBuffer())).toString("utf8")) as { builtAt: string; credentials: Credential[] }
+          const fresh = Date.now() - new Date(parsed.builtAt).getTime() < CACHE_HOURS * 3_600_000
+          if (fresh && parsed.credentials?.length) return parsed.credentials
+        }
+      }
+    } catch (e) {
+      console.error("[super32] credentials cache read failed", e)
+    }
+  }
+  const credentials = await computeCredentials(supabase)
+  if (credentials.length) {
+    await put(CACHE_PATH, gzipSync(JSON.stringify({ builtAt: new Date().toISOString(), credentials })), {
+      access: "public", addRandomSuffix: false, allowOverwrite: true, contentType: "application/gzip", cacheControlMaxAge: 60,
+    }).catch((e) => console.error("[super32] credentials cache write failed", e))
+  }
+  return credentials
 }
