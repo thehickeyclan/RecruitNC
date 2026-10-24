@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CreditCard, Pause, Ban, Receipt, CalendarClock } from "lucide-react"
 
 export const metadata = {
-  title: "Manage Blue Subscription | NC United",
+  title: "Manage Blue Subscription",
   description: "Pause, cancel, update payment, and view billing for NC United Blue membership.",
 }
 

@@ -14,7 +14,7 @@ import {
 import { fetchFargoResultsForYear, groupFargoByDivision } from "@/lib/fargo-archive-fetch"
 
 export const metadata: Metadata = {
-  title: "Fargo Nationals 2026 | NC United",
+  title: "Fargo Nationals 2026",
   description:
     "North Carolina results from the 2026 US Marine Corps National Championships (Fargo) — 16U and Junior freestyle.",
 }

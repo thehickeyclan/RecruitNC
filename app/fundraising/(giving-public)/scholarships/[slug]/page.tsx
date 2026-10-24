@@ -68,7 +68,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug } = await params
   const row = await getScholarshipBySlug(slug)
-  if (!row) return { title: "Scholarship | NC United" }
+  if (!row) return { title: "Scholarship" }
   const description = row.tagline ?? `${row.name} — NC United Wrestling scholarships.`
   const isCaden = row.slug === "caden-perry"
   return {

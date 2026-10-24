@@ -51,7 +51,7 @@ async function asDataUrl(url: string): Promise<string | null> {
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
-  const title = (url.searchParams.get("t") ?? "NC United Wrestling").slice(0, 90)
+  const title = (url.searchParams.get("t") ?? "NC United").slice(0, 90)
   const line = (url.searchParams.get("s") ?? "").slice(0, 160)
   const kicker = (url.searchParams.get("k") ?? "NC UNITED WRESTLING").slice(0, 50).toUpperCase()
   const imageUrl = allowedImage(url.searchParams.get("img"), url.origin)

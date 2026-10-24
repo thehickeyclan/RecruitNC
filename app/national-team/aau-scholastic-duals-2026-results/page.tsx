@@ -2,7 +2,7 @@ import { AauScholasticDuals2026PublicResults } from "@/components/national-team/
 import { getAauScholasticDuals2026RosterDisplayMaps } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
 
 export const metadata = {
-  title: "AAU Scholastic Duals 2026 Results | NC United",
+  title: "AAU Scholastic Duals 2026 Results",
   description:
     "NC United National Team dual meet results, individual records, and tournament recap from AAU Scholastic Duals 2026 in Fort Lauderdale.",
 }

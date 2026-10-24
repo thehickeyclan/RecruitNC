@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { HardLink } from "@/components/hard-link"
 
 export const metadata: Metadata = {
-  title: "Staff fundraising tools | NC United Wrestling",
+  title: "Staff fundraising tools",
   description:
     "RecruitNC sign-in for donor CRM and exports. Family playbook pages require a RecruitNC account; the giving hub stays public for donors.",
   robots: { index: false, follow: false },

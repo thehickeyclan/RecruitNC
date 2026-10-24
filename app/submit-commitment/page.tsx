@@ -7,7 +7,7 @@ import { CommitmentForm, type CollegeOption } from "@/components/commitments/com
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "Announce your commitment | NC United Wrestling",
+  title: "Announce your commitment",
   description: "Tell North Carolina wrestling where you are going to college.",
 }
 

@@ -16,7 +16,7 @@ import { listPublicAwardsAll, listScholarshipsForHub } from "@/lib/scholarships/
 import { HardLink } from "@/components/hard-link"
 
 export const metadata: Metadata = {
-  title: "Scholarships | NC United Wrestling",
+  title: "Scholarships",
   description:
     "NC United scholarships honor character and legacies in wrestling. Named funds provide training support stipends—apply, give, and read each fund’s story.",
 }

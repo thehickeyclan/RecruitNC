@@ -28,13 +28,13 @@ export function shareCardUrl(card: Pick<ShareCard, "title" | "description" | "ki
 export function shareMetadata(card: ShareCard): Metadata {
   const image = { url: shareCardUrl(card), width: 1200, height: 630, alt: card.title }
   return {
-    title: { absolute: card.pageTitle ?? `${card.title} | NC United Wrestling` },
+    title: { absolute: card.pageTitle ?? `${card.title} | NC United` },
     description: card.description,
     openGraph: {
       title: card.title,
       description: card.description,
       url: card.path,
-      siteName: "NC United Wrestling",
+      siteName: "NC United",
       type: "website",
       images: [image],
     },

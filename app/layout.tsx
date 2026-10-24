@@ -17,17 +17,17 @@ import { Analytics } from "@vercel/analytics/next"
 import { UserActivityTracker } from "@/components/user-activity-tracker"
 import { ContactTapTracker } from "@/components/contact-tap-tracker"
 
-const defaultTitle = "NC United Wrestling"
+const defaultTitle = "NC United"
 const defaultDescription =
   "North Carolina wrestling news, rankings, events, athlete profiles, clubs, and college recruiting coverage."
 // Any page without its own card still gets a full-width one instead of the bare logo.
-const defaultShareImage = "/api/share-card?t=NC%20United%20Wrestling&s=Rankings%2C%20athlete%20profiles%2C%20events%20and%20college%20recruiting%20for%20North%20Carolina%20wrestlers."
+const defaultShareImage = "/api/share-card?t=NC%20United&s=Rankings%2C%20athlete%20profiles%2C%20events%20and%20college%20recruiting%20for%20North%20Carolina%20wrestlers."
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://app.ncwrestlingunited.com"),
   title: {
     default: defaultTitle,
-    template: "%s | NC United Wrestling",
+    template: "%s | NC United",
   },
   description: defaultDescription,
   manifest: "/api/manifest",
@@ -35,14 +35,14 @@ export const metadata: Metadata = {
     title: defaultTitle,
     description: defaultDescription,
     url: "https://app.ncwrestlingunited.com",
-    siteName: "NC United Wrestling",
+    siteName: "NC United",
     type: "website",
     images: [
       {
         url: defaultShareImage,
         width: 1200,
         height: 630,
-        alt: "NC United Wrestling",
+        alt: "NC United",
       },
     ],
   },
