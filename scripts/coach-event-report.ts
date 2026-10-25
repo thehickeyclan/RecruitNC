@@ -120,6 +120,11 @@ async function main() {
   // A wrestler graded in NC United's recap of this event gets his grade and write-up flagged.
   const recapGrades = recapGradesFor(event.key, report.PROFILE_BASE_URL)
   for (const r of reports) r.recap = recapGrades.get(nameKey(r.name)) ?? null
+  // Performance order from the recap's grades (never shown to the coach): A first ... honorable
+  // mention, then everyone else by place and wins.
+  const ORDER = ["A+", "A", "A-", "B+", "B", "B-", "Honorable Mention"]
+  for (const r of reports) if (r.recap) r.performanceRank = ORDER.indexOf(r.recap.grade) === -1 ? 900 : ORDER.indexOf(r.recap.grade)
+  reports.sort(report.compareReports)
   if (recapGrades.size) console.log(`Recap grades attached: ${reports.filter((r) => r.recap).length} of ${reports.length}`)
 
   // What the profile shows beside what the brackets say.
