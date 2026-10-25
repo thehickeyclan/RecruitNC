@@ -1,0 +1,102 @@
+<!-- PRODUCTION NOTES (not article text): Free and fully visible through "How the Grades Work". Grade sections (A+ through Honorable Mention) render blurred for logged-out/free readers with the claim/sign-up panel; unblurred for Rankings, Command Center and Blue members, college coach accounts and admins; a family that claims a profile sees its own wrestler's grade free. Data file (full grades, bout-by-bout) is Rankings members/coaches only. Links in "Claim Your Profile" go to /create-profile, /rankings and coach sign-up. -->
+
+# Super 32 2026 — North Carolina Boys Recap
+
+
+## Overall Assessment
+
+North Carolina's boys didn't just show up to the hardest high school tournament in the country this year. They beat the kids they weren't supposed to beat. NC wrestlers won 11 matches against top-15 seeds, nearly double last year's six and more than five times the two from 2024, and eight different wrestlers collected a seeded win. 113 NC boys stepped into the brackets, the most of the three years. Fifteen finished with winning records, and four were still alive on Sunday morning.
+
+The headline is the top end. A year ago, NC's Super 32 story was depth without signature wins; this year the signature wins arrived. Braylen Yates (Topsail, 175), the reigning NHSCA freshman national champion and a Fargo 16U All-American, is North Carolina's lone boys All-American — he finished 8th, and he beat three seeded wrestlers on the mat to earn his medal. Mason Brown put together the strongest wrestled tournament on the team, with three top-15 seeds beaten. Ellis Chia, a senior who had never placed at the NC state tournament, beat two top-15 heavyweights. Brown and Chia both lost in the blood round, one win from the podium. On another Sunday, NC brings home three medals instead of one.
+
+The honest caveats: the breakthrough came from the unseeded, not the seeds. Of NC's two seeded boys, Yates medaled and #11 seed Tobin McNair went 1-2. And at 215, the draw was a buzzsaw: four of NC's five 215-pounders met a top-10 seed in the first round, yet Nash Mullis still beat the #9 seed and Brieon Mayfield took the #4 seed to a 2-1 decision. The depth underneath is real, too. The fifteen winning records top 2024's fourteen, with far more quality at the top of the card.
+
+*The girls' tournament, headlined by Ella Taylor's medal run at 200, is covered in its own recap.*
+
+## The Three-Year Comparison (NC boys)
+
+| Super 32 — NC boys | 2024 | 2025 | 2026 |
+|---|---|---|---|
+| Wrestlers in brackets | 105 | 90 | 113 |
+| Still alive entering Day 2 | 8 | 4 | 4 |
+| Wrestlers with winning records | 14 | 7 | 15 |
+| Wins over seeded opponents | 6 | 12 | 13 |
+| Wins over top-15 seeds | 2 | 6 | 11 |
+| Different wrestlers with a seeded win | 5 | 7 | 8 |
+| All-Americans | 0 | 1 | 1 |
+
+*Seeded-win rows count contested bouts only. Yates's blood-round win over #3 Joel Welch was a medical forfeit. It counts in his record and his All-American finish, but not as a contested win over a seed; the raw totals including it are 14 and 12. Wrestlers are counted for the state where they attend school, not their registration stamp.*
+
+## How the Grades Work
+
+Each wrestler is graded on the strength of his tournament, not just his record. He earns points for the seeds he beat (contested bouts only; forfeits earn advancement, never quality points), for how deep he went, for beating wrestlers who owned seeded wins themselves, and for losing only to wrestlers who went deep. Grades run A+ through B-. Within each grade, wrestlers are not listed in rank order — the grade is the evaluation, not the sequence. Wrestlers below that line are named in Honorable Mention or recognized with the squad, and the full grading for every wrestler is in the accompanying data file.
+
+## A+
+
+**Mason Brown (120) — 5-2.** The best wrestled tournament by a North Carolinian all weekend. Brown opened by teching Alabama champion Thomas Patterson and majoring Florida 2A champion Vladimir Drown. Then he beat #6 seed Daniel Brown of Indiana 11-4, #13 Izaya Schickley of Pennsylvania, and on Sunday morning #14 Paden Alyea, the Virginia 3A champion. Three top-15 seeds in one weekend. His run ended in the blood round against #21 Liam McGettigan of Florida, #26 nationally (SI). One win from a medal, with the strongest set of wins on the team.
+
+**Braylen Yates (175) — 6-3, 8th place, All-American.** He was seeded 20th and wrestled like what he is: the reigning NHSCA freshman national champion and a Fargo 16U All-American. On Saturday he took out #13 Teag Sanderson (PIAA AAA 3rd, Fargo 16U All-American) and #15 Sean Breedlove (Indiana state champion). He opened Sunday by beating #14 Brock Armstrong, Idaho's 6A champion. His medal-clincher came when #3 Joel Welch medically forfeited the blood round. The win counts in his record, and he earned the medal with the three seeded wins that put him there. His three losses: a 10-0 major to #4 Maximus Fortier, West Virginia's champion and #7 nationally (SI), in the round of 16; a major to #8 Kyler Crooks in the Consi of 4; and the 7th-place match, forfeited to #12 Ibrahim Dheel of Virginia. North Carolina's lone boys All-American leaves Greensboro in 8th.
+
+**Ellis Chia (285) — 4-2.** The story of the tournament for NC. A High Point Central senior who had never placed at the NC state tournament, Chia beat #10 Henry Redman and, on Sunday, #15 Carlos Rodriguez Jr. to reach the blood round, where he fell to #8 Andrew Arroyo of California. He beat two of the top-15 seeds in the country at his weight with no state plaque on his wall. Remember the name; college coaches will.
+
+## A
+
+**Campbell Tufts (165) — 4-2.** Pinned by #9 Collin Hamm in the round of 64, Tufts tore through the consolations with four straight wins, and the names on them are the story. He pinned Debraun Norris, Louisiana's 2026 D3 state champion, then pinned Jacob Ayers, Alabama's 1A-4A runner-up. Then came his win over a seed: a 4-2 decision over #19 Stone Redmon, Michigan's 2026 D3 state champion. He finished the run with a 2-1 win over Murphy Beyer, Wisconsin's 2026 D2 runner-up, before #12 Devon Weber stopped him in Consi of 16 #2. Two state champions and two state runners-up in one consolation run, quietly one of the most complete weekends on the team.
+
+**Nash Mullis (215) — 2-2.** The record is a lie. Mullis beat #9 Kannon Freschette, a Washington state champion and two-time Fargo All-American, 6-4. He also majored John Gill, Georgia's 4A champion and an NHSCA 3rd-place finisher, 11-0. His losses came to #10 Dominic Darch, an NHSCA runner-up, and Landon Guilford, Michigan's D2 champion. At 215, where four of NC's five entrants drew a top-10 seed in round one, Mullis produced one of the biggest single wins of the weekend.
+
+**Aiden White (Weddington, 138) — 4-2.** White won his first three on the championship side, including an 8-3 win over #14 Elijah Castanon, a Florida 1A state champion. That run ended against #19 Bryar Hooks, the reigning Fargo 16U freestyle champion and an Oklahoma 6A champion. White won once more in the consolations before going out. His second straight Super 32 with a seeded win — he went 4-2 here last year as well, at 132.
+
+**Drew Teeter (190) — 3-2.** Teeter's record undersells him. He majored #10 Maximus Purdy, Iowa's 2A champion, 15-4. His losses came to #6 Carter Lester, an NHSCA national champion ranked #11 by Flo, and, one win short of the blood round, by fall to Hayden Harvey of Pennsylvania, #23 nationally (SI).
+
+## A-
+
+**Jacob Perry (157) — 3-2.** Perry majored Ty Eversman, Colorado's 4A champion and #24 nationally (SI), 10-1, and also beat an NHSCA All-American, Nicolas Barrett. His losses were to the #9 and #13 seeds.
+
+**Ethan Halstead (120) — 5-2.** Five wins, four of them in a row in the consolations, including a major over Iowa 2A runner-up Anderson Osgood. His only losses were to the #7 and #10 seeds. Halstead never beat a seed himself, which keeps him out of the A group, but nobody on the team was harder to put away.
+
+## B+
+
+**Ayden Sumners (126) — 4-2.** Four straight wins in the consolations, the first a 7-1 decision over Zack Dixon, Connecticut's state champion and an NHSCA All-American. No win over a seed, but volume and toughness in a meat-grinder weight. He lost to the #21 and #23 seeds.
+
+**Carson Raper (113) — 3-2.** The NC 4A champion pinned Manny Novelli, Alaska's D-I champion and a Fargo 16U Greco runner-up, and majored Nick Yetzer, a Virginia 2A runner-up. His losses came to the #24 and #18 seeds.
+
+**Brieon Mayfield (215) — 3-2.** Nobody at this tournament had a tougher first hour. Mayfield drew #4 Decker Bechtold, a 2025 Super 32 placer ranked #6 nationally (SI), and lost 2-1. He answered with three straight consolation wins, including a tech over Vake Martin, Virginia's VISAA runner-up, before a 1-0 loss to Pennsylvania's Hunter Cox, who had beaten the #9 seed himself. The toughest draw on the team; the results just didn't include a win over a seed.
+
+## B
+
+**JeveN Palmeri (106) — 3-2.** Opened with two pins, the first over Delaware's state runner-up. He lost to #6 Johnathan Thompson, the Fargo 16U champion, then went out to Parker Workman, a Fargo 16U 4th-place finisher.
+
+**Carson Worrick (165) — 3-2.** Worrick's tournament is the seeding debate in miniature. His opener was against #2 seed Matthew Staples, the 2025 Super 32 runner-up and #4 nationally (SI), and he still battled back for three consolation wins and a 3-2 finish. Credit him for the draw he survived.
+
+**Logan Mumy (190) — 3-2.** Three wins at 190, and both losses to seeded wrestlers (#5 and #12). A solid weekend in Teeter's shadow.
+
+**Jordan Barbee (215) — 3-2.** The only NC 215-pounder to win his opening bout, Barbee ground out three wins in one of the most seed-dense brackets in the tournament. His losses were to #12 Hudson Koch and to unseeded Brennan Breisinger, a Fargo 16U All-American.
+
+## B-
+
+**Adrian Feliciano (126) — 2-2.** Pinned Rayce Watson, Ohio's 2025 D-II runner-up, and teched Oklahoma 3A medalist Luis Flores. His losses came to #14 Nico Emili and Illinois 2A champion Kai Enos.
+
+**Daniel McDermott (126) — 2-2.** Two pins, one over Daniel Lindsey, Mississippi's state champion. He was eliminated by Oregon 6A champion and NHSCA All-American Darion Johnson.
+
+**Micah Howard (165) — 2-2.** The NC 4A champion pinned Virginia 5A runner-up Drake Shultz. His losses came to #14 Jesus Guzman, #18 nationally (SI), and Arizona D1 runner-up Ryland Moss.
+
+**Matthew Akins (126) — 2-2.** Beat Drayton Johnson, South Carolina's 5A champion, and Zander Wilson, a PIAA AA medalist. His losses included the #2 seed.
+
+**Devin Hord (120) — 2-2.** Beat Ryland Aston, Georgia's 5A champion, and Bryce Butler, a South Carolina 4A medalist.
+
+**Clayton Chapman (126) — 2-2.** Teched Xavier Bernthal, the 2026 NC 7A champion, and beat Fargo All-American Evan Schomburg. He was eliminated by the #11 seed.
+
+**Ammon Scott (150) — 2-2.** Teched Kelby Harvey, Idaho's 3A champion. Both of his losses came to seeds (#22 and #16).
+
+## Honorable Mention
+
+Liam Myles (113, 2-2, losses included the #17 seed) · Connor Reece (144, 2-2, draw included the #13 and #20 seeds) · Joseph Shook (157, 2-2) · Braylon Butts (106, 1-2, lost to the #1 seed) · Vincent Grack (157, 2-2) · Carson Owens (190, 1-2) · Liam Smith (190, 1-2) · Paxton Kearns (138, 1-2) · Waylon Pinnix (132, 1-2) · Jacob McCord (165, 1-2, beat Connecticut's state champion) · Caleb Edwards (132, 1-2) · Aidan Szewczyk (132, 1-2) · Tyton Kostoff (150, 1-2) · Kalil McDowell (157, 1-2) · Tobin McNair (165, 1-2, the #11 seed; a rough weekend for NC's highest-seeded boy) · Luke Padgett (190, 1-2)
+
+## The Rest of the Squad
+
+Seventy-four more North Carolina boys stepped on the mat in Greensboro. Some won a bout in the consolations, some had their only win come by forfeit, and some drew an eventual semifinalist in the very first round and were gone by Saturday afternoon. Super 32 doesn't hand out easy weekends, and every one of them took the hardest draw in high school wrestling on purpose. Their full results are in the accompanying data file.
+
+## Claim Your Profile
+
+Almost every wrestler in this recap already has an NC United profile, built from verified results — state tournaments, national events, and weekends like this one. [**Claim your profile**](/create-profile) to check it, correct it, and follow it. [**Rankings members**](/rankings) get the full data file behind this recap — every bout, every grade, every seed beaten — plus the complete rankings with the results behind them, and they see which college programs viewed their wrestler's profile. College coaches: [your account is free](/auth/signup?type=college-coach), and every profile on the platform is built the same way this recap was — from results we verified.

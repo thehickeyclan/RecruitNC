@@ -221,6 +221,11 @@ export type AthleteEventReport = {
    * ..."). Competed wrestlers only; null when it could not be computed - never guessed.
    */
   strength: StrengthOfCompetitionLine | null
+  /**
+   * His grade and write-up from NC United's graded recap of this event, when one exists and
+   * grades him (lib/news-recaps). Coaches see every grade free. Attached by the caller.
+   */
+  recap?: { grade: string; text: string; url: string } | null
 }
 
 /* ------------------------------------------------------------------ *
@@ -654,7 +659,10 @@ ${facts ? `<p style="margin:2px 0 8px;color:#64748b;font-size:13px;">${facts}</p
   const matches = `<p style="margin:10px 0 4px;color:#64748b;font-size:12px;">${r.bouts
     .map((b) => `${esc(b.round)}${b.bracket ? ` (${esc(b.bracket)})` : ""}: ${b.outcome} ${esc(b.opponent)}${b.method || b.score ? ` ${esc([b.method, b.score].filter(Boolean).join(" "))}` : ""}`)
     .join("<br>")}</p>`
-  return `<div style="border-top:1px solid #e2e8f0;padding:16px 0;">${head}${stats}${note}${strength}${wins}${losses}${matches}
+  const recap = r.recap
+    ? `<div style="margin:8px 0;padding:10px 12px;background:#f8fafc;border-left:3px solid #d4af55;border-radius:4px;"><p style="margin:0 0 4px;font-size:13px;"><strong style="color:#0A1628;">NC United recap grade: ${esc(r.recap.grade)}</strong> &nbsp;<a href="${r.recap.url}" style="color:#003366;font-size:12px;">Read the full recap</a></p><p style="margin:0;color:#334155;font-size:13px;">${esc(r.recap.text)}</p></div>`
+    : ""
+  return `<div style="border-top:1px solid #e2e8f0;padding:16px 0;">${head}${stats}${note}${strength}${recap}${wins}${losses}${matches}
 <p style="margin:8px 0 0;font-size:13px;"><a href="${url}" style="color:#003366;">View full profile</a></p></div>`
 }
 
