@@ -53,7 +53,7 @@ Each wrestler is graded on the strength of his tournament, not just his record. 
 
 **Jacob Perry (157) — 3-2.** Perry majored Ty Eversman, Colorado's 4A champion and #24 nationally (SI), 10-1, and also beat an NHSCA All-American, Nicolas Barrett. His losses were to the #9 and #13 seeds.
 
-**Ethan Halstead (120) — 5-2.** Five wins, four of them in a row in the consolations, including a major over Iowa 2A runner-up Anderson Osgood. His only losses were to the #7 and #10 seeds. Halstead never beat a seed himself, which keeps him out of the A group, but nobody on the team was harder to put away.
+**Ethan Halstead (120) — 5-2.** An eighth grader in the high school bracket. Five wins, four of them in a row in the consolations, including a major over Iowa 2A runner-up Anderson Osgood. His only losses were to the #7 and #10 seeds. Halstead never beat a seed himself, which keeps him out of the A grades, but nobody on the team was harder to put away, and he has four more Super 32s ahead of him.
 
 ## B
 
