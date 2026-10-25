@@ -25,6 +25,7 @@ import fs from "fs"
 import path from "path"
 import { createRequire } from "module"
 import { createClient } from "@supabase/supabase-js"
+import { nameKey, recapGradesFor } from "@/lib/news-recaps/recap"
 
 // Some lib modules import "server-only", which throws outside a React server render. Pre-seed the
 // module cache so the script runs the real code paths (as scripts/verify-toc-public-field.ts does).
@@ -116,6 +117,10 @@ async function main() {
   if (loaded.missing.length) console.warn(`No athlete row for: ${loaded.missing.join(", ")}`)
 
   const reports = report.buildEventReport({ event, athletes: loaded.athletes, field, index, lossesVisible })
+  // A wrestler graded in NC United's recap of this event gets his grade and write-up flagged.
+  const recapGrades = recapGradesFor(event.key, report.PROFILE_BASE_URL)
+  for (const r of reports) r.recap = recapGrades.get(nameKey(r.name)) ?? null
+  if (recapGrades.size) console.log(`Recap grades attached: ${reports.filter((r) => r.recap).length} of ${reports.length}`)
 
   // What the profile shows beside what the brackets say.
   const byId = new Map(loaded.athletes.map((a) => [a.id, a]))
