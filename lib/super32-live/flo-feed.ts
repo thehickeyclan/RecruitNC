@@ -41,7 +41,10 @@ export async function fetchFloResultsCsv(eventId = FLO_EVENT_ID, date = "10/24/2
   // The results filter lists a division only once it has results; the girls' division is added by
   // id so their first finished match is never missed (HS Girls, from the posted brackets, 24 Oct).
   const KNOWN = eventId === FLO_EVENT_ID ? [{ value: "12RYea13jWFoxLwxk", label: "High School Girls" }] : []
+  // High school only. Flo adds Middle School, 11U and 8U on day two, and Middle School shares the
+  // boys' weights (106, 113, 120…): their bouts must never reach the HS brackets (25 Oct).
   const options = [...divs.data.options, ...KNOWN.filter((k) => !divs.data.options.some((o) => o.value === k.value))]
+    .filter((o) => /^high school/i.test(o.label))
   const lines = new Set<string>()
   let weights = 0
   for (const d of options) {
