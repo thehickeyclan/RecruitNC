@@ -29,7 +29,7 @@
 import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
-import { nameWords, schoolsLikelySame } from "@/lib/athlete-name-match"
+import { nameReadings, nameWords, namesReferToSamePerson, schoolsLikelySame } from "@/lib/athlete-name-match"
 import { currentClassYears } from "@/lib/class-years"
 import { normalizeState } from "@/lib/athlete-state"
 
@@ -122,6 +122,22 @@ async function main() {
     const k = nn(r.wrestler_name)
     byName.set(k, [...(byName.get(k) ?? []), r])
   }
+  /*
+   * One wrestler, two names, because a bracket quoted his nickname: Florida printed
+   * `Steven \`Jett\` Johnson` in 2025 and `Jett Johnson` in 2026 — the same Cocoa Beach
+   * 106-pounder, who came out of this loop as two profiles. Names that refer to one person
+   * (nameReadings) at a school that agrees are folded together before clustering.
+   */
+  for (const [a, rowsA] of [...byName]) {
+    if (!byName.has(a)) continue
+    for (const [b, rowsB] of [...byName]) {
+      if (b === a || !byName.has(b) || !byName.has(a)) continue
+      if (!namesReferToSamePerson(rowsA[0]!.wrestler_name, rowsB[0]!.wrestler_name)) continue
+      if (!schoolsLikelySame(schoolOf(rowsA[0]!), schoolOf(rowsB[0]!))) continue
+      byName.set(a, [...byName.get(a)!, ...rowsB])
+      byName.delete(b)
+    }
+  }
   const groups = new Map<string, Placer[]>()
   for (const [name, rows] of byName) {
     const clusters: Placer[][] = []
@@ -180,7 +196,7 @@ async function main() {
      */
     const placerYear = rows.map((x) => Number(x.grad_year)).find((y) => y > 0) ?? null
     const sameName = athletes.filter((a) => {
-      if (nn(a.name) !== nn(r.wrestler_name)) return false
+      if (!namesReferToSamePerson(a.name, r.wrestler_name)) return false
       const theirs = Number((a as { graduationyear?: unknown }).graduationyear)
       return !(placerYear && theirs > 0 && theirs !== placerYear)
     })
@@ -209,11 +225,20 @@ async function main() {
       ambiguous.push(`${r.wrestler_name} (${school}) vs ${sameName.map((a) => `${a.name} (${a.highschool ?? "no school"}, ${a.state ?? "no state"})`).join(" / ")}`)
       continue
     }
-    const name = title(String(r.wrestler_name).trim())
+    /*
+     * The formal reading is the profile's name and the nickname is its wrestling name, which is
+     * where the rest of the product already looks for the other spelling a bracket might print
+     * (lib/public-profile-data.ts). `Steven \`Jett\` Johnson` becomes Steven Johnson, wrestling
+     * as Jett Johnson — not a profile whose name carries a stray pair of backticks.
+     */
+    const readings = nameReadings(String(r.wrestler_name).trim())
+    const name = title(readings[0] ?? String(r.wrestler_name).trim())
+    const wrestlingName = readings[1] ? title(readings[1]) : null
     const parts = name.split(/\s+/)
     toCreate.push({
       row: {
         name,
+        wrestling_name: wrestlingName,
         firstName: parts[0],
         lastName: parts.slice(1).join(" "),
         highschool: school || null,

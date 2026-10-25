@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest"
 import {
   filterRowsByAthleteMatchContext,
   getAthleteNameSearchVariants,
+  nameReadings,
   nameWords,
   namesLikelySamePerson,
   namesReferToSamePerson,
@@ -197,5 +198,33 @@ describe("one school, two spellings", () => {
     expect(schoolsLikelySame("Northeast", "North Hagerstown")).toBe(false)
     expect(schoolsLikelySame("St. John Paul the Great Catholic", "St. Mary's")).toBe(false)
     expect(schoolsLikelySame("Mount Carmel", "Mount Hebron")).toBe(false)
+  })
+})
+
+describe("a nickname in quotes", () => {
+  it("gives the name two readings, formal first", () => {
+    expect(nameReadings("Steven `Jett` Johnson")).toEqual(["Steven Johnson", "Jett Johnson"])
+    expect(nameReadings('Patrick "Wyatt" Mayfield')).toEqual(["Patrick Mayfield", "Wyatt Mayfield"])
+  })
+
+  it("matches the other bracket's spelling of the same wrestler", () => {
+    /*
+     * Florida printed `Steven \`Jett\` Johnson` in 2025 and `Jett Johnson` in 2026: one Cocoa
+     * Beach 106-pounder, class of 2030, who was minted as two profiles before this.
+     */
+    expect(namesReferToSamePerson("Steven `Jett` Johnson", "Jett Johnson")).toBe(true)
+    expect(namesReferToSamePerson("Steven `Jett` Johnson", "Steven Johnson")).toBe(true)
+  })
+
+  it("does not make two wrestlers one", () => {
+    /* Without the quotes there is no evidence they are the same person, so they are not. */
+    expect(namesReferToSamePerson("Jett Johnson", "Steven Johnson")).toBe(false)
+    expect(namesReferToSamePerson("Steven `Jett` Johnson", "Jett Smith")).toBe(false)
+  })
+
+  it("leaves a mid-name apostrophe alone, however it is mangled", () => {
+    expect(nameReadings("Mason O`dell")).toEqual(["Mason O`dell"])
+    expect(nameReadings("A`Niyah Leon-Goodrich")).toEqual(["A`Niyah Leon-Goodrich"])
+    expect(nameReadings("Jackson D?Ettore")).toEqual(["Jackson D?Ettore"])
   })
 })

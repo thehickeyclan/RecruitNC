@@ -99,12 +99,13 @@ describe("the state names the championship", () => {
   })
 
   it("names a state we hold no association for by the state itself", () => {
+    /* Alabama, not Georgia: Georgia's GHSA went into the association map when the state loaded. */
     const labels = profileCredentials({
-      stateRows: [row("Georgia 6A State Championships", "3rd")],
+      stateRows: [row("Alabama 6A State Championships", "3rd")],
       tocRows: [],
       tournamentRows: [],
-      state: "GA",
+      state: "AL",
     }).map((c) => c.label)
-    expect(labels).toEqual(["Georgia 6A State 3rd · ’26"])
+    expect(labels).toEqual(["Alabama 6A State 3rd · ’26"])
   })
 })

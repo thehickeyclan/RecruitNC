@@ -114,6 +114,7 @@ const ASSOCIATIONS: Record<string, { public: string; independent?: string[] }> =
    */
   GA: { public: "GHSA", independent: ["GIAA"] },
   TN: { public: "TSSAA" },
+  FL: { public: "FHSAA" },
 }
 
 /**

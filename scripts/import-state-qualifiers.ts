@@ -20,6 +20,7 @@
 import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
+import { normalizeApostrophes } from "@/lib/athlete-name-match"
 import { stripResultMarkers } from "@/lib/identity-dedupe"
 
 for (const f of [".env.local", ".env"]) {
@@ -171,7 +172,12 @@ async function main() {
     const entries: Array<Record<string, unknown>> = []
     let noName = 0
     for (const r of group) {
-      const name = stripResultMarkers(`${r.first_name} ${r.last_name}`)
+      /*
+       * The apostrophe is folded as it is stored, not only as it is compared. FloArena writes a
+       * backtick for it - "Mason O`dell", "A`Niyah Leon-Goodrich", 29 of Florida's rows - and
+       * every surface that prints a placer name printed the backtick back at a coach.
+       */
+      const name = normalizeApostrophes(stripResultMarkers(`${r.first_name} ${r.last_name}`))
       /*
        * "Forfeit" is not a wrestler. Arizona's files carry rows whose whole name is a result,
        * alongside weights of "1" to "4" — that state needs recollecting, and until it does these

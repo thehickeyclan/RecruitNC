@@ -23,7 +23,7 @@
 import fs from "fs"
 import path from "path"
 import { createClient } from "@supabase/supabase-js"
-import { nameWords, schoolsLikelySame } from "@/lib/athlete-name-match"
+import { nameWords, namesReferToSamePerson, schoolsLikelySame } from "@/lib/athlete-name-match"
 import { normalizeState } from "@/lib/athlete-state"
 
 for (const f of [".env.local", ".env"]) {
@@ -53,9 +53,10 @@ const num = (v: unknown) => Number.parseFloat(String(v ?? "")) || 0
 async function main() {
   if (!DIR) { console.error("give the directory holding the season JSON files"); process.exit(1) }
   console.log(`${WRITE ? "WRITING" : "DRY RUN — nothing is written"}${STATE ? ` — matching only ${STATE} profiles` : " — matching profiles in EVERY state"}\n`)
-  const athletes: Array<{ id: string; name: string; highschool: string | null; state?: string | null }> = []
+  const athletes: Array<{ id: string; name: string; wrestling_name?: string | null; highschool: string | null; state?: string | null }> = []
   for (let from = 0; ; from += 1000) {
-    let q = sb.from("athletes").select("id, name, highschool, state")
+    /* .order("id"): without a stable order the pages of a 1,000-row read repeat and skip rows. */
+    let q = sb.from("athletes").select("id, name, wrestling_name, highschool, state").order("id")
     if (STATE) q = q.eq("state", STATE)
     const { data, error } = await q.range(from, from + 999)
     if (error) throw new Error(error.message)
@@ -72,7 +73,17 @@ async function main() {
     const say = (verdict: string) => console.log(`${file}\n   ${full} | ${wi.season} | ${matches.length} matches ${ss.wins}-${ss.losses}\n   ${verdict}`)
 
     if (matches.length < MIN_MATCHES) { say(`SKIPPED — only ${matches.length} match, a truncated pull rather than a season`); continue }
-    const sameName = athletes.filter((a) => nn(a.name) === nn(full))
+    /*
+     * The profile's wrestling name counts, and so does a nickname the bracket printed in quotes:
+     * Florida's `Steven \`Jett\` Johnson` wrestles as Jett Johnson, and both of his season files
+     * came back "no profile of that name" against the formal name alone.
+     */
+    const sameName = athletes.filter(
+      (a) =>
+        nn(a.name) === nn(full) ||
+        namesReferToSamePerson(a.name, full) ||
+        (a.wrestling_name ? namesReferToSamePerson(a.wrestling_name, full) : false),
+    )
     if (!sameName.length) { say("SKIPPED — no profile of that name"); continue }
     const schoolOk = sameName.filter((a) => schoolsLikelySame(a.highschool, wi.high_school))
     let pick = schoolOk.length === 1 ? schoolOk[0] : null
