@@ -5,11 +5,13 @@
 
 ## Overall Assessment
 
-North Carolina's boys won 11 matches against top-15 seeds at Super 32 this year, nearly double last year's six and more than five times the two from 2024. Eight different NC wrestlers collected a seeded win. 113 NC boys stepped into the brackets, the most of the three years. Fifteen finished with winning records, and four were still alive on Sunday morning.
+Super 32 is the best yardstick we have. Once a year the country's best high school wrestlers fill one bracket, and we get to see where North Carolina stands. Not against any other state, but against the North Carolina of a year ago, and the year before that.
 
-The difference from past years is at the top end. A year ago, NC's results were depth without many wins over seeds; this year those wins came. Braylen Yates (East Rowan, 175), the reigning NHSCA freshman national champion and a Fargo 16U All-American, is North Carolina's lone boys All-American. He finished 8th and beat three seeded wrestlers on the mat to earn the medal. Mason Brown beat three top-15 seeds, as many as any NC wrestler. Ellis Chia, a senior who has wrestled for less than two years and had never placed at the NC state tournament, beat two top-15 heavyweights. Brown and Chia both lost in the blood round, one win from the podium, and both to wrestlers who went on to place.
+By that measure, this was an encouraging weekend. Three years ago, NC boys beat two top-15 seeds all tournament. Last year it was six. This year it was eleven, and the wins came from more wrestlers each year: five, then seven, then eight. None of those steps is a giant leap on its own. Together they look like a trend, and small gains that keep stacking up are how a state's wrestling changes.
 
-Two caveats. The wins came mostly from unseeded wrestlers: of NC's two seeded boys, Yates medaled and #11 seed Tobin McNair went 1-2. And no NC boy beat a wrestler who finished on the podium; the strongest weekends ended against them instead. Thirty NC losses came to eventual placers, including both of Chia's, all three of Yates's, and Brieon Mayfield's 2-1 tiebreaker loss to Decker Bechtold, who finished 3rd. Below the top, the fifteen winning records top 2024's fourteen.
+The weekend had its leaders. Braylen Yates (East Rowan, 175) earned North Carolina's lone boys All-American medal. Mason Brown beat three top-15 seeds. Ellis Chia, a senior with less than two years in the sport, beat two at heavyweight. Brown and Chia each came within one win of the podium.
+
+Not every number moved. Four NC boys were still alive on Sunday morning, the same as last year and half of 2024's eight, and no NC boy beat a wrestler who finished on the podium. That's the next step. The three-year comparison below shows where we've grown and where we haven't yet.
 
 *The girls' tournament, headlined by Ella Taylor's medal run at 200, is covered in its own recap.*
 
@@ -101,7 +103,7 @@ Seventy-four more North Carolina boys stepped on the mat in Greensboro. Some won
 
 Super 32 is one of the toughest tests in high school wrestling, and a chance to measure North Carolina against the best competition in the country. This year's results give us reasons to be encouraged.
 
-Eleven wins over top-15 seeds, up from six last year and two in 2024, are real progress. Mason Brown, Braylen Yates and Ellis Chia showed that North Carolina wrestlers can beat nationally recognized talent, and Chia did it with less than two years in the sport.
+Mason Brown, Braylen Yates and Ellis Chia showed that North Carolina wrestlers can beat nationally recognized talent, and Chia did it with less than two years in the sport.
 
 The results also show how much work remains. We produced one boys All-American, and no NC boy beat a wrestler who finished on the podium.
 
