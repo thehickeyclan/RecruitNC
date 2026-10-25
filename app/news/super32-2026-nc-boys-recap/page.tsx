@@ -19,6 +19,7 @@ import { resolveRankingViewer } from "@/lib/ranking-access"
 import { hasPortalAccess, hasPremiumAccess } from "@/lib/ranking-visibility"
 import { GRADES, loadRecap, nameKey, SUPER32_2026_BOYS_RECAP, type GradedWrestler } from "@/lib/news-recaps/recap"
 import { markdownToHtml } from "@/lib/news-recaps/markdown"
+import { linkNames } from "@/lib/news-recaps/link-names"
 import { latestSnapshot, type SnapshotEntrant } from "@/lib/super32-live/snapshot"
 
 export const dynamic = "force-dynamic"
@@ -70,6 +71,15 @@ function sections(md: string): Array<{ head: string; body: string }> {
 
 const html = (md: string) => ({ __html: markdownToHtml(md) })
 const inlineHtml = (md: string) => ({ __html: markdownToHtml(md).replace(/^<p[^>]*>|<\/p>$/g, "") })
+
+/**
+ * Every NC wrestler with a profile: full name -> profile path, from the published results. Set at
+ * the top of each render; every request sets the same list (one published snapshot).
+ */
+let PROFILE_LINKS: Array<[string, string]> = []
+const LINK_CLASS = "font-semibold text-[#003366] underline decoration-[#d4af55] decoration-2 underline-offset-2"
+const linkedInline = (md: string) => ({ __html: linkNames(markdownToHtml(md).replace(/^<p[^>]*>|<\/p>$/g, ""), PROFILE_LINKS, LINK_CLASS) })
+const linkedHtml = (md: string) => ({ __html: linkNames(markdownToHtml(md), PROFILE_LINKS, LINK_CLASS) })
 
 function Hero({ title }: { title: string }) {
   return (
@@ -161,7 +171,7 @@ function GradeLegend({ body, graded }: { body: string; graded: GradedWrestler[] 
       </div>
       <details className="mt-3 text-sm">
         <summary className="cursor-pointer font-semibold text-[#003366]">The full method</summary>
-        <div dangerouslySetInnerHTML={html(body)} />
+        <div dangerouslySetInnerHTML={linkedHtml(body)} />
       </details>
     </section>
   )
@@ -185,7 +195,7 @@ function WrestlerCard({ w, e, open }: { w: GradedWrestler; e: SnapshotEntrant | 
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 shrink-0 select-none items-center justify-center rounded-lg bg-gray-200 text-base font-black text-transparent blur-[3px]">{w.grade}</span>
           <div className="min-w-0">
-            <div className="truncate text-base font-bold text-gray-900">{w.name}</div>
+            <div className="truncate text-base font-bold text-gray-900">{e?.athleteId ? <Link href={`/athletes/${e.athleteId}`} className="hover:underline">{w.name}</Link> : w.name}</div>
             <div className="text-xs text-gray-500">{w.weight} lbs · {record}{e?.school ? ` · ${e.school}` : ""}</div>
           </div>
         </div>
@@ -201,7 +211,7 @@ function WrestlerCard({ w, e, open }: { w: GradedWrestler; e: SnapshotEntrant | 
         <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-lg font-black ${st.badge}`}>{st.label}</span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2">
-            <h3 className="text-lg font-black text-[#0b1730]">{w.name}</h3>
+            <h3 className="text-lg font-black text-[#0b1730]">{e?.athleteId ? <Link href={`/athletes/${e.athleteId}`} className="hover:underline">{w.name}</Link> : w.name}</h3>
             <span className="text-sm text-gray-500">{w.weight} lbs{e?.school ? ` · ${e.school}` : ""}</span>
           </div>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -226,7 +236,7 @@ function WrestlerCard({ w, e, open }: { w: GradedWrestler; e: SnapshotEntrant | 
           <figcaption className="mt-0.5 text-[9px] text-gray-400">Photo: {photo.credit}</figcaption>
         </figure>
       )}
-      <p className="px-4 pb-4 pt-2 text-[15px] leading-relaxed text-gray-800" dangerouslySetInnerHTML={inlineHtml(w.paragraph)} />
+      <p className="px-4 pb-4 pt-2 text-[15px] leading-relaxed text-gray-800" dangerouslySetInnerHTML={linkedInline(w.paragraph)} />
     </article>
   )
 }
@@ -285,6 +295,8 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
   const snap = await latestSnapshot(admin, "super32-2026", true)
   const entrants = snap?.data.entrants ?? []
   const byName = new Map(entrants.filter((e) => e.gender === "boys").map((e) => [nameKey(e.name), e]))
+  // Longest names first, so "Liam Myles" is linked before any shorter name inside it.
+  PROFILE_LINKS = entrants.filter((e) => e.athleteId).map((e) => [e.name, `/athletes/${e.athleteId}`] as [string, string]).sort((a, b) => b[0].length - a[0].length)
 
   // Admins can see the page as a free reader would: ?preview=free.
   const previewFree = viewer.isAdmin === true && (await searchParams).preview === "free"
@@ -317,11 +329,11 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
 
       {paras.length > 0 && (
         <section className="mt-8">
-          <p className="text-xl font-medium leading-relaxed text-[#0b1730] md:text-2xl" dangerouslySetInnerHTML={inlineHtml(paras[0]!)} />
+          <p className="text-xl font-medium leading-relaxed text-[#0b1730] md:text-2xl" dangerouslySetInnerHTML={linkedInline(paras[0]!)} />
           {paras.slice(1).map((p, i) =>
             /^\*/.test(p)
               ? <p key={i} className="mt-4 rounded-lg bg-[#f4f6fb] px-4 py-2 text-sm text-gray-600" dangerouslySetInnerHTML={inlineHtml(p)} />
-              : <p key={i} className="mt-4 text-[17px] leading-relaxed text-gray-800" dangerouslySetInnerHTML={inlineHtml(p)} />,
+              : <p key={i} className="mt-4 text-[17px] leading-relaxed text-gray-800" dangerouslySetInnerHTML={linkedInline(p)} />,
           )}
         </section>
       )}
@@ -356,7 +368,9 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
         <div className="mt-3 flex flex-wrap gap-2">
           {recap.honorableMention.map((h) => (
             <span key={h.name} className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm shadow-sm">
-              <span className="font-semibold text-gray-900">{h.name}</span>
+              {byName.get(nameKey(h.name))?.athleteId
+                ? <Link href={`/athletes/${byName.get(nameKey(h.name))!.athleteId}`} className="font-semibold text-[#003366] hover:underline">{h.name}</Link>
+                : <span className="font-semibold text-gray-900">{h.name}</span>}
               <span className="text-gray-500"> · {h.weight}</span>
               {(unlocked || own.has(nameKey(h.name))) && h.note ? <span className="text-gray-500"> · {h.note}</span> : null}
             </span>
@@ -367,7 +381,7 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
       {outro.map((s) => (
         <section key={s.head} className="mt-10">
           <h2 className="text-xl font-black text-[#0b1730]">{s.head}</h2>
-          <div dangerouslySetInnerHTML={html(s.body)} />
+          <div dangerouslySetInnerHTML={linkedHtml(s.body)} />
         </section>
       ))}
 
