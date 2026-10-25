@@ -244,6 +244,25 @@ function LatestResults({ entrants, onOpen }: { entrants: SnapshotEntrant[]; onOp
   )
 }
 
+/** Claim the profile free, then Rankings ($9.99) for the state rank and which colleges looked. */
+function ProfileAd() {
+  return (
+    <section className="overflow-hidden rounded-xl border border-[#d4af55]/50 bg-gradient-to-r from-[#13294b] to-[#0f1f3f]">
+      <div className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
+        <div className="min-w-0">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-[#d4af55]">Every result today lands on their profile</div>
+          <div className={`${H} mt-1 text-2xl leading-tight text-white md:text-3xl`}>Claim your wrestler&apos;s profile. It&apos;s free.</div>
+          <div className="mt-1 text-sm text-[#c9d4ea]">Then add <span className="font-semibold text-white">Rankings</span> to see where they rank in North Carolina and <span className="font-semibold text-white">which college programs viewed their profile</span>. $9.99 a month.</div>
+        </div>
+        <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+          <Link href="/athletes" className="rounded-lg bg-white px-4 py-2.5 text-center text-sm font-semibold text-[#0b1730]">Find &amp; claim a profile</Link>
+          <Link href="/rankings" className="rounded-lg bg-[#d4af55] px-4 py-2.5 text-center text-sm font-semibold text-[#0b1730]">See Rankings →</Link>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 /**
  * The scrolling results bar, as last year's dashboard had it: every NC result, latest rounds
  * first, with the Huge/Big tag. Results arrive after each round, so the label says so.
@@ -484,6 +503,7 @@ function WrestlerSheet({ e, onClose, starred, onStar }: { e: SnapshotEntrant; on
         )}
         <div className="mt-5 grid gap-2 sm:grid-cols-2">
           {e.athleteId && <Link href={`/athletes/${e.athleteId}`} className="block rounded-lg bg-[#d4af55] py-2.5 text-center font-semibold text-[#0b1730]">Full profile</Link>}
+          {e.athleteId && <p className="text-center text-xs text-[#9fb0cf]">Is this your wrestler? <Link href={`/athletes/${e.athleteId}`} className="font-semibold text-white underline">Claim the profile free</Link>, then <Link href="/rankings" className="font-semibold text-[#d4af55] underline">Rankings</Link> shows their state rank and which colleges viewed it.</p>}
           <a href={FLO_BRACKETS_URL} target="_blank" rel="noopener noreferrer" className="block rounded-lg border border-[#d4af55]/60 py-2.5 text-center font-semibold text-[#d4af55]">{e.weight ? `${e.gender === "girls" ? "Girls " : ""}${e.weight} bracket on Flo ↗` : "Brackets on Flo ↗"}</a>
         </div>
       </div>
@@ -683,6 +703,8 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
             </Section>
 
             {!past && started && <LatestResults entrants={entrants} onOpen={setOpen} />}
+
+            {year === "2026" && <ProfileAd />}
 
             <div className="grid gap-5 lg:grid-cols-[1.6fr_1fr]">
               <Section title={past ? "2025 All-Americans" : started ? "Top Stories" : "Super 32 Preview"}>
