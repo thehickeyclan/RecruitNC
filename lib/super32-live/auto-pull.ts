@@ -36,7 +36,12 @@ export async function pullAndPublish(admin: SupabaseClient) {
   const up = await admin.from("super32_live_snapshots").update({ published: true, published_at: new Date().toISOString() }).eq("id", snap.id)
   if (up.error) throw new Error(up.error.message)
   const seedsUp = await latestUpload(admin, SUPER32_EVENT_KEY, "seeds")
-  const synced = await syncResults(admin, SUPER32_EVENT_KEY, feed.csv, seedsUp ? parseSeedsCsv(seedsUp.content) : [], snap.data).catch((e) => ({ error: String(e) }))
+  // Profiles are not rewritten on every pull: each sync deleted and re-inserted ~4,000 bout rows,
+  // which threw away the result links profiles read through and loaded the database for nothing.
+  // The full results go to profiles once, after the finals (admin Publish, or the final sync).
+  const synced = process.env.SUPER32_SYNC_EACH_PULL === "1"
+    ? await syncResults(admin, SUPER32_EVENT_KEY, feed.csv, seedsUp ? parseSeedsCsv(seedsUp.content) : [], snap.data).catch((e) => ({ error: String(e) }))
+    : { skipped: "profiles sync after the finals" }
   const s = snap.data.scoreboards.all
   const pushed = await sendWinAlerts(admin)
   return { status: "published" as const, bouts: feed.bouts, nc: `${s.wins}-${s.losses}`, ncBouts: after, alertsQueued: snap.alertsQueued, pushed, synced }
