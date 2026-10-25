@@ -742,6 +742,9 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
                         {list.length > 5 && <button onClick={() => (allWins ? collapseTo("s32-wins", () => setAllWins(false)) : setAllWins(true))} className="w-full pt-2.5 text-center text-xs text-[#d4af55]">{allWins ? "Show less" : `View all ${list.length}`}</button>}
                       </div>
                     ) : <Empty>{winTab === "top" ? "Wins over seeded wrestlers appear here." : "Wins over unseeded state champions, state finalists, NHSCA and Super 32 All-Americans and nationally ranked wrestlers appear here."}</Empty>}
+                    <p className="mt-3 border-t border-[#1f3360] pt-2.5 text-[11px] leading-snug text-[#6f83ab]">
+                      <span className="font-semibold text-[#e5372c]">Huge</span>: beat a #1–12 seed. <span className="font-semibold text-[#d4af55]">Big</span>: beat a #13–32 seed. <span className="font-semibold text-emerald-400">Significant</span>: beat an unseeded wrestler who is nationally ranked (top 30), a Super 32, NHSCA or Fargo All-American, or a 2025–26 state champion or runner-up.
+                    </p>
                   </Section>
                 )
               })()}
