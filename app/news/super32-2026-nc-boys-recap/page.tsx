@@ -1,6 +1,6 @@
 /**
- * Super 32 2026 — North Carolina Boys Recap. The top (through "How the Grades Work") and the A+
- * section are free; below that, names show and grades are locked for anyone without premium
+ * Super 32 2026 — North Carolina Boys Recap. The top (through "How the Grades Work") and the top
+ * grade awarded are free; below that, names show and grades are locked for anyone without premium
  * access (Rankings, Command Center, Blue, verified college coaches, admins). A family linked to a
  * wrestler sees that wrestler's grade free.
  *
@@ -84,7 +84,9 @@ export default async function Super32BoysRecapPage() {
   const recap = loadRecap(SUPER32_2026_BOYS_RECAP)
   const unlocked = hasPremiumAccess(viewer) || hasPortalAccess(viewer)
   const own = unlocked ? new Set<string>() : await ownWrestlerNames(userId)
-  const locked = !unlocked && GRADES.some((g) => g !== "A+" && recap.graded.some((w) => w.grade === g && !own.has(nameKey(w.name))))
+  // The top grade awarded is free (A+ is reserved and usually empty, so this is normally the A group).
+  const topGrade = GRADES.find((g) => recap.graded.some((w) => w.grade === g))
+  const locked = !unlocked && recap.graded.some((w) => w.grade !== topGrade && !own.has(nameKey(w.name)))
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
@@ -100,7 +102,7 @@ export default async function Super32BoysRecapPage() {
       {GRADES.map((g) => {
         const ws = recap.graded.filter((w) => w.grade === g)
         if (!ws.length) return null
-        const isOpen = (w: GradedWrestler) => g === "A+" || unlocked || own.has(nameKey(w.name))
+        const isOpen = (w: GradedWrestler) => g === topGrade || unlocked || own.has(nameKey(w.name))
         const allOpen = ws.every(isOpen)
         return (
           <section key={g}>
