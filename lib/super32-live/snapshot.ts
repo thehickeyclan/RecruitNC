@@ -425,18 +425,28 @@ export function queueAlerts(
   const short = (e: SnapshotEntrant) => `${e.name} (${e.gender === "girls" ? "G" : ""}${e.weight})`
   const out: Array<Record<string, unknown>> = []
 
-  const wins = named.flatMap((e) => e.bouts.filter((b) => b.win && (b.tier === "huge" || b.tier === "big") && newKeys.has(b.key)).map((b) => ({ e, b })))
-  wins.sort((x, y) => (x.b.tier === y.b.tier ? 0 : x.b.tier === "huge" ? -1 : 1))
+  // Sunday (day two) every NC boys win alerts: the four left are fighting for the blood round and
+  // All-American (Matt, 25 Oct). Huge and Big keep their labels; any other win reads "NC WIN".
+  const dayTwo = Date.now() >= new Date("2026-10-25T10:00:00Z").getTime()
+  const counts = (e: SnapshotEntrant, b: SnapshotEntrant["bouts"][number]) =>
+    b.win && newKeys.has(b.key) && !/^(bye|for|m ?for|ff|mff)$/i.test(b.winType.trim()) &&
+    (b.tier === "huge" || b.tier === "big" || (dayTwo && e.gender === "boys"))
+  const wins = named.flatMap((e) => e.bouts.filter((b) => counts(e, b)).map((b) => ({ e, b })))
+  const rank = (t: string | null) => (t === "huge" ? 0 : t === "big" ? 1 : 2)
+  wins.sort((x, y) => rank(x.b.tier) - rank(y.b.tier))
   if (wins.length) {
     const nHuge = wins.filter((w) => w.b.tier === "huge").length
-    const nBig = wins.length - nHuge
+    const nBig = wins.filter((w) => w.b.tier === "big").length
+    const word = (t: string | null) => (t === "huge" ? "HUGE" : t === "big" ? "BIG" : "NC WIN")
+    const standing = (e: SnapshotEntrant) => e.aaClinched ? `${e.wins}-${e.losses}, an All-American` : e.status === "alive" ? `${e.wins}-0` : `${e.wins}-${e.losses}, alive`
     const title = wins.length === 1
-      ? `${nHuge ? "HUGE" : "BIG"} WIN for North Carolina at Super 32`
-      : `Super 32: ${[nHuge ? `${nHuge} HUGE` : "", nBig ? `${nBig} BIG` : ""].filter(Boolean).join(" + ")} wins for NC`
+      ? (wins[0]!.e.aaClinched ? `${wins[0]!.e.name} is a Super 32 All-American!` : wins[0]!.b.tier === "huge" || wins[0]!.b.tier === "big" ? `${word(wins[0]!.b.tier)} WIN for North Carolina at Super 32` : `${wins[0]!.e.name} wins at Super 32`)
+      : nHuge + nBig ? `Super 32: ${[nHuge ? `${nHuge} HUGE` : "", nBig ? `${nBig} BIG` : "", wins.length - nHuge - nBig ? `${wins.length - nHuge - nBig} more` : ""].filter(Boolean).join(" + ")} wins for NC` : `Super 32: ${wins.length} NC wins`
     let body = ""
     let shown = 0
     for (const { e, b } of wins) {
-      const line = `${b.tier === "huge" ? "HUGE" : "BIG"}: ${short(e)} def. ${b.reasons[0]} ${b.opponent} (${b.opponentTeam}).`
+      const opp = b.opponentSeed ? `#${b.opponentSeed} seed ${b.opponent}` : b.opponent
+      const line = `${word(b.tier)}: ${short(e)} def. ${opp} (${b.opponentTeam}), ${b.round}. Now ${standing(e)}.`
       if ((body + " " + line).length > 230) break
       body = body ? `${body} ${line}` : line
       shown += 1
