@@ -1,4 +1,4 @@
-<!-- PRODUCTION NOTES (not article text): Free and fully visible through "How the Grades Work". Grade sections (A+ through Honorable Mention) render blurred for logged-out/free readers with the claim/sign-up panel; unblurred for Rankings, Command Center and Blue members, college coach accounts and admins; a family that claims a profile sees its own wrestler's grade free. Data file (full grades, bout-by-bout) is Rankings members/coaches only. Links in "Claim Your Profile" go to /create-profile, /rankings and coach sign-up. -->
+<!-- PRODUCTION NOTES (not article text): Free and fully visible through "How the Grades Work". Grade sections (A through Honorable Mention) render blurred for logged-out/free readers with the claim/sign-up panel; unblurred for Rankings, Command Center and Blue members, college coach accounts and admins; a family that claims a profile sees its own wrestler's grade free. Data file (full grades, bout-by-bout) is Rankings members/coaches only. Links in "Claim Your Profile" go to /create-profile, /rankings and coach sign-up. -->
 
 # Super 32 2026 — North Carolina Boys Recap
 
@@ -29,9 +29,9 @@ The honest caveats: the breakthrough came from the unseeded, not the seeds. Of N
 
 ## How the Grades Work
 
-Each wrestler is graded on the strength of his tournament, not just his record. He earns points for the seeds he beat (contested bouts only; forfeits earn advancement, never quality points), for how deep he went, for beating wrestlers who owned seeded wins themselves, and for losing only to wrestlers who went deep. Grades run A+ through B-. Within each grade, wrestlers are not listed in rank order — the grade is the evaluation, not the sequence. Wrestlers below that line are named in Honorable Mention or recognized with the squad, and the full grading for every wrestler is in the accompanying data file.
+Each wrestler is graded on the strength of his tournament, not just his record. Every grade is measured against what was possible. A seeded wrestler is expected to go deep, and a medal is where his tournament should end. An unseeded wrestler starts with top-15 seeds in his path, and every one he beats is a result the bracket didn't expect. That's why the top grade doesn't require a medal: Mason Brown and Ellis Chia, both unseeded, beat five top-15 seeds between them and each reached the blood round, one win from the podium, and Braylen Yates, the #20 seed, beat three and medaled. All three finished well past what their seeds predicted. He earns points for the seeds he beat (contested bouts only; forfeits earn advancement, never quality points), for how deep he went, for beating wrestlers who owned seeded wins themselves, and for losing only to wrestlers who went deep. Grades run A through B-. An A+ is reserved for a Super 32 finalist or champion who also beat top seeds; no North Carolina boy reached it this year. Within each grade, wrestlers are not listed in rank order — the grade is the evaluation, not the sequence. Wrestlers below that line are named in Honorable Mention or recognized with the squad, and the full grading for every wrestler is in the accompanying data file.
 
-## A+
+## A
 
 **Mason Brown (120) — 5-2.** The best wrestled tournament by a North Carolinian all weekend. Brown opened by teching Alabama champion Thomas Patterson and majoring Florida 2A champion Vladimir Drown. Then he beat #6 seed Daniel Brown of Indiana 11-4, #13 Izaya Schickley of Pennsylvania, and on Sunday morning #14 Paden Alyea, the Virginia 3A champion. Three top-15 seeds in one weekend. His run ended in the blood round against #21 Liam McGettigan of Florida, #26 nationally (SI). One win from a medal, with the strongest set of wins on the team.
 
@@ -39,7 +39,7 @@ Each wrestler is graded on the strength of his tournament, not just his record. 
 
 **Ellis Chia (285) — 4-2.** The story of the tournament for NC. A High Point Central senior who had never placed at the NC state tournament, Chia beat #10 Henry Redman and, on Sunday, #15 Carlos Rodriguez Jr. to reach the blood round, where he fell to #8 Andrew Arroyo of California. He beat two of the top-15 seeds in the country at his weight with no state plaque on his wall. Remember the name; college coaches will.
 
-## A
+## A-
 
 **Campbell Tufts (165) — 4-2.** Pinned by #9 Collin Hamm in the round of 64, Tufts tore through the consolations with four straight wins, and the names on them are the story. He pinned Debraun Norris, Louisiana's 2026 D3 state champion, then pinned Jacob Ayers, Alabama's 1A-4A runner-up. Then came his win over a seed: a 4-2 decision over #19 Stone Redmon, Michigan's 2026 D3 state champion. He finished the run with a 2-1 win over Murphy Beyer, Wisconsin's 2026 D2 runner-up, before #12 Devon Weber stopped him in Consi of 16 #2. Two state champions and two state runners-up in one consolation run, quietly one of the most complete weekends on the team.
 
@@ -49,21 +49,19 @@ Each wrestler is graded on the strength of his tournament, not just his record. 
 
 **Drew Teeter (190) — 3-2.** Teeter's record undersells him. He majored #10 Maximus Purdy, Iowa's 2A champion, 15-4. His losses came to #6 Carter Lester, an NHSCA national champion ranked #11 by Flo, and, one win short of the blood round, by fall to Hayden Harvey of Pennsylvania, #23 nationally (SI).
 
-## A-
+## B+
 
 **Jacob Perry (157) — 3-2.** Perry majored Ty Eversman, Colorado's 4A champion and #24 nationally (SI), 10-1, and also beat an NHSCA All-American, Nicolas Barrett. His losses were to the #9 and #13 seeds.
 
 **Ethan Halstead (120) — 5-2.** Five wins, four of them in a row in the consolations, including a major over Iowa 2A runner-up Anderson Osgood. His only losses were to the #7 and #10 seeds. Halstead never beat a seed himself, which keeps him out of the A group, but nobody on the team was harder to put away.
 
-## B+
+## B
 
 **Ayden Sumners (126) — 4-2.** Four straight wins in the consolations, the first a 7-1 decision over Zack Dixon, Connecticut's state champion and an NHSCA All-American. No win over a seed, but volume and toughness in a meat-grinder weight. He lost to the #21 and #23 seeds.
 
 **Carson Raper (113) — 3-2.** The NC 4A champion pinned Manny Novelli, Alaska's D-I champion and a Fargo 16U Greco runner-up, and majored Nick Yetzer, a Virginia 2A runner-up. His losses came to the #24 and #18 seeds.
 
 **Brieon Mayfield (215) — 3-2.** Nobody at this tournament had a tougher first hour. Mayfield drew #4 Decker Bechtold, a 2025 Super 32 placer ranked #6 nationally (SI), and lost 2-1. He answered with three straight consolation wins, including a tech over Vake Martin, Virginia's VISAA runner-up, before a 1-0 loss to Pennsylvania's Hunter Cox, who had beaten the #9 seed himself. The toughest draw on the team; the results just didn't include a win over a seed.
-
-## B
 
 **JeveN Palmeri (106) — 3-2.** Opened with two pins, the first over Delaware's state runner-up. He lost to #6 Johnathan Thompson, the Fargo 16U champion, then went out to Parker Workman, a Fargo 16U 4th-place finisher.
 
