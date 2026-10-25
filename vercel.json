@@ -77,6 +77,10 @@
     {
       "path": "/api/cron/signup-health",
       "schedule": "10 * * * *"
+    },
+    {
+      "path": "/api/cron/flo-commitments",
+      "schedule": "0 13 * * *"
     }
   ]
 }

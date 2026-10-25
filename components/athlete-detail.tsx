@@ -523,6 +523,8 @@ export function AthleteDetail({
 
   const athleteName = athlete?.name || "Unknown Athlete"
   const college = athlete?.college || "Not specified"
+  /* Set by lib/college-commitments/provenance.ts; null for a commitment typed in before we recorded a source. */
+  const commitmentProvenance = (athlete as { commitment_provenance?: { status: string; reportedOn: string; source: string; previousCollege: string | null } | null } | null)?.commitment_provenance ?? null
   const previousCollege = String(athlete?.previous_college ?? "").trim() || null
   const collegeTransferLabel =
     previousCollege &&
@@ -1460,6 +1462,18 @@ export function AthleteDetail({
                 <span className="text-[#A8BBD1]">Committed to </span>
                 <span className="font-bold">{college}</span>
                 {collegeTransferLabel ? <span className="block text-xs text-white/55">{collegeTransferLabel}</span> : null}
+                {commitmentProvenance ? (
+                  /*
+                   * Where it came from and when. The National Letter of Intent was abolished in
+                   * 2024, so a commitment read off a published list is reported, never signed,
+                   * and a coach reading this page can see which it is and go and check.
+                   */
+                  <span className="block text-xs text-white/55">
+                    {commitmentProvenance.status === "signed" ? "Signed" : "Reported"} {commitmentProvenance.reportedOn}
+                    {commitmentProvenance.source ? ` · ${commitmentProvenance.source}` : ""}
+                    {commitmentProvenance.previousCollege ? ` · was ${commitmentProvenance.previousCollege}` : ""}
+                  </span>
+                ) : null}
               </span>
             </p>
           ) : null}

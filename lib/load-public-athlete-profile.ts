@@ -28,6 +28,7 @@ import {
 } from "@/lib/other-tournaments"
 import { getNationalTeamResults } from "@/lib/tournament-utils"
 import { getNchsaaStateBoutsForAthlete, type NchsaaStateBout } from "@/lib/nchsaa-state-bouts"
+import { loadCommitmentProvenance, type CommitmentProvenance } from "@/lib/college-commitments/provenance"
 
 export type PublicAthleteProfile = Record<string, unknown> & {
   nhsca_results: unknown[]
@@ -53,6 +54,8 @@ export type PublicAthleteProfile = Record<string, unknown> & {
   profile_quality_wins: ProfileQualityWinsTournamentBlock[]
   /** Display-only: last tournament weight vs profile-listed weight. */
   profile_weight_display: ProfileWeightDisplay
+  /** Who reported the commitment and when; null for one typed in before we recorded that. */
+  commitment_provenance: CommitmentProvenance | null
 }
 
 export type LoadPublicAthleteProfileResult =
@@ -177,6 +180,7 @@ export async function loadPublicAthleteProfile(
     }>,
     other_tournament_results: otherTournamentBlocks.map((block) => block.result),
   }
+  const commitment_provenance = await loadCommitmentProvenance(client, String(athlete.id ?? ""))
   const lastCompeted = resolveLastCompetedWeight([...candidatesFromPublicProfilePayload(profilePayload), ...datedBouts])
   const listedWeight = (athlete as Record<string, unknown>).weightclass ?? (athlete as Record<string, unknown>).weight_class
   const profile_weight_display = buildProfileWeightDisplay(listedWeight as string | number | null, lastCompeted)
@@ -198,6 +202,7 @@ export async function loadPublicAthleteProfile(
       national_team_highlight_videos,
       profile_quality_wins,
       profile_weight_display,
+      commitment_provenance,
       national_rankings_current: nationalRankingsCurrent,
     },
   }

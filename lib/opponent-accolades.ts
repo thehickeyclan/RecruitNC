@@ -1,6 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { accoladeLineWithRank, findSignificantWins } from "@/lib/significant-wins"
 import { loadStatePlacerIndex } from "@/lib/state-placers"
+import { loadCommitmentCredentials } from "@/lib/college-commitments/credential"
+import { nameWords } from "@/lib/athlete-name-match"
 
 /**
  * Accolades for opponents in a bout list: "2026 FL 1A State Champion" beside the name, on wins and
@@ -26,12 +28,28 @@ export async function labelOpponents(admin: SupabaseClient, bouts: AccoladeBout[
   // The index is cached for ten minutes, but building it cold reads every state's placers. A
   // profile must never wait on that: past the budget the bouts go out without accolades, and the
   // build carries on so the next request finds it ready.
-  const loaded = await Promise.race([
-    // All states: read from the saved index (lib/state-placer-snapshot.ts), never built here.
-    loadStatePlacerIndex(admin, new Date(), { outOfState: true }).catch(() => null),
-    new Promise<null>((resolve) => setTimeout(() => resolve(null), INDEX_BUDGET_MS)),
+  const [loaded, commitments] = await Promise.all([
+    Promise.race([
+      // All states: read from the saved index (lib/state-placer-snapshot.ts), never built here.
+      loadStatePlacerIndex(admin, new Date(), { outOfState: true }).catch(() => null),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), INDEX_BUDGET_MS)),
+    ]),
+    /*
+     * A commitment is a credential too - "NC State commit" tells a coach something no placement
+     * does. It is not computed from results, so it is loaded and joined here rather than folded
+     * into the placer index (lib/college-commitments/credential.ts).
+     */
+    loadCommitmentCredentials(admin).catch(() => ({}) as Record<string, string>),
   ])
-  if (!loaded) return {}
+  const commitmentFor = (name: string) => commitments[nameWords(name).join(" ")] ?? null
+  if (!loaded) {
+    const only: Record<string, string> = {}
+    for (const bout of bouts) {
+      const label = commitmentFor(bout.name)
+      if (label) only[accoladeKey(bout.name.trim(), bout.club, bout.year)] = label
+    }
+    return only
+  }
   const index = {
     tocField: [],
     ranked: [],
@@ -50,7 +68,9 @@ export async function labelOpponents(admin: SupabaseClient, bouts: AccoladeBout[
       index,
     )
     const line = found ? accoladeLineWithRank(found) : null
-    if (line) labels[key] = line
+    const commit = commitmentFor(name)
+    const full = [line, commit].filter(Boolean).join(" · ")
+    if (full) labels[key] = full
   }
   return labels
 }
