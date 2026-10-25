@@ -7,7 +7,7 @@
 
 North Carolina's boys won 11 matches against top-15 seeds at Super 32 this year, nearly double last year's six and more than five times the two from 2024. Eight different NC wrestlers collected a seeded win. 113 NC boys stepped into the brackets, the most of the three years. Fifteen finished with winning records, and four were still alive on Sunday morning.
 
-The difference from past years is at the top end. A year ago, NC's results were depth without many wins over seeds; this year those wins came. Braylen Yates (East Rowan, 175), the reigning NHSCA freshman national champion and a Fargo 16U All-American, is North Carolina's lone boys All-American. He finished 8th and beat three seeded wrestlers on the mat to earn the medal. Mason Brown beat three top-15 seeds, as many as any NC wrestler. Ellis Chia, a senior who had never placed at the NC state tournament, beat two top-15 heavyweights. Brown and Chia both lost in the blood round, one win from the podium, and both to wrestlers who went on to place.
+The difference from past years is at the top end. A year ago, NC's results were depth without many wins over seeds; this year those wins came. Braylen Yates (East Rowan, 175), the reigning NHSCA freshman national champion and a Fargo 16U All-American, is North Carolina's lone boys All-American. He finished 8th and beat three seeded wrestlers on the mat to earn the medal. Mason Brown beat three top-15 seeds, as many as any NC wrestler. Ellis Chia, a senior who has wrestled for less than two years and had never placed at the NC state tournament, beat two top-15 heavyweights. Brown and Chia both lost in the blood round, one win from the podium, and both to wrestlers who went on to place.
 
 Two caveats. The wins came mostly from unseeded wrestlers: of NC's two seeded boys, Yates medaled and #11 seed Tobin McNair went 1-2. And no NC boy beat a wrestler who finished on the podium; the strongest weekends ended against them instead. Thirty NC losses came to eventual placers, including both of Chia's, all three of Yates's, and Brieon Mayfield's 2-1 tiebreaker loss to Decker Bechtold, who finished 3rd. Below the top, the fifteen winning records top 2024's fourteen.
 
@@ -37,7 +37,7 @@ Each wrestler is graded on the strength of his tournament, not just his record. 
 
 **Braylen Yates (175) — 6-3, 8th place, All-American.** He was seeded 20th and wrestled like what he is: the reigning NHSCA freshman national champion and a Fargo 16U All-American. On Saturday he took out #13 Teag Sanderson (PIAA AAA 3rd, Fargo 16U All-American) and #15 Sean Breedlove (Indiana state champion). He opened Sunday by beating #14 Brock Armstrong, Idaho's 6A champion. His medal-clincher came when #3 Joel Welch medically forfeited the blood round. The win counts in his record, and he earned the medal with the three seeded wins that put him there. All three of his losses came to wrestlers who placed: a 10-0 major to #4 Maximus Fortier, West Virginia's champion and #7 nationally (SI), who finished 2nd; a major to #8 Kyler Crooks (6th) in the Consi of 4; and the 7th-place match, forfeited to #12 Ibrahim Dheel of Virginia. North Carolina's lone boys All-American leaves Greensboro in 8th.
 
-**Ellis Chia (285) — 4-2.** The story of the tournament for NC. A High Point Central senior who had never placed at the NC state tournament, Chia beat #10 Henry Redman and, on Sunday, #15 Carlos Rodriguez Jr. to reach the blood round, where he fell to #8 Andrew Arroyo of California, who finished 8th. His only other loss was to #7 Sammy Seja Jr., who finished 7th. He beat two of the top-15 seeds in the country at his weight with no state plaque on his wall. College coaches should take note.
+**Ellis Chia (285) — 4-2.** The story of the tournament for NC. A High Point Central senior who has been wrestling for less than two years and had never placed at the NC state tournament, Chia beat #10 Henry Redman and, on Sunday, #15 Carlos Rodriguez Jr. to reach the blood round, where he fell to #8 Andrew Arroyo of California, who finished 8th. His only other loss was to #7 Sammy Seja Jr., who finished 7th. He beat two of the top-15 seeds in the country at his weight with no state plaque on his wall and less than two years in the sport. College coaches should take note.
 
 ## A-
 
@@ -96,6 +96,20 @@ Liam Myles (113, 2-2, losses included the #17 seed) · Joseph Shook (157, 2-2) �
 ## The Rest of the Squad
 
 Seventy-four more North Carolina boys stepped on the mat in Greensboro. Some won a bout in the consolations, some had their only win come by forfeit, and some drew an eventual semifinalist in the very first round and were gone by Saturday afternoon. Super 32 doesn't hand out easy weekends, and every one of them took the hardest draw in high school wrestling on purpose. Their full results are in the accompanying data file.
+
+## The Bigger Picture: Raising the Bar
+
+Super 32 is one of the toughest tests in high school wrestling, and a chance to measure North Carolina against the best competition in the country. This year's results give us reasons to be encouraged.
+
+Eleven wins over top-15 seeds, up from six last year and two in 2024, are real progress. Mason Brown, Braylen Yates and Ellis Chia showed that North Carolina wrestlers can beat nationally recognized talent, and Chia did it with less than two years in the sport.
+
+The results also show how much work remains. We produced one boys All-American, and no NC boy beat a wrestler who finished on the podium.
+
+That's the standard we're chasing.
+
+At NC United, our mission isn't only to celebrate individual results. It's to raise wrestling across North Carolina and measure our progress against the best in the country. Super 32 gave us another benchmark. Now the challenge is to build on it.
+
+**North Carolina Wrestling. All of It.**
 
 ## Claim Your Profile
 
