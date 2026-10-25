@@ -39,6 +39,8 @@ export type Accolades = {
   bestStateAssociation?: string | null
   statePlacings: number
   stateTitles: number
+  /** Class of each state title, so titles won in different classes don't all wear the latest one. */
+  titleClasses?: string[]
   /** Reached the state tournament without placing. */
   stateQualifier: boolean
   /** Top-eight finishes and titles by event, so the summary can name each one. */
@@ -67,7 +69,7 @@ const placeNumber = (placement: string | null): number | null => {
 const isAllAmericanEvent = (event: string) => /fargo|nhsca(?!.*duals)|super 32(?!.*early)/i.test(event)
 
 export function accoladesFrom(input: { stateRows: readonly SummaryRow[]; tournamentRows: readonly SummaryRow[] }): Accolades {
-  const out: Accolades = { allAmericans: 0, nationalTitles: 0, bestStatePlace: null, bestStateClass: null, statePlacings: 0, stateTitles: 0, stateQualifier: false, byEvent: { nhsca: { aa: 0, titles: 0 }, super32: { aa: 0, titles: 0 }, fargo: { aa: 0, titles: 0 } } }
+  const out: Accolades = { allAmericans: 0, nationalTitles: 0, bestStatePlace: null, bestStateClass: null, statePlacings: 0, stateTitles: 0, titleClasses: [], stateQualifier: false, byEvent: { nhsca: { aa: 0, titles: 0 }, super32: { aa: 0, titles: 0 }, fargo: { aa: 0, titles: 0 } } }
   for (const row of input.tournamentRows) {
     if (row.isDuals || /\(OF\)|overflow/i.test(row.event) || !isAllAmericanEvent(row.event)) continue
     const place = placeNumber(row.placement)
@@ -84,7 +86,10 @@ export function accoladesFrom(input: { stateRows: readonly SummaryRow[]; tournam
       continue
     }
     out.statePlacings += 1
-    if (place === 1) out.stateTitles += 1
+    if (place === 1) {
+      out.stateTitles += 1
+      out.titleClasses!.push(row.event.match(/\b(\d+A)\b/i)?.[1]?.toUpperCase() ?? "")
+    }
     if (out.bestStatePlace == null || place < out.bestStatePlace) {
       out.bestStatePlace = place
       out.bestStateClass = row.event.match(/\b(\d+A)\b/i)?.[1]?.toUpperCase() ?? null
@@ -111,7 +116,9 @@ export function accoladePhrases(a: Accolades): string[] {
     }
   } else if (a.nationalTitles > 0) out.push(`${times(a.nationalTitles)}national champion`)
   else if (a.allAmericans > 0) out.push(`${times(a.allAmericans)}All-American`)
-  const cls = a.bestStateClass ? ` ${a.bestStateClass}` : ""
+  // "two-time NCHSAA state champion" when the titles came in different classes (8A in '26, 4A in '25)
+  const mixedClasses = a.bestStatePlace === 1 && new Set(a.titleClasses ?? []).size > 1
+  const cls = a.bestStateClass && !mixedClasses ? ` ${a.bestStateClass}` : ""
   const assoc = a.bestStateAssociation || "NCHSAA"
   if (a.bestStatePlace === 1) out.push(`${times(a.stateTitles)}${assoc}${cls} state champion`)
   else if (a.bestStatePlace === 2) out.push(`${assoc}${cls} state runner-up`)
