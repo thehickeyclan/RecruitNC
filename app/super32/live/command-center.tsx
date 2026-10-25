@@ -28,8 +28,8 @@ type G = "all" | "boys" | "girls"
 
 /** A designed banner per division replaces the header when that tab is on. Add "all"/"boys" when they exist. */
 const BANNERS: Partial<Record<G, { src: string; alt: string }>> = {
-  all: { src: "/images/super32/super32-hq-2026-mcnair.jpg", alt: "North Carolina Super 32 HQ, October 24-25, 2026" },
-  boys: { src: "/images/super32/hq-2026-boys.jpg", alt: "North Carolina Super 32 HQ 2026: Boys" },
+  all: { src: "/images/super32/super32-hq-2026-mason.jpg", alt: "North Carolina Super 32 HQ, October 24-25, 2026" },
+  boys: { src: "/images/super32/hq-2026-boys-mason.jpg", alt: "North Carolina Super 32 HQ 2026: Boys" },
   girls: { src: "/images/super32/hq-2026-girls.jpg", alt: "North Carolina Super 32 HQ 2026: Girls" },
 }
 
