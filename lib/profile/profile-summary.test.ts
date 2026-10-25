@@ -21,6 +21,14 @@ describe("accolades", () => {
     expect(accoladePhrases(a)).toEqual(["NHSCA All-American", "Fargo All-American", "NCHSAA 7A state runner-up"])
   })
 
+  it("drops the class when state titles came in different classes", () => {
+    const a = accoladesFrom({
+      stateRows: [row("2026 NCHSAA 8A State Championships", 2026, "1st"), row("2025 NCHSAA 4A State Championships", 2025, "1st")],
+      tournamentRows: [],
+    })
+    expect(accoladePhrases(a)).toEqual(["two-time NCHSAA state champion"])
+  })
+
   it("names every event with its own count, a title over All-American", () => {
     const a = accoladesFrom({
       stateRows: [],
