@@ -36,11 +36,11 @@ const PHOTOS: Record<string, { src: string; credit: string }> = {
 
 const GRADE_STYLE: Record<string, { badge: string; label: string; blurb: string }> = {
   "A+": { badge: "bg-[#e5372c] text-white", label: "A+", blurb: "Finalist or champion who also beat top seeds" },
-  A: { badge: "bg-[#d4af55] text-[#0b1730]", label: "A", blurb: "Multiple top-15 seeds beaten, blood round or better" },
-  "A-": { badge: "bg-[#e9cf86] text-[#0b1730]", label: "A-", blurb: "A seeded win plus a strong résumé" },
-  "B+": { badge: "bg-[#3b5ba5] text-white", label: "B+", blurb: "A ranked win, or five wins with only seeded losses" },
-  B: { badge: "bg-[#5a76b8] text-white", label: "B", blurb: "Winning weekend with wins over state champions or medalists" },
-  "B-": { badge: "bg-[#8195bd] text-white", label: "B-", blurb: "2-2 with a win over a state champion or finalist" },
+  A: { badge: "bg-[#d4af55] text-[#0b1730]", label: "A", blurb: "Beat two or more top-15 seeds, reached the blood round or better" },
+  "A-": { badge: "bg-[#e9cf86] text-[#0b1730]", label: "A-", blurb: "Beat a seeded wrestler" },
+  "B+": { badge: "bg-[#3b5ba5] text-white", label: "B+", blurb: "Beat a nationally ranked wrestler, or won five with every loss to a seed" },
+  B: { badge: "bg-[#5a76b8] text-white", label: "B", blurb: "Winning record with a win over a state champion or placer" },
+  "B-": { badge: "bg-[#8195bd] text-white", label: "B-", blurb: "2-2 with a win over a state champion or runner-up" },
 }
 
 // While a draft, the page title and description say nothing: a signed-out visitor gets the
@@ -156,7 +156,7 @@ function GradeLegend({ body, graded }: { body: string; graded: GradedWrestler[] 
   return (
     <section className="mt-10 rounded-2xl bg-[#f4f6fb] p-5">
       <h2 className="text-2xl font-black text-[#0b1730]">How the grades work</h2>
-      <p className="mt-1 text-sm text-gray-600">Measured against what each wrestler&apos;s seed made possible, not just his record.</p>
+      <p className="mt-1 text-sm text-gray-600">Performance grades for this tournament, not rankings of the wrestlers. Each grade has one rule; a wrestler gets the highest one he meets.</p>
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
         {GRADES.map((g) => {
           const st = GRADE_STYLE[g]!
