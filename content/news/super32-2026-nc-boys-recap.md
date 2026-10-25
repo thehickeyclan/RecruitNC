@@ -9,7 +9,7 @@ North Carolina's boys didn't just show up to the hardest high school tournament 
 
 The headline is the top end. A year ago, NC's Super 32 story was depth without signature wins; this year the signature wins arrived. Braylen Yates (East Rowan, 175), the reigning NHSCA freshman national champion and a Fargo 16U All-American, is North Carolina's lone boys All-American — he finished 8th, and he beat three seeded wrestlers on the mat to earn his medal. Mason Brown put together the strongest wrestled tournament on the team, with three top-15 seeds beaten. Ellis Chia, a senior who had never placed at the NC state tournament, beat two top-15 heavyweights. Brown and Chia both lost in the blood round, one win from the podium. On another Sunday, NC brings home three medals instead of one.
 
-The honest caveats: the breakthrough came from the unseeded, not the seeds. Of NC's two seeded boys, Yates medaled and #11 seed Tobin McNair went 1-2. And at 215, the draw was a buzzsaw: four of NC's five 215-pounders met a top-10 seed in the first round, yet Nash Mullis still beat the #9 seed and Brieon Mayfield took the #4 seed to a 2-1 decision. The depth underneath is real, too. The fifteen winning records top 2024's fourteen, with far more quality at the top of the card.
+The honest caveats: the breakthrough came from the unseeded, not the seeds. Of NC's two seeded boys, Yates medaled and #11 seed Tobin McNair went 1-2. And at 215, the draw was a buzzsaw: four of NC's five 215-pounders met a top-10 seed in the first round, yet Nash Mullis still beat the #9 seed and Brieon Mayfield took the #4 seed to tiebreaker overtime before losing 2-1. The depth underneath is real, too. The fifteen winning records top 2024's fourteen, with far more quality at the top of the card.
 
 *The girls' tournament, headlined by Ella Taylor's medal run at 200, is covered in its own recap.*
 
@@ -61,7 +61,7 @@ Each wrestler is graded on the strength of his tournament, not just his record. 
 
 **Carson Raper (113) — 3-2.** The NC 4A champion pinned Manny Novelli, Alaska's D-I champion and a Fargo 16U Greco runner-up, and majored Nick Yetzer, a Virginia 2A runner-up. His losses came to the #24 and #18 seeds.
 
-**Brieon Mayfield (215) — 3-2.** Nobody at this tournament had a tougher first hour. Mayfield drew #4 Decker Bechtold, a 2025 Super 32 placer ranked #6 nationally (SI), and lost 2-1. He answered with three straight consolation wins, including a tech over Vake Martin, Virginia's VISAA runner-up, before a 1-0 loss to Pennsylvania's Hunter Cox, who had beaten the #9 seed himself. The toughest draw on the team; the results just didn't include a win over a seed.
+**Brieon Mayfield (215) — 3-2.** Nobody at this tournament had a tougher first hour. Mayfield drew #4 Decker Bechtold, a 2025 Super 32 placer ranked #6 nationally (SI), and lost 2-1 in tiebreaker overtime. He answered with three straight consolation wins, including a tech over Vake Martin, Virginia's VISAA runner-up, before a 1-0 loss to Pennsylvania's Hunter Cox, who had beaten the #9 seed himself. The toughest draw on the team; the results just didn't include a win over a seed.
 
 **JeveN Palmeri (106) — 3-2.** Opened with two pins, the first over Delaware's state runner-up. He lost to #6 Johnathan Thompson, the Fargo 16U champion, then went out to Parker Workman, a Fargo 16U 4th-place finisher.
 
