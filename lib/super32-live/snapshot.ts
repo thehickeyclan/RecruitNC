@@ -428,9 +428,13 @@ export function queueAlerts(
   // Sunday (day two) every NC boys win alerts: the four left are fighting for the blood round and
   // All-American (Matt, 25 Oct). Huge and Big keep their labels; any other win reads "NC WIN".
   const dayTwo = Date.now() >= new Date("2026-10-25T10:00:00Z").getTime()
+  // An All-American clinch always pushes, boys or girls, whatever the opponent's seed: Ella
+  // Taylor's quarterfinal win over an unseeded girl sent nothing (25 Oct).
+  const before = new Map(prevEntrants.map((e) => [id(e), e]))
+  const newlyAA = (e: SnapshotEntrant) => e.aaClinched && !before.get(id(e))?.aaClinched
   const counts = (e: SnapshotEntrant, b: SnapshotEntrant["bouts"][number]) =>
     b.win && newKeys.has(b.key) && !/^(bye|for|m ?for|ff|mff)$/i.test(b.winType.trim()) &&
-    (b.tier === "huge" || b.tier === "big" || (dayTwo && e.gender === "boys"))
+    (b.tier === "huge" || b.tier === "big" || (dayTwo && e.gender === "boys") || newlyAA(e))
   const wins = named.flatMap((e) => e.bouts.filter((b) => counts(e, b)).map((b) => ({ e, b })))
   const rank = (t: string | null) => (t === "huge" ? 0 : t === "big" ? 1 : 2)
   wins.sort((x, y) => rank(x.b.tier) - rank(y.b.tier))
