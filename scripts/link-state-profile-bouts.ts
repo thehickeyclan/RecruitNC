@@ -20,6 +20,7 @@
  *
  *   npx tsx scripts/link-state-profile-bouts.ts --state SC            # dry run
  *   npx tsx scripts/link-state-profile-bouts.ts --state SC --write
+ *   npx tsx scripts/link-state-profile-bouts.ts --state GA --event-key super32-2026   # one event
  */
 import fs from "fs"
 import path from "path"
@@ -44,6 +45,8 @@ const arg = (name: string) => {
 }
 const STATE = String(arg("--state") ?? "").toUpperCase()
 const WRITE = process.argv.includes("--write")
+/** --event-key super32-2026 limits the run to one event's bouts. */
+const EVENT_KEY = arg("--event-key")
 const CLOSE_LB = 30
 const CLOSE_SEASONS = 2
 const STATE_NAMES: Record<string, string> = { SC: "south carolina", NC: "north carolina", GA: "georgia", VA: "virginia" }
@@ -156,6 +159,7 @@ async function main() {
         .select("id, event_key, event_name, event_date, year, weight_class, athlete_name, athlete_club")
         .ilike("athlete_name", n)
         .is("athlete_id", null)
+        .match(EVENT_KEY ? { event_key: EVENT_KEY } : {})
         .limit(1000)
       bouts.push(...((data ?? []) as Bout[]))
     }
