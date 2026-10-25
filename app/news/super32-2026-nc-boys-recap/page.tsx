@@ -75,22 +75,40 @@ function Wrestler({ w, open }: { w: GradedWrestler; open: boolean }) {
   )
 }
 
-export default async function Super32BoysRecapPage() {
+function UnlockPanel() {
+  return (
+        <div className="mt-8 rounded-xl border border-[#d4af55] bg-[#0b1730] p-5 text-white">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-[#d4af55]">Every grade, every paragraph</div>
+          <div className="mt-1 text-xl font-bold">Unlock the full recap with Rankings.</div>
+          <p className="mt-1 text-sm text-[#c9d4ea]">Rankings members, NC United Blue families and college coaches see every grade and the data file behind it. Is your wrestler here? Claim the profile free and see their grade.</p>
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+            <Link href="/rankings" className="rounded-lg bg-[#d4af55] px-4 py-2.5 text-center text-sm font-semibold text-[#0b1730]">See Rankings →</Link>
+            <Link href="/create-profile" className="rounded-lg bg-white px-4 py-2.5 text-center text-sm font-semibold text-[#0b1730]">Claim a profile free</Link>
+            <Link href="/auth/signup?type=college-coach" className="rounded-lg border border-white/40 px-4 py-2.5 text-center text-sm font-semibold">College coach? Free access</Link>
+          </div>
+        </div>
+  )
+}
+
+export default async function Super32BoysRecapPage({ searchParams }: { searchParams: Promise<{ preview?: string }> }) {
   const supabase = await createClient()
   const admin = createAdminClient()
   const { viewer, userId } = await resolveRankingViewer({ supabase, admin })
   if (!PUBLIC && !viewer.isAdmin) notFound()
 
   const recap = loadRecap(SUPER32_2026_BOYS_RECAP)
-  const unlocked = hasPremiumAccess(viewer) || hasPortalAccess(viewer)
-  const own = unlocked ? new Set<string>() : await ownWrestlerNames(userId)
+  // Admins can see the page as a free reader would: ?preview=free.
+  const previewFree = viewer.isAdmin === true && (await searchParams).preview === "free"
+  const unlocked = !previewFree && (hasPremiumAccess(viewer) || hasPortalAccess(viewer))
+  const own = unlocked || previewFree ? new Set<string>() : await ownWrestlerNames(userId)
   // The top grade awarded is free (A+ is reserved and usually empty, so this is normally the A group).
   const topGrade = GRADES.find((g) => recap.graded.some((w) => w.grade === g))
-  const locked = !unlocked && recap.graded.some((w) => w.grade !== topGrade && !own.has(nameKey(w.name)))
+  const isOpenFor = (w: GradedWrestler, g: string) => g === topGrade || unlocked || own.has(nameKey(w.name))
+  const locked = !unlocked && recap.graded.some((w) => !isOpenFor(w, w.grade))
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
-      {!PUBLIC && <div className="mb-4 rounded-md bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-900">Draft — visible to admins only. Set SUPER32_RECAP_PUBLIC=1 to publish.</div>}
+      {!PUBLIC && <div className="mb-4 rounded-md bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-900">Draft — visible to admins only. Set SUPER32_RECAP_PUBLIC=1 to publish. {previewFree ? <Link href="?" className="underline">Viewing as a free reader — show full</Link> : <Link href="?preview=free" className="underline">Preview as a free reader</Link>}</div>}
       <h1 className="text-3xl font-bold leading-tight text-[#0b1730]">{recap.title}</h1>
       <figure className="mt-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -102,28 +120,19 @@ export default async function Super32BoysRecapPage() {
       {GRADES.map((g) => {
         const ws = recap.graded.filter((w) => w.grade === g)
         if (!ws.length) return null
-        const isOpen = (w: GradedWrestler) => g === topGrade || unlocked || own.has(nameKey(w.name))
+        const isOpen = (w: GradedWrestler) => isOpenFor(w, g)
         const allOpen = ws.every(isOpen)
+        // The unlock offer sits where the grades lock: just above the first locked section.
+        const firstLocked = locked && !allOpen && GRADES.filter((x) => recap.graded.some((w) => w.grade === x && !isOpenFor(w, x))).at(0) === g
         return (
           <section key={g}>
+            {firstLocked && <UnlockPanel />}
             <h2 className="mt-8 text-xl font-bold text-[#0b1730]">{allOpen ? g : "Graded below"}</h2>
             {ws.map((w) => <Wrestler key={w.name} w={w} open={isOpen(w)} />)}
           </section>
         )
       })}
 
-      {locked && (
-        <div className="mt-8 rounded-xl border border-[#d4af55] bg-[#0b1730] p-5 text-white">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-[#d4af55]">Every grade, every paragraph</div>
-          <div className="mt-1 text-xl font-bold">Unlock the full recap with Rankings.</div>
-          <p className="mt-1 text-sm text-[#c9d4ea]">Rankings members, NC United Blue families and college coaches see every grade and the data file behind it. Is your wrestler here? Claim the profile free and see their grade.</p>
-          <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-            <Link href="/rankings" className="rounded-lg bg-[#d4af55] px-4 py-2.5 text-center text-sm font-semibold text-[#0b1730]">See Rankings →</Link>
-            <Link href="/create-profile" className="rounded-lg bg-white px-4 py-2.5 text-center text-sm font-semibold text-[#0b1730]">Claim a profile free</Link>
-            <Link href="/auth/signup?type=college-coach" className="rounded-lg border border-white/40 px-4 py-2.5 text-center text-sm font-semibold">College coach? Free access</Link>
-          </div>
-        </div>
-      )}
 
       <section>
         <h2 className="mt-8 text-xl font-bold text-[#0b1730]">Honorable Mention</h2>
@@ -134,7 +143,8 @@ export default async function Super32BoysRecapPage() {
       {/* The markdown's own "Claim Your Profile" paragraph is replaced by the designed card below. */}
       <article dangerouslySetInnerHTML={{ __html: markdownToHtml(recap.outro.replace(/## Claim Your Profile[\s\S]*$/, "").trim()) }} />
 
-      <section className="mt-10 overflow-hidden rounded-2xl border border-[#d4af55]/60 bg-gradient-to-br from-[#13294b] to-[#0b1730] text-white">
+      {/* Members, coaches and admins already have everything: no sales card for them. */}
+      {!unlocked && <section className="mt-10 overflow-hidden rounded-2xl border border-[#d4af55]/60 bg-gradient-to-br from-[#13294b] to-[#0b1730] text-white">
         <div className="p-6">
           <div className="text-[11px] font-bold uppercase tracking-wider text-[#d4af55]">Every result in this recap lands on a profile</div>
           <h2 className="mt-1 text-2xl font-bold leading-tight md:text-3xl">Claim your wrestler&apos;s profile. It&apos;s free.</h2>
@@ -157,7 +167,7 @@ export default async function Super32BoysRecapPage() {
             </Link>
           </div>
         </div>
-      </section>
+      </section>}
     </main>
   )
 }
