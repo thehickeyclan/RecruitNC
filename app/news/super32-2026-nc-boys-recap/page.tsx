@@ -29,11 +29,11 @@ const PHOTOS: Record<string, { src: string; credit: string }> = {
 
 const PUBLIC = process.env.SUPER32_RECAP_PUBLIC === "1"
 
-export const metadata: Metadata = {
-  title: "Super 32 2026 — North Carolina Boys Recap",
-  description: "Every NC boy at Super 32, graded on the strength of his tournament.",
-  robots: PUBLIC ? undefined : { index: false, follow: false },
-}
+// While a draft, the page title and description say nothing: a signed-out visitor gets the
+// not-found page, and the title must not name the article either.
+export const metadata: Metadata = PUBLIC
+  ? { title: "Super 32 2026 — North Carolina Boys Recap", description: "Every NC boy at Super 32, graded on the strength of his tournament." }
+  : { title: "News", robots: { index: false, follow: false } }
 
 /** Names of the wrestlers this account owns or is a parent of, for the free own-grade unlock. */
 async function ownWrestlerNames(userId: string | null): Promise<Set<string>> {
