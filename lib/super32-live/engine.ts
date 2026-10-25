@@ -253,6 +253,7 @@ const PLACEMENT: Array<[RegExp, number, number]> = [
 ]
 
 /** Winning here guarantees a top-8 finish. Checked against Bentley Sly's 2025 path in the tests. */
+const CLINCH_BY_ROUND = false
 const AA_CLINCH = /^(quarter-?finals?|consi of 8 #2)$/i
 
 // ---------------------------------------------------------------------------------------------
@@ -355,7 +356,9 @@ export function summarizeEntrants(bouts: LiveBout[], ctx: TierContext, isNc: NcF
         e.placement = x.win ? p[1] : p[2]
         if (p[1] === 1) e.finalist = true
       }
-      if (x.win && AA_CLINCH.test(x.bout.round.trim())) e.aaClinched = true
+      // Clinch-by-round is off until the bracket rule is confirmed (Matt, 25 Oct): All-American only
+      // once a placement match is wrestled.
+      if (CLINCH_BY_ROUND && x.win && AA_CLINCH.test(x.bout.round.trim())) e.aaClinched = true
       // A finalist from the moment he wins his semifinal, not only once the final is wrestled.
       if (x.win && /^semi-?finals?$/i.test(x.bout.round.trim())) e.finalist = true
     }
