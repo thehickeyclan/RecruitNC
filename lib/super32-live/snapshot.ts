@@ -387,7 +387,7 @@ export async function buildSnapshot(supabase: SupabaseClient, eventKey = SUPER32
   if (error || !inserted) throw new Error(`snapshot insert failed: ${error?.message}`)
 
   // Alerts only once seeds are final: a preliminary list must never put a push in the queue.
-  const alerts = data.seedsFinal ? queueAlerts(data.entrants, prev?.data.entrants ?? [], newKeys, latestRecap, flo?.id ?? "none", eventKey, inserted.id) : []
+  const alerts = data.seedsFinal ? queueAlerts(data.entrants, prev?.data.entrants ?? [], newKeys, latestRecap, flo?.id ?? "none", eventKey, inserted.id, prev?.data.generatedAt ?? null) : []
   let alertsQueued = 0
   if (alerts.length) {
     const { data: rowsIn } = await supabase.from("super32_live_alerts").upsert(alerts, { onConflict: "dedupe_key", ignoreDuplicates: true }).select("id")
@@ -419,6 +419,8 @@ export function queueAlerts(
   floId: string,
   eventKey: string,
   snapshotId: string,
+  /** When the previous build ran: bouts first seen then are confirmed by this one. */
+  prevGeneratedAt: string | null = null,
 ) {
   const id = (e: { gender: string; weight: string; name: string }) => `${e.gender}|${e.weight}|${e.name}`
   const named = entrants
@@ -428,39 +430,39 @@ export function queueAlerts(
   // Sunday (day two) every NC boys win alerts: the four left are fighting for the blood round and
   // All-American (Matt, 25 Oct). Huge and Big keep their labels; any other win reads "NC WIN".
   const dayTwo = Date.now() >= new Date("2026-10-25T10:00:00Z").getTime()
-  // An All-American clinch always pushes, boys or girls, whatever the opponent's seed: Ella
-  // Taylor's quarterfinal win over an unseeded girl sent nothing (25 Oct).
-  const before = new Map(prevEntrants.map((e) => [id(e), e]))
-  const newlyAA = (e: SnapshotEntrant) => e.aaClinched && !before.get(id(e))?.aaClinched
+  // A result is pushed only once it is on two pulls in a row, on the second: Flo briefly posted
+  // Lauren Samuel as the winner of a quarterfinal she lost 7-7 on criteria, and that push went out
+  // (25 Oct). A bout is "confirmed now" when it was new on the previous pull and is still here.
+  const prevNew = new Set(prevEntrants.flatMap((e) => e.bouts.filter((b) => b.seenAt && b.seenAt === prevGeneratedAt).map((b) => b.key)))
+  const confirmed = (b: SnapshotEntrant["bouts"][number]) => prevNew.has(b.key)
+  const fft = (b: SnapshotEntrant["bouts"][number]) => /^(bye|for|m ?for|ff|mff|inj)/i.test(b.winType.trim())
+  // The win that clinches All-American (quarterfinal or blood round) always pushes, boys or girls.
+  const clinch = (b: SnapshotEntrant["bouts"][number]) => b.win && /^(quarter-?finals?|consi of 8 #2)$/i.test(b.round.trim())
   const counts = (e: SnapshotEntrant, b: SnapshotEntrant["bouts"][number]) =>
-    b.win && newKeys.has(b.key) && !/^(bye|for|m ?for|ff|mff)$/i.test(b.winType.trim()) &&
-    (b.tier === "huge" || b.tier === "big" || (dayTwo && e.gender === "boys") || newlyAA(e))
+    b.win && confirmed(b) && (clinch(b) || (!fft(b) && (b.tier === "huge" || b.tier === "big" || (dayTwo && e.gender === "boys"))))
   const wins = named.flatMap((e) => e.bouts.filter((b) => counts(e, b)).map((b) => ({ e, b })))
   const rank = (t: string | null) => (t === "huge" ? 0 : t === "big" ? 1 : 2)
   wins.sort((x, y) => rank(x.b.tier) - rank(y.b.tier))
   if (wins.length) {
-    const nHuge = wins.filter((w) => w.b.tier === "huge").length
-    const nBig = wins.filter((w) => w.b.tier === "big").length
-    const word = (t: string | null) => (t === "huge" ? "HUGE" : t === "big" ? "BIG" : "NC WIN")
+    const nHuge = wins.filter((w) => w.b.tier === "huge" && !fft(w.b)).length
+    const nBig = wins.filter((w) => w.b.tier === "big" && !fft(w.b)).length
+    const word = (b: SnapshotEntrant["bouts"][number]) => (fft(b) ? "ALL-AMERICAN" : b.tier === "huge" ? "HUGE" : b.tier === "big" ? "BIG" : "NC WIN")
     const standing = (e: SnapshotEntrant) => e.aaClinched ? `${e.wins}-${e.losses}, an All-American` : e.status === "alive" ? `${e.wins}-0` : `${e.wins}-${e.losses}, alive`
+    const one = wins[0]!
     const title = wins.length === 1
-      ? (wins[0]!.e.aaClinched ? `${wins[0]!.e.name} is a Super 32 All-American!` : wins[0]!.b.tier === "huge" || wins[0]!.b.tier === "big" ? `${word(wins[0]!.b.tier)} WIN for North Carolina at Super 32` : `${wins[0]!.e.name} wins at Super 32`)
+      ? (clinch(one.b) ? `${one.e.name} is a Super 32 All-American!` : one.b.tier === "huge" || one.b.tier === "big" ? `${word(one.b)} WIN for North Carolina at Super 32` : `${one.e.name} wins at Super 32`)
       : nHuge + nBig ? `Super 32: ${[nHuge ? `${nHuge} HUGE` : "", nBig ? `${nBig} BIG` : "", wins.length - nHuge - nBig ? `${wins.length - nHuge - nBig} more` : ""].filter(Boolean).join(" + ")} wins for NC` : `Super 32: ${wins.length} NC wins`
     let body = ""
     let shown = 0
     for (const { e, b } of wins) {
       const opp = b.opponentSeed ? `#${b.opponentSeed} seed ${b.opponent}` : b.opponent
-      const line = `${word(b.tier)}: ${short(e)} def. ${opp} (${b.opponentTeam}), ${b.round}. Now ${standing(e)}.`
+      const how = fft(b) ? `clinched with a ${/^m/i.test(b.winType.trim()) ? "medical " : ""}forfeit win over ${opp} (${b.opponentTeam})` : `def. ${opp} (${b.opponentTeam})`
+      const line = `${word(b)}: ${short(e)} ${how}, ${b.round}. Now ${standing(e)}.`
       if ((body + " " + line).length > 230) break
       body = body ? `${body} ${line}` : line
       shown += 1
     }
     if (shown < wins.length) body += ` +${wins.length - shown} more in Super 32 HQ.`
-    // A clinch that came by forfeit is not a listed win, so say how it was clinched (Yates, 25 Oct).
-    for (const { e } of wins.slice(0, shown)) {
-      const fft = e.aaClinched ? e.bouts.find((b) => b.win && newKeys.has(b.key) && /^(for|m ?for|ff|mff|inj)/i.test(b.winType.trim())) : undefined
-      if (fft) body += ` Clinched All-American with a ${/^m/i.test(fft.winType.trim()) ? "medical " : ""}forfeit win over ${fft.opponent} (${fft.opponentTeam}), ${fft.round}.`
-    }
     out.push({ event_key: eventKey, dedupe_key: `wins:${floId}`, kind: nHuge ? "huge" : "big", title, body, path: LIVE_PATH, status: "pending", snapshot_id: snapshotId })
   }
 
