@@ -452,6 +452,11 @@ export function queueAlerts(
       shown += 1
     }
     if (shown < wins.length) body += ` +${wins.length - shown} more in Super 32 HQ.`
+    // A clinch that came by forfeit is not a listed win, so say how it was clinched (Yates, 25 Oct).
+    for (const { e } of wins.slice(0, shown)) {
+      const fft = e.aaClinched ? e.bouts.find((b) => b.win && newKeys.has(b.key) && /^(for|m ?for|ff|mff|inj)/i.test(b.winType.trim())) : undefined
+      if (fft) body += ` Clinched All-American with a ${/^m/i.test(fft.winType.trim()) ? "medical " : ""}forfeit win over ${fft.opponent} (${fft.opponentTeam}), ${fft.round}.`
+    }
     out.push({ event_key: eventKey, dedupe_key: `wins:${floId}`, kind: nHuge ? "huge" : "big", title, body, path: LIVE_PATH, status: "pending", snapshot_id: snapshotId })
   }
 
