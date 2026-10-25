@@ -26,12 +26,32 @@ export const dynamic = "force-dynamic"
 
 const PUBLIC = process.env.SUPER32_RECAP_PUBLIC === "1"
 const IMG = "/images/news/super32-2026-boys-recap"
-/** Approved photos (Matt, 25 Oct). Shown with a wrestler only when his card is open. */
-const PHOTOS: Record<string, { src: string; credit: string }> = {
-  "mason brown": { src: `${IMG}/mason-brown.jpg`, credit: "Darkhorse" },
-  "braylen yates": { src: `${IMG}/braylen-yates.jpg`, credit: "Darkhorse" },
-  "drew teeter": { src: `${IMG}/drew-teeter.jpg`, credit: "Darkhorse" },
-  "campbell tufts": { src: `${IMG}/campbell-tufts.jpg`, credit: "Shannon Tufts" },
+/**
+ * Approved photos (Matt, 25 Oct) break up the article between sections, each with the context
+ * beneath it, rather than sitting beside a few wrestlers' cards. No photo credits (Matt, 25 Oct).
+ */
+type Photo = { src: string; alt: string; caption: string }
+const BREAKS: Record<"intro" | "A" | "A-", Photo[]> = {
+  intro: [{ src: `${IMG}/mason-brown.jpg`, alt: "Mason Brown", caption: "Mason Brown (120) beat three top-15 seeds, #6, #13 and #14, as many as any North Carolinian, and reached the blood round." }],
+  A: [{ src: `${IMG}/braylen-yates.jpg`, alt: "Braylen Yates", caption: "Braylen Yates (East Rowan, 175), seeded 20th, beat three seeds on the mat and finished 8th, North Carolina's lone boys All-American." }],
+  "A-": [
+    { src: `${IMG}/campbell-tufts.jpg`, alt: "Campbell Tufts", caption: "Campbell Tufts (165) won four straight in the consolations, every one over a state champion or runner-up." },
+    { src: `${IMG}/drew-teeter.jpg`, alt: "Drew Teeter", caption: "Drew Teeter (190) majored the #10 seed, Maximus Purdy, 15-4." },
+  ],
+}
+
+function PhotoBreak({ photos }: { photos: Photo[] }) {
+  return (
+    <div className={`mt-10 grid gap-4 ${photos.length > 1 ? "sm:grid-cols-2" : ""}`}>
+      {photos.map((ph) => (
+        <figure key={ph.src}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={ph.src} alt={ph.alt} className={`w-full rounded-xl object-cover object-top ${photos.length > 1 ? "h-72" : "h-80 md:h-[26rem]"}`} />
+          <figcaption className="mt-2 border-l-2 border-[#d4af55] pl-3 text-sm leading-snug text-gray-600">{ph.caption}</figcaption>
+        </figure>
+      ))}
+    </div>
+  )
 }
 
 const GRADE_STYLE: Record<string, { badge: string; label: string; blurb: string }> = {
@@ -90,7 +110,7 @@ function Hero({ title }: { title: string }) {
       <div className="absolute inset-x-0 bottom-0 p-5 md:p-8">
         <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#d4af55]">NC United · Super 32 · Greensboro</div>
         <h1 className="mt-1 text-3xl font-black leading-tight text-white md:text-5xl">{title.replace(/^Super 32 2026 — /, "")}</h1>
-        <div className="mt-1 text-sm text-[#c9d4ea]">Super 32 2026 · Photo: Rhett Hoy Photography</div>
+        <div className="mt-1 text-sm text-[#c9d4ea]">Super 32 2026</div>
       </div>
     </header>
   )
@@ -188,7 +208,6 @@ function WrestlerCard({ w, e, open }: { w: GradedWrestler; e: SnapshotEntrant | 
   const st = GRADE_STYLE[w.grade]!
   const record = e ? `${e.wins}-${e.losses}` : (w.heading.match(/(\d+-\d+)/)?.[1] ?? "")
   const seeded = (e?.bouts ?? []).filter((b) => b.win && b.opponentSeed && !/for/i.test(b.winType)).sort((a, b) => a.opponentSeed! - b.opponentSeed!)
-  const photo = PHOTOS[nameKey(w.name)]
   if (!open) {
     return (
       <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -221,21 +240,7 @@ function WrestlerCard({ w, e, open }: { w: GradedWrestler; e: SnapshotEntrant | 
             {seeded.map((b) => <Chip key={b.key} tone="gold">Beat #{b.opponentSeed}</Chip>)}
           </div>
         </div>
-        {photo && (
-          <figure className="hidden w-28 shrink-0 sm:block">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={photo.src} alt={w.name} className="h-32 w-28 rounded-lg object-cover object-top" />
-            <figcaption className="mt-0.5 text-[9px] text-gray-400">Photo: {photo.credit}</figcaption>
-          </figure>
-        )}
       </div>
-      {photo && (
-        <figure className="px-4 sm:hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={photo.src} alt={w.name} className="h-56 w-full rounded-lg object-cover object-top" />
-          <figcaption className="mt-0.5 text-[9px] text-gray-400">Photo: {photo.credit}</figcaption>
-        </figure>
-      )}
       <p className="px-4 pb-4 pt-2 text-[15px] leading-relaxed text-gray-800" dangerouslySetInnerHTML={linkedInline(w.paragraph)} />
     </article>
   )
@@ -339,6 +344,7 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
       )}
 
       {table && <ThreeYear body={table.body} />}
+      <PhotoBreak photos={BREAKS.intro} />
       {method && <GradeLegend body={method.body} graded={recap.graded} />}
 
       {GRADES.map((g) => {
@@ -359,6 +365,7 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
             <div className="mt-3 grid gap-3">
               {ws.map((w) => <WrestlerCard key={w.name} w={w} e={byName.get(nameKey(w.name))} open={isOpenFor(w)} />)}
             </div>
+            {(g === "A" || g === "A-") && <PhotoBreak photos={BREAKS[g]} />}
           </section>
         )
       })}
