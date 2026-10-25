@@ -22,7 +22,7 @@ describe("Super 32 2026 boys recap", () => {
     expect(r.graded.some((g) => g.grade === "A+")).toBe(false)
     expect(by["Ammon Scott"]).toMatchObject({ grade: "B-", weight: "150" })
     expect(r.graded.filter((g) => g.grade === "A").map((g) => g.name)).toEqual(["Mason Brown", "Braylen Yates", "Ellis Chia"])
-    expect(r.graded.length).toBe(23)
+    expect(r.graded.length).toBe(24)
   })
   it("reads the honorable mentions and keeps the closing sections", () => {
     expect(r.honorableMention.find((h) => h.name === "Tobin McNair")?.weight).toBe("165")
