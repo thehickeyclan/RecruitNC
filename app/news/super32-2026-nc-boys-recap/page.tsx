@@ -131,7 +131,33 @@ export default async function Super32BoysRecapPage() {
           {recap.honorableMention.map((h) => `${h.name} (${h.weight}${unlocked || own.has(nameKey(h.name)) ? `${h.note ? `, ${h.note}` : ""}` : ""})`).join(" · ")}
         </p>
       </section>
-      <article dangerouslySetInnerHTML={{ __html: markdownToHtml(recap.outro) }} />
+      {/* The markdown's own "Claim Your Profile" paragraph is replaced by the designed card below. */}
+      <article dangerouslySetInnerHTML={{ __html: markdownToHtml(recap.outro.replace(/## Claim Your Profile[\s\S]*$/, "").trim()) }} />
+
+      <section className="mt-10 overflow-hidden rounded-2xl border border-[#d4af55]/60 bg-gradient-to-br from-[#13294b] to-[#0b1730] text-white">
+        <div className="p-6">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-[#d4af55]">Every result in this recap lands on a profile</div>
+          <h2 className="mt-1 text-2xl font-bold leading-tight md:text-3xl">Claim your wrestler&apos;s profile. It&apos;s free.</h2>
+          <p className="mt-2 text-sm text-[#c9d4ea]">Almost every wrestler here already has an NC United profile, built from verified results. Claim it to check it, correct it and follow it.</p>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
+            <Link href="/create-profile" className="rounded-xl bg-white p-4 text-[#0b1730]">
+              <div className="text-xs font-bold uppercase tracking-wider text-[#003366]">Families</div>
+              <div className="mt-1 text-lg font-bold">Claim a profile free →</div>
+              <div className="mt-1 text-xs text-gray-600">See your own wrestler&apos;s grade in this recap.</div>
+            </Link>
+            <Link href="/rankings" className="rounded-xl bg-[#d4af55] p-4 text-[#0b1730]">
+              <div className="text-xs font-bold uppercase tracking-wider">Rankings · $9.99/mo</div>
+              <div className="mt-1 text-lg font-bold">Every grade + the data →</div>
+              <div className="mt-1 text-xs text-[#0b1730]/80">Full rankings, the bout-by-bout file, and which college programs viewed your wrestler.</div>
+            </Link>
+            <Link href="/auth/signup?type=college-coach" className="rounded-xl border border-white/30 p-4">
+              <div className="text-xs font-bold uppercase tracking-wider text-[#d4af55]">College coaches</div>
+              <div className="mt-1 text-lg font-bold">Free access →</div>
+              <div className="mt-1 text-xs text-[#c9d4ea]">Every profile, ranking and grade, built from verified results.</div>
+            </Link>
+          </div>
+        </div>
+      </section>
     </main>
   )
 }
