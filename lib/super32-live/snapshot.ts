@@ -32,7 +32,7 @@ export const LIVE_PATH = "/news/super32-live"
  * Entrants on an NC club who are not counted as North Carolina wrestlers (Matt, 22 Oct 2026):
  * both attend school out of state. They are left off the page, the totals and the alerts.
  */
-export const NOT_NC = ["Jaclyn Bouzakis", "Jack Harty"]
+export const NOT_NC = ["Jaclyn Bouzakis", "Jack Harty", "Marciano Blackmon"]
 
 /**
  * Wrestlers to Watch for 2026 (Matt, 23 Oct 2026): the top of our NC class rankings plus three he
