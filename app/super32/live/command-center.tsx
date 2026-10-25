@@ -809,7 +809,15 @@ export function CommandCenter({ initial, rehearsalLabel }: { initial?: PublicSna
             <div className={`${H} text-3xl leading-tight text-[#d4af55] md:text-4xl`}>Get alerts for the biggest wins.</div>
             <div className="text-sm text-[#c9d4ea]">Download the free NC United iPhone app and turn on Results alerts.</div>
           </div>
-          <span className="rounded-lg bg-white px-5 py-3 font-semibold text-[#0b1730]">Download on the App Store</span>
+          <span className="flex items-center gap-4">
+            <span className="rounded-lg bg-white px-5 py-3 font-semibold text-[#0b1730]">Download on the App Store</span>
+            {/* On a computer the button is no use; the QR moves them to their phone. */}
+            <span className="hidden flex-col items-center gap-1 md:flex">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/images/super32/app-download-qr.png" alt="Scan to get the NC United app" className="h-24 w-24 rounded-md bg-white p-1" />
+              <span className="text-[10px] text-[#9fb0cf]">Scan with your phone</span>
+            </span>
+          </span>
         </a>
       </main>
 

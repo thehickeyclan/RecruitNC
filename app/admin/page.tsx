@@ -13,7 +13,7 @@ import {
   TrendingUp, Zap, Plus, Eye, UserPlus, RefreshCw, ClipboardList, Database, BookOpen, CreditCard,
   ShoppingBag, Smile, Coins, LayoutDashboard, CircleDollarSign, Link2, Receipt, GraduationCap, Package,
   LayoutGrid, Handshake, Mail, Bot, Scale, Newspaper, Import, MapPinned, BellRing,
-  MessageSquare,
+  MessageSquare, QrCode,
 } from "lucide-react"
 
 interface AdminStats {
@@ -243,6 +243,12 @@ export default function AdminDashboard() {
                 ) : null}
                 <Bot className="h-6 w-6" />
                 <span className="text-sm font-semibold">Data Dawg</span>
+              </span>
+            </HardLink>
+            <HardLink href="/admin/share-codes" className="block">
+              <span className="w-full h-20 bg-gradient-to-br from-[#0b1730] to-[#13294B] hover:from-[#13294B] hover:to-[#0b1730] text-white shadow-lg flex flex-col items-center justify-center gap-2 cursor-pointer rounded-md inline-flex font-bold">
+                <QrCode className="h-6 w-6" />
+                <span className="text-sm font-semibold">Share Codes</span>
               </span>
             </HardLink>
             <HardLink href="/admin/imports" className="block">
