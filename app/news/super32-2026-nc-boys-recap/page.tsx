@@ -85,7 +85,7 @@ function Hero({ title }: { title: string }) {
   return (
     <header className="relative overflow-hidden rounded-2xl bg-[#0b1730]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={`${IMG}/yates-celebration.jpg`} alt="Braylen Yates celebrates at Super 32" className="h-72 w-full object-cover object-[50%_30%] opacity-80 md:h-96" />
+      <img src={`${IMG}/yates-celebration-hd.jpg`} alt="Braylen Yates celebrates at Super 32" className="h-72 w-full object-cover object-[50%_30%] opacity-80 md:h-96" />
       <div className="absolute inset-0 bg-gradient-to-t from-[#0b1730] via-[#0b1730]/60 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 p-5 md:p-8">
         <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#d4af55]">NC United · Super 32 · Greensboro</div>
