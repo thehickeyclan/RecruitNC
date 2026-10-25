@@ -362,41 +362,71 @@ function BoutCard({ bout }: { bout: AppBout }) {
   )
 }
 
-function TournamentRow({ row, compact = false }: { row: AppTournamentRow; compact?: boolean }) {
+/** A finish worth the gold: a title or a top-eight place. */
+const placedLine = (summary: string | null) => !!summary && /champion|all-american|\b(1st|2nd|3rd|[4-8]th)\b/i.test(summary)
+
+/**
+ * One event-year. On its own (By date) it is a card: a slightly lighter panel with space around
+ * it, the tournament name first, gold border only while open. Nested under its event (By
+ * tournament) it is a smaller indented row inside that event's card.
+ */
+function TournamentRow({ row, compact = false, onToggle }: { row: AppTournamentRow; compact?: boolean; onToggle?: (open: boolean) => void }) {
   const [open, setOpen] = useState(false)
   const summary = rowSummary(row)
   const bouts = row.bouts ?? []
+  const toggle = () => {
+    if (!bouts.length) return
+    setOpen((v) => { onToggle?.(!v); return !v })
+  }
+  const head = (
+    <button
+      type="button"
+      className={cn("flex w-full items-center gap-3 text-left", compact ? "px-3 py-2.5 pl-5" : "p-3.5", bouts.length > 0 && "hover:bg-white/[0.03]")}
+      aria-expanded={bouts.length > 0 ? open : undefined}
+      onClick={toggle}
+    >
+      <span className="min-w-0 flex-1">
+        {compact ? (
+          // Under its event's heading a year says the rest: "2026 · Junior Girls Freestyle".
+          <span className="block text-[13px] font-bold text-[#E2E8F0]">{[String(row.year), row.team, divisionOf(row.event)].filter(Boolean).join(" · ")}</span>
+        ) : (
+          <>
+            <span className="block text-[15px] font-black text-white">
+              {row.event} <span className="ml-1 text-xs font-semibold text-[#6B829D]">{row.year}</span>
+            </span>
+            {row.team ? <span className="mt-0.5 block text-[11px] font-bold tracking-wide text-[#6B829D]">{row.team}</span> : null}
+          </>
+        )}
+        {summary ? <span className={cn("mt-0.5 block text-[13px] font-semibold", placedLine(summary) ? "text-[#D3B574]" : "text-[#A8BBD1]")}>{summary}</span> : null}
+      </span>
+      {bouts.length > 0 ? (open ? <ChevronUp className={cn("h-4 w-4 shrink-0", compact ? "text-[#6B829D]" : "text-[#D3B574]")} aria-hidden /> : <ChevronDown className="h-4 w-4 shrink-0 text-[#6B829D]" aria-hidden />) : null}
+    </button>
+  )
+  const body = open ? (
+    <div className={cn("space-y-2 p-2", compact ? "bg-[#0A1628]/70 pl-4" : "border-t border-[#1a3a5f] bg-[#0f1c2e]")}>
+      {bouts.map((bout, index) => (
+        <BoutCard key={`${row.id}-${index}`} bout={bout} />
+      ))}
+    </div>
+  ) : null
+  if (compact) return <div className="border-t border-[#1a3a5f]">{head}{body}</div>
   return (
-    <div className="border-b border-[#1a3a5f] last:border-b-0">
-      <button
-        type="button"
-        className={cn("flex w-full items-center gap-3 p-3 text-left", bouts.length > 0 && "hover:bg-white/[0.03]")}
-        aria-expanded={bouts.length > 0 ? open : undefined}
-        onClick={() => bouts.length > 0 && setOpen((v) => !v)}
-      >
-        <span className="min-w-0 flex-1">
-          {compact ? (
-            // Under its event's heading a year says the rest: "2026 · Junior Girls Freestyle".
-            <span className="block text-[13px] font-bold text-white">{[String(row.year), row.team, divisionOf(row.event)].filter(Boolean).join(" · ")}</span>
-          ) : (
-            <>
-              <span className="block text-[13px] font-bold text-white">
-                {row.event} <span className="font-semibold text-[#6B829D]">{row.year}</span>
-              </span>
-              {row.team ? <span className="mt-0.5 block text-[11px] font-bold tracking-wide text-[#6B829D]">{row.team}</span> : null}
-            </>
-          )}
-          {summary ? <span className="mt-0.5 block text-[13px] font-semibold text-[#A8BBD1]">{summary}</span> : null}
-        </span>
-        {bouts.length > 0 ? (open ? <ChevronUp className="h-4 w-4 shrink-0 text-[#6B829D]" aria-hidden /> : <ChevronDown className="h-4 w-4 shrink-0 text-[#6B829D]" aria-hidden />) : null}
-      </button>
-      {open ? (
-        <div className="space-y-2 bg-[#0A1628] p-2">
-          {bouts.map((bout, index) => (
-            <BoutCard key={`${row.id}-${index}`} bout={bout} />
-          ))}
-        </div>
-      ) : null}
+    <div className={cn("mx-3 my-2.5 overflow-hidden rounded-xl border bg-[#13263c] transition-colors", open ? "border-[#D3B574]/70" : "border-[#1f3a5c]")}>
+      {head}
+      {body}
+    </div>
+  )
+}
+
+/** An event with its years (By tournament): the event's own card, gold while any year is open. */
+function EventCard({ name, rows }: { name: string; rows: AppTournamentRow[] }) {
+  const [openCount, setOpenCount] = useState(0)
+  return (
+    <div className={cn("mx-3 my-2.5 overflow-hidden rounded-xl border bg-[#13263c] transition-colors", openCount > 0 ? "border-[#D3B574]/70" : "border-[#1f3a5c]")}>
+      <p className="px-3.5 pb-1.5 pt-3 text-[15px] font-black text-white">{name}</p>
+      {rows.map((row) => (
+        <TournamentRow key={row.id} row={row} compact onToggle={(o) => setOpenCount((n) => n + (o ? 1 : -1))} />
+      ))}
     </div>
   )
 }
@@ -489,10 +519,7 @@ export function AppTournamentResults({
                       {g.style === "freestyle" ? "FREESTYLE" : "FOLKSTYLE"}
                     </p>
                   ) : null}
-                  <p className="px-3 pb-0.5 pt-3 text-[13px] font-black text-white">{g.name}</p>
-                  {g.rows.map((row) => (
-                    <TournamentRow key={row.id} row={row} compact />
-                  ))}
+                  <EventCard name={g.name} rows={g.rows} />
                 </div>
               ))}
               {groups.length > 8 ? <SeeAll open={showAll} label={`See all ${groups.length} tournaments`} onClick={() => setShowAll((v) => !v)} /> : null}
