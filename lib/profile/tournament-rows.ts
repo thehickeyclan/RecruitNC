@@ -270,7 +270,7 @@ function attachEventBouts(
 function rowsFromSummaries(
   event: string,
   results: AccordionSummaryResult[],
-  options: { team?: string; isDuals?: boolean } = {},
+  options: { team?: string; isDuals?: boolean; monthDay?: string } = {},
 ): TournamentRow[] {
   return results
     .filter((r) => !!r.year)
@@ -280,7 +280,9 @@ function rowsFromSummaries(
       team: options.team ?? null,
       isDuals: options.isDuals ?? looksLikeDuals(event),
       year: r.year,
-      sortKey: `${r.year}-06-01`,
+      // When in the year the event is held, so By date puts it in its place: Super 32 is late
+      // October, not June (it was sorting behind every fall event, 25 Oct 2026).
+      sortKey: `${r.year}-${options.monthDay ?? "06-01"}`,
       weight: r.weight ?? null,
       placement: r.placement || null,
       record: r.record ?? null,
@@ -451,7 +453,7 @@ export function buildTournamentRows(input: {
       roundFallback: "NHSCA Nationals",
     }),
     // Super 32 on the same terms, from the 2025 import on. Earlier years are a record only.
-    ...attachEventBouts(rowsFromSummaries("Super 32", input.super32Results ?? []), input.super32Bouts ?? [], {
+    ...attachEventBouts(rowsFromSummaries("Super 32", input.super32Results ?? [], { monthDay: "10-25" }), input.super32Bouts ?? [], {
       keyPrefix: "super32-",
       eventName: "Super 32",
       roundFallback: "Super 32",
