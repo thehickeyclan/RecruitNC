@@ -25,6 +25,7 @@ const PHOTOS: Record<string, { src: string; credit: string }> = {
   "mason brown": { src: `${IMG}/mason-brown.jpg`, credit: "Darkhorse" },
   "braylen yates": { src: `${IMG}/braylen-yates.jpg`, credit: "Darkhorse" },
   "drew teeter": { src: `${IMG}/drew-teeter.jpg`, credit: "Darkhorse" },
+  "campbell tufts": { src: `${IMG}/campbell-tufts.jpg`, credit: "Shannon Tufts" },
 }
 
 const PUBLIC = process.env.SUPER32_RECAP_PUBLIC === "1"
