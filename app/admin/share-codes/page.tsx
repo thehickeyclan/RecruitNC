@@ -31,6 +31,12 @@ const CODES: ShareCode[] = [
     use: "Signs and slides at Super 32: every NC result live, Huge and Big wins, My Wrestlers.",
   },
   {
+    key: "super32-hq-womens",
+    title: "Super 32 HQ — Women",
+    url: "https://www.ncwrestlingunited.com/super32/live?g=w",
+    use: "For the girls' side: opens Super 32 HQ on the Women tab.",
+  },
+  {
     key: "app-download",
     title: "NC United iPhone app",
     url: "https://apps.apple.com/app/id6803202791",
@@ -79,7 +85,7 @@ export default function ShareCodesPage() {
         QR codes for events, slides and print. PNG for screens and normal printing; SVG stays sharp at any size. To share one
         over text, send the link instead: a QR on a phone can&apos;t be scanned by the same phone.
       </p>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {CODES.map((c) => <CodeCard key={c.key} c={c} />)}
       </div>
     </div>
