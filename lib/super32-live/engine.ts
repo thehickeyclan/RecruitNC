@@ -254,11 +254,6 @@ const PLACEMENT: Array<[RegExp, number, number]> = [
 
 /** Winning here guarantees a top-8 finish. Checked against Bentley Sly's 2025 path in the tests. */
 const AA_CLINCH = /^(quarter-?finals?|consi of 8 #2)$/i
-/**
- * Girls place six, not eight (Super 32 girls' results stop at 6th): no 7th-place match, so a
- * Consi of 8 #2 win does not guarantee a medal. Only a quarterfinal win (a semifinal spot) does.
- */
-const AA_CLINCH_GIRLS = /^quarter-?finals?$/i
 
 // ---------------------------------------------------------------------------------------------
 // Tiers
@@ -360,7 +355,8 @@ export function summarizeEntrants(bouts: LiveBout[], ctx: TierContext, isNc: NcF
         e.placement = x.win ? p[1] : p[2]
         if (p[1] === 1) e.finalist = true
       }
-      if (x.win && (e.gender === "girls" ? AA_CLINCH_GIRLS : AA_CLINCH).test(x.bout.round.trim())) e.aaClinched = true
+      // Girls' brackets this year have the boys' rounds (Consi of 8 #1/#2, 7th place): same rule.
+      if (x.win && AA_CLINCH.test(x.bout.round.trim())) e.aaClinched = true
       // A finalist from the moment he wins his semifinal, not only once the final is wrestled.
       if (x.win && /^semi-?finals?$/i.test(x.bout.round.trim())) e.finalist = true
     }
