@@ -142,7 +142,10 @@ function buildFilteredAthletesQuery(
   return query
 }
 
-function mapAthleteRow(athlete: Record<string, unknown>, collegesMap: Map<string, { division?: string; name?: string }>) {
+function mapAthleteRow(
+  athlete: Record<string, unknown>,
+  collegesMap: Map<string, { division?: string; name?: string; logo_url?: string | null }>,
+) {
   const photoUrl = String(athlete.commitmentPhotoUrl || athlete.photourl || "/wrestler-silhouette.png")
   const collegeRow = athlete.college_id ? collegesMap.get(String(athlete.college_id)) : null
   const collegeName = collegeRow?.name ?? String(athlete.college ?? "")
@@ -159,10 +162,11 @@ function mapAthleteRow(athlete: Record<string, unknown>, collegesMap: Map<string
       athlete.college_weight_class != null && String(athlete.college_weight_class).trim() !== ""
         ? String(athlete.college_weight_class)
         : undefined,
+    // The athlete's own override first, then the college's logo on the colleges row.
     collegeLogoUrl:
       typeof athlete.collegeLogoUrl === "string" && athlete.collegeLogoUrl.trim() !== ""
         ? athlete.collegeLogoUrl.trim()
-        : undefined,
+        : collegeRow?.logo_url?.trim() || undefined,
     graduationyear: Number(athlete.graduationyear) || 0,
     photourl: photoUrl,
     photoUrl,

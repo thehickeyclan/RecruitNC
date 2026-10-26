@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { fetchCommitmentAthletes, type CommitmentAthleteListItem } from "@/lib/athletes-commitments-fetch"
 import { withCompetedWeights } from "@/lib/commitments-competed-weight"
+import { resolveCollegeLogoUrlMap } from "@/lib/entity-logo-resolve"
 import { shareMetadata } from "@/lib/share-metadata"
 import { CollegeCommitmentsClient } from "./college-commitments-client"
 
@@ -23,7 +24,14 @@ export default async function CollegeCommitmentsPage() {
   try {
     const supabase = await createClient()
     const { athletes } = await fetchCommitmentAthletes(supabase, { year: "all", gender: "all", division: "all", limit: 500 })
-    commitments = await withCompetedWeights(athletes)
+    // Colleges whose row has no logo go through the same resolver the logo APIs use (static
+    // files, then logo_mappings): once per college, not once per card as the cards used to.
+    const missing = [...new Set(athletes.filter((a) => !a.collegeLogoUrl && a.college).map((a) => a.college))]
+    const [withWeights, logos] = await Promise.all([
+      withCompetedWeights(athletes),
+      resolveCollegeLogoUrlMap(Object.fromEntries(missing.map((name) => [name, [name]]))).catch(() => ({}) as Record<string, string>),
+    ])
+    commitments = withWeights.map((a) => (a.collegeLogoUrl || !logos[a.college] ? a : { ...a, collegeLogoUrl: logos[a.college] }))
   } catch (error) {
     console.error("[college-commitments] load failed:", error)
   }
