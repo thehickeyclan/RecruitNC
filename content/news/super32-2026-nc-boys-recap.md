@@ -13,7 +13,7 @@ The weekend had its leaders. Braylen Yates (East Rowan, 175) earned North Caroli
 
 Not every number moved. Four NC boys were still alive on Sunday morning, the same as last year and half of 2024's eight, and no NC boy beat a wrestler who finished on the podium. That's the next step. The three-year comparison below shows where we've grown and where we haven't yet.
 
-*The girls' tournament, headlined by Ella Taylor's medal run at 200, is covered in its own recap.*
+*The girls' tournament, headlined by Lauren Samuel (132) and Ella Taylor (200), both 3rd-place finishers, is covered in its own recap.*
 
 ## The Three-Year Comparison (NC boys)
 
