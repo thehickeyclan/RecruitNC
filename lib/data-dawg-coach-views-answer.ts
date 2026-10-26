@@ -25,8 +25,8 @@ export function answerCoachViewsQuestion(): string {
   const price = `$${(SCOUTING_REPORT_PRICES.subscription / 100).toFixed(2)}`
   return [
     "Open your athlete profile and look for **College coach views**. It shows when college coaches have looked at your profile and how many times.",
-    `To see **which college programs** they are from, you need the RecruitNC subscription: ${price} a month. It also unlocks the full rankings.`,
-    "[Subscribe on the Rankings page](/rankings?plan=subscription)",
+    `To see **which college programs** they are from, sign up for Insider: ${price} a month. It also unlocks the full rankings and tournament grade reports.`,
+    "[Sign up for Insider](/rankings?plan=subscription)",
     "The panel only appears on a profile you have claimed (or one you are linked to as a parent). NC United Blue members already have this included.",
   ].join("\n\n")
 }

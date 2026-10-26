@@ -1345,7 +1345,7 @@ function ScoutingReportPaywall({ athleteId }: { athleteId: string }) {
             className="ncu-only flex min-h-[52px] w-full items-center justify-between rounded-sm border border-[#D3B574] bg-transparent px-4 text-left text-[#D3B574] hover:bg-[#D3B574]/10 disabled:opacity-60"
           >
             <span>
-              <span className="block text-sm font-bold">RecruitNC membership</span>
+              <span className="block text-sm font-bold">Insider</span>
               <span className="block text-xs text-[#D3B574]/70">
                 Every scouting report, full rankings, cancel any time
               </span>

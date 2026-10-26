@@ -138,7 +138,7 @@ export default async function CommandCenterSalesPage() {
               Try the college map
             </a>
           </div>
-          <p className="ncu-only mt-3 text-sm text-white/50">Cancel anytime · Includes Rankings</p>
+          <p className="ncu-only mt-3 text-sm text-white/50">Cancel anytime · Includes Insider</p>
           <p className="ncu-only mt-1 text-xs text-white/40"><a href="/auth/signin?returnTo=%2Fmy-recruiting" className="underline hover:text-white/80">NC United Blue members: sign in for free access</a></p>
         </div>
       </section>
@@ -387,18 +387,18 @@ export default async function CommandCenterSalesPage() {
               <span className="text-xl font-semibold text-white/55"> / month</span>
             </p>
             <ul className="mx-auto mt-6 max-w-sm space-y-2 text-left text-sm text-white/80">
-              {["Your roadmap, 8th grade to signing", "Every college: coaches, full cost, roster, alumni", "Your college list, compare and coach conversations", "Rankings and which programs viewed your profile", "Scout, your recruiting assistant, and the full Learn library"].map((l) => (
+              {["Your roadmap, 8th grade to signing", "Every college: coaches, full cost, roster, alumni", "Your college list, compare and coach conversations", "Insider: rankings, grade reports and which programs viewed your profile", "Scout, your recruiting assistant, and the full Learn library"].map((l) => (
                 <li key={l} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: GOLD }} aria-hidden /> {l}</li>
               ))}
             </ul>
             <Link href={d.onSale ? BUY : "/plans"} className="mt-8 block rounded-xl px-6 py-4 text-base font-black text-[#0A1628] hover:brightness-110" style={{ backgroundColor: SKY }}>
               {d.onSale ? "Sign up now →" : "See plans →"}
             </Link>
-            <p className="mt-3 text-xs text-white/50">Cancel anytime · Includes Rankings</p>
+            <p className="mt-3 text-xs text-white/50">Cancel anytime · Includes Insider</p>
             <p className="mt-1 text-[11px] text-white/40"><a href="/auth/signin?returnTo=%2Fmy-recruiting" className="underline hover:text-white/80">NC United Blue members: sign in for free access</a></p>
           </div>
           <p className="ncu-only mt-6 text-center text-sm text-white/55">
-            Just the rankings? <Link href="/plans" className="underline" style={{ color: GOLD }}>Rankings is {formatPrice(SCOUTING_REPORT_PRICES.subscription)}/month</Link>. Or <Link href="/create-profile" className="underline" style={{ color: GOLD }}>claim your free profile</Link>.
+            Just the rankings? <Link href="/plans" className="underline" style={{ color: GOLD }}>Insider is {formatPrice(SCOUTING_REPORT_PRICES.subscription)}/month</Link>. Or <Link href="/create-profile" className="underline" style={{ color: GOLD }}>claim your free profile</Link>.
           </p>
         </section>
 
@@ -412,7 +412,7 @@ export default async function CommandCenterSalesPage() {
               ["Does it guarantee a scholarship or an offer?", "No. Nothing can. It helps you find the colleges that fit, know what to do next and see real coach activity, so your wrestler's opportunities aren't left to chance."],
               ["Who sees my information?", "Your plan, list and notes are yours alone, and a family's income is never saved. Academics and contact info are seen only by verified college coaches, never the public."],
               ["Can college coaches message my wrestler?", "Yes, verified college coaches can write to your wrestler, and parents are part of every conversation. You stay in control: you can turn off messages from any coach. Messages are free for every family; the Recruiting Command Center ties each conversation to its college and your plan."],
-              ["I'm on Rankings. What happens if I upgrade?", "Your $9.99 plan is cancelled automatically when the Recruiting Command Center starts, so you never pay for both."],
+              ["I'm on Insider. What happens if I upgrade?", "Insider is included in the Command Center, so your $9.99 plan is cancelled automatically when the Recruiting Command Center starts, so you never pay for both."],
               ["Can I cancel?", "Anytime, from your account."],
             ].map(([q, a]) => (
               <details key={q} className="group p-5">

@@ -167,7 +167,7 @@ export async function resolveRankingViewerForUser(options: {
 
 /** What a locked surface says, and where it sends them. */
 export const RANKING_PAYWALL = {
-  error: "Rankings require NC United Blue, a RecruitNC subscription, or verified college-coach access.",
+  error: "Rankings require Insider, the Recruiting Command Center, NC United Blue, or verified college-coach access.",
   upgradeHref: "/rankings",
 } as const
 

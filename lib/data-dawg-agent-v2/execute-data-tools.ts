@@ -95,7 +95,7 @@ export async function toolPublicRankingsSearch(_args: {
 }) {
   return {
     error:
-      "RecruitNC rankings aren’t available through Data Dawg. Sign in or subscribe on the Rankings page.",
+      "RecruitNC rankings aren’t available through Data Dawg. Sign in, or sign up for Insider on the Rankings page.",
     rankings: [] as unknown[],
     where_to_look: `${RECRUITNC_APP_URL}/rankings`,
   }

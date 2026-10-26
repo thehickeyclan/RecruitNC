@@ -1,4 +1,4 @@
-<!-- PRODUCTION NOTES (not article text): Free and fully visible through "How the Grades Work". Grade sections (A through Honorable Mention) render blurred for logged-out/free readers with the claim/sign-up panel; unblurred for Rankings, Command Center and Blue members, college coach accounts and admins; a family that claims a profile sees its own wrestler's grade free. Data file (full grades, bout-by-bout) is Rankings members/coaches only. Links in "Claim Your Profile" go to /create-profile, /rankings and coach sign-up. -->
+<!-- PRODUCTION NOTES (not article text): Free and fully visible through "How the Grades Work". Grade sections (A through Honorable Mention) render blurred for logged-out/free readers with the claim/sign-up panel; unblurred for Insider, Command Center and Blue members, college coach accounts and admins; a family that claims a profile sees its own wrestler's grade free. Data file (full grades, bout-by-bout) is Insider members/coaches only. Links in "Claim Your Profile" go to /create-profile, /rankings and coach sign-up. -->
 
 # Super 32 2026 — North Carolina Boys Recap
 

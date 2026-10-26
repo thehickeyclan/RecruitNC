@@ -1069,7 +1069,7 @@ function MembershipStrip({
 
   const tiles = [
     {
-      title: <BrandName ncu="RecruitNC Rankings" national="Insider" />,
+      title: "Insider",
       icon: Trophy,
       status: rankingsStatus,
       detail: rankings.loading

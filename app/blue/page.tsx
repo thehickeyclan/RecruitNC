@@ -159,9 +159,9 @@ export default function BluePage() {
           <div className="mt-8 grid gap-4 md:grid-cols-[1fr_auto] md:items-center rounded-2xl border border-white/10 bg-[#060f1f]/60 p-6">
             <div>
               <p className="text-lg font-bold">Not in Blue? There&apos;s a plan for every family.</p>
-              <p className="mt-1 text-sm text-white/65">Rankings ($9.99) or the Recruiting Command Center ($24.99) on their own. Blue includes both.</p>
+              <p className="mt-1 text-sm text-white/65">Insider ($9.99) or the Recruiting Command Center ($24.99, includes Insider) on their own. Blue includes the Command Center and Insider.</p>
               <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1 text-sm text-white/75">
-                {["Practices run by college coaches", "National team pathway", "Recruiting Command Center", "Rankings and profile views"].map((l) => (
+                {["Practices run by college coaches", "National team pathway", "Recruiting Command Center", "Insider: rankings, grade reports and profile views"].map((l) => (
                   <li key={l} className="flex items-center gap-1.5"><Check className="h-4 w-4" style={{ color: GOLD }} aria-hidden /> {l}</li>
                 ))}
               </ul>
