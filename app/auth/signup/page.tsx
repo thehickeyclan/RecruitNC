@@ -205,7 +205,7 @@ function SignUpWizard() {
          * returnTo, and the modal strips it on dismissal.
          */
         const landing =
-          returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/coach-home"
+          returnTo && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : "/my-recruits"
         const destination = `${landing}${landing.includes("?") ? "&" : "?"}welcome=coach`
         window.location.replace(signIn.ok ? destination : `/auth/signin?returnTo=${encodeURIComponent(destination)}`)
         return

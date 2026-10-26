@@ -251,7 +251,7 @@ export function WelcomeModal() {
   const isCoach = usesRecruitingShell(profile)
   useEffect(() => {
     if (!isCoach || welcome) return
-    if (window.location.pathname !== "/coach-home") return
+    if (window.location.pathname !== "/coach-home" && window.location.pathname !== "/my-recruits") return
     try {
       if (localStorage.getItem(COACH_WELCOME_SEEN) === "1") return
     } catch {

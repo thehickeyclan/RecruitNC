@@ -23,7 +23,7 @@ export const RANKINGS_SALES = "/rankings"
  * 2026). The rankings taught coaches this was a rankings site; most never found the comparison,
  * the scouting reports or their own board from there.
  */
-export const COACH_HOME = "/coach-home"
+export const COACH_HOME = "/my-recruits" // My Recruits, not Coach Home (Matt, 26 Oct 2026)
 /**
  * A family - a wrestler, or a parent linked to one - lands on the Recruiting Command Center, which
  * leads with their wrestler and a one-tap way to his or her profile (Matt, 15 October 2026: "when

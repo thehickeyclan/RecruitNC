@@ -123,6 +123,7 @@ export function RwMembershipPlans({ returnTo = "/membership" }: { returnTo?: str
         {PLANS.map((plan) => (
           <div
             key={plan.kind}
+            id={plan.kind === "subscription" ? "insider" : "command-center"}
             className={`flex flex-col rounded-2xl border p-6 text-left ${plan.featured ? "border-2 border-[#A3E635] bg-[#15243B]" : "border-white/10 bg-[#15243B]/60"}`}
           >
             <p className={`text-sm font-black uppercase tracking-wider ${plan.featured ? "text-[#A3E635]" : "text-white"}`}>{plan.name}</p>
