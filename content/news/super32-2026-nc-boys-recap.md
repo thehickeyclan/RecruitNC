@@ -97,11 +97,11 @@ Only contested bouts count toward a grade's wins over seeds; a forfeit counts in
 
 ## Honorable Mention
 
-Liam Myles (113, 2-2, losses included the #17 seed) · Joseph Shook (157, 2-2) · Braylon Butts (106, 1-2, lost to the #1 seed) · Vincent Grack (157, 2-2) · Carson Owens (190, 1-2) · Liam Smith (190, 1-2) · Paxton Kearns (138, 1-2) · Waylon Pinnix (132, 1-2) · Jacob McCord (165, 1-2, beat Connecticut's state champion) · Caleb Edwards (132, 1-2) · Aidan Szewczyk (132, 1-2) · Tyton Kostoff (150, 1-2) · Kalil McDowell (157, 1-2) · Tobin McNair (165, 1-2, the #11 seed) · Luke Padgett (190, 1-2)
+Liam Myles (113, 2-2, losses included the #17 seed) · Joseph Shook (157, 2-2) · Braylon Butts (106, 1-2, lost to the #1 seed) · Vincent Grack (157, 2-2) · Carson Owens (190, 1-2) · Liam Smith (190, 1-2) · Paxton Kearns (138, 1-2) · Waylon Pinnix (132, 1-2) · Jacob McCord (165, 1-2, beat Connecticut's state champion) · Caleb Edwards (132, 1-2) · Aidan Szewczyk (132, 1-2) · Tyton Kostoff (150, 1-2) · Kalil McDowell (157, 1-2) · Tobin McNair (165, 1-2, the #11 seed) · Luke Padgett (190, 1-2) · Bennett Myles (106, 1-2, beat Vermont's state runner-up) · Kristopher Kerr Jr. (113, 1-2, beat Virginia's 6A state runner-up) · Jaxon Thomas (120, 1-2, beat Oklahoma's 4A state runner-up) · Landon Logan (144, 1-2, beat Missouri's Class 4 state runner-up) · Ethan Cole (126, 0-2, a 3-0 decision to the #6 seed, who finished 5th) · Tye Johnson (144, 0-2, a 10-7 decision to the #22 seed) · John Perez (285, 0-2, a one-point loss to the #17 seed)
 
 ## The Rest of North Carolina
 
-Seventy-four more North Carolina boys stepped on the mat in Greensboro, and every one of them chose the hardest test in high school wrestling. Their full results are in the accompanying data file.
+Sixty-seven more North Carolina boys stepped on the mat in Greensboro, and every one of them chose the hardest test in high school wrestling. Their full results are in the accompanying data file.
 
 ## The Bigger Picture: Raising the Bar
 
