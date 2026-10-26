@@ -21,6 +21,7 @@ import {
   Target,
   User,
   Users,
+  FileText,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useCoachMessageBadge, useInterestBadge, useNavNotifications } from "@/hooks/use-nav-badges"
@@ -131,6 +132,7 @@ export function RecruitingShell({ children }: { children: React.ReactNode }) {
     ...rankings,
     recruits,
     { href: "/interested", label: "Interested", icon: HeartHandshake, badge: interestNew },
+    { href: "/coach-reports", label: "Reports", icon: FileText },
     inbox,
     { href: "/compare?src=nav", label: "Compare", icon: GitCompareArrows },
     { href: "/perfect-recruit", label: "Perfect Recruit", icon: Target },
@@ -162,7 +164,7 @@ export function RecruitingShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div id="app-content" data-shell="recruiting" className="group/shell relative flex min-h-screen flex-col bg-[#0A1628]">
+    <div id="app-content" data-shell="recruiting" className="group/shell relative flex min-h-screen flex-col bg-[#0A1628] print:bg-white">
       <header className="sticky top-0 z-50 flex h-14 items-center gap-4 border-b border-white/10 bg-[#0A1628] px-4 print:hidden lg:px-5">
         <a href="/coach-home" className="flex shrink-0 items-baseline gap-3" aria-label={`${RECRUITING_BRAND.name} — Home`}>
           {/* RecruitNC here; RecruitWrestlers on recruitwrestlers.com (app/recruit-brand.css). */}
