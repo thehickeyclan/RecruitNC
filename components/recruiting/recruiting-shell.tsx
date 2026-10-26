@@ -138,7 +138,7 @@ export function RecruitingShell({ children }: { children: React.ReactNode }) {
     inbox,
     { href: "/compare?src=nav", label: "Compare", icon: GitCompareArrows },
     { href: "/perfect-recruit", label: "Perfect Recruit", icon: Target },
-    { href: "/athletes", label: "Commitments", icon: GraduationCap },
+    { href: "/college-commitments", label: "Commitments", icon: GraduationCap },
   ]
 
   const isActive = (link: string) => {

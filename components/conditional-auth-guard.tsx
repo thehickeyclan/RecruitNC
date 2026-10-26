@@ -51,7 +51,8 @@ export function ConditionalAuthGuard({
     // one of them useless, and they cannot be reprinted.
     "/download",
     "/athletes",
-    "/athletes-public",
+    "/college-commitments",
+    "/wrestlers",
     "/view-profile",
     "/prospects",
     /*

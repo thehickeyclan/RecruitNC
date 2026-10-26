@@ -30,7 +30,7 @@ export function Footer() {
             <h3 className="text-sm font-semibold text-[#D3B574] uppercase tracking-wider">Quick Links</h3>
             <ul className="mt-4 space-y-3">
               <li>
-                <a href="/athletes" className="text-sm text-gray-300 hover:text-white transition-colors">
+                <a href="/college-commitments" className="text-sm text-gray-300 hover:text-white transition-colors">
                   Commitments
                 </a>
               </li>

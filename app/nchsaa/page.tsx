@@ -653,7 +653,7 @@ export default function NCHSAAOverview() {
                   Search our athlete database to find Most Outstanding Wrestler award winners. These exceptional
                   athletes are marked with special badges in their profiles, highlighting their historic achievements.
                 </p>
-                <Link href="/athletes">
+                <Link href="/wrestlers">
                   <Button className="bg-orange-500 hover:bg-orange-600 text-white text-sm">
                     <Star className="w-4 h-4 mr-2" />
                     Search Award Winners

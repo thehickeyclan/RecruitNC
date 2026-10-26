@@ -156,7 +156,7 @@ export default async function PublicRankingsHomepage({
             */}
           {viewer.isVerifiedCoach === true ? (
             <HardLink
-              href="/athletes"
+              href="/prospects/all"
               className="mx-auto mt-8 flex max-w-2xl items-center gap-3 rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 transition-colors hover:bg-white/[0.08]"
             >
               <Users className="h-5 w-5 shrink-0 text-[#D3B574]" aria-hidden />

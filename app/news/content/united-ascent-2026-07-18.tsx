@@ -64,7 +64,7 @@ export function UnitedAscent20260718Content() {
           One of North Carolina’s top Class of 2026 wrestlers is headed to the next level. <Link href={profileHref("45e7dc80-aafb-43c5-9e27-92cc85b1b64b")}>Elijah “Eli” Horton</Link> has committed to continue his academic and wrestling career at Roanoke College.
         </p>
         <p>Congratulations to Eli, his family and his coaches. RecruitNC wishes him continued success at the next level.</p>
-        <p><Link href="/athletes">View North Carolina college commitments</Link></p>
+        <p><Link href="/college-commitments">View North Carolina college commitments</Link></p>
       </section>
 
       <section>

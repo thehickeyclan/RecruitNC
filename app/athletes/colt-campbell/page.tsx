@@ -17,5 +17,5 @@ export default async function ColtCampbellPage() {
   }
 
   // If not found, redirect to the athletes page
-  redirect("/athletes")
+  redirect("/prospects/all")
 }

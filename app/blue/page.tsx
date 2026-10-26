@@ -445,7 +445,7 @@ export default function BluePage() {
             </p>
             <p className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
               <Link href="/profile" className="font-medium text-[#003366] hover:text-[#B31B1B] hover:underline">Manage your account and athlete links →</Link>
-              <Link href="/athletes" className="font-medium text-[#003366] hover:text-[#B31B1B] hover:underline">Explore athlete profiles →</Link>
+              <Link href="/prospects/all" className="font-medium text-[#003366] hover:text-[#B31B1B] hover:underline">Explore athlete profiles →</Link>
             </p>
           </section>
 

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 export async function GET(request: Request) {
   try {
     // Revalidate the athletes page
-    revalidatePath("/athletes")
+    revalidatePath("/college-commitments")
 
     // Also revalidate the root page which might show athletes
     revalidatePath("/")

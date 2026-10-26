@@ -60,7 +60,7 @@ export function FeaturedTwoTwentySixAthletes() {
       ))}
       {athletes.length < 3 && (
         <div className="flex items-center justify-center p-6 border border-dashed border-gray-300 rounded-lg">
-          <Link href="/athletes" className="text-blue-600 hover:underline">
+          <Link href="/college-commitments" className="text-blue-600 hover:underline">
             View more commitments
           </Link>
         </div>

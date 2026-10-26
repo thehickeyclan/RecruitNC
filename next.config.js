@@ -3,6 +3,17 @@ const nextConfig = {
   async redirects() {
     return [
       {
+        // /athletes was two pages behind one name: college commitments, and a "Search wrestlers"
+        // tab that was LegacyNC's history search. Each has its own address now (26 Oct 2026).
+        // Profiles under /athletes/<id> are untouched; only the bare list address moves.
+        source: "/athletes",
+        has: [{ type: "query", key: "tab", value: "legacy" }],
+        destination: "/wrestlers",
+        permanent: true,
+      },
+      { source: "/athletes", destination: "/college-commitments", permanent: true },
+      { source: "/athletes-public", destination: "/college-commitments", permanent: true },
+      {
         // The Community area (group chats and DMs) was taken down on 14 Oct 2026: no group post had
         // ever been written, and 69 people a month opened it to an empty room. Recruiting messages
         // live in the inbox. The tables are left as they were.

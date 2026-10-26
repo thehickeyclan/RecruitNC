@@ -19,7 +19,7 @@ export function SimpleNavbar() {
 
   const links = [
     { href: "/", label: "Home" },
-    { href: "/athletes", label: "Athletes" },
+    { href: "/prospects/all", label: "Athletes" },
   ]
 
   // Add Admin link if user is logged in (for testing, we'll show it to all logged-in users)

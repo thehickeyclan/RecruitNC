@@ -23,7 +23,7 @@ const PLACES: Array<[RegExp, string]> = [
   [/^\/my-recruits/, "My Recruits"],
   [/^\/compare/, "Compare"],
   [/^\/inbox/, "Messages"],
-  [/^\/athletes/, "Commitments"],
+  [/^\/college-commitments/, "Commitments"],
 ]
 
 function placeName(path: string): string | null {

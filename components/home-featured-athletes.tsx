@@ -174,7 +174,7 @@ export function HomeFeaturedAthletes() {
         {athletes.length > 0 && (
           <div className="text-center mt-12">
             <a
-              href="/athletes"
+              href="/college-commitments"
               className="inline-flex items-center px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-lg"
             >
               View All Athletes

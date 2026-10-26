@@ -928,7 +928,7 @@ export function ProfileClient() {
                   variant="outline"
                   className="w-full justify-start sm:max-w-md border-border text-foreground hover:bg-muted"
                 >
-                  <a href="/athletes">Browse athletes</a>
+                  <a href="/prospects/all">Browse athletes</a>
                 </Button>
               </CardContent>
             </Card>

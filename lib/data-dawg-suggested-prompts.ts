@@ -139,7 +139,7 @@ export function getSuggestedPrompts(pathname: string): string[] {
       "Which school has the most state dual championships?",
     ]
   }
-  if (pathname.includes("/athletes")) {
+  if (pathname.includes("/athletes") || pathname.startsWith("/wrestlers")) {
     return [
       "Who is the all time winningest wrestler?",
       "Who are our 4x state champions?",

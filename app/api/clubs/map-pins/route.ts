@@ -109,7 +109,7 @@ function athleteClassYear(athlete: AnyRecord): string | number | null {
 }
 
 function clubSearchHref(name: string): string {
-  return `/athletes?search=${encodeURIComponent(name)}`
+  return `/prospects/all?search=${encodeURIComponent(name)}`
 }
 
 function createStats(): ClubStats {
