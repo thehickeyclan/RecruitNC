@@ -84,7 +84,7 @@ const WELCOMES: Record<string, Welcome> = {
    */
   college_coach: {
     heading: "You're in, Coach",
-    intro: `Full access, no charge. Four places to start with ${recruitingCoverage()}'s wrestlers:`,
+    intro: "Full access, no charge. Four places to start:",
     destinations: [
       {
         href: "/public-rankings",

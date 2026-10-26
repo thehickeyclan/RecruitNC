@@ -10,6 +10,7 @@ import { CoachTabs } from "@/components/coach-tabs"
 import { RECRUITING_BRAND, recruitingCoverage } from "@/lib/recruiting/brand"
 import { EMPTY_CRITERIA, describePerfectRecruit, type FitKey, type FitStatus } from "@/lib/program-fit"
 import { BrandName } from "@/components/recruiting/brand-name"
+import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
 
 export type PerfectRecruitMatch = {
   id: string
@@ -29,6 +30,7 @@ const PANEL = "rounded-xl border border-white/10 bg-[#0f1c2e]"
 const TITLE = "flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-white/40"
 
 function AccessPanel({ signedOut }: { signedOut: boolean }) {
+  const onRw = useOnRecruitWrestlers()
   return (
     <main className="min-h-screen bg-[#0A1628] px-4 py-16 text-white">
       <div className={`${PANEL} mx-auto max-w-xl border-[#D3B574]/30 p-6 text-center sm:p-8`}>
@@ -37,7 +39,7 @@ function AccessPanel({ signedOut }: { signedOut: boolean }) {
         </div>
         <h1 className="text-xl font-black">{signedOut ? "Sign in to set your perfect recruit" : "The perfect recruit is for college coaches"}</h1>
         <p className="mx-auto mt-2 max-w-md text-sm text-white/60">
-          Tell us what your program needs and every {recruitingCoverage()} wrestler is flagged against it. Free for verified college coaching staff.
+          Tell us what your program needs and every {recruitingCoverage(onRw)} wrestler is flagged against it. Free for verified college coaching staff.
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           {signedOut ? (
@@ -111,6 +113,7 @@ export default function PerfectRecruitClient({
   failed?: boolean
   team?: "mens" | "womens" | "both"
 }) {
+  const onRw = useOnRecruitWrestlers()
   const router = useRouter()
   const [wizardOpen, setWizardOpen] = useState(false)
   const [show, setShow] = useState<"meets" | "possible">("meets")
@@ -178,7 +181,7 @@ export default function PerfectRecruitClient({
             ) : (
               <>
                 <p className="mt-2 text-sm text-white/60">
-                  Checked {checked.toLocaleString()} {recruitingCoverage()} wrestlers in the current classes.
+                  Checked {checked.toLocaleString()} {recruitingCoverage(onRw)} wrestlers in the current classes.
                 </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {(

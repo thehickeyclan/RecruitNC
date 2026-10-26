@@ -17,3 +17,8 @@ export function useBrandHost(): BrandHost {
   }, [])
   return host
 }
+
+/** On recruitwrestlers.com, which carries every live state; NC United's address carries North Carolina only. */
+export function useOnRecruitWrestlers(): boolean {
+  return useBrandHost() === "national"
+}

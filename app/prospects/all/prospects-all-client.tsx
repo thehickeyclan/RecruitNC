@@ -22,6 +22,7 @@ import { RankingsTableView } from "@/components/rankings-table-view"
 import { RankingsCardView } from "@/components/rankings-card-view"
 import { Filter, LayoutGrid, List, Loader2, Search, Users, X, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
 
 type RecruitingStatus = "committed" | "verbal" | "recruiting" | "interested" | "uncommitted"
 
@@ -169,6 +170,7 @@ export default function ProspectsAllClient({
 }: {
   initialProspects?: Prospect[]
 }) {
+  const onRw = useOnRecruitWrestlers()
   /*
    * The rank column is the product.
    *
@@ -267,7 +269,7 @@ export default function ProspectsAllClient({
   // On a brand address (Guild Recruiting) the picker names states plainly; RecruitNC is NC United's name.
   const [brandHost, setBrandHost] = useState(false)
   useEffect(() => setBrandHost(document.documentElement.hasAttribute("data-host")), [])
-  const stateChoices = visibleStates(viewerProfile?.is_admin === true || viewerProfile?.role === "admin")
+  const stateChoices = visibleStates(viewerProfile?.is_admin === true || viewerProfile?.role === "admin", onRw)
   /*
    * A link can open the list on a state (?state=SC, from a state page such as wrestlingguild.com/recruit/sc).
    * Only a state this viewer may open is honoured; anything else stays on North Carolina.

@@ -6,6 +6,7 @@ import { HOME_STATE, normalizeStateCode } from "@/lib/recruiting/states"
 import { fetchProspectDirectoryPage } from "@/lib/prospects-directory"
 import { lastCompetedLabel, loadLastCompeted } from "@/lib/prospect-last-competed"
 import { highestAchievement, loadAchievements } from "@/lib/prospect-achievements"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -28,6 +29,8 @@ export async function GET(request: NextRequest) {
      * before a second state existed. A state not yet announced is admins' only.
      */
     const state = normalizeStateCode(searchParams.get("state")) ?? HOME_STATE
+    // RecruitWrestlers carries every live state; NC United's address North Carolina only.
+    const onRw = stagedBrandForHost(request.headers.get("host")) === "national"
     let isAdmin = false
     if (state !== HOME_STATE) {
       const { data: auth } = await (await createClient()).auth.getUser()
@@ -35,7 +38,7 @@ export async function GET(request: NextRequest) {
         const { data: me } = await supabase.from("user_profiles").select("is_admin, role").eq("user_id", auth.user.id).maybeSingle()
         isAdmin = me?.is_admin === true || me?.role === "admin"
       }
-      if (!isVisibleState(state, isAdmin)) return NextResponse.json({ error: "That state is not open yet." }, { status: 404 })
+      if (!isVisibleState(state, isAdmin, onRw)) return NextResponse.json({ error: "That state is not open yet." }, { status: 404 })
     }
 
     const minYear = minYearParam ? Number.parseInt(minYearParam, 10) : null
@@ -87,7 +90,7 @@ export async function GET(request: NextRequest) {
       {
         headers: {
           // A state still being checked is answered per person, never from a shared cache.
-          "Cache-Control": isVisibleState(state, false) ? "public, s-maxage=120, stale-while-revalidate=300" : "private, no-store",
+          "Cache-Control": isVisibleState(state, false, onRw) ? "public, s-maxage=120, stale-while-revalidate=300" : "private, no-store",
           "Content-Type": "application/json",
         },
       },

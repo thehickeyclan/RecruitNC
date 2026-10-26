@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { isOpenWhileStaged, stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { isOpenWhileStaged, isStaffOnlyAfterLaunch, stagedBrandForHost } from "@/lib/recruiting/national-paths"
 import { isRankerOnly, stagingGateAllows } from "@/lib/staging-gate"
 
 const SECRET = "test-secret-for-staging-gate"
@@ -104,5 +104,12 @@ describe("the staging gate", () => {
     expect(await isRankerOnly(bearer(await token({ sub: "u-ranker2", role: "authenticated", exp: future, app_metadata: grant })), [])).toBe(true)
     expect(await isRankerOnly(bearer(await token({ sub: "u-boss", role: "authenticated", exp: future, app_metadata: grant })), [])).toBe(false)
     expect(await isRankerOnly(bearer(await token({ sub: "u-fam2", role: "authenticated", exp: future })), [])).toBe(false)
+  })
+})
+
+describe("after launch", () => {
+  it("opens every page except the staff preview tools", () => {
+    for (const p of ["/", "/athletes/abc", "/view-profile", "/recaps", "/membership", "/api/prospects", "/admin"]) expect(isStaffOnlyAfterLaunch(p), p).toBe(false)
+    for (const p of ["/dev", "/dev/coach-preview", "/dev/family-preview"]) expect(isStaffOnlyAfterLaunch(p), p).toBe(true)
   })
 })

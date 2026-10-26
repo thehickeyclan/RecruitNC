@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { isNationalPath, isOpenWhileStaged, stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { isNationalPath, isOpenWhileStaged, isStaffOnlyAfterLaunch, stagedBrandForHost } from "@/lib/recruiting/national-paths"
 import { isCommunityAdminPath } from "@/lib/recruiting/admin-scope"
 import { isRankerOnly, stagingGateAllows } from "@/lib/staging-gate"
 import { FUNDRAISING_AUTH_RETURN_COOKIE } from "@/lib/fundraising/fundraising-auth-return-cookie"
@@ -73,7 +73,8 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
     if (pathname === "/robots.txt") {
       return new NextResponse("User-agent: *\nDisallow: /\n", { headers: { "Content-Type": "text/plain", "X-Robots-Tag": "noindex, nofollow" } })
     }
-    if (!isOpenWhileStaged(pathname) && !(await stagingGateAllows(request.headers, request.cookies.getAll(), pathname))) {
+    // Launched 26 Oct 2026: the site is public; only the staff preview tools stay gated.
+    if (isStaffOnlyAfterLaunch(pathname) && !isOpenWhileStaged(pathname) && !(await stagingGateAllows(request.headers, request.cookies.getAll(), pathname))) {
       if (pathname.startsWith("/api/")) {
         return NextResponse.json({ error: "Not available yet." }, { status: 403, headers: { "Cache-Control": "no-store", "X-Robots-Tag": "noindex, nofollow" } })
       }
