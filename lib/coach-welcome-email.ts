@@ -533,3 +533,43 @@ ${input.unsubscribeUrl ? `<p style="margin:28px 0 0;font-size:12px;color:#9ca3af
   ].join("\n\n")
   return { subject, html, text }
 }
+
+/**
+ * The women's version (Matt, 26 Oct 2026): announces the girls recap, with the sign-up link. Same
+ * letter format and rules as the men's (no questions, no "free" in the subject). No rankings-by-
+ * Friday line: that promise is for the NC rankings, not yet the girls' boards.
+ */
+export function renderSuper32WomensInviteLetter(input: Super32ResultsInviteInput): { subject: string; html: string; text: string } {
+  const coach = coachSalutation(input.coachName, input.coachEmail)
+  const subject = coach === "Coach" ? "Super 32 results for North Carolina's girls are in" : `${coach}, Super 32 results for North Carolina's girls are in`
+  const brand = RECRUITING_BRAND.name
+  const recap = `${BASE}/news/super32-2026-nc-girls-recap`
+  const paras = [
+    `${coach},`,
+    `Super 32 is done, and every North Carolina girl's results from Greensboro are on ${brand}: every match, with each opponent's seed, national ranking and state titles. Lauren Samuel and Ella Taylor both finished 3rd, North Carolina's best finishes of the weekend, and Samuel is now a two-time Super 32 All-American.`,
+    `We wrote up how North Carolina's girls did, wrestler by wrestler, in our recap.`,
+    `${input.coaches} college coaches from ${input.programs} programs already recruit North Carolina here: every wrestler's results, academics and contact information, scouting reports, and a My Recruits board shared with your staff. College coach accounts are free, and access is instant.`,
+  ]
+  const recapLine = `The girls' recap:`
+  const signupLine = `Create your coach account here:`
+  const close = `Reply to this email or call or text me anytime.`
+  const p = (t: string) => `<p style="margin:0 0 14px;">${esc(t)}</p>`
+  const link = (href: string) => `<a href="${href}" style="color:#1d4ed8;">${href.replace(/^https:\/\//, "")}</a>`
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:#ffffff;">
+<div style="max-width:560px;margin:0 auto;padding:24px 16px;font-family:${FONT};font-size:15px;line-height:1.6;color:#1f2937;">
+${paras.slice(0, 2).map(p).join("\n")}
+<p style="margin:0 0 14px;">${esc(paras[2]!)} ${link(recap)}</p>
+${p(paras[3]!)}
+<p style="margin:0 0 14px;">${esc(signupLine)} ${link(SIGNUP_URL)}</p>
+${p(close)}
+<p style="margin:18px 0 0;">Matt Hickey<br>${esc(brand)}<br>Cell 631.662.5409</p>
+${input.unsubscribeUrl ? `<p style="margin:28px 0 0;font-size:12px;color:#9ca3af;"><a href="${esc(input.unsubscribeUrl)}" style="color:#9ca3af;">Unsubscribe</a></p>` : ""}
+</div></body></html>`
+  const text = [
+    paras[0], paras[1], `${recapLine} ${recap}`, paras[3], `${signupLine} ${SIGNUP_URL}`, close,
+    `Matt Hickey\n${brand}\nCell 631.662.5409`,
+    ...(input.unsubscribeUrl ? [`Unsubscribe: ${input.unsubscribeUrl}`] : []),
+  ].join("\n\n")
+  return { subject, html, text }
+}
