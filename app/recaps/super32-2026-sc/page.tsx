@@ -26,7 +26,7 @@ import { isPlaceholderAthletePhoto } from "@/lib/recruiting-profile-photo"
 export const dynamic = "force-dynamic"
 
 const PUBLIC = process.env.SUPER32_SC_RECAP_PUBLIC === "1"
-const IMG = "/recruitwrestlers"
+const IMG = "/recruitwrestlers/recaps"
 /**
  * Approved photos (Matt, 25 Oct) break up the article between sections, each with the context
  * beneath it, rather than sitting beside a few wrestlers' cards. No photo credits (Matt, 25 Oct).
@@ -70,7 +70,7 @@ export async function generateMetadata(): Promise<Metadata> {
       // Link previews (GroupMe, texts, social) show the headline and the Yates photo, not the site card.
       const title = "Super 32 2026 — South Carolina Boys Recap"
       const description = "Nine winning records and three wins over national seeds, including the NHSCA national champion. Every SC boy graded on the strength of his tournament."
-      const image = { url: `${IMG}/share.jpg`, width: 1200, height: 630, alt: "RecruitWrestlers" }
+      const image = { url: `${IMG}/sc-share-card.jpg`, width: 1200, height: 630, alt: "Rollins Dixon at Super 32" }
       return {
         // The full title: the site's "| NC United" suffix must never reach a RecruitWrestlers page.
         title: { absolute: `${title} | RecruitWrestlers` },
@@ -116,10 +116,15 @@ const linkedHtml = (md: string) => ({ __html: linkNames(markdownToHtml(md), PROF
 
 function Hero({ title }: { title: string }) {
   return (
-    <header className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#15243B] to-[#0B1426] p-6 md:p-10">
-      <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#A3E635]">RecruitWrestlers · Super 32 · Greensboro</div>
-      <h1 className="mt-2 text-3xl font-black leading-tight text-white md:text-5xl">{title.replace(/^Super 32 2026 — /, "")}</h1>
-      <div className="mt-1 text-sm text-[#A8B3C5]">Super 32 2026</div>
+    <header className="relative overflow-hidden rounded-2xl bg-[#0B1426]">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={`${IMG}/sc-share-card.jpg`} alt="Rollins Dixon at Super 32" className="h-72 w-full object-cover object-center opacity-80 md:h-96" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0B1426] via-[#0B1426]/60 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 p-5 md:p-8">
+        <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#A3E635]">RecruitWrestlers · Super 32 · Greensboro</div>
+        <h1 className="mt-1 text-3xl font-black leading-tight text-white md:text-5xl">{title.replace(/^Super 32 2026 — /, "")}</h1>
+        <div className="mt-1 text-sm text-[#A8B3C5]">Super 32 2026</div>
+      </div>
     </header>
   )
 }
@@ -294,7 +299,9 @@ export default async function Super32ScBoysRecapPage({ searchParams }: { searchP
   // Small thumbnails from the coach report's data where there is one (scripts/coach-report-thumbs.ts), else the profile photo.
   const thumbs: Record<string, string> = {}
   const photos = new Map((photoRows ?? []).filter((p) => p.photourl && /^https:/.test(String(p.photourl)) && !isPlaceholderAthletePhoto(String(p.photourl))).map((p) => [String(p.id), thumbs[String(p.id)] ?? String(p.photourl)]))
-  const photoFor = (w: GradedWrestler) => photos.get(byName.get(nameKey(w.name))?.athleteId ?? "") ?? null
+  // Approved photos by name (Matt, 26 Oct 2026), then the profile photo.
+  const NAMED_PHOTOS: Record<string, string> = { [nameKey("Rollins Dixon")]: `${IMG}/rollins-dixon.jpg` }
+  const photoFor = (w: GradedWrestler) => NAMED_PHOTOS[nameKey(w.name)] ?? photos.get(byName.get(nameKey(w.name))?.athleteId ?? "") ?? null
   // Longest names first, so "Liam Myles" is linked before any shorter name inside it.
   PROFILE_LINKS = entrants.filter((e) => e.athleteId).map((e) => [e.name, `/athletes/${e.athleteId}`] as [string, string]).sort((a, b) => b[0].length - a[0].length)
 
