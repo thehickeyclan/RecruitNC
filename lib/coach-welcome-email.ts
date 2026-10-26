@@ -479,3 +479,57 @@ ${input.unsubscribeUrl ? `<p style="margin:28px 0 0;font-size:12px;color:#9ca3af
 </div></body></html>`
   return { subject, html, text: coachReportReadyText(input) }
 }
+
+/* ------------------------------------------------------------------ Super 32 results invite */
+
+export type Super32ResultsInviteInput = {
+  coachName: string | null
+  coachEmail: string | null
+  /** Coaches and programs on the platform, counted at send time. */
+  coaches: number
+  programs: number
+  unsubscribeUrl?: string | null
+}
+
+/**
+ * To men's college coaches not on the platform (Matt, 26 Oct 2026): Super 32 results for North Carolina
+ * are in, and coach accounts are free. A letter from Matt, the format that reaches the inbox: no
+ * images or buttons, a text twin, no "free" in the subject or preview, and no questions (coach
+ * emails ask nothing). Coaches who replied to earlier emails are left off by the send script.
+ */
+export function renderSuper32ResultsInviteLetter(input: Super32ResultsInviteInput): { subject: string; html: string; text: string } {
+  const coach = coachSalutation(input.coachName, input.coachEmail)
+  const subject = coach === "Coach" ? "Super 32 results for North Carolina are in" : `${coach}, Super 32 results for North Carolina are in`
+  const brand = RECRUITING_BRAND.name
+  const recap = `${BASE}/news/super32-2026-nc-boys-recap`
+  const paras = [
+    `${coach},`,
+    `Super 32 is done, and every North Carolina wrestler's results from Greensboro are on ${brand}: every match, with each opponent's seed, national ranking and state titles. North Carolina beat 11 top-15 seeds, up from six last year and two in 2024, and Braylen Yates medaled.`,
+    `${input.coaches} college coaches from ${input.programs} programs already recruit North Carolina here: every wrestler's results, academics and contact information, scouting reports, and a My Recruits board shared with your staff. College coach accounts are free, and access is instant.`,
+    `New North Carolina rankings come out by ${RANKINGS_UPDATE.by}, updated with results from ${RANKINGS_UPDATE.events}.`,
+  ]
+  const signupLine = `Create your coach account here:`
+  const recapLine = `Our recap of how North Carolina did:`
+  const close = `Reply to this email or call or text me anytime.`
+  const p = (t: string) => `<p style="margin:0 0 14px;">${esc(t)}</p>`
+  const link = (href: string) => `<a href="${href}" style="color:#1d4ed8;">${href.replace(/^https:\/\//, "")}</a>`
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:#ffffff;">
+<div style="max-width:560px;margin:0 auto;padding:24px 16px;font-family:${FONT};font-size:15px;line-height:1.6;color:#1f2937;">
+${paras.map(p).join("\n")}
+<p style="margin:0 0 14px;">${esc(signupLine)} ${link(SIGNUP_URL)}</p>
+<p style="margin:0 0 14px;">${esc(recapLine)} ${link(recap)}</p>
+${p(close)}
+<p style="margin:18px 0 0;">Matt Hickey<br>${esc(brand)}<br>Cell 631.662.5409</p>
+${input.unsubscribeUrl ? `<p style="margin:28px 0 0;font-size:12px;color:#9ca3af;"><a href="${esc(input.unsubscribeUrl)}" style="color:#9ca3af;">Unsubscribe</a></p>` : ""}
+</div></body></html>`
+  const text = [
+    ...paras,
+    `${signupLine} ${SIGNUP_URL}`,
+    `${recapLine} ${recap}`,
+    close,
+    `Matt Hickey\n${brand}\nCell 631.662.5409`,
+    ...(input.unsubscribeUrl ? [`Unsubscribe: ${input.unsubscribeUrl}`] : []),
+  ].join("\n\n")
+  return { subject, html, text }
+}
