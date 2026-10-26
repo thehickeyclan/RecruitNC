@@ -1,10 +1,8 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Building2, GraduationCap, LayoutGrid, List, PlusCircle, Search, X } from "lucide-react"
-import { Input } from "@/components/ui/input"
+import { Building2, GraduationCap, LayoutGrid, List } from "lucide-react"
+import { CommitsHero, FilterPanel, ResultBar, SearchField, SortField, StatTile, ViewToggle } from "@/components/commitments/commits-chrome"
 import { HardLink } from "@/components/hard-link"
 import { QuickChip, QuickGroup } from "@/components/ui/quick-chip"
 import { ProfessionalCommitmentCard } from "@/components/professional-commitment-card"
@@ -133,40 +131,7 @@ export function CollegeCommitmentsClient({ commitments }: { commitments: Commitm
 
   return (
     <main className="min-h-screen bg-[#0A1628]">
-      <section className="relative overflow-hidden border-b border-white/10">
-        <div className="absolute inset-0">
-          <Image src="/hero-banner-nchsaa-2026-arena.png" alt="" fill className="object-cover" priority />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0A1628]/95 via-[#0A1628]/85 to-[#0A1628]/70" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0A1628] via-transparent to-transparent" />
-        </div>
-        <div className="container relative mx-auto px-4 py-10 md:py-14">
-          <div className="mb-3 flex items-center gap-4">
-            <div className="rounded-xl bg-[#D3B574]/10 p-3 backdrop-blur-sm">
-              <GraduationCap className="h-7 w-7 text-[#D3B574] md:h-8 md:w-8" />
-            </div>
-            <h1 className="text-3xl font-black tracking-tight text-white md:text-5xl">College Commitments</h1>
-          </div>
-          <p className="max-w-2xl text-base leading-relaxed text-white/70 md:text-lg">
-            Where North Carolina wrestlers are wrestling next.
-          </p>
-          <div className="mt-6 flex flex-wrap items-center gap-3">
-            <Link
-              href="/submit-commitment"
-              className="inline-flex min-h-[40px] items-center gap-2 rounded-lg bg-[#D3B574] px-4 text-sm font-bold text-[#0A1628] transition-colors hover:bg-[#c4a665]"
-            >
-              <PlusCircle className="h-4 w-4" />
-              Add a commitment
-            </Link>
-            <Link
-              href="/colleges"
-              className="inline-flex min-h-[40px] items-center gap-2 rounded-lg border border-[#D3B574] px-4 text-sm font-bold text-[#D3B574] transition-colors hover:bg-[#D3B574] hover:text-[#0A1628]"
-            >
-              <Building2 className="h-4 w-4" />
-              By college
-            </Link>
-          </div>
-        </div>
-      </section>
+      <CommitsHero icon={GraduationCap} title="College Commitments" subtitle="Where North Carolina wrestlers are wrestling next." />
 
       <div className="container mx-auto space-y-6 px-4 py-8">
         {/* The division breakdown is the division filter: tap a number to see who it counts. */}
@@ -175,36 +140,13 @@ export function CollegeCommitmentsClient({ commitments }: { commitments: Commitm
             const active = division === d
             const count = d === "all" ? beforeDivision.length : divisionCounts[d]
             return (
-              <button
-                key={d}
-                type="button"
-                aria-pressed={active}
-                onClick={() => setDivision(d)}
-                className={`rounded-xl border px-3 py-3 text-left transition-colors sm:px-4 sm:py-4 ${
-                  active ? "border-[#D3B574] bg-[#D3B574]/10" : "border-white/10 bg-[#0f1c2e] hover:border-white/25"
-                }`}
-              >
-                <div className={`text-2xl font-black tabular-nums sm:text-3xl ${active ? "text-[#D3B574]" : "text-white"}`}>{count}</div>
-                <div className="mt-0.5 text-[11px] font-bold uppercase tracking-wider text-white/50">{d === "all" ? "All" : d}</div>
-              </button>
+              <StatTile key={d} value={count} label={d === "all" ? "All" : d} active={active} onClick={() => setDivision(d)} />
             )
           })}
         </div>
 
-        <div className="flex flex-wrap items-end gap-x-6 gap-y-4 rounded-xl border border-white/10 bg-[#0f1c2e] p-4">
-          <label className="flex w-full flex-col gap-1.5 text-[11px] font-bold uppercase tracking-wider text-white/45 lg:w-72">
-            Search
-            <span className="relative block">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/30" aria-hidden />
-              <Input
-                type="search"
-                placeholder="Wrestler, college or high school"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="min-h-[36px] border-white/20 bg-[#0A1628] pl-9 text-sm normal-case tracking-normal text-white placeholder:text-white/30 focus:border-[#D3B574]"
-              />
-            </span>
-          </label>
+        <FilterPanel>
+          <SearchField value={search} onChange={setSearch} placeholder="Wrestler, college or high school" />
           <QuickGroup label="Wrestling">
             {([
               ["all", "All"],
@@ -226,50 +168,27 @@ export function CollegeCommitmentsClient({ commitments }: { commitments: Commitm
               </QuickChip>
             ))}
           </QuickGroup>
-          <label className="flex flex-col gap-1.5 text-[11px] font-bold uppercase tracking-wider text-white/45 sm:ml-auto">
-            Sort by
-            <select
-              value={sort}
-              onChange={(e) => setSort(e.target.value as SortChoice)}
-              className="min-h-[36px] rounded-lg border border-white/20 bg-[#0A1628] px-3 text-sm font-semibold normal-case tracking-normal text-white focus:border-[#D3B574] focus:outline-none"
-            >
-              <option value="newest">Newest commitment</option>
-              <option value="name">Wrestler (A to Z)</option>
-              <option value="college">College (A to Z)</option>
-            </select>
-          </label>
-        </div>
+          <SortField
+            value={sort}
+            onChange={setSort}
+            options={[
+              ["newest", "Newest commitment"],
+              ["name", "Wrestler (A to Z)"],
+              ["college", "College (A to Z)"],
+            ]}
+          />
+        </FilterPanel>
 
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm text-white/60">
-            <span className="font-bold text-white">{shown.length}</span> commitment{shown.length === 1 ? "" : "s"}
-            {filtered ? (
-              <button type="button" onClick={clearAll} className="ml-3 inline-flex items-center gap-1 font-semibold text-[#D3B574] hover:underline">
-                <X className="h-3.5 w-3.5" />
-                Clear filters
-              </button>
-            ) : null}
-          </p>
-          <div className="inline-flex rounded-lg border border-white/15 p-0.5" role="group" aria-label="View">
-            {([
+        <ResultBar count={shown.length} noun="commitment" filtered={filtered} onClear={clearAll}>
+          <ViewToggle
+            value={view}
+            onChange={setView}
+            options={[
               ["list", "List", List],
               ["cards", "Cards", LayoutGrid],
-            ] as const).map(([value, label, Icon]) => (
-              <button
-                key={value}
-                type="button"
-                aria-pressed={view === value}
-                onClick={() => setView(value)}
-                className={`inline-flex min-h-[32px] items-center gap-1.5 rounded-md px-3 text-sm font-semibold transition-colors ${
-                  view === value ? "bg-[#D3B574] text-[#0A1628]" : "text-white/60 hover:text-white"
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
+            ]}
+          />
+        </ResultBar>
 
         {shown.length === 0 ? (
           <div className="rounded-xl border border-white/10 bg-[#0f1c2e] px-6 py-16 text-center">
