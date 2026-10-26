@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation"
 
+import { RankingsUpdateBanner } from "@/components/rankings-update-banner"
 import { RankingsSalesClient } from "./rankings-sales-client"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { loadSalesData } from "@/lib/recruiting/sales-data"
@@ -60,6 +61,8 @@ export default async function RankingsIndexPage({
   // The reason a parent pays: college coaches are looking. Counted live; the map is the real one.
   const d = await loadSalesData(createAdminClient())
   return (
+    <>
+    <RankingsUpdateBanner />
     <RankingsSalesClient
       collegeViews={d.collegeViews}
       topClasses={d.topClasses}
@@ -67,5 +70,6 @@ export default async function RankingsIndexPage({
       commandCenterOnSale={d.onSale}
       mapPreview={d.mapPreview}
     />
+    </>
   )
 }

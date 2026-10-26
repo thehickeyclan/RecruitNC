@@ -1,4 +1,5 @@
 import { ArrowRight, GraduationCap, ListOrdered, Users } from "lucide-react"
+import { RankingsUpdateBanner } from "@/components/rankings-update-banner"
 import { hasAnyRankingBoardGrant, rankingBoardAccessFor } from "@/lib/rankings/ranking-board-access"
 import { redirect } from "next/navigation"
 
@@ -134,6 +135,7 @@ export default async function PublicRankingsHomepage({
 
   return (
     <main className="min-h-screen bg-[#0A1628] text-white">
+      <RankingsUpdateBanner />
       <section className="border-b border-white/10">
         <div className="mx-auto max-w-5xl px-4 py-16 text-center sm:py-20">
           <p className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-[#D3B574]">
