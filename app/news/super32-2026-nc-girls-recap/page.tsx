@@ -340,6 +340,21 @@ export default async function Super32GirlsRecapPage({ searchParams }: { searchPa
         </section>
       )}
 
+      {/* Early, for non-members (Matt, 26 Oct 2026): claim the profile free, or Insider for every grade. */}
+      {!unlocked && (
+        <div className="mt-6 grid gap-2 sm:grid-cols-2">
+          <Link href="/create-profile" className="group rounded-xl border border-[#d4af55]/70 bg-[#fbf3dc] p-4 hover:border-[#d4af55]">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-[#7a5d12]">Families · free</div>
+            <div className="mt-0.5 font-black text-[#0b1730]">Claim your wrestler&apos;s profile →</div>
+            <div className="text-xs text-gray-600">See her grade in this recap, every result, and how many college coaches viewed her.</div>
+          </Link>
+          <Link href="/rankings" className="group rounded-xl bg-[#0b1730] p-4 text-white hover:bg-[#13294b]">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-[#d4af55]">Insider · $9.99/mo</div>
+            <div className="mt-0.5 font-black">Sign up for Insider →</div>
+            <div className="text-xs text-[#c9d4ea]">Every grade, Super 32 HQ, the rankings and college profile views.</div>
+          </Link>
+        </div>
+      )}
       {table && <ThreeYear body={table.body} />}
       <PhotoBreak photos={BREAKS.intro} />
       {method && <GradeLegend body={method.body} counts={Object.fromEntries(GRADES.map((g) => [g, recap.graded.filter((w) => w.grade === g).length]))} />}
