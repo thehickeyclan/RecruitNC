@@ -21,6 +21,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     athleteId?: string | null
     collegeId?: string | null
     announce?: boolean
+    createProfile?: boolean
   } | null
   if (!body) return NextResponse.json({ error: "Bad request" }, { status: 400 })
 
@@ -37,6 +38,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     athleteId: body.athleteId ?? null,
     collegeId: body.collegeId === undefined ? undefined : body.collegeId,
     announce: body.announce,
+    createProfile: body.createProfile === true,
   })
   return outcome.ok ? NextResponse.json(outcome) : NextResponse.json({ error: outcome.error }, { status: outcome.status })
 }

@@ -51,6 +51,7 @@ export function ApproveCommitmentClient(props: {
           athleteId: athleteId || null,
           collegeId: collegeId === AS_TYPED ? null : collegeId || null,
           announce,
+          createProfile: !athleteId && props.profiles.length === 0,
         }),
       })
       const data = await res.json().catch(() => ({ error: "Something went wrong." }))
@@ -105,7 +106,7 @@ export function ApproveCommitmentClient(props: {
         <p className="mb-2 text-[11px] font-extrabold uppercase tracking-[0.2em] text-[#D3B574]">Profile</p>
         {props.profiles.length === 0 ? (
           <p className="text-sm text-amber-200">
-            No profile found{props.reportedDetail ? ` (reported: ${props.reportedDetail})` : ""}. Make the profile first, then open this link again.
+            No profile yet{props.reportedDetail ? ` (reported: ${props.reportedDetail})` : ""}. Approving makes one.
           </p>
         ) : (
           <ul className="space-y-2">
@@ -177,11 +178,11 @@ export function ApproveCommitmentClient(props: {
 
       <button
         type="button"
-        disabled={busy || !athleteId || !collegeId}
+        disabled={busy || (!athleteId && props.profiles.length > 0) || !collegeId}
         onClick={() => void send("approve")}
         className="w-full rounded-xl bg-[#D3B574] px-6 py-4 text-lg font-black text-[#0A1628] disabled:opacity-40"
       >
-        {busy ? "Working…" : announce ? "Approve and announce" : "Approve"}
+        {busy ? "Working…" : `${!athleteId && props.profiles.length === 0 ? "Make the profile, approve" : "Approve"}${announce ? " and announce" : ""}`}
       </button>
       <button type="button" disabled={busy} onClick={() => void send("reject")} className="w-full py-2 text-sm font-bold text-white/50 hover:text-white">
         Decline

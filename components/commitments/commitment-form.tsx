@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { COLLEGE_WEIGHTS, SUBMITTER_ROLE_LABEL, SUBMITTER_ROLES, contactKind, todayInNc, type SubmitterRole } from "@/lib/commitments/intake"
+import { COLLEGE_WEIGHTS, PROFILE_CLASS_YEARS, SUBMITTER_ROLE_LABEL, SUBMITTER_ROLES, contactKind, todayInNc, type SubmitterRole } from "@/lib/commitments/intake"
 
 export type CollegeOption = { id: string; name: string; division: string | null; logoUrl: string | null }
 
@@ -238,7 +238,7 @@ export function CommitmentForm({
           <div className="grid grid-cols-2 gap-3">
             <select value={newYear} onChange={(e) => setNewYear(e.target.value)} className={INPUT}>
               <option value="">Class of…</option>
-              {[2026, 2027, 2028, 2029, 2030].map((y) => (
+              {PROFILE_CLASS_YEARS.map((y) => (
                 <option key={y} value={y}>
                   {y}
                 </option>

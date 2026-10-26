@@ -5,6 +5,8 @@ import { sendToSubscribers } from "@/lib/push-send"
 import { sendSms, toE164 } from "@/lib/sms"
 import { contactKind } from "@/lib/commitments/intake"
 import { siteUrl } from "@/lib/commitments/approval-link"
+import { findExistingAthlete } from "@/lib/athlete-duplicate-check"
+import { PROFILE_CLASS_YEARS } from "@/lib/commitments/intake"
 
 /**
  * Approving a reported commitment: the one step that makes it real.
@@ -67,13 +69,18 @@ export type ApproveOutcome =
 export async function approveSubmission(
   admin: SupabaseClient,
   submissionId: string,
-  choice: { athleteId?: string | null; collegeId?: string | null; announce?: boolean } = {},
+  choice: { athleteId?: string | null; collegeId?: string | null; announce?: boolean; createProfile?: boolean } = {},
 ): Promise<ApproveOutcome> {
   const sub = await loadSubmission(admin, submissionId)
   if (!sub) return { ok: false, status: 404, error: "That submission no longer exists." }
   if (sub.status === "approved") return { ok: false, status: 409, error: "This commitment was already approved." }
 
-  const athleteId = choice.athleteId || sub.athlete_id
+  let athleteId = choice.athleteId || sub.athlete_id
+  if (!athleteId && choice.createProfile) {
+    const made = await profileFor(admin, sub)
+    if (!made.ok) return { ok: false, status: 400, error: made.error }
+    athleteId = made.id
+  }
   if (!athleteId) return { ok: false, status: 400, error: "Choose the wrestler's profile first." }
 
   const collegeId = choice.collegeId === undefined ? sub.college_id : choice.collegeId
@@ -136,6 +143,46 @@ export async function approveSubmission(
 
   const submitterTold = await tellSubmitter(sub, String(athlete.name), college, athlete.id)
   return { ok: true, athleteName: String(athlete.name), college, announced, unchanged, submitterTold }
+}
+
+/**
+ * A reported wrestler we had no profile for: approval makes the profile, so a new name is still
+ * one tap. Only for a current class (profiles are for 2027 to 2030, never a graduate), and never a
+ * second profile - a same-name, same-class match is used instead.
+ */
+async function profileFor(admin: SupabaseClient, sub: Submission): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  const first = String(sub.first_name ?? "").trim()
+  const last = String(sub.last_name ?? "").trim()
+  const year = Number(sub.graduation_year)
+  if (!first || !last) return { ok: false, error: "The report has no full name to make a profile from." }
+  if (!(PROFILE_CLASS_YEARS as readonly number[]).includes(year)) {
+    return { ok: false, error: `Profiles are for the classes of ${PROFILE_CLASS_YEARS[0]} to ${PROFILE_CLASS_YEARS[PROFILE_CLASS_YEARS.length - 1]}.` }
+  }
+  const name = `${first} ${last}`
+  const existing = await findExistingAthlete(admin, { name, graduationYear: year, school: sub.high_school ?? undefined })
+  if (existing) return { ok: true, id: existing.id }
+  const now = new Date().toISOString()
+  const { data, error } = await admin
+    .from("athletes")
+    .insert({
+      name,
+      firstName: first,
+      lastName: last,
+      highschool: sub.high_school ?? "",
+      graduationyear: year,
+      gender: sub.gender ?? "Male",
+      status: "active",
+      state: "NC",
+      is_nc_athlete: true,
+      is_prospect: false,
+      recruiting_status: "Committed",
+      created_at: now,
+      updated_at: now,
+    })
+    .select("id")
+    .single()
+  if (error || !data) return { ok: false, error: `The profile could not be made: ${error?.message ?? "unknown error"}` }
+  return { ok: true, id: String(data.id) }
 }
 
 export async function rejectSubmission(admin: SupabaseClient, submissionId: string): Promise<{ ok: boolean; error?: string }> {

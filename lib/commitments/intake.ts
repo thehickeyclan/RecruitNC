@@ -22,6 +22,9 @@ export const SUBMITTER_ROLE_LABEL: Record<SubmitterRole, string> = {
   other: "Someone else",
 }
 
+/** The classes a profile is made for: never a graduate (Sarissa Tucker). */
+export const PROFILE_CLASS_YEARS = [2027, 2028, 2029, 2030] as const
+
 /** The NCAA weights. College starts at 125. */
 export const COLLEGE_WEIGHTS = ["125", "133", "141", "149", "157", "165", "174", "184", "197", "285"] as const
 
@@ -85,7 +88,9 @@ export function parseIntake(body: Record<string, unknown>, now: Date = new Date(
   }
   const year = Number(body.graduationYear)
   const graduationYear = Number.isInteger(year) && year >= 2020 && year <= 2035 ? year : null
-  if (!athleteId && !graduationYear) return { ok: false, error: "Add the wrestler's class year." }
+  if (!athleteId && !(graduationYear && (PROFILE_CLASS_YEARS as readonly number[]).includes(graduationYear))) {
+    return { ok: false, error: `Add the wrestler's class year (${PROFILE_CLASS_YEARS[0]} to ${PROFILE_CLASS_YEARS[PROFILE_CLASS_YEARS.length - 1]}).` }
+  }
   const gender = body.gender === "Female" ? "Female" : body.gender === "Male" ? "Male" : null
 
   const collegeId = text(body.collegeId, 64)
