@@ -24,6 +24,7 @@ import { linkNames } from "@/lib/news-recaps/link-names"
 import { latestSnapshot, type SnapshotEntrant } from "@/lib/super32-live/snapshot"
 import { Chip, MatchList, ordinal, schoolAndClass, super32Placings, ThreeYear, ViewProfilePill } from "@/components/news/super32-report-parts"
 import { isPlaceholderAthletePhoto } from "@/lib/recruiting-profile-photo"
+import { COACH_REPORTS, loadCoachReportFile } from "@/lib/coach-reports"
 
 export const dynamic = "force-dynamic"
 
@@ -126,6 +127,8 @@ function Hero({ title }: { title: string }) {
         <h1 className="mt-1 text-3xl font-black leading-tight text-white md:text-5xl">{title.replace(/^Super 32 2026 — /, "")}</h1>
         <div className="mt-1 text-sm text-[#c9d4ea]">Super 32 2026</div>
       </div>
+      {/* The main photo is credited (Matt, 26 Oct 2026); the photos inside the article are not. */}
+      <div className="absolute right-3 top-3 rounded bg-black/45 px-2 py-0.5 text-[10px] font-medium text-white/85">Photo: Rhett Hoy</div>
     </header>
   )
 }
@@ -294,7 +297,9 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
   // Profile photos for the graded wrestlers (Matt, 26 Oct 2026); open cards only, never a placeholder.
   const gradedIds = recap.graded.map((w) => byName.get(nameKey(w.name))?.athleteId).filter((id): id is string => !!id)
   const { data: photoRows } = gradedIds.length ? await admin.from("athletes").select("id, photourl").in("id", gradedIds) : { data: [] }
-  const photos = new Map((photoRows ?? []).filter((p) => p.photourl && /^https:/.test(String(p.photourl)) && !isPlaceholderAthletePhoto(String(p.photourl))).map((p) => [String(p.id), String(p.photourl)]))
+  // Small thumbnails from the coach report's data where there is one (scripts/coach-report-thumbs.ts), else the profile photo.
+  const thumbs = loadCoachReportFile(COACH_REPORTS.find((d) => d.eventKey === "super32-2026")!).photos
+  const photos = new Map((photoRows ?? []).filter((p) => p.photourl && /^https:/.test(String(p.photourl)) && !isPlaceholderAthletePhoto(String(p.photourl))).map((p) => [String(p.id), thumbs[String(p.id)] ?? String(p.photourl)]))
   const photoFor = (w: GradedWrestler) => photos.get(byName.get(nameKey(w.name))?.athleteId ?? "") ?? null
   // Longest names first, so "Liam Myles" is linked before any shorter name inside it.
   PROFILE_LINKS = entrants.filter((e) => e.athleteId).map((e) => [e.name, `/athletes/${e.athleteId}`] as [string, string]).sort((a, b) => b[0].length - a[0].length)
@@ -317,7 +322,7 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
   const paras = (assessment?.body ?? "").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-6">
+    <main style={{ WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }} className="mx-auto max-w-4xl px-4 py-6">
       {!PUBLIC && (
         <div className="mb-4 rounded-md bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-900">
           Draft — visible to admins only. Set SUPER32_RECAP_PUBLIC=1 to publish.{" "}

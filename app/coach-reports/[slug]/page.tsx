@@ -20,6 +20,7 @@ import type { AthleteEventReport } from "@/lib/coach-event-report"
 import { Chip, MatchList, ordinal, super32Placings, ThreeYear, ViewProfilePill } from "@/components/news/super32-report-parts"
 import { PrintButton } from "../print-button"
 import { ReportStarButton } from "../report-star-button"
+import { ReportSearch } from "../report-search"
 
 export const dynamic = "force-dynamic"
 export const metadata: Metadata = { title: "Tournament report", robots: { index: false, follow: false } }
@@ -40,7 +41,7 @@ function ReportCard({ r, e, starred, mine, readOnly, text, photo, placings }: {
   const seeded = (e?.bouts ?? []).filter((b) => b.win && b.opponentSeed && !/for/i.test(b.winType)).sort((a, b) => a.opponentSeed! - b.opponentSeed!)
   const place = r.place ?? e?.placement ?? null
   return (
-    <article className={`overflow-hidden rounded-xl border bg-white shadow-sm break-inside-avoid ${starred ? "border-[#d4af55] ring-1 ring-[#d4af55]" : "border-gray-200"}`}>
+    <article data-search={[r.name, r.school, r.weight, r.weight ? `${r.weight}lbs` : null, r.classYear].filter(Boolean).join(" ").toLowerCase()} className={`overflow-hidden rounded-xl border bg-white shadow-sm break-inside-avoid ${starred ? "border-[#d4af55] ring-1 ring-[#d4af55]" : "border-gray-200"}`}>
       <div className="flex gap-3 p-4">
         {photo
           // eslint-disable-next-line @next/next/no-img-element
@@ -111,7 +112,8 @@ export default async function CoachReportPage({ params, searchParams }: {
 
   return (
     // A white page on the portal's navy frame: readable there, and what the PDF prints.
-    <main className="mx-auto my-4 max-w-3xl rounded-2xl bg-[#f7f8fb] px-4 py-5 text-gray-900 md:px-6 print:my-0 print:max-w-none print:rounded-none print:bg-white print:px-0 print:py-0">
+    // print-color-adjust keeps the charts' bars and the chips in the PDF (browsers drop backgrounds).
+    <main style={{ WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }} className="mx-auto my-4 max-w-3xl rounded-2xl bg-[#f7f8fb] px-4 py-5 text-gray-900 md:px-6 print:my-0 print:max-w-none print:rounded-none print:bg-white print:px-0 print:py-0">
       <header className="rounded-2xl bg-[#0b1730] p-5 text-white print:rounded-none">
         <div className="flex items-center gap-4">
           {viewer.programLogo
@@ -137,6 +139,8 @@ export default async function CoachReportPage({ params, searchParams }: {
         </div>
         <PrintButton filename={`${def.title}${viewer.program ? ` — ${viewer.program}` : ""}${starredOnly ? " (starred)" : ""}`} />
       </div>
+
+      <ReportSearch />
 
       <p className="mt-3 flex items-center gap-1.5 text-sm text-gray-600">
         <Star className="h-4 w-4 shrink-0 fill-[#f5c518] text-[#f5c518]" aria-hidden />
