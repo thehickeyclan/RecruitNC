@@ -18,10 +18,12 @@ export const metadata = {
  * (Matt, 26 Oct 2026). Free during the event; after it, everyone else gets the pitch and the free
  * recap, never the dashboard.
  */
-export default async function Super32LivePage() {
+export default async function Super32LivePage({ searchParams }: { searchParams: Promise<{ preview?: string }> }) {
   const supabase = await createClient()
   const { viewer } = await resolveRankingViewer({ supabase, admin: createAdminClient() })
-  if (!(hasPremiumAccess(viewer) || hasPortalAccess(viewer))) return <HqLocked />
+  // Admins can check what a non-member sees: ?preview=free.
+  const previewFree = viewer.isAdmin === true && (await searchParams).preview === "free"
+  if (previewFree || !(hasPremiumAccess(viewer) || hasPortalAccess(viewer))) return <HqLocked />
   return (
     <div className={commandCenterFont.variable}>
       <CommandCenter />
