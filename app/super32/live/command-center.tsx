@@ -255,7 +255,7 @@ function ProfileAd() {
           <div className="mt-1 text-sm text-[#c9d4ea]">Then sign up for <span className="font-semibold text-white">Insider</span> and get full access to tournament grade reports, rankings and <span className="font-semibold text-white">college profile views</span>. $9.99 a month.</div>
         </div>
         <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-          <Link href="/athletes" className="rounded-lg bg-white px-4 py-2.5 text-center text-sm font-semibold text-[#0b1730]">Find &amp; claim a profile</Link>
+          <Link href="/prospects/all" className="rounded-lg bg-white px-4 py-2.5 text-center text-sm font-semibold text-[#0b1730]">Find &amp; claim a profile</Link>
           <Link href="/rankings" className="rounded-lg bg-[#d4af55] px-4 py-2.5 text-center text-sm font-semibold text-[#0b1730]">Sign up for Insider →</Link>
         </div>
       </div>

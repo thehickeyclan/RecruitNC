@@ -14,6 +14,7 @@ export const NATIONAL_PATH_PREFIXES = [
   "/membership",
   "/prospects",
   "/athletes",
+  "/college-commitments",
   "/view-profile",
   "/inbox",
   "/public-rankings",

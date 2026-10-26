@@ -17,5 +17,5 @@ export default async function BentleySlyPage() {
   }
 
   // If not found, redirect to the athletes page
-  redirect("/athletes")
+  redirect("/prospects/all")
 }

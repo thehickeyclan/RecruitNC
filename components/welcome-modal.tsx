@@ -57,7 +57,7 @@ const RANKINGS: Destination = {
 }
 
 const COMMITS: Destination = {
-  href: "/athletes",
+  href: "/college-commitments",
   icon: GraduationCap,
   title: "College commitments",
   body: "Who has signed where, this class and last.",

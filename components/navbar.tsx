@@ -134,7 +134,7 @@ export function Navbar() {
   /** Sits with the profiles, because comparing two wrestlers is what you do after finding one. */
   const compareItem = { href: "/compare?src=nav", label: "Compare Wrestlers" }
   const commitmentItems = [
-    { href: "/athletes", label: "College Commitments" },
+    { href: "/college-commitments", label: "College Commitments" },
     { href: "/high-schools", label: "Commitments by High School" },
     { href: "/colleges", label: "Commitments by College" },
   ]
@@ -254,7 +254,7 @@ export function Navbar() {
 
   /** Top-level LegacyNC menu (history / awards — not an event tournament). */
   const legacyNcItems: EventsMegaLink[] = [
-    { href: "/athletes?tab=legacy", label: "Wrestlers", icon: Users },
+    { href: "/wrestlers", label: "Wrestlers", icon: Users },
     { href: "/schools", label: "Schools", icon: Medal },
     { href: "/dave-schultz-award", label: "Dave Schultz Award", icon: Trophy },
     { href: "/tricia-saunders-award", label: "Tricia Saunders Award", icon: Trophy },

@@ -19,7 +19,7 @@ export default async function LiamHickeyPage() {
 
   // If not found, redirect to the athletes page
   if (!athletes || athletes.length === 0) {
-    redirect("/athletes")
+    redirect("/prospects/all")
   }
 
   const athlete = athletes[0]

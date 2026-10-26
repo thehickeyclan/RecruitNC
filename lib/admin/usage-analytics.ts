@@ -73,6 +73,7 @@ export function classifyPath(rawPath: string): SectionKey {
   if (
     path.startsWith("/view-profile") ||
     path.startsWith("/athletes") ||
+    path.startsWith("/college-commitments") ||
     path.startsWith("/unified-profile")
   ) {
     return "profiles"

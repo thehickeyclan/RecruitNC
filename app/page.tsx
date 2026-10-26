@@ -213,7 +213,7 @@ export default async function HomePage() {
             </div>
           </div>
           <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold">
-            <Link href="/athletes" className="text-white/70 hover:text-rnc-gold">Commitments <ArrowRight className="inline h-3.5 w-3.5" /></Link>
+            <Link href="/college-commitments" className="text-white/70 hover:text-rnc-gold">Commitments <ArrowRight className="inline h-3.5 w-3.5" /></Link>
             <Link href="/public-rankings" className="text-white/70 hover:text-rnc-gold">Prospect rankings <ArrowRight className="inline h-3.5 w-3.5" /></Link>
             <Link href="/clubs" className="inline-flex items-center gap-1 text-white/70 hover:text-rnc-gold">
               <MapPin className="h-3.5 w-3.5" aria-hidden="true" /> Find a club
@@ -410,7 +410,7 @@ export default async function HomePage() {
       <div className="container mx-auto space-y-16 px-4 py-12">
         {/* Latest Commits — the reason people come, so it leads */}
         <section>
-          <SectionHeader title="Latest Commits" href="/athletes" linkLabel="All commits" />
+          <SectionHeader title="Latest Commits" href="/college-commitments" linkLabel="All commits" />
           {latestCommits.length > 0 ? (
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
               {/* listMode defers each card's logo/record/honor fetches until it's flipped —

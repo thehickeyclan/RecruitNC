@@ -15,7 +15,7 @@ export function PortalNavigation() {
 
   const navItems = [
     { href: "/", label: "Dashboard", icon: BarChart3 },
-    { href: "/athletes", label: "Commits", icon: Users },
+    { href: "/college-commitments", label: "Commits", icon: Users },
     { href: "/colleges", label: "Colleges", icon: GraduationCap },
     { href: "/high-schools", label: "High Schools", icon: Building },
     { href: "/clubs", label: "Wrestling Clubs", icon: Shield },

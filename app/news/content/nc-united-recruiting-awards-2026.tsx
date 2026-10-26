@@ -341,7 +341,7 @@ export function NcUnitedRecruitingAwards2026Content({
           Open current prospect rankings →
         </HardLink>
         <HardLink
-          href="/athletes"
+          href="/college-commitments"
           className="inline-flex items-center rounded-md border-2 border-[#003366] bg-transparent px-4 py-2 text-sm font-semibold text-[#003366] transition-colors hover:bg-[#003366] hover:text-white"
         >
           Browse all 2026 commits →

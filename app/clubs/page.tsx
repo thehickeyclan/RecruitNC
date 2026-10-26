@@ -46,7 +46,7 @@ export default function ClubsPage() {
                 Explore the map
               </a>
               <Link
-                href="/athletes"
+                href="/prospects/all"
                 className={`inline-flex min-h-12 items-center justify-center rounded-sm border-2 border-white/25 px-6 py-3 text-lg text-white transition hover:bg-white/10 ${tocDisplayClass()}`}
               >
                 Search athletes

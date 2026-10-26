@@ -159,7 +159,7 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
       pathname.startsWith("/coaches/") ||
       pathname.startsWith("/colleges/"))
   ) {
-    return NextResponse.redirect(new URL("/athletes", request.url), 308)
+    return NextResponse.redirect(new URL("/college-commitments", request.url), 308)
   }
 
   // Individual-athlete giving is retired. Keep all public giving organizational
@@ -220,7 +220,8 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
   const publicRoutes = [
     '/view-profile',
     '/athletes',
-    '/athletes-public',
+    '/college-commitments',
+    '/wrestlers',
     '/prospects',
     '/schools',
     '/colleges',

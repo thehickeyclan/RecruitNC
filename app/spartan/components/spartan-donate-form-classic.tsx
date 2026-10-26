@@ -759,7 +759,7 @@ export function SpartanDonateFormClassic() {
                 {showNoDirectoryMatch && (
                   <p className="mt-1 text-[11px] text-[#888]">
                     No match — try another spelling or the{" "}
-                    <HardLink href="/athletes" className="text-[#C8A94A] hover:underline">
+                    <HardLink href="/prospects/all" className="text-[#C8A94A] hover:underline">
                       directory
                     </HardLink>
                     . You can still sponsor or use the box below, or switch to the NC United Training Fund.
@@ -789,7 +789,7 @@ export function SpartanDonateFormClassic() {
                   </ul>
                 )}
                 <p className="mt-3 text-[11px] text-[#666]">
-                  <HardLink href="/athletes" className="text-[#C8A94A] underline-offset-2 hover:underline">
+                  <HardLink href="/prospects/all" className="text-[#C8A94A] underline-offset-2 hover:underline">
                     Open full athlete directory
                   </HardLink>
                 </p>

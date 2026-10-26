@@ -192,7 +192,7 @@ export default async function CommandCenterHome() {
               ? "The Command Center is for wrestlers who are still being recruited. Link a younger wrestler and it fills in from their record."
               : "Claim your profile, or link to your child's as a parent, and the Command Center fills in from their record."}
           </p>
-          <Link href="/athletes" className="mt-5 inline-block rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
+          <Link href="/prospects/all" className="mt-5 inline-block rounded-lg bg-[#D3B574] px-5 py-2.5 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
             Find the profile
           </Link>
         </div>

@@ -20,7 +20,7 @@ export default async function EditRequestPage({ params }: EditRequestPageProps) 
     .single()
 
   if (error || !athlete) {
-    redirect("/athletes")
+    redirect("/prospects/all")
   }
 
   return (

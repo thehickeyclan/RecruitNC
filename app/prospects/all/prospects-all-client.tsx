@@ -23,6 +23,7 @@ import { RankingsCardView } from "@/components/rankings-card-view"
 import { Filter, LayoutGrid, List, Loader2, Search, Users, X, ChevronDown, ChevronUp, ArrowLeft } from 'lucide-react'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
+import { QuickChip, QuickGroup } from "@/components/ui/quick-chip"
 
 type RecruitingStatus = "committed" | "verbal" | "recruiting" | "interested" | "uncommitted"
 
@@ -103,15 +104,6 @@ const GRADUATES_LABEL = `Graduates (${CURRENT_CLASS_YEARS[0]! - 1} and earlier)`
 
 type SortChoice = "rank" | "name" | "weight" | "year" | "school"
 
-function QuickGroup({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <span className="text-[11px] font-bold uppercase tracking-wider text-white/45">{label}</span>
-      {/* One line per group on a phone, scrolling sideways, so the filters do not push the list a screen down. */}
-      <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-0.5 sm:flex-wrap sm:overflow-visible">{children}</div>
-    </div>
-  )
-}
 
 type HonorPill = "all-american" | "state-champion" | "state-placer"
 const HONOR_PILLS: ReadonlyArray<readonly [HonorPill, string]> = [
@@ -150,20 +142,6 @@ function stateOfProspect(prospect: Prospect): string {
   return raw || "NC"
 }
 
-function QuickChip({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`min-h-[36px] shrink-0 whitespace-nowrap rounded-full border px-3.5 text-sm font-semibold transition-colors ${
-        active ? "border-[#D3B574] bg-[#D3B574] text-[#0A1628]" : "border-white/20 text-white/75 hover:border-white/40 hover:text-white"
-      }`}
-    >
-      {children}
-    </button>
-  )
-}
 
 export default function ProspectsAllClient({
   initialProspects = [],

@@ -15,7 +15,7 @@ export function AuthNav() {
   const isCoach = user?.user_metadata?.role === "coach" || user?.user_metadata?.role === "admin" || isAdmin
 
   const navItems = [
-    { href: "/athletes", label: "Athletes", icon: Users },
+    { href: "/prospects/all", label: "Athletes", icon: Users },
     { href: "/colleges", label: "Colleges", icon: Building2 },
     { href: "/high-schools", label: "High Schools", icon: School },
     { href: "/clubs", label: "Clubs", icon: Trophy },

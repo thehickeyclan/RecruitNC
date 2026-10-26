@@ -237,7 +237,7 @@ if (athletes.length === 0) {
     <div className="text-center py-10 border rounded-lg">
       <h3 className="text-xl font-medium">No athletes found</h3>
       <p className="text-gray-500 mt-2">Try adjusting your search or filters</p>
-      <Button variant="outline" onClick={() => window.location.href = "/athletes"} className="mt-4">
+      <Button variant="outline" onClick={() => window.location.href = "/college-commitments"} className="mt-4">
         Clear Filters
       </Button>
     </div>
