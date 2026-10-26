@@ -174,7 +174,7 @@ function Change({ vals }: { vals: number[] }) {
   const d = vals[2]! - vals[1]!
   if (d === 0) return <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-500">Same as 2025</span>
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${d > 0 ? "bg-[#fbf3dc] text-[#7a5d12]" : "bg-gray-100 text-gray-500"}`}>
+    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${d > 0 ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500"}`}>
       {d > 0 ? "+" : ""}{d} vs 2025
     </span>
   )
@@ -207,6 +207,24 @@ function ThreeYear({ body }: { body: string }) {
             <div className="mt-2 text-center"><Change vals={r.vals} /></div>
           </div>
         ))}
+      </div>
+      <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-[#0b1730] text-white">
+              <th className="px-3 py-2 text-left font-semibold">NC boys</th>
+              {YEARS.map((yr) => <th key={yr} className={`px-3 py-2 text-right font-semibold ${yr === "2026" ? "text-[#d4af55]" : ""}`}>{yr}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={r.label} className={i % 2 ? "bg-[#f8f9fc]" : ""}>
+                <td className="px-3 py-2 text-gray-700">{r.label}</td>
+                {r.vals.map((v, j) => <td key={j} className={`px-3 py-2 text-right tabular-nums ${j === 2 ? "font-black text-[#0b1730]" : "text-gray-600"}`}>{v}</td>)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
       {note && <p className="mt-3 text-xs leading-relaxed text-gray-500" dangerouslySetInnerHTML={inlineHtml(note)} />}
     </section>
@@ -289,21 +307,32 @@ function MatchList({ bouts, weight, placings }: { bouts: SnapshotBout[]; weight:
   )
 }
 
-function LockedCard() {
-    return (
-      <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm" aria-label="Locked: Insider members only">
-        <div className="flex items-center gap-3" aria-hidden>
-          <span className="h-11 w-11 shrink-0 rounded-lg bg-gray-200 blur-[2px]" />
-          <div className="min-w-0 flex-1 space-y-2 blur-[3px]">
-            <div className="h-3.5 w-40 rounded bg-gray-300" />
-            <div className="h-2.5 w-28 rounded bg-gray-200" />
+/**
+ * Locked card: shaped like a real one and blurred just enough to be unreadable. The text under the
+ * blur is placeholder copy, never the wrestler's details, so un-blurring or view-source shows nothing.
+ */
+function LockedCard({ seed }: { seed: number }) {
+  const name = ["Insider member", "Insider members only", "Insider wrestler", "Members only"][seed % 4]
+  return (
+    <div className="relative select-none overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm" aria-label="Locked: Insider members only">
+      <div className="pointer-events-none blur-[5px]" aria-hidden>
+        <div className="flex gap-4 p-4">
+          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-[#5a76b8] text-lg font-black text-white">B</span>
+          <div className="min-w-0 flex-1">
+            <div className="whitespace-nowrap text-lg font-black text-[#0b1730]">{name}</div>
+            <div className="text-sm text-gray-500">000 lbs · High School · Class of 20XX</div>
+            <div className="mt-1.5 flex gap-1.5">
+              <span className="rounded-full bg-[#0b1730] px-2 py-0.5 text-[11px] font-semibold text-white">0-0</span>
+              <span className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[11px] font-semibold text-gray-700">Unseeded</span>
+            </div>
           </div>
         </div>
-        <div className="mt-3 space-y-1.5 blur-[4px]" aria-hidden>
-          <div className="h-2.5 w-11/12 rounded bg-gray-200" /><div className="h-2.5 w-10/12 rounded bg-gray-200" /><div className="h-2.5 w-8/12 rounded bg-gray-200" />
-        </div>
+        <p className="px-4 pb-4 text-[15px] leading-relaxed text-gray-800">
+          This wrestler&apos;s grade, the full write-up of his tournament and every opponent he faced are part of Insider, along with the rankings and the college programs viewing his profile.
+        </p>
       </div>
-    )
+    </div>
+  )
 }
 
 function WrestlerCard({ w, e, placings }: { w: GradedWrestler; e: SnapshotEntrant | undefined; placings: Map<string, number> }) {
@@ -453,7 +482,7 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
               </div>
             </div>
             <div className="mt-3 grid gap-3">
-              {ws.map((w, i) => (isOpenFor(w) ? <WrestlerCard key={w.name} w={w} e={byName.get(nameKey(w.name))} placings={placings} /> : <LockedCard key={`locked-${g}-${i}`} />))}
+              {ws.map((w, i) => (isOpenFor(w) ? <WrestlerCard key={w.name} w={w} e={byName.get(nameKey(w.name))} placings={placings} /> : <LockedCard key={`locked-${g}-${i}`} seed={i} />))}
             </div>
             {(g === "A" || g === "A-") && allOpen && <PhotoBreak photos={BREAKS[g]} />}
           </section>
@@ -465,7 +494,7 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
         <div className="mt-3 flex flex-wrap gap-2">
           {recap.honorableMention.map((h, i) => {
             if (!unlocked && !own.has(nameKey(h.name))) {
-              return <span key={i} className="h-8 w-36 rounded-lg border border-gray-200 bg-gray-100 blur-[2px]" aria-hidden />
+              return <span key={i} className="pointer-events-none select-none rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm shadow-sm blur-[4px]" aria-hidden><span className="font-semibold text-[#003366]">Insider member</span><span className="text-gray-500"> · 000 · High School</span></span>
             }
             const he = byName.get(nameKey(h.name))
             const id = he?.athleteId

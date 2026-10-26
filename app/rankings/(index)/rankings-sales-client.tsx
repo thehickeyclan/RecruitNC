@@ -286,7 +286,8 @@ export function RankingsSalesClient({
       [`Class rankings${WOMENS_RANGE ? ", men's and women's" : ""} and the Top 75`, false, true, true, true],
       ["Your wrestler's rank, shown on the profile", false, true, true, true],
       ["Rankings built on results, quality wins and head-to-head", false, true, true, true],
-      ["Every grade in our tournament grade reports", false, true, true, true],
+      ["Tournament recap reports: every grade and full write-up", false, true, true, true],
+      ["Every match with the opponent's seed, rank and titles", false, true, true, true],
       ["Recruiting plan, college list, compare and full costs", false, false, true, true],
       ["Every coach conversation tied to its college and your list", false, false, true, true],
       ["Your recruiting assistant: next steps for every stage, 8th grade to signing", false, false, true, true],
@@ -391,7 +392,7 @@ export function RankingsSalesClient({
                   or {formatPrice(SCOUTING_REPORT_PRICES.subscription_annual)}/year (save {formatPrice(annualSavingCents())})
                 </p>
                 <ul className="mt-5 space-y-2.5 text-sm text-white/85">
-                  {[`All class rankings${WOMENS_RANGE ? ", men's and women's" : ""}`, "Top 75 College Ready Prospects board", "Ranked on results, quality wins and head-to-head", "Your wrestler's rank, shown on the profile", "Every grade in our tournament grade reports", "Which college programs viewed your profile, and when"].map((l) => (
+                  {[`All class rankings${WOMENS_RANGE ? ", men's and women's" : ""}`, "Top 75 College Ready Prospects board", "Ranked on results, quality wins and head-to-head", "Your wrestler's rank, shown on the profile", "Tournament recap reports after major national events, starting with Super 32", "Every wrestler's grade and the full write-up of his tournament", "Every match, with the opponent's seed, national rank, state titles and where he placed", "Which college programs viewed your profile, and when"].map((l) => (
                     <li key={l} className="flex gap-2.5"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: gold }} aria-hidden /> {l}</li>
                   ))}
                 </ul>
