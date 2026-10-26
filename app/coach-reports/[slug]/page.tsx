@@ -21,6 +21,7 @@ import { Chip, MatchList, ordinal, super32Placings, ThreeYear, ViewProfilePill }
 import { PrintButton } from "../print-button"
 import { ReportStarButton } from "../report-star-button"
 import { ReportSearch } from "../report-search"
+import { rankingsUpdateNoticeActive, rankingsUpdateSentence } from "@/lib/rankings-update-notice"
 
 export const dynamic = "force-dynamic"
 export const metadata: Metadata = { title: "Tournament report", robots: { index: false, follow: false } }
@@ -165,6 +166,13 @@ export default async function CoachReportPage({ params, searchParams }: {
           </div>
         </div>
       </header>
+
+      {rankingsUpdateNoticeActive() && (
+        <div className="mt-4 flex items-start gap-2 rounded-xl border border-[#d4af55]/60 bg-[#fbf3dc] px-4 py-3 text-sm text-[#5c4510] print:hidden">
+          <span aria-hidden>📊</span>
+          <span><strong>Rankings update:</strong> {rankingsUpdateSentence()}</span>
+        </div>
+      )}
 
       <div className="mt-4 flex flex-wrap items-center gap-2 print:hidden">
         <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 text-sm font-semibold">

@@ -25,6 +25,7 @@ import { latestSnapshot, type SnapshotEntrant } from "@/lib/super32-live/snapsho
 import { Chip, MatchList, ordinal, schoolAndClass, super32Placings, ThreeYear, ViewProfilePill } from "@/components/news/super32-report-parts"
 import { isPlaceholderAthletePhoto } from "@/lib/recruiting-profile-photo"
 import { COACH_REPORTS, loadCoachReportFile } from "@/lib/coach-reports"
+import { rankingsUpdateNoticeActive, rankingsUpdateSentence } from "@/lib/rankings-update-notice"
 
 export const dynamic = "force-dynamic"
 
@@ -332,6 +333,12 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
 
       <Hero title={recap.title} />
       <StatStrip entrants={entrants} />
+      {rankingsUpdateNoticeActive() && (
+        <div className="mt-4 flex items-start gap-2 rounded-xl border border-[#d4af55]/60 bg-[#fbf3dc] px-4 py-3 text-sm text-[#5c4510] print:hidden">
+          <span aria-hidden>📊</span>
+          <span><strong>Rankings update:</strong> {rankingsUpdateSentence()}</span>
+        </div>
+      )}
 
       {paras.length > 0 && (
         <section className="mt-8">
