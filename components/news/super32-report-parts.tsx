@@ -83,7 +83,10 @@ export function ThreeYear({ body }: { body: string }) {
   const lines = body.split("\n").filter((l) => l.startsWith("|") && !/^\|\s*-/.test(l))
   const note = body.split("\n").filter((l) => !l.startsWith("|")).join(" ").trim()
   // Years come from the table's header row: three for the boys (2024-26), four for the girls (2023-26).
-  const years = lines[0]!.replace(/^\||\|$/g, "").split("|").map((c) => c.trim()).slice(1)
+  const headCells = lines[0]!.replace(/^\||\|$/g, "").split("|").map((c) => c.trim())
+  const years = headCells.slice(1)
+  // The table's own first header ("Super 32 — NC girls"), never a fixed label: it said "NC boys" on the girls' page.
+  const who = (headCells[0] ?? "").replace(/^super 32\s*[—-]\s*/i, "") || "North Carolina"
   const rows = lines.slice(1).map((l) => l.replace(/^\||\|$/g, "").split("|").map((c) => c.trim()))
     .map(([label, ...ys]) => ({ label: label!, vals: ys.slice(0, years.length).map(Number) }))
   const featured = rows.find((r) => FEATURED.test(r.label))
@@ -113,7 +116,7 @@ export function ThreeYear({ body }: { body: string }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-[#0b1730] text-white">
-              <th className="px-3 py-2 text-left font-semibold">NC boys</th>
+              <th className="px-3 py-2 text-left font-semibold">{who}</th>
               {years.map((yr, i) => <th key={yr} className={`px-3 py-2 text-right font-semibold ${i === years.length - 1 ? "text-[#d4af55]" : ""}`}>{yr}</th>)}
             </tr>
           </thead>
