@@ -39,6 +39,8 @@ export const NATIONAL_PATH_PREFIXES = [
   "/admin",
   // RecruitWrestlers articles, e.g. the Super 32 South Carolina recap (app/recaps).
   "/recaps",
+  // College coaches' Reports folder: every live state's tournament reports (Matt, 26 Oct 2026).
+  "/coach-reports",
 ] as const
 
 export function isNationalPath(pathname: string): boolean {

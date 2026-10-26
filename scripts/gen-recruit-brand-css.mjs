@@ -277,7 +277,7 @@ export function buildCss() {
    * and the green "good" marks are data, not brand, and are left alone.
    */
   const national = THEMES.find((t) => t.scope.includes('"national"'))
-  const EXTRA_ACCENTS = ["d7b95a", "d6b75d", "c5a84d", "cbaf5d", "d3b573", "c4a665", "c8a94a", "9c7a2e", "cc0000", "bc0b03", "b31b1b", "38bdf8", "7dd3fc", "bae6fd", "1f5fbf", "c8102e", "a00d25"]
+  const EXTRA_ACCENTS = ["d7b95a", "d6b75d", "c5a84d", "cbaf5d", "d3b573", "c4a665", "c8a94a", "9c7a2e", "cc0000", "bc0b03", "b31b1b", "38bdf8", "7dd3fc", "bae6fd", "1f5fbf", "c8102e", "a00d25", "d4af55"]
   const EXTRA_NAVIES = { "003366": "#15243B", "03154c": "#0B1426", "1e3a5f": "#22324D", "031a3f": "#0B1426", "0d1a4d": "#15243B", "0b1a33": "#15243B", "002147": "#0B1426" }
   const EXTRA_TOKEN = new RegExp(`(?<![\\w-])((?:[a-z-]+:)*)([a-z-]+)-\\[#(${EXTRA_ACCENTS.join("|")})\\](?:\\/(\\d+))?`, "gi")
   const SKY_TOKEN = /(?<![\w-])((?:[a-z-]+:)*)(text|bg|border|from|to|via|ring|fill|stroke)-sky-(\d{2,3})(?:\/(\d+))?/gi

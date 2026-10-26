@@ -13,7 +13,7 @@ import { notFound, redirect } from "next/navigation"
 import { Star } from "lucide-react"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
-import { COACH_REPORTS, loadCoachReportFile, resolveCoachReportViewer, withoutGradeTalk } from "@/lib/coach-reports"
+import { loadCoachReportFile, loadReportEntrants, reportGender, reportsOnAddress, resolveCoachReportViewer, withoutGradeTalk } from "@/lib/coach-reports"
 import { loadRecap, nameKey } from "@/lib/news-recaps/recap"
 import { latestSnapshot, type SnapshotEntrant } from "@/lib/super32-live/snapshot"
 import type { AthleteEventReport } from "@/lib/coach-event-report"
@@ -22,6 +22,10 @@ import { PrintButton } from "../print-button"
 import { ReportStarButton } from "../report-star-button"
 import { ReportSearch } from "../report-search"
 import { rankingsUpdateNoticeActive, rankingsUpdateSentence } from "@/lib/rankings-update-notice"
+import { headers } from "next/headers"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { RW_ACCENT } from "@/components/news/super32-report-parts"
+import { STATE_NAMES } from "@/lib/college-programs/states"
 
 export const dynamic = "force-dynamic"
 export const metadata: Metadata = { title: "Tournament report", robots: { index: false, follow: false } }
@@ -68,8 +72,7 @@ const PRINT_CSS = `
 }
 `
 
-const genderOf = (r: AthleteEventReport, e: SnapshotEntrant | undefined): "Male" | "Female" =>
-  e?.gender === "girls" || /^f/i.test(r.gender ?? "") ? "Female" : "Male"
+const genderOf = (r: AthleteEventReport, e: SnapshotEntrant | undefined): "Male" | "Female" => reportGender(r.gender, e?.gender)
 
 function ReportCard({ r, e, starred, mine, readOnly, text, photo, placings }: {
   r: AthleteEventReport; e: SnapshotEntrant | undefined; starred: boolean; mine: boolean; readOnly: boolean; text: string; photo: string | null; placings: Map<string, number>
@@ -110,7 +113,9 @@ export default async function CoachReportPage({ params, searchParams }: {
 }) {
   const { slug } = await params
   const sp = await searchParams
-  const def = COACH_REPORTS.find((d) => d.slug === slug)
+  // NC United carries North Carolina's reports; RecruitWrestlers every live state's.
+  const onRw = stagedBrandForHost((await headers()).get("host")) === "national"
+  const def = reportsOnAddress(onRw).find((d) => d.slug === slug)
   if (!def) notFound()
 
   const supabase = await createClient()
@@ -130,7 +135,9 @@ export default async function CoachReportPage({ params, searchParams }: {
 
   const file = loadCoachReportFile(def)
   const [snap, placings] = await Promise.all([latestSnapshot(admin as never, def.eventKey, true), super32Placings()])
-  const byAthlete = new Map((snap?.data.entrants ?? []).filter((e) => e.athleteId).map((e) => [e.athleteId!, e]))
+  // Another state's entrants come from its own file; North Carolina's from the published live snapshot.
+  const own = loadReportEntrants<SnapshotEntrant>(def)
+  const byAthlete = own.size ? own : new Map((snap?.data.entrants ?? []).filter((e) => e.athleteId).map((e) => [e.athleteId!, e]))
   const recap = def.recapSlug ? loadRecap(def.recapSlug) : null
   const writeUps = new Map((recap?.graded ?? []).map((w) => [nameKey(w.name), withoutGradeTalk(w.paragraph.replace(/\*\*/g, ""))]))
   const introSections = recap ? sections(recap.intro) : []
@@ -149,7 +156,7 @@ export default async function CoachReportPage({ params, searchParams }: {
   return (
     // A white page on the portal's navy frame: readable there, and what the PDF prints.
     // print-color-adjust keeps the charts' bars and the chips in the PDF (browsers drop backgrounds).
-    <main style={{ WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }} className="mx-auto my-4 max-w-3xl rounded-2xl bg-[#f7f8fb] px-4 py-5 text-gray-900 md:px-6 print:my-0 print:max-w-none print:rounded-none print:bg-white print:px-0 print:py-0">
+    <main style={{ WebkitPrintColorAdjust: "exact", printColorAdjust: "exact", ...(onRw ? RW_ACCENT : {}) }} className="mx-auto my-4 max-w-3xl rounded-2xl bg-[#f7f8fb] px-4 py-5 text-gray-900 md:px-6 print:my-0 print:max-w-none print:rounded-none print:bg-white print:px-0 print:py-0">
       <style>{PRINT_CSS}</style>
       <header className="rpt-header rounded-2xl bg-[#0b1730] p-5 text-white print:rounded-none">
         <div className="flex items-center gap-4">
@@ -161,13 +168,14 @@ export default async function CoachReportPage({ params, searchParams }: {
             {viewer.program && <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#d4af55]">Prepared for {viewer.program}</div>}
             <h1 className="mt-0.5 text-2xl font-black leading-tight md:text-3xl">{def.title}</h1>
             <div className="mt-0.5 text-sm text-[#c9d4ea]">
-              {mine.length} North Carolina wrestlers · {starredCount} of your recruits
+              {mine.length} {STATE_NAMES[def.state] ?? def.state} wrestlers · {starredCount} of your recruits
             </div>
           </div>
         </div>
       </header>
 
-      {rankingsUpdateNoticeActive() && (
+      {/* The notice is about North Carolina's rankings: only on its reports. */}
+      {def.state === "NC" && rankingsUpdateNoticeActive() && (
         <div className="mt-4 flex items-start gap-2 rounded-xl border border-[#d4af55]/60 bg-[#fbf3dc] px-4 py-3 text-sm text-[#5c4510] print:hidden">
           <span aria-hidden>📊</span>
           <span><strong>Rankings update:</strong> {rankingsUpdateSentence()}</span>
@@ -188,7 +196,7 @@ export default async function CoachReportPage({ params, searchParams }: {
 
       <p className="mt-3 flex items-center gap-1.5 text-sm text-gray-600">
         <Star className="h-4 w-4 shrink-0 fill-[#f5c518] text-[#f5c518]" aria-hidden />
-        <span><span className="font-semibold text-gray-800">Gold star = your recruit:</span> a wrestler you or your staff starred on RecruitNC. Tap &ldquo;Add to my recruits&rdquo; on anyone else to add him.</span>
+        <span><span className="font-semibold text-gray-800">{onRw ? "Star" : "Gold star"} = your recruit:</span> a wrestler you or your staff starred on {onRw ? "RecruitWrestlers" : "RecruitNC"}. Tap &ldquo;Add to my recruits&rdquo; on anyone else to add him.</span>
       </p>
 
       {!starredOnly && overall && (
@@ -218,7 +226,7 @@ export default async function CoachReportPage({ params, searchParams }: {
         </section>
       )}
 
-      <p className="mt-8 text-xs text-gray-400">Every result, credential and placing is computed from the event's brackets and our national results, never typed. NC United · RecruitNC.</p>
+      <p className="mt-8 text-xs text-gray-400">Every result, credential and placing is computed from the event's brackets and our national results, never typed. {onRw ? "RecruitWrestlers" : "NC United · RecruitNC"}.</p>
     </main>
   )
 }

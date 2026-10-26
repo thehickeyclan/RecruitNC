@@ -6,6 +6,7 @@ import { classifyViewer } from "@/lib/viewer-role"
 import { programLogo as resolveProgramLogo } from "@/lib/coach-program-logo"
 import { coachProgramOf, viewGenderFor } from "@/lib/recruiting/coach-program"
 import type { AthleteEventReport } from "@/lib/coach-event-report"
+import { liveStates } from "@/lib/recruiting/brand"
 
 /**
  * College coaches' tournament reports (Matt, 26 Oct 2026): one full report per event, every NC
@@ -26,6 +27,13 @@ export type CoachReportDef = {
   gender: "Male" | "Female"
   /** NC United's recap of the event, when there is one: its write-ups and order feed the report. */
   recapSlug: string | null
+  /** The state the report covers. NC United lists North Carolina's; RecruitWrestlers every live state's. */
+  state: string
+  /**
+   * The state's entrants (seeds, bouts, bracket), when they are not in the event's published live
+   * snapshot, which holds North Carolina's: e.g. content/reports/super32-2026-sc.json.
+   */
+  entrantsFile?: string
 }
 
 export const COACH_REPORTS: CoachReportDef[] = [
@@ -37,6 +45,7 @@ export const COACH_REPORTS: CoachReportDef[] = [
     file: "content/reports/super32-2026.json",
     gender: "Male",
     recapSlug: "super32-2026-nc-boys-recap",
+    state: "NC",
   },
   {
     slug: "super32-2026-womens",
@@ -46,8 +55,44 @@ export const COACH_REPORTS: CoachReportDef[] = [
     file: "content/reports/super32-2026.json",
     gender: "Female",
     recapSlug: "super32-2026-nc-girls-recap",
+    state: "NC",
+  },
+  {
+    // The 34 South Carolina boys with a profile (content/reports/super32-2026-sc.json; 21 more have none).
+    slug: "super32-2026-sc-mens",
+    title: "Super 32 2026 — South Carolina Men's Report",
+    eventKey: "super32-2026",
+    date: "2026-10-25",
+    file: "content/reports/super32-2026-sc-coach.json",
+    gender: "Male",
+    recapSlug: "super32-2026-sc-boys-recap",
+    state: "SC",
+    entrantsFile: "content/reports/super32-2026-sc.json",
   },
 ]
+
+/** A report file's own entrants (seeds, bouts, bracket), by athlete id; empty when the live snapshot holds them. */
+export function loadReportEntrants<E extends { athleteId?: string | null }>(def: CoachReportDef): Map<string, E> {
+  if (!def.entrantsFile) return new Map()
+  const file = JSON.parse(fs.readFileSync(path.join(process.cwd(), def.entrantsFile), "utf8")) as { entrants: E[] }
+  return new Map(file.entrants.filter((e) => e.athleteId).map((e) => [String(e.athleteId), e]))
+}
+
+/**
+ * Men's or women's report: the bracket a wrestler entered decides, then the profile. The Sheppard
+ * twins (Conway, SC) wrestled the boys' 113 bracket at Super 32 2026 and belong in the men's report.
+ */
+export function reportGender(profileGender: string | null | undefined, bracket: string | null | undefined): "Male" | "Female" {
+  if (bracket === "boys") return "Male"
+  if (bracket === "girls") return "Female"
+  return /^f/i.test(profileGender ?? "") ? "Female" : "Male"
+}
+
+/** The reports an address carries: North Carolina's on NC United, every live state's on RecruitWrestlers. */
+export function reportsOnAddress(onRecruitWrestlers: boolean): CoachReportDef[] {
+  const states = new Set<string>(liveStates(onRecruitWrestlers).map((s) => s.code))
+  return COACH_REPORTS.filter((d) => states.has(d.state))
+}
 
 export type CoachReportFile = {
   event: { key: string; name: string; date: string }
