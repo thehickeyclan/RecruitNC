@@ -24,7 +24,9 @@ import { rankingsUpdateNoticeActive, rankingsUpdateSentence } from "@/lib/rankin
 
 export const dynamic = "force-dynamic"
 
-const PUBLIC = process.env.SUPER32_RECAP_PUBLIC === "1"
+// Published: NC United published this recap on 26 Oct 2026, and RecruitWrestlers' copy follows it
+// without a switch of its own on the recruitwrestlers Vercel project. SUPER32_RECAP_PUBLIC=0 pulls it.
+const PUBLIC = process.env.SUPER32_RECAP_PUBLIC !== "0"
 const IMG = "/images/news/super32-2026-boys-recap"
 /**
  * Approved photos (Matt, 25 Oct) break up the article between sections, each with the context
