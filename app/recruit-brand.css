@@ -1716,6 +1716,10 @@ html[data-host="national"] .bg-rnc-ink\/80 {
   background-color: rgb(11 20 38 / 0.8);
 }
 
+html[data-host="national"] .bg-rnc-ink\/85 {
+  background-color: rgb(11 20 38 / 0.85);
+}
+
 html[data-host="national"] .bg-rnc-ink\/95 {
   background-color: rgb(11 20 38 / 0.95);
 }
@@ -1780,8 +1784,16 @@ html[data-host="national"] .group:hover .group-hover\:bg-rnc-gold\/10 {
   background-color: rgb(163 230 53 / 0.1);
 }
 
+html[data-host="national"] .group:hover .group-hover\:text-rnc-gold {
+  color: rgb(163 230 53);
+}
+
 html[data-host="national"] .hover\:bg-rnc-gold\/10:hover {
   background-color: rgb(163 230 53 / 0.1);
+}
+
+html[data-host="national"] .hover\:border-rnc-gold:hover {
+  border-color: rgb(163 230 53);
 }
 
 html[data-host="national"] .hover\:border-rnc-gold\/60:hover {
@@ -2624,6 +2636,10 @@ html[data-host="guild"] .bg-rnc-ink\/80 {
   background-color: rgb(10 10 11 / 0.8);
 }
 
+html[data-host="guild"] .bg-rnc-ink\/85 {
+  background-color: rgb(10 10 11 / 0.85);
+}
+
 html[data-host="guild"] .bg-rnc-ink\/95 {
   background-color: rgb(10 10 11 / 0.95);
 }
@@ -2688,8 +2704,16 @@ html[data-host="guild"] .group:hover .group-hover\:bg-rnc-gold\/10 {
   background-color: rgb(184 157 96 / 0.1);
 }
 
+html[data-host="guild"] .group:hover .group-hover\:text-rnc-gold {
+  color: rgb(212 188 130);
+}
+
 html[data-host="guild"] .hover\:bg-rnc-gold\/10:hover {
   background-color: rgb(184 157 96 / 0.1);
+}
+
+html[data-host="guild"] .hover\:border-rnc-gold:hover {
+  border-color: rgb(184 157 96);
 }
 
 html[data-host="guild"] .hover\:border-rnc-gold\/60:hover {
