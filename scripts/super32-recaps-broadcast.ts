@@ -43,6 +43,8 @@ async function main() {
       if (!e) continue
       if (/college/.test(String(u.role ?? ""))) { skip("college coach"); continue }
       if (u.is_admin || u.role === "admin") { skip("admin"); continue }
+      // A college address on any account but a parent's or an athlete's may be college staff: left off.
+      if (/\.edu$/i.test(e) && !["parent", "athlete"].includes(String(u.role ?? ""))) { skip(".edu (not parent/athlete)"); continue }
       if (!people.has(e)) people.set(e, (u.first_name as string | null) || String(u.full_name ?? "").split(/\s+/)[0] || null)
       if (claimedUsers.has(String(u.user_id))) claimedEmails.add(e)
     }
@@ -50,7 +52,27 @@ async function main() {
   }
   const accounts = people.size
   const { data: subs } = await admin.from("toc_email_subscribers").select("email").limit(10000)
-  for (const s of subs ?? []) { const e = String(s.email ?? "").toLowerCase().trim(); if (e && !people.has(e)) people.set(e, null) }
+  for (const s of subs ?? []) {
+    const e = String(s.email ?? "").toLowerCase().trim()
+    if (/\.edu$/i.test(e)) { skip(".edu subscriber"); continue }
+    if (e && !people.has(e)) people.set(e, null)
+  }
+  // No college coaches at all (Matt): every address in the coach directory, the staff lists and
+  // today's coach email logs, whatever role (or none) the account has.
+  const coachEmails = new Set<string>()
+  const { data: dirRows } = await admin.from("toc_college_coaches").select("email").limit(10000)
+  for (const r of dirRows ?? []) if (r.email) coachEmails.add(String(r.email).toLowerCase().trim())
+  for (const f of ["super32-results-invite-mens-staff.csv", "super32-results-invite-womens-staff.csv"]) {
+    const fp = path.join(SNAP, f)
+    if (fs.existsSync(fp)) for (const line of fs.readFileSync(fp, "utf8").split(/\r?\n/).slice(1)) { const e = line.split(",")[0]?.toLowerCase().trim(); if (e) coachEmails.add(e) }
+  }
+  for (const f of ["super32-results-invite-sent.json", "super32-womens-invite-sent.json", "coach-invite-sent.json", "coach-report-ready-2026-10-26/sent.json"]) {
+    for (const base of [SNAP, "ranking-snapshots"]) {
+      const fp = path.join(base, f)
+      if (fs.existsSync(fp)) for (const e of Object.keys(JSON.parse(fs.readFileSync(fp, "utf8")))) coachEmails.add(e.toLowerCase())
+    }
+  }
+  for (const e of [...people.keys()]) if (coachEmails.has(e)) { people.delete(e); skip("college coach (directory/staff list)") }
   const candidates = [...people.entries()].filter(([e]) => (/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(e) && !INTERNAL.test(e)) || (skip("internal/invalid"), false))
   const { allowed } = await filterUnsubscribed(admin as never, candidates.map(([e]) => e))
   const ok = new Set(allowed.map((e) => e.toLowerCase()))
