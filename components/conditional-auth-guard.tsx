@@ -95,8 +95,10 @@ export function ConditionalAuthGuard({
     // what it holds rather than a sign-in wall.
     "/recruiting/learn",
     "/news",
-    // Super 32 Command Center, public; its rehearsal page is notFound() in production.
-    "/super32/live",
+    // Super 32: the champions history (public, like /nhsca and /fargo - signed-out visitors were
+    // bounced to sign-in from it 34 times the week of the 2026 event) and the live Command Center.
+    // Its rehearsal page is notFound() in production.
+    "/super32",
     "/dev/super32-live-preview",
     "/nchsaa",
     "/nhsca",
