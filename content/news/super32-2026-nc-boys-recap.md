@@ -5,7 +5,7 @@
 
 ## Overall Assessment
 
-Super 32 is the best yardstick we have. Once a year the country's best high school wrestlers come to one tournament in Greensboro, and we get to see where North Carolina stands. Not against any other state, but against the North Carolina of a year ago, and the year before that.
+Super 32 is the best yardstick we have. Once a year the country's best high school wrestlers come to one tournament in Greensboro, and we get to see where North Carolina stands. Not only against every state in the country, but against ourselves: the North Carolina of a year ago, and the year before that.
 
 By that measure, this was an encouraging weekend. Three years ago, NC boys beat two top-15 seeds all tournament. Last year it was six. This year it was eleven, and the wins came from more wrestlers each year: five, then seven, then eight. None of those steps is a giant leap on its own. Together they look like a trend, and small gains that keep stacking up are how a state's wrestling changes.
 
