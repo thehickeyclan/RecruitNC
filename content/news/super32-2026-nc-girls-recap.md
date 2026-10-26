@@ -10,7 +10,7 @@ By that measure, the top of North Carolina's girls' lineup has arrived. Four yea
 
 The weekend had its leaders. Samuel (Cleveland, 132), a freshman, went 7-1 and became a two-time Super 32 All-American; after losing her quarterfinal she beat the girls who finished 7th, 5th and 4th. Taylor (Cary, 200), unseeded, beat the #3 seed and lost only to the champion.
 
-Not every number moved. Samuel and Taylor were North Carolina's only girls with winning records; North Carolina's girls went 26-82, and behind the medalists the best weekends were 2-2. Twenty-seven of those losses came against eventual medalists, and the gap between the top two and the next tier is the work in front of the state. The four-year comparison below shows where we've grown and where we haven't yet.
+Not every number moved. Samuel and Taylor were North Carolina's only girls with winning records; North Carolina's girls went 26-82, and twenty-seven of those losses came against eventual medalists. Growing the depth behind the top two is the work in front of the state. The four-year comparison below shows where we've grown and where we haven't yet.
 
 *The boys' tournament, headlined by Braylen Yates's All-American finish, is covered in its own recap.*
 
@@ -50,7 +50,7 @@ Khiry Reese (124, 2-2, a fall and a tech fall, then a loss to #6 Raenah Smith, t
 
 ## The Rest of North Carolina
 
-Twenty-six more North Carolina girls stepped on the mat in Greensboro, and the draw was unkind: Mia Pardo, the #7 seed at 95, went 0-2 and was eliminated by the wrestler who finished 7th, and Mackenzie Shaver lost to the eventual champion at 138. Super 32 doesn't hand out easy weekends, and every one of them took the hardest draw in high school wrestling on purpose.
+Twenty-six more North Carolina girls stepped on the mat in Greensboro, including Mia Pardo, the #7 seed at 95, and every one of them chose the hardest test in high school wrestling.
 
 ## The Bigger Picture: Raising the Bar
 
@@ -58,7 +58,7 @@ Super 32 is one of the toughest tests in high school wrestling, and a chance to 
 
 Lauren Samuel and Ella Taylor showed that North Carolina girls can beat the best wrestlers in the country: between them, six wins over girls who stood on the podium, and two bronze medals.
 
-The results also show how much work remains. We produced two girls' All-Americans, and only two winning records out of 42 wrestlers. The top is here; the depth behind it is what has to grow.
+The results also show how much work remains. We produced two girls' All-Americans and two winning records out of 42 wrestlers. The top is here; the depth behind it is what has to grow.
 
 That's the standard we're chasing.
 
