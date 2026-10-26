@@ -28,10 +28,13 @@ function movement(rank: number, previous: number | null): { label: string; class
 export function RankedAthleteCard({
   athlete,
   star,
+  stateCode,
 }: {
   athlete: PublicRankedAthlete
   /** Coaches and admins: the My Recruits star on the photo. Absent for everyone else. */
   star?: { starred: boolean }
+  /** RecruitWrestlers ranks more than one state: each tile says whose ranking it is (Matt, 26 Oct 2026). */
+  stateCode?: string
 }) {
   const profileHref = `/view-profile?id=${encodeURIComponent(athlete.athleteId)}`
   const move = movement(athlete.rank, athlete.previousRank)
@@ -59,6 +62,11 @@ export function RankedAthleteCard({
               <span className="text-4xl font-black text-white/20">{initials(athlete.name)}</span>
             </div>
           )}
+          {stateCode ? (
+            <span className="absolute bottom-2 left-2 rounded-full bg-[#0B1426]/85 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white ring-1 ring-white/25">
+              {stateCode}
+            </span>
+          ) : null}
           {/* Rank and movement share the top-left; the top-right belongs to the My Recruits star. */}
           <span className="absolute left-0 top-0 flex items-stretch">
             <span className="bg-[#D7B95A] px-2.5 py-1 text-sm font-black text-[#060f1f]">#{athlete.rank}</span>

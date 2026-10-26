@@ -17,6 +17,8 @@ const LINKS = [
   { href: "/public-rankings", label: "Rankings" },
   { href: "/recruiting/college-map", label: "Colleges" },
   { href: "/recruiting/learn", label: "Learn" },
+  // Tournament recaps, every live state (app/recaps).
+  { href: "/recaps", label: "News" },
 ]
 
 export function NationalLockup({ className = "" }: { className?: string }) {
