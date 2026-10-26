@@ -134,35 +134,32 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-rnc-ink">
-      {/* Super 32 HQ (Matt, 23 Oct 2026): the homepage lead for the weekend, replacing the TOC strip.
-          A results feature for three days after the finals, then gone (lib/super32-live/home-banner.ts). */}
-      {super32HomeBanner() && (
+      {/* Super 32 on the homepage: HQ during the event, then the recap is the headline (Matt, 26 Oct
+          2026: the live dashboard comes off; HQ is Insider-only now). Ends 8 Nov (lib/super32-live/home-banner.ts). */}
+      {super32HomeBanner() === "live" && (
         <section className="relative overflow-hidden border-b-2 border-[#D3B574] bg-[radial-gradient(ellipse_at_80%_0%,#1d3a78_0%,#0B1D3A_55%,#08142b_100%)]">
           <div className="container mx-auto px-4 py-7 sm:py-10">
-            <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-              <div className="min-w-0">
-                <p className="inline-flex items-center gap-2 rounded-full bg-[#CC0000] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">
-                  {super32HomeBanner() === "live" ? "Super 32 · Oct 24–25 · Greensboro" : "Super 32 · Final results"}
-                </p>
-                <h2 className="mt-3 text-4xl font-black uppercase leading-none tracking-tight text-white sm:text-6xl">
-                  Super 32 <span className="text-[#D3B574]">HQ</span>
-                </h2>
-                <p className="mt-3 max-w-xl text-base text-white/80 sm:text-lg">
-                  {super32HomeBanner() === "live"
-                    ? "Follow every North Carolina wrestler all weekend: NC's record, Huge and Big wins, round recaps and who's still alive."
-                    : "How North Carolina did in Greensboro: every NC wrestler, every Huge and Big win, and the All-Americans."}
-                </p>
-              </div>
-              <div className="flex shrink-0 flex-col gap-2.5 sm:flex-row md:flex-col">
-                <Link href="/super32/live" className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#D3B574] px-7 py-4 text-base font-extrabold text-[#0A1628] transition-colors hover:bg-[#c4a665] sm:text-lg">
-                  {super32HomeBanner() === "live" ? "Follow NC at Super 32" : "See the results"}
-                  <ArrowRight className="h-5 w-5" />
-                </Link>
-                <a href="https://apps.apple.com/app/id6803202791" className="inline-flex items-center justify-center rounded-xl border border-white/30 px-6 py-3 text-sm font-semibold text-white hover:border-[#D3B574] hover:text-[#D3B574]">
-                  Get alerts in the iPhone app
-                </a>
-              </div>
+            <h2 className="text-4xl font-black uppercase leading-none tracking-tight text-white sm:text-6xl">Super 32 <span className="text-[#D3B574]">HQ</span></h2>
+            <Link href="/super32/live" className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#D3B574] px-7 py-4 text-base font-extrabold text-[#0A1628]">Follow NC at Super 32 <ArrowRight className="h-5 w-5" /></Link>
+          </div>
+        </section>
+      )}
+      {super32HomeBanner() === "recap" && (
+        <section className="relative overflow-hidden border-b-2 border-[#D3B574] bg-[#08142b]">
+          <Image src="/images/news/super32-2026-boys-recap/share-card.jpg" alt="" fill sizes="100vw" className="object-cover object-[50%_30%] opacity-45" priority />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#08142b] via-[#08142b]/85 to-[#08142b]/30" />
+          <div className="container relative mx-auto px-4 py-8 sm:py-12">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full bg-[#CC0000] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">Super 32 · Recap</span>
+              <span className="rounded-full bg-[#D3B574] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#13294B]">★ Premium content</span>
             </div>
+            <h2 className="mt-3 max-w-3xl text-3xl font-black leading-tight text-white sm:text-5xl">Super 32 2026 — North Carolina Boys Recap</h2>
+            <p className="mt-3 max-w-2xl text-base text-white/80 sm:text-lg">
+              Eleven wins over top-15 seeds, up from six and two. Braylen Yates medaled, and every NC boy is graded on who he beat, how far he went and who beat him.
+            </p>
+            <Link href="/news/super32-2026-nc-boys-recap" className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#D3B574] px-7 py-4 text-base font-extrabold text-[#0A1628] transition-colors hover:bg-[#c4a665] sm:text-lg">
+              Read the recap <ArrowRight className="h-5 w-5" />
+            </Link>
           </div>
         </section>
       )}

@@ -11,7 +11,7 @@ import { StaffActivityList } from "@/components/recruiting/staff-activity-list"
 import type { StaffActivityItem } from "@/lib/recruiting/staff-activity"
 import type { EventWithRecruits } from "@/lib/college-programs/competing-next"
 import { eventDates } from "@/lib/college-programs/outreach-results"
-import { SUPER32_2026, super32Dates, super32NoticeActive, super32ReportPromise } from "@/lib/recruiting/super32-report"
+import { SUPER32_2026, super32Dates, super32NoticeActive, super32ReportPromise, super32ReportReadyActive } from "@/lib/recruiting/super32-report"
 import { ArrowRight, BarChart3, Bell, CalendarDays, History, FileText, GitCompareArrows, Lock, MessageSquare, Search, Star, Target, Users } from "lucide-react"
 import { BrandName } from "@/components/recruiting/brand-name"
 
@@ -300,6 +300,22 @@ function Tool({ href, icon: Icon, title, body }: { href: string; icon: typeof Se
 
 /** The Super 32 report promise, until the finals are over (lib/recruiting/super32-report.ts). */
 function Super32Notice({ womens }: { womens: boolean }) {
+  if (super32ReportReadyActive()) {
+    return (
+      <section className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-[#D3B574]/60 bg-[#D3B574]/10 p-4" aria-label={`${SUPER32_2026.name} report`}>
+        <FileText className="h-6 w-6 shrink-0 text-[#D3B574]" aria-hidden />
+        <div className="min-w-0 flex-1">
+          <p className="font-black">Your {SUPER32_2026.name} 2026 {womens ? "women's" : "men's"} report is ready</p>
+          <p className="text-sm text-white/70">
+            Every North Carolina wrestler&apos;s results from Greensboro, every match and every opponent&apos;s credentials. Your recruits are marked with a gold star, and you can star anyone you missed right from the report. Download it as a PDF.
+          </p>
+        </div>
+        <Link href={womens ? "/coach-reports/super32-2026-womens" : "/coach-reports/super32-2026-mens"} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-[#D3B574] px-4 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
+          Open the report <ArrowRight className="h-4 w-4" aria-hidden />
+        </Link>
+      </section>
+    )
+  }
   if (!super32NoticeActive()) return null
   return (
     <section className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-[#D3B574]/60 bg-[#D3B574]/10 p-4" aria-label={`${SUPER32_2026.name} reports`}>

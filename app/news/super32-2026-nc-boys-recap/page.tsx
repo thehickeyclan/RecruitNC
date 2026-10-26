@@ -404,6 +404,16 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
       ))}
 
       {/* Members, coaches and admins already have everything: no sales card for them. */}
+      {/* Super 32 HQ is Insider now (Matt, 26 Oct 2026): the recap sells it. Members open it; anyone else gets its pitch. */}
+      <section className="mt-10 overflow-hidden rounded-2xl border border-[#d4af55]/60 bg-gradient-to-br from-[#13294b] to-[#0b1730] p-6 text-white">
+        <div className="text-[11px] font-bold uppercase tracking-wider text-[#d4af55]">{unlocked ? "Included with your membership" : "Insider"}</div>
+        <h2 className="mt-1 text-2xl font-black">Super 32 <span className="text-[#d4af55]">HQ</span>: every NC result</h2>
+        <p className="mt-2 text-sm text-[#c9d4ea]">Every North Carolina wrestler&apos;s matches from Greensboro, boys and girls: every Huge and Big win, every opponent&apos;s seed, ranking and titles, and the All-Americans, in one dashboard.</p>
+        <Link href="/super32/live" className="mt-4 inline-flex rounded-lg bg-[#d4af55] px-4 py-2.5 text-sm font-bold text-[#0b1730]">
+          {unlocked ? "Open Super 32 HQ →" : "See Super 32 HQ with Insider →"}
+        </Link>
+      </section>
+
       {/* Thumbs up/down, the same reactions every NC United article uses (one per account or guest). */}
       <section className="mt-10 rounded-2xl border border-gray-200 bg-[#f4f6fb] px-5">
         <NchsaaArticleReactions articleSlug="super32-2026-nc-boys-recap" />
