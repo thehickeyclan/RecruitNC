@@ -31,9 +31,9 @@ export function renderSuper32RecapsEmail(input: { firstName: string | null; unsu
 <body style="margin:0;padding:0;background:#ffffff;">
 <div style="max-width:560px;margin:0 auto;padding:24px 16px;font-family:${FONT};font-size:15px;line-height:1.6;color:#1f2937;">
 ${blocks.map((b) => `<p style="margin:0 0 14px;">${esc(b.text)}${b.link ? ` <a href="${b.link[1]}" style="color:#1d4ed8;font-weight:600;">${esc(b.link[0])}</a>` : ""}</p>`).join("\n")}
-<p style="margin:18px 0 0;">Matt Hickey<br>NC United</p>
+<p style="margin:18px 0 0;">NC United</p>
 ${input.unsubscribeUrl ? `<p style="margin:28px 0 0;font-size:12px;color:#9ca3af;"><a href="${esc(input.unsubscribeUrl)}" style="color:#9ca3af;">Unsubscribe</a></p>` : ""}
 </div></body></html>`
-  const text = [...blocks.map((b) => (b.link ? `${b.text}\n${b.link[0]}: ${b.link[1]}` : b.text)), "Matt Hickey\nNC United", ...(input.unsubscribeUrl ? [`Unsubscribe: ${input.unsubscribeUrl}`] : [])].join("\n\n")
+  const text = [...blocks.map((b) => (b.link ? `${b.text}\n${b.link[0]}: ${b.link[1]}` : b.text)), "NC United", ...(input.unsubscribeUrl ? [`Unsubscribe: ${input.unsubscribeUrl}`] : [])].join("\n\n")
   return { subject, html, text }
 }
