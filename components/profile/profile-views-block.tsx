@@ -196,10 +196,10 @@ export function ProfileViewsBlock({ athleteId, athleteFirstName, className }: { 
       {views.locked && views.hasViews ? (
         <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-[#1a3a5f] pt-3">
           <p className="max-w-[46ch] text-xs text-[#A8BBD1]">
-            You always see how many programs are looking, and when. Subscribe to see which programs they are.
+            You always see how many programs are looking, and when. Sign up for Insider to see which programs they are.
           </p>
           <Link href={subscribe} className="ncu-only rounded-lg bg-[#D3B574] px-4 py-2.5 text-xs font-extrabold uppercase tracking-[0.12em] text-[#0A1628] hover:bg-[#c4a665]">
-            See which programs · $9.99/mo
+            Sign up for Insider · $9.99/mo
           </Link>
           <span className="guild-only">
             <span className="rounded-lg border border-white/15 px-4 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-white/60">Program names: coming soon</span>

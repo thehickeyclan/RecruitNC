@@ -293,11 +293,11 @@ export function Super32WhatGoodLooksLikeContent() {
       <h2>Go deeper</h2>
       <div className="not-prose my-6 grid gap-4 sm:grid-cols-2">
         <PlanCard
-          eyebrow="$9.99/month"
+          eyebrow="Insider · $9.99/month"
           title="See the College Prospect Rankings and which colleges are looking"
           body="North Carolina's College Prospect Rankings by class, men's and women's, and the Top 75 College Ready Prospects, plus the names of the college programs that have viewed your wrestler's profile."
           href="/rankings"
-          cta="See the College Prospect Rankings"
+          cta="Sign up for Insider"
         />
         <PlanCard
           eyebrow="$24.99/month"

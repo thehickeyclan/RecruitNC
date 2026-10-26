@@ -176,7 +176,7 @@ export default function PrivacyPolicyPage() {
               payment itself.
             </p>
             <p className="mt-2">
-              Recruiting memberships (RecruitNC Rankings and the Recruiting Command Center) are billed
+              Recruiting memberships (Insider and the Recruiting Command Center) are billed
               by Guild Ventures, which operates the recruiting platform behind RecruitNC.
             </p>
           </section>

@@ -56,7 +56,7 @@ export function receiptKindForCheckout(metadata: Metadata): ReceiptKind | null {
 }
 
 const KIND_LABEL: Record<ReceiptKind, string> = {
-  subscription: "RecruitNC Rankings subscription",
+  subscription: "Insider subscription",
   command_center: "Recruiting Command Center subscription",
   scouting_report: "Scouting report",
   blue: "NC United Blue membership",

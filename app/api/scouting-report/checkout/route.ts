@@ -110,8 +110,8 @@ export async function POST(request: Request) {
    */
   if (plan) {
     const { viewer } = await resolveRankingViewer({ supabase, admin })
-    // The Command Center is sold to anyone without the portal, including a Rankings subscriber
-    // upgrading; the Rankings plans to anyone without the rankings.
+    // The Command Center is sold to anyone without the portal, including an Insider subscriber
+    // upgrading; the Insider plans to anyone without the rankings.
     if (kind === "command_center" ? hasPortalAccess(viewer) : canSeeProspectRanking(viewer)) {
       return NextResponse.json(
         kind === "command_center"
@@ -155,12 +155,12 @@ export async function POST(request: Request) {
               name: kind === "command_center"
                 ? `${onRw ? "Recruiting" : "RecruitNC"} Command Center — monthly`
                 : plan
-                  ? `${onRw ? "Insider" : "RecruitNC Rankings"} — ${plan.label.toLowerCase()}`
+                  ? `Insider — ${plan.label.toLowerCase()}`
                   : `Scouting report — ${athleteName || "athlete"}`,
               description: kind === "command_center"
-                ? "The Recruiting Command Center: plan, college list, compare, coach messages and Learn, with full rankings and profile views."
+                ? "The Recruiting Command Center: plan, college list, compare, coach messages and Learn. Includes Insider: full rankings, tournament grade reports and profile views."
                 : plan
-                  ? "Every published class ranking and the Top 75, your wrestler's rank on the profile, and which college programs viewed it."
+                  ? "Every published class ranking and the Top 75, every tournament grade report, your wrestler's rank on the profile, and which college programs viewed it."
                   : "One athlete's scouting report: results, significant wins and losses, competition strength.",
             },
           },
