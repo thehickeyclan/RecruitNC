@@ -106,6 +106,8 @@ const nextConfig = {
     // tracing cannot follow: name them, or the page has no data in production.
     "/coach-reports": ["content/reports/**", "content/news/**"],
     "/coach-reports/[slug]": ["content/reports/**", "content/news/**"],
+    // The recap's photos come from the coach report's thumbnails.
+    "/news/super32-2026-nc-boys-recap": ["content/reports/**", "content/news/**"],
   },
   outputFileTracingExcludes: {
     "/*": [
