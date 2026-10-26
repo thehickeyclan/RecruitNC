@@ -55,7 +55,7 @@ function PhotoBreak({ photos }: { photos: Photo[] }) {
 }
 
 const GRADE_STYLE: Record<string, { badge: string; label: string; blurb: string }> = {
-  "A+": { badge: "bg-[#e5372c] text-white", label: "A+", blurb: "Finalist or champion who also beat top seeds" },
+  "A+": { badge: "bg-[#e5372c] text-white", label: "A+", blurb: "Top-four finish on the podium" },
   A: { badge: "bg-[#d4af55] text-[#0b1730]", label: "A", blurb: "Beat two or more top-15 seeds, reached the blood round or better" },
   "A-": { badge: "bg-[#e9cf86] text-[#0b1730]", label: "A-", blurb: "Beat a seeded wrestler" },
   "B+": { badge: "bg-[#3b5ba5] text-white", label: "B+", blurb: "Beat a nationally ranked wrestler, or won five with every loss to a seed" },
@@ -144,14 +144,18 @@ const FEATURED = /top-15/i
 /** Vertical columns, years left to right, so a row reads as progress over time; 2026 in gold. */
 function Columns({ vals, height }: { vals: number[]; height: number }) {
   const max = Math.max(...vals, 1)
+  // Bars live in their own fixed-height area, so a bar's height is exactly its share of the
+  // largest value; the labels sit outside it and can never squeeze a bar.
   return (
-    <div className="flex items-end justify-around gap-3" style={{ height }}>
+    <div className="flex justify-around gap-3">
       {YEARS.map((yr, i) => {
         const now = i === YEARS.length - 1
         return (
-          <div key={yr} className="flex h-full flex-1 flex-col items-center justify-end">
-            <span className={`mb-1 ${now ? "text-lg font-black text-[#0b1730]" : "text-sm font-semibold text-gray-500"}`}>{vals[i]}</span>
-            <div className={`w-full max-w-[56px] rounded-t-md ${now ? "bg-[#d4af55]" : "bg-[#c7d0e2]"}`} style={{ height: `${Math.max(4, (100 * vals[i]!) / max) * 0.72}%` }} />
+          <div key={yr} className="flex flex-1 flex-col items-center">
+            <div className="flex w-full flex-col items-center justify-end" style={{ height }}>
+              <span className={`mb-1 ${now ? "text-lg font-black text-[#0b1730]" : "text-sm font-semibold text-gray-500"}`}>{vals[i]}</span>
+              <div className={`w-full max-w-[56px] shrink-0 rounded-t-md ${now ? "bg-[#d4af55]" : "bg-[#c7d0e2]"}`} style={{ height: Math.max(3, Math.round(((height - 32) * vals[i]!) / max)) }} />
+            </div>
             <span className={`mt-1.5 text-xs ${now ? "font-bold text-[#0b1730]" : "text-gray-400"}`}>{yr}</span>
           </div>
         )
