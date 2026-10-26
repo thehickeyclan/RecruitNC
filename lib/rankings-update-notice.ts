@@ -5,8 +5,12 @@
  * missed one (the event-clock rule).
  */
 export const RANKINGS_UPDATE = {
+  /** What Matt calls them (26 Oct 2026). */
+  name: "North Carolina College Prospect Rankings",
   by: "Friday, October 30",
   events: "Journeymen, I-64 and Super 32",
+  /** This update is the men's boards. */
+  scope: "men",
 }
 const ENDS = Date.parse("2026-10-31T23:59:59-04:00")
 
@@ -15,5 +19,5 @@ export function rankingsUpdateNoticeActive(now: Date = new Date()): boolean {
 }
 
 export function rankingsUpdateSentence(): string {
-  return `New North Carolina rankings come out by ${RANKINGS_UPDATE.by}, updated with results from ${RANKINGS_UPDATE.events}.`
+  return `The ${RANKINGS_UPDATE.name} update ${RANKINGS_UPDATE.by}, with ${RANKINGS_UPDATE.events} results for the ${RANKINGS_UPDATE.scope}.`
 }

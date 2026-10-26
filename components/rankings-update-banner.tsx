@@ -9,7 +9,7 @@ export function RankingsUpdateBanner({ className = "" }: { className?: string })
   return (
     <div className={`border-b border-[#D3B574]/40 bg-[#D3B574] text-[#0A1628] ${className}`}>
       <div className="mx-auto max-w-5xl px-4 py-2.5 text-center text-sm font-semibold">
-        📊 New North Carolina rankings by <strong>{RANKINGS_UPDATE.by}</strong>, updated with {RANKINGS_UPDATE.events} results.
+        📊 The {RANKINGS_UPDATE.name} update <strong>{RANKINGS_UPDATE.by}</strong>, with {RANKINGS_UPDATE.events} results for the {RANKINGS_UPDATE.scope}.
       </div>
     </div>
   )
