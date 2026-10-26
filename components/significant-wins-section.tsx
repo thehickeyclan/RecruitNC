@@ -1,6 +1,7 @@
 "use client"
 
 import { Fragment, useEffect, useState } from "react"
+import { topWins } from "@/lib/win-strength"
 import { Trophy } from "lucide-react"
 import type { ProfileQualityWinsTournamentBlock } from "@/lib/profile-quality-wins"
 import { styleOfEventForAthlete } from "@/lib/wrestling-style"
@@ -55,7 +56,7 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [], style
 }) {
   const [wins, setWins] = useState<SignificantWin[]>([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState<"all" | "in-state" | "national">("all")
+  const [filter, setFilter] = useState<"all" | "top" | "in-state" | "national">("all")
   const [expanded, setExpanded] = useState(false)
 
   useEffect(() => {
@@ -120,8 +121,10 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [], style
     .map((w, i) => ({ w, i, t: w.date ? Date.parse(w.date) : Number.NaN }))
     .sort((x, y) => (Number.isNaN(x.t) ? 1 : 0) - (Number.isNaN(y.t) ? 1 : 0) || (y.t || 0) - (x.t || 0) || x.i - y.i)
     .map(({ w }) => w)
-  const visibleWins = filter === "all" ? allWins : allWins.filter((win) => win.scope === filter)
-  const displayedWins = expanded ? visibleWins : visibleWins.slice(0, 3)
+  // Top 5: the strongest wins of the last 12 months, one per opponent (lib/win-strength.ts).
+  const best = topWins(allWins)
+  const visibleWins = filter === "top" ? best : filter === "all" ? allWins : allWins.filter((win) => win.scope === filter)
+  const displayedWins = expanded || filter === "top" ? visibleWins : visibleWins.slice(0, 3)
 
   if (loading) return null
   // The Olympic-styles list is only shown when there is something in it; the folkstyle one always
@@ -152,7 +155,7 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [], style
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2" aria-label="Filter significant wins">
-        {(["all", "in-state", "national"] as const).map((option) => (
+        {(best.length ? (["all", "top", "in-state", "national"] as const) : (["all", "in-state", "national"] as const)).map((option) => (
           <button
             key={option}
             type="button"
@@ -164,7 +167,7 @@ export function SignificantWinsSection({ athleteId, qualityWinBlocks = [], style
               ? "rounded-full bg-rnc-gold px-3 py-1 text-xs font-bold text-rnc-ink"
               : "rounded-full border border-rnc-line px-3 py-1 text-xs font-semibold text-slate-300 hover:border-rnc-gold/60"}
           >
-            {option === "all" ? "All" : option === "in-state" ? "In-state" : "National"}
+            {option === "all" ? "All" : option === "top" ? "Top 5" : option === "in-state" ? "In-state" : "National"}
           </button>
         ))}
       </div>

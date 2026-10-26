@@ -15,6 +15,7 @@ import type { LucideIcon } from "lucide-react"
 import { BarChart3, ChevronDown, ChevronRight, ChevronUp, Lock, TrendingDown, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { weightLabel } from "@/lib/profile/weight-label"
+import { newestFirst, topWins } from "@/lib/win-strength"
 
 /* ------------------------------------------------------------------ data, as the app reads it */
 
@@ -554,18 +555,22 @@ function SeeAll({ open, label, onClick }: { open: boolean; label: string; onClic
  * Significant wins or notable losses, In-state | National. National means an opponent from
  * another state; it opens on National when there is one, the stronger list.
  */
-function BoutList({ bouts }: { bouts: AppWin[] }) {
-  const national = bouts.filter((b) => b.scope === "national")
-  const inState = bouts.filter((b) => b.scope !== "national")
-  const [tab, setTab] = useState<"in-state" | "national">(national.length ? "national" : "in-state")
+function BoutList({ bouts, top = false }: { bouts: AppWin[]; top?: boolean }) {
+  // Newest first; the Top 5 tab (wins only) ranks the last 12 months by strength (lib/win-strength.ts).
+  const sorted = newestFirst(bouts)
+  const national = sorted.filter((b) => b.scope === "national")
+  const inState = sorted.filter((b) => b.scope !== "national")
+  const best = top ? topWins(sorted) : []
+  const [tab, setTab] = useState<"top" | "in-state" | "national">(national.length ? "national" : "in-state")
   const [showAll, setShowAll] = useState(false)
-  const list = tab === "national" ? national : inState
+  const list = tab === "top" ? best : tab === "national" ? national : inState
   const shown = showAll ? list : list.slice(0, 6)
   return (
     <div className="space-y-2">
       <Toggle
         value={tab}
         options={[
+          ...(best.length ? ([["top", "Top 5"]] as Array<["top", string]>) : []),
           ["in-state", `In-state (${inState.length})`],
           ["national", `National (${national.length})`],
         ]}
@@ -590,7 +595,7 @@ function BoutList({ bouts }: { bouts: AppWin[] }) {
           </div>
         ))
       ) : (
-        <p className="text-xs text-[#A8BBD1]">{tab === "national" ? "None against out-of-state opponents on file." : "None against NC opponents on file."}</p>
+        <p className="text-xs text-[#A8BBD1]">{tab === "top" ? "No significant wins in the last 12 months." : tab === "national" ? "None against out-of-state opponents on file." : "None against NC opponents on file."}</p>
       )}
       {list.length > 6 && !showAll ? (
         <button type="button" onClick={() => setShowAll(true)} className="text-[13px] font-extrabold text-[#D3B574]">
@@ -601,7 +606,7 @@ function BoutList({ bouts }: { bouts: AppWin[] }) {
   )
 }
 
-function StyledBoutList({ bouts }: { bouts: AppWin[] }) {
+function StyledBoutList({ bouts, top = false }: { bouts: AppWin[]; top?: boolean }) {
   const [style, setStyle] = useState<StyleFilter>("all")
   const both = bouts.some((b) => isOlympic(b.style)) && bouts.some((b) => !isOlympic(b.style))
   const list = !both || style === "all" ? bouts : bouts.filter((b) => (style === "olympic" ? isOlympic(b.style) : !isOlympic(b.style)))
@@ -609,7 +614,7 @@ function StyledBoutList({ bouts }: { bouts: AppWin[] }) {
     <div className="space-y-3">
       {both ? <StyleToggle value={style} onChange={setStyle} /> : null}
       {/* Keyed so the In-state | National tab re-picks itself for the filtered list. */}
-      <BoutList key={style} bouts={list} />
+      <BoutList key={style} bouts={list} top={top} />
     </div>
   )
 }
@@ -624,7 +629,7 @@ export function AppSignificantWins({ wins, loaded, footer, className }: { wins: 
     >
       {wins.length || footer ? (
         <div className="space-y-3">
-          {wins.length ? <StyledBoutList bouts={wins} /> : <p className="text-xs text-[#A8BBD1]">No wins over ranked, All-American or state-placing opponents on file yet.</p>}
+          {wins.length ? <StyledBoutList bouts={wins} top /> : <p className="text-xs text-[#A8BBD1]">No wins over ranked, All-American or state-placing opponents on file yet.</p>}
           {footer ? <div className="flex flex-wrap items-center gap-2 border-t border-[#1a3a5f] pt-3">{footer}</div> : null}
         </div>
       ) : null}
