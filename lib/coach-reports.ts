@@ -1,0 +1,141 @@
+import "server-only"
+import fs from "node:fs"
+import path from "node:path"
+import type { SupabaseClient } from "@supabase/supabase-js"
+import { classifyViewer } from "@/lib/viewer-role"
+import { programLogo as resolveProgramLogo } from "@/lib/coach-program-logo"
+import { coachProgramOf, viewGenderFor } from "@/lib/recruiting/coach-program"
+import type { AthleteEventReport } from "@/lib/coach-event-report"
+
+/**
+ * College coaches' tournament reports (Matt, 26 Oct 2026): one full report per event, every NC
+ * wrestler in it, built off NC United's recap of the event. A coach's staff stars mark their
+ * wrestlers; the page filters to them and prints to PDF. Grades never appear (Matt: no grades in
+ * coach reports), even though the recap behind it has them.
+ *
+ * The data file is built once by scripts/coach-event-report.ts --all-entrants --json-out and read
+ * here on the server only: it holds notable losses, which are coach-only.
+ */
+export type CoachReportDef = {
+  slug: string
+  title: string
+  eventKey: string
+  date: string
+  file: string
+  /** Men's and women's are separate reports (Matt, 26 Oct 2026). */
+  gender: "Male" | "Female"
+  /** NC United's recap of the event, when there is one: its write-ups and order feed the report. */
+  recapSlug: string | null
+}
+
+export const COACH_REPORTS: CoachReportDef[] = [
+  {
+    slug: "super32-2026-mens",
+    title: "Super 32 2026 — North Carolina Men's Report",
+    eventKey: "super32-2026",
+    date: "2026-10-25",
+    file: "content/reports/super32-2026.json",
+    gender: "Male",
+    recapSlug: "super32-2026-nc-boys-recap",
+  },
+  {
+    slug: "super32-2026-womens",
+    title: "Super 32 2026 — North Carolina Women's Report",
+    eventKey: "super32-2026",
+    date: "2026-10-25",
+    file: "content/reports/super32-2026.json",
+    gender: "Female",
+    recapSlug: null,
+  },
+]
+
+export type CoachReportFile = {
+  event: { key: string; name: string; date: string }
+  generatedAt: string
+  reports: AthleteEventReport[]
+  summaries: Record<string, string>
+  photos: Record<string, string>
+}
+
+const cache = new Map<string, CoachReportFile>()
+export function loadCoachReportFile(def: CoachReportDef): CoachReportFile {
+  const hit = cache.get(def.file)
+  if (hit) return hit
+  const data = JSON.parse(fs.readFileSync(path.join(process.cwd(), def.file), "utf8")) as CoachReportFile
+  cache.set(def.file, data)
+  return data
+}
+
+export type CoachReportViewer =
+  | { access: "signed-out" | "not-coach" }
+  | {
+      access: "ok"
+      userId: string
+      isAdmin: boolean
+      program: string | null
+      programLogo: string | null
+      /** Men's, women's or both (null): which report the Reports folder lists first. */
+      viewGender: "Male" | "Female" | null
+      /** Athletes starred by anyone on this coach's staff (same school), or by the coach alone without one. */
+      starred: Set<string>
+    }
+
+/**
+ * Verified college coaches and admins, on Coach Home's rule. An admin may pass a coach's user id
+ * (`as`) to see exactly that coach's report: their program, logo and staff stars.
+ */
+export async function resolveCoachReportViewer(admin: SupabaseClient, userId: string | null, asUserId?: string | null): Promise<CoachReportViewer> {
+  if (!userId) return { access: "signed-out" }
+  const cols = "user_id, role, profile_type, verified_coach, verification_status, is_admin, school_id, institution"
+  const { data: me } = await admin.from("user_profiles").select(cols).eq("user_id", userId).maybeSingle()
+  const meClass = classifyViewer(me ?? null)
+  const isAdmin = meClass.kind === "admin" || me?.is_admin === true
+  if (!isAdmin && !(meClass.isCollegeCoach && meClass.verifiedCoach)) return { access: "not-coach" }
+
+  let subject = me
+  if (isAdmin && asUserId) {
+    const { data: other } = await admin.from("user_profiles").select(cols).eq("user_id", asUserId).maybeSingle()
+    if (other) subject = other
+  }
+  const subjectId = String(subject?.user_id ?? userId)
+
+  // The staff: every coach at the same school. A coach without a school is his own staff.
+  let staff = [subjectId]
+  if (subject?.school_id) {
+    const { data: mates } = await admin.from("user_profiles").select("user_id").eq("school_id", subject.school_id)
+    staff = [...new Set([subjectId, ...(mates ?? []).map((m) => String(m.user_id))])]
+  }
+  const { data: stars } = await admin.from("college_coach_stars").select("athlete_id").in("coach_user_id", staff)
+
+  let program = (subject?.institution as string | null) ?? null
+  let logoUrl: string | null = null
+  if (subject?.school_id) {
+    const { data: school } = await admin.from("schools").select("name, logo_url").eq("id", subject.school_id).maybeSingle()
+    program = (school?.name as string | null) ?? program
+    logoUrl = (school?.logo_url as string | null) ?? null
+  }
+  const programLogo = program ? (await resolveProgramLogo({ name: program, logo_url: logoUrl })).url : null
+
+  const coachProgram = await admin.auth.admin.getUserById(subjectId).then((r) => coachProgramOf(r.data?.user), () => null)
+  // A "both" program sees men's and women's with men's first; otherwise its own leads.
+  const vg = coachProgram === "both" ? null : viewGenderFor(coachProgram, null)
+
+  return {
+    access: "ok",
+    userId: subjectId,
+    isAdmin,
+    program,
+    programLogo,
+    viewGender: vg,
+    starred: new Set((stars ?? []).map((s) => String(s.athlete_id))),
+  }
+}
+
+/**
+ * A recap write-up with any sentence about grades taken out: coach reports carry no grades.
+ * ("He never beat a seed himself, which keeps him out of the A group, but ..." loses that sentence.)
+ */
+export function withoutGradeTalk(paragraph: string): string {
+  const sentences = paragraph.match(/[^.!?]+[.!?]+(\s|$)/g) ?? [paragraph]
+  return sentences.filter((s) => !/\b(grade[ds]?|A group|B group|A-|B\+|honorable mention)\b/i.test(s)).join("").trim()
+}

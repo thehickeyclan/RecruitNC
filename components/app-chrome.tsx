@@ -28,7 +28,7 @@ const SHELL_HINT_KEY = "recruiting-shell"
  * 2026: "you changed nc united website our front end"). A real coach still gets the portal frame
  * everywhere; this is only the staff preview.
  */
-const COACH_PORTAL_PATHS = ["/coach-home", "/my-recruits", "/prospects", "/athletes", "/view-profile", "/inbox", "/public-rankings", "/compare", "/perfect-recruit", "/interested", "/scouting-report"]
+const COACH_PORTAL_PATHS = ["/coach-home", "/my-recruits", "/prospects", "/athletes", "/view-profile", "/inbox", "/public-rankings", "/compare", "/perfect-recruit", "/interested", "/scouting-report", "/coach-reports"]
 /**
  * Pages with no Data Dawg launcher whoever is looking: the inbox (it covers the send button) and
  * the pages that exist only for coaches.
