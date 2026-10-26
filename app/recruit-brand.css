@@ -1468,6 +1468,10 @@ html[data-host="national"] .hover\:bg-\[\#13294B\]\/60:hover {
   background-color: rgb(21 36 59 / 0.6);
 }
 
+html[data-host="national"] .hover\:bg-\[\#13294b\]:hover {
+  background-color: rgb(21 36 59);
+}
+
 html[data-host="national"] .hover\:border-\[\#0A1628\]:hover {
   border-color: rgb(11 20 38);
 }
@@ -2370,6 +2374,10 @@ html[data-host="guild"] .hover\:bg-\[\#13294B\]\/10:hover {
 
 html[data-host="guild"] .hover\:bg-\[\#13294B\]\/60:hover {
   background-color: rgb(26 26 30 / 0.6);
+}
+
+html[data-host="guild"] .hover\:bg-\[\#13294b\]:hover {
+  background-color: rgb(26 26 30);
 }
 
 html[data-host="guild"] .hover\:border-\[\#0A1628\]:hover {

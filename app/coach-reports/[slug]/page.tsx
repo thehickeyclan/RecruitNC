@@ -17,8 +17,9 @@ import { COACH_REPORTS, loadCoachReportFile, resolveCoachReportViewer, withoutGr
 import { loadRecap, nameKey } from "@/lib/news-recaps/recap"
 import { latestSnapshot, type SnapshotEntrant } from "@/lib/super32-live/snapshot"
 import type { AthleteEventReport } from "@/lib/coach-event-report"
-import { Chip, MatchList, ordinal, super32Placings, ThreeYear } from "@/components/news/super32-report-parts"
+import { Chip, MatchList, ordinal, super32Placings, ThreeYear, ViewProfilePill } from "@/components/news/super32-report-parts"
 import { PrintButton } from "../print-button"
+import { ReportStarButton } from "../report-star-button"
 
 export const dynamic = "force-dynamic"
 export const metadata: Metadata = { title: "Tournament report", robots: { index: false, follow: false } }
@@ -33,8 +34,8 @@ function sections(md: string): Array<{ head: string; body: string }> {
 const genderOf = (r: AthleteEventReport, e: SnapshotEntrant | undefined): "Male" | "Female" =>
   e?.gender === "girls" || /^f/i.test(r.gender ?? "") ? "Female" : "Male"
 
-function ReportCard({ r, e, starred, text, photo, placings }: {
-  r: AthleteEventReport; e: SnapshotEntrant | undefined; starred: boolean; text: string; photo: string | null; placings: Map<string, number>
+function ReportCard({ r, e, starred, mine, readOnly, text, photo, placings }: {
+  r: AthleteEventReport; e: SnapshotEntrant | undefined; starred: boolean; mine: boolean; readOnly: boolean; text: string; photo: string | null; placings: Map<string, number>
 }) {
   const seeded = (e?.bouts ?? []).filter((b) => b.win && b.opponentSeed && !/for/i.test(b.winType)).sort((a, b) => a.opponentSeed! - b.opponentSeed!)
   const place = r.place ?? e?.placement ?? null
@@ -48,11 +49,7 @@ function ReportCard({ r, e, starred, text, photo, placings }: {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2">
             <h3 className="text-lg font-black text-[#0b1730]"><Link href={`/athletes/${r.athleteId}`} className="hover:underline">{r.name}</Link></h3>
-            {starred && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-[#fff6d6] px-2 py-0.5 text-[11px] font-bold text-[#7a5d12]">
-                <Star className="h-3.5 w-3.5 fill-[#f5c518] text-[#f5c518]" aria-hidden /> Your recruit
-              </span>
-            )}
+            <ReportStarButton athleteId={r.athleteId} name={r.name} mine={mine} staff={starred && !mine} readOnly={readOnly} />
             <span className="text-sm text-gray-500">{[r.weight ? `${r.weight} lbs` : null, r.school, r.classYear ? `Class of ${r.classYear}` : null].filter(Boolean).join(" · ")}</span>
           </div>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
@@ -65,6 +62,7 @@ function ReportCard({ r, e, starred, text, photo, placings }: {
       </div>
       {text && <p className="px-4 pb-3 text-[15px] leading-relaxed text-gray-800">{text}</p>}
       {e && <MatchList bouts={e.bouts} weight={String(e.weight ?? r.weight ?? "")} placings={placings} />}
+      <div className="pt-3"><ViewProfilePill athleteId={r.athleteId} /></div>
     </article>
   )
 }
@@ -90,6 +88,8 @@ export default async function CoachReportPage({ params, searchParams }: {
   const viewer = await resolveCoachReportViewer(admin, viewerId, sp.as)
   if (viewer.access === "signed-out") redirect(`/auth/signin?returnTo=${encodeURIComponent(`/coach-reports/${slug}`)}`)
   if (viewer.access !== "ok") redirect("/coach-home")
+  // Men's coaches get the men's report, women's coaches the women's.
+  if (!viewer.genders.includes(def.gender)) redirect("/coach-reports")
 
   const file = loadCoachReportFile(def)
   const [snap, placings] = await Promise.all([latestSnapshot(admin as never, def.eventKey, true), super32Placings()])
@@ -140,7 +140,7 @@ export default async function CoachReportPage({ params, searchParams }: {
 
       <p className="mt-3 flex items-center gap-1.5 text-sm text-gray-600">
         <Star className="h-4 w-4 shrink-0 fill-[#f5c518] text-[#f5c518]" aria-hidden />
-        <span><span className="font-semibold text-gray-800">Gold star = your recruit:</span> a wrestler you or your staff starred on RecruitNC.</span>
+        <span><span className="font-semibold text-gray-800">Gold star = your recruit:</span> a wrestler you or your staff starred on RecruitNC. Tap &ldquo;Add to my recruits&rdquo; on anyone else to add him.</span>
       </p>
 
       {!starredOnly && overall && (
@@ -163,6 +163,7 @@ export default async function CoachReportPage({ params, searchParams }: {
           <div className="mt-3 grid gap-3">
             {shown.map((r) => (
               <ReportCard key={r.athleteId} r={r} e={byAthlete.get(r.athleteId)} starred={viewer.starred.has(r.athleteId)}
+                mine={viewer.mine.has(r.athleteId)} readOnly={viewer.readOnly}
                 text={textFor(r)} photo={file.photos[r.athleteId] ?? null} placings={placings} />
             ))}
           </div>

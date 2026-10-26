@@ -22,7 +22,8 @@ import { markdownToHtml } from "@/lib/news-recaps/markdown"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { linkNames } from "@/lib/news-recaps/link-names"
 import { latestSnapshot, type SnapshotEntrant } from "@/lib/super32-live/snapshot"
-import { Chip, MatchList, ordinal, schoolAndClass, super32Placings, ThreeYear } from "@/components/news/super32-report-parts"
+import { Chip, MatchList, ordinal, schoolAndClass, super32Placings, ThreeYear, ViewProfilePill } from "@/components/news/super32-report-parts"
+import { isPlaceholderAthletePhoto } from "@/lib/recruiting-profile-photo"
 
 export const dynamic = "force-dynamic"
 
@@ -203,13 +204,17 @@ function LockedCard({ seed }: { seed: number }) {
   )
 }
 
-function WrestlerCard({ w, e, placings }: { w: GradedWrestler; e: SnapshotEntrant | undefined; placings: Map<string, number> }) {
+function WrestlerCard({ w, e, placings, photo }: { w: GradedWrestler; e: SnapshotEntrant | undefined; placings: Map<string, number>; photo: string | null }) {
   const st = GRADE_STYLE[w.grade]!
   const record = e ? `${e.wins}-${e.losses}` : (w.heading.match(/(\d+-\d+)/)?.[1] ?? "")
   const seeded = (e?.bouts ?? []).filter((b) => b.win && b.opponentSeed && !/for/i.test(b.winType)).sort((a, b) => a.opponentSeed! - b.opponentSeed!)
   return (
     <article className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
       <div className="flex gap-4 p-4">
+        {photo && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photo} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover object-top" />
+        )}
         <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-lg text-lg font-black ${st.badge}`}>{st.label}</span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2">
@@ -226,6 +231,7 @@ function WrestlerCard({ w, e, placings }: { w: GradedWrestler; e: SnapshotEntran
       </div>
       <p className="px-4 pb-4 pt-2 text-[15px] leading-relaxed text-gray-800" dangerouslySetInnerHTML={linkedInline(w.paragraph)} />
       {e && <MatchList bouts={e.bouts} weight={w.weight} placings={placings} />}
+      {e?.athleteId && <div className="pt-3"><ViewProfilePill athleteId={e.athleteId} /></div>}
     </article>
   )
 }
@@ -285,6 +291,11 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
   const entrants = snap?.data.entrants ?? []
   const byName = new Map(entrants.filter((e) => e.gender === "boys").map((e) => [nameKey(e.name), e]))
   const placings = await super32Placings()
+  // Profile photos for the graded wrestlers (Matt, 26 Oct 2026); open cards only, never a placeholder.
+  const gradedIds = recap.graded.map((w) => byName.get(nameKey(w.name))?.athleteId).filter((id): id is string => !!id)
+  const { data: photoRows } = gradedIds.length ? await admin.from("athletes").select("id, photourl").in("id", gradedIds) : { data: [] }
+  const photos = new Map((photoRows ?? []).filter((p) => p.photourl && /^https:/.test(String(p.photourl)) && !isPlaceholderAthletePhoto(String(p.photourl))).map((p) => [String(p.id), String(p.photourl)]))
+  const photoFor = (w: GradedWrestler) => photos.get(byName.get(nameKey(w.name))?.athleteId ?? "") ?? null
   // Longest names first, so "Liam Myles" is linked before any shorter name inside it.
   PROFILE_LINKS = entrants.filter((e) => e.athleteId).map((e) => [e.name, `/athletes/${e.athleteId}`] as [string, string]).sort((a, b) => b[0].length - a[0].length)
 
@@ -350,7 +361,7 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
               </div>
             </div>
             <div className="mt-3 grid gap-3">
-              {ws.map((w, i) => (isOpenFor(w) ? <WrestlerCard key={w.name} w={w} e={byName.get(nameKey(w.name))} placings={placings} /> : <LockedCard key={`locked-${g}-${i}`} seed={i} />))}
+              {ws.map((w, i) => (isOpenFor(w) ? <WrestlerCard key={w.name} w={w} e={byName.get(nameKey(w.name))} placings={placings} photo={photoFor(w)} /> : <LockedCard key={`locked-${g}-${i}`} seed={i} />))}
             </div>
             {(g === "A" || g === "A-") && allOpen && <PhotoBreak photos={BREAKS[g]} />}
           </section>
