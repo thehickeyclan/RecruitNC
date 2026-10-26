@@ -20,7 +20,7 @@ import { hasPortalAccess, hasPremiumAccess } from "@/lib/ranking-visibility"
 import { GRADES, loadRecap, nameKey, SUPER32_2026_BOYS_RECAP, type GradedWrestler } from "@/lib/news-recaps/recap"
 import { markdownToHtml } from "@/lib/news-recaps/markdown"
 import { linkNames } from "@/lib/news-recaps/link-names"
-import { latestSnapshot, type SnapshotEntrant } from "@/lib/super32-live/snapshot"
+import { latestSnapshot, type SnapshotBout, type SnapshotEntrant } from "@/lib/super32-live/snapshot"
 
 export const dynamic = "force-dynamic"
 
@@ -70,6 +70,12 @@ export const metadata: Metadata = PUBLIC
   : { title: "News", robots: { index: false, follow: false } }
 
 /** Names of the wrestlers this account owns or is a parent of, for the free own-grade unlock. */
+/** Final Super 32 2026 placings, keyed "name|weight", so every opponent shows where he finished. */
+async function super32Placings(): Promise<Map<string, number>> {
+  const { data } = await createAdminClient().from("national_event_placers").select("wrestler_name, weight, place").eq("event_key", "super32-2026")
+  return new Map((data ?? []).map((r) => [`${nameKey(r.wrestler_name)}|${String(r.weight).replace(/\D/g, "")}`, r.place as number]))
+}
+
 async function ownWrestlerNames(userId: string | null, entrants: SnapshotEntrant[]): Promise<Set<string>> {
   if (!userId) return new Set()
   const admin = createAdminClient()
@@ -244,6 +250,45 @@ const ordinal = (n: number) => `${n}${n === 1 ? "st" : n === 2 ? "nd" : n === 3 
 const schoolAndClass = (e: SnapshotEntrant | undefined) =>
   [e?.school && !/^n\/?a$/i.test(e.school) ? e.school : null, e?.classYear ? `Class of ${e.classYear}` : null].filter(Boolean).join(" · ")
 
+const WIN_TYPE: Record<string, string> = { DEC: "Dec", MD: "Major", TF: "Tech fall", F: "Fall", FOR: "Forfeit", "M FOR": "Medical forfeit", DQ: "DQ", INJ: "Injury default" }
+const score = (b: SnapshotBout) => (b.winType === "F" ? (b.result.match(/\d+:\d+/)?.[0] ?? "") : /FOR/.test(b.winType) ? "" : b.result)
+
+/**
+ * Every match with everything we hold on the opponent: seed, national rankings, state and national
+ * finishes, and where he placed here. The opponent graph is the point (Matt, 25 Oct): all of it is
+ * computed from the results, never typed.
+ */
+function MatchList({ bouts, weight, placings }: { bouts: SnapshotBout[]; weight: string; placings: Map<string, number> }) {
+  const rows = bouts.filter((b) => b.winType !== "BYE")
+  if (!rows.length) return null
+  return (
+    <div className="border-t border-gray-100 bg-[#fafbfd] px-4 py-3">
+      <div className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Every match</div>
+      <ol className="mt-2 space-y-2">
+        {rows.map((b) => {
+          const place = placings.get(`${nameKey(b.opponent)}|${weight.replace(/\D/g, "")}`)
+          const creds = (b.reasons ?? []).filter((r) => !/^#\d+ seed$/.test(r))
+          return (
+            <li key={b.key} className="flex gap-2.5 text-sm">
+              <span className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded text-[11px] font-black ${b.win ? "bg-[#0b1730] text-white" : "bg-gray-200 text-gray-600"}`}>{b.win ? "W" : "L"}</span>
+              <div className="min-w-0">
+                <div className="text-gray-900">
+                  <span className="font-semibold">{b.opponent}</span>
+                  <span className="text-gray-500"> ({b.opponentTeam})</span>
+                  {b.opponentSeed ? <span className="ml-1 rounded bg-[#fbf3dc] px-1 text-[11px] font-bold text-[#7a5d12]">#{b.opponentSeed} seed</span> : null}
+                  {place ? <span className="ml-1 rounded bg-[#0b1730] px-1 text-[11px] font-bold text-white">Placed {ordinal(place)} here</span> : null}
+                </div>
+                <div className="text-xs text-gray-500">{[b.round, [WIN_TYPE[b.winType] ?? b.winType, score(b)].filter(Boolean).join(" ")].join(" · ")}</div>
+                {creds.length > 0 && <div className="text-xs text-gray-600">{creds.join(" · ")}</div>}
+              </div>
+            </li>
+          )
+        })}
+      </ol>
+    </div>
+  )
+}
+
 function LockedCard() {
     return (
       <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm" aria-label="Locked: Insider members only">
@@ -261,7 +306,7 @@ function LockedCard() {
     )
 }
 
-function WrestlerCard({ w, e }: { w: GradedWrestler; e: SnapshotEntrant | undefined }) {
+function WrestlerCard({ w, e, placings }: { w: GradedWrestler; e: SnapshotEntrant | undefined; placings: Map<string, number> }) {
   const st = GRADE_STYLE[w.grade]!
   const record = e ? `${e.wins}-${e.losses}` : (w.heading.match(/(\d+-\d+)/)?.[1] ?? "")
   const seeded = (e?.bouts ?? []).filter((b) => b.win && b.opponentSeed && !/for/i.test(b.winType)).sort((a, b) => a.opponentSeed! - b.opponentSeed!)
@@ -283,6 +328,7 @@ function WrestlerCard({ w, e }: { w: GradedWrestler; e: SnapshotEntrant | undefi
         </div>
       </div>
       <p className="px-4 pb-4 pt-2 text-[15px] leading-relaxed text-gray-800" dangerouslySetInnerHTML={linkedInline(w.paragraph)} />
+      {e && <MatchList bouts={e.bouts} weight={w.weight} placings={placings} />}
     </article>
   )
 }
@@ -341,6 +387,7 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
   const snap = await latestSnapshot(admin, "super32-2026", true)
   const entrants = snap?.data.entrants ?? []
   const byName = new Map(entrants.filter((e) => e.gender === "boys").map((e) => [nameKey(e.name), e]))
+  const placings = await super32Placings()
   // Longest names first, so "Liam Myles" is linked before any shorter name inside it.
   PROFILE_LINKS = entrants.filter((e) => e.athleteId).map((e) => [e.name, `/athletes/${e.athleteId}`] as [string, string]).sort((a, b) => b[0].length - a[0].length)
 
@@ -406,7 +453,7 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
               </div>
             </div>
             <div className="mt-3 grid gap-3">
-              {ws.map((w, i) => (isOpenFor(w) ? <WrestlerCard key={w.name} w={w} e={byName.get(nameKey(w.name))} /> : <LockedCard key={`locked-${g}-${i}`} />))}
+              {ws.map((w, i) => (isOpenFor(w) ? <WrestlerCard key={w.name} w={w} e={byName.get(nameKey(w.name))} placings={placings} /> : <LockedCard key={`locked-${g}-${i}`} />))}
             </div>
             {(g === "A" || g === "A-") && allOpen && <PhotoBreak photos={BREAKS[g]} />}
           </section>
