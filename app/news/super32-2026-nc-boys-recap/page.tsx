@@ -19,6 +19,7 @@ import { resolveRankingViewer } from "@/lib/ranking-access"
 import { hasPortalAccess, hasPremiumAccess } from "@/lib/ranking-visibility"
 import { GRADES, loadRecap, nameKey, SUPER32_2026_BOYS_RECAP, type GradedWrestler } from "@/lib/news-recaps/recap"
 import { markdownToHtml } from "@/lib/news-recaps/markdown"
+import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { linkNames } from "@/lib/news-recaps/link-names"
 import { latestSnapshot, type SnapshotBout, type SnapshotEntrant } from "@/lib/super32-live/snapshot"
 
@@ -531,6 +532,11 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
       ))}
 
       {/* Members, coaches and admins already have everything: no sales card for them. */}
+      {/* Thumbs up/down, the same reactions every NC United article uses (one per account or guest). */}
+      <section className="mt-10 rounded-2xl border border-gray-200 bg-[#f4f6fb] px-5">
+        <NchsaaArticleReactions articleSlug="super32-2026-nc-boys-recap" />
+      </section>
+
       {!unlocked && <ClaimCard />}
     </main>
   )
