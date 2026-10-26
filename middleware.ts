@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { isNationalPath, isOpenWhileStaged, isStaffOnlyAfterLaunch, stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { isNationalPath, isNcUnitedPage, isOpenWhileStaged, isStaffOnlyAfterLaunch, stagedBrandForHost } from "@/lib/recruiting/national-paths"
 import { isCommunityAdminPath } from "@/lib/recruiting/admin-scope"
 import { isRankerOnly, stagingGateAllows } from "@/lib/staging-gate"
 import { FUNDRAISING_AUTH_RETURN_COOKIE } from "@/lib/fundraising/fundraising-auth-return-cookie"
@@ -89,8 +89,11 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
     }
     // RecruitWrestlers' own policy, not NC United's (app/recruitwrestlers/privacy).
     if (pathname === "/privacy") return NextResponse.rewrite(new URL("/recruitwrestlers/privacy", request.url))
+    if (pathname === "/contact") return NextResponse.rewrite(new URL("/recruitwrestlers/contact", request.url))
     if (!isNationalPath(pathname) && !isOpenWhileStaged(pathname) && !pathname.startsWith("/guild-recruiting")) {
-      return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, APP_ORIGIN), 307)
+      // NC United's real pages forward there; anything else is RecruitWrestlers' "page not found".
+      if (isNcUnitedPage(pathname)) return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, APP_ORIGIN), 307)
+      return NextResponse.rewrite(new URL("/recruitwrestlers/not-found", request.url), { status: 404 })
     }
   }
 

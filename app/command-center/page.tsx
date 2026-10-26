@@ -20,6 +20,8 @@ import { SCOUTING_REPORT_PRICES, formatPrice } from "@/lib/scouting-report-entit
 import { RwMembershipPlans } from "@/components/recruiting/rw-membership-plans"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { BrandName } from "@/components/recruiting/brand-name"
+import { headers } from "next/headers"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 
 export const dynamic = "force-dynamic"
 const SHARE_TITLE = "Recruiting Command Center | RecruitNC"
@@ -87,6 +89,9 @@ function Feature({
 
 export default async function CommandCenterSalesPage() {
   const d = await loadSalesData(createAdminClient())
+  // RecruitWrestlers sells through its own plans page; /plans is NC United's (Matt's product review, 26 Oct 2026).
+  const onRw = stagedBrandForHost((await headers()).get("host")) === "national"
+  const buyHref = onRw ? "/membership" : d.onSale ? BUY : "/plans"
   const price = formatPrice(SCOUTING_REPORT_PRICES.command_center)
   const stats = d.platform
     ? ([
@@ -131,7 +136,7 @@ export default async function CommandCenterSalesPage() {
             <span className="text-lg text-white/60">/ month · cancel anytime</span>
           </div>
           <div className="ncu-only mt-6 flex flex-wrap gap-3">
-            <Link href={d.onSale ? BUY : "/plans"} className="rounded-xl px-7 py-3.5 text-base font-black text-[#0A1628] shadow-lg transition hover:brightness-110" style={{ backgroundColor: SKY }}>
+            <Link href={buyHref} className="rounded-xl px-7 py-3.5 text-base font-black text-[#0A1628] shadow-lg transition hover:brightness-110" style={{ backgroundColor: SKY }}>
               {d.onSale ? "Sign up now →" : "See plans →"}
             </Link>
             <a href="#find-your-colleges" className="rounded-xl border border-white/25 bg-[#060f1f]/40 px-7 py-3.5 text-base font-bold transition hover:bg-white/10">
@@ -204,7 +209,7 @@ export default async function CommandCenterSalesPage() {
             <span className="hidden sm:inline">Explore {d.mapPreview?.total ?? "every"} college wrestling programs across NCAA Division I, II, III, NAIA and junior college, men&apos;s and women&apos;s. Tap any college to see its coaching staff, its recruiting questionnaire and the wrestlers from your state who went there, then save it to your list and compare.</span>
           </p>
           <div className="mt-6">
-            <CollegeProgramMap accessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? ""} upsellHref={d.onSale ? BUY : "/plans"} heightClass="h-[340px] sm:h-[560px]" showList={false} cooperative />
+            <CollegeProgramMap accessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN ?? ""} upsellHref={buyHref} heightClass="h-[340px] sm:h-[560px]" showList={false} cooperative />
           </div>
         </section>
 
@@ -391,14 +396,14 @@ export default async function CommandCenterSalesPage() {
                 <li key={l} className="flex gap-2"><Check className="mt-0.5 h-4 w-4 shrink-0" style={{ color: GOLD }} aria-hidden /> {l}</li>
               ))}
             </ul>
-            <Link href={d.onSale ? BUY : "/plans"} className="mt-8 block rounded-xl px-6 py-4 text-base font-black text-[#0A1628] hover:brightness-110" style={{ backgroundColor: SKY }}>
+            <Link href={buyHref} className="mt-8 block rounded-xl px-6 py-4 text-base font-black text-[#0A1628] hover:brightness-110" style={{ backgroundColor: SKY }}>
               {d.onSale ? "Sign up now →" : "See plans →"}
             </Link>
             <p className="mt-3 text-xs text-white/50">Cancel anytime · Includes Insider</p>
             <p className="mt-1 text-[11px] text-white/40"><a href="/auth/signin?returnTo=%2Fmy-recruiting" className="underline hover:text-white/80">NC United Blue members: sign in for free access</a></p>
           </div>
           <p className="ncu-only mt-6 text-center text-sm text-white/55">
-            Just the rankings? <Link href="/plans" className="underline" style={{ color: GOLD }}>Insider is {formatPrice(SCOUTING_REPORT_PRICES.subscription)}/month</Link>. Or <Link href="/create-profile" className="underline" style={{ color: GOLD }}>claim your free profile</Link>.
+            Just the rankings? <Link href={onRw ? "/membership" : "/plans"} className="underline" style={{ color: GOLD }}>Insider is {formatPrice(SCOUTING_REPORT_PRICES.subscription)}/month</Link>. Or <Link href="/create-profile" className="underline" style={{ color: GOLD }}>claim your free profile</Link>.
           </p>
         </section>
 
@@ -430,7 +435,7 @@ export default async function CommandCenterSalesPage() {
             </div>
           </div>
           <div className="ncu-only mt-10 text-center">
-            <Link href={d.onSale ? BUY : "/plans"} className="inline-block rounded-xl px-8 py-4 text-base font-black text-[#0A1628] hover:brightness-110" style={{ backgroundColor: SKY }}>
+            <Link href={buyHref} className="inline-block rounded-xl px-8 py-4 text-base font-black text-[#0A1628] hover:brightness-110" style={{ backgroundColor: SKY }}>
               {d.onSale ? `Sign up now, ${price}/month →` : "See plans →"}
             </Link>
           </div>

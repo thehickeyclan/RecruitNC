@@ -26,7 +26,37 @@ const defaultShareImage = "/api/share-card?t=NC%20United&s=Rankings%2C%20athlete
 /** True on NC United's Vercel project (its production address is ncwrestlingunited.com), set by Vercel at build. */
 const NC_UNITED_PROJECT = /ncwrestlingunited/i.test(process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "")
 
-export const metadata: Metadata = {
+/** True on RecruitWrestlers' own Vercel project (Guild Ventures), which serves recruitwrestlers.com only. */
+const RW_PROJECT = /recruitwrestlers/i.test(process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "")
+
+const rwDescription = "College wrestling recruiting built on verified results: athlete profiles, rankings, recaps and the Recruiting Command Center."
+
+/** RecruitWrestlers' defaults: its tab titles, link previews and icons, never NC United's (Matt's product review, 26 Oct 2026). */
+const rwMetadata: Metadata = {
+  metadataBase: new URL("https://www.recruitwrestlers.com"),
+  title: { default: "RecruitWrestlers", template: "%s | RecruitWrestlers" },
+  description: rwDescription,
+  manifest: null,
+  openGraph: {
+    title: "RecruitWrestlers",
+    description: rwDescription,
+    url: "https://www.recruitwrestlers.com",
+    siteName: "RecruitWrestlers",
+    type: "website",
+    images: [{ url: "/recruitwrestlers/share.jpg", width: 1200, height: 630, alt: "RecruitWrestlers" }],
+  },
+  twitter: { card: "summary_large_image", title: "RecruitWrestlers", description: rwDescription, images: ["/recruitwrestlers/share.jpg"] },
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "RecruitWrestlers" },
+  icons: {
+    icon: [
+      { url: "/recruitwrestlers/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/recruitwrestlers/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: [{ url: "/recruitwrestlers/apple-icon.png" }],
+  },
+}
+
+const ncuMetadata: Metadata = {
   metadataBase: new URL("https://app.ncwrestlingunited.com"),
   title: {
     default: defaultTitle,
@@ -69,6 +99,8 @@ export const metadata: Metadata = {
   },
   generator: "v0.app",
 }
+
+export const metadata: Metadata = RW_PROJECT ? rwMetadata : ncuMetadata
 
 export const viewport: Viewport = {
   width: "device-width",

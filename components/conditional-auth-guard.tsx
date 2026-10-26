@@ -77,6 +77,8 @@ export function ConditionalAuthGuard({
     // they have an account, so a login wall here loses the sale (15 Oct 2026).
     "/plans",
     "/command-center",
+    // RecruitWrestlers' plans page: prices before an account (Matt's product review, 26 Oct 2026).
+    "/membership",
     // Dev-only product screenshots (404 in production).
     "/dev/screens",
     "/schools",

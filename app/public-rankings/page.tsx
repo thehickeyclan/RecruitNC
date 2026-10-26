@@ -19,6 +19,8 @@ import {
 } from "@/lib/public-rankings-cap"
 import { resolveViewGender } from "@/lib/recruiting/coach-program-server"
 import { BrandName } from "@/components/recruiting/brand-name"
+import { headers } from "next/headers"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 
 export const dynamic = "force-dynamic"
 
@@ -79,7 +81,9 @@ export default async function PublicRankingsHomepage({
     if (params.purchased) carried.set("purchased", "1")
     if (params.welcome === "coach") carried.set("welcome", "coach")
     const query = carried.toString()
-    redirect(query ? `/rankings?${query}` : "/rankings")
+    // NC United sells the rankings at /rankings; RecruitWrestlers on its own plans page, never NC United's.
+    const sales = stagedBrandForHost((await headers()).get("host")) === "national" ? "/membership" : "/rankings"
+    redirect(query ? `${sales}?${query}` : sales)
   }
 
   // Staff read the boards before the announcement, on the same page customers will use.

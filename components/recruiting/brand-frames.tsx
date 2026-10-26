@@ -16,6 +16,8 @@ function useBrandTitle(host: BrandHost) {
       const next = t
         .replace(/ \| RecruitNC(?= \||$)/g, ` | ${name}`)
         .replace(/NC United Wrestling/g, name)
+        .replace(/ \| NC United$/, ` | ${name}`)
+        .replace(/^NC United$/, name)
         .replace(new RegExp(`( \\| ${name})+`, "g"), ` | ${name}`)
       if (next !== t) document.title = next
     }
