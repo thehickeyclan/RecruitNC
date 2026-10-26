@@ -1,6 +1,6 @@
 /**
  * Super 32 2026 — North Carolina Boys Recap. The top (through "How the Grades Work") and the top
- * grade awarded are free; below that, names show and grades are locked for anyone without premium
+ * grade awarded are free; below that, names, grades and details are locked (never sent in the HTML) for anyone without premium
  * access (Rankings, Command Center, Blue, verified college coaches, admins). A family linked to a
  * wrestler sees that wrestler's grade free. Members are never shown a sales panel.
  *
@@ -172,7 +172,7 @@ function ThreeYear({ body }: { body: string }) {
   )
 }
 
-function GradeLegend({ body, graded }: { body: string; graded: GradedWrestler[] }) {
+function GradeLegend({ body, counts }: { body: string; counts: Record<string, number> }) {
   return (
     <section className="mt-10 rounded-2xl bg-[#f4f6fb] p-5">
       <h2 className="text-2xl font-black text-[#0b1730]">How the grades work</h2>
@@ -180,7 +180,7 @@ function GradeLegend({ body, graded }: { body: string; graded: GradedWrestler[] 
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
         {GRADES.map((g) => {
           const st = GRADE_STYLE[g]!
-          const n = graded.filter((w) => w.grade === g).length
+          const n = counts[g] ?? 0
           return (
             <div key={g} className="flex items-center gap-3 rounded-lg bg-white p-2.5">
               <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-sm font-black ${st.badge}`}>{st.label}</span>
@@ -204,18 +204,15 @@ function Chip({ children, tone = "gray" }: { children: React.ReactNode; tone?: "
 
 const ordinal = (n: number) => `${n}${n === 1 ? "st" : n === 2 ? "nd" : n === 3 ? "rd" : "th"}`
 
-function WrestlerCard({ w, e, open }: { w: GradedWrestler; e: SnapshotEntrant | undefined; open: boolean }) {
-  const st = GRADE_STYLE[w.grade]!
-  const record = e ? `${e.wins}-${e.losses}` : (w.heading.match(/(\d+-\d+)/)?.[1] ?? "")
-  const seeded = (e?.bouts ?? []).filter((b) => b.win && b.opponentSeed && !/for/i.test(b.winType)).sort((a, b) => a.opponentSeed! - b.opponentSeed!)
-  if (!open) {
+/** Locked: no props at all, so nothing that identifies the wrestler reaches the page, even blurred (Matt, 25 Oct). */
+function LockedCard() {
     return (
-      <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-        <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 shrink-0 select-none items-center justify-center rounded-lg bg-gray-200 text-base font-black text-transparent blur-[3px]">{w.grade}</span>
-          <div className="min-w-0">
-            <div className="truncate text-base font-bold text-gray-900">{e?.athleteId ? <Link href={`/athletes/${e.athleteId}`} className="hover:underline">{w.name}</Link> : w.name}</div>
-            <div className="text-xs text-gray-500">{w.weight} lbs · {record}{e?.school ? ` · ${e.school}` : ""}</div>
+      <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm" aria-label="Locked: Rankings members only">
+        <div className="flex items-center gap-3" aria-hidden>
+          <span className="h-11 w-11 shrink-0 rounded-lg bg-gray-200 blur-[2px]" />
+          <div className="min-w-0 flex-1 space-y-2 blur-[3px]">
+            <div className="h-3.5 w-40 rounded bg-gray-300" />
+            <div className="h-2.5 w-28 rounded bg-gray-200" />
           </div>
         </div>
         <div className="mt-3 space-y-1.5 blur-[4px]" aria-hidden>
@@ -223,7 +220,12 @@ function WrestlerCard({ w, e, open }: { w: GradedWrestler; e: SnapshotEntrant | 
         </div>
       </div>
     )
-  }
+}
+
+function WrestlerCard({ w, e }: { w: GradedWrestler; e: SnapshotEntrant | undefined }) {
+  const st = GRADE_STYLE[w.grade]!
+  const record = e ? `${e.wins}-${e.losses}` : (w.heading.match(/(\d+-\d+)/)?.[1] ?? "")
+  const seeded = (e?.bouts ?? []).filter((b) => b.win && b.opponentSeed && !/for/i.test(b.winType)).sort((a, b) => a.opponentSeed! - b.opponentSeed!)
   return (
     <article className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
       <div className="flex gap-4 p-4">
@@ -345,7 +347,7 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
 
       {table && <ThreeYear body={table.body} />}
       <PhotoBreak photos={BREAKS.intro} />
-      {method && <GradeLegend body={method.body} graded={recap.graded} />}
+      {method && <GradeLegend body={method.body} counts={Object.fromEntries(GRADES.map((g) => [g, recap.graded.filter((w) => w.grade === g).length]))} />}
 
       {GRADES.map((g) => {
         const ws = recap.graded.filter((w) => w.grade === g)
@@ -356,16 +358,18 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
           <section key={g} className="mt-10">
             {locked && g === firstLockedGrade && <UnlockPanel />}
             <div className="mt-8 flex items-center gap-3">
-              <span className={`flex h-10 w-10 items-center justify-center rounded-lg text-base font-black ${allOpen ? st.badge : "select-none bg-gray-200 text-transparent blur-[3px]"}`}>{st.label}</span>
+              {allOpen
+                ? <span className={`flex h-10 w-10 items-center justify-center rounded-lg text-base font-black ${st.badge}`}>{st.label}</span>
+                : <span className="h-10 w-10 rounded-lg bg-gray-200 blur-[2px]" aria-hidden />}
               <div>
                 <h2 className="text-xl font-black text-[#0b1730]">{allOpen ? `Grade ${st.label}` : "Graded below"}</h2>
                 {allOpen && <div className="text-xs text-gray-500">{st.blurb}</div>}
               </div>
             </div>
             <div className="mt-3 grid gap-3">
-              {ws.map((w) => <WrestlerCard key={w.name} w={w} e={byName.get(nameKey(w.name))} open={isOpenFor(w)} />)}
+              {ws.map((w, i) => (isOpenFor(w) ? <WrestlerCard key={w.name} w={w} e={byName.get(nameKey(w.name))} /> : <LockedCard key={`locked-${g}-${i}`} />))}
             </div>
-            {(g === "A" || g === "A-") && <PhotoBreak photos={BREAKS[g]} />}
+            {(g === "A" || g === "A-") && allOpen && <PhotoBreak photos={BREAKS[g]} />}
           </section>
         )
       })}
@@ -373,15 +377,21 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
       <section className="mt-10">
         <h2 className="text-xl font-black text-[#0b1730]">Honorable mention</h2>
         <div className="mt-3 flex flex-wrap gap-2">
-          {recap.honorableMention.map((h) => (
-            <span key={h.name} className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm shadow-sm">
-              {byName.get(nameKey(h.name))?.athleteId
-                ? <Link href={`/athletes/${byName.get(nameKey(h.name))!.athleteId}`} className="font-semibold text-[#003366] hover:underline">{h.name}</Link>
-                : <span className="font-semibold text-gray-900">{h.name}</span>}
-              <span className="text-gray-500"> · {h.weight}</span>
-              {(unlocked || own.has(nameKey(h.name))) && h.note ? <span className="text-gray-500"> · {h.note}</span> : null}
-            </span>
-          ))}
+          {recap.honorableMention.map((h, i) => {
+            if (!unlocked && !own.has(nameKey(h.name))) {
+              return <span key={i} className="h-8 w-36 rounded-lg border border-gray-200 bg-gray-100 blur-[2px]" aria-hidden />
+            }
+            const id = byName.get(nameKey(h.name))?.athleteId
+            return (
+              <span key={h.name} className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm shadow-sm">
+                {id
+                  ? <Link href={`/athletes/${id}`} className="font-semibold text-[#003366] hover:underline">{h.name}</Link>
+                  : <span className="font-semibold text-gray-900">{h.name}</span>}
+                <span className="text-gray-500"> · {h.weight}</span>
+                {h.note ? <span className="text-gray-500"> · {h.note}</span> : null}
+              </span>
+            )
+          })}
         </div>
       </section>
 
