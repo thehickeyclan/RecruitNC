@@ -188,16 +188,32 @@ async function buildPublicClassRanking(
    * on the men's board beside the boy holding the same number (13 October 2026).
    */
   board: "Male" | "Female" = "Male",
+  /** Whose board: North Carolina's unless a RecruitWrestlers page asks for another live state. */
+  state = "NC",
 ): Promise<PublicClassRanking> {
   const gender = isWomensBoard(board) ? "Female" : "Male"
   const cap = getPublicRankingsMax(year, gender)
-  const reachable = includeUnreleased ? isRankedClassYear(year, gender) : isPublicRankingsYearPublished(year, gender)
+  const admin = createAdminClient()
+  /*
+   * North Carolina's releases are listed in lib/public-rankings-cap. Another state's board is
+   * reachable once it has been published (ranking_editions), or by its ranker and admins before.
+   */
+  const otherStatePublished =
+    state === "NC"
+      ? false
+      : Boolean(
+          (await admin.from("ranking_editions").select("published_at").eq("class_year", year).eq("gender", gender).eq("state", state).maybeSingle()).data
+            ?.published_at,
+        )
+  const reachable =
+    state === "NC"
+      ? includeUnreleased ? isRankedClassYear(year, gender) : isPublicRankingsYearPublished(year, gender)
+      : includeUnreleased || otherStatePublished
   if (!reachable) {
     return { year, gender, published: false, cap, publishedAt: null, athletes: [] }
   }
 
-  const admin = createAdminClient()
-  // North Carolina's board (lib/recruiting/states.ts).
+  // One state's board (lib/recruiting/states.ts): a state's ranks never appear on another's page.
   const { data: rows } = await inState(
     admin
       .from("athletes")
@@ -212,6 +228,7 @@ async function buildPublicClassRanking(
           ...IDENTITY_COLUMNS,
         ].join(", "),
       ),
+    state,
   )
       .eq("graduationyear", year)
       .eq("gender", gender)
@@ -271,7 +288,7 @@ async function buildPublicClassRanking(
     .select("published_at")
     .eq("class_year", year)
     .eq("gender", gender)
-    .eq("state", "NC")
+    .eq("state", state)
     .maybeSingle()
 
   return { year, gender, published: true, cap, publishedAt: (edition?.published_at as string) ?? null, athletes }

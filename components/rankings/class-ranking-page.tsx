@@ -13,6 +13,10 @@ import { loadPublicClassRanking } from "@/lib/rankings/public-rankings-view"
 import { RankingsNav } from "@/components/rankings/rankings-nav"
 import { RankingsSummary } from "@/components/rankings/rankings-summary"
 import { RankingsWatermark } from "@/components/rankings/rankings-watermark"
+import { headers } from "next/headers"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { liveStates } from "@/lib/recruiting/brand"
+import { STATE_NAMES } from "@/lib/college-programs/states"
 
 /**
  * A published class ranking, laid out like the Tournament of Champions field.
@@ -21,7 +25,15 @@ import { RankingsWatermark } from "@/components/rankings/rankings-watermark"
  * 560 lines each, one per year, which had drifted apart — different filters, different empty
  * states, different ways of saying the same thing.
  */
-export async function ClassRankingPage({ year, gender = "Male" }: { year: number; gender?: "Male" | "Female" }) {
+export async function ClassRankingPage({ year, gender = "Male", state: askedState }: { year: number; gender?: "Male" | "Female"; state?: string }) {
+  /*
+   * RecruitWrestlers ranks every live state, one board per state, with a state filter and a
+   * state pill on each tile (Matt, 26 Oct 2026). NC United is North Carolina only.
+   */
+  const onRw = stagedBrandForHost((await headers()).get("host")) === "national"
+  const states = liveStates(onRw)
+  const state = states.some((s) => s.code === String(askedState ?? "").toUpperCase()) ? String(askedState).toUpperCase() : "NC"
+  const stateName = STATE_NAMES[state] ?? state
   // "Women's " in front of every heading on the women's board; nothing on the men's, as before.
   const womens = gender === "Female"
   const board = womens ? "Women's " : ""
@@ -48,14 +60,14 @@ export async function ClassRankingPage({ year, gender = "Male" }: { year: number
    * is neither an admin nor a subscriber. A grant on this exact board - the same one that opens
    * the admin board to him - opens this page and nothing else.
    */
-  const ranker = viewer.isAdmin === true ? false : (await requireRankingBoardAccess(gender, year, "read")).ok
+  const ranker = viewer.isAdmin === true ? false : (await requireRankingBoardAccess(gender, year, "read", state)).ok
   const preview = viewer.isAdmin === true || ranker
   if (!canSeeProspectRanking(viewer) && !ranker) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#061224] px-4">
         <div className="max-w-md text-center">
           <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#CC0000]">
-            <BrandName /> · North Carolina prospect rankings
+            <BrandName /> · {stateName} prospect rankings
           </p>
           <h1 className="mt-3 text-3xl font-light uppercase tracking-tight text-white">
             {board}Class of {year}
@@ -81,7 +93,8 @@ export async function ClassRankingPage({ year, gender = "Male" }: { year: number
     )
   }
 
-  const ranking = await loadPublicClassRanking(year, preview, gender)
+  const ranking = await loadPublicClassRanking(year, preview, gender, state)
+  const basePath = gender === "Female" ? `/public-rankings/women/${year}` : `/public-rankings/${year}`
   // Coaches and admins get the My Recruits star on every card (Matt, 14 October 2026).
   const canStar = (viewer.isAdmin === true || viewer.isVerifiedCoach === true) && Boolean(userId)
   const starred = canStar ? await loadStarredAthleteIds(createAdminClient(), String(userId)).catch(() => new Set<string>()) : null
@@ -91,7 +104,7 @@ export async function ClassRankingPage({ year, gender = "Male" }: { year: number
       <section className="px-4 py-12 sm:py-16">
         <div className="mx-auto max-w-6xl">
           <p className="text-center text-[11px] font-bold uppercase tracking-[0.22em] text-[#CC0000]">
-            <BrandName /> · North Carolina {womens ? "women's " : ""}prospect rankings
+            <BrandName /> · {stateName} {womens ? "women's " : ""}prospect rankings
           </p>
           <h1 className="mt-3 text-center text-4xl font-black uppercase tracking-tight text-white sm:text-5xl">
             {board}Class of {year}
@@ -99,9 +112,23 @@ export async function ClassRankingPage({ year, gender = "Male" }: { year: number
 
           <p className="mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-white/60">
             {womens
-              ? `The top ${ranking.cap} women's wrestlers in North Carolina's Class of ${year}, ranked on results: freestyle and national events first, then who they beat.`
-              : `The top ${ranking.cap} wrestlers in North Carolina's Class of ${year}, ranked on results: who they wrestled, how they did against them, and what they have done outside this state.`}
+              ? `The top ${ranking.cap} women's wrestlers in ${stateName}'s Class of ${year}, ranked on results: freestyle and national events first, then who they beat.`
+              : `The top ${ranking.cap} wrestlers in ${stateName}'s Class of ${year}, ranked on results: who they wrestled, how they did against them, and what they have done outside this state.`}
           </p>
+          {states.length > 1 ? (
+            <nav className="mt-6 flex justify-center gap-2" aria-label="State">
+              {states.map((s) => (
+                <Link
+                  key={s.code}
+                  href={s.code === "NC" ? basePath : `${basePath}?state=${s.code}`}
+                  aria-current={s.code === state ? "page" : undefined}
+                  className={`rounded-full px-4 py-1.5 text-sm font-bold ${s.code === state ? "bg-[#A3E635] text-[#0B1426]" : "border border-white/20 text-white/75 hover:border-white/50 hover:text-white"}`}
+                >
+                  {s.name}
+                </Link>
+              ))}
+            </nav>
+          ) : null}
           {publishedDateLabel(ranking.publishedAt) ? (
             <p className="mt-2 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-[#d6b75d]">
               {publishedDateLabel(ranking.publishedAt)}
@@ -120,7 +147,9 @@ export async function ClassRankingPage({ year, gender = "Male" }: { year: number
 
           {!ranking.published ? (
             <p className="mt-10 rounded-sm border border-white/10 bg-white/[0.03] p-8 text-center text-sm text-white/55">
-              The {board}Class of {year} is not published yet.
+              {state === "NC"
+                ? `The ${board}Class of ${year} is not published yet.`
+                : `${stateName}'s ${board}Class of ${year} rankings are being finalized and publish soon.`}
             </p>
           ) : ranking.athletes.length === 0 ? (
             <p className="mt-10 rounded-sm border border-white/10 bg-white/[0.03] p-8 text-center text-sm text-white/55">
@@ -134,7 +163,7 @@ export async function ClassRankingPage({ year, gender = "Male" }: { year: number
               </p>
             <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
               {ranking.athletes.map((athlete) => (
-                <RankedAthleteCard key={athlete.athleteId} athlete={athlete} star={starred ? { starred: starred.has(athlete.athleteId) } : undefined} />
+                <RankedAthleteCard key={athlete.athleteId} athlete={athlete} star={starred ? { starred: starred.has(athlete.athleteId) } : undefined} stateCode={onRw ? state : undefined} />
               ))}
             </ul>
             </>
