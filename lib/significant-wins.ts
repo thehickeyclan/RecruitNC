@@ -1,4 +1,5 @@
 import { hasNameAlias, nameWords, namesLikelySamePerson } from "@/lib/athlete-name-match"
+import { recordStrength } from "@/lib/win-strength"
 import { isNationalEvent } from "@/lib/wrestling-style"
 
 /**
@@ -345,6 +346,12 @@ export type SignificantWin = {
    * comparing two résumés needs to know whether a win came against #2 or #38.
    */
   opponentRanking: number | null
+  /**
+   * How strong the win is, from the opponent's whole record - every state finish with its
+   * division, every national placing, a national rank (lib/win-strength.ts). The profile's Top 5
+   * sorts on it; the printed credential names only part of that record.
+   */
+  strength?: number
 }
 
 function opponentName(bout: Bout): string {
@@ -754,6 +761,25 @@ function findSignificantBouts(
       eventPlacers.flatMap((p) => p.finishes).filter((f) => season == null || Math.abs(f.year - season) <= 3),
     )
     const eventState = eventLabel ? eventPlacers.find((p) => p.state && p.state !== "NC")?.state ?? null : null
+    const fargoFinishes = (index.fargoAllAmericans ?? [])
+      .filter((f) => namesLikelySamePerson(f.name, name))
+      .filter((f) => schoolConsistent(bout.opponent_school, f.schools, index.stateSchools))
+      .flatMap((f) => f.finishes)
+      .filter((f) => season == null || Math.abs(f.year - season) <= 3)
+    const eventFinishes = [
+      ...new Map(
+        eventPlacers
+          .flatMap((p) => p.finishes)
+          .filter((f) => season == null || Math.abs(f.year - season) <= 3)
+          .map((f) => [`${f.event}|${f.year}|${f.place}|${f.weight}`, f]),
+      ).values(),
+    ]
+    const strength = recordStrength({
+      nationalRank: national?.rank ?? null,
+      stateFinishes: [...new Map(finishes.map((f) => [`${f.state ?? "NC"}|${f.year}|${f.place}|${f.classification}`, f])).values()],
+      eventFinishes,
+      fargoFinishes,
+    })
     if (!national && !inField && !ranked && !placer && !eventLabel) continue
 
     // One entry per opponent per day: the same bout is sometimes stored twice.
@@ -784,6 +810,7 @@ function findSignificantBouts(
       ...(fargo ? { fargoLabel: fargo } : {}),
       opponentGraduationYear: ranked?.graduationYear ?? null,
       opponentRanking: ranked?.ranking ?? null,
+      ...(strength > 0 ? { strength } : {}),
       ...(national
         ? { nationalRankLabel: `#${national.rank} ${national.source}`, opponentState: national.state }
         : placer && finishes.some((f) => f.state && f.state !== "NC")
@@ -809,8 +836,16 @@ function findSignificantBouts(
       eventLabel: seenLabels.eventLabel ?? w.eventLabel,
     })
   }
+  // The record behind the labels goes with them: his strongest reading at any meeting.
+  const strengthByName = new Map<string, number>()
+  for (const w of wins) {
+    const key = w.opponent.toLowerCase()
+    if ((w.strength ?? 0) > (strengthByName.get(key) ?? 0)) strengthByName.set(key, w.strength!)
+  }
   for (const w of wins) {
     const labels = labelsByName.get(w.opponent.toLowerCase())
+    const strongest = strengthByName.get(w.opponent.toLowerCase())
+    if (strongest && strongest > (w.strength ?? 0)) w.strength = strongest
     if (!w.stateLabel && labels?.stateLabel) w.stateLabel = labels.stateLabel
     if (!w.fargoLabel && labels?.fargoLabel) w.fargoLabel = labels.fargoLabel
     if (!w.eventLabel && labels?.eventLabel) w.eventLabel = labels.eventLabel

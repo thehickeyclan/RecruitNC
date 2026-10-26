@@ -179,6 +179,8 @@ export async function loadAthleteSignificantWins(
     stateFinish: stateFinishOf(win),
     // A win over another state's placer is a national result, and the filter should say so.
     scope: scopeFor(win.opponentState),
+    // The Top 5's score, from his whole record (lib/win-strength.ts).
+    strength: win.strength ?? null,
   }))
 
   /*
@@ -261,6 +263,7 @@ export async function loadAthleteSignificantWins(
       credential: significantWinCredential(hit) ?? win.credential,
       stateFinish: stateFinishOf(hit),
       scope: scopeFor(hit.opponentState),
+      strength: hit.strength ?? null,
     }
   })
 
