@@ -105,7 +105,8 @@ async function main() {
     for (const rcpt of recipients(m)) {
       const unsubFor = to ? unsubscribeUrl("https://app.ncwrestlingunited.com", rcpt) : m.unsub
       const res = await resend.emails.send({
-        from: "Matt Hickey · RecruitNC <info@ncwrestlingunited.com>",
+        // The letter goes out as Matt alone, as the Oct 17 invite letter did (it landed in Primary).
+        from: asLetter ? "Matt Hickey <info@ncwrestlingunited.com>" : "Matt Hickey · RecruitNC <info@ncwrestlingunited.com>",
         to: [rcpt],
         replyTo: "info@ncwrestlingunited.com",
         subject: m.subject,
