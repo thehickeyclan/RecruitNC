@@ -240,6 +240,10 @@ function Chip({ children, tone = "gray" }: { children: React.ReactNode; tone?: "
 const ordinal = (n: number) => `${n}${n === 1 ? "st" : n === 2 ? "nd" : n === 3 ? "rd" : "th"}`
 
 /** Locked: no props at all, so nothing that identifies the wrestler reaches the page, even blurred (Matt, 25 Oct). */
+/** "South Rowan · Class of 2030": school (never a placeholder like "NA") then class year. */
+const schoolAndClass = (e: SnapshotEntrant | undefined) =>
+  [e?.school && !/^n\/?a$/i.test(e.school) ? e.school : null, e?.classYear ? `Class of ${e.classYear}` : null].filter(Boolean).join(" · ")
+
 function LockedCard() {
     return (
       <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm" aria-label="Locked: Insider members only">
@@ -268,7 +272,7 @@ function WrestlerCard({ w, e }: { w: GradedWrestler; e: SnapshotEntrant | undefi
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2">
             <h3 className="text-lg font-black text-[#0b1730]">{e?.athleteId ? <Link href={`/athletes/${e.athleteId}`} className="hover:underline">{w.name}</Link> : w.name}</h3>
-            <span className="text-sm text-gray-500">{[`${w.weight} lbs`, e?.school && !/^n\/?a$/i.test(e.school) ? e.school : null, e?.classYear ? `Class of ${e.classYear}` : null].filter(Boolean).join(" · ")}</span>
+            <span className="text-sm text-gray-500">{[`${w.weight} lbs`, schoolAndClass(e)].filter(Boolean).join(" · ")}</span>
           </div>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             <Chip tone="navy">{record}</Chip>
@@ -416,13 +420,15 @@ export default async function Super32BoysRecapPage({ searchParams }: { searchPar
             if (!unlocked && !own.has(nameKey(h.name))) {
               return <span key={i} className="h-8 w-36 rounded-lg border border-gray-200 bg-gray-100 blur-[2px]" aria-hidden />
             }
-            const id = byName.get(nameKey(h.name))?.athleteId
+            const he = byName.get(nameKey(h.name))
+            const id = he?.athleteId
+            const sc = schoolAndClass(he)
             return (
               <span key={h.name} className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm shadow-sm">
                 {id
                   ? <Link href={`/athletes/${id}`} className="font-semibold text-[#003366] hover:underline">{h.name}</Link>
                   : <span className="font-semibold text-gray-900">{h.name}</span>}
-                <span className="text-gray-500"> · {h.weight}</span>
+                <span className="text-gray-500"> · {h.weight}{sc ? ` · ${sc}` : ""}</span>
                 {h.note ? <span className="text-gray-500"> · {h.note}</span> : null}
               </span>
             )
