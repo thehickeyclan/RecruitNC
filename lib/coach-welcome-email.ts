@@ -327,11 +327,9 @@ ${input.unsubscribeUrl ? `<p style="margin:28px 0 0;font-size:12px;color:#9ca3af
 }
 
 
-/** The one direct ask, so coaches reply (replies are the strongest inbox signal). Never "what would you like to see". */
-function replyAsk(starred: number): string {
-  return starred
-    ? "Recruiting a North Carolina wrestler who isn't on your list? Reply with his name and I'll star him for you, so he shows up in every report. Or call or text me."
-    : "Reply with the North Carolina wrestlers you're recruiting and I'll star them for you, so they show up in every report. Or call or text me."
+/** How to reach Matt. A statement, never a question: coach emails ask nothing (Matt, 26 Oct 2026). */
+function replyAsk(_starred: number): string {
+  return "Reply to this email or call or text me anytime."
 }
 
 /* ------------------------------------------------------------------ Super 32 report ready */
