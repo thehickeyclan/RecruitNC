@@ -100,12 +100,15 @@ export function HomeNewsHighlightsCarousel() {
               </div>
             )}
             <div className="flex flex-col justify-center p-6 md:p-8">
-              {mainStory.category && (
-                <span
-                  className={`mb-2 inline-block self-start rounded px-2 py-0.5 text-xs font-medium text-white ${mainStory.categoryBadgeClass ?? "bg-[#003366]"}`}
-                >
-                  {mainStory.category}
-                </span>
+              {(mainStory.category || mainStory.premium) && (
+                <div className="mb-2 flex flex-wrap gap-1.5">
+                  {mainStory.category && (
+                    <span className={`inline-block rounded px-2 py-0.5 text-xs font-medium text-white ${mainStory.categoryBadgeClass ?? "bg-[#003366]"}`}>
+                      {mainStory.category}
+                    </span>
+                  )}
+                  {mainStory.premium && <span className="rounded bg-[#D3B574] px-2 py-0.5 text-xs font-semibold text-[#13294B]">★ Premium content</span>}
+                </div>
               )}
               <h3 className="mb-2 text-xl font-bold text-[#003366] group-hover:underline md:text-2xl">
                 {mainStory.title}
@@ -185,12 +188,15 @@ function StoryCard({ item }: { item: NewsItem }) {
               <FileText className="h-10 w-10 text-slate-300" />
             </div>
           )}
-          {item.category && (
-            <span
-              className={`absolute left-2 top-2 rounded px-2 py-0.5 text-xs font-medium text-white ${item.categoryBadgeClass ?? "bg-[#003366]"}`}
-            >
-              {item.category}
-            </span>
+          {(item.category || item.premium) && (
+            <div className="absolute left-2 top-2 flex flex-wrap gap-1">
+              {item.category && (
+                <span className={`rounded px-2 py-0.5 text-xs font-medium text-white ${item.categoryBadgeClass ?? "bg-[#003366]"}`}>
+                  {item.category}
+                </span>
+              )}
+              {item.premium && <span className="rounded bg-[#D3B574] px-2 py-0.5 text-xs font-semibold text-[#13294B]">★ Premium content</span>}
+            </div>
           )}
         </div>
         <div className="flex flex-1 flex-col p-4">

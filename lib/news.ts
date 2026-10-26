@@ -43,6 +43,8 @@ export interface NewsItem {
   imageBannerBgClass?: string
   /** On /news index: full-width image banner above text (hero-style). */
   newsListBanner?: boolean
+  /** Part of it is for Insider/Command Center/Blue members: shows a "Premium content" pill on news cards (Matt, 25 Oct 2026). */
+  premium?: boolean
   /** If true, this is an announcement (lives under /news/[slug]). If false, href is external (e.g. NCHSAA). */
   isAnnouncement?: boolean
   /** Omit from home carousel when the story is already promoted in the homepage hero banner. */
@@ -124,8 +126,29 @@ const ALL_NEWS: NewsItem[] = [
     categoryBadgeClass: "bg-[#CC0000]",
     author: "NC United",
     isAnnouncement: false,
-    pinToTop: true,
+    // Unpinned 25 Oct 2026: the event is over and the recap leads now.
     actionLabel: "Follow NC live at Super 32 HQ",
+  },
+  {
+    // The recap lives at its own route (app/news/super32-2026-nc-boys-recap), not /news/[slug].
+    id: "super32-2026-nc-boys-recap",
+    slug: "super32-2026-nc-boys-recap",
+    title: "Super 32 2026 — North Carolina Boys Recap",
+    subtitle: "Eleven wins over top-15 seeds, up from six and two. Every NC boy graded on the strength of his tournament.",
+    summary:
+      "North Carolina's boys beat 11 top-15 seeds at Super 32, up from six last year and two in 2024. Braylen Yates medaled, and every NC boy is graded on who he beat, how far he went and who beat him.",
+    href: "/news/super32-2026-nc-boys-recap",
+    date: "2026-10-25",
+    image: "/images/news/super32-2026-boys-recap/yates-celebration-hd.jpg",
+    imagePosition: "top",
+    newsListBanner: true,
+    category: "SUPER 32",
+    categoryBadgeClass: "bg-[#CC0000]",
+    author: "NC United",
+    isAnnouncement: false,
+    pinToTop: true,
+    premium: true,
+    actionLabel: "Read the recap",
   },
   {
     id: "super32-2026-what-good-looks-like",
