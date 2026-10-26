@@ -101,7 +101,16 @@ async function main() {
   const to = arg("to")
   // A test goes to each tester separately, as each coach would receive it.
   const recipients = (m: { email: string }) => (to ? to.split(",").map((t) => t.trim()) : [m.email])
+  // --batch N --pause S: N coaches, then a pause of S seconds, so the send is spread out.
+  const batch = Number(arg("batch")) || 0
+  const pause = (Number(arg("pause")) || 180) * 1000
+  let done = 0
   for (const m of list) {
+    if (batch && done > 0 && done % batch === 0) {
+      console.log(`batch done (${done} sent); pausing ${pause / 1000}s`)
+      await new Promise((r) => setTimeout(r, pause))
+    }
+    done++
     for (const rcpt of recipients(m)) {
       const unsubFor = to ? unsubscribeUrl("https://app.ncwrestlingunited.com", rcpt) : m.unsub
       const res = await resend.emails.send({
