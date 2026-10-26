@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
 import { COLLEGE_LEADERBOARD_MIN_CLASS_YEAR } from "@/lib/colleges"
+import { inState } from "@/lib/recruiting/states"
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
@@ -13,9 +14,7 @@ export async function GET(request: NextRequest) {
 
     console.log(`Leaderboard API called with: metric=${metric}, gender=${gender}, year=${year}`)
 
-    let query = supabase
-      .from("athletes")
-      .select("highschool, college, gender, graduationyear, commitmentdate, rankings")
+    let query = inState(supabase.from("athletes").select("highschool, college, gender, graduationyear, commitmentdate, rankings"))
       .not("highschool", "is", null)
       .not("college", "is", null)
       .neq("college", "")

@@ -10,6 +10,7 @@ import {
 } from "@/lib/colleges"
 import { matchesDivisionFilter } from "@/lib/division-display"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
+import { inState } from "@/lib/recruiting/states"
 
 const supabase = createAdminClient()
 
@@ -77,9 +78,7 @@ export async function GET(request: NextRequest) {
       `College Leaderboard API called with: metric=${metric}, gender=${gender}, year=${year}, division=${division}, search=${search || "(none)"}`,
     )
 
-    let query = supabase
-      .from("athletes")
-      .select("college, college_id, highschool, gender, graduationyear, commitmentdate, rankings, prospect_ranking")
+    let query = inState(supabase.from("athletes").select("college, college_id, highschool, gender, graduationyear, commitmentdate, rankings, prospect_ranking"))
       .not("college", "is", null)
       .not("highschool", "is", null)
       .neq("college", "")

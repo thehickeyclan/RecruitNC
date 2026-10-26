@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { getCollegesByIds } from "@/lib/colleges"
 import { matchesDivisionFilter } from "@/lib/division-display"
+import { inState } from "@/lib/recruiting/states"
 
 export type CommitmentAthleteFilters = {
   year?: string | null
@@ -122,6 +123,8 @@ function buildFilteredAthletesQuery(
 ) {
   let query = supabase.from("athletes").select(select, withCount ? { count: "exact" } : undefined)
   query = query.not("college", "is", null).neq("college", "").or("is_prospect.is.null,is_prospect.eq.false")
+  // North Carolina's commitments only: national profiles from other states carry a college too.
+  query = inState(query)
 
   const yearFilter = filters.year
   if (yearFilter && yearFilter !== "all") {

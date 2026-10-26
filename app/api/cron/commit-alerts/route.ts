@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { sendToSubscribers } from "@/lib/push-send"
 import { scheduledJobsOff, skippedJob } from "@/lib/scheduled-jobs"
+import { inState } from "@/lib/recruiting/states"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
@@ -71,11 +72,14 @@ export async function GET(request: NextRequest) {
    * cannot announce anybody — the stamp does not move. `commitmentdate` is when it happened, so
    * a backfill of genuinely old commitments stays quiet even though we learned of them today.
    */
-  const { data: candidates, error } = await admin
-    .from("athletes")
-    .select("id, name, college, commitmentdate, college_set_at")
-    .not("college", "is", null)
-    .neq("college", "")
+  // NC United's alert announces North Carolina's commits, never another state's national profile.
+  const { data: candidates, error } = await inState(
+    admin
+      .from("athletes")
+      .select("id, name, college, commitmentdate, college_set_at")
+      .not("college", "is", null)
+      .neq("college", ""),
+  )
     .gte("commitmentdate", cutoffIso)
     .gte("college_set_at", learnedAfter)
     .order("commitmentdate", { ascending: true })
