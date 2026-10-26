@@ -67,7 +67,7 @@ async function main() {
   const one = async (to: string, first: string | null) => {
     const unsub = unsubscribeUrl("https://app.ncwrestlingunited.com", to)
     const m = renderSuper32RecapsEmail({ firstName: first, unsubscribeUrl: unsub, hasClaimed: claimedEmails.has(to) })
-    return resend.emails.send({ from: "Matt Hickey <info@ncwrestlingunited.com>", to: [to], replyTo: "info@ncwrestlingunited.com", subject: m.subject, html: m.html, text: m.text, headers: unsubscribeHeaders(unsub) })
+    return resend.emails.send({ from: "NC United <info@ncwrestlingunited.com>", to: [to], replyTo: "info@ncwrestlingunited.com", subject: m.subject, html: m.html, text: m.text, headers: unsubscribeHeaders(unsub) })
   }
   if (arg("to")) { for (const t of arg("to")!.split(",")) { const r = await one(t.trim(), null); console.log(r.error ? `FAILED ${t}: ${r.error.message}` : `test sent to ${t}`) } return }
   if (!flag("send")) { console.log("Dry run: nothing sent."); return }
