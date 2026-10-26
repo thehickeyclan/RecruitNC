@@ -196,8 +196,8 @@ export default async function SchoolPage({ params, searchParams }: Params) {
   const rankings = rankingsAll.sort((a, b) => Number(b.gender === team) - Number(a.gender === team))
   const ranking = rankings[0] ?? null
 
-  const cost = costLines(school.id, school.state)
-  const tuition = cost ? null : tuitionFacts(school.id, school.state)
+  const cost = costLines(school.id, school.state, homeState)
+  const tuition = cost ? null : tuitionFacts(school.id, school.state, homeState)
   const admissions = collegeAdmissions(school.id)
   const fit = fitForSchool(school.id)
   const depth = depthFor(school.id, team)
@@ -456,7 +456,7 @@ export default async function SchoolPage({ params, searchParams }: Params) {
               <p className="mt-1 text-xs leading-5 text-white/55">
                 The average a year after the grants and scholarships the college gave, before loans. It is every aided student, not your wrestler: any athletic scholarship offered would lower it.
               </p>
-              {fit.netPriceInStateOnly && school.state !== "NC" ? (
+              {fit.netPriceInStateOnly && school.state !== homeState ? (
                 <p className="mt-2 text-sm text-white/65">
                   Published for in-state families only.{" "}
                   {fit.netPriceCalculatorUrl ? (
