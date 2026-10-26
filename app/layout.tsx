@@ -23,6 +23,9 @@ const defaultDescription =
 // Any page without its own card still gets a full-width one instead of the bare logo.
 const defaultShareImage = "/api/share-card?t=NC%20United&s=Rankings%2C%20athlete%20profiles%2C%20events%20and%20college%20recruiting%20for%20North%20Carolina%20wrestlers."
 
+/** True on NC United's Vercel project (its production address is ncwrestlingunited.com), set by Vercel at build. */
+const NC_UNITED_PROJECT = /ncwrestlingunited/i.test(process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "")
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://app.ncwrestlingunited.com"),
   title: {
@@ -91,11 +94,15 @@ export default function RootLayout({
           its frame (components/app-chrome.tsx) show from the first frame with no NC United gold, and
           the tab says RecruitWrestlers. Same pages, two addresses; this is the one switch.
         */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var h=location.hostname,b=/^recruit\\./.test(h)?'guild':/(^|\\.)recruitwrestlers\\.com$/.test(h)?'national':null;if(!b)return;document.documentElement.setAttribute('data-host',b)}catch(e){}})();`,
-          }}
-        />
+        {/* NC United's own project never ships it (Matt, 26 Oct 2026): RecruitWrestlers runs as its own
+            Vercel project now, and the name must not appear in NC United's page source before launch. */}
+        {!NC_UNITED_PROJECT && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `(function(){try{var h=location.hostname,b=/^recruit\\./.test(h)?'guild':/(^|\\.)recruitwrestlers\\.com$/.test(h)?'national':null;if(!b)return;document.documentElement.setAttribute('data-host',b)}catch(e){}})();`,
+            }}
+          />
+        )}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="msapplication-TileColor" content="#003366" />
         <meta name="msapplication-tap-highlight" content="no" />
