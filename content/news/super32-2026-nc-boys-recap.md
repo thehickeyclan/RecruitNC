@@ -33,7 +33,7 @@ Not every number moved. Four NC boys were still alive on Sunday morning, the sam
 
 These are performance grades for one weekend, not rankings of who is the better wrestler. A grade measures what a wrestler did in Greensboro: who he beat, how far he went and who beat him. A win over a national seed carries the most weight, because most NC boys were unseeded and every seed they beat was a result the bracket didn't expect. That's why the top grade doesn't require a medal: Mason Brown and Ellis Chia, both unseeded, beat five top-15 seeds between them and each reached the blood round, one win from the podium, and Braylen Yates, the #20 seed, beat three and medaled.
 
-Each grade has one rule, printed beside it above, and a wrestler gets the highest grade whose rule he meets. The A+ is reserved for a finalist or champion who also beat top seeds; no North Carolina boy reached it this year.
+Each grade has one rule, printed beside it above, and a wrestler gets the highest grade whose rule he meets. An A+ takes a top-four finish on the podium; no North Carolina boy reached it this year.
 
 Only contested bouts count toward a grade's wins over seeds; a forfeit counts in the record, never in the grade. Every grade above follows its rule; none was set by hand. Within each grade, wrestlers are not listed in rank order. Wrestlers below that line are named in Honorable Mention or recognized with the squad, and the full grading for every wrestler is in the accompanying data file.
 
