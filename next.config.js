@@ -109,6 +109,7 @@ const nextConfig = {
     // The recap's photos come from the coach report's thumbnails.
     "/news/super32-2026-nc-boys-recap": ["content/reports/**", "content/news/**"],
     "/news/super32-2026-nc-girls-recap": ["content/reports/**", "content/news/**"],
+    "/recaps/super32-2026-sc": ["content/reports/**", "content/news/**"],
   },
   outputFileTracingExcludes: {
     "/*": [

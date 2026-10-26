@@ -37,6 +37,8 @@ export const NATIONAL_PATH_PREFIXES = [
   // One admin, here (Matt, 22 Oct 2026). Community tools in it (Blue, store, TOC) still work; their
   // public pages are NC United's and open on its address.
   "/admin",
+  // RecruitWrestlers articles, e.g. the Super 32 South Carolina recap (app/recaps).
+  "/recaps",
 ] as const
 
 export function isNationalPath(pathname: string): boolean {
