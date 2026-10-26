@@ -170,7 +170,7 @@ function short(s: ScoutSession, school: CollegeMapSchool): string {
   const programs = school.programs
     .filter((p) => !s.team || p[s.team])
     .map((p) => `${DIVISION_SHORT[p.division]}${p.conference ? ` ${p.conference}` : ""} (${[p.mens ? "men" : null, p.womens ? "women" : null].filter(Boolean).join(" and ")})`)
-  const cost = yearlyCostFor(school.id, school.state)
+  const cost = yearlyCostFor(school.id, school.state, s.homeState ?? "NC")
   const stage = s.list.get(school.id)
   return [
     `${spoken(school.name)} [id ${school.id}] [link: school:${school.id}]: ${programs.join("; ") || "no program for this team"}, ${school.city}, ${school.state}`,
@@ -198,7 +198,7 @@ function findColleges(s: ScoutSession, a: Record<string, unknown>): string {
     if (!programs.length) return false
     if (state && school.state !== state) return false
     if (conference && !programs.some((p) => (p.conference ?? "").toLowerCase().includes(conference))) return false
-    if (maxCost != null && (yearlyCostFor(school.id, school.state)?.amount ?? Infinity) > maxCost) return false
+    if (maxCost != null && (yearlyCostFor(school.id, school.state, s.homeState ?? "NC")?.amount ?? Infinity) > maxCost) return false
     if (a.room_at_weight === true && !roomAtWeight(s, school.id)) return false
     if (typeof a.grade_category === "string" && typeof a.min_grade === "string") {
       const have = gradePoints(nicheFor(school.id)?.grades[a.grade_category as keyof NonNullable<ReturnType<typeof nicheFor>>["grades"]])

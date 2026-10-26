@@ -58,7 +58,7 @@ const LEARN_LINKS = [
 
 export default async function CommandCenterHome() {
   const cc = await loadCommandCenter("/my-recruiting")
-  const { athletes, wrestlers, schools, blue, focus, views, viewerId } = cc
+  const { athletes, wrestlers, schools, blue, focus, views, viewerId, homeState } = cc
   const admin = createAdminClient()
   const first = athletes[0] ?? null
   const w = wrestlers[0] ?? null
@@ -379,8 +379,8 @@ export default async function CommandCenterHome() {
                 <ul className="mt-3 space-y-3">
                   {schools.slice(0, 2).map((s) => {
                     const school = SCHOOL_BY_ID.get(s.id)
-                    const cost = school ? yearlyCostFor(s.id, school.state) : null
-                    const which = school && cost ? (school.state === "NC" ? "in-state" : "out-of-state") : null
+                    const cost = school ? yearlyCostFor(s.id, school.state, homeState) : null
+                    const which = school && cost ? (school.state === homeState ? "in-state" : "out-of-state") : null
                     return (
                       <li key={s.id} className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
                         <div className="flex items-center gap-3">

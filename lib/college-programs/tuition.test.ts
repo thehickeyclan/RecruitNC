@@ -13,27 +13,34 @@ describe("college tuition", () => {
 
   it("gives a North Carolina family the in-state price at home and the out-of-state price elsewhere", () => {
     const nc = programs.schools.find((s) => s.state === "NC" && tuitionForSchool(s.id)?.control === "Public")!
-    expect(tuitionFacts(nc.id, nc.state)!.lines[0]).toMatch(/for North Carolina residents$/)
+    expect(tuitionFacts(nc.id, nc.state, "NC")!.lines[0]).toMatch(/for North Carolina residents$/)
     const asu = school("Arizona State University")
-    expect(tuitionFacts(asu.id, asu.state)!.lines[0]).toBe("$31,450 a year from out of state, which is what a North Carolina family pays")
+    expect(tuitionFacts(asu.id, asu.state, "NC")!.lines[0]).toBe("$31,450 a year from out of state, which is what a North Carolina family pays")
+  })
+
+  it("gives a South Carolina family South Carolina's in-state price, and North Carolina's out-of-state one", () => {
+    const sc = programs.schools.find((s) => s.state === "SC" && tuitionForSchool(s.id)?.control === "Public" && tuitionForSchool(s.id)?.inState !== tuitionForSchool(s.id)?.outOfState)!
+    const nc = programs.schools.find((s) => s.state === "NC" && tuitionForSchool(s.id)?.control === "Public" && tuitionForSchool(s.id)?.inState !== tuitionForSchool(s.id)?.outOfState)!
+    expect(tuitionFacts(sc.id, sc.state, "SC")!.lines[0]).toMatch(/for South Carolina residents$/)
+    expect(tuitionFacts(nc.id, nc.state, "SC")!.lines[0]).toMatch(/from out of state, which is what a South Carolina family pays$/)
   })
 
   it("shows one price where residency makes no difference", () => {
     const obu = school("Ouachita Baptist University")
-    expect(tuitionFacts(obu.id, obu.state)).toEqual({ control: "Private", lines: ["$31,780 a year"] })
+    expect(tuitionFacts(obu.id, obu.state, "NC")).toEqual({ control: "Private", lines: ["$31,780 a year"] })
   })
 
   it("says a service academy charges nothing, and invents no figure where there is none", () => {
     const navy = school("United States Naval Academy")
-    expect(tuitionFacts(navy.id, navy.state)!.lines).toEqual(["No tuition: a federal service academy"])
-    expect(tuitionFacts("fort-hays-tech-northwest", "KS")!.lines).toEqual([])
-    expect(tuitionFacts("simon-fraser-university", "BC")).toBeNull()
+    expect(tuitionFacts(navy.id, navy.state, "NC")!.lines).toEqual(["No tuition: a federal service academy"])
+    expect(tuitionFacts("fort-hays-tech-northwest", "KS", "NC")!.lines).toEqual([])
+    expect(tuitionFacts("simon-fraser-university", "BC", "NC")).toBeNull()
   })
 })
 
 describe("what a year costs", () => {
   it("adds fees, housing, food and books to tuition, at the rate a North Carolina family is charged, and says the year", () => {
-    const uva = costFacts("university-of-virginia", "VA")!
+    const uva = costFacts("university-of-virginia", "VA", "NC")!
     // The Department of Education's own page for Virginia: $59,512 tuition and fees out of state in 2024-25.
     expect(uva.headline).toBe("$79,512 a year from out of state, which is what a North Carolina family is charged (2024-25 price)")
     expect(uva.breakdown).toBe("Tuition and fees $59,512 · Housing and food $14,800 · Books and other costs $5,200")
@@ -43,8 +50,8 @@ describe("what a year costs", () => {
 
   it("leads with the in-state price at a North Carolina public college, and one price at a private one", () => {
     const unc = school("University of North Carolina at Chapel Hill")
-    expect(costFacts(unc.id, unc.state)!.headline).toMatch(/a year for North Carolina residents \(20\d\d-\d\d price\)$/)
-    const duke = costFacts("duke-university", "NC")!
+    expect(costFacts(unc.id, unc.state, "NC")!.headline).toMatch(/a year for North Carolina residents \(20\d\d-\d\d price\)$/)
+    const duke = costFacts("duke-university", "NC", "NC")!
     expect(duke.headline).toMatch(/^\$[\d,]+ a year \(20\d\d-\d\d price\)$/)
     expect(duke.other).toBeNull()
   })
@@ -52,7 +59,7 @@ describe("what a year costs", () => {
   it("is more than tuition alone, and carries a year, for every college", () => {
     let counted = 0
     for (const s of programs.schools) {
-      const cost = costFacts(s.id, s.state)
+      const cost = costFacts(s.id, s.state, "NC")
       const tuition = tuitionForSchool(s.id)
       if (!cost) continue
       counted++
@@ -65,24 +72,24 @@ describe("what a year costs", () => {
   })
 
   it("never shows a tuition-only dollar figure: every price on a page or a list is the full yearly cost", () => {
-    const fullCost = programs.schools.filter((s) => costFacts(s.id, s.state))
+    const fullCost = programs.schools.filter((s) => costFacts(s.id, s.state, "NC"))
     expect(fullCost.length).toBe(429)
     for (const s of programs.schools) {
-      const cost = costFacts(s.id, s.state)
+      const cost = costFacts(s.id, s.state, "NC")
       if (cost) {
         expect(cost.breakdown, s.name).toMatch(/^Tuition and fees \$[\d,]+ · Housing and food \$[\d,]+/)
-        expect(costShort(s.id, s.state), s.name).toMatch(/tuition, housing, food and books/)
+        expect(costShort(s.id, s.state, "NC"), s.name).toMatch(/tuition, housing, food and books/)
       } else {
         // The service academies, Simon Fraser and Fort Hays Tech Northwest: no price at all, never a partial one.
-        expect((tuitionFacts(s.id, s.state)?.lines ?? []).join(" "), s.name).not.toMatch(/\$/)
-        expect(costShort(s.id, s.state) ?? "", s.name).not.toMatch(/\$/)
+        expect((tuitionFacts(s.id, s.state, "NC")?.lines ?? []).join(" "), s.name).not.toMatch(/\$/)
+        expect(costShort(s.id, s.state, "NC") ?? "", s.name).not.toMatch(/\$/)
       }
     }
   })
 
   it("falls back to tuition alone where no full price is published", () => {
-    expect(costFacts("united-states-naval-academy-navy", "MD")).toBeNull()
-    expect(costShort("united-states-naval-academy-navy", "MD")).toBe("No tuition (service academy)")
-    expect(costShort("university-of-virginia", "VA")).toBe("$79,512 a year out-of-state: tuition, housing, food and books (2024-25 price, before aid)")
+    expect(costFacts("united-states-naval-academy-navy", "MD", "NC")).toBeNull()
+    expect(costShort("united-states-naval-academy-navy", "MD", "NC")).toBe("No tuition (service academy)")
+    expect(costShort("university-of-virginia", "VA", "NC")).toBe("$79,512 a year out-of-state: tuition, housing, food and books (2024-25 price, before aid)")
   })
 })

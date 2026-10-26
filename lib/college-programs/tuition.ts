@@ -9,7 +9,7 @@
  * - **The year is 2023-24**, the newest the Department of Education publishes in bulk (IPEDS).
  * - **Tuition only**: no fees, housing or food, and before any aid.
  * - **Published price, not a family's price.** In-state applies to residents of the college's
- *   own state, so a North Carolina family pays the out-of-state figure at a public college
+ *   own state, so the family pays the out-of-state figure at a public college
  *   elsewhere. Which figure applies is worked out here, not left to the reader.
  *
  * Merged systems share one record: PennWest Clarion and Edinboro carry the same figures, as do
@@ -17,6 +17,10 @@
  */
 import costData from "@/lib/college-programs/cost-published.json"
 import data from "@/lib/college-programs/tuition-2023-24.json"
+import { STATE_NAMES } from "@/lib/college-programs/states"
+
+/** "South Carolina" for "SC": cost lines are worded for the family's own state. */
+const stateName = (code: string) => STATE_NAMES[code] ?? code
 
 export type SchoolTuition = { control: "Public" | "Private" | null; inState: number | null; outOfState: number | null }
 
@@ -32,9 +36,9 @@ export function tuitionForSchool(schoolId: string): SchoolTuition | null {
 
 export type CostLines = {
   year: string
-  /** The full yearly cost a North Carolina family is charged: tuition, fees, housing, food, books and other costs. */
+  /** The full yearly cost the family is charged: tuition, fees, housing, food, books and other costs. */
   total: number
-  /** "a year from out of state, which is what a North Carolina family pays". */
+  /** "a year from out of state, which is what the family pays". */
   who: string
   lines: Array<{ label: string; amount: number }>
   other: string | null
@@ -42,7 +46,7 @@ export type CostLines = {
 }
 
 /** The same full yearly cost as costFacts, as numbers for a card; null when none is published. */
-export function costLines(schoolId: string, schoolState: string, homeState = "NC"): CostLines | null {
+export function costLines(schoolId: string, schoolState: string, homeState: string): CostLines | null {
   const c = COST[schoolId]
   if (!c || c.tuitionFeesIn == null || c.tuitionFeesOut == null || c.housingFood == null) return null
   const resident = schoolState === homeState
@@ -64,8 +68,8 @@ export function costLines(schoolId: string, schoolState: string, homeState = "NC
   }
 }
 
-/** One short line for a list: the figure a North Carolina family is charged, with its year. */
-export function tuitionShort(schoolId: string, schoolState: string, homeState = "NC"): string | null {
+/** One short line for a list: the figure the family is charged, with its year. */
+export function tuitionShort(schoolId: string, schoolState: string, homeState: string): string | null {
   const t = tuitionForSchool(schoolId)
   if (!t || (t.inState == null && t.outOfState == null)) return null
   if (t.inState === 0 && (t.outOfState ?? 0) === 0) return "No tuition (service academy)"
@@ -83,7 +87,7 @@ export type TuitionFacts = {
 }
 
 /** The tuition lines for one school, worded for a family living in `homeState` (North Carolina). */
-export function tuitionFacts(schoolId: string, schoolState: string, homeState = "NC"): TuitionFacts | null {
+export function tuitionFacts(schoolId: string, schoolState: string, homeState: string): TuitionFacts | null {
   const t = tuitionForSchool(schoolId)
   if (!t) return null
   const { control, inState, outOfState } = t
@@ -94,8 +98,8 @@ export function tuitionFacts(schoolId: string, schoolState: string, homeState = 
     return {
       control,
       lines: resident
-        ? [`${dollars(inState)} a year for North Carolina residents`, `${dollars(outOfState)} from out of state`]
-        : [`${dollars(outOfState)} a year from out of state, which is what a North Carolina family pays`, `${dollars(inState)} for residents of the state`],
+        ? [`${dollars(inState)} a year for ${stateName(homeState)} residents`, `${dollars(outOfState)} from out of state`]
+        : [`${dollars(outOfState)} a year from out of state, which is what a ${stateName(homeState)} family pays`, `${dollars(inState)} for residents of the state`],
     }
   }
   return { control, lines: [`${dollars((inState ?? outOfState)!)} a year`] }
@@ -126,7 +130,7 @@ const costNote = (c: SchoolCost) =>
 
 export type CostFacts = {
   control: "Public" | "Private" | null
-  /** "$76,954 a year from out of state, which is what a North Carolina family is charged". */
+  /** "$76,954 a year from out of state, which is what the family is charged". */
   headline: string
   /** "Tuition and fees $58,014 · Housing and food $13,940 · Books and other costs $5,000". */
   breakdown: string
@@ -137,8 +141,8 @@ export type CostFacts = {
 
 const totalOf = (c: SchoolCost, tuitionFees: number) => tuitionFees + (c.housingFood ?? 0) + (c.books ?? 0) + (c.other ?? 0)
 
-/** The full yearly cost for one college, worded for a North Carolina family; null when none is published. */
-export function costFacts(schoolId: string, schoolState: string, homeState = "NC"): CostFacts | null {
+/** The full yearly cost for one college, worded for the family; null when none is published. */
+export function costFacts(schoolId: string, schoolState: string, homeState: string): CostFacts | null {
   const c = COST[schoolId]
   if (!c || c.tuitionFeesIn == null || c.tuitionFeesOut == null || c.housingFood == null) return null
   const control = tuitionForSchool(schoolId)?.control ?? null
@@ -151,16 +155,16 @@ export function costFacts(schoolId: string, schoolState: string, homeState = "NC
     headline: !split
       ? `${dollars(totalOf(c, theirs))} a year (${c.year} price)`
       : resident
-        ? `${dollars(totalOf(c, theirs))} a year for North Carolina residents (${c.year} price)`
-        : `${dollars(totalOf(c, theirs))} a year from out of state, which is what a North Carolina family is charged (${c.year} price)`,
+        ? `${dollars(totalOf(c, theirs))} a year for ${stateName(homeState)} residents (${c.year} price)`
+        : `${dollars(totalOf(c, theirs))} a year from out of state, which is what a ${stateName(homeState)} family is charged (${c.year} price)`,
     breakdown: [`Tuition and fees ${dollars(theirs)}`, `Housing and food ${dollars(c.housingFood)}`, extras > 0 ? `Books and other costs ${dollars(extras)}` : null].filter(Boolean).join(" · "),
     other: !split ? null : resident ? `${dollars(totalOf(c, c.tuitionFeesOut))} from out of state` : `${dollars(totalOf(c, c.tuitionFeesIn))} for residents of the state`,
     note: costNote(c),
   }
 }
 
-/** One short line for a list: the full yearly cost a North Carolina family is charged. Falls back to tuition alone. */
-export function costShort(schoolId: string, schoolState: string, homeState = "NC"): string | null {
+/** One short line for a list: the full yearly cost the family is charged. Falls back to tuition alone. */
+export function costShort(schoolId: string, schoolState: string, homeState: string): string | null {
   const c = COST[schoolId]
   if (!c || c.tuitionFeesIn == null || c.tuitionFeesOut == null || c.housingFood == null) return tuitionShort(schoolId, schoolState, homeState)
   const resident = schoolState === homeState
@@ -168,8 +172,8 @@ export function costShort(schoolId: string, schoolState: string, homeState = "NC
   return `${dollars(totalOf(c, resident ? c.tuitionFeesIn : c.tuitionFeesOut))} a year${which}: tuition, housing, food and books (${c.year} price, before aid)`
 }
 
-/** The full yearly cost a North Carolina family is charged, as a number, for comparing colleges. */
-export function yearlyCostFor(schoolId: string, schoolState: string, homeState = "NC"): { amount: number; year: string } | null {
+/** The full yearly cost the family is charged, as a number, for comparing colleges. */
+export function yearlyCostFor(schoolId: string, schoolState: string, homeState: string): { amount: number; year: string } | null {
   const c = COST[schoolId]
   if (!c || c.tuitionFeesIn == null || c.tuitionFeesOut == null || c.housingFood == null) return null
   return { amount: totalOf(c, schoolState === homeState ? c.tuitionFeesIn : c.tuitionFeesOut), year: c.year }

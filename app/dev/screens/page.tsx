@@ -40,7 +40,7 @@ export default async function Screens({ searchParams }: { searchParams?: Promise
     const s = SCHOOLS.get(id)
     if (!s) continue
     const program = s.programs[0]
-    const cost = yearlyCostFor(id, s.state)
+    const cost = yearlyCostFor(id, s.state, "NC")
     rows.push({
       id,
       name: s.name.replace(/\s*\([^)]*\)\s*/g, " ").trim(),
