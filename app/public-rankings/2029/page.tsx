@@ -11,6 +11,6 @@ export const metadata: Metadata = {
     "North Carolina's top Class of 2029 wrestling prospects, ranked on results with the evidence behind every place.",
 }
 
-export default function Rankings2029Page() {
-  return <ClassRankingPage year={2029} />
+export default async function Rankings2029Page({ searchParams }: { searchParams: Promise<{ state?: string }> }) {
+  return <ClassRankingPage year={2029} state={(await searchParams).state} />
 }
