@@ -66,7 +66,18 @@ const GRADE_STYLE: Record<string, { badge: string; label: string; blurb: string 
 // While a draft, the page title and description say nothing: a signed-out visitor gets the
 // not-found page, and the title must not name the article either.
 export const metadata: Metadata = PUBLIC
-  ? { title: "Super 32 2026 — North Carolina Boys Recap", description: "Every NC boy at Super 32, graded on the strength of his tournament." }
+  ? (() => {
+      // Link previews (GroupMe, texts, social) show the headline and the Yates photo, not the site card.
+      const title = "Super 32 2026 — North Carolina Boys Recap"
+      const description = "Eleven wins over top-15 seeds, up from six and two. Every NC boy graded on the strength of his tournament."
+      const image = { url: `${IMG}/share-card.jpg`, width: 1200, height: 630, alt: "Braylen Yates celebrates at Super 32" }
+      return {
+        title,
+        description,
+        openGraph: { title, description, url: "/news/super32-2026-nc-boys-recap", siteName: "NC United", type: "article", images: [image] },
+        twitter: { card: "summary_large_image", title, description, images: [image.url] },
+      } satisfies Metadata
+    })()
   : { title: "News", robots: { index: false, follow: false } }
 
 /** Names of the wrestlers this account owns or is a parent of, for the free own-grade unlock. */
