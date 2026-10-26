@@ -138,34 +138,65 @@ function StatStrip({ entrants }: { entrants: SnapshotEntrant[] }) {
 }
 
 /** The three-year table as cards: each row a stat, 2026 called out. */
+const YEARS = ["2024", "2025", "2026"] as const
+const FEATURED = /top-15/i
+
+/** Vertical columns, years left to right, so a row reads as progress over time; 2026 in gold. */
+function Columns({ vals, height }: { vals: number[]; height: number }) {
+  const max = Math.max(...vals, 1)
+  return (
+    <div className="flex items-end justify-around gap-3" style={{ height }}>
+      {YEARS.map((yr, i) => {
+        const now = i === YEARS.length - 1
+        return (
+          <div key={yr} className="flex h-full flex-1 flex-col items-center justify-end">
+            <span className={`mb-1 ${now ? "text-lg font-black text-[#0b1730]" : "text-sm font-semibold text-gray-500"}`}>{vals[i]}</span>
+            <div className={`w-full max-w-[56px] rounded-t-md ${now ? "bg-[#d4af55]" : "bg-[#c7d0e2]"}`} style={{ height: `${Math.max(4, (100 * vals[i]!) / max) * 0.72}%` }} />
+            <span className={`mt-1.5 text-xs ${now ? "font-bold text-[#0b1730]" : "text-gray-400"}`}>{yr}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+function Change({ vals }: { vals: number[] }) {
+  const d = vals[2]! - vals[1]!
+  if (d === 0) return <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-500">Same as 2025</span>
+  return (
+    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${d > 0 ? "bg-[#fbf3dc] text-[#7a5d12]" : "bg-gray-100 text-gray-500"}`}>
+      {d > 0 ? "+" : ""}{d} vs 2025
+    </span>
+  )
+}
+
 function ThreeYear({ body }: { body: string }) {
   const lines = body.split("\n").filter((l) => l.startsWith("|") && !/^\|\s*-/.test(l))
   const note = body.split("\n").filter((l) => !l.startsWith("|")).join(" ").trim()
   const rows = lines.slice(1).map((l) => l.replace(/^\||\|$/g, "").split("|").map((c) => c.trim()))
+    .map(([label, ...ys]) => ({ label: label!, vals: ys.slice(0, 3).map(Number) }))
+  const featured = rows.find((r) => FEATURED.test(r.label))
+  const rest = rows.filter((r) => r !== featured)
   return (
     <section className="mt-10">
-      <h2 className="text-2xl font-black text-[#0b1730]">Three years, side by side</h2>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
-        {rows.map(([label, y24, y25, y26]) => {
-          const vals = [Number(y24), Number(y25), Number(y26)]
-          const max = Math.max(...vals, 1)
-          return (
-            <div key={label} className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-              <div className="text-sm font-semibold text-gray-600">{label}</div>
-              <div className="mt-2 space-y-1.5">
-                {(["2024", "2025", "2026"] as const).map((yr, i) => (
-                  <div key={yr} className="flex items-center gap-2">
-                    <span className={`w-10 text-xs ${i === 2 ? "font-bold text-[#0b1730]" : "text-gray-400"}`}>{yr}</span>
-                    <div className="h-2.5 flex-1 rounded-full bg-gray-100">
-                      <div className={`h-2.5 rounded-full ${i === 2 ? "bg-[#d4af55]" : "bg-gray-300"}`} style={{ width: `${(100 * vals[i]!) / max}%` }} />
-                    </div>
-                    <span className={`w-8 text-right text-sm ${i === 2 ? "font-black text-[#0b1730]" : "text-gray-500"}`}>{vals[i]}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )
-        })}
+      <h2 className="text-2xl font-black text-[#0b1730]">Three years of progress</h2>
+      {featured && (
+        <div className="mt-4 rounded-2xl border border-[#e9cf86] bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <div className="text-lg font-black text-[#0b1730]">{featured.label}</div>
+            <Change vals={featured.vals} />
+          </div>
+          <div className="mt-4"><Columns vals={featured.vals} height={220} /></div>
+        </div>
+      )}
+      <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-3">
+        {rest.map((r) => (
+          <div key={r.label} className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+            <div className="min-h-[2.5rem] text-[13px] font-semibold leading-tight text-gray-700">{r.label}</div>
+            <div className="mt-2"><Columns vals={r.vals} height={120} /></div>
+            <div className="mt-2 text-center"><Change vals={r.vals} /></div>
+          </div>
+        ))}
       </div>
       {note && <p className="mt-3 text-xs leading-relaxed text-gray-500" dangerouslySetInnerHTML={inlineHtml(note)} />}
     </section>
