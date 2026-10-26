@@ -35,11 +35,11 @@ These are performance grades for one weekend, not rankings of who is the better 
 
 Each grade has one rule, printed beside it above, and a wrestler gets the highest grade whose rule he meets. An A+ takes a top-four finish on the podium; no North Carolina boy reached it this year.
 
-Only contested bouts count toward a grade's wins over seeds; a forfeit counts in the record, never in the grade. Every grade above follows its rule; none was set by hand. Within each grade, wrestlers are not listed in rank order. Wrestlers below that line are named in Honorable Mention or recognized with the squad, and the full grading for every wrestler is in the accompanying data file.
+Only contested bouts count toward a grade's wins over seeds; a forfeit counts in the record, never in the grade. Every grade above follows its rule; none was set by hand. Within each grade, wrestlers are not listed in rank order. Wrestlers below that line are named in Honorable Mention or in The Rest of North Carolina, and the full grading for every wrestler is in the accompanying data file.
 
 ## A
 
-**Mason Brown (120) — 5-2.** The best wrestled tournament by a North Carolinian all weekend. Brown opened by teching Alabama champion Thomas Patterson and majoring Florida 2A champion Vladimir Drown. Then he beat #6 seed Daniel Brown of Indiana 11-4, #13 Izaya Schickley of Pennsylvania, and on Sunday morning #14 Paden Alyea, the Virginia 3A champion. Three top-15 seeds in one weekend. His run ended in the blood round against #21 Liam McGettigan of Florida, #26 nationally (SI), who went on to finish 6th. One win from a medal, with the strongest set of wins on the team.
+**Mason Brown (120) — 5-2.** The best wrestled tournament by a North Carolinian all weekend. Brown opened by teching Alabama champion Thomas Patterson and majoring Florida 2A champion Vladimir Drown. Then he beat #6 seed Daniel Brown of Indiana 11-4, #13 Izaya Schickley of Pennsylvania, and on Sunday morning #14 Paden Alyea, the Virginia 3A champion. Three top-15 seeds in one weekend. His run ended in the blood round against #21 Liam McGettigan of Florida, #26 nationally (SI), who went on to finish 6th. One win from a medal, with the strongest set of wins of any North Carolinian.
 
 **Braylen Yates (175) — 6-3, 8th place, All-American.** He was seeded 20th and wrestled like what he is: the reigning NHSCA freshman national champion and a Fargo 16U All-American. On Saturday he took out #13 Teag Sanderson (PIAA AAA 3rd, Fargo 16U All-American) and #15 Sean Breedlove (Indiana state champion). He opened Sunday by beating #14 Brock Armstrong, Idaho's 6A champion. His medal-clincher came when #3 Joel Welch medically forfeited the blood round. The win counts in his record, and he earned the medal with the three seeded wins that put him there. Two of his six wins, that one and his opener, came by medical forfeit. All three of his losses came to wrestlers who placed: a 10-0 major to #4 Maximus Fortier, West Virginia's champion and #7 nationally (SI), who finished 2nd; a major to #8 Kyler Crooks (6th) in the Consi of 4; and the 7th-place match, forfeited to #12 Ibrahim Dheel of Virginia. North Carolina's lone boys All-American leaves Greensboro with an 8th-place medal.
 
@@ -47,7 +47,7 @@ Only contested bouts count toward a grade's wins over seeds; a forfeit counts in
 
 ## A-
 
-**Campbell Tufts (165) — 4-2.** Pinned by #9 Collin Hamm in the round of 64, Tufts tore through the consolations with four straight wins, and the names on them are the story. He pinned Debraun Norris, Louisiana's 2026 D3 state champion, then pinned Jacob Ayers, Alabama's 1A-4A runner-up. Then came his win over a seed: a 4-2 decision over #19 Stone Redmon, Michigan's 2026 D3 state champion. He finished the run with a 2-1 win over Murphy Beyer, Wisconsin's 2026 D2 runner-up, before #12 Devon Weber, the eventual 4th-place finisher, stopped him in Consi of 16 #2. Two state champions and two state runners-up in one consolation run, quietly one of the most complete weekends on the team.
+**Campbell Tufts (165) — 4-2.** Pinned by #9 Collin Hamm in the round of 64, Tufts tore through the consolations with four straight wins, and the names on them are the story. He pinned Debraun Norris, Louisiana's 2026 D3 state champion, then pinned Jacob Ayers, Alabama's 1A-4A runner-up. Then came his win over a seed: a 4-2 decision over #19 Stone Redmon, Michigan's 2026 D3 state champion. He finished the run with a 2-1 win over Murphy Beyer, Wisconsin's 2026 D2 runner-up, before #12 Devon Weber, the eventual 4th-place finisher, stopped him in Consi of 16 #2. Two state champions and two state runners-up in one consolation run, quietly one of the most complete weekends in the state.
 
 **Nash Mullis (215) — 2-2.** The record undersells it. Mullis beat #9 Kannon Freschette, a Washington state champion and two-time Fargo All-American, 6-4. He also majored John Gill, Georgia's 4A champion and an NHSCA 3rd-place finisher, 11-0. His losses came to #10 Dominic Darch, an NHSCA runner-up who finished 7th, and Landon Guilford, Michigan's D2 champion. At 215, where four of NC's five entrants drew a top-10 seed in round one, Mullis produced one of the biggest single wins of the weekend.
 
@@ -59,7 +59,7 @@ Only contested bouts count toward a grade's wins over seeds; a forfeit counts in
 
 **Jacob Perry (157) — 3-2.** Perry majored Ty Eversman, Colorado's 4A champion and #24 nationally (SI), 10-1, and also beat an NHSCA All-American, Nicolas Barrett. His losses were to the #9 and #13 seeds.
 
-**Ethan Halstead (120) — 5-2.** Halstead is an eighth grader — he doesn't have a high school yet — and he won five matches in the high school division. Four came in a row in the consolations, including a major over Iowa 2A runner-up Anderson Osgood. His only losses were to the #7 seed and #10 Aiden Garcia, who finished 3rd. He never beat a seed himself, which keeps him out of the A group, but nobody on the team was harder to put away.
+**Ethan Halstead (120) — 5-2.** Halstead is an eighth grader — he doesn't have a high school yet — and he won five matches in the high school division. Four came in a row in the consolations, including a major over Iowa 2A runner-up Anderson Osgood. His only losses were to the #7 seed and #10 Aiden Garcia, who finished 3rd. He never beat a seed himself, which keeps him out of the A group, but no North Carolinian was harder to put away.
 
 ## B
 
@@ -67,7 +67,7 @@ Only contested bouts count toward a grade's wins over seeds; a forfeit counts in
 
 **Carson Raper (113) — 3-2.** The NC 4A champion pinned Manny Novelli, Alaska's D-I champion and a Fargo 16U Greco runner-up, and majored Nick Yetzer, a Virginia 2A runner-up. His losses came to the #24 and #18 seeds.
 
-**Brieon Mayfield (215) — 3-2.** Nobody at this tournament had a tougher first hour. Mayfield drew #4 Decker Bechtold, a 2025 Super 32 placer ranked #6 nationally (SI), and lost 2-1 in tiebreaker overtime. Bechtold went on to finish 3rd. He answered with three straight consolation wins, including a tech over Vake Martin, Virginia's VISAA runner-up, before a 1-0 loss to Pennsylvania's Hunter Cox, who had beaten the #9 seed himself. The toughest draw on the team; the results just didn't include a win over a seed.
+**Brieon Mayfield (215) — 3-2.** Nobody at this tournament had a tougher first hour. Mayfield drew #4 Decker Bechtold, a 2025 Super 32 placer ranked #6 nationally (SI), and lost 2-1 in tiebreaker overtime. Bechtold went on to finish 3rd. He answered with three straight consolation wins, including a tech over Vake Martin, Virginia's VISAA runner-up, before a 1-0 loss to Pennsylvania's Hunter Cox, who had beaten the #9 seed himself. The toughest draw of any North Carolinian; the results just didn't include a win over a seed.
 
 **JeveN Palmeri (106) — 3-2.** Opened with two pins, the first over Delaware's state runner-up. He lost to #6 Johnathan Thompson, the Fargo 16U champion, then went out to Parker Workman, a Fargo 16U 4th-place finisher.
 
@@ -99,7 +99,7 @@ Only contested bouts count toward a grade's wins over seeds; a forfeit counts in
 
 Liam Myles (113, 2-2, losses included the #17 seed) · Joseph Shook (157, 2-2) · Braylon Butts (106, 1-2, lost to the #1 seed) · Vincent Grack (157, 2-2) · Carson Owens (190, 1-2) · Liam Smith (190, 1-2) · Paxton Kearns (138, 1-2) · Waylon Pinnix (132, 1-2) · Jacob McCord (165, 1-2, beat Connecticut's state champion) · Caleb Edwards (132, 1-2) · Aidan Szewczyk (132, 1-2) · Tyton Kostoff (150, 1-2) · Kalil McDowell (157, 1-2) · Tobin McNair (165, 1-2, the #11 seed; a rough weekend for NC's highest-seeded boy) · Luke Padgett (190, 1-2)
 
-## The Rest of the Squad
+## The Rest of North Carolina
 
 Seventy-four more North Carolina boys stepped on the mat in Greensboro. Some won a bout in the consolations, some had their only win come by forfeit, and some drew an eventual semifinalist in the very first round and were gone by Saturday afternoon. Super 32 doesn't hand out easy weekends, and every one of them took the hardest draw in high school wrestling on purpose. Their full results are in the accompanying data file.
 

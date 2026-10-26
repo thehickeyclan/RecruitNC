@@ -26,7 +26,7 @@ describe("Super 32 2026 boys recap", () => {
   })
   it("reads the honorable mentions and keeps the closing sections", () => {
     expect(r.honorableMention.find((h) => h.name === "Tobin McNair")?.weight).toBe("165")
-    expect(r.outro).toContain("## The Rest of the Squad")
+    expect(r.outro).toContain("## The Rest of North Carolina")
   })
 })
 
