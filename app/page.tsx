@@ -5,6 +5,7 @@
 // which meant a blank shell, "Loading..." text, and layout shift on every visit. Data now loads
 // on the server via lib/home-data (admin client, no cookies) so `revalidate` below is real.
 
+import { RankingsUpdateBanner } from "@/components/rankings-update-banner"
 import Link from "next/link"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
@@ -134,6 +135,7 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-rnc-ink">
+      <RankingsUpdateBanner />
       {/* Super 32 on the homepage: HQ during the event, then the recap is the headline (Matt, 26 Oct
           2026: the live dashboard comes off; HQ is Insider-only now). Ends 8 Nov (lib/super32-live/home-banner.ts). */}
       {super32HomeBanner() === "live" && (
