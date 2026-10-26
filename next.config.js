@@ -102,6 +102,10 @@ const nextConfig = {
   // name the file — which is the problem it exists to solve.
   outputFileTracingIncludes: {
     "/api/admin/migrations": ["docs/sql/**"],
+    // Coach Reports read their data file and the recap behind them by a computed path, which
+    // tracing cannot follow: name them, or the page has no data in production.
+    "/coach-reports": ["content/reports/**", "content/news/**"],
+    "/coach-reports/[slug]": ["content/reports/**", "content/news/**"],
   },
   outputFileTracingExcludes: {
     "/*": [
