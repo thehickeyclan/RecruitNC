@@ -22,11 +22,14 @@ const argv = process.argv.slice(2)
 const arg = (k: string) => { const i = argv.indexOf(`--${k}`); return i >= 0 ? argv[i + 1] : undefined }
 const flag = (k: string) => argv.includes(`--${k}`)
 const SNAP = arg("snapshots") ?? "ranking-snapshots"
-const LOG = path.join(SNAP, "super32-results-invite-sent.json")
+// --womens: the women's letter (girls recap) to the women's staff list, with its own send log.
+const WOMENS = flag("womens")
+const LOG = path.join(SNAP, WOMENS ? "super32-womens-invite-sent.json" : "super32-results-invite-sent.json")
 const INTERNAL = /ncwrestlingunited|thehickeyclan|recruitwrestlers|wrestlingguild|testcoach|@example\.com$|^test@/i
 
 async function main() {
-  const { renderSuper32ResultsInviteLetter } = await import("../lib/coach-welcome-email")
+  const emails = await import("../lib/coach-welcome-email")
+  const renderSuper32ResultsInviteLetter = WOMENS ? emails.renderSuper32WomensInviteLetter : emails.renderSuper32ResultsInviteLetter
   const { filterUnsubscribed, unsubscribeHeaders, unsubscribeUrl } = await import("../lib/email-unsubscribe")
   const admin = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } })
 
@@ -47,7 +50,7 @@ async function main() {
   const exclude = new Set(arg("exclude") ? fs.readFileSync(arg("exclude")!, "utf8").split(/\r?\n/).map((l) => l.trim().toLowerCase()).filter((l) => l && !l.startsWith("#")) : [])
 
   const csvPath = arg("from-csv")
-  if (!csvPath) throw new Error("--from-csv <men's staff csv> is required (men's coaches only)")
+  if (!csvPath) throw new Error("--from-csv <staff csv> is required (men's list, or women's with --womens)")
   const [head, ...lines] = fs.readFileSync(csvPath, "utf8").trim().split(/\r?\n/)
   const cols = head!.split(",")
   const people = new Map<string, { email: string; name: string | null; optedOut: boolean }>()
@@ -64,6 +67,12 @@ async function main() {
   for (const r of dir ?? []) { const p = people.get(String(r.email ?? "").toLowerCase().trim()); if (p) p.optedOut = true }
   const why: Record<string, number> = {}
   const count = (k: string) => { why[k] = (why[k] ?? 0) + 1; return false }
+  // Never a second Super 32 email to someone who got the men's one.
+  if (WOMENS) {
+    const mensLog = path.join(SNAP, "super32-results-invite-sent.json")
+    const mensSent: Record<string, string> = fs.existsSync(mensLog) ? JSON.parse(fs.readFileSync(mensLog, "utf8")) : {}
+    for (const e of Object.keys(mensSent)) if (people.delete(e)) count("got the men's email")
+  }
   const candidates = [...people.values()].filter((p) =>
     !/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(p.email) ? count("invalid") : INTERNAL.test(p.email) ? count("internal") : users.has(p.email) ? count("has an account") : exclude.has(p.email) ? count("replied (excluded)") : p.optedOut ? count("opted out") : true)
   const { allowed } = await filterUnsubscribed(admin as never, candidates.map((c) => c.email))
@@ -72,14 +81,15 @@ async function main() {
   const list = candidates.filter((c) => (ok.has(c.email) || count("unsubscribed")) && (!sent[c.email] || count("already sent")))
 
   console.log(`On the platform: ${onPlatform.length} coaches, ${programs} programs`)
-  console.log(`Audience: ${people.size} men's staff addresses | left off: ${Object.entries(why).map(([k, n]) => `${n} ${k}`).join(", ")} | to send: ${list.length}`)
+  console.log(`Audience: ${people.size} ${WOMENS ? "women's" : "men's"} staff addresses | left off: ${Object.entries(why).map(([k, n]) => `${n} ${k}`).join(", ")} | to send: ${list.length}`)
   const missingExcluded = [...exclude].filter((e) => !people.has(e))
   if (missingExcluded.length) console.log(`(excluded addresses not in the audience anyway: ${missingExcluded.length})`)
-  fs.writeFileSync(path.join(SNAP, "super32-results-invite-list.csv"), "email,name\n" + list.map((c) => `${c.email},"${c.name ?? ""}"`).join("\n"))
+  fs.writeFileSync(path.join(SNAP, WOMENS ? "super32-womens-invite-list.csv" : "super32-results-invite-list.csv"), "email,name\n" + list.map((c) => `${c.email},"${c.name ?? ""}"`).join("\n"))
   const sample = list.find((c) => c.name && c.name.split(" ").length > 1) ?? list[0]!
   const preview = renderSuper32ResultsInviteLetter({ coachName: sample.name, coachEmail: sample.email, coaches: onPlatform.length, programs, unsubscribeUrl: null })
-  fs.writeFileSync(path.join(SNAP, "super32-results-invite-preview.html"), preview.html)
-  console.log(`Subject: ${preview.subject}\nPreview: ${path.resolve(SNAP, "super32-results-invite-preview.html")}`)
+  const previewFile = WOMENS ? "super32-womens-invite-preview.html" : "super32-results-invite-preview.html"
+  fs.writeFileSync(path.join(SNAP, previewFile), preview.html)
+  console.log(`Subject: ${preview.subject}\nPreview: ${path.resolve(SNAP, previewFile)}`)
 
   const { Resend } = await import("resend")
   const resend = new Resend(process.env.RESEND_API_KEY)
