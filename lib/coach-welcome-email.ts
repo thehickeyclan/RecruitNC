@@ -326,6 +326,14 @@ ${input.unsubscribeUrl ? `<p style="margin:28px 0 0;font-size:12px;color:#9ca3af
   return { subject, html, text }
 }
 
+
+/** The one direct ask, so coaches reply (replies are the strongest inbox signal). Never "what would you like to see". */
+function replyAsk(starred: number): string {
+  return starred
+    ? "Recruiting a North Carolina wrestler who isn't on your list? Reply with his name and I'll star him for you, so he shows up in every report. Or call or text me."
+    : "Reply with the North Carolina wrestlers you're recruiting and I'll star them for you, so they show up in every report. Or call or text me."
+}
+
 /* ------------------------------------------------------------------ Super 32 report ready */
 
 export type CoachReportReadyInput = {
@@ -410,7 +418,8 @@ ${section("In your report", "Every result, every opponent", `
   </table>`)}
 
 ${section("Coming Friday", "New rankings", `
-  <p style="margin:0 0 18px;">New North Carolina rankings come out by <strong>${esc(RANKINGS_UPDATE.by)}</strong>, updated with results from <strong>${esc(RANKINGS_UPDATE.events)}</strong>. They'll be on your Coach Home. Questions? Reply to this email or call or text me.</p>
+  <p style="margin:0 0 18px;">New North Carolina rankings come out by <strong>${esc(RANKINGS_UPDATE.by)}</strong>, updated with results from <strong>${esc(RANKINGS_UPDATE.events)}</strong>. They'll be on your Coach Home.</p>
+  <p style="margin:0 0 18px;"><strong>${esc(replyAsk(n))}</strong></p>
   <p style="margin:2px 0 0;font-weight:800;color:${INK};">Matt Hickey</p>
   <p style="margin:0;color:${MUTED};font-size:13px;">${esc(RECRUITING_BRAND.name)}</p>`, true)}
 
@@ -422,4 +431,53 @@ ${section("Coming Friday", "New rankings", `
 </table></td></tr></table>
 </body></html>`
   return { subject, html }
+}
+
+/** The designed email's plain-text twin: an HTML-only email reads as marketing to mail filters. */
+export function coachReportReadyText(input: CoachReportReadyInput): string {
+  const coach = coachSalutation(input.coachName, input.coachEmail)
+  const n = input.recruits.length
+  return [
+    `${coach},`,
+    n
+      ? `Your Super 32 report is ready. ${n} wrestler${n === 1 ? "" : "s"} you or your staff starred competed in Greensboro; they're marked with a gold star in your report, alongside all ${input.wrestlers} North Carolina wrestlers.`
+      : `Your Super 32 report is ready: every North Carolina wrestler at Super 32, all ${input.wrestlers} of them, with every match and every opponent's seed, national ranking and state titles.`,
+    ...(n ? [input.recruits.slice(0, 6).map((r) => `* ${r.name}: ${r.line}`).join("\n") + (n > 6 ? `\n...and ${n - 6} more in your report.` : "")] : []),
+    `Coach Home (your report is in the Reports folder): ${BASE}/coach-home`,
+    `Super 32 Recruiting Recap: ${BASE}/coach-reports/super32-2026-mens`,
+    `Super 32 HQ: ${BASE}/super32/live`,
+    `New North Carolina rankings come out by ${RANKINGS_UPDATE.by}, updated with results from ${RANKINGS_UPDATE.events}.`,
+    replyAsk(n),
+    `Matt Hickey\n${RECRUITING_BRAND.name}\nCell 631.662.5409`,
+    ...(input.unsubscribeUrl ? [`Unsubscribe: ${input.unsubscribeUrl}`] : []),
+  ].join("\n\n")
+}
+
+/**
+ * The same news as a short letter from Matt: no images, no buttons, a few plain links, and a text
+ * twin. The designed invite went to Gmail's Promotions tab twice (17 Oct 2026) and the letter
+ * landed in the inbox; this is the version to send if the designed one tests into Promotions.
+ */
+export function renderCoachReportReadyLetter(input: CoachReportReadyInput): { subject: string; html: string; text: string } {
+  const { subject } = renderCoachReportReadyEmail(input)
+  const coach = coachSalutation(input.coachName, input.coachEmail)
+  const n = input.recruits.length
+  const link = (href: string, label: string) => `<a href="${href}" style="color:#1d4ed8;">${esc(label)}</a>`
+  const p = (h: string) => `<p style="margin:0 0 14px;">${h}</p>`
+  const shown = input.recruits.slice(0, 6)
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(subject)}</title></head>
+<body style="margin:0;padding:0;background:#ffffff;">
+<div style="max-width:560px;margin:0 auto;padding:24px 16px;font-family:${FONT};font-size:15px;line-height:1.6;color:#1f2937;">
+${p(`${esc(coach)},`)}
+${p(n
+    ? `Your Super 32 report is ready. ${n} wrestler${n === 1 ? "" : "s"} you or your staff starred competed in Greensboro, and they're marked with a gold star in your report alongside all ${input.wrestlers} North Carolina wrestlers:`
+    : `Your Super 32 report is ready: every North Carolina wrestler at Super 32, all ${input.wrestlers} of them, with every match and every opponent's seed, national ranking and state titles.`)}
+${n ? `<ul style="margin:0 0 14px;padding-left:20px;">${shown.map((r) => `<li style="margin:0 0 4px;"><strong>${esc(r.name)}</strong>: ${esc(r.line)}</li>`).join("")}</ul>${n > 6 ? p(`…and ${n - 6} more in your report.`) : ""}` : ""}
+${p(`It's in the Reports folder on your ${link(`${BASE}/coach-home`, "Coach Home")}. You can filter to your recruits, star anyone you missed, and download it as a PDF. Every North Carolina result from Greensboro is also on ${link(`${BASE}/super32/live`, "Super 32 HQ")}, and here is the ${link(`${BASE}/coach-reports/super32-2026-mens`, "Super 32 Recruiting Recap")} directly.`)}
+${p(`New North Carolina rankings come out by ${esc(RANKINGS_UPDATE.by)}, updated with results from ${esc(RANKINGS_UPDATE.events)}.`)}
+${p(esc(replyAsk(n)))}
+<p style="margin:18px 0 0;">Matt Hickey<br>${esc(RECRUITING_BRAND.name)}<br>Cell 631.662.5409</p>
+${input.unsubscribeUrl ? `<p style="margin:28px 0 0;font-size:12px;color:#9ca3af;"><a href="${esc(input.unsubscribeUrl)}" style="color:#9ca3af;">Unsubscribe</a></p>` : ""}
+</div></body></html>`
+  return { subject, html, text: coachReportReadyText(input) }
 }
