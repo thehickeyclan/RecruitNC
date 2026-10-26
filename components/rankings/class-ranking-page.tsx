@@ -73,11 +73,12 @@ export async function ClassRankingPage({ year, gender = "Male", state: askedStat
             {board}Class of {year}
           </h1>
           <p className="mt-4 text-sm leading-relaxed text-white/60">
-            The published rankings are for NC United Blue members, verified college coaches and
-            RecruitNC subscribers.
+            {onRw
+              ? "The published rankings are for Insider and Recruiting Command Center members and verified college coaches."
+              : "The published rankings are for NC United Blue members, verified college coaches and RecruitNC subscribers."}
           </p>
           <Link
-            href="/rankings"
+            href={onRw ? "/membership" : "/rankings"}
             className="mt-6 inline-block rounded-lg bg-[#d6b75d] px-5 py-2.5 text-sm font-semibold text-[#061224] hover:bg-[#c5a84d]"
           >
             See what is included
