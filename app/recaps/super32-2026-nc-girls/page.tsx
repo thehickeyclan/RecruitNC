@@ -17,7 +17,7 @@ import { markdownToHtml } from "@/lib/news-recaps/markdown"
 import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import { linkNames } from "@/lib/news-recaps/link-names"
 import { latestSnapshot, type SnapshotEntrant } from "@/lib/super32-live/snapshot"
-import { Chip, MatchList, ordinal, schoolAndClass, super32GirlsPlacings, ThreeYear, ViewProfilePill } from "@/components/news/super32-report-parts"
+import { Chip, MatchList, ordinal, RW_ACCENT, schoolAndClass, super32GirlsPlacings, ThreeYear, ViewProfilePill } from "@/components/news/super32-report-parts"
 import { isPlaceholderAthletePhoto } from "@/lib/recruiting-profile-photo"
 import { COACH_REPORTS, loadCoachReportFile } from "@/lib/coach-reports"
 import { rankingsUpdateNoticeActive, rankingsUpdateSentence } from "@/lib/rankings-update-notice"
@@ -42,7 +42,7 @@ function PhotoBreak({ photos }: { photos: Photo[] }) {
         <figure key={ph.src}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={ph.src} alt={ph.alt} className={`w-full rounded-xl object-cover object-top ${photos.length > 1 ? "h-72" : "h-80 md:h-[26rem]"}`} />
-          <figcaption className="mt-2 border-l-2 border-[#d4af55] pl-3 text-sm leading-snug text-gray-600">{ph.caption}</figcaption>
+          <figcaption className="mt-2 border-l-2 border-[#A3E635] pl-3 text-sm leading-snug text-gray-600">{ph.caption}</figcaption>
         </figure>
       ))}
     </div>
@@ -51,8 +51,8 @@ function PhotoBreak({ photos }: { photos: Photo[] }) {
 
 const GRADE_STYLE: Record<string, { badge: string; label: string; blurb: string }> = {
   "A+": { badge: "bg-[#e5372c] text-white", label: "A+", blurb: "Top-four finish on the podium" },
-  A: { badge: "bg-[#d4af55] text-[#0b1730]", label: "A", blurb: "Beat two or more top-15 seeds, reached the blood round or better" },
-  "A-": { badge: "bg-[#e9cf86] text-[#0b1730]", label: "A-", blurb: "Beat a seeded wrestler" },
+  A: { badge: "bg-[#A3E635] text-[#0b1730]", label: "A", blurb: "Beat two or more top-15 seeds, reached the blood round or better" },
+  "A-": { badge: "bg-[#D9F99D] text-[#0b1730]", label: "A-", blurb: "Beat a seeded wrestler" },
   "B+": { badge: "bg-[#3b5ba5] text-white", label: "B+", blurb: "Beat a nationally ranked wrestler, or won five with every loss to a seed" },
   B: { badge: "bg-[#5a76b8] text-white", label: "B", blurb: "Winning record with a win over a state champion or placer" },
   "B-": { badge: "bg-[#8195bd] text-white", label: "B-", blurb: "2-2 with a win over a state champion or runner-up" },
@@ -108,7 +108,7 @@ const inlineHtml = (md: string) => ({ __html: markdownToHtml(md).replace(/^<p[^>
  * the top of each render; every request sets the same list (one published snapshot).
  */
 let PROFILE_LINKS: Array<[string, string]> = []
-const LINK_CLASS = "font-semibold text-[#003366] underline decoration-[#d4af55] decoration-2 underline-offset-2"
+const LINK_CLASS = "font-semibold text-[#003366] underline decoration-[#A3E635] decoration-2 underline-offset-2"
 const linkedInline = (md: string) => ({ __html: linkNames(markdownToHtml(md).replace(/^<p[^>]*>|<\/p>$/g, ""), PROFILE_LINKS, LINK_CLASS) })
 const linkedHtml = (md: string) => ({ __html: linkNames(markdownToHtml(md), PROFILE_LINKS, LINK_CLASS) })
 
@@ -119,7 +119,7 @@ function Hero({ title }: { title: string }) {
       <img src={`${IMG}/share-card.jpg`} alt="Ella Taylor at Super 32" className="h-72 w-full object-cover object-center opacity-80 md:h-96" />
       <div className="absolute inset-0 bg-gradient-to-t from-[#0b1730] via-[#0b1730]/60 to-transparent" />
       <div className="absolute inset-x-0 bottom-0 p-5 md:p-8">
-        <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#d4af55]">RecruitWrestlers · Super 32 · Greensboro</div>
+        <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#A3E635]">RecruitWrestlers · Super 32 · Greensboro</div>
         <h1 className="mt-1 text-3xl font-black leading-tight text-white md:text-5xl">{title.replace(/^Super 32 2026 — /, "")}</h1>
         <div className="mt-1 text-sm text-[#c9d4ea]">Super 32 2026</div>
       </div>
@@ -235,12 +235,12 @@ function WrestlerCard({ w, e, placings, photo }: { w: GradedWrestler; e: Snapsho
 
 function UnlockPanel() {
   return (
-    <div className="mt-8 rounded-2xl border border-[#d4af55] bg-[#0b1730] p-5 text-white">
-      <div className="text-[11px] font-bold uppercase tracking-wider text-[#d4af55]">Insider</div>
+    <div className="mt-8 rounded-2xl border border-[#A3E635] bg-[#0b1730] p-5 text-white">
+      <div className="text-[11px] font-bold uppercase tracking-wider text-[#A3E635]">Insider</div>
       <div className="mt-1 text-xl font-bold">Sign up for Insider and get full access.</div>
       <p className="mt-1 text-sm text-[#c9d4ea]">Tournament grade reports, rankings and college profile views. Is your wrestler here? Claim the profile free and see their grade.</p>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-        <Link href="/membership" className="rounded-lg bg-[#d4af55] px-4 py-2.5 text-center text-sm font-semibold text-[#0b1730]">Sign up for Insider →</Link>
+        <Link href="/membership" className="rounded-lg bg-[#A3E635] px-4 py-2.5 text-center text-sm font-semibold text-[#0b1730]">Sign up for Insider →</Link>
         <Link href="/create-profile" className="rounded-lg bg-white px-4 py-2.5 text-center text-sm font-semibold text-[#0b1730]">Claim a profile free</Link>
         <Link href="/auth/signup?type=college-coach" className="rounded-lg border border-white/40 px-4 py-2.5 text-center text-sm font-semibold">College coach? Free access</Link>
       </div>
@@ -250,9 +250,9 @@ function UnlockPanel() {
 
 function ClaimCard() {
   return (
-    <section className="mt-10 overflow-hidden rounded-2xl border border-[#d4af55]/60 bg-gradient-to-br from-[#13294b] to-[#0b1730] text-white">
+    <section className="mt-10 overflow-hidden rounded-2xl border border-[#A3E635]/60 bg-gradient-to-br from-[#13294b] to-[#0b1730] text-white">
       <div className="p-6">
-        <div className="text-[11px] font-bold uppercase tracking-wider text-[#d4af55]">Every result in this recap lands on a profile</div>
+        <div className="text-[11px] font-bold uppercase tracking-wider text-[#A3E635]">Every result in this recap lands on a profile</div>
         <h2 className="mt-1 text-2xl font-bold leading-tight md:text-3xl">Claim your wrestler&apos;s profile. It&apos;s free.</h2>
         <p className="mt-2 text-sm text-[#c9d4ea]">Almost every wrestler here already has a RecruitWrestlers profile, built from verified results. Claim it to check it, correct it and follow it.</p>
         <div className="mt-4 grid gap-3 md:grid-cols-3">
@@ -261,13 +261,13 @@ function ClaimCard() {
             <div className="mt-1 text-lg font-bold">Claim a profile free →</div>
             <div className="mt-1 text-xs text-gray-600">See your own wrestler&apos;s grade in this recap.</div>
           </Link>
-          <Link href="/membership" className="rounded-xl bg-[#d4af55] p-4 text-[#0b1730]">
+          <Link href="/membership" className="rounded-xl bg-[#A3E635] p-4 text-[#0b1730]">
             <div className="text-xs font-bold uppercase tracking-wider">Insider · $9.99/mo</div>
             <div className="mt-1 text-lg font-bold">Every grade + the data →</div>
             <div className="mt-1 text-xs text-[#0b1730]/80">Full rankings, the bout-by-bout file, and which college programs viewed your wrestler.</div>
           </Link>
           <Link href="/auth/signup?type=college-coach" className="rounded-xl border border-white/30 p-4">
-            <div className="text-xs font-bold uppercase tracking-wider text-[#d4af55]">College coaches</div>
+            <div className="text-xs font-bold uppercase tracking-wider text-[#A3E635]">College coaches</div>
             <div className="mt-1 text-lg font-bold">Free access →</div>
             <div className="mt-1 text-xs text-[#c9d4ea]">Every profile, ranking and grade, built from verified results.</div>
           </Link>
@@ -327,7 +327,7 @@ export default async function Super32GirlsRecapPage({ searchParams }: { searchPa
   const paras = (assessment?.body ?? "").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
 
   return (
-    <main style={{ WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }} className="mx-auto max-w-4xl px-4 py-6">
+    <main style={{ WebkitPrintColorAdjust: "exact", printColorAdjust: "exact", ...RW_ACCENT }} className="mx-auto max-w-4xl px-4 py-6">
       {!PUBLIC && (
         <div className="mb-4 rounded-md bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-900">
           Draft — visible to admins only. Set SUPER32_GIRLS_RECAP_PUBLIC=1 to publish.{" "}
@@ -338,7 +338,7 @@ export default async function Super32GirlsRecapPage({ searchParams }: { searchPa
       <Hero title={recap.title} />
       <StatStrip entrants={entrants} />
       {rankingsUpdateNoticeActive() && (
-        <div className="mt-4 flex items-start gap-2 rounded-xl border border-[#d4af55]/60 bg-[#fbf3dc] px-4 py-3 text-sm text-[#5c4510] print:hidden">
+        <div className="mt-4 flex items-start gap-2 rounded-xl border border-[#A3E635]/60 bg-[#F7FEE7] px-4 py-3 text-sm text-[#365314] print:hidden">
           <span aria-hidden>📊</span>
           <span><strong>Rankings update:</strong> {rankingsUpdateSentence()}</span>
         </div>
@@ -358,13 +358,13 @@ export default async function Super32GirlsRecapPage({ searchParams }: { searchPa
       {/* Early, for non-members (Matt, 26 Oct 2026): claim the profile free, or Insider for every grade. */}
       {!unlocked && (
         <div className="mt-6 grid gap-2 sm:grid-cols-2">
-          <Link href="/create-profile" className="group rounded-xl border border-[#d4af55]/70 bg-[#fbf3dc] p-4 hover:border-[#d4af55]">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-[#7a5d12]">Families · free</div>
+          <Link href="/create-profile" className="group rounded-xl border border-[#A3E635]/70 bg-[#F7FEE7] p-4 hover:border-[#A3E635]">
+            <div className="text-[11px] font-bold uppercase tracking-wider text-[#3F6212]">Families · free</div>
             <div className="mt-0.5 font-black text-[#0b1730]">Claim your wrestler&apos;s profile →</div>
             <div className="text-xs text-gray-600">See her grade in this recap, every result, and how many college coaches viewed her.</div>
           </Link>
           <Link href="/membership" className="group rounded-xl bg-[#0b1730] p-4 text-white hover:bg-[#13294b]">
-            <div className="text-[11px] font-bold uppercase tracking-wider text-[#d4af55]">Insider · $9.99/mo</div>
+            <div className="text-[11px] font-bold uppercase tracking-wider text-[#A3E635]">Insider · $9.99/mo</div>
             <div className="mt-0.5 font-black">Sign up for Insider →</div>
             <div className="text-xs text-[#c9d4ea]">Every grade, the rankings and college profile views.</div>
           </Link>

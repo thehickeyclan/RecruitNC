@@ -45,7 +45,7 @@ export async function super32GirlsPlacings(): Promise<Map<string, number>> {
 /** The chart that leads: wins over top-15 seeds (boys), else All-Americans (girls). */
 export const FEATURED = /top-15|all-americans/i
 
-/** Vertical columns, years left to right, so a row reads as progress over time; 2026 in gold. */
+/** Vertical columns, years left to right, so a row reads as progress over time; 2026 in the accent colour (gold on NC United, lime on RecruitWrestlers: RW_ACCENT). */
 export function Columns({ vals, years, height }: { vals: number[]; years: string[]; height: number }) {
   const max = Math.max(...vals, 1)
   // Bars live in their own fixed-height area, so a bar's height is exactly its share of the
@@ -58,7 +58,7 @@ export function Columns({ vals, years, height }: { vals: number[]; years: string
           <div key={yr} className="flex flex-1 flex-col items-center">
             <div className="flex w-full flex-col items-center justify-end" style={{ height }}>
               <span className={`mb-1 ${now ? "text-lg font-black text-[#0b1730]" : "text-sm font-semibold text-gray-500"}`}>{vals[i]}</span>
-              <div className={`w-full max-w-[56px] shrink-0 rounded-t-md ${now ? "bg-[#d4af55]" : "bg-[#c7d0e2]"}`} style={{ height: Math.max(3, Math.round(((height - 32) * vals[i]!) / max)) }} />
+              <div className={`w-full max-w-[56px] shrink-0 rounded-t-md ${now ? "bg-[var(--rpt-accent,#d4af55)]" : "bg-[#c7d0e2]"}`} style={{ height: Math.max(3, Math.round(((height - 32) * vals[i]!) / max)) }} />
             </div>
             <span className={`mt-1.5 text-xs ${now ? "font-bold text-[#0b1730]" : "text-gray-400"}`}>{yr}</span>
           </div>
@@ -95,7 +95,7 @@ export function ThreeYear({ body }: { body: string }) {
     <section className="mt-10">
       <h2 className="text-2xl font-black text-[#0b1730]">{years.length === 4 ? "Four" : "Three"} years of progress</h2>
       {featured && (
-        <div className="rpt-chart mt-4 rounded-2xl border border-[#e9cf86] bg-white p-5 shadow-sm">
+        <div className="rpt-chart mt-4 rounded-2xl border border-[var(--rpt-accent-line,#e9cf86)] bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <div className="text-lg font-black text-[#0b1730]">{featured.label}</div>
             <Change vals={featured.vals} years={years} />
@@ -117,7 +117,7 @@ export function ThreeYear({ body }: { body: string }) {
           <thead>
             <tr className="bg-[#0b1730] text-white">
               <th className="px-3 py-2 text-left font-semibold">{who}</th>
-              {years.map((yr, i) => <th key={yr} className={`px-3 py-2 text-right font-semibold ${i === years.length - 1 ? "text-[#d4af55]" : ""}`}>{yr}</th>)}
+              {years.map((yr, i) => <th key={yr} className={`px-3 py-2 text-right font-semibold ${i === years.length - 1 ? "text-[var(--rpt-accent,#d4af55)]" : ""}`}>{yr}</th>)}
             </tr>
           </thead>
           <tbody>
@@ -136,7 +136,7 @@ export function ThreeYear({ body }: { body: string }) {
 }
 
 export function Chip({ children, tone = "gray" }: { children: React.ReactNode; tone?: "gold" | "gray" | "navy" }) {
-  const c = tone === "gold" ? "bg-[#fbf3dc] text-[#7a5d12] border-[#e9cf86]" : tone === "navy" ? "bg-[#0b1730] text-white border-[#0b1730]" : "bg-gray-50 text-gray-700 border-gray-200"
+  const c = tone === "gold" ? "bg-[var(--rpt-accent-soft,#fbf3dc)] text-[var(--rpt-accent-ink,#7a5d12)] border-[var(--rpt-accent-line,#e9cf86)]" : tone === "navy" ? "bg-[#0b1730] text-white border-[#0b1730]" : "bg-gray-50 text-gray-700 border-gray-200"
   return <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${c}`}>{children}</span>
 }
 
@@ -172,7 +172,7 @@ export function MatchList({ bouts, weight, placings }: { bouts: SnapshotBout[]; 
                 <div className="text-gray-900">
                   <span className="font-semibold">{b.opponent}</span>
                   <span className="text-gray-500"> ({b.opponentTeam})</span>
-                  {b.opponentSeed ? <span className="ml-1 rounded bg-[#fbf3dc] px-1 text-[11px] font-bold text-[#7a5d12]">#{b.opponentSeed} seed</span> : null}
+                  {b.opponentSeed ? <span className="ml-1 rounded bg-[var(--rpt-accent-soft,#fbf3dc)] px-1 text-[11px] font-bold text-[var(--rpt-accent-ink,#7a5d12)]">#{b.opponentSeed} seed</span> : null}
                   {place ? <span className="ml-1 rounded bg-[#0b1730] px-1 text-[11px] font-bold text-white">Placed {ordinal(place)} here</span> : null}
                 </div>
                 <div className="text-xs text-gray-500">{[b.round, [WIN_TYPE[b.winType] ?? b.winType, score(b)].filter(Boolean).join(" ")].join(" · ")}</div>
@@ -197,3 +197,14 @@ export function ViewProfilePill({ athleteId }: { athleteId: string }) {
     </div>
   )
 }
+
+/**
+ * RecruitWrestlers' accent for the shared parts above: lime, never gold (Matt, 20 Oct 2026). Spread
+ * into a RecruitWrestlers page's <main> style; NC United's pages set nothing and keep their gold.
+ */
+export const RW_ACCENT = {
+  "--rpt-accent": "#A3E635",
+  "--rpt-accent-line": "#D9F99D",
+  "--rpt-accent-soft": "#F7FEE7",
+  "--rpt-accent-ink": "#3F6212",
+} as React.CSSProperties
