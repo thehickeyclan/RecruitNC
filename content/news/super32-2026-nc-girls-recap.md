@@ -46,11 +46,11 @@ Only contested bouts count toward a grade's wins over seeds; a forfeit or injury
 
 ## Honorable Mention
 
-Khiry Reese (124, 2-2, a fall and a tech fall, then a loss to #6 Raenah Smith, the eventual runner-up) · Claire Ballard (118, 2-2, a fall and a 10-0 tech fall in the consolations; out to #8 Angelina Gochis, Illinois's champion) · Riley Paden (138, 1-2, beat Florida state runner-up Nova Estrada; both losses to medalists, the runner-up and the 8th-place finisher) · Savada Kitchen (200, 0-2, 8th here last year; reached the blood round, losing only to the runner-up and the 4th-place finisher) · Alyssa Self (132, 1-2, opened against #1 Marlee Solomon, the eventual champion; a fall in the consolations) · Sofia Salas Romero (112, 1-2, a 10-0 tech fall; a loss to #4 Daphney Gomez, who finished 3rd) · Anida Begic (148, 1-2, a 15-2 tech fall; a loss to #8 Yamilett Cortez, who finished 8th) · Cora Flahive (106, 1-2, a fall in the consolations) · Alyvia Hawkins (200, 0-2, reached the Consi of 8; a loss to the 4th-place finisher) · Mikaylah Potter (132, 1-2) · Averi Baisley (148, 1-2) · Kate Hayes (132, 1-2) · Bella Johnson (112, 1-2)
+Khiry Reese (124, 2-2, a fall and a tech fall, then a loss to #6 Raenah Smith, the eventual runner-up) · Claire Ballard (118, 2-2, a fall and a 10-0 tech fall in the consolations; out to #8 Angelina Gochis, Illinois's champion) · Riley Paden (138, 1-2, beat Florida state runner-up Nova Estrada; both losses to medalists, the runner-up and the 8th-place finisher) · Savada Kitchen (200, 0-2, 8th here last year; reached the blood round, losing only to the runner-up and the 4th-place finisher) · Alyssa Self (132, 1-2, opened against #1 Marlee Solomon, the eventual champion; a fall in the consolations) · Sofia Salas Romero (112, 1-2, a 10-0 tech fall; a loss to #4 Daphney Gomez, who finished 3rd) · Anida Begic (148, 1-2, a 15-2 tech fall; a loss to #8 Yamilett Cortez, who finished 8th) · Mia Pardo (95, 0-2, the #7 seed; a 9-7 decision to a Fargo Junior placer, then a loss to the #9 seed, who finished 7th) · Cora Flahive (106, 1-2, a fall in the consolations) · Alyvia Hawkins (200, 0-2, reached the Consi of 8; a loss to the 4th-place finisher) · Mikaylah Potter (132, 1-2) · Averi Baisley (148, 1-2) · Kate Hayes (132, 1-2) · Bella Johnson (112, 1-2)
 
 ## The Rest of North Carolina
 
-Twenty-six more North Carolina girls stepped on the mat in Greensboro, including Mia Pardo, the #7 seed at 95, and every one of them chose the hardest test in high school wrestling.
+Twenty-five more North Carolina girls stepped on the mat in Greensboro, and every one of them chose the hardest test in high school wrestling.
 
 ## The Bigger Picture: Raising the Bar
 
