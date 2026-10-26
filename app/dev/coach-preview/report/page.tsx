@@ -2,7 +2,7 @@
  * A coach's tournament report exactly as that coach sees it, on a developer's machine, with no
  * session (as /dev/coach-preview does for Coach Home):
  *
- * /dev/coach-report-preview?slug=super32-2026-mens&coach=coach@school.edu[&starred=1]
+ * /dev/coach-preview/report?slug=super32-2026-mens&coach=coach@school.edu[&starred=1]
  *
  * Local development only: it does not exist in a production or preview build.
  */

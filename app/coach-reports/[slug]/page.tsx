@@ -32,6 +32,41 @@ function sections(md: string): Array<{ head: string; body: string }> {
   })
 }
 
+/**
+ * The PDF's own layout (Matt, 26 Oct 2026: "formatted to eliminate white space"): narrow margins,
+ * tighter cards, matches in two columns, the three-year table instead of its charts, and cards
+ * allowed to run across a page break (only the name block is kept whole), so pages fill.
+ */
+const PRINT_CSS = `
+@page { size: letter; margin: 0.35in; }
+@media print {
+  .rpt-header { padding: 10px 14px !important; }
+  .rpt-header h1 { font-size: 18px !important; }
+  .rpt-header img { width: 40px !important; height: 40px !important; }
+  .rpt-intro { margin-top: 8px !important; font-size: 10.5px !important; line-height: 1.4 !important; }
+  .rpt-intro p { margin-top: 4px !important; }
+  .rpt-chart { display: none !important; }
+  .rpt-table { margin-top: 6px !important; box-shadow: none !important; }
+  .rpt-table th, .rpt-table td { padding: 2px 8px !important; font-size: 10px !important; }
+  section { margin-top: 10px !important; }
+  .rpt-list { gap: 6px !important; margin-top: 4px !important; }
+  .rpt-card { break-inside: auto !important; box-shadow: none !important; border-radius: 6px !important; }
+  .rpt-head { break-inside: avoid; break-after: avoid; padding: 6px 8px 2px !important; gap: 8px !important; }
+  .rpt-head h3 { font-size: 13px !important; }
+  .rpt-photo { width: 34px !important; height: 34px !important; }
+  .rpt-text { font-size: 10px !important; line-height: 1.35 !important; padding: 0 8px 4px !important; }
+  .rpt-matches { padding: 4px 8px !important; }
+  .rpt-matches > div:first-child { break-after: avoid; }
+  main h2 { font-size: 15px !important; }
+  .rpt-table + p { font-size: 9px !important; margin-top: 4px !important; }
+  .rpt-matches ol { display: grid !important; grid-template-columns: 1fr 1fr; column-gap: 12px; row-gap: 2px; margin-top: 2px !important; }
+  .rpt-matches ol > li + li { margin-top: 0 !important; }
+  .rpt-matches li { break-inside: avoid; font-size: 9px !important; line-height: 1.25 !important; }
+  .rpt-matches li span[class*="h-5"] { width: 14px !important; height: 14px !important; font-size: 8px !important; }
+  .rpt-matches li .text-xs { font-size: 8.5px !important; }
+}
+`
+
 const genderOf = (r: AthleteEventReport, e: SnapshotEntrant | undefined): "Male" | "Female" =>
   e?.gender === "girls" || /^f/i.test(r.gender ?? "") ? "Female" : "Male"
 
@@ -41,12 +76,12 @@ function ReportCard({ r, e, starred, mine, readOnly, text, photo, placings }: {
   const seeded = (e?.bouts ?? []).filter((b) => b.win && b.opponentSeed && !/for/i.test(b.winType)).sort((a, b) => a.opponentSeed! - b.opponentSeed!)
   const place = r.place ?? e?.placement ?? null
   return (
-    <article data-search={[r.name, r.school, r.weight, r.weight ? `${r.weight}lbs` : null, r.classYear].filter(Boolean).join(" ").toLowerCase()} className={`overflow-hidden rounded-xl border bg-white shadow-sm break-inside-avoid ${starred ? "border-[#d4af55] ring-1 ring-[#d4af55]" : "border-gray-200"}`}>
-      <div className="flex gap-3 p-4">
+    <article data-search={[r.name, r.school, r.weight, r.weight ? `${r.weight}lbs` : null, r.classYear].filter(Boolean).join(" ").toLowerCase()} className={`rpt-card overflow-hidden rounded-xl border bg-white shadow-sm ${starred ? "border-[#d4af55] ring-1 ring-[#d4af55]" : "border-gray-200"}`}>
+      <div className="rpt-head flex gap-3 p-4">
         {photo
           // eslint-disable-next-line @next/next/no-img-element
-          ? <img src={photo} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover object-top" />
-          : <div className="h-14 w-14 shrink-0 rounded-lg bg-gray-100" />}
+          ? <img src={photo} alt="" className="rpt-photo h-14 w-14 shrink-0 rounded-lg object-cover object-top" />
+          : <div className="rpt-photo h-14 w-14 shrink-0 rounded-lg bg-gray-100" />}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2">
             <h3 className="text-lg font-black text-[#0b1730]"><Link href={`/athletes/${r.athleteId}`} className="hover:underline">{r.name}</Link></h3>
@@ -61,7 +96,7 @@ function ReportCard({ r, e, starred, mine, readOnly, text, photo, placings }: {
           </div>
         </div>
       </div>
-      {text && <p className="px-4 pb-3 text-[15px] leading-relaxed text-gray-800">{text}</p>}
+      {text && <p className="rpt-text px-4 pb-3 text-[15px] leading-relaxed text-gray-800">{text}</p>}
       {e && <MatchList bouts={e.bouts} weight={String(e.weight ?? r.weight ?? "")} placings={placings} />}
       <div className="pt-3"><ViewProfilePill athleteId={r.athleteId} /></div>
     </article>
@@ -114,7 +149,8 @@ export default async function CoachReportPage({ params, searchParams }: {
     // A white page on the portal's navy frame: readable there, and what the PDF prints.
     // print-color-adjust keeps the charts' bars and the chips in the PDF (browsers drop backgrounds).
     <main style={{ WebkitPrintColorAdjust: "exact", printColorAdjust: "exact" }} className="mx-auto my-4 max-w-3xl rounded-2xl bg-[#f7f8fb] px-4 py-5 text-gray-900 md:px-6 print:my-0 print:max-w-none print:rounded-none print:bg-white print:px-0 print:py-0">
-      <header className="rounded-2xl bg-[#0b1730] p-5 text-white print:rounded-none">
+      <style>{PRINT_CSS}</style>
+      <header className="rpt-header rounded-2xl bg-[#0b1730] p-5 text-white print:rounded-none">
         <div className="flex items-center gap-4">
           {viewer.programLogo
             // eslint-disable-next-line @next/next/no-img-element
@@ -148,7 +184,7 @@ export default async function CoachReportPage({ params, searchParams }: {
       </p>
 
       {!starredOnly && overall && (
-        <section className="mt-6 space-y-3 text-[15px] leading-relaxed text-gray-800">
+        <section className="rpt-intro mt-6 space-y-3 text-[15px] leading-relaxed text-gray-800">
           {overall.body.split(/\n\s*\n/).filter((p) => p.trim() && !p.startsWith("*")).map((p, i) => <p key={i}>{p.replace(/\*\*/g, "")}</p>)}
         </section>
       )}
@@ -164,7 +200,7 @@ export default async function CoachReportPage({ params, searchParams }: {
         <section className="mt-8">
           <h2 className="text-xl font-black text-[#0b1730]">{starredOnly ? "Your recruits" : "Every North Carolina wrestler"} · {shown.length}</h2>
           <p className="text-xs text-gray-500">Strongest tournaments first.</p>
-          <div className="mt-3 grid gap-3">
+          <div className="rpt-list mt-3 grid gap-3">
             {shown.map((r) => (
               <ReportCard key={r.athleteId} r={r} e={byAthlete.get(r.athleteId)} starred={viewer.starred.has(r.athleteId)}
                 mine={viewer.mine.has(r.athleteId)} readOnly={viewer.readOnly}
