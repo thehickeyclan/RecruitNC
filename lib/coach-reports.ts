@@ -45,7 +45,7 @@ export const COACH_REPORTS: CoachReportDef[] = [
     date: "2026-10-25",
     file: "content/reports/super32-2026.json",
     gender: "Female",
-    recapSlug: null,
+    recapSlug: "super32-2026-nc-girls-recap",
   },
 ]
 
