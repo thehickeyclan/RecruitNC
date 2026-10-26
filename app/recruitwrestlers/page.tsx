@@ -17,6 +17,7 @@ import { ANNOUNCED_PROGRAMS } from "@/lib/college-programs/announced"
 import { PREVIEW, buildMapPreview } from "@/lib/college-programs/map-preview"
 import collegeMapData from "@/lib/college-programs/programs-2026-27.json"
 import type { CollegeMapSchool } from "@/lib/college-programs/types"
+import { NationalHeader } from "@/components/recruiting/national-frame"
 
 export const revalidate = 3600
 
@@ -94,24 +95,8 @@ export default async function RecruitWrestlersHome() {
 
   return (
     <div className="min-h-screen bg-[#0B1426] text-white">
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0B1426]/95 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-          <a href="/" aria-label={NATIONAL_BRAND.name}>
-            <RwLogo className="h-8 w-auto sm:h-9" />
-          </a>
-          <nav className="hidden items-center gap-6 text-sm font-semibold text-white/75 lg:flex">
-            <a href="/prospects/all" className="hover:text-white">Athletes</a>
-            <a href="/public-rankings" className="hover:text-white">Rankings</a>
-            <a href="/recruiting/college-map" className="hover:text-white">Colleges</a>
-            <a href="/command-center" className="hover:text-white">Command Center</a>
-            <a href="/recruiting/learn" className="hover:text-white">Learn</a>
-          </nav>
-          <div className="flex items-center gap-3">
-            <a href="/auth/signin" className="hidden text-sm font-semibold text-white/80 hover:text-white sm:inline">Sign in</a>
-            <a href="/create-profile" className={`${PRIMARY} px-4 py-2`}>Get started</a>
-          </div>
-        </div>
-      </header>
+      {/* The site header: same product menu as every page, with the phone menu. */}
+      <NationalHeader />
 
       <main>
         {/* Hero: a recruiting site, said in the first line, with a door for each of the two people it serves. */}
@@ -309,7 +294,7 @@ export default async function RecruitWrestlersHome() {
             <a href="/prospects/all" className="hover:text-white">Athletes</a>
             <a href="/public-rankings" className="hover:text-white">Rankings</a>
             <a href="/recruiting/college-map" className="hover:text-white">Colleges</a>
-            <a href="/recruiting/learn" className="hover:text-white">Learn</a>
+            <a href="/for-coaches" className="hover:text-white">For coaches</a>
             <a href="/privacy" className="hover:text-white">Privacy</a>
             <a href="mailto:info@recruitwrestlers.com" className="hover:text-white">info@recruitwrestlers.com</a>
           </nav>

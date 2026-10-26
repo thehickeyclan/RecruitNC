@@ -93,7 +93,7 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
     if (!isNationalPath(pathname) && !isOpenWhileStaged(pathname) && !pathname.startsWith("/guild-recruiting")) {
       // NC United's real pages forward there; anything else is RecruitWrestlers' "page not found".
       if (isNcUnitedPage(pathname)) return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, APP_ORIGIN), 307)
-      return NextResponse.rewrite(new URL("/recruitwrestlers/not-found", request.url), { status: 404 })
+      return NextResponse.rewrite(new URL("/recruitwrestlers/not-found", request.url))
     }
   }
 

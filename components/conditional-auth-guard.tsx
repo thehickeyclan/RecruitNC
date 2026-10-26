@@ -79,6 +79,7 @@ export function ConditionalAuthGuard({
     "/command-center",
     // RecruitWrestlers' plans page: prices before an account (Matt's product review, 26 Oct 2026).
     "/membership",
+    "/for-coaches",
     // Dev-only product screenshots (404 in production).
     "/dev/screens",
     "/schools",

@@ -12,14 +12,24 @@ import { RwLogo } from "@/components/recruiting/rw-mark"
  *
  * Plain <a href>: app/layout.tsx navigates same-site links on capture.
  */
-const LINKS = [
+/*
+ * The menu is the products, not features (Matt, 26 Oct 2026: "the top should not have links like
+ * learn, that should be part of command center"). Free: Athletes, Rankings, News. Paid: Insider
+ * and the Recruiting Command Center. Coaches: free access. Learn and the college map live inside
+ * the Command Center.
+ */
+const FREE = [
   { href: "/prospects/all", label: "Athletes" },
   { href: "/public-rankings", label: "Rankings" },
-  { href: "/recruiting/college-map", label: "Colleges" },
-  { href: "/recruiting/learn", label: "Learn" },
-  // Tournament recaps, every live state (app/recaps).
   { href: "/recaps", label: "News" },
 ]
+const PRODUCTS = [
+  { href: "/membership#insider", label: "Insider" },
+  { href: "/command-center", label: "Command Center" },
+  { href: "/for-coaches", label: "For coaches" },
+]
+const LINKS = [...FREE, ...PRODUCTS]
+const FOOTER = [...FREE, { href: "/membership", label: "Plans" }, { href: "/command-center", label: "Command Center" }, { href: "/for-coaches", label: "For coaches" }, { href: "/contact", label: "Contact" }]
 
 export function NationalLockup({ className = "" }: { className?: string }) {
   return (
@@ -32,7 +42,7 @@ export function NationalLockup({ className = "" }: { className?: string }) {
 export function NationalHeader() {
   const { user, signOut } = useAuth()
   const [open, setOpen] = useState(false)
-  const links = user ? [{ href: "/my-recruiting", label: "Command Center" }, ...LINKS, { href: "/inbox", label: "Messages" }] : LINKS
+  const links = user ? [{ href: "/my-recruiting", label: "Command Center" }, ...FREE, { href: "/inbox", label: "Messages" }] : LINKS
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0B1426]/95 text-white backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
@@ -61,7 +71,7 @@ export function NationalHeader() {
               <a href="/auth/signin" className="hidden text-sm font-semibold text-white/80 hover:text-white sm:inline">
                 Sign in
               </a>
-              <a href="/create-profile" className="rounded-xl bg-[#A3E635] px-4 py-2 text-sm font-bold text-[#0B1426] hover:bg-[#BEF264]">
+              <a href="/membership" className="rounded-xl bg-[#A3E635] px-4 py-2 text-sm font-bold text-[#0B1426] hover:bg-[#BEF264]">
                 Get started
               </a>
             </>
@@ -98,7 +108,7 @@ export function NationalFooter() {
           <p className="mt-2 text-sm text-white/45">College wrestling recruiting, built on verified results.</p>
         </div>
         <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/60">
-          {LINKS.map((l) => (
+          {FOOTER.map((l) => (
             <a key={l.href} href={l.href} className="hover:text-white">
               {l.label}
             </a>

@@ -145,7 +145,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
     if (!coachAtFrontDoor) return
     // The one exception: a partner program's coach who chose the NC United link.
     if (hasCommunityAccess(profile) && new URLSearchParams(window.location.search).has("community")) return
-    window.location.replace("/coach-home")
+    window.location.replace("/my-recruits")
   }, [coachAtFrontDoor, profile])
   // No chat launcher in the coach portal at all (Matt, 11 October 2026).
   // On the community side, the inbox keeps its reply box and send button in the corner the chat launcher floats over.

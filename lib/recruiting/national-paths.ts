@@ -42,6 +42,8 @@ export const NATIONAL_PATH_PREFIXES = [
   "/recaps",
   // College coaches' Reports folder: every live state's tournament reports (Matt, 26 Oct 2026).
   "/coach-reports",
+  // The coach product's own page: My Recruits, free for college coaches (Matt, 26 Oct 2026).
+  "/for-coaches",
 ] as const
 
 export function isNationalPath(pathname: string): boolean {

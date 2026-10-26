@@ -5,7 +5,9 @@
  * drawn (lib/coach-front-door.ts).
  */
 export const PORTAL_HINT_COOKIE = "recruiting-shell"
-export const COACH_HOME_PATH = "/coach-home"
+// A coach lands on My Recruits, their board of wrestlers (Matt, 26 Oct 2026: "coach logs in they
+// should be put right into my recruits"). Coach Home stays one tap away in the coach menu.
+export const COACH_HOME_PATH = "/my-recruits"
 
 /**
  * "1" when the coach's program also works with NC United (lib/recruiting/brand.ts,
