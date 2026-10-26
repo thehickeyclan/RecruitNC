@@ -1,10 +1,15 @@
 /**
- * The published Command Center snapshot, public. Internal fields (seen-at map, review lists) are
+ * The published Command Center snapshot, for members only (Matt, 26 Oct 2026: "HQ should now be
+ * member only": Insider, Blue, the Command Center, verified college coaches and admins). The page
+ * gates too; this is the data behind it, so it cannot be read around the page. Internal fields (seen-at map, review lists) are
  * dropped. `?year=2025` returns last year's event, published once as a permanent 2025 view.
  */
 import { NextResponse, type NextRequest } from "next/server"
 import { unstable_cache } from "next/cache"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { createClient } from "@/lib/supabase/server"
+import { resolveRankingViewer } from "@/lib/ranking-access"
+import { hasPortalAccess, hasPremiumAccess } from "@/lib/ranking-visibility"
 import { latestSnapshot, SUPER32_EVENT_KEY, type SnapshotData } from "@/lib/super32-live/snapshot"
 
 export const dynamic = "force-dynamic"
@@ -25,7 +30,11 @@ const load = unstable_cache(
 )
 
 export async function GET(request: NextRequest) {
+  const { viewer } = await resolveRankingViewer({ supabase: await createClient(), admin: createAdminClient() })
+  if (!(hasPremiumAccess(viewer) || hasPortalAccess(viewer))) {
+    return NextResponse.json({ error: "Super 32 HQ is for Insider, NC United Blue and college coaches." }, { status: 403, headers: { "Cache-Control": "private, no-store" } })
+  }
   const eventKey = YEARS[request.nextUrl.searchParams.get("year") ?? "2026"] ?? SUPER32_EVENT_KEY
   const data = await load(eventKey)
-  return NextResponse.json({ snapshot: data }, { headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=30" } })
+  return NextResponse.json({ snapshot: data }, { headers: { "Cache-Control": "private, no-store" } })
 }

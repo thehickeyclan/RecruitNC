@@ -127,6 +127,8 @@ const ALL_NEWS: NewsItem[] = [
     author: "NC United",
     isAnnouncement: false,
     // Unpinned 25 Oct 2026: the event is over and the recap leads now.
+    // Members only since 26 Oct 2026 (Insider, Blue, college coaches, admins): premium content.
+    premium: true,
     actionLabel: "Follow NC live at Super 32 HQ",
   },
   {
