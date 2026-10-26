@@ -65,7 +65,7 @@ export function ThreeYear({ body }: { body: string }) {
     <section className="mt-10">
       <h2 className="text-2xl font-black text-[#0b1730]">Three years of progress</h2>
       {featured && (
-        <div className="mt-4 rounded-2xl border border-[#e9cf86] bg-white p-5 shadow-sm">
+        <div className="rpt-chart mt-4 rounded-2xl border border-[#e9cf86] bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <div className="text-lg font-black text-[#0b1730]">{featured.label}</div>
             <Change vals={featured.vals} />
@@ -73,7 +73,7 @@ export function ThreeYear({ body }: { body: string }) {
           <div className="mt-4"><Columns vals={featured.vals} height={220} /></div>
         </div>
       )}
-      <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-3">
+      <div className="rpt-chart mt-3 grid grid-cols-2 gap-3 lg:grid-cols-3">
         {rest.map((r) => (
           <div key={r.label} className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
             <div className="min-h-[2.5rem] text-[13px] font-semibold leading-tight text-gray-700">{r.label}</div>
@@ -82,7 +82,7 @@ export function ThreeYear({ body }: { body: string }) {
           </div>
         ))}
       </div>
-      <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="rpt-table mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-[#0b1730] text-white">
@@ -129,7 +129,7 @@ export function MatchList({ bouts, weight, placings }: { bouts: SnapshotBout[]; 
   const rows = bouts.filter((b) => b.winType !== "BYE")
   if (!rows.length) return null
   return (
-    <div className="border-t border-gray-100 bg-[#fafbfd] px-4 py-3">
+    <div className="rpt-matches border-t border-gray-100 bg-[#fafbfd] px-4 py-3">
       <div className="text-[11px] font-bold uppercase tracking-wider text-gray-500">Every match</div>
       <ol className="mt-2 space-y-2">
         {rows.map((b) => {
