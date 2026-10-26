@@ -43,8 +43,6 @@ async function main() {
       if (!e) continue
       if (/college/.test(String(u.role ?? ""))) { skip("college coach"); continue }
       if (u.is_admin || u.role === "admin") { skip("admin"); continue }
-      // A college address on any account but a parent's or an athlete's may be college staff: left off.
-      if (/\.edu$/i.test(e) && !["parent", "athlete"].includes(String(u.role ?? ""))) { skip(".edu (not parent/athlete)"); continue }
       if (!people.has(e)) people.set(e, (u.first_name as string | null) || String(u.full_name ?? "").split(/\s+/)[0] || null)
       if (claimedUsers.has(String(u.user_id))) claimedEmails.add(e)
     }
@@ -54,7 +52,6 @@ async function main() {
   const { data: subs } = await admin.from("toc_email_subscribers").select("email").limit(10000)
   for (const s of subs ?? []) {
     const e = String(s.email ?? "").toLowerCase().trim()
-    if (/\.edu$/i.test(e)) { skip(".edu subscriber"); continue }
     if (e && !people.has(e)) people.set(e, null)
   }
   // No college coaches at all (Matt): every address in the coach directory, the staff lists and
@@ -72,6 +69,9 @@ async function main() {
       if (fs.existsSync(fp)) for (const e of Object.keys(JSON.parse(fs.readFileSync(fp, "utf8")))) coachEmails.add(e.toLowerCase())
     }
   }
+  // Confirmed by Matt (26 Oct 2026): college coaches on non-coach accounts or the newsletter list.
+  // A .edu address alone never makes someone a coach (Jim Giannotti is not one).
+  for (const e of ["randydeangelo@bac.edu", "barber_vo@lynchburg.edu"]) coachEmails.add(e)
   for (const e of [...people.keys()]) if (coachEmails.has(e)) { people.delete(e); skip("college coach (directory/staff list)") }
   const candidates = [...people.entries()].filter(([e]) => (/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(e) && !INTERNAL.test(e)) || (skip("internal/invalid"), false))
   const { allowed } = await filterUnsubscribed(admin as never, candidates.map(([e]) => e))
