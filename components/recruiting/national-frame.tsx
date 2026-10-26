@@ -29,7 +29,7 @@ const PRODUCTS = [
   { href: "/for-coaches", label: "For coaches" },
 ]
 const LINKS = [...FREE, ...PRODUCTS]
-const FOOTER = [...FREE, { href: "/membership", label: "Plans" }, { href: "/command-center", label: "Command Center" }, { href: "/for-coaches", label: "For coaches" }, { href: "/contact", label: "Contact" }]
+const FOOTER = [...FREE, { href: "/membership", label: "Plans" }, { href: "/command-center", label: "Command Center" }, { href: "/for-coaches", label: "For coaches" }, { href: "/about", label: "About" }, { href: "/contact", label: "Contact" }]
 
 export function NationalLockup({ className = "" }: { className?: string }) {
   return (
