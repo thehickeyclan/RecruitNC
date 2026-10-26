@@ -14,6 +14,7 @@ import { eventDates } from "@/lib/college-programs/outreach-results"
 import { SUPER32_2026, super32Dates, super32NoticeActive, super32ReportPromise, super32ReportReadyActive } from "@/lib/recruiting/super32-report"
 import { ArrowRight, BarChart3, Bell, CalendarDays, History, FileText, GitCompareArrows, Lock, MessageSquare, Search, Star, Target, Users } from "lucide-react"
 import { BrandName } from "@/components/recruiting/brand-name"
+import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
 
 export type CoachHomeData = {
   coachName: string | null
@@ -225,6 +226,7 @@ function SuggestedList({ wrestlers }: { wrestlers: CoachHomeData["suggested"] })
 }
 
 function WrestlerSearch({ athletes }: { athletes: CoachHomeData["athletes"] }) {
+  const onRw = useOnRecruitWrestlers()
   const [query, setQuery] = useState("")
   const matches = useMemo(() => {
     const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean)
@@ -269,14 +271,14 @@ function WrestlerSearch({ athletes }: { athletes: CoachHomeData["athletes"] }) {
           </ul>
         ) : (
           <p className="mt-3 text-sm text-white/50">
-            No {recruitingCoverage()} wrestler in the current classes matches that.{" "}
+            No {recruitingCoverage(onRw)} wrestler in the current classes matches that.{" "}
             <Link href="/prospects/all" className={`${GOLD} hover:underline`}>
               Browse all profiles
             </Link>
           </p>
         )
       ) : (
-        <p className="mt-2 text-xs text-white/40">{athletes.length.toLocaleString()} {recruitingCoverage()} wrestlers in the current classes.</p>
+        <p className="mt-2 text-xs text-white/40">{athletes.length.toLocaleString()} {recruitingCoverage(onRw)} wrestlers in the current classes.</p>
       )}
     </div>
   )
@@ -334,6 +336,7 @@ function Super32Notice({ womens }: { womens: boolean }) {
 }
 
 export default function CoachHomeClient({ access, data }: { access: "ok" | "signed-out" | "not-coach"; data: CoachHomeData | null }) {
+  const onRw = useOnRecruitWrestlers()
   if (access !== "ok" || !data) return <AccessPanel signedOut={access === "signed-out"} />
   const { recruits, messages } = data
   const hasWork = recruits.total > 0 || messages.unread > 0 || messages.latest.length > 0
@@ -356,7 +359,7 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
             <p className={`text-[11px] font-black uppercase tracking-widest ${GOLD}`}><BrandName /> · Coach Home</p>
             <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">{data.coachName ? `Welcome, Coach ${data.coachName}` : "Welcome, Coach"}</h1>
             <p className="mt-1 text-sm text-white/55">
-              {data.program ? `${data.program} · ` : ""}Everything you use to recruit {recruitingCoverage()}, in one place.
+              {data.program ? `${data.program} · ` : ""}Everything you use to recruit {recruitingCoverage(onRw)}, in one place.
             </p>
           </div>
           <BoardSwitch value={data.viewGender} className="hidden shrink-0 self-start sm:inline-flex" />
@@ -603,7 +606,7 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
             href={profilesHref}
             icon={Users}
             title={womens ? "All women's profiles" : "All athlete profiles"}
-            body={`Every ${recruitingCoverage()} ${womens ? "women's " : ""}profile, with filters for class, weight and last competed.`}
+            body={`Every ${recruitingCoverage(onRw)} ${womens ? "women's " : ""}profile, with filters for class, weight and last competed.`}
           />
           <Tool href="/athletes" icon={Users} title="College commitments" body="Who has committed where, this class and last." />
         </div>

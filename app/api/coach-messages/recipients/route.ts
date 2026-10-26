@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { resolveRequestUserId } from "@/lib/request-user"
 import { loadLiveRoster } from "@/lib/coach-roster"
 import { classifyViewer } from "@/lib/viewer-role"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 
 /**
  * The wrestlers a coach can start a conversation with: the same list Coach Home searches
@@ -20,6 +21,6 @@ export async function GET(request: NextRequest) {
   if (!who.isCollegeCoach && who.kind !== "admin" && profile?.is_admin !== true) {
     return NextResponse.json({ error: "College coaches only." }, { status: 403 })
   }
-  const athletes = await loadLiveRoster()
+  const athletes = await loadLiveRoster(stagedBrandForHost(request.headers.get("host")) === "national")
   return NextResponse.json({ athletes })
 }

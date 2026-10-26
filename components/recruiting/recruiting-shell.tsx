@@ -38,6 +38,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
 
 /**
  * The frame around a college coach's pages (Matt, 11 October 2026): a slim bar on top, the
@@ -95,6 +96,7 @@ function SideMenu({ items, isActive, onNavigate, partner }: { items: Item[]; isA
 }
 
 export function RecruitingShell({ children }: { children: React.ReactNode }) {
+  const onRw = useOnRecruitWrestlers()
   const [menuOpen, setMenuOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
   const pathname = usePathname() ?? ""
@@ -172,7 +174,7 @@ export function RecruitingShell({ children }: { children: React.ReactNode }) {
             <RecruitingWordmark className="text-xl" />
           </span>
           <BrandLockup />
-          <span className="hidden text-[10px] font-semibold uppercase tracking-[0.25em] text-white/45 sm:inline">{recruitingCoverage()} wrestling</span>
+          <span className="hidden text-[10px] font-semibold uppercase tracking-[0.25em] text-white/45 sm:inline">{recruitingCoverage(onRw)} wrestling</span>
         </a>
         <RecruitingSearch className="hidden min-w-0 max-w-md flex-1 md:block" />
         <div className="ml-auto flex items-center gap-1">

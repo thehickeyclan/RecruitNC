@@ -68,6 +68,14 @@ export function stagedBrandForHost(host: string | null | undefined): StagedBrand
   return null
 }
 
+/**
+ * RecruitWrestlers launched (Matt, 26 Oct 2026: "lift gate"). Only the staff preview tools stay
+ * behind the gate: /dev renders the site as a named coach or family would see it.
+ */
+export function isStaffOnlyAfterLaunch(pathname: string): boolean {
+  return pathname === "/dev" || pathname.startsWith("/dev/")
+}
+
 /** Paths a visitor must reach to sign in, or that carry no athlete data, while the gate is closed. */
 export function isOpenWhileStaged(pathname: string): boolean {
   return (

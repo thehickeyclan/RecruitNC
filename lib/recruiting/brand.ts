@@ -24,7 +24,7 @@ export const RECRUITING_BRAND = {
    */
   states: [
     { code: "NC", name: "North Carolina", live: true },
-    { code: "SC", name: "South Carolina", live: false },
+    { code: "SC", name: "South Carolina", live: true }, // Live 26 Oct 2026 (Matt); scripts/state-readiness.ts --state SC: all data gates pass
     // Being built (Matt, 21 Oct 2026): profiles first, not open to coaches until he says go.
     { code: "VA", name: "Virginia", live: false },
   ],
@@ -58,18 +58,29 @@ export const stateBrand = (code: string) => `Recruit${code.toUpperCase()}`
 
 export type RecruitingState = (typeof RECRUITING_BRAND.states)[number]
 
-/** States a viewer may open: the live ones, and the ones still being checked for an admin. */
-export function visibleStates(isAdmin: boolean): RecruitingState[] {
-  return RECRUITING_BRAND.states.filter((s) => s.live || isAdmin)
+/**
+ * The states open on an address. RecruitWrestlers carries every live state; NC United is its NC
+ * licensee and reports North Carolina only (Matt, 26 Oct 2026: "nc united will only report on nc..
+ * like an oem of recruitwrestlers"). Defaults to NC United's view, so a caller that does not say
+ * which address it is on never shows another state there.
+ */
+export function liveStates(onRecruitWrestlers = false): RecruitingState[] {
+  return RECRUITING_BRAND.states.filter((s) => (onRecruitWrestlers ? s.live : s.code === "NC"))
 }
 
-export function isVisibleState(code: string | null | undefined, isAdmin: boolean): boolean {
-  return visibleStates(isAdmin).some((s) => s.code === String(code ?? "").toUpperCase())
+/** States a viewer may open: the live ones on this address, and the ones still being checked for an admin. */
+export function visibleStates(isAdmin: boolean, onRecruitWrestlers = false): RecruitingState[] {
+  const live = new Set(liveStates(onRecruitWrestlers).map((s) => s.code))
+  return RECRUITING_BRAND.states.filter((s) => live.has(s.code) || isAdmin)
+}
+
+export function isVisibleState(code: string | null | undefined, isAdmin: boolean, onRecruitWrestlers = false): boolean {
+  return visibleStates(isAdmin, onRecruitWrestlers).some((s) => s.code === String(code ?? "").toUpperCase())
 }
 
 /** "North Carolina", "North Carolina and South Carolina", "North Carolina, South Carolina, and Virginia". */
-export function recruitingCoverage(): string {
-  const names = RECRUITING_BRAND.states.filter((s) => s.live).map((s) => s.name)
+export function recruitingCoverage(onRecruitWrestlers = false): string {
+  const names = liveStates(onRecruitWrestlers).map((s) => s.name)
   return new Intl.ListFormat("en-US", { style: "long", type: "conjunction" }).format(names)
 }
 

@@ -3,6 +3,7 @@ import { RECRUITING_BRAND, recruitingCoverage } from "@/lib/recruiting/brand"
 import { BrandLockup } from "@/components/recruiting/brand-frames"
 import { BrandName } from "@/components/recruiting/brand-name"
 import { RecruitingWordmark } from "@/components/recruiting/recruiting-wordmark"
+import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
 
 /**
  * The footer under a college coach's pages: recruiting links, how to reach us, and one line back
@@ -18,6 +19,7 @@ const LINKS = [
 ]
 
 export function RecruitingFooter() {
+  const onRw = useOnRecruitWrestlers()
   return (
     <footer className="border-t border-white/10 bg-[#0A1628] text-white print:hidden">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -28,7 +30,7 @@ export function RecruitingFooter() {
             </span>
             <BrandLockup />
             <p className="mt-2 text-sm text-white/50">{RECRUITING_BRAND.tagline}</p>
-            <p className="mt-1 text-sm text-white/50">Covering {recruitingCoverage()}. Free for college coaching staff.</p>
+            <p className="mt-1 text-sm text-white/50">Covering {recruitingCoverage(onRw)}. Free for college coaching staff.</p>
           </div>
           <ul className="grid grid-cols-2 gap-x-10 gap-y-3 text-sm">
             {LINKS.map((item) => (

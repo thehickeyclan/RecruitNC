@@ -19,6 +19,8 @@ import { loadInterested } from "@/lib/college-programs/interested-for-coach"
 import { mapSchoolIdFor } from "@/lib/college-programs/load"
 import type { CoachHomeData } from "./coach-home-client"
 import { inState } from "@/lib/recruiting/states"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { headers } from "next/headers"
 
 
 /**
@@ -55,7 +57,7 @@ export async function loadCoachHome(
   const [board, threads, roster, school] = await Promise.all([
     loadMyRecruits(admin, userId).catch(() => null),
     listThreads(admin, userId).catch(() => null),
-    loadLiveRoster().catch(() => []),
+    loadLiveRoster(stagedBrandForHost((await headers()).get("host")) === "national").catch(() => []),
     profile?.school_id
       ? admin
           .from("schools")
