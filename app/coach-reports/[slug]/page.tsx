@@ -135,7 +135,7 @@ export default async function CoachReportPage({ params, searchParams }: {
   const writeUps = new Map((recap?.graded ?? []).map((w) => [nameKey(w.name), withoutGradeTalk(w.paragraph.replace(/\*\*/g, ""))]))
   const introSections = recap ? sections(recap.intro) : []
   const overall = introSections.find((s) => /overall assessment/i.test(s.head))
-  const table = introSections.find((s) => /three-year/i.test(s.head))
+  const table = introSections.find((s) => /year comparison/i.test(s.head))
 
   const starredOnly = sp.starred === "1"
   const asParam = [sp.as && viewer.isAdmin ? `as=${encodeURIComponent(sp.as)}` : "", process.env.NODE_ENV !== "production" && sp.devcoach ? `devcoach=${encodeURIComponent(sp.devcoach)}` : ""].filter(Boolean).join("&")

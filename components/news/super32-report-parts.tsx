@@ -17,19 +17,43 @@ export async function super32Placings(): Promise<Map<string, number>> {
   return new Map((data ?? []).map((r) => [`${nameKey(r.wrestler_name)}|${String(r.weight).replace(/\D/g, "")}`, r.place as number]))
 }
 
+/**
+ * Girls' Super 32 2026 placings, keyed the same way. national_event_placers holds the boys only, so
+ * these are derived from the bracket's own placement matches ("3rd Place", "5th Place", "7th Place")
+ * and the "Finals" round, exactly as the recap's figures were checked (26 Oct 2026).
+ */
+export async function super32GirlsPlacings(): Promise<Map<string, number>> {
+  const admin = createAdminClient()
+  const rows: Array<{ weight_class: string; round: string; athlete_name: string; win: boolean; is_bye: boolean }> = []
+  for (let from = 0; ; from += 1000) {
+    const { data } = await admin.from("other_tournament_bouts").select("weight_class, round, athlete_name, win, is_bye")
+      .eq("source_file", "super32-2026-live.csv").eq("gender", "F").or("round.ilike.%place%,round.eq.Finals").order("id").range(from, from + 999)
+    rows.push(...((data ?? []) as typeof rows))
+    if (!data || data.length < 1000) break
+  }
+  const out = new Map<string, number>()
+  for (const r of rows) {
+    if (r.is_bye) continue
+    const m = /(\d+)(st|nd|rd|th) place/i.exec(r.round)
+    const place = m ? (r.win ? Number(m[1]) : Number(m[1]) + 1) : /^finals$/i.test(r.round) ? (r.win ? 1 : 2) : null
+    if (place) out.set(`${nameKey(r.athlete_name)}|${String(r.weight_class).replace(/\D/g, "")}`, place)
+  }
+  return out
+}
+
 /** The three-year table as cards: each row a stat, 2026 called out. */
-export const YEARS = ["2024", "2025", "2026"] as const
-export const FEATURED = /top-15/i
+/** The chart that leads: wins over top-15 seeds (boys), else All-Americans (girls). */
+export const FEATURED = /top-15|all-americans/i
 
 /** Vertical columns, years left to right, so a row reads as progress over time; 2026 in gold. */
-export function Columns({ vals, height }: { vals: number[]; height: number }) {
+export function Columns({ vals, years, height }: { vals: number[]; years: string[]; height: number }) {
   const max = Math.max(...vals, 1)
   // Bars live in their own fixed-height area, so a bar's height is exactly its share of the
   // largest value; the labels sit outside it and can never squeeze a bar.
   return (
     <div className="flex justify-around gap-3">
-      {YEARS.map((yr, i) => {
-        const now = i === YEARS.length - 1
+      {years.map((yr, i) => {
+        const now = i === years.length - 1
         return (
           <div key={yr} className="flex flex-1 flex-col items-center">
             <div className="flex w-full flex-col items-center justify-end" style={{ height }}>
@@ -44,12 +68,13 @@ export function Columns({ vals, height }: { vals: number[]; height: number }) {
   )
 }
 
-export function Change({ vals }: { vals: number[] }) {
-  const d = vals[2]! - vals[1]!
-  if (d === 0) return <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-500">Same as 2025</span>
+export function Change({ vals, years }: { vals: number[]; years: string[] }) {
+  const d = vals[vals.length - 1]! - vals[vals.length - 2]!
+  const prev = years[years.length - 2]
+  if (d === 0) return <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-500">Same as {prev}</span>
   return (
     <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${d > 0 ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500"}`}>
-      {d > 0 ? "+" : ""}{d} vs 2025
+      {d > 0 ? "+" : ""}{d} vs {prev}
     </span>
   )
 }
@@ -57,28 +82,30 @@ export function Change({ vals }: { vals: number[] }) {
 export function ThreeYear({ body }: { body: string }) {
   const lines = body.split("\n").filter((l) => l.startsWith("|") && !/^\|\s*-/.test(l))
   const note = body.split("\n").filter((l) => !l.startsWith("|")).join(" ").trim()
+  // Years come from the table's header row: three for the boys (2024-26), four for the girls (2023-26).
+  const years = lines[0]!.replace(/^\||\|$/g, "").split("|").map((c) => c.trim()).slice(1)
   const rows = lines.slice(1).map((l) => l.replace(/^\||\|$/g, "").split("|").map((c) => c.trim()))
-    .map(([label, ...ys]) => ({ label: label!, vals: ys.slice(0, 3).map(Number) }))
+    .map(([label, ...ys]) => ({ label: label!, vals: ys.slice(0, years.length).map(Number) }))
   const featured = rows.find((r) => FEATURED.test(r.label))
   const rest = rows.filter((r) => r !== featured)
   return (
     <section className="mt-10">
-      <h2 className="text-2xl font-black text-[#0b1730]">Three years of progress</h2>
+      <h2 className="text-2xl font-black text-[#0b1730]">{years.length === 4 ? "Four" : "Three"} years of progress</h2>
       {featured && (
         <div className="rpt-chart mt-4 rounded-2xl border border-[#e9cf86] bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <div className="text-lg font-black text-[#0b1730]">{featured.label}</div>
-            <Change vals={featured.vals} />
+            <Change vals={featured.vals} years={years} />
           </div>
-          <div className="mt-4"><Columns vals={featured.vals} height={220} /></div>
+          <div className="mt-4"><Columns vals={featured.vals} years={years} height={220} /></div>
         </div>
       )}
       <div className="rpt-chart mt-3 grid grid-cols-2 gap-3 lg:grid-cols-3">
         {rest.map((r) => (
           <div key={r.label} className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
             <div className="min-h-[2.5rem] text-[13px] font-semibold leading-tight text-gray-700">{r.label}</div>
-            <div className="mt-2"><Columns vals={r.vals} height={120} /></div>
-            <div className="mt-2 text-center"><Change vals={r.vals} /></div>
+            <div className="mt-2"><Columns vals={r.vals} years={years} height={120} /></div>
+            <div className="mt-2 text-center"><Change vals={r.vals} years={years} /></div>
           </div>
         ))}
       </div>
@@ -87,14 +114,14 @@ export function ThreeYear({ body }: { body: string }) {
           <thead>
             <tr className="bg-[#0b1730] text-white">
               <th className="px-3 py-2 text-left font-semibold">NC boys</th>
-              {YEARS.map((yr) => <th key={yr} className={`px-3 py-2 text-right font-semibold ${yr === "2026" ? "text-[#d4af55]" : ""}`}>{yr}</th>)}
+              {years.map((yr, i) => <th key={yr} className={`px-3 py-2 text-right font-semibold ${i === years.length - 1 ? "text-[#d4af55]" : ""}`}>{yr}</th>)}
             </tr>
           </thead>
           <tbody>
             {rows.map((r, i) => (
               <tr key={r.label} className={i % 2 ? "bg-[#f8f9fc]" : ""}>
                 <td className="px-3 py-2 text-gray-700">{r.label}</td>
-                {r.vals.map((v, j) => <td key={j} className={`px-3 py-2 text-right tabular-nums ${j === 2 ? "font-black text-[#0b1730]" : "text-gray-600"}`}>{v}</td>)}
+                {r.vals.map((v, j) => <td key={j} className={`px-3 py-2 text-right tabular-nums ${j === years.length - 1 ? "font-black text-[#0b1730]" : "text-gray-600"}`}>{v}</td>)}
               </tr>
             ))}
           </tbody>
