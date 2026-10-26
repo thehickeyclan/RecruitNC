@@ -1,12 +1,12 @@
 /**
  * Super 32 2026 — North Carolina Boys Recap. The top (through "How the Grades Work") and the top
  * grade awarded are free; below that, names, grades and details are locked (never sent in the HTML) for anyone without premium
- * access (Rankings, Command Center, Blue, verified college coaches, admins). A family linked to a
+ * access (Insider, Command Center, Blue, verified college coaches, admins). A family linked to a
  * wrestler sees that wrestler's grade free. Members are never shown a sales panel.
  *
  * The words come from content/news/*.md untouched; the page dresses them: a hero with the headline
  * numbers, the three-year table as stat cards, a grade legend, and a card per wrestler whose record,
- * school and seeded wins are read from the published Super 32 results, not retyped.
+ * school, class year and seeded wins are read from the published Super 32 results, not retyped.
  *
  * Draft until SUPER32_RECAP_PUBLIC=1: admins only, everyone else gets a 404 (Matt, 25 Oct).
  */
@@ -242,7 +242,7 @@ const ordinal = (n: number) => `${n}${n === 1 ? "st" : n === 2 ? "nd" : n === 3 
 /** Locked: no props at all, so nothing that identifies the wrestler reaches the page, even blurred (Matt, 25 Oct). */
 function LockedCard() {
     return (
-      <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm" aria-label="Locked: Rankings members only">
+      <div className="relative overflow-hidden rounded-xl border border-gray-200 bg-white p-4 shadow-sm" aria-label="Locked: Insider members only">
         <div className="flex items-center gap-3" aria-hidden>
           <span className="h-11 w-11 shrink-0 rounded-lg bg-gray-200 blur-[2px]" />
           <div className="min-w-0 flex-1 space-y-2 blur-[3px]">
@@ -268,7 +268,7 @@ function WrestlerCard({ w, e }: { w: GradedWrestler; e: SnapshotEntrant | undefi
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-baseline gap-x-2">
             <h3 className="text-lg font-black text-[#0b1730]">{e?.athleteId ? <Link href={`/athletes/${e.athleteId}`} className="hover:underline">{w.name}</Link> : w.name}</h3>
-            <span className="text-sm text-gray-500">{w.weight} lbs{e?.school ? ` · ${e.school}` : ""}</span>
+            <span className="text-sm text-gray-500">{[`${w.weight} lbs`, e?.school && !/^n\/?a$/i.test(e.school) ? e.school : null, e?.classYear ? `Class of ${e.classYear}` : null].filter(Boolean).join(" · ")}</span>
           </div>
           <div className="mt-1.5 flex flex-wrap gap-1.5">
             <Chip tone="navy">{record}</Chip>
@@ -286,11 +286,11 @@ function WrestlerCard({ w, e }: { w: GradedWrestler; e: SnapshotEntrant | undefi
 function UnlockPanel() {
   return (
     <div className="mt-8 rounded-2xl border border-[#d4af55] bg-[#0b1730] p-5 text-white">
-      <div className="text-[11px] font-bold uppercase tracking-wider text-[#d4af55]">Every grade, every paragraph</div>
-      <div className="mt-1 text-xl font-bold">Unlock the full recap with Rankings.</div>
-      <p className="mt-1 text-sm text-[#c9d4ea]">Rankings members, NC United Blue families and college coaches see every grade and the data file behind it. Is your wrestler here? Claim the profile free and see their grade.</p>
+      <div className="text-[11px] font-bold uppercase tracking-wider text-[#d4af55]">Insider</div>
+      <div className="mt-1 text-xl font-bold">Sign up for Insider and get full access.</div>
+      <p className="mt-1 text-sm text-[#c9d4ea]">Tournament grade reports, rankings and college profile views. Is your wrestler here? Claim the profile free and see their grade.</p>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-        <Link href="/rankings" className="rounded-lg bg-[#d4af55] px-4 py-2.5 text-center text-sm font-semibold text-[#0b1730]">See Rankings →</Link>
+        <Link href="/rankings" className="rounded-lg bg-[#d4af55] px-4 py-2.5 text-center text-sm font-semibold text-[#0b1730]">Sign up for Insider →</Link>
         <Link href="/create-profile" className="rounded-lg bg-white px-4 py-2.5 text-center text-sm font-semibold text-[#0b1730]">Claim a profile free</Link>
         <Link href="/auth/signup?type=college-coach" className="rounded-lg border border-white/40 px-4 py-2.5 text-center text-sm font-semibold">College coach? Free access</Link>
       </div>
@@ -312,7 +312,7 @@ function ClaimCard() {
             <div className="mt-1 text-xs text-gray-600">See your own wrestler&apos;s grade in this recap.</div>
           </Link>
           <Link href="/rankings" className="rounded-xl bg-[#d4af55] p-4 text-[#0b1730]">
-            <div className="text-xs font-bold uppercase tracking-wider">Rankings · $9.99/mo</div>
+            <div className="text-xs font-bold uppercase tracking-wider">Insider · $9.99/mo</div>
             <div className="mt-1 text-lg font-bold">Every grade + the data →</div>
             <div className="mt-1 text-xs text-[#0b1730]/80">Full rankings, the bout-by-bout file, and which college programs viewed your wrestler.</div>
           </Link>
