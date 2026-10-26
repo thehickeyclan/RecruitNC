@@ -156,21 +156,25 @@ export default async function HomePage() {
           {/* The recap as the top story, inside the hero rather than a second banner on top of it
               (Matt, 26 Oct 2026: two stacked banners looked horrible). Ends 8 Nov. */}
           {super32HomeBanner() === "recap" && (
-            <Link
-              href="/news/super32-2026-nc-boys-recap"
-              className="group mb-8 flex max-w-2xl items-center gap-4 rounded-xl border border-rnc-gold/60 bg-rnc-ink/85 p-3 pr-4 backdrop-blur-sm transition-colors hover:border-rnc-gold"
-            >
-              <Image src="/images/news/super32-2026-boys-recap/share-card.jpg" alt="" width={112} height={72} className="h-[72px] w-28 shrink-0 rounded-lg object-cover object-[50%_25%]" />
+            // One announcement, two recaps (Matt, 26 Oct 2026): a button for the men's and one for the women's.
+            <div className="mb-8 flex max-w-2xl items-center gap-4 rounded-xl border border-rnc-gold/60 bg-rnc-ink/85 p-3 pr-4 backdrop-blur-sm">
+              <Image src="/images/news/super32-2026-boys-recap/share-card.jpg" alt="" width={112} height={72} className="hidden h-[72px] w-28 shrink-0 rounded-lg object-cover object-[50%_25%] sm:block" />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="rounded bg-[#CC0000] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">Top story</span>
                   <span className="rounded bg-rnc-gold px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rnc-ink">★ Premium content</span>
                 </div>
-                <p className="mt-1 font-black leading-tight text-white group-hover:text-rnc-gold">Super 32 2026 — North Carolina Boys Recap</p>
-                <p className="mt-0.5 text-xs text-white/65">11 wins over top-15 seeds, up from 6 and 2. Every NC boy graded.</p>
+                <p className="mt-1 font-black leading-tight text-white">Super 32 2026 — North Carolina Recaps</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <Link href="/news/super32-2026-nc-boys-recap" className="inline-flex items-center gap-1 rounded-lg bg-rnc-gold px-3 py-1.5 text-xs font-extrabold text-rnc-ink hover:bg-[#c4a665]">
+                    Men&apos;s recap <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                  <Link href="/news/super32-2026-nc-girls-recap" className="inline-flex items-center gap-1 rounded-lg border border-rnc-gold px-3 py-1.5 text-xs font-extrabold text-rnc-gold hover:bg-rnc-gold/10">
+                    Women&apos;s recap <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
               </div>
-              <ArrowRight className="hidden h-5 w-5 shrink-0 text-rnc-gold sm:block" aria-hidden />
-            </Link>
+            </div>
           )}
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-rnc-gold">
             Recruit<span className="text-white">NC</span> · North Carolina wrestling

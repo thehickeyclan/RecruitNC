@@ -153,6 +153,28 @@ const ALL_NEWS: NewsItem[] = [
     actionLabel: "Read the recap",
   },
   {
+    // The girls recap, its own story (Matt, 26 Oct 2026). Pushed only if Matt asks: it was marked
+    // announced in push_sent_news when it was published, so the news-alerts job skips it.
+    id: "super32-2026-nc-girls-recap",
+    slug: "super32-2026-nc-girls-recap",
+    title: "Super 32 2026 — North Carolina Girls Recap",
+    subtitle: "Lauren Samuel and Ella Taylor finished 3rd, North Carolina's best finishes of the weekend. Every NC girl graded.",
+    summary:
+      "Lauren Samuel and Ella Taylor both finished 3rd at Super 32, the best finishes by any North Carolinian, and Samuel is now a two-time All-American. Every NC girl is graded on who she beat, how far she went and who beat her.",
+    href: "/news/super32-2026-nc-girls-recap",
+    date: "2026-10-26",
+    image: "/images/news/super32-2026-girls-recap/ella-taylor-hero.jpg",
+    imagePosition: "top",
+    newsListBanner: true,
+    category: "SUPER 32",
+    categoryBadgeClass: "bg-[#CC0000]",
+    author: "NC United",
+    isAnnouncement: false,
+    pinToTop: true,
+    premium: true,
+    actionLabel: "Read the recap",
+  },
+  {
     id: "super32-2026-what-good-looks-like",
     slug: "super32-2026-what-good-looks-like",
     title: "What Will It Take? Defining Success for North Carolina at Super 32",
