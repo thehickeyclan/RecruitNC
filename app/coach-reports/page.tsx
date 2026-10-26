@@ -21,7 +21,7 @@ export default async function CoachReportsIndex({ searchParams }: { searchParams
   if (viewer.access === "signed-out") redirect("/auth/signin?returnTo=%2Fcoach-reports")
   if (viewer.access !== "ok") redirect("/coach-home")
 
-  const reports = [...COACH_REPORTS].sort((a, b) =>
+  const reports = COACH_REPORTS.filter((d) => viewer.genders.includes(d.gender)).sort((a, b) =>
     b.date.localeCompare(a.date) || (viewer.viewGender === "Female" ? (a.gender === "Female" ? -1 : 1) : a.gender === "Male" ? -1 : 1))
   const asParam = sp.as && viewer.isAdmin ? `?as=${encodeURIComponent(sp.as)}` : ""
 

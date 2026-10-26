@@ -3,6 +3,7 @@
  * college coaches' report built from it (app/coach-reports): the three-year charts, the chips and
  * the computed "Every match" list with each opponent's credentials.
  */
+import Link from "next/link"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { markdownToHtml } from "@/lib/news-recaps/markdown"
 import { nameKey } from "@/lib/news-recaps/recap"
@@ -155,3 +156,14 @@ export function MatchList({ bouts, weight, placings }: { bouts: SnapshotBout[]; 
   )
 }
 
+
+/** Bottom-right of every card: not every coach knows the name is a link (Matt, 26 Oct 2026). */
+export function ViewProfilePill({ athleteId }: { athleteId: string }) {
+  return (
+    <div className="flex justify-end px-4 pb-3 print:hidden">
+      <Link href={`/athletes/${athleteId}`} className="inline-flex items-center gap-1 rounded-full bg-[#0b1730] px-3 py-1 text-xs font-semibold text-white hover:bg-[#13294b]">
+        View profile →
+      </Link>
+    </div>
+  )
+}
