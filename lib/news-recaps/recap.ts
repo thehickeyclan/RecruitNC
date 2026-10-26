@@ -22,7 +22,7 @@ export type Recap = {
   intro: string
   graded: GradedWrestler[]
   honorableMention: Array<{ name: string; weight: string; note: string }>
-  /** Sections after the grades (Rest of the Squad, Claim Your Profile). */
+  /** Sections after the grades (The Rest of North Carolina, Claim Your Profile). */
   outro: string
 }
 

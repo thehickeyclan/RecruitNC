@@ -144,26 +144,6 @@ export default async function HomePage() {
           </div>
         </section>
       )}
-      {super32HomeBanner() === "recap" && (
-        <section className="relative overflow-hidden border-b-2 border-[#D3B574] bg-[#08142b]">
-          <Image src="/images/news/super32-2026-boys-recap/share-card.jpg" alt="" fill sizes="100vw" className="object-cover object-[50%_30%] opacity-45" priority />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#08142b] via-[#08142b]/85 to-[#08142b]/30" />
-          <div className="container relative mx-auto px-4 py-8 sm:py-12">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-[#CC0000] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white">Super 32 · Recap</span>
-              <span className="rounded-full bg-[#D3B574] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[#13294B]">★ Premium content</span>
-            </div>
-            <h2 className="mt-3 max-w-3xl text-3xl font-black leading-tight text-white sm:text-5xl">Super 32 2026 — North Carolina Boys Recap</h2>
-            <p className="mt-3 max-w-2xl text-base text-white/80 sm:text-lg">
-              Eleven wins over top-15 seeds, up from six and two. Braylen Yates medaled, and every NC boy is graded on who he beat, how far he went and who beat him.
-            </p>
-            <Link href="/news/super32-2026-nc-boys-recap" className="mt-5 inline-flex items-center gap-2 rounded-xl bg-[#D3B574] px-7 py-4 text-base font-extrabold text-[#0A1628] transition-colors hover:bg-[#c4a665] sm:text-lg">
-              Read the recap <ArrowRight className="h-5 w-5" />
-            </Link>
-          </div>
-        </section>
-      )}
-
       {/* Hero - a recruiting site, said in the first line, with a door for each of the two people
           it serves: the college coach looking for talent and the family who wants to be found. */}
       <section className="relative overflow-hidden">
@@ -173,6 +153,25 @@ export default async function HomePage() {
           <div className="absolute inset-0 bg-gradient-to-t from-rnc-ink via-transparent to-transparent" />
         </div>
         <div className="container relative mx-auto px-4 py-14 md:py-20">
+          {/* The recap as the top story, inside the hero rather than a second banner on top of it
+              (Matt, 26 Oct 2026: two stacked banners looked horrible). Ends 8 Nov. */}
+          {super32HomeBanner() === "recap" && (
+            <Link
+              href="/news/super32-2026-nc-boys-recap"
+              className="group mb-8 flex max-w-2xl items-center gap-4 rounded-xl border border-rnc-gold/60 bg-rnc-ink/85 p-3 pr-4 backdrop-blur-sm transition-colors hover:border-rnc-gold"
+            >
+              <Image src="/images/news/super32-2026-boys-recap/share-card.jpg" alt="" width={112} height={72} className="h-[72px] w-28 shrink-0 rounded-lg object-cover object-[50%_25%]" />
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="rounded bg-[#CC0000] px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">Top story</span>
+                  <span className="rounded bg-rnc-gold px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-rnc-ink">★ Premium content</span>
+                </div>
+                <p className="mt-1 font-black leading-tight text-white group-hover:text-rnc-gold">Super 32 2026 — North Carolina Boys Recap</p>
+                <p className="mt-0.5 text-xs text-white/65">11 wins over top-15 seeds, up from 6 and 2. Every NC boy graded.</p>
+              </div>
+              <ArrowRight className="hidden h-5 w-5 shrink-0 text-rnc-gold sm:block" aria-hidden />
+            </Link>
+          )}
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-rnc-gold">
             Recruit<span className="text-white">NC</span> · North Carolina wrestling
           </p>
