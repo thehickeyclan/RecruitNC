@@ -1,12 +1,18 @@
 /**
- * RecruitWrestlers' recaps (Matt, 26 Oct 2026): every state's Super 32 recap in one place, North
- * Carolina's and South Carolina's so far. recruitwrestlers.com addresses only; NC United has its own
- * recaps in its News.
+ * RecruitWrestlers' News (Matt, 26 Oct 2026: "model news after nc united pages.. much nicer"):
+ * NC United's News layout - hero, featured story, "More stories" grid - in RecruitWrestlers' navy
+ * and lime, carrying every state's stories. recruitwrestlers.com addresses only; NC United has
+ * its own News. The address stays /recaps (NC United owns /news); the menu calls it News.
  */
 import type { Metadata } from "next"
+import Image from "next/image"
 import Link from "next/link"
 import { headers } from "next/headers"
 import { notFound } from "next/navigation"
+import { ArrowRight, Calendar } from "lucide-react"
+import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
+import { resolveRankingViewer } from "@/lib/ranking-access"
 
 export const dynamic = "force-dynamic"
 
@@ -15,35 +21,169 @@ const isRwHost = (host: string) => /recruitwrestlers\.com$|^localhost|\.vercel\.
 export async function generateMetadata(): Promise<Metadata> {
   const host = (await headers()).get("host") ?? ""
   if (!isRwHost(host)) return { title: { absolute: "Page not found" }, robots: { index: false, follow: false } }
-  return { title: { absolute: "Super 32 2026 Recaps | RecruitWrestlers" }, description: "How every state's wrestlers did at Super 32 2026, graded on the strength of their tournament." }
+  return {
+    title: { absolute: "News | RecruitWrestlers" },
+    description: "Tournament recaps and recruiting news from RecruitWrestlers, state by state.",
+  }
 }
 
-const RECAPS = [
-  { href: "/recaps/super32-2026-nc-boys", state: "North Carolina", title: "Boys recap", line: "11 wins over top-15 seeds, up from 6 and 2. Braylen Yates medaled.", img: "/images/news/super32-2026-boys-recap/share-card.jpg" },
-  { href: "/recaps/super32-2026-nc-girls", state: "North Carolina", title: "Girls recap", line: "Lauren Samuel and Ella Taylor both finished 3rd.", img: "/images/news/super32-2026-girls-recap/share-card.jpg" },
-  { href: "/recaps/super32-2026-sc", state: "South Carolina", title: "Boys recap", line: "Nine winning records and a win over the NHSCA national champion.", img: "/recruitwrestlers/recaps/sc-share-card.jpg" },
+type Story = {
+  href: string
+  title: string
+  summary: string
+  date: string
+  readTime: string
+  image: string
+  category: string
+  state: string
+  premium: boolean
+  /** A draft until its publish switch is on; admins see it marked as a draft. */
+  published: boolean
+}
+
+// Newest first. The NC recaps are published (NC United published them 26 Oct); SC waits for Matt.
+const STORIES: Story[] = [
+  {
+    href: "/recaps/super32-2026-sc",
+    title: "Super 32 2026: South Carolina Boys Recap",
+    summary: "Nine winning records, the most in three years, and Sy Strobel's win over the reigning NHSCA national champion. Every SC boy graded on who he beat.",
+    date: "2026-10-26",
+    readTime: "10 min read",
+    image: "/recruitwrestlers/recaps/sc-share-card.jpg",
+    category: "Super 32",
+    state: "SC",
+    premium: true,
+    published: process.env.SUPER32_SC_RECAP_PUBLIC === "1",
+  },
+  {
+    href: "/recaps/super32-2026-nc-boys",
+    title: "Super 32 2026: North Carolina Boys Recap",
+    summary: "11 wins over top-15 seeds, up from 6 and 2, and Braylen Yates on the podium. Every NC boy graded on who he beat and how far he went.",
+    date: "2026-10-26",
+    readTime: "12 min read",
+    image: "/images/news/super32-2026-boys-recap/share-card.jpg",
+    category: "Super 32",
+    state: "NC",
+    premium: true,
+    published: true,
+  },
+  {
+    href: "/recaps/super32-2026-nc-girls",
+    title: "Super 32 2026: North Carolina Girls Recap",
+    summary: "Lauren Samuel and Ella Taylor both finished 3rd. Every NC girl graded on who she beat and how far she went.",
+    date: "2026-10-26",
+    readTime: "8 min read",
+    image: "/images/news/super32-2026-girls-recap/share-card.jpg",
+    category: "Super 32",
+    state: "NC",
+    premium: true,
+    published: true,
+  },
 ]
 
-export default async function RecapsIndex() {
-  if (!isRwHost((await headers()).get("host") ?? "")) notFound()
+const dateLong = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+const dateShort = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+
+function Pills({ s, draft }: { s: Story; draft: boolean }) {
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8">
-      <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#A3E635]">RecruitWrestlers · Super 32 2026</div>
-      <h1 className="mt-1 text-3xl font-black text-white md:text-4xl">State recaps</h1>
-      <p className="mt-1 text-sm text-[#A8B3C5]">Every wrestler graded on who he or she beat, how far they went and who beat them. More states coming.</p>
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        {RECAPS.map((r) => (
-          <Link key={r.href} href={r.href} className="group overflow-hidden rounded-2xl border border-white/10 bg-[#15243B] hover:border-[#A3E635]/60">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={r.img} alt="" className="h-40 w-full object-cover object-center" />
-            <div className="p-4">
-              <div className="text-[11px] font-bold uppercase tracking-wider text-[#A3E635]">{r.state}</div>
-              <div className="mt-0.5 text-lg font-black text-white group-hover:underline">{r.title}</div>
-              <div className="mt-1 text-sm text-[#A8B3C5]">{r.line}</div>
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span className="rounded-full bg-[#A3E635] px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-[#0B1426]">{s.category}</span>
+      <span className="rounded-full border border-white/25 px-2.5 py-0.5 text-xs font-bold text-white">{s.state}</span>
+      {s.premium ? <span className="rounded-full border border-[#A3E635] px-2.5 py-0.5 text-xs font-semibold text-[#A3E635]">★ Premium content</span> : null}
+      {draft ? <span className="rounded-full bg-amber-400/20 px-2.5 py-0.5 text-xs font-semibold text-amber-200">Draft · staff only</span> : null}
+    </div>
+  )
+}
+
+export default async function RecruitWrestlersNews() {
+  if (!isRwHost((await headers()).get("host") ?? "")) notFound()
+  const { viewer } = await resolveRankingViewer({ supabase: await createClient(), admin: createAdminClient() })
+  const isAdmin = viewer.isAdmin === true
+  const stories = STORIES.filter((s) => s.published || isAdmin)
+  const [featured, ...rest] = stories
+
+  return (
+    <div className="min-h-screen bg-[#0B1426]">
+      <header className="border-b border-white/10 bg-gradient-to-br from-[#15243B] via-[#11203A] to-[#0B1426]">
+        <div className="container mx-auto px-4 py-12 md:py-16">
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#A3E635]">RecruitWrestlers</p>
+          <h1 className="mt-2 text-4xl font-black tracking-tight text-white md:text-5xl lg:text-6xl">News</h1>
+          <p className="mt-4 max-w-2xl text-lg text-[#A8B3C5]">
+            Tournament recaps and recruiting news, state by state. Every wrestler graded on who they beat, how far they went and who beat them.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="/membership" className="inline-flex rounded-xl bg-[#A3E635] px-5 py-3 text-sm font-bold text-[#0B1426] hover:bg-[#BEF264]">
+              Join Insider for full recaps
+            </Link>
+            <Link href="/auth/signup" className="inline-flex rounded-xl border border-white/20 px-5 py-3 text-sm font-bold text-white hover:border-[#A3E635] hover:text-[#A3E635]">
+              Create a free account
+            </Link>
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-12 md:py-16">
+        {featured ? (
+          <section className="mb-16">
+            <Link
+              href={featured.href}
+              className="group block overflow-hidden rounded-2xl border border-white/10 bg-[#15243B] transition-all duration-300 hover:border-[#A3E635]/50 hover:shadow-xl hover:shadow-[#A3E635]/5"
+            >
+              <div className="grid gap-0 md:grid-cols-2">
+                <div className="relative aspect-[16/10] overflow-hidden bg-[#11203A] md:aspect-auto md:min-h-[400px]">
+                  <Image src={featured.image} alt="" fill priority sizes="(max-width: 768px) 100vw, 50vw" className="object-cover object-center transition-transform duration-500 group-hover:scale-105" />
+                </div>
+                <div className="flex flex-col justify-center p-6 md:p-10">
+                  <div className="mb-4 flex items-center gap-3">
+                    <Pills s={featured} draft={!featured.published} />
+                    <span className="text-sm uppercase tracking-wide text-white/50">Featured</span>
+                  </div>
+                  <h2 className="text-2xl font-bold leading-tight text-white transition-colors group-hover:text-[#A3E635] md:text-3xl lg:text-4xl">{featured.title}</h2>
+                  <p className="mt-4 line-clamp-3 text-base leading-relaxed text-[#A8B3C5] md:text-lg">{featured.summary}</p>
+                  <div className="mt-6 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-white/50">
+                      <Calendar className="h-4 w-4" />
+                      {dateLong(featured.date)} · {featured.readTime}
+                    </div>
+                    <span className="inline-flex items-center gap-2 font-medium text-[#A3E635] transition-all group-hover:gap-3">
+                      Read the recap
+                      <ArrowRight className="h-4 w-4" />
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          </section>
+        ) : null}
+
+        {rest.length > 0 ? (
+          <section>
+            <h2 className="mb-8 text-sm font-semibold uppercase tracking-widest text-white/40">More stories</h2>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {rest.map((s) => (
+                <Link key={s.href} href={s.href} className="group block overflow-hidden rounded-xl border border-white/10 bg-[#15243B]/60 transition-all duration-300 hover:border-[#A3E635]/40 hover:bg-[#15243B]">
+                  <div className="relative aspect-[16/10] overflow-hidden bg-[#11203A]">
+                    <Image src={s.image} alt="" fill sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover object-center transition-transform duration-500 group-hover:scale-105" />
+                  </div>
+                  <div className="p-5">
+                    <div className="mb-3">
+                      <Pills s={s} draft={!s.published} />
+                    </div>
+                    <h3 className="line-clamp-2 font-semibold leading-snug text-white transition-colors group-hover:text-[#A3E635]">{s.title}</h3>
+                    <p className="mt-2 line-clamp-2 text-sm text-[#A8B3C5]">{s.summary}</p>
+                    <div className="mt-4 flex items-center justify-between text-xs text-white/40">
+                      <span>{dateShort(s.date)}</span>
+                      <span>{s.readTime}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
-          </Link>
-        ))}
-      </div>
-    </main>
+          </section>
+        ) : null}
+
+        {stories.length === 0 ? <p className="py-16 text-center text-white/50">No stories yet.</p> : null}
+      </main>
+    </div>
   )
 }
