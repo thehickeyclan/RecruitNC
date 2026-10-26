@@ -61,7 +61,7 @@ export type NetPrice = { amount: number; note: string } | { amount: null; note: 
  * What families at one income level paid, for a North Carolina family at this college; or why
  * there is no figure.
  */
-export function netPriceFor(fit: CollegeFit, schoolState: string, bracket: number | null, homeState = "NC"): NetPrice {
+export function netPriceFor(fit: CollegeFit, schoolState: string, bracket: number | null, homeState: string): NetPrice {
   if (fit.netPriceInStateOnly && schoolState !== homeState) {
     return { amount: null, note: "Published for in-state students only. Use the college's calculator." }
   }

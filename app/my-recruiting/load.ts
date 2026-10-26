@@ -31,6 +31,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import type { WarRoomSchool, WarRoomWrestler } from "./war-room-plan"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
+import { familyState } from "@/lib/recruiting/family-state"
 
 
 const SCHOOLS = new Map([...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS].map((s) => [s.id, s]))
@@ -47,6 +48,8 @@ export async function loadCommandCenter(returnTo: string) {
   // The signed-in viewer - or, on a developer's machine, the family an admin is previewing.
   const portal = await resolvePortalViewer({ supabase, admin })
   const viewerId = portal.userId ?? user.id
+  // The family's own state: college costs, in-state labels and alumni are theirs, not North Carolina's.
+  const homeState = await familyState(admin, viewerId).catch(() => "NC")
   const viewer = portal.viewer
   const [ids, focus] = await Promise.all([familyAthleteIds(admin, viewerId), familyFocus(admin, viewerId)])
   const blue = hasPortalAccess(viewer)
@@ -124,7 +127,7 @@ export async function loadCommandCenter(returnTo: string) {
           savedAt: row.updated_at ? String(row.updated_at) : null,
           memo: row.note ? String(row.note) : null,
           onRecruitNC: false,
-          tuition: costShort(school.id, school.state),
+          tuition: costShort(school.id, school.state, homeState),
           noTeam: focus && !school.programs.some((p) => p[focus.gender]) ? `No ${focus.gender === "womens" ? "women's" : "men's"} team` : null,
         },
       ]
@@ -161,7 +164,7 @@ export async function loadCommandCenter(returnTo: string) {
     ),
   )
 
-  return { viewerId, authUserId: user.id, blue, focus, athletes, wrestlers, schools, graduatesOnly, views, premium }
+  return { viewerId, authUserId: user.id, blue, focus, athletes, wrestlers, schools, graduatesOnly, views, premium, homeState }
 }
 
 export type CommandCenter = Awaited<ReturnType<typeof loadCommandCenter>>

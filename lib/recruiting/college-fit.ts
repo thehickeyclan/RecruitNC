@@ -43,6 +43,8 @@ export type FamilyFitContext = {
   mine: Standing | null
   myGpa: number | null
   snapshot: Awaited<ReturnType<typeof readWentHereSnapshot>>
+  /** The family's state: in-state cost and net price are theirs (an SC family pays in-state at Clemson, not UNC). */
+  homeState: string
 }
 
 /** The family's wrestler (the oldest still in school) and their own fit profile. */
@@ -58,10 +60,11 @@ export async function loadFamilyFitContext(admin: SupabaseClient, userId: string
   const first = wrestler ? String(wrestler.firstName ?? "").trim() || String(wrestler.name ?? "").split(" ")[0] || null : null
   const { data: account } = await admin.auth.admin.getUserById(userId)
   const profile = cleanProfile(account?.user?.user_metadata?.family_fit ?? EMPTY_PROFILE)
+  const homeState = await familyState(admin, userId).catch(() => "NC")
   const [mine, snapshot, last] = await Promise.all([
     wrestler ? loadAthleteCredentials(admin, wrestler as unknown as Record<string, unknown>).then(standingOf) : Promise.resolve(null),
     // The family's own state's alumni only (RecruitNC: NC, RecruitSC: SC).
-    familyState(admin, userId).then(async (state) => snapshotForState(await readWentHereSnapshot(), state)),
+    readWentHereSnapshot().then((snap) => snapshotForState(snap, homeState)),
     wrestler
       ? loadLastCompeted(admin, [String(wrestler.id)], new Map([[String(wrestler.id), wrestler.graduationyear ? Number(wrestler.graduationyear) : null]])).then((m) => m.get(String(wrestler.id)) ?? null)
       : Promise.resolve(null),
@@ -80,6 +83,7 @@ export async function loadFamilyFitContext(admin: SupabaseClient, userId: string
     mine,
     myGpa: parseGpa(wrestler?.academic_gpa),
     snapshot,
+    homeState,
   }
 }
 
@@ -98,8 +102,8 @@ export type CollegeFitResult = {
 export function collegeFitFor(ctx: FamilyFitContext, school: CollegeMapSchool, income: number | null): CollegeFitResult {
   const { team, among } = ctx
   const fit = fitForSchool(school.id)
-  const cost = yearlyCostFor(school.id, school.state)
-  const net = fit ? netPriceFor(fit, school.state, income) : null
+  const cost = yearlyCostFor(school.id, school.state, ctx.homeState)
+  const net = fit ? netPriceFor(fit, school.state, income, ctx.homeState) : null
   const rosterTeam = team ?? (school.programs.some((p) => p.mens) ? "mens" : "womens")
   const depth = depthFor(school.id, rosterTeam)
   const near = ctx.weight ? nearestCollegeWeights(ctx.weight, rosterTeam) : []

@@ -46,7 +46,7 @@ const athleticMark = (l: FitLine): FitMark =>
 export default async function CommandCenterColleges({ searchParams }: { searchParams?: Promise<Record<string, string | undefined>> }) {
   const params = (await searchParams) ?? {}
   const cc = await loadCommandCenter("/my-recruiting/colleges")
-  const { blue, wrestlers, schools, focus, athletes, viewerId } = cc
+  const { blue, wrestlers, schools, focus, athletes, viewerId, homeState } = cc
   const admin = createAdminClient()
   const board = params.view === "board"
 
@@ -125,7 +125,7 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
     if (!school) return []
     const program = school.programs.find((p) => !focus || p[focus.gender]) ?? school.programs[0]
     const fit = ctx?.first ? collegeFitFor(ctx, school, null) : null
-    const cost = yearlyCostFor(s.id, school.state)
+    const cost = yearlyCostFor(s.id, school.state, homeState)
     const v = views.get(s.id)
     return [
       {
@@ -137,7 +137,7 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
         place: s.place,
         logo: s.logo,
         status: s.status,
-        cost: cost ? { ...cost, which: school.state === "NC" ? "in-state" : "out-of-state" } : null,
+        cost: cost ? { ...cost, which: school.state === homeState ? "in-state" : "out-of-state" } : null,
         academic: fit ? academicMark(fit.lines.academic) : { label: "—", tone: "none", why: "" },
         athletic: fit ? athleticMark(fit.lines.athletic) : { label: "—", tone: "none", why: "" },
         viewed: v ? { views: v.views, last: v.lastViewedAt } : null,
