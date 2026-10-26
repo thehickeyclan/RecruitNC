@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   const admin = createAdminClient()
   const { data, error } = await admin
     .from("athletes")
-    .select("id, name, graduationyear, highschool, weightclass, photourl")
+    .select('id, name, graduationyear, highschool, "wrestlingClub", college, photourl')
     .ilike("name", `%${q.replace(/[%_]/g, "")}%`)
     .eq("status", "active")
     .order("name")
@@ -37,7 +37,9 @@ export async function GET(request: NextRequest) {
       name: a.name,
       graduationYear: a.graduationyear ?? null,
       highSchool: a.highschool ?? null,
-      weightClass: a.weightclass ?? null,
+      club: a.wrestlingClub ?? null,
+      // Shown back so a reporter sees a commitment we already hold before sending it again.
+      college: String(a.college ?? "").trim() || null,
       photoUrl: a.photourl ?? null,
     })),
   })

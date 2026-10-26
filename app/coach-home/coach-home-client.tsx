@@ -609,6 +609,12 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
             body={`Every ${recruitingCoverage(onRw)} ${womens ? "women's " : ""}profile, with filters for class, weight and last competed.`}
           />
           <Tool href="/athletes" icon={Users} title="College commitments" body="Who has committed where, this class and last." />
+          <Tool
+            href="/submit-commitment?role=college-coach"
+            icon={Star}
+            title="Report a commitment"
+            body="One of your recruits committed? Send it in a minute; it goes on the profile and out on the app."
+          />
         </div>
 
         <p className="mt-10 text-center text-xs text-white/35">

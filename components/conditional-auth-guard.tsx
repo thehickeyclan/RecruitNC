@@ -41,6 +41,10 @@ export function ConditionalAuthGuard({
      * login page, and three were recorded as unsubscribed.
      */
     "/unsubscribe",
+    // Anyone with the news reports a commitment - a parent, a college coach - most with no
+    // account; and the approval page's link carries its own permission (26 Oct 2026).
+    "/submit-commitment",
+    "/approve-commitment",
     // Partners send this link to their own people; a login wall would waste it.
     "/supporters",
     // The printed QR code on lanyards and signage points here. A login wall would make every

@@ -2099,6 +2099,15 @@ export function AthleteDetail({
                   ? "Your profile is complete. Keep it current: college coaches read this page."
                   : "Complete your profile to get more views from college coaches."}
               </p>
+              {/* The family hears the news first: one tap to report it, starting from this profile. */}
+              {!String(athlete.college ?? "").trim() ? (
+                <a
+                  href={`/submit-commitment?athlete=${encodeURIComponent(String(athlete.id))}&role=${isViewingOwnProfile ? "athlete" : "parent"}`}
+                  className="mt-2 inline-block text-sm font-bold text-[#D3B574] hover:underline"
+                >
+                  Committed to a college? Tell us →
+                </a>
+              ) : null}
             </div>
             <ul className="space-y-1.5 lg:w-64">
               {completeness.items.map((item) => (
