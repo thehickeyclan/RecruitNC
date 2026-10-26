@@ -2916,6 +2916,14 @@ html[data-host="national"] .bg-\[\#cc0000\] {
   background-color: rgb(163 230 53); color: #0B1426;
 }
 
+html[data-host="national"] .bg-\[\#d4af55\] {
+  background-color: rgb(163 230 53); color: #0B1426;
+}
+
+html[data-host="national"] .bg-\[\#d4af55\]\/10 {
+  background-color: rgb(163 230 53 / 0.1);
+}
+
 html[data-host="national"] .bg-\[\#d6b75d\] {
   background-color: rgb(163 230 53); color: #0B1426;
 }
@@ -3132,6 +3140,26 @@ html[data-host="national"] .border-\[\#c8102e\] {
   border-color: rgb(163 230 53);
 }
 
+html[data-host="national"] .border-\[\#d4af55\] {
+  border-color: rgb(163 230 53);
+}
+
+html[data-host="national"] .border-\[\#d4af55\]\/40 {
+  border-color: rgb(163 230 53 / 0.4);
+}
+
+html[data-host="national"] .border-\[\#d4af55\]\/50 {
+  border-color: rgb(163 230 53 / 0.5);
+}
+
+html[data-host="national"] .border-\[\#d4af55\]\/60 {
+  border-color: rgb(163 230 53 / 0.6);
+}
+
+html[data-host="national"] .border-\[\#d4af55\]\/70 {
+  border-color: rgb(163 230 53 / 0.7);
+}
+
 html[data-host="national"] .border-\[\#d6b75d\]\/25 {
   border-color: rgb(163 230 53 / 0.25);
 }
@@ -3181,6 +3209,10 @@ html[data-host="national"] .border-t-\[\#CC0000\] {
 }
 
 html[data-host="national"] .decoration-\[\#C8A94A\] {
+  text-decoration-color: rgb(163 230 53);
+}
+
+html[data-host="national"] .decoration-\[\#d4af55\] {
   text-decoration-color: rgb(163 230 53);
 }
 
@@ -3248,6 +3280,10 @@ html[data-host="national"] .focus\:border-\[\#CC0000\]:focus {
   border-color: rgb(163 230 53);
 }
 
+html[data-host="national"] .focus\:border-\[\#d4af55\]:focus {
+  border-color: rgb(163 230 53);
+}
+
 html[data-host="national"] .focus\:ring-\[\#B31B1B\]\/50:focus {
   --tw-ring-color: rgb(163 230 53 / 0.5);
 }
@@ -3278,6 +3314,10 @@ html[data-host="national"] .focus\:ring-\[\#C8A94A\]\/45:focus {
 
 html[data-host="national"] .focus\:ring-\[\#C8A94A\]\/50:focus {
   --tw-ring-color: rgb(163 230 53 / 0.5);
+}
+
+html[data-host="national"] .focus\:ring-\[\#d4af55\]\/40:focus {
+  --tw-ring-color: rgb(163 230 53 / 0.4);
 }
 
 html[data-host="national"] .from-\[\#B31B1B\] {
@@ -3424,6 +3464,10 @@ html[data-host="national"] .hover\:bg-\[\#c5a84d\]:hover {
   background-color: rgb(163 230 53); color: #0B1426;
 }
 
+html[data-host="national"] .hover\:bg-\[\#d4af55\]\/10:hover {
+  background-color: rgb(163 230 53 / 0.1);
+}
+
 html[data-host="national"] .hover\:bg-\[\#d6b75d\]\/20:hover {
   background-color: rgb(163 230 53 / 0.2);
 }
@@ -3496,6 +3540,14 @@ html[data-host="national"] .hover\:border-\[\#D7B95A\]\/40:hover {
   border-color: rgb(163 230 53 / 0.4);
 }
 
+html[data-host="national"] .hover\:border-\[\#d4af55\]:hover {
+  border-color: rgb(163 230 53);
+}
+
+html[data-host="national"] .hover\:border-\[\#d4af55\]\/60:hover {
+  border-color: rgb(163 230 53 / 0.6);
+}
+
 html[data-host="national"] .hover\:from-\[\#a00d25\]:hover {
   --tw-gradient-from: rgb(163 230 53) var(--tw-gradient-from-position); --tw-gradient-to: rgb(163 230 53 / 0) var(--tw-gradient-to-position); --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
 }
@@ -3528,6 +3580,10 @@ html[data-host="national"] .hover\:text-\[\#c4a665\]:hover {
   color: rgb(163 230 53);
 }
 
+html[data-host="national"] .hover\:text-\[\#d4af55\]:hover {
+  color: rgb(163 230 53);
+}
+
 html[data-host="national"] .hover\:text-\[\#d6b75d\]:hover {
   color: rgb(163 230 53);
 }
@@ -3556,6 +3612,10 @@ html[data-host="national"] .ring-\[\#CC0000\]\/20 {
 
 html[data-host="national"] .ring-\[\#CC0000\]\/30 {
   --tw-ring-color: rgb(163 230 53 / 0.3);
+}
+
+html[data-host="national"] .ring-\[\#d4af55\] {
+  --tw-ring-color: rgb(163 230 53);
 }
 
 html[data-host="national"] .shadow-\[\#CC0000\]\/20 {
@@ -3660,6 +3720,14 @@ html[data-host="national"] .text-\[\#D7B95A\] {
 
 html[data-host="national"] .text-\[\#c8102e\] {
   color: rgb(163 230 53);
+}
+
+html[data-host="national"] .text-\[\#d4af55\] {
+  color: rgb(163 230 53);
+}
+
+html[data-host="national"] .text-\[\#d4af55\]\/80 {
+  color: rgb(163 230 53 / 0.8);
 }
 
 html[data-host="national"] .text-\[\#d6b75d\] {
@@ -5192,5 +5260,41 @@ html[data-host="national"] [fill="#a00d25" i] {
   fill: rgb(163 230 53);
 }
 html[data-host="national"] [stroke="#a00d25" i] {
+  stroke: rgb(163 230 53);
+}
+
+html[data-host="national"] [style*=";color:#d4af55" i],
+html[data-host="national"] [style*="; color: rgb(212, 175, 85)" i],
+html[data-host="national"] [style^="color:#d4af55" i],
+html[data-host="national"] [style^="color: rgb(212, 175, 85)"] {
+  color: rgb(163 230 53) !important;
+}
+
+html[data-host="national"] [style*="background-color:#d4af55" i],
+html[data-host="national"] [style*="background:#d4af55" i],
+html[data-host="national"] [style*="background-color: rgba(212, 175, 85," i],
+html[data-host="national"] [style*="background: rgba(212, 175, 85," i] {
+  background-color: rgb(163 230 53 / 0.15) !important;
+}
+
+html[data-host="national"] [style*="background-color:#d4af55;" i],
+html[data-host="national"] [style*="background:#d4af55;" i],
+html[data-host="national"] [style*="background-color: rgb(212, 175, 85)" i],
+html[data-host="national"] [style*="background: rgb(212, 175, 85)" i],
+html[data-host="national"] [style$="background-color:#d4af55" i],
+html[data-host="national"] [style$="background:#d4af55" i] {
+  background-color: rgb(163 230 53) !important;
+}
+
+html[data-host="national"] [style*="border-color:#d4af55" i],
+html[data-host="national"] [style*="border-color: rgb(212, 175, 85)" i],
+html[data-host="national"] [style*="border-color: rgba(212, 175, 85," i] {
+  border-color: rgb(163 230 53) !important;
+}
+
+html[data-host="national"] [fill="#d4af55" i] {
+  fill: rgb(163 230 53);
+}
+html[data-host="national"] [stroke="#d4af55" i] {
   stroke: rgb(163 230 53);
 }
