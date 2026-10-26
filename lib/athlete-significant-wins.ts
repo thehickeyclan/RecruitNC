@@ -303,6 +303,14 @@ export async function loadAthleteSignificantWins(
   }))
 
 
+  /*
+   * Nationally ranked wins first, whatever list they came from (Matt's rule: "ranked first").
+   * Family-added wins were listed ahead of everything, so Jacob Perry's two Georgia Early Entry
+   * wins sat above his Super 32 win over SI's #24 (Matt, 26 October 2026). Stable otherwise.
+   */
+  const ranked = (w: { reason?: unknown }) => (w.reason === "national-ranked" ? 0 : 1)
+  wins.sort((a, b) => ranked(a) - ranked(b))
+
   return {
     wins: wins.map((w) => ({ ...w, style: styleOfEventForAthlete(w.event, null, gender) })),
     losses,
