@@ -492,7 +492,7 @@ export function ScoutingReportDocument({
               </ul>
             ) : null}
             {report.summary ? (
-              <p className={cn("font-serif text-[12px] leading-[1.6] text-gray-900", facts.length && "mt-3")}>{report.summary}</p>
+              <p className={cn("font-serif text-[12px] leading-[1.6] text-gray-900", facts.length && "mt-3")}>{brandSwap(report.summary, rw)}</p>
             ) : null}
           </Block>
         ) : null}

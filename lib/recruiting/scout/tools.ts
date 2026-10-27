@@ -27,6 +27,7 @@ import { collegeKey } from "@/lib/recruiting/roadmap-adapt"
 import { fitForSchool, satTotalRange } from "@/lib/college-programs/fit"
 import { STATE_NAMES } from "@/lib/college-programs/states"
 import { NICHE_CATEGORIES, gradePoints, nicheFor } from "@/lib/college-programs/niche"
+import { productName } from "@/lib/recruiting/product-name"
 
 /**
  * Scout's college tools (17 Oct 2026, Matt: "understands all the colleges, the line ups, the NC
@@ -269,8 +270,8 @@ async function collegeDetails(s: ScoutSession, a: Record<string, unknown>): Prom
   s.onPlatform ??= await schoolsWithApprovedCoaches(s.admin).catch(() => new Set<string>())
   lines.push(
     s.onPlatform.has(school.id)
-      ? `This program's coaches are on ${RECRUITING_BRAND.name}: they can see the wrestler's profile and verified results here, and the family can tell them the wrestler is interested from the college list.`
-      : `This program's coaches are not on ${RECRUITING_BRAND.name} yet: reach them by email.`,
+      ? `This program's coaches are on ${productName()}: they can see the wrestler's profile and verified results here, and the family can tell them the wrestler is interested from the college list.`
+      : `This program's coaches are not on ${productName()} yet: reach them by email.`,
   )
   // National team ranking, the latest coaches' poll that lists it.
   const ranks = await teamRankingsForSchool(school.id).catch(() => [])
