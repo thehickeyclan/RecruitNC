@@ -11,6 +11,13 @@ import { SCOUTING_REPORT_PRICES, formatPrice } from "@/lib/scouting-report-entit
  * lib/stripe-accounts.ts). Used on /membership and the Command Center page on recruitwrestlers.com.
  */
 type Kind = "subscription" | "command_center"
+type BillingKind = Kind | "subscription_annual" | "command_center_annual"
+
+/** Yearly is twelve months less 20%, the same on NC United (Matt, 27 Oct 2026). */
+const ANNUAL: Record<Kind, { kind: BillingKind; cents: number }> = {
+  subscription: { kind: "subscription_annual", cents: SCOUTING_REPORT_PRICES.subscription_annual },
+  command_center: { kind: "command_center_annual", cents: SCOUTING_REPORT_PRICES.command_center_annual },
+}
 
 const PLANS: Array<{ kind: Kind; name: string; cents: number; lines: string[]; featured?: boolean }> = [
   {
@@ -31,6 +38,7 @@ const PLANS: Array<{ kind: Kind; name: string; cents: number; lines: string[]; f
 export function RwMembershipPlans({ returnTo = "/membership" }: { returnTo?: string }) {
   const { user } = useAuth()
   const [busy, setBusy] = useState<Kind | null>(null)
+  const [yearly, setYearly] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [purchased, setPurchased] = useState(false)
   const [status, setStatus] = useState<{ insider: boolean; commandCenter: boolean; via: string | null; email: string | null } | null>(null)
@@ -53,13 +61,14 @@ export function RwMembershipPlans({ returnTo = "/membership" }: { returnTo?: str
     if (q.get("canceled") === "1") setMessage("Checkout was cancelled. Nothing was charged.")
   }, [])
 
-  const start = async (kind: Kind) => {
+  const start = async (plan: Kind) => {
+    const kind: BillingKind = yearly ? ANNUAL[plan].kind : plan
     setMessage(null)
     if (!user) {
       window.location.href = `/auth/signin?returnTo=${encodeURIComponent(returnTo)}`
       return
     }
-    setBusy(kind)
+    setBusy(plan)
     try {
       const res = await fetch("/api/scouting-report/checkout", {
         method: "POST",
@@ -99,6 +108,24 @@ export function RwMembershipPlans({ returnTo = "/membership" }: { returnTo?: str
           You&apos;re in. Your membership is active; it can take a minute to show everywhere.
         </p>
       ) : null}
+      <div className="mb-6 flex justify-center">
+        <div className="inline-flex rounded-full border border-white/15 bg-white/[0.03] p-1" role="group" aria-label="Billing">
+          {[
+            { y: false, label: "Monthly" },
+            { y: true, label: "Yearly · save 20%" },
+          ].map((o) => (
+            <button
+              key={o.label}
+              type="button"
+              aria-pressed={yearly === o.y}
+              onClick={() => setYearly(o.y)}
+              className={`rounded-full px-4 py-1.5 text-sm font-bold ${yearly === o.y ? "bg-[#A3E635] text-[#0B1426]" : "text-white/75 hover:text-white"}`}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="grid gap-4 md:grid-cols-3">
         {/* Free first (Matt, 22 Oct 2026): the profile, claiming it and coach messages cost nothing. */}
         <div className="flex flex-col rounded-2xl border border-white/10 bg-[#15243B]/40 p-6 text-left">
@@ -128,8 +155,8 @@ export function RwMembershipPlans({ returnTo = "/membership" }: { returnTo?: str
           >
             <p className={`text-sm font-black uppercase tracking-wider ${plan.featured ? "text-[#A3E635]" : "text-white"}`}>{plan.name}</p>
             <p className="mt-2 text-4xl font-black text-white">
-              {formatPrice(plan.cents)}
-              <span className="text-base font-semibold text-[#A8B3C5]"> / month</span>
+              {formatPrice(yearly ? ANNUAL[plan.kind].cents : plan.cents)}
+              <span className="text-base font-semibold text-[#A8B3C5]"> / {yearly ? "year" : "month"}</span>
             </p>
             <ul className="mt-4 flex-1 space-y-2 text-sm text-white/85">
               {plan.lines.map((l) => (
@@ -151,7 +178,9 @@ export function RwMembershipPlans({ returnTo = "/membership" }: { returnTo?: str
         ))}
       </div>
       {message ? <p className="mt-4 text-center text-sm text-[#A8B3C5]">{message}</p> : null}
-      <p className="mt-4 text-center text-xs text-[#A8B3C5]">Monthly, cancel anytime from your account. Upgrading from Insider cancels it, so you never pay for both.</p>
+      <p className="mt-4 text-center text-xs text-[#A8B3C5]">
+        {yearly ? "Billed once a year, 20% less than monthly." : "Billed monthly."} Cancel anytime from your account. Upgrading from Insider cancels it, so you never pay for both.
+      </p>
     </div>
   )
 }

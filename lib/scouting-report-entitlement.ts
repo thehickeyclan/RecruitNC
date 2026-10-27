@@ -29,18 +29,18 @@ export const SCOUTING_REPORT_PRICES = {
    */
   subscription: 999,
   /**
-   * The same subscription paid yearly, at a shade under seven months' price.
-   *
-   * Recruiting is seasonal and a monthly subscriber cancels in March; the discount buys the
-   * months nobody would otherwise pay for. Two months free is the conventional shape of this
-   * offer and the buyer recognises it without doing arithmetic.
+   * The same subscription paid yearly: twelve months less 20% (Matt, 27 Oct 2026: "sell insider
+   * annual plan and command center at 20% discount", the same on NC United and RecruitWrestlers).
+   * Was $79. Subscribers already on $79 keep it: Stripe bills a subscription at its starting price.
    */
-  subscription_annual: 7900,
+  subscription_annual: 9590,
   /**
    * The Recruiting Command Center on its own (Matt, 15 Oct 2026): the full recruiting portal with
    * the rankings and profile views. Blue ($55) is this plus NC United practices and a drop-in.
    */
   command_center: 2499,
+  /** The Command Center paid yearly: twelve months less 20%, as Insider's annual (Matt, 27 Oct 2026). */
+  command_center_annual: 23990,
 } as const
 
 export type ScoutingPurchaseKind = keyof typeof SCOUTING_REPORT_PRICES
@@ -50,21 +50,34 @@ export const SUBSCRIPTION_PLANS = {
   subscription: { interval: "month" as const, label: "Monthly", amount: SCOUTING_REPORT_PRICES.subscription },
   subscription_annual: { interval: "year" as const, label: "Annual", amount: SCOUTING_REPORT_PRICES.subscription_annual },
   command_center: { interval: "month" as const, label: "Command Center", amount: SCOUTING_REPORT_PRICES.command_center },
+  command_center_annual: { interval: "year" as const, label: "Command Center annual", amount: SCOUTING_REPORT_PRICES.command_center_annual },
 } as const
 
 /** What a stored subscription unlocks: the rankings bundle, or that plus the Command Center. */
 export type SubscriptionPlanTier = "rankings" | "command_center"
-export const planTierForKind = (kind: string): SubscriptionPlanTier => (kind === "command_center" ? "command_center" : "rankings")
+export const planTierForKind = (kind: string): SubscriptionPlanTier => (isCommandCenterKind(kind) ? "command_center" : "rankings")
+
+/** The Command Center, monthly or yearly. */
+export function isCommandCenterKind(kind: string): boolean {
+  return kind === "command_center" || kind === "command_center_annual"
+}
+
+/** Billed yearly. */
+export function isAnnualKind(kind: string): boolean {
+  return kind === "subscription_annual" || kind === "command_center_annual"
+}
 
 export type SubscriptionPlanKind = keyof typeof SUBSCRIPTION_PLANS
 
 export function isSubscriptionKind(kind: string): kind is SubscriptionPlanKind {
-  return kind === "subscription" || kind === "subscription_annual" || kind === "command_center"
+  return kind === "subscription" || kind === "subscription_annual" || kind === "command_center" || kind === "command_center_annual"
 }
 
 /** What the annual plan saves against twelve months, for the page to state plainly. */
-export function annualSavingCents(): number {
-  return SCOUTING_REPORT_PRICES.subscription * 12 - SCOUTING_REPORT_PRICES.subscription_annual
+export function annualSavingCents(plan: "insider" | "command_center" = "insider"): number {
+  return plan === "command_center"
+    ? SCOUTING_REPORT_PRICES.command_center * 12 - SCOUTING_REPORT_PRICES.command_center_annual
+    : SCOUTING_REPORT_PRICES.subscription * 12 - SCOUTING_REPORT_PRICES.subscription_annual
 }
 
 export function formatPrice(cents: number): string {
