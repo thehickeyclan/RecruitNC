@@ -9,7 +9,15 @@ export type NavNewFeed = {
   reports: { slug: string; date: string }[]
   rankingsPublishedAt: string | null
   newsDate: string | null
+  /** The bell's lines: each release from the last RELEASE_WINDOW_DAYS, newest first. */
+  events?: NavRelease[]
 }
+
+/** One release in the bell: "South Carolina Class of 2027 men's rankings published". */
+export type NavRelease = { id: string; kind: "rankings" | "report" | "news"; title: string; link: string; at: string; slug?: string }
+
+/** How far back the bell lists releases. */
+export const RELEASE_WINDOW_DAYS = 30
 
 /** What this browser has opened. `since` is when it started keeping track. */
 export type NavSeen = { since: string; reports: string[]; rankings: string | null; news: string | null }
@@ -42,4 +50,16 @@ export function markSeen(seen: NavSeen, pathname: string, now: Date): NavSeen {
   if (/^\/(public-rankings|rankings)(\/|$)/.test(pathname)) return { ...seen, rankings: at }
   if (/^\/(news|recaps)(\/|$)/.test(pathname)) return { ...seen, news: at }
   return seen
+}
+
+/**
+ * A release is read once it is ticked in the bell, older than this browser's tracking, or its page
+ * was opened after it came out (opening rankings reads every release before that visit).
+ */
+export function releaseIsRead(e: NavRelease, seen: NavSeen, readIds: readonly string[]): boolean {
+  if (readIds.includes(e.id)) return true
+  const at = t(e.at)
+  if (at <= t(seen.since)) return true
+  if (e.kind === "report") return Boolean(e.slug && seen.reports.includes(e.slug))
+  return at <= t(e.kind === "rankings" ? seen.rankings : seen.news)
 }

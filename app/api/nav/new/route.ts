@@ -3,18 +3,19 @@ import { headers } from "next/headers"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { reportsOnAddress, resolveCoachReportViewer } from "@/lib/coach-reports"
-import { liveStates } from "@/lib/recruiting/brand"
+import { liveStates, RECRUITING_BRAND } from "@/lib/recruiting/brand"
 import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 import { isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { getAllNews } from "@/lib/news"
 import { RW_STORIES } from "@/lib/recruitwrestlers-news"
-import type { NavNewFeed } from "@/lib/nav-new"
+import { RELEASE_WINDOW_DAYS, type NavNewFeed, type NavRelease } from "@/lib/nav-new"
 
 export const dynamic = "force-dynamic"
 
 /**
  * GET /api/nav/new - what the menu may mark as new on this address (lib/nav-new.ts): the coach's
  * reports, the latest rankings release and the newest story. The browser decides what is unseen.
+ * `events` lists each of them from the last few weeks for the bell, one line per release.
  */
 export async function GET() {
   const { data: { user } } = await (await createClient()).auth.getUser()
@@ -26,7 +27,7 @@ export async function GET() {
   const viewer = await resolveCoachReportViewer(admin, user.id)
   const reports =
     viewer.access === "ok"
-      ? reportsOnAddress(onRw).filter((d) => viewer.genders.includes(d.gender)).map((d) => ({ slug: d.slug, date: d.date }))
+      ? reportsOnAddress(onRw).filter((d) => viewer.genders.includes(d.gender))
       : []
 
   // A board counts once it is out: North Carolina's by its release list, every other state's by its edition.
@@ -39,12 +40,30 @@ export async function GET() {
   const released = (editions ?? []).filter((e) => e.state !== "NC" || isPublicRankingsYearPublished(e.class_year as number, e.gender))
   const rankingsPublishedAt = released.map((e) => String(e.published_at)).sort().pop() ?? null
 
-  const newsDate =
-    (onRw ? RW_STORIES.filter((s) => s.published).map((s) => s.date) : getAllNews().map((n) => n.date))
-      .filter((d) => d <= today)
-      .sort()
-      .pop() ?? null
+  const stories = (onRw ? RW_STORIES.filter((s) => s.published) : getAllNews().filter((n) => n.href.startsWith("/")))
+    .map((s) => ({ title: s.title, href: s.href, date: s.date }))
+    .filter((s) => s.date <= today)
+  const newsDate = stories.map((s) => s.date).sort().pop() ?? null
 
-  const feed: NavNewFeed = { reports, rankingsPublishedAt, newsDate }
+  const stateName = (code: string) => RECRUITING_BRAND.states.find((s) => s.code === code)?.name ?? code
+  const cutoff = new Date(Date.now() - RELEASE_WINDOW_DAYS * 86_400_000).toISOString()
+  const events: NavRelease[] = [
+    ...released.map((e) => {
+      const women = /^f/i.test(String(e.gender))
+      return {
+        id: `rankings:${e.state}:${e.class_year}:${e.gender}:${e.published_at}`,
+        kind: "rankings" as const,
+        title: `${stateName(String(e.state))} Class of ${e.class_year} ${women ? "women's" : "men's"} rankings published`,
+        link: `/public-rankings/${women ? "women/" : ""}${e.class_year}?state=${e.state}`,
+        at: String(e.published_at),
+      }
+    }),
+    ...reports.map((d) => ({ id: `report:${d.slug}`, kind: "report" as const, title: `${d.title} is ready`, link: `/coach-reports/${d.slug}`, at: d.date, slug: d.slug })),
+    ...stories.map((s) => ({ id: `news:${s.href}`, kind: "news" as const, title: s.title, link: s.href, at: s.date })),
+  ]
+    .filter((e) => (e.at.length === 10 ? `${e.at}T12:00:00Z` : e.at) >= cutoff)
+    .sort((a, b) => (b.at > a.at ? 1 : -1))
+
+  const feed: NavNewFeed = { reports: reports.map((d) => ({ slug: d.slug, date: d.date })), rankingsPublishedAt, newsDate, events }
   return NextResponse.json(feed)
 }

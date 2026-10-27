@@ -1,10 +1,12 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { freshSeen, markSeen, navNewCounts, type NavNewFeed, type NavSeen } from "@/lib/nav-new"
+import { freshSeen, markSeen, navNewCounts, releaseIsRead, type NavNewFeed, type NavRelease, type NavSeen } from "@/lib/nav-new"
 
 /** Fired on window when a conversation is read or written in place, so badges elsewhere re-count. */
 export const COACH_MESSAGES_CHANGED = "coach-messages:changed"
+
+const SEEN_KEY = "nav-new:seen"
 
 export type NavNotification = { id: string; type: string; title: string; body: string | null; link: string | null; read_at: string | null; created_at: string }
 
@@ -39,16 +41,57 @@ export function useCoachMessageBadge(signedIn: boolean, pathname: string) {
   return { unread, show }
 }
 
-/** The bell: loaded on sign-in and again each time the list is opened. */
+const READ_KEY = "nav-new:read"
+const RELEASE = "release:"
+
+function readStore<T>(key: string, fallback: T): T {
+  try {
+    const raw = window.localStorage.getItem(key)
+    return raw ? (JSON.parse(raw) as T) : fallback
+  } catch {
+    return fallback
+  }
+}
+function writeStore(key: string, value: unknown) {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value))
+  } catch {}
+}
+
+/**
+ * The bell: the person's own notifications (forum replies and the like) and, beside them, every
+ * rankings release, coach report and story from the last few weeks (/api/nav/new). A release is
+ * read in this browser once it is ticked or its page was opened (lib/nav-new.ts releaseIsRead).
+ * Loaded on sign-in and again each time the list is opened.
+ */
 export function useNavNotifications(signedIn: boolean, open: boolean) {
   const [notifications, setNotifications] = useState<NavNotification[]>([])
 
   const fetchNotifications = useCallback(() => {
     if (!signedIn) return
-    fetch("/api/notifications", { credentials: "include" })
+    const own = fetch("/api/notifications", { credentials: "include" })
       .then((r) => r.json())
-      .then((data) => setNotifications(Array.isArray(data?.notifications) ? data.notifications : []))
-      .catch(() => setNotifications([]))
+      .then((data) => (Array.isArray(data?.notifications) ? (data.notifications as NavNotification[]) : []))
+      .catch(() => [] as NavNotification[])
+    const releases = fetch("/api/nav/new", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => (Array.isArray(d?.events) ? (d.events as NavRelease[]) : []))
+      .catch(() => [] as NavRelease[])
+    Promise.all([own, releases]).then(([mine, events]) => {
+      const seen = readStore<NavSeen>(SEEN_KEY, freshSeen(new Date()))
+      const readIds = readStore<string[]>(READ_KEY, [])
+      const now = new Date().toISOString()
+      const fromReleases: NavNotification[] = events.map((e) => ({
+        id: RELEASE + e.id,
+        type: e.kind,
+        title: e.title,
+        body: null,
+        link: e.link,
+        read_at: releaseIsRead(e, seen, readIds) ? now : null,
+        created_at: e.at.length === 10 ? `${e.at}T12:00:00` : e.at,
+      }))
+      setNotifications([...mine, ...fromReleases].sort((a, b) => (b.created_at > a.created_at ? 1 : -1)))
+    })
   }, [signedIn])
 
   useEffect(() => {
@@ -64,20 +107,29 @@ export function useNavNotifications(signedIn: boolean, open: boolean) {
   }, [signedIn, open, fetchNotifications])
 
   const markRead = useCallback((id: string) => {
+    const stamp = () => setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read_at: n.read_at ?? new Date().toISOString() } : n)))
+    if (id.startsWith(RELEASE)) {
+      const readIds = readStore<string[]>(READ_KEY, [])
+      writeStore(READ_KEY, [...readIds, id.slice(RELEASE.length)].slice(-200))
+      stamp()
+      return
+    }
     fetch(`/api/notifications/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       credentials: "include",
       body: JSON.stringify({ read: true }),
-    }).then(() => {
-      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)))
-    })
+    }).then(stamp)
   }, [])
 
   const markAllRead = useCallback(() => {
-    fetch("/api/notifications/read-all", { method: "PATCH", credentials: "include" }).then(() => {
-      setNotifications((prev) => prev.map((n) => ({ ...n, read_at: n.read_at ?? new Date().toISOString() })))
+    const stamp = new Date().toISOString()
+    setNotifications((prev) => {
+      const releaseIds = prev.filter((n) => n.id.startsWith(RELEASE) && !n.read_at).map((n) => n.id.slice(RELEASE.length))
+      if (releaseIds.length) writeStore(READ_KEY, [...readStore<string[]>(READ_KEY, []), ...releaseIds].slice(-200))
+      return prev.map((n) => ({ ...n, read_at: n.read_at ?? stamp }))
     })
+    fetch("/api/notifications/read-all", { method: "PATCH", credentials: "include" }).catch(() => {})
   }, [])
 
   return { notifications, unread: notifications.filter((n) => !n.read_at).length, markRead, markAllRead }
@@ -99,7 +151,6 @@ export function useInterestBadge(signedIn: boolean, pathname: string) {
   return count
 }
 
-const SEEN_KEY = "nav-new:seen"
 
 /**
  * New reports (a count), a new rankings release and a new story (lib/nav-new.ts). The feed is
@@ -119,19 +170,16 @@ export function useNavNew(signedIn: boolean, pathname: string) {
       .catch(() => {})
   }, [signedIn])
   useEffect(() => {
-    let current: NavSeen
-    try {
-      const raw = window.localStorage.getItem(SEEN_KEY)
-      current = raw ? (JSON.parse(raw) as NavSeen) : freshSeen(new Date())
-    } catch {
-      current = freshSeen(new Date())
-    }
-    const next = markSeen(current, pathname, new Date())
-    try {
-      window.localStorage.setItem(SEEN_KEY, JSON.stringify(next))
-    } catch {}
+    const next = markSeen(readStore<NavSeen>(SEEN_KEY, freshSeen(new Date())), pathname, new Date())
+    writeStore(SEEN_KEY, next)
     setSeen(next)
   }, [pathname])
   if (!feed || !seen) return { reports: 0, rankings: false, news: false }
   return navNewCounts(feed, seen)
+}
+
+/** A bell line's date. Reports and stories carry a day, not a time, so none is invented. */
+export function bellDate(n: Pick<NavNotification, "type" | "created_at">): string {
+  const dayOnly = n.type === "report" || n.type === "news"
+  return new Date(n.created_at).toLocaleDateString(undefined, dayOnly ? { month: "short", day: "numeric" } : { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })
 }

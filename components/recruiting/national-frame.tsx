@@ -6,6 +6,7 @@ import { LogOut, Menu, X } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { RwLogo } from "@/components/recruiting/rw-mark"
 import { useCoachMessageBadge, useNavNew } from "@/hooks/use-nav-badges"
+import { NotificationBell } from "@/components/recruiting/notification-bell"
 
 /** A count beside a link, or "New" when something came out since this person last looked. */
 function NavMark({ count, fresh }: { count?: number; fresh?: boolean }) {
@@ -78,6 +79,7 @@ export function NationalHeader() {
         <div className="flex items-center gap-2">
           {user ? (
             <>
+              <NotificationBell signedIn />
               <a href="/profile" className="hidden text-sm font-semibold text-white/80 hover:text-white sm:inline">
                 My account
               </a>
