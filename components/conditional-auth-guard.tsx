@@ -126,6 +126,8 @@ export function ConditionalAuthGuard({
     // The App Store listing points at /privacy and /support, and Apple opens both signed out
     // during review — a login wall there is a rejection, not a detail. /contact is the route
     // both of those pages send people to, so gating it broke the only way to reach a human.
+    // Short profile links (/w/xavier-bernthal-2029): they redirect to the public profile.
+    "/w",
     "/privacy",
     "/support",
     "/contact",

@@ -257,6 +257,9 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
     '/api/super32-live',
     // Its rehearsal page; notFound() in production.
     '/dev/super32-live-preview',
+    // Short profile links, /w/<name>-<class> (lib/profile-short-link.ts). The slash keeps /w from
+    // matching every route that starts with a w.
+    '/w/',
     '/blue',
     '/go',
     '/store',
