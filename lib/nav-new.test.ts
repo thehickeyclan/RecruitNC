@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { freshSeen, markSeen, navNewCounts, type NavNewFeed } from "./nav-new"
+import { freshSeen, markSeen, navNewCounts, releaseIsRead, type NavNewFeed } from "./nav-new"
 
 const now = new Date("2026-10-27T15:00:00Z")
 const feed: NavNewFeed = {
@@ -30,5 +30,23 @@ describe("navNewCounts", () => {
     const seen = freshSeen(now)
     expect(markSeen(seen, "/my-recruits", now)).toBe(seen)
     expect(markSeen(seen, "/coach-reports", now)).toBe(seen)
+  })
+})
+
+describe("releaseIsRead", () => {
+  const rel = { id: "rankings:SC:2027:Male:x", kind: "rankings" as const, title: "", link: "", at: "2026-10-26T10:00:00Z" }
+  it("is unread until ticked or its page is opened", () => {
+    const seen = freshSeen(now)
+    expect(releaseIsRead(rel, seen, [])).toBe(false)
+    expect(releaseIsRead(rel, seen, [rel.id])).toBe(true)
+    expect(releaseIsRead(rel, markSeen(seen, "/public-rankings/2027", now), [])).toBe(true)
+  })
+  it("anything before tracking began is read", () => {
+    expect(releaseIsRead({ ...rel, at: "2026-09-01T00:00:00Z" }, freshSeen(now), [])).toBe(true)
+  })
+  it("a report reads when opened", () => {
+    const r = { id: "report:a", kind: "report" as const, title: "", link: "", at: "2026-10-25", slug: "a" }
+    expect(releaseIsRead(r, freshSeen(now), [])).toBe(false)
+    expect(releaseIsRead(r, markSeen(freshSeen(now), "/coach-reports/a", now), [])).toBe(true)
   })
 })

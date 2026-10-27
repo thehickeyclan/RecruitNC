@@ -43,18 +43,20 @@ import {
 import { StoreButton } from "@/components/store-button"
 import { StoreNavLink } from "@/components/store-nav-link"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { useCoachMessageBadge, useNavNew, useNavNotifications } from "@/hooks/use-nav-badges"
+import { bellDate, useCoachMessageBadge, useNavNew, useNavNotifications } from "@/hooks/use-nav-badges"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [hubAccess, setHubAccess] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
+  // Desktop and phone bells each get their own: one shared switch let the hidden one close the other on open.
+  const [mobileNotificationsOpen, setMobileNotificationsOpen] = useState(false)
   const pathname = usePathname() ?? ""
   const { user, signOut, isLoading, profile } = useAuth()
   const cartItems = useCartStore((s) => s.items)
   const cartCount = cartItems.reduce((sum, i) => sum + i.quantity, 0)
   const { notifications, unread: unreadNotifications, markRead: markNotificationRead, markAllRead: markAllNotificationsRead } =
-    useNavNotifications(!!user, notificationsOpen)
+    useNavNotifications(!!user, notificationsOpen || mobileNotificationsOpen)
   const { unread: unreadMessages, show: showMessages } = useCoachMessageBadge(!!user, pathname)
   // "New" beside Rankings and News when a release or story came out since this person last looked.
   const fresh = useNavNew(!!user, pathname)
@@ -646,7 +648,7 @@ export function Navbar() {
                             <p className="text-sm font-medium">{n.title}</p>
                             {n.body && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
                             <p className="text-xs text-muted-foreground mt-1">
-                              {new Date(n.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                              {bellDate(n)}
                             </p>
                           </a>
                         )
@@ -760,7 +762,7 @@ export function Navbar() {
             )}
             {/* Notifications bell - when logged in */}
             {user && (
-              <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+              <Popover open={mobileNotificationsOpen} onOpenChange={setMobileNotificationsOpen}>
                 <PopoverTrigger asChild>
                   <button
                     type="button"
@@ -800,14 +802,14 @@ export function Navbar() {
                             href={href}
                             onClick={() => {
                               markNotificationRead(n.id)
-                              setNotificationsOpen(false)
+                              setMobileNotificationsOpen(false)
                             }}
                             className={`block px-3 py-2.5 text-left border-b border-border/50 last:border-0 hover:bg-muted/50 ${!n.read_at ? "bg-muted/30" : ""}`}
                           >
                             <p className="text-sm font-medium">{n.title}</p>
                             {n.body && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.body}</p>}
                             <p className="text-xs text-muted-foreground mt-1">
-                              {new Date(n.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
+                              {bellDate(n)}
                             </p>
                           </a>
                         )

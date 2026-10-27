@@ -8,7 +8,6 @@ import { usePathname } from "next/navigation"
 import type { LucideIcon } from "lucide-react"
 import {
   BarChart3,
-  Bell,
   ChevronDown,
   GitCompareArrows,
   GraduationCap,
@@ -23,13 +22,13 @@ import {
   FileText,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
-import { useCoachMessageBadge, useInterestBadge, useNavNew, useNavNotifications } from "@/hooks/use-nav-badges"
+import { useCoachMessageBadge, useInterestBadge, useNavNew } from "@/hooks/use-nav-badges"
+import { NotificationBell } from "@/components/recruiting/notification-bell"
 import { COACH_PREVIEW_KEY, COMMUNITY_PARTNER_LINKS, RECRUITING_BRAND, hasCommunityAccess, recruitingCoverage, usesRecruitingShell } from "@/lib/recruiting/brand"
 import { RecruitingFooter } from "@/components/recruiting/recruiting-footer"
 import { RecruitingWordmark } from "@/components/recruiting/recruiting-wordmark"
 import { RecruitingSearch } from "@/components/recruiting/recruiting-search"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -100,12 +99,10 @@ function SideMenu({ items, isActive, onNavigate, partner }: { items: Item[]; isA
 export function RecruitingShell({ children, hideNcUnited = false }: { children: React.ReactNode; hideNcUnited?: boolean }) {
   const onRw = useOnRecruitWrestlers()
   const [menuOpen, setMenuOpen] = useState(false)
-  const [notificationsOpen, setNotificationsOpen] = useState(false)
   const pathname = usePathname() ?? ""
   const { user, profile, signOut } = useAuth()
   const messages = useCoachMessageBadge(!!user, pathname)
   const interestNew = useInterestBadge(!!user, pathname)
-  const bell = useNavNotifications(!!user, notificationsOpen)
   const fresh = useNavNew(!!user, pathname)
 
   /**
@@ -187,51 +184,7 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
               Coach view · exit
             </button>
           ) : null}
-          <Popover open={notificationsOpen} onOpenChange={setNotificationsOpen}>
-            <PopoverTrigger asChild>
-              <button type="button" className={iconButton} aria-label={bell.unread > 0 ? `Notifications (${bell.unread} unread)` : "Notifications"}>
-                <Bell className="h-5 w-5" />
-                {bell.unread > 0 && (
-                  <span className="absolute right-1 top-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
-                    {bell.unread > 99 ? "99+" : bell.unread}
-                  </span>
-                )}
-              </button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-[min(340px,100vw-24px)] p-0" sideOffset={8}>
-              <div className="flex items-center justify-between border-b px-3 py-2">
-                <span className="text-sm font-semibold">Notifications</span>
-                {bell.unread > 0 && (
-                  <button type="button" onClick={bell.markAllRead} className="text-xs text-muted-foreground hover:text-foreground">
-                    Mark all read
-                  </button>
-                )}
-              </div>
-              <div className="max-h-[320px] overflow-y-auto">
-                {bell.notifications.length === 0 ? (
-                  <p className="px-3 py-4 text-center text-sm text-muted-foreground">No notifications yet.</p>
-                ) : (
-                  bell.notifications.map((n) => (
-                    <a
-                      key={n.id}
-                      href={n.link || "#"}
-                      onClick={() => {
-                        bell.markRead(n.id)
-                        setNotificationsOpen(false)
-                      }}
-                      className={`block border-b border-border/50 px-3 py-2.5 text-left last:border-0 hover:bg-muted/50 ${!n.read_at ? "bg-muted/30" : ""}`}
-                    >
-                      <p className="text-sm font-medium">{n.title}</p>
-                      {n.body && <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{n.body}</p>}
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {new Date(n.created_at).toLocaleDateString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}
-                      </p>
-                    </a>
-                  ))
-                )}
-              </div>
-            </PopoverContent>
-          </Popover>
+          <NotificationBell signedIn={!!user} />
           <DropdownMenu>
             <DropdownMenuTrigger className="ml-1 flex h-10 items-center gap-2 rounded-lg border border-white/20 px-3 text-sm font-semibold text-white hover:bg-white/10">
               <User className="h-4 w-4" />
