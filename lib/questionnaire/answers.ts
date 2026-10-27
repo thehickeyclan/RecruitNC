@@ -2,7 +2,7 @@ import "server-only"
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 
-import { getAthleteProfileUrl } from "@/lib/athlete-profile-links"
+import { shareableProfileUrl } from "@/lib/athlete-profile-links"
 import { resultClauses } from "@/lib/college-programs/outreach-results"
 import { loadAthleteCredentials } from "@/lib/credentials/athlete-credentials"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
@@ -19,7 +19,7 @@ import { ANSWER_FIELDS, cleanAnswers, type Answers } from "./fields"
 const TABLE_MISSING = "42P01"
 
 const PROFILE_COLUMNS =
-  'id, name, wrestling_name, "firstName", "lastName", highschool, graduationyear, gender, weightclass, location, nhsca_results, super32_results, academic_gpa, academic_sat, academic_act, academic_interest, "contactEmail", phone, birthdate, highlight_video_url, "wrestlingClub", "careerRecord"'
+  'id, name, wrestling_name, "firstName", "lastName", highschool, graduationyear, gender, weightclass, location, nhsca_results, super32_results, academic_gpa, academic_sat, academic_act, academic_interest, "contactEmail", phone, birthdate, highlight_video_url, "wrestlingClub", "careerRecord", state, is_nc_athlete'
 
 export type LoadedAnswers = {
   available: boolean
@@ -63,7 +63,7 @@ export async function profileAnswers(admin: SupabaseClient, athleteId: string): 
     record: text(row.careerRecord),
     accolades: results.join("; "),
     video: /^https?:\/\//i.test(text(row.highlight_video_url)) ? text(row.highlight_video_url) : "",
-    profileUrl: getAthleteProfileUrl(athleteId),
+    profileUrl: await shareableProfileUrl(athleteId, row as { state?: string | null; is_nc_athlete?: boolean | null }),
   }
   return Object.fromEntries(Object.entries(out).filter(([, v]) => v)) as Answers
 }

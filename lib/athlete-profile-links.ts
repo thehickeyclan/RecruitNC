@@ -4,6 +4,8 @@
 
 import { formatCommitChronologyLine } from "@/lib/data-dawg-college-commit"
 import { escapeForIlike, postgrestIlikeAtom } from "@/lib/athlete-name-match"
+import { athleteStateCode } from "@/lib/recruiting/states"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 
 export const RECRUITNC_APP_URL = "https://app.ncwrestlingunited.com"
 
@@ -13,10 +15,30 @@ export const RECRUITNC_APP_URL = "https://app.ncwrestlingunited.com"
  */
 export const RECRUITNC_PROFILE_PATH = "/view-profile"
 
-/** Build absolute profile URL for an athlete id (RecruitNC public profile). */
-export function getAthleteProfileUrl(id: string): string {
+export const RECRUITWRESTLERS_URL = "https://www.recruitwrestlers.com"
+
+/** Build absolute profile URL for an athlete id: NC United's address unless RecruitWrestlers is asked for. */
+export function getAthleteProfileUrl(id: string, opts: { recruitWrestlers?: boolean } = {}): string {
   const trimmed = String(id ?? "").trim()
-  return `${RECRUITNC_APP_URL}${RECRUITNC_PROFILE_PATH}?id=${encodeURIComponent(trimmed)}`
+  return `${opts.recruitWrestlers ? RECRUITWRESTLERS_URL : RECRUITNC_APP_URL}${RECRUITNC_PROFILE_PATH}?id=${encodeURIComponent(trimmed)}`
+}
+
+/**
+ * The profile link a family hands a college coach (interest-form answers, coach emails, the info
+ * sheet). RecruitWrestlers' address for a wrestler outside North Carolina, whose profile NC United
+ * does not show, and for any family using recruitwrestlers.com; NC United's for its own NC families
+ * (Matt's product review, 26 Oct 2026: the answer sheet gave an SC wrestler an NC United link).
+ */
+export async function shareableProfileUrl(id: string, athlete: { state?: string | null; is_nc_athlete?: boolean | null } | null): Promise<string> {
+  const outsideNc = athleteStateCode(athlete ?? null) !== "NC"
+  let onRw = false
+  try {
+    const { headers } = await import("next/headers")
+    onRw = stagedBrandForHost((await headers()).get("host")) === "national"
+  } catch {
+    // Outside a request (scripts): the wrestler's state decides.
+  }
+  return getAthleteProfileUrl(id, { recruitWrestlers: outsideNc || onRw })
 }
 
 /**
