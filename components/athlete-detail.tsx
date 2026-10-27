@@ -357,11 +357,34 @@ export function AthleteDetail({
   const [parentLinkedAthleteIds, setParentLinkedAthleteIds] = useState<Set<string>>(new Set())
   const { toast } = useToast()
 
+  /*
+   * The short link (/w/xavier-bernthal-2029), fetched ahead of the tap: Safari only lets a page
+   * write the clipboard inside the tap itself, so there is no time to ask then. Until it arrives,
+   * or if it never does, the share button copies the page address as it always did.
+   */
+  const [shortLink, setShortLink] = useState<string | null>(null)
+  useEffect(() => {
+    if (!athlete?.id) return
+    let cancelled = false
+    fetch(`/api/athletes/${encodeURIComponent(String(athlete.id))}/short-link`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (!cancelled && typeof d?.path === "string") setShortLink(`${window.location.origin}${d.path}`)
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [athlete?.id])
+
   const handleShareProfile = async () => {
-    const url = window.location.href
+    const url = shortLink ?? window.location.href
     try {
       await navigator.clipboard.writeText(url)
-      toast({ title: "Link copied", description: "Profile link copied to clipboard." })
+      toast({
+        title: "Link copied",
+        description: shortLink ? `${url.replace(/^https?:\/\//, "")} - made for an Instagram bio.` : "Profile link copied to clipboard.",
+      })
     } catch {
       toast({ title: "Copy failed", description: "Could not copy link. Try selecting the URL manually.", variant: "destructive" })
     }
