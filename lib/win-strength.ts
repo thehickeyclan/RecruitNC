@@ -232,7 +232,20 @@ export function winDate(date: string | null | undefined): number {
   return Number.NaN
 }
 
-type ScorableWin = { opponent: string; credential?: string | null; date?: string | null; strength?: number | null }
+type ScorableWin = { opponent: string; credential?: string | null; date?: string | null; strength?: number | null; result?: string | null }
+
+/**
+ * A forfeit is not a win over anybody: nobody wrestled. Noah Cerino's "win" over SI's #17 was an
+ * FF in a Fargo Greco consolation round and Micah Howard's over SI's #28 a medical forfeit, and
+ * each sat atop his Top 5 above wins he actually wrestled (27 October 2026). Same spellings as
+ * lib/head-to-head.ts isForfeitResult; defaults, injury defaults and DQs stay - the match started.
+ */
+function isForfeitWin(result: string | null | undefined): boolean {
+  const code = String(result ?? "").trim().toLowerCase().replace(/\s+/g, " ")
+  if (/^medical forfeit\b/.test(code)) return true
+  const first = code.match(/^(m\.? ?)?(for\.?|forfeit|ff|ffl|mff|mffl|mfl|vfo|fmc)\b/)
+  return Boolean(first)
+}
 
 /** Newest first; undated wins last, in their original order. */
 export function newestFirst<T extends ScorableWin>(wins: readonly T[]): T[] {
@@ -254,6 +267,7 @@ export function topWins<T extends ScorableWin>(wins: readonly T[], now = Date.no
   for (const w of wins) {
     const t = winDate(w.date)
     if (Number.isNaN(t) || now - t > YEAR_MS) continue
+    if (isForfeitWin(w.result)) continue
     const score = scoreOf(w, nowYear)
     if (score <= 0) continue
     const key = w.opponent.trim().toLowerCase()

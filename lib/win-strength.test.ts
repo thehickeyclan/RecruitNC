@@ -103,3 +103,17 @@ describe("dates", () => {
     expect(list.map((w) => w.opponent)).toEqual(["c", "b", "a"])
   })
 })
+
+describe("topWins leaves out forfeits", () => {
+  it("a forfeit or medical forfeit over a ranked opponent is not a top win; a default is", async () => {
+    const { topWins } = await import("./win-strength")
+    const now = Date.UTC(2026, 9, 27)
+    const wins = [
+      { opponent: "A", credential: "#17 Sports Illustrated", date: "2026-07-15", result: "FF" },
+      { opponent: "B", credential: "#28 Sports Illustrated", date: "2026-03-27", result: "M FOR" },
+      { opponent: "C", credential: "#20 MatScouts", date: "2026-10-25", result: "DEC 6-4" },
+      { opponent: "D", credential: "#30 Sports Illustrated", date: "2026-10-25", result: "INJ" },
+    ]
+    expect(topWins(wins, now).map((w) => w.opponent)).toEqual(["C", "D"])
+  })
+})
