@@ -69,10 +69,17 @@ export function stripRankFields<T extends Record<string, unknown>>(row: T): T {
   return out
 }
 
-export function stripPrivateAthleteFields<T extends Record<string, unknown>>(row: T): T {
-  const out = { ...row }
+export function stripPrivateAthleteFields<T extends Record<string, unknown>>(row: T): T & { is_claimed?: boolean } {
+  const out: Record<string, unknown> = { ...row }
   for (const field of PRIVATE_ATHLETE_FIELDS) delete out[field]
-  return out
+  /*
+   * Whether somebody owns the profile, without saying who. With the owner stripped, every claimed
+   * profile looked unclaimed to a signed-out visitor and offered "Is this you, or your wrestler?
+   * Create a free account" - on Xavier Bernthal's page, linked from his family's Instagram
+   * (27 October 2026).
+   */
+  if ("claimed_by_user_id" in row) out.is_claimed = Boolean(row.claimed_by_user_id)
+  return out as T & { is_claimed?: boolean }
 }
 
 /**
