@@ -11,7 +11,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { AlertTriangle, ArrowLeftRight, Check, FileText, Mail, MessageSquare, NotebookPen, Search, Star, Trash2 } from "lucide-react"
+import { AlertTriangle, ArrowLeftRight, Check, FileText, Mail, MessageSquare, NotebookPen, Phone as PhoneIcon, Search, Star, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useCoachMode } from "@/hooks/use-coach-mode"
 import { PIPELINE_STAGES, type PipelineStage } from "@/lib/recruiting/pipeline"
@@ -57,6 +57,12 @@ export function MyRecruitsBoard({
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState("")
   const [classYear, setClassYear] = useState<number | "all">("all")
+  /*
+   * Who is still recruitable (Matt, 27 Oct 2026: "why would i track wrestlers committed
+   * elsewhere?"). Committed elsewhere and graduated classes leave the working board for their own
+   * filters; a decommit clears his college and he is back on his own.
+   */
+  const [bucket, setBucket] = useState<Bucket>("active")
   const [stage, setStage] = useState<PipelineStage | "all">("all")
   const [appliedOnly, setAppliedOnly] = useState(false)
   const [stageError, setStageError] = useState<string | null>(null)
@@ -109,21 +115,29 @@ export function MyRecruitsBoard({
     else setComposeFor(row)
   }
 
+  const bucketCounts = useMemo(() => {
+    const c: Record<Bucket, number> = { active: 0, elsewhere: 0, graduated: 0 }
+    for (const r of data?.recruits ?? []) c[bucketOf(r)]++
+    return c
+  }, [data])
+  const working = useMemo(() => (data?.recruits ?? []).filter((r) => bucketOf(r) === bucket), [data, bucket])
   const classes = useMemo(
-    () => [...new Set((data?.recruits ?? []).map((r) => r.classYear).filter((y): y is number => y != null))].sort(),
-    [data],
+    () => [...new Set(working.map((r) => r.classYear).filter((y): y is number => y != null))].sort(),
+    [working],
   )
+  /** More than one state on the board: each row carries its state pill. */
+  const manyStates = useMemo(() => new Set((data?.recruits ?? []).map((r) => r.state).filter(Boolean)).size > 1, [data])
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase()
-    return (data?.recruits ?? []).filter(
+    return working.filter(
       (r) =>
         (classYear === "all" || r.classYear === classYear) &&
         (stage === "all" || r.stage === stage) &&
         (!appliedOnly || r.applied.applied) &&
         (!q || [r.name, r.highSchool, r.club, r.weight].some((v) => (v ?? "").toLowerCase().includes(q))),
     )
-  }, [data, query, classYear, stage, appliedOnly])
-  const appliedCount = useMemo(() => (data?.recruits ?? []).filter((r) => r.applied.applied).length, [data])
+  }, [working, query, classYear, stage, appliedOnly])
+  const appliedCount = useMemo(() => working.filter((r) => r.applied.applied).length, [working])
   /*
    * The first ten, so the funnel and what needs the coach stay in view with a long board (Matt,
    * 27 Oct 2026). A search shows every match; "Show all" opens the rest.
@@ -157,9 +171,9 @@ export function MyRecruitsBoard({
 
   const stageCounts = useMemo(() => {
     const counts = Object.fromEntries(PIPELINE_STAGES.map((st) => [st, 0])) as Record<PipelineStage, number>
-    for (const r of data?.recruits ?? []) counts[r.stage] = (counts[r.stage] ?? 0) + 1
+    for (const r of working) counts[r.stage] = (counts[r.stage] ?? 0) + 1
     return counts
-  }, [data])
+  }, [working])
 
   /**
    * Move a wrestler through the funnel. Shown at once and put back if the save fails. The stage is
@@ -264,11 +278,12 @@ export function MyRecruitsBoard({
             <>
               <Funnel
                 counts={stageCounts}
-                total={data.recruits.length}
+                total={working.length}
                 active={stage}
                 onPick={setStage}
                 applied={{ count: appliedCount, on: appliedOnly, toggle: () => setAppliedOnly((v) => !v) }}
               />
+              <LostAlert rows={(data.recruits ?? []).filter((r) => !r.graduated && justLost(r))} />
               {stageError ? <p className="mt-3 rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{stageError}</p> : null}
               {needsYou}
 
@@ -292,9 +307,28 @@ export function MyRecruitsBoard({
                       classYear === y ? "border-[#D3B574] bg-[#D3B574] text-[#0A1628]" : "border-white/20 text-white/70 hover:bg-white/10",
                     )}
                   >
-                    {y === "all" ? `All (${data.recruits.length})` : `Class of ${y}`}
+                    {y === "all" ? `All (${working.length})` : `Class of ${y}`}
                   </button>
                 ))}
+                {(["elsewhere", "graduated"] as const).map((b) =>
+                  bucketCounts[b] ? (
+                    <button
+                      key={b}
+                      type="button"
+                      onClick={() => {
+                        setBucket(bucket === b ? "active" : b)
+                        setClassYear("all")
+                        setStage("all")
+                      }}
+                      className={cn(
+                        "rounded-full border px-3 py-1.5 text-xs font-semibold",
+                        bucket === b ? "border-white/60 bg-white/15 text-white" : "border-dashed border-white/20 text-white/50 hover:text-white/80",
+                      )}
+                    >
+                      {b === "elsewhere" ? "Committed elsewhere" : "Graduated"} ({bucketCounts[b]})
+                    </button>
+                  ) : null,
+                )}
               </div>
 
               {/* Desktop: one table. */}
@@ -304,26 +338,30 @@ export function MyRecruitsBoard({
                     <tr>
                       <th className="px-4 py-3 font-semibold">Wrestler</th>
                       <th className="px-2 py-3 font-semibold">Class · Wt</th>
-                      <th className="px-2 py-3 font-semibold">Rank</th>
-                      <th className="px-2 py-3 font-semibold">Best results</th>
-                      <th className="px-2 py-3 font-semibold">Stage</th>
-                      <th className="px-2 py-3 font-semibold">Status</th>
+                      <th className="px-2 py-3 font-semibold">Résumé</th>
+                      <th className="px-2 py-3 font-semibold">GPA</th>
+                      <th className="px-2 py-3 font-semibold">Recruiting</th>
+                      <th className="px-2 py-3 font-semibold">Your stage</th>
+                      <th className="px-2 py-3 font-semibold">Last contact</th>
                       <th className="px-2 py-3 font-semibold">Last competed</th>
-                      <th className="px-2 py-3 font-semibold">Scouting report</th>
                       <th className="px-2 py-3" />
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/10">
                     {shown.map((r) => (
-                      <tr key={r.athleteId} className="align-top hover:bg-white/[0.03]">
+                      <tr key={r.athleteId} className={cn("align-top", justLost(r) ? "bg-red-500/10 shadow-[inset_3px_0_0_#ef4444]" : "hover:bg-white/[0.03]")}>
                         <td className="px-4 py-3">
                           <Link href={`/view-profile?id=${r.athleteId}`} className="flex items-center gap-3">
                             <Avatar row={r} />
                             <span className="min-w-0">
-                              <span className="block font-bold text-white hover:text-[#D3B574]">{r.name}</span>
+                              <span className="block font-bold text-white hover:text-[#D3B574]">
+                                {r.name}
+                                {manyStates && r.state ? <StatePill code={r.state} /> : null}
+                              </span>
                               <span className="block truncate text-xs text-white/55">
                                 {[r.highSchool, r.club].filter(Boolean).join(" · ") || "—"}
                               </span>
+                              {r.phone ? <Phone value={r.phone} /> : null}
                               <span className="block text-[11px] text-white/35" title={`Added ${dayLabel(r.starredAt)}`}>
                                 Added {dayLabel(r.starredAt)}
                                 {r.starredBy !== "You" ? ` by ${r.starredBy}` : ""}
@@ -337,34 +375,22 @@ export function MyRecruitsBoard({
                           <span className="text-white/35"> · </span>
                           {r.weight ? `${r.weight} lbs` : "—"}
                         </td>
-                        <td className="px-2 py-3 font-bold text-[#D3B574]">{r.rank ? `${r.womensRank ? "W " : ""}#${r.rank}` : "—"}</td>
-                        <td className="px-2 py-3 text-xs leading-relaxed text-white/80">
-                          {r.stateFinish || r.nationalFinish ? (
-                            <>
-                              {r.stateFinish ? <div>{r.stateFinish}</div> : null}
-                              {r.nationalFinish ? <div className="text-[#E9D6A6]">{r.nationalFinish}</div> : null}
-                            </>
-                          ) : (
-                            "—"
-                          )}
+                        <td className="max-w-[220px] px-2 py-3">
+                          <Resume row={r} />
+                        </td>
+                        <td className="whitespace-nowrap px-2 py-3 font-semibold text-white/85">{r.gpa != null ? r.gpa.toFixed(2) : <span className="font-normal text-white/35">—</span>}</td>
+                        <td className="px-2 py-3">
+                          <Recruiting row={r} />
                         </td>
                         <td className="px-2 py-3">
                           <StageSelect row={r} onChange={moveStage} />
                           <AppliedToggle row={r} onChange={setApplied} className="mt-1.5" />
-                          <LastContact row={r} className="mt-1.5" />
                         </td>
-                        <td className="px-2 py-3 text-xs">
-                          {r.committedTo ? (
-                            <span className="font-semibold text-emerald-300">Committed · {r.committedTo}</span>
-                          ) : (
-                            <span className="text-white/70">Uncommitted</span>
-                          )}
+                        <td className="px-2 py-3">
+                          <LastContact row={r} />
                         </td>
                         <td className="px-2 py-3">
                           <Activity row={r} />
-                        </td>
-                        <td className="px-2 py-3">
-                          <ReportLink row={r} />
                         </td>
                         <td className="px-2 py-3">
                           <Actions row={r} removing={removing === r.athleteId} onRemove={remove} picked={picked.includes(r.athleteId)} onPick={pick} thread={threads.get(r.athleteId)} onMessage={isCoach ? onMessage : undefined} onLog={setLogFor} />
@@ -379,7 +405,7 @@ export function MyRecruitsBoard({
               {/* Phones: a card per wrestler. */}
               <ul className="mt-4 space-y-2 md:hidden">
                 {shown.map((r) => (
-                  <li key={r.athleteId} className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                  <li key={r.athleteId} className={cn("rounded-xl border p-3", justLost(r) ? "border-red-500/60 bg-red-500/10" : "border-white/10 bg-white/[0.03]")}>
                     <div className="flex items-start gap-3">
                       <Link href={`/view-profile?id=${r.athleteId}`}>
                         <Avatar row={r} />
@@ -388,29 +414,26 @@ export function MyRecruitsBoard({
                         <Link href={`/view-profile?id=${r.athleteId}`} className="font-bold text-white">
                           {r.name}
                         </Link>
-                        {r.rank ? <span className="ml-2 text-xs font-bold text-[#D3B574]">{r.womensRank ? "W " : ""}#{r.rank}</span> : null}
+                        {manyStates && r.state ? <StatePill code={r.state} /> : null}
                         <p className="text-xs text-white/60">
-                          {[r.classYear ? `Class of ${r.classYear}` : null, r.weight ? `${r.weight} lbs` : null].filter(Boolean).join(" · ")}
+                          {[r.classYear ? `Class of ${r.classYear}` : null, r.weight ? `${r.weight} lbs` : null, r.gpa != null ? `${r.gpa.toFixed(2)} GPA` : null].filter(Boolean).join(" · ")}
                         </p>
                         <p className="truncate text-xs text-white/50">{[r.highSchool, r.club].filter(Boolean).join(" · ")}</p>
+                        {r.phone ? <Phone value={r.phone} /> : null}
                         {data?.fit?.[r.athleteId] ? <FitBadge flag={data.fit[r.athleteId]} className="mt-1" /> : null}
-                        {r.stateFinish ? <p className="mt-1 text-xs text-white/80">{r.stateFinish}</p> : null}
-                        {r.nationalFinish ? <p className="text-xs text-[#E9D6A6]">{r.nationalFinish}</p> : null}
+                        <div className="mt-1.5">
+                          <Resume row={r} />
+                        </div>
+                        <div className="mt-1.5">
+                          <Recruiting row={r} />
+                        </div>
                         <div className="mt-1">
                           <Activity row={r} compact />
                         </div>
-                        <p className="mt-1 text-xs">
-                          {r.committedTo ? (
-                            <span className="font-semibold text-emerald-300">Committed · {r.committedTo}</span>
-                          ) : (
-                            <span className="text-white/60">Uncommitted</span>
-                          )}
-                        </p>
                       </div>
                     </div>
                     <div className="mt-3 flex flex-wrap items-center gap-3">
                       <StageSelect row={r} onChange={moveStage} />
-                      <ReportLink row={r} />
                     </div>
                     <AppliedToggle row={r} onChange={setApplied} className="mt-2" />
                     <LastContact row={r} className="mt-2" />
@@ -546,27 +569,115 @@ function Avatar({ row }: { row: MyRecruitRow }) {
   )
 }
 
+type Bucket = "active" | "elsewhere" | "graduated"
+/** Graduated first: a graduate's commitment is history, not a recruiting fact. */
+const LOST_DAYS = 14
 /**
- * The report gets its own labelled column. It used to sit unlabelled beside the trash button,
- * which is where a coach looks to remove someone, not to read about them. Shown only where a
- * report exists, so it never leads to "not available for this athlete".
+ * He committed somewhere else in the last two weeks (Matt, 27 Oct 2026): an alert on top and a red
+ * row, so the staff sees it before he moves to "Committed elsewhere".
  */
-function ReportLink({ row }: { row: MyRecruitRow }) {
-  if (!row.hasReport) {
-    return (
-      <span className="whitespace-nowrap text-xs text-white/45">
-        {row.reportUnavailable === "girls" ? "None yet for girls" : "None: graduated"}
-      </span>
-    )
-  }
+export const justLost = (r: MyRecruitRow, now = Date.now()) =>
+  Boolean(r.committedTo && !r.committedToUs && r.committedAt && now - new Date(`${r.committedAt}T12:00:00Z`).getTime() <= LOST_DAYS * 86_400_000)
+const bucketOf = (r: MyRecruitRow): Bucket =>
+  r.graduated ? "graduated" : r.committedTo && !r.committedToUs && !justLost(r) ? "elsewhere" : "active"
+
+function LostAlert({ rows }: { rows: MyRecruitRow[] }) {
+  if (!rows.length) return null
   return (
-    <Link
-      href={`/athletes/${row.athleteId}/scouting-report`}
-      className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-md border border-[#D3B574]/60 bg-[#D3B574]/10 px-2.5 py-1.5 text-xs font-semibold text-[#D3B574] hover:bg-[#D3B574]/20"
+    <div className="mt-4 rounded-xl border border-red-500/50 bg-red-500/10 p-4">
+      <p className="flex items-center gap-2 text-sm font-bold text-red-200">
+        <AlertTriangle className="h-4 w-4" aria-hidden />
+        {rows.length === 1 ? "A recruit on your board committed elsewhere" : `${rows.length} recruits on your board committed elsewhere`}
+      </p>
+      <ul className="mt-2 space-y-1 text-sm text-white/85">
+        {rows.map((r) => (
+          <li key={r.athleteId}>
+            <Link href={`/view-profile?id=${r.athleteId}`} className="font-semibold text-white hover:underline">{r.name}</Link> committed to{" "}
+            <span className="font-semibold text-red-200">{r.committedTo}</span>
+            {r.committedAt ? <span className="text-white/50"> · {shortDay(r.committedAt)}</span> : null}
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+/** His cell, tap to call or text. Inside the profile link, so it stops the click from opening the profile. */
+function Phone({ value }: { value: string }) {
+  const digits = value.replace(/[^0-9+]/g, "")
+  const shown = /^\d{10}$/.test(digits) ? `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}` : value
+  return (
+    <span
+      role="link"
+      tabIndex={0}
+      onClick={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        window.location.href = `tel:${digits}`
+      }}
+      className="mt-0.5 inline-flex cursor-pointer items-center gap-1 text-xs font-semibold text-white/80 hover:text-[#D3B574]"
+      title={`Call or text ${shown}`}
     >
-      <FileText className="h-3.5 w-3.5" aria-hidden />
-      View report
-    </Link>
+      <PhoneIcon className="h-3 w-3" aria-hidden />
+      {shown}
+    </span>
+  )
+}
+
+function StatePill({ code }: { code: string }) {
+  return <span className="ml-2 inline-block rounded border border-white/25 px-1 align-middle text-[10px] font-bold leading-4 text-white/70">{code}</span>
+}
+
+/**
+ * What he has done, in one cell: class rank, best state finish, best national finishes, and the
+ * scouting report where one exists. Only what is on file; nothing when there is nothing.
+ */
+function Resume({ row }: { row: MyRecruitRow }) {
+  const empty = !row.rank && !row.stateFinish && !row.nationalFinish
+  return (
+    <div className="text-xs leading-snug">
+      {row.rank ? <span className="mr-1.5 inline-block rounded bg-[#D3B574]/15 px-1.5 py-px font-bold text-[#D3B574]">{row.womensRank ? "W " : ""}#{row.rank}</span> : null}
+      {row.stateFinish ? <span className="text-white/85">{row.stateFinish}</span> : null}
+      {row.nationalFinish ? <div className="mt-0.5 text-[#E9D6A6]">{row.nationalFinish}</div> : null}
+      {empty ? <span className="text-white/35">No state or national place</span> : null}
+      {row.hasReport ? (
+        <Link href={`/athletes/${row.athleteId}/scouting-report`} className="mt-1 inline-flex items-center gap-1 font-semibold text-[#D3B574] hover:underline">
+          <FileText className="h-3 w-3" aria-hidden />
+          Scouting report
+        </Link>
+      ) : null}
+    </div>
+  )
+}
+
+/**
+ * Where he stands with colleges, from his side: committed (to you or elsewhere), interested in
+ * your program, and, for a Division I staff, the day recruiting contact opens if it is ahead.
+ */
+function Recruiting({ row }: { row: MyRecruitRow }) {
+  return (
+    <div className="space-y-1 text-xs leading-snug">
+      {row.committedToUs ? (
+        <div className="font-semibold text-emerald-300">Committed to you</div>
+      ) : row.committedTo ? (
+        <div className={cn("font-semibold", justLost(row) ? "text-red-300" : "text-amber-200")}>
+          Committed · {row.committedTo}
+          {justLost(row) && row.committedAt ? <span className="block font-normal text-red-200/80">{shortDay(row.committedAt)}</span> : null}
+        </div>
+      ) : (
+        <div className="text-white/70">Uncommitted</div>
+      )}
+      {row.interestedAt ? (
+        <div
+          className="inline-flex items-center gap-1 rounded-full bg-emerald-400/15 px-2 py-0.5 font-semibold text-emerald-200"
+          title={`Marked interest in your program ${shortDay(row.interestedAt)}`}
+        >
+          <Star className="h-3 w-3 fill-current" aria-hidden />
+          Interested in you
+        </div>
+      ) : null}
+      {row.contactOpens ? <div className="text-white/45">D1 contact opens {row.contactOpens.label}</div> : null}
+    </div>
   )
 }
 

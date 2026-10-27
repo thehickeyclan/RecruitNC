@@ -7,6 +7,11 @@ import { loadActivity } from "@/lib/activity-load"
 import type { ActivityStatus } from "@/lib/activity-status"
 import type { PipelineStage } from "@/lib/recruiting/pipeline"
 import { programApplied, programStages } from "@/lib/recruiting/program-stage"
+import { athleteStateCode } from "@/lib/recruiting/states"
+import { stateChampionshipName } from "@/lib/athlete-state"
+import { mostRecentGraduatedClassYear } from "@/lib/class-years"
+import { d1ContactOpens } from "@/lib/coach-messages-compliance"
+import { coachProgramFacts } from "@/lib/coach-messages-compliance-server"
 
 export type MyRecruitRow = {
   athleteId: string
@@ -21,11 +26,27 @@ export type MyRecruitRow = {
   rank: number | null
   /** That rank is on the women's board: printed "W #4", never a bare "#4" beside a boy's. */
   womensRank?: boolean
-  /** "NCHSAA 7A State 2nd '26" - the best state finish on file. */
+  /** Two-letter state of the school he competes for (lib/recruiting/states.ts). */
+  state: string | null
+  /** "NCHSAA 7A 2nd '26", "SCHSL 5A Champion '26" - the best state finish on file, any state. */
   stateFinish: string | null
   /** "NHSCA 4th '25 · Super 32 3rd '24" - national placings (top 8). */
   nationalFinish: string | null
   committedTo: string | null
+  /** He committed to the viewer's own program (the board says "Committed to you", not "elsewhere"). */
+  committedToUs: boolean
+  /** When he committed, as the commitment was recorded; null when we do not know. */
+  committedAt: string | null
+  /** His cell as the family entered it: a private field coaches may see (lib/athlete-private-fields.ts). */
+  phone: string | null
+  /** Academic GPA as the family entered it: a private field coaches may see (lib/athlete-private-fields.ts). */
+  gpa: number | null
+  /** When he marked interest in the viewer's program (college_interest); null if he has not. */
+  interestedAt: string | null
+  /** Division I programs only: the day recruiting contact opens for him, while it is still ahead. */
+  contactOpens: { date: string; label: string } | null
+  /** His class has graduated: kept on the board, out of the default view. */
+  graduated: boolean
   starredAt: string
   /** Whoever on the staff starred him; "You" for the viewer. */
   starredBy: string
@@ -48,6 +69,15 @@ export type MyRecruitRow = {
   reportUnavailable: "graduated" | "girls" | null
   /** Days since the last result on file, and a flag when the gap means something (lib/activity-status.ts). */
   activity: ActivityStatus | null
+}
+
+/** "Ferrum" and "Ferrum College" are one college: compared on the words that name it. */
+const GENERIC = /\b(university|college|of|the|at|and|state university)\b/g
+const collegeKey = (name: string) => name.toLowerCase().replace(/&/g, " ").replace(/[^a-z\s]/g, " ").replace(GENERIC, " ").replace(/\s+/g, " ").trim()
+export function sameCollege(a: string, b: string): boolean {
+  const x = collegeKey(a)
+  const y = collegeKey(b)
+  return Boolean(x && y && x === y)
 }
 
 const ordinal = (n: number) => (n === 1 ? "Champion" : `${n}${n === 2 ? "nd" : n === 3 ? "rd" : "th"}`)
@@ -163,13 +193,26 @@ export async function loadMyRecruits(admin: ReturnType<typeof createAdminClient>
     }
   }
 
-  const [{ data: athletes }, state, nhsca, s32, { viewer }] = await Promise.all([
-    admin.from("athletes").select("id, name, wrestling_name, photourl, gender, graduationyear, weightclass, highschool, wrestlingClub, college, recruiting_status, prospect_ranking").in("id", ids),
+  const [{ data: athletes }, state, nhsca, s32, { viewer }, program, { data: otherStates }] = await Promise.all([
+    admin
+      .from("athletes")
+      .select("id, name, wrestling_name, photourl, gender, graduationyear, weightclass, highschool, wrestlingClub, college, recruiting_status, prospect_ranking, state, is_nc_athlete, academic_gpa, phone, commitmentdate")
+      .in("id", ids),
     linked("wrestling_nchsaa_results", "year, place, classification"),
     linked("nhsca_placements", "year, placement"),
     linked("super32_results", "year, placement"),
     resolveRankingViewerForUser({ admin, userId: user.id }),
+    coachProgramFacts(admin as never, user.id).catch(() => ({ schoolName: null, mapId: null, division: { mens: null, womens: null } })),
+    // Every other state's finishes (North Carolina's are the NCHSAA rows above).
+    admin.from("state_tournament_placers").select("athlete_id, season, state, classification, place").in("athlete_id", ids).gt("place", 0),
   ])
+  // Interest in this program, from the wrestler's side: the strongest signal on a board.
+  const { data: interest } = program.mapId
+    ? await admin.from("college_interest").select("athlete_id, created_at").eq("school_id", program.mapId).in("athlete_id", ids)
+    : { data: [] }
+  const interestedAt = new Map((interest ?? []).map((r) => [String(r.athlete_id), String(r.created_at)]))
+  const graduatedClass = mostRecentGraduatedClassYear()
+  const now = new Date()
   const seeRank = canSeeProspectRanking(viewer)
   // Who has gone quiet - an injury, a missed season - on the board a staff scans every day.
   const activity = await loadActivity(admin as never, (athletes ?? []) as Array<{ id: string; graduationyear?: unknown }>).catch(
@@ -181,9 +224,13 @@ export async function loadMyRecruits(admin: ReturnType<typeof createAdminClient>
     const a = (athletes ?? []).find((x) => x.id === id)
     if (!a) continue
     const star = byAthlete.get(id)!
-    const best = state
-      .filter((r) => r.athlete_id === id && Number(r.place) > 0)
-      .sort((x, y) => Number(x.place) - Number(y.place) || Number(y.year) - Number(x.year))[0]
+    const home = athleteStateCode(a as { state?: string | null; is_nc_athlete?: boolean | null })
+    const best = [
+      ...state.filter((r) => r.athlete_id === id && Number(r.place) > 0).map((r) => ({ assoc: stateChampionshipName("NC", r.classification ?? ""), cls: r.classification ?? "", place: Number(r.place), year: Number(r.year) })),
+      ...(otherStates ?? [])
+        .filter((r) => r.athlete_id === id && Number(r.place) > 0)
+        .map((r) => ({ assoc: stateChampionshipName(String(r.state), String(r.classification ?? "")), cls: String(r.classification ?? ""), place: Number(r.place), year: Number(r.season) })),
+    ].sort((x, y) => x.place - y.place || y.year - x.year)[0]
     const national = [
       ...nhsca.filter((r) => r.athlete_id === id).map((r) => ({ ev: "NHSCA", year: Number(r.year), place: Number(r.placement) })),
       ...s32.filter((r) => r.athlete_id === id).map((r) => ({ ev: "Super 32", year: Number(r.year), place: Number(r.placement) })),
@@ -209,9 +256,18 @@ export async function loadMyRecruits(admin: ReturnType<typeof createAdminClient>
       club: a.wrestlingClub ?? null,
       rank,
       womensRank: rank != null && /^f/i.test(String(a.gender ?? "").trim()),
-      stateFinish: best ? `NCHSAA ${best.classification ?? ""} State ${ordinal(Number(best.place))} ${yy(Number(best.year))}`.replace(/\s+/g, " ") : null,
+      state: home,
+      stateFinish: best ? `${best.assoc} ${best.cls.startsWith(best.assoc) ? "" : best.cls} ${ordinal(best.place)} ${yy(best.year)}`.replace(/\s+/g, " ") : null,
       nationalFinish: national.length ? national.join(" · ") : null,
       committedTo: college && college !== "Not specified" ? college : null,
+      committedToUs: Boolean(college && program.schoolName && sameCollege(college, program.schoolName)),
+      gpa: typeof a.academic_gpa === "number" && a.academic_gpa > 0 ? a.academic_gpa : Number(a.academic_gpa) > 0 ? Number(a.academic_gpa) : null,
+      phone: String(a.phone ?? "").trim() || null,
+      committedAt: college ? String(a.commitmentdate ?? "").slice(0, 10) || null : null,
+      interestedAt: interestedAt.get(id) ?? null,
+      contactOpens:
+        program.division[/^f/i.test(String(a.gender ?? "")) ? "womens" : "mens"] === "NCAA Division I" ? d1ContactOpens((a.gender as string | null) ?? null, classYear, now) : null,
+      graduated: classYear != null && classYear <= graduatedClass,
       starredAt: star.starredAt,
       starredBy: star.starredBy,
       mine: star.mine,

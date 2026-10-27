@@ -36,3 +36,22 @@ export async function coachMessagingCompliance(admin: SupabaseClient, coachUserI
   }
   return messagingRule({ division, divisionNote, gender, classYear: athlete?.graduationyear ? Number(athlete.graduationyear) : null, firstName })
 }
+
+/**
+ * A coach's college as the board needs it: its name, its college-map id (for interest), and the
+ * division of its men's and women's programs (for the contact window). Nulls when no school.
+ */
+export async function coachProgramFacts(
+  admin: SupabaseClient,
+  coachUserId: string,
+): Promise<{ schoolName: string | null; mapId: string | null; division: { mens: CollegeMapSchool["programs"][number]["division"] | null; womens: CollegeMapSchool["programs"][number]["division"] | null } }> {
+  const none = { schoolName: null, mapId: null, division: { mens: null, womens: null } }
+  const { data: profile } = await admin.from("user_profiles").select("school_id").eq("user_id", coachUserId).maybeSingle()
+  if (!profile?.school_id) return none
+  const { data: school } = await admin.from("schools").select("name").eq("id", profile.school_id).maybeSingle()
+  if (!school?.name) return none
+  const mapId = mapSchoolIdFor(String(school.name))
+  const mapped = mapId ? SCHOOLS.get(mapId) : undefined
+  const of = (team: "mens" | "womens") => (mapped?.programs.find((p) => p[team]) ?? mapped?.programs[0])?.division ?? null
+  return { schoolName: String(school.name), mapId: mapId ?? null, division: { mens: of("mens"), womens: of("womens") } }
+}
