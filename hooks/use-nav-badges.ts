@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
+import { freshSeen, markSeen, navNewCounts, type NavNewFeed, type NavSeen } from "@/lib/nav-new"
 
 /** Fired on window when a conversation is read or written in place, so badges elsewhere re-count. */
 export const COACH_MESSAGES_CHANGED = "coach-messages:changed"
@@ -96,4 +97,41 @@ export function useInterestBadge(signedIn: boolean, pathname: string) {
       .catch(() => {})
   }, [signedIn, pathname])
   return count
+}
+
+const SEEN_KEY = "nav-new:seen"
+
+/**
+ * New reports (a count), a new rankings release and a new story (lib/nav-new.ts). The feed is
+ * read once per sign-in; opening a page clears its mark in this browser.
+ */
+export function useNavNew(signedIn: boolean, pathname: string) {
+  const [feed, setFeed] = useState<NavNewFeed | null>(null)
+  const [seen, setSeen] = useState<NavSeen | null>(null)
+  useEffect(() => {
+    if (!signedIn) {
+      setFeed(null)
+      return
+    }
+    fetch("/api/nav/new", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setFeed(d && Array.isArray(d.reports) ? (d as NavNewFeed) : null))
+      .catch(() => {})
+  }, [signedIn])
+  useEffect(() => {
+    let current: NavSeen
+    try {
+      const raw = window.localStorage.getItem(SEEN_KEY)
+      current = raw ? (JSON.parse(raw) as NavSeen) : freshSeen(new Date())
+    } catch {
+      current = freshSeen(new Date())
+    }
+    const next = markSeen(current, pathname, new Date())
+    try {
+      window.localStorage.setItem(SEEN_KEY, JSON.stringify(next))
+    } catch {}
+    setSeen(next)
+  }, [pathname])
+  if (!feed || !seen) return { reports: 0, rankings: false, news: false }
+  return navNewCounts(feed, seen)
 }
