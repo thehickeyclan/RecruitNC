@@ -12,7 +12,7 @@ import { questionnairesForSchool } from "@/lib/college-programs/questionnaires"
 import { isHeadCoach, staffForSchool } from "@/lib/college-programs/staff"
 import type { CollegeMapSchool } from "@/lib/college-programs/types"
 import { loadAthleteCredentials } from "@/lib/credentials/athlete-credentials"
-import { getAthleteProfileUrl } from "@/lib/athlete-profile-links"
+import { shareableProfileUrl } from "@/lib/athlete-profile-links"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
 
 /**
@@ -28,7 +28,7 @@ const SCHOOLS = [...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS]
 
 // The credential engine matches unlinked results by name and school, so it needs these exactly.
 const ATHLETE_COLUMNS =
-  'id, name, wrestling_name, "firstName", "lastName", highschool, graduationyear, gender, weightclass, location, academic_gpa, academic_interest, "contactEmail", phone, nhsca_results, super32_results'
+  'id, name, wrestling_name, "firstName", "lastName", highschool, graduationyear, gender, weightclass, location, academic_gpa, academic_interest, "contactEmail", phone, nhsca_results, super32_results, state, is_nc_athlete'
 
 /** A calendar event with its real dates, so picking it can be saved to the wrestler's schedule. */
 export type SuggestedEvent = OutreachEvent & { startDate: string; endDate: string | null }
@@ -124,7 +124,7 @@ export async function loadOutreachContext(
     results: resultClauses(credentials),
     gpa,
     intendedMajor: athlete.academic_interest ? String(athlete.academic_interest).trim() : null,
-    profileUrl: getAthleteProfileUrl(athleteId),
+    profileUrl: await shareableProfileUrl(athleteId, athlete as { state?: string | null; is_nc_athlete?: boolean | null }),
     phone: athlete.phone ? String(athlete.phone).trim() : null,
     email: athlete.contactEmail ? String(athlete.contactEmail).trim() : null,
     schoolName: spokenSchoolName(school.name),
