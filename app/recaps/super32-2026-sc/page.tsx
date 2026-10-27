@@ -22,6 +22,7 @@ import path from "node:path"
 import { headers } from "next/headers"
 import { Chip, MatchList, ordinal, RW_ACCENT, schoolAndClass, super32Placings, ThreeYear, ViewProfilePill } from "@/components/news/super32-report-parts"
 import { isPlaceholderAthletePhoto } from "@/lib/recruiting-profile-photo"
+import { hasAnyRankingBoardGrant } from "@/lib/rankings/ranking-board-access"
 
 export const dynamic = "force-dynamic"
 
@@ -286,7 +287,13 @@ export default async function Super32ScBoysRecapPage({ searchParams }: { searchP
   // RecruitWrestlers only: NC United's addresses never serve it (localhost and previews for checking).
   const host = ((await headers()).get("host") ?? "").toLowerCase()
   if (!isRwHost(host)) notFound()
-  if (!PUBLIC && !viewer.isAdmin) notFound()
+  /*
+   * South Carolina's rankers review the draft before it is published (Matt, 27 Oct 2026: Alan
+   * Faponte reads the SC recap). A ranking-board grant naming SC opens it, fully unlocked.
+   */
+  const { data: authUser } = await supabase.auth.getUser()
+  const scReviewer = hasAnyRankingBoardGrant(authUser.user?.app_metadata?.ranking_board_access, "SC")
+  if (!PUBLIC && !viewer.isAdmin && !scReviewer) notFound()
 
   const recap = loadRecap("super32-2026-sc-boys-recap")
   const scFile = JSON.parse(fs.readFileSync(path.join(process.cwd(), "content/reports/super32-2026-sc.json"), "utf8")) as { entrants: SnapshotEntrant[] }
@@ -307,7 +314,7 @@ export default async function Super32ScBoysRecapPage({ searchParams }: { searchP
 
   // Admins can see the page as a free reader would: ?preview=free.
   const previewFree = viewer.isAdmin === true && (await searchParams).preview === "free"
-  const unlocked = !previewFree && (hasPremiumAccess(viewer) || hasPortalAccess(viewer))
+  const unlocked = !previewFree && (hasPremiumAccess(viewer) || hasPortalAccess(viewer) || scReviewer)
   const own = unlocked || previewFree ? new Set<string>() : await ownWrestlerNames(userId, entrants)
   // The top grade awarded is free (A+ is reserved and usually empty, so this is normally the A group).
   const topGrade = GRADES.find((g) => recap.graded.some((w) => w.grade === g))
