@@ -23,9 +23,10 @@ import {
   TEAM_PRIZE,
   type NilSource,
 } from "@/lib/recruiting/learn/nil"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const metadata: Metadata = {
-  title: "NIL in wrestling: what families need to know | RecruitNC",
+  title: `NIL in wrestling: what families need to know | ${productName()}`,
   description: "What NIL is, what revenue sharing is, what college wrestlers really earn, the myths, and North Carolina's high school rules, explained for wrestling families.",
 }
 

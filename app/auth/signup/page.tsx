@@ -90,7 +90,7 @@ type Role = "athlete" | "parent" | "college-coach" | "hs-club-coach" | "referee"
  */
 const ROLES: Array<{ value: Role; title: string; blurb: string; icon: typeof Trophy }> = [
   { value: "athlete", title: "Athlete", blurb: "Claim and manage your wrestling profile", icon: Trophy },
-  { value: "parent", title: "Parent", blurb: "Manage your wrestler's profile and NC United", icon: Users },
+  { value: "parent", title: "Parent", blurb: "Manage your wrestler's profile and recruiting", icon: Users },
   { value: "college-coach", title: "College coach", blurb: "Free rankings and athlete profiles, instantly", icon: GraduationCap },
   { value: "hs-club-coach", title: "High school or club coach", blurb: "Follow your wrestlers and events", icon: Shield },
   { value: "referee", title: "Referee", blurb: "Officials and event staff", icon: Flag },

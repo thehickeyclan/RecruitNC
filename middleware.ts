@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server"
-import { isNationalPath, isNcUnitedPage, isOpenWhileStaged, isStaffOnlyAfterLaunch, stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { isNationalPath, isOpenWhileStaged, isStaffOnlyAfterLaunch, stagedBrandForHost } from "@/lib/recruiting/national-paths"
 import { isCommunityAdminPath } from "@/lib/recruiting/admin-scope"
 import { isRankerOnly, stagingGateAllows } from "@/lib/staging-gate"
 import { FUNDRAISING_AUTH_RETURN_COOKIE } from "@/lib/fundraising/fundraising-auth-return-cookie"
@@ -92,8 +92,8 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
     if (pathname === "/contact") return NextResponse.rewrite(new URL("/recruitwrestlers/contact", request.url))
     if (pathname === "/about") return NextResponse.rewrite(new URL("/recruitwrestlers/about", request.url))
     if (!isNationalPath(pathname) && !isOpenWhileStaged(pathname) && !pathname.startsWith("/guild-recruiting")) {
-      // NC United's real pages forward there; anything else is RecruitWrestlers' "page not found".
-      if (isNcUnitedPage(pathname)) return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, APP_ORIGIN), 307)
+      // Nothing on recruitwrestlers.com leads to NC United (Matt's NC United sweep, 27 Oct 2026):
+      // its pages, asked for here, are RecruitWrestlers' "page not found".
       return NextResponse.rewrite(new URL("/recruitwrestlers/not-found", request.url))
     }
   }

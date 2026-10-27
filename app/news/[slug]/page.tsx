@@ -80,6 +80,7 @@ import {
   AAU_SCHOLASTIC_DUALS_2026_NEWS_SLUG,
   getAauScholasticDuals2026RosterDisplayMaps,
 } from "@/lib/content/aau-scholastic-duals-2026-profile-ids"
+import { productName } from "@/lib/recruiting/product-name"
 
 const ANNOUNCEMENT_CONTENT: Record<string, () => JSX.Element> = {
   "united-ascent-2026-08-24": () => <UnitedAscent20260824Content />,
@@ -162,7 +163,7 @@ export async function generateMetadata({
 
   const title =
     slug === "the-weight-of-the-scale"
-      ? "Weight Cutting in Wrestling: Risks, Benefits, and When to Move Up | RecruitNC"
+      ? `Weight Cutting in Wrestling: Risks, Benefits, and When to Move Up | ${productName()}`
       : `${item.title} | NC United`
 
   return {

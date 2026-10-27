@@ -33,9 +33,10 @@ import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
-export const metadata: Metadata = { title: "Compare colleges | RecruitNC" }
+export const metadata: Metadata = { title: `Compare colleges | ${productName()}` }
 
 const SCHOOLS = new Map([...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS].map((s) => [s.id, s]))
 const MAX = 4

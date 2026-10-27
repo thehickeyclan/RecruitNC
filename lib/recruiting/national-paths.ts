@@ -74,25 +74,6 @@ export function stagedBrandForHost(host: string | null | undefined): StagedBrand
 }
 
 /**
- * NC United's own pages that RecruitWrestlers links to or people may follow from it: asked for on
- * recruitwrestlers.com they forward to app.ncwrestlingunited.com. Any other unknown address gets
- * RecruitWrestlers' "page not found", never NC United's sign-in page (Matt's product review,
- * 26 Oct 2026). Its NC data pages (NCHSAA, NHSCA, Super 32, Fargo, commitments) forward until
- * RecruitWrestlers has its own per-state versions.
- */
-export const NC_UNITED_PAGE_PREFIXES = [
-  "/blue", "/store", "/store-app", "/cart", "/checkout", "/tournament-of-champions", "/calendar", "/clubs",
-  "/news", "/fundraising", "/national-team", "/spartan", "/supporters", "/weekend-wars", "/scholarships",
-  "/dave-schultz-award", "/tricia-saunders-award", "/forum", "/messages", "/support", "/download", "/go",
-  "/nchsaa", "/nhsca", "/super32", "/fargo", "/history", "/stats", "/high-schools", "/college-commitments",
-  "/rankings", "/plans", "/campaign",
-] as const
-
-export function isNcUnitedPage(pathname: string): boolean {
-  return NC_UNITED_PAGE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))
-}
-
-/**
  * RecruitWrestlers launched (Matt, 26 Oct 2026: "lift gate"). Only the staff preview tools stay
  * behind the gate: /dev renders the site as a named coach or family would see it.
  */

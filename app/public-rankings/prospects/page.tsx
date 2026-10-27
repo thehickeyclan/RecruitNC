@@ -13,12 +13,13 @@ import { hasPremiumAccess } from "@/lib/ranking-visibility"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { PUBLIC_TOP_PROSPECTS_RELEASED } from "@/lib/public-rankings-cap"
 import { BrandName } from "@/components/recruiting/brand-name"
+import { productName } from "@/lib/recruiting/product-name"
 
 // Per-viewer: the board is gated, so it cannot be one static document for everybody.
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "Top 75 Ranked Prospects | RecruitNC",
+  title: `Top 75 Ranked Prospects | ${productName()}`,
   description:
     "North Carolina's top college wrestling prospects across the classes of 2027, 2028 and 2029.",
 }

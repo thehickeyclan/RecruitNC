@@ -24,10 +24,11 @@ import {
   WOMENS_PLAYBOOK,
   type WSource,
 } from "@/lib/recruiting/learn/womens"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
 export const metadata: Metadata = {
-  title: "Women's wrestling: the college pathway | RecruitNC",
+  title: `Women's wrestling: the college pathway | ${productName()}`,
   description: "Where the college women's wrestling programs are, how the sport has grown, the scholarships, and how recruiting differs for girls, with where North Carolina girls have gone.",
 }
 

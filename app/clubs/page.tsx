@@ -4,13 +4,14 @@ import { ClubLocatorMap } from "@/components/clubs/club-locator-map"
 import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
 import { Search, ShieldCheck, Trophy, Users } from "lucide-react"
 import { shareMetadata } from "@/lib/share-metadata"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const metadata = shareMetadata({
   title: "North Carolina Wrestling Club Map",
   description: "Every wrestling club and training center in North Carolina, with athlete and college commitment counts.",
   path: "/clubs",
   kicker: "RecruitNC",
-  pageTitle: "North Carolina Wrestling Club Map | RecruitNC",
+  pageTitle: `North Carolina Wrestling Club Map | ${productName()}`,
 })
 
 export default function ClubsPage() {

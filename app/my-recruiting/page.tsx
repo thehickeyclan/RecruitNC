@@ -34,9 +34,10 @@ import { buildInfoSheet } from "./info-sheet"
 import { loadCommandCenter } from "./load"
 import { MapPreviewCard } from "./map-preview"
 import { BrandName } from "@/components/recruiting/brand-name"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
-export const metadata = { title: "Recruiting Command Center | RecruitNC" }
+export const metadata = { title: `Recruiting Command Center | ${productName()}` }
 
 const ALL_SCHOOLS = [...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS]
 const SCHOOL_BY_ID = new Map(ALL_SCHOOLS.map((s) => [s.id, s]))

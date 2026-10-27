@@ -196,7 +196,7 @@ export default function RootLayout({
             <BulletproofInternalLinks />
             <UserActivityTracker />
             <LayoutOptionalClients />
-            <AppChrome>{children}</AppChrome>
+            <AppChrome hideNcUnited={RW_PROJECT}>{children}</AppChrome>
             {/* Coach Call/Text/Email taps on a wrestler, the closest signal of off-site contact. */}
             <ContactTapTracker />
             {/* Renders nothing without ?welcome=<role>, set at verification and at coach sign-up. */}

@@ -16,11 +16,12 @@ import { resolveFitViewer } from "@/lib/program-fit-viewer"
 import PerfectRecruitClient, { type PerfectRecruitMatch } from "./perfect-recruit-client"
 import { headers } from "next/headers"
 import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
 export const maxDuration = 60
 
-export const metadata = { title: "Your Perfect Recruit | RecruitNC" }
+export const metadata = { title: `Your Perfect Recruit | ${productName()}` }
 
 export default async function PerfectRecruitPage() {
   const supabase = await createClient()

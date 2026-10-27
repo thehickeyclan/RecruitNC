@@ -11,10 +11,11 @@ import { PortalShell } from "@/components/portal/portal-shell"
 import { readWentHereSnapshot, snapshotForState } from "@/lib/college-programs/went-here-snapshot"
 import { COLLEGE_DIVISIONS, DIVISION_COLOR, DIVISION_SHORT, type CollegeDivision } from "@/lib/college-programs/types"
 import { LOOK_POINTS } from "@/lib/recruiting/learn/coaches-look-for"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
 export const metadata: Metadata = {
-  title: "What college wrestling coaches look at | RecruitNC",
+  title: `What college wrestling coaches look at | ${productName()}`,
   description: "What college wrestling coaches evaluate, and where North Carolina wrestlers who went to college stood in high school, level by level.",
 }
 

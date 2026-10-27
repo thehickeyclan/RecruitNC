@@ -12,18 +12,23 @@ import { LearnDisclaimer } from "@/components/recruiting/learn/learn-disclaimer"
 import { CHECKED, LEARN_PAGES } from "@/lib/recruiting/learn/content"
 import { BrandName } from "@/components/recruiting/brand-name"
 import { shareMetadata } from "@/lib/share-metadata"
+import { headers } from "next/headers"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const metadata = shareMetadata({
   title: "College Wrestling Recruiting Rules",
   description: "When coaches can contact you, the recruiting calendar, signing, scholarships and eligibility, with sources.",
   path: "/recruiting/learn",
   kicker: "RecruitNC · Learn",
-  pageTitle: "College Wrestling Recruiting Rules | RecruitNC",
+  pageTitle: `College Wrestling Recruiting Rules | ${productName()}`,
 })
 
 const checkedLabel = new Date(`${CHECKED}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
 
-export default function LearnIndexPage() {
+export default async function LearnIndexPage() {
+  // The lock names the plan that opens the guide on this site: the Command Center on RecruitWrestlers.
+  const lockLabel = stagedBrandForHost((await headers()).get("host")) === "national" ? "Recruiting Command Center" : "NC United Blue"
   return (
     <main className="min-h-screen bg-[#0A1628] px-4 py-8 text-white sm:px-6">
       <div className="mx-auto max-w-3xl">
@@ -65,7 +70,7 @@ export default function LearnIndexPage() {
                     {page.free ? (
                       <span className="rounded-full bg-emerald-300/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-emerald-200">Free</span>
                     ) : (
-                      <Lock className="h-3.5 w-3.5 text-[#D3B574]" aria-label="NC United Blue" />
+                      <Lock className="h-3.5 w-3.5 text-[#D3B574]" aria-label={lockLabel} />
                     )}
                   </span>
                   <span className="mt-0.5 block text-sm leading-5 text-white/60">{page.summary}</span>

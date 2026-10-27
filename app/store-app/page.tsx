@@ -2,6 +2,9 @@ import { StorePageClient } from "@/components/store-page-client"
 import { createClient } from "@/lib/supabase/server"
 import { Suspense } from "react"
 import { shareMetadata } from "@/lib/share-metadata"
+import { headers } from "next/headers"
+import { notFound } from "next/navigation"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 
 export const metadata = shareMetadata({
   title: "NC United Store",
@@ -12,6 +15,9 @@ export const metadata = shareMetadata({
 export const dynamic = "force-dynamic"
 
 export default async function StoreAppPage() {
+  // NC United's store; not on RecruitWrestlers (Matt's NC United sweep, 27 Oct 2026). The store
+  // runs without middleware (middleware.ts matcher), so it refuses here.
+  if (stagedBrandForHost((await headers()).get("host")) === "national") notFound()
   const supabase = await createClient()
 
   const { data: productsData, error } = await supabase

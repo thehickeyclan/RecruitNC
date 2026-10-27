@@ -73,6 +73,7 @@ import { hasPortalAccess } from "@/lib/ranking-visibility"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { BrandName } from "@/components/recruiting/brand-name"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
 
@@ -98,7 +99,7 @@ type Params = { params: Promise<{ id: string }>; searchParams?: Promise<{ fall?:
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const school = SCHOOLS.get((await params).id)
-  if (!school) return { title: "College wrestling program | RecruitNC" }
+  if (!school) return { title: `College wrestling program | ${productName()}` }
   const name = spoken(school.name)
   const levels = school.programs.map((p) => DIVISION_SHORT[p.division]).join(" / ")
   return {

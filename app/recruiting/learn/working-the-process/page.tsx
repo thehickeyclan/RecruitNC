@@ -8,9 +8,10 @@ import { MessageCircleQuestion } from "lucide-react"
 import { PortalShell } from "@/components/portal/portal-shell"
 import { sectionId } from "@/lib/recruiting/learn/content"
 import { COACH_QUESTIONS, QUESTIONS_ID, WORKING_STEPS } from "@/lib/recruiting/learn/working"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const metadata: Metadata = {
-  title: "Working the recruiting process, step by step | RecruitNC",
+  title: `Working the recruiting process, step by step | ${productName()}`,
   description: "The practical side of college wrestling recruiting: questionnaires, writing to coaches, following up, camps, social media and coach calls.",
 }
 
