@@ -133,14 +133,16 @@ export function Navbar() {
   const profilesItem = { href: "/prospects/all", label: "Browse Athlete Profiles" }
   /** Sits with the profiles, because comparing two wrestlers is what you do after finding one. */
   const compareItem = { href: "/compare?src=nav", label: "Compare Wrestlers" }
-  const commitmentItems = [
-    { href: "/college-commitments", label: "College Commitments" },
-    { href: "/high-schools", label: "Commitments by High School" },
-    { href: "/colleges", label: "Commitments by College" },
-  ]
+  /*
+   * One entry. By college and by high school are tabs on the commitments page itself (27 Oct
+   * 2026), so listing them here too was three menu rows for one place.
+   */
+  const commitmentItems = [{ href: "/college-commitments", label: "College Commitments" }]
+  /* Still under Athletes for the menu's active state: they are the commitments page's other tabs. */
+  const commitmentTabs = [{ href: "/colleges" }, { href: "/high-schools" }]
   const rankingsItem = { href: "/public-rankings", label: "Rankings" }
   const recruitingItem = { href: "/recruiting/tournaments", label: "Recruiting" }
-  const athletesItems = [profilesItem, compareItem, ...commitmentItems, recruitingItem]
+  const athletesItems = [profilesItem, compareItem, ...commitmentItems, ...commitmentTabs, recruitingItem]
 
   const programsItems = [
     { href: "/command-center", label: "Recruiting Command Center", description: "Your recruiting assistant, 8th grade to signing" },
