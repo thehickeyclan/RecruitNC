@@ -8,6 +8,7 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { BrandName } from "@/components/recruiting/brand-name"
 
 type Props = {
   /** True when session exists in HttpOnly cookies (e.g. after /auth/callback) — browser client may not see it. */
@@ -177,7 +178,7 @@ export function ResetPasswordClient({ serverHasSession }: Props) {
         <div className="text-center">
           <h1 className="text-3xl font-bold">Reset your password</h1>
           <p className="mt-2 text-gray-600">
-            {showForm ? "Enter and confirm your new password below." : "Set a new password for your RecruitNC account."}
+            {showForm ? "Enter and confirm your new password below." : <>Set a new password for your <BrandName /> account.</>}
           </p>
         </div>
 
