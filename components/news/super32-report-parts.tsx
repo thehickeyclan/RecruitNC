@@ -44,9 +44,12 @@ export async function super32GirlsPlacings(): Promise<Map<string, number>> {
 /** The three-year table as cards: each row a stat, 2026 called out. */
 /** The chart that leads: wins over top-15 seeds (boys), else All-Americans (girls). */
 export const FEATURED = /top-15|all-americans/i
+// A row where a drop is the improvement ("Went 0-2"), and one whose values are percentages.
+const LOWER_IS_BETTER = /0-2/
+const PERCENT = /%/
 
 /** Vertical columns, years left to right, so a row reads as progress over time; 2026 in the accent colour (gold on NC United, lime on RecruitWrestlers: RW_ACCENT). */
-export function Columns({ vals, years, height }: { vals: number[]; years: string[]; height: number }) {
+export function Columns({ vals, years, height, unit = "" }: { vals: number[]; years: string[]; height: number; unit?: string }) {
   const max = Math.max(...vals, 1)
   // Bars live in their own fixed-height area, so a bar's height is exactly its share of the
   // largest value; the labels sit outside it and can never squeeze a bar.
@@ -57,7 +60,7 @@ export function Columns({ vals, years, height }: { vals: number[]; years: string
         return (
           <div key={yr} className="flex flex-1 flex-col items-center">
             <div className="flex w-full flex-col items-center justify-end" style={{ height }}>
-              <span className={`mb-1 ${now ? "text-lg font-black text-[#0b1730]" : "text-sm font-semibold text-gray-500"}`}>{vals[i]}</span>
+              <span className={`mb-1 ${now ? "text-lg font-black text-[#0b1730]" : "text-sm font-semibold text-gray-500"}`}>{vals[i]}{unit}</span>
               <div className={`w-full max-w-[56px] shrink-0 rounded-t-md ${now ? "bg-[var(--rpt-accent,#d4af55)]" : "bg-[#c7d0e2]"}`} style={{ height: Math.max(3, Math.round(((height - 32) * vals[i]!) / max)) }} />
             </div>
             <span className={`mt-1.5 text-xs ${now ? "font-bold text-[#0b1730]" : "text-gray-400"}`}>{yr}</span>
@@ -68,13 +71,15 @@ export function Columns({ vals, years, height }: { vals: number[]; years: string
   )
 }
 
-export function Change({ vals, years }: { vals: number[]; years: string[] }) {
+export function Change({ vals, years, label = "" }: { vals: number[]; years: string[]; label?: string }) {
   const d = vals[vals.length - 1]! - vals[vals.length - 2]!
+  const better = LOWER_IS_BETTER.test(label) ? d < 0 : d > 0
+  const unit = PERCENT.test(label) ? " pts" : ""
   const prev = years[years.length - 2]
   if (d === 0) return <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-500">Same as {prev}</span>
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${d > 0 ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500"}`}>
-      {d > 0 ? "+" : ""}{d} vs {prev}
+    <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${better ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-500"}`}>
+      {d > 0 ? "+" : ""}{d}{unit} vs {prev}
     </span>
   )
 }
@@ -98,7 +103,7 @@ export function ThreeYear({ body }: { body: string }) {
         <div className="rpt-chart mt-4 rounded-2xl border border-[var(--rpt-accent-line,#e9cf86)] bg-white p-5 shadow-sm">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <div className="text-lg font-black text-[#0b1730]">{featured.label}</div>
-            <Change vals={featured.vals} years={years} />
+            <Change vals={featured.vals} years={years} label={featured.label} />
           </div>
           <div className="mt-4"><Columns vals={featured.vals} years={years} height={220} /></div>
         </div>
@@ -107,8 +112,8 @@ export function ThreeYear({ body }: { body: string }) {
         {rest.map((r) => (
           <div key={r.label} className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
             <div className="min-h-[2.5rem] text-[13px] font-semibold leading-tight text-gray-700">{r.label}</div>
-            <div className="mt-2"><Columns vals={r.vals} years={years} height={120} /></div>
-            <div className="mt-2 text-center"><Change vals={r.vals} years={years} /></div>
+            <div className="mt-2"><Columns vals={r.vals} years={years} height={120} unit={PERCENT.test(r.label) ? "%" : ""} /></div>
+            <div className="mt-2 text-center"><Change vals={r.vals} years={years} label={r.label} /></div>
           </div>
         ))}
       </div>
@@ -124,7 +129,7 @@ export function ThreeYear({ body }: { body: string }) {
             {rows.map((r, i) => (
               <tr key={r.label} className={i % 2 ? "bg-[#f8f9fc]" : ""}>
                 <td className="px-3 py-2 text-gray-700">{r.label}</td>
-                {r.vals.map((v, j) => <td key={j} className={`px-3 py-2 text-right tabular-nums ${j === years.length - 1 ? "font-black text-[#0b1730]" : "text-gray-600"}`}>{v}</td>)}
+                {r.vals.map((v, j) => <td key={j} className={`px-3 py-2 text-right tabular-nums ${j === years.length - 1 ? "font-black text-[#0b1730]" : "text-gray-600"}`}>{v}{PERCENT.test(r.label) ? "%" : ""}</td>)}
               </tr>
             ))}
           </tbody>
