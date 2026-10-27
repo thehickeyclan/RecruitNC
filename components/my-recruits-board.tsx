@@ -148,19 +148,19 @@ export function MyRecruitsBoard({
   const shown = collapsed ? rows.slice(0, FIRST) : rows
 
   /** Applied or not, for the whole staff. Shown at once and put back if the save fails. */
-  const setApplied = async (athleteId: string, applied: boolean) => {
+  const setApplied = async (athleteId: string, applied: boolean, date?: string) => {
     const before = data?.recruits.find((r) => r.athleteId === athleteId)?.applied
-    if (!before || before.applied === applied) return
+    if (!before || (before.applied === applied && (!applied || !date || date === before.date))) return
     const put = (value: MyRecruitRow["applied"]) =>
       setData((d) => (d ? { ...d, recruits: d.recruits.map((r) => (r.athleteId === athleteId ? { ...r, applied: value } : r)) } : d))
-    put({ applied, date: applied ? new Date().toISOString() : null })
+    put({ applied, date: applied ? (date ?? new Date().toISOString()) : null })
     setStageError(null)
     try {
       const res = await fetch("/api/coach-portal/update-applied", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ athleteId, hasApplied: applied }),
+        body: JSON.stringify({ athleteId, hasApplied: applied, appliedDate: applied ? (date ?? null) : null }),
       })
       if (!res.ok) throw new Error()
     } catch {
@@ -201,11 +201,13 @@ export function MyRecruitsBoard({
   }
 
   const remove = async (athleteId: string) => {
+    const who = data?.recruits.find((r) => r.athleteId === athleteId)
+    if (!window.confirm(`Take ${who?.name ?? "him"} off the board?${data?.hasSchool ? " He comes off for your whole staff." : ""}`)) return
     setRemoving(athleteId)
     try {
-      // The star endpoint toggles; on a wrestler you starred it removes your star.
+      // Off the program's board: every staff star on him (app/api/coach-portal/star DELETE).
       await fetch("/api/coach-portal/star", {
-        method: "POST",
+        method: "DELETE",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ athleteId }),
@@ -775,14 +777,65 @@ function Funnel({
 }
 
 /** "Applied Oct 3" or "Not applied": one tap to change, for the whole staff. */
-function AppliedToggle({ row, onChange, className }: { row: MyRecruitRow; onChange: (athleteId: string, applied: boolean) => void; className?: string }) {
+/**
+ * Applied, and the day he applied: today unless the coach picks another (Matt, 27 Oct 2026: "if a
+ * kid applied 3 months ago no way to put in the date"). Click to set or correct it, or to clear it.
+ */
+function AppliedToggle({ row, onChange, className }: { row: MyRecruitRow; onChange: (athleteId: string, applied: boolean, date?: string) => void; className?: string }) {
   const on = row.applied.applied
+  const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/New_York" })
+  const current = row.applied.date ? new Date(row.applied.date).toLocaleDateString("en-CA", { timeZone: "America/New_York" }) : today
+  const [editing, setEditing] = useState(false)
+  const [day, setDay] = useState(current)
+  if (editing) {
+    return (
+      <div className={cn("flex flex-wrap items-center gap-1.5 text-[11px]", className)}>
+        <input
+          type="date"
+          value={day}
+          max={today}
+          onChange={(e) => setDay(e.target.value)}
+          aria-label={`Date ${row.name} applied`}
+          className="rounded border border-white/20 bg-[#0A1628] px-1.5 py-0.5 text-[11px] text-white [color-scheme:dark]"
+        />
+        <button
+          type="button"
+          disabled={!day || day > today}
+          onClick={() => {
+            onChange(row.athleteId, true, `${day}T12:00:00.000Z`)
+            setEditing(false)
+          }}
+          className="rounded bg-emerald-400/20 px-2 py-0.5 font-semibold text-emerald-200 hover:bg-emerald-400/30 disabled:opacity-40"
+        >
+          Save
+        </button>
+        {on ? (
+          <button
+            type="button"
+            onClick={() => {
+              onChange(row.athleteId, false)
+              setEditing(false)
+            }}
+            className="px-1 font-semibold text-white/50 hover:text-red-300"
+          >
+            Not applied
+          </button>
+        ) : null}
+        <button type="button" onClick={() => setEditing(false)} className="px-1 text-white/40 hover:text-white">
+          Cancel
+        </button>
+      </div>
+    )
+  }
   return (
     <button
       type="button"
-      onClick={() => onChange(row.athleteId, !on)}
+      onClick={() => {
+        setDay(current)
+        setEditing(true)
+      }}
       aria-pressed={on}
-      title={on ? "Click to mark as not applied" : "Click when he has applied to your school"}
+      title={on ? "Change the date or mark as not applied" : "Mark applied and pick the day"}
       className={cn(
         "inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-semibold",
         on ? "border-emerald-300/60 bg-emerald-300/15 text-emerald-200" : "border-white/15 text-white/45 hover:border-white/40 hover:text-white",
@@ -790,7 +843,7 @@ function AppliedToggle({ row, onChange, className }: { row: MyRecruitRow; onChan
       )}
     >
       {on ? <Check className="h-3 w-3" aria-hidden /> : null}
-      {on ? `Applied${row.applied.date ? ` ${new Date(row.applied.date).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" })}` : ""}` : "Not applied"}
+      {on ? `Applied${row.applied.date ? ` ${new Date(row.applied.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: new Date(row.applied.date).getFullYear() === new Date().getFullYear() ? undefined : "numeric", timeZone: "America/New_York" })}` : ""}` : "Not applied"}
     </button>
   )
 }
@@ -995,10 +1048,9 @@ function Actions({
         <span className="sr-only md:hidden">Compare</span>
         <span className="md:sr-only">Compare</span>
       </button>
-      {row.mine ? (
-        <button
+      <button
           type="button"
-          title="Remove from my recruits"
+          title="Take off the board"
           aria-label={`Remove ${row.name}`}
           disabled={removing}
           onClick={() => onRemove(row.athleteId)}
@@ -1006,7 +1058,6 @@ function Actions({
         >
           <Trash2 className="h-3.5 w-3.5" />
         </button>
-      ) : null}
     </div>
   )
 }

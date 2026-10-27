@@ -57,9 +57,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 })
     }
 
-    const appliedTimestamp = hasApplied
-      ? appliedDate || new Date().toISOString()
-      : null
+    // A coach may backdate it; never into the future, and never a date that does not parse.
+    const picked = appliedDate ? new Date(appliedDate) : null
+    if (picked && (Number.isNaN(picked.getTime()) || picked.getTime() > Date.now() + 86_400_000)) {
+      return NextResponse.json({ error: "Pick a date on or before today." }, { status: 400 })
+    }
+    const appliedTimestamp = hasApplied ? (picked?.toISOString() ?? new Date().toISOString()) : null
 
     // The whole staff sees it: written to every staff row for this wrestler (lib/recruiting/program-stage.ts).
     const saved = await setProgramApplied(createAdminClient(), user.id, athleteId, hasApplied, appliedTimestamp)
