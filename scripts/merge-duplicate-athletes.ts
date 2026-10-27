@@ -29,6 +29,7 @@ if (!url || !key) {
 }
 const admin = createClient(url, key, { auth: { persistSession: false } })
 const emitSql = process.argv.includes("--sql")
+const write = process.argv.includes("--write")
 
 /** Every column in the database that points at an athlete, read from the live schema. */
 async function athleteReferences(): Promise<Array<{ table: string; column: string }>> {
@@ -45,7 +46,79 @@ async function athleteReferences(): Promise<Array<{ table: string; column: strin
       }
     }
   }
-  return refs.sort((a, b) => a.table.localeCompare(b.table) || a.column.localeCompare(b.column))
+  /*
+   * Views are dropped here. `unified_fundraising_lookup` carries an athlete_id and looks exactly
+   * like a table in the schema, but a view derives from its base tables and cannot be updated -
+   * and in the --sql path that error arrives inside `begin ... commit` and rolls the whole merge
+   * back. Each candidate is probed with an update against an id that cannot exist: a table
+   * answers "0 rows", a view refuses.
+   */
+  const writable: Array<{ table: string; column: string }> = []
+  const NO_SUCH_ID = "00000000-0000-0000-0000-000000000000"
+  for (const ref of refs) {
+    const { error } = await admin.from(ref.table).update({ [ref.column]: NO_SUCH_ID }).eq(ref.column, NO_SUCH_ID)
+    if (error && /cannot update view|is not updatable/i.test(error.message)) continue
+    writable.push(ref)
+  }
+  return writable.sort((a, b) => a.table.localeCompare(b.table) || a.column.localeCompare(b.column))
+}
+
+/**
+ * Apply the plan through PostgREST, because there is no psql on the machines this runs from and
+ * nine hundred lines of SQL is not something to paste by hand.
+ *
+ * Not one transaction, so the order matters: the survivor is filled first, then the references
+ * are repointed, and the duplicate row is deleted last. A run that dies partway leaves both
+ * profiles alive with their rows split between them, which the scan finds again - rather than a
+ * deleted profile whose results went nowhere.
+ *
+ * A join table with a unique key (a like, a coach's star) rejects the repoint when the survivor
+ * already holds the same row. That is not a failure: both profiles were starred by one coach and
+ * one of the two rows is now redundant, so the duplicate's row is deleted instead.
+ */
+async function apply(
+  plan: Array<{ label: string; keepId: string; keep: Record<string, unknown>; drops: Array<{ id: string; row: Record<string, unknown>; sets: string[] }> }>,
+  refs: Array<{ table: string; column: string }>,
+) {
+  const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19)
+  /*
+   * Written outside the repository on purpose. The undo snapshot is the whole deleted row of
+   * every duplicate - 108 columns, among them a contact email, a phone number, a birthdate, a
+   * GPA and a Zelle address - and ranking-snapshots is a tracked directory. CLAUDE_SCRATCH or
+   * the system temp directory, never a path git can see.
+   */
+  const dir = process.env.CLAUDE_SCRATCH_DIR || process.env.TMPDIR || "/tmp"
+  const log = `${dir.replace(/\/$/, "")}/merge-duplicate-athletes-${stamp}.json`
+  await import("fs").then((fs) => fs.writeFileSync(log, JSON.stringify({ undo: "each drops[].row is the full deleted athlete row; re-insert it and repoint by hand", plan }, null, 2)))
+  console.log(`\nWRITING. Undo snapshot: ${log}\n`)
+  let moved = 0, collisions = 0, deleted = 0
+  for (const group of plan) {
+    console.log(group.label)
+    for (const drop of group.drops) {
+      if (drop.sets.length) {
+        const patch = Object.fromEntries(drop.sets.map((c) => [c, drop.row[c]]))
+        const { error } = await admin.from("athletes").update(patch).eq("id", group.keepId)
+        if (error) { console.log(`  FILL FAILED (${drop.sets.join(", ")}): ${error.message}`); continue }
+        console.log(`  filled ${drop.sets.length} field(s) on the survivor: ${drop.sets.join(", ")}`)
+      }
+      for (const ref of refs) {
+        const { error, count } = await admin.from(ref.table).update({ [ref.column]: group.keepId }, { count: "exact" }).eq(ref.column, drop.id)
+        if (!error) { if (count) { moved += count; console.log(`  ${ref.table}.${ref.column}: ${count} row(s) moved`) }; continue }
+        if (!/duplicate key|23505/i.test(error.message)) { console.log(`  ${ref.table}.${ref.column} FAILED: ${error.message}`); continue }
+        const { error: delErr, count: gone } = await admin.from(ref.table).delete({ count: "exact" }).eq(ref.column, drop.id)
+        if (delErr) { console.log(`  ${ref.table}.${ref.column} FAILED both ways: ${delErr.message}`); continue }
+        collisions += gone ?? 0
+        console.log(`  ${ref.table}.${ref.column}: the survivor already held the same row, dropped ${gone} redundant row(s)`)
+      }
+      const { error } = await admin.from("athletes").delete().eq("id", drop.id)
+      if (error) { console.log(`  DELETE FAILED for ${drop.id}: ${error.message}`); continue }
+      deleted++
+      console.log(`  deleted ${drop.id} (${String(drop.row.name)})`)
+    }
+    console.log()
+  }
+  console.log(`${deleted} duplicate profile(s) deleted, ${moved} row(s) moved, ${collisions} redundant row(s) dropped.`)
+  console.log(`Undo snapshot: ${log}`)
 }
 
 async function main() {
@@ -111,6 +184,8 @@ async function main() {
   console.log(`${refs.length} tables reference athletes. ${dupes.length} groups hold more than one profile of the same wrestler.\n`)
 
   const statements: string[] = []
+  /* The same plan the SQL describes, for --write to apply through PostgREST. */
+  const plan: Array<{ label: string; keepId: string; keep: Record<string, unknown>; drops: Array<{ id: string; row: Record<string, unknown>; sets: string[] }> }> = []
   for (const [label, rows] of dupes) {
     const scored = []
     for (const row of rows) {
@@ -133,6 +208,8 @@ async function main() {
 
     // Fill the survivor's empty columns from the duplicates before anything is deleted.
     const columns = Object.keys(keep.row).filter((c) => c !== "id" && c !== "created_at")
+    /** Per duplicate, the survivor columns to take from it: its fills and any preferred value. */
+    const takes = new Map<string, string[]>()
     for (const dup of merge) {
       const fills = columns.filter((c) => {
         const k = keep.row[c]
@@ -166,6 +243,7 @@ async function main() {
             `update public.athletes a set "${c}" = b."${c}" from public.athletes b` +
               ` where a.id = '${keep.row.id}' and b.id = '${dup.row.id}';`,
           )
+          takes.set(String(dup.row.id), [...(takes.get(String(dup.row.id)) ?? []), c])
           continue
         }
         console.log(
@@ -179,7 +257,14 @@ async function main() {
             ` where a.id = '${keep.row.id}' and b.id = '${dup.row.id}';`,
         )
       }
+      takes.set(String(dup.row.id), [...fills, ...(takes.get(String(dup.row.id)) ?? [])])
     }
+    plan.push({
+      label,
+      keepId: String(keep.row.id),
+      keep: keep.row,
+      drops: merge.map((d) => ({ id: String(d.row.id), row: d.row, sets: takes.get(String(d.row.id)) ?? [] })),
+    })
 
     for (const dup of merge) {
       for (const ref of refs) {
@@ -192,8 +277,9 @@ async function main() {
     console.log()
   }
 
+  if (write) return apply(plan, refs)
   if (!emitSql) {
-    console.log("Re-run with --sql to print the SQL.")
+    console.log("Re-run with --sql to print the SQL, or --write to apply it here.")
     return
   }
 
