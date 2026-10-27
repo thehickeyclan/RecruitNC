@@ -9,7 +9,6 @@ import Link from "next/link"
  * links, so the row is hidden under it; admins, on the community bar, still get the tabs.
  */
 const TABS = [
-  { key: "home", href: "/coach-home", label: "Coach Home" },
   { key: "recruits", href: "/my-recruits", label: "My Recruits" },
   { key: "standard", href: "/perfect-recruit", label: "Perfect Recruit" },
   { key: "messages", href: "/inbox", label: "Messages" },

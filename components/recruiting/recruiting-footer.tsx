@@ -10,10 +10,9 @@ import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
  * to the community site. None of the store, Blue or giving links components/footer.tsx carries.
  */
 const LINKS = [
-  { href: "/coach-home", label: "Coach Home" },
+  { href: "/my-recruits", label: "My Recruits" },
   { href: "/prospects/all", label: "Athletes" },
   { href: "/public-rankings", label: "Rankings" },
-  { href: "/my-recruits", label: "My Recruits" },
   { href: "/perfect-recruit", label: "Perfect Recruit" },
   { href: "/compare?src=footer", label: "Compare" },
 ]

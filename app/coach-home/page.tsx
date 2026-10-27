@@ -1,41 +1,15 @@
 /**
- * Coach Home: everything a college coach uses, on one page.
- *
- * A coach had to know the site to use it - rankings under one menu, profiles under another, the
- * comparison under a third, My Recruits and messages somewhere else again - and most never found
- * past the page they landed on (Matt, 10 October 2026). Nothing here is new: it is the search, the
- * coach's own board and inbox, and a door to each tool, in the order a coach reaches for them.
- *
- * Verified college coaches and admins, on the comparison's rule (lib/compare-access.ts) without
- * its tester list - testers were given the comparison, not the rest of a coach's account.
+ * Coach Home folded into My Recruits (Matt, 27 Oct 2026): a coach's home is the board with its
+ * funnel, then what needs him (app/my-recruits, components/coach/my-recruits-home.tsx). Old links
+ * and bookmarks land there, keeping any query (?view=coach). Its sections live on in
+ * ./coach-home-client.tsx and ./load-coach-home.ts, which My Recruits uses.
  */
-import { cookies } from "next/headers"
-import { VIEW_GENDER_COOKIE } from "@/lib/recruiting/coach-program"
-import { createAdminClient } from "@/lib/supabase/admin"
-import { createClient } from "@/lib/supabase/server"
-import CoachHomeClient from "./coach-home-client"
-import { loadCoachHome } from "./load-coach-home"
-import { shareMetadata } from "@/lib/share-metadata"
-import { productName } from "@/lib/recruiting/product-name"
+import { redirect } from "next/navigation"
 
 export const dynamic = "force-dynamic"
 
-export const metadata = shareMetadata({
-  title: "Coach Home",
-  description: "Recruit North Carolina wrestlers: results, academics and contact info. Free for college coaches.",
-  path: "/coach-home",
-  kicker: "RecruitNC · For college coaches",
-  pageTitle: `Coach Home | ${productName()}`,
-})
-
-export default async function CoachHomePage() {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return <CoachHomeClient access="signed-out" data={null} />
-
-  const chosen = (await cookies()).get(VIEW_GENDER_COOKIE)?.value
-  const loaded = await loadCoachHome(createAdminClient(), user.id, chosen)
-  return <CoachHomeClient access={loaded.access} data={loaded.data} />
+export default async function CoachHomePage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const q = new URLSearchParams()
+  for (const [k, v] of Object.entries(await searchParams)) if (typeof v === "string") q.set(k, v)
+  redirect(q.toString() ? `/my-recruits?${q}` : "/my-recruits")
 }
