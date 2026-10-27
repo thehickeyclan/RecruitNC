@@ -141,8 +141,8 @@ export function Navbar() {
   /* Still under Athletes for the menu's active state: they are the commitments page's other tabs. */
   const commitmentTabs = [{ href: "/colleges" }, { href: "/high-schools" }]
   const rankingsItem = { href: "/public-rankings", label: "Rankings" }
-  const recruitingItem = { href: "/recruiting/tournaments", label: "Recruiting" }
-  const athletesItems = [profilesItem, compareItem, ...commitmentItems, ...commitmentTabs, recruitingItem]
+  // "Recruiting" (/recruiting/tournaments) left this menu 27 Oct 2026: it is a single article, not a section.
+  const athletesItems = [profilesItem, compareItem, ...commitmentItems, ...commitmentTabs]
 
   const programsItems = [
     { href: "/command-center", label: "Recruiting Command Center", description: "Your recruiting assistant, 8th grade to signing" },
@@ -337,10 +337,6 @@ export function Navbar() {
                       <a href={item.href} className="block w-full cursor-pointer">{item.label}</a>
                     </DropdownMenuItem>
                   ))}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <a href={recruitingItem.href} className="block w-full cursor-pointer">{recruitingItem.label}</a>
-                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               <a href="/public-rankings" className={navLinkClass("/public-rankings")}>Rankings</a>
@@ -913,7 +909,6 @@ export function Navbar() {
                       {commitmentItems.map((item) => (
                         <a key={item.href} href={item.href} className={mobileSubLinkClass(item.href)} onClick={() => setIsOpen(false)}>{item.label}</a>
                       ))}
-                      <a href={recruitingItem.href} className={mobileSubLinkClass(recruitingItem.href)} onClick={() => setIsOpen(false)}>{recruitingItem.label}</a>
                     </div>
                   </div>
                   <a href={rankingsItem.href} className={mobileLinkClass(rankingsItem.href)} onClick={() => setIsOpen(false)}>{rankingsItem.label}</a>
