@@ -69,3 +69,14 @@ export function messagingRule(input: {
     href: "/recruiting/learn/division-1",
   }
 }
+
+/**
+ * The day a Division I coach may start recruiting this wrestler, while it is still ahead; null
+ * once it has passed or when the class is unknown. The board's "Contact opens" line.
+ */
+export function d1ContactOpens(gender: string | null, classYear: number | null, now: Date = new Date()): { date: string; label: string } | null {
+  if (!classYear) return null
+  const row = (D1_CONTACT[d1TrackFor(gender, classYear)].rows ?? [])[0]
+  const opens = row ? resolveRuleDate(row.value, classYear, now) : null
+  return opens && !opens.open ? { date: opens.date.toISOString().slice(0, 10), label: opens.label } : null
+}
