@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { firstLast, prefersDuplicate } from "@/lib/duplicate-athletes"
+import { firstLast, prefersDuplicate, sameWrestler, type DuplicateCandidate } from "@/lib/duplicate-athletes"
 
 describe("firstLast", () => {
   it("ignores a nickname sitting in the middle", () => {
@@ -53,5 +53,49 @@ describe("prefersDuplicate", () => {
 
   it("leaves an email conflict to a person", () => {
     expect(prefersDuplicate("contactEmail", "coach@school.k12.nc.us", "athlete@gmail.com")).toBe(false)
+  })
+})
+
+describe("sameWrestler", () => {
+  const at = (over: Partial<DuplicateCandidate> = {}): DuplicateCandidate => ({
+    id: "a", name: "Alex Rodriguez", highschool: "Cardinal Gibbons", state: "NC", graduationyear: 2027, gender: "Male", ...over,
+  })
+
+  it("is certain when the school and class agree and only the spelling of the name differs", () => {
+    /* Each of these was a real pair of pages for one wrestler. */
+    for (const [x, y] of [
+      ["Alex Rodriguez", "Alexander Rodriguez"],
+      ["Wes Files", "Wesley Files"],
+      ["Zoe Wolford", "Zoey Wolford"],
+      ["Jerry Salazar-Mendoza", "Jerry Salazar Mendoza"],
+      ["Tor'Rina Rushing", "TorRina Rushing"],
+      ["Steven `Jett` Johnson", "Jett Johnson"],
+    ]) {
+      expect(sameWrestler(at({ name: x }), at({ id: "b", name: y }))?.grade, `${x} / ${y}`).toBe("certain")
+    }
+  })
+
+  it("will not merge two wrestlers who share a name", () => {
+    /*
+     * Maryland's two Logan Browns: Northwest's, class of 2027, and McDonogh's, class of 2028.
+     * The first went unminted once because the second existed and shared his name.
+     */
+    const a = at({ name: "Logan Brown", highschool: "Northwest", state: "MD", graduationyear: 2027 })
+    const b = at({ id: "b", name: "Logan Brown", highschool: "McDonogh", state: "MD", graduationyear: 2028 })
+    expect(sameWrestler(a, b)).toBeNull()
+  })
+
+  it("never crosses a state or a stated gender", () => {
+    /* Saniya Brown is a Georgia wrestler and a North Carolina wrestler, and they are two people. */
+    expect(sameWrestler(at({ name: "Saniya Brown", state: "GA", highschool: "Bainbridge", graduationyear: 2028 }), at({ id: "b", name: "Saniya Brown", state: "NC", highschool: "Overhills", graduationyear: 2028 }))).toBeNull()
+    /* A brother and a sister share a surname and a house. */
+    expect(sameWrestler(at({ gender: "Male" }), at({ id: "b", gender: "Female" }))).toBeNull()
+  })
+
+  it("holds, rather than merging, what a person should look at", () => {
+    expect(sameWrestler(at(), at({ id: "b", highschool: null }))?.grade).toBe("likely")
+    expect(sameWrestler(at(), at({ id: "b", graduationyear: null }))?.grade).toBe("likely")
+    expect(sameWrestler(at(), at({ id: "b", highschool: "Green Hope" }))?.grade).toBe("review")
+    expect(sameWrestler(at(), at({ id: "b", graduationyear: 2028 }))?.grade).toBe("review")
   })
 })

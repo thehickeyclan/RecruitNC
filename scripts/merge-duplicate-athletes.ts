@@ -19,7 +19,7 @@
  *   merged on a shared surname. Every group is printed for a human to read before any SQL runs.
  */
 import { createClient } from "@supabase/supabase-js"
-import { firstLast, prefersDuplicate, survivorScore } from "@/lib/duplicate-athletes"
+import { duplicateBlockKeys, prefersDuplicate, sameWrestler, survivorScore, type DuplicateCandidate } from "@/lib/duplicate-athletes"
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -50,20 +50,65 @@ async function athleteReferences(): Promise<Array<{ table: string; column: strin
 
 async function main() {
   const refs = await athleteReferences()
-  const { data: all, error } = await admin.from("athletes").select("*")
-  if (error) {
-    console.error("Could not read athletes:", error.message)
-    process.exit(1)
+  /*
+   * Paged, and ordered by id. A plain select stops at PostgREST's 1,000-row ceiling, which this
+   * read quietly hit the moment the second state landed: it was comparing the first 1,000 of
+   * 3,342 profiles and reporting no duplicates in the rest. Without the order the pages of such
+   * a read also repeat and skip rows.
+   */
+  const all: Array<Record<string, unknown>> = []
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await admin.from("athletes").select("*").order("id").range(from, from + 999)
+    if (error) {
+      console.error("Could not read athletes:", error.message)
+      process.exit(1)
+    }
+    all.push(...((data ?? []) as Array<Record<string, unknown>>))
+    if (!data || data.length < 1000) break
   }
 
-  const groups = new Map<string, Array<Record<string, unknown>>>()
-  for (const row of all ?? []) {
-    const key = `${firstLast(String(row.name))}|${row.graduationyear ?? ""}`
-    groups.set(key, [...(groups.get(key) ?? []), row])
+  /*
+   * Grouping is `sameWrestler` (lib/duplicate-athletes.ts), not a key string, because the
+   * duplicates that survive are the ones whose names do not key the same: Alex and Alexander
+   * Rodriguez at Cardinal Gibbons, Wes and Wesley Files at Frankfort. Only its "certain" verdict
+   * groups here - name, school and class year all agreeing - and "likely" and "review" are left
+   * to scripts/scan-duplicate-profiles.ts and a person. Rows are joined transitively, so three
+   * spellings of one wrestler become one group rather than three pairs.
+   */
+  const rows = all
+  const candidate = (r: Record<string, unknown>): DuplicateCandidate => ({
+    id: String(r.id), name: String(r.name ?? ""), wrestling_name: (r.wrestling_name as string) ?? null,
+    highschool: (r.highschool as string) ?? null, state: (r.state as string) ?? null,
+    graduationyear: r.graduationyear == null ? null : Number(r.graduationyear), gender: (r.gender as string) ?? null,
+  })
+  const blocks = new Map<string, Array<Record<string, unknown>>>()
+  for (const r of rows) for (const k of duplicateBlockKeys(candidate(r))) blocks.set(k, [...(blocks.get(k) ?? []), r])
+  const parent = new Map<string, string>()
+  const find = (x: string): string => (parent.get(x) === x || !parent.has(x) ? x : (parent.set(x, find(parent.get(x)!)), parent.get(x)!))
+  for (const r of rows) parent.set(String(r.id), String(r.id))
+  const reasons = new Map<string, string>()
+  for (const group of blocks.values()) {
+    if (group.length < 2 || group.length > 400) continue
+    for (let i = 0; i < group.length; i++) {
+      for (let j = i + 1; j < group.length; j++) {
+        const verdict = sameWrestler(candidate(group[i]!), candidate(group[j]!))
+        if (verdict?.grade !== "certain") continue
+        const [x, y] = [find(String(group[i]!.id)), find(String(group[j]!.id))]
+        if (x !== y) parent.set(x, y)
+        reasons.set(find(String(group[i]!.id)), verdict.why)
+      }
+    }
   }
-  const dupes = [...groups].filter(([, rows]) => rows.length > 1)
+  const byRoot = new Map<string, Array<Record<string, unknown>>>()
+  for (const r of rows) {
+    const root = find(String(r.id))
+    byRoot.set(root, [...(byRoot.get(root) ?? []), r])
+  }
+  const dupes = [...byRoot]
+    .filter(([, g]) => g.length > 1)
+    .map(([root, g]) => [`${g[0]!.name} · ${g[0]!.highschool ?? "no school"} · ${g[0]!.graduationyear ?? "no class"} — ${reasons.get(root) ?? "same wrestler"}`, g] as [string, Array<Record<string, unknown>>])
 
-  console.log(`${refs.length} tables reference athletes. ${dupes.length} name+class groups have more than one profile.\n`)
+  console.log(`${refs.length} tables reference athletes. ${dupes.length} groups hold more than one profile of the same wrestler.\n`)
 
   const statements: string[] = []
   for (const [label, rows] of dupes) {
