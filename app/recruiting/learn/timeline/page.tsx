@@ -25,11 +25,12 @@ import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "Wrestling recruiting timeline, grade by grade | RecruitNC",
+  title: `Wrestling recruiting timeline, grade by grade | ${productName()}`,
   description: "What a wrestling family should be doing each year from eighth grade to signing, with the dates college coaches may first call, meet and host a wrestler.",
 }
 

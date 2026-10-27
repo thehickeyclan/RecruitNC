@@ -13,11 +13,12 @@ import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { BrandName } from "@/components/recruiting/brand-name"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "The tournaments college wrestling coaches watch | RecruitNC",
+  title: `The tournaments college wrestling coaches watch | ${productName()}`,
   description: "Where college coaches want to see a wrestler compete: men's folkstyle, men's freestyle and Greco, and women's wrestling, with when and where each is held.",
 }
 

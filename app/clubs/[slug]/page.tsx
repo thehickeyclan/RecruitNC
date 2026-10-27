@@ -13,6 +13,7 @@ import { DEFAULT_PUBLIC_RANKINGS_CAP, PUBLISHED_PUBLIC_RANKINGS_YEARS } from "@/
 import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
 import { ClubClaimButton } from "@/components/clubs/club-claim-button"
 import { Archive, ExternalLink, Facebook, Instagram, MapPin, Phone, Mail, ShieldCheck } from "lucide-react"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
 
@@ -103,7 +104,7 @@ function isClosed(club: ClubRow): boolean {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params
   const club = await loadClub(slug)
-  if (!club) return { title: "Club not found | RecruitNC" }
+  if (!club) return { title: `Club not found | ${productName()}` }
 
   // cache() means this shares the page body's lookup rather than repeating it.
   const logoUrl = await loadClubLogo(

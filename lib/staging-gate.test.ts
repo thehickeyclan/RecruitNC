@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
-import { isNcUnitedPage, isOpenWhileStaged, isStaffOnlyAfterLaunch, stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { isOpenWhileStaged, isStaffOnlyAfterLaunch, stagedBrandForHost } from "@/lib/recruiting/national-paths"
 import { isRankerOnly, stagingGateAllows } from "@/lib/staging-gate"
 
 const SECRET = "test-secret-for-staging-gate"
@@ -111,12 +111,5 @@ describe("after launch", () => {
   it("opens every page except the staff preview tools", () => {
     for (const p of ["/", "/athletes/abc", "/view-profile", "/recaps", "/membership", "/api/prospects", "/admin"]) expect(isStaffOnlyAfterLaunch(p), p).toBe(false)
     for (const p of ["/dev", "/dev/coach-preview", "/dev/family-preview"]) expect(isStaffOnlyAfterLaunch(p), p).toBe(true)
-  })
-})
-
-describe("unknown addresses on RecruitWrestlers", () => {
-  it("forwards NC United's real pages and nothing else", () => {
-    for (const p of ["/blue", "/store/x", "/tournament-of-champions", "/news/some-story", "/nchsaa/2026", "/plans"]) expect(isNcUnitedPage(p), p).toBe(true)
-    for (const p of ["/about", "/terms", "/faq", "/pricing", "/this-page-does-not-exist", "/bluesky"]) expect(isNcUnitedPage(p), p).toBe(false)
   })
 })

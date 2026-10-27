@@ -16,6 +16,7 @@ import { createClient } from "@/lib/supabase/server"
 import CoachHomeClient from "./coach-home-client"
 import { loadCoachHome } from "./load-coach-home"
 import { shareMetadata } from "@/lib/share-metadata"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
 
@@ -24,7 +25,7 @@ export const metadata = shareMetadata({
   description: "Recruit North Carolina wrestlers: results, academics and contact info. Free for college coaches.",
   path: "/coach-home",
   kicker: "RecruitNC · For college coaches",
-  pageTitle: "Coach Home | RecruitNC",
+  pageTitle: `Coach Home | ${productName()}`,
 })
 
 export default async function CoachHomePage() {

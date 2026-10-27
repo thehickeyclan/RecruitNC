@@ -9,6 +9,7 @@ import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { ViewProfileClient } from "./view-profile-client"
+import { productName } from "@/lib/recruiting/product-name"
 
 /**
  * Resolved per request, not cached.
@@ -40,10 +41,10 @@ export async function generateMetadata({ searchParams }: ViewProfilePageProps): 
   const noIndex = { index: false, follow: false, nocache: true } as const
   const params = await searchParams
   const id = params.id?.trim() ?? ""
-  if (!id) return { title: "Athlete profile | RecruitNC", robots: noIndex }
+  if (!id) return { title: `Athlete profile | ${productName()}`, robots: noIndex }
 
   const result = await loadPublicAthleteProfile(id)
-  if (!result.ok) return { title: "Athlete profile | RecruitNC", robots: noIndex }
+  if (!result.ok) return { title: `Athlete profile | ${productName()}`, robots: noIndex }
 
   const a = result.athlete as Record<string, unknown>
   const name = typeof a.name === "string" && a.name.trim() ? a.name.trim() : "Athlete"

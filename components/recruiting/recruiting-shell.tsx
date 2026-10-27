@@ -95,7 +95,7 @@ function SideMenu({ items, isActive, onNavigate, partner }: { items: Item[]; isA
   )
 }
 
-export function RecruitingShell({ children }: { children: React.ReactNode }) {
+export function RecruitingShell({ children, hideNcUnited = false }: { children: React.ReactNode; hideNcUnited?: boolean }) {
   const onRw = useOnRecruitWrestlers()
   const [menuOpen, setMenuOpen] = useState(false)
   const [notificationsOpen, setNotificationsOpen] = useState(false)
@@ -168,11 +168,13 @@ export function RecruitingShell({ children }: { children: React.ReactNode }) {
   return (
     <div id="app-content" data-shell="recruiting" className="group/shell relative flex min-h-screen flex-col bg-[#0A1628] print:bg-white">
       <header className="sticky top-0 z-50 flex h-14 items-center gap-4 border-b border-white/10 bg-[#0A1628] px-4 print:hidden lg:px-5">
-        <a href="/coach-home" className="flex shrink-0 items-baseline gap-3" aria-label={`${RECRUITING_BRAND.name} — Home`}>
+        <a href="/coach-home" className="flex shrink-0 items-baseline gap-3" aria-label={`${onRw || hideNcUnited ? "RecruitWrestlers" : RECRUITING_BRAND.name} — Home`}>
           {/* RecruitNC here; RecruitWrestlers on recruitwrestlers.com (app/recruit-brand.css). */}
-          <span className="ncu-only">
-            <RecruitingWordmark className="text-xl" />
-          </span>
+          {hideNcUnited ? null : (
+            <span className="ncu-only">
+              <RecruitingWordmark className="text-xl" />
+            </span>
+          )}
           <BrandLockup />
           <span className="hidden text-[10px] font-semibold uppercase tracking-[0.25em] text-white/45 sm:inline">{recruitingCoverage(onRw)} wrestling</span>
         </a>

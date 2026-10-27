@@ -14,10 +14,11 @@ import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { ClockCalculator } from "./clock-calculator"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
 export const metadata: Metadata = {
-  title: "Division I and II eligibility clock calculator | RecruitNC",
+  title: `Division I and II eligibility clock calculator | ${productName()}`,
   description: "How many seasons of Division I eligibility your wrestler has under the NCAA's five-year, age-based model, from birth month, class and plans after high school.",
 }
 

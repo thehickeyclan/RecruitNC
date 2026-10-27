@@ -3,13 +3,14 @@ import type { Metadata } from "next"
 import { CollegeProgramMap } from "@/components/colleges/college-program-map"
 import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
 import { BrandName } from "@/components/recruiting/brand-name"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const metadata: Metadata = {
-  title: "College Wrestling Program Map | RecruitNC",
+  title: `College Wrestling Program Map | ${productName()}`,
   description:
     "Every college wrestling program in the country for 2026-27 — NCAA Division I, II, III, NAIA and NJCAA, men's and women's — on one map.",
   openGraph: {
-    title: "College Wrestling Program Map | RecruitNC",
+    title: `College Wrestling Program Map | ${productName()}`,
     description: "Every NCAA, NAIA and NJCAA wrestling program for 2026-27, men's and women's, on one map.",
     url: "/recruiting/college-map",
     type: "website",

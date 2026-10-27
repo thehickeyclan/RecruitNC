@@ -3,9 +3,10 @@ import Link from "next/link"
 import { ClubManageClient } from "@/components/clubs/club-manage-client"
 import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
 import { ShieldCheck } from "lucide-react"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const metadata: Metadata = {
-  title: "Manage your club | RecruitNC",
+  title: `Manage your club | ${productName()}`,
   description: "Coaches and club owners keep their RecruitNC club listing current.",
   // A personal management screen, not something to index.
   robots: { index: false, follow: false },

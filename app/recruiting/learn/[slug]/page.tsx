@@ -19,6 +19,7 @@ import { familyFocus } from "@/lib/recruiting/family-focus"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
 
@@ -26,7 +27,7 @@ type Params = { params: Promise<{ slug: string }> }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const page = learnPage((await params).slug)
-  if (!page) return { title: "Recruiting rules | RecruitNC" }
+  if (!page) return { title: `Recruiting rules | ${productName()}` }
   return { title: `${page.title}: wrestling recruiting rules | RecruitNC`, description: page.summary }
 }
 

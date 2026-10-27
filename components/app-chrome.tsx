@@ -122,7 +122,11 @@ function useRecruitingShell(): boolean {
 /**
  * Spartan campaign and future microsites: no portal nav/footer/chat so the page owns the full frame.
  */
-export function AppChrome({ children }: { children: React.ReactNode }) {
+/**
+ * hideNcUnited: RecruitWrestlers' own Vercel project. Its pages carry no NC United menu, footer,
+ * logo, email or socials at all - not even hidden (Matt's NC United sweep, 27 Oct 2026).
+ */
+export function AppChrome({ children, hideNcUnited = false }: { children: React.ReactNode; hideNcUnited?: boolean }) {
   const pathname = usePathname()
   const path = pathname && pathname.length > 0 ? pathname : "/"
   /*
@@ -211,7 +215,7 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
   if (recruitingShell) {
     return (
       <>
-        <RecruitingShell>
+        <RecruitingShell hideNcUnited={hideNcUnited}>
           <ConditionalAuthGuard>{children}</ConditionalAuthGuard>
         </RecruitingShell>
       </>
@@ -225,19 +229,23 @@ export function AppChrome({ children }: { children: React.ReactNode }) {
         the first paint - so recruitwrestlers.com never flashes NC United's menu, and nothing about
         app.ncwrestlingunited.com changes.
       */}
-      <div className="ncu-only">
-        <Navbar />
-      </div>
+      {hideNcUnited ? null : (
+        <div className="ncu-only">
+          <Navbar />
+        </div>
+      )}
       <BrandHeader />
-      <div className="ncu-only">{familyBand === "top" ? <FamilyProfileBand /> : null}</div>
+      {hideNcUnited ? null : <div className="ncu-only">{familyBand === "top" ? <FamilyProfileBand /> : null}</div>}
       <main className="flex-1">
         <ConditionalAuthGuard>{children}</ConditionalAuthGuard>
       </main>
-      <div className="ncu-only">
-        {familyBand === "foot" ? <FamilyProfileBand /> : null}
-        <Footer />
-        {chat}
-      </div>
+      {hideNcUnited ? null : (
+        <div className="ncu-only">
+          {familyBand === "foot" ? <FamilyProfileBand /> : null}
+          <Footer />
+          {chat}
+        </div>
+      )}
       <BrandFooter />
     </div>
   )

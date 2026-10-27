@@ -3,10 +3,11 @@ import type { Metadata } from "next"
 import { RankingsSalesClient } from "../rankings/(index)/rankings-sales-client"
 import { loadSalesData } from "@/lib/recruiting/sales-data"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
 export const metadata: Metadata = {
-  title: "Plans | RecruitNC",
+  title: `Plans | ${productName()}`,
   description: "Free, Insider, Command Center and NC United Blue: what each plan includes and what it costs.",
 }
 

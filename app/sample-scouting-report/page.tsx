@@ -10,6 +10,7 @@ import { withClassPositionFloor } from "@/lib/rankings/report-star-floor"
 import { writeSummary } from "@/lib/scouting-report-summary"
 import { scoutingReportAvailable } from "@/lib/scouting-report-access"
 import { ScoutingReportDocument } from "@/app/athletes/[id]/scouting-report/scouting-report-client"
+import { productName } from "@/lib/recruiting/product-name"
 
 /**
  * One real scouting report, on an unlisted page, for the college coach outreach to link to.
@@ -31,7 +32,7 @@ import { ScoutingReportDocument } from "@/app/athletes/[id]/scouting-report/scou
 const SAMPLE_ATHLETE_ID = "1a2d638e-5978-45d4-b6c8-bc95ba754367"
 
 export const metadata: Metadata = {
-  title: "Scouting report | RecruitNC",
+  title: `Scouting report | ${productName()}`,
   /* A recruiting document about a minor is never indexed, sample or not. */
   robots: { index: false, follow: false },
 }

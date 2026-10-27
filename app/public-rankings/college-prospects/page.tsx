@@ -14,12 +14,15 @@ import { publishedDateLabel } from "@/lib/rankings/published-date"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
 import { BrandName } from "@/components/recruiting/brand-name"
+import { headers } from "next/headers"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { productName } from "@/lib/recruiting/product-name"
 
 // Per-viewer: gated inside, so it cannot be cached as one document for everybody.
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "Top 75 College Prospects | RecruitNC",
+  title: `Top 75 College Prospects | ${productName()}`,
   description:
     "North Carolina's top 75 college wrestling prospects from the classes of 2027 and 2028.",
 }
@@ -48,7 +51,7 @@ export default async function TopHundredPage() {
             This list requires rankings access.
           </p>
           <Link
-            href="/rankings"
+            href={stagedBrandForHost((await headers()).get("host")) === "national" ? "/membership" : "/rankings"}
             className="mt-6 inline-block rounded-lg bg-[#d6b75d] px-5 py-2.5 text-sm font-semibold text-[#061224] hover:bg-[#c5a84d]"
           >
             See what is included

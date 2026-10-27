@@ -23,9 +23,10 @@ import {
   WOMENS,
   type TransferSource,
 } from "@/lib/recruiting/learn/transfer-portal"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const metadata: Metadata = {
-  title: "The wrestling transfer portal: what high school families need to know | RecruitNC",
+  title: `The wrestling transfer portal: what high school families need to know | ${productName()}`,
   description: "How the transfer portal changes college wrestling recruiting, the transfer rules for every level, and what families should do and ask.",
 }
 

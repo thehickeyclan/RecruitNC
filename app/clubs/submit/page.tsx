@@ -4,9 +4,10 @@ import { ClubSubmissionForm } from "@/components/clubs/club-submission-form"
 import { TocPatrioticBar, tocDisplayClass } from "@/components/toc/toc-theme"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClientFresh } from "@/lib/supabase/admin"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const metadata: Metadata = {
-  title: "Submit a Wrestling Club | RecruitNC",
+  title: `Submit a Wrestling Club | ${productName()}`,
   description: "Submit a North Carolina wrestling club for review and inclusion on the RecruitNC club map.",
 }
 
