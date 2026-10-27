@@ -7,6 +7,7 @@ import { normalizePhoneForStorage } from "@/lib/phone-format"
 import { notifyStaffBlockedCoachSignup, notifyStaffCoachSignup } from "@/lib/staff-alerts-sms"
 import { blockedCoachMatch } from "@/lib/coach-blocklist"
 import { assignCoachCollege, collegeResultNote } from "@/lib/coach-college"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 
 export const dynamic = "force-dynamic"
 
@@ -84,6 +85,8 @@ export async function POST(request: NextRequest) {
       full_name: fullName,
       profile_type: "college-coach",
       institution: college,
+      // Which site the coach signed up on: emails sent later carry that site's name.
+      signup_brand: stagedBrandForHost(request.headers.get("host")) === "national" ? "recruitwrestlers" : "ncunited",
     },
   })
 

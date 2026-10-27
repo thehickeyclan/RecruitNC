@@ -4,6 +4,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { canonicalRole, shouldAutoApproveCoach } from "@/lib/coach-auto-approve"
+import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 
 // Safe, additive: extends existing handler to accept first/last/cell/profileType
 export async function POST(request: NextRequest) {
@@ -89,7 +90,10 @@ export async function POST(request: NextRequest) {
 
     const safeReturnTo =
       typeof returnTo === "string" && returnTo.startsWith("/") && !returnTo.startsWith("//") ? returnTo : undefined
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+    // The confirmation link returns to the site the person signed up on: a RecruitWrestlers family
+    // was sent back to NC United (Matt's NC United sweep, 27 Oct 2026).
+    const signupBrand = stagedBrandForHost(request.headers.get("host")) === "national" ? "recruitwrestlers" : "ncunited"
+    const baseUrl = signupBrand === "recruitwrestlers" ? "https://www.recruitwrestlers.com" : process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
     const emailRedirectTo = safeReturnTo
       ? `${baseUrl}/auth/callback?next=${encodeURIComponent(safeReturnTo)}`
       : `${baseUrl}/auth/callback`
@@ -106,6 +110,8 @@ export async function POST(request: NextRequest) {
           last_name: lastName || undefined,
           cell_phone: cellPhone || undefined,
           profile_type: profileType || undefined,
+          // Which site the account began on: emails and alerts sent later carry that site's name.
+          signup_brand: signupBrand,
         },
       },
     })
