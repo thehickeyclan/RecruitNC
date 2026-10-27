@@ -48,6 +48,16 @@ function loadEnv() {
   }
 }
 
+/**
+ * `--require-team` — for a field that draws from every state.
+ *
+ * Without it a wrestler links whenever his name is unique among our profiles, whatever school
+ * the bout names. See matchAthlete in lib/other-tournament-import.ts for what that did to the
+ * 2025 Beast of the East file. Pass it for the Beast, the Ironman, Powerade, National Prep and
+ * any other national bracket; leave it off for a state's own field.
+ */
+const REQUIRE_TEAM = process.argv.includes("--require-team")
+
 function arg(name: string, fallback?: string): string {
   const index = process.argv.indexOf(`--${name}`)
   if (index >= 0 && process.argv[index + 1]) return process.argv[index + 1]!
@@ -106,7 +116,7 @@ async function main() {
 
   for (const athlete of parsed.athletes) {
     const key = `${athlete.athleteName.toLowerCase()}|${athlete.club.toLowerCase()}`
-    const outcome = matchAthlete(athlete.athleteName, athlete.club, index)
+    const outcome = matchAthlete(athlete.athleteName, athlete.club, index, { requireTeam: REQUIRE_TEAM })
     if (outcome.status === "matched") {
       resolved.set(key, {
         id: outcome.athlete.id,
