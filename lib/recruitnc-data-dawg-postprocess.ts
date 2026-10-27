@@ -3,6 +3,8 @@
  * After porting Legacy’s `app/api/ai/chat/route.ts`, call `applyRecruitNcDataDawgAnswerPostProcess(answer)`
  * on the final `answer` string before `NextResponse.json` (main success path and any path that returns `answer`).
  */
+import { productName } from "@/lib/recruiting/product-name"
+
 
 const RECRUITNC_APP_URL = "https://app.ncwrestlingunited.com"
 
@@ -80,7 +82,7 @@ const PATH_LABELS: Array<[RegExp, (m: RegExpMatchArray) => string]> = [
   [/^\/fargo\/?$/, () => "Fargo results"],
   [/^\/nchsaa\/?$/, () => "NCHSAA results"],
   [/^\/nhsca\/?$/, () => "NHSCA results"],
-  [/^\/(?:public-)?rankings\b/, () => "RecruitNC rankings"],
+  [/^\/(?:public-)?rankings\b/, () => `${productName()} rankings`],
   [/^\/college-commits\b/, () => "College commits"],
   [/^\/recruiting\/college-map\b/, () => "College program map"],
   [/^\/recruiting\/schools\b/, () => "College page"],
@@ -119,7 +121,7 @@ function labelForUrl(rawUrl: string): string {
       if (m) return label(m)
     }
     const first = path.split("?")[0].split("/").filter(Boolean)[0]
-    return first ? titleCaseSegment(first) : "RecruitNC"
+    return first ? titleCaseSegment(first) : productName()
   }
 
   return host.replace(/^www\./, "")
