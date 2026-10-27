@@ -2059,7 +2059,8 @@ export function AthleteDetail({
       */}
       {!isViewingOwnProfile && !isAdmin && (
         <div className={cn("px-1 empty:hidden", mobileRecruiterLayout && PROFILE_SECTION_ORDER.claim)}>
-          {athlete.claimed_by_user_id ? (
+          {/* is_claimed: a signed-out visitor is not told who owns it (lib/athlete-private-fields.ts). */}
+          {athlete.claimed_by_user_id || (athlete as { is_claimed?: boolean }).is_claimed ? (
             <ParentLinkButton athleteId={String(athlete.id)} athleteName={athleteName} />
           ) : (
             <ClaimProfileButton
