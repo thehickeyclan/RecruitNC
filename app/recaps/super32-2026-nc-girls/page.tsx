@@ -329,7 +329,8 @@ export default async function Super32GirlsRecapPage({ searchParams }: { searchPa
   const paras = (assessment?.body ?? "").split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
 
   return (
-    <main style={{ WebkitPrintColorAdjust: "exact", printColorAdjust: "exact", ...RW_ACCENT }} className="mx-auto max-w-4xl px-4 py-6">
+    // A light page on RecruitWrestlers' navy site: the recap is written dark-on-light (as the coach reports).
+    <main style={{ WebkitPrintColorAdjust: "exact", printColorAdjust: "exact", ...RW_ACCENT }} className="mx-auto my-4 max-w-4xl rounded-2xl bg-[#f7f8fb] px-4 py-6 text-gray-900 md:px-6 print:my-0 print:rounded-none print:bg-white">
       {!PUBLIC && (
         <div className="mb-4 rounded-md bg-amber-100 px-3 py-2 text-sm font-semibold text-amber-900">
           Draft — visible to admins only. Set SUPER32_GIRLS_RECAP_PUBLIC=1 to publish.{" "}
