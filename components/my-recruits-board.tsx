@@ -37,7 +37,19 @@ const dayLabel = (iso: string) =>
   new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
 
 /** The board itself; `initialData` lets it render without a fetch (previews, tests). */
-export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload | null }) {
+/**
+ * needsYou: shown under the funnel (messages to answer, alerts, a report ready). below: after the
+ * board (suggested wrestlers, competing next). My Recruits is the coach's home (Matt, 27 Oct 2026).
+ */
+export function MyRecruitsBoard({
+  initialData = null,
+  needsYou = null,
+  below = null,
+}: {
+  initialData?: Payload | null
+  needsYou?: React.ReactNode
+  below?: React.ReactNode
+}) {
   const [data, setData] = useState<Payload | null>(initialData)
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState("")
@@ -108,6 +120,14 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
     )
   }, [data, query, classYear, stage, appliedOnly])
   const appliedCount = useMemo(() => (data?.recruits ?? []).filter((r) => r.applied.applied).length, [data])
+  /*
+   * The first ten, so the funnel and what needs the coach stay in view with a long board (Matt,
+   * 27 Oct 2026). A search shows every match; "Show all" opens the rest.
+   */
+  const [showAll, setShowAll] = useState(false)
+  const FIRST = 10
+  const collapsed = !showAll && !query.trim() && rows.length > FIRST
+  const shown = collapsed ? rows.slice(0, FIRST) : rows
 
   /** Applied or not, for the whole staff. Shown at once and put back if the save fails. */
   const setApplied = async (athleteId: string, applied: boolean) => {
@@ -217,6 +237,8 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
           ) : !data ? (
             <p className="mt-8 text-sm text-white/50">Loading your recruits…</p>
           ) : data.recruits.length === 0 ? (
+            <>
+            {needsYou}
             <div className="mt-8 rounded-xl border border-white/10 bg-white/[0.03] p-8 text-center">
               <Star className="mx-auto h-8 w-8 text-[#D3B574]" aria-hidden />
               <p className="mt-3 text-lg font-bold">No recruits yet</p>
@@ -231,6 +253,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                 Browse the rankings
               </Link>
             </div>
+            </>
           ) : (
             <>
               <Funnel
@@ -241,6 +264,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                 applied={{ count: appliedCount, on: appliedOnly, toggle: () => setAppliedOnly((v) => !v) }}
               />
               {stageError ? <p className="mt-3 rounded-lg border border-red-400/30 bg-red-500/10 p-3 text-sm text-red-200">{stageError}</p> : null}
+              {needsYou}
 
               <div className="mt-4 flex flex-wrap items-center gap-2">
                 <label className="relative w-full sm:w-auto sm:min-w-[220px] sm:flex-1">
@@ -284,7 +308,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/10">
-                    {rows.map((r) => (
+                    {shown.map((r) => (
                       <tr key={r.athleteId} className="align-top hover:bg-white/[0.03]">
                         <td className="px-4 py-3">
                           <Link href={`/view-profile?id=${r.athleteId}`} className="flex items-center gap-3">
@@ -348,7 +372,7 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
 
               {/* Phones: a card per wrestler. */}
               <ul className="mt-4 space-y-2 md:hidden">
-                {rows.map((r) => (
+                {shown.map((r) => (
                   <li key={r.athleteId} className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
                     <div className="flex items-start gap-3">
                       <Link href={`/view-profile?id=${r.athleteId}`}>
@@ -395,8 +419,20 @@ export function MyRecruitsBoard({ initialData = null }: { initialData?: Payload 
                 ))}
                 {!rows.length ? <p className="p-6 text-center text-sm text-white/50">No recruits match.</p> : null}
               </ul>
+              {rows.length > FIRST && !query.trim() ? (
+                <div className="mt-3 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowAll((v) => !v)}
+                    className="rounded-full border border-white/20 px-4 py-1.5 text-sm font-semibold text-white/80 hover:border-white/40 hover:text-white"
+                  >
+                    {collapsed ? `Show all ${rows.length} recruits` : `Show the first ${FIRST}`}
+                  </button>
+                </div>
+              ) : null}
             </>
           )}
+          {below}
         </div>
 
         {logFor ? (

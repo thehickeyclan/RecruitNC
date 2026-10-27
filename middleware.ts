@@ -82,7 +82,17 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
       holding.headers.set("Cache-Control", "private, no-store")
       return holding
     }
-    if (pathname === "/") return NextResponse.rewrite(new URL("/recruitwrestlers", request.url))
+    if (pathname === "/") {
+      // A signed-in college coach's home is My Recruits here too: the home page is for families
+      // and visitors (Matt, 27 Oct 2026: a coach opening recruitwrestlers.com got the family menu).
+      const door = await coachFrontDoor(request.headers, request.cookies.getAll(), false)
+      if (door.redirect) {
+        const response = NextResponse.redirect(new URL(COACH_HOME_PATH, request.url), 307)
+        response.headers.set("Cache-Control", "private, no-store")
+        return response
+      }
+      return NextResponse.rewrite(new URL("/recruitwrestlers", request.url))
+    }
     // NC United's community admin tools stay on NC United's address (lib/recruiting/admin-scope.ts).
     if (isCommunityAdminPath(pathname)) {
       return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, APP_ORIGIN), 307)

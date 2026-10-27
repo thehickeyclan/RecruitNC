@@ -10,7 +10,7 @@ By that measure, the top of North Carolina's girls' lineup has arrived. Four yea
 
 The weekend had its leaders. Samuel (Cleveland, 132), a freshman, went 7-1 and became a two-time Super 32 All-American; after losing her quarterfinal she beat the girls who finished 7th, 5th and 4th. Taylor (Cary, 200), unseeded, beat the #3 seed and lost only to the champion.
 
-Not every number moved. Samuel and Taylor were North Carolina's only girls with winning records; North Carolina's girls went 26-82, and twenty-seven of those losses came against eventual medalists. Growing the depth behind the top two is the work in front of the state. The four-year comparison below shows where we've grown and where we haven't yet.
+Not every number moved. Samuel and Taylor were North Carolina's only girls with winning records; North Carolina's girls went 26-82, and twenty-seven of those losses came against eventual medalists. Twenty-eight of the 42, 67%, went 0-2, down slightly from 70% a year ago. Growing the depth behind the top two is the work in front of the state. The four-year comparison below shows where we've grown and where we haven't yet.
 
 *The boys' tournament, headlined by Braylen Yates's All-American finish, is covered in its own recap.*
 
@@ -22,9 +22,10 @@ Not every number moved. Samuel and Taylor were North Carolina's only girls with 
 | Match wins | 20 | 21 | 27 | 26 |
 | Wrestlers with winning records | 1 | 3 | 4 | 2 |
 | Wrestlers with at least one win | 13 | 11 | 12 | 14 |
+| Went 0-2 (% of wrestlers) | 59 | 68 | 70 | 67 |
 | All-Americans | 1 | 2 | 3 | 2 |
 
-*Wrestlers are counted for the state where they attend school, not their registration stamp, so Jaclyn Bouzakis, the 2024 and 2025 champion on a North Carolina stamp, who attends school in Pennsylvania, is not counted.*
+*Wrestlers are counted for the state where they attend school, not their registration stamp, so Jaclyn Bouzakis, the 2024 and 2025 champion on a North Carolina stamp, who attends school in Pennsylvania, is not counted. 0-2 counts: 19 of 32 in 2023, 23 of 34 in 2024, 28 of 40 in 2025, 28 of 42 in 2026.*
 
 ## How the Grades Work
 
