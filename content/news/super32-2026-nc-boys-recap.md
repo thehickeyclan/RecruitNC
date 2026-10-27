@@ -11,7 +11,7 @@ By that measure, this was an encouraging weekend. Three years ago, NC boys beat 
 
 The weekend had its leaders. Braylen Yates (East Rowan, 175) earned North Carolina's lone boys All-American medal. Mason Brown beat three top-15 seeds. Ellis Chia, a senior with less than two years in the sport, beat two at heavyweight. Brown and Chia each came within one win of the podium.
 
-Not every number moved. Four NC boys were still alive on Sunday morning, the same as last year and half of 2024's eight, and no NC boy beat a wrestler who finished on the podium. That's the next step. The three-year comparison below shows where we've grown and where we haven't yet.
+Not every number moved. Four NC boys were still alive on Sunday morning, the same as last year and half of 2024's eight, and no NC boy beat a wrestler who finished on the podium. Sixty of our 113 boys, 53%, went 0-2, about the same share as the last two years (51% in 2024 and 2025). Winning the first match is the next step for the middle of the lineup, and beating a medalist is the next step at the top. The three-year comparison below shows where we've grown and where we haven't yet.
 
 *The girls' tournament, headlined by Lauren Samuel (132) and Ella Taylor (200), both 3rd-place finishers, is covered in its own recap.*
 
@@ -25,9 +25,10 @@ Not every number moved. Four NC boys were still alive on Sunday morning, the sam
 | Wins over seeded opponents | 6 | 12 | 13 |
 | Wins over top-15 seeds | 2 | 6 | 11 |
 | Different wrestlers with a seeded win | 5 | 7 | 8 |
+| Went 0-2 (% of wrestlers) | 51 | 51 | 53 |
 | All-Americans | 0 | 1 | 1 |
 
-*Seeded-win rows count contested bouts only. Yates's blood-round win over #3 Joel Welch was a medical forfeit. It counts in his record and his All-American finish, but not as a contested win over a seed; the raw totals including it are 14 and 12. Wrestlers are counted for the state where they attend school, not their registration stamp.*
+*Seeded-win rows count contested bouts only. Yates's blood-round win over #3 Joel Welch was a medical forfeit. It counts in his record and his All-American finish, but not as a contested win over a seed; the raw totals including it are 14 and 12. Wrestlers are counted for the state where they attend school, not their registration stamp. 0-2 counts: 54 of 105 in 2024, 46 of 90 in 2025, 60 of 113 in 2026.*
 
 ## How the Grades Work
 
