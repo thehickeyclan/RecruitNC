@@ -45,10 +45,13 @@ export function MyRecruitsBoard({
   initialData = null,
   needsYou = null,
   below = null,
+  asUserId = null,
 }: {
   initialData?: Payload | null
   needsYou?: React.ReactNode
   below?: React.ReactNode
+  /** An admin viewing one coach's board (?as=): that coach's data, read-only. */
+  asUserId?: string | null
 }) {
   const [data, setData] = useState<Payload | null>(initialData)
   const [error, setError] = useState<string | null>(null)
@@ -65,7 +68,7 @@ export function MyRecruitsBoard({
   const pickedRows = picked.map((id) => data?.recruits.find((r) => r.athleteId === id)).filter((r): r is MyRecruitRow => Boolean(r))
 
   const load = () =>
-    fetch("/api/coaches/my-recruits", { credentials: "include" })
+    fetch(asUserId ? `/api/coaches/my-recruits?as=${encodeURIComponent(asUserId)}` : "/api/coaches/my-recruits", { credentials: "include" })
       .then(async (r) => {
         const body = await r.json().catch(() => ({}))
         if (!r.ok) throw new Error(body.error ?? "Could not load your recruits.")
@@ -88,7 +91,8 @@ export function MyRecruitsBoard({
   const [composeFor, setComposeFor] = useState<MyRecruitRow | null>(null)
   const [logFor, setLogFor] = useState<MyRecruitRow | null>(null)
   useEffect(() => {
-    if (initialData) return
+    // Viewing as a coach: the threads would be the admin's own, so none are shown.
+    if (initialData || asUserId) return
     fetch("/api/coach-messages", { credentials: "include" })
       .then((r) => r.json())
       .then((d: { threads?: Array<{ id: string; athleteId: string; viewerRole: string; unread: boolean; yourTurn?: boolean }> }) => {
@@ -124,7 +128,7 @@ export function MyRecruitsBoard({
    * The first ten, so the funnel and what needs the coach stay in view with a long board (Matt,
    * 27 Oct 2026). A search shows every match; "Show all" opens the rest.
    */
-  const [showAll, setShowAll] = useState(false)
+  const [showAll, setShowAll] = useState(Boolean(asUserId))
   const FIRST = 10
   const collapsed = !showAll && !query.trim() && rows.length > FIRST
   const shown = collapsed ? rows.slice(0, FIRST) : rows
@@ -200,6 +204,8 @@ export function MyRecruitsBoard({
 
   return (
       <main className="min-h-screen bg-[#0A1628] text-white">
+        {/* Read-only when an admin views a coach's board: every control is disabled, links still open. */}
+        <fieldset disabled={Boolean(asUserId)} className="contents">
         <div className={cn("mx-auto max-w-7xl px-4 py-8 sm:py-10", pickedRows.length ? "pb-28 sm:pb-28" : "")}>
           <CoachTabs active="recruits" className="mb-6" />
           <div className="flex flex-wrap items-end justify-between gap-3">
@@ -493,6 +499,7 @@ export function MyRecruitsBoard({
             </div>
           </div>
         ) : null}
+        </fieldset>
       </main>
   )
 }

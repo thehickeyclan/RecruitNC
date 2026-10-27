@@ -40,7 +40,7 @@ function MessagesToAnswer({ data }: { data: CoachHomeData }) {
   )
 }
 
-export function MyRecruitsHome({ data }: { data: CoachHomeData | null }) {
+export function MyRecruitsHome({ data, viewingAs = null }: { data: CoachHomeData | null; viewingAs?: { userId: string; label: string } | null }) {
   const womens = data?.viewGender === "Female"
   const needsYou = data ? (
     <div className="mt-2">
@@ -55,5 +55,18 @@ export function MyRecruitsHome({ data }: { data: CoachHomeData | null }) {
       <CompetingNextPanel data={data} />
     </div>
   ) : null
-  return <MyRecruitsBoard needsYou={needsYou} below={below} />
+  if (!viewingAs) return <MyRecruitsBoard needsYou={needsYou} below={below} />
+  return (
+    <>
+      <div className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-2 border-b border-[#A3E635]/40 bg-[#15243B] px-4 py-2 text-sm text-white">
+        <span>
+          Viewing as <span className="font-bold">{viewingAs.label}</span> · read-only
+        </span>
+        <Link href="/admin/view-as-coach" className="font-semibold text-[#A3E635] underline">
+          Pick another coach
+        </Link>
+      </div>
+      <MyRecruitsBoard needsYou={needsYou} below={below} asUserId={viewingAs.userId} />
+    </>
+  )
 }
