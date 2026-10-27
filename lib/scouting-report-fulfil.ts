@@ -11,7 +11,7 @@
 
 import { accountOfRow, type StripeAccount } from "@/lib/stripe-accounts"
 import type { SupabaseClient } from "@supabase/supabase-js"
-import { isSubscriptionKind, isSubscriptionLive, planTierForKind } from "@/lib/scouting-report-entitlement"
+import { isAnnualKind, isSubscriptionKind, isSubscriptionLive, planTierForKind } from "@/lib/scouting-report-entitlement"
 import {
   notifyStaffSubscriptionCancelled,
   notifyStaffSubscriptionStarted,
@@ -106,7 +106,7 @@ export async function fulfilScoutingReportCheckout(
 
     // Both plans land here; the kind in metadata says which was bought. The email is not in
     // the session metadata, so it comes from the profile the subscription was granted to.
-    const interval = String(params.metadata.kind ?? "") === "subscription_annual" ? "yr" : "mo"
+    const interval = isAnnualKind(String(params.metadata.kind ?? "")) ? "yr" : "mo"
     const { data: buyer } = await supabase
       .from("user_profiles")
       .select("email")

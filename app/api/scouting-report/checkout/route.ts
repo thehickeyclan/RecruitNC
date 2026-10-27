@@ -8,6 +8,8 @@ import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 import {
   SCOUTING_REPORT_PRICES,
   SUBSCRIPTION_PLANS,
+  isAnnualKind,
+  isCommandCenterKind,
   isSubscriptionKind,
   type ScoutingPurchaseKind,
 } from "@/lib/scouting-report-entitlement"
@@ -66,7 +68,8 @@ export async function POST(request: Request) {
     ? (body.kind as ScoutingPurchaseKind)
     : "single"
   const plan = isSubscriptionKind(kind) ? SUBSCRIPTION_PLANS[kind] : null
-  if (onRw && kind !== "subscription" && kind !== "command_center") {
+  // RecruitWrestlers sells Insider and the Command Center, monthly or yearly; never single reports.
+  if (onRw && !isSubscriptionKind(kind)) {
     return NextResponse.json({ error: "Not sold here." }, { status: 400 })
   }
   const athleteId = String(body.athleteId ?? "").trim()
@@ -112,9 +115,9 @@ export async function POST(request: Request) {
     const { viewer } = await resolveRankingViewer({ supabase, admin })
     // The Command Center is sold to anyone without the portal, including an Insider subscriber
     // upgrading; the Insider plans to anyone without the rankings.
-    if (kind === "command_center" ? hasPortalAccess(viewer) : canSeeProspectRanking(viewer)) {
+    if (isCommandCenterKind(kind) ? hasPortalAccess(viewer) : canSeeProspectRanking(viewer)) {
       return NextResponse.json(
-        kind === "command_center"
+        isCommandCenterKind(kind)
           ? { error: "Your account already includes the Command Center.", reason: "already_entitled_portal" }
           : { error: "Your account already includes the rankings.", reason: "already_entitled" },
         { status: 409 },
@@ -152,12 +155,12 @@ export async function POST(request: Request) {
             unit_amount: SCOUTING_REPORT_PRICES[kind],
             ...(plan ? { recurring: { interval: plan.interval } } : {}),
             product_data: {
-              name: kind === "command_center"
-                ? `${onRw ? "Recruiting" : "RecruitNC"} Command Center — monthly`
+              name: isCommandCenterKind(kind)
+                ? `${onRw ? "Recruiting" : "RecruitNC"} Command Center — ${isAnnualKind(kind) ? "annual" : "monthly"}`
                 : plan
                   ? `Insider — ${plan.label.toLowerCase()}`
                   : `Scouting report — ${athleteName || "athlete"}`,
-              description: kind === "command_center"
+              description: isCommandCenterKind(kind)
                 ? "The Recruiting Command Center: plan, college list, compare, coach messages and Learn. Includes Insider: full rankings, tournament grade reports and profile views."
                 : plan
                   ? "Every published class ranking and the Top 75, every tournament grade report, your wrestler's rank on the profile, and which college programs viewed it."

@@ -108,7 +108,7 @@ export function RankingsSalesClient({
   }
   const [checkingOut, setCheckingOut] = useState<string | null>(null)
   const [checkoutError, setCheckoutError] = useState<string | null>(null)
-  const [requestedPlan, setRequestedPlan] = useState<"subscription" | "subscription_annual" | "command_center" | null>(null)
+  const [requestedPlan, setRequestedPlan] = useState<"subscription" | "subscription_annual" | "command_center" | "command_center_annual" | null>(null)
   const [checkoutReturned, setCheckoutReturned] = useState<"purchased" | "canceled" | null>(null)
   const [subscription, setSubscription] = useState<RankingsSubscription | null>(null)
   const [managingSubscription, setManagingSubscription] = useState(false)
@@ -125,11 +125,11 @@ export function RankingsSalesClient({
     return ret.startsWith("/") && !ret.startsWith("//") ? ret : "/public-rankings"
   }
 
-  const startCheckout = async (kind: "subscription" | "subscription_annual" | "command_center") => {
+  const startCheckout = async (kind: "subscription" | "subscription_annual" | "command_center" | "command_center_annual") => {
     // Stripe needs an account to attach the subscription to, so signing in comes first —
     // but only once they have chosen, and the plan rides along so the choice is not lost.
     if (locked === "anonymous") {
-      window.location.href = `/auth/signin?returnTo=${encodeURIComponent(`${kind === "command_center" ? "/plans" : "/rankings"}?plan=${kind}`)}`
+      window.location.href = `/auth/signin?returnTo=${encodeURIComponent(`${kind.startsWith("command_center") ? "/plans" : "/rankings"}?plan=${kind}`)}`
       return
     }
     setCheckingOut(kind)
@@ -178,7 +178,7 @@ export function RankingsSalesClient({
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const plan = params.get("plan")
-    if (plan === "subscription" || plan === "subscription_annual" || plan === "command_center") setRequestedPlan(plan)
+    if (plan === "subscription" || plan === "subscription_annual" || plan === "command_center" || plan === "command_center_annual") setRequestedPlan(plan)
     if (params.get("purchased") === "1") setCheckoutReturned("purchased")
     if (params.get("canceled") === "1") setCheckoutReturned("canceled")
 
@@ -445,6 +445,9 @@ export function RankingsSalesClient({
                   {formatPrice(SCOUTING_REPORT_PRICES.command_center)}
                   <span className="text-lg font-semibold text-white/60"> / month</span>
                 </p>
+                <p className="mt-1 text-sm text-white/55">
+                  or {formatPrice(SCOUTING_REPORT_PRICES.command_center_annual)}/year (save {formatPrice(annualSavingCents("command_center"))})
+                </p>
                 <p className="mt-4 text-xs font-black uppercase tracking-widest text-sky-300">Includes Insider, plus:</p>
                 <ul className="mt-3 space-y-2.5 text-sm text-white/85">
                   {["Next steps for every stage, 8th grade to signing", "My College List: your stage, next step and verified coach activity", "Compare fit, with full yearly cost", "Every college's coaching staff and the NC wrestlers on its roster", "Coach conversations tied to each college", "The full Learn library: rules, timeline and costs"].map((l) => (
@@ -460,6 +463,14 @@ export function RankingsSalesClient({
                       className="mt-6 rounded-xl bg-sky-400 px-4 py-3 text-base font-black text-[#0A1628] transition hover:brightness-110 disabled:opacity-60"
                     >
                       {checkingOut === "command_center" ? "Starting…" : "Get the Recruiting Command Center →"}
+                    </button>
+                    <button
+                      type="button"
+                      disabled={checkingOut !== null}
+                      onClick={() => { void startCheckout("command_center_annual") }}
+                      className="mt-2 rounded-xl border border-sky-400/60 px-4 py-2.5 text-sm font-bold text-sky-300 transition hover:bg-sky-400/10 disabled:opacity-60"
+                    >
+                      {checkingOut === "command_center_annual" ? "Starting…" : `Or pay yearly, ${formatPrice(SCOUTING_REPORT_PRICES.command_center_annual)}`}
                     </button>
                     <p className="mt-2 text-center text-xs text-white/45">On Insider already? It replaces your $9.99 plan.</p>
                     <p className="mt-1 text-center text-[11px] text-white/40"><a href="/auth/signin?returnTo=%2Fmy-recruiting" className="underline hover:text-white/80">NC United Blue members: sign in for free access</a></p>

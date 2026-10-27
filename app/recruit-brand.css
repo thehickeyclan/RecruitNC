@@ -3862,6 +3862,10 @@ html[data-host="national"] .border-sky-400\/50 {
   border-color: rgb(163 230 53 / 0.5);
 }
 
+html[data-host="national"] .border-sky-400\/60 {
+  border-color: rgb(163 230 53 / 0.6);
+}
+
 html[data-host="national"] .border-sky-400\/70 {
   border-color: rgb(163 230 53 / 0.7);
 }
@@ -3876,6 +3880,10 @@ html[data-host="national"] .border-sky-500\/40 {
 
 html[data-host="national"] .border-sky-800 {
   border-color: rgb(163 230 53);
+}
+
+html[data-host="national"] .hover\:bg-sky-400\/10:hover {
+  background-color: rgb(163 230 53 / 0.1);
 }
 
 html[data-host="national"] .hover\:border-sky-400\/60:hover {
