@@ -13,7 +13,6 @@ import {
   GitCompareArrows,
   GraduationCap,
   HeartHandshake,
-  Home,
   LogOut,
   Menu,
   MessageSquare,
@@ -110,7 +109,6 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
    * (calendar, notes, activity) is a link from that page, not a second place called My Recruits.
    */
   const boardHref = "/my-recruits"
-  const home: Item = { href: "/coach-home", label: "Home", icon: Home }
   const athletes: Item = { href: "/prospects/all", label: "Athletes", icon: Users }
   const recruits: Item = { href: boardHref, label: "My Recruits", icon: Star }
   const inbox: Item = { href: "/inbox", label: "Messages", icon: MessageSquare, badge: messages.unread }
@@ -128,11 +126,11 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
         const womens: Item = { href: "/public-rankings#womens", label: "Women's Rankings", icon: BarChart3 }
         return womensFirst ? [womens, mens] : [mens, womens]
       })()
+  // My Recruits is the coach's home (Matt, 27 Oct 2026): first, and Coach Home folds into it.
   const items: Item[] = [
-    home,
+    recruits,
     athletes,
     ...rankings,
-    recruits,
     { href: "/interested", label: "Interested", icon: HeartHandshake, badge: interestNew },
     { href: "/coach-reports", label: "Reports", icon: FileText },
     inbox,
@@ -168,7 +166,7 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
   return (
     <div id="app-content" data-shell="recruiting" className="group/shell relative flex min-h-screen flex-col bg-[#0A1628] print:bg-white">
       <header className="sticky top-0 z-50 flex h-14 items-center gap-4 border-b border-white/10 bg-[#0A1628] px-4 print:hidden lg:px-5">
-        <a href="/coach-home" className="flex shrink-0 items-baseline gap-3" aria-label={`${onRw || hideNcUnited ? "RecruitWrestlers" : RECRUITING_BRAND.name} — Home`}>
+        <a href="/my-recruits" className="flex shrink-0 items-baseline gap-3" aria-label={`${onRw || hideNcUnited ? "RecruitWrestlers" : RECRUITING_BRAND.name} — Home`}>
           {/* RecruitNC here; RecruitWrestlers on recruitwrestlers.com (app/recruit-brand.css). */}
           {hideNcUnited ? null : (
             <span className="ncu-only">
@@ -268,7 +266,7 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
       </div>
 
       <nav aria-label="Recruiting navigation" className="fixed inset-x-0 bottom-0 z-40 grid h-16 grid-cols-5 border-t border-white/10 bg-[#0A1628] print:hidden lg:hidden">
-        {[home, athletes, { ...recruits, label: "Recruits" }, inbox].map((item) => {
+        {[{ ...recruits, label: "Recruits" }, athletes, { ...rankings[0], label: "Rankings" }, inbox].map((item) => {
           const active = isActive(item.href)
           return (
             <a

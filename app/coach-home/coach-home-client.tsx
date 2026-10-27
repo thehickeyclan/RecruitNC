@@ -137,7 +137,7 @@ function RecruitsCard({ total, children }: { total: number; children: React.Reac
  * times and opened eight profiles - three from the rankings, four from the athlete list, none from
  * here. A list a coach can see is a list he clicks.
  */
-function TopUncommitted({ wrestlers, poolSize, womens }: { wrestlers: CoachHomeData["suggested"]; poolSize: number; womens: boolean }) {
+export function TopUncommitted({ wrestlers, poolSize, womens }: { wrestlers: CoachHomeData["suggested"]; poolSize: number; womens: boolean }) {
   const years = [...new Set(wrestlers.map((w) => w.classYear))].sort((x, y) => x - y)
   return (
     <section className={`${PANEL} mt-4 p-4 sm:p-5`} aria-labelledby="ch-top">
@@ -301,7 +301,7 @@ function Tool({ href, icon: Icon, title, body }: { href: string; icon: typeof Se
 }
 
 /** The Super 32 report promise, until the finals are over (lib/recruiting/super32-report.ts). */
-function Super32Notice({ womens }: { womens: boolean }) {
+export function Super32Notice({ womens }: { womens: boolean }) {
   if (super32ReportReadyActive()) {
     return (
       <section className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-[#D3B574]/60 bg-[#D3B574]/10 p-4" aria-label={`${SUPER32_2026.name} report`}>
@@ -309,7 +309,7 @@ function Super32Notice({ womens }: { womens: boolean }) {
         <div className="min-w-0 flex-1">
           <p className="font-black">Your {SUPER32_2026.name} 2026 {womens ? "women's" : "men's"} report is ready</p>
           <p className="text-sm text-white/70">
-            Every North Carolina wrestler&apos;s results from Greensboro, every match and every opponent&apos;s credentials. Your recruits are marked with a gold star, and you can star anyone you missed right from the report. Download it as a PDF.
+            Every wrestler&apos;s results from Greensboro, every match and every opponent&apos;s credentials. Your recruits are starred, and you can star anyone you missed right from the report. Download it as a PDF.
           </p>
         </div>
         <Link href={womens ? "/coach-reports/super32-2026-womens" : "/coach-reports/super32-2026-mens"} className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg bg-[#D3B574] px-4 text-sm font-bold text-[#0A1628] hover:bg-[#e2c98d]">
@@ -345,7 +345,7 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
   return (
     <main className="min-h-screen bg-[#0A1628] text-white">
       <div className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
-        <CoachTabs active="home" className="mb-6" />
+        <CoachTabs active="recruits" className="mb-6" />
         <header className="flex items-center gap-4">
           {data.programLogo ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -372,36 +372,7 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
 
         <Super32Notice womens={womens} />
         {(data.interested ?? []).length ? <InterestedPanel wrestlers={data.interested!} program={data.program} /> : null}
-        {data.alerts && (data.alerts.weekend.length || data.alerts.added.length) ? (
-          <section className={`${PANEL} mb-4 mt-4 border-[#D3B574]/30 p-4 sm:p-5`} aria-labelledby="ch-alerts">
-            <h2 id="ch-alerts" className={TITLE}>
-              <Bell className={`h-3.5 w-3.5 ${GOLD}`} /> Alerts
-            </h2>
-            <ul className="mt-2 space-y-1">
-              {data.alerts.weekend.length ? (
-                <li className="rounded-lg bg-[#D3B574]/10 px-3 py-2.5 text-sm">
-                  <span className="font-bold text-white">
-                    This weekend: {new Set(data.alerts.weekend.flatMap((e) => e.recruits.map((r) => r.id))).size} of your recruits competing
-                  </span>
-                  <span className="text-white/60"> · {data.alerts.weekend.map((e) => `${e.title} (${e.recruits.length})`).join(" · ")}</span>
-                </li>
-              ) : null}
-              {data.alerts.added.map((a) => (
-                <li key={`${a.athleteId}-${a.title}-${a.startDate}`}>
-                  <Link href={`/athletes/${a.athleteId}`} className={ROW}>
-                    <span className="min-w-0 truncate">
-                      <span className="font-bold text-white">{a.name}</span> added {a.title}
-                    </span>
-                    <span className="shrink-0 text-xs text-white/45">
-                      {eventDates(a.startDate, a.endDate)}
-                      {a.location ? ` · ${a.location}` : ""}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ) : null}
+        <AlertsPanel data={data} />
 
 
         {/*
@@ -501,43 +472,7 @@ export default function CoachHomeClient({ access, data }: { access: "ok" | "sign
 
         {data.suggested?.length && hasWork ? <TopUncommitted wrestlers={data.suggested} poolSize={data.athletes.length} womens={womens} /> : null}
 
-        {(data.competingNext ?? []).length ? (
-          <section className={`${PANEL} mt-4 p-4 sm:p-5`} aria-labelledby="ch-next">
-            <h2 id="ch-next" className={TITLE}>
-              <CalendarDays className={`h-3.5 w-3.5 ${GOLD}`} /> Where your recruits are competing next
-            </h2>
-            <ul className="mt-2 space-y-3">
-              {(data.competingNext ?? []).map((event) => (
-                <li key={`${event.title}-${event.startDate}`}>
-                  <p className="px-3 text-sm font-bold text-white">
-                    {event.title}
-                    <span className="font-normal text-white/50">
-                      {" "}
-                      · {eventDates(event.startDate, event.endDate)}
-                      {event.location ? ` · ${event.location}` : ""}
-                    </span>
-                    <span className={`ml-2 text-xs font-bold ${GOLD}`}>
-                      {event.recruits.length} {event.recruits.length === 1 ? "recruit" : "recruits"}
-                    </span>
-                  </p>
-                  <ul className="grid gap-x-4 sm:grid-cols-2">
-                    {event.recruits.map((r) => (
-                      <li key={r.id}>
-                        <Link href={`/athletes/${r.id}`} className={ROW}>
-                          <span className="min-w-0 truncate font-bold text-white">{r.name}</span>
-                          <span className="shrink-0 text-xs text-white/45">
-                            {[r.classYear ? `\u2019${String(r.classYear).slice(-2)}` : null, r.weight ? `${r.weight} lbs` : null, r.highSchool].filter(Boolean).join(" · ")}
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-2 px-3 text-xs text-white/35">Entered by each wrestler&apos;s family.</p>
-          </section>
-        ) : null}
+        <CompetingNextPanel data={data} />
 
         {recruits.competedRecently.length ? (
           <section className={`${PANEL} mt-4 p-4 sm:p-5`} aria-labelledby="ch-new">
@@ -679,5 +614,88 @@ function InterestedPanel({ wrestlers, program }: { wrestlers: NonNullable<CoachH
         ))}
       </ul>
     </section>
+  )
+}
+
+/** Shared with My Recruits (the coach's home since 27 Oct 2026). */
+export function AlertsPanel({ data }: { data: CoachHomeData }) {
+  return (
+    <>
+      {data.alerts && (data.alerts.weekend.length || data.alerts.added.length) ? (
+  <section className={`${PANEL} mb-4 mt-4 border-[#D3B574]/30 p-4 sm:p-5`} aria-labelledby="ch-alerts">
+    <h2 id="ch-alerts" className={TITLE}>
+      <Bell className={`h-3.5 w-3.5 ${GOLD}`} /> Alerts
+    </h2>
+    <ul className="mt-2 space-y-1">
+      {data.alerts.weekend.length ? (
+        <li className="rounded-lg bg-[#D3B574]/10 px-3 py-2.5 text-sm">
+          <span className="font-bold text-white">
+            This weekend: {new Set(data.alerts.weekend.flatMap((e) => e.recruits.map((r) => r.id))).size} of your recruits competing
+          </span>
+          <span className="text-white/60"> · {data.alerts.weekend.map((e) => `${e.title} (${e.recruits.length})`).join(" · ")}</span>
+        </li>
+      ) : null}
+      {data.alerts.added.map((a) => (
+        <li key={`${a.athleteId}-${a.title}-${a.startDate}`}>
+          <Link href={`/athletes/${a.athleteId}`} className={ROW}>
+            <span className="min-w-0 truncate">
+              <span className="font-bold text-white">{a.name}</span> added {a.title}
+            </span>
+            <span className="shrink-0 text-xs text-white/45">
+              {eventDates(a.startDate, a.endDate)}
+              {a.location ? ` · ${a.location}` : ""}
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  </section>
+) : null}
+    </>
+  )
+}
+
+/** Shared with My Recruits (the coach's home since 27 Oct 2026). */
+export function CompetingNextPanel({ data }: { data: CoachHomeData }) {
+  return (
+    <>
+      {(data.competingNext ?? []).length ? (
+  <section className={`${PANEL} mt-4 p-4 sm:p-5`} aria-labelledby="ch-next">
+    <h2 id="ch-next" className={TITLE}>
+      <CalendarDays className={`h-3.5 w-3.5 ${GOLD}`} /> Where your recruits are competing next
+    </h2>
+    <ul className="mt-2 space-y-3">
+      {(data.competingNext ?? []).map((event) => (
+        <li key={`${event.title}-${event.startDate}`}>
+          <p className="px-3 text-sm font-bold text-white">
+            {event.title}
+            <span className="font-normal text-white/50">
+              {" "}
+              · {eventDates(event.startDate, event.endDate)}
+              {event.location ? ` · ${event.location}` : ""}
+            </span>
+            <span className={`ml-2 text-xs font-bold ${GOLD}`}>
+              {event.recruits.length} {event.recruits.length === 1 ? "recruit" : "recruits"}
+            </span>
+          </p>
+          <ul className="grid gap-x-4 sm:grid-cols-2">
+            {event.recruits.map((r) => (
+              <li key={r.id}>
+                <Link href={`/athletes/${r.id}`} className={ROW}>
+                  <span className="min-w-0 truncate font-bold text-white">{r.name}</span>
+                  <span className="shrink-0 text-xs text-white/45">
+                    {[r.classYear ? `\u2019${String(r.classYear).slice(-2)}` : null, r.weight ? `${r.weight} lbs` : null, r.highSchool].filter(Boolean).join(" · ")}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </li>
+      ))}
+    </ul>
+    <p className="mt-2 px-3 text-xs text-white/35">Entered by each wrestler&apos;s family.</p>
+  </section>
+) : null}
+    </>
   )
 }
