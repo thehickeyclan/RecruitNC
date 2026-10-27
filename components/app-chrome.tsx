@@ -142,7 +142,8 @@ export function AppChrome({ children, hideNcUnited = false }: { children: React.
    * the recruiting portal is being separated from the community site (Matt, 13 October 2026).
    */
   const { profile } = useAuth()
-  const coachAtFrontDoor = path === "/" && usesRecruitingShell(profile) && !(typeof window !== "undefined" && isNationalHost(window.location.hostname))
+  // On recruitwrestlers.com too: its home page is for families and visitors, never a coach's.
+  const coachAtFrontDoor = path === "/" && usesRecruitingShell(profile)
   useEffect(() => {
     // The server normally does this first (middleware.ts); this catches a coach it could not yet
     // recognise. There is no way round it: the community front page is not a coach's page.
