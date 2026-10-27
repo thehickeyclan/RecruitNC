@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { logBoardEvent } from "@/lib/recruiting/board-events"
+import { programStaffIds } from "@/lib/recruiting/program-stage"
 
 export async function POST(request: NextRequest) {
   try {
@@ -124,4 +125,25 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     )
   }
+}
+
+/**
+ * Take a wrestler off the program's board (Matt, 27 Oct 2026: "how do you take a kid off the
+ * board?"). One board per staff, so every staff star on him goes, not only the caller's; logged
+ * in "who changed what" so the staff can see who took him off.
+ */
+export async function DELETE(request: NextRequest) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return NextResponse.json({ error: "Authentication required" }, { status: 401 })
+  const { athleteId } = await request.json().catch(() => ({}))
+  if (!athleteId || typeof athleteId !== "string") return NextResponse.json({ error: "Invalid request" }, { status: 400 })
+  const admin = createAdminClient()
+  const staff = await programStaffIds(admin, user.id)
+  const { error } = await admin.from("college_coach_stars").delete().eq("athlete_id", athleteId).in("coach_user_id", staff)
+  if (error) return NextResponse.json({ error: "Could not remove him." }, { status: 500 })
+  await logBoardEvent(admin, { actor: user.id, athleteId, kind: "removed" })
+  return NextResponse.json({ success: true, action: "removed" })
 }
