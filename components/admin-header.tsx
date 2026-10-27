@@ -21,6 +21,12 @@ const adminNavItems: {
     icon: "🧭",
   },
   {
+    // See any coach's My Recruits exactly as they see it, read-only (Matt, 27 Oct 2026).
+    title: "View as coach",
+    href: "/admin/view-as-coach",
+    icon: "👁",
+  },
+  {
     title: "Submissions",
     href: "/admin/submissions-manager",
     icon: "📝",
