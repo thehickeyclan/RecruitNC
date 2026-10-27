@@ -23,7 +23,7 @@ import {
   FileText,
 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
-import { useCoachMessageBadge, useInterestBadge, useNavNotifications } from "@/hooks/use-nav-badges"
+import { useCoachMessageBadge, useInterestBadge, useNavNew, useNavNotifications } from "@/hooks/use-nav-badges"
 import { COACH_PREVIEW_KEY, COMMUNITY_PARTNER_LINKS, RECRUITING_BRAND, hasCommunityAccess, recruitingCoverage, usesRecruitingShell } from "@/lib/recruiting/brand"
 import { RecruitingFooter } from "@/components/recruiting/recruiting-footer"
 import { RecruitingWordmark } from "@/components/recruiting/recruiting-wordmark"
@@ -52,7 +52,8 @@ import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
  * Links are plain <a href>, as in the community bar: app/layout.tsx navigates on capture before
  * React click handlers run.
  */
-type Item = { href: string; label: string; icon: LucideIcon; badge?: number }
+/** `badge` counts; `fresh` is a "New" tag for something released since the coach last looked. */
+type Item = { href: string; label: string; icon: LucideIcon; badge?: number; fresh?: boolean }
 
 function SideMenu({ items, isActive, onNavigate, partner }: { items: Item[]; isActive: (href: string) => boolean; onNavigate?: () => void; partner: boolean }) {
   return (
@@ -70,11 +71,13 @@ function SideMenu({ items, isActive, onNavigate, partner }: { items: Item[]; isA
             }`}
           >
             <item.icon className="h-[18px] w-[18px] shrink-0" aria-hidden />
-            <span className="flex-1">{item.label}</span>
+            <span className="flex-1 whitespace-nowrap">{item.label}</span>
             {item.badge ? (
               <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white">
                 {item.badge > 9 ? "9+" : item.badge}
               </span>
+            ) : item.fresh ? (
+              <span className="shrink-0 rounded-full bg-red-600 px-1 py-px text-[9px] font-bold uppercase text-white">New</span>
             ) : null}
           </a>
         )
@@ -103,6 +106,7 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
   const messages = useCoachMessageBadge(!!user, pathname)
   const interestNew = useInterestBadge(!!user, pathname)
   const bell = useNavNotifications(!!user, notificationsOpen)
+  const fresh = useNavNew(!!user, pathname)
 
   /**
    * One My Recruits for every coach: the board with the funnel on it. The program portal
@@ -120,10 +124,10 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
   const womensOut = releasedClassYears("Female").length > 0
   const womensFirst = viewGenderFor(coachProgramOf(user)) === "Female"
   const rankings: Item[] = !womensOut
-    ? [{ href: "/public-rankings", label: "Rankings", icon: BarChart3 }]
+    ? [{ href: "/public-rankings", label: "Rankings", icon: BarChart3, fresh: fresh.rankings }]
     : (() => {
-        const mens: Item = { href: "/public-rankings#mens", label: "Men's Rankings", icon: BarChart3 }
-        const womens: Item = { href: "/public-rankings#womens", label: "Women's Rankings", icon: BarChart3 }
+        const mens: Item = { href: "/public-rankings#mens", label: "Men's Rankings", icon: BarChart3, fresh: fresh.rankings }
+        const womens: Item = { href: "/public-rankings#womens", label: "Women's Rankings", icon: BarChart3, fresh: fresh.rankings }
         return womensFirst ? [womens, mens] : [mens, womens]
       })()
   // My Recruits is the coach's home (Matt, 27 Oct 2026): first, and Coach Home folds into it.
@@ -132,7 +136,7 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
     athletes,
     ...rankings,
     { href: "/interested", label: "Interested", icon: HeartHandshake, badge: interestNew },
-    { href: "/coach-reports", label: "Reports", icon: FileText },
+    { href: "/coach-reports", label: "Reports", icon: FileText, badge: fresh.reports },
     inbox,
     { href: "/compare?src=nav", label: "Compare", icon: GitCompareArrows },
     { href: "/perfect-recruit", label: "Perfect Recruit", icon: Target },
@@ -281,6 +285,8 @@ export function RecruitingShell({ children, hideNcUnited = false }: { children: 
                 <span className="absolute right-[22%] top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
                   {item.badge > 9 ? "9+" : item.badge}
                 </span>
+              ) : item.fresh ? (
+                <span className="absolute right-[26%] top-2 h-2.5 w-2.5 rounded-full bg-red-600" aria-label="New" />
               ) : null}
             </a>
           )

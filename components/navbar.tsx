@@ -43,7 +43,7 @@ import {
 import { StoreButton } from "@/components/store-button"
 import { StoreNavLink } from "@/components/store-nav-link"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { useCoachMessageBadge, useNavNotifications } from "@/hooks/use-nav-badges"
+import { useCoachMessageBadge, useNavNew, useNavNotifications } from "@/hooks/use-nav-badges"
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -56,6 +56,9 @@ export function Navbar() {
   const { notifications, unread: unreadNotifications, markRead: markNotificationRead, markAllRead: markAllNotificationsRead } =
     useNavNotifications(!!user, notificationsOpen)
   const { unread: unreadMessages, show: showMessages } = useCoachMessageBadge(!!user, pathname)
+  // "New" beside Rankings and News when a release or story came out since this person last looked.
+  const fresh = useNavNew(!!user, pathname)
+  const newTag = <span className="ml-1.5 rounded-full bg-red-600 px-1.5 py-0.5 align-middle text-[10px] font-bold uppercase tracking-wide text-white">New</span>
 
   useEffect(() => {
     if (!user) {
@@ -339,7 +342,7 @@ export function Navbar() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <a href="/public-rankings" className={navLinkClass("/public-rankings")}>Rankings</a>
+              <a href="/public-rankings" className={navLinkClass("/public-rankings")}>Rankings{fresh.rankings ? newTag : null}</a>
               <a href="/clubs" className={navLinkClass("/clubs")}>Clubs</a>
               <DropdownMenu>
                 <DropdownMenuTrigger className={navTriggerClass(eventsNavItemsForActive)}>
@@ -567,7 +570,7 @@ export function Navbar() {
                   })}
                 </DropdownMenuContent>
               </DropdownMenu>
-              <a href="/news" className={navLinkClass("/news")}>News</a>
+              <a href="/news" className={navLinkClass("/news")}>News{fresh.news ? newTag : null}</a>
               <a href="/about" className={navLinkClass("/about")}>About</a>
               <StoreNavLink className={navLinkClass("/store-app")}>Store</StoreNavLink>
               {highlightNavItems.map((item) => (
@@ -851,7 +854,10 @@ export function Navbar() {
                   onClick={() => setIsOpen(true)}
                   className="mobile-optimized min-h-[44px] min-w-[44px] flex items-center gap-2 px-3 text-white hover:bg-white/10 border border-white/40"
                 >
-                  <Menu className="h-5 w-5" />
+                  <span className="relative">
+                    <Menu className="h-5 w-5" />
+                    {fresh.rankings || fresh.news ? <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-red-600" aria-label="New" /> : null}
+                  </span>
                   <span className="text-sm font-semibold">MENU</span>
                 </Button>
               </SheetTrigger>
@@ -911,7 +917,7 @@ export function Navbar() {
                       ))}
                     </div>
                   </div>
-                  <a href={rankingsItem.href} className={mobileLinkClass(rankingsItem.href)} onClick={() => setIsOpen(false)}>{rankingsItem.label}</a>
+                  <a href={rankingsItem.href} className={mobileLinkClass(rankingsItem.href)} onClick={() => setIsOpen(false)}>{rankingsItem.label}{fresh.rankings ? newTag : null}</a>
                   <a href="/clubs" className={mobileLinkClass("/clubs")} onClick={() => setIsOpen(false)}>Clubs</a>
                   <div className="px-3">
                     <div className={mobileMenuParentClass(isDropdownActive(eventsNavItemsForActive))}>Results</div>
@@ -1023,7 +1029,7 @@ export function Navbar() {
                       ))}
                     </div>
                   </div>
-                  <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News</a>
+                  <a href="/news" className={mobileLinkClass("/news")} onClick={() => setIsOpen(false)}>News{fresh.news ? newTag : null}</a>
                   <a href="/about" className={mobileLinkClass("/about")} onClick={() => setIsOpen(false)}>About</a>
                   <StoreNavLink className={mobileLinkClass("/store-app") + " block min-h-[44px] w-full text-left"} onNavigate={() => setIsOpen(false)}>Store</StoreNavLink>
                   <a href="/cart" target="_top" className={mobileLinkClass("/cart") + " flex items-center gap-2 min-h-[44px] w-full text-left"} onClick={() => setIsOpen(false)} aria-label={cartCount > 0 ? `Cart (${cartCount} items)` : "Cart"}>
