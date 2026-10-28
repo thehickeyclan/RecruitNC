@@ -17,6 +17,7 @@ import {
 import { STATE_NAMES } from "@/lib/college-programs/states"
 import { loadMapbox, type MapLike } from "@/lib/mapbox/load-mapbox"
 import { BrandName } from "@/components/recruiting/brand-name"
+import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
 import {
   COLLEGE_DIVISIONS,
   DIVISION_COLOR,
@@ -110,6 +111,7 @@ function programLine(p: CollegeMapSchool["programs"][number]): string {
 function LockedActions({ schoolId, href }: { schoolId: string; href: string }) {
   const [staff, setStaff] = useState<{ staffCount: number; hasQuestionnaire: boolean } | null>(null)
   const [alumni, setAlumni] = useState<{ count: number; stateName: string } | null>(null)
+  const onRw = useOnRecruitWrestlers()
   useEffect(() => {
     let cancelled = false
     setStaff(null)
@@ -136,9 +138,11 @@ function LockedActions({ schoolId, href }: { schoolId: string; href: string }) {
     {
       icon: GraduationCap,
       label:
-        alumni && alumni.count > 0
-          ? `See the ${alumni.count} ${alumni.stateName} wrestler${alumni.count === 1 ? "" : "s"} who went here`
-          : `See the ${alumni?.stateName ?? "North Carolina"} wrestlers who went here`,
+        // "Your state" (Matt, 28 Oct 2026). The count on file is North Carolina's, so it is shown only
+        // on NC United, where the visitor's state is North Carolina.
+        !onRw && alumni && alumni.count > 0
+          ? `See the ${alumni.count} wrestler${alumni.count === 1 ? "" : "s"} from your state who went here`
+          : "See the wrestlers from your state who went here",
     },
     { icon: Bookmark, label: "Save to your college list" },
     { icon: BarChart3, label: "Compare with other colleges" },
