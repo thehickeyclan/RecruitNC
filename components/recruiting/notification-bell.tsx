@@ -27,18 +27,19 @@ export function NotificationBell({ signedIn }: { signedIn: boolean }) {
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-[min(340px,100vw-24px)] p-0" sideOffset={8}>
-        <div className="flex items-center justify-between border-b px-3 py-2">
-          <span className="text-sm font-semibold">Notifications</span>
+      {/* Navy like the portal around it (Matt, 28 Oct 2026: "should the notifications be the dark blue, not white"). */}
+      <PopoverContent align="end" className="w-[min(360px,100vw-24px)] border-white/15 bg-[#13294B] p-0 text-white shadow-2xl shadow-black/50" sideOffset={8}>
+        <div className="flex items-center justify-between border-b border-white/10 px-4 py-2.5">
+          <span className="text-sm font-bold">Notifications</span>
           {bell.unread > 0 && (
-            <button type="button" onClick={bell.markAllRead} className="text-xs text-muted-foreground hover:text-foreground">
+            <button type="button" onClick={bell.markAllRead} className="text-xs font-semibold text-white/55 hover:text-white">
               Mark all read
             </button>
           )}
         </div>
-        <div className="max-h-[320px] overflow-y-auto">
+        <div className="max-h-[360px] overflow-y-auto">
           {bell.notifications.length === 0 ? (
-            <p className="px-3 py-4 text-center text-sm text-muted-foreground">No notifications yet.</p>
+            <p className="px-4 py-5 text-center text-sm text-white/50">No notifications yet.</p>
           ) : (
             bell.notifications.map((n) => (
               <a
@@ -48,13 +49,14 @@ export function NotificationBell({ signedIn }: { signedIn: boolean }) {
                   bell.markRead(n.id)
                   setNotificationsOpen(false)
                 }}
-                className={`block border-b border-border/50 px-3 py-2.5 text-left last:border-0 hover:bg-muted/50 ${!n.read_at ? "bg-muted/30" : ""}`}
+                className={`flex gap-2.5 border-b border-white/10 px-4 py-3 text-left last:border-0 hover:bg-white/[0.06] ${!n.read_at ? "bg-white/[0.04]" : ""}`}
               >
-                <p className="text-sm font-medium">{n.title}</p>
-                {n.body && <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{n.body}</p>}
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {bellDate(n)}
-                </p>
+                <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${!n.read_at ? "bg-[#D3B574]" : "bg-transparent"}`} aria-hidden />
+                <span className="min-w-0">
+                  <span className={`block text-sm ${!n.read_at ? "font-semibold text-white" : "font-medium text-white/75"}`}>{n.title}</span>
+                  {n.body && <span className="mt-0.5 line-clamp-2 block text-xs text-white/55">{n.body}</span>}
+                  <span className="mt-1 block text-xs text-white/45">{bellDate(n)}</span>
+                </span>
               </a>
             ))
           )}

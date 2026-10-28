@@ -8,7 +8,7 @@ import Link from "next/link"
 import { headers } from "next/headers"
 import { notFound } from "next/navigation"
 import Image from "next/image"
-import { ArrowLeftRight, Bell, FileText, GraduationCap, MessageSquare, Search, Star, Target } from "lucide-react"
+import { ArrowLeftRight, Bell, FileText, GraduationCap, MessageSquare, Search, Star, Target, Trophy } from "lucide-react"
 import { recruitingCoverage } from "@/lib/recruiting/brand"
 import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 
@@ -32,13 +32,34 @@ const FEATURES = [
 
 /**
  * The product, shown (Matt, 28 Oct 2026: "we are a product platform.. why not show it?").
- * Screens rendered from app/dev/coach-screens with invented wrestlers; refresh them with
- * scripts/coach-screens.cjs after a UI change.
+ * Screenshots of the real coach portal with invented wrestlers; refresh them with
+ * node scripts/coach-screens/capture.cjs after a UI change.
  */
 const SHOWCASE = [
   { img: "board", icon: Star, kicker: "My Recruits", title: "Your board and your funnel, shared with your staff", points: ["Stages from Prospect to Signed, applied dates, follow-ups", "Résumé, GPA and cell on every row", "\"Interested in you\" when a wrestler marks your program"] },
   { img: "alerts", icon: Bell, kicker: "Alerts", title: "Know the moment something changes", points: ["A red alert when a recruit commits elsewhere", "Placings, interest and quiet spells on your recruits", "New reports and ranking releases in the bell"] },
-  { img: "report", icon: FileText, kicker: "Scouting reports", title: "Every win and loss, with the opponent's résumé", points: ["Who he beat, how, and what that opponent has done", "Losses shown too, with who they came against", "Academics and contact for verified coaches"] },
+  {
+    img: "report",
+    icon: FileText,
+    kicker: "Scouting reports",
+    title: "Every significant win and notable loss, with the opponent's résumé",
+    points: [
+      "Significant win: a win over a wrestler who is nationally ranked, ranked in his state, a state champion or placer, or a national placer (NHSCA, Super 32, Fargo)",
+      "Notable loss: a loss to a wrestler of that calibre, shown with what he has done",
+      "Strength of competition, star rating, academics and contact for verified coaches",
+    ],
+  },
+  {
+    img: "tournament",
+    icon: Trophy,
+    kicker: "Tournament reports",
+    title: "After every national tournament, how your recruits did",
+    points: [
+      "Every match, every opponent's seed and credentials, starting with Super 32",
+      "Placement, record, significant wins, notable losses and strength of competition",
+      "Your recruits starred, ready within 24 hours of the finals, and downloadable as a PDF",
+    ],
+  },
   { img: "compare", icon: ArrowLeftRight, kicker: "Compare", title: "Two wrestlers, side by side", points: ["Head to head over the last twelve months", "Common opponents and strength of schedule", "The edge marked, line by line"] },
   { img: "athletes", icon: Search, kicker: "Athletes", title: "Every wrestler in the current classes", points: ["Filter by class, last-competed weight, state and commitment", "Results from the brackets, never typed in", "Star anyone onto your board"] },
   { img: "messages", icon: MessageSquare, kicker: "Messages", title: "Write to the wrestler, with his parents on the thread", points: ["Parents see every message", "Division I contact dates shown before you write", "Every message counts as contact on your board"] },

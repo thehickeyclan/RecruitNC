@@ -137,6 +137,19 @@ export default async function PublicRankingsHomepage({
   ].filter((group) => group.links.length)
   if (viewGender === "Female") groups.reverse()
 
+  /*
+   * One tile per state (Matt, 28 Oct 2026: "tiles for each state.. nc available now; the others
+   * coming soon"). RecruitWrestlers only - NC United's boards are North Carolina's by definition.
+   * A state turns live here when its boards are published; until then it says so and links nowhere.
+   */
+  const onRw = stagedBrandForHost((await headers()).get("host")) === "national"
+  const STATE_TILES: Array<{ code: string; name: string; live: boolean }> = [
+    { code: "NC", name: "North Carolina", live: true },
+    { code: "SC", name: "South Carolina", live: false },
+    { code: "VA", name: "Virginia", live: false },
+    { code: "MD", name: "Maryland", live: false },
+  ]
+
   return (
     <main className="min-h-screen bg-[#0A1628] text-white">
       <RankingsUpdateBanner />
@@ -165,7 +178,7 @@ export default async function PublicRankingsHomepage({
             >
               <Users className="h-5 w-5 shrink-0 text-[#D3B574]" aria-hidden />
               <span className="min-w-0 flex-1 text-sm text-white">
-                <span className="font-semibold">Every North Carolina wrestler, ranked or not</span>
+                <span className="font-semibold">{onRw ? "Every wrestler, ranked or not" : "Every North Carolina wrestler, ranked or not"}</span>
                 <span className="ml-2 text-white/60">
                   Full profiles — results, film, academics and contact details.
                 </span>
@@ -187,6 +200,41 @@ export default async function PublicRankingsHomepage({
             <p className="mt-1 text-sm text-white/65">
               They are included with your NC United Blue membership. You have not been charged.
             </p>
+          </div>
+        ) : null}
+
+        {onRw ? (
+          <div className="mb-12">
+            <h2 className="mb-4 text-2xl font-black tracking-tight text-white">Rankings by state</h2>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {STATE_TILES.map((st) =>
+                st.live ? (
+                  <a key={st.code} href={`#${groups[0]?.key ?? "mens"}`} className="group block h-full">
+                    <Card className="h-full border-[#D3B574]/60 bg-[#13294B] text-white transition hover:-translate-y-0.5 hover:border-[#D3B574]">
+                      <CardHeader>
+                        <p className="text-3xl font-black text-white">{st.code}</p>
+                        <CardTitle className="text-lg font-bold text-white">{st.name}</CardTitle>
+                        <span className="mt-1 inline-flex w-fit rounded-full bg-[#D3B574] px-2.5 py-0.5 text-xs font-bold text-[#0A1628]">Available now</span>
+                      </CardHeader>
+                      <CardContent>
+                        <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#D3B574]">
+                          See the class boards
+                          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                        </span>
+                      </CardContent>
+                    </Card>
+                  </a>
+                ) : (
+                  <Card key={st.code} aria-disabled className="h-full border-dashed border-white/15 bg-white/[0.03] text-white">
+                    <CardHeader>
+                      <p className="text-3xl font-black text-white/40">{st.code}</p>
+                      <CardTitle className="text-lg font-bold text-white/70">{st.name}</CardTitle>
+                      <span className="mt-1 inline-flex w-fit rounded-full border border-white/20 px-2.5 py-0.5 text-xs font-semibold text-white/55">Coming soon</span>
+                    </CardHeader>
+                  </Card>
+                ),
+              )}
+            </div>
           </div>
         ) : null}
 
