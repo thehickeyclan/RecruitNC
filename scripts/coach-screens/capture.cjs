@@ -123,6 +123,57 @@ async function assertClean(p, banned, shot) {
   const c = await anonymiseRows(p, { nameSel: "table tbody tr td:first-child a", schoolSel: "table tbody tr td:first-child > div" })
   await save("commitments", c)
 
+  // The Super 32 tournament report: drawn on the server from content/reports, every name swapped from that file's own list.
+  {
+    const rep = JSON.parse(fs.readFileSync("content/reports/super32-2026.json", "utf8"))
+    const people = new Set(), schools = new Set(), surnames = new Set()
+    for (const r of rep.reports) {
+      people.add(r.name); schools.add(r.school); surnames.add(String(r.name).replace(/ (Jr\.|II|III)$/, "").split(" ").pop())
+      for (const b of r.bouts ?? []) people.add(b.opponent)
+      for (const w of [...(r.significantWins ?? []), ...(r.notableLosses ?? [])]) { people.add(w.opponent); schools.add(w.opponentSchool) }
+    }
+    const realPeople = [...people].filter((n) => n && n.includes(" ")).sort((a, b) => b.length - a.length)
+    const F2 = [...FIRST, "Eli", "Wyatt", "Caleb", "Logan", "Hunter", "Blake", "Reid", "Colt", "Dylan", "Miles", "Bryce", "Chase", "Seth", "Trent", "Wade", "Zane", "Knox", "Rhett", "Silas", "Tate", "Beau", "Clay", "Heath", "Jett", "Lane", "Nash", "Asher", "Jude", "Finn", "Grady"]
+    const L2 = [...LAST, "Mabry", "Noble", "Orr", "Pruitt", "Quill", "Rook", "Stroud", "Tolan", "Upton", "Voss", "Wren", "Yeager", "Ashby", "Benning", "Corliss", "Dacey", "Ellery", "Farlow", "Gentry", "Harlan", "Ivers", "Jessup", "Kirby", "Landry", "Marlow", "Nettles", "Oakes", "Pelham", "Radley", "Sayer", "Thorne", "Varner", "Whitlock", "Yardley", "Abbott", "Blevins", "Cutler", "Darrow", "Embry", "Fulton"]
+    let fakes = []
+    for (let i = 0; fakes.length < realPeople.length * 2 && i < F2.length * L2.length; i++) fakes.push(`${F2[i % F2.length]} ${L2[(Math.floor(i / F2.length) + i) % L2.length]}`)
+    fakes = [...new Set(fakes)]
+    const taken = new Set()
+    for (let i = 0; i < fakes.length; i += 100) { const { data } = await s.from("athletes").select("name").in("name", fakes.slice(i, i + 100)); for (const r of data ?? []) taken.add(r.name) }
+    fakes = fakes.filter((f) => !taken.has(f) && !realPeople.includes(f))
+    const pairs = realPeople.map((n, i) => [n, fakes[i]])
+    const surnamePairs = [...surnames].filter((n) => n && n.length >= 4).map((n, i) => [n, L2[(i * 3) % L2.length]])
+    const schoolPairs = [...schools].filter((n) => n && n.length > 3).map((n, i) => [n, SCHOOLS[i % SCHOOLS.length]])
+    await go("/coach-reports/super32-2026-mens", 12000)
+    await p.evaluate(({ pairs, surnamePairs, schoolPairs }) => {
+      const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+      for (let n = w.nextNode(); n; n = w.nextNode()) {
+        let t = n.nodeValue
+        for (const [a, b] of pairs) if (t.includes(a)) t = t.split(a).join(b)
+        for (const [a, b] of schoolPairs) if (t.includes(a)) t = t.split(a).join(b)
+        for (const [a, b] of surnamePairs) t = t.replace(new RegExp(`\\b${a}\\b`, "g"), b)
+        if (t !== n.nodeValue) n.nodeValue = t
+      }
+      for (const img of document.querySelectorAll("main img")) if (!/logo|brand|rw-|recruitwrestlers/i.test(img.src + img.alt)) img.style.visibility = "hidden"
+    }, { pairs, surnamePairs, schoolPairs })
+    // A coach with recruits in the field, and the card of a wrestler with wins and losses to show.
+    await rename(p, [["0 of your recruits", "6 of your recruits"], ["Your recruits (0)", "Your recruits (6)"]])
+    // The Super 32 header, then the athlete assessments (Matt, 28 Oct 2026): the essay, the
+    // three-year comparison and the rankings notice come out; the fullest card leads.
+    await p.evaluate(() => {
+      document.querySelectorAll("section.rpt-intro").forEach((e) => e.remove())
+      for (const sec of document.querySelectorAll("section")) if (/Three years of progress/.test(sec.textContent ?? "") && !sec.querySelector("article.rpt-card")) sec.remove()
+      for (const el of document.querySelectorAll("p, div")) if (/^\s*📊?\s*Rankings update:/.test(el.textContent ?? "") && el.textContent.length < 300) { el.remove(); break }
+      const cards = [...document.querySelectorAll("article.rpt-card")]
+      const best = cards.slice(0, 12).sort((a, b) => b.getBoundingClientRect().height - a.getBoundingClientRect().height)[0]
+      if (best && best.parentElement) best.parentElement.prepend(best)
+      window.scrollTo(0, 0)
+    })
+    await rename(p, [["0 of your recruits", "6 of your recruits"], ["Your recruits (0)", "Your recruits (6)"]])
+    await p.waitForTimeout(800)
+    await save("tournament", [...realPeople, ...surnamePairs.map(([a]) => a)])
+  }
+
   await go("/inbox", 8000)
   await p.locator("text=Cole Whitaker").first().click().catch(() => {}); await p.waitForTimeout(5000)
   await save("messages")
