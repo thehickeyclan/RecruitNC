@@ -15,6 +15,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { ArrowLeft, ArrowRight, Check, HelpCircle, Pencil, Sparkles, Star, Target, X } from "lucide-react"
 import { ACADEMIC_MAJOR_OPTIONS } from "@/lib/academic-majors"
+import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
 import {
   COLLEGE_WEIGHTS,
   WOMENS_COLLEGE_WEIGHTS,
@@ -222,6 +223,9 @@ export function PerfectRecruitWizard({
   const last = step === STEPS.length - 1
   const needs = setNeeds(c)
   const groups = [...new Set(PRIORITY_OPTIONS.map((o) => o.group))]
+  const onRw = useOnRecruitWrestlers()
+  const product = onRw ? "RecruitWrestlers" : "RecruitNC"
+  const optionLabel = (text: string) => text.replace(/RecruitNC/g, product)
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label="Your perfect recruit">
@@ -337,7 +341,7 @@ export function PerfectRecruitWizard({
                   onChange={(e) => { const checked = e.target.checked; update(() => ({ requireRanked: checked })) }}
                   className="h-4 w-4 accent-[#D3B574]"
                 />
-                <span className="text-sm text-white/80">Ranked only: a published RecruitNC rank or a national ranking</span>
+                <span className="text-sm text-white/80">Ranked only: a published {product} rank or a national ranking</span>
               </label>
             </>
           ) : null}
@@ -354,7 +358,7 @@ export function PerfectRecruitWizard({
                   <div className="flex flex-wrap gap-2">
                     {PRIORITY_OPTIONS.filter((o) => o.group === g).map((o) => (
                       <Chip key={o.key} on={c.priorities.includes(o.key)} onClick={() => update((p) => ({ priorities: toggle(p.priorities, o.key) }))}>
-                        {o.label}
+                        {optionLabel(o.label)}
                       </Chip>
                     ))}
                   </div>
@@ -381,7 +385,7 @@ export function PerfectRecruitWizard({
                 )}
                 {c.priorities.length ? (
                   <p className="mt-3 text-sm text-white/60">
-                    Decided by: {c.priorities.map((k) => PRIORITY_OPTIONS.find((o) => o.key === k)?.label).filter(Boolean).join(", ")}
+                    Decided by: {c.priorities.map((k) => PRIORITY_OPTIONS.find((o) => o.key === k)?.label).filter((l): l is string => Boolean(l)).map(optionLabel).join(", ")}
                   </p>
                 ) : null}
               </div>

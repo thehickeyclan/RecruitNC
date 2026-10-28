@@ -15,6 +15,7 @@ import { competitionLine, stylesLine } from "@/lib/wrestling-style"
 import { accoladeLineWithRank } from "@/lib/significant-wins"
 import { countRankedWins, isTeamBlindEvent } from "@/lib/strength-of-competition"
 import type { ActivityStatus } from "@/lib/activity-status"
+import { productName } from "@/lib/recruiting/product-name"
 
 export type ComparisonReport = Omit<ScoutingReport, "summary">
 
@@ -537,7 +538,7 @@ function stateRankRow(l: ComparisonReport, r: ComparisonReport): ComparisonRow {
     edge = lower(lr, rr)
     basis = `#${Math.min(lr, rr)} against #${Math.max(lr, rr)} on the same board`
   }
-  return { key: "state-rank", group: "rankings", label: "RecruitNC ranking", left: cell(l), right: cell(r), edge, basis, defaultOn: true }
+  return { key: "state-rank", group: "rankings", label: `${productName()} ranking`, left: cell(l), right: cell(r), edge, basis, defaultOn: true }
 }
 
 function starRow(l: ComparisonReport, r: ComparisonReport, personal: boolean): ComparisonRow {

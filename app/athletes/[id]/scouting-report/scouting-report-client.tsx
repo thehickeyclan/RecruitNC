@@ -529,7 +529,7 @@ export function ScoutingReportDocument({
             </div>
             <table className="mt-2 w-full border-collapse text-[11.5px]">
               <tbody>
-                {starRows(report).map((row) => (
+                {starRows(report, rw).map((row) => (
                   <tr key={row.label} className="border-t border-gray-300">
                     <td className="w-[7.5rem] py-1.5 pr-3 align-top text-[9.5px] font-black uppercase tracking-[0.14em] text-[#03154C] sm:w-[12rem]">
                       {brandSwap(row.label, rw)}
@@ -979,7 +979,7 @@ function ProfileLink({ label, href }: { label: string; href: string }) {
  * The star rating's supporting lines, from its own component details: in-state finish,
  * significant wins, national competition, and the class ranking.
  */
-function starRows(report: ScoutingReport): Array<{ label: string; value: string }> {
+function starRows(report: ScoutingReport, rw: boolean): Array<{ label: string; value: string }> {
   const rating = report.starRating
   if (!rating) return []
   const component = (key: string) => rating.components.find((c) => c.key === key)
@@ -991,7 +991,7 @@ function starRows(report: ScoutingReport): Array<{ label: string; value: string 
   const national = [starPart(report, "National placement"), starPart(report, "National record")].filter(Boolean).join(" · ")
   if (national || component("nationals")?.detail) rows.push({ label: "National competition", value: national || component("nationals")!.detail })
   const ranking = component("ranking")?.detail
-  if (ranking) rows.push({ label: "RecruitNC ranking", value: ranking })
+  if (ranking) rows.push({ label: rw ? "RecruitWrestlers ranking" : "RecruitNC ranking", value: brandSwap(ranking, rw) })
   return rows
 }
 

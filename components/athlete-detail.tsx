@@ -73,6 +73,7 @@ import { getYouTubeVideoId, isDirectHighlightVideoUrl } from "@/lib/highlight-vi
 import { ProfileViewStatsPanel } from "./profile-view-stats-panel"
 import { BannerViewStats } from "./profile/banner-view-stats"
 import { getPublicRankingsMax, isPublicRankingsYearPublished, rankingLabel } from "@/lib/public-rankings-cap"
+import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
 import { scoutingReportAvailable } from "@/lib/scouting-report-access"
 import { stateName } from "@/lib/athlete-state"
 
@@ -274,6 +275,8 @@ export function AthleteDetail({
 }: AthleteDetailProps) {
   const isDark = theme === "dark"
   const { isAdmin, isVerifiedCoach, profile: viewerProfile } = useAuth()
+  /** The product named in the rank label: RecruitWrestlers on its own address, RecruitNC on NC United. */
+  const rankProduct = useOnRecruitWrestlers() ? "RecruitWrestlers" : "RecruitNC"
   /**
    * The server decides who sees the scouting report, so the entry point cannot drift from the
    * endpoint. Pre-launch that is an explicit allowlist rather than a role, which is why this
@@ -1307,7 +1310,7 @@ export function AthleteDetail({
         },
   ]
   const bannerRibbon = prospectRanking
-    ? `${rankingLabel(prospectRanking, rankBoardGender)}  ·  Class of ${graduationYear || "—"}`
+    ? `${rankingLabel(prospectRanking, rankBoardGender, rankProduct)}  ·  Class of ${graduationYear || "—"}`
     : graduationYear
       ? `Class of ${graduationYear}`
       : null
@@ -1489,7 +1492,7 @@ export function AthleteDetail({
           <div className="mt-2 flex flex-wrap items-center gap-1.5 empty:hidden">
             {prospectRanking ? (
               <p className="inline-block rounded-md bg-[#D3B574] px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.22em] text-[#0A1628]">
-                {rankingLabel(prospectRanking, rankBoardGender)}
+                {rankingLabel(prospectRanking, rankBoardGender, rankProduct)}
               </p>
             ) : null}
           </div>
@@ -1691,7 +1694,7 @@ export function AthleteDetail({
               {prospectRanking && (
                 <div className="mb-4">
                   <Badge className="bg-[#D3B574] text-[#13294B] px-3 py-1.5 text-sm font-bold">
-                    {rankingLabel(prospectRanking, rankBoardGender)} - Class of {graduationYear}
+                    {rankingLabel(prospectRanking, rankBoardGender, rankProduct)} - Class of {graduationYear}
                   </Badge>
                 </div>
               )}
@@ -1818,7 +1821,7 @@ export function AthleteDetail({
 
                   {prospectRanking && (
                     <Badge className="bg-[#D3B574] text-[#13294B] px-4 py-2 text-base font-bold shadow-lg mb-4">
-                      {rankingLabel(prospectRanking, rankBoardGender)} - Class of {graduationYear}
+                      {rankingLabel(prospectRanking, rankBoardGender, rankProduct)} - Class of {graduationYear}
                     </Badge>
                   )}
 

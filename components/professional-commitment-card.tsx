@@ -14,6 +14,7 @@ import {
 } from "@/lib/commitment-card-honors"
 import { prefetchAthleteProfile } from "@/lib/prefetch-athlete-profile"
 import { getPublicRankingsMax, isPublicRankingsYearPublished, rankingLabel } from "@/lib/public-rankings-cap"
+import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
 interface Athlete {
   id: string
   name: string
@@ -132,6 +133,8 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
   const [highSchoolLogoError, setHighSchoolLogoError] = useState(false)
   const [clubLogoUrl, setClubLogoUrl] = useState<string | null>(null)
   const [clubLogoError, setClubLogoError] = useState(false)
+  /** The product named in the rank label: RecruitWrestlers on its own address, RecruitNC on NC United. */
+  const rankProduct = useOnRecruitWrestlers() ? "RecruitWrestlers" : "RecruitNC"
   const [collegeLogoUrl, setCollegeLogoUrl] = useState<string | null>(null)
   const [collegeLogoError, setCollegeLogoError] = useState(false)
   const [displayClubName, setDisplayClubName] = useState<string>("")
@@ -744,7 +747,7 @@ export function ProfessionalCommitmentCard({ athlete, listMode = false }: Profes
                     {backCardNcRank != null && (
                       <>
                         <span className="text-white/30">•</span>
-                        <span style={{ color: "#D3B574" }}>{rankingLabel(backCardNcRank, ncRankGender)}</span>
+                        <span style={{ color: "#D3B574" }}>{rankingLabel(backCardNcRank, ncRankGender, rankProduct)}</span>
                       </>
                     )}
                   </div>

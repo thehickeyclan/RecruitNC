@@ -38,6 +38,7 @@ import {
   type SeasonRecordRow,
   type SchoolDualTitle,
 } from "@/lib/data-dawg-athlete-analyst-profile"
+import { productName } from "@/lib/recruiting/product-name"
 
 function athleteDisplayName(row: Record<string, unknown>): string {
   const n = String(row.name ?? "").trim()
@@ -369,7 +370,7 @@ async function gatherAthleteDossierData(athleteId: string) {
       .map((d) => Number(d.year))
       .filter((y) => Number.isFinite(y)),
     seasonRecords: seasonRecordRows,
-    verifiedSources: ["RecruitNC"],
+    verifiedSources: [`${productName()}`],
   }
 
   return {

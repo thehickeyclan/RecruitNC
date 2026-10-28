@@ -24,6 +24,7 @@ import { buildScoutingReport, loadOpponentIndex } from "@/lib/scouting-report"
 import { withClassPositionFloor } from "@/lib/rankings/report-star-floor"
 import { loadStatePlacerIndex } from "@/lib/state-placers"
 import { releasesPersonalData, scoutingAccessTier } from "@/lib/scouting-report-access"
+import { productName } from "@/lib/recruiting/product-name"
 
 export const dynamic = "force-dynamic"
 
@@ -43,7 +44,7 @@ function rankedLabel(report: ComparisonReport): string | null {
   const national = [...report.nationalRankings].sort((a, b) => a.current - b.current)[0]
   if (national) return `#${national.current} ${national.sourceLabel}`
   if (report.rankingPublished && report.prospectRanking != null) {
-    return `${rankingLabel(report.prospectRanking, report.identity.gender, "")} RecruitNC, Class of ${report.identity.graduationYear}`
+    return `${rankingLabel(report.prospectRanking, report.identity.gender, "")} ${productName()}, Class of ${report.identity.graduationYear}`
   }
   return null
 }

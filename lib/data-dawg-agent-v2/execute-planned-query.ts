@@ -18,6 +18,7 @@ import {
 import {
   type PlannedDataDawgQuery,
 } from "./query-planner"
+import { productName } from "@/lib/recruiting/product-name"
 
 function formatMultiTimeChampions(payload: {
   exact_title_count?: number
@@ -175,7 +176,7 @@ function formatRankings(payload: Record<string, unknown>): string {
   }
   if (payload.available_years && !payload.rankings) {
     const years = payload.available_years as number[]
-    return `RecruitNC public prospect rankings are available for class years: **${years.join(", ")}** (top 20 per class).`
+    return `${productName()} public prospect rankings are available for class years: **${years.join(", ")}** (top 20 per class).`
   }
   const rankings =
     (payload.rankings as Array<{
@@ -196,7 +197,7 @@ function formatRankings(payload: Record<string, unknown>): string {
     return `${r.rank ?? "—"}. **${r.name ?? "Unknown"}**${school}${wt}`
   })
   return (
-    `**RecruitNC Prospect Rankings${year != null ? ` — Class of ${year}` : ""}**\n\n` +
+    `**${productName()} Prospect Rankings${year != null ? ` — Class of ${year}` : ""}**\n\n` +
     `${lines.join("\n")}\n\n` +
     `Full list: ${pageUrl}`
   )

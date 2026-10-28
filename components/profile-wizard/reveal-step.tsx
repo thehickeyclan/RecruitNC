@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import { Loader2, Check, ArrowRight } from "lucide-react"
 import type { ProfileGap, ProfileReveal } from "@/lib/profile-reveal"
+import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
 
 /**
  * "Found you" — the record we already hold, shown before anything is asked for.
@@ -25,6 +26,8 @@ export function RevealStep({
   const [reveal, setReveal] = useState<ProfileReveal | null>(null)
   const [gaps, setGaps] = useState<ProfileGap[]>([])
   const [loading, setLoading] = useState(true)
+  /** The product named in the rank label: RecruitWrestlers on its own address, RecruitNC on NC United. */
+  const rankProduct = useOnRecruitWrestlers() ? "RecruitWrestlers" : "RecruitNC"
 
   useEffect(() => {
     let cancelled = false
@@ -95,7 +98,7 @@ export function RevealStep({
             </p>
             {reveal.prospectRanking ? (
               <span className="mt-2 inline-block bg-[#D3B574] px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-[#0A1628]">
-                {reveal.prospectRankingLabel ?? `RecruitNC #${reveal.prospectRanking}`} in the class
+                {reveal.prospectRankingLabel ?? `${rankProduct} #${reveal.prospectRanking}`} in the class
               </span>
             ) : null}
           </div>

@@ -18,6 +18,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { evaluateProgramFit, hasAnyCriteria, type FitCheck, type FitSubject, type ProgramFitCriteria } from "@/lib/program-fit"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
 import { getPublicRankingsMax, isPublicRankingsYearPublished, rankingLabel } from "@/lib/public-rankings-cap"
+import { productName } from "@/lib/recruiting/product-name"
 
 export type FitVerdict = "meets" | "possible" | "misses"
 
@@ -168,7 +169,7 @@ export async function loadFitSubjects(
       nationalEvents: nationalEvents.get(a.id)?.size ?? 0,
       stateBestPlace: state?.place ?? null,
       stateBestLabel: state?.label ?? null,
-      rankedLabel: ranked ? `${rankingLabel(rank, a.gender, "")} RecruitNC Class of ${classYear}` : null,
+      rankedLabel: ranked ? `${rankingLabel(rank, a.gender, "")} ${productName()} Class of ${classYear}` : null,
       female: /^(f|female|girl)/i.test(String(a.gender ?? "")),
     })
   }

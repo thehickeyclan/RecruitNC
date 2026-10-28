@@ -5,6 +5,7 @@ import {
   getSuper32ForAthlete,
   type TournamentResultForDisplay,
 } from "@/lib/public-profile-data"
+import { productName } from "@/lib/recruiting/product-name"
 
 /**
  * Club honours, taken from result tables rather than anything a user typed.
@@ -60,7 +61,7 @@ function podiumYears(rows: TournamentResultForDisplay[]): string[] {
 /** Athlete name for display, matching how profiles resolve it. */
 function athleteName(athlete: Record<string, any>): string {
   const composed = [athlete.firstName, athlete.lastName].filter(Boolean).join(" ").trim()
-  return String(athlete.name ?? "").trim() || composed || "RecruitNC athlete"
+  return String(athlete.name ?? "").trim() || composed || `${productName()} athlete`
 }
 
 export async function loadClubTournamentHonours(

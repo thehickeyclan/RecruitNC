@@ -8,6 +8,7 @@ import {
 } from "@/lib/data-dawg-athlete-timeline"
 import { formatFargoCareerAnswerLines, summarizeFargoCareer } from "@/lib/fargo-career"
 import { namesLikelySamePerson } from "@/lib/athlete-name-match"
+import { productName } from "@/lib/recruiting/product-name"
 
 type CrossStorePayload = {
   searched_for?: string
@@ -127,7 +128,7 @@ export function buildCrossStoreAthleteSummary(
   const schoolBit = schools.length === 1 ? ` from ${schools[0]}` : ""
   const first = achievements.length
     ? `${name} is ${achievements.join(", ").replace(/, ([^,]*)$/, " and $1")}${schoolBit}.`
-    : `${name}'s RecruitNC history includes verified state and national tournament results${schoolBit}.`
+    : `${name}'s ${productName()} history includes verified state and national tournament results${schoolBit}.`
 
   const commit = data.college_commits?.[0]
   if (!commit?.college) return first
