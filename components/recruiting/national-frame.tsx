@@ -24,7 +24,7 @@ function NavMark({ count, fresh }: { count?: number; fresh?: boolean }) {
  */
 /*
  * The menu is the products, not features (Matt, 26 Oct 2026: "the top should not have links like
- * learn, that should be part of command center"). Free: Athletes, Rankings, News. Paid: Insider
+ * learn, that should be part of command center"). Free: Athletes, Rankings, News, Commitments. Paid: Insider
  * and the Recruiting Command Center. Coaches: free access. Learn and the college map live inside
  * the Command Center.
  */
@@ -32,6 +32,8 @@ const FREE = [
   { href: "/prospects/all", label: "Athletes" },
   { href: "/public-rankings", label: "Rankings" },
   { href: "/recaps", label: "News" },
+  // Public to everyone, signed in or not (Matt, 28 Oct 2026).
+  { href: "/college-commitments", label: "Commitments" },
 ]
 const PRODUCTS = [
   { href: "/membership#insider", label: "Insider" },
