@@ -32,8 +32,8 @@ const FEATURES = [
 
 /**
  * The product, shown (Matt, 28 Oct 2026: "we are a product platform.. why not show it?").
- * Screens rendered from app/dev/coach-screens with invented wrestlers; refresh them with
- * scripts/coach-screens.cjs after a UI change.
+ * Screenshots of the real coach portal with invented wrestlers; refresh them with
+ * node scripts/coach-screens/capture.cjs after a UI change.
  */
 const SHOWCASE = [
   { img: "board", icon: Star, kicker: "My Recruits", title: "Your board and your funnel, shared with your staff", points: ["Stages from Prospect to Signed, applied dates, follow-ups", "Résumé, GPA and cell on every row", "\"Interested in you\" when a wrestler marks your program"] },
