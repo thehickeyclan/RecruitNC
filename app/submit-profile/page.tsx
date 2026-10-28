@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { currentClassYears } from "@/lib/class-years"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -485,10 +486,12 @@ export default function SubmitProfilePage() {
                       <SelectValue placeholder="Select year" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="2026">2026</SelectItem>
-                      <SelectItem value="2027">2027</SelectItem>
-                      <SelectItem value="2028">2028</SelectItem>
-                      <SelectItem value="2029">2029</SelectItem>
+                      {/* The classes in high school now, derived: a typed list stopped at 2029 (27 Oct 2026). */}
+                      {currentClassYears().map((year) => (
+                        <SelectItem key={year} value={String(year)}>
+                          {year}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

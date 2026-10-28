@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, FormEvent } from "react"
+import { currentClassYears } from "@/lib/class-years"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -25,7 +26,8 @@ import {
 } from "@/lib/national-team-weight-classes"
 
 const INTEREST_FORM_WEIGHT_CLASSES = interestFormWeightClassUnion()
-const GRADUATION_YEARS = ["2026", "2027", "2028", "2029"]
+// The classes in high school now, derived: the typed list stopped at 2029 and kept 2026.
+const GRADUATION_YEARS = currentClassYears().map(String)
 
 interface FormData {
   firstName: string
