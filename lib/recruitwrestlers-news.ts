@@ -8,7 +8,8 @@ export type Story = {
   summary: string
   date: string
   readTime: string
-  image: string
+  /** The tile's picture; a story without one gets a lettered tile. */
+  image: string | null
   category: string
   state: string
   premium: boolean
@@ -18,6 +19,19 @@ export type Story = {
 
 // The NC recaps are published (NC United published them 26 Oct); SC waits for Matt.
 export const RW_STORIES: Story[] = [
+  {
+    href: "/recaps/beyond-the-mat",
+    title: "Beyond the Mat: The Questions Every Wrestling Family Should Ask",
+    summary: "If wrestling went away tomorrow, would you still want to attend this school? Five questions about the people, the future, the wrestling, the academics and the money.",
+    date: "2026-10-28",
+    readTime: "8 min read",
+    image: null,
+    category: "Recruiting advice",
+    state: "All",
+    premium: false,
+    // Matt publishes it: staff only until this is true.
+    published: false,
+  },
   {
     href: "/recaps/super32-2026-sc",
     title: "Super 32 2026: South Carolina Boys Recap",

@@ -31,11 +31,23 @@ export async function generateMetadata(): Promise<Metadata> {
 const dateLong = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
 const dateShort = (d: string) => new Date(`${d}T12:00:00`).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
 
+/** A story without a photo: its title on navy with a lime rule. */
+function LetteredTile({ title }: { title: string }) {
+  const [head, tail] = title.split(": ")
+  return (
+    <div className="absolute inset-0 flex flex-col justify-end bg-gradient-to-br from-[#1b2d49] via-[#11203A] to-[#0B1426] p-6 md:p-8">
+      <span className="mb-3 h-1 w-12 rounded bg-[#A3E635]" />
+      <p className="text-2xl font-black leading-tight text-white md:text-4xl">{head}</p>
+      {tail ? <p className="mt-2 text-base font-semibold text-white/70 md:text-lg">{tail}</p> : null}
+    </div>
+  )
+}
+
 function Pills({ s, draft }: { s: Story; draft: boolean }) {
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       <span className="rounded-full bg-[#A3E635] px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-[#0B1426]">{s.category}</span>
-      <span className="rounded-full border border-white/25 px-2.5 py-0.5 text-xs font-bold text-white">{s.state}</span>
+      {s.state !== "All" ? <span className="rounded-full border border-white/25 px-2.5 py-0.5 text-xs font-bold text-white">{s.state}</span> : null}
       {s.premium ? <span className="rounded-full border border-[#A3E635] px-2.5 py-0.5 text-xs font-semibold text-[#A3E635]">★ Premium content</span> : null}
       {draft ? <span className="rounded-full bg-amber-400/20 px-2.5 py-0.5 text-xs font-semibold text-amber-200">Draft · staff only</span> : null}
     </div>
@@ -78,7 +90,11 @@ export default async function RecruitWrestlersNews() {
             >
               <div className="grid gap-0 md:grid-cols-2">
                 <div className="relative aspect-[16/10] overflow-hidden bg-[#11203A] md:aspect-auto md:min-h-[400px]">
-                  <Image src={featured.image} alt="" fill priority sizes="(max-width: 768px) 100vw, 50vw" className="object-cover object-center transition-transform duration-500 group-hover:scale-105" />
+                  {featured.image ? (
+                    <Image src={featured.image} alt="" fill priority sizes="(max-width: 768px) 100vw, 50vw" className="object-cover object-center transition-transform duration-500 group-hover:scale-105" />
+                  ) : (
+                    <LetteredTile title={featured.title} />
+                  )}
                 </div>
                 <div className="flex flex-col justify-center p-6 md:p-10">
                   <div className="mb-4 flex items-center gap-3">
@@ -93,7 +109,7 @@ export default async function RecruitWrestlersNews() {
                       {dateLong(featured.date)} · {featured.readTime}
                     </div>
                     <span className="inline-flex items-center gap-2 font-medium text-[#A3E635] transition-all group-hover:gap-3">
-                      Read the recap
+                      {featured.category === "Recruiting advice" ? "Read the article" : "Read the recap"}
                       <ArrowRight className="h-4 w-4" />
                     </span>
                   </div>
@@ -110,7 +126,11 @@ export default async function RecruitWrestlersNews() {
               {rest.map((s) => (
                 <Link key={s.href} href={s.href} className="group block overflow-hidden rounded-xl border border-white/10 bg-[#15243B]/60 transition-all duration-300 hover:border-[#A3E635]/40 hover:bg-[#15243B]">
                   <div className="relative aspect-[16/10] overflow-hidden bg-[#11203A]">
-                    <Image src={s.image} alt="" fill sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover object-center transition-transform duration-500 group-hover:scale-105" />
+                    {s.image ? (
+                      <Image src={s.image} alt="" fill sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover object-center transition-transform duration-500 group-hover:scale-105" />
+                    ) : (
+                      <LetteredTile title={s.title} />
+                    )}
                   </div>
                   <div className="p-5">
                     <div className="mb-3">
