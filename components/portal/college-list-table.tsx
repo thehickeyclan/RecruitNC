@@ -9,6 +9,7 @@ import type { Admissions } from "@/lib/college-programs/list"
 import { ArrowRight, BarChart3, ExternalLink, MoreVertical } from "lucide-react"
 
 import { CoachEmailComposer } from "@/components/colleges/coach-email-composer"
+import { ReachOutChecklist, type ReachState } from "@/components/portal/reach-out-checklist"
 import { StageSelect } from "@/components/portal/stage-select"
 import { BOARD_STAGES, COLLEGE_LIST_STATUSES, COLLEGE_LIST_STATUS_LABEL, boardStage, type BoardStage, type CollegeListStatus } from "@/lib/college-programs/list"
 
@@ -42,6 +43,10 @@ export type ListRow = {
   stageSince?: string | null
   questionnaireDoneAt?: string | null
   note: string | null
+  /** The reach-out checklist for the first wrestler: interested, form, email (28 Oct 2026). */
+  reach?: ReachState | null
+  /** The next planned visit to this college. */
+  visit?: { label: string; official: boolean } | null
 }
 
 /** A list row as the shared pipeline pieces read it (chips, signals, panel, next step). */
@@ -88,7 +93,7 @@ const MAX_COMPARE = 4
  * college, where they stand, what it costs, how it fits, what coaches have actually done, and the
  * next step. The status is the family's own; viewed and messaged are verified.
  */
-export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow[]; readOnly: boolean; wrestlerId: string | null }) {
+export function CollegeListTable({ rows, readOnly, wrestlerId, wrestlerName }: { rows: ListRow[]; readOnly: boolean; wrestlerId: string | null; wrestlerName?: string | null }) {
   const [tab, setTab] = useState<(typeof TABS)[number]["key"]>("all")
   const [level, setLevel] = useState("all")
   const [picked, setPicked] = useState<string[]>([])
@@ -169,7 +174,10 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
           <thead>
             <tr className="border-b border-white/10 text-left text-xs font-semibold text-white/50">
               <th className="w-10 p-3" />
-              <th className="p-3">College</th>
+              <th className="p-3">
+                College
+                <span className="block font-normal text-white/35">reach out: interested · form · email</span>
+              </th>
               <th className="p-3">Level</th>
               <th className="p-3">
                 Fit
@@ -182,7 +190,7 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
               <th className="p-3">Last activity</th>
               <th className="p-3">
                 Progress
-                <span className="block font-normal text-white/35">your moves · from the college</span>
+                <span className="block font-normal text-white/35">from the college</span>
               </th>
               <th className="p-3">Stage</th>
               <th className="p-3">Next step</th>
@@ -220,6 +228,28 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
                         <span className="block text-xs text-white/45">{[r.place, r.conference].filter(Boolean).join(" · ")}</span>
                       </span>
                     </a>
+                    {r.reach && wrestlerId ? (
+                      <div className="mt-2 pl-[3.25rem]">
+                        <ReachOutChecklist
+                          compact
+                          school={{ id: r.id, name: r.name }}
+                          athlete={{ id: wrestlerId, firstName: wrestlerName ?? "Your wrestler" }}
+                          initial={{ ...r.reach, ...(r.id in formDone ? { formDone: formDone[r.id] } : {}) }}
+                          status={statusOf(r)}
+                          readOnly={readOnly}
+                          onChange={(st) => setFormDone((m) => ({ ...m, [r.id]: st.formDone }))}
+                        />
+                      </div>
+                    ) : null}
+                    {r.visit ? (
+                      <div className="pl-[3.25rem]">
+                    
+                      <a href="/my-recruiting/plan#visits" className={`mt-1 inline-flex items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[10px] font-black ${r.visit.official ? "bg-[#D3B574] text-[#0A1628]" : "bg-white/15 text-white"}`}>
+                        {r.visit.label}
+                      </a>
+                    
+                      </div>
+                    ) : null}
                   </td>
                   <td className="p-3">
                     <span className="rounded px-1.5 py-0.5 text-[11px] font-black text-[#071427]" style={{ backgroundColor: r.levelColor }}>
@@ -253,10 +283,11 @@ export function CollegeListTable({ rows, readOnly, wrestlerId }: { rows: ListRow
                   </td>
                   <td className="p-3">
                     <div className="flex max-w-[15rem] flex-wrap gap-1">
-                      {chips.map((x) => (
+                      {(r.reach && wrestlerId ? chips.filter((x) => x.key === "apply") : chips).map((x) => (
                         <Chip key={x.key} a={x} onToggle={x.key === "form" && !readOnly ? () => void toggleForm(r, !x.done) : undefined} />
                       ))}
                     </div>
+
                     <Signals c={pc} today={today} hideLast />
                   </td>
                   <td className="w-36 p-3">

@@ -29,11 +29,15 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { loadCommandCenter } from "../load"
 import { MapPreviewCard } from "../map-preview"
 import { WarRoomPlan } from "../war-room-plan"
+import { reachStateFor } from "../journey-data"
+import { easternToday } from "@/lib/college-programs/admissions-format"
+import { visitDates, visitPhase } from "@/lib/recruiting/visits"
 
 export const dynamic = "force-dynamic"
 export const metadata = { title: "My College List | Recruiting Command Center" }
 
-const SCHOOLS = new Map([...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS].map((s) => [s.id, s]))
+const ALL_SCHOOLS = [...(data.schools as CollegeMapSchool[]), ...ANNOUNCED_PROGRAMS]
+const SCHOOLS = new Map(ALL_SCHOOLS.map((s) => [s.id, s]))
 const LEVELS: CollegeDivision[] = ["NCAA Division I", "NCAA Division II", "NCAA Division III", "NAIA", "NJCAA"]
 const card = "rounded-2xl border border-white/10 bg-[#0d1d36]/80 p-5"
 
@@ -120,6 +124,8 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
     )
   }
 
+  const first = athletes[0] ?? null
+  const today = easternToday()
   const rows: ListRow[] = schools.flatMap((s) => {
     const school = SCHOOLS.get(s.id)
     if (!school) return []
@@ -155,6 +161,12 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
         stageSince: s.stageSince ?? null,
         questionnaireDoneAt: s.questionnaireDoneAt ?? null,
         note: s.memo ?? null,
+        reach: first ? reachStateFor(cc, s.id, first.id) : null,
+        // The next visit planned to this college, for the row's badge.
+        visit: (() => {
+          const v = cc.visits.visits.find((x) => x.schoolId === s.id && visitPhase(x, today) === "upcoming")
+          return v ? { label: `${v.kind === "official" ? "Official" : "Unofficial"} visit ${visitDates(v)}`, official: v.kind === "official" } : null
+        })(),
       },
     ]
   })
@@ -162,7 +174,6 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
   const byStatus = (k: (typeof COLLEGE_LIST_STATUSES)[number]) => schools.filter((s) => s.status === k).length
   const byLevel = LEVELS.map((d) => ({ d, n: schools.filter((s) => s.level === DIVISION_SHORT[d]).length }))
   const viewedCount = rows.filter((r) => r.viewed).length
-  const savedSchools = schools.map((s) => SCHOOLS.get(s.id)).filter((s): s is CollegeMapSchool => Boolean(s))
 
   return (
     <PortalShell active="colleges">
@@ -170,7 +181,7 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
         {header}
         <div className="mt-6 grid gap-5 xl:grid-cols-[1fr_320px]">
           <div className="min-w-0">
-            <CollegeListTable rows={rows} readOnly={viewerId !== cc.authUserId} wrestlerId={wrestlers[0]?.id ?? null} />
+            <CollegeListTable rows={rows} readOnly={viewerId !== cc.authUserId} wrestlerId={wrestlers[0]?.id ?? null} wrestlerName={first?.firstName ?? null} />
             <p className="mt-3 text-xs text-white/40">
               Your status is yours to set. Coach activity is verified from <BrandName />: a program&apos;s coaches viewing the profile or writing to you. Published cost is the
               college&apos;s full price before aid; what families paid after aid is in Compare.
@@ -226,7 +237,9 @@ export default async function CommandCenterColleges({ searchParams }: { searchPa
 
             <div className="[&>a]:mt-0">
               <MapPreviewCard
-                preview={buildMapPreview(savedSchools, { team: focus?.gender ?? null, savedIds: schools.map((s) => s.id), accessToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN })}
+                // Every college, with the saved ones ringed - the same card as the home page. It was drawn
+                // from the saved ones only, so a new list read "0 colleges with men's wrestling" (28 Oct 2026).
+                preview={buildMapPreview(ALL_SCHOOLS, { team: focus?.gender ?? null, savedIds: schools.map((s) => s.id), accessToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN })}
                 who={null}
                 team={focus?.gender ?? null}
                 savedCount={schools.length}

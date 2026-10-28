@@ -85,6 +85,10 @@
     {
       "path": "/api/cron/super32-flo",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/family-reminders",
+      "schedule": "*/15 * * * *"
     }
   ]
 }

@@ -29,6 +29,8 @@ export type WarRoomSchool = {
   questionnaireDone?: boolean
   /** When it was marked done, if it was ticked rather than implied by the stage. */
   questionnaireDoneAt?: string | null
+  /** When the family emailed the coach: from the composer, or ticked on the reach-out checklist. */
+  emailedAt?: string | null
   /** The admissions track (application status, plan, date, pre-read). */
   admissions?: Admissions
   /** The college's own deadlines and basics for this cycle (lib/college-programs/admissions.ts). */

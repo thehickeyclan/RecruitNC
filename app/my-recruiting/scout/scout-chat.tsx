@@ -96,16 +96,17 @@ function Body({ text }: { text: string }) {
   )
 }
 
-export function ScoutChat({ firstName, initialTurns }: { firstName: string | null; initialTurns?: Turn[] }) {
+export function ScoutChat({ firstName, initialTurns, ask: askOnOpen }: { firstName: string | null; initialTurns?: Turn[]; ask?: string | null }) {
   const name = firstName ?? "your wrestler"
   const [turns, setTurns] = useState<Turn[]>(initialTurns ?? [])
   const [draft, setDraft] = useState("")
   const [busy, setBusy] = useState(false)
   const end = useRef<HTMLDivElement>(null)
 
-  // The conversation survives a reload in this tab, nowhere else.
+  // The conversation survives a reload in this tab, nowhere else. A question sent by a path step's
+  // Ask Scout link starts a new one instead, so the restored conversation never replaces it.
   useEffect(() => {
-    if (initialTurns) return
+    if (initialTurns || askOnOpen) return
     try {
       const saved = sessionStorage.getItem(STORE)
       if (saved) setTurns(JSON.parse(saved) as Turn[])
@@ -141,6 +142,16 @@ export function ScoutChat({ firstName, initialTurns }: { firstName: string | nul
     ])
     setBusy(false)
   }
+
+  // The question a recruiting-path step sent, asked once; the address is cleaned so a reload does not ask again.
+  const asked = useRef(false)
+  useEffect(() => {
+    if (!askOnOpen || asked.current || initialTurns) return
+    asked.current = true
+    window.history.replaceState(null, "", window.location.pathname)
+    void ask(askOnOpen)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [askOnOpen])
 
   const tiles: Array<{ icon: LucideIcon; label: string; question: string }> = [
     { icon: GraduationCap, label: "What colleges fit my results?", question: `What colleges fit ${name}'s results?` },

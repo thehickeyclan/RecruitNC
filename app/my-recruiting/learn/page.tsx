@@ -14,6 +14,7 @@ import {
   BarChart3,
   BookOpen,
   CalendarDays,
+  Compass,
   ChevronRight,
   DollarSign,
   FileText,
@@ -22,6 +23,7 @@ import {
   ListChecks,
   Mail,
   Map as MapIcon,
+  Plane,
   Scale,
   ShieldAlert,
   Target,
@@ -79,6 +81,7 @@ const TOPICS: Array<{ icon: LucideIcon; label: string; href: string }> = [
   { icon: DollarSign, label: "NIL and revenue sharing", href: "/recruiting/learn/nil" },
   { icon: Users, label: "Women's wrestling", href: "/recruiting/learn/womens-wrestling" },
   { icon: CalendarDays, label: "Eligibility clock calculator", href: "/recruiting/learn/eligibility-clock" },
+  { icon: Plane, label: "Official visits", href: "/recruiting/learn/official-visits" },
   { icon: ShieldAlert, label: "Staying eligible in NC", href: "/recruiting/learn/staying-eligible-in-north-carolina" },
 ]
 
@@ -87,11 +90,13 @@ const DO_NEXT: Array<{ icon: LucideIcon; label: string; text: string; href: stri
   { icon: Mail, label: "Write to a coach", text: "From verified results", href: "/my-recruiting/colleges" },
   { icon: MapIcon, label: "Find colleges at a level", text: "Every program on the map", href: "/recruiting/college-map" },
   { icon: BarChart3, label: "Compare your colleges", text: "Fit, full cost, roster", href: "/recruiting/compare" },
-  { icon: Target, label: "Your next steps", text: "The plan for this year", href: "/my-recruiting/plan" },
+  { icon: Target, label: "Your recruiting path", text: "The five steps, and where you are", href: "/my-recruiting" },
 ]
 
 /** Whole guides (Matt, 19 Oct 2026): the pages a family reads start to finish, beside the quick answers. */
 const GUIDES: Array<{ icon: LucideIcon; title: string; text: string; href: string }> = [
+  { icon: Compass, title: "How to use the Command Center", text: "The five steps of the recruiting path, and how to use Scout.", href: "/recruiting/learn/how-to-use-command-center" },
+  { icon: Plane, title: "Get ready for your official visit", text: "The checklist, who pays, the limits by level and the questions to ask.", href: "/recruiting/learn/official-visits" },
   { icon: DollarSign, title: "NIL in wrestling", text: "What it is, what wrestlers really earn, and what's just rumour.", href: "/recruiting/learn/nil" },
   { icon: ArrowLeftRight, title: "The transfer portal", text: "How transfers change recruiting, and the rules at every level.", href: "/recruiting/learn/transfer-portal" },
   { icon: CalendarDays, title: "The eligibility clock", text: "Work out how many college seasons your wrestler has.", href: "/recruiting/learn/eligibility-clock" },
