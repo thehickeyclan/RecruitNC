@@ -46,7 +46,10 @@ export function MyRecruitsBoard({
   needsYou = null,
   below = null,
   asUserId = null,
+  identity = null,
 }: {
+  /** The coach's program logo, program and name, as on Coach Home (Matt, 28 Oct 2026). */
+  identity?: { logo: string | null; program: string | null; coachName: string | null } | null
   initialData?: Payload | null
   needsYou?: React.ReactNode
   below?: React.ReactNode
@@ -225,8 +228,15 @@ export function MyRecruitsBoard({
         <div className={cn("mx-auto max-w-7xl px-4 py-8 sm:py-10", pickedRows.length ? "pb-28 sm:pb-28" : "")}>
           <CoachTabs active="recruits" className="mb-6" />
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D3B574]"><BrandName /></p>
+            <div className="flex min-w-0 items-center gap-4">
+            {identity?.logo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={identity.logo} alt={identity.program ? `${identity.program} logo` : "Program logo"} className="h-16 w-16 shrink-0 rounded-xl bg-white object-contain p-1.5 sm:h-20 sm:w-20" />
+            ) : null}
+            <div className="min-w-0">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D3B574]">
+                {identity?.coachName || identity?.program ? [identity.coachName ? `Coach ${identity.coachName}` : null, identity.program].filter(Boolean).join(" · ") : <BrandName />}
+              </p>
               <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">My Recruits</h1>
               <p className="mt-1 text-sm text-white/60">
                 Every wrestler you{data?.hasSchool ? " and your staff" : ""} added to the watch list.{" "}
@@ -234,6 +244,7 @@ export function MyRecruitsBoard({
                   See who changed what
                 </Link>
               </p>
+            </div>
             </div>
             <div className="flex flex-wrap items-center gap-4">
               <Link
