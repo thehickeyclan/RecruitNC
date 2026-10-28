@@ -33,6 +33,7 @@ import {
 import { walletBalanceFromRow } from "@/lib/fundraising/wallet-balance"
 import type { ProfileSpartanSupportersAthletePayload } from "@/app/api/profile/spartan-fundraising-supporters/route"
 import { HardLink } from "@/components/hard-link"
+import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
 
 const ATHLETE_COMPLETENESS_LABELS: Record<string, string> = {
   bio: "Bio",
@@ -117,6 +118,7 @@ export function ProfileClient() {
   /** Wallet totals load when the user opens Digital wallet (or links an athlete). */
   const [spartanWalletPanelActivated, setSpartanWalletPanelActivated] = useState(false)
   const [activeProfileTab, setActiveProfileTab] = useState("account")
+  const onRw = useOnRecruitWrestlers()
   const rankingsAccess = useRankingsAccess()
 
   useEffect(() => {
@@ -597,9 +599,12 @@ export function ProfileClient() {
    * empty screen of zeros; it now shows only when a linked athlete still has a balance (or when a
    * link opens it directly).
    */
+  /* The wallet is NC United's fundraising; RecruitWrestlers never shows it (Matt, 28 Oct 2026). */
   const showWalletTab =
-    activeProfileTab === "fundraise" ||
-    (spartanFundraising?.athletes ?? []).some((row) => walletBalanceFromRow(row as never).availableCents > 0)
+    !onRw &&
+    (activeProfileTab === "fundraise" ||
+      (spartanFundraising?.athletes ?? []).some((row) => walletBalanceFromRow(row as never).availableCents > 0))
+  const tabValue = onRw && activeProfileTab === "fundraise" ? "account" : activeProfileTab
 
   return (
     <div className="profile-surface min-h-screen bg-[#0A1628]">
@@ -636,7 +641,7 @@ export function ProfileClient() {
       </div>
 
       <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-        <Tabs value={activeProfileTab} onValueChange={onProfileTabChange} className="w-full space-y-6">
+        <Tabs value={tabValue} onValueChange={onProfileTabChange} className="w-full space-y-6">
           <TabsList className={`mb-0 grid w-full grid-cols-2 ${showWalletTab ? "sm:grid-cols-4" : "sm:grid-cols-3"} gap-2 rounded-xl bg-[#0F1E32] border border-[#1e3a5f] p-2 h-auto`}>
             <TabsTrigger
               value="account"
@@ -954,6 +959,7 @@ export function ProfileClient() {
             />
         </TabsContent>
 
+        {onRw ? null : (
         <TabsContent value="fundraise" className="mt-0 space-y-0 focus-visible:outline-none">
           <ProfileFundraiseTab
             walletPanelActivated={spartanWalletPanelActivated}
@@ -977,6 +983,7 @@ export function ProfileClient() {
             }}
           />
         </TabsContent>
+        )}
 
         <TabsContent value="blue" className="mt-0 space-y-6 focus-visible:outline-none">
                 {/* Everything this account pays for, or gets through Blue, in one place. */}
