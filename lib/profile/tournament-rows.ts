@@ -13,6 +13,7 @@ import { displayName, placementLabel, type OtherTournamentProfileBlock } from "@
 import { parseFargoDivisionString } from "@/lib/fargo-division"
 import { HOME_STATE, stateChampionshipName } from "@/lib/athlete-state"
 import type { NchsaaStateBout } from "@/lib/nchsaa-state-bouts"
+import { cleanClassification } from "@/lib/profile/state-hs-group"
 import {
   fargoEventKey,
   NC_UNITED_AAU_DUALS_EVENT_KEY,
@@ -134,7 +135,8 @@ export function buildNchsaaStateRows(
 ): TournamentRow[] {
   const body = (classification: string) => stateChampionshipName(state, classification)
   return results
-    .map((result, index) => {
+    .map((raw, index) => {
+      const result = { ...raw, classification: cleanClassification(raw.classification) }
       const bouts = stateBouts.filter((bout) => bout.year === result.year)
       const rounds = inferNchsaaStateRounds(result.place, bouts)
       const wins = bouts.filter((bout) => bout.outcome === "W").length
