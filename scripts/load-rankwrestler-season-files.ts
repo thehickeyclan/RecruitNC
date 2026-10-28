@@ -60,7 +60,7 @@ async function main() {
     if (STATE) q = q.eq("state", STATE)
     const { data, error } = await q.range(from, from + 999)
     if (error) throw new Error(error.message)
-    athletes.push(...((data ?? []) as never))
+    athletes.push(...((data ?? []) as Array<(typeof athletes)[number]>))
     if (!data || data.length < 1000) break
   }
 
@@ -130,9 +130,22 @@ async function main() {
     const existing = (held ?? [])[0] as { id: string; total_matches: number } | undefined
     if (existing && Number(existing.total_matches) === matches.length) { say(`already loaded with ${matches.length} matches — unchanged, left alone`); continue }
 
+    /*
+     * `wrestler_id` is unique across the whole table, not per athlete, so two wrestlers of one
+     * name in one season collide: Alabama's Caleb Edwards (Brewbaker Tech) was refused because
+     * North Carolina's Caleb Edwards (Piedmont) already held `caleb_edwards_2025-26`. The plain
+     * key is kept wherever it is free or already this athlete's, so nothing existing is renamed,
+     * and only the loser of a collision carries the profile id that makes it unique.
+     */
+    const plainKey = `${pick.name.toLowerCase().replace(/\s+/g, "_")}_${wi.season}`
+    const { data: keyHolder } = await sb.from("matches").select("athlete_id").eq("wrestler_id", plainKey).maybeSingle()
+    const wrestlerId =
+      !keyHolder || keyHolder.athlete_id === pick.id ? plainKey : `${plainKey}_${pick.id.slice(0, 8)}`
+    if (wrestlerId !== plainKey) say(`another wrestler of that name holds "${plainKey}" — this season is keyed ${wrestlerId}`)
+
     const row = {
       athlete_id: pick.id,
-      wrestler_id: `${pick.name.toLowerCase().replace(/\s+/g, "_")}_${wi.season}`,
+      wrestler_id: wrestlerId,
       first_name: wi.first_name,
       last_name: wi.last_name,
       season: wi.season,
