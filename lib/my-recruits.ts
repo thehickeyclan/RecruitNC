@@ -9,6 +9,7 @@ import type { PipelineStage } from "@/lib/recruiting/pipeline"
 import { programApplied, programStages } from "@/lib/recruiting/program-stage"
 import { athleteStateCode } from "@/lib/recruiting/states"
 import { stateChampionshipName } from "@/lib/athlete-state"
+import { cleanClassification } from "@/lib/profile/state-hs-group"
 import { mostRecentGraduatedClassYear } from "@/lib/class-years"
 import { d1ContactOpens } from "@/lib/coach-messages-compliance"
 import { coachProgramFacts } from "@/lib/coach-messages-compliance-server"
@@ -229,7 +230,7 @@ export async function loadMyRecruits(admin: ReturnType<typeof createAdminClient>
       ...state.filter((r) => r.athlete_id === id && Number(r.place) > 0).map((r) => ({ assoc: stateChampionshipName("NC", r.classification ?? ""), cls: r.classification ?? "", place: Number(r.place), year: Number(r.year) })),
       ...(otherStates ?? [])
         .filter((r) => r.athlete_id === id && Number(r.place) > 0)
-        .map((r) => ({ assoc: stateChampionshipName(String(r.state), String(r.classification ?? "")), cls: String(r.classification ?? ""), place: Number(r.place), year: Number(r.season) })),
+        .map((r) => ({ assoc: stateChampionshipName(String(r.state), String(r.classification ?? "")), cls: cleanClassification(r.classification as string | null), place: Number(r.place), year: Number(r.season) })),
     ].sort((x, y) => x.place - y.place || y.year - x.year)[0]
     const national = [
       ...nhsca.filter((r) => r.athlete_id === id).map((r) => ({ ev: "NHSCA", year: Number(r.year), place: Number(r.placement) })),

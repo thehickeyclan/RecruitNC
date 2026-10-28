@@ -16,6 +16,7 @@ import { BarChart3, ChevronDown, ChevronRight, ChevronUp, Lock, TrendingDown, Tr
 import { cn } from "@/lib/utils"
 import { weightLabel } from "@/lib/profile/weight-label"
 import { newestFirst, topWins } from "@/lib/win-strength"
+import { isStateHs, stateHsGroupName } from "@/lib/profile/state-hs-group"
 
 /* ------------------------------------------------------------------ data, as the app reads it */
 
@@ -283,6 +284,13 @@ function Toggle<T extends string>({ value, options, onChange }: { value: T; opti
 
 /* ------------------------------------------------------------------ tournament results */
 
+/**
+ * The high school state tournament, named by the wrestler's own association (Matt, 28 Oct 2026: a
+ * South Carolina kid's results sat under "NCHSAA State"). The row already says "SCHSL 5A State
+ * Championships" (lib/profile/tournament-rows.ts); the group takes the body from it: "SCHSL State",
+ * "NCISA State", "Georgia State". Freestyle and Greco state events are not this tournament.
+ */
+const STATE_HS = "__state_hs__"
 const EVENT_ORDER: Array<[RegExp, string]> = [
   [/fargo/i, "Fargo"],
   [/women'?s nationals|spokane/i, "USAW Women's Nationals"],
@@ -290,34 +298,40 @@ const EVENT_ORDER: Array<[RegExp, string]> = [
   [/super ?32(?!.*early)/i, "Super 32"],
   [/nhsca(?!.*duals)/i, "NHSCA Nationals"],
   [/tournament of champions|\btoc\b/i, "Tournament of Champions"],
-  [/nchsaa|state championships/i, "NCHSAA State"],
+  [/nchsaa|state championships/i, STATE_HS],
   [/women'?s national duals/i, "Women's National Duals"],
   [/southeast regional|rader/i, "Southeast Regionals"],
   [/journeymen/i, "Journeymen"],
   [/early entry/i, "Super 32 Early Entry"],
 ]
 
-type EventGroup = { name: string; style: "freestyle" | "folkstyle"; rows: AppTournamentRow[] }
+type EventGroup = { name: string; style: "freestyle" | "folkstyle"; rows: AppTournamentRow[]; stateHs?: boolean }
 
 /**
  * In-state or national, the way a coach sorts a résumé (Matt, 10 October 2026): the state
  * tournament and the Tournament of Champions are North Carolina's; everything else travels.
  */
-const IN_STATE_GROUPS = new Set(["NCHSAA State", "Tournament of Champions"])
-const scopeOf = (g: EventGroup): "in-state" | "national" => (IN_STATE_GROUPS.has(g.name) || /nc freestyle|tar heel state|nc usa/i.test(g.name) ? "in-state" : "national")
+const IN_STATE_GROUPS = new Set(["Tournament of Champions"])
+const scopeOf = (g: EventGroup): "in-state" | "national" =>
+  g.stateHs || IN_STATE_GROUPS.has(g.name) || /\b[a-z]{2} freestyle|tar heel state|nc usa/i.test(g.name) ? "in-state" : "national"
 
 function groupByEvent(rows: AppTournamentRow[], style: EventGroup["style"]): EventGroup[] {
   const groups = new Map<string, AppTournamentRow[]>()
+  const stateHs = new Set<string>()
   for (const row of rows) {
-    const named = EVENT_ORDER.find(([re]) => re.test(row.event))?.[1] ?? (row.isDuals ? "Duals" : row.event.replace(/^\d{4}\s+/, ""))
+    let named = isStateHs(row.event) ? STATE_HS : EVENT_ORDER.find(([re]) => re.test(row.event))?.[1] ?? (row.isDuals ? "Duals" : row.event.replace(/^\d{4}\s+/, ""))
+    if (named === STATE_HS) {
+      named = stateHsGroupName(row.event)
+      stateHs.add(named)
+    }
     groups.set(named, [...(groups.get(named) ?? []), row])
   }
   const rank = (name: string) => {
-    const i = EVENT_ORDER.findIndex(([, n]) => n === name)
+    const i = EVENT_ORDER.findIndex(([, n]) => n === (stateHs.has(name) ? STATE_HS : name))
     return i < 0 ? (name === "Duals" ? 99 : 50) : i
   }
   return [...groups.entries()]
-    .map(([name, list]) => ({ name, style, rows: [...list].sort((a, b) => b.year - a.year) }))
+    .map(([name, list]) => ({ name, style, stateHs: stateHs.has(name), rows: [...list].sort((a, b) => b.year - a.year) }))
     .sort((a, b) => rank(a.name) - rank(b.name))
 }
 
