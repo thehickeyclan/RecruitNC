@@ -11,7 +11,7 @@ import { prefetchAthleteProfile } from "@/lib/prefetch-athlete-profile"
 import { getDivisionDisplayShort } from "@/lib/division-display"
 import type { CommitmentAthleteListItem } from "@/lib/athletes-commitments-fetch"
 
-type Commitment = CommitmentAthleteListItem & { top_honor?: string | null }
+type Commitment = CommitmentAthleteListItem & { top_honor?: string | null; state?: string }
 type Gender = "all" | "male" | "female"
 type SortChoice = "newest" | "name" | "college"
 type ViewMode = "list" | "cards"
@@ -73,7 +73,17 @@ function DivisionBadge({ c }: { c: Commitment }) {
   )
 }
 
-export function CollegeCommitmentsClient({ commitments }: { commitments: Commitment[] }) {
+export function CollegeCommitmentsClient({
+  commitments,
+  coverage = "North Carolina",
+  showState = false,
+}: {
+  commitments: Commitment[]
+  /** "North Carolina", or every live state on RecruitWrestlers. */
+  coverage?: string
+  /** More than one state on the page: each wrestler carries his state's tag. */
+  showState?: boolean
+}) {
   const [search, setSearch] = useState("")
   const [gender, setGender] = useState<Gender>("all")
   const [classYear, setClassYear] = useState<string>("all")
@@ -131,7 +141,7 @@ export function CollegeCommitmentsClient({ commitments }: { commitments: Commitm
 
   return (
     <main className="min-h-screen bg-[#0A1628]">
-      <CommitsHero icon={GraduationCap} title="College Commitments" subtitle="Where North Carolina wrestlers are wrestling next." />
+      <CommitsHero icon={GraduationCap} title="College Commitments" subtitle={`Where ${coverage} wrestlers are wrestling next.`} />
 
       <div className="container mx-auto space-y-6 px-4 py-8">
         {/* The division breakdown is the division filter: tap a number to see who it counts. */}
@@ -253,6 +263,7 @@ export function CollegeCommitmentsClient({ commitments }: { commitments: Commitm
                       <HardLink href={`/view-profile?id=${encodeURIComponent(c.id)}`} className="font-semibold text-white hover:text-[#D3B574]">
                         {c.name}
                       </HardLink>
+                      {showState && c.state ? <span className="ml-2 rounded border border-white/25 px-1 align-middle text-[10px] font-bold text-white/70">{c.state}</span> : null}
                       {c.highschool ? <div className="text-xs text-white/45">{c.highschool}</div> : null}
                     </td>
                     <td className="px-4 py-3">
