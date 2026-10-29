@@ -16,6 +16,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { gunzipSync, gzipSync } from "node:zlib"
 import { list, put } from "@vercel/blob"
 import type { Credential, Gender } from "./engine"
+import { nhscaDivision } from "@/lib/nhsca-division"
 
 const SOURCE_LABEL: Record<string, string> = { sports_illustrated: "SI", flowrestling: "Flo", matscouts: "MatScouts" }
 const ORD = (n: number) => (n === 1 ? "1st" : n === 2 ? "2nd" : n === 3 ? "3rd" : `${n}th`)
@@ -71,15 +72,18 @@ async function eventPlacers(supabase: SupabaseClient): Promise<Credential[]> {
   ]
   const out: Credential[] = []
   for (const [key, label, gender] of events) {
-    const rows = await pageAll<{ wrestler_name: string; state: string | null; place: number }>((from) =>
-      supabase.from("national_event_placers").select("wrestler_name, state, place").eq("event_key", key).order("id").range(from, from + 999),
+    const rows = await pageAll<{ wrestler_name: string; state: string | null; place: number; event_key?: string; division?: string | null }>((from) =>
+      supabase.from("national_event_placers").select("*").eq("event_key", key).order("id").range(from, from + 999),
     )
     for (const r of rows) {
       if (!r.place || r.place > 8) continue
+      // NHSCA's grade division in the words (lib/nhsca-division.ts): "2026 NHSCA freshman champion".
+      const div = /^nhsca/.test(key) ? nhscaDivision(key, r.division) : null
+      const named = div ? `${label} ${div.toLowerCase()}` : label
       out.push({
         name: r.wrestler_name, state: r.state, gender,
         kind: r.place === 1 ? "event_champion" : "event_all_american",
-        label: r.place === 1 ? `${label} champion` : `${label} ${ORD(r.place)}`,
+        label: r.place === 1 ? `${named} champion` : `${named} ${ORD(r.place)}`,
       })
     }
   }

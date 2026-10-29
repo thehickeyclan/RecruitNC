@@ -272,13 +272,13 @@ function attachEventBouts(
 function rowsFromSummaries(
   event: string,
   results: AccordionSummaryResult[],
-  options: { team?: string; isDuals?: boolean; monthDay?: string } = {},
+  options: { team?: string; isDuals?: boolean; monthDay?: string; divisionInEvent?: boolean } = {},
 ): TournamentRow[] {
   return results
     .filter((r) => !!r.year)
     .map((r, i) => ({
       id: `${event}-${r.year}-${i}`,
-      event,
+      event: options.divisionInEvent && r.division ? `${event} - ${r.division}` : event,
       team: options.team ?? null,
       isDuals: options.isDuals ?? looksLikeDuals(event),
       year: r.year,
@@ -449,7 +449,9 @@ export function buildTournamentRows(input: {
      * naming anybody beaten is the one thing a college coach cannot use, and states has shown
      * every bout since its own import.
      */
-    ...attachEventBouts(rowsFromSummaries("NHSCA Nationals", input.nhscaResults ?? []), input.nhscaBouts ?? [], {
+    // A row with its grade division reads "NHSCA Nationals - Freshman" (lib/nhsca-division.ts);
+    // the profile groups it under NHSCA Nationals and shows the division beside it.
+    ...attachEventBouts(rowsFromSummaries("NHSCA Nationals", input.nhscaResults ?? [], { divisionInEvent: true }), input.nhscaBouts ?? [], {
       keyPrefix: "nhsca-nationals-",
       eventName: "NHSCA High School Nationals",
       roundFallback: "NHSCA Nationals",
