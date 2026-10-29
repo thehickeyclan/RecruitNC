@@ -153,6 +153,17 @@ type Accounted = {
   placers?: Array<{ name: string; school?: string; season?: number; reason: "graduated" | "duplicate" | "namesake" | "source-conflict" | "approved"; note?: string }>
   classYearUnresolved?: Array<{ athleteId: string; note?: string }>
   preFreshmanVerified?: Array<{ athleteId: string; note?: string }>
+  /**
+   * A wrestler whose North Carolina results are genuine history, because he moved.
+   *
+   * The gate below treats an NC result on another state's profile as a possible mis-link, which
+   * is right by default. It is not always wrong, though: Jack Harty won NCHSAA 4A titles at
+   * Northern Guilford and now wrestles for Greens Farms Academy in Connecticut, so his profile
+   * is a Connecticut profile carrying two real North Carolina championships. Naming him here
+   * says that was checked, the way preFreshmanVerified does for an eighth-grade medal, instead
+   * of leaving Connecticut permanently NO-GO on a fact about one transfer.
+   */
+  homeStateResultsVerified?: Array<{ athleteId: string; note?: string }>
 }
 function accountedFor(state: string): Accounted {
   // The repo this script lives in, then the working folder: the same answer wherever it is run.
@@ -219,10 +230,13 @@ async function measure(state: string) {
   const namesakes = links.filter((l) => yearsEarly(l) > (l.independent ? 2 : 0) && !verifiedEarly.has(l.athlete_id)).map(line)
   const middleSchool = links.filter((l) => l.independent && yearsEarly(l) > 0 && yearsEarly(l) <= 2).map(line)
   // Out of state NC results on a non-NC profile: possible (a move), never assumed.
+  const verifiedHomeResults = new Set((acct.homeStateResultsVerified ?? []).map((v) => v.athleteId))
   const crossState =
     state === HOME_STATE
       ? []
-      : links.filter((l) => l.source === HOME_STATE).map((l) => `${byId.get(l.athlete_id)?.name} carries ${l.label} · ${l.athlete_id}`)
+      : links
+          .filter((l) => l.source === HOME_STATE && !verifiedHomeResults.has(l.athlete_id))
+          .map((l) => `${byId.get(l.athlete_id)?.name} carries ${l.label} · ${l.athlete_id}`)
 
   const dupCount = new Map<string, Athlete[]>()
   for (const a of current) dupCount.set(key(a.name, a.graduationyear), [...(dupCount.get(key(a.name, a.graduationyear)) ?? []), a])
@@ -301,7 +315,7 @@ async function measure(state: string) {
       { check: "Championship-linked profiles with no state", kind: "GATE", value: String(wrongState.length), pass: wrongState.length === 0, detail: wrongState },
       { check: "Unexplained results before freshman year (namesake or wrong class)", kind: "GATE", value: String(namesakes.length), pass: namesakes.length === 0, detail: namesakes },
       { check: "Independent-school results from 7th/8th grade (check class year)", kind: "INFO", value: String(middleSchool.length), pass: true, detail: middleSchool },
-      { check: "NC results on this state's profiles (review each)", kind: "GATE", value: String(crossState.length), pass: crossState.length === 0, detail: crossState },
+      { check: "NC results on this state's profiles (unnamed)", kind: "GATE", value: String(crossState.length), pass: crossState.length === 0, detail: crossState },
       { check: "Duplicate profiles (same name and class)", kind: "GATE", value: String(dups.length), pass: dups.length === 0, detail: dups },
       {
         check: "Current-class profiles with a school",

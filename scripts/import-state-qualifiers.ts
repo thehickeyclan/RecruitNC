@@ -169,7 +169,7 @@ async function main() {
       .filter(([a, b]) => a !== b)
 
     const divisions = new Map<string, Record<string, unknown>>()
-    const entries: Array<Record<string, unknown>> = []
+    let entries: Array<Record<string, unknown>> = []
     let noName = 0
     for (const r of group) {
       /*
@@ -311,8 +311,27 @@ async function main() {
     }
     for (const d of divisions.values()) if (d.association === "PENDING" || !d.association) d.association = fallback
     for (const d of divisions.values()) if (d.association === "PENDING" || !d.association) d.association = fallback
-    const missingDepth = [...divisions.values()].filter((d) => !d.places_awarded)
-    if (missingDepth.length) { console.log(`   no placement anywhere in ${missingDepth.length} division(s) — not written`); continue }
+    /*
+     * A division where nothing placed is a half-read bracket, so it is refused — but on its own,
+     * not by taking the rest of the slice with it.
+     *
+     * Connecticut's Nollan Thomas placed 5th in the 2025 girls bracket and entered the 2026 boys
+     * Open. Her Open row is gendered girls, which is correct about her, so it grouped with the
+     * girls slice and arrived as a one-row "Open" division with no placement. The whole 262-row
+     * girls slice was then refused over it. The guard is still worth having - it is what catches
+     * a bracket we only partly fetched - so the division is dropped and named, and everything
+     * else in the slice writes.
+     */
+    const missingDepth = [...divisions.entries()].filter(([, d]) => !d.places_awarded)
+    for (const [k] of missingDepth) {
+      const cls = String(k.split("|")[3] ?? "")
+      const dropped = entries.filter((e) => e.classification === cls)
+      console.log(`   no placement anywhere in "${cls}" — that division is not written (${dropped.length} row(s): ${dropped.map((e) => e.wrestler_name).slice(0, 4).join(", ")})`)
+      divisions.delete(k)
+    }
+    const droppedClasses = new Set(missingDepth.map(([k]) => String(k.split("|")[3] ?? "")))
+    if (droppedClasses.size) entries = entries.filter((e) => !droppedClasses.has(String(e.classification)))
+    if (!entries.length) { console.log("   nothing left to write"); continue }
     const { error: dErr } = await sb.from("state_tournament_divisions").upsert([...divisions.values()] as never, { onConflict: "season,state,association,gender,classification" })
     if (dErr) { console.log(`   divisions FAILED: ${dErr.message}`); continue }
     /*
