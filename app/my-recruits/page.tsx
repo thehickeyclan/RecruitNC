@@ -8,6 +8,7 @@
 import { cookies } from "next/headers"
 import { AuthGuard } from "@/components/auth-guard"
 import { MyRecruitsHome } from "@/components/coach/my-recruits-home"
+import { RwWelcomeNote } from "@/components/coach/rw-welcome-note"
 import { loadCoachHome } from "@/app/coach-home/load-coach-home"
 import { VIEW_GENDER_COOKIE } from "@/lib/recruiting/coach-program"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -36,6 +37,7 @@ export default async function MyRecruitsPage({ searchParams }: { searchParams: P
   const loaded = subjectId ? await loadCoachHome(admin, subjectId, (await cookies()).get(VIEW_GENDER_COOKIE)?.value).catch(() => null) : null
   return (
     <AuthGuard>
+      <RwWelcomeNote />
       <MyRecruitsHome data={loaded?.access === "ok" ? loaded.data : null} viewingAs={viewingAs} />
     </AuthGuard>
   )

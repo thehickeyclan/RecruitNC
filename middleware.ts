@@ -5,6 +5,7 @@ import { isRankerOnly, stagingGateAllows } from "@/lib/staging-gate"
 import { FUNDRAISING_AUTH_RETURN_COOKIE } from "@/lib/fundraising/fundraising-auth-return-cookie"
 import { adminGateApplies, adminGateRefusal } from "@/lib/admin-api-gate"
 import { COACH_HOME_PATH, PORTAL_HINT_COOKIE, coachFrontDoor } from "@/lib/coach-front-door"
+import { COACH_RW_CUTOVER, NCU_PRODUCTION_HOSTS, isCoachCutoverPath } from "@/lib/recruiting/coach-cutover"
 
 const APP_ORIGIN = "https://app.ncwrestlingunited.com"
 
@@ -135,6 +136,27 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
         { error: refusal === 401 ? "Sign in as an admin." : "Admin access required." },
         { status: refusal, headers: { "Cache-Control": "no-store" } },
       )
+    }
+  }
+
+  /*
+   * College coaches work on RecruitWrestlers.com (lib/recruiting/coach-cutover.ts). A coach who
+   * opens the front page or a portal page on NC United's own address is handed across, signed in.
+   * Only on the production address; a partner coach asking for NC United by name stays.
+   */
+  if (
+    COACH_RW_CUTOVER &&
+    !brand &&
+    (request.method === "GET" || request.method === "HEAD") &&
+    NCU_PRODUCTION_HOSTS.has(String(request.headers.get("host") ?? "").toLowerCase().split(":")[0]!) &&
+    isCoachCutoverPath(pathname)
+  ) {
+    const door = await coachFrontDoor(request.headers, request.cookies.getAll(), request.nextUrl.searchParams.has("community"))
+    if (door.redirect) {
+      const next = pathname === "/" ? COACH_HOME_PATH : `${pathname}${request.nextUrl.search}`
+      const response = NextResponse.redirect(new URL(`/auth/rw-handoff?next=${encodeURIComponent(next)}`, request.url), 307)
+      response.headers.set("Cache-Control", "private, no-store")
+      return response
     }
   }
 
