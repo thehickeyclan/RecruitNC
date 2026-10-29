@@ -12,19 +12,21 @@ export type ExplorerState = { code: string; name: string; mens: number[]; womens
 
 export function RankingsExplorer({
   states,
+  selected,
   base,
   showStates,
   initialGender = "mens",
 }: {
   states: ExplorerState[]
+  /** The state the page is showing; picking another reloads the page for it (?state=). */
+  selected: string
   /** "/rankings" on RecruitWrestlers, "/public-rankings" on NC United. */
   base: string
   showStates: boolean
   initialGender?: "mens" | "womens"
 }) {
   const live = states.filter((s) => s.mens.length || s.womens.length)
-  const [code, setCode] = useState(live[0]?.code ?? "NC")
-  const state = states.find((s) => s.code === code) ?? live[0]
+  const state = states.find((s) => s.code === selected) ?? live[0]
   const [gender, setGender] = useState<"mens" | "womens">(initialGender)
   const years = useMemo(() => (state ? (gender === "mens" ? state.mens : state.womens) : []), [state, gender])
   const [year, setYear] = useState<number | null>(years[0] ?? null)
@@ -42,18 +44,17 @@ export function RankingsExplorer({
           <div className="flex flex-wrap gap-2">
             {states.map((s) => {
               const isLive = s.mens.length > 0 || s.womens.length > 0
-              const selected = isLive && s.code === state?.code
+              const isSelected = isLive && s.code === state?.code
               return isLive ? (
-                <button
+                <a
                   key={s.code}
-                  type="button"
-                  onClick={() => setCode(s.code)}
-                  aria-pressed={selected}
-                  className={`w-[104px] rounded-xl border px-3 py-3 text-left transition ${selected ? "border-[#D3B574] bg-[#D3B574]/10" : "border-white/15 bg-white/[0.03] hover:border-white/35"}`}
+                  href={s.code === "NC" ? "?" : `?state=${s.code}`}
+                  aria-current={isSelected ? "true" : undefined}
+                  className={`w-[104px] rounded-xl border px-3 py-3 text-left transition ${isSelected ? "border-[#D3B574] bg-[#D3B574]/10" : "border-white/15 bg-white/[0.03] hover:border-white/35"}`}
                 >
                   <span className="block text-lg font-black">{s.code}</span>
                   <span className="block text-xs text-white/70">{s.name}</span>
-                </button>
+                </a>
               ) : (
                 <div key={s.code} aria-disabled className="w-[104px] rounded-xl border border-dashed border-white/15 px-3 py-3 text-white/45">
                   <span className="block text-lg font-black">{s.code}</span>

@@ -120,7 +120,7 @@ export default async function PublicRankingsHomepage({
     href: `/public-rankings/women/${year}`,
     eyebrow: "Women's class rankings",
     title: `Class of ${year}`,
-    description: `The published Top ${getPublicRankingsMax(year, "Female")}.`,
+    description: "The published class rankings.",
     icon: ListOrdered,
   }))
   const { gender: viewGender } = await resolveViewGender()
@@ -174,8 +174,36 @@ export default async function PublicRankingsHomepage({
       : []),
   ]
   const liveStateCount = explorerStates.filter((s) => s.mens.length || s.womens.length).length
+  /*
+   * The state picked in the explorer drives the whole page - its class tiles, its top five, its
+   * date (Matt, 29 Oct 2026: "switching the state filter does not change everything to SC").
+   */
+  const askedState = String(((await searchParams) ?? {}).state ?? "").toUpperCase()
+  const picked = explorerStates.find((st) => st.code === askedState && (st.mens.length || st.womens.length)) ?? explorerStates[0]!
+  const stateCode = picked.code
+  const stateName = picked.name
+  const stateQuery = stateCode === "NC" ? "" : `?state=${stateCode}`
+  const stateGroups =
+    stateCode === "NC"
+      ? groups
+      : [
+          {
+            key: "mens",
+            heading: "Men's Rankings",
+            links: picked.mens.map((year) => ({ href: `/public-rankings/${year}${stateQuery}`, eyebrow: "Class rankings", title: `Class of ${year}`, description: "The published class rankings.", icon: ListOrdered })),
+            preview: false,
+            note: null,
+          },
+          {
+            key: "womens",
+            heading: "Women's Rankings",
+            links: picked.womens.map((year) => ({ href: `/public-rankings/women/${year}${stateQuery}`, eyebrow: "Women's class rankings", title: `Class of ${year}`, description: `The published Top ${getPublicRankingsMax(year, "Female")}.`, icon: ListOrdered })),
+            preview: false,
+            note: groups.find((g) => g.key === "womens")?.note ?? null,
+          },
+        ].filter((group) => group.links.length)
   const ncUpdated = (editions ?? [])
-    .filter((e) => e.state === "NC" && e.gender === "Male")
+    .filter((e) => e.state === stateCode && e.gender === "Male")
     .map((e) => String(e.published_at))
     .sort()
     .at(-1)
@@ -185,8 +213,8 @@ export default async function PublicRankingsHomepage({
   const at = (href: string) => href.replace(/^\/public-rankings/, base)
 
   // The leading board, five deep, for the members this page is for (the page redirects everyone else).
-  const previewYear = releasedMensYears[0]
-  const preview = previewYear != null && (canSeeProspectRanking(viewer) || isAdmin) ? await loadPublicClassRanking(previewYear, isAdmin, "Male", "NC").catch(() => null) : null
+  const previewYear = picked.mens[0]
+  const preview = previewYear != null && (canSeeProspectRanking(viewer) || isAdmin) ? await loadPublicClassRanking(previewYear, isAdmin, "Male", stateCode).catch(() => null) : null
   const top5 = preview?.athletes.slice(0, 5) ?? []
 
   const title = "font-black tracking-tight text-white"
@@ -194,16 +222,19 @@ export default async function PublicRankingsHomepage({
 
   return (
     <main className="min-h-screen bg-[#0A1628] text-white">
-      <RankingsUpdateBanner />
+      {/* The banner announces North Carolina's next update; another state's page leaves it off. */}
+      {stateCode === "NC" ? <RankingsUpdateBanner /> : null}
       {/* Hero: a real North Carolina wrestler, never a generated one (Matt, 29 Oct 2026). */}
       <section className="relative overflow-hidden border-b border-white/10">
         {/* eslint-disable-next-line @next/next/no-img-element */}
+        {/* RecruitWrestlers reads state-neutral: no state name on the singlet there (Matt, 29 Oct 2026). */}
         <img
-          src="/toc-finals-north-carolina-bw.jpg"
+          src={onRw ? "/toc-finals-attack.jpg" : "/toc-finals-north-carolina-bw.jpg"}
           alt=""
           aria-hidden
-          className="absolute inset-y-0 right-0 hidden h-full w-[48%] object-cover object-[50%_25%] opacity-80 md:block"
-          style={{ maskImage: "linear-gradient(to right, transparent, black 40%)", WebkitMaskImage: "linear-gradient(to right, transparent, black 40%)" }}
+          className={`absolute inset-y-0 right-0 hidden h-full w-[48%] object-cover opacity-80 md:block ${onRw ? "-scale-x-100 object-[30%_40%]" : "object-[50%_25%]"}`}
+          // The mask turns with a flipped photo, so it runs the other way.
+          style={{ maskImage: `linear-gradient(to ${onRw ? "left" : "right"}, transparent, black 40%)`, WebkitMaskImage: `linear-gradient(to ${onRw ? "left" : "right"}, transparent, black 40%)` }}
         />
         <div className="relative mx-auto max-w-6xl px-4 py-12 sm:py-16">
           <div className="max-w-2xl">
@@ -221,7 +252,6 @@ export default async function PublicRankingsHomepage({
               {([
                 [Users, "Built for college coaches"],
                 [BarChart3, "Men's and women's rankings"],
-                [GraduationCap, "Every level: DI · DII · DIII · NAIA · NJCAA"],
               ] as const).map(([Icon, label]) => (
                 <span key={label} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-[#0A1628]/70 px-3 py-2 text-white/80">
                   <Icon className="h-4 w-4 text-[#D3B574]" aria-hidden /> {label}
@@ -258,15 +288,15 @@ export default async function PublicRankingsHomepage({
               </span>
             ) : null}
           </div>
-          <RankingsExplorer states={explorerStates} base={base} showStates={onRw} initialGender={viewGender === "Female" && womensYears.length ? "womens" : "mens"} />
+          <RankingsExplorer states={explorerStates} selected={stateCode} base={base} showStates={onRw} initialGender={viewGender === "Female" && womensYears.length ? "womens" : "mens"} />
         </div>
 
-        {groups.map((group) => (
+        {stateGroups.map((group) => (
           <div key={group.key} id={group.key} className={`${panel} scroll-mt-24 p-5 sm:p-6`}>
             <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
               <div>
-                {/* Every board here is North Carolina's; say so (Matt, 29 Oct 2026). */}
-                <h2 className={`text-2xl ${title}`}>North Carolina {group.heading}</h2>
+                {/* Every board names its state (Matt, 29 Oct 2026). */}
+                <h2 className={`text-2xl ${title}`}>{stateName} {group.heading}</h2>
                 {group.preview ? (
                   <span className="mt-1 inline-block rounded-full border border-[#D3B574]/50 px-2.5 py-0.5 text-xs font-semibold text-[#D3B574]">
                     Staff preview — not yet released
@@ -298,8 +328,8 @@ export default async function PublicRankingsHomepage({
         {top5.length ? (
           <div className={`${panel} p-5 sm:p-6`}>
             <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
-              <h2 className={`text-2xl ${title}`}>North Carolina Men&apos;s Class of {previewYear}: the top five</h2>
-              <HardLink href={at(`/public-rankings/${previewYear}`)} className="inline-flex items-center gap-1 text-sm font-semibold text-[#D3B574] hover:underline">
+              <h2 className={`text-2xl ${title}`}>{stateName} Men&apos;s Class of {previewYear}: the top five</h2>
+              <HardLink href={at(`/public-rankings/${previewYear}${stateQuery}`)} className="inline-flex items-center gap-1 text-sm font-semibold text-[#D3B574] hover:underline">
                 View full rankings <ArrowRight className="h-4 w-4" aria-hidden />
               </HardLink>
             </div>
@@ -355,7 +385,7 @@ export default async function PublicRankingsHomepage({
               <p className="mt-1 text-sm text-white/60">A review of every result, not a points formula.</p>
             </div>
             {previewYear != null ? (
-              <HardLink href={`${at(`/public-rankings/${previewYear}`)}#how-we-rank`} className="inline-flex items-center gap-1 rounded-lg border border-white/20 px-3 py-1.5 text-sm font-semibold text-white/85 hover:bg-white/5">
+              <HardLink href={`${at(`/public-rankings/${previewYear}${stateQuery}`)}#how-we-rank`} className="inline-flex items-center gap-1 rounded-lg border border-white/20 px-3 py-1.5 text-sm font-semibold text-white/85 hover:bg-white/5">
                 How we rank <ArrowRight className="h-4 w-4" aria-hidden />
               </HardLink>
             ) : null}
