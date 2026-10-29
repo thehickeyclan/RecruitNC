@@ -45,3 +45,13 @@ describe("national All-American events", () => {
     expect(placementFromRounds([{ round: "Quarterfinal", win: true, is_bye: false }])).toBe(null)
   })
 })
+
+import { isAllAmerican } from "./prospect-achievements"
+describe("isAllAmerican", () => {
+  it("counts a podium at any national event", () => {
+    expect(isAllAmerican({ nationalPodiums: ["Fargo 2025"] })).toBe(true)
+    expect(isAllAmerican({ bestNhscaPlace: 8 })).toBe(true)
+    expect(isAllAmerican({ bestSuper32Place: 9 })).toBe(false)
+    expect(isAllAmerican({})).toBe(false)
+  })
+})

@@ -94,9 +94,14 @@ export type Achievement = { level: AchievementLevel; badge: string; color: strin
  * Ordered by what a college coach reads first: a national podium outranks a state title, which
  * outranks a state place, which outranks having been there.
  */
+/** Top eight at any national event we count - the one rule the badge and the Honors filter share. */
+export function isAllAmerican(facts: AchievementFacts): boolean {
+  const podium = (place: number | null | undefined) => place != null && Number(place) >= 1 && Number(place) <= 8
+  return podium(facts.bestNhscaPlace) || podium(facts.bestSuper32Place) || (facts.nationalPodiums?.length ?? 0) > 0
+}
+
 export function highestAchievement(facts: AchievementFacts): Achievement {
-  const podium = (place: number | null | undefined) => place != null && place >= 1 && place <= 8
-  if (podium(facts.bestNhscaPlace) || podium(facts.bestSuper32Place) || (facts.nationalPodiums?.length ?? 0) > 0) {
+  if (isAllAmerican(facts)) {
     return { level: "all-american", badge: "All-American", color: "bg-purple-600 text-white" }
   }
   if (facts.bestStatePlace === 1) {
@@ -144,10 +149,17 @@ export async function loadAchievements(
   // PostgREST caps a request, so the ids go in batches rather than one enormous `in`.
   for (let i = 0; i < ids.length; i += 200) {
     const batch = ids.slice(i, i + 200)
-    const [state, nhsca] = await Promise.all([
+    const [state, nhsca, otherStates] = await Promise.all([
       supabase.from("wrestling_nchsaa_results").select("athlete_id, place").in("athlete_id", batch),
       supabase.from("nhsca_placements").select("athlete_id, placement").in("athlete_id", batch),
+      // Every other state's placers, every season we hold (Matt, 29 Oct 2026: "same thing with states").
+      supabase.from("state_tournament_placers").select("athlete_id, place").in("athlete_id", batch).limit(5000),
     ])
+    for (const row of otherStates.data ?? []) {
+      const f = facts(String(row.athlete_id))
+      f.bestStatePlace = bestPlace(f.bestStatePlace, row.place)
+      f.stateQualifier = true
+    }
     for (const row of state.data ?? []) {
       const f = facts(String(row.athlete_id))
       f.bestStatePlace = bestPlace(f.bestStatePlace, row.place)
