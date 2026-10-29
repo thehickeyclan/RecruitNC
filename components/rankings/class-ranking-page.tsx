@@ -96,6 +96,18 @@ export async function ClassRankingPage({ year, gender = "Male", state: askedStat
   }
 
   const ranking = await loadPublicClassRanking(year, preview, gender, state)
+  // Another state's published classes, so its tabs grey out the boards it does not have yet.
+  const stateYears =
+    state === "NC"
+      ? undefined
+      : [
+          ...new Set(
+            ((await createAdminClient().from("ranking_editions").select("class_year").eq("state", state).eq("gender", gender).not("published_at", "is", null)).data ?? []).map((r) =>
+              Number((r as { class_year: number }).class_year),
+            ),
+          ),
+          year,
+        ]
   const basePath = gender === "Female" ? `/public-rankings/women/${year}` : `/public-rankings/${year}`
   // Coaches and admins get the My Recruits star on every card (Matt, 14 October 2026).
   const canStar = (viewer.isAdmin === true || viewer.isVerifiedCoach === true) && Boolean(userId)
@@ -151,7 +163,7 @@ export async function ClassRankingPage({ year, gender = "Male", state: askedStat
 
           <RankingsSummary athletes={ranking.athletes} />
 
-          <RankingsNav current={year} isAdmin={preview} gender={gender} state={state === "NC" ? undefined : state} />
+          <RankingsNav current={year} isAdmin={preview} gender={gender} state={state === "NC" ? undefined : state} stateYears={stateYears} />
           {preview && (state === "NC" ? !isPublicRankingsYearPublished(year, gender) : !ranking.publishedAt) ? (
             <p className="mx-auto mt-6 max-w-xl rounded-sm border border-[#D7B95A]/50 bg-[#D7B95A]/10 px-4 py-2 text-center text-xs font-semibold text-[#D7B95A]">
               Staff preview. This board is not released: only admins and its ranker can see this page.

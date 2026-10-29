@@ -206,7 +206,17 @@ export default async function PublicRankingsHomepage({
           {
             key: "mens",
             heading: "Men's Rankings",
-            links: picked.mens.map((year) => ({ href: `/public-rankings/${year}${stateQuery}`, eyebrow: "Class rankings", title: `Class of ${year}`, description: "The published class rankings.", icon: ListOrdered })),
+            // North Carolina's boards this state does not have yet show greyed, never as North Carolina's.
+            links: [
+              ...[...new Set([...releasedMensYears, ...picked.mens])].sort((a, b) => a - b).map((year) => ({
+                href: picked.mens.includes(year) ? `/public-rankings/${year}${stateQuery}` : "",
+                eyebrow: "Class rankings",
+                title: `Class of ${year}`,
+                description: picked.mens.includes(year) ? "The published class rankings." : "Coming soon",
+                icon: ListOrdered,
+              })),
+              { href: "", eyebrow: "Classes", title: "Top 75 College Prospects", description: "Coming soon", icon: GraduationCap },
+            ],
             preview: false,
             note: null,
           },
@@ -368,7 +378,13 @@ export default async function PublicRankingsHomepage({
             </div>
             {group.note ? <p className="mb-5 max-w-3xl text-sm leading-relaxed text-white/65">{group.note}</p> : null}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {group.links.map(({ href, title: cardTitle, description, icon: Icon }) => (
+              {group.links.map(({ href, title: cardTitle, description, icon: Icon }) => !href ? (
+                <div key={cardTitle} aria-disabled className="h-full rounded-xl border border-dashed border-white/15 p-5 text-white/40">
+                  <Icon className="h-6 w-6" aria-hidden />
+                  <p className="mt-3 text-2xl font-black">{cardTitle}</p>
+                  <p className="mt-1 text-sm">{description}</p>
+                </div>
+              ) : (
                 <HardLink key={href} href={locked ? INSIDER : at(href)} className="group block h-full rounded-xl border border-white/10 bg-[#13294B]/60 p-5 transition hover:-translate-y-0.5 hover:border-[#D3B574]/70">
                   <Icon className="h-6 w-6 text-[#D3B574]" aria-hidden />
                   <p className="mt-3 text-2xl font-black text-white">{cardTitle}</p>
