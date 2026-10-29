@@ -8,7 +8,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { yearFilterToApiParams } from "@/lib/prospects-directory"
 import { currentClassYears } from "@/lib/class-years"
-import { highestAchievement, type AchievementFacts } from "@/lib/prospect-achievements"
+import { highestAchievement, isAllAmerican, type AchievementFacts } from "@/lib/prospect-achievements"
 import { useCoachMode } from "@/hooks/use-coach-mode"
 import { useAuth } from "@/contexts/auth-context"
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
@@ -120,9 +120,8 @@ function hasHonor(prospect: Prospect, honor: HonorPill): boolean {
   // Placed 1st to 6th at states, the champion included: lib/prospect-achievements.ts places 2-6 and
   // counts 7th and below as qualifying.
   if (honor === "state-placer") return Number.isFinite(state) && state >= 1 && state <= 6
-  const nhsca = Number(facts.bestNhscaPlace)
-  const s32 = Number(facts.bestSuper32Place)
-  return (Number.isFinite(nhsca) && nhsca >= 1 && nhsca <= 8) || (Number.isFinite(s32) && s32 >= 1 && s32 <= 8)
+  // Every national podium: Super 32, Fargo, NHSCA, Ironman, Powerade, Beast, Preps, girls' events.
+  return isAllAmerican(facts)
 }
 
 /** The state a wrestler competes in. Rows without one are North Carolina's: the directory holds no one else yet. */
@@ -465,12 +464,13 @@ export default function ProspectsAllClient({
         if (!matchesTerm) return false
       }
 
+      // The current classes, derived each summer - the hard-coded 2026-2029 had dropped the Class of 2030.
       if (yearFilter === "active") {
         const y = prospect.graduationyear
-        if (y == null || y < 2026 || y > 2029) return false
+        if (y == null || y < CURRENT_CLASS_YEARS[0]! || y > CURRENT_CLASS_YEARS[CURRENT_CLASS_YEARS.length - 1]!) return false
       } else if (yearFilter === "graduates") {
         const y = prospect.graduationyear
-        if (y == null || y > 2025) return false
+        if (y == null || y > CURRENT_CLASS_YEARS[0]! - 1) return false
       } else if (yearFilter !== "all") {
         if (String(prospect.graduationyear || "") !== yearFilter) return false
       }
