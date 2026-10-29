@@ -30,6 +30,7 @@ export const dynamic = "force-dynamic"
 
 /** Where a locked board sends a visitor on RecruitWrestlers. */
 const INSIDER = "/membership#insider"
+const LOGIN = `/auth/signin?returnTo=${encodeURIComponent("/rankings")}`
 
 const rankingLinks = [
   {
@@ -234,6 +235,9 @@ export default async function PublicRankingsHomepage({
   // Counted live, so it grows as coaches join (Matt, 29 Oct 2026).
   const platform = locked ? await loadPlatformStats(createAdminClient()).catch(() => null) : null
   const coachCount = platform?.coaches ?? 0
+  // Signed out: make the account, then land on Insider's checkout. Signed in: straight to it.
+  const signedIn = Boolean(session.user)
+  const joinHref = signedIn ? INSIDER : `/auth/signup?returnTo=${encodeURIComponent(INSIDER)}`
   const programCount = platform?.programs ?? 0
 
   const title = "font-black tracking-tight text-white"
@@ -279,9 +283,16 @@ export default async function PublicRankingsHomepage({
                     {programCount ? <span><span className="text-4xl font-black text-[#D3B574]">{programCount.toLocaleString()}</span> <span className="text-sm text-white/70">college programs</span></span> : null}
                   </p>
                 ) : null}
-                <a href={INSIDER} className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#D3B574] px-6 py-3 text-sm font-black text-[#0A1628] hover:brightness-110">
-                  See the rankings with Insider <ArrowRight className="h-4 w-4" aria-hidden />
-                </a>
+                <div className="mt-6 flex flex-wrap items-center gap-3">
+                  <a href={joinHref} className="inline-flex items-center gap-2 rounded-xl bg-[#D3B574] px-6 py-3 text-sm font-black text-[#0A1628] hover:brightness-110">
+                    Join Insider · {formatPrice(SCOUTING_REPORT_PRICES.subscription)}/mo <ArrowRight className="h-4 w-4" aria-hidden />
+                  </a>
+                  {signedIn ? null : (
+                    <a href={LOGIN} className="rounded-xl border border-white/25 px-6 py-3 text-sm font-bold text-white hover:bg-white/10">
+                      Log in
+                    </a>
+                  )}
+                </div>
               </>
             ) : (
               <>
@@ -372,11 +383,30 @@ export default async function PublicRankingsHomepage({
         ))}
 
         {locked ? (
+          /* The other half of Insider: which colleges looked at your wrestler (Matt, 29 Oct 2026). */
+          <div className={`${panel} grid gap-6 p-5 sm:p-6 md:grid-cols-[1fr_1.2fr] md:items-center`}>
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-[#D3B574]">Also in Insider</p>
+              <h2 className={`mt-2 text-3xl ${title}`}>See which colleges are looking at your wrestler.</h2>
+              <p className="mt-3 text-[15px] leading-7 text-white/70">
+                When a college coach opens the profile, Insider names the program, how many times and when. Free accounts see
+                that someone looked; Insider shows who.
+              </p>
+            </div>
+            <figure className="overflow-hidden rounded-xl border border-white/10">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/screens/cc-views.jpg" alt="Six college programs have viewed the example wrestler, named with logos, view counts and dates" loading="lazy" className="block w-full" />
+              <figcaption className="px-3 py-1.5 text-[11px] text-white/45">The real panel, with an example wrestler.</figcaption>
+            </figure>
+          </div>
+        ) : null}
+
+        {locked ? (
           <div className="rounded-2xl border-2 border-[#D3B574] bg-[#0f1c2e] p-6 sm:p-8">
             <div className="grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-center">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.22em] text-[#D3B574]">Insider</p>
-                <h2 className={`mt-2 text-3xl sm:text-4xl ${title}`}>Open every board.</h2>
+                <h2 className={`mt-2 text-3xl sm:text-4xl ${title}`}>The rankings, and who&apos;s looking.</h2>
                 <ul className="mt-4 space-y-2 text-[15px] text-white/80">
                   {[
                     "Every published class ranking, men's and women's, in every live state",
@@ -390,9 +420,11 @@ export default async function PublicRankingsHomepage({
               <div className="rounded-xl border border-white/10 bg-[#0A1628] p-5 text-center">
                 <p className="text-4xl font-black text-white">{formatPrice(SCOUTING_REPORT_PRICES.subscription)}<span className="text-base font-semibold text-white/55"> / month</span></p>
                 <p className="mt-1 text-xs text-white/50">Cancel anytime · included in the Recruiting Command Center</p>
-                <a href={INSIDER} className="mt-4 block rounded-xl bg-[#D3B574] px-5 py-3 text-sm font-black text-[#0A1628] hover:brightness-110">Join Insider →</a>
+                <a href={joinHref} className="mt-4 block rounded-xl bg-[#D3B574] px-5 py-3 text-sm font-black text-[#0A1628] hover:brightness-110">{signedIn ? "Join Insider →" : "Sign up for Insider →"}</a>
+                {signedIn ? null : (
+                  <a href={LOGIN} className="mt-2 block rounded-xl border border-white/20 px-5 py-2.5 text-sm font-bold text-white hover:bg-white/10">Already a member? Log in</a>
+                )}
                 <a href="/auth/coach-signup" className="mt-3 block text-sm text-white/70 underline hover:text-white">College coach? Free access</a>
-                <a href={`/auth/signin?returnTo=${encodeURIComponent("/rankings")}`} className="mt-1 block text-xs text-white/50 underline hover:text-white/80">Already a member? Sign in</a>
               </div>
             </div>
           </div>

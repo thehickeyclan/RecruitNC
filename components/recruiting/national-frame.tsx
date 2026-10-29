@@ -37,7 +37,7 @@ const FREE = [
   { href: "/college-commitments", label: "Commitments" },
 ]
 const PRODUCTS = [
-  { href: "/membership#insider", label: "Insider" },
+  { href: "/rankings", label: "Insider" },
   { href: "/command-center", label: "Command Center" },
   { href: "/for-coaches", label: "For coaches" },
 ]
@@ -91,7 +91,7 @@ export function NationalHeader() {
         </a>
         <nav className="hidden items-center gap-6 text-sm font-semibold text-white/75 lg:flex">
           {links.map((l) => (
-            <a key={l.href} href={l.href} className="inline-flex items-center hover:text-white">
+            <a key={l.label} href={l.href} className="inline-flex items-center hover:text-white">
               {l.label}
               {user ? <NavMark {...marks[l.href]} /> : null}
             </a>
@@ -140,7 +140,7 @@ export function NationalHeader() {
             </a>
           ) : null}
           {[...links, ...(user ? [{ href: "/profile", label: "My account" }] : [{ href: "/auth/signin", label: "Sign in" }])].map((l) => (
-            <a key={l.href} href={l.href} className="flex items-center rounded-lg px-2 py-2.5 text-base font-semibold text-white/85 hover:bg-white/5">
+            <a key={l.label} href={l.href} className="flex items-center rounded-lg px-2 py-2.5 text-base font-semibold text-white/85 hover:bg-white/5">
               {l.label}
               {user ? <NavMark {...marks[l.href]} /> : null}
             </a>
@@ -166,7 +166,7 @@ export function NationalFooter() {
         </div>
         <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/60">
           {FOOTER.map((l) => (
-            <a key={l.href} href={l.href} className="hover:text-white">
+            <a key={l.label} href={l.href} className="hover:text-white">
               {l.label}
             </a>
           ))}
