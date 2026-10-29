@@ -183,6 +183,14 @@ export function recordFromCredential(credential: string | null | undefined, nowY
   for (const m of c.matchAll(/(\d{4}) NHSCA (?:Champion|All-American \((\d)\w\w)/g)) {
     eventFinishes.push({ event: "NHSCA", year: Number(m[1]), place: m[2] ? Number(m[2]) : 1 })
   }
+  // Family-typed: "2026 NHSCA 3rd place finish", "2026 NHSCA 5th".
+  for (const m of c.matchAll(new RegExp(String.raw`(\d{4}) NHSCA ${ORD}`, "g"))) {
+    eventFinishes.push({ event: "NHSCA", year: Number(m[1]), place: Number(m[2]) })
+  }
+  // "2x NHSCA All-American" with no years: places and years unknown, so each counts as a 6th, last year.
+  for (const m of c.matchAll(/(\d)x NHSCA All-American(?! \()/g)) {
+    for (let i = 0; i < Number(m[1]); i++) eventFinishes.push({ event: "NHSCA", year: nowYear - 1, place: 6 })
+  }
   for (const m of c.matchAll(/(\d)x NHSCA All-American \(([\d, ]+)\)/g)) {
     // Places are not printed for a multiple All-American; take each as 6th.
     for (const y of m[2].split(/,\s*/)) eventFinishes.push({ event: "NHSCA", year: Number(y), place: 6 })
