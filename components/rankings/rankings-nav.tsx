@@ -16,7 +16,10 @@ export function RankingsNav({
   current,
   isAdmin = false,
   gender = "Male",
+  state,
 }: {
+  /** Another state's boards keep their state as the reader moves between classes. */
+  state?: string
   /** Whose boards these tabs switch between. The other set is one link away, never mixed in. */
   gender?: "Male" | "Female"
   /** The board being viewed: a class year, or "prospects" for the ranked list. */
@@ -29,7 +32,7 @@ export function RankingsNav({
 
   const tabs: Array<{ href: string; label: string; key: number | "prospects" | "top-100" | "other" }> = [
     ...years.map((y) => ({
-      href: womens ? `/public-rankings/women/${y}` : `/public-rankings/${y}`,
+      href: `${womens ? `/public-rankings/women/${y}` : `/public-rankings/${y}`}${state ? `?state=${state}` : ""}`,
       label: womens ? `Women's ${y}` : `Class of ${y}`,
       key: y as number,
     })),

@@ -70,7 +70,9 @@ export function RankedAthleteCard({
           {/* Rank and movement share the top-left; the top-right belongs to the My Recruits star. */}
           <span className="absolute left-0 top-0 flex items-stretch">
             <span className="bg-[#D7B95A] px-2.5 py-1 text-sm font-black text-[#060f1f]">#{athlete.rank}</span>
-            {move ? (
+            {athlete.isNew ? (
+              <span className="flex items-center bg-emerald-400 px-1.5 text-[10px] font-black tracking-wider text-[#061224]">NEW</span>
+            ) : move ? (
               <span className={`flex items-center bg-black/60 px-1.5 text-[10px] font-bold ${move.className}`}>
                 {move.label}
               </span>

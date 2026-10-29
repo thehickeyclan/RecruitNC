@@ -860,7 +860,7 @@ export default function RankingBoardPage() {
             <div className="ml-auto flex flex-wrap items-center gap-2">
               <span className="text-xs text-slate-400">
                 Saved <b className="text-white">{timeAgo(draftSavedAt)}</b>
-                {state === "NC" ? (
+                {state === "NC" || canPublish ? (
                   <>
                     {" · "}Published <b className="text-white">{timeAgo(publishedAt)}</b>
                   </>
