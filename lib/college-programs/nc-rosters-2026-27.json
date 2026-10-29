@@ -1,5 +1,5 @@
 {
- "source": "NC-Wrestlers-on-College-Rosters-2026.xlsx: rosters pulled 12 Oct 2026 from each school's published roster; 544 of 626 team rosters reviewed; UNC Pembroke refreshed from its live roster 20 Oct 2026 (27 from NC)",
+ "source": "NC-Wrestlers-on-College-Rosters-2026.xlsx: rosters pulled 12 Oct 2026 from each school's published roster; 544 of 626 team rosters reviewed; UNC Pembroke refreshed from its live roster 20 Oct 2026 (27 from NC); Hunter College: Ryder Menard (Lake Norman, 2026) added 29 Oct 2026 from Matt - the roster read was still 2025-26",
  "pulled": "2026-10-12",
  "schools": {
   "american-university": {
@@ -6550,7 +6550,16 @@
    ]
   },
   "hunter-college": {
-   "wrestlers": [],
+   "wrestlers": [
+    {
+     "name": "Ryder Menard",
+     "team": "mens",
+     "weight": null,
+     "class": "Fr.",
+     "hometown": null,
+     "highSchool": "Lake Norman"
+    }
+   ],
    "teams": [
     {
      "team": "mens",
