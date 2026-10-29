@@ -45,7 +45,7 @@ export function RankingMethod({ womens = false }: { womens?: boolean }) {
     <section className="mx-auto mt-14 max-w-6xl" aria-labelledby="how-we-rank">
       <p className="text-center text-[11px] font-bold uppercase tracking-[0.22em] text-[#D7B95A]">How we rank</p>
       <h2 id="how-we-rank" className="mt-2 text-center text-2xl font-black uppercase tracking-tight text-white sm:text-3xl">
-        Built on results, finished by people
+        Every place is earned on the mat
       </h2>
       {womens ? (
         <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-white/60">
