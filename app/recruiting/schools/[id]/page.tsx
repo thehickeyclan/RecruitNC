@@ -68,6 +68,7 @@ import { collegeViewsFor } from "@/lib/recruiting/college-views"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { MAJOR_FAMILIES, type FitLine, type FitStatus } from "@/lib/recruiting/family-fit"
 import { familyFocus } from "@/lib/recruiting/family-focus"
+import { isDemoFamily } from "@/lib/recruiting/demo-family"
 import { resolvePortalViewer } from "@/lib/recruiting/portal-viewer"
 import { hasPortalAccess } from "@/lib/ranking-visibility"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -218,7 +219,7 @@ export default async function SchoolPage({ params, searchParams }: Params) {
   const fitResult = ctx && ctx.first ? collegeFitFor(ctx, school, null) : null
   // This college's coaches looking at the family's wrestler: the reason RecruitNC exists.
   const viewed =
-    familySide && userId
+    familySide && userId && !(await isDemoFamily())
       ? ((await collegeViewsFor(admin, await familyAthleteIds(admin, userId).catch(() => [])).catch(() => new Map())).get(school.id) ?? null)
       : null
   const viewedDate = viewed ? new Date(viewed.lastViewedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "America/New_York" }) : null

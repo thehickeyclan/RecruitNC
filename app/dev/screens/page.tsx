@@ -17,6 +17,7 @@ import { DIVISION_COLOR, DIVISION_SHORT, type CollegeMapSchool } from "@/lib/col
 import { adaptRoadmap } from "@/lib/recruiting/roadmap-adapt"
 import { ScoutChat } from "@/app/my-recruiting/scout/scout-chat"
 import { CoachWarningPreview } from "./coach-warning-preview"
+import { ProfileViewsBlock } from "@/components/profile/profile-views-block"
 
 export const dynamic = "force-dynamic"
 
@@ -112,6 +113,11 @@ export default async function Screens({ searchParams }: { searchParams?: Promise
               values: { firstName: "Jordan", lastName: "Example", gradYear: "2028", highSchool: "Example High School", gpa: "3.7", weight: "150", club: "Example Wrestling Club", dob: "2010-03-14", street: "100 Example St", city: "Raleigh", state: "NC", zip: "27601", parent1Name: "Pat Example", parent1Phone: "(919) 555-0100", parent1Email: "pat@example.com", heightFt: "5", heightIn: "8" },
             }}
           />
+        </div>
+      ) : shot === "views" ? (
+        // The views come from the capture script (scripts/command-center-screens), invented, never a real wrestler's.
+        <div className="mx-auto max-w-2xl">
+          <ProfileViewsBlock athleteId="example" athleteFirstName="Jordan" />
         </div>
       ) : shot === "coach-warning" ? (
         <CoachWarningPreview />

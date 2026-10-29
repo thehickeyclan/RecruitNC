@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { HOME_STATE, US_STATES } from "@/lib/athlete-state"
+import { BrandName } from "@/components/recruiting/brand-name"
+import { useOnRecruitWrestlers } from "@/components/recruiting/brand-host"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { PublicImageUpload } from "@/components/public-image-upload"
 import { AlertCircle, CheckCircle, GraduationCap, Instagram, Link2, Phone, School, User } from "lucide-react"
@@ -151,6 +153,12 @@ export function CreateProfileForm({
   } | null>(null)
   const [forceCreate, setForceCreate] = useState(false)
 
+  // RecruitWrestlers carries every state: nobody there is North Carolina until they say so (Matt, 29 Oct 2026).
+  const onRw = useOnRecruitWrestlers()
+  useEffect(() => {
+    if (onRw) setFormData((prev) => (prev.state === HOME_STATE ? { ...prev, state: "" } : prev))
+  }, [onRw])
+
   // Auth resolves after first render, so the email arrives late.
   useEffect(() => {
     if (accountEmail) setFormData((prev) => (prev.email ? prev : { ...prev, email: accountEmail }))
@@ -235,6 +243,10 @@ export function CreateProfileForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!formData.state) {
+      setError("Choose your state")
+      return
+    }
     await createProfile(forceCreate)
   }
 
@@ -272,8 +284,8 @@ export function CreateProfileForm({
           <CheckCircle className="mx-auto h-12 w-12 text-emerald-400" />
           <h1 className="mt-4 text-3xl font-black">Your profile is live</h1>
           <p className="mt-2 leading-7 text-white/65">
-            Your tournament results are already on their way — state placements, NHSCA, Super32, Fargo, NC United
-            national team and your match record are all imported. Add a photo and a short bio from your profile;
+            Your tournament results are already on their way — state placements, NHSCA, Super32, Fargo<BrandName ncu=", NC United national team" national="" />
+            and your match record are all imported. Add a photo and a short bio from your profile;
             that is what coaches read first.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
@@ -679,8 +691,7 @@ export function CreateProfileForm({
                 {/* Results are imported, not typed. Telling families to enter them by hand produced
                     achievement lists that contradicted the tournament tables sitting beside them. */}
                 <li>
-                  · Your results are added for you — NCHSAA state placements, NHSCA, Super32, Fargo, NC United
-                  national team, and your in-season match record. Nothing to type.
+                  · Your results are added for you — <BrandName ncu="NCHSAA state placements" national="state placements" />, NHSCA, Super32, Fargo<BrandName ncu=", NC United national team" national="" />, and your in-season match record. Nothing to type.
                 </li>
                 <li>
                   · The achievements box on your profile is for what we don&apos;t track: club tournaments,

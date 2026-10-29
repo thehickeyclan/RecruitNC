@@ -20,6 +20,7 @@ import { familyState } from "@/lib/recruiting/family-state"
 import { parseGpa, standingOf, type Standing } from "@/lib/college-programs/went-here-stats"
 import { loadAthleteCredentials } from "@/lib/credentials/athlete-credentials"
 import { loadLastCompeted } from "@/lib/prospect-last-competed"
+import { DEMO_FAMILY, isDemoFamily } from "@/lib/recruiting/demo-family"
 import { EMPTY_PROFILE, academicFit, athleticFit, cleanProfile, costFit, goalsFit, milesBetween, type FamilyFitProfile, type FitLine } from "@/lib/recruiting/family-fit"
 import ncZips from "@/lib/recruiting/nc-zips.json"
 
@@ -49,6 +50,16 @@ export type FamilyFitContext = {
 
 /** The family's wrestler (the oldest still in school) and their own fit profile. */
 export async function loadFamilyFitContext(admin: SupabaseClient, userId: string, team: "mens" | "womens" | null): Promise<FamilyFitContext> {
+  // Product screenshots on a developer's machine (lib/recruiting/demo-family.ts): an invented family.
+  if (await isDemoFamily()) {
+    const d = DEMO_FAMILY
+    const snapshot = await readWentHereSnapshot().then((snap) => snapshotForState(snap, d.homeState))
+    return {
+      team, among: team === "womens" ? "women" : team === "mens" ? "men" : "wrestlers", first: d.first, sat: d.sat, act: d.act, weight: d.weight,
+      classYear: d.classYear, profile: d.profile, profileSet: true, home: (NC_ZIPS[d.profile.homeZip] as [number, number] | undefined) ?? null,
+      mine: d.standing, myGpa: d.gpa, snapshot, homeState: d.homeState,
+    }
+  }
   const ids = await familyAthleteIds(admin, userId)
   const { data: rows } = ids.length
     ? await admin.from("athletes").select('id, name, wrestling_name, "firstName", "lastName", highschool, graduationyear, gender, weightclass, college, college_id, academic_gpa, academic_sat, academic_act, nhsca_results, super32_results').in("id", ids)

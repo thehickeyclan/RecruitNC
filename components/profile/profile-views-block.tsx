@@ -126,7 +126,7 @@ export function ProfileViewsBlock({ athleteId, athleteFirstName, className }: { 
               {model.weeks.map((n, i) => (
                 <span
                   key={i}
-                  className={cn("flex-1 rounded-t-[3px]", i === WEEKS - 1 ? "bg-[#D3B574]" : "bg-[#13294B]")}
+                  className={cn("flex-1 rounded-t-[3px]", i === WEEKS - 1 ? "bg-[#D3B574]" : "bg-white/25")}
                   style={{ height: `${Math.max(4, Math.round((n / peak) * 100))}%` }}
                 />
               ))}
