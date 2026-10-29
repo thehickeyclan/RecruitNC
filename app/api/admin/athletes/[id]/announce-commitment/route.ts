@@ -53,7 +53,9 @@ export async function POST(_request: NextRequest, { params }: { params: Promise<
     const outcome = await sendToSubscribers("alert_commits", {
       title: "New commitment",
       body: `${athlete.name} commits to ${athlete.college}`,
-      data: { type: "commit", athleteId: athlete.id },
+      // The app follows `path` on a tap (recruitnc-mobile src/lib/notification-path.ts); without it a
+        // commitment alert just opened the app. /athlete/[id] has been in every build since 20 Sep.
+        data: { type: "commit", athleteId: athlete.id, path: `/athlete/${athlete.id}` },
     })
     return NextResponse.json({ ok: true, athlete: athlete.name, college: athlete.college, ...outcome })
   } catch (sendError) {
