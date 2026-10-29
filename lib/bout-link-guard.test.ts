@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { aliasKey, boutsToUnlink, type AliasVerdict, type GuardBout } from "./bout-link-guard"
+import { aliasKey, boutsToUnlink, NOT_HIS_EVENTS, type AliasVerdict, type GuardBout } from "./bout-link-guard"
 
 const carson = { id: "carson", name: "Carson Owens", gender: "Male", state: "NC", highschool: "Leesville Road" }
 const isaac = { id: "isaac", name: "Isaac Young", gender: "Male", state: "NC", highschool: "Pisgah" }
@@ -114,5 +114,18 @@ describe("bout link guard", () => {
     // A state tournament where girls wrestle in the boys' brackets is left alone.
     const v = { ...bout("isaac", "Isaac Young", "Pisgah", "152", "2026-02-21", "vhsl-states-2026"), gender: "F" }
     expect(dropped([...ISAAC, v]).has("vhsl-states-2026")).toBe(false)
+  })
+
+  it("takes off events a person said are not his, even under his own state", () => {
+    const id = "ddea34af-ae6a-4880-8a1c-687576bef1fe"
+    expect(NOT_HIS_EVENTS[id]?.events).toContain("super32-2025")
+    const jacob = { id, name: "Jacob Perry", gender: "Male", state: "NC", highschool: "New Bern" }
+    const out = boutsToUnlink(
+      new Map([[id, jacob]]),
+      [bout(id, "Jacob Perry", "NC", "150", "2024-10-26", "super32-2025"), bout(id, "Jacob Perry", "NC", "152", "2025-03-27", "nhsca-nationals-2025")],
+      new Map([[aliasKey("Jacob Perry", "NC"), { status: "linked" }]]),
+      new Map(),
+    )
+    expect(out.map((b) => b.event_key)).toEqual(["super32-2025"])
   })
 })
