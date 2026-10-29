@@ -1,0 +1,12 @@
+{
+  "preFreshmanVerified": [
+    {
+      "athleteId": "a2d38fa9-fa82-461b-b5cd-b0c60cb863b4",
+      "note": "Jaron Todisco Coulon, Bow, class of 2028. He won his Division III weight in 2024, which his class year makes an eighth-grade title — and that is the direct consequence of resolving him to 2028 rather than 2027. Flo printed 'HS Freshman' for him in BOTH the 2024 and 2025 D3 payloads, which cannot both be right, and his RankWrestlers record is a 0-0 gradeless shell, so nothing independent breaks it. Taking the later print as the true one is the Cael Martin and Alex Moskowitz precedent, and it makes the 2024 title pre-freshman; taking the earlier print would have made him class of 2027 with no pre-freshman result. This row and his class year stand or fall together. Named here because it is a reasoned choice, not an observation (29 Oct 2026)."
+    }
+  ],
+  "notes": [
+    "Five girls' rows were dropped on import, all non-placing entries in a boys divisional bracket: Grace Kenna, Zoe Millette and Rebekah Sanborn (2024 Division I), Grace Kenna (2025 Division I) and Ayla Saeturn (2025 Division II). NH divisionals are coed-entry, so a girl's row can sit in a boys classification; where she did not place, that classification arrives as a one- or three-row division with no placement, which the importer refuses as the shape of a half-read bracket. The guard drops only that division now, so 2,019 of the 2,024 entrants and all 1,038 placed rows imported. No placement is missing — only those five girls' non-placing divisional entries. Same shape as Connecticut's Nollan Thomas (29 Oct 2026).",
+    "The Meet of Champions ships as its own classification and is never merged into a state placement, so a New Hampshire wrestler can carry two 2026 placings — his divisional championship and the MOC. That is why 221 placers hold 221 profiles while the mint list is 213: the extra placings belong to wrestlers already minted from another slice (29 Oct 2026)."
+  ]
+}
