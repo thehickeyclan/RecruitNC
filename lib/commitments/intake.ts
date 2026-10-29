@@ -110,6 +110,12 @@ export function parseIntake(body: Record<string, unknown>, now: Date = new Date(
   const submitterContact = text(body.submitterContact, 160)
   if (!submitterContact || !contactKind(submitterContact)) return { ok: false, error: "Add an email or a cell number, so we can tell you when it's live." }
 
+  /*
+   * The website's form requires the commitment photo (Matt, 29 Oct 2026); it says so with
+   * `photoRequired`. The phone app's older form has no photo field, so its reports still go through.
+   */
+  if (body.photoRequired === true && !httpUrl(body.photoUrl)) return { ok: false, error: "Add the commitment photo." }
+
   return {
     ok: true,
     value: {
