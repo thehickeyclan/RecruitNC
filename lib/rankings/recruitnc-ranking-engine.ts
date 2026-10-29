@@ -1518,7 +1518,12 @@ export async function buildRecruitNcRankingBoard({
         Number.isFinite(year) && (gradYear == null || (year <= gradYear && year > gradYear - 5))
 
       const allAmericanRows = [
-        ...(bundle.nhsca || []).map((r) => ({ event: "NHSCA", year: Number(r.year), place: placementNumberOf(r.placement) })),
+        /*
+         * NHSCA's division rides along, because a card pill reading "NHSCA 2026 4th" does not
+         * say which of the four grade brackets it was, and four wrestlers place fourth at each
+         * weight. The division is already on the row (tournament-tables.ts maps it).
+         */
+        ...(bundle.nhsca || []).map((r) => ({ event: "NHSCA", year: Number(r.year), place: placementNumberOf(r.placement), division: r.division })),
         ...(bundle.fargo || []).map((r) => ({ event: "Fargo", year: Number(r.year), place: placementNumberOf(r.placement) })),
         /*
          * On the women's board a top-eight finish at Spokane, the US Open or Super 32 is an
@@ -1546,9 +1551,12 @@ export async function buildRecruitNcRankingBoard({
        * A wrestler who placed fourth at NHSCA in 2026 and eighth at Fargo in 2025 has two
        * results, and both belong on the card: "NHSCA 2026 4th", "Fargo 2025 8th".
        */
-      const allAmerican = allAmericanRows.map(
-        (row) => `${row.event} ${row.year} ${ordinal(row.place!)}`,
-      )
+      const NHSCA_GRADE_DIVISIONS = new Set(["freshman", "sophomore", "junior", "senior"])
+      const allAmerican = allAmericanRows.map((row) => {
+        const division = String((row as { division?: unknown }).division ?? "").trim().toLowerCase()
+        const grade = NHSCA_GRADE_DIVISIONS.has(division) ? ` ${division}` : ""
+        return `${row.event} ${row.year}${grade} ${ordinal(row.place!)}`
+      })
 
       const statePlacements = [...(bundle.nchsaa || [])]
         .filter((r) => Number(r.place) >= 1)

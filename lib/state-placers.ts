@@ -213,6 +213,7 @@ async function loadEventPlacers(supabase: SupabaseClient, statePlacers: StatePla
     team: string | null
     state: string | null
     nc_namesake?: boolean | null
+    division?: string | null
   }
   const rows: Row[] = []
   for (let from = 0; ; from += 1000) {
@@ -240,7 +241,7 @@ async function loadEventPlacers(supabase: SupabaseClient, statePlacers: StatePla
     }
     // Not yet checked counts as a namesake, as for state placers.
     entry.ncNamesake ||= r.nc_namesake !== false
-    entry.finishes.push({ event: r.event_name, year: r.year, place: r.place, weight: Number.parseInt(String(r.weight ?? ""), 10) || null })
+    entry.finishes.push({ event: r.event_name, year: r.year, place: r.place, weight: Number.parseInt(String(r.weight ?? ""), 10) || null, division: r.division ?? null })
     byKey.set(key, entry)
   }
   const entries = [...byKey.values()]

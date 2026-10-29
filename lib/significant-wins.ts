@@ -105,7 +105,22 @@ export type OpponentIndex = {
   eventPlacers?: readonly EventPlacer[]
 }
 
-export type EventPlacement = { event: string; year: number; place: number; weight: number | null }
+export type EventPlacement = {
+  event: string
+  year: number
+  place: number
+  weight: number | null
+  /**
+   * The grade division, for an event that runs more than one.
+   *
+   * NHSCA High School Nationals is six tournaments in one building - Freshman, Sophomore, Junior
+   * and Senior brackets plus unified Girls and Middle School - so four wrestlers win each weight.
+   * Without this, a freshman title and a senior title are the same sentence on a profile, and a
+   * coach reading it cannot tell them apart. Null for an event with one bracket per weight, and
+   * for the pre-2023 NHSCA rows whose division the source cannot supply.
+   */
+  division?: string | null
+}
 
 export type EventPlacer = {
   name: string
@@ -123,6 +138,27 @@ export type EventPlacer = {
  * "2025 Super 32 3rd (190)", "2026 NHSCA All-American (3rd, 138)", "2026 NHSCA Champion (138)";
  * the newest three when he has more.
  */
+/**
+ * The grade division as a credential reads it: "freshman", "sophomore", "junior", "senior".
+ *
+ * Girls and Middle School are unified divisions at NHSCA rather than grades, so they are left out
+ * of the label - a girls' All-American is already named by her own bracket, and no middle school
+ * result reaches a recruiting profile at all.
+ */
+const GRADE_DIVISIONS = new Set(["freshman", "sophomore", "junior", "senior"])
+const divisionWord = (division: string | null | undefined): string | null => {
+  const d = String(division ?? "").trim().toLowerCase()
+  return GRADE_DIVISIONS.has(d) ? d : null
+}
+
+/**
+ * "2025 Super 32 3rd (190)", "2026 NHSCA sophomore All-American (3rd, 138)",
+ * "2026 NHSCA freshman Champion (138)"; the newest three when he has more.
+ *
+ * Every division weighs the same here and in the star rating - a freshman national title counts
+ * as a national title (Matt, 29 Oct 2026). The division is in the label because the two are not
+ * the same achievement to describe, not because one is worth less to count.
+ */
 export function eventPlacementLabel(finishes: readonly EventPlacement[]): string | null {
   if (!finishes.length) return null
   // The same finish can reach here twice, once from each bracket entry of one wrestler.
@@ -130,7 +166,18 @@ export function eventPlacementLabel(finishes: readonly EventPlacement[]): string
   const nhscaAA = unique.filter((f) => /nhsca/i.test(f.event))
   if (nhscaAA.length > 1) {
     const rest = unique.filter((f) => !/nhsca/i.test(f.event))
-    const years = nhscaAA.map((f) => f.year).sort().join(", ")
+    /*
+     * Each year carries its own division, because that is the point: Sean Perez Jr is a "3x NHSCA
+     * All-American (2024 freshman, 2025 sophomore, 2026 junior)", which says he has done it in
+     * three brackets as he moved up, and a bare list of years does not.
+     */
+    const years = [...nhscaAA]
+      .sort((a, b) => a.year - b.year)
+      .map((f) => {
+        const word = divisionWord(f.division)
+        return word ? `${f.year} ${word}` : String(f.year)
+      })
+      .join(", ")
     const head = `${nhscaAA.length}x NHSCA All-American (${years})`
     const tail = eventPlacementLabel(rest)
     return tail ? `${head} · ${tail}` : head
@@ -142,10 +189,13 @@ export function eventPlacementLabel(finishes: readonly EventPlacement[]): string
     .slice(0, 3)
     .map((f) => {
       const at = f.weight ? ` (${f.weight})` : ""
-      if (f.place === 1) return `${f.year} ${f.event} Champion${at}`
+      const nhsca = /nhsca/i.test(f.event)
+      const word = nhsca ? divisionWord(f.division) : null
+      const event = word ? `${f.event} ${word}` : f.event
+      if (f.place === 1) return `${f.year} ${event} Champion${at}`
       const ord = `${f.place}${ordinalSuffix(f.place)}`
-      return /nhsca/i.test(f.event)
-        ? `${f.year} NHSCA All-American (${ord}${f.weight ? `, ${f.weight}` : ""})`
+      return nhsca
+        ? `${f.year} ${event} All-American (${ord}${f.weight ? `, ${f.weight}` : ""})`
         : `${f.year} ${f.event} ${ord}${at}`
     })
     .join(" · ")
