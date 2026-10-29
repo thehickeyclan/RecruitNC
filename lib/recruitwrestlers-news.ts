@@ -42,7 +42,8 @@ export const RW_STORIES: Story[] = [
     category: "Super 32",
     state: "SC",
     premium: true,
-    published: process.env.SUPER32_SC_RECAP_PUBLIC === "1",
+    // Published by Matt, 29 Oct 2026.
+    published: true,
   },
   {
     href: "/recaps/super32-2026-nc-boys",

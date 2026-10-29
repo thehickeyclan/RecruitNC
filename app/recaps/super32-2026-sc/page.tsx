@@ -26,7 +26,8 @@ import { hasAnyRankingBoardGrant } from "@/lib/rankings/ranking-board-access"
 
 export const dynamic = "force-dynamic"
 
-const PUBLIC = process.env.SUPER32_SC_RECAP_PUBLIC === "1"
+// Published by Matt, 29 Oct 2026. The env switch can still force it on; it no longer holds it back.
+const PUBLIC = true
 const IMG = "/recruitwrestlers/recaps"
 /**
  * Approved photos (Matt, 25 Oct) break up the article between sections, each with the context
