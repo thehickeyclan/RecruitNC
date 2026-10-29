@@ -1,4 +1,6 @@
-import { ArrowRight, BarChart3, CalendarDays, GraduationCap, ListOrdered, Medal, Shuffle, Trophy, Users } from "lucide-react"
+import { SCOUTING_REPORT_PRICES, formatPrice } from "@/lib/scouting-report-entitlement"
+import { loadPlatformStats } from "@/lib/platform-stats"
+import { ArrowRight, BarChart3, CalendarDays, Check, Lock, GraduationCap, ListOrdered, Medal, Shuffle, Trophy, Users } from "lucide-react"
 import { RankingsExplorer, type ExplorerState } from "@/components/rankings/rankings-explorer"
 import { loadPublicClassRanking } from "@/lib/rankings/public-rankings-view"
 import { RankingsUpdateBanner } from "@/components/rankings-update-banner"
@@ -25,6 +27,9 @@ import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 import { lastUpdatedLabel } from "@/lib/rankings/published-date"
 
 export const dynamic = "force-dynamic"
+
+/** Where a locked board sends a visitor on RecruitWrestlers. */
+const INSIDER = "/membership#insider"
 
 const rankingLinks = [
   {
@@ -69,7 +74,17 @@ export default async function PublicRankingsHomepage({
   // Somebody who ranks a board for us reads the boards, subscriber or not.
   const { data: session } = await (await createClient()).auth.getUser()
   const grants = session.user?.app_metadata?.ranking_board_access
-  if (!canSeeProspectRanking(viewer) && !hasAnyRankingBoardGrant(grants, "NC")) {
+  const onRwHost = stagedBrandForHost((await headers()).get("host")) === "national"
+  const member = canSeeProspectRanking(viewer) || hasAnyRankingBoardGrant(grants, "NC")
+  const landing = (await searchParams) ?? {}
+  /*
+   * On RecruitWrestlers a visitor without the rankings gets this same page with the boards locked:
+   * what we rank, which states and classes, how - and Insider to open them (Matt, 29 Oct 2026:
+   * "where is the sales page?"; it had been a bounce to a bare price table). A Stripe return or a
+   * new coach still goes to membership, where those messages live. NC United sells at /rankings.
+   */
+  const locked = onRwHost && !member && !landing.purchased && landing.welcome !== "coach"
+  if (!member && !locked) {
     /*
      * Stripe sends a paying customer here, and the webhook that grants access may not have
      * landed yet. Carrying the flag back means they see "payment received, access activating"
@@ -214,8 +229,12 @@ export default async function PublicRankingsHomepage({
 
   // The leading board, five deep, for the members this page is for (the page redirects everyone else).
   const previewYear = picked.mens[0]
-  const preview = previewYear != null && (canSeeProspectRanking(viewer) || isAdmin) ? await loadPublicClassRanking(previewYear, isAdmin, "Male", stateCode).catch(() => null) : null
+  const preview = previewYear != null && !locked && (canSeeProspectRanking(viewer) || isAdmin) ? await loadPublicClassRanking(previewYear, isAdmin, "Male", stateCode).catch(() => null) : null
   const top5 = preview?.athletes.slice(0, 5) ?? []
+  // Counted live, so it grows as coaches join (Matt, 29 Oct 2026).
+  const platform = locked ? await loadPlatformStats(createAdminClient()).catch(() => null) : null
+  const coachCount = platform?.coaches ?? 0
+  const programCount = platform?.programs ?? 0
 
   const title = "font-black tracking-tight text-white"
   const panel = "rounded-2xl border border-white/10 bg-[#0f1c2e]"
@@ -241,15 +260,42 @@ export default async function PublicRankingsHomepage({
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#D3B574]">
               <BrandName ncu="RecruitNC" national="RecruitWrestlers" /> · Recruiting intelligence
             </p>
-            <h1 className={`mt-3 text-4xl sm:text-6xl ${title}`}>College Prospect Rankings</h1>
-            <p className="mt-3 text-xl font-bold text-white/80 sm:text-2xl">Beyond records. Beyond state championships.</p>
-            <p className="mt-4 text-base leading-7 text-white/65">
-              We rank men&apos;s and women&apos;s wrestling prospects on national competition, quality wins, head-to-head results,
-              common opponents and state performance, so college coaches at every level can find and evaluate talent.
-            </p>
-            <p className="mt-4 text-base font-bold text-[#D3B574]">We do the research. You discover the talent.</p>
+            {locked ? (
+              /*
+               * For families and wrestlers who do not have the rankings yet (Matt, 29 Oct 2026): what
+               * college coaches see, how we rank, and the live count of coaches using it.
+               */
+              <>
+                <h1 className={`mt-3 text-4xl sm:text-6xl ${title}`}>See what college coaches see.</h1>
+                <p className="mt-3 text-xl font-bold text-white/80 sm:text-2xl">College Prospect Rankings: our No. 1 recruiting resource for college coaches, at every division.</p>
+                <p className="mt-4 text-base leading-7 text-white/65">
+                  Coaches open these boards to decide who to recruit. We rank men&apos;s and women&apos;s prospects on national competition,
+                  quality wins, head-to-head results, common opponents and state performance, and show the evidence behind every place.
+                  Insider puts the same boards in front of your family.
+                </p>
+                {coachCount ? (
+                  <p className="mt-5 flex flex-wrap items-baseline gap-x-6 gap-y-2">
+                    <span><span className="text-4xl font-black text-[#D3B574]">{coachCount.toLocaleString()}</span> <span className="text-sm text-white/70">college coaches use it</span></span>
+                    {programCount ? <span><span className="text-4xl font-black text-[#D3B574]">{programCount.toLocaleString()}</span> <span className="text-sm text-white/70">college programs</span></span> : null}
+                  </p>
+                ) : null}
+                <a href={INSIDER} className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#D3B574] px-6 py-3 text-sm font-black text-[#0A1628] hover:brightness-110">
+                  See the rankings with Insider <ArrowRight className="h-4 w-4" aria-hidden />
+                </a>
+              </>
+            ) : (
+              <>
+                <h1 className={`mt-3 text-4xl sm:text-6xl ${title}`}>College Prospect Rankings</h1>
+                <p className="mt-3 text-xl font-bold text-white/80 sm:text-2xl">Beyond records. Beyond state championships.</p>
+                <p className="mt-4 text-base leading-7 text-white/65">
+                  We rank men&apos;s and women&apos;s wrestling prospects on national competition, quality wins, head-to-head results,
+                  common opponents and state performance, so college coaches at every level can find and evaluate talent.
+                </p>
+                <p className="mt-4 text-base font-bold text-[#D3B574]">We do the research. You discover the talent.</p>
+              </>
+            )}
             <div className="mt-6 flex flex-wrap gap-3 text-sm">
-              {([
+              {(locked ? [] : [
                 [Users, "Built for college coaches"],
                 [BarChart3, "Men's and women's rankings"],
               ] as const).map(([Icon, label]) => (
@@ -288,7 +334,7 @@ export default async function PublicRankingsHomepage({
               </span>
             ) : null}
           </div>
-          <RankingsExplorer states={explorerStates} selected={stateCode} base={base} showStates={onRw} initialGender={viewGender === "Female" && womensYears.length ? "womens" : "mens"} />
+          <RankingsExplorer states={explorerStates} selected={stateCode} lockedHref={locked ? INSIDER : undefined} base={base} showStates={onRw} initialGender={viewGender === "Female" && womensYears.length ? "womens" : "mens"} />
         </div>
 
         {stateGroups.map((group) => (
@@ -312,18 +358,45 @@ export default async function PublicRankingsHomepage({
             {group.note ? <p className="mb-5 max-w-3xl text-sm leading-relaxed text-white/65">{group.note}</p> : null}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {group.links.map(({ href, title: cardTitle, description, icon: Icon }) => (
-                <HardLink key={href} href={at(href)} className="group block h-full rounded-xl border border-white/10 bg-[#13294B]/60 p-5 transition hover:-translate-y-0.5 hover:border-[#D3B574]/70">
+                <HardLink key={href} href={locked ? INSIDER : at(href)} className="group block h-full rounded-xl border border-white/10 bg-[#13294B]/60 p-5 transition hover:-translate-y-0.5 hover:border-[#D3B574]/70">
                   <Icon className="h-6 w-6 text-[#D3B574]" aria-hidden />
                   <p className="mt-3 text-2xl font-black text-white">{cardTitle}</p>
                   <p className="mt-1 text-sm text-white/60">{description}</p>
                   <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#D3B574]">
-                    View rankings <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden />
+                    {locked ? <><Lock className="h-4 w-4" aria-hidden /> Unlock with Insider</> : <>View rankings <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden /></>}
                   </span>
                 </HardLink>
               ))}
             </div>
           </div>
         ))}
+
+        {locked ? (
+          <div className="rounded-2xl border-2 border-[#D3B574] bg-[#0f1c2e] p-6 sm:p-8">
+            <div className="grid gap-6 md:grid-cols-[1.4fr_1fr] md:items-center">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.22em] text-[#D3B574]">Insider</p>
+                <h2 className={`mt-2 text-3xl sm:text-4xl ${title}`}>Open every board.</h2>
+                <ul className="mt-4 space-y-2 text-[15px] text-white/80">
+                  {[
+                    "Every published class ranking, men's and women's, in every live state",
+                    "The evidence behind each place: national results and who he beat",
+                    "Your wrestler's rank on his profile, and which college programs viewed it",
+                  ].map((l) => (
+                    <li key={l} className="flex gap-2.5"><Check className="mt-1 h-4 w-4 shrink-0 text-[#D3B574]" aria-hidden /> {l}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="rounded-xl border border-white/10 bg-[#0A1628] p-5 text-center">
+                <p className="text-4xl font-black text-white">{formatPrice(SCOUTING_REPORT_PRICES.subscription)}<span className="text-base font-semibold text-white/55"> / month</span></p>
+                <p className="mt-1 text-xs text-white/50">Cancel anytime · included in the Recruiting Command Center</p>
+                <a href={INSIDER} className="mt-4 block rounded-xl bg-[#D3B574] px-5 py-3 text-sm font-black text-[#0A1628] hover:brightness-110">Join Insider →</a>
+                <a href="/auth/coach-signup" className="mt-3 block text-sm text-white/70 underline hover:text-white">College coach? Free access</a>
+                <a href={`/auth/signin?returnTo=${encodeURIComponent("/rankings")}`} className="mt-1 block text-xs text-white/50 underline hover:text-white/80">Already a member? Sign in</a>
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {top5.length ? (
           <div className={`${panel} p-5 sm:p-6`}>
@@ -381,10 +454,14 @@ export default async function PublicRankingsHomepage({
         <div className={`${panel} p-5 sm:p-6`}>
           <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h2 className={`text-2xl ${title}`}>How we evaluate college prospects</h2>
-              <p className="mt-1 text-sm text-white/60">A review of every result, not a points formula.</p>
+              <h2 className={`text-2xl ${title}`}>{locked ? "How we rank" : "How we evaluate college prospects"}</h2>
+              <p className="mt-1 text-sm text-white/60">
+                {locked
+                  ? "Every result is read, not added up: who he wrestled, who he beat, and where. The same evidence college coaches see beside every place."
+                  : "A review of every result, not a points formula."}
+              </p>
             </div>
-            {previewYear != null ? (
+            {previewYear != null && !locked ? (
               <HardLink href={`${at(`/public-rankings/${previewYear}${stateQuery}`)}#how-we-rank`} className="inline-flex items-center gap-1 rounded-lg border border-white/20 px-3 py-1.5 text-sm font-semibold text-white/85 hover:bg-white/5">
                 How we rank <ArrowRight className="h-4 w-4" aria-hidden />
               </HardLink>
