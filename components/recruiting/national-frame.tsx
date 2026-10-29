@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import type { FamilyNextStep } from "@/lib/recruiting/family-next-step"
 import { usePathname } from "next/navigation"
 import { LogOut, Menu, X } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
@@ -63,7 +64,25 @@ export function NationalHeader() {
     "/recaps": { fresh: fresh.news },
   }
   const anyMark = messages.unread > 0 || fresh.rankings || fresh.news
-  const links: { href: string; label: string }[] = user ? [{ href: "/my-recruiting", label: "Command Center" }, ...FREE, { href: "/inbox", label: "Messages" }] : LINKS
+  /*
+   * One button, the family's next step (Matt, 29 Oct 2026): free profile, then GPA and cell,
+   * then Insider, then the Command Center (lib/recruiting/family-next-step.ts).
+   */
+  const [next, setNext] = useState<FamilyNextStep | null>(null)
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+    void fetch("/api/membership/next-step", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: FamilyNextStep | null) => !cancelled && setNext(d))
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+  }, [user])
+  const cta = user ? (next?.href && next.label ? { href: next.href, label: next.label } : null) : { href: "/create-profile", label: "Claim free profile" }
+  const mine = next?.athleteId ? [{ href: `/view-profile?id=${encodeURIComponent(next.athleteId)}`, label: "My profile" }] : []
+  const links: { href: string; label: string }[] = user ? [...mine, { href: "/my-recruiting", label: "Command Center" }, ...FREE, { href: "/inbox", label: "Messages" }] : LINKS
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0B1426]/95 text-white backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
@@ -79,6 +98,11 @@ export function NationalHeader() {
           ))}
         </nav>
         <div className="flex items-center gap-2">
+          {user && cta ? (
+            <a href={cta.href} className="hidden rounded-xl bg-[#A3E635] px-4 py-2 text-sm font-bold text-[#0B1426] hover:bg-[#BEF264] xl:inline-block">
+              {cta.label}
+            </a>
+          ) : null}
           {user ? (
             <>
               <NotificationBell signedIn />
@@ -94,7 +118,8 @@ export function NationalHeader() {
               <a href="/auth/signin" className="hidden text-sm font-semibold text-white/80 hover:text-white sm:inline">
                 Sign in
               </a>
-              <a href="/membership" className="rounded-xl bg-[#A3E635] px-4 py-2 text-sm font-bold text-[#0B1426] hover:bg-[#BEF264]">
+              {/* Step one is the free profile, not a price table. */}
+              <a href="/create-profile" className="rounded-xl bg-[#A3E635] px-4 py-2 text-sm font-bold text-[#0B1426] hover:bg-[#BEF264]">
                 Get started
               </a>
             </>
@@ -109,6 +134,11 @@ export function NationalHeader() {
       </div>
       {open ? (
         <nav className="border-t border-white/10 px-4 py-3 lg:hidden">
+          {user && cta ? (
+            <a href={cta.href} className="mb-2 block rounded-xl bg-[#A3E635] px-4 py-3 text-center text-base font-bold text-[#0B1426]">
+              {cta.label}
+            </a>
+          ) : null}
           {[...links, ...(user ? [{ href: "/profile", label: "My account" }] : [{ href: "/auth/signin", label: "Sign in" }])].map((l) => (
             <a key={l.href} href={l.href} className="flex items-center rounded-lg px-2 py-2.5 text-base font-semibold text-white/85 hover:bg-white/5">
               {l.label}
