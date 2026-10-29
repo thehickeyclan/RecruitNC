@@ -60,6 +60,20 @@ export const HELD_STATE_ENTRIES = new Set<string>([
 ])
 
 /** Further below his weight than this is somebody else (25% when only a neighbouring season is known). */
+/**
+ * Events a person has said are not this wrestler's, when the entry itself cannot tell two of ours
+ * apart (both entered as "NC"). athlete id -> event keys. Kept here so it holds through every import.
+ */
+export const NOT_HIS_EVENTS: Record<string, { note: string; events: readonly string[] }> = {
+  // Jacob Perry, New Bern 2028 (Matt, 29 Oct 2026): always New Bern; NHSCA 8th in 2025 as a
+  // freshman was his first national. The 2023-24 NHSCA entries are middle-school years and the
+  // Super 32 2025 entry is West Rowan's Jacob Perry.
+  "ddea34af-ae6a-4880-8a1c-687576bef1fe": {
+    note: "another NC Jacob Perry",
+    events: ["nhsca-nationals-2023", "nhsca-nationals-2024", "super32-2025"],
+  },
+}
+
 const BELOW = 0.15
 const BELOW_NEIGHBOUR = 0.25
 /** Further above than this is somebody else. */
@@ -159,6 +173,10 @@ export function boutsToUnlink(
       const club = clubOf(b).toUpperCase()
       const entry = `${a.name}|${club}`
       if (HELD_STATE_ENTRIES.has(entry)) continue
+      if (NOT_HIS_EVENTS[athleteId]?.events.includes(b.event_key)) {
+        out.push({ ...b, why: `not his: ${NOT_HIS_EVENTS[athleteId]!.note}` })
+        continue
+      }
       if (verdict(b)?.status === "rejected") {
         out.push({ ...b, why: `rejected: ${b.athlete_club}` })
         continue
