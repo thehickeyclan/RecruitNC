@@ -21,6 +21,7 @@ import { resolveViewGender } from "@/lib/recruiting/coach-program-server"
 import { BrandName } from "@/components/recruiting/brand-name"
 import { headers } from "next/headers"
 import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
+import { lastUpdatedLabel } from "@/lib/rankings/published-date"
 
 export const dynamic = "force-dynamic"
 
@@ -143,12 +144,39 @@ export default async function PublicRankingsHomepage({
    * A state turns live here when its boards are published; until then it says so and links nowhere.
    */
   const onRw = stagedBrandForHost((await headers()).get("host")) === "national"
-  const STATE_TILES: Array<{ code: string; name: string; live: boolean }> = [
-    { code: "NC", name: "North Carolina", live: true },
-    { code: "SC", name: "South Carolina", live: false },
-    { code: "VA", name: "Virginia", live: false },
-    { code: "MD", name: "Maryland", live: false },
-  ]
+  /*
+   * A state's tile opens once one of its men's classes is published (ranking_editions), and goes
+   * straight to that board; North Carolina's are the class lists below.
+   */
+  const { data: stateEditions } = onRw
+    ? await createAdminClient()
+        .from("ranking_editions")
+        .select("state, class_year, published_at")
+        .eq("gender", "Male")
+        .not("published_at", "is", null)
+        .neq("state", "NC")
+        .order("class_year", { ascending: true })
+    : { data: [] as Array<{ state: string; class_year: number; published_at: string }> }
+  const stateBoards = new Map<string, { year: number; publishedAt: string }>()
+  for (const row of stateEditions ?? []) {
+    const prev = stateBoards.get(String(row.state))
+    stateBoards.set(String(row.state), {
+      year: prev ? prev.year : Number(row.class_year),
+      publishedAt: prev && prev.publishedAt > String(row.published_at) ? prev.publishedAt : String(row.published_at),
+    })
+  }
+  const STATE_TILES: Array<{ code: string; name: string; live: boolean; href: string; updated: string | null }> = [
+    { code: "NC", name: "North Carolina" },
+    { code: "SC", name: "South Carolina" },
+    { code: "VA", name: "Virginia" },
+    { code: "MD", name: "Maryland" },
+  ].map((st) => {
+    const board = stateBoards.get(st.code)
+    if (st.code === "NC") return { ...st, live: true, href: `#${groups[0]?.key ?? "mens"}`, updated: null }
+    return board
+      ? { ...st, live: true, href: `/public-rankings/${board.year}?state=${st.code}`, updated: lastUpdatedLabel(board.publishedAt) }
+      : { ...st, live: false, href: "", updated: null }
+  })
 
   return (
     <main className="min-h-screen bg-[#0A1628] text-white">
@@ -209,12 +237,13 @@ export default async function PublicRankingsHomepage({
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {STATE_TILES.map((st) =>
                 st.live ? (
-                  <a key={st.code} href={`#${groups[0]?.key ?? "mens"}`} className="group block h-full">
+                  <a key={st.code} href={st.href} className="group block h-full">
                     <Card className="h-full border-[#D3B574]/60 bg-[#13294B] text-white transition hover:-translate-y-0.5 hover:border-[#D3B574]">
                       <CardHeader>
                         <p className="text-3xl font-black text-white">{st.code}</p>
                         <CardTitle className="text-lg font-bold text-white">{st.name}</CardTitle>
                         <span className="mt-1 inline-flex w-fit rounded-full bg-[#D3B574] px-2.5 py-0.5 text-xs font-bold text-[#0A1628]">Available now</span>
+                        {st.updated ? <span className="mt-1 text-[11px] text-white/55">{st.updated}</span> : null}
                       </CardHeader>
                       <CardContent>
                         <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#D3B574]">

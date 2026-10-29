@@ -1,7 +1,8 @@
 import { BrandName } from "@/components/recruiting/brand-name"
 import Link from "next/link"
 import { isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
-import { publishedDateLabel } from "@/lib/rankings/published-date"
+import { lastUpdatedLabel } from "@/lib/rankings/published-date"
+import { RankingLegend, RankingMethod } from "@/components/rankings/ranking-method"
 import { requireRankingBoardAccess } from "@/lib/rankings/ranking-board-access"
 import { RankedAthleteCard } from "@/components/rankings/ranked-athlete-card"
 import { loadStarredAthleteIds } from "@/lib/recruiting/starred-ids"
@@ -105,41 +106,53 @@ export async function ClassRankingPage({ year, gender = "Male", state: askedStat
       <section className="px-4 py-12 sm:py-16">
         <div className="mx-auto max-w-6xl">
           <p className="text-center text-[11px] font-bold uppercase tracking-[0.22em] text-[#CC0000]">
-            <BrandName /> · {stateName} {womens ? "women's " : ""}prospect rankings
+            <BrandName /> · College Prospect Rankings
           </p>
-          <h1 className="mt-3 text-center text-4xl font-black uppercase tracking-tight text-white sm:text-5xl">
-            {board}Class of {year}
+          <h1 className="mt-3 text-center text-4xl font-black uppercase tracking-tight text-white sm:text-6xl">
+            {stateName}
+            <span className="block text-2xl text-[#D7B95A] sm:text-3xl">{board}Class of {year}</span>
           </h1>
+
+          {/* The stamp sits under the title, where a reader decides whether the board is current. */}
+          {lastUpdatedLabel(ranking.publishedAt) ? (
+            <p className="mt-4 flex justify-center">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#D7B95A]/40 bg-[#D7B95A]/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.16em] text-[#D7B95A]">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" aria-hidden />
+                {lastUpdatedLabel(ranking.publishedAt)}
+              </span>
+            </p>
+          ) : null}
 
           <p className="mx-auto mt-4 max-w-2xl text-center text-sm leading-relaxed text-white/60">
             {womens
               ? `The top ${ranking.cap} women's wrestlers in ${stateName}'s Class of ${year}, ranked on results: freestyle and national events first, then who they beat.`
-              : `The top ${ranking.cap} wrestlers in ${stateName}'s Class of ${year}, ranked on results: who they wrestled, how they did against them, and what they have done outside this state.`}
+              : `The top ${ranking.cap} college prospects in ${stateName}'s Class of ${year}: national results, direct wins and the strength of the opponents behind them.`}{" "}
+            <a href="#how-we-rank" className="font-semibold text-white/80 underline underline-offset-4 hover:text-white">
+              How we rank
+            </a>
           </p>
           {states.length > 1 ? (
-            <nav className="mt-6 flex justify-center gap-2" aria-label="State">
-              {states.map((s) => (
-                <Link
-                  key={s.code}
-                  href={s.code === "NC" ? basePath : `${basePath}?state=${s.code}`}
-                  aria-current={s.code === state ? "page" : undefined}
-                  className={`rounded-full px-4 py-1.5 text-sm font-bold ${s.code === state ? "bg-[#A3E635] text-[#0B1426]" : "border border-white/20 text-white/75 hover:border-white/50 hover:text-white"}`}
-                >
-                  {s.name}
-                </Link>
-              ))}
+            <nav className="mx-auto mt-6 max-w-xl rounded-full border border-white/10 bg-white/[0.04] p-1" aria-label="State">
+              <ul className="flex flex-wrap justify-center gap-1">
+                {states.map((s) => (
+                  <li key={s.code}>
+                    <Link
+                      href={s.code === "NC" ? basePath : `${basePath}?state=${s.code}`}
+                      aria-current={s.code === state ? "page" : undefined}
+                      className={`block rounded-full px-4 py-1.5 text-sm font-bold transition ${s.code === state ? "bg-[#A3E635] text-[#0B1426]" : "text-white/70 hover:bg-white/10 hover:text-white"}`}
+                    >
+                      {s.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             </nav>
-          ) : null}
-          {publishedDateLabel(ranking.publishedAt) ? (
-            <p className="mt-2 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-[#d6b75d]">
-              {publishedDateLabel(ranking.publishedAt)}
-            </p>
           ) : null}
 
           <RankingsSummary athletes={ranking.athletes} />
 
-          <RankingsNav current={year} isAdmin={preview} gender={gender} />
-          {preview && !isPublicRankingsYearPublished(year, gender) ? (
+          <RankingsNav current={year} isAdmin={preview} gender={gender} state={state === "NC" ? undefined : state} />
+          {preview && (state === "NC" ? !isPublicRankingsYearPublished(year, gender) : !ranking.publishedAt) ? (
             <p className="mx-auto mt-6 max-w-xl rounded-sm border border-[#D7B95A]/50 bg-[#D7B95A]/10 px-4 py-2 text-center text-xs font-semibold text-[#D7B95A]">
               Staff preview. This board is not released: only admins and its ranker can see this page.
             </p>
@@ -162,6 +175,10 @@ export async function ClassRankingPage({ year, gender = "Male", state: askedStat
               <p className="mt-8 text-center text-sm text-white/70">
               Tap any wrestler for full results, significant wins and the scouting report.
               </p>
+              <RankingLegend
+                moved={ranking.athletes.some((a) => a.previousRank != null && a.previousRank !== a.rank)}
+                isNew={ranking.athletes.some((a) => a.isNew === true)}
+              />
             <ul className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
               {ranking.athletes.map((athlete) => (
                 <RankedAthleteCard key={athlete.athleteId} athlete={athlete} star={starred ? { starred: starred.has(athlete.athleteId) } : undefined} stateCode={onRw ? state : undefined} />
@@ -171,6 +188,8 @@ export async function ClassRankingPage({ year, gender = "Male", state: askedStat
           )}
 
           <RankingsWatermark userId={userId} />
+
+          <RankingMethod womens={womens} />
 
           <p className="mx-auto mt-10 max-w-2xl text-center text-[11px] leading-relaxed text-white/35">
             Rankings are reviewed by <BrandName ncu="NC United" /> staff before publication. A direct win between two ranked
