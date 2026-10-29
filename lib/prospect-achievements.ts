@@ -32,6 +32,58 @@ export type AchievementFacts = {
   bestNhscaPlace?: number | null
   /** Best Super 32 finish. */
   bestSuper32Place?: number | null
+  /** Top-eight finishes at the national events below, e.g. "Fargo 2025", read from the brackets. */
+  nationalPodiums?: string[]
+}
+
+/**
+ * The events whose top eight is All-American (Matt, 29 Oct 2026): Super 32, Fargo, NHSCA, Ironman,
+ * Powerade, Beast of the East and National Preps, and for girls their own - Fargo, NHSCA, Super 32,
+ * Ironman Women, National Preps girls and USAW Women's Nationals (U17 and U20). Super 32's
+ * early-entry qualifiers are separate events and are not.
+ */
+const AA_EVENTS: Array<[RegExp, string]> = [
+  [/^super32-20\d\d$/, "Super 32"],
+  [/^fargo-/, "Fargo"],
+  [/^nhsca-nationals-/, "NHSCA"],
+  [/^ironman-women-/, "Ironman"],
+  [/^ironman-20/, "Ironman"],
+  [/^powerade-/, "Powerade"],
+  [/^beast-of-the-east-/, "Beast of the East"],
+  [/^national-preps-/, "National Preps"],
+  [/^usaw-womens-nationals-20\d\d-u(17|20)-/, "USAW Women's Nationals"],
+]
+const AA_EVENT_FILTER = [
+  "event_key.like.super32-20%",
+  "event_key.like.fargo-%",
+  "event_key.like.nhsca-nationals-%",
+  "event_key.like.ironman-%",
+  "event_key.like.powerade-%",
+  "event_key.like.beast-of-the-east-%",
+  "event_key.like.national-preps-%",
+  "event_key.like.usaw-womens-nationals-%",
+].join(",")
+/** Only the placement matches decide a finish, so only they are fetched. */
+const PLACEMENT_ROUND_FILTER = "round.ilike.%place%,round.ilike.final%,round.ilike.championship%"
+
+/** Winner's place and loser's place in each placement match (as lib/national-results-from-bouts.ts reads them). */
+const PLACEMENT_ROUNDS: Array<[RegExp, number, number]> = [
+  [/^(1st place( match)?|finals?|championship( final)?)$/i, 1, 2],
+  [/^3rd place( match)?$/i, 3, 4],
+  [/^5th place( match)?$/i, 5, 6],
+  [/^7th place( match)?$/i, 7, 8],
+]
+export function placementFromRounds(bouts: ReadonlyArray<{ round: string | null; win: boolean | null; is_bye: boolean | null }>): number | null {
+  for (const b of bouts) {
+    if (b.is_bye) continue
+    const hit = PLACEMENT_ROUNDS.find(([re]) => re.test(String(b.round ?? "").trim()))
+    if (hit) return b.win ? hit[1] : hit[2]
+  }
+  return null
+}
+
+export function aaEventLabel(eventKey: string): string | null {
+  return AA_EVENTS.find(([re]) => re.test(eventKey))?.[1] ?? null
 }
 
 export type Achievement = { level: AchievementLevel; badge: string; color: string }
@@ -44,7 +96,7 @@ export type Achievement = { level: AchievementLevel; badge: string; color: strin
  */
 export function highestAchievement(facts: AchievementFacts): Achievement {
   const podium = (place: number | null | undefined) => place != null && place >= 1 && place <= 8
-  if (podium(facts.bestNhscaPlace) || podium(facts.bestSuper32Place)) {
+  if (podium(facts.bestNhscaPlace) || podium(facts.bestSuper32Place) || (facts.nationalPodiums?.length ?? 0) > 0) {
     return { level: "all-american", badge: "All-American", color: "bg-purple-600 text-white" }
   }
   if (facts.bestStatePlace === 1) {
@@ -105,6 +157,38 @@ export async function loadAchievements(
     for (const row of nhsca.data ?? []) {
       const f = facts(String(row.athlete_id))
       f.bestNhscaPlace = bestPlace(f.bestNhscaPlace, row.placement)
+    }
+
+    // National podiums from the brackets: every linked wrestler, every state, boys and girls.
+    type Bout = { athlete_id: string; event_key: string; weight_class: string | null; round: string | null; win: boolean | null; is_bye: boolean | null; year: number | null }
+    const bouts: Bout[] = []
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase
+        .from("other_tournament_bouts")
+        .select("athlete_id, event_key, weight_class, round, win, is_bye, year")
+        .in("athlete_id", batch)
+        .or(AA_EVENT_FILTER)
+        .or(PLACEMENT_ROUND_FILTER)
+        .order("id")
+        .range(from, from + 999)
+      if (error || !data?.length) break
+      bouts.push(...(data as Bout[]))
+      if (data.length < 1000) break
+    }
+    const byEntry = new Map<string, Bout[]>()
+    for (const b of bouts) {
+      if (!aaEventLabel(b.event_key)) continue
+      const key = `${b.athlete_id}|${b.event_key}|${b.weight_class ?? ""}`
+      byEntry.set(key, [...(byEntry.get(key) ?? []), b])
+    }
+    for (const [key, entry] of byEntry) {
+      const placement = placementFromRounds(entry)
+      if (placement == null || placement > 8) continue
+      const [athleteId, eventKey] = key.split("|") as [string, string]
+      const year = Number(entry[0]!.year) || Number(eventKey.match(/20\d\d/)?.[0]) || null
+      const label = `${aaEventLabel(eventKey)}${year ? ` ${year}` : ""}`
+      const f = facts(athleteId)
+      f.nationalPodiums = [...new Set([...(f.nationalPodiums ?? []), label])]
     }
   }
 
