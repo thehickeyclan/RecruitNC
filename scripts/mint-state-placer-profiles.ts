@@ -50,6 +50,21 @@ const arg = (n: string, d?: string) => {
   const i = process.argv.indexOf(`--${n}`)
   return i > 0 ? String(process.argv[i + 1]) : d
 }
+/*
+ * An unknown flag stops the run rather than being ignored.
+ *
+ * Several state imports were invoked with `--link-only`, which this script has never had. It was
+ * silently dropped and the run did something subtly different from what the command said - it
+ * minted as well as linked. The behaviour was the right one, so nothing was damaged, but a flag
+ * that does nothing and says nothing is how a real mistake gets made on the run after.
+ */
+const KNOWN_FLAGS = new Set(["--write", "--include-graduated", "--only-with-class-year", "--state", "--season"])
+for (let i = 0; i < process.argv.length; i += 1) {
+  const a = process.argv[i]!
+  if (!a.startsWith("--")) continue
+  if (!KNOWN_FLAGS.has(a)) throw new Error(`unknown flag ${a}. Known: ${[...KNOWN_FLAGS].join(" ")}`)
+}
+
 const WRITE = process.argv.includes("--write")
 const INCLUDE_GRADUATED = process.argv.includes("--include-graduated")
 /**
