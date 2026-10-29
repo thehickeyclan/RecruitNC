@@ -123,6 +123,7 @@ const ASSOCIATIONS: Record<string, { public: string; independent?: string[] }> =
   NJ: { public: "NJSIAA" },
   NY: { public: "NYSPHSAA" },
   CT: { public: "CIAC" },
+  MA: { public: "MIAA" },
 }
 
 /**
