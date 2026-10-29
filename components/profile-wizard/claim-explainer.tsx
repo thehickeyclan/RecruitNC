@@ -32,8 +32,15 @@ const STEPS: Array<[string, string]> = [
 function ExampleViews() {
   return (
     <figure className="mt-5 overflow-hidden rounded-xl border border-white/10 bg-[#0f1c2e]">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/screens/cc-views.jpg" alt="The profile views panel: six college programs viewed the example wrestler, with logos, view counts and dates, and a bar of views per week" loading="lazy" className="block w-full" />
+      {/* Each site's own panel, in its own theme. */}
+      <span className="ncu-only">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/screens/ncu/views.jpg" alt="The profile views panel: six college programs viewed the example wrestler, with logos, view counts and dates, and a bar of views per week" loading="lazy" className="block w-full" />
+      </span>
+      <span className="national-only">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/screens/rw/views.jpg" alt="The profile views panel: six college programs viewed the example wrestler, with logos, view counts and dates, and a bar of views per week" loading="lazy" className="block w-full" />
+      </span>
       <figcaption className="px-4 py-2 text-[11px] text-white/50">
         The real panel, with an example wrestler. Free accounts see when and how often; programs are named with a membership.
       </figcaption>

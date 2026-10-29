@@ -124,6 +124,8 @@ export default async function CommandCenterSalesPage() {
   const onRw = stagedBrandForHost((await headers()).get("host")) === "national"
   const buyHref = onRw ? "/membership" : d.onSale ? BUY : "/plans"
   const price = formatPrice(SCOUTING_REPORT_PRICES.command_center)
+  // Each site shows its own product: screenshots captured in its own theme (scripts/command-center-screens).
+  const shot = (name: string) => `/screens/${onRw ? "rw" : "ncu"}/${name}.jpg`
   const stats = d.platform
     ? ([
         [d.platform.coaches, <>College coaches on <BrandName /></>],
@@ -258,7 +260,7 @@ export default async function CommandCenterSalesPage() {
           intro="Pick the colleges and say what matters. Compare lines them up on athletic, academic, financial and personal fit, worked out from your wrestler's own results, GPA, test scores, budget, intended major and how far from home you want to be."
           points={["Room at your weight, from the real roster and who graduates before you arrive", "Your GPA and SAT against the middle half admitted", "The full yearly cost, what families paid after aid, and how far from home"]}
         >
-          <Shot src="/screens/cc-compare.jpg" alt="Compare colleges for Jordan: Appalachian State, Campbell and NC State side by side with athletic fit, team ranking, roster size, room at his weights, wrestlers from his state, acceptance rate, SAT range, graduation rate and cost" />
+          <Shot src={shot("compare")} alt="Compare colleges for Jordan: Appalachian State, Campbell and NC State side by side with athletic fit, team ranking, roster size, room at his weights, wrestlers from his state, acceptance rate, SAT range, graduation rate and cost" />
         </Wide>
 
         <Wide
@@ -269,8 +271,8 @@ export default async function CommandCenterSalesPage() {
           points={["Room by weight for your class year, from the current roster", "Admissions, majors and graduation rates from the Department of Education", "Campus life grades and the real cost after grants"]}
         >
           <div className="grid gap-4 md:grid-cols-[2fr_1fr] md:items-start">
-            <Shot src="/screens/cc-college-analytics.jpg" alt="A college page: room by weight for the class arriving in fall 2028, with the example wrestler's two weights highlighted, then academics and campus life grades" />
-            <Shot src="/screens/cc-college-fit.jpg" alt="A good fit for Jordan: athletic close, academic stretch, financial good fit; and what families paid after aid at each income" caption="Fit and cost for your family, on every college." />
+            <Shot src={shot("college-analytics")} alt="A college page: room by weight for the class arriving in fall 2028, with the example wrestler's two weights highlighted, then academics and campus life grades" />
+            <Shot src={shot("college-fit")} alt="A good fit for Jordan: athletic close, academic stretch, financial good fit; and what families paid after aid at each income" caption="Fit and cost for your family, on every college." />
           </div>
         </Wide>
 
@@ -284,8 +286,8 @@ export default async function CommandCenterSalesPage() {
           <div className="relative grid gap-4 md:grid-cols-2 md:items-start">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/images/scout-mascot.webp" alt="" aria-hidden loading="lazy" className="pointer-events-none absolute -bottom-6 -left-10 z-10 hidden w-[200px] drop-shadow-[0_20px_30px_rgba(0,0,0,0.7)] lg:block" />
-            <Shot src="/screens/scout.jpg" alt="Scout answering when a Division I coach can first contact a class of 2028 wrestler: April 1, 2027" />
-            <Shot src="/screens/cc-scout-email.jpg" alt="Scout drafting a short introduction email to the Campbell coaching staff from the wrestler's results" />
+            <Shot src={shot("scout")} alt="Scout answering when a Division I coach can first contact a class of 2028 wrestler: April 1, 2027" />
+            <Shot src={shot("scout-email")} alt="Scout drafting a short introduction email to the Campbell coaching staff from the wrestler's results" />
           </div>
         </Wide>
 
@@ -297,7 +299,7 @@ export default async function CommandCenterSalesPage() {
           points={["Programs named, with every visit dated", "A week-by-week line of coach views", "Messages from verified college coaches only, with parents in every conversation"]}
         >
           <div className="mx-auto max-w-3xl">
-            <Shot src="/screens/cc-views.jpg" alt="Six college programs have viewed Jordan: NC State, Campbell, Appalachian State, Mount Olive and Davidson with view counts and dates, and a bar chart of views per week" caption="The real panel, with an example wrestler and invented views." />
+            <Shot src={shot("views")} alt="Six college programs have viewed Jordan: NC State, Campbell, Appalachian State, Mount Olive and Davidson with view counts and dates, and a bar chart of views per week" caption="The real panel, with an example wrestler and invented views." />
           </div>
         </Wide>
 
@@ -308,7 +310,7 @@ export default async function CommandCenterSalesPage() {
           intro="A board that runs your recruiting like a pipeline: where you stand with each program, how long it has sat there, who wrote back, which deadline is next, and the one thing to do today."
           points={["Interested to offer, with days in each stage", "Coach views, messages and calls on each card", "Today's moves: apply, email the coach, follow up"]}
         >
-          <Shot src="/screens/cc-board.jpg" alt="The recruiting board: a pipeline from interested to offer, today's moves, and a card per college with coach views, messages, notes and deadlines" />
+          <Shot src={shot("board")} alt="The recruiting board: a pipeline from interested to offer, today's moves, and a card per college with coach views, messages, notes and deadlines" />
         </Wide>
 
         <Wide
@@ -318,7 +320,7 @@ export default async function CommandCenterSalesPage() {
           intro="Each college has its own recruiting questionnaire. Keep your answers in one place, open each form, copy what it asks for, and track which are done."
           points={["Every college on your list, with its form", "Your answers saved privately for your family", "Marked off as you submit"]}
         >
-          <Shot src="/screens/cc-forms.jpg" alt="Interest forms: four to do, one submitted, and the example family's saved answers ready to copy" />
+          <Shot src={shot("forms")} alt="Interest forms: four to do, one submitted, and the example family's saved answers ready to copy" />
         </Wide>
 
         <div className="hidden pt-12 sm:block">
@@ -331,7 +333,7 @@ export default async function CommandCenterSalesPage() {
           eyebrow="Your plan"
           title="Know what to do this year"
           points={["A checklist for every grade, 8th to 12th, that ticks itself from the profile and your college list", "New steps when something changes: a state placing to send coaches, a GPA under a division's minimum", "The dates coaches may call, meet and host, for your wrestler's class"]}
-          visual={<Shot src="/screens/roadmap.jpg" alt="The recruiting roadmap adapted for an example junior: steps added for a state placing and programs that viewed him, and steps ticked from his profile" />}
+          visual={<Shot src={shot("roadmap")} alt="The recruiting roadmap adapted for an example junior: steps added for a state placing and programs that viewed him, and steps ticked from his profile" />}
         />
 
         <Feature

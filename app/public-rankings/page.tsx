@@ -411,7 +411,7 @@ export default async function PublicRankingsHomepage({
             </div>
             <figure className="overflow-hidden rounded-xl border border-white/10">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/screens/cc-views.jpg" alt="Six college programs have viewed the example wrestler, named with logos, view counts and dates" loading="lazy" className="block w-full" />
+              <img src="/screens/rw/views.jpg" alt="Six college programs have viewed the example wrestler, named with logos, view counts and dates" loading="lazy" className="block w-full" />
               <figcaption className="px-3 py-1.5 text-[11px] text-white/45">The real panel, with an example wrestler.</figcaption>
             </figure>
           </div>
