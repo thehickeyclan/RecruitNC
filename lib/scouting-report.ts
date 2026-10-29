@@ -47,6 +47,7 @@ import { releasesPersonalData, type ScoutingAccessTier } from "@/lib/scouting-re
 import { reportSignificantBouts } from "@/lib/report-significant-wins"
 import { getSubmittedWins } from "@/lib/athlete-submitted-wins"
 import { productName } from "@/lib/recruiting/product-name"
+import { nhscaDivision } from "@/lib/nhsca-division"
 
 export type ScoutingReportIdentity = {
   name: string
@@ -512,8 +513,8 @@ export function buildResultRows(bundle: {
   ]
   for (const [label, list] of national) {
     for (const r of list) {
-      // Fargo runs freestyle and Greco as separate tournaments; the division says which.
-      const division = label === "Fargo" ? String(r.division ?? "").trim() : ""
+      // Fargo runs freestyle and Greco as separate tournaments; NHSCA runs grade divisions (lib/nhsca-division.ts).
+      const division = label === "Fargo" ? String(r.division ?? "").trim() : label === "NHSCA Nationals" ? (nhscaDivision(null, r.division) ?? "") : ""
       // Say "did not place" rather than leaving the placement out.
       //
       // Abdul-Jamil Zaggout went 4-2 at NHSCA 2026 and placed nowhere. His row read
@@ -525,7 +526,7 @@ export function buildResultRows(bundle: {
       const detail = [division, r.weight, placement, r.record ? `${r.record} record` : ""]
         .filter(Boolean)
         .join(" · ")
-      if (detail) rows.push({ event: label, style: styleOfEventForAthlete(label, division, gender), place: placeNumber(r.placement), record: String(r.record ?? "").trim() || null, year: r.year, when: when(label, r.year), date: null, weight: String(r.weight ?? "") || null, detail })
+      if (detail) rows.push({ event: label, style: styleOfEventForAthlete(label, label === "Fargo" ? division : "", gender), place: placeNumber(r.placement), record: String(r.record ?? "").trim() || null, year: r.year, when: when(label, r.year), date: null, weight: String(r.weight ?? "") || null, detail })
     }
   }
   for (const r of bundle.other ?? []) {

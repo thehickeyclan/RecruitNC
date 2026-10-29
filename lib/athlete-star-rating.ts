@@ -286,6 +286,11 @@ function nationalPlacings(rows: readonly NationalEventRow[]): string[] {
     .filter((r) => r.placement != null && r.placement > 0 && r.placement <= 8)
     .sort((a, b) => Number(MAIN_EVENT.test(b.event)) - Number(MAIN_EVENT.test(a.event)) || a.placement! - b.placement! || b.year - a.year)
     .map((r) => {
+      // NHSCA's grade division reads inside the brackets: "3rd at 2024 NHSCA Nationals (freshman All-American)".
+      if (/^NHSCA Nationals$/i.test(r.event) && r.division) {
+        const d = r.division.toLowerCase()
+        return `${placeWord(r.placement!)} at ${r.year} NHSCA Nationals (${r.placement === 1 ? `${d} champion` : `${d} All-American`})`
+      }
       const division = r.division ? ` ${r.division.replace(/\bBoys\s+/i, "").trim()}` : ""
       const aa = /^(NHSCA Nationals|Fargo)$/i.test(r.event) ? " (All-American)" : ""
       return `${placeWord(r.placement!)} at ${r.year} ${r.event}${division}${aa}`
