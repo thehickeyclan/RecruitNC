@@ -30,7 +30,7 @@ function NavMark({ count, fresh }: { count?: number; fresh?: boolean }) {
  */
 const FREE = [
   { href: "/prospects/all", label: "Athletes" },
-  { href: "/public-rankings", label: "Rankings" },
+  { href: "/rankings", label: "Rankings" },
   { href: "/recaps", label: "News" },
   // Public to everyone, signed in or not (Matt, 28 Oct 2026).
   { href: "/college-commitments", label: "Commitments" },
@@ -59,7 +59,7 @@ export function NationalHeader() {
   const fresh = useNavNew(!!user, pathname)
   const marks: Record<string, { count?: number; fresh?: boolean }> = {
     "/inbox": { count: messages.unread },
-    "/public-rankings": { fresh: fresh.rankings },
+    "/rankings": { fresh: fresh.rankings },
     "/recaps": { fresh: fresh.news },
   }
   const anyMark = messages.unread > 0 || fresh.rankings || fresh.news
