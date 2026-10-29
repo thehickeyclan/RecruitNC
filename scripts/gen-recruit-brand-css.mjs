@@ -335,6 +335,10 @@ export function buildCss() {
     `html[data-host="guild"] body,\nhtml[data-host="guild"] .auth-surface {\n  background: #0A0A0B !important;\n}`,
     // RecruitWrestlers: Midnight Navy page, Muted Gray for secondary text (Matt's palette, 20 Oct 2026).
     `html[data-host="national"] body,\nhtml[data-host="national"] .auth-surface {\n  background: #0B1426 !important;\n}`,
+    // Sign-in has no NC United promo column here, so its one card sits in the middle.
+    `html[data-host="national"] .auth-columns {\n  grid-template-columns: minmax(0, 28rem) !important;\n  justify-content: center;\n}`,
+    // Token-themed dark surfaces (profiles, sign-in) take lime for their primary here, never gold.
+    `html[data-host="national"] .profile-surface {\n  --primary: 82 77% 55%;\n  --primary-foreground: 222 55% 10%;\n  --ring: 82 77% 55%;\n}`,
     // RecruitWrestlers admin (Matt, 22 Oct 2026: one admin on recruitwrestlers.com, lime). Work
     // areas stay light for tables and forms; NC United's rainbow of gradient tiles and its blue hero
     // become Secondary Navy with lime icons. Light gradients (from-white cards) are untouched.
