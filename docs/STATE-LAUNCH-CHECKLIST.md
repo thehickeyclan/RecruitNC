@@ -37,6 +37,15 @@ Graduates are found without the file where we can: a class year in the identity 
 
 Reported, not blocking: profiles per class, girls, claimed (coaches can only message a claimed profile), photos, and independent-school results from 7th/8th grade (NCISA and SCISA allow middle schoolers on varsity: check the class year, don't unlink).
 
+## 1b. National results reach the profiles (and after every national event)
+
+Brackets carry legal names with suffixes ("Maximiliano Johnson", "Tyrone Norris III"); profiles carry what the family typed ("Max Johnson", "Tyrone Norris"). In South Carolina that left 21 of 55 Super 32 entrants off their profiles, so their records were missing from profiles, the ranking board and the coach report (Alan Aponte, 28 Oct 2026).
+
+- [ ] `npx tsx scripts/link-state-profile-bouts.ts --state XX` (dry run): matches nicknames, middle names and suffixes (lib/name-variants.ts), still only when the name is unique and the weight fits
+- [ ] Matt runs it with `--write`
+- [ ] Read the **still unlinked** list at the end: every name with a same-surname profile is resolved (link, or a written reason), every name without a profile is either minted (class 2027+) or written off
+- [ ] After any national event import (Super 32, NHSCA, Fargo): the same, with `--event-key <event>`, before a recap or coach report is built from it
+
 ## 2. Product (by hand, as a coach)
 
 Sign in as the test coach (testcoach.thehickeyclan@gmail.com) on app.ncwrestlingunited.com **and** on recruit.wrestlingguild.com, with the state still `live: false` and then after the switch on a preview build.

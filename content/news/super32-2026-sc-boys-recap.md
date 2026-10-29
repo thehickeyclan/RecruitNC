@@ -35,7 +35,7 @@ Only contested bouts count toward a grade's wins over seeds; a forfeit counts in
 
 **Sy Strobel (West-Oak, 190) — 3-2.** A two-time SC 3A champion, Strobel won his first three matches on the championship side, the third a 10-6 decision over #13 Dresden Beard of Kansas, the 2026 NHSCA national champion. He lost to #4 Mason Savidan of California, who finished 3rd, and then to Tennessee's Rock Shurette, an NHSCA placer.
 
-**Maximiliano Johnson (150) — 4-2.** Johnson won four matches, including a 7-0 shutout of NHSCA placer Micah Engelman of Pennsylvania and a 6-1 decision over #25 seed Deacon Morgan of Michigan, #7 nationally (Flo). His losses came to #3 Peyton Hornsby of Indiana, who finished 2nd, and Georgia 3A champion Cruz Hezel.
+**Maximiliano Johnson (James Island, 150) — 4-2.** Johnson won four matches, including a 7-0 shutout of NHSCA placer Micah Engelman of Pennsylvania and a 6-1 decision over #25 seed Deacon Morgan of Michigan, #7 nationally (Flo). His losses came to #3 Peyton Hornsby of Indiana, who finished 2nd, and Georgia 3A champion Cruz Hezel.
 
 ## B
 
