@@ -50,7 +50,7 @@ Only contested bouts count toward a grade's wins over seeds; a forfeit counts in
 
 **Bryson Chappell (Chesnee, 126) — 3-2.** The 2026 SC 2A/1A champion won three straight in the consolations, including a 5-0 shutout of Ohio's 2025 Division II runner-up and an 8-5 decision over Michigan's Division 2 champion. He opened against #13 Tyler Verceles of Maryland.
 
-**Ryan Osolin (132) — 3-2.** Osolin opened with a 9-3 decision over Virginia's 3A champion, then teched Virginia's 5A runner-up in the consolations. His losses came to #12 Cayden Rios of Texas, the NHSCA runner-up, and Pennsylvania placer Jake Benyo.
+**Ryan Osolin (132) — 3-2.** Osolin opened with a 9-3 decision over Virginia's 3A champion, then teched Virginia's 5A runner-up in the consolations. His losses came to #12 Cayden Rios of Texas, the NHSCA junior runner-up, and Pennsylvania placer Jake Benyo.
 
 **Xavier Gonzalez (Clover, 144) — 3-2.** Gonzalez won three straight in the consolations, including decisions over Florida's 3A 3rd-place finisher and Indiana's 6th-place finisher. Both of his losses came to seeds: #18 Kavi Garvey of California, who finished 7th, and #19 Nicholas Marchese of Illinois.
 
@@ -64,7 +64,7 @@ Only contested bouts count toward a grade's wins over seeds; a forfeit counts in
 
 **Noah Lynch (138) — 2-2.** Lynch pinned his opener and then Rhode Island's state champion, Logan Medeiros, in the consolations.
 
-**Jacob Rasamee (James Island, 144) — 2-2.** Rasamee opened with a 13-6 decision over Georgia's 4A runner-up and later beat North Carolina's 7A 3rd-place finisher 7-4. He lost to #9 Caden Woodall of Arizona, the NHSCA national champion.
+**Jacob Rasamee (James Island, 144) — 2-2.** Rasamee opened with a 13-6 decision over Georgia's 4A runner-up and later beat North Carolina's 7A 3rd-place finisher 7-4. He lost to #9 Caden Woodall of Arizona, the NHSCA freshman national champion.
 
 ## Honorable Mention
 
