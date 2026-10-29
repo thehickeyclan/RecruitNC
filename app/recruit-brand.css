@@ -1220,6 +1220,10 @@ html[data-host="national"] .bg-\[\#13294B\]\/50 {
   background-color: rgb(21 36 59 / 0.5);
 }
 
+html[data-host="national"] .bg-\[\#13294B\]\/60 {
+  background-color: rgb(21 36 59 / 0.6);
+}
+
 html[data-host="national"] .bg-\[\#13294B\]\/80 {
   background-color: rgb(21 36 59 / 0.8);
 }
@@ -2130,6 +2134,10 @@ html[data-host="guild"] .bg-\[\#13294B\]\/40 {
 
 html[data-host="guild"] .bg-\[\#13294B\]\/50 {
   background-color: rgb(26 26 30 / 0.5);
+}
+
+html[data-host="guild"] .bg-\[\#13294B\]\/60 {
+  background-color: rgb(26 26 30 / 0.6);
 }
 
 html[data-host="guild"] .bg-\[\#13294B\]\/80 {

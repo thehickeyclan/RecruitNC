@@ -1,11 +1,12 @@
-import { ArrowRight, GraduationCap, ListOrdered, Users } from "lucide-react"
+import { ArrowRight, BarChart3, CalendarDays, GraduationCap, ListOrdered, Medal, Shuffle, Trophy, Users } from "lucide-react"
+import { RankingsExplorer, type ExplorerState } from "@/components/rankings/rankings-explorer"
+import { loadPublicClassRanking } from "@/lib/rankings/public-rankings-view"
 import { RankingsUpdateBanner } from "@/components/rankings-update-banner"
 import { hasAnyRankingBoardGrant, rankingBoardAccessFor } from "@/lib/rankings/ranking-board-access"
 import { redirect } from "next/navigation"
 
 import { HardLink } from "@/components/hard-link"
 import { CoachMessagingIntro } from "@/components/coach-messages/coach-messaging-intro"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { resolveRankingViewer } from "@/lib/ranking-access"
 import { canSeeProspectRanking } from "@/lib/ranking-visibility"
 import { createAdminClient } from "@/lib/supabase/admin"
@@ -148,80 +149,94 @@ export default async function PublicRankingsHomepage({
    * A state's tile opens once one of its men's classes is published (ranking_editions), and goes
    * straight to that board; North Carolina's are the class lists below.
    */
-  const { data: stateEditions } = onRw
-    ? await createAdminClient()
-        .from("ranking_editions")
-        .select("state, class_year, published_at")
-        .eq("gender", "Male")
-        .not("published_at", "is", null)
-        .neq("state", "NC")
-        .order("class_year", { ascending: true })
-    : { data: [] as Array<{ state: string; class_year: number; published_at: string }> }
-  const stateBoards = new Map<string, { year: number; publishedAt: string }>()
-  for (const row of stateEditions ?? []) {
-    const prev = stateBoards.get(String(row.state))
-    stateBoards.set(String(row.state), {
-      year: prev ? prev.year : Number(row.class_year),
-      publishedAt: prev && prev.publishedAt > String(row.published_at) ? prev.publishedAt : String(row.published_at),
-    })
-  }
-  const STATE_TILES: Array<{ code: string; name: string; live: boolean; href: string; updated: string | null }> = [
-    { code: "NC", name: "North Carolina" },
-    { code: "SC", name: "South Carolina" },
-    { code: "VA", name: "Virginia" },
-    { code: "MD", name: "Maryland" },
-  ].map((st) => {
-    const board = stateBoards.get(st.code)
-    if (st.code === "NC") return { ...st, live: true, href: `#${groups[0]?.key ?? "mens"}`, updated: null }
-    return board
-      ? { ...st, live: true, href: `/public-rankings/${board.year}?state=${st.code}`, updated: lastUpdatedLabel(board.publishedAt) }
-      : { ...st, live: false, href: "", updated: null }
-  })
+  /*
+   * Every published edition, both boards, every state: which classes each state offers in the
+   * explorer, and when North Carolina's men's boards last changed.
+   */
+  const { data: editions } = await createAdminClient()
+    .from("ranking_editions")
+    .select("state, gender, class_year, published_at")
+    .not("published_at", "is", null)
+    .order("class_year", { ascending: true })
+  const editionYears = (code: string, gender: "Male" | "Female") =>
+    [...new Set((editions ?? []).filter((e) => e.state === code && e.gender === gender).map((e) => Number(e.class_year)))].sort((a, b) => a - b)
+  const releasedMensYears = releasedLinks
+    .map(({ href }) => Number(href.split("/").at(-1)))
+    .filter((y) => Number.isFinite(y))
+  const explorerStates: ExplorerState[] = [
+    { code: "NC", name: "North Carolina", mens: releasedMensYears, womens: womensYears },
+    ...(onRw
+      ? [
+          { code: "SC", name: "South Carolina" },
+          { code: "VA", name: "Virginia" },
+          { code: "MD", name: "Maryland" },
+        ].map((st) => ({ ...st, mens: editionYears(st.code, "Male"), womens: editionYears(st.code, "Female") }))
+      : []),
+  ]
+  const liveStateCount = explorerStates.filter((s) => s.mens.length || s.womens.length).length
+  const ncUpdated = (editions ?? [])
+    .filter((e) => e.state === "NC" && e.gender === "Male")
+    .map((e) => String(e.published_at))
+    .sort()
+    .at(-1)
+
+  // RecruitWrestlers' boards live at /rankings (middleware); NC United's at /public-rankings.
+  const base = onRw ? "/rankings" : "/public-rankings"
+  const at = (href: string) => href.replace(/^\/public-rankings/, base)
+
+  // The leading board, five deep, for the members this page is for (the page redirects everyone else).
+  const previewYear = releasedMensYears[0]
+  const preview = previewYear != null && (canSeeProspectRanking(viewer) || isAdmin) ? await loadPublicClassRanking(previewYear, isAdmin, "Male", "NC").catch(() => null) : null
+  const top5 = preview?.athletes.slice(0, 5) ?? []
+
+  const title = "font-black tracking-tight text-white"
+  const panel = "rounded-2xl border border-white/10 bg-[#0f1c2e]"
 
   return (
     <main className="min-h-screen bg-[#0A1628] text-white">
       <RankingsUpdateBanner />
-      <section className="border-b border-white/10">
-        <div className="mx-auto max-w-5xl px-4 py-16 text-center sm:py-20">
-          <p className="mb-3 text-sm font-semibold uppercase tracking-[0.22em] text-[#D3B574]">
-            <BrandName ncu="RecruitNC Rankings" national="RecruitWrestlers Rankings" />
-          </p>
-          <h1 className="text-balance text-4xl font-black tracking-tight text-white sm:text-6xl">
-            College Prospect Rankings
-          </h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base text-white/65">
-            Class rankings and the Top 75 College Prospects, informed by results, quality wins
-            and strength of competition.
-          </p>
-          {/*
-            * The other half of the job. A verified coach lands here when he signs in; the boards
-            * say who is good and the profiles say what they did, and neither page mentioned the
-            * other. Shown to coaches only - a family browsing their own class board does not
-            * need pointing at a directory of other people's children.
-            */}
-          {viewer.isVerifiedCoach === true ? (
-            <HardLink
-              href="/prospects/all"
-              className="mx-auto mt-8 flex max-w-2xl items-center gap-3 rounded-xl border border-white/15 bg-white/[0.04] px-4 py-3 transition-colors hover:bg-white/[0.08]"
-            >
-              <Users className="h-5 w-5 shrink-0 text-[#D3B574]" aria-hidden />
-              <span className="min-w-0 flex-1 text-sm text-white">
-                <span className="font-semibold">{onRw ? "Every wrestler, ranked or not" : "Every North Carolina wrestler, ranked or not"}</span>
-                <span className="ml-2 text-white/60">
-                  Full profiles — results, film, academics and contact details.
+      {/* Hero: a real North Carolina wrestler, never a generated one (Matt, 29 Oct 2026). */}
+      <section className="relative overflow-hidden border-b border-white/10">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/toc-finals-north-carolina-bw.jpg"
+          alt=""
+          aria-hidden
+          className="absolute inset-y-0 right-0 hidden h-full w-[48%] object-cover object-[50%_25%] opacity-80 md:block"
+          style={{ maskImage: "linear-gradient(to right, transparent, black 40%)", WebkitMaskImage: "linear-gradient(to right, transparent, black 40%)" }}
+        />
+        <div className="relative mx-auto max-w-6xl px-4 py-12 sm:py-16">
+          <div className="max-w-2xl">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#D3B574]">
+              <BrandName ncu="RecruitNC" national="RecruitWrestlers" /> · Recruiting intelligence
+            </p>
+            <h1 className={`mt-3 text-4xl sm:text-6xl ${title}`}>College Prospect Rankings</h1>
+            <p className="mt-3 text-xl font-bold text-white/80 sm:text-2xl">Beyond records. Beyond state championships.</p>
+            <p className="mt-4 text-base leading-7 text-white/65">
+              We rank men&apos;s and women&apos;s wrestling prospects on national competition, quality wins, head-to-head results,
+              common opponents and state performance, so college coaches at every level can find and evaluate talent.
+            </p>
+            <p className="mt-4 text-base font-bold text-[#D3B574]">We do the research. You discover the talent.</p>
+            <div className="mt-6 flex flex-wrap gap-3 text-sm">
+              {([
+                [Users, "Built for college coaches"],
+                [BarChart3, "Men's and women's rankings"],
+                [GraduationCap, "Every level: DI · DII · DIII · NAIA · NJCAA"],
+              ] as const).map(([Icon, label]) => (
+                <span key={label} className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-[#0A1628]/70 px-3 py-2 text-white/80">
+                  <Icon className="h-4 w-4 text-[#D3B574]" aria-hidden /> {label}
                 </span>
-              </span>
-              <ArrowRight className="h-4 w-4 shrink-0 text-[#D3B574]" aria-hidden />
-            </HardLink>
-          ) : null}
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-5xl px-4 py-12 sm:py-16">
+      <section className="mx-auto max-w-6xl space-y-6 px-4 py-10 sm:py-12">
         {/* College coaches who have not messaged anyone yet: renders nothing for everyone else. */}
-        <CoachMessagingIntro className="mx-auto mb-8 max-w-2xl" />
+        <CoachMessagingIntro className="mx-auto max-w-2xl" />
         {alreadyIncluded ? (
-          <div className="mx-auto mb-8 max-w-2xl rounded-xl border border-[#D3B574]/50 bg-[#D3B574]/10 px-6 py-4 text-center">
+          <div className="mx-auto max-w-2xl rounded-xl border border-[#D3B574]/50 bg-[#D3B574]/10 px-6 py-4 text-center">
             <p className="text-sm font-semibold text-[#D3B574]">
               You already have the rankings &mdash; no payment needed.
             </p>
@@ -231,84 +246,155 @@ export default async function PublicRankingsHomepage({
           </div>
         ) : null}
 
-        {onRw ? (
-          <div className="mb-12">
-            <h2 className="mb-4 text-2xl font-black tracking-tight text-white">Rankings by state</h2>
+        <div className={`${panel} p-5 sm:p-6`}>
+          <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className={`text-2xl ${title}`}>Explore prospect rankings</h2>
+              <p className="mt-1 text-sm text-white/60">{onRw ? "Pick a state, division and class to open its latest rankings." : "Pick a division and class to open its latest rankings."}</p>
+            </div>
+            {onRw ? (
+              <span className="rounded-full bg-[#D3B574] px-3 py-1 text-xs font-black text-[#0A1628]">
+                {liveStateCount} {liveStateCount === 1 ? "state" : "states"} live
+              </span>
+            ) : null}
+          </div>
+          <RankingsExplorer states={explorerStates} base={base} showStates={onRw} initialGender={viewGender === "Female" && womensYears.length ? "womens" : "mens"} />
+        </div>
+
+        {groups.map((group) => (
+          <div key={group.key} id={group.key} className={`${panel} scroll-mt-24 p-5 sm:p-6`}>
+            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
+              <div>
+                {/* Every board here is North Carolina's; say so (Matt, 29 Oct 2026). */}
+                <h2 className={`text-2xl ${title}`}>North Carolina {group.heading}</h2>
+                {group.preview ? (
+                  <span className="mt-1 inline-block rounded-full border border-[#D3B574]/50 px-2.5 py-0.5 text-xs font-semibold text-[#D3B574]">
+                    Staff preview — not yet released
+                  </span>
+                ) : null}
+              </div>
+              {group.key === "mens" && lastUpdatedLabel(ncUpdated) ? (
+                <span className="inline-flex items-center gap-1.5 text-xs text-white/60">
+                  <CalendarDays className="h-3.5 w-3.5" aria-hidden /> {lastUpdatedLabel(ncUpdated)}
+                </span>
+              ) : null}
+            </div>
+            {group.note ? <p className="mb-5 max-w-3xl text-sm leading-relaxed text-white/65">{group.note}</p> : null}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {STATE_TILES.map((st) =>
-                st.live ? (
-                  <a key={st.code} href={st.href} className="group block h-full">
-                    <Card className="h-full border-[#D3B574]/60 bg-[#13294B] text-white transition hover:-translate-y-0.5 hover:border-[#D3B574]">
-                      <CardHeader>
-                        <p className="text-3xl font-black text-white">{st.code}</p>
-                        <CardTitle className="text-lg font-bold text-white">{st.name}</CardTitle>
-                        <span className="mt-1 inline-flex w-fit rounded-full bg-[#D3B574] px-2.5 py-0.5 text-xs font-bold text-[#0A1628]">Available now</span>
-                        {st.updated ? <span className="mt-1 text-[11px] text-white/55">{st.updated}</span> : null}
-                      </CardHeader>
-                      <CardContent>
-                        <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#D3B574]">
-                          See the class boards
-                          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              {group.links.map(({ href, title: cardTitle, description, icon: Icon }) => (
+                <HardLink key={href} href={at(href)} className="group block h-full rounded-xl border border-white/10 bg-[#13294B]/60 p-5 transition hover:-translate-y-0.5 hover:border-[#D3B574]/70">
+                  <Icon className="h-6 w-6 text-[#D3B574]" aria-hidden />
+                  <p className="mt-3 text-2xl font-black text-white">{cardTitle}</p>
+                  <p className="mt-1 text-sm text-white/60">{description}</p>
+                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#D3B574]">
+                    View rankings <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden />
+                  </span>
+                </HardLink>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {top5.length ? (
+          <div className={`${panel} p-5 sm:p-6`}>
+            <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3">
+              <h2 className={`text-2xl ${title}`}>North Carolina Men&apos;s Class of {previewYear}: the top five</h2>
+              <HardLink href={at(`/public-rankings/${previewYear}`)} className="inline-flex items-center gap-1 text-sm font-semibold text-[#D3B574] hover:underline">
+                View full rankings <ArrowRight className="h-4 w-4" aria-hidden />
+              </HardLink>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px] text-left text-sm">
+                <thead className="text-xs uppercase tracking-wider text-white/50">
+                  <tr className="border-b border-white/10">
+                    <th className="py-2 pr-3 font-semibold">#</th>
+                    <th className="py-2 pr-3 font-semibold">Athlete</th>
+                    <th className="py-2 pr-3 font-semibold">School</th>
+                    <th className="py-2 pr-3 font-semibold">Weight</th>
+                    <th className="py-2 pr-3 font-semibold">Key results</th>
+                    <th className="py-2 font-semibold"><span className="sr-only">Profile</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {top5.map((a) => (
+                    <tr key={a.athleteId} className="border-b border-white/5 last:border-0">
+                      <td className="py-3 pr-3 text-base font-black">{a.rank}</td>
+                      <td className="py-3 pr-3">
+                        <span className="flex items-center gap-3">
+                          {a.photoUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={a.photoUrl} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" />
+                          ) : (
+                            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/10 text-xs font-bold text-white/60">
+                              {a.name.split(" ").map((w) => w[0]).slice(0, 2).join("")}
+                            </span>
+                          )}
+                          <span className="font-bold text-white">{a.name}</span>
                         </span>
-                      </CardContent>
-                    </Card>
-                  </a>
-                ) : (
-                  <Card key={st.code} aria-disabled className="h-full border-dashed border-white/15 bg-white/[0.03] text-white">
-                    <CardHeader>
-                      <p className="text-3xl font-black text-white/40">{st.code}</p>
-                      <CardTitle className="text-lg font-bold text-white/70">{st.name}</CardTitle>
-                      <span className="mt-1 inline-flex w-fit rounded-full border border-white/20 px-2.5 py-0.5 text-xs font-semibold text-white/55">Coming soon</span>
-                    </CardHeader>
-                  </Card>
-                ),
-              )}
+                      </td>
+                      <td className="py-3 pr-3 text-white/75">{a.highSchool ?? "—"}</td>
+                      <td className="py-3 pr-3 text-white/75">{a.weightClass ?? "—"}</td>
+                      <td className="py-3 pr-3 text-white/75">{a.credentials.slice(0, 2).map((c) => c.label).join(" · ") || "—"}</td>
+                      <td className="py-3 text-right">
+                        <HardLink href={`/view-profile?id=${encodeURIComponent(a.athleteId)}`} className="inline-block rounded-lg border border-[#D3B574] px-3 py-1.5 text-xs font-bold text-[#D3B574] hover:bg-[#D3B574]/10">
+                          View profile
+                        </HardLink>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         ) : null}
 
-        {groups.map((group) => (
-        <div key={group.key} id={group.key} className="mb-12 scroll-mt-24">
-        <div className="mb-4 flex flex-wrap items-baseline gap-3">
-          {/* Every board here is North Carolina's; on the national site say so on every tile (Matt, 29 Oct 2026). */}
-          <h2 className="text-2xl font-black tracking-tight text-white">{onRw ? `North Carolina ${group.heading}` : group.heading}</h2>
-          {group.preview ? (
-            <span className="rounded-full border border-[#D3B574]/50 px-2.5 py-0.5 text-xs font-semibold text-[#D3B574]">
-              Staff preview — not yet released
+        <div className={`${panel} p-5 sm:p-6`}>
+          <div className="mb-5 flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className={`text-2xl ${title}`}>How we evaluate college prospects</h2>
+              <p className="mt-1 text-sm text-white/60">A review of every result, not a points formula.</p>
+            </div>
+            {previewYear != null ? (
+              <HardLink href={`${at(`/public-rankings/${previewYear}`)}#how-we-rank`} className="inline-flex items-center gap-1 rounded-lg border border-white/20 px-3 py-1.5 text-sm font-semibold text-white/85 hover:bg-white/5">
+                How we rank <ArrowRight className="h-4 w-4" aria-hidden />
+              </HardLink>
+            ) : null}
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {([
+              [Trophy, "National performance", "Results at the premier national tournaments, against nationally competitive fields."],
+              [BarChart3, "Strength of competition", "Who he wrestled and who he beat: the quality of every win."],
+              [Shuffle, "Head-to-head and common opponents", "Direct matchups first, then shared opponents for context."],
+              [Medal, "State performance", "State championships, placements and progress season to season."],
+            ] as const).map(([Icon, h, body]) => (
+              <div key={h} className="rounded-xl border border-white/10 bg-[#13294B]/60 p-5">
+                <Icon className="h-6 w-6 text-[#D3B574]" aria-hidden />
+                <p className="mt-3 font-bold text-white">{h}</p>
+                <p className="mt-1 text-sm leading-6 text-white/60">{body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/*
+          * The other half of the job. A verified coach lands here when he signs in; the boards
+          * say who is good and the profiles say what they did. Shown to coaches only - a family
+          * browsing their own class board does not need pointing at a directory of other people's children.
+          */}
+        {viewer.isVerifiedCoach === true ? (
+          <HardLink href="/prospects/all" className={`${panel} flex flex-wrap items-center justify-between gap-4 p-5 transition hover:border-[#D3B574]/60 sm:p-6`}>
+            <span>
+              <span className={`block text-xl ${title}`}>{onRw ? "Every wrestler, ranked or not" : "Every North Carolina wrestler, ranked or not"}</span>
+              <span className="mt-1 block text-sm text-white/65">Full profiles: results, film, academics and contact details.</span>
             </span>
-          ) : null}
-        </div>
-        {group.note ? (
-          <p className="mb-5 max-w-3xl text-sm leading-relaxed text-white/65">{group.note}</p>
+            <span className="inline-flex items-center gap-2 rounded-xl bg-[#D3B574] px-5 py-3 text-sm font-black text-[#0A1628]">
+              Explore athlete profiles <ArrowRight className="h-4 w-4" aria-hidden />
+            </span>
+          </HardLink>
         ) : null}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {group.links.map(({ href, eyebrow, title, description, icon: Icon }) => (
-            <HardLink key={href} href={href} className="group block h-full">
-              <Card className="h-full border-white/10 bg-[#13294B] text-white transition hover:-translate-y-0.5 hover:border-[#D3B574]/70">
-                <CardHeader>
-                  <div className="mb-3 flex items-center justify-between gap-2">
-                    <Icon className="h-6 w-6 text-[#D3B574]" />
-                    {onRw ? <span className="rounded-full bg-[#D3B574] px-2.5 py-0.5 text-xs font-black text-[#0A1628]">North Carolina</span> : null}
-                  </div>
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/50">{onRw ? `NC ${group.key === "womens" ? "women's" : "men's"} · ${eyebrow.replace(/^Women's class rankings$/, "Class rankings")}` : eyebrow}</p>
-                  <CardTitle className="text-2xl font-bold text-white">{title}</CardTitle>
-                  <CardDescription className="text-sm text-white/65">{description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <span className="inline-flex items-center gap-2 text-sm font-semibold text-[#D3B574]">
-                    View rankings
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                  </span>
-                </CardContent>
-              </Card>
-            </HardLink>
-          ))}
-        </div>
-        </div>
-        ))}
 
         {isAdmin && PUBLISHED_PUBLIC_RANKINGS_YEARS.length === 0 ? (
-          <div className="mx-auto mb-8 max-w-xl rounded-xl border border-[#D3B574]/50 bg-[#D3B574]/10 px-6 py-4 text-center">
+          <div className="mx-auto max-w-xl rounded-xl border border-[#D3B574]/50 bg-[#D3B574]/10 px-6 py-4 text-center">
             <p className="text-sm font-semibold text-[#D3B574]">Admin preview — not yet released</p>
             <p className="mt-1 text-sm text-white/60">Only admins can open these boards right now.</p>
           </div>
@@ -321,7 +407,7 @@ export default async function PublicRankingsHomepage({
           </div>
         ) : null}
 
-        <p className="mx-auto mt-10 max-w-2xl text-center text-sm leading-relaxed text-white/55">
+        <p className="mx-auto max-w-2xl pt-4 text-center text-sm leading-relaxed text-white/55">
           Rankings are updated as new results and verified athlete information become available.
         </p>
       </section>

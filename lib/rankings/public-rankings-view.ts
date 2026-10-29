@@ -11,6 +11,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { getPublicRankingsMax, isPublicRankingsYearPublished, isRankedClassYear, isWomensBoard } from "@/lib/public-rankings-cap"
 import { loadWomensNationalRanks, type WomensNationalRankRow } from "@/lib/rankings/womens-national-ranks"
 import { inState } from "@/lib/recruiting/states"
+import { loadLastCompeted } from "@/lib/prospect-last-competed"
 import { loadPublishedSnapshot } from "@/lib/rankings/ranking-snapshot"
 
 /**
@@ -277,11 +278,14 @@ async function buildPublicClassRanking(
    */
   const showMovement = state === "NC" ? isPublicRankingsYearPublished(year, gender) : snapshot != null
 
-  const [credentials, nationalRanks] = await Promise.all([
-    loadAthleteCredentialsBatch(admin, (rows ?? []) as unknown as Array<Record<string, unknown>>),
+  const rowList = (rows ?? []) as unknown as Array<Record<string, unknown>>
+  const [credentials, nationalRanks, lastCompeted] = await Promise.all([
+    loadAthleteCredentialsBatch(admin, rowList),
     gender === "Female"
       ? loadWomensNationalRanks(admin, (rows ?? []).map((row) => String((row as unknown as Record<string, unknown>).id)))
       : Promise.resolve(new Map<string, WomensNationalRankRow[]>()),
+    // The weight shown is the one he last competed at, not the listed one (Matt, told 10+ times).
+    loadLastCompeted(admin, rowList.map((r) => String(r.id)), new Map(rowList.map((r) => [String(r.id), r.graduationyear == null ? null : Number(r.graduationyear)]))).catch(() => new Map()),
   ])
 
   const athletes: PublicRankedAthlete[] = (rows ?? []).map((row) => {
@@ -307,7 +311,7 @@ async function buildPublicClassRanking(
       ) ?? null,
       highSchool: (raw.highschool as string) || null,
       club: (raw.wrestlingClub as string) || null,
-      weightClass: raw.weightclass == null ? null : String(raw.weightclass),
+      weightClass: lastCompeted.get(id)?.weight ?? (raw.weightclass == null ? null : String(raw.weightclass)),
       graduationYear: raw.graduationyear == null ? null : Number(raw.graduationyear),
       previousRank: showMovement ? previousRank : null,
       isNew: showMovement && isNew,
