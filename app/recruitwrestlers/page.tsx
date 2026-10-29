@@ -138,7 +138,7 @@ export default async function RecruitWrestlersHome() {
               </div>
             </div>
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm font-semibold">
-              <a href="/public-rankings" className="text-white/70 hover:text-[#A3E635]">Prospect rankings <ArrowRight className="inline h-3.5 w-3.5" /></a>
+              <a href="/rankings" className="text-white/70 hover:text-[#A3E635]">Prospect rankings <ArrowRight className="inline h-3.5 w-3.5" /></a>
               <a href="/recruiting/college-map" className="inline-flex items-center gap-1 text-white/70 hover:text-[#A3E635]">
                 <MapIcon className="h-3.5 w-3.5" aria-hidden /> College map
               </a>
@@ -292,7 +292,7 @@ export default async function RecruitWrestlersHome() {
           </div>
           <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/60">
             <a href="/prospects/all" className="hover:text-white">Athletes</a>
-            <a href="/public-rankings" className="hover:text-white">Rankings</a>
+            <a href="/rankings" className="hover:text-white">Rankings</a>
             <a href="/recruiting/college-map" className="hover:text-white">Colleges</a>
             <a href="/for-coaches" className="hover:text-white">For coaches</a>
             <a href="/privacy" className="hover:text-white">Privacy</a>

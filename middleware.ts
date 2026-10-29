@@ -97,6 +97,20 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
     if (isCommunityAdminPath(pathname)) {
       return NextResponse.redirect(new URL(`${pathname}${request.nextUrl.search}`, APP_ORIGIN), 307)
     }
+    /*
+     * The boards live at /rankings here (Matt, 29 Oct 2026: "/rankings it should be"). The pages are
+     * app/public-rankings - a name left over from NC United, where /rankings is the Insider checkout,
+     * which stays. Old /public-rankings links move permanently; a checkout link goes to membership.
+     */
+    if (pathname === "/public-rankings" || pathname.startsWith("/public-rankings/")) {
+      return NextResponse.redirect(new URL(`${pathname.replace(/^\/public-rankings/, "/rankings")}${request.nextUrl.search}`, request.url), 308)
+    }
+    if (pathname === "/rankings" && request.nextUrl.searchParams.has("plan")) {
+      return NextResponse.redirect(new URL("/membership#insider", request.url), 307)
+    }
+    if ((pathname === "/rankings" || pathname.startsWith("/rankings/")) && !pathname.startsWith("/rankings/updates")) {
+      return NextResponse.rewrite(new URL(`${pathname.replace(/^\/rankings/, "/public-rankings")}${request.nextUrl.search}`, request.url))
+    }
     // RecruitWrestlers' own policy, not NC United's (app/recruitwrestlers/privacy).
     if (pathname === "/privacy") return NextResponse.rewrite(new URL("/recruitwrestlers/privacy", request.url))
     if (pathname === "/contact") return NextResponse.rewrite(new URL("/recruitwrestlers/contact", request.url))
