@@ -315,6 +315,14 @@
     {
       "athleteId": "fbe7a805-460a-41f3-8474-66c9baf1f3c1",
       "note": "Sydney Thompson, North Pontotoc High School, class of 2030. Before her freshman year she placed 7 in 2025. Mississippi's brackets admitted them: the package's grade evidence carries 59 eighth-grade and 20 seventh-grade entries, and each class year here is derived from the grade the tournament itself published - the same field that flags the result as pre-freshman. The MHSAA sanctioned wrestling only recently and its fields are small, which is why a third of the state's profiles carry one of these. The package cites no MHSAA by-law, so what is verified is the event's own record of who wrestled, not the rule behind it. Different from Maryland (COMAR 13A.06.03.02, grades 9-12 only) and Virginia (VHSL 28-2-1, eighth graders on junior varsity only), where the same shape proved a class year wrong (29 Oct 2026)."
+    },
+    {
+      "athleteId": "396cfdb1-7c76-47de-a27c-69b296f7e983",
+      "note": "Alex Moskowitz, Ocean Springs, class of 2029. He placed 3rd in 2025, which his class year makes an eighth-grade result - and that is the direct consequence of resolving him to 2029 rather than 2028. Flo printed 'HS Freshman' for him in both 2025 and 2026; taking the later print as the true one (Louisiana's Cael Martin precedent) makes the 2025 medal pre-freshman, which Mississippi's own brackets admit - the package's grade evidence carries 59 eighth-grade and 20 seventh-grade entries. Taking the earlier print instead would have made him class of 2028 with no pre-freshman result, so this row and his class year stand or fall together. Named here rather than hidden because it is a reasoned choice, not an observation (29 Oct 2026)."
     }
+  ],
+  "notes": [
+    "Alex Moskowitz (Ocean Springs, boys) reads the class of 2029 on a precedent rather than on his own evidence. Flo printed 'HS Freshman' for him in both 2025 and 2026, which cannot both be right, and he has no RankWrestlers record to break it. Louisiana's Cael Martin was the identical shape and broke to the later print, so the 2025 one is taken as the stale repeat. He also held two profiles, one per school spelling ('Ocean Springs' and 'Ocean Springs, MS'); they are merged. Worth a second look if an RW record ever appears (29 Oct 2026).",
+    "Sasha Sandoval (Oxford, girls) reads 2027: her anchored RankWrestlers record prints grade 'So' for 2024-25 and the 2025 Flo print agrees, against a lone 2024 '8th' print. Her two profiles, one per school spelling, are merged (29 Oct 2026)."
   ]
 }

@@ -45,6 +45,7 @@ export const RECRUITING_BRAND = {
     { code: "KY", name: "Kentucky", live: false },
     { code: "IN", name: "Indiana", live: false },
     { code: "NJ", name: "New Jersey", live: false },
+    { code: "NY", name: "New York", live: false },
   ],
 } as const
 
