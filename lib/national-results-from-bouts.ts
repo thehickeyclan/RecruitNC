@@ -19,6 +19,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import type { TournamentResultForDisplay } from "@/lib/public-profile-data"
 import type { OtherTournamentResult } from "@/lib/other-tournaments"
 import { athleteStateCode, HOME_STATE } from "@/lib/recruiting/states"
+import { nhscaDivision } from "@/lib/nhsca-division"
 
 export type NationalResultsFromBouts = {
   nhsca: TournamentResultForDisplay[]
@@ -97,7 +98,7 @@ export async function loadNationalResultsFromBouts(
 
   const { data, error } = await supabase
     .from("other_tournament_bouts")
-    .select("event_key, event_name, event_date, year, weight_class, round, win, is_bye, athlete_club")
+    .select("event_key, event_name, event_date, year, weight_class, round, win, is_bye, athlete_club, division")
     .eq("athlete_id", id)
     .or("event_key.like.super32-20%,event_key.like.nhsca-nationals-%,event_key.like.fargo-%,event_key.like.journeymen-fall-classic-%")
     .limit(2000)
@@ -123,7 +124,11 @@ export async function loadNationalResultsFromBouts(
       ...(s.weight ? { weight: s.weight } : {}),
     }
     if (/^super32-20\d\d$/.test(key)) out.super32.push(row)
-    else if (/^nhsca-nationals-/.test(key)) out.nhsca.push(row)
+    else if (/^nhsca-nationals-/.test(key)) {
+      // His grade division, so the profile says "Freshman" beside a freshman title.
+      const div = nhscaDivision(key, (bouts.find((b) => (b as { division?: string | null }).division) as { division?: string | null } | undefined)?.division)
+      out.nhsca.push(div ? { ...row, division: div } : row)
+    }
     else if (/^fargo-/.test(key)) out.fargo.push({ ...row, division: fargoDivision(key) })
     else if (/^journeymen-fall-classic-/.test(key)) {
       out.other.push({
