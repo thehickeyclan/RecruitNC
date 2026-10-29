@@ -23,6 +23,16 @@ import { Label } from "@/components/ui/label"
 function authIntentForPath(path: string | null) {
   const target = path || ""
 
+  // From the Insider page: the free account first, then Insider's checkout (Matt, 29 Oct 2026).
+  if (target.startsWith("/membership")) {
+    return {
+      badge: "STEP 1: FREE ACCOUNT",
+      title: "Create your free RecruitNC account, then start Insider",
+      description: "Make the account, then choose Insider: every published ranking, and which colleges viewed your profile.",
+      bullets: ["Every published class ranking", "Which college programs viewed your profile", "Cancel anytime"],
+    }
+  }
+
   if (target.startsWith("/public-rankings") || target.startsWith("/rankings") || target.startsWith("/admin/rankings")) {
     return {
       badge: "RANKINGS ACCESS",
