@@ -77,8 +77,11 @@ export function profileCredentials(input: {
     const place = placeNumber(row.placement)
     if (place == null || place > 8) continue
     if (isNationalEvent(row.event)) {
-      const aa = /fargo|nhsca/i.test(row.event) && place > 1 ? " · All-American" : ""
-      add(nationalName(row), `${placeWord(place)}${aa} · ${shortYear(row.year)}`, "national", place, row.year)
+      // NHSCA's grade division (lib/nhsca-division.ts): "Freshman Champion · ’26", "3rd · Freshman All-American · ’24".
+      const div = /nhsca/i.test(row.event) ? row.event.match(/ - (Freshman|Sophomore|Junior|Senior|Girls|Middle School)$/)?.[1] : undefined
+      const aa = /fargo|nhsca/i.test(row.event) && place > 1 ? ` · ${div ? `${div} ` : ""}All-American` : ""
+      const finish = place === 1 && div ? `${div} Champion` : placeWord(place)
+      add(nationalName(row), `${finish}${aa} · ${shortYear(row.year)}`, "national", place, row.year)
     } else if (place === 1 && /\b[a-z]{2} freestyle\b|freestyle & greco/i.test(row.event)) {
       const style = styleOfEvent(row.event, row.team) === "greco" ? "Greco" : "Freestyle"
       add(`${state} ${style} State`, `Champion · ${shortYear(row.year)}`, "olympic-state", place, row.year)

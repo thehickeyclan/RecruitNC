@@ -25,6 +25,7 @@ import {
 import { getPublicRankingsMax, isPublicRankingsYearPublished } from "@/lib/public-rankings-cap"
 import { latestSeasonMatchRows } from "@/lib/toc/ai-seeding"
 import type { HeadToHeadBout } from "@/lib/head-to-head"
+import { nhscaDivision } from "@/lib/nhsca-division"
 
 /** The hand-set rating on an athlete row, if there is one. */
 export function starOverrideOf(athlete: Record<string, unknown>): { stars: number | null; reason: string | null } {
@@ -63,7 +64,8 @@ const OVERFLOW = /\(OF\)|\boverflow\b/i
 export function nationalEventRows(bundle: AthleteTournamentBundle): NationalEventRow[] {
   const rows: NationalEventRow[] = []
   for (const r of bundle.nhsca ?? []) {
-    rows.push({ event: "NHSCA Nationals", year: Number(r.year), placement: placementNumber(r.placement), record: r.record ?? null })
+    const division = nhscaDivision(null, (r as { division?: unknown }).division)
+    rows.push({ event: "NHSCA Nationals", year: Number(r.year), placement: placementNumber(r.placement), record: r.record ?? null, ...(division ? { division } : {}) })
   }
   for (const r of bundle.super32 ?? []) {
     rows.push({ event: "Super 32", year: Number(r.year), placement: placementNumber(r.placement), record: r.record ?? null })
