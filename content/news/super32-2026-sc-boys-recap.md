@@ -6,7 +6,7 @@
 
 Super 32 is the best yardstick there is. Once a year the country's best high school wrestlers come to one tournament in Greensboro, and every state gets to see where it stands: against the rest of the country, and against itself a year ago.
 
-For South Carolina, the middle of the lineup took a real step. Nine SC boys left Greensboro with winning records, the most in the three years measured, and South Carolina won more matches than in either of the last two years with a smaller group. Three SC boys beat national seeds, led by Sy Strobel's 10-6 win over the reigning NHSCA national champion, and Rollins Dixon won five matches, including one over a wrestler ranked #11 in the country.
+For South Carolina, the middle of the lineup took a real step. Nine SC boys left Greensboro with winning records, the most in the three years measured, and South Carolina won more matches than in either of the last two years with a smaller group. Three SC boys beat national seeds, led by Sy Strobel's 10-6 win over the reigning NHSCA sophomore national champion, and Rollins Dixon won five matches, including one over a wrestler ranked #11 in the country.
 
 The next step is the medal rounds. No SC boy placed this year, and the deepest runs, by Dixon and Strobel, ended one round short of the blood round. The year comparison below shows where South Carolina has grown and where it hasn't yet.
 
@@ -38,7 +38,7 @@ Only contested bouts count toward a grade's wins over seeds; a forfeit counts in
 
 **Rollins Dixon (St James, 165) — 5-2.** The 2026 SC 5A runner-up won five matches. He opened with a decision over Chaney Lewis Jr. of Pennsylvania, a Fargo 16U Greco placer, then lost 4-2 to #4 Thunder Page of Kansas, who finished 5th. In the consolations he beat Missouri's Reed Wilson, #11 nationally (Flo), 5-4, pinned Virginia 4A runner-up Rocco Zagorites, and beat #10 seed Manny Gusfa of New Jersey, an NHSCA placer, 11-4. His run ended against #16 Grayson Debevoise of Ohio. Both of his losses came to seeds.
 
-**Sy Strobel (West-Oak, 190) — 3-2.** A two-time SC 3A champion, Strobel won his first three matches on the championship side, the third a 10-6 decision over #13 Dresden Beard of Kansas, the 2026 NHSCA national champion. He lost to #4 Mason Savidan of California, who finished 3rd, and then to Tennessee's Rock Shurette, an NHSCA placer.
+**Sy Strobel (West-Oak, 190) — 3-2.** A two-time SC 3A champion, Strobel won his first three matches on the championship side, the third a 10-6 decision over #13 Dresden Beard of Kansas, the 2026 NHSCA sophomore national champion. He lost to #4 Mason Savidan of California, who finished 3rd, and then to Tennessee's Rock Shurette, an NHSCA placer.
 
 **Maximiliano Johnson (James Island, 150) — 4-2.** Johnson won four matches, including a 7-0 shutout of NHSCA placer Micah Engelman of Pennsylvania and a 6-1 decision over #25 seed Deacon Morgan of Michigan, #7 nationally (Flo). His losses came to #3 Peyton Hornsby of Indiana, who finished 2nd, and Georgia 3A champion Cruz Hezel.
 
@@ -54,7 +54,7 @@ Only contested bouts count toward a grade's wins over seeds; a forfeit counts in
 
 **Xavier Gonzalez (Clover, 144) — 3-2.** Gonzalez won three straight in the consolations, including decisions over Florida's 3A 3rd-place finisher and Indiana's 6th-place finisher. Both of his losses came to seeds: #18 Kavi Garvey of California, who finished 7th, and #19 Nicholas Marchese of Illinois.
 
-**Tyrone Norris III (Clover, 157) — 3-2.** The 2026 SC 5A runner-up beat Florida's Howard Hill, the 2026 NHSCA national champion, 10-2, and North Carolina's 6A runner-up 4-1. Both of his losses came to seeds, the second 4-3 to #21 Guardian Miller of Ohio.
+**Tyrone Norris III (Clover, 157) — 3-2.** The 2026 SC 5A runner-up beat Florida's Howard Hill, the 2026 NHSCA freshman national champion, 10-2, and North Carolina's 6A runner-up 4-1. Both of his losses came to seeds, the second 4-3 to #21 Guardian Miller of Ohio.
 
 ## B-
 
@@ -76,7 +76,7 @@ Thirty-eight more South Carolina boys stepped on the mat in Greensboro, and ever
 
 ## The Bigger Picture
 
-Super 32 is one of the toughest tests in high school wrestling, and a chance to measure South Carolina against the best competition in the country. This year's results give the state real reasons to be encouraged: nine winning records, more wins than in either of the last two years, three wins over national seeds, one of them over the reigning NHSCA national champion, and a second NHSCA champion beaten in the consolations.
+Super 32 is one of the toughest tests in high school wrestling, and a chance to measure South Carolina against the best competition in the country. This year's results give the state real reasons to be encouraged: nine winning records, more wins than in either of the last two years, three wins over national seeds, one of them over the reigning NHSCA sophomore national champion, and the NHSCA freshman national champion beaten in the consolations.
 
 The next step is the podium. That's the standard every state is chasing, and Super 32 gives South Carolina a clear benchmark to build on next year.
 
