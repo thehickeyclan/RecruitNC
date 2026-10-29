@@ -3833,6 +3833,10 @@ html[data-host="national"] .bg-sky-500\/15 {
   background-color: rgb(163 230 53 / 0.15);
 }
 
+html[data-host="national"] .bg-sky-500\/20 {
+  background-color: rgb(163 230 53 / 0.2);
+}
+
 html[data-host="national"] .bg-sky-500\/25 {
   background-color: rgb(163 230 53 / 0.25);
 }
@@ -3911,6 +3915,10 @@ html[data-host="national"] .hover\:border-sky-400\/60:hover {
 
 html[data-host="national"] .ring-sky-400\/30 {
   --tw-ring-color: rgb(163 230 53 / 0.3);
+}
+
+html[data-host="national"] .ring-sky-400\/40 {
+  --tw-ring-color: rgb(163 230 53 / 0.4);
 }
 
 html[data-host="national"] .text-sky-100 {

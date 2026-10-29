@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
-import { isVisibleState } from "@/lib/recruiting/brand"
+import { isVisibleState, visibleStates } from "@/lib/recruiting/brand"
 import { HOME_STATE, normalizeStateCode } from "@/lib/recruiting/states"
 import { fetchProspectDirectoryPage } from "@/lib/prospects-directory"
 import { lastCompetedLabel, loadLastCompeted } from "@/lib/prospect-last-competed"
@@ -28,7 +28,9 @@ export async function GET(request: NextRequest) {
      * One state per request; North Carolina when none is asked for, which is every request made
      * before a second state existed. A state not yet announced is admins' only.
      */
-    const state = normalizeStateCode(searchParams.get("state")) ?? HOME_STATE
+    // "ALL": North Carolina and every other state this viewer may open, in one list.
+    const allStates = String(searchParams.get("state") ?? "").toUpperCase() === "ALL"
+    const state = allStates ? "ALL" : (normalizeStateCode(searchParams.get("state")) ?? HOME_STATE)
     // RecruitWrestlers carries every live state; NC United's address North Carolina only.
     const onRw = stagedBrandForHost(request.headers.get("host")) === "national"
     let isAdmin = false
@@ -38,12 +40,13 @@ export async function GET(request: NextRequest) {
         const { data: me } = await supabase.from("user_profiles").select("is_admin, role").eq("user_id", auth.user.id).maybeSingle()
         isAdmin = me?.is_admin === true || me?.role === "admin"
       }
-      if (!isVisibleState(state, isAdmin, onRw)) return NextResponse.json({ error: "That state is not open yet." }, { status: 404 })
+      if (!allStates && !isVisibleState(state, isAdmin, onRw)) return NextResponse.json({ error: "That state is not open yet." }, { status: 404 })
     }
 
     const minYear = minYearParam ? Number.parseInt(minYearParam, 10) : null
     const maxYear = maxYearParam ? Number.parseInt(maxYearParam, 10) : null
 
+    const withStates = allStates ? visibleStates(isAdmin, onRw).map((st) => st.code).filter((c: string) => c !== HOME_STATE) : null
     const { prospects, hasMore } = await fetchProspectDirectoryPage(supabase, {
       graduationYear,
       gender,
@@ -51,7 +54,8 @@ export async function GET(request: NextRequest) {
       maxYear: Number.isFinite(maxYear!) ? maxYear : null,
       limit,
       offset,
-      state,
+      state: allStates ? HOME_STATE : state,
+      withStates,
     })
 
     /*
