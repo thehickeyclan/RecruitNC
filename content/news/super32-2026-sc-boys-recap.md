@@ -14,12 +14,17 @@ The next step is the medal rounds. No SC boy placed this year, and the deepest r
 
 | Super 32 — SC boys | 2024 | 2025 | 2026 |
 |---|---|---|---|
-| Wrestlers in brackets | 65 | 67 | 55 |
-| Match wins | 48 | 51 | 55 |
-| Wrestlers with winning records | 6 | 4 | 9 |
-| All-Americans | 0 | 2 | 0 |
+| Wrestlers in brackets | 64 | 66 | 55 |
+| Match wins | 43 | 44 | 54 |
+| Still alive entering Day 2 | 1 | 1 | 0 |
+| Wrestlers with winning records | 5 | 3 | 9 |
+| Wins over seeded opponents | 1 | 4 | 3 |
+| Wins over top-15 seeds | 0 | 1 | 2 |
+| Different wrestlers with a seeded win | 1 | 3 | 3 |
+| Went 0-2 (% of wrestlers) | 63 | 58 | 53 |
+| All-Americans | 0 | 1 | 0 |
 
-*Every year is counted by the state wrestlers registered under, the only basis available for 2024 and 2025. By school, 2026 is the same 55 wrestlers with a 54-110 record: Marciano Blackmon (South Pointe), registered in North Carolina, is in, and Karter Lorang, who attends school in Pennsylvania, is out. One of 2025's two All-Americans, Shamus Regan, attends school in Florida.*
+*Wrestlers are counted for the state where they attend school, the same basis as the North Carolina recap. 2026 includes Marciano Blackmon (South Pointe), registered in North Carolina, and leaves out Karter Lorang, who attends school in Pennsylvania; 2024 and 2025 leave out Shamus Regan, registered in South Carolina but at school outside the state. Seeds are from Flo's brackets for each year. Seeded-win rows count contested bouts only: Thomas Johnson's 2024 win over #17 Luke Geleta was a forfeit. Still alive entering Day 2 means a win in the second Consi of 16 round or a place in the quarterfinals, counted the same way each year. 0-2 counts: 40 of 64 in 2024, 38 of 66 in 2025, 29 of 55 in 2026. 2025's All-American is Jaelen Culp, 8th at 165.*
 
 ## How the Grades Work
 
