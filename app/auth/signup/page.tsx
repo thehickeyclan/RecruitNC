@@ -273,7 +273,7 @@ function SignUpWizard() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-start pt-20 md:items-center md:pt-0 justify-center bg-gray-50 px-4">
+      <div className="min-h-screen flex items-start pt-20 md:items-center md:pt-0 justify-center profile-surface bg-[#0A1628] px-4">
         <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Account created — one last step</CardTitle>
@@ -290,7 +290,7 @@ function SignUpWizard() {
               <p className="text-sm text-muted-foreground">
                 If you don&apos;t see the email within a minute, check spam, junk, promotions, or school/work email filters.
               </p>
-              {resendMessage ? <p className="text-sm text-blue-700">{resendMessage}</p> : null}
+              {resendMessage ? <p className="text-sm text-[#D3B574]">{resendMessage}</p> : null}
               <Button className="w-full" onClick={handleResendVerification} disabled={resending}>
                 {resending ? "Sending..." : "Resend verification email"}
               </Button>
@@ -317,11 +317,11 @@ function SignUpWizard() {
   }
 
   return (
-    <div className="min-h-screen flex items-start justify-center bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 px-4 pb-8 pt-8 md:items-center md:pt-0">
+    <div className="min-h-screen flex items-start justify-center profile-surface bg-[#0A1628] px-4 pb-8 pt-8 md:items-center md:pt-0">
       <div className="w-full max-w-xl space-y-5">
         <div className="text-center">
-          <Badge className="mb-3 bg-[#D3B574] px-3 py-1 text-xs font-bold text-[#03154C]">{authIntent.badge}</Badge>
-          <h1 className="text-2xl font-bold text-[#03154C] md:text-3xl"><BrandText text={authIntent.title} /></h1>
+          <Badge className="mb-3 bg-[#D3B574] px-3 py-1 text-xs font-bold text-white">{authIntent.badge}</Badge>
+          <h1 className="text-2xl font-bold text-white md:text-3xl"><BrandText text={authIntent.title} /></h1>
         </div>
 
         <Card className="w-full shadow-lg">
@@ -338,21 +338,21 @@ function SignUpWizard() {
                     key={value}
                     type="button"
                     onClick={() => pickRole(value)}
-                    className="flex w-full items-center gap-4 rounded-lg border border-gray-200 bg-white p-4 text-left transition-colors hover:border-[#03154C] hover:bg-blue-50"
+                    className="flex w-full items-center gap-4 rounded-lg border border-border bg-[#0A1628] p-4 text-left transition-colors hover:border-[#D3B574] hover:bg-white/5"
                   >
-                    <Icon className="h-6 w-6 flex-shrink-0 text-[#03154C]" aria-hidden />
+                    <Icon className="h-6 w-6 flex-shrink-0 text-white" aria-hidden />
                     <span className="flex-1">
-                      <span className="block font-semibold text-gray-900">{title}</span>
+                      <span className="block font-semibold text-white">{title}</span>
                       <span className="block text-sm text-muted-foreground">{blurb}</span>
                     </span>
-                    <ChevronRight className="h-5 w-5 text-gray-400" aria-hidden />
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" aria-hidden />
                   </button>
                 ))}
-                <p className="pt-3 text-center text-sm text-gray-600">
+                <p className="pt-3 text-center text-sm text-muted-foreground">
                   Already have an account?{" "}
                   <Link
                     href={`/auth/signin${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`}
-                    className="text-blue-600 hover:underline"
+                    className="text-[#D3B574] hover:underline"
                   >
                     Sign in
                   </Link>
@@ -368,7 +368,7 @@ function SignUpWizard() {
                     setProfileType(null)
                     setError("")
                   }}
-                  className="mb-1 inline-flex w-fit items-center gap-1 text-sm text-blue-600 hover:underline"
+                  className="mb-1 inline-flex w-fit items-center gap-1 text-sm text-[#D3B574] hover:underline"
                   disabled={loading}
                 >
                   <ChevronLeft className="h-4 w-4" aria-hidden /> Change
@@ -450,9 +450,9 @@ function SignUpWizard() {
                     asks for just those afterwards. */}
                 <div className="mt-5">
                   <div className="mb-4 flex items-center gap-3">
-                    <span className="h-px flex-1 bg-gray-200" />
-                    <span className="text-xs font-medium uppercase tracking-wide text-gray-400">or</span>
-                    <span className="h-px flex-1 bg-gray-200" />
+                    <span className="h-px flex-1 bg-border" />
+                    <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">or</span>
+                    <span className="h-px flex-1 bg-border" />
                   </div>
                   <GoogleSignInButton returnTo={returnTo} profileType={profileType} label="Sign up with Google" />
                 </div>
