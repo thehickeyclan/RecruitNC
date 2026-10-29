@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ArrowRight, Globe } from "lucide-react"
+import { ArrowRight, Globe, Lock } from "lucide-react"
 
 /**
  * "Explore prospect rankings" on the rankings page (Matt's mock, 29 Oct 2026): pick a state, men's
@@ -13,6 +13,7 @@ export type ExplorerState = { code: string; name: string; mens: number[]; womens
 export function RankingsExplorer({
   states,
   selected,
+  lockedHref,
   base,
   showStates,
   initialGender = "mens",
@@ -20,6 +21,8 @@ export function RankingsExplorer({
   states: ExplorerState[]
   /** The state the page is showing; picking another reloads the page for it (?state=). */
   selected: string
+  /** A visitor without the rankings: the button opens membership instead of the board. */
+  lockedHref?: string
   /** "/rankings" on RecruitWrestlers, "/public-rankings" on NC United. */
   base: string
   showStates: boolean
@@ -105,8 +108,8 @@ export function RankingsExplorer({
           </select>
         </label>
         {href ? (
-          <a href={href} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#D3B574] px-5 py-3 text-sm font-black text-[#0A1628] hover:brightness-110">
-            View rankings <ArrowRight className="h-4 w-4" aria-hidden />
+          <a href={lockedHref ?? href} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#D3B574] px-5 py-3 text-sm font-black text-[#0A1628] hover:brightness-110">
+            {lockedHref ? <><Lock className="h-4 w-4" aria-hidden /> Unlock with Insider</> : <>View rankings <ArrowRight className="h-4 w-4" aria-hidden /></>}
           </a>
         ) : null}
       </div>
