@@ -270,7 +270,8 @@ export default async function PublicRankingsHomepage({
         {groups.map((group) => (
         <div key={group.key} id={group.key} className="mb-12 scroll-mt-24">
         <div className="mb-4 flex flex-wrap items-baseline gap-3">
-          <h2 className="text-2xl font-black tracking-tight text-white">{group.heading}</h2>
+          {/* Every board here is North Carolina's; on the national site say so on every tile (Matt, 29 Oct 2026). */}
+          <h2 className="text-2xl font-black tracking-tight text-white">{onRw ? `North Carolina ${group.heading}` : group.heading}</h2>
           {group.preview ? (
             <span className="rounded-full border border-[#D3B574]/50 px-2.5 py-0.5 text-xs font-semibold text-[#D3B574]">
               Staff preview — not yet released
@@ -285,8 +286,11 @@ export default async function PublicRankingsHomepage({
             <HardLink key={href} href={href} className="group block h-full">
               <Card className="h-full border-white/10 bg-[#13294B] text-white transition hover:-translate-y-0.5 hover:border-[#D3B574]/70">
                 <CardHeader>
-                  <Icon className="mb-3 h-6 w-6 text-[#D3B574]" />
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/50">{eyebrow}</p>
+                  <div className="mb-3 flex items-center justify-between gap-2">
+                    <Icon className="h-6 w-6 text-[#D3B574]" />
+                    {onRw ? <span className="rounded-full bg-[#D3B574] px-2.5 py-0.5 text-xs font-black text-[#0A1628]">North Carolina</span> : null}
+                  </div>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-white/50">{onRw ? `NC ${group.key === "womens" ? "women's" : "men's"} · ${eyebrow.replace(/^Women's class rankings$/, "Class rankings")}` : eyebrow}</p>
                   <CardTitle className="text-2xl font-bold text-white">{title}</CardTitle>
                   <CardDescription className="text-sm text-white/65">{description}</CardDescription>
                 </CardHeader>

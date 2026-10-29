@@ -19,6 +19,7 @@ import { rosterForSchool } from "@/lib/college-programs/rosters"
 import { fitScore, type FitLine, type FitStatus } from "@/lib/recruiting/family-fit"
 import { NEED_LABEL } from "@/lib/college-programs/roster-room"
 import { collegeFitFor, loadFamilyFitContext } from "@/lib/recruiting/college-fit"
+import { isDemoFamily } from "@/lib/recruiting/demo-family"
 import { collegeViewsFor } from "@/lib/recruiting/college-views"
 import { familyAthleteIds } from "@/lib/coach-messages"
 import { FamilyFitForm } from "@/components/colleges/family-fit-form"
@@ -83,9 +84,11 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
   const userId = portal.userId ?? auth.user.id
   const blue = hasPortalAccess(portal.viewer)
 
+  // Product screenshots (lib/recruiting/demo-family.ts): the invented family's, never this account's list or views.
+  const demo = await isDemoFamily()
   const [{ data: list }, focus] = await Promise.all([
-    admin.from("college_list_items").select("school_id, status, note, updated_at").eq("user_id", userId).order("updated_at", { ascending: false }),
-    familyFocus(admin, userId),
+    demo ? Promise.resolve({ data: [] as Array<{ school_id: string; status: string; note: string | null; updated_at: string }> }) : admin.from("college_list_items").select("school_id, status, note, updated_at").eq("user_id", userId).order("updated_at", { ascending: false }),
+    demo ? Promise.resolve({ gender: "mens" as const }) : familyFocus(admin, userId),
   ])
   const listed = new Map((list ?? []).map((r) => [String(r.school_id), { status: r.status as CollegeListStatus, note: (r.note as string | null) ?? null }]))
   const saved = (list ?? []).map((r) => SCHOOLS.get(String(r.school_id))).filter((s): s is CollegeMapSchool => Boolean(s))
@@ -102,7 +105,7 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
   const savedLogos = askedStep === "colleges" || (!askedStep && chosen.length < 2) ? await Promise.all(saved.map((sc) => schoolLogoUrl(sc).catch(() => null))) : []
   const { first, sat, act, profile, profileSet, weight } = ctx
   // Coaches of each college who viewed the wrestler: a verified signal, shown beside the list stage.
-  const viewsByCollege = blue ? await collegeViewsFor(admin, await familyAthleteIds(admin, userId).catch(() => [])).catch(() => new Map()) : new Map()
+  const viewsByCollege = blue && !demo ? await collegeViewsFor(admin, await familyAthleteIds(admin, userId).catch(() => [])).catch(() => new Map()) : new Map()
 
   const columns = await Promise.all(
     chosen.map(async (school) => {

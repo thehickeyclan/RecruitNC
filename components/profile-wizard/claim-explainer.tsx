@@ -25,40 +25,19 @@ const STEPS: Array<[string, string]> = [
 ]
 
 /**
- * What a claimed profile shows when college coaches look - a made-up example, never a real
- * wrestler's views (Matt asked for "a screenshot with the name blurred"; a real one still identifies
- * the kid by school and results, and coach interest is private). Same look as the profile's panel.
+ * What a claimed profile shows when college coaches look: the real Profile Views panel, screenshotted
+ * with an invented wrestler and invented views (scripts/command-center-screens). Matt, 29 Oct 2026:
+ * the blurred mock-up was not impactful; the real screen is. Never a real wrestler's views.
  */
-/** What a free account sees: when, and how often. Program names and levels unlock with a plan. */
-const EXAMPLE_VISITS: Array<[string, string]> = [
-  ["Viewed 3 times", "Today"],
-  ["Viewed once", "Yesterday"],
-  ["Viewed 2 times", "3 days ago"],
-  ["Viewed once", "Last week"],
-]
-
 function ExampleViews() {
   return (
-    <div className="mt-5 rounded-xl border border-[#D3B574] bg-[#0f1c2e] p-4" aria-label="Example of the college coach views panel">
-      <div className="flex items-center justify-between">
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#D3B574]">Example · on your profile</p>
-        <p className="text-[11px] text-white/45">Sample, not a real wrestler</p>
-      </div>
-      <p className="mt-2 text-lg font-black">6 college programs viewed this profile</p>
-      <ul className="mt-3 space-y-2">
-        {EXAMPLE_VISITS.map(([label, when]) => (
-          <li key={label} className="flex items-center gap-3 rounded-lg border border-white/10 bg-[#0A1628] px-3 py-2">
-            <span className="h-8 w-8 shrink-0 rounded-full bg-white/15 blur-[2px]" aria-hidden />
-            <span className="min-w-0 flex-1">
-              <span className="block select-none text-sm font-bold text-white/80 blur-[5px]" aria-hidden>College Program Name</span>
-              <span className="block text-xs text-white/50">{label}</span>
-            </span>
-            <span className="shrink-0 text-xs text-white/60">{when}</span>
-          </li>
-        ))}
-      </ul>
-      <p className="mt-3 text-xs text-white/55">Claim your profile to see when college coaches look at it.</p>
-    </div>
+    <figure className="mt-5 overflow-hidden rounded-xl border border-white/10 bg-[#0f1c2e]">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/screens/cc-views.jpg" alt="The profile views panel: six college programs viewed the example wrestler, with logos, view counts and dates, and a bar of views per week" loading="lazy" className="block w-full" />
+      <figcaption className="px-4 py-2 text-[11px] text-white/50">
+        The real panel, with an example wrestler. Free accounts see when and how often; programs are named with a membership.
+      </figcaption>
+    </figure>
   )
 }
 
@@ -67,7 +46,7 @@ export function ClaimExplainer() {
   return (
     <section className="mx-auto mb-6 w-full max-w-xl text-white">
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#D3B574]"><BrandName /> · Free for every wrestler</p>
-      <h1 className="mt-2 text-2xl font-black leading-tight sm:text-3xl">College coaches recruit North Carolina wrestlers here.</h1>
+      <h1 className="mt-2 text-2xl font-black leading-tight sm:text-3xl">College coaches recruit <BrandName ncu="North Carolina wrestlers" national="wrestlers" /> here.</h1>
       <p className="mt-3 text-white/75">
         Men&apos;s and women&apos;s college programs use <BrandName /> to find wrestlers. Claim your profile so they can reach
         you, and see when they look.
