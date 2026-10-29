@@ -17,6 +17,14 @@
  * Re-running replaces each event key it writes; nothing else is touched.
  *
  *   npx tsx scripts/import-state-championship-bouts.ts --state SC --dir <bouts-csv> [--source <zip name>] [--write]
+ *
+ * `--layer qualifiers` loads the step below state instead (Matt, 29 October 2026: SC's Upper and
+ * Lower State qualifiers and region tournaments). Those bouts go under `<association>-qualifiers-
+ * <season>`, named for the tournament in each file's Classification column ("SCHSL 5A Upper
+ * State"), so nothing here can read as - or replace - a state championship bout. `--dates` gives
+ * each tournament its date, matched on the Classification text, first match wins:
+ *
+ *   --layer qualifiers --dates "Region=2026-01-23,Girls=2026-02-11,*=2026-02-13"
  */
 import fs from "fs"
 import path from "path"
@@ -37,6 +45,15 @@ const STATE = String(val("--state") ?? "").toUpperCase()
 const DIR = val("--dir")
 const SOURCE = val("--source") ?? "muse-delivery"
 const WRITE = args.includes("--write")
+const QUALIFIERS = val("--layer") === "qualifiers"
+const DATES = String(val("--dates") ?? "")
+  .split(",")
+  .map((pair) => pair.split("=").map((x) => x.trim()))
+  .filter(([k, v]) => k && /^\d{4}-\d{2}-\d{2}$/.test(v ?? ""))
+const dateFor = (classification: string): string | null => {
+  for (const [k, v] of DATES) if (k === "*" || classification.toLowerCase().includes(k!.toLowerCase())) return v!
+  return null
+}
 if (!STATE || !DIR) throw new Error("--state XX --dir <bouts-csv>")
 
 const norm = (s: unknown) => String(s ?? "").toLowerCase().replace(/[^a-z ]/g, "").replace(/\s+/g, " ").trim()
@@ -118,23 +135,25 @@ async function main() {
     if (!b.Winner || !b.Loser) continue
     const season = Number(b.Season)
     const assoc = String(b.Association).toUpperCase()
-    const eventKey = `${assoc.toLowerCase()}-states-${season}`
+    const eventKey = QUALIFIERS ? `${assoc.toLowerCase()}-qualifiers-${season}` : `${assoc.toLowerCase()}-states-${season}`
     const rt = String(b["Result Type"] ?? "").toUpperCase()
     // Muse's Result starts with the type ("F 1:11", "TF 17-2"): the score is what follows it.
     const rest = String(b.Result ?? "").replace(new RegExp(`^${rt}\\b\\s*`, "i"), "").trim()
     const score = rest ? rest : b["Winner Score"] && (b["Winner Score"] !== "0" || b["Loser Score"] !== "0") ? `${b["Winner Score"]}-${b["Loser Score"]}` : null
     const base = {
       event_key: eventKey,
-      event_name: `${assoc} State Championships`,
+      event_name: QUALIFIERS ? `${assoc} ${b.Classification}` : `${assoc} State Championships`,
       year: season,
       weight_class: b["Weight Class"],
-      round: [b.Classification && b.Classification !== assoc && !/^girls$/i.test(b.Classification) ? b.Classification : null, b.Round || "State Championships"].filter(Boolean).join(" · "),
+      round: QUALIFIERS
+        ? [b.Classification, b.Round].filter(Boolean).join(" · ")
+        : [b.Classification && b.Classification !== assoc && !/^girls$/i.test(b.Classification) ? b.Classification : null, b.Round || "State Championships"].filter(Boolean).join(" · "),
       source_round: b.Round || null,
       is_bye: false,
       win_type: rt || null,
       score,
       gender: /^g/i.test(b.Gender) ? "F" : "M",
-      event_date: null,
+      event_date: QUALIFIERS ? dateFor(String(b.Classification ?? "")) : null,
       source_file: SOURCE,
       _rank: roundRank(b.Round ?? ""),
     }
@@ -153,6 +172,7 @@ async function main() {
   console.log(`${STATE}: ${bouts.length} bout rows in ${files.length} files, ${unique.length} after Bout ID dedupe`)
   console.log(`  sides linked to a profile: ${linked} of ${sides}, across ${profiles.size} profiles`)
   for (const k of keys) console.log(`  ${k}: ${rows.filter((r) => r.event_key === k).length} rows`)
+  if (QUALIFIERS && rows.some((r) => !r.event_date)) throw new Error("--layer qualifiers needs --dates covering every tournament")
   if (!WRITE) return console.log("\nDry run. --write to apply.")
   for (const k of keys) {
     const { error } = await sb.from("other_tournament_bouts").delete().eq("event_key", k)
