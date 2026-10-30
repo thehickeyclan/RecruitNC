@@ -104,6 +104,14 @@ export const SOURCES = {
     url: "https://collegecost.ed.gov/net-price",
   },
   fafsa: { label: "Federal Student Aid (FAFSA)", url: "https://studentaid.gov/h/apply-for-aid/fafsa" },
+  vhslEligibility: {
+    label: "VHSL: eligibility",
+    url: "https://www.vhsl.org/eligibility/",
+  },
+  vhslNil: {
+    label: "VHSL name, image and likeness policy",
+    url: "https://www.vhsl.org/vhsl-nil-policy-digital-course/",
+  },
   nwcaPortal: {
     label: "NWCA: transfer window approved by the Division I Cabinet, January 2026",
     url: "https://nwcaonline.com/news/2026/1/14/national-wrestling-coaches-association-nwca-initiative-on-transfer-portal-approved-by-ncaa-division-i-cabinet.aspx",
@@ -767,6 +775,88 @@ export const LEARN_PAGES: LearnPage[] = [
       },
     ],
   },
+  {
+    slug: "staying-eligible-in-virginia",
+    title: "Staying eligible in Virginia",
+    summary:
+      "The VHSL rules that decide whether a Virginia wrestler can compete at all: who is eligible, what a transfer costs, and where NIL is allowed.",
+    free: true,
+    sections: [
+      {
+        heading: "Who is eligible to wrestle for a VHSL school",
+        intro:
+          "These are conditions on competing at all, checked by the school rather than by a college. A wrestler who fails one of them does not wrestle, however the season was going.",
+        bullets: [
+          "A bona fide student in good standing at the school the wrestler represents (28-1-1).",
+          "Enrolled in the last four years of high school (28-2-1). An eighth grader may be eligible for junior varsity only — no middle schooler wrestles VHSL varsity, and none reaches a state championship.",
+          "Enrolled no later than the fifteenth day of the semester (28-3-1).",
+          "Not yet nineteen on or before August 1 of the school year.",
+          "No more than eight consecutive semesters of eligibility, counted from first entering ninth grade.",
+        ],
+        reading:
+          "The scholarship rule (28-4-1) sets how many subjects a wrestler must carry and pass each semester, and we are not printing a number here: two member-school handbooks quoting 28-4-1 say three subjects, while VHSL's own condensed summary on the physical form says five. Until the current Handbook text is read directly, ask your athletic director what your school applies.",
+        rule: "VHSL Handbook Section 28 (28-1-1, 28-2-1, 28-3-1, 28-4-1); condensed eligibility rules revised April 2025",
+        sources: ["vhslEligibility"],
+      },
+      {
+        heading: "Transferring schools costs a year unless the family moved",
+        intro:
+          "Virginia's transfer rule is strict, and it is the one that most often surprises a family part-way through a season.",
+        bullets: [
+          "A wrestler who transfers schools sits out all VHSL competition for 365 consecutive calendar days.",
+          "The exception is a transfer that went with a genuine change of residence by the parents or guardians.",
+          "Other exceptions and waivers exist and are decided above the school — the route starts with the principal, and runs through the division.",
+        ],
+        advice:
+          "Ask before the move, not after. The 365 days run from the transfer, so a family that checks in advance can often time a move around a season rather than lose one.",
+        rule: "VHSL transfer rule, 365 consecutive days; waiver routes at division level",
+        sources: ["vhslEligibility"],
+      },
+      {
+        heading: "NIL is allowed in Virginia, with lines that end eligibility",
+        intro:
+          "Unlike prize money for wrestling itself, commercial NIL work is permitted for VHSL athletes. The restrictions are about the school's name, not the money.",
+        bullets: [
+          "A wrestler may be paid, in an individual capacity, for commercials, endorsements, appearances, autographs, merchandise, group licensing and social-media work.",
+          "Nothing may use VHSL or member-school property: no school name, logo or mascot, and never in the school uniform.",
+          "NIL may not be an inducement to enrol at a school or to join a team, and may not be pay-for-play or tied to performance.",
+          "No endorsing during school team activities or events.",
+          "Prohibited categories: alcohol; adult entertainment; cannabis and its derivatives; controlled substances; performance-enhancing drugs; drug paraphernalia; tobacco, nicotine and vapour products; weapons and ammunition; casinos and gambling, including betting on athletic contests.",
+          "Agreements must be disclosed to the school's athletic director for compliance review.",
+        ],
+        reading:
+          "The policy was adopted on 3 May 2023 and took effect on 1 July 2023. Virginia also has NIL in statute; we have not printed the section number here because we have not read it directly.",
+        rule: "VHSL NIL policy, adopted 3 May 2023, effective 1 July 2023",
+        sources: ["vhslNil"],
+      },
+      {
+        heading: "Girls wrestling is fully sanctioned by VHSL from 2026-27",
+        intro:
+          "Virginia girls have wrestled their own state championship for several seasons. From 2026-27 VHSL sanctions it fully, and it is wrestled alongside the boys.",
+        bullets: [
+          "Two classed girls tournaments, Classes 1-3 and Classes 4-6, held alongside the boys.",
+          "The 2026 boys championships were wrestled 20-21 February 2026 — Salem for Classes 1-3, Virginia Beach for Classes 4-6.",
+          "The 2026 girls championship was a separate event from the boys.",
+        ],
+        reading:
+          "The sanctioning follows VHSL's vote of May 2025. First practice, first competition and regional dates for 2026-27 come from VHSL's official calendar, which we have not published here.",
+        sources: ["vhslEligibility"],
+      },
+      {
+        heading: "What this page does not answer yet",
+        intro:
+          "Two things a Virginia family will reasonably ask, which we are not answering until the Handbook text is read directly. An answer we have not verified is worse than none.",
+        bullets: [
+          "Prize money and amateur standing. VHSL keeps amateur and awards rules in Section 28, and its NIL policy separates commercial earnings, which are allowed, from payment for athletic performance. We have not pulled the exact awards text, so we are not saying what a Virginia wrestler may accept. North Carolina's limit does not transfer: that is an NCHSAA rule, not a Virginia one.",
+          "Weight certification. Virginia wrestling runs under NFHS weight management with a preseason hydration and body-composition assessment, and VHSL publishes its own wrestling procedures. The dates, the protocol and the minimum-weight rules are not printed here.",
+          "VISAA schools. VISAA is a separate association with its own handbook, and nothing on this page applies to a wrestler at a VISAA school.",
+        ],
+        advice:
+          "For any of the three, ask your athletic director, and ask before the event rather than after. If you tell us what your school says, we will verify it against the Handbook and add it here.",
+        sources: ["vhslEligibility"],
+      },
+    ],
+  },
 ]
 
 /**
@@ -840,3 +930,22 @@ export const sectionId = (heading: string) =>
     .replace(/^-|-$/g, "")
 
 export const learnPage = (slug: string) => LEARN_PAGES.find((page) => page.slug === slug) ?? null
+
+/**
+ * The eligibility page for a wrestler's own state.
+ *
+ * These rules decide whether there is a season at all, and they are the state's, not the NCAA's:
+ * North Carolina's $250 prize limit is an NCHSAA rule and means nothing in Virginia, whose
+ * transfer rule in turn costs a year that North Carolina's does not. A family shown the wrong
+ * state's page is worse off than one shown none, so a state we have no page for gets no link.
+ */
+export function stateEligibilityPage(state: string | null | undefined): { slug: string; label: string; state: string } | null {
+  const code = String(state ?? "").trim().toUpperCase()
+  const found = LEARN_PAGES.find((p) => p.slug === `staying-eligible-in-${STATE_SLUG[code] ?? ""}`)
+  return found ? { slug: found.slug, label: `Staying eligible in ${code}`, state: code } : null
+}
+
+const STATE_SLUG: Record<string, string> = {
+  NC: "north-carolina",
+  VA: "virginia",
+}
