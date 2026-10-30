@@ -161,8 +161,8 @@ export default async function BeyondTheMat() {
             years. Outside the classroom, these people will be among the most influential figures in their lives.
           </P>
           <P>
-            We naturally evaluate coaches on their ability to develop great wrestlers. Their technical expertise, competitive success and
-            history of producing All-Americans matter.
+            We naturally evaluate coaches on their ability to develop great wrestlers: their technical expertise, their competitive success and
+            their history of producing All-Americans. All of that matters.
           </P>
           <P>But what about their ability to develop great people?</P>
           <P>
