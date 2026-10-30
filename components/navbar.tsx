@@ -835,7 +835,7 @@ export function Navbar() {
                   asChild
                   variant="outline"
                   size="sm"
-                  className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white bg-transparent mobile-optimized min-h-[44px] px-3"
+                  className="border-white/70 text-white hover:bg-white hover:text-[#003366] bg-transparent mobile-optimized min-h-[44px] px-3"
                 >
                   <Link href="/auth/signin" target="_top" rel="noopener" onPointerDown={signInHere} onFocus={signInHere}>Sign In</Link>
                 </Button>

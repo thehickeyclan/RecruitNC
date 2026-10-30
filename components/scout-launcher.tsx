@@ -14,7 +14,7 @@ export function ScoutLauncher() {
       <Link
         href="/my-recruiting/scout"
         aria-label="Ask Scout, your recruiting assistant"
-        className="h-16 w-16 overflow-hidden rounded-full border-2 border-[#D3B574]/50 bg-[#0A1628] shadow-lg shadow-[#D3B574]/20 transition hover:border-[#D3B574]"
+        className="h-12 w-12 overflow-hidden rounded-full sm:h-16 sm:w-16 border-2 border-[#D3B574]/50 bg-[#0A1628] shadow-lg shadow-[#D3B574]/20 transition hover:border-[#D3B574]"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/images/scout-avatar.webp" alt="" className="h-full w-full object-cover object-top" />
