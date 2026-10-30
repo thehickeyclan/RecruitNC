@@ -27,7 +27,12 @@ function isFundraisingHubPublicPath(p: string): boolean {
 /** Every response on a pre-launch brand address says: do not index. */
 export async function middleware(request: NextRequest) {
   const response = await routeRequest(request)
-  if (stagedBrandForHost(request.headers.get("host"))) {
+  /*
+   * RecruitWrestlers launched publicly (Matt, 30 Oct 2026): it is indexed and cached like any public
+   * site, each page deciding for itself (a draft or a profile still says noindex in its metadata).
+   * Only the retired Guild address, which forwards everything, stays out of search.
+   */
+  if (stagedBrandForHost(request.headers.get("host")) === "guild") {
     response.headers.set("X-Robots-Tag", "noindex, nofollow")
     response.headers.set("Cache-Control", "private, no-store")
   }
@@ -72,8 +77,20 @@ async function routeRequest(request: NextRequest): Promise<NextResponse> {
   }
   if (brand) {
     if (pathname === "/robots.txt") {
-      return new NextResponse("User-agent: *\nDisallow: /\n", { headers: { "Content-Type": "text/plain", "X-Robots-Tag": "noindex, nofollow" } })
+      // Public pages are open to search; accounts, tools and staff pages are not.
+      const body =
+        brand === "national"
+          ? [
+              "User-agent: *",
+              "Allow: /",
+              ...["/admin", "/api", "/auth", "/dev", "/my-recruiting", "/my-recruits", "/coach-home", "/coach-reports", "/inbox", "/profile", "/edit-profile", "/profile-setup"].map((p) => `Disallow: ${p}`),
+              "Sitemap: https://www.recruitwrestlers.com/sitemap.xml",
+              "",
+            ].join("\n")
+          : "User-agent: *\nDisallow: /\n"
+      return new NextResponse(body, { headers: { "Content-Type": "text/plain" } })
     }
+    if (brand === "national" && pathname === "/sitemap.xml") return NextResponse.rewrite(new URL("/recruitwrestlers/sitemap.xml", request.url))
     // Launched 26 Oct 2026: the site is public; only the staff preview tools stay gated.
     if (isStaffOnlyAfterLaunch(pathname) && !isOpenWhileStaged(pathname) && !(await stagingGateAllows(request.headers, request.cookies.getAll(), pathname))) {
       if (pathname.startsWith("/api/")) {
