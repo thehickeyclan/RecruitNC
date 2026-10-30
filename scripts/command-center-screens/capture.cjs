@@ -15,8 +15,10 @@ const fs = require("fs")
 const NM = process.argv[2] || "node_modules"
 const BRANDS = (process.argv[3] || "both") === "both" ? ["rw", "ncu"] : [process.argv[3]]
 const ONLY = (process.argv[4] || "").split(",").filter(Boolean)
-const { chromium } = require(path.join(NM, "playwright-core"))
-const { createClient } = require(path.join(NM, "@supabase/supabase-js"))
+// A relative folder is read from where the command runs; without one, the usual module lookup.
+const need = (m) => { try { return require(path.resolve(NM, m)) } catch { return require(m) } }
+const { chromium } = need("playwright-core")
+const { createClient } = need("@supabase/supabase-js")
 for (const l of fs.readFileSync(".env.local", "utf8").split("\n")) { const m = l.match(/^([A-Z0-9_]+)=(.*)$/); if (m) process.env[m[1]] = m[2].replace(/^"|"$/g, "") }
 const LOCAL = "http://localhost:3013"
 const BASE = { rw: "http://www.recruitwrestlers.com:3013", ncu: LOCAL }
