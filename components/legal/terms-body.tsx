@@ -8,7 +8,7 @@ import { TERMS_VERSION } from "@/lib/legal/consent"
  */
 export function TermsBody({ operator, service, email }: { operator: string; service: string; email: string }) {
   const h2 = "mt-8 text-lg font-bold text-white"
-  const updated = new Date(`${TERMS_VERSION}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
+  const updated = new Date(`${TERMS_VERSION.slice(0, 10)}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
   return (
     <div className="space-y-3 text-[15px] leading-relaxed text-[#D6DEEA]">
       <p className="text-sm text-[#A8B3C5]">Last updated {updated}</p>
@@ -35,6 +35,10 @@ export function TermsBody({ operator, service, email }: { operator: string; serv
         add information such as a photo, academics and contact details. Only the wrestler, their parent or guardian may claim a profile; claiming someone
         else&apos;s profile is not allowed and we will remove it. We may correct, combine or remove profiles and results to keep them accurate. Tell us about
         anything that is wrong and we will check it against the source.
+      </p>
+      <p>
+        The public profiles of current high school wrestlers (name, school, class, results and honors) can appear in search engines. A wrestler&apos;s family
+        can hide a profile from search engines at any time; private details such as GPA and contact information are never shown publicly.
       </p>
 
       <h2 className={h2}>3. Rules for college coaches</h2>

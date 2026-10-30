@@ -96,7 +96,9 @@ export function ClaimDetails() {
 
       <p className="mt-4 text-xs leading-relaxed text-white/55">
         Only verified college coaches see contact info and academics, never the public. Parents see every message a
-        coach sends.
+        coach sends. A high school wrestler&apos;s public profile (name, school, class, results) can be found on Google
+        so college coaches can find it; you can hide it from search at any time on the profile.{" "}
+        <a href="/privacy" className="underline">Privacy</a>
       </p>
     </section>
   )

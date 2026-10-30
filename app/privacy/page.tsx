@@ -14,7 +14,7 @@ export default function PrivacyPolicyPage() {
       <div className="mx-auto max-w-3xl">
         <p className="text-xs font-bold tracking-[0.2em] text-rnc-gold">NC UNITED WRESTLING</p>
         <h1 className="mt-2 text-4xl font-extrabold tracking-tight">Privacy Policy</h1>
-        <p className="mt-3 text-sm text-[#A8BBD1]">Last updated 22 October 2026</p>
+        <p className="mt-3 text-sm text-[#A8BBD1]">Last updated 30 October 2026</p>
 
         <div className="mt-10 space-y-10 text-[15px] leading-relaxed text-[#D6E1EE]">
           <section>
@@ -232,6 +232,18 @@ export default function PrivacyPolicyPage() {
               our non-profit financial records. Notification tokens are deleted when a device
               uninstalls the app or when Apple tells us the token is dead. You can ask us to delete
               your information sooner.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-xl font-bold text-white">Wrestler profiles in search engines</h2>
+            <p className="mt-2">
+              The profiles of current high school wrestlers can be found through search engines such as
+              Google. Search engines see only what the public profile shows: name, school, class, results
+              and honors; never GPA, test scores, phone numbers or email addresses, and profile photos are
+              kept out of image search. A wrestler&apos;s family can hide the profile from search engines at
+              any time with the switch on the profile, and anyone can ask us to hide a profile nobody has
+              claimed. Middle school wrestlers&apos; profiles are never offered to search engines.
             </p>
           </section>
 
