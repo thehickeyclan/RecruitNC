@@ -42,6 +42,19 @@ export function NchsaaArticleReactions({ articleSlug }: { articleSlug: string })
     fetchCounts()
   }, [fetchCounts])
 
+  // The same article can carry the buttons twice (top and bottom): a vote in one updates both.
+  useEffect(() => {
+    const event = `article-reaction:${articleSlug}`
+    const sync = (e: Event) => {
+      const d = (e as CustomEvent<{ up: number; down: number; reaction: "up" | "down" }>).detail
+      setUp(d.up)
+      setDown(d.down)
+      setUserReaction(d.reaction)
+    }
+    window.addEventListener(event, sync)
+    return () => window.removeEventListener(event, sync)
+  }, [articleSlug])
+
   const submit = async (reaction: "up" | "down") => {
     if (loading) return
     setLoading(true)
@@ -54,9 +67,7 @@ export function NchsaaArticleReactions({ articleSlug }: { articleSlug: string })
       })
       const data = await res.json()
       if (res.ok) {
-        setUp(data.up ?? 0)
-        setDown(data.down ?? 0)
-        setUserReaction(reaction)
+        window.dispatchEvent(new CustomEvent(`article-reaction:${articleSlug}`, { detail: { up: data.up ?? 0, down: data.down ?? 0, reaction } }))
       }
     } finally {
       setLoading(false)

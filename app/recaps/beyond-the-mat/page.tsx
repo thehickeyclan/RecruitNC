@@ -4,6 +4,7 @@
  * A free RecruitWrestlers story: advice first, the Command Center as a small note after the end.
  * Staff-only until its switch in lib/recruitwrestlers-news.ts is on.
  */
+import { NchsaaArticleReactions } from "@/components/nchsaa-article-reactions"
 import type { Metadata } from "next"
 import Link from "next/link"
 import { headers } from "next/headers"
@@ -29,6 +30,8 @@ export async function generateMetadata(): Promise<Metadata> {
     ...(story.published ? {} : { robots: { index: false, follow: false } }),
   }
 }
+
+const REACTIONS_SLUG = "rw-choosing-a-college-next-40-years"
 
 const H2 = ({ n, children }: { n: number; children: React.ReactNode }) => (
   <h2 className="mt-12 flex items-baseline gap-3 text-2xl font-black tracking-tight text-[#0b1730] sm:text-3xl">
@@ -75,6 +78,10 @@ export default async function BeyondTheMat() {
           <img src={story.image} alt="A wrestler and his parents walking a college campus" className="block aspect-[2/1] w-full object-cover" />
         ) : null}
         <div className="px-6 pb-12 pt-8 sm:px-12">
+          {/* Thumbs at the top and the bottom (Matt, 30 Oct 2026); one count, shared. */}
+          <div className="border-b border-gray-200 pb-2">
+            <NchsaaArticleReactions articleSlug={REACTIONS_SLUG} />
+          </div>
           <P>
             Over the past several years, we&apos;ve tracked more than 150 college wrestling commitments and helped hundreds of athletes and
             their families navigate the recruiting process.
@@ -283,7 +290,11 @@ export default async function BeyondTheMat() {
             the next four years, but for the next 40.
           </p>
 
-          <section className="mt-12 rounded-xl border border-gray-200 bg-gray-50 p-6">
+          <div className="mt-10 border-t border-gray-200 pt-2">
+            <NchsaaArticleReactions articleSlug={REACTIONS_SLUG} />
+          </div>
+
+          <section className="mt-8 rounded-xl border border-gray-200 bg-gray-50 p-6">
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gray-500">About the author</p>
             <p className="mt-2 text-[15px] leading-relaxed text-gray-700">
               <b className="text-[#0b1730]">Matt Hickey</b> is the founder of RecruitWrestlers. A former
