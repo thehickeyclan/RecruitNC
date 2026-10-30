@@ -21,7 +21,7 @@ export type Story = {
 export const RW_STORIES: Story[] = [
   {
     href: "/recaps/beyond-the-mat",
-    title: "College Wrestling Recruiting: 5 Questions Every Family Should Ask",
+    title: "Beyond the Mat: Choosing a College for the Next 40 Years",
     summary: "If wrestling went away tomorrow, would you still want to attend this school? Five questions about the people, the future, the wrestling, the academics and the money.",
     date: "2026-10-28",
     readTime: "8 min read",
