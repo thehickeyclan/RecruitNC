@@ -22,6 +22,7 @@ import {
 } from "@/components/profile/profile-banner-parts"
 import { ProfileRow } from "@/components/profile/profile-row"
 import { CompetingNextBlock } from "@/components/profile/competing-next-block"
+import { ParentContactBlock } from "@/components/profile/parent-contact-block"
 import { AppNotableLosses, AppRow, AppSignificantWins, AppTournamentResults, rankedWinsLast12Months, useAppProfile } from "@/components/profile/app-profile-rows"
 import { ProfileViewsBlock } from "@/components/profile/profile-views-block"
 import { summarySentences, type Accolades } from "@/lib/profile/profile-summary"
@@ -1982,6 +1983,8 @@ export function AthleteDetail({
               <CoachMessageButton athleteId={String(athlete.id)} athleteName={athleteName} variant="action" className="min-h-[44px]" />
             ) : null}
             {contactButtons}
+            {/* Parent / guardian: the family, college coaches and admins only - the block asks its own route. */}
+            <ParentContactBlock athleteId={String(athlete.id)} />
             {canEdit ? (
               <button type="button" onClick={() => setEditingSection("contact")} className="text-xs font-bold text-[#D3B574] hover:underline">
                 Edit contact details
