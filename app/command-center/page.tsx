@@ -25,12 +25,16 @@ import { BrandName } from "@/components/recruiting/brand-name"
 import { headers } from "next/headers"
 import { stagedBrandForHost } from "@/lib/recruiting/national-paths"
 import { recruitingCoverage } from "@/lib/recruiting/brand"
+import { shareCardUrl } from "@/lib/share-metadata"
 
 export const dynamic = "force-dynamic"
 const SHARE_TITLE = "Recruiting Command Center"
 const SHARE_DESCRIPTION = "Meet Scout, your AI recruiting assistant. Plan every stage, compare colleges and hear from college coaches, on the same platform they use to recruit."
 // The link preview when the page is texted or posted: Scout, not the NC United logo (Matt, 17 Oct 2026).
-const SHARE_IMAGE = { url: "/images/command-center-share.jpg", width: 1200, height: 630, alt: "Recruiting Command Center: meet Scout, your AI recruiting assistant" }
+// RecruitWrestlers' deployment gets its own lime card; the gold Scout card is NC United's (launch review, 30 Oct 2026).
+const SHARE_IMAGE = /recruitwrestlers/i.test(process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "")
+  ? { url: shareCardUrl({ title: "Recruiting Command Center", description: "Meet Scout, your recruiting assistant. Best-fit colleges, your plan and coach interest, in one place.", kicker: "RecruitWrestlers" }), width: 1200, height: 630, alt: "Recruiting Command Center on RecruitWrestlers" }
+  : { url: "/images/command-center-share.jpg", width: 1200, height: 630, alt: "Recruiting Command Center: meet Scout, your AI recruiting assistant" }
 export const metadata: Metadata = {
   title: SHARE_TITLE,
   description: "Plan, track colleges, compare full costs and hear from college coaches: the recruiting portal for wrestling families, men's and women's.",

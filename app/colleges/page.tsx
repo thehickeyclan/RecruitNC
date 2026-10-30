@@ -67,7 +67,7 @@ export default function CollegesPage() {
 
   return (
     <main className="min-h-screen bg-[#0A1628]">
-      <CommitsHero icon={Building2} title="Colleges" subtitle="The college programs North Carolina wrestlers are committing to." />
+      <CommitsHero icon={Building2} title="Colleges" subtitle="The college programs our wrestlers are committing to." />
 
       <div className="container mx-auto space-y-6 px-4 py-8">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">

@@ -30,7 +30,8 @@ export function shareCardUrl(card: Pick<ShareCard, "title" | "description" | "ki
  * previews carry its name. Page metadata is built per project, so NC United's stays as it is.
  */
 const RW_PROJECT = /recruitwrestlers/i.test(process.env.VERCEL_PROJECT_PRODUCTION_URL ?? "")
-const rwWords = (s: string) => s.replace(/RecruitNC/gi, "RecruitWrestlers").replace(/NC United Wrestling/gi, "RecruitWrestlers")
+// "NC United · RecruitNC" kickers become plain "RecruitWrestlers", never "NC United · RecruitWrestlers".
+const rwWords = (s: string) => s.replace(/NC United\s*·\s*/gi, "").replace(/RecruitNC/gi, "RecruitWrestlers").replace(/NC United Wrestling/gi, "RecruitWrestlers")
 
 export function shareMetadata(input: ShareCard): Metadata {
   const card: ShareCard = RW_PROJECT

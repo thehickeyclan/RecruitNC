@@ -225,9 +225,14 @@ export default async function ComparePage({ searchParams }: { searchParams?: Pro
         {!blue ? (
           <div className="mt-6 rounded-xl border border-[#D3B574]/40 bg-[#D3B574]/10 p-5 text-sm leading-6 text-white/80">
             Comparing colleges is part of the Command Center.{" "}
-            <a href="/plans" className="font-bold text-[#D3B574] underline">
+            <a href="/plans" className="ncu-only font-bold text-[#D3B574] underline">
               See plans
             </a>
+            <span className="national-only">
+              <a href="/command-center" className="font-bold text-[#D3B574] underline">
+                Join the Command Center
+              </a>
+            </span>
           </div>
         ) : (
           <>
