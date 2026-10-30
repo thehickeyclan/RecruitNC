@@ -27,7 +27,8 @@ export const RW_STORIES: Story[] = [
     readTime: "10 min read",
     // Matt's photo, 29 Oct 2026: a family walking a campus.
     image: "/images/news/college-recruiting-5-questions.webp",
-    category: "Recruiting advice",
+    // The column name (Matt, 30 Oct 2026): a series about life after wrestling, not this headline.
+    category: "Beyond the Mat",
     state: "All",
     premium: false,
     // Matt publishes it: staff only until this is true.

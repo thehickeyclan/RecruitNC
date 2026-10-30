@@ -64,7 +64,7 @@ export default async function BeyondTheMat() {
           {!story.published ? (
             <p className="mb-4 inline-block rounded-full bg-amber-400/20 px-3 py-1 text-xs font-bold text-amber-200">Draft · staff only</p>
           ) : null}
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#A3E635]">Recruiting advice</p>
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#A3E635]">Beyond the Mat</p>
           <h1 className="mt-3 text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl">Choosing a College for the Next 40 Years</h1>
           <p className="mt-3 text-xl font-semibold text-white/85 sm:text-2xl">Leveraging wrestling for a lifetime of opportunity</p>
           <p className="mt-6 text-sm text-white/60">By Matt Hickey · October 28, 2026 · 10 min read</p>

@@ -109,7 +109,7 @@ export default async function RecruitWrestlersNews() {
                       {dateLong(featured.date)} · {featured.readTime}
                     </div>
                     <span className="inline-flex items-center gap-2 font-medium text-[#A3E635] transition-all group-hover:gap-3">
-                      {featured.category === "Recruiting advice" ? "Read the article" : "Read the recap"}
+                      {/recap/i.test(featured.title) ? "Read the recap" : "Read the article"}
                       <ArrowRight className="h-4 w-4" />
                     </span>
                   </div>
