@@ -52,6 +52,15 @@ export default function RecruitWrestlersPrivacy() {
             scores are never public; verified college coaches can see them on a wrestler&apos;s profile and scouting report.
           </p>
 
+          <h2 className={h2}>Wrestler profiles in search engines</h2>
+          <p>
+            The profiles of current high school wrestlers can be found through search engines such as Google, like the results pages other wrestling sites
+            publish. Search engines see only what the public page shows: the wrestler&apos;s name, school, class, results and honors. They never see GPA, test
+            scores, phone numbers or email addresses, and profile photos are kept out of image search and search previews. A wrestler&apos;s family can hide the
+            profile from search engines at any time with the switch on the profile; for a profile nobody has claimed, anyone can ask us to hide it at
+            info@recruitwrestlers.com. Middle school wrestlers&apos; profiles are never offered to search engines.
+          </p>
+
           <h2 className={h2}>College coach views and messages</h2>
           <p>
             When a college coach opens a wrestler&apos;s profile, the wrestler&apos;s family can see the college program and when it looked; the coach&apos;s own name is

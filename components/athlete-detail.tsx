@@ -25,6 +25,7 @@ import { CompetingNextBlock } from "@/components/profile/competing-next-block"
 import { ParentContactBlock } from "@/components/profile/parent-contact-block"
 import { AppNotableLosses, AppRow, AppSignificantWins, AppTournamentResults, rankedWinsLast12Months, useAppProfile } from "@/components/profile/app-profile-rows"
 import { ProfileViewsBlock } from "@/components/profile/profile-views-block"
+import { SearchVisibilityToggle } from "@/components/profile/search-visibility-toggle"
 import { summarySentences, type Accolades } from "@/lib/profile/profile-summary"
 import { profileStrengthOfCompetition } from "@/lib/profile/profile-competition"
 import { SignificantWinSubmissionDialog } from "@/components/significant-win-submission-dialog"
@@ -1880,6 +1881,10 @@ export function AthleteDetail({
       </div>
       {canViewProfileStats && athlete.id ? (
         <ProfileViewsBlock athleteId={String(athlete.id)} athleteFirstName={firstNames.split(" ")[0] || athleteName} className={ROW_ORDER.views} />
+      ) : null}
+      {/* The family's switch for search engines (lib/profile-search.ts). */}
+      {canEdit && athlete.id ? (
+        <SearchVisibilityToggle athleteId={String(athlete.id)} firstName={firstNames.split(" ")[0] || athleteName} className={ROW_ORDER.views} />
       ) : null}
       <div className={cn("empty:hidden", ROW_ORDER.messages)}>
         <FamilyMessagesPanel athleteId={String(athlete.id)} />

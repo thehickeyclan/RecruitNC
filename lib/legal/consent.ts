@@ -9,8 +9,8 @@
  *   13 to 17 needs a parent or guardian's agreement.
  * - Email updates are a separate, optional yes.
  */
-export const TERMS_VERSION = "2026-10-30"
-export const PRIVACY_VERSION = "2026-10-30"
+export const TERMS_VERSION = "2026-10-30.2"
+export const PRIVACY_VERSION = "2026-10-30.2"
 
 export type AgeBand = "18+" | "13-17" | "under-13"
 
