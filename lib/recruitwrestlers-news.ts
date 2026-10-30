@@ -21,11 +21,12 @@ export type Story = {
 export const RW_STORIES: Story[] = [
   {
     href: "/recaps/beyond-the-mat",
-    title: "Beyond the Mat: The Questions Every Wrestling Family Should Ask",
+    title: "College Wrestling Recruiting: 5 Questions Every Family Should Ask",
     summary: "If wrestling went away tomorrow, would you still want to attend this school? Five questions about the people, the future, the wrestling, the academics and the money.",
     date: "2026-10-28",
     readTime: "8 min read",
-    image: null,
+    // Matt's photo, 29 Oct 2026: a family walking a campus.
+    image: "/images/news/college-recruiting-5-questions.webp",
     category: "Recruiting advice",
     state: "All",
     premium: false,

@@ -1,5 +1,6 @@
 /**
- * "Beyond the Mat: The Questions Every Wrestling Family Should Ask" by Matt Hickey (28 Oct 2026).
+ * "College Wrestling Recruiting: 5 Questions Every Family Should Ask" by Matt Hickey (28 Oct 2026;
+ * first drafted as "Beyond the Mat", retitled 29 Oct).
  * A free RecruitWrestlers story: advice first, the Command Center as a small note after the end.
  * Staff-only until its switch in lib/recruitwrestlers-news.ts is on.
  */
@@ -24,6 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return {
     title: { absolute: `${story.title} | RecruitWrestlers` },
     description: story.summary,
+    ...(story.image ? { openGraph: { title: story.title, description: story.summary, images: [story.image] } } : {}),
     ...(story.published ? {} : { robots: { index: false, follow: false } }),
   }
 }
@@ -52,11 +54,14 @@ export default async function BeyondTheMat() {
             <p className="mb-4 inline-block rounded-full bg-amber-400/20 px-3 py-1 text-xs font-bold text-amber-200">Draft · staff only</p>
           ) : null}
           <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#A3E635]">Recruiting advice</p>
-          <h1 className="mt-3 text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl">Beyond the Mat</h1>
-          <p className="mt-3 text-xl font-semibold text-white/85 sm:text-2xl">The questions every wrestling family should ask</p>
+          <h1 className="mt-3 text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl">College Wrestling Recruiting: 5 Questions Every Family Should Ask</h1>
           <p className="mt-6 text-sm text-white/60">By Matt Hickey · October 28, 2026 · 8 min read</p>
         </header>
 
+        {story.image ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={story.image} alt="A wrestler and his parents walking a college campus" className="block aspect-[2/1] w-full object-cover" />
+        ) : null}
         <div className="px-6 pb-12 pt-8 sm:px-12">
           <P>
             Over the past several years, we&apos;ve tracked more than 150 college wrestling commitments and had the privilege of being part of
