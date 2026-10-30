@@ -1,3 +1,4 @@
+import { PoweredByRw } from "@/components/recruiting/powered-by-rw"
 import Image from "next/image"
 import { HardLink } from "@/components/hard-link"
 import { StoreButton } from "@/components/store-button"
@@ -134,6 +135,9 @@ export function Footer() {
         <div className="mt-8 pt-6 border-t border-[#1e3a5f]">
           <p className="text-center text-xs text-gray-500">
             &copy; {new Date().getFullYear()} NC United Wrestling. All rights reserved.
+          </p>
+          <p className="mt-3 text-center">
+            <PoweredByRw />
           </p>
         </div>
       </div>

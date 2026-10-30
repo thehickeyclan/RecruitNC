@@ -1,3 +1,4 @@
+import { PoweredByRw } from "@/components/recruiting/powered-by-rw"
 import { ContactEmail } from "@/components/recruiting/contact-email"
 import { RECRUITING_BRAND, recruitingCoverage } from "@/lib/recruiting/brand"
 import { BrandLockup } from "@/components/recruiting/brand-frames"
@@ -30,6 +31,7 @@ export function RecruitingFooter() {
             <BrandLockup />
             <p className="mt-2 text-sm text-white/50">{RECRUITING_BRAND.tagline}</p>
             <p className="mt-1 text-sm text-white/50">Covering {recruitingCoverage(onRw)}. Free for college coaching staff.</p>
+            <PoweredByRw className="mt-3" />
           </div>
           <ul className="grid grid-cols-2 gap-x-10 gap-y-3 text-sm">
             {LINKS.map((item) => (
