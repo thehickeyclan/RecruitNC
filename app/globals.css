@@ -329,4 +329,13 @@ body:has([data-composer]:focus) [data-assistant-launcher] {
   textarea {
     font-size: 16px !important;
   }
+
+  /*
+   * The 9-11px labels (about 1,200 of them: kickers, chips, card captions) were read on a desktop
+   * screen. On a phone they are the smallest type on the page and the first thing a parent has to
+   * zoom for (mobile review, 30 Oct 2026). One pixel up, phones only; layouts were checked at 390px.
+   */
+  .text-\[9px\] { font-size: 10px; }
+  .text-\[10px\] { font-size: 11px; }
+  .text-\[11px\] { font-size: 12px; }
 }

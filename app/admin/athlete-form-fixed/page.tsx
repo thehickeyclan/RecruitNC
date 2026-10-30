@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState, useRef, type FormEvent } from "react"
 import { useRouter } from "next/navigation"
+import { preparePhoto } from "@/lib/images/prepare-photo"
 
 export default function AthleteFormFixed() {
   const router = useRouter()
@@ -94,7 +95,7 @@ export default function AthleteFormFixed() {
       // If we have a file and the athlete was created successfully, upload the image
       if (selectedFile && data.athlete && data.athlete.id) {
         const formData = new FormData()
-        formData.append("file", selectedFile)
+        formData.append("file", await preparePhoto(selectedFile))
         formData.append("athleteId", data.athlete.id)
 
         console.log("Uploading image for athlete ID:", data.athlete.id)

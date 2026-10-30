@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { Upload, Check } from "lucide-react"
+import { preparePhoto } from "@/lib/images/prepare-photo"
 
 interface AthleteImageUploaderProps {
   athleteId: string
@@ -56,7 +57,7 @@ export function AthleteImageUploader({
 
     try {
       const formData = new FormData()
-      formData.append("file", file)
+      formData.append("file", await preparePhoto(file))
       formData.append("athleteId", athleteId)
       formData.append("category", type)
 
