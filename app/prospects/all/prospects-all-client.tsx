@@ -925,7 +925,7 @@ export default function ProspectsAllClient({
                 <select
                   value={stateFilter}
                   onChange={(e) => setStateFilter(e.target.value)}
-                  className="min-h-[36px] rounded-lg border border-white/20 bg-[#0A1628] px-3 text-sm font-semibold normal-case tracking-normal text-white focus:border-[#D3B574] focus:outline-none"
+                  className="min-h-[36px] rounded-lg border border-white/20 bg-[#0A1628] px-3 text-base sm:text-sm font-semibold normal-case tracking-normal text-white focus:border-[#D3B574] focus:outline-none"
                 >
                   {onRw ? <option value={ALL_STATES}>All states</option> : null}
                   {stateChoices.map((st) => (
@@ -952,7 +952,7 @@ export default function ProspectsAllClient({
               <select
                 value={sortBy}
                 onChange={(e) => setSortChoice(e.target.value as SortChoice)}
-                className="min-h-[36px] rounded-lg border border-white/20 bg-[#0A1628] px-3 text-sm font-semibold normal-case tracking-normal text-white focus:border-[#D3B574] focus:outline-none"
+                className="min-h-[36px] rounded-lg border border-white/20 bg-[#0A1628] px-3 text-base sm:text-sm font-semibold normal-case tracking-normal text-white focus:border-[#D3B574] focus:outline-none"
               >
                 {maySeeRanking ? <option value="rank">Rank</option> : null}
                 <option value="name">Name (A to Z)</option>

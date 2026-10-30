@@ -262,7 +262,8 @@ export default async function PublicRankingsHomepage({
   return (
     <main className="min-h-screen bg-[#0A1628] text-white">
       {/* The banner announces North Carolina's next update; another state's page leaves it off. */}
-      {stateCode === "NC" ? <RankingsUpdateBanner /> : null}
+      {/* NC news belongs with NC's boards, not on the national pitch a visitor without the rankings sees. */}
+      {stateCode === "NC" && !locked ? <RankingsUpdateBanner /> : null}
       {/* Hero: a real North Carolina wrestler, never a generated one (Matt, 29 Oct 2026). */}
       <section className="relative overflow-hidden border-b border-white/10">
         {/* eslint-disable-next-line @next/next/no-img-element */}
