@@ -1,6 +1,6 @@
 /**
- * "College Wrestling Recruiting: 5 Questions Every Family Should Ask" by Matt Hickey (28 Oct 2026;
- * first drafted as "Beyond the Mat", retitled 29 Oct).
+ * "Beyond the Mat: Choosing a College for the Next 40 Years" by Matt Hickey (28 Oct 2026;
+ * titled "College Wrestling Recruiting: 5 Questions Every Family Should Ask" on 29 Oct, retitled 30 Oct).
  * A free RecruitWrestlers story: advice first, the Command Center as a small note after the end.
  * Staff-only until its switch in lib/recruitwrestlers-news.ts is on.
  */
@@ -54,7 +54,8 @@ export default async function BeyondTheMat() {
             <p className="mb-4 inline-block rounded-full bg-amber-400/20 px-3 py-1 text-xs font-bold text-amber-200">Draft · staff only</p>
           ) : null}
           <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#A3E635]">Recruiting advice</p>
-          <h1 className="mt-3 text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl">College Wrestling Recruiting: 5 Questions Every Family Should Ask</h1>
+          <h1 className="mt-3 text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl">Beyond the Mat</h1>
+          <p className="mt-3 text-xl font-semibold text-white/85 sm:text-2xl">Choosing a college for the next 40 years</p>
           <p className="mt-6 text-sm text-white/60">By Matt Hickey · October 28, 2026 · 8 min read</p>
         </header>
 
@@ -64,8 +65,8 @@ export default async function BeyondTheMat() {
         ) : null}
         <div className="px-6 pb-12 pt-8 sm:px-12">
           <P>
-            Over the past several years, we&apos;ve tracked more than 150 college wrestling commitments and had the privilege of being part of
-            many athletes&apos; recruiting journeys. I&apos;ve also been through the process myself, as a wrestling parent.
+            Over the past several years, we&apos;ve tracked more than 150 college wrestling commitments and helped hundreds of athletes and
+            their families through the recruiting process.
           </P>
           <P>
             One thing I&apos;ve learned is that when the recruiting calls begin, most families naturally focus on three questions: How much
@@ -77,7 +78,7 @@ export default async function BeyondTheMat() {
             The right college provides an environment where those qualities can flourish, opening doors to opportunities that extend well
             beyond the sport.
           </P>
-          <P>Having navigated this journey as a parent, there&apos;s one question I encourage every young wrestler to consider before committing to a college:</P>
+          <P>There&apos;s one question I encourage every young wrestler to consider before committing to a college:</P>
           <Quote>&ldquo;If wrestling went away tomorrow, would you still want to attend this school?&rdquo;</Quote>
           <P>
             It isn&apos;t meant to diminish wrestling. It&apos;s meant to encourage athletes to consider the complete college experience. And when
@@ -86,12 +87,13 @@ export default async function BeyondTheMat() {
 
           <H2 n={1}>The people: who will influence your child?</H2>
           <P>
-            Your child is going to spend an enormous amount of time with their coaches and teammates. These people will shape their daily
-            experience, their confidence, their habits and their development.
+            Your child is going to spend an enormous amount of time with their coaches, teammates and workout partners. These people will
+            shape their daily experience, their confidence, their habits and their development.
           </P>
           <P>
             Do you trust the coaching staff? Do they genuinely care about their athletes as people? Are the teammates people your child wants
-            to surround themselves with?
+            to surround themselves with? And who will their workout partners be? The wrestlers at and around their weight, the ones they drill
+            and go live with every day, will shape their development as much as any coach.
           </P>
           <P>A coach&apos;s record matters. So does the kind of person that coach helps develop. One question I encourage every parent to ask a college coach:</P>
           <Quote>
@@ -132,6 +134,12 @@ export default async function BeyondTheMat() {
             The greatest return on the years our children have invested in wrestling may have little to do with what they accomplish on the
             mat in college. It may be what they accomplish in the decades that follow.
           </P>
+          <P>
+            For most wrestlers, the smart choice is to use wrestling to open doors at schools they might not have gotten into on academics
+            alone. The sport will end, for almost everyone, when college does. Used well, it gets you into an environment you could not
+            otherwise have reached: the network, the academic institution, the alumni, the mentors and the internships.
+          </P>
+          <Quote>That&apos;s called leverage. And that&apos;s where the investment pays off: over 40 years, not just 4.</Quote>
 
           <H2 n={3}>The wrestling: is this the right environment to grow?</H2>
           <P>
@@ -168,6 +176,14 @@ export default async function BeyondTheMat() {
             athletic money may still provide an exceptional overall package through academic or need-based aid. Look at the complete picture,
             not just the athletic offer.
           </P>
+          <P>
+            Many programs now help their athletes find support beyond scholarships, including name, image and likeness (NIL) opportunities.
+            Ask every program what it does, beyond the scholarship itself, to help make the numbers work.
+          </P>
+          <P>
+            And don&apos;t assume a Division III school can&apos;t put together a competitive package. Division III schools don&apos;t award
+            athletic scholarships, but academic, merit and need-based aid can make the final cost as competitive as an athletic offer, or more.
+          </P>
 
           <h2 className="mt-12 text-2xl font-black tracking-tight text-[#0b1730] sm:text-3xl">Enjoy the journey. Keep perspective.</h2>
           <P>
@@ -175,10 +191,10 @@ export default async function BeyondTheMat() {
             weekends, sacrifices and countless hours in wrestling rooms and gyms.
           </P>
           <P>
-            Whether your child chooses Division I, II or III, or the NAIA, earning the chance to keep wrestling while pursuing a college
+            Whether your child chooses Division I, II or III, the NAIA or junior college, earning the chance to keep wrestling while pursuing a college
             education is worth celebrating.
           </P>
-          <P>Having been through this as a parent, and having watched many other families go through it, my advice is simple:</P>
+          <P>Having helped hundreds of families through it, my advice is simple:</P>
           <P>
             Ask questions. Visit schools. Get to know the coaches and teammates. Explore the alumni network. Ask about internships and careers.
             Talk to former athletes. Understand the financial commitment.
@@ -199,8 +215,8 @@ export default async function BeyondTheMat() {
             <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-gray-500">About the author</p>
             <p className="mt-2 text-[15px] leading-relaxed text-gray-700">
               <b className="text-[#0b1730]">Matt Hickey</b> is the founder of RecruitWrestlers and co-founder of NC United. A former
-              Division I wrestler and father of a current Division I wrestler, Matt has experienced the recruiting journey firsthand and enjoys
-              helping families navigate the process.
+              Division I wrestler, Matt and the RecruitWrestlers team have helped hundreds of athletes and families navigate the recruiting
+              process.
             </p>
             <p className="mt-3 text-[15px] leading-relaxed text-gray-700">
               During his 25-year career in technology, Matt has served as a CRO, CEO and founder, helping build and grow companies in the AI and
