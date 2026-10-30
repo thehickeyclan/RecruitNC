@@ -1,3 +1,4 @@
+import { PoweredByRw } from "@/components/recruiting/powered-by-rw"
 import { SCOUTING_REPORT_PRICES, formatPrice } from "@/lib/scouting-report-entitlement"
 import { loadPlatformStats } from "@/lib/platform-stats"
 import { ArrowRight, BarChart3, CalendarDays, Check, Lock, GraduationCap, ListOrdered, Medal, Shuffle, Trophy, Users } from "lucide-react"
@@ -313,6 +314,7 @@ export default async function PublicRankingsHomepage({
                   common opponents and state performance, so college coaches at every level can find and evaluate talent.
                 </p>
                 <p className="mt-4 text-base font-bold text-[#D3B574]">We do the research. You discover the talent.</p>
+            <PoweredByRw className="mt-3" />
               </>
             )}
             <div className="mt-6 flex flex-wrap gap-3 text-sm">
