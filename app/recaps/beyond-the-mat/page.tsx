@@ -279,6 +279,11 @@ export default async function BeyondTheMat() {
           </P>
           <P>And most importantly, listen to your child. This is their journey.</P>
           <P>
+            The recruiting process is also one of the first major decisions many of our children will make. Use it. Let them lead the calls
+            with coaches, write their own questions, weigh the trade-offs and explain their thinking. Guide them, but resist the urge to decide
+            for them. The ability to gather information, think it through and own a decision will serve them long after the final match.
+          </P>
+          <P>
             Wrestling teaches lessons that extend far beyond competition: discipline, resilience, accountability and the willingness to work
             toward difficult goals. Those qualities can become the foundation for success in whatever path our children choose.
           </P>
