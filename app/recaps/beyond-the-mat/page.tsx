@@ -143,9 +143,23 @@ export default async function BeyondTheMat() {
 
           <H2 n={3}>The wrestling: is this the right environment to grow?</H2>
           <P>
-            Wrestling should, of course, remain an important part of the decision. Is the coaching philosophy a good fit? Will your child be
-            challenged? Will they have the chance to develop and compete? Does the program&apos;s culture suit their personality and goals?
+            None of this means the wrestling matters less. It matters enormously, and it deserves hard questions. A wrestler who is not
+            developing, not competing and not enjoying the room will not get the most out of anything else the school offers.
           </P>
+          <ul className="mt-4 space-y-2.5 text-[17px] leading-[1.7] text-gray-800">
+            {[
+              "The room: who are the workout partners at and around your weight, and will they push you every day?",
+              "Development: do wrestlers here actually get better? Ask how the staff's wrestlers have progressed from freshman year to their last season.",
+              "The path to compete: who is in the lineup at your weight now, who graduates before you arrive, and what is the plan for a redshirt year?",
+              "The coaching: how much one-on-one time does a wrestler like you get, and who runs the technique, the conditioning and the competition schedule?",
+              "Fit: does the coaching philosophy suit how you wrestle, and does the program's culture suit your personality and goals?",
+            ].map((q) => (
+              <li key={q} className="flex gap-3">
+                <span className="mt-[0.7em] h-1.5 w-1.5 shrink-0 rounded-full bg-[#65a30d]" />
+                {q}
+              </li>
+            ))}
+          </ul>
           <P>
             College wrestling is demanding. Balancing training, academics and a personal life is hard. Finding a program where your child feels
             supported, motivated and genuinely excited to be part of the team matters enormously.
