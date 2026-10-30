@@ -3,6 +3,7 @@ import { redirect } from "next/navigation"
 import { ProfileSetupForm, EMPTY_PROFILE_SETUP, type ProfileSetupValues } from "@/components/profile-setup-form"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { createClient } from "@/lib/supabase/server"
+import { loadLastCompeted } from "@/lib/prospect-last-competed"
 
 /**
  * Where every door leads once the wrestler is known and the account exists.
@@ -42,6 +43,10 @@ export default async function ProfileSetupPage({
     return ""
   }
   const name = str("name")
+  const gradYear = Number(row.graduationyear) || null
+  const lastWeight =
+    (await loadLastCompeted(admin, [String(id)], new Map([[String(id), gradYear]])).catch(() => new Map())).get(String(id))?.weight ?? ""
+  const { data: parentLink } = await admin.from("parent_athlete_links").select("id").eq("user_id", user.id).eq("athlete_id", id).maybeSingle()
   const social = row.socialMedia
   const socialInstagram =
     social && typeof social === "object" && !Array.isArray(social)
@@ -54,7 +59,8 @@ export default async function ProfileSetupPage({
     highSchool: str("highschool", "high_school"),
     club: str("wrestlingClub", "wrestlingclub"),
     graduationYear: str("graduationyear", "graduation_year"),
-    weightClass: str("weightclass", "weight_class"),
+    // The weight last competed at, not the one typed on the profile long ago.
+    weightClass: lastWeight || str("weightclass", "weight_class"),
     gpa: str("academic_gpa", "gpa"),
     sat: str("academic_sat"),
     act: str("academic_act"),
@@ -71,8 +77,16 @@ export default async function ProfileSetupPage({
   const mode = initial.highSchool || initial.graduationYear ? "verify" : "create"
 
   return (
-    <div className="min-h-screen bg-[#0A1628] px-4 py-12">
-      <ProfileSetupForm athleteId={String(id)} athleteName={name || "Your wrestler"} initial={initial} mode={mode} />
+    <div className="profile-surface min-h-screen bg-[#0A1628] px-4 py-12">
+      <ProfileSetupForm
+        athleteId={String(id)}
+        athleteName={name || "Your wrestler"}
+        initial={initial}
+        mode={mode}
+        photoUrl={str("photourl", "photo_url") || null}
+        gender={str("gender") || null}
+        asParent={Boolean(parentLink) && row.claimed_by_user_id !== user.id}
+      />
     </div>
   )
 }

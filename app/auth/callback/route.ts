@@ -198,7 +198,7 @@ export async function GET(req: NextRequest) {
       // A new account goes back where it signed up, or to finding its wrestler (lib/auth/signup-landing.ts).
       // New accounts only: an old Google account signing in again keeps its usual landing.
       if (isEmailVerificationCallback && (type === "signup" || !profile)) {
-        const meta = (session.user.user_metadata ?? {}) as Record<string, unknown>
+        const meta = ((session.user as User).user_metadata ?? {}) as Record<string, unknown>
         const admin = createAdminClient()
         const landing = signupLanding({
           returnTo: meta.signup_return_to,
@@ -239,7 +239,9 @@ export async function GET(req: NextRequest) {
      * first run, and complete-profile asks its own question first - the flag would be stripped by
      * that redirect anyway.
      */
-    if (isEmailVerificationCallback && !redirectPath.startsWith("/auth/")) {
+    // Not over a page that is already asking them to claim: the welcome would cover the one button.
+    const landsOnClaim = redirectPath.startsWith("/create-profile") || /[?&]claim=1/.test(redirectPath)
+    if (isEmailVerificationCallback && !redirectPath.startsWith("/auth/") && !landsOnClaim) {
       const role = String(profile?.role ?? "").trim() || createdRole
       if (role) {
         const url = new URL(redirectPath, requestUrl.origin)
