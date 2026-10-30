@@ -287,14 +287,14 @@ function SignUpWizard() {
           <CardHeader>
             <CardTitle>Account created — one last step</CardTitle>
             <CardDescription>
-              We sent a verification link to <span className="font-semibold">{email}</span>. Tap that link to activate your free RecruitNC account.
+              We sent a verification link to <span className="font-semibold">{email}</span>. <BrandText text="Tap that link to activate your free RecruitNC account." />
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
                 <strong>Important:</strong> protected actions like rankings, profile claiming/editing, TOC confirmations, wallet, and recruiting tools
-                require email verification. Public RecruitNC pages are still available while you check your inbox.
+                {" "}<BrandText text="require email verification. Public RecruitNC pages are still available while you check your inbox." />
               </p>
               <p className="text-sm text-muted-foreground">
                 If you don&apos;t see the email within a minute, check spam, junk, promotions, or school/work email filters.

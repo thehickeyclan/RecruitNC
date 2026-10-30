@@ -6,6 +6,8 @@ import { buildUserProfileUpsertPayload } from "@/lib/user-profile-from-auth"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { alreadyAnswered } from "@/lib/complete-profile"
 import { postSignInDestination } from "@/lib/post-sign-in-destination"
+import { signupLanding } from "@/lib/auth/signup-landing"
+import { familyAthleteIds } from "@/lib/coach-messages"
 
 export async function GET(req: NextRequest) {
   console.log("[v0] ===== AUTH CALLBACK ROUTE CALLED =====")
@@ -193,6 +195,20 @@ export async function GET(req: NextRequest) {
        * (coaches and athletes to /athletes, admins to /admin, the rest to the homepage).
        */
       redirectPath = await postSignInDestination(createAdminClient(), session.user.id)
+      // A new account goes back where it signed up, or to finding its wrestler (lib/auth/signup-landing.ts).
+      // New accounts only: an old Google account signing in again keeps its usual landing.
+      if (isEmailVerificationCallback && (type === "signup" || !profile)) {
+        const meta = (session.user.user_metadata ?? {}) as Record<string, unknown>
+        const admin = createAdminClient()
+        const landing = signupLanding({
+          returnTo: meta.signup_return_to,
+          role: String(meta.profile_type ?? profile?.profile_type ?? ""),
+          hasWrestler: (await familyAthleteIds(admin, session.user.id).catch(() => [])).length > 0,
+          firstName: typeof meta.first_name === "string" ? meta.first_name : null,
+          lastName: typeof meta.last_name === "string" ? meta.last_name : null,
+        })
+        if (landing) redirectPath = landing
+      }
     }
 
     /*
