@@ -126,6 +126,7 @@ const ASSOCIATIONS: Record<string, { public: string; independent?: string[] }> =
   MA: { public: "MIAA" },
   RI: { public: "RIIL" },
   NH: { public: "NHIAA" },
+  VT: { public: "VPA" },
 }
 
 /**

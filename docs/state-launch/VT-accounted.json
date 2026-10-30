@@ -1,0 +1,16 @@
+{
+  "placers": [
+    {
+      "name": "Maxwell LaPerle",
+      "school": "Spaulding",
+      "season": 2026,
+      "reason": "approved",
+      "note": "Class year not found in any source, so no profile — and he is the 2026 state champion at 190, the most visible placer in the state to be missing one. No Vermont payload prints a grade for him in a season he placed, and the RankWrestlers pass over all 42 of Vermont's unresolved keys found no usable record for any of them. Closed as not found rather than guessed; he gets a profile the moment a year surfaces, the same rule Rhode Island's 24 and Tennessee's unresolved placers are held under. Worth a targeted look precisely because he is a champion (30 Oct 2026)."
+    }
+  ],
+  "notes": [
+    "Vermont resolved 91 of 133 placer keys (68%), well under the 95% bar, and that is a source limit rather than a collection miss: the 2025 payload prints no grades at all and the 2026 one prints them, so most of the 42 unresolved keys are 2025-only placers who have since graduated. The readiness gate still passes because it only asks for a profile or a reason for placers it can place in a class, and 83 of the 84 2026 placed rows carry a year. The one that does not is named above (30 Oct 2026).",
+    "2024 is not built, by decision rather than omission. The Flo hub payload for the 2024 event (12929149) is an abandoned operator skeleton whose few named matches contradict verified results — its 138 semifinal omits the confirmed champion Asa Reis. Nothing was built from it. The recovery path (Burlington Free Press / VPA published placement lists) is in the package's VT-scoping.md. Same treatment as Indiana 2024 boys and Connecticut 2024 boys (30 Oct 2026).",
+    "Only 2 girls hold a current-class Vermont profile, and that is the honest ceiling of the method rather than the population. Vermont runs no separate girls championship — girls wrestle inside the same brackets, the payloads carry no gender field, and there is no in-state girls roster to cross-reference. The 6 girls identified were found solely by their entry in the New England girls championships under the same name and school, so the method sees only girls who also wrestled at New Englands and no girl is inferred from her name (30 Oct 2026)."
+  ]
+}
